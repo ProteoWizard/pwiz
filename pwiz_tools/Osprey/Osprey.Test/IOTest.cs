@@ -1228,6 +1228,122 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
+        public void TestLibraryCacheRetainMatchesRelease()
+        {
+            // RetainFragmentsFor's contract is EQUIVALENCE, not leanness: loading with a retain
+            // set must leave the library in exactly the state that loading everything and then
+            // calling LibraryFragmentRelease.ReleaseFragments with the same set would leave. A
+            // direct swap, differing only in what was allocated on the way.
+            //
+            // The state is what this pins, and it is not a detail. A skipped entry that kept
+            // Array.Empty would be a READABLE empty spectrum, which every scorer's
+            // `Fragments == null || Fragments.Count == 0` guard absorbs as "this entry has no
+            // spectrum" - scoring a degenerate zero where the released state throws. Skipping
+            // the allocation must not also skip the tripwire that says the skip was wrong, so
+            // the assertion below is on IsSpectrumReleased and on the throw, never on "is it
+            // empty". That is the exact difference this test exists for: before issue #4650's
+            // review, the skip produced the empty state and no caller assigned the option, so
+            // nothing would have caught it.
+            //
+            // Ids 10 and 11 are targets, each with its paired decoy sharing the base_id. The
+            // retain set names 10 only, so the pair rides along on the base_id and the 11 pair
+            // is dropped - a set that both retains and releases, since one that did neither
+            // would pass whatever the code did.
+            const uint DECOY_BIT = 0x80000000;
+            var entries = new List<LibraryEntry>
+            {
+                MakeTestEntry(10),
+                MakeTestEntry(10 | DECOY_BIT),
+                MakeTestEntry(11),
+                MakeTestEntry(11 | DECOY_BIT)
+            };
+            var retained = new HashSet<uint> { 10u };
+
+            string tempPath = Path.Combine(Path.GetTempPath(),
+                "osprey_test_retain_" + Guid.NewGuid().ToString("N") + ".libcache");
+
+            try
+            {
+                LibraryCache.SaveCache(tempPath, entries, "retain-hash");
+
+                // Route A: load everything, then release. The shape this is a swap FOR.
+                var released = LibraryCache.LoadCache(tempPath, "retain-hash", false, null,
+                    out LibraryCache.LibraryCacheStatus releasedStatus);
+                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, releasedStatus);
+                int nReleased = LibraryFragmentRelease.ReleaseFragments(released, retained);
+
+                // Route B: load only what the set names.
+                var skipped = LibraryCache.LoadCache(tempPath, "retain-hash", false, null,
+                    out LibraryCache.LibraryCacheStatus skippedStatus, retained);
+                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, skippedStatus);
+
+                // The set has to do both jobs, or the comparison below proves nothing.
+                Assert.AreEqual(2, nReleased,
+                    @"the retain set must release the 11 pair and keep the 10 pair");
+
+                Assert.AreEqual(released.Count, skipped.Count);
+                for (int i = 0; i < released.Count; i++)
+                {
+                    var a = released[i];
+                    var b = skipped[i];
+                    string what = string.Format(CultureInfo.InvariantCulture, @"entry {0} (id {1})", i, a.Id);
+
+                    // Identity is untouched on BOTH sides, including on a released entry:
+                    // protein parsimony walks the whole library after the spectra are gone.
+                    Assert.AreEqual(a.Id, b.Id, what);
+                    Assert.AreEqual(a.Sequence, b.Sequence, what);
+                    Assert.AreEqual(a.ModifiedSequence, b.ModifiedSequence, what);
+                    Assert.AreEqual(a.Charge, b.Charge, what);
+                    Assert.AreEqual(a.PrecursorMz, b.PrecursorMz, 1e-10, what);
+                    Assert.AreEqual(a.RetentionTime, b.RetentionTime, 1e-10, what);
+                    Assert.AreEqual(a.RtCalibrated, b.RtCalibrated, what);
+                    Assert.AreEqual(a.IsDecoy, b.IsDecoy, what);
+                    Assert.AreEqual(a.Modifications.Count, b.Modifications.Count, what);
+                    CollectionAssert.AreEqual(a.ProteinIds.ToArray(), b.ProteinIds.ToArray(), what);
+                    CollectionAssert.AreEqual(a.GeneNames.ToArray(), b.GeneNames.ToArray(), what);
+
+                    // The state itself. Asked through IsSpectrumReleased because reading
+                    // Fragments to find out is what throws - which is the point of the state.
+                    Assert.AreEqual(a.IsSpectrumReleased, b.IsSpectrumReleased, what);
+                    bool expectReleased = !retained.Contains(a.Id & ScoringTaskShared.BASE_ID_MASK);
+                    Assert.AreEqual(expectReleased, b.IsSpectrumReleased, what);
+
+                    if (expectReleased)
+                    {
+                        // The tripwire, on the skipped side specifically. Equality above would
+                        // also hold if BOTH sides had quietly become readable-empty, so the
+                        // throw is asserted rather than inferred.
+                        Assert.ThrowsException<InvalidOperationException>(() =>
+                        {
+                            int unused = b.Fragments.Count;
+                        }, what + @": a skipped spectrum must throw on read, not read as empty");
+                        continue;
+                    }
+
+                    // A retained entry carries the identical peaks, read rather than skipped.
+                    Assert.AreEqual(a.Fragments.Count, b.Fragments.Count, what);
+                    for (int f = 0; f < a.Fragments.Count; f++)
+                    {
+                        var fa = a.Fragments[f];
+                        var fb = b.Fragments[f];
+                        Assert.AreEqual(fa.Mz, fb.Mz, 1e-10, what);
+                        Assert.AreEqual(fa.RelativeIntensity, fb.RelativeIntensity, what);
+                        Assert.AreEqual(fa.Annotation.IonType, fb.Annotation.IonType, what);
+                        Assert.AreEqual(fa.Annotation.Ordinal, fb.Annotation.Ordinal, what);
+                        Assert.AreEqual(fa.Annotation.Charge, fb.Annotation.Charge, what);
+                        Assert.AreEqual(fa.Annotation.NeutralLoss, fb.Annotation.NeutralLoss, what);
+                        Assert.AreEqual(fa.Annotation.CustomLossMass, fb.Annotation.CustomLossMass, 1e-10, what);
+                    }
+                }
+            }
+            finally
+            {
+                if (File.Exists(tempPath))
+                    File.Delete(tempPath);
+            }
+        }
+
+        [TestMethod]
         public void TestLibraryCacheOmitFragments()
         {
             // A FirstPassFDR / StopAfterStage5 worker loads the library lean: the
@@ -3290,6 +3406,94 @@ namespace pwiz.Osprey.Test
         // Build an FdrEntry with a per-row-distinct feature vector (feature[f] = baseValue + f)
         // and distinct fragment / XIC blobs derived from baseValue, so a chunk-boundary row
         // mismap -- or an overlay row silently keeping the ORIGINAL blobs -- surfaces as a
+        /// <summary>
+        /// Write and read the same fixture many times over and assert every scalar survives.
+        /// The regression guard for the parallel-write data race: `ParquetPlainEncoder` returned
+        /// its widening buffer to the ArrayPool and then encoded from it, so once columns
+        /// compressed concurrently another column's dictionary-index buffer could land in the
+        /// byte-typed <c>charge</c> column. Measured at 27 corrupted round-trips in 20,000
+        /// before the fix and 0 in 100,000 after.
+        ///
+        /// <para>A single-shot round-trip cannot see a defect this rare - it surfaced as a ~2%
+        /// failure across four unrelated tests. Iterating in-process is what turns hours of
+        /// full-suite soaking into seconds. Cheap by default (25 iterations) so it costs the
+        /// gate nothing; set <c>OSPREY_PARQUET_STRESS_ITERS</c> to sweep harder, and pair it
+        /// with <c>OSPREY_PARQUET_WRITE_THREADS=1</c> to A/B the concurrent writer.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestParquetRoundTripScalarStress()
+        {
+            int iters = 25;
+            string raw = Environment.GetEnvironmentVariable(@"OSPREY_PARQUET_STRESS_ITERS");
+            if (!string.IsNullOrEmpty(raw) && int.TryParse(raw, out int parsed) && parsed > 0)
+                iters = parsed;
+
+            string dir = Path.Combine(Path.GetTempPath(), @"osprey_stress_" + Path.GetRandomFileName());
+            Directory.CreateDirectory(dir);
+            try
+            {
+                var entries = new List<FdrEntry>();
+                var expected = new Dictionary<uint, FdrEntry>();
+                foreach (uint id in new uint[] { 5, 2, 9, 1, 7, 3, 8 })
+                {
+                    var e = MakeStreamEntry(id, id * 100.0);
+                    entries.Add(e);
+                    expected[id] = e;
+                }
+
+                int nBad = 0;
+                string firstBad = null;
+                for (int i = 0; i < iters; i++)
+                {
+                    string path = Path.Combine(dir, @"stress" + i + @".scores.parquet");
+                    ParquetScoreCache.WriteScoresParquet(path, entries, null, null, @"f.mzML");
+                    var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(path);
+                    string bad = null;
+                    if (stubs.Count != entries.Count)
+                    {
+                        bad = string.Format(@"row count {0}, expected {1}", stubs.Count, entries.Count);
+                    }
+                    else
+                    {
+                        foreach (var s in stubs)
+                        {
+                            if (!expected.TryGetValue(s.EntryId, out FdrEntry want))
+                            {
+                                bad = string.Format(@"unknown entry_id {0}", s.EntryId);
+                                break;
+                            }
+                            if (s.Charge != want.Charge)
+                                bad = string.Format(@"charge {0}, expected {1}", s.Charge, want.Charge);
+                            else if (s.ScanNumber != want.ScanNumber)
+                                bad = string.Format(@"scan_number {0}, expected {1}", s.ScanNumber, want.ScanNumber);
+                            else if (s.IsDecoy != want.IsDecoy)
+                                bad = string.Format(@"is_decoy {0}, expected {1}", s.IsDecoy, want.IsDecoy);
+                            if (bad != null)
+                            {
+                                bad = string.Format(@"entry_id {0}: {1}", s.EntryId, bad);
+                                break;
+                            }
+                        }
+                    }
+                    if (bad != null)
+                    {
+                        nBad++;
+                        if (firstBad == null)
+                            firstBad = string.Format(@"iteration {0} - {1}", i, bad);
+                    }
+                    File.Delete(path);
+                }
+
+                Assert.AreEqual(0, nBad, string.Format(
+                    @"{0} of {1} parquet round-trips lost a scalar. First: {2}",
+                    nBad, iters, firstBad ?? @"(none)"));
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
+        }
+
         // value mismatch. Key fields (entry_id, charge, scan_number) stay id-derived so an
         // overlay preserves the canonical sort key of the row it replaces.
         private static FdrEntry MakeStreamEntry(uint id, double baseValue)

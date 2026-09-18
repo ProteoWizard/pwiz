@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -111,6 +111,21 @@ namespace pwiz.Osprey.Tasks
                 FdrScoresSidecar.Pass.FirstPass);
             if (!string.IsNullOrEmpty(pass1Experiment))
                 yield return pass1Experiment;
+
+            // The ANALYSIS-WIDE retained base_id summary, the other one-file-per-analysis input.
+            // The streamed join has always read it (PerFileRescoreTask.BuildStage7PerRunSource),
+            // and issue #4650 gave the library-fragment release a second read, so it is now this
+            // task's dependency on every path that releases. DECLARED for the reason the
+            // paragraph above gives about the per-file 1st-pass sidecars: reading a file every
+            // run while declaring it nowhere is worse than declaring it wrongly, because an
+            // orchestrator building a node's shipping list from Inputs omits it, hands over
+            // every run, and fails at the top of Stage 7 with the whole load already paid for.
+            // regression.ps1 only survives that today by relaying the file between phase dirs by
+            // hand. Provenance only, like its siblings - the driver validates by output stamp.
+            string retainedSummary = RetainedBaseIdSidecar.PathFor(
+                ctx.Config.OutputBlib, ScoringTaskShared.ArtifactSiblingPath(ctx.Config));
+            if (!string.IsNullOrEmpty(retainedSummary))
+                yield return retainedSummary;
 
             if (!OspreyEnvironment.Pass2ProteinCompact)
                 yield break;
@@ -440,7 +455,7 @@ namespace pwiz.Osprey.Tasks
             // library's own instances rather than one string per observation (#4486).
             ctx.Get<SequencePool>().LogSummary(ctx.LogInfo);
 
-            ReleaseUnscorableLibraryFragments(rescored, rescored.FileCount, fullLibrary, ctx);
+            ReleaseUnscorableLibraryFragments(rescored.FileCount, fullLibrary, ctx);
 
             // Second-pass FDR. ALWAYS runs, because it always has a file to write.
             //
@@ -964,8 +979,8 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Drop <c>Fragments</c> from every library entry outside the final per-file pool,
-        /// keeping the identity fields on all of them. See
+        /// Drop <c>Fragments</c> from every library entry outside the analysis-wide retained
+        /// set FirstPassFDR left on disk, keeping the identity fields on all of them. See
         /// <see cref="OspreyEnvironment.ReleaseLibraryFragments"/> for the rationale and
         /// <see cref="LibraryFragmentRelease"/> for the set arithmetic.
         ///
@@ -978,25 +993,60 @@ namespace pwiz.Osprey.Tasks
         /// the distributed path being exactly where memory hurts most.</para>
         ///
         /// <para>Harmless and near-free on the straight-through pipeline, where FirstPassFDR
-        /// already released in this same process: <see cref="LibraryEntry.ReleaseSpectrum"/> is
-        /// idempotent, so the count reported here is only what Stage 6 dropped afterwards (a
-        /// gap-fill candidate that did not survive rescoring).</para>
+        /// already released the SAME set in this same process:
+        /// <see cref="LibraryEntry.ReleaseSpectrum"/> is idempotent, so the count reported here
+        /// is 0.</para>
+        ///
+        /// <para>The retained set is READ, not rebuilt (issue #4650). Stage 7 used to fold
+        /// every run's final pool to collect one <c>uint</c> per entry - 36,308,041 entries
+        /// over 446 runs - to rebuild the 625,620 base_ids FirstPassFDR had already written to
+        /// <c>&lt;blib-stem&gt;.1st-pass.retained_base_ids.bin</c>, 2,502,512 bytes on THAT run
+        /// (the issue's libdecoy protein-compact CHS cohort; other arms of the same cohort
+        /// carry different counts, so the figures travel with their run). That fold cost 11 minutes
+        /// and set the run's peak at 41.5 GB (~86% of it uncollected garbage), and it is linear
+        /// in file count, so it grew with every run added.</para>
+        ///
+        /// <para>The fold could never find anything the summary does not already contain. The
+        /// pool is the reconciled parquet's survivors plus Stage 6's gap-fill rows, and a
+        /// gap-fill target is a precursor that PASSED in a sibling replicate - so its base_id
+        /// is in the join-wide first-pass set the summary is built from. See
+        /// <see cref="LibraryFragmentRelease.BuildRetainedBaseIds"/>, whose doc used to assert
+        /// the opposite and is what left this question open on the issue. On the
+        /// straight-through leg this is literally the set Stage 5 already applied to this same
+        /// library instance.</para>
         /// </summary>
         private void ReleaseUnscorableLibraryFragments(
-            RescoredEntries rescored, int nFiles,
-            List<LibraryEntry> fullLibrary, PipelineContext ctx)
+            int nFiles, List<LibraryEntry> fullLibrary, PipelineContext ctx)
         {
             if (!LibraryFragmentRelease.RunsOnThisLeg(ctx))
                 return;
 
-            // Streamed: this folds to O(distinct base_id) and retains nothing, so it can walk
-            // the files one at a time and drop each. While something else still reads the
-            // whole-run buffer, Files() yields from it and this costs nothing; once nothing
-            // does, it is one file resident at a time (#4486).
-            var retained = LibraryFragmentRelease.BuildRetainedBaseIds(rescored.StreamFiles(@"Collecting the reported base_ids"));
+            // WHO NEEDS THE SUMMARY decides what its absence means, and the two legs differ.
+            //
+            // On --task SecondPassFDR this release is the ONLY one - FirstPassFdrTask is excluded
+            // from that leg - so the summary is genuinely required and its absence is Stage 5
+            // output corruption. Fail loudly, with no fallback to the fold this replaced.
+            //
+            // Everywhere else Stage 5 already released the same set in this same process, so
+            // this call frees nothing and the summary is a convenience. Aborting a run that has
+            // done every hour of its work, at the last stage, for a MEMORY OPTIMISATION that
+            // would have changed nothing, is worse than not performing it - and the fold this
+            // replaced needed no file at all, so that abort would be a new failure mode rather
+            // than a preserved one. Skip and say so.
+            if (!ctx.Config.ExpectReconciledInput &&
+                !ScoringTaskShared.PerRunSurvivorLoaderAvailable(ctx.Config))
+            {
+                ctx.LogInfo(
+                    @"Skipping the library-fragment release: no readable analysis-wide retained " +
+                    @"base_id summary. Stage 5 released the same set earlier in this process, so " +
+                    @"this frees nothing; the run is unaffected.");
+                return;
+            }
+
+            var retained = ScoringTaskShared.ReadRetainedBaseIdsOrFail(ctx.Config);
             int released = LibraryFragmentRelease.ReleaseFragments(fullLibrary, retained);
             ctx.LogInfo(string.Format(
-                @"Released library fragments for {0} of {1} entries ({2} base_ids retained for the reported pool)",
+                @"Released library fragments for {0} of {1} entries ({2} base_ids retained for the 1st-pass retained set)",
                 released, fullLibrary.Count, retained.Count));
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after library-fragment release");
             // Post-GC counterpart, so the release's actual recovery is attributable rather
