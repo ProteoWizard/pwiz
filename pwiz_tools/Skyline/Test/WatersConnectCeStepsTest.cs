@@ -21,117 +21,133 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.ProteowizardWrapper;
+using pwiz.Common.Chemistry;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
 {
     /// <summary>
-    /// Verifies that waters_connect CE optimization channels, which share their product m/z and differ only
-    /// in collision energy, get the product m/z shifts Skyline uses to tell optimization steps apart, and that
-    /// data acquired the old way, with shifted product m/z, is left alone.
+    /// Verifies that waters_connect CE optimization chromatograms, which share their product m/z and differ
+    /// only in collision energy, get the product m/z spacing the loader reads optimization steps from, and
+    /// that data acquired with the product m/z already stepped is left alone.
     /// </summary>
     [TestClass]
     public class WatersConnectCeStepsTest : AbstractUnitTest
     {
         private const double PRECURSOR_MZ = 311.08;
         private const double PRODUCT_MZ = 91.99;
+        private const int STEP_COUNT = 5;
 
         [TestMethod]
         public void TestWatersConnectCeSteps()
         {
-            AssertEx.AreEqual(ChromatogramInfo.OPTIMIZE_SHIFT_SIZE, WatersConnectCeSteps.OPTIMIZE_SHIFT_SIZE);
-
-            ValidateOddSeries();
-            ValidateEvenSeries();
+            ValidateFullSeries();
+            ValidateTruncatedSeries();
             ValidateSeriesKeptSeparate();
             ValidateNoSeries();
         }
 
         /// <summary>
-        /// A full series of 7 steps, listed out of CE order, is shifted -3..+3 in CE order, and the shifted
-        /// product m/z values have the spacing the Skyline loader recognizes as optimization steps.
+        /// A full set of 11 steps, listed out of collision energy order, is spaced -5..+5 in collision energy
+        /// order around the real product m/z, and the result has the spacing the loader recognizes.
         /// </summary>
-        private static void ValidateOddSeries()
+        private static void ValidateFullSeries()
         {
-            var collisionEnergies = new[] { 15.0, 9, 21, 11, 19, 13, 17 };
-            var channels = collisionEnergies.Select((ce, i) => MakeChannel(i, false, PRECURSOR_MZ, PRODUCT_MZ, ce)).ToList();
-            var shifts = WatersConnectCeSteps.GetProductMzShifts(channels);
-            AssertShiftsInCeOrder(channels, shifts, -3);
+            var collisionEnergies = new[] { 25.0, 15, 35, 17, 33, 19, 31, 21, 29, 23, 27 };
+            var chromIds = MakeSeries(PRECURSOR_MZ, PRODUCT_MZ, collisionEnergies);
+            WatersConnectCeSteps.SpaceProductMzBySteps(chromIds, STEP_COUNT);
+            AssertSpacedInCeOrder(chromIds, PRODUCT_MZ, -STEP_COUNT);
 
-            var shiftedMzs = channels.OrderBy(c => c.CollisionEnergy)
-                .Select(c => c.ProductMz + shifts[c.Index]).ToList();
-            for (int i = 1; i < shiftedMzs.Count; i++)
-                AssertEx.IsTrue(ChromatogramInfo.IsOptimizationSpacing(shiftedMzs[i - 1], shiftedMzs[i]));
+            var productMzs = chromIds.OrderBy(chromId => chromId.Key.CollisionEnergy)
+                .Select(chromId => chromId.Key.Product.RawValue).ToList();
+            for (int i = 1; i < productMzs.Count; i++)
+                AssertEx.IsTrue(ChromatogramInfo.IsOptimizationSpacing(productMzs[i - 1], productMzs[i]));
         }
 
         /// <summary>
-        /// With an even number of steps the center is the lower of the two middle channels, the same rule
-        /// the Skyline loader uses.
+        /// The export drops steps whose collision energy would not have been positive, so a short series
+        /// counts back from the highest collision energy rather than centering on the middle.
         /// </summary>
-        private static void ValidateEvenSeries()
+        private static void ValidateTruncatedSeries()
         {
-            var channels = new[] { 10.0, 12, 14, 16 }.Select((ce, i) => MakeChannel(i, false, PRECURSOR_MZ, PRODUCT_MZ, ce)).ToList();
-            AssertShiftsInCeOrder(channels, WatersConnectCeSteps.GetProductMzShifts(channels), -1);
+            // The three lowest of 11 steps are missing, so the remaining 8 are steps -2..+5
+            var chromIds = MakeSeries(PRECURSOR_MZ, PRODUCT_MZ, new[] { 21.0, 23, 25, 27, 29, 31, 33, 35 });
+            WatersConnectCeSteps.SpaceProductMzBySteps(chromIds, STEP_COUNT);
+            AssertSpacedInCeOrder(chromIds, PRODUCT_MZ, -2);
         }
 
         /// <summary>
-        /// Channels of different polarity or precursor m/z form separate series even when the other values match.
+        /// Chromatograms of a different precursor or product m/z form separate series, each centered on its
+        /// own product m/z.
         /// </summary>
         private static void ValidateSeriesKeptSeparate()
         {
-            var ces = new[] { 10.0, 12, 14 };
-            var positive = ces.Select((ce, i) => MakeChannel(i, false, PRECURSOR_MZ, PRODUCT_MZ, ce)).ToList();
-            var negative = ces.Select((ce, i) => MakeChannel(10 + i, true, PRECURSOR_MZ, PRODUCT_MZ, ce)).ToList();
-            var otherPrecursor = ces.Select((ce, i) => MakeChannel(20 + i, false, PRECURSOR_MZ + 1, PRODUCT_MZ, ce)).ToList();
-            var shifts = WatersConnectCeSteps.GetProductMzShifts(positive.Concat(negative).Concat(otherPrecursor));
-            AssertEx.AreEqual(9, shifts.Count);
-            AssertShiftsInCeOrder(positive, shifts, -1);
-            AssertShiftsInCeOrder(negative, shifts, -1);
-            AssertShiftsInCeOrder(otherPrecursor, shifts, -1);
+            var collisionEnergies = new[] { 19.0, 21, 23 };
+            var chromIds = MakeSeries(PRECURSOR_MZ, PRODUCT_MZ, collisionEnergies);
+            foreach (var chromId in MakeSeries(PRECURSOR_MZ, PRODUCT_MZ + 64, collisionEnergies))
+                chromIds.Add(chromId);
+            foreach (var chromId in MakeSeries(PRECURSOR_MZ + 1, PRODUCT_MZ, collisionEnergies))
+                chromIds.Add(chromId);
+            WatersConnectCeSteps.SpaceProductMzBySteps(chromIds, STEP_COUNT);
+            AssertSpacedInCeOrder(chromIds.Take(3).ToList(), PRODUCT_MZ, -1);
+            AssertSpacedInCeOrder(chromIds.Skip(3).Take(3).ToList(), PRODUCT_MZ + 64, -1);
+            AssertSpacedInCeOrder(chromIds.Skip(6).ToList(), PRODUCT_MZ, -1);
         }
 
         /// <summary>
-        /// Nothing is shifted without a series: data acquired with shifted product m/z (the old waters_connect
-        /// export), repeated CE values (e.g. cone voltage optimization), missing CE, or a single channel.
+        /// Nothing moves without a series: data acquired with the product m/z already stepped, repeated
+        /// collision energies (as in cone voltage optimization), missing collision energies, or too few
+        /// chromatograms to be an optimization series.
         /// </summary>
         private static void ValidateNoSeries()
         {
-            var legacyShifted = new[] { 91.97, 91.98, 91.99, 92.00, 92.01 }
-                .Select((mz, i) => MakeChannel(i, false, PRECURSOR_MZ, mz, 11 + 2 * i));
-            AssertNoShifts(legacyShifted);
+            var alreadyStepped = new List<ChromKeyProviderIdPair>();
+            for (int i = 0; i < 5; i++)
+                alreadyStepped.Add(MakeChromId(i, PRECURSOR_MZ, PRODUCT_MZ + i * ChromatogramInfo.OPTIMIZE_SHIFT_SIZE, 15 + 2 * i));
+            AssertUnchanged(alreadyStepped);
 
-            var repeatedCe = Enumerable.Range(0, 5).Select(i => MakeChannel(i, false, PRECURSOR_MZ, PRODUCT_MZ, 15));
-            AssertNoShifts(repeatedCe);
-
-            var missingCe = Enumerable.Range(0, 5).Select(i => MakeChannel(i, false, PRECURSOR_MZ, PRODUCT_MZ, 0));
-            AssertNoShifts(missingCe);
-
-            AssertNoShifts(new[] { MakeChannel(0, false, PRECURSOR_MZ, PRODUCT_MZ, 15) });
+            AssertUnchanged(MakeSeries(PRECURSOR_MZ, PRODUCT_MZ, new[] { 21.0, 21, 21, 21, 21 }));
+            AssertUnchanged(MakeSeries(PRECURSOR_MZ, PRODUCT_MZ, new[] { 0.0, 0, 0, 0, 0 }));
+            AssertUnchanged(MakeSeries(PRECURSOR_MZ, PRODUCT_MZ, new[] { 21.0, 23 }));
         }
 
-        private static WatersConnectCeSteps.Channel MakeChannel(int index, bool? isNegativePolarity,
-            double precursorMz, double productMz, double collisionEnergy)
+        private static List<ChromKeyProviderIdPair> MakeSeries(double precursorMz, double productMz,
+            IList<double> collisionEnergies)
         {
-            return new WatersConnectCeSteps.Channel(index, isNegativePolarity, precursorMz, productMz, collisionEnergy);
+            return Enumerable.Range(0, collisionEnergies.Count)
+                .Select(i => MakeChromId(i, precursorMz, productMz, collisionEnergies[i])).ToList();
         }
 
-        private static void AssertShiftsInCeOrder(IEnumerable<WatersConnectCeSteps.Channel> channels,
-            IDictionary<int, double> shifts, int firstStep)
+        private static ChromKeyProviderIdPair MakeChromId(int providerId, double precursorMz, double productMz,
+            double collisionEnergy)
+        {
+            var key = new ChromKey(null, new SignedMz(precursorMz), IonMobilityFilter.EMPTY, new SignedMz(productMz),
+                0, collisionEnergy, 0, ChromSource.fragment, ChromExtractor.summed);
+            return new ChromKeyProviderIdPair(key, providerId);
+        }
+
+        /// <summary>
+        /// Asserts that the chromatograms are spaced one step apart in collision energy order, starting at
+        /// <paramref name="firstStep"/>, around the given real product m/z.
+        /// </summary>
+        private static void AssertSpacedInCeOrder(IList<ChromKeyProviderIdPair> chromIds, double productMz, int firstStep)
         {
             int step = firstStep;
-            foreach (var channel in channels.OrderBy(c => c.CollisionEnergy))
+            foreach (var chromId in chromIds.OrderBy(chromId => chromId.Key.CollisionEnergy))
             {
-                AssertEx.IsTrue(shifts.ContainsKey(channel.Index));
-                AssertEx.AreEqual(step * ChromatogramInfo.OPTIMIZE_SHIFT_SIZE, shifts[channel.Index], 1e-9);
+                AssertEx.AreEqual(productMz + step * ChromatogramInfo.OPTIMIZE_SHIFT_SIZE,
+                    chromId.Key.Product.RawValue, 1e-9, $@"CE {chromId.Key.CollisionEnergy}");
                 step++;
             }
         }
 
-        private static void AssertNoShifts(IEnumerable<WatersConnectCeSteps.Channel> channels)
+        private static void AssertUnchanged(IList<ChromKeyProviderIdPair> chromIds)
         {
-            AssertEx.AreEqual(0, WatersConnectCeSteps.GetProductMzShifts(channels).Count);
+            var productMzs = chromIds.Select(chromId => chromId.Key.Product.RawValue).ToList();
+            WatersConnectCeSteps.SpaceProductMzBySteps(chromIds, STEP_COUNT);
+            AssertEx.AreEqualDeep(productMzs, chromIds.Select(chromId => chromId.Key.Product.RawValue).ToList());
         }
     }
 }

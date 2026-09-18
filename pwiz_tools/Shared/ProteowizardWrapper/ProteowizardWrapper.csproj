@@ -113,7 +113,6 @@
     <Compile Include="MsDataFileImpl.cs" />
     <Compile Include="MsDataFileInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="WatersConnectCeSteps.cs" />
   </ItemGroup>
   <ItemGroup Condition=" '$(Platform)' == 'x64' ">
     <Reference Include="ThermoFisher.CommonCore.Data">
