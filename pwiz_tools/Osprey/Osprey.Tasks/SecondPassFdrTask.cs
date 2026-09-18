@@ -47,7 +47,7 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     internal sealed class SecondPassFdrTask : OspreyTask
     {
-        public override string Name => @"SecondPassFDR";
+        public override string Name => HpcTaskName.SECOND_PASS_FDR;
 
         /// <summary>
         /// Computes Stage 7-8 (2nd-pass FDR + protein FDR + blib) in

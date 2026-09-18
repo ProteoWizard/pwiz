@@ -47,7 +47,7 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     internal sealed class SpectraCacheTask : OspreyTask
     {
-        public override string Name => @"SpectraCache";
+        public override string Name => HpcTaskName.SPECTRA_CACHE;
 
         /// <summary>
         /// Selected explicitly and never part of the canonical pipeline: a full run

@@ -471,10 +471,10 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         }
 
         /// <summary>Task name stamped on both first-pass products; see <see cref="FirstPassFdrTask"/>.</summary>
-        private const string FirstPassTaskName = @"FirstPassFDR";
+        private const string FirstPassTaskName = HpcTaskName.FIRST_PASS_FDR;
 
         /// <summary>Task name stamped on the pass-2 product; see <see cref="SecondPassFdrTask"/>.</summary>
-        private const string SecondPassTaskName = @"SecondPassFDR";
+        private const string SecondPassTaskName = HpcTaskName.SECOND_PASS_FDR;
 
         private static string FirstPassExperimentSidecarPath(OspreyConfig config)
         {

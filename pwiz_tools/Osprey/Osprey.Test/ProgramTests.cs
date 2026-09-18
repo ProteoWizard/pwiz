@@ -151,7 +151,7 @@ namespace pwiz.Osprey.Test
             mutate(config);
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + @"SpectraCache");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + HpcTaskName.SPECTRA_CACHE);
             StringAssert.Contains(err, expected);
         }
 
@@ -173,7 +173,7 @@ namespace pwiz.Osprey.Test
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + @"PerFileScoring");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + HpcTaskName.PER_FILE_SCORING);
             StringAssert.Contains(err, OspreyCommandArgs.ARG_INPUT.ArgumentText);
         }
 
@@ -184,7 +184,7 @@ namespace pwiz.Osprey.Test
             config.InputFiles = new List<string> { "a.mzML" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + @"PerFileScoring");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + HpcTaskName.PER_FILE_SCORING);
             StringAssert.Contains(err, OspreyCommandArgs.ARG_LIBRARY.ArgumentText);
         }
 
@@ -208,7 +208,7 @@ namespace pwiz.Osprey.Test
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + @"PerFileRescoring");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + HpcTaskName.PER_FILE_RESCORING);
             StringAssert.Contains(err, OspreyCommandArgs.ARG_INPUT.ArgumentText);
         }
 
@@ -219,7 +219,7 @@ namespace pwiz.Osprey.Test
             config.InputFiles = new List<string> { "a.mzML" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + @"PerFileRescoring");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + HpcTaskName.PER_FILE_RESCORING);
             StringAssert.Contains(err, OspreyCommandArgs.ARG_LIBRARY.ArgumentText + @" and " + OspreyCommandArgs.ARG_OUTPUT.ArgumentText);
         }
 
@@ -243,7 +243,7 @@ namespace pwiz.Osprey.Test
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + @"FirstPassFDR");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + HpcTaskName.FIRST_PASS_FDR);
             StringAssert.Contains(err, OspreyCommandArgs.ARG_INPUT.ArgumentText);
         }
 
@@ -254,7 +254,7 @@ namespace pwiz.Osprey.Test
             config.InputFiles = new List<string> { "a.mzML", "b.mzML" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + @"FirstPassFDR");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + HpcTaskName.FIRST_PASS_FDR);
             StringAssert.Contains(err, OspreyCommandArgs.ARG_LIBRARY.ArgumentText + @" and " + OspreyCommandArgs.ARG_OUTPUT.ArgumentText);
         }
 
@@ -269,7 +269,7 @@ namespace pwiz.Osprey.Test
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + @"FirstPassFDR");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + HpcTaskName.FIRST_PASS_FDR);
             StringAssert.Contains(err, "2+ files");
         }
 
@@ -309,7 +309,7 @@ namespace pwiz.Osprey.Test
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + @"SecondPassFDR");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + HpcTaskName.SECOND_PASS_FDR);
             StringAssert.Contains(err, OspreyCommandArgs.ARG_INPUT.ArgumentText);
         }
 
@@ -320,7 +320,7 @@ namespace pwiz.Osprey.Test
             config.InputFiles = new List<string> { "a.mzML" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + @"SecondPassFDR");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + HpcTaskName.SECOND_PASS_FDR);
             StringAssert.Contains(err, OspreyCommandArgs.ARG_LIBRARY.ArgumentText + @" and " + OspreyCommandArgs.ARG_OUTPUT.ArgumentText);
         }
 
@@ -385,62 +385,32 @@ namespace pwiz.Osprey.Test
 
         // --- ResolveTask (--task) -----------------------------------------
 
+        /// <summary>
+        /// Every task resolves from its one declared name (<see cref="HpcTaskName"/>), the
+        /// --task value list is exactly that set, matching is case-insensitive, and an
+        /// unknown name is an error that names the flag and the value.
+        /// </summary>
         [TestMethod]
-        public void TestResolveTaskPerFileScoring()
+        public void TestResolveTask()
         {
-            Assert.IsNull(Program.ResolveTask("PerFileScoring", out HpcTask task));
-            Assert.AreEqual(HpcTask.PerFileScoring, task);
-        }
+            var members = (HpcTask[])Enum.GetValues(typeof(HpcTask));
+            foreach (var expected in members)
+            {
+                Assert.IsNull(Program.ResolveTask(HpcTaskName.Of(expected), out HpcTask task));
+                Assert.AreEqual(expected, task);
+                CollectionAssert.Contains(HpcTaskName.ALL, HpcTaskName.Of(expected));
+            }
+            Assert.AreEqual(members.Length, HpcTaskName.ALL.Length, @"every task is listed once");
+            CollectionAssert.AreEqual(HpcTaskName.ALL, OspreyCommandArgs.ARG_TASK.Values);
 
-        [TestMethod]
-        public void TestResolveTaskFirstPassFdr()
-        {
-            Assert.IsNull(Program.ResolveTask("FirstPassFDR", out HpcTask task));
-            Assert.AreEqual(HpcTask.FirstPassFdr, task);
-        }
+            Assert.IsNull(Program.ResolveTask(HpcTaskName.PER_FILE_RESCORING.ToLowerInvariant(), out HpcTask lower));
+            Assert.AreEqual(HpcTask.PerFileRescore, lower);
 
-        [TestMethod]
-        public void TestResolveTaskPerFileRescore()
-        {
-            Assert.IsNull(Program.ResolveTask("PerFileRescoring", out HpcTask task));
-            Assert.AreEqual(HpcTask.PerFileRescore, task);
-        }
-
-        [TestMethod]
-        public void TestResolveTaskSecondPassFdr()
-        {
-            Assert.IsNull(Program.ResolveTask("SecondPassFDR", out HpcTask task));
-            Assert.AreEqual(HpcTask.SecondPassFdr, task);
-        }
-
-        [TestMethod]
-        public void TestResolveTaskSpectraCache()
-        {
-            Assert.IsNull(Program.ResolveTask("SpectraCache", out HpcTask task));
-            Assert.AreEqual(HpcTask.SpectraCache, task);
-        }
-
-        [TestMethod]
-        public void TestResolveTaskModelDiagnostics()
-        {
-            Assert.IsNull(Program.ResolveTask("ModelDiagnostics", out HpcTask task));
-            Assert.AreEqual(HpcTask.ModelDiagnostics, task);
-        }
-
-        [TestMethod]
-        public void TestResolveTaskIsCaseInsensitive()
-        {
-            Assert.IsNull(Program.ResolveTask("perfilerescoring", out HpcTask task));
-            Assert.AreEqual(HpcTask.PerFileRescore, task);
-        }
-
-        [TestMethod]
-        public void TestResolveTaskUnknownErrors()
-        {
             string err = Program.ResolveTask("Bogus", out _);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "unknown task");
             StringAssert.Contains(err, "Bogus");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK.ArgumentText);
         }
 
         [TestMethod]
@@ -575,9 +545,9 @@ namespace pwiz.Osprey.Test
         public void TestParseArgsAcceptsTaskAndValidArgs()
         {
             // --task and ordinary flags must NOT throw.
-            Parse(OspreyCommandArgs.ARG_TASK + @"FirstPassFDR", OspreyCommandArgs.ARG_LIBRARY + @"ref.blib", OspreyCommandArgs.ARG_OUTPUT + @"out.blib");
+            Parse(OspreyCommandArgs.ARG_TASK + HpcTaskName.FIRST_PASS_FDR, OspreyCommandArgs.ARG_LIBRARY + @"ref.blib", OspreyCommandArgs.ARG_OUTPUT + @"out.blib");
             // --task=Name is the one joined form Program.Main pre-scans, so it is spelled here.
-            Parse(OspreyCommandArgs.ARG_TASK.ArgumentText + @"=SecondPassFDR", OspreyCommandArgs.ARG_LIBRARY + @"ref.blib", OspreyCommandArgs.ARG_OUTPUT + @"out.blib");
+            Parse(OspreyCommandArgs.ARG_TASK.ArgumentText + @"=" + HpcTaskName.SECOND_PASS_FDR, OspreyCommandArgs.ARG_LIBRARY + @"ref.blib", OspreyCommandArgs.ARG_OUTPUT + @"out.blib");
         }
 
         [TestMethod]

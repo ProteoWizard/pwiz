@@ -74,7 +74,7 @@ namespace pwiz.Osprey.Tasks
         // path those calls are no-ops.
         private const int PROCESS_FILE_SEGMENTS = 4;
 
-        public override string Name => @"PerFileScoring";
+        public override string Name => HpcTaskName.PER_FILE_SCORING;
 
         /// <summary>
         /// Computes per-file scores from spectra for every task except the three that

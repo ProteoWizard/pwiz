@@ -146,7 +146,7 @@ namespace pwiz.Osprey.Tasks
         /// This task's name, as a constant so another task can name the stamp it looks for
         /// without constructing one of these or duplicating the literal (#4486).
         /// </summary>
-        public const string TASK_NAME = @"PerFileRescoring";
+        public const string TASK_NAME = HpcTaskName.PER_FILE_RESCORING;
 
         public override string Name => TASK_NAME;
 

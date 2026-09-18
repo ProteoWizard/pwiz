@@ -69,7 +69,7 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     internal sealed class FirstPassFdrTask : OspreyTask
     {
-        public override string Name => @"FirstPassFDR";
+        public override string Name => HpcTaskName.FIRST_PASS_FDR;
 
         /// <summary>
         /// Computes Stage 5 (Percolator first-pass FDR + Stage 6

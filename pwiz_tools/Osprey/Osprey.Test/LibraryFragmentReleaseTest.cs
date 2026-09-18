@@ -151,11 +151,11 @@ namespace pwiz.Osprey.Test
         private static void ValidateEveryLegThatHoldsTheLibraryReleasesIt()
         {
             AssertRunsOnLeg(true, @"straight-through", new OspreyConfig());
-            AssertRunsOnLeg(true, @"--task SecondPassFDR", ForTask(HpcTask.SecondPassFdr));
+            AssertRunsOnLeg(true, OspreyCommandArgs.ARG_TASK + HpcTaskName.SECOND_PASS_FDR, ForTask(HpcTask.SecondPassFdr));
             // The `--input-scores full pipeline` leg that stood here is gone with the flag:
             // a single-node full pipeline started from parquets IS the straight-through leg
             // above now, asserted once rather than twice under two input kinds.
-            AssertRunsOnLeg(false, @"--task FirstPassFDR", ForTask(HpcTask.FirstPassFdr));
+            AssertRunsOnLeg(false, OspreyCommandArgs.ARG_TASK + HpcTaskName.FIRST_PASS_FDR, ForTask(HpcTask.FirstPassFdr));
 
             // --fdrbench-pass 1 used to force the RESIDENT first-pass pool, which never computed
             // a surviving base_id set, so there was nothing to release against. Since #4507 the

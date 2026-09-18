@@ -5292,7 +5292,7 @@ namespace pwiz.Osprey.Test
 
         #region TaskValiditySidecar Tests
 
-        private const string TASK_NAME = "PerFileScoring";
+        private const string TASK_NAME = HpcTaskName.PER_FILE_SCORING;
         private const string TASK_VERSION = "26.6.0";
 
         /// <summary>
@@ -5439,22 +5439,22 @@ namespace pwiz.Osprey.Test
                 const string scoringKey = "scoring-key";
                 const string rescoreKey = "rescore-key";
 
-                TaskValiditySidecar.Write(output, "PerFileScoring", TASK_VERSION,
+                TaskValiditySidecar.Write(output, HpcTaskName.PER_FILE_SCORING, TASK_VERSION,
                     scoringKey, new string[0]);
-                TaskValiditySidecar.Write(output, "PerFileRescoring", TASK_VERSION,
+                TaskValiditySidecar.Write(output, HpcTaskName.PER_FILE_RESCORING, TASK_VERSION,
                     rescoreKey, new string[0]);
 
-                string scoringPath = TaskValiditySidecar.PathFor(output, "PerFileScoring");
-                string rescorePath = TaskValiditySidecar.PathFor(output, "PerFileRescoring");
+                string scoringPath = TaskValiditySidecar.PathFor(output, HpcTaskName.PER_FILE_SCORING);
+                string rescorePath = TaskValiditySidecar.PathFor(output, HpcTaskName.PER_FILE_RESCORING);
                 Assert.AreNotEqual(scoringPath, rescorePath);
                 Assert.IsTrue(File.Exists(scoringPath));
                 Assert.IsTrue(File.Exists(rescorePath));
 
                 // Each task's IsValid sees its own key, not the other's.
-                Assert.IsTrue(TaskValiditySidecar.IsValid(output, "PerFileScoring", scoringKey));
-                Assert.IsTrue(TaskValiditySidecar.IsValid(output, "PerFileRescoring", rescoreKey));
-                Assert.IsFalse(TaskValiditySidecar.IsValid(output, "PerFileScoring", rescoreKey));
-                Assert.IsFalse(TaskValiditySidecar.IsValid(output, "PerFileRescoring", scoringKey));
+                Assert.IsTrue(TaskValiditySidecar.IsValid(output, HpcTaskName.PER_FILE_SCORING, scoringKey));
+                Assert.IsTrue(TaskValiditySidecar.IsValid(output, HpcTaskName.PER_FILE_RESCORING, rescoreKey));
+                Assert.IsFalse(TaskValiditySidecar.IsValid(output, HpcTaskName.PER_FILE_SCORING, rescoreKey));
+                Assert.IsFalse(TaskValiditySidecar.IsValid(output, HpcTaskName.PER_FILE_RESCORING, scoringKey));
             }
             finally
             {
