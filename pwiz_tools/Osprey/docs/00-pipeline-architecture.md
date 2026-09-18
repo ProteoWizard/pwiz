@@ -525,13 +525,18 @@ user-supplied paths do reach it, both noted below. A completed run can therefore
 output directory and still be recognised as valid - the property external tooling relies
 on to adopt a prior run's Stage 1-4 artifacts instead of recomputing them for hours.
 
-**The exception is `--decoy-pairing-manifest`**, whose path goes into
-`SearchParameterHash` verbatim and unnormalised. It is the only path anywhere in artifact
-identity, so it is the only reason a move invalidates: relocate a cohort that was searched
-with a pairing manifest and every artifact invalidates, because the manifest is named from
-somewhere else now. Restoring the original path with a junction is the cheap fix. Anything
-that adds a second path to a hash removes relocatability for every run, not just
-entrapment ones.
+**There is no exception, and `--decoy-pairing-manifest` used to be one.** Its path went into
+`SearchParameterHash` verbatim and unnormalised - the only path anywhere in artifact identity,
+and so the only reason a move invalidated: relocate a cohort searched with a pairing manifest
+and every artifact invalidated, because the manifest was named from somewhere else now. Worse,
+the invalidation ran the wrong way round. EDITING a manifest in place changed neither its path
+nor the hash, so every scored parquet went on reading valid against a file that no longer said
+what it said - and the manifest decides decoy classification, target/decoy pairing and the
+protein accessions protein FDR runs on, which makes that a stale FDR answer rather than a stale
+cache. The manifest is now identified the way the library is, by file **name + size + mtime**
+(`SearchIdentity.DecoyPairingManifestTerm`), so moving one is free and editing one invalidates.
+Nothing left in artifact identity is a path. Anything that adds one back removes relocatability
+for every run, not just entrapment ones.
 
 **P16. A report is a DERIVED VIEW over the artifacts, never an output only its producing
 phase can make.** Everything the diagnostics report says about a pass is a reduction over
@@ -1010,7 +1015,11 @@ Experiment-wide, to **every** node:
   Stage 6 planning ends. It is what makes this list one a single-run node can actually run
   on: without it a node would rebuild the union from every run's `reconciliation.json`,
   which is the O(runs) pre-pass P6 forbids. Its absence is FATAL rather than silently
-  rebuilt, deliberately - see `ScoringTaskShared.ReadRetainedBaseIds`
+  rebuilt, deliberately - see `ScoringTaskShared.ReadRetainedBaseIds`. Stage 7's
+  library-fragment release reads the same file (#4650); it used to fold every run's final
+  pool to rebuild the set instead, which is the identical O(runs) pre-pass in different
+  clothes - 11 minutes and a 41.5 GB peak on the 446-run CHS cohort of issue #4650, for the
+  625,620 base_ids already sitting on disk in that run's 2,502,512-byte summary
 - `<stem>.1st-pass.model.json` (any one copy) - **mandatory on an ordinary run**, because
   the default pass-2 mode is a frozen one (`protein-compact`); an unset
   `OSPREY_PASS2_QVALUE` is not an opt-out
