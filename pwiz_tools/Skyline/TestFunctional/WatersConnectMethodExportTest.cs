@@ -436,6 +436,65 @@ namespace pwiz.SkylineTestFunctional
 
             ValidateCeCannotIdentifyStep(document, ceRegression);
             ValidateTruncatedSeries(document, ceRegression);
+            ValidateSeriesWithoutCenterStep(document);
+        }
+
+        /// <summary>
+        /// When the collision energy of the center step is not positive, that step is not exported at all, so
+        /// the quant ion has to move to the exported step nearest the center instead of being left to
+        /// ParseMethod, which would mark the first row of the adduct whatever its step or transition.
+        /// </summary>
+        private static void ValidateSeriesWithoutCenterStep(SrmDocument document)
+        {
+            // A regression giving a negative collision energy at step 0, reached only with no explicit values
+            var negativeCe = new CollisionEnergyRegression(@"Negative center",
+                new[] { new ChargeRegressionLine(1, 0, -5) }, 6, 5);
+            var documentNegativeCe = ClearExplicitCollisionEnergies(document).ChangeSettings(
+                document.Settings.ChangeTransitionPrediction(prediction => prediction.ChangeCollisionEnergy(negativeCe)));
+            var optimized = ExportCompounds(documentNegativeCe, ExportOptimize.CE, negativeCe.StepSize, negativeCe.StepCount)
+                .SelectMany(compound => compound.Adducts).ToList();
+            // The export without optimization marks the quant ion transition of each adduct
+            var plain = ExportCompounds(documentNegativeCe, null, 0, 0)
+                .SelectMany(compound => compound.Adducts).ToList();
+            Assert.AreEqual(plain.Count, optimized.Count);
+            for (int i = 0; i < optimized.Count; i++)
+            {
+                var steps = optimized[i].Transitions.GroupBy(TransitionKey).ToList();
+                Assert.IsTrue(steps.All(g => g.All(t => t.CollisionEnergy > 0)),
+                    "A step with a non-positive collision energy was exported for {0}", optimized[i].Name);
+                Assert.IsTrue(steps.All(g => g.Count() < negativeCe.StepCount * 2 + 1),
+                    "No step was dropped for {0}, so the case under test was not exercised", optimized[i].Name);
+
+                var quantIons = optimized[i].Transitions.Where(t => t.IsQuanIon).ToList();
+                Assert.AreEqual(1, quantIons.Count, "Adduct {0} does not have exactly one quant ion", optimized[i].Name);
+                // The quant ion stays on the transition the unoptimized export marks, at its lowest exported
+                // step, which is the one nearest the missing center
+                var plainQuantIon = plain[i].Transitions.Single(t => t.IsQuanIon);
+                AssertEx.AreEqual(plainQuantIon.ProductMz, quantIons[0].ProductMz, 1e-6,
+                    @"The quant ion moved to another transition");
+                var quantIonSteps = steps.Single(g => g.Key == TransitionKey(quantIons[0]));
+                AssertEx.AreEqual(quantIonSteps.Min(t => t.CollisionEnergy), quantIons[0].CollisionEnergy, 1e-6,
+                    @"The quant ion is not the exported step nearest the center");
+            }
+        }
+
+        /// <summary>
+        /// Returns the document with every explicit collision energy removed, so that the collision energy
+        /// comes from the regression.
+        /// </summary>
+        private static SrmDocument ClearExplicitCollisionEnergies(SrmDocument document)
+        {
+            var moleculeGroups = document.MoleculeGroups.Select(nodeGroup => (DocNode) nodeGroup.ChangeChildren(
+                nodeGroup.Molecules.Select(nodeMol => (DocNode) nodeMol.ChangeChildren(
+                    nodeMol.TransitionGroups.Select(nodeTranGroup =>
+                    {
+                        var transitions = nodeTranGroup.Transitions.Select(nodeTran => (DocNode) nodeTran
+                            .ChangeExplicitValues(nodeTran.ExplicitValues.ChangeCollisionEnergy(null))).ToList();
+                        return (DocNode) nodeTranGroup
+                            .ChangeExplicitValues(nodeTranGroup.ExplicitValues.ChangeCollisionEnergy(null))
+                            .ChangeChildren(transitions);
+                    }).ToList())).ToList())).ToList();
+            return (SrmDocument) document.ChangeChildren(moleculeGroups);
         }
 
         /// <summary>
