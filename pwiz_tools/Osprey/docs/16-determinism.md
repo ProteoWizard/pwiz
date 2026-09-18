@@ -201,10 +201,12 @@ any future edit:
 
 Partitioning over ROWS instead - the obvious "optimization" if the invariant is
 not understood - would make each bin's summation order depend on where the range
-boundaries fell, and would silently break the `1e-9` cross-impl parity gate that
-`regression.ps1` enforces. Sibling-subtraction histogram construction (deriving
-a child's histogram as parent minus its sibling) is off limits for the same
-reason: it changes the arithmetic, not merely its order.
+boundaries fell, and would silently move every `--fdr-method gbdt` q-value.
+Nothing in `regression.ps1` would catch that: the gate runs the default SVM
+path, which never constructs a tree, so the golden test below is the only guard.
+Sibling-subtraction histogram construction (deriving a child's histogram as
+parent minus its sibling) is off limits for the same reason: it changes the
+arithmetic, not merely its order.
 
 `MaxDegreeOfParallelism` defaults to **1**, so the FDR path stays sequential
 unless a caller opts in. `MLTest.TestGbtSquaredErrorObjective` asserts the ten

@@ -172,6 +172,13 @@ namespace pwiz.Osprey.ML
     /// </summary>
     public sealed class GradientBoostedTrees
     {
+        // Smallest node worth handing to the scheduler in AccumulateHistograms, in
+        // row-by-feature accumulation steps. Node population halves at every level, so most
+        // nodes in a depth-6 tree are far too small to repay a parallel dispatch; the
+        // million-row cost the parallel path exists for lives in the handful of wide nodes
+        // near the root.
+        private const long PARALLEL_WORK_THRESHOLD = 1L << 16;
+
         // Flattened node arrays across all trees. Internal node: Feature >= 0, split
         // at Threshold (value &lt;= Threshold -> Left, else Right). Leaf: Feature == -1,
         // contribution == Leaf (already scaled by learning rate).
@@ -242,7 +249,8 @@ namespace pwiz.Osprey.ML
             if (p == null)
                 throw new ArgumentNullException(nameof(p));
             int n = x.Length;
-            if (n == 0) throw new ArgumentException(@"GradientBoostedTrees.Train: empty training set");
+            if (n == 0)
+                throw new ArgumentException(@"GradientBoostedTrees.Train: empty training set");
             if (y == null || y.Length != n)
                 throw new ArgumentException(@"GradientBoostedTrees.Train: target length must match the row count");
 
@@ -537,8 +545,10 @@ namespace pwiz.Osprey.ML
             for (int t = 0; t < data.TreeRoot.Length; t++)
             {
                 if (data.TreeRoot[t] < 0 || data.TreeRoot[t] >= nodes)
+                {
                     throw new ArgumentException(string.Format(
                         @"GradientBoostedTrees.FromModelData: tree {0} root is outside the node array", t));
+                }
             }
 
             return new GradientBoostedTrees((int[])data.Feature.Clone(), (double[])data.Threshold.Clone(),
@@ -560,16 +570,15 @@ namespace pwiz.Osprey.ML
         {
             // Only these two change per boosting round; everything else is fixed for the
             // whole Train call and is therefore set once, in the constructor.
-            public int[] Rows;
-            public int[] Feats;
+            private int[] _rows;
+            private int[] _feats;
 
-            public readonly byte[] Bin;
-            public readonly int RowStride;
-            public readonly double[] G;
-            public readonly double[] H;
-            public readonly int MaxBins;
-            public readonly int MaxDegreeOfParallelism;
-
+            private readonly byte[] _bin;
+            private readonly int _rowStride;
+            private readonly double[] _g;
+            private readonly double[] _h;
+            private readonly int _maxBins;
+            private readonly int _maxDegreeOfParallelism;
             private readonly double[][] _gradHist;
             private readonly double[][] _hessHist;
             private readonly int[] _partition;
@@ -578,19 +587,19 @@ namespace pwiz.Osprey.ML
             public TreeWorkspace(int n, int nColUse, int maxBins, GbtParams p,
                 byte[] bin, double[] g, double[] h)
             {
-                MaxBins = maxBins;
-                MaxDegreeOfParallelism = Math.Max(1, p.MaxDegreeOfParallelism);
-                Bin = bin;
-                RowStride = n;
-                G = g;
-                H = h;
+                _maxBins = maxBins;
+                _maxDegreeOfParallelism = Math.Max(1, p.MaxDegreeOfParallelism);
+                _bin = bin;
+                _rowStride = n;
+                _g = g;
+                _h = h;
                 _partition = new int[n];
 
                 // Allocated once rather than at every node. A depth-6 tree has up to 63
                 // internal nodes, so per-node allocation would be ~12,600 throwaway objects
                 // per fold per boosting run.
-                _parallelOptions = MaxDegreeOfParallelism > 1
-                    ? new ParallelOptions { MaxDegreeOfParallelism = MaxDegreeOfParallelism }
+                _parallelOptions = _maxDegreeOfParallelism > 1
+                    ? new ParallelOptions { MaxDegreeOfParallelism = _maxDegreeOfParallelism }
                     : null;
 
                 // One histogram buffer per depth that can still split: a node's histogram is
@@ -607,14 +616,20 @@ namespace pwiz.Osprey.ML
                 }
             }
 
-            public ParallelOptions ParallelOptions
-            {
-                get { return _parallelOptions; }
-            }
+            public int[] Rows { get { return _rows; } }
+            public int[] Feats { get { return _feats; } }
+            public byte[] Bin { get { return _bin; } }
+            public int RowStride { get { return _rowStride; } }
+            public double[] G { get { return _g; } }
+            public double[] H { get { return _h; } }
+            public int MaxBins { get { return _maxBins; } }
+            public int MaxDegreeOfParallelism { get { return _maxDegreeOfParallelism; } }
+            public ParallelOptions ParallelOptions { get { return _parallelOptions; } }
+            public int[] PartitionBuffer { get { return _partition; } }
 
             public void Reset(int[] rows, int[] feats)
             {
-                Rows = rows; Feats = feats;
+                _rows = rows; _feats = feats;
             }
 
             // Indexed directly: AccumulateHistograms is only reached for a node that can
@@ -628,11 +643,6 @@ namespace pwiz.Osprey.ML
             public double[] HessHist(int depth)
             {
                 return _hessHist[depth];
-            }
-
-            public int[] PartitionBuffer
-            {
-                get { return _partition; }
             }
         }
 
@@ -700,12 +710,6 @@ namespace pwiz.Osprey.ML
         // Fill this depth's pooled histogram with the node's gradient and hessian sums per
         // (sampled feature, bin). One thread owns a feature and walks the node's rows in
         // ascending order, so the sums do not depend on the thread count.
-        // Smallest node worth handing to the scheduler, in row-by-feature accumulation steps.
-        // Node population halves at every level, so most nodes in a depth-6 tree are far too
-        // small to repay a parallel dispatch; the million-row cost this exists for lives in
-        // the handful of wide nodes near the root.
-        private const long PARALLEL_WORK_THRESHOLD = 1L << 16;
-
         private static void AccumulateHistograms(TreeWorkspace ws, int start, int count, int depth,
             double[] hg, double[] hh, int[] feats)
         {
@@ -777,6 +781,14 @@ namespace pwiz.Osprey.ML
         // Optimal leaf weight with L1 soft-threshold + L2 shrinkage, times learning rate.
         private static double LeafValue(double g, double h, GbtParams p)
         {
+            // Under squared error the hessian is the raw sample weight, so a node whose rows
+            // all carry weight 0 has h == 0 and, with RegLambda also 0 (settable from the
+            // environment), the division below is 0/0. Its gradient is 0 too (g = (f-y)w), so
+            // the correct update is no update. The logistic branch floors h at 1e-6 and never
+            // gets here; for every h + RegLambda > 0 this is a pure pass-through.
+            if (h + p.RegLambda <= 0)
+                return 0.0;
+
             double num = g;
             if (p.RegAlpha > 0)
                 num = g > p.RegAlpha ? g - p.RegAlpha : (g < -p.RegAlpha ? g + p.RegAlpha : 0.0);

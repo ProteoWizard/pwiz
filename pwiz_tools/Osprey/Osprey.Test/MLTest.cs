@@ -769,6 +769,40 @@ namespace pwiz.Osprey.Test
             // The same instance is fine once the objective matches the entry point.
             regressionParams.Objective = GbtObjective.LogisticBinary;
             Assert.IsNotNull(GradientBoostedTrees.Train(x, isDecoy, regressionParams));
+
+            // Under squared error the hessian IS the weight, so a negative weight can drive a
+            // node's summed hessian to -RegLambda and NaN the leaf. Rejected up front.
+            var negativeWeight = new double[x.Length];
+            for (int i = 0; i < negativeWeight.Length; i++)
+                negativeWeight[i] = 1.0;
+            negativeWeight[3] = -1.0;
+            Assert.ThrowsException<ArgumentException>(
+                () => GradientBoostedTrees.Train(x, y, RegressionGbt(), negativeWeight));
+            negativeWeight[3] = double.NaN;
+            Assert.ThrowsException<ArgumentException>(
+                () => GradientBoostedTrees.Train(x, y, RegressionGbt(), negativeWeight));
+
+            // A continuous target through the logistic objective is a finite-looking but
+            // meaningless model; the overload must refuse it rather than fit it.
+            var logisticParams = new GbtParams { NTrees = 2 };
+            Assert.ThrowsException<ArgumentException>(
+                () => GradientBoostedTrees.Train(x, y, logisticParams));
+
+            // An out-of-range objective cast must not fall through to the logistic branch.
+            var unknownObjective = new GbtParams { NTrees = 2, Objective = (GbtObjective)7 };
+            Assert.ThrowsException<ArgumentException>(
+                () => GradientBoostedTrees.Train(x, y, unknownObjective));
+
+            // Weight 0 is legal, and with RegLambda = 0 every node's h + lambda is 0. The
+            // gradient is 0 too, so the correct leaf is 0, not the 0/0 NaN that would poison
+            // every later round's margin.
+            var zeroWeight = new double[x.Length];
+            var noRidge = RegressionGbt();
+            noRidge.RegLambda = 0.0;
+            noRidge.NTrees = 3;
+            var zeroWeightModel = GradientBoostedTrees.Train(x, y, noRidge, zeroWeight);
+            Assert.AreEqual(0.0, zeroWeightModel.ScoreSingle(x[0]),
+                @"an all-zero-weight fit with no ridge must score its base of 0, not NaN");
         }
 
         private static double[][] GoldenProbes()
