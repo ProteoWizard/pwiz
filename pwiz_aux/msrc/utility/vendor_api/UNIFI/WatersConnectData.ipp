@@ -1121,11 +1121,21 @@ private:
                 info.Q3 = Convert::ToDouble(mrmChannelJson->SelectToken("$.msTechnique.basicMsProperties.productMz")->ToString());
                 info.type = UNIFI::UnifiChromatogramInfo::MRM;
 
-                // CE may be missing, null, or "NaN"; only a finite number is kept (as a magnitude, like the MassLynx reader)
+                // CE may be missing, null, "NaN", or a quoted number; only a finite number is kept
+                // (as a magnitude, like the MassLynx reader)
                 auto collisionEnergyToken = mrmChannelJson->SelectToken("$.msTechnique.fragmentationProperties.collisionEnergy");
-                if (collisionEnergyToken != nullptr && (collisionEnergyToken->Type == JTokenType::Float || collisionEnergyToken->Type == JTokenType::Integer))
+                if (collisionEnergyToken != nullptr && collisionEnergyToken->Type != JTokenType::Null)
                 {
-                    double collisionEnergy = collisionEnergyToken->ToObject<double>();
+                    double collisionEnergy = Double::NaN;
+                    if (collisionEnergyToken->Type == JTokenType::Float || collisionEnergyToken->Type == JTokenType::Integer)
+                        collisionEnergy = collisionEnergyToken->ToObject<double>();
+                    else if (collisionEnergyToken->Type == JTokenType::String)
+                    {
+                        // A quoted number: parsed invariantly, since that is how the server writes JSON
+                        if (!Double::TryParse(collisionEnergyToken->ToString(), System::Globalization::NumberStyles::Float,
+                                System::Globalization::CultureInfo::InvariantCulture, collisionEnergy))
+                            collisionEnergy = Double::NaN;
+                    }
                     if (!Double::IsNaN(collisionEnergy) && !Double::IsInfinity(collisionEnergy))
                         info.collisionEnergy = Math::Abs(collisionEnergy);
                 }

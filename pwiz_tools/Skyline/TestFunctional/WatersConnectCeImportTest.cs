@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -77,7 +78,13 @@ namespace pwiz.SkylineTestFunctional
                 // and the same areas as the same data acquired with the product m/z stepped per step
                 var stepsShiftedMz = areasShiftedMz[transition.Key];
                 foreach (var step in steps)
-                    AssertEx.AreEqual(stepsShiftedMz[step.Key], step.Value, step.Value * 1e-5, $@"{transition.Key} step {step.Key}");
+                {
+                    Assert.IsTrue(stepsShiftedMz.TryGetValue(step.Key, out var areaShiftedMz),
+                        "Step {0} of {1} is missing from the replicate with the product m/z stepped", step.Key, transition.Key);
+                    // An absolute floor, so that a zero area at the ends of the ramp is still compared
+                    AssertEx.AreEqual(areaShiftedMz, step.Value, Math.Max(1.0, areaShiftedMz * 1e-5),
+                        $@"{transition.Key} step {step.Key}");
+                }
             }
         }
 
@@ -110,7 +117,12 @@ namespace pwiz.SkylineTestFunctional
                     var key = string.Format(@"{0:F04} -> {1:F04}", nodeGroup.PrecursorMz, nodeTran.Mz);
                     var steps = new Dictionary<int, float>();
                     foreach (var chromInfo in nodeTran.Results[replicateIndex])
+                    {
+                        // Two chromatograms sharing one step is the failure this test exists to catch, so say so
+                        Assert.IsFalse(steps.ContainsKey(chromInfo.OptimizationStep),
+                            "Transition {0} has more than one chromatogram for optimization step {1}", key, chromInfo.OptimizationStep);
                         steps.Add(chromInfo.OptimizationStep, chromInfo.Area);
+                    }
                     areas.Add(key, steps);
                 }
             }

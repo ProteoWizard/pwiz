@@ -4694,10 +4694,10 @@ namespace pwiz.Skyline.Model
 
             writer.Write(FieldSeparator);
 
-            // waters_connect records the CE of every channel, so the optimization steps keep the real product m/z
-            // and are told apart on import by their CE (see WatersConnectCeSteps).
-            int productMzStep = this is WatersConnectMethodExporter ? 0 : step;
-            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), productMzStep).ToString(CultureInfo));
+            // waters_connect records the CE of every channel, so where the CE alone identifies the step, the
+            // steps keep the real product m/z and are told apart on import by their CE (see WatersConnectCeSteps).
+            bool ceIdentifiesStep = CeIdentifiesOptimizationStep(nodePep, nodeTranGroup, nodeTran);
+            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), ceIdentifiesStep ? 0 : step).ToString(CultureInfo));
             writer.Write(FieldSeparator);
 
             // Waters only excepts integers for CE and CV
@@ -4725,8 +4725,18 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.WriteDsvField(RTWindow.ToString(CultureInfo), FieldSeparator);
             writer.Write(FieldSeparator);
-            if (step != 0 && this is WatersConnectMethodExporter)
-                writer.Write(false);    // Only the center optimization step can be the quant ion
+            if (ceIdentifiesStep)
+            {
+                // The steps of a transition share a product m/z, so only the center step can be the quant ion.
+                // Without ranking information the first transition is used, which is what ParseMethod would
+                // otherwise fall back to, except that it would land on an arbitrary step.
+                bool isQuantTransition = nodeTran.ResultsRank.HasValue
+                    ? nodeTran.ResultsRank == 1
+                    : nodeTran.HasLibInfo
+                        ? nodeTran.LibInfo.Rank == 1
+                        : ReferenceEquals(nodeTran, nodeTranGroup.Transitions.FirstOrDefault());
+                writer.Write(step == 0 && isQuantTransition);
+            }
             else if (nodeTran.ResultsRank.HasValue)
                 writer.Write((nodeTran.ResultsRank == 1).ToString());
             else if (nodeTran.HasLibInfo)
@@ -4749,6 +4759,29 @@ namespace pwiz.Skyline.Model
             writer.WriteDsvField(FormatMods(GetCompound(nodePep, nodeTranGroup)), FieldSeparator);
 
             writer.WriteLine();
+        }
+
+        /// <summary>
+        /// True when the collision energies written for the optimization steps of this transition tell the
+        /// steps apart on their own, so the product m/z does not need to be stepped as well. Only
+        /// waters_connect records the collision energy of each acquired channel, and the value must both
+        /// change with the step and stay distinct after rounding to whole volts.
+        /// </summary>
+        private bool CeIdentifiesOptimizationStep(PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup,
+            TransitionDocNode nodeTran)
+        {
+            if (!(this is WatersConnectMethodExporter) || !Equals(OptimizeType, ExportOptimize.CE))
+                return false;
+            var regression = Document.Settings.TransitionSettings.Prediction.CollisionEnergy;
+            if (regression == null || Equals(CollisionEnergyList.NONE, regression))
+                return false;   // The step is not applied to the collision energy, so it cannot identify it
+            var ceValues = new HashSet<int>();
+            for (int step = -OptimizeStepCount; step <= OptimizeStepCount; step++)
+            {
+                if (!ceValues.Add((int) Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step))))
+                    return false;   // Rounding to whole volts leaves two steps indistinguishable
+            }
+            return true;
         }
 
         /// <summary>

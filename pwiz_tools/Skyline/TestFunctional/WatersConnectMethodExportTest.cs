@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -29,6 +30,7 @@ using System.Security.Authentication;
 using System.Text;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
 using pwiz.Common.SystemUtil;
@@ -38,6 +40,8 @@ using pwiz.CommonFileDialogs;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 using WatersConnectModel = pwiz.Skyline.Model.WatersConnect;
@@ -418,7 +422,35 @@ namespace pwiz.SkylineTestFunctional
                     for (int step = 1; step < collisionEnergies.Count; step++)
                         AssertEx.AreEqual(ceRegression.StepSize, collisionEnergies[step] - collisionEnergies[step - 1], 1e-6);
                 }
-                Assert.AreEqual(1, transitions.Count(t => t.IsQuanIon));
+                // The quant ion is the center step, not whichever step ParseMethod happens to see first
+                var quantIons = transitions.Where(t => t.IsQuanIon).ToList();
+                Assert.AreEqual(1, quantIons.Count);
+                var quantIonSteps = transitions.Where(t => t.ProductMz == quantIons[0].ProductMz)
+                    .Select(t => t.CollisionEnergy).OrderBy(ce => ce).ToList();
+                AssertEx.AreEqual(quantIonSteps[quantIonSteps.Count / 2], quantIons[0].CollisionEnergy, 1e-6,
+                    @"The quant ion is not the center CE step");
+            }
+
+            // The uploaded payload is the first to repeat a product m/z, so check it against the server's schema
+            ValidateJsonAgainstSchema(SerializeMethod(optimizedCompounds), TestFilesDir.GetTestPath("method-dev-spec.json"));
+
+            ValidateCeCannotIdentifyStep(document, ceRegression);
+        }
+
+        /// <summary>
+        /// With no collision energy predictor the optimization step is not applied to the collision energy, so
+        /// the steps are still told apart by a stepped product m/z rather than becoming identical channels.
+        /// </summary>
+        private static void ValidateCeCannotIdentifyStep(SrmDocument document, OptimizableRegression ceRegression)
+        {
+            var documentNoPredictor = document.ChangeSettings(document.Settings.ChangeTransitionPrediction(
+                prediction => prediction.ChangeCollisionEnergy(CollisionEnergyList.NONE)));
+            var adducts = ExportCompounds(documentNoPredictor, ExportOptimize.CE, ceRegression.StepSize, ceRegression.StepCount)
+                .SelectMany(compound => compound.Adducts);
+            foreach (var adduct in adducts)
+            {
+                Assert.AreEqual(adduct.Transitions.Count, adduct.Transitions.Select(t => t.ProductMz).Distinct().Count(),
+                    "Steps of {0} share a product m/z although their collision energies are equal", adduct.Name);
             }
         }
 
@@ -432,8 +464,28 @@ namespace pwiz.SkylineTestFunctional
                 OptimizeStepCount = optimizeStepCount
             };
             exporter.Export(null);
+            // ParsingContext is static and only ExportMethod sets it, so clear what an earlier export left
+            WatersConnectModel.ParseableObject.ParsingContext.Clear();
             return exporter.MemoryOutput.Values
                 .SelectMany(output => exporter.ParseMethod(output.ToString()).Compounds).ToList();
+        }
+
+        /// <summary>
+        /// Serializes compounds the way the exporter uploads them, so the payload can be schema checked.
+        /// </summary>
+        private static string SerializeMethod(IEnumerable<WatersConnectModel.Compound> compounds)
+        {
+            var method = new WatersConnectModel.MethodModel
+            {
+                Name = @"TestMethod",
+                DestinationFolderId = Guid.Empty.ToString(),
+                TemplateVersionId = Guid.Empty.ToString(),
+                CreationMode = @"Single",
+                ScheduleType = @"FullGradientTime",
+                Compounds = compounds.ToArray()
+            };
+            return JsonConvert.SerializeObject(method, Formatting.Indented,
+                new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
         }
 
         private void TestAuthenticationError(ExportMethodDlg exportMethodDlg)
