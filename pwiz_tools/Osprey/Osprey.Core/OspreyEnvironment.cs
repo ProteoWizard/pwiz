@@ -104,6 +104,26 @@ namespace pwiz.Osprey.Core
         public static readonly bool CoAssignmentPanelOnly = IsSet(@"OSPREY_MDIAG_COASSIGN_ONLY");
 
         /// <summary>
+        /// OSPREY_LIBRARY_LOAD_ONLY=1: load the spectral library, report what that cost, and
+        /// exit 0 before decoys, scoring or anything else.
+        ///
+        /// <para>A measurement harness, like <see cref="CoAssignmentPanelOnly"/>. The library
+        /// load is the one phase every <c>--task</c> leg performs and each performs
+        /// DIFFERENTLY - <c>PerFileScoring</c> reads every fragment, <c>FirstPassFDR</c> reads
+        /// none (<c>OmitFragments</c>), <c>SecondPassFDR</c> reads only the retained set
+        /// (issue #4650) - so it is the one phase where the three can be compared directly.
+        /// Without this the comparison means running the legs themselves, which is hours on a
+        /// 446-run cohort and swamps a 10-second difference in noise.</para>
+        ///
+        /// <para>Exits BEFORE decoy handling deliberately. Decoy generation is its own cost
+        /// (~45 s on Astral at one file) and belongs to a different question; including it
+        /// would report the load as whatever the decoy arm happens to do on that leg.</para>
+        ///
+        /// <para>Writes NOTHING, so it cannot be mistaken for a run or overwrite one.</para>
+        /// </summary>
+        public static readonly bool LibraryLoadOnly = IsSet(@"OSPREY_LIBRARY_LOAD_ONLY");
+
+        /// <summary>
         /// OSPREY_LOG_MEMORY=1: emit the post-GC <c>[MEM ...]</c> probes. Each one forces a
         /// blocking <c>GC.Collect()/WaitForPendingFinalizers()/GC.Collect()</c> so the number it
         /// reports is a true live set rather than a heap with uncollected garbage in it.
