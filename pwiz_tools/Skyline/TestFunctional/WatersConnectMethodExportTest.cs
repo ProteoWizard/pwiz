@@ -435,6 +435,47 @@ namespace pwiz.SkylineTestFunctional
             ValidateJsonAgainstSchema(SerializeMethod(optimizedCompounds), TestFilesDir.GetTestPath("method-dev-spec.json"));
 
             ValidateCeCannotIdentifyStep(document, ceRegression);
+            ValidateTruncatedSeries(document, ceRegression);
+        }
+
+        /// <summary>
+        /// With a step size large enough to take the low steps below zero volts, those steps are not written
+        /// at all, and the quant ion moves to the written step nearest the center rather than being left to
+        /// land on the lowest one.
+        /// </summary>
+        private static void ValidateTruncatedSeries(SrmDocument document, OptimizableRegression ceRegression)
+        {
+            var wideSteps = (CollisionEnergyRegression) ceRegression.ChangeStepSize(6);
+            var documentWideSteps = document.ChangeSettings(document.Settings.ChangeTransitionPrediction(
+                prediction => prediction.ChangeCollisionEnergy(wideSteps)));
+            var adducts = ExportCompounds(documentWideSteps, ExportOptimize.CE, wideSteps.StepSize, wideSteps.StepCount)
+                .SelectMany(compound => compound.Adducts).ToList();
+            // The same export without optimization gives the collision energy of the center step
+            var centerCeByTransition = ExportCompounds(documentWideSteps, null, 0, 0)
+                .SelectMany(compound => compound.Adducts).SelectMany(adduct => adduct.Transitions)
+                .ToDictionary(TransitionKey, t => t.CollisionEnergy);
+            bool anyTruncated = false;
+            foreach (var adduct in adducts)
+            {
+                var quantIons = adduct.Transitions.Where(t => t.IsQuanIon).ToList();
+                Assert.AreEqual(1, quantIons.Count, "Adduct {0} does not have exactly one quant ion", adduct.Name);
+                foreach (var steps in adduct.Transitions.GroupBy(TransitionKey))
+                {
+                    var collisionEnergies = steps.Select(t => t.CollisionEnergy).ToList();
+                    Assert.AreEqual(collisionEnergies.Count, collisionEnergies.Distinct().Count(),
+                        "Steps of {0} do not have distinct collision energies", steps.Key);
+                    if (collisionEnergies.Count < wideSteps.StepCount * 2 + 1)
+                        anyTruncated = true;
+                    // The quant ion is the written step whose CE is nearest the center step's CE
+                    if (!steps.Any(t => t.IsQuanIon))
+                        continue;
+                    var centerCe = centerCeByTransition[steps.Key];
+                    var nearestCe = collisionEnergies.OrderBy(ce => Math.Abs(ce - centerCe)).First();
+                    AssertEx.AreEqual(nearestCe, steps.First(t => t.IsQuanIon).CollisionEnergy, 1e-6,
+                        @"The quant ion is not the written step nearest the center");
+                }
+            }
+            Assert.IsTrue(anyTruncated, "No series was truncated, so the case under test was not exercised");
         }
 
         /// <summary>
@@ -452,6 +493,11 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(adduct.Transitions.Count, adduct.Transitions.Select(t => t.ProductMz).Distinct().Count(),
                     "Steps of {0} share a product m/z although their collision energies are equal", adduct.Name);
             }
+        }
+
+        private static string TransitionKey(WatersConnectModel.Transition transition)
+        {
+            return string.Format(@"{0:F04} -> {1:F04}", transition.PrecursorMz, transition.ProductMz);
         }
 
         private static IList<WatersConnectModel.Compound> ExportCompounds(SrmDocument document, string optimizeType,
