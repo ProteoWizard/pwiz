@@ -33,6 +33,7 @@ namespace pwiz.Skyline.EditUI
         public EditNoteDlg()
         {
             InitializeComponent();
+            DpiUtil.ScaleFixedPanel(splitContainer1);
 
             Icon = Resources.Skyline;
         }
