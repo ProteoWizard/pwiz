@@ -88,6 +88,14 @@ namespace SkylineNightly
                 {
                     case @"run":
                     {
+                        // With no modes given, the saved settings say what to run - the same settings the
+                        // form wrote the task's modes from, so the task no longer has to carry them
+                        if (args.Length == 1)
+                        {
+                            args = string.IsNullOrEmpty(Settings.Default.mode2)
+                                ? new[] { command, Settings.Default.mode1 }
+                                : new[] { command, Settings.Default.mode1, Settings.Default.mode2 };
+                        }
                         switch (args.Length)
                         {
                             case 2:

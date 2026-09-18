@@ -19,16 +19,16 @@
 
 
 //
-// Small wrapper program for SkylineNightly
-// Accepts same argmuments as SkylineNightly, but first updates local SkylineNightly.exe from GitHub artifacts before invoking it
-// 
+// Small wrapper program for SkylineNightly, which is what the scheduled task runs. It updates the local
+// SkylineNightly.exe (and itself) from the TeamCity artifacts, then starts a SkylineNightly run. What the
+// run is comes from SkylineNightly's saved settings, so any arguments the task passes are ignored.
+//
 
 // ReSharper disable LocalizableElement
 
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net;
 using Ionic.Zip;
 using SkylineNightly;
@@ -142,7 +142,7 @@ namespace SkylineNightlyShim
                 {
                     // Attempt to update SkylineNightly.exe
                     TeamCityNightlyAuth.ConfigureClient(client, teamCityToken);
-                    string zipFileLink = TeamCityNightlyAuth.GetArtifactUrl(TEAM_CITY_BUILD_TYPE_64_MASTER, SKYLINENIGHTLY_ZIP, "?branch=master", false);
+                    string zipFileLink = TeamCityNightlyAuth.GetArtifactUrl(TEAM_CITY_BUILD_TYPE_64_MASTER, SKYLINENIGHTLY_ZIP, TeamCityNightlyAuth.GetMasterBranchQuery(), false);
                     var fileName = Path.Combine(nightlyDirectory ?? throw new InvalidOperationException(), SKYLINENIGHTLY_ZIP);
                     Log("Update " + nightlyDirectory + " with " + zipFileLink);
                     client.DownloadFile(zipFileLink, fileName);
@@ -162,7 +162,7 @@ namespace SkylineNightlyShim
                 Log("Trouble updating SkylineNightly.exe, proceeding with existing installation");
             }
 
-            // Invoke SkylineNightly with any args provided
+            // Start the run SkylineNightly's settings describe
             Process nightly = new Process
             {
                 StartInfo =
@@ -172,7 +172,7 @@ namespace SkylineNightlyShim
                     RedirectStandardError = true,
                     FileName = "SkylineNightly.exe",
                     WorkingDirectory = nightlyDirectory ?? throw new InvalidOperationException(),
-                    Arguments = string.Join(" ", args.Select(arg => string.Format("\"{0}\"", arg))),
+                    Arguments = "run",
                     CreateNoWindow = true
                 }
             };
