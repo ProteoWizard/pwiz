@@ -70,8 +70,8 @@ namespace pwiz.SkylineTestData.Results
 
             // wiff2
             {
-                string extWiff2 = ExtAbWiff2Safe;
-                string suffix = IsAbWiff2Safe ? "" : "-sample-centroid";
+                string extWiff2 = ExtensionTestContext.ExtAbWiff2;
+                string suffix = ExtensionTestContext.CanImportAbWiff2 ? "" : "-sample-centroid";
 
                 // Do file type checks
                 using (var msData = new MsDataFileImpl(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.ABI, "swath.api" + suffix + extWiff2)))
@@ -95,8 +95,8 @@ namespace pwiz.SkylineTestData.Results
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
                 const string replicateName = "Wiff2Test";
-                string extRaw = ExtAbWiff2Safe;
-                string suffix = IsAbWiff2Safe ? "" : "-sample-centroid";
+                string extRaw = ExtensionTestContext.ExtAbWiff2;
+                string suffix = ExtensionTestContext.CanImportAbWiff2 ? "" : "-sample-centroid";
                 var chromSets = new[]
                 {
                     new ChromatogramSet(replicateName, new[]
