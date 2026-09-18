@@ -358,6 +358,7 @@ namespace pwiz.Common.DataBinding
             }
         }
 
+
         class OpIsGreaterThan : ComparisonFilterOperation
         {
             public OpIsGreaterThan() : base(@">")

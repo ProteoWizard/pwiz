@@ -19084,6 +19084,10 @@ struct PWIZ_API_DECL CVTermInfo
     std::string def;
     bool isObsolete;
 
+    /// the type of the value the term carries, e.g. "xsd:float";
+    /// empty for terms that carry no value (flags such as "zoom scan")
+    std::string valueType;
+
     typedef std::vector<CVID> id_list;
     id_list parentsIsA;
     id_list parentsPartOf;
