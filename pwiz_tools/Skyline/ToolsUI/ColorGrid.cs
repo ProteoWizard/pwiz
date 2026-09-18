@@ -43,13 +43,14 @@ namespace pwiz.Skyline.ToolsUI
             colorPickerDlg.FullOpen = true;
             colBtn.UseColumnTextForButtonValue = true;
             comboColorType.SelectedIndex = 0;
-            // Fixed-width columns and the row height are 96-DPI designs that neither
-            // AutoScaleMode.Font nor column auto-sizing scales (issue #4599).
+            // Fixed-width columns are 96-DPI designs that neither AutoScaleMode.Font nor
+            // column auto-sizing scales. Row height is NOT scaled here - WinForms derives
+            // it from the font, so scaling it again makes these rows half again as tall as
+            // every other grid's (issue #4599).
             colBtn.Width = colBtn.MinimumWidth = DpiUtil.Scale(this, colBtn.MinimumWidth);
             colorCol.Width = DpiUtil.Scale(this, colorCol.Width);
             rgbCol.MinimumWidth = DpiUtil.Scale(this, rgbCol.MinimumWidth);
             hexCol.MinimumWidth = DpiUtil.Scale(this, hexCol.MinimumWidth);
-            dataGridViewColors.RowTemplate.Height = DpiUtil.Scale(this, dataGridViewColors.RowTemplate.Height);
             if (DpiUtil.GetFactor(this) > 1)
             {
                 // The anchored children do not follow this container's size when the
