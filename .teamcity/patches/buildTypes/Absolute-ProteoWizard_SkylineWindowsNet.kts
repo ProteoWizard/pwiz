@@ -32,6 +32,26 @@ create(DslContext.projectId, BuildType({
     """.trimIndent()
 
     steps {
+        exec {
+            name = "Skyline code inspection"
+            id = "Skyline_Code_Inspection"
+            path = "pwsh"
+            arguments = "-NoProfile -File pwiz_tools/Skyline/tcinspect.ps1"
+            // tcinspect.ps1 posts its own GitHub commit status rather than handing a verdict
+            // to a following step, so the check updates when the inspection finishes instead
+            // of when the enclosing step ends - and it stays correct if the inspection ever
+            // moves inside tcbuild.bat. It always exits 0, so it cannot fail this build.
+            //
+            // It publishes the context the standalone "Skyline Code Inspection" config
+            // publishes, character for character, replacing that check on a PR rather than
+            // adding a second one. Note there is no "teamcity - " prefix on that one, unlike
+            // every other config here - verified against the GitHub status API, not inferred.
+            param("env.GITHUB_STATUS_TOKEN", "credentialsJSON:ff89fd87-e72b-4868-b752-4f2beaabe7b2")
+            param("env.BUILD_VCS_NUMBER", "%build.vcs.number%")
+            // guest=1 so the link from GitHub opens without a TeamCity login, matching what
+            // the standalone inspection config has always linked to.
+            param("env.INSPECTION_TARGET_URL", "https://teamcity.labkey.org/buildConfiguration/%system.teamcity.buildType.id%/%teamcity.build.id%?guest=1")
+        }
         dotnetCustom {
             name = "Install dotCover"
             id = "Install_dotCover"
@@ -114,11 +134,11 @@ create(DslContext.projectId, BuildType({
             param("GitHubAuthToken", "credentialsJSON:ff89fd87-e72b-4868-b752-4f2beaabe7b2")
             param("buildStatusUpdateState", "success")
         }
-        stepsOrder = arrayListOf("Set_PYTHON_HOME_if_unset_by_agent", "Install_dotCover", "RUNNER_simpleRunner_139", "dotnet_1", "dotnet", "Test", "Set_PWIZ_VERSION_variable", "RUNNER_73", "RUNNER_85")
+        stepsOrder = arrayListOf("Set_PYTHON_HOME_if_unset_by_agent", "Skyline_Code_Inspection", "Install_dotCover", "RUNNER_simpleRunner_139", "dotnet_1", "dotnet", "Test", "Set_PWIZ_VERSION_variable", "RUNNER_73", "RUNNER_85")
     }
 
     failureConditions {
-        executionTimeoutMin = 90
+        executionTimeoutMin = 120
         failOnMetricChange {
             id = "BUILD_EXT_539"
             metric = BuildFailureOnMetric.MetricType.TEST_COUNT
