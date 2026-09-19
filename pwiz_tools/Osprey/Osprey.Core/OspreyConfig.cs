@@ -194,9 +194,10 @@ namespace pwiz.Osprey.Core
         /// peptides supporting it, the group q-value, and whether it passes protein FDR.
         /// ON by default -- it is the user-facing answer to "which proteins did you
         /// detect, and on what evidence"; the former <c>cs_stage7_protein_fdr.tsv</c> is a
-        /// counts-only cross-impl diagnostic, not this. Disable with
-        /// <c>--no-protein-report</c>. Additive (a new file), so byte-parity gates that
-        /// compare the blib + Stage-7 dump are unaffected.
+        /// counts-only cross-impl diagnostic, not this. There is no CLI switch to turn it
+        /// off (only <c>--diagnostics-only</c> or an absent <c>-o</c> skips it). Additive
+        /// (a new file), so byte-parity gates that compare the blib + Stage-7 dump are
+        /// unaffected.
         /// </summary>
         public bool WriteProteinReport { get; set; } = true;
 
@@ -206,8 +207,8 @@ namespace pwiz.Osprey.Core
         /// experiment-level row. Modeled on DIA-NN's per-run <c>stats.tsv</c>, with the
         /// per-replicate protein count computed by an INDEPENDENT run-level protein FDR
         /// (its own parsimony + picked-protein FDR on that replicate) so it is a true
-        /// per-run number, not a slice of the experiment set. ON by default; disable with
-        /// <c>--no-summary-report</c>. Additive, so byte-parity gates are unaffected.
+        /// per-run number, not a slice of the experiment set. ON by default, with no CLI
+        /// switch to turn it off. Additive, so byte-parity gates are unaffected.
         /// </summary>
         public bool WriteSummaryReport { get; set; } = true;
 

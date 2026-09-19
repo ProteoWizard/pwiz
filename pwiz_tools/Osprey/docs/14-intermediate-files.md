@@ -81,6 +81,7 @@ durable artifact writer in the tree, as of this document's last verification:
 | `BlibOutputWriter` | `<output>.blib` |
 | `ModelDiagnosticsReport` (2 sites) | `<output>.model-diagnostics.{html,data.json}` |
 | `FdrBenchInputWriter` (2 sites) | `--fdrbench` input + pairing manifest |
+| `OspreyReportWriter` (1 site, `WriteTsv`, both reports) | `<output>.protein_groups.tsv`, `<output>.stats.tsv` |
 
 **A new durable artifact that does not commit through `FileSaver` is a defect**, because
 every reader in the pipeline treats presence as proof of completeness. **Exempt**: `-d`
