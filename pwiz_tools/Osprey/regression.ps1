@@ -223,20 +223,25 @@
     Skip the Osprey build step (use the existing Release binary).
 
 .PARAMETER KeepRunDirs
-    Number of most-recent TestResults\regression-* run dirs to keep when pruning
-    ORPHANS at startup (default 0 -- keep none). A normal run now removes its own
-    output when it finishes (see -KeepOutput), so this only clears dirs left behind
-    by a previously killed run (TeamCity timeout / OOM). Raise it to retain old run
-    dirs on a roomy local disk.
+    Number of most-recent TestResults\regression-* run dirs to keep when pruning at
+    startup (default 1 -- keep the last run's output). Cleaning happens BEFORE a run,
+    never after: a local run retains its output (see -KeepOutput / -CleanOutput), and
+    the next run prunes everything but the most recent set, so the disk holds one set
+    between runs and two during one. 0 restores keep-none.
 
 .PARAMETER KeepOutput
-    Keep this run's TestResults\regression-<stamp> output instead of deleting it. By
-    default the run deletes its scratch as it goes -- each HPC-chain phase and each
-    dataset as soon as it is consumed, then the whole run root at the end -- so it
-    leaves no multi-GB output behind to starve the next run on a shared build agent.
-    The raw input data (downloaded mzML/library) is NEVER touched. Pass this locally
-    to retain output for post-mortem; a red CI gate's diagnosis lives in the build
-    log, not these files.
+    Retain this run's TestResults\regression-<stamp> output. This is already the
+    default for a local run; the switch forces retention under -TeamCity or alongside
+    -CleanOutput. A passing run's output has readers too - a later A/B, a memory
+    profile, the streamed diagnostics HTML - and re-running a 40-minute gate to
+    regenerate a file it had already produced is what made retention the default.
+    The raw input data (downloaded mzML/library) is NEVER touched.
+
+.PARAMETER CleanOutput
+    Delete this run's scratch as it goes -- each HPC-chain phase and each dataset as
+    soon as it is consumed, then the whole run root at the end. Implied by -TeamCity
+    (the shared agent is disk-bound and a red gate's diagnosis lives in the build log,
+    not these files); pass it locally on a full disk. -KeepOutput wins over both.
 
 .EXAMPLE
     # Local: run Stellar straight-through + resume against the committed golden
@@ -294,12 +299,19 @@ param(
     [switch]$NoBuild,
     [switch]$StageOnly,
     [ValidateRange(0, [int]::MaxValue)]
-    [int]$KeepRunDirs = 0,
+    [int]$KeepRunDirs = 1,
     [switch]$KeepOutput,
+    [switch]$CleanOutput,
     [double]$Tolerance = 1e-9
 )
 
 $ErrorActionPreference = 'Stop'
+
+# Clean BEFORE a run, not after. Output is retained by default so the run that just
+# finished can be read, compared, or profiled; only a shared agent (-TeamCity) or an
+# explicit -CleanOutput deletes as it goes, and -KeepOutput overrides both. The startup
+# prune (-KeepRunDirs, default 1) is what bounds the disk.
+$retainOutput = $KeepOutput -or -not ($TeamCity -or $CleanOutput)
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 $scriptRoot   = Split-Path -Parent $PSCommandPath
@@ -375,9 +387,9 @@ $knownResidentGaps = @(
     # above names it, and a table that omits the one gap the preamble names is worse than
     # no table. Token NONE, so it does not inflate the required-token count below.
     @{
-        Issue = '#4486'
+        Issue = '#4665'
         Token = 'NONE'
-        Path  = 'SecondPassFDR pulling RescoredEntries rebuilds the whole-run survivor buffer it reads (#4597 moved the build off the end of Stage 6, which does not shrink it); resident for the whole of Stage 7.'
+        Path  = 'Transfer pass-2 (OSPREY_PASS2_QVALUE=transfer) computes its per-file half in Stage 7 over the whole pool (TransferOneFile runs from TransferPerRunQ, not from Pass2PerFileWorker); resident for the whole of Stage 7. #4486, the original tracker, is closed.'
         # One model, stated explicitly: a fixed library term plus a per-file slope, both from
         # the 4/8/16-file A/B. Quoting a straight-through 82-file endpoint next to that rig's
         # marginal slope produced three numbers no single model reproduced (24.43/82 = 0.298,
@@ -677,9 +689,9 @@ if ($dupGolden.Count -gt 0) {
 # was killed (TeamCity timeout / OOM) before it reached its own cleanup. Run here
 # FIRST -- before the build, data acquisition, and the new run dir -- so even a
 # near-full disk can run it (deleting needs ~no free space) and the rest of the run
-# has the reclaimed space. Keeps the most recent $KeepRunDirs (default 0 = keep
-# none). The dir names sort chronologically (regression-YYYYMMDD_HHMMSS), so a Name
-# sort orders oldest-first.
+# has the reclaimed space. Keeps the most recent $KeepRunDirs (default 1 = the last
+# run's output, which a local run retains). The dir names sort chronologically
+# (regression-YYYYMMDD_HHMMSS), so a Name sort orders oldest-first.
 function Test-RunDirLive([string]$Name) {
     <#
     True when this run dir belongs to a gate process that is still running.
@@ -745,9 +757,9 @@ Remove-StaleRunDirs (Join-Path $scriptRoot 'TestResults') $KeepRunDirs
 
 # Best-effort recursive delete of a scratch path (a run/phase/dataset output dir or
 # a single dead-weight input copy). Swallows errors -- reclaiming disk must never
-# fail the gate. Honors -KeepOutput so a local post-mortem can retain everything.
+# fail the gate. Honors the retention default (see $retainOutput above the build step).
 function Remove-Scratch([string]$Path) {
-    if ($KeepOutput) { return }
+    if ($retainOutput) { return }
     if ([string]::IsNullOrEmpty($Path) -or -not (Test-Path -LiteralPath $Path)) { return }
     Remove-Item -LiteralPath $Path -Recurse -Force -ErrorAction SilentlyContinue
 }
@@ -1915,7 +1927,7 @@ function Invoke-HpcChain {
     # Phase 1's copied mzMLs are dead weight once it has run: phase 2/3 read its
     # parquets + calibration, never its mzML (phase 3 re-copies the mzML from the
     # data dir). Drop them so they don't sit on disk through the per-file rescore loop.
-    if (-not $KeepOutput) {
+    if (-not $retainOutput) {
         Get-ChildItem -Path $ph1Root -Recurse -Filter $sourceFilter -File -ErrorAction SilentlyContinue |
             Remove-Item -Force -ErrorAction SilentlyContinue
     }
@@ -2018,7 +2030,7 @@ function Invoke-HpcChain {
         # worker's 6 GB spectra.bin + library copy is on disk at a time (the
         # out-of-disk failure was several of them coexisting with the
         # straight-through leg's spectra caches).
-        if (-not $KeepOutput) {
+        if (-not $retainOutput) {
             Remove-Item (Join-Path $ph3 "$s.spectra.bin") -Force -ErrorAction SilentlyContinue
             Remove-Item (Join-Path $ph3 "$s$sourceExt") -Force -ErrorAction SilentlyContinue
             Remove-Item (Join-Path $ph3 "$s.scores.parquet") -Force -ErrorAction SilentlyContinue
@@ -2199,10 +2211,11 @@ if ($StageOnly) {
     exit 0
 }
 
-# Self-cleaning: each dataset's scratch is removed as soon as its legs finish, and
-# the whole run root in the finally below -- so the run leaves no multi-GB output
-# behind to starve the next run on a shared agent. -KeepOutput (honored by
-# Remove-Scratch) opts out for local post-mortem.
+# Cleaning as it goes (-TeamCity or -CleanOutput): each dataset's scratch is removed
+# as soon as its legs finish, and the whole run root in the finally below -- so the
+# run leaves no multi-GB output behind to starve the next run on a shared agent. A
+# local run retains everything (see $retainOutput); the next run's startup prune
+# bounds the disk.
 try {
 foreach ($name in $selected) {
     $cfg = $datasets[$name]
@@ -4209,11 +4222,12 @@ if ($knownResidentGaps.Count -eq 0) {
     Write-Host (("  Tokens REQUIRED by this gate: {0} (target: 0). Each must have an open " +
         "issue to remove it.") -f $requiredTokens.Count)
 }
-# No artifacts are published, and the run's scratch under TestResults is deleted on
-# completion (the downloaded raw input data is kept). A red gate's diagnosis lives in
-# the build log (every per-file log is Tee'd to the console TeamCity captures) and
-# the buildProblem line (which names the failing dataset + leg + first divergent
-# columns), NOT in the run output files. Pass -KeepOutput to retain them locally.
+# No artifacts are published, and under -TeamCity the run's scratch under TestResults
+# is deleted on completion (the downloaded raw input data is kept). A red gate's
+# diagnosis lives in the build log (every per-file log is Tee'd to the console
+# TeamCity captures) and the buildProblem line (which names the failing dataset +
+# leg + first divergent columns), NOT in the run output files. A local run retains
+# them; -CleanOutput deletes them.
 if ($overallFail) {
     Write-Problem-Tc 'Osprey regression FAILED'
     exit 1

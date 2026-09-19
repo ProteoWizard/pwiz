@@ -47,6 +47,14 @@ every push). Wired in #4283:
 
 ## Agent requirements
 
+**Pin the agent.** Trigger this config with `agent_name='MacCoss TeamCity Agent 1'` as
+well as `branch='pull/<N>'`: the ephemeral AWS agents die about ten seconds in with exit
+code 9009 (a tool the per-commit image does not carry), which reads as an instant red.
+Two other shapes that are not gate failures: a `freeze.settings.error` build problem
+with no step output (compare the trigger time with the first step's start and read the
+step results; re-trigger), and `Assert.Inconclusive` from the cross-impl parity tests
+when no Rust checkout is present (expected on the agent).
+
 Same as the per-commit Osprey agent, plus outbound internet:
 
 - **pwsh** (PowerShell 7+) on PATH (project standard; no `powershell.exe` fallback)

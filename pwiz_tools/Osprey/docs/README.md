@@ -50,6 +50,7 @@ owns operations (CLI flags, how a task names its runs and in what order, orchest
 | 18 | [peptide-trace](18-peptide-trace.md) | The per-peptide diagnostic dump facility (C# `OSPREY_DUMP_*` / `OSPREY_DIAG_*` in place of the Rust `OSPREY_TRACE_PEPTIDE`). |
 | 19 | [testing](19-testing.md) | The C# test suite and the standing gates: `regression.ps1` (straight-through correctness at 1e-9) and the cross-impl drift bridge against Rust. |
 | 20 | [command-line](20-command-line.md) | Full CLI option reference (every flag, default, and value list) with copy-paste unit (Stellar) and HRAM (Astral) examples and the four-task HPC split. |
+| 21 | [user-facing-text](21-user-facing-text.md) | Vocabulary for the log, warnings and errors - the only UI Osprey has: which developer terms never appear in user text and what replaces them. |
 
 ## Supplementary
 

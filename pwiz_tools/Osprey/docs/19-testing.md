@@ -165,6 +165,13 @@ under a per-run timestamped `TestResults/regression-<stamp>` via `--work-dir`
 (`regression.ps1:142-145,229-231`). It then asserts a no-copy invariant that the
 read-only data dir is byte-for-byte untouched (`regression.ps1:277-293,477-481`).
 
+The two acquisitions are searched four ways (`Stellar`, `StellarLibDecoy`,
+`StellarGenDecoyEntrap`, `Astral`; see `TEAMCITY-CONFIG.md`), and a change to decoy
+construction can be **inert on Stellar and visible only on Astral**: the Stellar library
+has no selenocysteine peptides, so a decoy rule that touches only `U`-containing sequences
+produces a byte-identical Stellar golden and a red Astral one. Run `-Dataset All` before
+merging any decoy-generation change, whatever the Stellar leg says.
+
 It runs three complementary correctness legs, all at a **1e-9 tolerance**
 (`regression.ps1:114`, `-Tolerance` default):
 
@@ -211,7 +218,15 @@ sibling `ai/` checkout** (`regression.ps1:38-41`, `Regression/README.md:4-7`).
 
 Switches: `-Dataset {Stellar|Astral|All}` (`regression.ps1:103`), `-CreateGolden`,
 `-SkipResume` (mode-2 off), `-SkipHpcChain` (mode-3 off), `-NoBuild`, `-Threads`
-(default 16), `-TeamCity`, `-KeepOutput`, `-Tolerance` (default 1e-9).
+(default 16), `-TeamCity`, `-KeepOutput`, `-CleanOutput`, `-KeepRunDirs` (default 1),
+`-Tolerance` (default 1e-9).
+
+Run output is cleaned **before** a run, never after. A local run retains its
+`TestResults/regression-<stamp>` output (a passing run's files have readers: a later A/B,
+a memory profile, the streamed diagnostics HTML), and the next run's startup prune keeps
+only the most recent `-KeepRunDirs` sets, so the disk holds one set between runs. Only
+`-TeamCity` (the shared agent is disk-bound) or an explicit `-CleanOutput` deletes as it
+goes; `-KeepOutput` overrides both.
 
 ## 6. Standing gate 2 — `Test-PerfGate.ps1` (interleaved A/B wall-time)
 

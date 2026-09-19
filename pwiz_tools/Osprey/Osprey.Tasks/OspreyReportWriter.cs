@@ -182,16 +182,20 @@ namespace pwiz.Osprey.Tasks
                 .ThenBy(r => double.Parse(r[4], CultureInfo.InvariantCulture))
                 .ThenBy(r => r[0], StringComparer.Ordinal);
 
-            using (var w = new StreamWriter(path, false))
+            using (var saver = new FileSaver(path))
             {
-                w.NewLine = "\n";
-                w.WriteLine(string.Join("\t", new[]
+                using (var w = new StreamWriter(saver.SafeName, false))
                 {
-                    "Protein.Group", "Protein.Names", "N.Peptides", "N.Proteotypic",
-                    "PG.Q.Value", "Passes.PG.FDR", "Grouping.Peptides", "Library.Unique.Peptides"
-                }));
-                foreach (var r in ordered)
-                    w.WriteLine(string.Join("\t", r));
+                    w.NewLine = "\n";
+                    w.WriteLine(string.Join("\t", new[]
+                    {
+                        "Protein.Group", "Protein.Names", "N.Peptides", "N.Proteotypic",
+                        "PG.Q.Value", "Passes.PG.FDR", "Grouping.Peptides", "Library.Unique.Peptides"
+                    }));
+                    foreach (var r in ordered)
+                        w.WriteLine(string.Join("\t", r));
+                }
+                saver.Commit();
             }
         }
 
@@ -298,12 +302,16 @@ namespace pwiz.Osprey.Tasks
                 expProteins.ToString(CultureInfo.InvariantCulture),
             });
 
-            using (var w = new StreamWriter(path, false))
+            using (var saver = new FileSaver(path))
             {
-                w.NewLine = "\n";
-                w.WriteLine(string.Join("\t", new[] { "Run", "Precursors", "Peptides", "Proteins" }));
-                foreach (var r in rows)
-                    w.WriteLine(string.Join("\t", r));
+                using (var w = new StreamWriter(saver.SafeName, false))
+                {
+                    w.NewLine = "\n";
+                    w.WriteLine(string.Join("\t", new[] { "Run", "Precursors", "Peptides", "Proteins" }));
+                    foreach (var r in rows)
+                        w.WriteLine(string.Join("\t", r));
+                }
+                saver.Commit();
             }
         }
 

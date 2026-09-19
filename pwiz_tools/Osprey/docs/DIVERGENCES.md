@@ -285,7 +285,7 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 
 | Classification | Title | Rust says | C# does | Evidence | Sev |
 |---|---|---|---|---|---|
-| STALE | Fold assignment is round-robin over sorted groups | `fold = hash(mod_seq) % n_folds` | Round-robin `i % nFolds` over ordinal-sorted keys, no hash (matches Rust `create_stratified_folds_by_peptide`) | `PercolatorFdr.cs:2492-2504`; `CalibrationScorer.cs:402-452` | minor |
+| STALE | Fold assignment is round-robin over sorted groups | `fold = hash(mod_seq) % n_folds` | Round-robin `i % nFolds` over ordinal-sorted keys, no hash (matches Rust `create_stratified_folds_by_peptide`) | `PercolatorSampling.cs:124-133`; `CalibrationScorer.cs:402-452` | minor |
 | INTENT | TotalOrder bit-transform replaces `total_cmp` | Built-in `f64::total_cmp` | IEEE-754 total order via sign-flipped long key + stable LINQ sort; arithmetic unchanged | `TotalOrder.cs:55-70` | info |
 | INTENT | SIMD lane-reduction order differs from scalar left-fold | Sequential scalar left-fold | Per-lane partials + horizontal sum; sub-ULP drift inside 1e-9 gate at p=21 | `LinearSvmClassifier.cs:531-545` | minor |
 | INTENT | Oracle is PowerShell regression gate, not inline tests | Inline tests + manual two-blib diff | `regression.ps1` 3 legs at 1e-9 (golden/resume/HPC-chain) | `regression.ps1:14-36,490-543` | info |
