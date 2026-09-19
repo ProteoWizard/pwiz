@@ -51,7 +51,6 @@ namespace TestRunnerLib
         public readonly int? MinidumpLeakThreshold;
         public readonly bool DoNotRunInParallel;
         public readonly bool DoNotRunInNightly;
-        public bool DoNotLeakTest; // If true, test is too lengthy to run multiple iterations for leak checks (we invert this in perftest runs)
         public readonly bool DoNotUseUnicode; // If true, test is known to have trouble with Unicode (3rd party tool, mz5, etc), or the system does not support it
         public readonly DateTime? SkipTestUntil; // If set, test will be skipped if the current (UTC) date is before the SkipTestUntil date
 
@@ -72,9 +71,6 @@ namespace TestRunnerLib
 
             var noNightlyTestAttr = RunTests.GetAttribute(testMethod, "NoNightlyTestingAttribute");
             DoNotRunInNightly = noNightlyTestAttr != null;
-
-            var noNightlyLeakTestAttr = RunTests.GetAttribute(testMethod, "NoLeakTestingAttribute");
-            DoNotLeakTest = noNightlyLeakTestAttr != null; // Running this multiple times would take too long
 
             var skipTestUntilAttr = RunTests.GetAttribute(testMethod, "SkipTestUntilAttribute") as SkipTestUntilAttribute;
             SkipTestUntil = skipTestUntilAttr?.SkipTestUntil;

@@ -86,8 +86,7 @@ namespace pwiz.SkylineTestFunctional
             typeof(NextGenIsotopeDotProductCalc) 
         };
 
-        [TestMethod,
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+        [TestMethod]
         public void TestLabelPeakPicking()
         {
             TestFilesZip = @"TestFunctional\LabelPeakPickingTest.zip";

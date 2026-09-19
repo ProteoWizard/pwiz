@@ -102,7 +102,6 @@ namespace TestPerf
         // routine suite; it's invoked manually for the LFQbench poster only. Uncomment to run.
         //[TestMethod]
         [NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
-        [NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)]
         [NoNightlyTesting(@"~36 GB dataset download (.wiff.scan sidecars); manually invoked for the LFQbench poster only")]
         public void TestDiannSearchLFQbench()
         {

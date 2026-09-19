@@ -53,15 +53,13 @@ namespace pwiz.SkylineTestData.Results
 
         private enum DriftFilterType { none, library }
 
-        [TestMethod,
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+        [TestMethod]
         public void WatersImsMseNoDriftTimesChromatogramTest()
         {
             WatersImsMseChromatogramTest(DriftFilterType.none, IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power);
         }
 
-        [TestMethod,
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+        [TestMethod]
         public void WatersImsMseLibraryDriftTimesChromatogramTest()
         {
             WatersImsMseChromatogramTest(DriftFilterType.library, IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power);
@@ -69,22 +67,19 @@ namespace pwiz.SkylineTestData.Results
             WatersImsMseChromatogramTest(DriftFilterType.library, IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.fixed_width);
         }
 
-        [TestMethod,
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+        [TestMethod]
         public void WatersImsMseNoDriftTimesChromatogramTestAsSmallMolecules()
         {
             WatersImsMseChromatogramTest(DriftFilterType.none, IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power, RefinementSettings.ConvertToSmallMoleculesMode.formulas);
         }
 
-        [TestMethod,
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+        [TestMethod]
         public void WatersImsMseNoDriftTimesChromatogramTestAsSmallMoleculeMasses()
         {
             WatersImsMseChromatogramTest(DriftFilterType.none, IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power, RefinementSettings.ConvertToSmallMoleculesMode.masses_only);
         }
 
-        [TestMethod,
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+        [TestMethod]
         public void WatersImsMseLibraryDriftTimesChromatogramTestAsSmallMolecules()
         {
             WatersImsMseChromatogramTest(DriftFilterType.library, IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power, RefinementSettings.ConvertToSmallMoleculesMode.formulas);
