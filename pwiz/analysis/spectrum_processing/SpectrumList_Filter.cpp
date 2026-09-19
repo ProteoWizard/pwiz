@@ -318,12 +318,25 @@ PWIZ_API_DECL SpectrumList_FilterPredicate_MSLevelSet::SpectrumList_FilterPredic
 
 PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_MSLevelSet::accept(const msdata::Spectrum& spectrum) const
 {
-    CVParam param = spectrum.cvParamChild(MS_spectrum_type);
-    if (param.cvid == CVID_Unknown) return boost::logic::indeterminate;
-    if (!cvIsA(param.cvid, MS_mass_spectrum))
-        return msLevelSet_.contains(0); // non-MS spectra are considered ms level 0
-    param = spectrum.cvParam(MS_ms_level);
-    if (param.cvid == CVID_Unknown) return boost::logic::indeterminate;
+    if (!spectrum.hasCVParamChild(MS_spectrum_type))
+        return boost::logic::indeterminate;
+
+    // A declared ms level decides this, whatever the spectrum type says. Not every child of
+    // "spectrum type" is under "mass spectrum" - "calibration spectrum" is not, and the UIMF reader
+    // writes it as the sole type on frames that carry a perfectly good ms level - so keying off the
+    // type first discarded that level and called such a spectrum ms level 0.
+    //
+    // Ask by child rather than for the first one: a spectrum may carry more than one child of
+    // "spectrum type", and no rule fixes the order a writer emits them in.
+    CVParam param = spectrum.cvParam(MS_ms_level);
+    if (param.cvid == CVID_Unknown)
+    {
+        // Nothing declared, so the type is all there is to go on. A spectrum that is not a mass
+        // spectrum at all - an emission spectrum, say - is considered ms level 0.
+        if (!spectrum.hasCVParamChild(MS_mass_spectrum))
+            return msLevelSet_.contains(0);
+        return boost::logic::indeterminate;
+    }
     int msLevel = param.valueAs<int>();
     bool result = msLevelSet_.contains(msLevel);
     return result;
