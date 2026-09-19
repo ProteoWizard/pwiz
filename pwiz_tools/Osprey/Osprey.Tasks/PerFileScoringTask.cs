@@ -74,7 +74,13 @@ namespace pwiz.Osprey.Tasks
         // path those calls are no-ops.
         private const int PROCESS_FILE_SEGMENTS = 4;
 
-        public override string Name => @"PerFileScoring";
+        /// <summary>
+        /// This task's name, as a constant so the CLI selector, the validity stamp another
+        /// task looks for, and the tests all spell it from here rather than duplicating it.
+        /// </summary>
+        public const string TASK_NAME = @"PerFileScoring";
+
+        public override string Name => TASK_NAME;
 
         /// <summary>
         /// Computes per-file scores from spectra for every task except the three that

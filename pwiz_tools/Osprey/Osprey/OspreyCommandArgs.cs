@@ -28,6 +28,8 @@ using System.Linq;
 using System.Text;
 using pwiz.Common.CommandLine;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.Tasks;
+using pwiz.Osprey.Tasks.ModelDiagnostics;
 
 namespace pwiz.Osprey
 {
@@ -42,7 +44,8 @@ namespace pwiz.Osprey
     /// framework's strict <c>--name=value</c> grammar: it needs short aliases (<c>-i</c>),
     /// space-separated values (<c>--name value</c>), variadic consumption (<c>-i a b c</c>),
     /// and a positional-file fallback. The framework is reused for argument declaration,
-    /// grouping, and ascii/unicode/HTML help rendering only. Value coercion and the exact
+    /// grouping, ascii/unicode/HTML help rendering, and building tokens from the declared
+    /// instances (<c>ARG_THREADS + 8</c>, which the tests use). Value coercion and the exact
     /// warning strings stay in the per-argument ProcessValue handlers so the parsed
     /// <see cref="OspreyConfig"/> stays byte-identical with the former switch.
     /// </summary>
@@ -51,14 +54,21 @@ namespace pwiz.Osprey
         private const int USAGE_WIDTH = 78;
 
         // Install the host text the PortableUtil help renderer needs (descriptions + table
-        // headers). Osprey's tokenizer throws its own ArgumentExceptions for value
-        // errors, so the framework value-exception message methods are never reached.
+        // headers). Osprey's tokenizer throws its own ArgumentExceptions for value errors, so
+        // at parse time the framework value-exception message methods are not reached; the
+        // token BUILDER (ArgumentBase.operator +) does reach ValueUnexpected / ValueInvalid
+        // when a test hands a flag a value or a fixed-list argument a value it does not list.
         static OspreyCommandArgs()
         {
             ArgUsage.Provider = new OspreyArgUsageProvider();
             // Osprey's grammar is space-separated (--name value), not --name=value, so the
-            // generated help must render "--name <value>" to match what the tokenizer accepts.
+            // generated help must render "--name <value>" to match what the tokenizer accepts,
+            // and a token built from an instance is "--name value" for the same reason.
             ArgUsage.ArgumentValueSeparator = @" ";
+            // ParseInt / ParseDouble read numbers in the invariant culture, so a number a
+            // test joins to an argument must render that way too. When Osprey's locale
+            // handling is designed, this moves with the parsers.
+            ArgUsage.ValueFormatProvider = System.Globalization.CultureInfo.InvariantCulture;
         }
 
         // --- Raw parse sinks (applied to the config in ToConfig) ---------------------------
@@ -112,7 +122,7 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_RESOLUTION = new OspreyArgument(@"resolution",
             new[] { @"unit", @"hram", @"auto" }, (c, p) => c._resolution = p.Value.ToLowerInvariant());
         public static readonly OspreyArgument ARG_FRAGMENT_TOLERANCE = new OspreyArgument(@"fragment-tolerance",
-            () => @"<value>", (c, p) => c._fragmentTolerance = ParseDouble(p.Value, @"--fragment-tolerance"));
+            () => @"<value>", (c, p) => c._fragmentTolerance = ParseDouble(p));
         public static readonly OspreyArgument ARG_FRAGMENT_UNIT = new OspreyArgument(@"fragment-unit",
             new[] { @"ppm", @"mz" }, (c, p) => c._fragmentUnit = p.Value.ToLowerInvariant());
         public static readonly OspreyArgument ARG_NO_PREFILTER = new OspreyArgument(@"no-prefilter",
@@ -124,13 +134,13 @@ namespace pwiz.Osprey
 
         // --- FDR & Protein Inference ------------------------------------------------------
         public static readonly OspreyArgument ARG_RUN_FDR = new OspreyArgument(@"run-fdr",
-            () => @"<threshold>", (c, p) => c._config.RunFdr = ParseDouble(p.Value, @"--run-fdr"));
+            () => @"<threshold>", (c, p) => c._config.RunFdr = ParseDouble(p));
         public static readonly OspreyArgument ARG_EXPERIMENT_FDR = new OspreyArgument(@"experiment-fdr",
-            () => @"<threshold>", (c, p) => c._config.ExperimentFdr = ParseDouble(p.Value, @"--experiment-fdr"));
+            () => @"<threshold>", (c, p) => c._config.ExperimentFdr = ParseDouble(p));
         public static readonly OspreyArgument ARG_RECONCILIATION_COMPACTION_FDR = new OspreyArgument(@"reconciliation-compaction-fdr",
-            () => @"<threshold>", (c, p) => c._config.ReconciliationCompactionFdr = ParseDouble(p.Value, @"--reconciliation-compaction-fdr"));
+            () => @"<threshold>", (c, p) => c._config.ReconciliationCompactionFdr = ParseDouble(p));
         public static readonly OspreyArgument ARG_PROTEIN_FDR = new OspreyArgument(@"protein-fdr",
-            () => @"<threshold>", (c, p) => c._config.ProteinFdr = ParseDouble(p.Value, @"--protein-fdr"));
+            () => @"<threshold>", (c, p) => c._config.ProteinFdr = ParseDouble(p));
         public static readonly OspreyArgument ARG_FDR_METHOD = new OspreyArgument(@"fdr-method",
             new[] { @"percolator", @"gbdt", @"simple" }, (c, p) =>
             {
@@ -199,7 +209,7 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_FDRBENCH_PER_RUN = new OspreyArgument(@"fdrbench-per-run",
             (c, p) => c._config.FdrBenchPerRun = true);
         public static readonly OspreyArgument ARG_FDRBENCH_PASS = new OspreyArgument(@"fdrbench-pass",
-            new[] { @"1", @"2", @"both" }, (c, p) => c._config.FdrBenchPass = ParseFdrBenchPass(p.Value));
+            new[] { @"1", @"2", @"both" }, (c, p) => c._config.FdrBenchPass = ParseFdrBenchPass(p));
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_FDR =
             new ArgumentGroup<OspreyCommandArgs>(() => @"FDR & Protein Inference", true,
@@ -221,9 +231,13 @@ namespace pwiz.Osprey
         // --- Distributed / HPC ------------------------------------------------------------
         // --task is resolved + validated in Program.Main's pre-scan; the tokenizer here only
         // consumes its value (and rejects a missing one). Declared so it appears in help.
+        // The value list is the --help order, each name from the class that owns the task.
         public static readonly OspreyArgument ARG_TASK = new OspreyArgument(@"task",
-            new[] { @"SpectraCache", @"PerFileScoring", @"FirstPassFDR", @"PerFileRescoring", @"SecondPassFDR", @"ModelDiagnostics" },
-            (c, p) => true);
+            new[]
+            {
+                SpectraCacheTask.TASK_NAME, PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME,
+                PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME, ModelDiagnosticsReport.TASK_NAME
+            }, (c, p) => true);
         // --input-scores is GONE. It named an input KIND - "you handed me parquets" - which is
         // how the Rust pipeline said "Stage 1-4 is already done"; the C# port says that with
         // --task plus the per-run validity sidecars, and two seams answering one question is
@@ -255,14 +269,14 @@ namespace pwiz.Osprey
                     // 0 is the value a user most naturally types to mean "off" --
                     // map it to sequential rather than silently falling through to
                     // auto. Positive N is an explicit concurrent-file count.
-                    int n = ParseInt(p.Value, @"--parallel-files");
+                    int n = ParseInt(p);
                     c._config.FileParallelism = n <= 0
                         ? FileParallelism.Sequential
                         : FileParallelism.Explicit(n);
                 }
             });
         public static readonly OspreyArgument ARG_THREADS = new OspreyArgument(@"threads",
-            () => @"<count>", (c, p) => c._config.NThreads = ParseInt(p.Value, @"--threads"));
+            () => @"<count>", (c, p) => c._config.NThreads = ParseInt(p));
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_PERFORMANCE =
             new ArgumentGroup<OspreyCommandArgs>(() => @"Performance", true,
@@ -412,8 +426,10 @@ namespace pwiz.Osprey
                     // Consume + require the value; the selector itself is resolved in Main.
                     i++;
                     if (i >= args.Length || args[i].StartsWith(@"-"))
-                        throw new ArgumentException(
-                            @"--task requires a task name (SpectraCache, PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR, or ModelDiagnostics).");
+                    {
+                        throw new ArgumentException(string.Format(@"{0} requires a task name ({1}).",
+                            ARG_TASK.ArgumentText, string.Join(@", ", ARG_TASK.Values)));
+                    }
                     i++;
                     continue;
                 }
@@ -617,9 +633,9 @@ namespace pwiz.Osprey
         {
             foreach (var arg in AllArguments)
             {
-                if (string.Equals(token, ArgumentBase.ARG_PREFIX + arg.Name, StringComparison.Ordinal))
+                if (string.Equals(token, arg.ArgumentText, StringComparison.Ordinal))
                     return arg;
-                if (arg.ShortName != null && string.Equals(token, @"-" + arg.ShortName, StringComparison.Ordinal))
+                if (arg.ShortName != null && string.Equals(token, arg.ShortArgumentText, StringComparison.Ordinal))
                     return arg;
             }
             return null;
@@ -662,42 +678,56 @@ namespace pwiz.Osprey
         /// The int.Parse this replaced threw FormatException (or OverflowException), which is
         /// neither caught as a usage error nor legible: `--threads bad` reported "Input string
         /// was not in a correct format." with a stack through the parser, for a typo. Mirrors
-        /// <see cref="ParseDouble"/>, which has always done this.
+        /// <see cref="ParseDouble"/>, which has always done this. The flag named in the
+        /// message comes from the pair itself, so no call site spells an option name twice.
         /// </summary>
-        private static int ParseInt(string value, string flagName)
+        private static int ParseInt(NameValuePair p)
         {
             int result;
-            if (!int.TryParse(value, System.Globalization.NumberStyles.Integer,
+            if (!int.TryParse(p.Value, System.Globalization.NumberStyles.Integer,
                 System.Globalization.CultureInfo.InvariantCulture, out result))
             {
-                throw new ArgumentException(string.Format(
-                    @"Invalid value '{0}' for {1}", value, flagName));
+                throw new ArgumentException(InvalidValueMessage(p));
             }
             return result;
         }
 
-        private static double ParseDouble(string value, string flagName)
+        /// <summary>
+        /// Invariant-culture only, deliberately: <see cref="NameValuePair.ValueDouble"/> tries the
+        /// current culture first, and under a locale whose group separator is '.' that reads
+        /// <c>0.01</c> as 1. An FDR threshold cannot afford that until Osprey's locale handling
+        /// is designed as a whole.
+        /// </summary>
+        private static double ParseDouble(NameValuePair p)
         {
             double result;
-            if (!double.TryParse(value, System.Globalization.NumberStyles.Float,
+            if (!double.TryParse(p.Value, System.Globalization.NumberStyles.Float,
                 System.Globalization.CultureInfo.InvariantCulture, out result))
             {
-                throw new ArgumentException(string.Format(
-                    @"Invalid value '{0}' for {1}", value, flagName));
+                throw new ArgumentException(InvalidValueMessage(p));
             }
             return result;
         }
 
-        private static int ParseFdrBenchPass(string value)
+        /// <summary>
+        /// The one source of "Invalid value ... for --name" text: the same provider method the
+        /// framework's own <see cref="ValueInvalidException"/> uses, with the flag spelled from
+        /// the pair, so no handler spells an option name or its value list a second time.
+        /// </summary>
+        private static string InvalidValueMessage(NameValuePair p, string[] expectedValues = null)
         {
-            if (string.Equals(value, @"1", StringComparison.Ordinal))
+            return ArgUsage.Provider.ValueInvalidMessage(ArgumentBase.ARG_PREFIX + p.Name, p.Value, expectedValues);
+        }
+
+        private static int ParseFdrBenchPass(NameValuePair p)
+        {
+            if (string.Equals(p.Value, @"1", StringComparison.Ordinal))
                 return OspreyConfig.FDRBENCH_PASS_1;
-            if (string.Equals(value, @"2", StringComparison.Ordinal))
+            if (string.Equals(p.Value, @"2", StringComparison.Ordinal))
                 return OspreyConfig.FDRBENCH_PASS_2;
-            if (string.Equals(value, @"both", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(p.Value, @"both", StringComparison.OrdinalIgnoreCase))
                 return OspreyConfig.FDRBENCH_PASS_1 | OspreyConfig.FDRBENCH_PASS_2;
-            throw new ArgumentException(string.Format(
-                @"Invalid value '{0}' for --fdrbench-pass (expected 1, 2, or both)", value));
+            throw new ArgumentException(InvalidValueMessage(p, ARG_FDRBENCH_PASS.Values));
         }
 
         // --- Help rendering (generated from the declarations; cannot drift) ---------------
@@ -844,8 +874,11 @@ namespace pwiz.Osprey
         /// <summary>
         /// Inline (not yet localized) description + header provider for Osprey. Routing
         /// through the seam means swapping in a .resx later is a one-line change with no edits
-        /// to the declarations. Osprey's tokenizer raises its own value errors, so the
-        /// value-exception message members are never reached.
+        /// to the declarations. Osprey's tokenizer raises its own value errors, but it
+        /// formats them through <see cref="ValueInvalidMessage"/> (see
+        /// <see cref="OspreyCommandArgs.InvalidValueMessage"/>), and the token builder
+        /// <c>ArgumentBase.operator +</c> raises the framework's ValueUnexpected /
+        /// ValueInvalid exceptions, so these message members are live text.
         /// </summary>
         private class OspreyArgUsageProvider : IArgUsageProvider
         {
@@ -899,11 +932,16 @@ namespace pwiz.Osprey
             public string ArgumentHeader { get { return @"Argument"; } }
             public string DescriptionHeader { get { return @"Description"; } }
 
-            // Osprey's tokenizer never raises framework value exceptions; these are
-            // required by the interface but unreached.
+            // ValueInvalidMessage is the text every "Invalid value" error in this file shows;
+            // ValueUnexpected / ValueInvalid are what the token builder throws.
             public string ValueMissingMessage(string argText) { return string.Format(@"{0} requires a value.", argText); }
             public string ValueUnexpectedMessage(string argText) { return string.Format(@"{0} does not take a value.", argText); }
-            public string ValueInvalidMessage(string argText, string value, string[] argValues) { return string.Format(@"Invalid value '{0}' for {1}.", value, argText); }
+            public string ValueInvalidMessage(string argText, string value, string[] argValues)
+            {
+                return argValues == null
+                    ? string.Format(@"Invalid value '{0}' for {1}.", value, argText)
+                    : string.Format(@"Invalid value '{0}' for {1} (expected {2}).", value, argText, string.Join(@", ", argValues));
+            }
             public string ValueInvalidBoolMessage(string argText, string value) { return string.Format(@"Invalid value '{0}' for {1}.", value, argText); }
             public string ValueInvalidIntMessage(string argText, string value) { return string.Format(@"Invalid value '{0}' for {1}.", value, argText); }
             public string ValueOutOfRangeIntMessage(string argText, int value, int minVal, int maxVal) { return string.Format(@"Value {0} for {1} out of range [{2}, {3}].", value, argText, minVal, maxVal); }
