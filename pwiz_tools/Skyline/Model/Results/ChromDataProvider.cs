@@ -362,6 +362,13 @@ namespace pwiz.Skyline.Model.Results
                 _chromIds.Add(ki);
             }
 
+            if (_optimizableRegression?.OptType == OptimizationType.collision_energy && dataFile.IsWatersConnectFile)
+            {
+                // waters_connect records the collision energy of every channel, so its CE optimization methods
+                // keep the real product m/z. Space the product m/z by collision energy to tell the steps apart.
+                WatersConnectCeSteps.SpaceProductMzBySteps(_chromIds, _optimizableRegression.StepCount);
+            }
+
             if (fixCEOptForShimadzu)
             {
                 SetOptStepsFromCeValues();
