@@ -69,7 +69,13 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     internal sealed class FirstPassFdrTask : OspreyTask
     {
-        public override string Name => @"FirstPassFDR";
+        /// <summary>
+        /// This task's name, as a constant so the CLI selector, the validity stamp another
+        /// task looks for, and the tests all spell it from here rather than duplicating it.
+        /// </summary>
+        public const string TASK_NAME = @"FirstPassFDR";
+
+        public override string Name => TASK_NAME;
 
         /// <summary>
         /// Computes Stage 5 (Percolator first-pass FDR + Stage 6

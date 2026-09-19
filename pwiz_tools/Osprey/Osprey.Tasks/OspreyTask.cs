@@ -58,9 +58,9 @@ namespace pwiz.Osprey.Tasks
     public abstract class OspreyTask
     {
         /// <summary>
-        /// Short identifier used in pipeline log lines. Conventionally
-        /// PascalCase and matches the class name minus the <c>Task</c>
-        /// suffix (e.g. "PerFileScoring").
+        /// Short identifier used in pipeline log lines, the <c>--task</c> selector and the
+        /// validity sidecar. Each task returns its own <c>TASK_NAME</c> constant, the one
+        /// spelling the CLI value list and the tests reference too.
         /// </summary>
         public abstract string Name { get; }
 
