@@ -58,12 +58,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.ShowDocumentGrid(true));
             WaitForOpenForm<DocumentGridForm>();
 
-            TestDefaultExportFileName(documentPath);
+            TestDefaultExportFileName();
 
             // A name of its own, so the round trip cannot be satisfied by the ".sky.view" that
             // saving the document already wrote beside it.
             var layoutPath = ExportLayout(@"ExportedLayout");
-            Assert.IsTrue(File.Exists(layoutPath));
 
             // Take the window away, then bring it back by importing what was exported.
             RunUI(() => SkylineWindow.ShowDocumentGrid(false));
@@ -99,7 +98,9 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.ShowDocumentGrid(true));
             WaitForOpenForm<DocumentGridForm>();
 
-            var layoutPath = ExportLayout(@"ResultsDependent");
+            // Typed with its ".view": the filter's single-part extension leaves "Name.view" alone,
+            // where a two-part ".sky.view" would be appended to it
+            var layoutPath = ExportLayout(@"ResultsDependent.view", @"ResultsDependent.view");
             var layoutXml = File.ReadAllText(layoutPath);
             AssertEx.Contains(layoutXml, typeof(DocumentGridForm).ToString());
             layoutXml = layoutXml.Replace(typeof(DocumentGridForm).ToString(),
@@ -126,38 +127,17 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Settings.Default.ActiveDirectory = Path.GetTempPath());
             // A bare name lands in whatever folder the dialog opened in, and ExportLayout expects
             // it beside the document
-            Assert.IsTrue(File.Exists(ExportLayout(@"BesideDocument")));
+            ExportLayout(@"BesideDocument");
         }
 
         /// <summary>
         /// A name TYPED with the full ".sky.view" is taken as typed, not doubled. The shell appends the
         /// selected file type's extension unless the name's LAST extension is the filter's, and the
-        /// filter is the single ".view" that both "Name.sky.view" and "Name.view" end in - so neither
-        /// gets anything appended. (A ".sky.view" filter used to append itself to "Name.view".)
+        /// filter is the single ".view" that "Name.sky.view" ends in - so nothing gets appended.
         /// </summary>
         private void TestExportTypedFullName()
         {
-            var typedPath = TestContext.GetTestResultsPath(@"TypedName.sky.view");
-            FileEx.SafeDelete(typedPath);
-            FileEx.SafeDelete(typedPath + @".sky.view");
-            RunLongNativeDlg<NativeSaveFileDialog>(SkylineWindow.ShowExportLayoutDlg, dlg =>
-            {
-                dlg.EnterPath(typedPath);
-                dlg.DismissWithAcceptButton();
-            });
-            Assert.IsTrue(File.Exists(typedPath));
-            Assert.IsFalse(File.Exists(typedPath + @".sky.view"));
-
-            var shortPath = TestContext.GetTestResultsPath(@"ShortName.view");
-            FileEx.SafeDelete(shortPath);
-            FileEx.SafeDelete(shortPath + @".sky.view");
-            RunLongNativeDlg<NativeSaveFileDialog>(SkylineWindow.ShowExportLayoutDlg, dlg =>
-            {
-                dlg.EnterPath(shortPath);
-                dlg.DismissWithAcceptButton();
-            });
-            Assert.IsTrue(File.Exists(shortPath));
-            Assert.IsFalse(File.Exists(shortPath + @".sky.view"));
+            ExportLayout(@"TypedName.sky.view", @"TypedName.sky.view");
         }
 
         /// <summary>
@@ -220,14 +200,14 @@ namespace pwiz.SkylineTestFunctional
         /// over whole. The ".sky" is part of the name, not of the ".view" extension the dialog filters on,
         /// so the offer is neither trimmed to "&lt;document&gt;.view" nor doubled.
         /// </summary>
-        private void TestDefaultExportFileName(string documentPath)
+        private void TestDefaultExportFileName()
         {
             RunLongNativeDlg<NativeSaveFileDialog>(SkylineWindow.ShowExportLayoutDlg, dlg =>
             {
                 string fileName = null;
                 WaitForConditionUI(() => null != (fileName =
                     dlg.EnumerateChildren().OfType<NativeTextBox>().FirstOrDefault()?.GetValueNow() as string));
-                Assert.AreEqual(Path.GetFileName(SkylineWindow.GetViewFile(documentPath)), fileName);
+                Assert.AreEqual(@"LayoutExportImport.sky.view", fileName);
                 // Captioned with the command, not the shell's generic "Save As"
                 Assert.AreEqual(SkylineResources.SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout, dlg.Title);
                 dlg.DismissWithCancelButton();
@@ -257,22 +237,30 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// Exports to <paramref name="baseName"/> in the dialog's current folder (the test results
-        /// folder, which saving the document made the active directory) and returns the path written.
-        ///
-        /// <para>A BASE name with no extension, deliberately: the dialog appends the ".view" that
-        /// <see cref="SkylineWindow.FILTER_VIEW"/> carries, so the returned path proves which extension
-        /// the dialog adds. (Full names are exercised by TestExportTypedFullName.)</para>
+        /// Exports to a BASE name with no extension, deliberately: the dialog appends the ".view" that
+        /// <see cref="SkylineWindow.FILTER_VIEW"/> carries, so the file found proves which extension
+        /// the dialog adds.
         /// </summary>
         private string ExportLayout(string baseName)
         {
-            var layoutPath = TestContext.GetTestResultsPath(baseName + SkylineWindow.EXT_VIEW);
+            return ExportLayout(baseName, baseName + SkylineWindow.EXT_VIEW);
+        }
+
+        /// <summary>
+        /// Types <paramref name="typedName"/> into the Export dialog, which opens beside the document
+        /// in the test results folder, and returns the path of <paramref name="expectedFileName"/>
+        /// there once that is the file the export wrote.
+        /// </summary>
+        private string ExportLayout(string typedName, string expectedFileName)
+        {
+            var layoutPath = TestContext.GetTestResultsPath(expectedFileName);
             FileEx.SafeDelete(layoutPath); // Or a second local run hits the dialog's own overwrite prompt
             RunLongNativeDlg<NativeSaveFileDialog>(SkylineWindow.ShowExportLayoutDlg, dlg =>
             {
-                dlg.EnterPath(baseName);
+                dlg.EnterPath(typedName);
                 dlg.DismissWithAcceptButton();
             });
+            AssertEx.FileExists(layoutPath);
             return layoutPath;
         }
 

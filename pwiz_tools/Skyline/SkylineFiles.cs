@@ -1505,7 +1505,6 @@ namespace pwiz.Skyline
             using (var dlg = new SaveFileDialog())
             {
                 dlg.Title = SkylineResources.SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout;
-                dlg.SupportMultiDottedExtensions = true;
                 dlg.Filter = FILTER_VIEW;
                 dlg.InitialDirectory = GetLayoutDirectory();
                 dlg.DefaultExt = EXT_VIEW;
