@@ -34,10 +34,12 @@ namespace SkylineNightly
         public const string TokenEnvVar = "TEAMCITY_NIGHTLY_TEST_AUTH_TOKEN";
 
         /// <summary>
-        /// The bt209 branch a machine downloads SkylineNightly and its master SkylineTester from, as a
-        /// TeamCity branch locator such as "pull/4700". Unset means master. This is how a change to the
-        /// nightly tooling gets tried on a machine or two before it merges: set the variable there, and
-        /// the machine runs the pull request's build as if it were master, until the variable is unset.
+        /// The bt209 branch a machine downloads SkylineNightly itself from, as a TeamCity branch locator
+        /// such as "pull/4700". Unset means master. This is how a change to SkylineNightly gets tried on
+        /// a machine or two before it merges: set the variable there, and the machine runs the pull
+        /// request's SkylineNightly until the variable is unset. It changes nothing else: SkylineTester
+        /// still comes from the branch's own build, so SkylineNightly must always be able to drive the
+        /// SkylineTester of every branch, current or not.
         ///
         /// Set it as a persistent User-level variable (PowerShell - no admin needed), which the scheduled
         /// task picks up on its next run, as it does the TeamCity token:
@@ -73,24 +75,15 @@ namespace SkylineNightly
         }
 
         /// <summary>
-        /// The branch of the master build config this machine takes as master: what BranchEnvVar says,
-        /// or master.
+        /// The branch query for the SkylineNightly download, e.g. "?branch=master" or what BranchEnvVar says.
         /// </summary>
-        public static string GetMasterBranch()
+        public static string GetSkylineNightlyBranchQuery()
         {
             var branch = Environment.GetEnvironmentVariable(BranchEnvVar);
-            return string.IsNullOrWhiteSpace(branch) ? MASTER_BRANCH : branch.Trim();
+            return "?branch=" + Uri.EscapeDataString(string.IsNullOrWhiteSpace(branch) ? MASTER_BRANCH : branch.Trim());
         }
 
-        /// <summary>
-        /// The branch query for a download from the master build config, e.g. "?branch=master".
-        /// </summary>
-        public static string GetMasterBranchQuery()
-        {
-            return "?branch=" + Uri.EscapeDataString(GetMasterBranch());
-        }
-
-        // branchQuery is e.g. "?branch=master" (see GetMasterBranchQuery), or "" for build configs whose
+        // branchQuery is e.g. "?branch=master", or "" for build configs whose
         // VCS root pins the branch. useLastSuccessful selects the most recent successful build instead of
         // the most recent finished build; SkylineNightly switches to that during prolonged TC outages.
         public static string GetArtifactUrl(string buildType, string zipName, string branchQuery, bool useLastSuccessful)

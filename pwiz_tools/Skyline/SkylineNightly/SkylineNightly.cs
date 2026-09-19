@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -33,16 +34,25 @@ namespace SkylineNightly
         private const string REG_FILESYSTEM_KEY = @"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem";
         private const string REG_LONGPATHS_ENABLED = @"LongPathsEnabled";
 
-        public static readonly Nightly.RunMode[] RunModes = 
-            { Nightly.RunMode.trunk, Nightly.RunMode.perf, Nightly.RunMode.release, Nightly.RunMode.stress, Nightly.RunMode.integration, Nightly.RunMode.release_perf, Nightly.RunMode.integration_perf };
+        // In the order of the branch and type combo boxes. The pre-split combined run is not offered:
+        // saving the form is how a machine moves off it.
+        public static readonly Branch[] Branches = { Branch.master, Branch.release, Branch.integration };
+        public static readonly RunType[] RunTypes = { RunType.standard, RunType.leak, RunType.perf };
+
+        // The last selection of each type combo that did not make two long runs, to switch back to
+        private readonly Dictionary<ComboBox, int> _validTypeIndexes = new Dictionary<ComboBox, int>();
 
         public SkylineNightly()
         {
             InitializeComponent();
 
-            comboBoxOptions.SelectedIndex = Array.IndexOf(RunModes, Enum.Parse(typeof(Nightly.RunMode), Settings.Default.mode1, false));
-            comboBoxOptions2.SelectedIndex = 
-                Settings.Default.mode2 == string.Empty ? RunModes.Length : Array.IndexOf(RunModes, Enum.Parse(typeof(Nightly.RunMode), Settings.Default.mode2, false)); // RunModes.Count == None
+            var savedRuns = RunSpec.GetSavedRuns();
+            SelectRun(comboBoxBranch1, comboBoxType1, savedRuns[0]);
+            radioButtonTwoRuns.Checked = savedRuns.Length > 1;
+            if (radioButtonTwoRuns.Checked)
+                SelectRun(comboBoxBranch2, comboBoxType2, savedRuns[1]);
+            else
+                ShowSecondRun(false);
 
             startTime.Value = DateTime.Parse(Settings.Default.StartTime);
             textBoxFolder.Text = Settings.Default.NightlyFolder;
@@ -84,9 +94,12 @@ namespace SkylineNightly
             if (!Directory.Exists(nightlyFolder))
                 Directory.CreateDirectory(nightlyFolder);
 
+            // The type combos refuse this as it is chosen; this catches a pair loaded from saved settings
+            if (WarnIfTwoLongRuns())
+                return;
+
             Settings.Default.NightlyFolder = nightlyFolder;
-            Settings.Default.mode1 = RunModes[comboBoxOptions.SelectedIndex].ToString();
-            Settings.Default.mode2 = comboBoxOptions2.SelectedIndex == RunModes.Length ? string.Empty : RunModes[comboBoxOptions2.SelectedIndex].ToString(); //RunModes.Length == None
+            RunSpec.SaveRuns(GetRun1(), GetRun2());
 
             Settings.Default.Save();
 
@@ -111,10 +124,7 @@ namespace SkylineNightly
                     if (scheduledTime < now + TimeSpan.FromMinutes(1) && scheduledTime + TimeSpan.FromMinutes(3) > now)
                         scheduledTime = now + TimeSpan.FromMinutes(2);
                     dt.StartBoundary = scheduledTime;
-                    int durationHours;
-                    RunType(out durationHours);
-                    var maxHours = durationHours == -1 ? 167 : 23; //If one of them is a stress test
-                    dt.ExecutionTimeLimit = new TimeSpan(maxHours, 30, 0);
+                    dt.ExecutionTimeLimit = new TimeSpan(23, 30, 0);
                     dt.Enabled = true;
                     td.Settings.WakeToRun = true;
 
@@ -154,40 +164,42 @@ namespace SkylineNightly
             Close();
         }
 
-        public string RunType(out int durationHours)
+        /// <summary>
+        /// The total hours of the runs selected in the form.
+        /// </summary>
+        private int GetDurationHours()
         {
-            durationHours = 0;
-            string result = @"run ";
+            return (int)(GetRun1().TargetDuration.TotalHours + (GetRun2()?.TargetDuration.TotalHours ?? 0));
+        }
 
-            int[] hours =
-            {
-                Nightly.DEFAULT_DURATION_HOURS, Nightly.PERF_DURATION_HOURS, Nightly.DEFAULT_DURATION_HOURS, -1,
-                Nightly.DEFAULT_DURATION_HOURS, Nightly.PERF_DURATION_HOURS, Nightly.PERF_DURATION_HOURS
-            };
+        private RunSpec GetRun1()
+        {
+            return new RunSpec(Branches[comboBoxBranch1.SelectedIndex], RunTypes[comboBoxType1.SelectedIndex]);
+        }
 
-            result += RunModes[comboBoxOptions.SelectedIndex].ToString();
-            durationHours += hours[comboBoxOptions.SelectedIndex];
+        /// <summary>
+        /// The second run of the day, or null for none.
+        /// </summary>
+        private RunSpec GetRun2()
+        {
+            if (!radioButtonTwoRuns.Checked || comboBoxBranch2.SelectedIndex == -1 || comboBoxType2.SelectedIndex == -1)
+                return null;
+            return new RunSpec(Branches[comboBoxBranch2.SelectedIndex], RunTypes[comboBoxType2.SelectedIndex]);
+        }
 
-            if (comboBoxOptions2.SelectedIndex != RunModes.Length && comboBoxOptions2.SelectedIndex != -1) //!= none && != not selected
-            {
-                result += @" " + RunModes[comboBoxOptions2.SelectedIndex];
-                durationHours += hours[comboBoxOptions2.SelectedIndex];
-            }
-
-            var stress = Array.IndexOf(RunModes, Nightly.RunMode.stress);  // 3 == Stress
-            if (comboBoxOptions.SelectedIndex == stress || comboBoxOptions2.SelectedIndex == stress)
-            {
-                durationHours = -1;
-            }
-
-            return result;
+        private static void SelectRun(ComboBox comboBoxBranch, ComboBox comboBoxType, RunSpec runSpec)
+        {
+            comboBoxBranch.SelectedIndex = Array.IndexOf(Branches, runSpec.Branch);
+            // The combined run shows as standard: it becomes the standard run when the form is saved
+            var runType = runSpec.RunType == RunType.standard_leak ? RunType.standard : runSpec.RunType;
+            comboBoxType.SelectedIndex = Array.IndexOf(RunTypes, runType);
         }
 
         private void StartTimeChanged(object sender, EventArgs e)
         {
-            int durationHours;
-            RunType(out durationHours);
-            endTime.Text = durationHours == -1 ? @"no limit" : (startTime.Value + TimeSpan.FromHours(durationHours)).ToShortTimeString();
+            if (comboBoxBranch1.SelectedIndex == -1 || comboBoxType1.SelectedIndex == -1)
+                return; // Still initializing
+            endTime.Text = (startTime.Value + TimeSpan.FromHours(GetDurationHours())).ToShortTimeString();
         }
 
         private void Now_Click(object sender, EventArgs e)
@@ -210,13 +222,59 @@ namespace SkylineNightly
             }
         }
 
-        private void comboBoxOptions_SelectedIndexChanged(object sender, EventArgs e)
+        /// <summary>
+        /// A machine may schedule one long run a day, not two. Shows why when both runs are long,
+        /// and returns true if it did.
+        /// </summary>
+        private bool WarnIfTwoLongRuns()
+        {
+            var runSpec2 = GetRun2();
+            if (runSpec2 == null || comboBoxType1.SelectedIndex == -1 || !GetRun1().IsLong || !runSpec2.IsLong)
+                return false;
+            // ReSharper disable LocalizableElement
+            MessageBox.Show(this, string.Format("Two {0}-hour runs leave no margin in a day.\r\n" +
+                                                "Schedule at most one leak checking or perf run per machine, with a standard run or nothing as the other.",
+                                                RunSpec.LONG_DURATION_HOURS));
+            // ReSharper restore LocalizableElement
+            return true;
+        }
+
+        private void radioButtonTwoRuns_CheckedChanged(object sender, EventArgs e)
+        {
+            ShowSecondRun(radioButtonTwoRuns.Checked);
+            StartTimeChanged(sender, e); // End time display may depend on run type
+        }
+
+        /// <summary>
+        /// The Then row exists only with two runs a day. Shown for the first time, it starts
+        /// from the first run's branch.
+        /// </summary>
+        private void ShowSecondRun(bool show)
+        {
+            label4.Visible = comboBoxBranch2.Visible = labelType2.Visible = comboBoxType2.Visible = show;
+            if (!show)
+                return;
+            if (comboBoxBranch2.SelectedIndex == -1)
+                comboBoxBranch2.SelectedIndex = comboBoxBranch1.SelectedIndex;
+            if (comboBoxType2.SelectedIndex == -1)
+                comboBoxType2.SelectedIndex = Array.IndexOf(RunTypes, RunType.standard);
+        }
+
+        private void comboBoxBranch_SelectedIndexChanged(object sender, EventArgs e)
         {
             StartTimeChanged(sender, e); // End time display may depend on run type
         }
 
-        private void comboBoxOptions2_SelectedIndexChanged(object sender, EventArgs e)
+        private void comboBoxType_SelectedIndexChanged(object sender, EventArgs e)
         {
+            var comboBoxType = (ComboBox)sender;
+            // Not while the constructor is still loading saved settings, which OK checks instead
+            if (IsHandleCreated && WarnIfTwoLongRuns())
+            {
+                comboBoxType.SelectedIndex = _validTypeIndexes[comboBoxType];
+                return; // The change of selection just made calls back here
+            }
+            _validTypeIndexes[comboBoxType] = comboBoxType.SelectedIndex;
             StartTimeChanged(sender, e); // End time display may depend on run type
         }
     }

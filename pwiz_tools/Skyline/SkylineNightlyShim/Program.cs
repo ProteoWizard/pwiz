@@ -142,7 +142,7 @@ namespace SkylineNightlyShim
                 {
                     // Attempt to update SkylineNightly.exe
                     TeamCityNightlyAuth.ConfigureClient(client, teamCityToken);
-                    string zipFileLink = TeamCityNightlyAuth.GetArtifactUrl(TEAM_CITY_BUILD_TYPE_64_MASTER, SKYLINENIGHTLY_ZIP, TeamCityNightlyAuth.GetMasterBranchQuery(), false);
+                    string zipFileLink = TeamCityNightlyAuth.GetArtifactUrl(TEAM_CITY_BUILD_TYPE_64_MASTER, SKYLINENIGHTLY_ZIP, TeamCityNightlyAuth.GetSkylineNightlyBranchQuery(), false);
                     var fileName = Path.Combine(nightlyDirectory ?? throw new InvalidOperationException(), SKYLINENIGHTLY_ZIP);
                     Log("Update " + nightlyDirectory + " with " + zipFileLink);
                     client.DownloadFile(zipFileLink, fileName);
