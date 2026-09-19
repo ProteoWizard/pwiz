@@ -608,7 +608,7 @@ namespace SkylineNightly
 
             var isRelease = ((mode == RunMode.release) || (mode == RunMode.release_perf));
             var isIntegration = mode == RunMode.integration || mode == RunMode.integration_perf;
-            var branchType = (isRelease || isIntegration) ? "" : "?branch=master"; // TC has a config just for release branch, and another for integration branch, but main config builds pull requests, other branches etc
+            var branchType = (isRelease || isIntegration) ? "" : TeamCityNightlyAuth.GetMasterBranchQuery(); // TC has a config just for release branch, and another for integration branch, but main config builds pull requests, other branches etc
             var buildType = isIntegration ? TEAM_CITY_BUILD_TYPE_64_INTEGRATION : isRelease ? TEAM_CITY_BUILD_TYPE_64_RELEASE : TEAM_CITY_BUILD_TYPE_64_MASTER;
 
             string zipFileLink = TeamCityNightlyAuth.GetArtifactUrl(buildType, SKYLINETESTER_ZIP_NAME, branchType, desperate);

@@ -1,7 +1,7 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -417,8 +417,24 @@ namespace pwiz.Osprey.Tasks
             // Naming what is admitted fails CLOSED: a task added later is excluded until someone
             // decides otherwise, which is the direction a predicate guarding a memory shape
             // should fail in.
-            if (config.SelectedTask.HasValue && config.SelectedTask != HpcTask.PerFileRescore)
+            // ModelDiagnostics is admitted for the same reason PerFileRescore is: it consumes
+            // the per-run survivor loader and nothing else. Admitting it is what stops it
+            // falling to the all-runs bundle, which retains every run's survivors and grew
+            // 0.10 GB/file on a 446-run cohort - past a 63.7 GB box by file ~310, measured
+            // 2026-09-10. The report itself is unaffected either way, so the symptom was
+            // memory alone and no gate could see it: mode 7 covers this task but runs 3 files,
+            // where an O(files) bundle is free.
+            //
+            // Safe now for the reason the --model-diagnostics paragraph below gives: the report
+            // is FirstPassFDR's DECLARED OUTPUT, folded by FoldDiagnosticsOnly BEFORE Rehydrate
+            // is reached, so the per-run arm cannot skip a regeneration the way it did when the
+            // report was a side effect of whichever hydrate ran (Astral mode 7).
+            if (config.SelectedTask.HasValue &&
+                config.SelectedTask != HpcTask.PerFileRescore &&
+                config.SelectedTask != HpcTask.ModelDiagnostics)
+            {
                 return false;
+            }
             if (config.StopAfterStage5 || config.ExpectReconciledInput)
                 return false;
             // --model-diagnostics is NOT excluded any more, and what changed is where the report
@@ -440,6 +456,26 @@ namespace pwiz.Osprey.Tasks
             //
             // The gate check is mode 3's per-run-hydrate leg, which SKIPPED on all three
             // --model-diagnostics datasets for exactly this reason and must now run and pass.
+            return PerRunSurvivorLoaderAvailable(config);
+        }
+
+        /// <summary>
+        /// Whether the per-run survivor loader can be BUILT at all: the analysis-wide retained
+        /// base_id summary is on disk in a shape this build reads. It is what the loader is
+        /// assembled from, so its absence means the bounded route does not exist here - no
+        /// output blib to name it after, or a summary written by a build with a different
+        /// <c>FormatVersion</c>.
+        ///
+        /// <para>Split out of <see cref="CanHydratePerRun"/> because the two halves of that
+        /// predicate answer different questions and one caller needs them apart. The terms above
+        /// it are about the ROUTE - which task this is, what it consumes - and a false there
+        /// means the run declined a bounded alternative that exists. This term is about DISK
+        /// state, and a false here means there was nothing to decline. Only the first is a
+        /// defect; see <see cref="AllRunsBundleGuardError"/>, which refuses one and not the
+        /// other.</para>
+        /// </summary>
+        internal static bool PerRunSurvivorLoaderAvailable(OspreyConfig config)
+        {
             string path = RetainedBaseIdSidecar.PathFor(config.OutputBlib, ArtifactSiblingPath(config));
             return !string.IsNullOrEmpty(path) && RetainedBaseIdSidecar.IsCurrentFormat(path);
         }
@@ -586,31 +622,33 @@ namespace pwiz.Osprey.Tasks
         /// taking the streamed join with it.</para>
         ///
         /// <para>No consumer may read PIN features off these stubs
-        /// (<c>PerFileScoringTask.NeedsResidentPool</c>: <c>--fdrbench-pass 1</c>, a
-        /// non-Percolator FDR method, <c>OSPREY_FDR_PROJECTION=0</c>) - a streamed pool drops
+        /// (<c>PerFileScoringTask.NeedsResidentPool</c>: a non-Percolator FDR method,
+        /// <c>OSPREY_FDR_PROJECTION=0</c>) - a streamed pool drops
         /// the entries those consumers index. And the analysis-wide retained base_id summary has
         /// to be on disk, because it IS the compaction predicate every refill applies; without
         /// it a refilled run would carry the pre-compaction pool and the fold would run over a
         /// set ~52x too large. Its absence returns false here rather than failing, for the
         /// reason its sibling gives.</para>
+        ///
+        /// <para><b>What the streamed join is worth</b>, kept here because this is where the
+        /// choice is made - it used to live on the <c>OSPREY_STAGE7_STREAM</c> switch and would
+        /// have been deleted with it. The all-runs survivor pool is what a
+        /// <c>--task SecondPassFDR</c> node spends its whole memory budget on before the join
+        /// computes anything: at 446 CHS runs it reached 68.0 GB managed / 70.5 GB private and
+        /// was killed at run 381 of 446 with 0.34 GB free, still inside the
+        /// <c>--input-scores</c> load. It is the <c>O(runs x entries)</c> shape the architecture
+        /// forbids a join to hold, and every consumer of it in Stage 7 - the pass-2 competition,
+        /// protein FDR, the experiment-q re-clamp and all three blib gates - is a fold to
+        /// <c>O(distinct)</c> that never needed the whole pool. The fragment release was on that
+        /// list until #4650; it now reads its set from the analysis-wide summary and is not a
+        /// consumer of the pool at all.</para>
         /// </summary>
         internal static bool CanStreamStage7Join(OspreyConfig config)
-        {
-            return CanStreamStage7Join(config, OspreyEnvironment.Stage7Stream);
-        }
-
-        /// <summary>
-        /// Pure core of the one-argument <c>CanStreamStage7Join</c>, with the env switch
-        /// passed in. Exists so <see cref="Stage7ResidentGuardError"/> can ask the question the
-        /// operator's choice hinges on - "would this run have streamed if the switch were on?" -
-        /// which is what separates a CHOSEN resident join from one that had no alternative.
-        /// </summary>
-        internal static bool CanStreamStage7Join(OspreyConfig config, bool stage7Stream)
         {
             // LAST, because AllReconciledParquetsCurrent is the only term that opens a file per
             // run. Every cheaper disqualifier returns first, so a run that was never going to
             // stream does not pay 446 footer reads to be told so.
-            return Stage7StreamAdmittedBeforeRescore(config, stage7Stream) &&
+            return Stage7StreamAdmittedBeforeRescore(config) &&
                    AllReconciledParquetsCurrent(config);
         }
 
@@ -632,7 +670,7 @@ namespace pwiz.Osprey.Tasks
         /// FirstPassFDR writes it before any caller of either form runs, so it is answerable on
         /// every route at every point either question is asked.</para>
         /// </summary>
-        internal static bool Stage7StreamAdmittedBeforeRescore(OspreyConfig config, bool stage7Stream)
+        internal static bool Stage7StreamAdmittedBeforeRescore(OspreyConfig config)
         {
             // FIRST, and it is a correctness term rather than an optimisation. Every other term
             // here describes the SHAPE of a Stage 7 join; none of them asks whether this process
@@ -646,8 +684,11 @@ namespace pwiz.Osprey.Tasks
             // proxy went and nothing took over the question it had been answering incidentally.
             if (!RunsStage7Join(config))
                 return false;
-            if (!stage7Stream)
-                return false;
+            // OSPREY_STAGE7_STREAM=0 was the second term and is GONE (2026-09-10). It let an
+            // operator force the resident join as an A/B oracle; that A/B is banked and the
+            // switch retired, so the streamed join is the only arm anyone can ask for. What is
+            // left below is not a choice - it is the set of configurations that already hold a
+            // resident pool for a declared reason, and they are named by token.
             if (PerFileScoringTask.NeedsResidentPool(config, OspreyEnvironment.UseFdrProjection))
                 return false;
             // --model-diagnostics WAS the fourth requirement, and is no longer one. The pass-2
@@ -664,9 +705,17 @@ namespace pwiz.Osprey.Tasks
             // folds the written answers; every other mode still computes the per-file half HERE,
             // over the whole pool - RestorePass1Scalars, the resident second pass and the
             // projection sink's per-file protein-q map all index it. Streaming underneath them
-            // does not make them per-run, it just takes their input away: the fragment release
-            // streams first and drops the pool, and ComputeAndPersist then throws
-            // "Value was read after StreamFiles dropped the survivor pool" hours into Stage 7.
+            // does not make them per-run, it just takes their input away: something streams
+            // first and drops the pool, and ComputeAndPersist then throws "Value was read after
+            // StreamFiles dropped the survivor pool" hours into Stage 7.
+            //
+            // The fragment release used to be the concrete first-streamer quoted here. It is
+            // not any more (#4650): it reads its retained set from the analysis-wide summary and
+            // touches no pool. The term stands on its other grounds, which are the real ones -
+            // RestorePass1Scalars, the resident second pass, the projection sink's per-file map.
+            // Named because the illustration going away is exactly how a term gets relaxed on
+            // the strength of a fixed ordering, and then fails hours into Stage 7 for the
+            // reasons that never moved.
             //
             // Not a guess about which modes are safe - the same predicate ComputeAndPersist
             // itself branches on for `frozenCompetition`. When transfer's per-run half moves to
@@ -674,10 +723,7 @@ namespace pwiz.Osprey.Tasks
             // together.
             if (!OspreyEnvironment.Pass2ProteinCompact)
                 return false;
-            string retainedPath =
-                RetainedBaseIdSidecar.PathFor(config.OutputBlib, ArtifactSiblingPath(config));
-            return !string.IsNullOrEmpty(retainedPath) &&
-                   RetainedBaseIdSidecar.IsCurrentFormat(retainedPath);
+            return PerRunSurvivorLoaderAvailable(config);
         }
 
         /// <summary>
@@ -717,59 +763,66 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Fail fast when the RESIDENT Stage-7 join was CHOSEN over an admissible streamed one,
-        /// unless the operator named <see cref="ResidentPaths.STAGE7_STREAM_OFF"/>. The Stage-7
-        /// sibling of <c>PerFileScoringTask.GuardResidentPool</c>, which stops at the
-        /// pre-compaction line and so never saw this pool.
+        /// Refuse the ALL-RUNS reconciliation bundle, which retains every run's POST-compaction
+        /// survivors at once and so grows O(files x entries) - 0.10 GB/file measured on a
+        /// 446-run cohort, past a 63.7 GB box by file ~310.
         ///
-        /// <para>Only the CHOSEN case. The question asked is "would this run have streamed with
-        /// the switch on", so a run that could not stream for any other reason - a
-        /// straight-through join, a non-protein-compact pass-2 mode, a missing retained-base_id
-        /// summary - is not refused, because there is no choice for a token to record. Those
-        /// remain disclosed rather than tokened until the streamed join is admissible for them
-        /// too; refusing them here would put a mandatory token on every ordinary run, which
-        /// grants nothing and is exactly the blanket amnesty the named-token ratchet replaced.</para>
+        /// <para>This is the guard's invariant reaching PAST THE COMPACTION LINE.
+        /// <see cref="PerFileScoringTask.ResidentPoolGuardError"/> enforces "no unnamed
+        /// PRE-compaction pool" and stops there, which is why
+        /// <see cref="ResidentPaths.COMPACTED_ENTRIES_BUFFER"/> had to be named rather than
+        /// refused - no token could reach it. The bundle guarded here is on the same far side of
+        /// that line, and it was reachable with no token and no disclosure at all: a run took an
+        /// O(files x entries) route without declaring it, which is the one shape the named-token
+        /// ratchet exists to make impossible.</para>
         ///
-        /// <para><c>streamingAvailable</c> - whether this run COULD stream the join, i.e.
-        /// the two-argument <c>CanStreamStage7Join</c> with the switch forced on - is
-        /// passed IN rather than computed here, so the guard is a pure function and its refusal
-        /// is unit-testable. Computing it internally makes every test process answer false (no
-        /// retained-base_id sidecar on disk), so the refusal branch would never be reached and
-        /// the test would pass vacuously. Its Stage-6 sibling takes the same parameter for the
-        /// same reason.</para>
+        /// <para>It takes NO token, deliberately. <see cref="ResidentPaths"/> may only shrink,
+        /// and where this fires the bounded alternative is already on disk - the per-run
+        /// survivor loader built from the analysis-wide retained base_id summary. A path that
+        /// CAN stream and does not is a defect to fix, not a path to name, which is the
+        /// disposition the hpc-merge and resume-survivor-handoff notes already record.</para>
+        ///
+        /// <para><b>Null where the bounded alternative does not exist</b>, which is the whole
+        /// content of this guard. It first read <c>!CanHydratePerRun</c> as "an operator chose a
+        /// resident route", and that predicate's false branch is half DISK STATE: no <c>-o</c>
+        /// blib to name the summary after, or a summary this build cannot read. This guard has
+        /// nothing to add there, on either load. Under a resident token master completes those
+        /// runs through the overlay, which needs no summary, so refusing them is a regression;
+        /// on the default lean load the streamed bundle needs the same summary and fails one
+        /// call later with its own error naming the producer, so refusing first only puts a
+        /// second, contradictory remedy above the real one - and this one named a remedy built
+        /// FROM the very file whose absence triggered it. <c>WarnPreCompactionPool</c> records
+        /// the disposition for the first shape: warn, because "every configuration that reaches
+        /// here worked before the bounded hydrate existed, so failing them would be a
+        /// regression, not a guard". What is left after the split is the route case - the
+        /// loader is on disk and this run declined it - which is the
+        /// <c>--task ModelDiagnostics</c> defect this branch fixes and is unreachable once it
+        /// is fixed. That is the point: it fires only if a later edit re-opens the arm, which
+        /// is the one thing no gate at 3 files can see.</para>
         /// </summary>
-        internal static string Stage7ResidentGuardError(
-            bool streamingAvailable, bool stage7Stream, string allowUnfixedResident)
+        internal static string AllRunsBundleGuardError(OspreyConfig config, string allowUnfixedResident)
         {
-            if (stage7Stream || !streamingAvailable)
+            // Disk state, not a choice: nothing to decline, so nothing to refuse. The caller
+            // discloses the cost instead - it is about to take the O(files x entries) route
+            // because this analysis has no bounded one, and that is worth saying out loud.
+            if (!PerRunSurvivorLoaderAvailable(config))
                 return null;
-            if (OspreyEnvironment.NamesResidentPath(allowUnfixedResident,
-                    ResidentPaths.STAGE7_STREAM_OFF))
-            {
-                return null;
-            }
-            // OSPREY_STAGE6_STREAM_SURVIVORS=0 withholds the survivor loader, so the cold arm
-            // publishes no per-run source however this run answers - which makes the remedy
-            // below ("unset OSPREY_STAGE7_STREAM") unachievable, and refusing on it would demand
-            // a token for a choice the operator does not have. The A/B oracle that switch exists
-            // to provide asks for BOTH stages resident; this is the one combination where
-            // `streamingAvailable` is true and streaming is nonetheless unreachable.
-            if (!OspreyEnvironment.Stage6StreamSurvivors)
-                return null;
-            // The SUPPLIED value is quoted, matching the two sibling guards: a stale or
-            // misspelled token otherwise reads exactly like an unset one, and the operator
-            // cannot tell "you named nothing" from "you named the wrong path".
+            // Named the same way the sibling guards name theirs, so a stale or misspelled token
+            // cannot read as an unset one - even though no token can admit this path, an
+            // operator who set one is owed the answer that it was not the problem.
+            string supplied = string.IsNullOrWhiteSpace(allowUnfixedResident)
+                ? string.Empty
+                : string.Format(@" OSPREY_ALLOW_UNFIXED_RESIDENT is currently '{0}'; no token " +
+                                @"admits this path.", allowUnfixedResident);
             return string.Format(
-                @"OSPREY_STAGE7_STREAM=0 forces the RESIDENT Stage-7 join, which rebuilds every " +
-                @"run's survivors at once and holds them for the whole stage - O(files), measured " +
-                @"at 91.1 GB on a 446-run cohort. This run CAN stream it, so residency here is a " +
-                @"choice and has to be named: set OSPREY_ALLOW_UNFIXED_RESIDENT={0} to run the " +
-                @"A/B deliberately, or unset OSPREY_STAGE7_STREAM to take the streamed join. " +
-                @"OSPREY_ALLOW_UNFIXED_RESIDENT is currently {1}.",
-                ResidentPaths.STAGE7_STREAM_OFF,
-                string.IsNullOrWhiteSpace(allowUnfixedResident)
-                    ? @"unset"
-                    : @"'" + allowUnfixedResident + @"'");
+                @"This run is about to build the {0}, which holds every run's survivors at " +
+                @"once and grows O(files x entries) - measured at 0.10 GB/file on a 446-run " +
+                @"cohort, i.e. past a 63.7 GB box by file ~310. The bounded alternative " +
+                @"exists: the per-run survivor loader, built from the analysis-wide retained " +
+                @"base_id summary. Something that was streamed is resident again - fix that " +
+                @"rather than allowing it. OSPREY_ALLOW_UNFIXED_RESIDENT cannot admit this " +
+                @"path.{1}",
+                RescoreHydration.ALL_RUNS_BUNDLE_MARKER, supplied);
         }
 
         /// <summary>
@@ -783,16 +836,42 @@ namespace pwiz.Osprey.Tasks
         /// Creating empty blib." and exiting 0. An empty <c>.blib</c> from a successful-looking
         /// run is the worst outcome this pipeline can produce, and the sidecar's own reader
         /// documents its absence as FATAL.</para>
+        ///
+        /// <para>The Stage 7 library-fragment release reads it through here too (issue #4650),
+        /// for the same reason and with the same refusal to degrade: the fallback it replaced
+        /// was a fold over every run's final pool, the O(files) pre-pass this artifact exists to
+        /// delete. That caller checks <c>LibraryFragmentRelease.SummaryCanExist</c> first, so by
+        /// the time it asks, a config that never writes a summary has already been excluded.</para>
+        ///
+        /// <para>An EMPTY summary is NOT a failure, and was briefly made one here in error.
+        /// <see cref="RetainedBaseIdSidecar.Read"/> returns an empty set rather than null for a
+        /// zero-count file, and zero is what a genuine analysis with no surviving precursors
+        /// writes - <c>GlobalBaseIds</c> over nothing. Osprey handles that state deliberately
+        /// and gracefully, hundreds of lines further on, with "No entries pass FDR threshold.
+        /// Creating empty blib." Rejecting it here converted that into an abort, and offered a
+        /// remedy that would regenerate the identical file. The catastrophic reading of an empty
+        /// set - release every spectrum in the library - is real, but it belongs to the one
+        /// CALLER for whom empty means "release everything" rather than "retain nothing", and a
+        /// guard in a shared reader cannot tell those apart.</para>
+        ///
+        /// <para>The remedy - carried on <see cref="ReadRetainedBaseIds"/>'s error, so every
+        /// caller that logs it says the same thing - names a STAMP deletion rather than "re-run
+        /// FirstPassFDR", because that task declares this file in neither <c>Outputs</c> nor its
+        /// <c>ValidityKey</c>. That is deliberate, with its own rationale at
+        /// <c>RetainedBaseIdSidecar.FormatVersion</c>, and its consequence is stated in
+        /// <c>FirstPassFdrTask</c>: re-running the task over a complete analysis "reports its
+        /// outputs valid and writes nothing". An operator told to re-run it would loop
+        /// forever.</para>
         /// </summary>
         internal static HashSet<uint> ReadRetainedBaseIdsOrFail(OspreyConfig config)
         {
             var retained = ReadRetainedBaseIds(config, out string error);
             if (retained != null)
                 return retained;
+            // ONE remedy, and it comes from the inner error.
             throw new InvalidDataException(string.Format(
-                @"The second-pass join is streaming, which requires the analysis-wide retained " +
-                @"base_id summary, and it could not be read: {0} Continuing would fold every run " +
-                @"as empty and write an empty library.",
+                @"The analysis-wide retained base_id summary is required here and could not be " +
+                @"read: {0} Continuing would fold every run as empty and write an empty library.",
                 error ?? @"(no reason reported)"));
         }
 
@@ -827,8 +906,11 @@ namespace pwiz.Osprey.Tasks
                     @"The analysis-wide retained base_id summary is missing or unreadable at {0}. " +
                     @"It is written by FirstPassFDR when Stage 6 planning ends, and every run's " +
                     @"compaction reads it; without it a run cannot be compacted without " +
-                    @"re-reading every other run's reconciliation.json. Re-run the FirstPassFDR " +
-                    @"phase for this analysis to produce it.", path);
+                    @"re-reading every other run's reconciliation.json. To produce it, delete " +
+                    @"this analysis's '<output>.FirstPassFDR.osprey.task' stamp and run the " +
+                    @"first pass again - FirstPassFDR declares this file in neither Outputs nor " +
+                    @"its ValidityKey, so re-running the task over a complete analysis reports " +
+                    @"its outputs valid and writes nothing.", path);
                 return null;
             }
             return retained;

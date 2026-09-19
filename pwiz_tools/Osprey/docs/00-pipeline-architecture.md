@@ -525,13 +525,18 @@ user-supplied paths do reach it, both noted below. A completed run can therefore
 output directory and still be recognised as valid - the property external tooling relies
 on to adopt a prior run's Stage 1-4 artifacts instead of recomputing them for hours.
 
-**The exception is `--decoy-pairing-manifest`**, whose path goes into
-`SearchParameterHash` verbatim and unnormalised. It is the only path anywhere in artifact
-identity, so it is the only reason a move invalidates: relocate a cohort that was searched
-with a pairing manifest and every artifact invalidates, because the manifest is named from
-somewhere else now. Restoring the original path with a junction is the cheap fix. Anything
-that adds a second path to a hash removes relocatability for every run, not just
-entrapment ones.
+**There is no exception, and `--decoy-pairing-manifest` used to be one.** Its path went into
+`SearchParameterHash` verbatim and unnormalised - the only path anywhere in artifact identity,
+and so the only reason a move invalidated: relocate a cohort searched with a pairing manifest
+and every artifact invalidated, because the manifest was named from somewhere else now. Worse,
+the invalidation ran the wrong way round. EDITING a manifest in place changed neither its path
+nor the hash, so every scored parquet went on reading valid against a file that no longer said
+what it said - and the manifest decides decoy classification, target/decoy pairing and the
+protein accessions protein FDR runs on, which makes that a stale FDR answer rather than a stale
+cache. The manifest is now identified the way the library is, by file **name + size + mtime**
+(`SearchIdentity.DecoyPairingManifestTerm`), so moving one is free and editing one invalidates.
+Nothing left in artifact identity is a path. Anything that adds one back removes relocatability
+for every run, not just entrapment ones.
 
 **P16. A report is a DERIVED VIEW over the artifacts, never an output only its producing
 phase can make.** Everything the diagnostics report says about a pass is a reduction over
@@ -1010,7 +1015,11 @@ Experiment-wide, to **every** node:
   Stage 6 planning ends. It is what makes this list one a single-run node can actually run
   on: without it a node would rebuild the union from every run's `reconciliation.json`,
   which is the O(runs) pre-pass P6 forbids. Its absence is FATAL rather than silently
-  rebuilt, deliberately - see `ScoringTaskShared.ReadRetainedBaseIds`
+  rebuilt, deliberately - see `ScoringTaskShared.ReadRetainedBaseIds`. Stage 7's
+  library-fragment release reads the same file (#4650); it used to fold every run's final
+  pool to rebuild the set instead, which is the identical O(runs) pre-pass in different
+  clothes - 11 minutes and a 41.5 GB peak on the 446-run CHS cohort of issue #4650, for the
+  625,620 base_ids already sitting on disk in that run's 2,502,512-byte summary
 - `<stem>.1st-pass.model.json` (any one copy) - **mandatory on an ordinary run**, because
   the default pass-2 mode is a frozen one (`protein-compact`); an unset
   `OSPREY_PASS2_QVALUE` is not an opt-out
@@ -1120,12 +1129,18 @@ the text says so rather than describing the current shape as though it were the 
    `.scores.parquet` and first-pass sidecar. The streamed path is the default; the switch
    goes when the resident one does.
 
-   `OSPREY_STAGE7_STREAM=0` is the Stage 7 sibling, and the same disposition applies - it
-   selects the resident second-pass join, where `RescoredEntries` holds every run's
-   survivors instead of rebuilding one run at a time through `StreamFiles`. Both arms are
-   required to produce identical bytes.
+   **Stage 7 had the same sibling switch and no longer does.** `OSPREY_STAGE7_STREAM=0`
+   selected the resident second-pass join, where `RescoredEntries` held every run's survivors
+   instead of rebuilding one run at a time through `StreamFiles`. It was removed on
+   2026-09-10 once its A/B was banked - the resident arm passed the whole regression against
+   the committed golden at 1e-9 and produced a byte-identical diagnostics report - and
+   `ResidentPaths.KNOWN_UNFIXED` shrank from 5 to 4 with it. Setting the name now fails at
+   startup. The streamed fold is the only arm an operator can select - the configurations
+   that still take the resident fold are named below and do so by their own declaration -
+   so "both arms produce identical bytes" is history rather than a standing requirement,
+   and the golden is what answers "did streaming change results?" from here on.
 
-   **It IS the in-place A/B its Stage 6 sibling is, and it did not used to be.**
+   Its removal was earned by first making it a real A/B, which it had not been.
    `CanStreamStage7Join` opened on `!config.ExpectReconciledInput`, a flag only
    `--task SecondPassFDR` sets, so on a straight-through run the switch changed nothing -
    while `SecondPassFdrTask.ValidityKey` appended `;stage7stream=0` regardless, forcing a
@@ -1134,7 +1149,7 @@ the text says so rather than describing the current shape as though it were the 
    the survivor-subset shape (`ScoringTaskShared.AllReconciledParquetsCurrent`). Asked of
    the disk, it is route-independent - a straight-through run's Stage 6 has just written
    those parquets - so the cold run, both resume arms and the `--task SecondPassFDR` merge
-   all fold run by run, and the switch compares two arms of whichever one you are running.
+   all fold run by run.
 
    The per-run source is not one implementation reached four ways: each arm hands the fold
    the per-file half of the whole-run loop it would otherwise have run
@@ -1144,10 +1159,14 @@ the text says so rather than describing the current shape as though it were the 
    an arm is a call-shape change rather than a second algorithm.
 
    One route still cannot stream: a pass-2 mode whose per-file half has no worker
-   (`OSPREY_PASS2_QVALUE=transfer` still competes over the whole pool in Stage 7). Until
-   `TransferOneFile` moves into `Pass2PerFileWorker`, `Stage7ResidentGuardError` keeps its
-   `streamingAvailable` exemption - a run with no streamed alternative has no choice for a
-   token to record.
+   (`OSPREY_PASS2_QVALUE=transfer` still competes over the whole pool in Stage 7). It is
+   `ScoringTaskShared.Stage7StreamAdmittedBeforeRescore` that declines there, on
+   `!OspreyEnvironment.Pass2ProteinCompact`, and no token records it - a run with no streamed
+   alternative has nothing for a token to admit. That is the one operator-chosen route into
+   the resident fold left standing, and it ends when `TransferOneFile` moves into
+   `Pass2PerFileWorker`; `SecondPassFdrTask.WarnResidentStage7Join` discloses it meanwhile.
+   The other routes in are `NeedsResidentPool`'s, which the first-pass guard names and
+   tokens.
 
    Because nothing in the output distinguishes the arms, the shape that ran is asserted from
    the marker line `Second-pass join: folding over N run(s)` rather than inferred -

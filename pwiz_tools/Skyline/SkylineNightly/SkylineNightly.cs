@@ -112,7 +112,7 @@ namespace SkylineNightly
                         scheduledTime = now + TimeSpan.FromMinutes(2);
                     dt.StartBoundary = scheduledTime;
                     int durationHours;
-                    var runType = RunType(out durationHours);
+                    RunType(out durationHours);
                     var maxHours = durationHours == -1 ? 167 : 23; //If one of them is a stress test
                     dt.ExecutionTimeLimit = new TimeSpan(maxHours, 30, 0);
                     dt.Enabled = true;
@@ -131,9 +131,10 @@ namespace SkylineNightly
                     //   TaskPriority = 8, I/O Priority = Normal, Memory Priority = 5
                     td.Settings.Priority = ProcessPriorityClass.High; 
 
-                    // Add an action that will launch SkylineNightlyShim whenever the trigger fires
+                    // Add an action that will launch SkylineNightlyShim whenever the trigger fires. What
+                    // to run is in the settings saved above; the shim just updates and says "run".
                     var assembly = Assembly.GetExecutingAssembly();
-                    td.Actions.Add(new ExecAction(assembly.Location.Replace(@".exe", @"Shim.exe"), runType));
+                    td.Actions.Add(new ExecAction(assembly.Location.Replace(@".exe", @"Shim.exe"), @"run"));
 
                     // Register the task in the root folder
                     ts.RootFolder.RegisterTaskDefinition(Nightly.NightlyTaskNameWithUser, td);
