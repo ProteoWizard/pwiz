@@ -79,7 +79,7 @@ share `base_id`; the decoy has the high bit set.
 `PercolatorEntryBuilder.Build` (`PercolatorEntryBuilder.cs:52`) emits exactly one
 `PercolatorEntry` per stub in nested `(file, entry)` order. Results are later zipped
 back **by position** — the former psm_id-keyed re-join was removed as redundant
-(`PercolatorEngine.ApplyPercolatorResults`, `PercolatorEngine.cs:404`). Before
+(`PercolatorEngine.ApplyPercolatorResults`, `PercolatorEngine.cs:519`). Before
 building, each file's entries are sorted by `(EntryId, Charge, ScanNumber,
 ParquetIndex)` so the SVM working-set order is canonical across Rust and C#
 (`PercolatorEngine.cs:82`).

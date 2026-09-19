@@ -204,8 +204,10 @@ bit-identical to the in-memory original (see 14-intermediate-files.md).
 
 The PEP estimator is fed a `base_id`-ascending-sorted union so its
 non-associative KDE sum is order-stable (`PercolatorQValues.ComputePepWinnerMap`, `Osprey.FDR/PercolatorQValues.cs:65-68,:87-101`),
-and experiment-level q-values are propagated through a `base_id`-keyed map
-(`ComputeExperimentPrecursorQMap`, `:783-788`) rather than dictionary iteration.
+and experiment-level q-values are propagated through a map keyed by the winner's **full
+`entry_id`** (decoy bit intact — never the shared `base_id`, which let a target inherit
+its paired decoy's q; #4558) rather than dictionary iteration
+(`ComputeExperimentPrecursorQMap`, `:756-788`; the per-row lookup at `:806-810`).
 
 ## Step 9 — Razor shared-peptide assignment
 

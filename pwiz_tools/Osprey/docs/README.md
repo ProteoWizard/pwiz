@@ -20,7 +20,9 @@ the Rust documentation" section**; those are consolidated in
 
 **00 sorts first and is the one document to read before changing what any task reads,
 writes, or keeps.** It has no Rust counterpart and no "Divergences" section: it states the
-architecture the C# pipeline is built to, rather than porting a Rust source doc.
+architecture the C# pipeline is built to, rather than porting a Rust source doc. **21** is
+exempt the same way: it is a C#-only review checklist for the log's vocabulary, with no
+Rust counterpart and no "Divergences" section.
 
 Three documents divide the file-and-orchestration subject, and none repeats another: **00**
 owns scope, contract, principles and relay (which file, whose, when, who may read it);

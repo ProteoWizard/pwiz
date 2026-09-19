@@ -205,8 +205,8 @@ this single cached pass.
 **Peak shape (3–5)** — `PeakShapeReference` (`PeakShapeCalculators.cs:42`) selects the
 reference XIC as highest-total-intensity, **last on tie** (`>=`, seed `-1.0`).
 `peak_apex` is a direct lookup of the CWT/override apex value (NOT a recomputed local
-max, `:124`). `peak_area` is left-to-right trapezoidal integration over `[start, end)`
-(`:144`). `peak_sharpness` is the mean of left/right slopes (`:176`), with strict
+max, `:157-175`). `peak_area` is left-to-right trapezoidal integration over `[start, end)`
+(`:204-208`). `peak_sharpness` is the mean of left/right slopes (`:264-278`), with strict
 `dt > 1e-10` guards.
 
 All three are **intensity-scale** features and are conditioned as `log10(x + 1)` by

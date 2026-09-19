@@ -50,9 +50,10 @@ Every count gets a thousands separator (`{0:N0}`). Counts of five or more digits
 
 ## Enums
 
-Display strings for enums follow Skyline's pattern: a `GetLocalizedString(this Enum)`
-extension over a `LOCALIZED_VALUES` array of resource strings (see
-`Skyline/Model/Export.cs`), so the text can move to RESX and be translated after the
+Osprey has no enum display-string helper yet. When one is needed, adopt Skyline's pattern
+rather than inventing another: a `GetLocalizedString(this Enum)` extension over a
+`LOCALIZED_VALUES` array of resource strings (see `Skyline/Model/Export.cs` — nothing
+under `pwiz_tools/Osprey` implements it today), so the text can move to RESX and be translated after the
 first release without touching the call sites.
 
 ## Tiers
