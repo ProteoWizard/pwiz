@@ -29,85 +29,125 @@ using pwiz.Osprey.Core;
 namespace pwiz.Osprey.Tasks
 {
     /// <summary>
-    /// The one authoritative list of every task Osprey can run. The <c>--task</c> value list,
-    /// the name lookup behind it, and the pipeline a run walks are all derived from
-    /// <see cref="CreateAll"/>, so adding a task is one class deriving from
-    /// <see cref="OspreyTask"/> plus one line here - nothing in the exe's argument model,
-    /// its validation or the task library's predicates switches on a task name any more.
-    /// (The <c>--task</c> help prose still describes the two selector-only tasks by name;
-    /// a new selector gets a sentence there.)
+    /// The tasks a run can select and the pipeline they compose: two explicit lists.
+    /// <see cref="All"/> is every <c>--task</c> value, in <c>--help</c> order; the
+    /// <c>--task</c> value list, the name lookup behind it and the reflection guard in the
+    /// tests all derive from it. <see cref="Pipeline"/> is the canonical stages in execution
+    /// order, and it is the pipeline that says which tasks are its stages - a task does not
+    /// declare that of itself. A task that is selectable but not a stage names, here, the
+    /// pipeline its selection runs. Adding a stage is one class deriving from
+    /// <see cref="OspreyTask"/> plus its place in the two lists; nothing in the exe's argument
+    /// model, its validation or the task library's predicates switches on a task name.
+    /// (The <c>--task</c> help prose still describes the two selector-only tasks by name; a
+    /// new selector gets a sentence there.)
     ///
-    /// <para>A factory rather than a static singleton on purpose: tasks hold per-run state
+    /// <para>A fresh set per run rather than a static singleton: tasks hold per-run state
     /// (the one-shot hydrate guards, the shared entry buffer), and the tests run several
-    /// pipelines in one process. A run calls it once and shares the instances between the
-    /// selection and the pipeline, which is what lets a task ask whether it IS the selected
-    /// task by reference; the argument model calls it separately, at type init, for the
-    /// value list alone.</para>
+    /// pipelines in one process. A run creates ONE set and shares its instances between the
+    /// selection and the pipeline it walks, which is what lets a stage ask whether it IS the
+    /// selection by reference; the argument model creates a set of its own, at type init,
+    /// for the value list alone.</para>
+    ///
+    /// <para>One pipeline today. A second - selectable by a <c>--pipeline &lt;name&gt;</c> -
+    /// would be another ordered list declared beside this one, not another fact on the
+    /// tasks.</para>
     /// </summary>
-    public static class OspreyTasks
+    public sealed class OspreyTasks
     {
+        private readonly IReadOnlyDictionary<OspreyTask, IReadOnlyList<OspreyTask>> _pipelineBySelector;
+
         /// <summary>
         /// Every selectable task, in <c>--help</c> order: the data-staging step first, then
-        /// the four canonical stages in execution order, then the render over completed
-        /// products. A fresh set of instances per call.
+        /// the canonical stages in execution order, then the render over completed products.
         /// </summary>
-        public static OspreyTask[] CreateAll()
+        public IReadOnlyList<OspreyTask> All { get; }
+
+        /// <summary>
+        /// The canonical pipeline: the stages a full run walks, in execution order
+        /// (PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR), alternating
+        /// fan-out and join.
+        /// </summary>
+        public IReadOnlyList<OspreyTask> Pipeline { get; }
+
+        private OspreyTasks(IReadOnlyList<OspreyTask> all, IReadOnlyList<OspreyTask> pipeline,
+            IReadOnlyDictionary<OspreyTask, IReadOnlyList<OspreyTask>> pipelineBySelector)
         {
-            return new OspreyTask[]
+            All = all;
+            Pipeline = pipeline;
+            _pipelineBySelector = pipelineBySelector;
+            // The lists are declared by hand, so check them once at construction rather than
+            // letting a slip surface as "unknown task" or as a selection that runs nothing:
+            // every task listed once, every stage listed, every selector-only task given the
+            // pipeline it runs.
+            if (all.Distinct().Count() != all.Count)
+                throw new InvalidOperationException(@"A task is listed more than once.");
+            foreach (var stage in pipeline)
             {
-                new SpectraCacheTask(),
-                new PerFileScoringTask(),
-                new FirstPassFdrTask(),
-                new PerFileRescoreTask(),
-                new SecondPassFdrTask(),
-                new ModelDiagnosticsTask(),
-            };
+                if (!all.Contains(stage))
+                    throw new InvalidOperationException(string.Format(@"Stage {0} is not in the task list.", stage.Name));
+            }
+            foreach (var task in all.Where(t => !pipeline.Contains(t)))
+            {
+                if (!pipelineBySelector.ContainsKey(task))
+                    throw new InvalidOperationException(string.Format(@"--task {0} is not a stage and names no pipeline to run.", task.Name));
+            }
         }
 
         /// <summary>
-        /// The task in <paramref name="allTasks"/> named <paramref name="name"/>, matched
-        /// case-insensitively so the operator may type <c>firstpassfdr</c>, or null when no
-        /// task has that name. The <c>Name</c> the match returns is the canonical spelling,
-        /// which is what the log and the sidecars then carry.
+        /// A fresh set of instances: the six tasks, the canonical pipeline over four of them,
+        /// and what the other two run when selected.
         /// </summary>
-        public static OspreyTask FindByName(IEnumerable<OspreyTask> allTasks, string name)
+        public static OspreyTasks Create()
         {
-            return allTasks.FirstOrDefault(t => string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase));
+            var spectraCache = new SpectraCacheTask();
+            var perFileScoring = new PerFileScoringTask();
+            var firstPassFdr = new FirstPassFdrTask();
+            var perFileRescore = new PerFileRescoreTask();
+            var secondPassFdr = new SecondPassFdrTask();
+            var modelDiagnostics = new ModelDiagnosticsTask();
+
+            var pipeline = new OspreyTask[] { perFileScoring, firstPassFdr, perFileRescore, secondPassFdr };
+            return new OspreyTasks(
+                new OspreyTask[] { spectraCache, perFileScoring, firstPassFdr, perFileRescore, secondPassFdr, modelDiagnostics },
+                pipeline,
+                new Dictionary<OspreyTask, IReadOnlyList<OspreyTask>>
+                {
+                    // SpectraCache stages data rather than analyzing it: a one-task pipeline
+                    // of its own, so the canonical pipeline's membership rules stay about the
+                    // analysis itself. ModelDiagnostics is a render over a completed analysis:
+                    // it runs the canonical stages, which rehydrate from their stamps and fold
+                    // the report with every other write suppressed.
+                    { spectraCache, new OspreyTask[] { spectraCache } },
+                    { modelDiagnostics, pipeline },
+                });
         }
 
         /// <summary>
-        /// The tasks a run walks, in execution order: the selected task alone when it
-        /// <see cref="OspreyTask.RunsStandalone"/>, the canonical pipeline when it
-        /// <see cref="OspreyTask.RunsCanonicalPipeline"/> (its membership predicates then
-        /// decide what runs for the selection), and a refusal when it answers neither - a
-        /// task that declares no pipeline must not silently run the whole analysis with
-        /// itself never called. The selected task must be one of
-        /// <paramref name="allTasks"/> - the same instance, not a namesake - so the pipeline
-        /// and the selection agree by reference.
+        /// The task named <paramref name="name"/>, matched case-insensitively so the operator
+        /// may type <c>firstpassfdr</c>, or null when no task has that name. The <c>Name</c>
+        /// the match returns is the canonical spelling, which is what the log and the
+        /// sidecars then carry.
         /// </summary>
-        public static OspreyTask[] PipelineFor(IReadOnlyList<OspreyTask> allTasks, ISelectableTask selected)
+        public OspreyTask FindByName(string name)
         {
-            if (selected == null)
-                return CanonicalPipeline(allTasks);
-            var selectedTask = allTasks.FirstOrDefault(t => ReferenceEquals(t, selected));
-            if (selectedTask == null)
-                throw new ArgumentException(@"The selected task is not one of the tasks this run created.", nameof(selected));
-            if (selectedTask.RunsStandalone)
-                return new[] { selectedTask };
-            if (selectedTask.RunsCanonicalPipeline)
-                return CanonicalPipeline(allTasks);
-            throw new InvalidOperationException(string.Format(
-                @"--task {0} declares no pipeline to run: it is neither standalone nor a canonical-pipeline task.",
-                selectedTask.Name));
+            return All.FirstOrDefault(t => string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>
-        /// The four canonical stages from <paramref name="allTasks"/>, in execution order:
-        /// PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR.
+        /// The stages a selection walks, in execution order: the canonical pipeline when
+        /// nothing is selected or a stage of it is (the selected stage is then the only one
+        /// included - see <see cref="OspreyConfig.Includes"/>), and the pipeline this set
+        /// declares for a selector-only task. The selection must be one of this set's
+        /// instances, not a namesake from another set, so the pipeline and the selection
+        /// agree by reference.
         /// </summary>
-        public static OspreyTask[] CanonicalPipeline(IEnumerable<OspreyTask> allTasks)
+        public IReadOnlyList<OspreyTask> PipelineFor(OspreyTask selected)
         {
-            return allTasks.Where(t => t.InCanonicalPipeline).ToArray();
+            if (selected == null || Pipeline.Contains(selected))
+                return Pipeline;
+            if (_pipelineBySelector.TryGetValue(selected, out var pipeline))
+                return pipeline;
+            throw new ArgumentException(@"The selected task is not one of the tasks this run created.", nameof(selected));
         }
     }
 }

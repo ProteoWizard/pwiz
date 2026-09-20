@@ -1169,8 +1169,8 @@ function Compare-DirFingerprint {
 # the driver's own log, so these helpers read it.
 #
 # The canonical four-task pipeline, in execution order. These are the
-# OspreyTask.Name values (the InCanonicalPipeline members of OspreyTasks.CreateAll(),
-# i.e. OspreyTasks.CanonicalPipeline): the same tokens
+# OspreyTask.Name values (OspreyTasks.Create().Pipeline, the explicit ordered list the
+# task set declares): the same tokens
 # Invoke-ResumeInvalidation keys off, and the ones the driver stamps into both its
 # [TASK] log lines and the .<Name>.osprey.task validity sidecars.
 $pipelineTaskNames = @('PerFileScoring', 'FirstPassFDR', 'PerFileRescoring', 'SecondPassFDR')
@@ -3280,7 +3280,7 @@ foreach ($name in $selected) {
     # The per-leg expectations are calibrated against an observed run, NOT derived from
     # reading the C# -- deriving them is how the original defects got in. Two surprises
     # from that observation are encoded here: --task PerFileRescoring DOES release
-    # (FirstPassFdrTask.Rehydrate is reached through a lazy Demand even though IsIncluded
+    # (FirstPassFdrTask.Rehydrate is reached through a lazy Demand even though the membership rule
     # excludes it from that leg), and the warm re-run legitimately logs nothing at all
     # because a fully cached run does no work -- asserting a release there would be a
     # false red on every run.

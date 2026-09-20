@@ -39,11 +39,12 @@ namespace pwiz.Osprey.Tasks
     /// this one runs the CANONICAL pipeline unchanged: Stages 1-5 rehydrate from their valid
     /// stamps, each FDR pass folds its own report from its completed artifacts, and every
     /// other artifact write is suppressed through <see cref="OspreyConfig.DiagnosticsOnly"/>.
-    /// So this class is never in a pipeline list, its <see cref="IsIncluded"/> is false and
-    /// its <see cref="Run"/> / <see cref="Rehydrate"/> are unreachable; what it owns is the
-    /// name, the facts the pipeline asks of the selected task, and the two flags the
-    /// selection implies. It validates like the full pipeline (the base default), because
-    /// the caller re-issues the completed run's command line verbatim plus the selector.</para>
+    /// Which pipeline a selection runs is the task set's declaration (<see cref="OspreyTasks"/>),
+    /// so this class is never in a pipeline list and its <see cref="Run"/> /
+    /// <see cref="Rehydrate"/> are unreachable; what it owns is the name, what it consumes,
+    /// and the two flags the selection implies. It validates like the full pipeline (the
+    /// base default), because the caller re-issues the completed run's command line
+    /// verbatim plus the selector.</para>
     ///
     /// <para>The non-degenerate version - a fifth canonical stage after SecondPassFDR that
     /// OWNS the report render, replacing the <c>DiagnosticsOnly</c> write-suppression
@@ -61,12 +62,6 @@ namespace pwiz.Osprey.Tasks
         public override string Name => TASK_NAME;
 
         /// <summary>
-        /// Not a stage, but the selection runs the canonical stages: they rehydrate from their
-        /// stamps and fold the report with every other write suppressed.
-        /// </summary>
-        public override bool RunsCanonicalPipeline => true;
-
-        /// <summary>
         /// Admitted to the per-run survivor loader for the same reason the rescore worker is:
         /// it consumes that loader and nothing else. Admitting it is what stops it falling to
         /// the all-runs bundle, which retains every run's survivors and grew 0.10 GB/file on a
@@ -75,16 +70,11 @@ namespace pwiz.Osprey.Tasks
         public override bool HydratesPerRun => true;
 
         /// <summary>
-        /// Lets <c>SecondPassFDR</c> compute the pass-2 view, so it folds the same Stage 7
-        /// join and must not be pushed back onto the resident pool.
-        /// </summary>
-        public override bool RunsStage7Join => true;
-
-        /// <summary>
         /// The selector IS the request for the report; without the flag the run would
-        /// recompute the pass-2 view and write nothing, a silent no-op. Sets none of the
-        /// three membership flags: it is a member of every canonical task, exactly like the
-        /// straight-through run, and suppresses artifact WRITES rather than membership.
+        /// recompute the pass-2 view and write nothing, a silent no-op. Sets neither stop
+        /// boundary: every canonical stage is included, exactly like the straight-through
+        /// run (<see cref="OspreyConfig.Includes"/>), and artifact WRITES are what it
+        /// suppresses.
         /// </summary>
         public override void ApplySelection(OspreyConfig config)
         {
@@ -101,8 +91,6 @@ namespace pwiz.Osprey.Tasks
             return string.Format(@"{0} (report only; no other artifact is written)",
                 ModelDiagnosticsReport.ReportPath(config));
         }
-
-        public override bool IsIncluded(PipelineContext ctx) => false;
 
         public override bool Run(PipelineContext ctx)
         {

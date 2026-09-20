@@ -126,7 +126,7 @@ namespace pwiz.Osprey.Test
             // assertion would still pass. TestFirstPassMembershipAcrossTasks pins the property
             // that actually guards this - that FirstPassFdrTask is excluded here - and the
             // retired token is pinned by KNOWN_UNFIXED not containing it.
-            var hpc = new OspreyConfig { ExpectReconciledInput = true };
+            var hpc = TaskConfigs.ForTask(SecondPassFdrTask.TASK_NAME);
             AssertNeedsResidentPool(false, hpc);
 
             // Taking ExpectReconciledInput out of NeedsResidentPool made the LEAN counts-only
@@ -452,32 +452,29 @@ namespace pwiz.Osprey.Test
         /// every task except <c>--task SecondPassFDR</c> - and that one disagreement forced an
         /// O(files) resident pool for a consumer that does not exist.
         ///
-        /// <para>Pinned as a TRUTH TABLE over the flag combinations the tasks' <c>ApplySelection</c>
-        /// derive from <c>--task</c>, not as a single case, because the defect was a predicate that was
-        /// right four times out of five. A future task flag that re-splits membership has to
-        /// come through here.</para>
+        /// <para>Pinned as a TRUTH TABLE over every selection, built the way the CLI builds
+        /// them, not as a single case, because the defect was a predicate that was right four
+        /// times out of five. The flag-only configs that used to stand for the tasks here are
+        /// gone: membership is the selection's, and a config with a flag but no selection is
+        /// one the CLI cannot produce.</para>
         /// </summary>
         [TestMethod]
         public void TestFirstPassMembershipAcrossTasks()
         {
             // Straight-through (-i, no --task): FirstPassFDR runs.
-            Assert.IsTrue(FirstPassFdrTask.IsIncludedFor(new OspreyConfig()));
+            Assert.IsTrue(ScoringTaskShared.Includes<FirstPassFdrTask>(TaskConfigs.StraightThrough()));
 
-            // --task PerFileScoring / PerFileRescoring set NoJoin: excluded, they stop before
-            // the join. One row each is enough now: these used to be asserted twice, once
-            // with a parquet list and once without, because the predicate read the input KIND
-            // as well as the flags and the two could disagree.
-            Assert.IsFalse(FirstPassFdrTask.IsIncludedFor(
-                new OspreyConfig { NoJoin = true }));
+            // The two per-file workers: excluded, they stop before the join.
+            Assert.IsFalse(ScoringTaskShared.Includes<FirstPassFdrTask>(TaskConfigs.ForTask(PerFileScoringTask.TASK_NAME)));
+            Assert.IsFalse(ScoringTaskShared.Includes<FirstPassFdrTask>(TaskConfigs.ForTask(PerFileRescoreTask.TASK_NAME)));
 
-            // --task FirstPassFDR sets StopAfterStage5: it IS the first-pass node.
-            Assert.IsTrue(FirstPassFdrTask.IsIncludedFor(
-                new OspreyConfig { StopAfterStage5 = true }));
+            // --task FirstPassFDR: it IS the first-pass node.
+            Assert.IsTrue(ScoringTaskShared.Includes<FirstPassFdrTask>(TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME)));
 
-            // --task SecondPassFDR: NoJoin FALSE, so the old !NoJoin proxy said "runs" - but
-            // ExpectReconciledInput excludes it. This single row is the whole change.
-            Assert.IsFalse(FirstPassFdrTask.IsIncludedFor(
-                new OspreyConfig { ExpectReconciledInput = true }),
+            // --task SecondPassFDR: the old !NoJoin proxy said "runs" - the selection says the
+            // join runs alone. This single row is the whole change.
+            var secondPass = TaskConfigs.ForTask(SecondPassFdrTask.TASK_NAME);
+            Assert.IsFalse(ScoringTaskShared.Includes<FirstPassFdrTask>(secondPass),
                 "--task SecondPassFDR must not be treated as running first-pass Percolator");
 
             // And the consequence the loader draws from it: the merge no longer demands the
@@ -491,8 +488,7 @@ namespace pwiz.Osprey.Test
             // file, because that path hands Stage 7 empty per-file lists and would write a
             // near-empty .blib with no error. Streaming hydrate and lean projection are
             // different routes; only the first is what this row unlocks.
-            Assert.IsFalse(PerFileScoringTask.NeedsResidentPool(
-                new OspreyConfig { ExpectReconciledInput = true }, useFdrProjection: true));
+            Assert.IsFalse(PerFileScoringTask.NeedsResidentPool(secondPass, useFdrProjection: true));
         }
     }
 }

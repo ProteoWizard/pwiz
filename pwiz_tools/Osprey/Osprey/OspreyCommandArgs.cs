@@ -233,7 +233,7 @@ namespace pwiz.Osprey
         // The value list IS the task list, in its --help order, so the help and the
         // resolution cannot disagree; six trivial constructions, once, at type init.
         public static readonly OspreyArgument ARG_TASK = new OspreyArgument(@"task",
-            OspreyTasks.CreateAll().Select(t => t.Name).ToArray(), (c, p) => true);
+            OspreyTasks.Create().All.Select(t => t.Name).ToArray(), (c, p) => true);
         // --input-scores is GONE. It named an input KIND - "you handed me parquets" - which is
         // how the Rust pipeline said "Stage 1-4 is already done"; the C# port says that with
         // --task plus the per-run validity sidecars, and two seams answering one question is

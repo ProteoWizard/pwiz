@@ -251,9 +251,7 @@ namespace pwiz.Osprey.Test
 
         private static PipelineContext MakeContext(OspreyConfig config)
         {
-            // The release predicates read the membership flags, not the task instances, so
-            // a pipeline built from a second task list serves.
-            return new PipelineContext(config, OspreyTasks.CanonicalPipeline(OspreyTasks.CreateAll()), null, null, null);
+            return TaskConfigs.ContextFor(config);
         }
 
         /// <summary>

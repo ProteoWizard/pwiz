@@ -56,14 +56,6 @@ namespace pwiz.Osprey.Tasks
         public override string Name => TASK_NAME;
 
         /// <summary>
-        /// Runs as a one-task pipeline of its own rather than gating the canonical one:
-        /// a full run reaches the identical caching code through
-        /// <see cref="PerFileScoringTask"/>, so including this task there would
-        /// double-index every input for nothing.
-        /// </summary>
-        public override bool RunsStandalone => true;
-
-        /// <summary>
         /// Sees one input at a time and never computes an experiment-wide score.
         /// </summary>
         public override bool IsPerFileWorker => true;
@@ -83,15 +75,6 @@ namespace pwiz.Osprey.Tasks
         public override string DescribeOutput(OspreyConfig config)
         {
             return @"per-file .spectra.bin (no scoring; --output and --library are not used)";
-        }
-
-        /// <summary>
-        /// Selected explicitly and never part of the canonical pipeline; the one pipeline
-        /// this task appears in is the one built for its own selection.
-        /// </summary>
-        public override bool IsIncluded(PipelineContext ctx)
-        {
-            return ReferenceEquals(ctx.Config.SelectedTask, this);
         }
 
         public override IEnumerable<string> Inputs(PipelineContext ctx)

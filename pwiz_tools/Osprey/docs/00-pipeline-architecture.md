@@ -208,9 +208,9 @@ section exists to preserve it.
 
 ### Two selectable tasks that are not pipeline tasks
 
-The task list (`OspreyTasks.CreateAll()`) has six members, but only the four above are
-pipeline stages. The canonical pipeline (`OspreyTasks.CanonicalPipeline`, the members
-that answer `InCanonicalPipeline`) contains those four and nothing else; the other two
+The task set (`OspreyTasks.Create()`) lists six selectable tasks, but only the four above are
+pipeline stages. The canonical pipeline (`OspreyTasks.Pipeline`, an explicit ordered list
+the set declares beside `All`) contains those four and nothing else; the other two
 are reachable only by naming them in `--task`, and neither participates in a run that
 does not:
 

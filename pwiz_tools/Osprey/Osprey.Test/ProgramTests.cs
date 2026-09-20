@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -385,11 +386,11 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestResolveTask()
         {
-            var allTasks = OspreyTasks.CreateAll();
-            Assert.AreEqual(allTasks.Length, OspreyCommandArgs.ARG_TASK.Values.Length, @"every task is listed once");
-            foreach (var expected in allTasks)
+            var tasks = OspreyTasks.Create();
+            Assert.AreEqual(tasks.All.Count, OspreyCommandArgs.ARG_TASK.Values.Length, @"every task is listed once");
+            foreach (var expected in tasks.All)
             {
-                Assert.IsNull(Program.ResolveTask(expected.Name, allTasks, out OspreyTask task));
+                Assert.IsNull(Program.ResolveTask(expected.Name, tasks, out OspreyTask task));
                 Assert.AreSame(expected, task, expected.Name);
                 Assert.AreEqual(1, Array.FindAll(OspreyCommandArgs.ARG_TASK.Values, v => v == expected.Name).Length,
                     string.Format(@"{0} must appear in the --task values exactly once", expected.Name));
@@ -405,81 +406,81 @@ namespace pwiz.Osprey.Test
                 OspreyCommandArgs.ARG_TASK.Values);
 
             // Case-insensitive, resolving to the canonical spelling.
-            Assert.IsNull(Program.ResolveTask(PerFileRescoreTask.TASK_NAME.ToLowerInvariant(), allTasks, out OspreyTask lower));
+            Assert.IsNull(Program.ResolveTask(PerFileRescoreTask.TASK_NAME.ToLowerInvariant(), tasks, out OspreyTask lower));
             Assert.AreEqual(PerFileRescoreTask.TASK_NAME, lower.Name);
 
-            string err = Program.ResolveTask("Bogus", allTasks, out OspreyTask none);
+            string err = Program.ResolveTask("Bogus", tasks, out OspreyTask none);
             Assert.IsNull(none);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "unknown task");
             StringAssert.Contains(err, "Bogus");
             StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK.ArgumentText);
-            foreach (var task in allTasks)
+            foreach (var task in tasks.All)
                 StringAssert.Contains(err, task.Name);
         }
 
         [TestMethod]
-        public void TestSelectTaskSetsExpectedMembershipFlags()
+        public void TestSelectTaskSetsExpectedBehaviorFlags()
         {
-            // Each task must set (through its ApplySelection, reached by SelectTask)
-            // the (NoJoin, StopAfterStage5, ExpectReconciledInput) tuple the four
-            // tasks' IsIncluded methods read. Mirrors PipelineMembershipTest.
-            //   task             | NoJoin | StopAfterStage5 | ExpectReconciled
-            //   PerFileScoring   | true   | false           | false
-            //   FirstPassFDR     | false  | true            | false
-            //   PerFileRescoring | true   | false           | false
-            //   SecondPassFDR    | false  | false           | true
-            //   SpectraCache     | false  | false           | false
-            //   ModelDiagnostics | false  | false           | false
-            // SpectraCache is all-false because it drives no membership at all:
-            // it runs its own one-task pipeline (OspreyTask.RunsStandalone)
-            // rather than gating tasks inside the canonical one. ModelDiagnostics is
-            // all-false for the opposite reason: it runs the CANONICAL pipeline
-            // unchanged so Stages 1-5 rehydrate from their existing stamps, and
-            // suppresses writes through DiagnosticsOnly instead of through membership.
-            var cases = new (string Task, bool NoJoin, bool StopAfterStage5, bool ExpectReconciled)[]
+            // Each task must set (through its ApplySelection, reached by SelectTask) the
+            // behavior flags its selection implies - and nothing else. These are not
+            // membership flags any more (that is OspreyConfig.Includes, pinned in
+            // PipelineMembershipTest); each is read by the arms of one task's body or by a
+            // gate below the task library.
+            //   task             | StopAfterStage5 | ExpectReconciled | DiagnosticsOnly
+            //   SpectraCache     | false           | false            | false
+            //   PerFileScoring   | false           | false            | false
+            //   FirstPassFDR     | true            | false            | false
+            //   PerFileRescoring | false           | false            | false
+            //   SecondPassFDR    | false           | true             | false
+            //   ModelDiagnostics | false           | false            | true
+            var cases = new (string Task, bool StopAfterStage5, bool ExpectReconciled, bool DiagnosticsOnly)[]
             {
-                (PerFileScoringTask.TASK_NAME,   true,  false, false),
-                (FirstPassFdrTask.TASK_NAME,     false, true,  false),
-                (PerFileRescoreTask.TASK_NAME,   true,  false, false),
-                (SecondPassFdrTask.TASK_NAME,    false, false, true),
                 (SpectraCacheTask.TASK_NAME,     false, false, false),
-                (ModelDiagnosticsTask.TASK_NAME, false, false, false),
+                (PerFileScoringTask.TASK_NAME,   false, false, false),
+                (FirstPassFdrTask.TASK_NAME,     true,  false, false),
+                (PerFileRescoreTask.TASK_NAME,   false, false, false),
+                (SecondPassFdrTask.TASK_NAME,    false, true,  false),
+                (ModelDiagnosticsTask.TASK_NAME, false, false, true),
             };
-            Assert.AreEqual(OspreyTasks.CreateAll().Length, cases.Length, @"every task has a flags row");
+            Assert.AreEqual(OspreyTasks.Create().All.Count, cases.Length, @"every task has a flags row");
             foreach (var c in cases)
             {
                 var config = TaskConfigs.ForTask(c.Task);
                 Assert.AreEqual(c.Task, config.SelectedTask.Name);
-                Assert.AreEqual(c.NoJoin, config.NoJoin, string.Format("{0}: NoJoin", c.Task));
                 Assert.AreEqual(c.StopAfterStage5, config.StopAfterStage5,
                     string.Format("{0}: StopAfterStage5", c.Task));
                 Assert.AreEqual(c.ExpectReconciled, config.ExpectReconciledInput,
                     string.Format("{0}: ExpectReconciledInput", c.Task));
-                // DiagnosticsOnly is set by the selection too, so it must single out
-                // exactly one row - it is the flag every write suppression reads.
-                Assert.AreEqual(c.Task == ModelDiagnosticsTask.TASK_NAME, config.DiagnosticsOnly,
+                // DiagnosticsOnly is the flag every write suppression reads, so it must
+                // single out exactly one row.
+                Assert.AreEqual(c.DiagnosticsOnly, config.DiagnosticsOnly,
                     string.Format("{0}: DiagnosticsOnly", c.Task));
             }
-            // No selection: the full pipeline, every flag off.
-            var full = new OspreyConfig();
-            full.SelectTask(null);
+            // No selection: the full pipeline, every flag off, the canonical pipeline carried.
+            var full = TaskConfigs.StraightThrough();
             Assert.IsNull(full.SelectedTask);
-            Assert.IsFalse(full.NoJoin || full.StopAfterStage5 || full.ExpectReconciledInput || full.DiagnosticsOnly);
-            // A re-selection holds exactly the new task's flags: nothing a previous selection
-            // set survives, so a config reused across selections cannot carry a stale flag
-            // into the membership predicates.
-            var reselected = TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME);
+            Assert.AreEqual(4, full.Pipeline.Count);
+            Assert.IsFalse(full.StopAfterStage5 || full.ExpectReconciledInput || full.DiagnosticsOnly);
+            // A re-selection holds exactly the new task's flags and pipeline: nothing a
+            // previous selection set survives, so a config reused across selections cannot
+            // carry a stale flag into a task body.
+            var tasks = OspreyTasks.Create();
+            var reselected = TaskConfigs.ForTask(tasks, FirstPassFdrTask.TASK_NAME);
             Assert.IsTrue(reselected.StopAfterStage5);
-            reselected.SelectTask(null);
+            reselected.SelectTask(null, tasks.Pipeline);
             Assert.IsFalse(reselected.StopAfterStage5, @"clearing the selection clears its flags");
-            reselected.SelectTask(OspreyTasks.FindByName(OspreyTasks.CreateAll(), ModelDiagnosticsTask.TASK_NAME));
-            reselected.SelectTask(OspreyTasks.FindByName(OspreyTasks.CreateAll(), SecondPassFdrTask.TASK_NAME));
+            var modelDiagnostics = tasks.FindByName(ModelDiagnosticsTask.TASK_NAME);
+            reselected.SelectTask(modelDiagnostics, tasks.PipelineFor(modelDiagnostics));
+            var secondPass = tasks.FindByName(SecondPassFdrTask.TASK_NAME);
+            reselected.SelectTask(secondPass, tasks.PipelineFor(secondPass));
             Assert.IsFalse(reselected.DiagnosticsOnly, @"a later selection drops the earlier one's flags");
             Assert.IsTrue(reselected.ExpectReconciledInput);
             // ... except --model-diagnostics, which is the operator's own flag, not a
             // selection's: ModelDiagnostics implies it but a later selection does not revoke it.
             Assert.IsTrue(reselected.ModelDiagnostics);
+            // A selection without the pipeline it runs is refused: the two travel together.
+            Assert.ThrowsException<ArgumentNullException>(() => new OspreyConfig().SelectTask(secondPass, null));
         }
 
         // --- --task ModelDiagnostics: regenerate the report, touch nothing else ---
@@ -514,15 +515,12 @@ namespace pwiz.Osprey.Test
 
         private static List<string> SecondPassFdrOutputs(string taskName)
         {
-            var allTasks = OspreyTasks.CreateAll();
-            var config = TaskConfigs.ForTask(allTasks, taskName);
+            var config = TaskConfigs.ForTask(taskName);
             config.InputFiles = new List<string> { @"a.mzML", @"b.mzML" };
             config.LibrarySource = LibrarySource.FromPath(@"ref.blib");
             config.OutputBlib = @"out.blib";
-            var tasks = OspreyTasks.PipelineFor(allTasks, config.SelectedTask);
-            var ctx = new PipelineContext(config, tasks, null, null, null);
-            var secondPass = tasks[tasks.Length - 1];
-            Assert.IsInstanceOfType(secondPass, typeof(SecondPassFdrTask));
+            var ctx = TaskConfigs.ContextFor(config);
+            var secondPass = config.Pipeline.OfType<SecondPassFdrTask>().Single();
             return new List<string>(secondPass.Outputs(ctx));
         }
 
@@ -625,7 +623,9 @@ namespace pwiz.Osprey.Test
         public void TestConfigDefaultsDisableHpcMode()
         {
             var cfg = new OspreyConfig();
-            Assert.IsFalse(cfg.NoJoin, "NoJoin should default to false");
+            Assert.IsNull(cfg.SelectedTask, "no task should be selected by default");
+            Assert.IsFalse(cfg.StopAfterStage5 || cfg.ExpectReconciledInput || cfg.DiagnosticsOnly,
+                "no selection-derived flag should default to true");
         }
 
         // --- ParquetScoreCache.CheckParquetMetadata -----------------------

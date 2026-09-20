@@ -21,7 +21,7 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.Tasks;
@@ -30,31 +30,53 @@ namespace pwiz.Osprey.Test
 {
     /// <summary>
     /// One task's config, built the way <c>Program.Main</c> builds it: the task looked up by
-    /// name in the run's task list and SELECTED, so it sets the flags it implies through the
-    /// same <see cref="OspreyConfig.SelectTask"/> the CLI goes through. Three test classes
-    /// each used to hand-copy Main's flag assignments, and one of the copies named a task
-    /// Main did not, building a config the CLI cannot produce; deriving the flags from the
-    /// task here means a test cannot pin a membership no real run has.
+    /// name in a task set and SELECTED together with the pipeline it runs, through the same
+    /// <see cref="OspreyConfig.SelectTask"/> the CLI goes through. Three test classes each
+    /// used to hand-copy Main's flag assignments, and one of the copies named a task Main did
+    /// not, building a config the CLI cannot produce; a config that stands for a task is
+    /// built here or not at all.
     /// </summary>
     internal static class TaskConfigs
     {
         /// <summary>
-        /// A config selecting the named task from a fresh task list. For a test that also
-        /// builds a pipeline, use the overload that takes the list, so the selection and the
-        /// pipeline share instances the way a run does.
+        /// A config selecting the named task from a fresh task set. The pipeline it runs
+        /// travels on the config, so a test that needs a <see cref="PipelineContext"/> over
+        /// the same instances builds it with <see cref="ContextFor"/>.
         /// </summary>
         public static OspreyConfig ForTask(string taskName)
         {
-            return ForTask(OspreyTasks.CreateAll(), taskName);
+            return ForTask(OspreyTasks.Create(), taskName);
         }
 
-        public static OspreyConfig ForTask(IReadOnlyList<OspreyTask> allTasks, string taskName)
+        public static OspreyConfig ForTask(OspreyTasks tasks, string taskName)
         {
-            var task = OspreyTasks.FindByName(allTasks, taskName);
+            var task = tasks.FindByName(taskName);
             Assert.IsNotNull(task, string.Format(@"no task named '{0}'", taskName));
             var config = new OspreyConfig();
-            config.SelectTask(task);
+            config.SelectTask(task, tasks.PipelineFor(task));
             return config;
+        }
+
+        /// <summary>
+        /// A no-selection config over the canonical pipeline: the straight-through run.
+        /// </summary>
+        public static OspreyConfig StraightThrough()
+        {
+            var config = new OspreyConfig();
+            config.SelectTask(null, OspreyTasks.Create().Pipeline);
+            return config;
+        }
+
+        /// <summary>
+        /// A pipeline context over the stages <paramref name="config"/> carries - the
+        /// instances its selection was resolved against, so a stage asking "am I the
+        /// selection?" by reference gets the run's answer. A bare config that never went
+        /// through <see cref="OspreyConfig.SelectTask"/> gets a fresh canonical pipeline.
+        /// </summary>
+        public static PipelineContext ContextFor(OspreyConfig config)
+        {
+            var stages = config.Pipeline?.Cast<OspreyTask>() ?? OspreyTasks.Create().Pipeline;
+            return new PipelineContext(config, stages, null, null, null);
         }
     }
 }

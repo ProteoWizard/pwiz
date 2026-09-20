@@ -82,21 +82,11 @@ namespace pwiz.Osprey.Tasks
 
         public override string Name => TASK_NAME;
 
-        public override bool InCanonicalPipeline => true;
-
         /// <summary>
         /// The Stage 1-4 fan-out worker: each input produces a <c>{stem}.scores.parquet</c>
         /// next to it, no FDR, no blib.
         /// </summary>
         public override bool IsPerFileWorker => true;
-
-        /// <summary>
-        /// Include only the per-file fan-out, not the joining tasks.
-        /// </summary>
-        public override void ApplySelection(OspreyConfig config)
-        {
-            config.NoJoin = true;
-        }
 
         /// <summary>
         /// mzML in, per-file <c>.scores.parquet</c> out: a library, but no <c>--output</c>,
@@ -117,17 +107,6 @@ namespace pwiz.Osprey.Tasks
         public override string DescribeOutput(OspreyConfig config)
         {
             return @"per-file .scores.parquet (next to each input file)";
-        }
-
-        /// <summary>
-        /// Computes per-file scores from spectra for every task except the three that
-        /// start after Stage 4. For those it is excluded and a downstream task
-        /// lazy-rehydrates each run's scores through
-        /// <c>ctx.Demand&lt;PerFileScoringTask&gt;()</c>.
-        /// </summary>
-        public override bool IsIncluded(PipelineContext ctx)
-        {
-            return !ScoringTaskShared.StartsAfterPerFileScoring(ctx.Config);
         }
 
         // Stage 1-4 byproducts this task publishes for downstream consumers to
@@ -436,7 +415,7 @@ namespace pwiz.Osprey.Tasks
             //
             // NOT reachable today, and the claim that it was is wrong: Program.cs rejects
             // --task SecondPassFDR combined with --input and requires --input-scores, so
-            // ExpectReconciledInput means this task is excluded and IsIncluded returns false -
+            // under --task SecondPassFDR this task is excluded by the membership rule -
             // Run is never entered on that config. This is aligned with its two siblings so the
             // one decision has one predicate, not so that a live defect is closed.
             bool needsResidentPool = !CanUseLeanProjection(ctx.Config, hasReconSidecars: false,
@@ -943,8 +922,8 @@ namespace pwiz.Osprey.Tasks
         /// surface the per-file outputs for downstream tasks (before any
         /// early-exit, so a partial-success caller still sees the populated
         /// collections), then apply the two success-but-stop boundaries --
-        /// an empty score set (cannot run FDR) and <c>--task PerFileScoring</c> (Stage
-        /// 1-4 only). Returns <c>true</c> to continue the pipeline, or
+        /// an empty score set (cannot run FDR) and a per-file worker selection (Stage
+        /// 1-4 only, no join in this process). Returns <c>true</c> to continue the pipeline, or
         /// <c>false</c> with <see cref="PipelineContext.ExitCode"/> = 0 at
         /// either boundary.
         /// </summary>
@@ -1009,16 +988,28 @@ namespace pwiz.Osprey.Tasks
                 return false;
             }
 
-            // --task PerFileScoring: stop here. Per-file `.scores.parquet` files are
-            // now on disk; a separate `--task FirstPassFDR` invocation (typically
-            // on a SecondPassFDR node) will pick them up and run Stage 5+.
-            if (ctx.Config.NoJoin)
+            // A per-file worker stops here: nothing after Stage 1-4 joins in this process.
+            // For --task PerFileScoring the per-file `.scores.parquet` files are now on disk
+            // and a separate `--task FirstPassFDR` invocation (typically on a SecondPassFDR
+            // node) will pick them up and run Stage 5+. The rescore worker reaches this tail
+            // through its disk-load rehydrate, having loaded Stage 1-4 state rather than
+            // scored it, and stops the same way; the message says which happened.
+            if (ctx.Config.SelectedTask?.IsPerFileWorker == true)
             {
-                ctx.LogInfo(string.Format(
-                    @"--task PerFileScoring: Stage 1-4 complete. {0} entries scored across {1} file(s). " +
-                    @"Per-file `.scores.parquet` written next to each input mzML. " +
-                    @"Skipping FDR and blib output.",
-                    totalScored, nFiles));
+                if (ReferenceEquals(ctx.Config.SelectedTask, this))
+                {
+                    ctx.LogInfo(string.Format(
+                        @"--task {0}: Stage 1-4 complete. {1} entries scored across {2} file(s). " +
+                        @"Per-file `.scores.parquet` written next to each input mzML. " +
+                        @"Skipping FDR and blib output.",
+                        Name, totalScored, nFiles));
+                }
+                else
+                {
+                    ctx.LogInfo(string.Format(
+                        @"--task {0}: Stage 1-4 state loaded for {1} file(s); a per-file worker runs no join.",
+                        ctx.Config.SelectedTask.Name, nFiles));
+                }
                 ctx.ExitCode = 0;
                 return false;
             }
@@ -1581,7 +1572,7 @@ namespace pwiz.Osprey.Tasks
         /// 2. Nothing in the run reads the PRE-compaction pool
         ///    (<see cref="PreCompactionPoolReason"/> finds no consumer).
         ///
-        /// Term 2 asks <see cref="FirstPassFdrTask.IsIncludedFor"/> directly: FirstPassFDR must
+        /// Term 2 asks the one membership rule (<see cref="ScoringTaskShared.Includes{T}"/>): FirstPassFDR must
         /// be EXCLUDED from this pipeline and reachable only through its bundle-adopt
         /// Rehydrate, because a FirstPassFDR that Ran would train first-pass Percolator on
         /// whatever <c>ScoredEntries</c> holds - which must be the full pre-compaction pool.
@@ -1664,8 +1655,8 @@ namespace pwiz.Osprey.Tasks
             // hasReconSidecars: every reason above is a resident-pool consumer and returns
             // first, so reaching here means none of them applies.
             //
-            // Ask the task's own membership predicate rather than the former `!NoJoin` proxy
-            // (#4486). The two agree on every task but --task SecondPassFDR, which leaves
+            // Ask the membership rule itself rather than the former `!NoJoin` proxy
+            // (#4486). The two agreed on every task but --task SecondPassFDR, which left
             // NoJoin false while setting ExpectReconciledInput: FirstPassFdrTask is excluded
             // there, so nothing trains, and the proxy was forcing an O(files) resident pool
             // for a consumer that does not exist. Re-deriving membership here is what let
@@ -1677,7 +1668,7 @@ namespace pwiz.Osprey.Tasks
             // report one run at a time and trains nothing, so it needs no pool; the arm proving it
             // runs inside FirstPassFdrTask.Run, AFTER this decision, so it cannot be what corrects
             // it. Ask the same question here instead.
-            if (FirstPassFdrTask.IsIncludedFor(config) && !FirstPassFdrTask.WillOnlyFoldDiagnostics(ctx))
+            if (ScoringTaskShared.Includes<FirstPassFdrTask>(config) && !FirstPassFdrTask.WillOnlyFoldDiagnostics(ctx))
                 return @"First-pass Percolator training in this process";
             // No bundle at all. The reconciliation envelope is what carries the compaction
             // predicate, so without it there is nothing to compact against at load time and

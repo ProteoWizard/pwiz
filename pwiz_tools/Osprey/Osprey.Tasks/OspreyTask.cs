@@ -65,47 +65,16 @@ namespace pwiz.Osprey.Tasks
         public abstract string Name { get; }
 
         // ---- The selection contract (ISelectableTask) ------------------------------------
-        // Every fact defaults to FAIL CLOSED: a task added later is admitted to nothing - no
-        // per-run hydrate, no Stage 7 stream, no canonical pipeline - until its author
-        // overrides what is true of it. Each of these used to be a switch over an enum of
-        // task names in whichever consumer asked, and an exclusion list written there could
-        // not know about a task added afterwards; a fact answered by the task itself can.
-        // The doc for each is on the interface.
-
-        public virtual bool HydratesPerRun => false;
-
-        public virtual bool StartsAfterPerFileScoring => false;
-
-        public virtual bool ReadsReconciledScores => false;
-
-        public virtual bool RunsStage7Join => false;
+        // What a task IS, answered by the task; the two facts default to FAIL CLOSED, so a
+        // task added later is a join that hydrates nothing per run until its author says
+        // otherwise. Where a task sits, and which stages run alongside it, are not here: the
+        // pipeline is an ordered list the task set composes (OspreyTasks), and membership is
+        // OspreyConfig.Includes over that list and the selection. The doc for each member is
+        // on the interface.
 
         public virtual bool IsPerFileWorker => false;
 
-        /// <summary>
-        /// One of the four canonical pipeline stages - the list a full run walks in
-        /// execution order (see <see cref="OspreyTasks"/>). A task selectable by name but
-        /// not a stage (a data-staging step, a render over completed products) leaves this
-        /// false and is reached only through <c>--task</c>.
-        /// </summary>
-        public virtual bool InCanonicalPipeline => false;
-
-        /// <summary>
-        /// When selected, runs as a one-task pipeline of its own instead of gating the
-        /// canonical one. Keeps the canonical pipeline's membership rules about the analysis
-        /// itself; a task that stages data without analyzing it is the case.
-        /// </summary>
-        public virtual bool RunsStandalone => false;
-
-        /// <summary>
-        /// When selected, walks the canonical pipeline: as a member of it, gated by the
-        /// flags its <see cref="ApplySelection"/> sets, or - the one other case - as a
-        /// selector that is not a stage but runs the canonical stages with its flags applied
-        /// (the diagnostics render). A task that is neither this nor
-        /// <see cref="RunsStandalone"/> declares no pipeline, and selecting it is refused
-        /// rather than silently running the whole analysis with the task never called.
-        /// </summary>
-        public virtual bool RunsCanonicalPipeline => InCanonicalPipeline;
+        public virtual bool HydratesPerRun => false;
 
         public virtual void ApplySelection(OspreyConfig config)
         {
@@ -159,20 +128,6 @@ namespace pwiz.Osprey.Tasks
         /// consumes implements this as a no-op returning <c>true</c>.
         /// </summary>
         public abstract bool Rehydrate(PipelineContext ctx);
-
-        /// <summary>
-        /// Whether this task participates in the pipeline for the current
-        /// configuration. Driver-owned membership predicate: the orchestrator
-        /// iterates only the included tasks and runs those whose outputs are
-        /// not already on disk, while excluded tasks lazy-rehydrate their state
-        /// through <see cref="PipelineContext.Demand{T}"/> when an included task
-        /// reaches for it. Replaces the <c>DeriveStartAtTask</c> /
-        /// <c>DeriveStopAfterTask</c> range gating (the membership becomes a
-        /// per-task fact rather than a contiguous [start..stop] window).
-        /// Default <c>true</c>; tasks that run only in some HPC modes override
-        /// to gate on the relevant <see cref="OspreyConfig"/> flags.
-        /// </summary>
-        public virtual bool IsIncluded(PipelineContext ctx) => true;
 
         /// <summary>
         /// The byproduct purpose types this task publishes for downstream tasks

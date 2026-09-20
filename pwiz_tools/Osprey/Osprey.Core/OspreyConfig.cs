@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace pwiz.Osprey.Core
 {
@@ -328,70 +329,91 @@ namespace pwiz.Osprey.Core
         public FileParallelism FileParallelism { get; set; } = FileParallelism.Sequential;
 
         /// <summary>
-        /// Pipeline-membership flag (read by each task's <c>IsIncluded</c>):
-        /// include only the per-file fan-out, not the joining tasks. Set by both
-        /// <c>--task PerFileScoring</c> and <c>--task PerFileRescoring</c>; the
-        /// concrete behavior depends on which of the two selected it.
-        /// <c>PerFileScoring</c> is the Stage 1-4 worker - each input produces a
-        /// <c>{stem}.scores.parquet</c> next to it, no FDR, no blib;
-        /// <c>PerFileRescoring</c> is the Stage 6 rescore worker. The two are told apart
-        /// by <see cref="SelectedTask"/>, which is the only thing that ever decided it -
-        /// they used to be told apart by input KIND as well, and that second seam is gone.
-        /// </summary>
-        public bool NoJoin { get; set; }
-
-        /// <summary>
         /// HPC: when true, exit after Stage 5 + reconciliation planning,
         /// having written the boundary files
         /// (<c>&lt;stem&gt;.&lt;phase&gt;-pass.fdr_scores.bin</c> and
         /// <c>&lt;stem&gt;.reconciliation.json</c>) for each input file.
-        /// Skips Stage 6 + 7 + 8. Set by <c>--task FirstPassFDR</c>.
+        /// Skips Stage 6 + 7 + 8. Set by <c>--task FirstPassFDR</c>. A behavior flag the
+        /// first-pass task's own arms read (planning ends the run; no survivor loader is
+        /// built) - not a membership flag: which stages run is <see cref="Includes"/>.
         /// </summary>
         public bool StopAfterStage5 { get; set; }
 
         /// <summary>
-        /// HPC: when true, every <c>--input-scores</c> parquet must carry
+        /// HPC: when true, every run's reconciled parquet must carry
         /// <c>osprey.reconciled = "true"</c> in its footer metadata. Set
         /// by <c>--task SecondPassFDR</c>; the post-Stage-6 (reconciled)
         /// entry point. Stages 1-6 are skipped: the pipeline loads
         /// reconciled scores + the <c>.{1st,2nd}-pass.fdr_scores.bin</c>
         /// sidecars, then runs Stages 7-8 (second-pass FDR overlay,
         /// protein parsimony + picked-protein FDR, blib output). Mirrors
-        /// Rust's <c>config.expect_reconciled_input</c>.
+        /// Rust's <c>config.expect_reconciled_input</c>. A behavior flag (the strict
+        /// reconciled-footer gate lives below the task library and reads it here) - not a
+        /// membership flag: which stages run is <see cref="Includes"/>.
         /// </summary>
         public bool ExpectReconciledInput { get; set; }
 
         /// <summary>
-        /// The single pipeline task selected by <c>--task &lt;Name&gt;</c> on the
-        /// CLI, or null for the full pipeline (no <c>--task</c>). Set only through
-        /// <see cref="SelectTask"/>, which writes the flags a task implies (<see cref="NoJoin"/>,
-        /// <see cref="StopAfterStage5"/>, <see cref="ExpectReconciledInput"/>,
-        /// <see cref="DiagnosticsOnly"/>) in the same step, so the CLI path cannot set the
-        /// selection without its flags or leave a previous selection's behind. The instance
-        /// is the task itself - the same one the pipeline runs - so a task can ask whether it
-        /// IS the selection by reference, and every per-task fact the pipeline needs is
-        /// answered by the task through <see cref="ISelectableTask"/> rather than by a switch
-        /// over its name. It has no input-KIND contract to enforce: every task takes the same
-        /// data files, and the second seam that said "you handed me parquets, so Stage 1-4 is
-        /// done" has retired into these flags.
+        /// The single task selected by <c>--task &lt;Name&gt;</c> on the CLI, or null for
+        /// the full pipeline (no <c>--task</c>). Set only through <see cref="SelectTask"/>,
+        /// together with the <see cref="Pipeline"/> it runs and the flags it implies, so the
+        /// CLI path cannot set one without the others or leave a previous selection's behind.
+        /// The instance is the task itself - the same one the pipeline runs - so a task can
+        /// ask whether it IS the selection by reference, and what it is is answered by the
+        /// task through <see cref="ISelectableTask"/> rather than by a switch over its name.
+        /// It has no input-KIND contract to enforce: every task takes the same data files,
+        /// and the second seam that said "you handed me parquets, so Stage 1-4 is done" has
+        /// retired.
         /// </summary>
         public ISelectableTask SelectedTask { get; private set; }
 
         /// <summary>
-        /// Select the task a run executes, or null for the full pipeline, and let it set the
-        /// flags it implies. The one place the selection and its flags are written together:
-        /// the four flags a selection derives are cleared first, so they hold exactly what
-        /// this task sets and nothing a previous selection left. <see cref="ModelDiagnostics"/>
-        /// is not among them - <c>--model-diagnostics</c> sets it on its own.
+        /// The stages this run walks, in execution order: the pipeline the selection was
+        /// resolved against, or the canonical pipeline when nothing is selected. Null until
+        /// <see cref="SelectTask"/> is called, which a bare config in a unit test never does;
+        /// every reader treats that as "no selection, the full pipeline". Position questions -
+        /// does this run start after per-file scoring, does it run the final join - are
+        /// answered from this list and the selection, never by a task describing where it
+        /// sits.
         /// </summary>
-        public void SelectTask(ISelectableTask task)
+        public IReadOnlyList<ISelectableTask> Pipeline { get; private set; }
+
+        /// <summary>
+        /// Select the task a run executes - or null for the full pipeline - together with the
+        /// stages it runs, and let it set the flags it implies. The one place the selection,
+        /// its pipeline and its flags are written together: the flags a selection derives are
+        /// cleared first, so they hold exactly what this task sets and nothing a previous
+        /// selection left. <see cref="ModelDiagnostics"/> is not among them -
+        /// <c>--model-diagnostics</c> sets it on its own.
+        /// </summary>
+        public void SelectTask(ISelectableTask task, IReadOnlyList<ISelectableTask> pipeline)
         {
-            NoJoin = false;
+            if (task != null && pipeline == null)
+                throw new ArgumentNullException(nameof(pipeline), @"A selected task must come with the pipeline it runs.");
             StopAfterStage5 = false;
             ExpectReconciledInput = false;
             DiagnosticsOnly = false;
             SelectedTask = task;
+            Pipeline = pipeline;
             task?.ApplySelection(this);
+        }
+
+        /// <summary>
+        /// Whether <paramref name="stage"/> is included in this run's driver loop - the one
+        /// membership rule. Every stage is when nothing is selected. A selected task that is a
+        /// stage of the pipeline it runs (an HPC node: one node = one task) is included alone,
+        /// and the stages before it materialize on demand from their artifacts on disk. A
+        /// selected task that is NOT a stage of the pipeline it runs is a selector that runs
+        /// all of it - the diagnostics render - and every stage is included. Replaces the
+        /// three membership flags (<c>NoJoin</c>, and the two above read as membership) that
+        /// each stage's own predicate used to combine, which encoded one fan-out and one
+        /// join over a pipeline that has two of each.
+        /// </summary>
+        public bool Includes(ISelectableTask stage)
+        {
+            if (SelectedTask == null || ReferenceEquals(SelectedTask, stage))
+                return true;
+            return !Pipeline.Contains(SelectedTask);
         }
 
         /// <summary>
@@ -401,7 +423,7 @@ namespace pwiz.Osprey.Core
         /// large cohort without disturbing - or waiting for - the results it already produced.
         /// Every suppressed artifact is one this run would otherwise REWRITE with the same
         /// content it already holds, so skipping them costs nothing but the write. Set by
-        /// that task's <see cref="ISelectableTask.ApplySelection"/>, like its three siblings.
+        /// that task's <see cref="ISelectableTask.ApplySelection"/>, like its two siblings.
         /// </summary>
         public bool DiagnosticsOnly { get; set; }
 

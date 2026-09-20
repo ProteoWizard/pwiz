@@ -77,13 +77,6 @@ namespace pwiz.Osprey.Tasks
 
         public override string Name => TASK_NAME;
 
-        public override bool InCanonicalPipeline => true;
-
-        /// <summary>
-        /// The first join: handed every run's Stage 4 parquet, never spectra.
-        /// </summary>
-        public override bool StartsAfterPerFileScoring => true;
-
         /// <summary>
         /// Exit after Stage 5 + reconciliation planning, having written the boundary
         /// files for each input. The ONLY setter of that flag.
@@ -118,39 +111,6 @@ namespace pwiz.Osprey.Tasks
                     Name);
             }
             return null;
-        }
-
-        /// <summary>
-        /// Computes Stage 5 (Percolator first-pass FDR + Stage 6
-        /// planning) in straight-through, --task FirstPassFDR (StopAfterStage5), and
-        /// the --input-scores full-pipeline. Excluded in --task PerFileScoring
-        /// (stops at Stage 1-4), --task PerFileRescoring, and the --task SecondPassFDR
-        /// stage (where it rehydrates the bundle rather than recomputing).
-        /// </summary>
-        public override bool IsIncluded(PipelineContext ctx) => IsIncludedFor(ctx.Config);
-
-        /// <summary>
-        /// Pure membership predicate behind <see cref="IsIncluded"/>, exposed so a caller
-        /// that needs to know whether first-pass Percolator trains in THIS process asks the
-        /// one definition instead of re-deriving it.
-        ///
-        /// <para><see cref="PerFileScoringTask"/>'s pre-compaction-pool decision used
-        /// <c>!NoJoin</c> as a proxy for exactly this question. That proxy is right for every
-        /// task except <c>--task SecondPassFDR</c>, which leaves <c>NoJoin</c> false while
-        /// setting <c>ExpectReconciledInput</c> - so this task is EXCLUDED, nothing trains,
-        /// and the resident pre-compaction pool the proxy forced was pure waste at O(files)
-        /// (issue #4486). Calling the predicate keeps the two from drifting again.</para>
-        /// </summary>
-        internal static bool IsIncludedFor(OspreyConfig c)
-        {
-            // Three clauses over two seams collapsed to one over the task flags. The
-            // retired term was `inputs` - were parquets supplied - which the truth table
-            // above shows was never doing independent work: it tracked exactly the tasks
-            // whose flags already say so. Excluded for the two per-file workers (NoJoin)
-            // and for the Stage 7 node (ExpectReconciledInput); included for the full
-            // pipeline, for --task FirstPassFDR itself, and for --task ModelDiagnostics,
-            // which needs first-pass state to render.
-            return !c.NoJoin && !c.ExpectReconciledInput;
         }
 
         /// <summary>
@@ -2343,7 +2303,7 @@ namespace pwiz.Osprey.Tasks
                     perFileEntries.Count));
                 // Success: return true (not false). The stop after Stage 5 is now
                 // a membership fact -- PerFileRescore and SecondPassFDR are excluded
-                // by IsIncluded under --task FirstPassFDR, so the driver loop iterates no
+                // by the membership rule under --task FirstPassFDR (OspreyConfig.Includes), so the driver loop iterates no
                 // further. The failure path above keeps ExitCode=1; return false.
                 ctx.ExitCode = 0;
                 return true;

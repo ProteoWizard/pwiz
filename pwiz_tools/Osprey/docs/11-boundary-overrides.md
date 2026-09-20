@@ -292,7 +292,7 @@ computed by Stage 6 planning. The flags that affect this stage:
 | Flag / field | Default | Effect on this stage |
 |--------------|---------|----------------------|
 | `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}` | (in-process, all stages) | `PerFileRescoring` (`PerFileRescoreTask`) runs this stage as a standalone worker. `SecondPassFDR` (`SecondPassFdrTask`) rehydrates reconciled parquets instead of re-scoring. |
-| `-i <file...>` | — | Names the run the worker rescores; its boundary `.scores.parquet` and sidecars derive from the stem. Membership is `--task` alone (`PerFileRescoreTask.IsIncluded`). |
+| `-i <file...>` | — | Names the run the worker rescores; its boundary `.scores.parquet` and sidecars derive from the stem. Membership is `--task` alone (`OspreyConfig.Includes`: the selected stage runs by itself). |
 | `--reconciliation-compaction-fdr <v>` | 0.01 (`OspreyConfig.ReconciliationCompactionFdr`) | First-pass compaction predicate applied upstream in FirstPassFDR; determines which entries survive into the rescore set. |
 | `ReconciliationConfig.Enabled` | true | Gates reconciliation planning + `reconciliation.json` inputs (`PerFileRescoreTask.cs:158`). Disabling leaves only multi-charge consensus rescore. |
 | `ReconciliationConfig.ConsensusFdr` | 0.01 (`ReconciliationConfig.cs:39`) | Threshold for consensus peptide selection, calibration refit, and reconciliation planning (`Stage6Planner.cs`). Not a CLI flag; config field. |

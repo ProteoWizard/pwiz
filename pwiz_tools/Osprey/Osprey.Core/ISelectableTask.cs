@@ -29,14 +29,14 @@ namespace pwiz.Osprey.Core
     /// selection is carried by <see cref="OspreyConfig.SelectedTask"/>, which lives here and
     /// is read on both sides of that boundary - by the exe that resolves the name and by the
     /// task library's own predicates. So the contract sits where both can see it, and Core
-    /// still names no task: every member is a fact about the selected task, answered by the
-    /// task itself, and a task added later answers them without anything here changing.
+    /// still names no task.
     ///
-    /// <para>Each fact used to be a switch over an enum of task names, one per consumer,
-    /// which is how <c>--task ModelDiagnostics</c> was routed down the per-run rescore path:
-    /// an exclusion list cannot know about a sixth member. Asked of the task, a fact fails
-    /// CLOSED - the defaults on <c>OspreyTask</c> admit a new task to nothing until its author
-    /// decides otherwise.</para>
+    /// <para>Deliberately small. A task states what it IS - its name, whether it is a
+    /// fan-out worker, what it consumes - and what its selection asks of the run. Where it
+    /// sits in a pipeline, and which stages run alongside it, are the pipeline's facts, not
+    /// the task's: they are answered by <see cref="OspreyConfig.Pipeline"/> and
+    /// <see cref="OspreyConfig.Includes"/>, from the ordered stage list the selection was
+    /// resolved against.</para>
     /// </summary>
     public interface ISelectableTask
     {
@@ -47,46 +47,23 @@ namespace pwiz.Osprey.Core
         string Name { get; }
 
         /// <summary>
-        /// May hydrate ONE run's survivors at a time from the analysis-wide retained base_id
-        /// summary instead of an all-runs bundle - the bounded Stage 6 route. True of the
-        /// rescore worker and of the diagnostics render, which consume the per-run loader and
-        /// nothing else.
-        /// </summary>
-        bool HydratesPerRun { get; }
-
-        /// <summary>
-        /// Starts AFTER Stage 4: handed a directory of per-run artifacts rather than spectra,
-        /// so per-file scoring does not run for it and its upstream state materializes
-        /// through the disk load instead. True of the two joins and the rescore worker.
-        /// </summary>
-        bool StartsAfterPerFileScoring { get; }
-
-        /// <summary>
-        /// Reads each run's rows from the Stage 6 <c>.scores-reconciled.parquet</c> rather
-        /// than the Stage 4 <c>.scores.parquet</c>. A property of the task, not of what is on
-        /// disk: a re-run over a completed directory must not hand a first pass the survivor
-        /// subset just because the reconciled sibling exists.
-        /// </summary>
-        bool ReadsReconciledScores { get; }
-
-        /// <summary>
-        /// This process runs Stage 7's join, so a per-run source published for that join is
-        /// actually folded by something. A task that stops earlier must answer false, or it
-        /// publishes for a consumer that never arrives.
-        /// </summary>
-        bool RunsStage7Join { get; }
-
-        /// <summary>
-        /// One of the per-file HPC workers: sees ONE input and never computes an
-        /// experiment-wide score, so its input count is not the cohort size.
+        /// A fan-out worker: sees ONE run at a time and never computes an experiment-wide
+        /// score or writes an experiment-wide product, so its input count is not the cohort
+        /// size and it stops before any join.
         /// </summary>
         bool IsPerFileWorker { get; }
 
         /// <summary>
-        /// Set the config flags this task implies once it has been selected - the
-        /// pipeline-membership flags the tasks' <c>IsIncluded</c> predicates read, and any
-        /// output-mode flag the selector stands for. Called once, by
-        /// <see cref="OspreyConfig.SelectTask"/>, after the command line has parsed.
+        /// May hydrate ONE run's survivors at a time from the analysis-wide retained base_id
+        /// summary instead of an all-runs bundle - the bounded Stage 6 route. True of a task
+        /// that consumes the per-run loader and nothing else.
+        /// </summary>
+        bool HydratesPerRun { get; }
+
+        /// <summary>
+        /// Set the config flags this task implies once it has been selected - a stop
+        /// boundary, an input gate, an output-mode flag the selector stands for. Called once,
+        /// by <see cref="OspreyConfig.SelectTask"/>, after the command line has parsed.
         /// </summary>
         void ApplySelection(OspreyConfig config);
 

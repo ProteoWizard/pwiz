@@ -80,10 +80,10 @@ namespace pwiz.Osprey
             {
                 // Scan args for the HPC task selector up front so error
                 // messages name the task before any other argument is parsed. A single
-                // `--task <Name>` runs exactly one pipeline task (HPC: one
-                // node = one task): the task sets the (NoJoin, StopAfterStage5,
-                // ExpectReconciledInput) config flags the four tasks'
-                // IsIncluded methods read. Default (no --task) runs the full
+                // `--task <Name>` runs exactly one pipeline stage (HPC: one
+                // node = one task) - the selected stage is the only one the driver
+                // includes (OspreyConfig.Includes) - and the task sets whatever behavior
+                // flag its selection implies. Default (no --task) runs the full
                 // straight-through pipeline. Any unrecognized flag (including
                 // the retired --no-join / --join-only / --join-at-pass) fails
                 // fast in ParseArgs.
@@ -109,14 +109,14 @@ namespace pwiz.Osprey
                     }
                 }
 
-                // The one task list for this run. The selection is looked up in it and the
-                // pipeline is built from it, so the two hold the same instances and a task
+                // The one task set for this run. The selection is looked up in it and the
+                // pipeline comes from it, so the two hold the same instances and a stage
                 // can ask whether it IS the selection by reference.
-                var allTasks = OspreyTasks.CreateAll();
+                var tasks = OspreyTasks.Create();
                 OspreyTask selectedTask = null;
                 if (taskName != null)
                 {
-                    string taskErr = ResolveTask(taskName, allTasks, out selectedTask);
+                    string taskErr = ResolveTask(taskName, tasks, out selectedTask);
                     if (taskErr != null)
                     {
                         LogError(taskErr);
@@ -148,12 +148,16 @@ namespace pwiz.Osprey
                     LogError(ex.Message);
                     return 1;
                 }
-                // --task selects one pipeline task, and the task sets the membership flags
-                // the tasks' IsIncluded methods read (OspreyTask.ApplySelection) - and, for
-                // ModelDiagnostics, the report flag the selector stands for. The flags are
-                // derived from --task and from nothing else, which is what let the input
-                // KIND retire: it was the OTHER seam saying the same thing.
-                config.SelectTask(selectedTask);
+                // --task selects one task and, with it, the pipeline it runs - the canonical
+                // stages, or a selector's own list (OspreyTasks.PipelineFor). Membership is
+                // one rule over the two (OspreyConfig.Includes); the task sets whatever
+                // behavior flag its selection implies (OspreyTask.ApplySelection) - a stop
+                // boundary, the reconciled-footer gate, the report flag the diagnostics
+                // selector stands for. All of it derives from --task and from nothing else,
+                // which is what let the input KIND retire: it was the OTHER seam saying the
+                // same thing.
+                var pipeline = tasks.PipelineFor(selectedTask);
+                config.SelectTask(selectedTask, pipeline);
 
                 // Apply the output / cache directory overrides process-wide so
                 // every per-file artifact path helper (scores parquet, spectra
@@ -411,12 +415,11 @@ namespace pwiz.Osprey
                 }
 
                 // Single entry point. The rescore worker (--task
-                // PerFileRescoring) includes only
-                // PerFileRescoreTask (OspreyTask.IsIncluded); PerFileScoring's
-                // lazy-rehydrate (via ctx.Demand) populates the upstream state
-                // from the boundary files on disk.
-                var pipeline = new AnalysisPipeline();
-                return pipeline.Run(config, allTasks);
+                // PerFileRescoring) includes only PerFileRescoreTask
+                // (OspreyConfig.Includes); PerFileScoring's lazy-rehydrate (via
+                // ctx.Demand) populates the upstream state from the boundary files
+                // on disk.
+                return new AnalysisPipeline().Run(config, pipeline);
             }
             catch (Exception ex)
             {
@@ -502,21 +505,20 @@ namespace pwiz.Osprey
         /// <summary>
         /// Resolve a <c>--task &lt;Name&gt;</c> selector (case-insensitive, matched
         /// against each task's stable <c>Name</c>) to the task instance in
-        /// <paramref name="allTasks"/> that bears it. One node = one task on HPC. The
-        /// caller hands the instance to <see cref="OspreyConfig.SelectTask"/>, which lets
-        /// the task set the pipeline-membership flags it implies, and the same instance
-        /// then appears in the pipeline the run walks.
+        /// <paramref name="tasks"/> that bears it. One node = one task on HPC. The caller
+        /// hands the instance and the pipeline it runs to <see cref="OspreyConfig.SelectTask"/>,
+        /// and the same instance then appears in that pipeline.
         ///
         /// Returns null on success, or an error message string listing every valid name
         /// for an unknown one. Internal so Osprey.Test can exercise it.
         /// </summary>
-        internal static string ResolveTask(string taskName, IReadOnlyList<OspreyTask> allTasks, out OspreyTask task)
+        internal static string ResolveTask(string taskName, OspreyTasks tasks, out OspreyTask task)
         {
-            task = OspreyTasks.FindByName(allTasks, taskName);
+            task = tasks.FindByName(taskName);
             if (task != null)
                 return null;
             return string.Format("{0}: unknown task '{1}'. Valid tasks: {2}.",
-                OspreyCommandArgs.ARG_TASK.ArgumentText, taskName, string.Join(", ", allTasks.Select(t => t.Name)));
+                OspreyCommandArgs.ARG_TASK.ArgumentText, taskName, string.Join(", ", tasks.All.Select(t => t.Name)));
         }
 
         /// <summary>
