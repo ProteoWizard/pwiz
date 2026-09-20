@@ -47,8 +47,11 @@ namespace pwiz.Osprey
         /// Run the complete analysis pipeline.
         /// </summary>
         /// <param name="config">Analysis configuration.</param>
+        /// <param name="allTasks">Every task this run created (<see cref="OspreyTasks.CreateAll"/>),
+        /// the list <see cref="OspreyConfig.SelectedTask"/> was resolved from, so the
+        /// pipeline and the selection share instances.</param>
         /// <returns>0 on success, non-zero on failure.</returns>
-        public int Run(OspreyConfig config)
+        public int Run(OspreyConfig config, IReadOnlyList<OspreyTask> allTasks)
         {
             var stopwatch = Stopwatch.StartNew();
 
@@ -69,13 +72,12 @@ namespace pwiz.Osprey
                 // task now receives the stems it needs on -i, which is the direction the
                 // derivation was always going.
 
-                // --task SpectraCache stages data rather than analyzing it: it runs
-                // its own one-task pipeline instead of the canonical four. Selecting
+                // A task that stages data rather than analyzing it (--task SpectraCache)
+                // runs its own one-task pipeline instead of the canonical four. Selecting
                 // it by list, not by an IsIncluded gate on every other task, keeps the
-                // canonical pipeline's membership rules about the analysis itself.
-                var pipelineTasks = config.SelectedTask == HpcTask.SpectraCache
-                    ? SpectraCachePipeline()
-                    : CanonicalPipeline();
+                // canonical pipeline's membership rules about the analysis itself; which
+                // tasks do that is the task's own fact (OspreyTask.RunsStandalone).
+                var pipelineTasks = OspreyTasks.PipelineFor(allTasks, config.SelectedTask);
                 var ctx = new PipelineContext(config, pipelineTasks,
                     LogInfo, LogWarning, LogError, OspreyDiagnostics.Active);
 
@@ -123,40 +125,6 @@ namespace pwiz.Osprey
                 LogError(string.Format("Pipeline failed: {0}", ex));
                 return 1;
             }
-        }
-
-        /// <summary>
-        /// The canonical four-task pipeline in execution order:
-        /// PerFileScoring -> FirstPassFDR -> PerFileRescore -> SecondPassFDR.
-        /// Single source of truth for the task list. Tasks read upstream
-        /// state through ctx.Demand&lt;T&gt;().GetX() rather than constructor
-        /// args; the driver runs each task that is
-        /// <see cref="OspreyTask.IsIncluded"/> for the current config and whose
-        /// outputs are not already valid on disk. Returning false from any task
-        /// is the signal to stop and propagate ctx.ExitCode.
-        /// </summary>
-        internal static OspreyTask[] CanonicalPipeline()
-        {
-            return new OspreyTask[]
-            {
-                new PerFileScoringTask(),
-                new FirstPassFdrTask(),
-                new PerFileRescoreTask(),
-                new SecondPassFdrTask(),
-            };
-        }
-
-        /// <summary>
-        /// The one-task pipeline behind <c>--task SpectraCache</c>: build every
-        /// input's <c>.spectra.bin</c> and stop, without a library or any of the
-        /// analysis stages.
-        /// </summary>
-        internal static OspreyTask[] SpectraCachePipeline()
-        {
-            return new OspreyTask[]
-            {
-                new SpectraCacheTask(),
-            };
         }
 
         #region Utility Methods

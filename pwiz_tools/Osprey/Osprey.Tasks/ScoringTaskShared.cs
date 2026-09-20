@@ -413,27 +413,22 @@ namespace pwiz.Osprey.Tasks
             // ExpectReconciledInput, because it is neither a fan-out nor a join; it is a fifth
             // thing, and an exclusion list cannot know about the fifth thing.
             //
-            // Naming what is admitted fails CLOSED: a task added later is excluded until someone
-            // decides otherwise, which is the direction a predicate guarding a memory shape
-            // should fail in.
-            // ModelDiagnostics is admitted for the same reason PerFileRescore is: it consumes
-            // the per-run survivor loader and nothing else. Admitting it is what stops it
-            // falling to the all-runs bundle, which retains every run's survivors and grew
-            // 0.10 GB/file on a 446-run cohort - past a 63.7 GB box by file ~310, measured
-            // 2026-09-10. The report itself is unaffected either way, so the symptom was
-            // memory alone and no gate could see it: mode 7 covers this task but runs 3 files,
-            // where an O(files) bundle is free.
+            // So the question is asked of the task (ISelectableTask.HydratesPerRun), which
+            // fails CLOSED: a task added later answers false until its author decides
+            // otherwise, the direction a predicate guarding a memory shape should fail in.
+            // The rescore worker and ModelDiagnostics answer true for the same reason: each
+            // consumes the per-run survivor loader and nothing else, and admitting them is
+            // what stops either falling to the all-runs bundle, which retains every run's
+            // survivors and grew 0.10 GB/file on a 446-run cohort - past a 63.7 GB box by file
+            // ~310, measured 2026-09-10. The straight-through run (no task) is admitted too.
             //
-            // Safe now for the reason the --model-diagnostics paragraph below gives: the report
-            // is FirstPassFDR's DECLARED OUTPUT, folded by FoldDiagnosticsOnly BEFORE Rehydrate
-            // is reached, so the per-run arm cannot skip a regeneration the way it did when the
-            // report was a side effect of whichever hydrate ran (Astral mode 7).
-            if (config.SelectedTask.HasValue &&
-                config.SelectedTask != HpcTask.PerFileRescore &&
-                config.SelectedTask != HpcTask.ModelDiagnostics)
-            {
+            // Safe for ModelDiagnostics for the reason the --model-diagnostics paragraph below
+            // gives: the report is FirstPassFDR's DECLARED OUTPUT, folded by
+            // FoldDiagnosticsOnly BEFORE Rehydrate is reached, so the per-run arm cannot skip a
+            // regeneration the way it did when the report was a side effect of whichever
+            // hydrate ran (Astral mode 7).
+            if (config.SelectedTask != null && !config.SelectedTask.HydratesPerRun)
                 return false;
-            }
             if (config.StopAfterStage5 || config.ExpectReconciledInput)
                 return false;
             // --model-diagnostics is NOT excluded any more, and what changed is where the report
@@ -491,23 +486,19 @@ namespace pwiz.Osprey.Tasks
         /// <c>--task ModelDiagnostics</c> join the pipeline and demand state a diagnostics
         /// fold never publishes. One question, asked of the task.</para>
         ///
-        /// <para><c>ModelDiagnostics</c> is deliberately NOT here. It is neither a fan-out nor
-        /// a join but a render over retained products, and it needs the per-file load to have
-        /// happened - which it did by taking <c>-i</c> even while the others took parquets.
-        /// That asymmetry was the first symptom of the two seams, and it survives the
-        /// retirement as an ordinary membership fact rather than as an input-kind accident.</para>
+        /// <para><c>ModelDiagnostics</c> deliberately answers false. It is neither a fan-out
+        /// nor a join but a render over retained products, and it needs the per-file load to
+        /// have happened - which it did by taking <c>-i</c> even while the others took
+        /// parquets. That asymmetry was the first symptom of the two seams, and it survives
+        /// the retirement as an ordinary membership fact rather than as an input-kind
+        /// accident.</para>
+        ///
+        /// <para>Each task answers for itself (<see cref="ISelectableTask.StartsAfterPerFileScoring"/>);
+        /// the full pipeline, with no task selected, starts from the spectra.</para>
         /// </summary>
         internal static bool StartsAfterPerFileScoring(OspreyConfig config)
         {
-            switch (config.SelectedTask)
-            {
-                case HpcTask.FirstPassFdr:
-                case HpcTask.PerFileRescore:
-                case HpcTask.SecondPassFdr:
-                    return true;
-                default:
-                    return false;
-            }
+            return config.SelectedTask?.StartsAfterPerFileScoring ?? false;
         }
 
         /// <summary>
@@ -532,24 +523,27 @@ namespace pwiz.Osprey.Tasks
         /// and no reconciled sibling exists yet. So on a correct node each task has exactly
         /// one of the two present, and asking the disk cannot distinguish "the artifact for
         /// my pass" from "the only artifact here".</para>
+        ///
+        /// <para>Each task answers for itself (<see cref="ISelectableTask.ReadsReconciledScores"/>).</para>
         /// </summary>
         internal static bool ReadsReconciledScores(OspreyConfig config)
         {
-            return config.SelectedTask == HpcTask.SecondPassFdr;
+            return config.SelectedTask?.ReadsReconciledScores ?? false;
         }
 
         /// <summary>
         /// True when THIS process runs Stage 7's join, i.e. when a per-run source published for
         /// that join will actually be folded by something.
         ///
-        /// <para>Names what is ADMITTED, so it fails closed: the straight-through pipeline (no
-        /// <c>--task</c>, which runs every stage), the <c>SecondPassFDR</c> node, and
-        /// <c>ModelDiagnostics</c> - which is not an HPC fan-out node but does let
-        /// <c>SecondPassFDR</c> compute the pass-2 view, so it folds the same join and must not
-        /// be pushed back onto the resident pool. A task added later is excluded until someone
-        /// decides otherwise, which is the direction a predicate guarding a memory shape - and,
-        /// since <see cref="Stage7StreamAdmittedBeforeRescore"/>, a correctness one - should
-        /// fail in.</para>
+        /// <para>Asked of the task (<see cref="ISelectableTask.RunsStage7Join"/>), so it fails
+        /// closed: the straight-through pipeline (no <c>--task</c>, which runs every stage) is
+        /// admitted here, and of the tasks only <c>SecondPassFDR</c> and
+        /// <c>ModelDiagnostics</c> answer true - the latter is not an HPC fan-out node but does
+        /// let <c>SecondPassFDR</c> compute the pass-2 view, so it folds the same join and must
+        /// not be pushed back onto the resident pool. A task added later is excluded until
+        /// someone decides otherwise, which is the direction a predicate guarding a memory
+        /// shape - and, since <see cref="Stage7StreamAdmittedBeforeRescore"/>, a correctness
+        /// one - should fail in.</para>
         ///
         /// <para>The excluded tasks each have a consumer that never arrives.
         /// <c>PerFileScoring</c> and <c>SpectraCache</c> stop before Stage 5.
@@ -561,10 +555,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal static bool RunsStage7Join(OspreyConfig config)
         {
-            if (!config.SelectedTask.HasValue)
-                return true;
-            return config.SelectedTask == HpcTask.SecondPassFdr ||
-                   config.SelectedTask == HpcTask.ModelDiagnostics;
+            return config.SelectedTask?.RunsStage7Join ?? true;
         }
 
         /// <summary>

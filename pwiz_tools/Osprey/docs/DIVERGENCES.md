@@ -98,7 +98,7 @@ This is the section a maintainer should read first. It lists the **single PORT-E
 - **Doc:** [11-boundary-overrides.md](11-boundary-overrides.md)
 - **Rust says:** The reconciled cache carries fragment/XIC/bounds blob columns.
 - **C# does:** `fragment_mzs`, `fragment_intensities`, `reference_xic_rts`, `reference_xic_intensities`, `bounds_area`, `bounds_snr` are written null/zero today (tracked follow-up); RT boundaries and the 21 features are still computed and written.
-- **C# evidence:** `Osprey/RescoreWorker.cs:64-71`
+- **C# evidence:** the class summary of the since-removed `Osprey/RescoreWorker.cs` (an unreferenced alias for `AnalysisPipeline.Run`, deleted 2026-09); the columns themselves are declared in `Osprey.IO/ParquetScoreCache.cs`
 - **Recommended action:** Confirm nothing downstream (blib, reports) reads these six columns off the *reconciled* parquet. If they are consumed anywhere, this is a real data-loss bug; if not, it's a benign tracked follow-up.
 
 #### U7. Python calibration report tooling (`evaluate_calibration.py`) has no verified C# equivalent — info
@@ -235,7 +235,7 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 | STALE | Gap-fill two-pass not in the doc | Only 3 override types documented | Also gap-fill two-pass (CWT + forced-integration) via same override channel | `PerFileRescoreTask.cs:1337-1477` | info |
 | STALE | Gap-fill progress labels differ | "Gap-fill CWT"/"Gap-fill forced" | "Gap-fill scoring"/"Gap-fill forced integration" (console string only) | `PerFileRescoreTask.cs:1385,1453` | info |
 | INTENT | Reconciled parquet is a separate sibling file | Updates `.scores.parquet` in place | Writes `.scores-reconciled.parquet`, stamps `osprey.reconciled` footer (crash-resume safety) | `ReconciledParquetWriter.cs:54,200-204` | minor |
-| UNVER | Six blob columns null/zero in reconciled parquet (**U6**) | Reconciled cache carries fragment/XIC/bounds blobs | 6 columns written null/zero (tracked follow-up); RT bounds + 21 features still written | `RescoreWorker.cs:64-71` | minor |
+| UNVER | Six blob columns null/zero in reconciled parquet (**U6**) | Reconciled cache carries fragment/XIC/bounds blobs | 6 columns written null/zero (tracked follow-up); RT bounds + 21 features still written | the removed `RescoreWorker.cs` summary; columns in `ParquetScoreCache.cs` | minor |
 
 ### [13-blib-output-schema.md](13-blib-output-schema.md) — matches-with-notes
 
@@ -274,7 +274,7 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 | Classification | Title | Rust says | C# does | Evidence | Sev |
 |---|---|---|---|---|---|
 | INTENT | CLI is `--task <Name>`, not `--no-join`/`--join-at-pass`/`--join-only` | Orchestrated by `--join-at-pass` + modifiers | Single `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}`; old flags retired, fail fast | `Program.cs:86-128`; `OspreyCommandArgs.cs:206-207` | major |
-| INTENT | One name per task, describing the FDR pass | Named by pass/join topology | CLI name, enum member and class are one name per task; residual `PerFileRescoring` vs `PerFileRescore` | `OspreyConfig.cs` (`HpcTask`); `Program.cs` (`ResolveTask`) | info |
+| INTENT | One name per task, describing the FDR pass | Named by pass/join topology | CLI name and class are one name per task, looked up in the one task list; residual `PerFileRescoring` vs `PerFileRescoreTask` | `Osprey.Tasks/OspreyTasks.cs`; `Program.cs` (`ResolveTask`) | info |
 | INTENT | Stage 6 separate `.scores-reconciled.parquet` | Rewrites `.scores.parquet` | Separate sibling; each run's effective parquet prefers reconciled | `PerFileRescoreTask.cs:163-177,944-954` | minor |
 | INTENT | Membership-predicate + lazy-rehydrate, not stage window | Each mode runs stages X..Y | Fixed 4-task pipeline; `IsIncluded` + typed byproduct registry; pinned by truth table | `AnalysisPipeline.cs:99-148`; `PipelineMembershipTest.cs:55-93` | info |
 | INTENT | No `--parquet-compression`; ZSTD unconditional | `--parquet-compression snappy` for OspreySharp interop | Writes ZSTD; read auto-dispatches; cross-impl ZSTD/Snappy read compat is follow-up | `ParquetScoreCache.cs:270,462` | minor |

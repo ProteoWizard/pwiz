@@ -42,8 +42,8 @@ namespace pwiz.Osprey.Tasks
     /// <see cref="OspreyTask.Run"/> never ran.
     ///
     /// The context is constructed once at the top of
-    /// <c>AnalysisPipeline.Run</c> (or <c>RescoreWorker.Run</c>) and
-    /// lives for the duration of the pipeline execution.
+    /// <c>AnalysisPipeline.Run</c> and lives for the duration of the
+    /// pipeline execution.
     /// </summary>
     public sealed class PipelineContext
     {

@@ -55,7 +55,7 @@ namespace pwiz.Osprey.Tasks
     /// parquets is enforced separately by the parquet
     /// <c>osprey.search_hash</c> footer metadata check.)
     /// </summary>
-    public abstract class OspreyTask
+    public abstract class OspreyTask : ISelectableTask
     {
         /// <summary>
         /// Short identifier used in pipeline log lines, the <c>--task</c> selector and the
@@ -63,6 +63,60 @@ namespace pwiz.Osprey.Tasks
         /// spelling the CLI value list and the tests reference too.
         /// </summary>
         public abstract string Name { get; }
+
+        // ---- The selection contract (ISelectableTask) ------------------------------------
+        // Every fact defaults to FAIL CLOSED: a task added later is admitted to nothing - no
+        // per-run hydrate, no Stage 7 stream, no canonical pipeline - until its author
+        // overrides what is true of it. Each of these used to be a switch over an enum of
+        // task names in whichever consumer asked, and an exclusion list written there could
+        // not know about a task added afterwards; a fact answered by the task itself can.
+        // The doc for each is on the interface.
+
+        public virtual bool HydratesPerRun => false;
+
+        public virtual bool StartsAfterPerFileScoring => false;
+
+        public virtual bool ReadsReconciledScores => false;
+
+        public virtual bool RunsStage7Join => false;
+
+        public virtual bool IsPerFileWorker => false;
+
+        /// <summary>
+        /// One of the four canonical pipeline stages - the list a full run walks in
+        /// execution order (see <see cref="OspreyTasks"/>). A task selectable by name but
+        /// not a stage (a data-staging step, a render over completed products) leaves this
+        /// false and is reached only through <c>--task</c>.
+        /// </summary>
+        public virtual bool InCanonicalPipeline => false;
+
+        /// <summary>
+        /// When selected, runs as a one-task pipeline of its own instead of gating the
+        /// canonical one. Keeps the canonical pipeline's membership rules about the analysis
+        /// itself; a task that stages data without analyzing it is the case.
+        /// </summary>
+        public virtual bool RunsStandalone => false;
+
+        public virtual void ApplySelection(OspreyConfig config)
+        {
+        }
+
+        /// <summary>
+        /// The requirement most tasks share - the run's inputs, its library and its output -
+        /// with messages naming this task. A task that needs less (or more) overrides.
+        /// </summary>
+        public virtual string ValidateSelection(OspreyConfig config)
+        {
+            if (!config.HasInputFiles)
+                return RequiresError(@"--input <file...>");
+            if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
+                return RequiresError(@"--library and --output");
+            return null;
+        }
+
+        public virtual string DescribeOutput(OspreyConfig config) => null;
+
+        // ---- The pipeline contract ------------------------------------------------------
 
         /// <summary>
         /// Execute this task against the shared pipeline context. May
@@ -181,5 +235,14 @@ namespace pwiz.Osprey.Tasks
             ctx.Config.Identity.SearchParameterHash(),
             ctx.Config.Identity.LibraryIdentityHash(),
             OspreyEnvironment.PickValidityKeySuffix());
+
+        /// <summary>
+        /// A <see cref="ValidateSelection"/> error naming this task and what it is missing,
+        /// in the one form every task's message takes.
+        /// </summary>
+        protected string RequiresError(string requirement)
+        {
+            return string.Format(@"--task {0} requires {1}.", Name, requirement);
+        }
     }
 }

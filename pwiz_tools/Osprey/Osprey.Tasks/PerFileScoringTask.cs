@@ -82,6 +82,43 @@ namespace pwiz.Osprey.Tasks
 
         public override string Name => TASK_NAME;
 
+        public override bool InCanonicalPipeline => true;
+
+        /// <summary>
+        /// The Stage 1-4 fan-out worker: each input produces a <c>{stem}.scores.parquet</c>
+        /// next to it, no FDR, no blib.
+        /// </summary>
+        public override bool IsPerFileWorker => true;
+
+        /// <summary>
+        /// Include only the per-file fan-out, not the joining tasks.
+        /// </summary>
+        public override void ApplySelection(OspreyConfig config)
+        {
+            config.NoJoin = true;
+        }
+
+        /// <summary>
+        /// mzML in, per-file <c>.scores.parquet</c> out: a library, but no <c>--output</c>,
+        /// which is accepted and not used.
+        /// </summary>
+        public override string ValidateSelection(OspreyConfig config)
+        {
+            if (!config.HasInputFiles)
+                return RequiresError(@"--input <mzML...>");
+            if (config.LibrarySource == null)
+                return RequiresError(@"--library");
+            return null;
+        }
+
+        /// <summary>
+        /// The real output rather than the ignored <c>--output</c> blib path.
+        /// </summary>
+        public override string DescribeOutput(OspreyConfig config)
+        {
+            return @"per-file .scores.parquet (next to each input file)";
+        }
+
         /// <summary>
         /// Computes per-file scores from spectra for every task except the three that
         /// start after Stage 4. For those it is excluded and a downstream task
@@ -1083,7 +1120,7 @@ namespace pwiz.Osprey.Tasks
             {
                 ctx.LogInfo(string.Format(
                     @"[LIB-LOAD] {0} entries in {1:F2}s (task={2}, omitFragments={3}, retainSet={4})",
-                    library.Count, swLibrary.Elapsed.TotalSeconds, config.SelectedTask,
+                    library.Count, swLibrary.Elapsed.TotalSeconds, config.SelectedTask?.Name,
                     loadOptions.OmitFragments,
                     loadOptions.RetainFragmentsFor == null
                         ? @"none"

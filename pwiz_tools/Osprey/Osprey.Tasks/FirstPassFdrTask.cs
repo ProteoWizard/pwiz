@@ -77,6 +77,49 @@ namespace pwiz.Osprey.Tasks
 
         public override string Name => TASK_NAME;
 
+        public override bool InCanonicalPipeline => true;
+
+        /// <summary>
+        /// The first join: handed every run's Stage 4 parquet, never spectra.
+        /// </summary>
+        public override bool StartsAfterPerFileScoring => true;
+
+        /// <summary>
+        /// Exit after Stage 5 + reconciliation planning, having written the boundary
+        /// files for each input. The ONLY setter of that flag.
+        /// </summary>
+        public override void ApplySelection(OspreyConfig config)
+        {
+            config.StopAfterStage5 = true;
+        }
+
+        /// <summary>
+        /// The Stage 5 -> Stage 6 boundary file pair is only meaningful with 2+ siblings
+        /// to reconcile against and reconciliation enabled, so both are rejected early on
+        /// top of the shared input / library / output requirement.
+        /// </summary>
+        public override string ValidateSelection(OspreyConfig config)
+        {
+            string err = base.ValidateSelection(config);
+            if (err != null)
+                return err;
+            if (config.InputFiles.Count < 2)
+            {
+                return string.Format(
+                    @"--task {0} requires --input with 2+ files (got {1}). The Stage 5 -> Stage 6 " +
+                    @"boundary file pair is only meaningful for multi-file fan-back-in.",
+                    Name, config.InputFiles.Count);
+            }
+            if (!config.Reconciliation.Enabled)
+            {
+                return string.Format(
+                    @"--task {0} requires Reconciliation.Enabled = true (got false from config). " +
+                    @"The Stage 5 -> Stage 6 boundary file pair is only meaningful when reconciliation runs.",
+                    Name);
+            }
+            return null;
+        }
+
         /// <summary>
         /// Computes Stage 5 (Percolator first-pass FDR + Stage 6
         /// planning) in straight-through, --task FirstPassFDR (StopAfterStage5), and

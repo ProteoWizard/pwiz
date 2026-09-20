@@ -55,6 +55,35 @@ namespace pwiz.Osprey.Tasks
 
         public override string Name => TASK_NAME;
 
+        public override bool InCanonicalPipeline => true;
+
+        /// <summary>
+        /// The second join: handed every run's reconciled parquet, never spectra.
+        /// </summary>
+        public override bool StartsAfterPerFileScoring => true;
+
+        /// <summary>
+        /// The one task whose rows come from the Stage 6 <c>.scores-reconciled.parquet</c>:
+        /// its node is shipped only that artifact (regression mode 3 deletes the Stage 4
+        /// originals from the worker directory before staging it).
+        /// </summary>
+        public override bool ReadsReconciledScores => true;
+
+        /// <summary>
+        /// Runs Stage 7's join, so per-run sources published for it are folded here.
+        /// </summary>
+        public override bool RunsStage7Join => true;
+
+        /// <summary>
+        /// Every input's reconciled parquet must carry <c>osprey.reconciled = "true"</c> in
+        /// its footer: the post-Stage-6 entry point. Also arms the strict-reconciled-input
+        /// gate that check implements.
+        /// </summary>
+        public override void ApplySelection(OspreyConfig config)
+        {
+            config.ExpectReconciledInput = true;
+        }
+
         /// <summary>
         /// Computes Stage 7-8 (2nd-pass FDR + protein FDR + blib) in
         /// straight-through, the --task SecondPassFDR stage, and the --input-scores

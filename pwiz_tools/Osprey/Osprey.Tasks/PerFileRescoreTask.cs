@@ -150,6 +150,33 @@ namespace pwiz.Osprey.Tasks
 
         public override string Name => TASK_NAME;
 
+        public override bool InCanonicalPipeline => true;
+
+        /// <summary>
+        /// The Stage 6 fan-out worker: one run's scores in, its reconciled parquet out.
+        /// </summary>
+        public override bool IsPerFileWorker => true;
+
+        /// <summary>
+        /// Handed a run's Stage 4 parquet and the Stage 5 boundary files, never spectra.
+        /// </summary>
+        public override bool StartsAfterPerFileScoring => true;
+
+        /// <summary>
+        /// Consumes the per-run survivor loader and nothing else, so it takes the bounded
+        /// route rather than the all-runs bundle.
+        /// </summary>
+        public override bool HydratesPerRun => true;
+
+        /// <summary>
+        /// Include only the per-file fan-out, not the joining tasks. The same flag
+        /// <c>--task PerFileScoring</c> sets; the selection itself tells the two apart.
+        /// </summary>
+        public override void ApplySelection(OspreyConfig config)
+        {
+            config.NoJoin = true;
+        }
+
         /// <summary>
         /// Computes the Stage 6 rescore in the straight-through run and in the rescore
         /// worker (--task PerFileRescoring). Excluded in --task PerFileScoring,
@@ -163,19 +190,20 @@ namespace pwiz.Osprey.Tasks
             // The rescore worker is the ONE task NoJoin does not distinguish - it is set by
             // --task PerFileScoring too - and the input KIND is what used to tell them
             // apart: mzML in meant Stage 1-4, parquets in meant Stage 6. Both are named by
-            // their data files now, so the task says which worker this is, which is the only
-            // thing that ever actually decided it.
+            // their data files now, so the selection says which worker this is, which is the
+            // only thing that ever actually decided it - and the selection is this instance,
+            // so the question is asked by reference.
             //
             // StopAfterStage5 means that boundary whatever the inputs look like, and it is
             // checked on every route rather than one - it used to be checked on one only,
             // which failed a run AFTER writing the report it was asked for.
             //
-            // --task FirstPassFDR is its ONLY setter (Program.cs has the single assignment).
-            // The paragraph here said ModelDiagnostics sets it too; it does not, and the same
+            // --task FirstPassFDR is its ONLY setter (FirstPassFdrTask.ApplySelection). The
+            // paragraph here said ModelDiagnostics sets it too; it does not, and the same
             // claim had been copied into docs/15-hpc-scoring-split.md's truth table and a unit
             // test helper that built the config to match. ModelDiagnostics sets none of the
             // three flags, so it is a member of every task and suppresses artifact WRITES.
-            return c.SelectedTask == HpcTask.PerFileRescore
+            return ReferenceEquals(c.SelectedTask, this)
                 || (!c.NoJoin && !c.StopAfterStage5 && !c.ExpectReconciledInput);
         }
 

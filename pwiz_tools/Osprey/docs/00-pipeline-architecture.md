@@ -50,9 +50,10 @@ file, one LC-MS/MS acquisition. It is the unit the pipeline fans out over.
 
 The code spells this concept `file`, because a run arrives as a file and is keyed by
 its file stem. The two fan-out tasks are `PerFileScoring` and `PerFileRescoring` in the
-CLI and in the `.osprey.task` sidecar names; the `HpcTask` enum spells three of the four
-differently (`FirstPassFdr`, `PerFileRescore`, `SecondPassFdr`), so a name copied from the
-enum will not match a filename. Stage 6's canonical name is "Per-file rescore".
+CLI and in the `.osprey.task` sidecar names - each task's `Name`, the one spelling; the
+class names differ (`FirstPassFdrTask`, `PerFileRescoreTask`, `SecondPassFdrTask`), so a
+name copied from a class will not match a filename. Stage 6's canonical name is
+"Per-file rescore".
 **Proper names are quoted as they are spelled** -
 tasks, types, paths, stage names - and this document says **run** everywhere else,
 because "per-run versus experiment-wide" is the distinction that carries the
@@ -184,7 +185,7 @@ without violating any rule stated in terms of fan-out versus join alone.
 ### Four tasks over seven stages
 
 The pipeline is a fixed, four-element list, always in this order
-(`AnalysisPipeline.CanonicalPipeline()`). It alternates fan-out and join:
+(`OspreyTasks.CanonicalPipeline`). It alternates fan-out and join:
 
 | Task | Stages | Shape | Nodes | May hold resident |
 |---|---|---|---|---|
@@ -207,10 +208,11 @@ section exists to preserve it.
 
 ### Two selectable tasks that are not pipeline tasks
 
-The `HpcTask` enum has six members, but only the four above are pipeline stages.
-`AnalysisPipeline.CanonicalPipeline()` contains those four and nothing else; the other
-two are reachable only by naming them in `--task`, and neither participates in a run
-that does not:
+The task list (`OspreyTasks.CreateAll()`) has six members, but only the four above are
+pipeline stages. The canonical pipeline (`OspreyTasks.CanonicalPipeline`, the members
+that answer `InCanonicalPipeline`) contains those four and nothing else; the other two
+are reachable only by naming them in `--task`, and neither participates in a run that
+does not:
 
 - **`--task SpectraCache`** builds each input's `.spectra.bin` and stops. It is the
   data-staging step *ahead* of the pipeline, not a node within it, which is why it needs

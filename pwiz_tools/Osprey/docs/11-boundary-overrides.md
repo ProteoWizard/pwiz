@@ -258,16 +258,17 @@ stamps `osprey.reconciled = "true"` and `osprey.reconciliation_hash` alongside
 SecondPassFDR` node validates.
 
 Note: six per-row blob columns (`fragment_mzs`, `fragment_intensities`,
-`reference_xic_rts`, `reference_xic_intensities`, `bounds_area`, `bounds_snr`) are
-currently written null/zero — a tracked follow-up noted in
-`RescoreWorker.cs:64-71`, not a boundary-override algorithm difference.
+`reference_xic_rts`, `reference_xic_intensities`, `bounds_area`, `bounds_snr`) were
+recorded as written null/zero — a tracked follow-up noted in the class summary of the
+since-removed `RescoreWorker.cs`, not a boundary-override algorithm difference. See
+DIVERGENCES.md U6 for the status of that claim.
 
 ## Worker mode, hydration, and compaction
 
-`RescoreWorker.Run` (`Osprey/RescoreWorker.cs:80`) is now a thin alias for
-`new AnalysisPipeline().Run(config)` (Phase C): the `--task PerFileRescoring`
-worker reuses the canonical pipeline, and the upstream boundary state is
-rehydrated lazily rather than hand-assembled.
+The `--task PerFileRescoring` worker IS the canonical pipeline (Phase C): `Program.Main`
+selects the task and runs `AnalysisPipeline.Run` like every other invocation, and the
+upstream boundary state is rehydrated lazily rather than hand-assembled. (The
+`RescoreWorker.Run` alias that survived the collapse with no callers was removed.)
 
 - `RescoreHydration.HydrateForRescore` (`Osprey.Tasks/RescoreHydration.cs:166`)
   loads pre-compaction `FdrEntry` stubs from each `.scores.parquet`, overlays the
@@ -290,7 +291,7 @@ computed by Stage 6 planning. The flags that affect this stage:
 
 | Flag / field | Default | Effect on this stage |
 |--------------|---------|----------------------|
-| `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}` | (in-process, all stages) | `PerFileRescoring` runs this stage as a standalone worker (internal `HpcTask.PerFileRescore`). `SecondPassFDR` (`HpcTask.SecondPassFdr`) rehydrates reconciled parquets instead of re-scoring. |
+| `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}` | (in-process, all stages) | `PerFileRescoring` (`PerFileRescoreTask`) runs this stage as a standalone worker. `SecondPassFDR` (`SecondPassFdrTask`) rehydrates reconciled parquets instead of re-scoring. |
 | `-i <file...>` | — | Names the run the worker rescores; its boundary `.scores.parquet` and sidecars derive from the stem. Membership is `--task` alone (`PerFileRescoreTask.IsIncluded`). |
 | `--reconciliation-compaction-fdr <v>` | 0.01 (`OspreyConfig.ReconciliationCompactionFdr`) | First-pass compaction predicate applied upstream in FirstPassFDR; determines which entries survive into the rescore set. |
 | `ReconciliationConfig.Enabled` | true | Gates reconciliation planning + `reconciliation.json` inputs (`PerFileRescoreTask.cs:158`). Disabling leaves only multi-charge consensus rescore. |
@@ -356,14 +357,15 @@ variant): `OSPREY_DUMP_MULTICHARGE`, `OSPREY_DUMP_CONSENSUS`,
   `Osprey.Tasks/PerFileRescoreTask.cs:145-151`. Severity: minor.
 
 - **[UNVERIFIED] Six per-row blob columns written null/zero in the reconciled
-  parquet** - `RescoreWorker`'s summary states `fragment_mzs`,
+  parquet** - the summary of the since-removed `RescoreWorker.cs` stated `fragment_mzs`,
   `fragment_intensities`, `reference_xic_rts`, `reference_xic_intensities`,
-  `bounds_area`, and `bounds_snr` are currently written null/zero, tracked as a
+  `bounds_area`, and `bounds_snr` were written null/zero, tracked as a
   follow-up. This is a serialization gap in the reconciled parquet, not in the
   boundary-override scoring itself (features and RT boundaries are computed and
   written). A human should confirm whether any downstream consumer reads those
-  six columns off the reconciled parquet. Evidence: `Osprey/RescoreWorker.cs:64-71`.
-  Severity: minor.
+  six columns off the reconciled parquet, and whether the claim still holds - the
+  columns are declared in `Osprey.IO/ParquetScoreCache.cs` and the only evidence was
+  that comment. Severity: minor.
 
 Verified to match the Rust doc step for step: the single shared scoring path for
 first-pass and re-scoring; override detection by entry id; the

@@ -35,6 +35,9 @@ namespace pwiz.Osprey.Core
         /// <summary>Input mzML file paths.</summary>
         public List<string> InputFiles { get; set; } = new List<string>();
 
+        /// <summary>At least one input was named on the command line.</summary>
+        public bool HasInputFiles => InputFiles != null && InputFiles.Count > 0;
+
         /// <summary>Spectral library source.</summary>
         public LibrarySource LibrarySource { get; set; }
 
@@ -360,16 +363,28 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// The single pipeline task selected by <c>--task &lt;Name&gt;</c> on the
-        /// CLI, or null for the full pipeline (no <c>--task</c>). The three
-        /// membership flags above (<see cref="NoJoin"/>,
-        /// <see cref="StopAfterStage5"/>, <see cref="ExpectReconciledInput"/>)
-        /// are derived from this and drive each task's <c>IsIncluded</c>; this
-        /// property additionally lets argument validation name the task the user actually
-        /// typed in error messages. It no longer has an input-KIND contract to enforce:
-        /// every task takes the same data files, and the second seam that said "you handed
-        /// me parquets, so Stage 1-4 is done" has retired into these flags.
+        /// CLI, or null for the full pipeline (no <c>--task</c>). Set only through
+        /// <see cref="SelectTask"/>, so the flags a task implies (<see cref="NoJoin"/>,
+        /// <see cref="StopAfterStage5"/>, <see cref="ExpectReconciledInput"/>,
+        /// <see cref="DiagnosticsOnly"/>) can never disagree with the selection. The instance
+        /// is the task itself - the same one the pipeline runs - so a task can ask whether it
+        /// IS the selection by reference, and every per-task fact the pipeline needs is
+        /// answered by the task through <see cref="ISelectableTask"/> rather than by a switch
+        /// over its name. It has no input-KIND contract to enforce: every task takes the same
+        /// data files, and the second seam that said "you handed me parquets, so Stage 1-4 is
+        /// done" has retired into these flags.
         /// </summary>
-        public HpcTask? SelectedTask { get; set; }
+        public ISelectableTask SelectedTask { get; private set; }
+
+        /// <summary>
+        /// Select the task a run executes, or null for the full pipeline, and let it set the
+        /// flags it implies. The one place the selection and its flags are written together.
+        /// </summary>
+        public void SelectTask(ISelectableTask task)
+        {
+            SelectedTask = task;
+            task?.ApplySelection(this);
+        }
 
         /// <summary>
         /// True under <c>--task ModelDiagnostics</c>: recompute the pass-2 view and write ONLY
@@ -377,9 +392,10 @@ namespace pwiz.Osprey.Core
         /// sidecars. The point is to be able to re-judge a diagnostics change on a completed
         /// large cohort without disturbing - or waiting for - the results it already produced.
         /// Every suppressed artifact is one this run would otherwise REWRITE with the same
-        /// content it already holds, so skipping them costs nothing but the write.
+        /// content it already holds, so skipping them costs nothing but the write. Set by
+        /// that task's <see cref="ISelectableTask.ApplySelection"/>, like its three siblings.
         /// </summary>
-        public bool DiagnosticsOnly => SelectedTask == HpcTask.ModelDiagnostics;
+        public bool DiagnosticsOnly { get; set; }
 
         /// <summary>
         /// Shallow clone for per-file ProcessFile() calls. The pipeline
@@ -405,41 +421,6 @@ namespace pwiz.Osprey.Core
         /// and MUST stay byte-identical with Rust.
         /// </summary>
         public SearchIdentity Identity => new SearchIdentity(this);
-    }
-
-    /// <summary>
-    /// A single HPC pipeline task selectable via <c>--task &lt;Name&gt;</c>
-    /// (one HPC node = one task). Each member is its task's
-    /// <c>OspreyTask.Name</c> in PascalCase, so the member, the class, and the
-    /// CLI selector are one word per task rather than three to map between.
-    /// <para>The stamp is not the member: what a task writes into its
-    /// <c>.osprey.task</c> sidecars and logs as <c>[TASK] &lt;Name&gt;</c> is
-    /// <c>OspreyTask.Name</c> verbatim, which keeps the all-caps FDR acronym
-    /// (<see cref="FirstPassFdr"/> stamps <c>FirstPassFDR</c>). Anything matching
-    /// those artifacts must use the Name, never the member or the class name.
-    /// <see cref="PerFileRescore"/> differs by more than casing - its Name is
-    /// <c>PerFileRescoring</c>.</para>
-    /// </summary>
-    public enum HpcTask
-    {
-        PerFileScoring,
-        FirstPassFdr,
-        PerFileRescore,
-        SecondPassFdr,
-        // Stage 1 alone: build each input's .spectra.bin cache and stop. Not an
-        // HPC fan-out node like the four above but the data-staging step ahead of
-        // them, which is why it needs no library and publishes no byproducts.
-        // Appended rather than ordered first so the existing members keep their
-        // ordinal values.
-        SpectraCache,
-        // Regenerate ONLY the --model-diagnostics HTML for a COMPLETED analysis, from that
-        // run's own outputs. Like SpectraCache this is not one of the four HPC fan-out nodes:
-        // it runs the canonical pipeline so Stages 1-5 rehydrate from their valid stamps, then
-        // lets SecondPassFDR compute the pass-2 view while suppressing every artifact write
-        // except the report. Exists because judging a diagnostics change on a large cohort
-        // otherwise means re-running the whole search - 7 hours on the 82-file SEA-AD set -
-        // or accepting a stale page written by an older build.
-        ModelDiagnostics
     }
 
     /// <summary>
