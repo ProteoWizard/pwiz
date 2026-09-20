@@ -33,13 +33,16 @@ namespace pwiz.Osprey.Tasks
     /// the name lookup behind it, and the pipeline a run walks are all derived from
     /// <see cref="CreateAll"/>, so adding a task is one class deriving from
     /// <see cref="OspreyTask"/> plus one line here - nothing in the exe's argument model,
-    /// its validation or the task library's predicates names tasks any more.
+    /// its validation or the task library's predicates switches on a task name any more.
+    /// (The <c>--task</c> help prose still describes the two selector-only tasks by name;
+    /// a new selector gets a sentence there.)
     ///
     /// <para>A factory rather than a static singleton on purpose: tasks hold per-run state
     /// (the one-shot hydrate guards, the shared entry buffer), and the tests run several
-    /// pipelines in one process. A run calls it ONCE and shares the instances between the
+    /// pipelines in one process. A run calls it once and shares the instances between the
     /// selection and the pipeline, which is what lets a task ask whether it IS the selected
-    /// task by reference.</para>
+    /// task by reference; the argument model calls it separately, at type init, for the
+    /// value list alone.</para>
     /// </summary>
     public static class OspreyTasks
     {
@@ -74,10 +77,13 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// The tasks a run walks, in execution order: the selected task alone when it
-        /// <see cref="OspreyTask.RunsStandalone"/>, otherwise the canonical pipeline, whose
-        /// membership predicates then decide what runs for the selection. The selected task
-        /// must be one of <paramref name="allTasks"/> - the same instance, not a namesake -
-        /// so the pipeline and the selection agree by reference.
+        /// <see cref="OspreyTask.RunsStandalone"/>, the canonical pipeline when it
+        /// <see cref="OspreyTask.RunsCanonicalPipeline"/> (its membership predicates then
+        /// decide what runs for the selection), and a refusal when it answers neither - a
+        /// task that declares no pipeline must not silently run the whole analysis with
+        /// itself never called. The selected task must be one of
+        /// <paramref name="allTasks"/> - the same instance, not a namesake - so the pipeline
+        /// and the selection agree by reference.
         /// </summary>
         public static OspreyTask[] PipelineFor(IReadOnlyList<OspreyTask> allTasks, ISelectableTask selected)
         {
@@ -86,9 +92,13 @@ namespace pwiz.Osprey.Tasks
             var selectedTask = allTasks.FirstOrDefault(t => ReferenceEquals(t, selected));
             if (selectedTask == null)
                 throw new ArgumentException(@"The selected task is not one of the tasks this run created.", nameof(selected));
-            return selectedTask.RunsStandalone
-                ? new[] { selectedTask }
-                : CanonicalPipeline(allTasks);
+            if (selectedTask.RunsStandalone)
+                return new[] { selectedTask };
+            if (selectedTask.RunsCanonicalPipeline)
+                return CanonicalPipeline(allTasks);
+            throw new InvalidOperationException(string.Format(
+                @"--task {0} declares no pipeline to run: it is neither standalone nor a canonical-pipeline task.",
+                selectedTask.Name));
         }
 
         /// <summary>

@@ -61,6 +61,12 @@ namespace pwiz.Osprey.Tasks
         public override string Name => TASK_NAME;
 
         /// <summary>
+        /// Not a stage, but the selection runs the canonical stages: they rehydrate from their
+        /// stamps and fold the report with every other write suppressed.
+        /// </summary>
+        public override bool RunsCanonicalPipeline => true;
+
+        /// <summary>
         /// Admitted to the per-run survivor loader for the same reason the rescore worker is:
         /// it consumes that loader and nothing else. Admitting it is what stops it falling to
         /// the all-runs bundle, which retains every run's survivors and grew 0.10 GB/file on a

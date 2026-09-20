@@ -364,9 +364,10 @@ namespace pwiz.Osprey.Core
         /// <summary>
         /// The single pipeline task selected by <c>--task &lt;Name&gt;</c> on the
         /// CLI, or null for the full pipeline (no <c>--task</c>). Set only through
-        /// <see cref="SelectTask"/>, so the flags a task implies (<see cref="NoJoin"/>,
+        /// <see cref="SelectTask"/>, which writes the flags a task implies (<see cref="NoJoin"/>,
         /// <see cref="StopAfterStage5"/>, <see cref="ExpectReconciledInput"/>,
-        /// <see cref="DiagnosticsOnly"/>) can never disagree with the selection. The instance
+        /// <see cref="DiagnosticsOnly"/>) in the same step, so the CLI path cannot set the
+        /// selection without its flags or leave a previous selection's behind. The instance
         /// is the task itself - the same one the pipeline runs - so a task can ask whether it
         /// IS the selection by reference, and every per-task fact the pipeline needs is
         /// answered by the task through <see cref="ISelectableTask"/> rather than by a switch
@@ -378,10 +379,17 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// Select the task a run executes, or null for the full pipeline, and let it set the
-        /// flags it implies. The one place the selection and its flags are written together.
+        /// flags it implies. The one place the selection and its flags are written together:
+        /// the four flags a selection derives are cleared first, so they hold exactly what
+        /// this task sets and nothing a previous selection left. <see cref="ModelDiagnostics"/>
+        /// is not among them - <c>--model-diagnostics</c> sets it on its own.
         /// </summary>
         public void SelectTask(ISelectableTask task)
         {
+            NoJoin = false;
+            StopAfterStage5 = false;
+            ExpectReconciledInput = false;
+            DiagnosticsOnly = false;
             SelectedTask = task;
             task?.ApplySelection(this);
         }

@@ -58,8 +58,8 @@ namespace pwiz.Osprey
             try
             {
                 // Select the diagnostics sink before any task runs -- the single
-                // chokepoint every entry point reaches the pipeline through
-                // (Program.Main and the rescore worker). -d forces the dump
+                // chokepoint every invocation reaches the pipeline through
+                // (Program.Main, whatever --task it selected). -d forces the dump
                 // bundle on; otherwise the sink self-enables only if an
                 // OSPREY_DUMP_* / OSPREY_DIAG_* env var is set.
                 OspreyDiagnostics.Initialize(config.Diagnostics);

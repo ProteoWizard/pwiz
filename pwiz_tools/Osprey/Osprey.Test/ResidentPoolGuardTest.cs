@@ -452,8 +452,8 @@ namespace pwiz.Osprey.Test
         /// every task except <c>--task SecondPassFDR</c> - and that one disagreement forced an
         /// O(files) resident pool for a consumer that does not exist.
         ///
-        /// <para>Pinned as a TRUTH TABLE over the flag combinations <c>Program</c> derives from
-        /// <c>--task</c>, not as a single case, because the defect was a predicate that was
+        /// <para>Pinned as a TRUTH TABLE over the flag combinations the tasks' <c>ApplySelection</c>
+        /// derive from <c>--task</c>, not as a single case, because the defect was a predicate that was
         /// right four times out of five. A future task flag that re-splits membership has to
         /// come through here.</para>
         /// </summary>

@@ -73,6 +73,11 @@ namespace pwiz.Osprey.Test
                 (ModelDiagnosticsTask.TASK_NAME, new[] { true,  true,  true,  true  }),
             };
 
+            // Every task that walks the canonical pipeline has a row, so a task added later
+            // cannot leave its membership unpinned; the standalone task has none to pin.
+            foreach (var task in OspreyTasks.CreateAll().Where(t => t.RunsCanonicalPipeline))
+                Assert.IsTrue(cases.Any(c => c.Name == task.Name), task.Name + @" has no membership row");
+
             foreach (var c in cases)
             {
                 string caseName = c.Name ?? @"straight-through";
@@ -94,9 +99,10 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// The pipeline a selection builds: SpectraCache alone runs as a one-task pipeline of
         /// its own and is included there; every other selection, and no selection, walks the
-        /// four canonical stages in execution order. Pinned because the shape used to be two
-        /// hand-written lists chosen by an enum test, and is now derived from the tasks'
-        /// own <c>RunsStandalone</c> / <c>InCanonicalPipeline</c> facts.
+        /// four canonical stages in execution order; a task that declares neither is refused.
+        /// Pinned because the shape used to be two hand-written lists chosen by an enum test,
+        /// and is now derived from the tasks' own <c>RunsStandalone</c> /
+        /// <c>RunsCanonicalPipeline</c> facts.
         /// </summary>
         [TestMethod]
         public void TestPipelineForSelection()
@@ -122,6 +128,7 @@ namespace pwiz.Osprey.Test
                 }
                 else
                 {
+                    Assert.IsTrue(task.RunsCanonicalPipeline, task.Name + @" must declare a pipeline");
                     CollectionAssert.AreEqual(canonical, pipeline.Select(t => t.Name).ToArray(), task.Name);
                 }
                 // The instances are shared, not namesakes: the canonical pipeline's members
@@ -135,6 +142,14 @@ namespace pwiz.Osprey.Test
             // pipeline whose reference checks all fail.
             var stranger = OspreyTasks.FindByName(OspreyTasks.CreateAll(), SpectraCacheTask.TASK_NAME);
             Assert.ThrowsException<ArgumentException>(() => OspreyTasks.PipelineFor(allTasks, stranger));
+            // A listed task that declares no pipeline - the fail-closed defaults - is refused
+            // too, rather than running the whole analysis with itself never called.
+            var unlisted = new UnlistedTask();
+            var withUnlisted = allTasks.Concat(new[] { unlisted }).ToArray();
+            var selectsUnlisted = new OspreyConfig();
+            selectsUnlisted.SelectTask(unlisted);
+            Assert.ThrowsException<InvalidOperationException>(
+                () => OspreyTasks.PipelineFor(withUnlisted, selectsUnlisted.SelectedTask));
         }
 
         /// <summary>
@@ -147,16 +162,17 @@ namespace pwiz.Osprey.Test
         public void TestSelectedTaskFacts()
         {
             // Columns: HydratesPerRun, StartsAfterPerFileScoring, ReadsReconciledScores,
-            // RunsStage7Join, IsPerFileWorker, InCanonicalPipeline, RunsStandalone.
+            // RunsStage7Join, IsPerFileWorker, InCanonicalPipeline, RunsCanonicalPipeline,
+            // RunsStandalone.
             var expected = new (string Name, bool HydratesPerRun, bool StartsAfter, bool ReadsReconciled,
-                bool Stage7Join, bool PerFileWorker, bool Canonical, bool Standalone)[]
+                bool Stage7Join, bool PerFileWorker, bool InCanonical, bool RunsCanonical, bool Standalone)[]
             {
-                (SpectraCacheTask.TASK_NAME,     false, false, false, false, true,  false, true),
-                (PerFileScoringTask.TASK_NAME,   false, false, false, false, true,  true,  false),
-                (FirstPassFdrTask.TASK_NAME,     false, true,  false, false, false, true,  false),
-                (PerFileRescoreTask.TASK_NAME,   true,  true,  false, false, true,  true,  false),
-                (SecondPassFdrTask.TASK_NAME,    false, true,  true,  true,  false, true,  false),
-                (ModelDiagnosticsTask.TASK_NAME, true,  false, false, true,  false, false, false),
+                (SpectraCacheTask.TASK_NAME,     false, false, false, false, true,  false, false, true),
+                (PerFileScoringTask.TASK_NAME,   false, false, false, false, true,  true,  true,  false),
+                (FirstPassFdrTask.TASK_NAME,     false, true,  false, false, false, true,  true,  false),
+                (PerFileRescoreTask.TASK_NAME,   true,  true,  false, false, true,  true,  true,  false),
+                (SecondPassFdrTask.TASK_NAME,    false, true,  true,  true,  false, true,  true,  false),
+                (ModelDiagnosticsTask.TASK_NAME, true,  false, false, true,  false, false, true,  false),
             };
             var allTasks = OspreyTasks.CreateAll();
             Assert.AreEqual(expected.Length, allTasks.Length, @"every task has a row");
@@ -169,14 +185,38 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(e.ReadsReconciled, task.ReadsReconciledScores, e.Name + @": ReadsReconciledScores");
                 Assert.AreEqual(e.Stage7Join, task.RunsStage7Join, e.Name + @": RunsStage7Join");
                 Assert.AreEqual(e.PerFileWorker, task.IsPerFileWorker, e.Name + @": IsPerFileWorker");
-                Assert.AreEqual(e.Canonical, task.InCanonicalPipeline, e.Name + @": InCanonicalPipeline");
+                Assert.AreEqual(e.InCanonical, task.InCanonicalPipeline, e.Name + @": InCanonicalPipeline");
+                Assert.AreEqual(e.RunsCanonical, task.RunsCanonicalPipeline, e.Name + @": RunsCanonicalPipeline");
                 Assert.AreEqual(e.Standalone, task.RunsStandalone, e.Name + @": RunsStandalone");
             }
+            // The facts are not independent, whatever row an author writes: a stage of the
+            // canonical pipeline runs it when selected; a task runs exactly one pipeline
+            // shape; a per-file worker never runs the join; and a task reading the reconciled
+            // parquet starts after the per-file scoring that wrote its precursor.
+            foreach (var task in allTasks)
+            {
+                if (task.InCanonicalPipeline)
+                    Assert.IsTrue(task.RunsCanonicalPipeline, task.Name + @": a canonical stage runs the canonical pipeline");
+                Assert.IsFalse(task.RunsStandalone && task.RunsCanonicalPipeline, task.Name + @": one pipeline shape");
+                Assert.IsFalse(task.IsPerFileWorker && task.RunsStage7Join, task.Name + @": a per-file worker runs no join");
+                if (task.ReadsReconciledScores)
+                    Assert.IsTrue(task.StartsAfterPerFileScoring, task.Name + @": reconciled rows exist only after Stage 4");
+            }
+            // The list is complete: every concrete OspreyTask in the task library is in it,
+            // so a class committed without its CreateAll() line cannot pass as "unknown task".
+            var concreteTaskTypes = typeof(OspreyTask).Assembly.GetTypes()
+                .Where(t => !t.IsAbstract && typeof(OspreyTask).IsAssignableFrom(t))
+                .OrderBy(t => t.FullName)
+                .ToArray();
+            CollectionAssert.AreEqual(concreteTaskTypes,
+                allTasks.Select(t => t.GetType()).OrderBy(t => t.FullName).ToArray(),
+                @"every OspreyTask subclass in Osprey.Tasks must be listed in OspreyTasks.CreateAll() exactly once");
             // The defaults fail closed: a task that overrides nothing is admitted to nothing.
             var unknown = new UnlistedTask();
             Assert.IsFalse(unknown.HydratesPerRun || unknown.StartsAfterPerFileScoring ||
                            unknown.ReadsReconciledScores || unknown.RunsStage7Join ||
-                           unknown.IsPerFileWorker || unknown.InCanonicalPipeline || unknown.RunsStandalone);
+                           unknown.IsPerFileWorker || unknown.InCanonicalPipeline ||
+                           unknown.RunsCanonicalPipeline || unknown.RunsStandalone);
             // And the predicates that consult them read the selection, with the straight-through
             // run (no selection) answering as the full pipeline: from the spectra, running the join.
             var full = new OspreyConfig();

@@ -97,6 +97,16 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public virtual bool RunsStandalone => false;
 
+        /// <summary>
+        /// When selected, walks the canonical pipeline: as a member of it, gated by the
+        /// flags its <see cref="ApplySelection"/> sets, or - the one other case - as a
+        /// selector that is not a stage but runs the canonical stages with its flags applied
+        /// (the diagnostics render). A task that is neither this nor
+        /// <see cref="RunsStandalone"/> declares no pipeline, and selecting it is refused
+        /// rather than silently running the whole analysis with the task never called.
+        /// </summary>
+        public virtual bool RunsCanonicalPipeline => InCanonicalPipeline;
+
         public virtual void ApplySelection(OspreyConfig config)
         {
         }

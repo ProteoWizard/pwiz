@@ -178,6 +178,18 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// The worker writes each run's reconciled parquet and pass-2 sidecars, never the
+        /// blib; <c>--output</c> is required only to locate the analysis-wide sidecars
+        /// beside it (the retained base_id summary, the experiment sidecar). Naming the blib
+        /// would read as "the blib is being rebuilt".
+        /// </summary>
+        public override string DescribeOutput(OspreyConfig config)
+        {
+            return @"per-file .scores-reconciled.parquet (next to each input's .scores.parquet; " +
+                   @"--output locates the analysis-wide sidecars and is not written)";
+        }
+
+        /// <summary>
         /// Computes the Stage 6 rescore in the straight-through run and in the rescore
         /// worker (--task PerFileRescoring). Excluded in --task PerFileScoring,
         /// --task FirstPassFDR (stops at Stage 5), --task ModelDiagnostics (a render, which

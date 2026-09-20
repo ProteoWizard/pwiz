@@ -308,8 +308,8 @@ namespace pwiz.Osprey
                     LogInfo(string.Format("Task: {0} (single-task run)", config.SelectedTask.Name));
                 // A task that writes something other than the blib - per-file parquets,
                 // per-file spectra caches, the diagnostics report alone - names its real
-                // output, so the log does not read as if the ignored --output blib were
-                // being rebuilt. (PerFileRescoring still writes --output.)
+                // output, so the log does not read as if the --output blib were being
+                // rebuilt. Of the selectable tasks only SecondPassFDR writes it.
                 LogInfo(string.Format("Output: {0}",
                     config.SelectedTask?.DescribeOutput(config) ?? config.OutputBlib));
                 LogInfo(string.Format("Resolution: {0}", config.ResolutionMode));

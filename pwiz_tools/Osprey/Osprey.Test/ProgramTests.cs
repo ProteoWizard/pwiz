@@ -446,6 +446,7 @@ namespace pwiz.Osprey.Test
                 (SpectraCacheTask.TASK_NAME,     false, false, false),
                 (ModelDiagnosticsTask.TASK_NAME, false, false, false),
             };
+            Assert.AreEqual(OspreyTasks.CreateAll().Length, cases.Length, @"every task has a flags row");
             foreach (var c in cases)
             {
                 var config = TaskConfigs.ForTask(c.Task);
@@ -465,6 +466,20 @@ namespace pwiz.Osprey.Test
             full.SelectTask(null);
             Assert.IsNull(full.SelectedTask);
             Assert.IsFalse(full.NoJoin || full.StopAfterStage5 || full.ExpectReconciledInput || full.DiagnosticsOnly);
+            // A re-selection holds exactly the new task's flags: nothing a previous selection
+            // set survives, so a config reused across selections cannot carry a stale flag
+            // into the membership predicates.
+            var reselected = TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME);
+            Assert.IsTrue(reselected.StopAfterStage5);
+            reselected.SelectTask(null);
+            Assert.IsFalse(reselected.StopAfterStage5, @"clearing the selection clears its flags");
+            reselected.SelectTask(OspreyTasks.FindByName(OspreyTasks.CreateAll(), ModelDiagnosticsTask.TASK_NAME));
+            reselected.SelectTask(OspreyTasks.FindByName(OspreyTasks.CreateAll(), SecondPassFdrTask.TASK_NAME));
+            Assert.IsFalse(reselected.DiagnosticsOnly, @"a later selection drops the earlier one's flags");
+            Assert.IsTrue(reselected.ExpectReconciledInput);
+            // ... except --model-diagnostics, which is the operator's own flag, not a
+            // selection's: ModelDiagnostics implies it but a later selection does not revoke it.
+            Assert.IsTrue(reselected.ModelDiagnostics);
         }
 
         // --- --task ModelDiagnostics: regenerate the report, touch nothing else ---

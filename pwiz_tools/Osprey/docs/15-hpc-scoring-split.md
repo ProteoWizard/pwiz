@@ -25,7 +25,7 @@ There is one list of tasks, `OspreyTasks.CreateAll()` (`Osprey.Tasks/OspreyTasks
 
 - The list is in `--help` order: the staging step, the four canonical stages in execution order, the render. `SpectraCache` and `ModelDiagnostics` are **not pipeline stages**: both are reachable only by naming them in `--task`, neither is `InCanonicalPipeline`, and neither belongs in an HPC relay plan. `SpectraCache` `RunsStandalone` (a one-task pipeline of its own); `ModelDiagnosticsTask` is a selector only - never in any pipeline list, its `Run` / `Rehydrate` unreachable - that owns the name, the per-task facts and the two flags the selection implies. See 00-pipeline-architecture.md, "Two selectable tasks that are not pipeline tasks".
 - The residual spelling to read carefully is `PerFileRescoring` (the name) vs `PerFileRescoreTask` (the class); everything else differs only in the `Fdr`/`FDR` casing, which follows this codebase's own type convention (`FdrEntry`, `FdrController`) rather than the all-caps `pwiz.Osprey.FDR` namespace.
-- **Adding a task** is one class deriving from `OspreyTask` (its `TASK_NAME`, its overrides) plus one line in `CreateAll()`. Nothing in `Program`, `OspreyCommandArgs` or `ScoringTaskShared` names tasks.
+- **Adding a task** is one class deriving from `OspreyTask` (its `TASK_NAME`, its overrides) plus one line in `CreateAll()`. Nothing in `Program`, `OspreyCommandArgs` or `ScoringTaskShared` switches on a task name; the tests that pin the list (`ProgramTests.TestResolveTask`, `PipelineMembershipTest.TestSelectedTaskFacts`) go red until the new task has its rows, and the `--task` help prose (`OspreyCommandArgs`) and [20-command-line.md](20-command-line.md) describe the selector-only tasks by name and want a sentence for a new one.
 
 ## Orchestration model: `--task` + membership predicates
 
@@ -42,19 +42,19 @@ ModelDiagnosticsTask -> config.ModelDiagnostics = config.DiagnosticsOnly = true
 
 Every other per-task fact the pipeline used to switch on the enum for is likewise answered by the task, through the `ISelectableTask` contract in `Osprey.Core` (the config lives in Core, below the task library, so the contract sits where both the exe and the tasks can see it; Core still names no task). The facts default to **fail closed** on `OspreyTask` - a task added later is admitted to nothing until its author overrides what is true of it - and are pinned as one truth table by `PipelineMembershipTest.TestSelectedTaskFacts`:
 
-| Task | `HydratesPerRun` | `StartsAfterPerFileScoring` | `ReadsReconciledScores` | `RunsStage7Join` | `IsPerFileWorker` | `InCanonicalPipeline` | `RunsStandalone` |
-|---|---|---|---|---|---|---|---|
-| `SpectraCache` | – | – | – | – | yes | – | yes |
-| `PerFileScoring` | – | – | – | – | yes | yes | – |
-| `FirstPassFDR` | – | yes | – | – | – | yes | – |
-| `PerFileRescoring` | yes | yes | – | – | yes | yes | – |
-| `SecondPassFDR` | – | yes | yes | yes | – | yes | – |
-| `ModelDiagnostics` | yes | – | – | yes | – | – | – |
-| *(no `--task`)* | admitted | – | – | yes | – | | |
+| Task | `HydratesPerRun` | `StartsAfterPerFileScoring` | `ReadsReconciledScores` | `RunsStage7Join` | `IsPerFileWorker` | `InCanonicalPipeline` | `RunsCanonicalPipeline` | `RunsStandalone` |
+|---|---|---|---|---|---|---|---|---|
+| `SpectraCache` | - | - | - | - | yes | - | - | yes |
+| `PerFileScoring` | - | - | - | - | yes | yes | yes | - |
+| `FirstPassFDR` | - | yes | - | - | - | yes | yes | - |
+| `PerFileRescoring` | yes | yes | - | - | yes | yes | yes | - |
+| `SecondPassFDR` | - | yes | yes | yes | - | yes | yes | - |
+| `ModelDiagnostics` | yes | - | - | yes | - | - | yes | - |
+| *(no `--task`)* | admitted | - | - | yes | - | | canonical | |
 
 The `ScoringTaskShared` predicates (`CanHydratePerRun`, `StartsAfterPerFileScoring`, `ReadsReconciledScores`, `RunsStage7Join`) read these off `config.SelectedTask`, with the no-task straight-through run answering as the full pipeline (from the spectra, running the join). `ValidateArgs` asks the task what it requires (`ValidateSelection`) and the startup echo asks it what it writes (`DescribeOutput`), so neither has a per-task switch either.
 
-The pipeline a run walks is `OspreyTasks.PipelineFor(allTasks, config.SelectedTask)`: the selected task alone when it `RunsStandalone`, otherwise the canonical four (`OspreyTasks.CanonicalPipeline`, the `InCanonicalPipeline` members of the list) in execution order `PerFileScoring → FirstPassFDR → PerFileRescoring → SecondPassFDR`. `Main` calls `CreateAll()` once and shares the instances between the lookup and the pipeline, which is what lets `PerFileRescoreTask.IsIncluded` and `SpectraCacheTask.IsIncluded` ask "am I the selection?" by reference. The driver loop (`Osprey/AnalysisPipeline.cs`):
+The pipeline a run walks is `OspreyTasks.PipelineFor(allTasks, config.SelectedTask)`: the selected task alone when it `RunsStandalone`; the canonical four (`OspreyTasks.CanonicalPipeline`, the `InCanonicalPipeline` members of the list) in execution order `PerFileScoring -> FirstPassFDR -> PerFileRescoring -> SecondPassFDR` when it `RunsCanonicalPipeline` (every stage, and the diagnostics selector); and a refusal (`InvalidOperationException`, exit 1) when it is neither - a task that declares no pipeline must not silently run the whole analysis with itself never called. `Main` calls `CreateAll()` once and shares the instances between the lookup and the pipeline, which is what lets `PerFileRescoreTask.IsIncluded` and `SpectraCacheTask.IsIncluded` ask "am I the selection?" by reference. The driver loop (`Osprey/AnalysisPipeline.cs`):
 
 1. Skips any task whose `IsIncluded(ctx)` is false (excluded tasks lazy-rehydrate their state on demand if a downstream task reaches for it).
 2. Skips any included task whose declared `Outputs` already exist on disk with a matching `.osprey.task` validity-key sidecar (`ctx.CanRehydrate`).
@@ -85,7 +85,7 @@ The exact per-task membership per mode is pinned by `PipelineMembershipTest.Test
 - `<stem>.calibration.json` — RT + MS1/MS2 mass calibration (`CalibrationIO.CalibrationPathForInput`).
 - `<stem>.spectra.bin` — the decoded-spectrum cache. No *join* reads it, but Stage 6 rescore does, and it is what lets a search run at all once the input has been deleted (see 14-intermediate-files.md).
 
-The parquet footer is stamped once against the unmutated outer config (`:226-232`) with `osprey.version`, `osprey.search_hash`, `osprey.library_hash`, and `osprey.reconciled = "false"`. Under `--task PerFileScoring` (`config.NoJoin`, `SelectedTask == PerFileScoring`) the task stops after writing the parquets and returns false with `ExitCode = 0` (`FinalizeAndCheck`, `:649-658`) — Stage 5+ is skipped, no blib is written. `--output` is accepted but not used (`Osprey/Program.cs:228-232` reports the real per-file parquet output instead of warning).
+The parquet footer is stamped once against the unmutated outer config (`:226-232`) with `osprey.version`, `osprey.search_hash`, `osprey.library_hash`, and `osprey.reconciled = "false"`. Under `--task PerFileScoring` (`config.NoJoin`, `SelectedTask == PerFileScoring`) the task stops after writing the parquets and returns false with `ExitCode = 0` (`FinalizeAndCheck`, `:649-658`) — Stage 5+ is skipped, no blib is written. `--output` is accepted but not used (`PerFileScoringTask.DescribeOutput` names the real per-file parquet output in the startup echo instead of warning).
 
 Under `--task PerFileScoring` the task's `IsIncluded` is true because the task does not start after Stage 4 (`ScoringTaskShared.StartsAfterPerFileScoring`). The cross `ValidateArgs` used to reject here - `--task PerFileScoring --input-scores` - cannot be typed any more, which is the point of retiring the second seam rather than teaching a third predicate about it.
 
@@ -104,7 +104,7 @@ Under `--task PerFileScoring` the task's `IsIncluded` is true because the task d
 
 The boundary file pair per file is thus `<stem>.1st-pass.fdr_scores.bin` + `<stem>.reconciliation.json`. Each reconciliation.json carries `search_hash`, `library_hash`, the sorted join-wide file-stem set, and the global first-pass passing base_id set (`:970-996`), so a single-file Stage 6 worker can reconstruct the join-wide compaction set.
 
-Under `--task FirstPassFDR` (`config.StopAfterStage5`), `PlanStage6` writes the boundary pair and returns true with `ExitCode = 0` before Stage 6 rescore (`:775-797`). `ValidateArgs` requires `--input` with 2+ runs and `Reconciliation.Enabled = true`: the Stage 5 -> Stage 6 boundary pair is only meaningful for multi-file fan-back-in.
+Under `--task FirstPassFDR` (`config.StopAfterStage5`), `PlanStage6` writes the boundary pair and returns true with `ExitCode = 0` before Stage 6 rescore (`:775-797`). `FirstPassFdrTask.ValidateSelection` requires `--input` with 2+ runs and `Reconciliation.Enabled = true`: the Stage 5 -> Stage 6 boundary pair is only meaningful for multi-file fan-back-in.
 
 ## Stage 6 — Per-file rescore (`--task PerFileRescoring`)
 
@@ -125,7 +125,7 @@ Under `--task PerFileRescoring` (`config.NoJoin`, and `SelectedTask` is what dis
 3. Re-clamp experiment q to best run q (`PercolatorEngine.ClampExperimentQToBestRun`, `:177`).
 4. Write the BiblioSpecLite `.blib` (`WriteBlibOutput`, `:299-370`; see 13-blib-output-schema.md).
 
-Under `--task SecondPassFDR` (`config.ExpectReconciledInput`), `Rehydrate` (`:317-455`) hydrates from the reconciled parquets + sidecars **without** materializing `FirstPassFdrTask` (which would wrongly re-run Stage 5 Percolator on the reconciled parquets), applies its own compaction, and lets `SecondPassFdrTask.Run` do 2nd-pass FDR + protein FDR + blib. The strict reconciled-input gate asserts every run's reconciled parquet carries `osprey.reconciled = "true"` (`ParquetScoreCache.ValidateScoresParquetGroup`). `ValidateArgs` requires `--input` plus `--library` + `--output`.
+Under `--task SecondPassFDR` (`config.ExpectReconciledInput`), `Rehydrate` (`:317-455`) hydrates from the reconciled parquets + sidecars **without** materializing `FirstPassFdrTask` (which would wrongly re-run Stage 5 Percolator on the reconciled parquets), applies its own compaction, and lets `SecondPassFdrTask.Run` do 2nd-pass FDR + protein FDR + blib. The strict reconciled-input gate asserts every run's reconciled parquet carries `osprey.reconciled = "true"` (`ParquetScoreCache.ValidateScoresParquetGroup`). `ValidateSelection` (the base default) requires `--input` plus `--library` + `--output`.
 
 `SecondPassFdrTask.Rehydrate` returns `true` as a no-op (`:113`): nothing consumes SecondPassFDR's state in-memory, so it is never demanded.
 
@@ -207,11 +207,11 @@ a corrupt cache a downstream stage must reject. See principle P8 in
 | Flag / field | Default | Effect on this stage |
 |---|---|---|
 | `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}` | none (full pipeline in one process) | Selects one HPC worker; the task sets `NoJoin` / `StopAfterStage5` / `ExpectReconciledInput` (`OspreyTask.ApplySelection`). Resolved case-insensitively against the task list (`ResolveTask`). |
-| `-i/--input <mzML...>` | none | Required by `PerFileScoring` and the default full pipeline; forbidden by `FirstPassFDR` / `PerFileRescoring` / `SecondPassFDR`. |
+| `-i/--input <file...>` | none | Required by every task and the default full pipeline (each task's `ValidateSelection`); `FirstPassFDR` requires 2+ runs. The joins and the rescore worker are named by their data files too, whose parquets and sidecars derive from the stem. |
 | `-l/--library`, `-o/--output` | none | Required by `FirstPassFDR`, `PerFileRescoring`, and `SecondPassFDR`. `--output` is accepted-but-unused by `--task PerFileScoring` (writes per-file parquets, not a blib). |
 | `--reconciliation-compaction-fdr <v>` | 0.01 | Peptide-q gate for Stage 5 compaction (`FirstPassFdrTask.cs:689`). |
 | `--protein-fdr <v>` | 0.01 (machinery always runs) | Protein-rescue gate for compaction (`EffectiveProteinFdr`, `FirstPassFdrTask.cs:693`) and the SecondPassFDR passing-group count. |
-| `Reconciliation.Enabled` (config) | true | Gates Stage 6 planning (`FirstPassFdrTask.cs:387`) and the `--task FirstPassFDR` requirement (`Program.cs:395-398`). |
+| `Reconciliation.Enabled` (config) | true | Gates Stage 6 planning (`FirstPassFdrTask.cs:387`) and the `--task FirstPassFDR` requirement (`FirstPassFdrTask.ValidateSelection`). |
 | `--parallel-files [N]` | sequential (off) | OUTER parallelism: number of input files scored/rescored at once. Both Stage 1-4 scoring and Stage 6 rescore fan out under the same resolved `EffectiveFileParallelism` (`RunPlan.cs:47`). Auto when the flag is given with no value. |
 | `--threads <count>` | all cores | INNER per-file main-search thread budget, divided across concurrently running files. |
 | `--work-dir` / `--output-dir` / `--cache-dir` | input file's own dir | Redirect where per-file artifacts (parquet, spectra, calibration, sidecars) are written (`ArtifactPaths`, `Program.cs:135-136`). |
@@ -221,7 +221,7 @@ a corrupt cache a downstream stage must reject. See principle P8 in
 
 ## Divergences from the Rust documentation
 
-- **[INTENTIONAL-CSHARP-DESIGN] CLI surface is `--task <Name>`, not `--no-join` / `--join-at-pass` / `--join-only`** - Rust doc says the HPC split is orchestrated by `--join-at-pass=<N>` with `--no-join` / `--join-only` modifiers; C# retired those flags and uses a single `--task {PerFileScoring|FirstPassFDR|PerFileRescoring|SecondPassFDR}` selector that derives the `NoJoin` / `StopAfterStage5` / `ExpectReconciledInput` membership flags. The unrecognized Rust flags fail fast. Evidence: `Osprey/Program.cs:86-128`, `Osprey/OspreyCommandArgs.cs:206-207`. Severity: major.
+- **[INTENTIONAL-CSHARP-DESIGN] CLI surface is `--task <Name>`, not `--no-join` / `--join-at-pass` / `--join-only`** - Rust doc says the HPC split is orchestrated by `--join-at-pass=<N>` with `--no-join` / `--join-only` modifiers; C# retired those flags and uses a single `--task {PerFileScoring|FirstPassFDR|PerFileRescoring|SecondPassFDR}` selector; the selected task sets the `NoJoin` / `StopAfterStage5` / `ExpectReconciledInput` membership flags (`OspreyTask.ApplySelection`). The unrecognized Rust flags fail fast. Evidence: `Osprey/Program.cs` (`Main`, `ResolveTask`), the `ApplySelection` overrides in `Osprey.Tasks`, `Osprey/OspreyCommandArgs.cs` (`ARG_TASK`). Severity: major.
 
 - **[INTENTIONAL-CSHARP-DESIGN] One name per task, describing the FDR pass** - The CLI name, the task class, the `[TASK]` log token, and the `.osprey.task` stamp are all one string per task (`OspreyTask.Name`), describing the FDR pass rather than the join topology. Two of them used to describe the topology instead (`FirstJoinTask`/`FirstPassFDR` and `MergeNodeTask`/`SecondPassFDR`), which cost a reader a mapping table and once produced a resume leg that keyed off the class names, matched zero sidecars, and passed green having resumed nothing; issue #4535 renamed them. The `HpcTask` enum that stood beside the names, and the `ResolveTask` / `TaskCliName` switches that mapped between them, went when the task list became the one authority: `--task` is now a lookup in `OspreyTasks.CreateAll()` by `Name`. The residual spelling is `PerFileRescoring` (the name) vs `PerFileRescoreTask` (the class), plus the `Fdr`/`FDR` casing that follows this codebase's type convention (`FdrEntry`, `FdrController`) rather than the all-caps `pwiz.Osprey.FDR` namespace. Evidence: `Osprey.Tasks/OspreyTasks.cs`, `ResolveTask` in `Osprey/Program.cs`. Severity: info.
 

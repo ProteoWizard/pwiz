@@ -4,7 +4,7 @@ This report consolidates every divergence found by the 18 per-document parity re
 
 ## Executive summary
 
-Across all 18 algorithm documents the C# port is a faithful, parity-focused reproduction of the Rust engine: on the Stellar/Astral reference datasets it is bit-identical, enforced by the `regression.ps1` 1e-9 gate (golden + resume + HPC-chain legs) plus `OSPREY_CROSS_IMPL_*` byte-parity hooks. Of **110 catalogued divergences**, the overwhelming majority are either **documentation staleness** (the Rust prose lagging its own evolving Rust code, which the C# port correctly tracks) or **intentional C# infrastructure/CLI redesigns** that preserve output. There is exactly **one genuine PORT-ERROR** — the Razor shared-peptide assignment order in protein parsimony — and it sits off the default, bit-identical-tested path. **Eight items are UNVERIFIED** (the reviewer could not confirm one side against source and flagged them for a human to check). Nothing on the default analysis path was found to change output relative to Rust.
+Across all 18 algorithm documents the C# port is a faithful, parity-focused reproduction of the Rust engine: on the Stellar/Astral reference datasets it is bit-identical, enforced by the `regression.ps1` 1e-9 gate (golden + resume + HPC-chain legs) plus `OSPREY_CROSS_IMPL_*` byte-parity hooks. Of **110 catalogued divergences**, the overwhelming majority are either **documentation staleness** (the Rust prose lagging its own evolving Rust code, which the C# port correctly tracks) or **intentional C# infrastructure/CLI redesigns** that preserve output. There is exactly **one genuine PORT-ERROR** — the Razor shared-peptide assignment order in protein parsimony — and it sits off the default, bit-identical-tested path. **Seven items are UNVERIFIED** (an eighth, U6, is resolved) (the reviewer could not confirm one side against source and flagged them for a human to check). Nothing on the default analysis path was found to change output relative to Rust.
 
 ### Count by classification
 
@@ -12,7 +12,7 @@ Across all 18 algorithm documents the C# port is a faithful, parity-focused repr
 |---|---:|
 | STALE-RUST-DOC | 49 |
 | INTENTIONAL-CSHARP-DESIGN | 50 |
-| UNVERIFIED | 8 |
+| UNVERIFIED | 7 (+1 resolved) |
 | FLAG-GATED | 2 |
 | PORT-ERROR | 1 |
 | **Total** | **110** |
@@ -45,7 +45,7 @@ The 6 `major` items are: the sparse-library calibration retry omission (doc 04),
 
 ## Port errors and items to verify
 
-This is the section a maintainer should read first. It lists the **single PORT-ERROR** and all **8 UNVERIFIED** items — the divergences that either are, or might be, real behavioral differences from Rust.
+This is the section a maintainer should read first. It lists the **single PORT-ERROR** and all **7 UNVERIFIED** items (and the resolved U6) — the divergences that either are, or might be, real behavioral differences from Rust.
 
 ### PORT-ERROR (1)
 
@@ -57,7 +57,7 @@ This is the section a maintainer should read first. It lists the **single PORT-E
 - **Severity:** minor (non-default flag: default is `--shared-peptides all`; the Razor path is not covered by the All-mode reference gates).
 - **Recommended action:** Reimplement Razor as the iterative group-centric batch set cover with alphabetical shared-peptide ordering to match Rust, and port `test_shared_peptides_razor_cascading_assignment`. Note this is the same code region flagged as UNVERIFIED/major for determinism in doc 15 (U8 below) — fixing both together is natural: the sorted, group-batch algorithm is inherently path- and process-order-independent.
 
-### UNVERIFIED (8)
+### UNVERIFIED (7, plus U6 resolved)
 
 #### U1. No sample-expansion retry loop or graduated linear-fit fallback for sparse libraries — **major**
 - **Doc:** [04-calibration.md](04-calibration.md)
@@ -94,12 +94,12 @@ This is the section a maintainer should read first. It lists the **single PORT-E
 - **C# evidence:** `Osprey/OspreyFileDiagnostics.cs:1918,1983`
 - **Recommended action:** Lab memory references a default-emitted `protein_groups.tsv` + `stats.tsv` (see MEMORY: "Osprey protein & summary reports"), so a writer likely lives outside the reviewed files. Confirm the emitter exists and matches Rust's report columns; if it genuinely does not exist, this is a missing feature.
 
-#### U6. Six per-row blob columns written null/zero in the reconciled parquet — minor
+#### U6. Six per-row blob columns written null/zero in the reconciled parquet — RESOLVED
 - **Doc:** [11-boundary-overrides.md](11-boundary-overrides.md)
 - **Rust says:** The reconciled cache carries fragment/XIC/bounds blob columns.
-- **C# does:** `fragment_mzs`, `fragment_intensities`, `reference_xic_rts`, `reference_xic_intensities`, `bounds_area`, `bounds_snr` are written null/zero today (tracked follow-up); RT boundaries and the 21 features are still computed and written.
-- **C# evidence:** the class summary of the since-removed `Osprey/RescoreWorker.cs` (an unreferenced alias for `AnalysisPipeline.Run`, deleted 2026-09); the columns themselves are declared in `Osprey.IO/ParquetScoreCache.cs`
-- **Recommended action:** Confirm nothing downstream (blib, reports) reads these six columns off the *reconciled* parquet. If they are consumed anywhere, this is a real data-loss bug; if not, it's a benign tracked follow-up.
+- **C# does:** All six (`fragment_mzs`, `fragment_intensities`, `reference_xic_rts`, `reference_xic_intensities`, `bounds_area`, `bounds_snr`) are populated on the reconciled write path since PR #4188 (`40340dada3`, 2026-05): `PerFileRescoreTask` -> `ReconciledParquetWriter` -> `ParquetScoreCache.StreamReconciledScoresParquet` -> `BuildFdrEntryColumns`.
+- **C# evidence:** `Osprey.IO/ParquetScoreCache.cs` (`BuildFdrEntryColumns`, the `boundsAreas[j]` / `fragmentMzs[j] = EncodeF64Blob(...)` assignments); `IOTest.TestStreamReconciledTransferMatchesLoadAllOverlay` asserts them.
+- **Recommended action:** None. The item stood on a class summary in the since-removed `Osprey/RescoreWorker.cs` that predated #4188 and was never updated; it is kept here so the U-numbering stays stable.
 
 #### U7. Python calibration report tooling (`evaluate_calibration.py`) has no verified C# equivalent — info
 - **Doc:** [14-intermediate-files.md](14-intermediate-files.md)
@@ -235,7 +235,7 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 | STALE | Gap-fill two-pass not in the doc | Only 3 override types documented | Also gap-fill two-pass (CWT + forced-integration) via same override channel | `PerFileRescoreTask.cs:1337-1477` | info |
 | STALE | Gap-fill progress labels differ | "Gap-fill CWT"/"Gap-fill forced" | "Gap-fill scoring"/"Gap-fill forced integration" (console string only) | `PerFileRescoreTask.cs:1385,1453` | info |
 | INTENT | Reconciled parquet is a separate sibling file | Updates `.scores.parquet` in place | Writes `.scores-reconciled.parquet`, stamps `osprey.reconciled` footer (crash-resume safety) | `ReconciledParquetWriter.cs:54,200-204` | minor |
-| UNVER | Six blob columns null/zero in reconciled parquet (**U6**) | Reconciled cache carries fragment/XIC/bounds blobs | 6 columns written null/zero (tracked follow-up); RT bounds + 21 features still written | the removed `RescoreWorker.cs` summary; columns in `ParquetScoreCache.cs` | minor |
+| UNVER | Six blob columns null/zero in reconciled parquet (**U6**, RESOLVED) | Reconciled cache carries fragment/XIC/bounds blobs | All six populated since PR #4188; the item stood on a stale class summary | `ParquetScoreCache.cs` (`BuildFdrEntryColumns`) | info |
 
 ### [13-blib-output-schema.md](13-blib-output-schema.md) — matches-with-notes
 
@@ -273,7 +273,7 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 
 | Classification | Title | Rust says | C# does | Evidence | Sev |
 |---|---|---|---|---|---|
-| INTENT | CLI is `--task <Name>`, not `--no-join`/`--join-at-pass`/`--join-only` | Orchestrated by `--join-at-pass` + modifiers | Single `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}`; old flags retired, fail fast | `Program.cs:86-128`; `OspreyCommandArgs.cs:206-207` | major |
+| INTENT | CLI is `--task <Name>`, not `--no-join`/`--join-at-pass`/`--join-only` | Orchestrated by `--join-at-pass` + modifiers | Single `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}`; old flags retired, fail fast | `Program.cs` (`Main`, `ResolveTask`); the `ApplySelection` overrides in `Osprey.Tasks`; `OspreyCommandArgs.cs` (`ARG_TASK`) | major |
 | INTENT | One name per task, describing the FDR pass | Named by pass/join topology | CLI name and class are one name per task, looked up in the one task list; residual `PerFileRescoring` vs `PerFileRescoreTask` | `Osprey.Tasks/OspreyTasks.cs`; `Program.cs` (`ResolveTask`) | info |
 | INTENT | Stage 6 separate `.scores-reconciled.parquet` | Rewrites `.scores.parquet` | Separate sibling; each run's effective parquet prefers reconciled | `PerFileRescoreTask.cs:163-177,944-954` | minor |
 | INTENT | Membership-predicate + lazy-rehydrate, not stage window | Each mode runs stages X..Y | Fixed 4-task pipeline; `IsIncluded` + typed byproduct registry; pinned by truth table | `AnalysisPipeline.cs:99-148`; `PipelineMembershipTest.cs:55-93` | info |

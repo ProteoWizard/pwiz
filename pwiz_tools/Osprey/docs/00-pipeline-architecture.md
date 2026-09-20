@@ -198,7 +198,7 @@ Stages 1-4 are library preparation, mzML processing, calibration, and the main
 first-pass search that computes the 21 PIN features. Stage 5 is first-pass FDR plus the
 Stage 6 reconciliation plan. Stage 6 is the per-run rescore and gap-fill. Stage 7 is
 second-pass FDR, protein FDR, and the `.blib` write. The stage-to-document map is in
-[README.md](README.md); the task-name-to-enum-to-class map is in
+[README.md](README.md); the task-name-to-class map is in
 [15-hpc-scoring-split](15-hpc-scoring-split.md).
 
 A fan-out task's node count is free. One node per run, five runs per node, or all 500

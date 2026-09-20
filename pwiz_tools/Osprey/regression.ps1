@@ -1169,7 +1169,8 @@ function Compare-DirFingerprint {
 # the driver's own log, so these helpers read it.
 #
 # The canonical four-task pipeline, in execution order. These are the
-# OspreyTask.Name values (AnalysisPipeline.CanonicalPipeline): the same tokens
+# OspreyTask.Name values (the InCanonicalPipeline members of OspreyTasks.CreateAll(),
+# i.e. OspreyTasks.CanonicalPipeline): the same tokens
 # Invoke-ResumeInvalidation keys off, and the ones the driver stamps into both its
 # [TASK] log lines and the .<Name>.osprey.task validity sidecars.
 $pipelineTaskNames = @('PerFileScoring', 'FirstPassFDR', 'PerFileRescoring', 'SecondPassFDR')

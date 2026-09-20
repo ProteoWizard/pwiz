@@ -257,11 +257,11 @@ stamps `osprey.reconciled = "true"` and `osprey.reconciliation_hash` alongside
 (`ReconciledParquetWriter.cs:200-204`), which the downstream `--task
 SecondPassFDR` node validates.
 
-Note: six per-row blob columns (`fragment_mzs`, `fragment_intensities`,
-`reference_xic_rts`, `reference_xic_intensities`, `bounds_area`, `bounds_snr`) were
-recorded as written null/zero — a tracked follow-up noted in the class summary of the
-since-removed `RescoreWorker.cs`, not a boundary-override algorithm difference. See
-DIVERGENCES.md U6 for the status of that claim.
+Note: the six per-row blob columns (`fragment_mzs`, `fragment_intensities`,
+`reference_xic_rts`, `reference_xic_intensities`, `bounds_area`, `bounds_snr`) are
+populated on the reconciled write path since PR #4188 (`ParquetScoreCache.BuildFdrEntryColumns`);
+an older note here that they were written null/zero stood on a stale class summary in
+the since-removed `RescoreWorker.cs`. See DIVERGENCES.md U6 (resolved).
 
 ## Worker mode, hydration, and compaction
 
@@ -356,16 +356,14 @@ variant): `OSPREY_DUMP_MULTICHARGE`, `OSPREY_DUMP_CONSENSUS`,
   Evidence: `Osprey.Tasks/ReconciledParquetWriter.cs:54`, `:200-204`,
   `Osprey.Tasks/PerFileRescoreTask.cs:145-151`. Severity: minor.
 
-- **[UNVERIFIED] Six per-row blob columns written null/zero in the reconciled
+- **[RESOLVED] Six per-row blob columns written null/zero in the reconciled
   parquet** - the summary of the since-removed `RescoreWorker.cs` stated `fragment_mzs`,
   `fragment_intensities`, `reference_xic_rts`, `reference_xic_intensities`,
-  `bounds_area`, and `bounds_snr` were written null/zero, tracked as a
-  follow-up. This is a serialization gap in the reconciled parquet, not in the
-  boundary-override scoring itself (features and RT boundaries are computed and
-  written). A human should confirm whether any downstream consumer reads those
-  six columns off the reconciled parquet, and whether the claim still holds - the
-  columns are declared in `Osprey.IO/ParquetScoreCache.cs` and the only evidence was
-  that comment. Severity: minor.
+  `bounds_area`, and `bounds_snr` were written null/zero. That predated PR #4188,
+  which populates all six on the reconciled write path
+  (`Osprey.IO/ParquetScoreCache.cs`, `BuildFdrEntryColumns`; asserted by
+  `IOTest.TestStreamReconciledTransferMatchesLoadAllOverlay`). Kept as a row so
+  DIVERGENCES.md U6 keeps its number. Severity: info.
 
 Verified to match the Rust doc step for step: the single shared scoring path for
 first-pass and re-scoring; override detection by entry id; the
