@@ -7,7 +7,7 @@ A future pass should port pwiz/data/common/cvgen.cpp to generate BOTH the
 enum AND the full relational term info directly from the OBO sources.
 
 Usage (run from repo root):
-    python pwiz-sharp/src/Pwiz.Data.Common/Cv/generate_cvid.py
+    python pwiz-sharp/pwiz/src/Common/generate_cvid.py
 """
 from __future__ import annotations
 
@@ -16,10 +16,10 @@ import sys
 
 REPO = pathlib.Path(__file__).resolve().parents[4]
 SRC = REPO / "pwiz/data/common/cv.hpp"
-OUT = REPO / "pwiz-sharp/src/Pwiz.Data.Common/Cv/CVID.generated.cs"
+OUT = pathlib.Path(__file__).resolve().parent / "CVID.generated.cs"
 
 HEADER = """// This file is generated from pwiz/data/common/cv.hpp.
-// Do not edit by hand — run pwiz-sharp/src/Pwiz.Data.Common/Cv/generate_cvid.py to regenerate.
+// Do not edit by hand — run pwiz-sharp/pwiz/src/Common/generate_cvid.py to regenerate.
 // Source ontologies: psi-ms.obo, unimod.obo, unit.obo (see cv.hpp header for versions).
 
 // ReSharper disable All

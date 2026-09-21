@@ -162,7 +162,7 @@ public static class OboParser
                     break;
 
                 case "name":
-                    current.Name = rest;
+                    current.Name = Unescape(rest);
                     break;
 
                 case "def":
@@ -184,7 +184,7 @@ public static class OboParser
 
                 case "synonym":
                     if (rest.Contains("EXACT", StringComparison.Ordinal))
-                        current.ExactSynonyms.Add(ExtractQuoted(rest));
+                        current.ExactSynonyms.Add(Unescape(ExtractQuoted(rest)));
                     break;
 
                 case "is_obsolete":
@@ -224,6 +224,18 @@ public static class OboParser
     {
         int bang = s.IndexOf('!');
         return bang >= 0 ? s[..bang].Trim() : s;
+    }
+
+    // OBO escapes the characters that are significant to its own syntax (a term name like
+    // "(?<=[ALIV])(?\!P)" would otherwise start a comment at the '!'). Mirrors cpp obo.cpp
+    // unescape(), so names and synonyms match the cpp-generated cv.cpp byte for byte.
+    private static string Unescape(string s)
+    {
+        if (!s.Contains('\\')) return s;
+        return s.Replace("\\!", "!").Replace("\\:", ":").Replace("\\,", ",")
+                .Replace("\\(", "(").Replace("\\)", ")")
+                .Replace("\\[", "[").Replace("\\]", "]")
+                .Replace("\\{", "{").Replace("\\}", "}");
     }
 
     private static string ExtractQuoted(string s)
