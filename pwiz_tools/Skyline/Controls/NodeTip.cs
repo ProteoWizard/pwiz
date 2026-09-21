@@ -107,6 +107,15 @@ namespace pwiz.Skyline.Controls
         Rectangle RectToScreen(Rectangle r);
     }
 
+    /// <summary>
+    /// A tip displayer that shows tips only while it has the focus, and can be told to show them
+    /// regardless: by a test, or when Skyline is being driven while it is not the active window.
+    /// </summary>
+    public interface IFocusTipDisplayer : ITipDisplayer
+    {
+        bool IgnoreFocus { get; set; }
+    }
+
     public class NodeTip : CustomTip
     {
         public static string FontFace { get { return @"Arial"; } }

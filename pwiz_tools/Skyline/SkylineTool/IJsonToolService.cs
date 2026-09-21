@@ -564,9 +564,10 @@ namespace SkylineTool
         /// <see cref="SendKeyStroke"/>; to paste, use the "paste" action, which takes the text to paste and so
         /// needs neither the clipboard nor a keystroke.</para>
         ///
-        /// <para>NOT for the Targets tree: <c>SequenceTree.OnKeyPress</c> forwards each character on with
-        /// <c>SendKeys.Send</c>, which posts to the FOCUSED window, so the characters land in whatever
-        /// application is in front and arrive out of order. Use the "rename_node" action instead.</para>
+        /// <para>Typing into the Targets tree edits the selected node's label, as it does for a user, and with
+        /// a background proteome brings up the completion pop-up (a form of its own, listed by
+        /// <see cref="GetOpenForms"/>). Select an item in its list to accept it, or press "Down"/"Up" then
+        /// "Enter" on the tree; "Enter" alone accepts the text as typed and "Esc" cancels.</para>
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="controlId">The control to type into, matched as <see cref="GetControls"/> reports it

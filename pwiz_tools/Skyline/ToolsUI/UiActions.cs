@@ -340,7 +340,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public static readonly UiAction SendText = SimpleAction<IKeyboardElement, string>(
                 @"SendText", (e, text) => { e.SendTextNow(text); return null; })
-            .Describe(new LlmInstruction(@"Type text into this control, whether or not it has the focus. Named for what it does: it delivers the CHARACTERS, it does not simulate key presses - for a key use 'send_key_stroke', and to paste use 'paste' (which takes the text, so it needs no clipboard). Do NOT type into the Targets tree: it forwards each character through the FOCUSED window, so the characters land in whatever application is in front, arrive out of order, and leave the tree stuck editing a label. Use 'rename_node' to set a node's text."),
+            .Describe(new LlmInstruction(@"Type text into this control, whether or not it has the focus. Named for what it does: it delivers the CHARACTERS, it does not simulate key presses - for a key use 'send_key_stroke', and to paste use 'paste' (which takes the text, so it needs no clipboard). Typing into the Targets tree edits the selected node's label, as it does for a user: select the node first (the blank one at the end to add a target). With a background proteome the matches appear in a completion pop-up, a form of its own - select an item in its list to accept it, or press 'Down'/'Up' then 'Enter' on the tree; 'Enter' alone accepts the text as typed and 'Esc' cancels. The matches are looked up in the background, so the pop-up opens a moment after the typing returns: read its list before choosing."),
                 new LlmInstruction(@"the text to type, taken literally"));
 
         public static readonly UiAction SendKeyStroke = SimpleAction<IKeyboardElement, string>(
@@ -436,13 +436,17 @@ namespace pwiz.Skyline.ToolsUI
                 @"RenameNode", (e, value) => { e.RenameNodeNow(value); return null; })
             .Describe(new LlmInstruction(@"Rename the tree's selected node in place (select the node first)."), new LlmInstruction(@"the new name"));
 
+        public static readonly UiAction ShowTooltip = SimpleAction<ITooltipElement>(
+                @"ShowTooltip", e => { e.ShowTooltipNow(); return null; })
+            .Describe(new LlmInstruction(@"Show the tooltip of the selected item, as resting the mouse on it does: a tree's selected node, a list's selected item, a grid's current cell (select it first). An item that has a tooltip brings it up about half a second later as a window of its own in the open forms, where its image can be captured whole; it stays until the selection changes or the mouse next moves over the control."));
+
         // Every action, in get_actions / get_children listing order (the universal ones first).
         public static readonly UiAction[] AllActions =
         {
             GetActions, GetChildren, Click, GetValue, SetValue, SendText, SendKeyStroke, GetOptions, CheckItem, UncheckItem,
             SelectItem, UnselectItem, SetSelectedIndex, GetGridText, SetGridText, SetCurrentCellAddress,
             GetGraphZoom, ZoomGraphTo, ClickGraph, Expand,
-            Collapse, SelectTab, Dismiss, Paste, SelectAll, RenameNode
+            Collapse, SelectTab, Dismiss, Paste, SelectAll, RenameNode, ShowTooltip
         };
 
         // The action with the given wire name, matched case- and underscore-insensitively, or null.

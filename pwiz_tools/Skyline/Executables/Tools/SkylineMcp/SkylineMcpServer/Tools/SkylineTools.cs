@@ -583,7 +583,10 @@ public static class SkylineTools
         "its index, e.g. [\"Peptides\", 0]); 'paste' (value the text to paste into a text box, a grid, the " +
         "Targets tree, or the main Skyline window -- without using the clipboard); 'select_all' (selects all " +
         "of a paste-capable element's content, e.g. before paste to replace it); 'rename_node' (the Targets " +
-        "tree, value the new name for the selected node). " +
+        "tree, value the new name for the selected node); 'show_tooltip' (a tree, list or grid: shows " +
+        "the tooltip of the selected node / selected item / current cell, as resting the mouse on it does -- " +
+        "select it first; it comes up about half a second later as a window of its own in " +
+        "skyline_get_open_forms, where skyline_get_form_image captures it whole). " +
         "For a control's right-click menu, pass path as the JSON {\"parent\": <the control's " +
         "UiElementPath>, \"type\": \"ContextMenu\"}, then get_children to list its items or " +
         "click to invoke one (for a grid, move to the cell first with skyline_set_current_cell_address). When " +
@@ -591,7 +594,7 @@ public static class SkylineTools
         "skyline_get_controls; the typed tools (skyline_click_form_button, ...) remain for common cases.")]
     public static string PerformAction(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string form,
-        [Description("Action: get_actions, get_children, click, get_value, set_value, send_text, send_key_stroke, get_options, check_item, uncheck_item, select_item, unselect_item, set_selected_index, get_grid_text, set_grid_text, set_current_cell_address, get_graph_zoom, zoom_graph_to, click_graph, expand, collapse, select_tab, dismiss, paste, select_all, rename_node")] string action,
+        [Description("Action: get_actions, get_children, click, get_value, set_value, send_text, send_key_stroke, get_options, check_item, uncheck_item, select_item, unselect_item, set_selected_index, get_grid_text, set_grid_text, set_current_cell_address, get_graph_zoom, zoom_graph_to, click_graph, expand, collapse, select_tab, dismiss, paste, select_all, rename_node, show_tooltip")] string action,
         [Description("Visible label that names the control (optional)")] string label = null,
         [Description("Control type for a caption-less control, e.g. TreeView/ListView (optional)")] string type = null,
         [Description("Value for set_value/set_grid_text, the text for send_text/paste/rename_node, the key for send_key_stroke (e.g. 'Ctrl+V'), a [column, row] array for set_current_cell_address, a [left, top, right, bottom] array of graph data coordinates for zoom_graph_to/click_graph, the tab text for select_tab, or a JSON array path for expand/collapse (optional)")] string value = null,
@@ -917,10 +920,13 @@ public static class SkylineTools
         "focus and you never have to arrange focus first; the control is verified enabled first. The text is " +
         "LITERAL - no key names, nothing to escape. To press a key (Enter, Down, Ctrl+V) use " +
         "skyline_send_key_stroke; to PASTE use skyline_perform_action with action='paste', which takes the " +
-        "text and so needs neither the clipboard nor Ctrl+V. DO NOT type into the Targets tree: it forwards " +
-        "each character through the FOCUSED window, so the characters land in whatever application is in " +
-        "front and arrive out of order - use skyline_perform_action with action='rename_node' to set a " +
-        "node's text. Discover control names with skyline_get_controls.")]
+        "text and so needs neither the clipboard nor Ctrl+V. Typing into the Targets tree edits the selected " +
+        "node's label, as it does for a user: select the node first (the blank one at the end to add a " +
+        "target). With a background proteome the matches appear in a completion pop-up, a form of its own " +
+        "in skyline_get_open_forms - select_item in its list accepts one, or press 'Down'/'Up' then 'Enter' " +
+        "on the tree; 'Enter' alone accepts the text as typed and 'Esc' cancels. The matches are looked up in the " +
+        "background, so the pop-up opens a moment after this returns: read its list before choosing. " +
+        "Discover control names with skyline_get_controls.")]
     public static string SendText(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
         [Description("Control to type into, as skyline_get_controls reports it: its visible Label, or its Type for a caption-less control (e.g. 'TreeView')")] string controlId,

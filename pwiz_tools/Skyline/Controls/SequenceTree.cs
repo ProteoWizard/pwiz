@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Controls
     /// https://web.archive.org/web/20090316035456/http://www.codeproject.com/KB/tree/CustomizedLabelEdit.aspx?display=Print
     /// </para>
     /// </summary>
-    public class SequenceTree : TreeViewMS, ITipDisplayer
+    public class SequenceTree : TreeViewMS, IFocusTipDisplayer
     {
         private Image _dropImage;
         private TreeNode _nodeCapture;
@@ -1129,15 +1129,14 @@ namespace pwiz.Skyline.Controls
         {
             if (IsEditableNode(SelectedNode) && !Char.IsControl(e.KeyChar))
             {
-                BeginEdit(true);
-                string keyChar = e.KeyChar.ToString(LocalizationHelper.CurrentCulture);
-                if (IsKeyLocked(Keys.CapsLock))
-                    keyChar = keyChar.ToLower();
-                if (@"+^%~(){}[]".IndexOf(keyChar, StringComparison.Ordinal) >= 0)
-                {
-                    keyChar = @"{" + keyChar + @"}";
-                }
-                SendKeys.Send(keyChar);
+                // A character can arrive here while the label is already being edited, when it was sent
+                // to this window rather than to the one with the focus. It belongs to the edit under way.
+                if (_editTextBox == null)
+                    BeginEdit(true);
+                // Handed straight to the edit box. SendKeys would type it into whichever window is in front,
+                // which is another application whenever Skyline is not the active one.
+                User32.SendMessage(_editTextBox.TextBox.Handle, User32.WinMessageType.WM_CHAR,
+                    (IntPtr) e.KeyChar, IntPtr.Zero);
                 e.Handled = true;
             }
             else

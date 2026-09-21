@@ -1,4 +1,5 @@
 using pwiz.Common.SystemUtil.PInvoke;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Util;
 using SkylineTool;
 using System;
@@ -134,9 +135,10 @@ namespace pwiz.Skyline.ToolsUI
                 UiActions.GetOptions.CallNow(FindElement(controlId, UiActions.GetOptions)));
         }
 
-        /// <summary>Every top-level window of this process that is an open managed Form or a native modal dialog,
-        /// each wrapped as the connector window abstraction that drives it. Enumerated purely from Win32 + a
-        /// Control.FromHandle lookup, so it is safe on any thread. Top-level only -- a form docked inside the main
+        /// <summary>Every visible top-level window of this process that is a managed Form, a tip Skyline draws itself
+        /// or a native modal dialog, each wrapped as the connector window abstraction that drives it (see
+        /// <see cref="NewStandaloneWindow"/>). Enumerated purely from Win32 + WinForms' handle-table lookups, so it
+        /// is safe on any thread. Top-level only -- a form docked inside the main
         /// window is a child window and does not appear here (JsonUiService.GetOpenFormElements adds those).</summary>
         public static IEnumerable<StandaloneWindow> GetTopLevelWindows(CancellationToken cancellationToken)
         {
@@ -147,37 +149,19 @@ namespace pwiz.Skyline.ToolsUI
                 if (windowProcessId != processId)
                     continue;
 
-                switch (Control.FromHandle(hwnd))
-                {
-                    case Form form:
-                        if (form.Visible)
-                        {
-                            var standaloneForm = StandaloneForm.Create(form, hwnd, cancellationToken);
-                            if (standaloneForm != null)
-                            {
-                                yield return standaloneForm;
-                            }
-                        }
+                if (!User32.IsWindowVisible(hwnd))
+                    continue;
 
-                        break;
-                    case { }:
-                        // A child control is not a top-level window to drive, so skip it.
-                        break;
-                    default:
-                        if (User32.IsWindowVisible(hwnd))
-                        {
-                            var nativeDialog = NativeDialog.Create(hwnd, cancellationToken);
-                            if (nativeDialog != null)
-                                yield return nativeDialog;
-                        }
-                        break;
-                }
+                var window = NewStandaloneWindow(hwnd, cancellationToken);
+                if (window != null)
+                    yield return window;
             }
         }
 
-        // Wraps a top-level window handle as the connector window abstraction that drives it: Control.FromHandle
-        // resolves a managed WinForms form (built with the handle already in hand -- safe off the UI thread), or it
-        // is a native window, which NativeDialog.Create classifies. CLASSIFY, do not just wrap: the kind is half of
+        // Wraps a top-level window handle as the connector window abstraction that drives it, asking in turn what
+        // WinForms knows the handle as: a Control (a form is built with the handle already in hand -- safe off the UI
+        // thread), else a NativeWindow (a tip Skyline draws itself), else nothing managed at all, which leaves a
+        // native window for NativeDialog.Create to classify. CLASSIFY, do not just wrap: the kind is half of
         // the FormId, so a window enumerated here must come back with the same id it has anywhere else (a Save
         // dialog is "SaveFileDialog:Save As" here as well as in GetOpenDialogs) -- otherwise the id a wait reports
         // in ActionResult.FormId would not resolve.
@@ -189,17 +173,23 @@ namespace pwiz.Skyline.ToolsUI
         // exception about it anyway.
         internal static StandaloneWindow NewStandaloneWindow(IntPtr hwnd, CancellationToken cancellationToken)
         {
-            switch (Control.FromHandle(hwnd))
+            var control = Control.FromHandle(hwnd);
+            if (control != null)
             {
-                case Form form:
-                    return StandaloneForm.Create(form, hwnd, cancellationToken);
-                case { }:
-                    return null;    // a child control is not a top-level window to drive
-                default:
-                    // Null for anything that is not a "#32770"; picks the subclass that drives the ones that are
-                    // (Open / Save / folder browser), else the generic dialog.
-                    return NativeDialog.Create(hwnd, cancellationToken);
+                // A child control is not a top-level window to drive.
+                return control is Form form ? StandaloneForm.Create(form, hwnd, cancellationToken) : null;
             }
+
+            var nativeWindow = NativeWindow.FromHandle(hwnd);
+            if (nativeWindow != null)
+            {
+                // Any other managed window is a helper (a ToolTip's, a timer's) with nothing to drive.
+                return nativeWindow is CustomTip tip ? new TipWindow(tip, hwnd, cancellationToken) : null;
+            }
+
+            // Null for anything that is not a "#32770"; picks the subclass that drives the ones that are (Open /
+            // Save / folder browser), else the generic dialog.
+            return NativeDialog.Create(hwnd, cancellationToken);
         }
 
         /// <summary>The handles of this process's modal dialog windows -- visible, enabled, top-level windows whose

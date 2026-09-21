@@ -97,6 +97,10 @@ namespace pwiz.Skyline.ToolsUI
     /// peptide group), as a user does by editing the node label and pressing Enter.</summary>
     public interface IRenameNodeElement { void RenameNodeNow(string value); }
 
+    /// <summary>An element that can show the tooltip of its selected item, as resting the mouse on the item does:
+    /// a tree's selected node, a list's selected item, a grid's current cell.</summary>
+    public interface ITooltipElement { void ShowTooltipNow(); }
+
     /// <summary>An element the keyboard can be driven on, without it having the focus. Every control is one.
     /// <see cref="SendTextNow"/> takes LITERAL text, so nothing in it needs escaping;
     /// <see cref="SendKeyStrokeNow"/> takes one key named with its modifiers ("Ctrl+V", "Down").</summary>
@@ -717,6 +721,58 @@ namespace pwiz.Skyline.ToolsUI
             RaiseProtectedHandler(Control, @"OnKeyDown", new KeyEventArgs(ParseKeyStroke(keyStroke)));
         }
 
+        /// <summary>Brings up the tooltip of the item at <paramref name="itemBounds"/> (client coordinates) the way a
+        /// user does: the mouse comes to rest on the item, and the tip follows after the usual delay. Several of
+        /// Skyline's tips show only for a focused control, and Skyline is rarely the active window while it is
+        /// being driven (giving the control the focus does not help then), so such a control is told to ignore the
+        /// focus until the tip comes down: see <see cref="HideTooltip"/>, which an element also calls when its
+        /// selection changes.</summary>
+        protected void ShowTooltipAt(System.Drawing.Rectangle itemBounds)
+        {
+            HideTooltip();
+            if (FocusTipDisplayer != null)
+                FocusTipDisplayer.IgnoreFocus = true;
+            MoveMouseTo((itemBounds.Left + itemBounds.Right) / 2, (itemBounds.Top + itemBounds.Bottom) / 2);
+            // Subscribed after the move above, which raises MouseMove itself.
+            Control.MouseMove += RealMouseMoved;
+        }
+
+        /// <summary>Takes the tooltip down by moving the mouse off the control, which also lets the next move
+        /// count as one however this one ended.</summary>
+        protected void HideTooltip()
+        {
+            StopIgnoringFocus();
+            MoveMouseTo(-1, -1);
+        }
+
+        // The real mouse has moved over the control, so it decides about tips again.
+        private void RealMouseMoved(object sender, MouseEventArgs e)
+        {
+            StopIgnoringFocus();
+        }
+
+        private void StopIgnoringFocus()
+        {
+            Control.MouseMove -= RealMouseMoved;
+            if (FocusTipDisplayer != null)
+                FocusTipDisplayer.IgnoreFocus = false;
+        }
+
+        private void MoveMouseTo(int x, int y)
+        {
+            RaiseProtectedHandler(Control, @"OnMouseMove", new MouseEventArgs(MouseButtons.None, 0, x, y, 0));
+        }
+
+        // The control itself (the Targets tree) or the form it is on (the Files tree, the pick list).
+        private IFocusTipDisplayer FocusTipDisplayer =>
+            Control as IFocusTipDisplayer ?? Control.FindForm() as IFocusTipDisplayer;
+
+        protected static Exception NothingSelected()
+        {
+            return new ArgumentException(new LlmInstruction(
+                @"Nothing is selected -- select the item whose tooltip to show first."));
+        }
+
         // Spellings for keys whose Keys name differs. Everything else is matched against the Keys enum, so
         // "V", "Down", "F2", "Delete" and "Space" all work as they are.
         private static readonly Dictionary<string, Keys> KEY_ALIASES =
@@ -1124,6 +1180,8 @@ namespace pwiz.Skyline.ToolsUI
                 // SequenceTree before TreeView -- it derives from TreeView, so its case must win.
                 case SequenceTree sequenceTree: return new SequenceTreeElement(sequenceTree, token);
                 case TreeView treeView: return new TreeViewElement(treeView, token);
+                case ListView listView when listView.FindForm() is StatementCompletionForm:
+                    return new StatementCompletionListElement(listView, token);
                 case ListView listView: return new ItemContainerElement<ListView>(listView, token);
                 // The grid itself -- the inner grid of a DataboundGridControl (a BoundDataGridView, driven
                 // through its rich copy/paste path) or a standalone DataGridView (direct cell access). The
@@ -1491,10 +1549,26 @@ namespace pwiz.Skyline.ToolsUI
 
     /// <summary>A ListControl -- a ListBox or CheckedListBox. Select an item by index
     /// (set_selected_index) or by its text (select_item / unselect_item).</summary>
-    internal class ListControlElement<T> : ControlElement<T>, ISelectItemsElement, IOptionsElement
+    internal class ListControlElement<T> : ControlElement<T>, ISelectItemsElement, IOptionsElement, ITooltipElement
         where T : ListControl
     {
         public ListControlElement(T control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
+
+        public void ShowTooltipNow()
+        {
+            var listBox = Control as ListBox;
+            if (listBox == null || listBox.SelectedIndex < 0)
+                throw NothingSelected();
+            ShowTooltipAt(listBox.GetItemRectangle(listBox.SelectedIndex));
+            listBox.SelectedIndexChanged += SelectionChanged;
+        }
+
+        private void SelectionChanged(object sender, EventArgs e)
+        {
+            ((ListBox) (ListControl) Control).SelectedIndexChanged -= SelectionChanged;
+            HideTooltip();
+        }
+
         public void SetSelectedIndexNow(int index) => ListItems.SetSelectedIndex(Control, index);
         public void SetItemSelectedNow(string item, bool isSelected) => ListItems.SetSelected(Control, item, isSelected);
         // Every choice the list offers (get_options), regardless of selection/checked state.
@@ -1539,9 +1613,26 @@ namespace pwiz.Skyline.ToolsUI
     /// <summary>A TreeView. Besides checking/selecting a node by text, a node is expanded or collapsed
     /// (expand/collapse) by a path: an array whose segments select a child at each level -- a string is the
     /// first child whose text matches it, an integer is the child at that index.</summary>
-    internal class TreeViewElement : ItemContainerElement<TreeView>, IExpandCollapseElement
+    internal class TreeViewElement : ItemContainerElement<TreeView>, IExpandCollapseElement, ITooltipElement
     {
         public TreeViewElement(TreeView control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
+
+        public void ShowTooltipNow()
+        {
+            var node = Control.SelectedNode;
+            if (node == null)
+                throw NothingSelected();
+            node.EnsureVisible();
+            ShowTooltipAt((node as TreeNodeMS)?.BoundsMS ?? node.Bounds);
+            Control.AfterSelect += SelectionChanged;
+        }
+
+        private void SelectionChanged(object sender, TreeViewEventArgs e)
+        {
+            Control.AfterSelect -= SelectionChanged;
+            HideTooltip();
+        }
+
         public void ExpandNow(object path) => ResolveTreePath(path).Expand();
         public void CollapseNow(object path) => ResolveTreePath(path).Collapse();
 
@@ -1646,6 +1737,58 @@ namespace pwiz.Skyline.ToolsUI
             SequenceTree.BeginEdit(false);
             SequenceTree.StatementCompletionEditBox.TextBox.Text = value;
             SequenceTree.CommitEditBox(false);
+        }
+
+        // While a node label is being edited the keyboard belongs to the edit box, which is where a user's
+        // key would go: Down and Up move through the completion pop-up, Enter accepts and Esc cancels.
+        public override void SendKeyStrokeNow(string keyStroke)
+        {
+            var editTextBox = SequenceTree.StatementCompletionEditBox?.TextBox;
+            if (editTextBox == null)
+                base.SendKeyStrokeNow(keyStroke);
+            else
+                RaiseProtectedHandler(editTextBox, @"OnKeyDown", new KeyEventArgs(ParseKeyStroke(keyStroke)));
+        }
+    }
+
+    /// <summary>The list on the completion pop-up that typing into the Targets tree brings up (a
+    /// <see cref="StatementCompletionForm"/>). It never takes the focus and has no selection: a click on an
+    /// item accepts it, so that is what selecting one does here.</summary>
+    internal sealed class StatementCompletionListElement : ControlElement<ListView>, ISelectItemsElement, IOptionsElement
+    {
+        public StatementCompletionListElement(ListView control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
+
+        // Each choice as the pop-up shows it: the name, then its description.
+        public IEnumerable<string> GetOptions() =>
+            Control.Items.Cast<ListViewItem>().Select(item =>
+                TextUtil.SpaceSeparate(item.Text, StatementCompletionForm.GetDescription(item) ?? string.Empty).Trim()).ToList();
+
+        public void SetItemSelectedNow(string item, bool isSelected)
+        {
+            if (!isSelected)
+                throw new ArgumentException(new LlmInstruction(
+                    @"The completion list has no selection to clear. Press 'Esc' on the Targets tree to close it."));
+            var items = Control.Items;
+            int best = ListItems.BestMatch(items.Count, i => items[i].Text, item);
+            if (best < 0)
+                throw new ArgumentException(LlmInstruction.Format(@"Item not found in the completion list: {0}.", item));
+            ClickItem(items[best]);
+        }
+
+        public void SetSelectedIndexNow(int index)
+        {
+            if (index < 0 || index >= Control.Items.Count)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Index {0} is out of range; the completion list has {1} items.", index, Control.Items.Count));
+            ClickItem(Control.Items[index]);
+        }
+
+        private void ClickItem(ListViewItem item)
+        {
+            item.EnsureVisible();
+            var bounds = item.Bounds;
+            RaiseProtectedHandler(Control, @"OnMouseDown", new MouseEventArgs(MouseButtons.Left, 1,
+                bounds.Left + bounds.Height, bounds.Top + bounds.Height / 2, 0));
         }
     }
 
@@ -2058,10 +2201,26 @@ namespace pwiz.Skyline.ToolsUI
     /// <summary>A grid -- the DataGridView a caller reads as TSV or sets a cell on, by direct cell access.
     /// A bound grid (the inner grid of a DataboundGridControl, e.g. the Document Grid) is a
     /// <see cref="BoundGridElement"/> that overrides the read/write with the rich copy/paste path.</summary>
-    internal class GridElement : ControlElement, IValueElement, IClipboardElement
+    internal class GridElement : ControlElement, IValueElement, IClipboardElement, ITooltipElement
     {
         private readonly DataGridView _dataGridView;
         public GridElement(DataGridView dataGridView, CancellationToken cancellationToken) : base(dataGridView, cancellationToken) { _dataGridView = dataGridView; }
+
+        public void ShowTooltipNow()
+        {
+            var cell = _dataGridView.CurrentCellAddress;
+            if (cell.X < 0 || cell.Y < 0)
+                throw NothingSelected();
+            ShowTooltipAt(_dataGridView.GetCellDisplayRectangle(cell.X, cell.Y, true));
+            _dataGridView.CurrentCellChanged += CurrentCellChanged;
+        }
+
+        private void CurrentCellChanged(object sender, EventArgs e)
+        {
+            _dataGridView.CurrentCellChanged -= CurrentCellChanged;
+            HideTooltip();
+        }
+
 
         // Pasting into a grid is normally the same as set_grid_text: tab-separated text filled from the current
         // cell. SetGridText owns the gating/marshaling, so that case just delegates to it.

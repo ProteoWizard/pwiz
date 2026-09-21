@@ -558,6 +558,13 @@ namespace pwiz.Skyline.ToolsUI
         internal static System.Drawing.Bitmap CaptureNativeWindow(IntPtr windowHandle)
         {
             User32.SetForegroundWindow(windowHandle);
+            return CaptureWindowRect(windowHandle);
+        }
+
+        // The screen copy alone, for a window that must not be activated to be captured: a tip is topmost already,
+        // and activating it deactivates the window it belongs to, which takes the tip down (and closes a pick list).
+        internal static System.Drawing.Bitmap CaptureWindowRect(IntPtr windowHandle)
+        {
             var rect = new User32.RECT();
             User32.GetWindowRect(windowHandle, ref rect);
             var screenRect = rect.Rectangle * ScreenCapture.GetScalingFactor();
