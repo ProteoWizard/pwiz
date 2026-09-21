@@ -993,22 +993,24 @@ namespace pwiz.Osprey.Tasks
             // and a separate `--task FirstPassFDR` invocation (typically on a SecondPassFDR
             // node) will pick them up and run Stage 5+. The rescore worker reaches this tail
             // through its disk-load rehydrate, having loaded Stage 1-4 state rather than
-            // scored it, and stops the same way; the message says which happened.
+            // scored it, and stops the same way; the message says which happened. The
+            // messages speak in task names, the vocabulary the CLI and its help use; the
+            // stage numbers are the developer docs' and never reach an operator.
             if (ctx.Config.SelectedTask?.IsPerFileWorker == true)
             {
                 if (ReferenceEquals(ctx.Config.SelectedTask, this))
                 {
                     ctx.LogInfo(string.Format(
-                        @"--task {0}: Stage 1-4 complete. {1} entries scored across {2} file(s). " +
-                        @"Per-file `.scores.parquet` written next to each input mzML. " +
-                        @"Skipping FDR and blib output.",
-                        Name, totalScored, nFiles));
+                        @"--task {0} complete: {1} entries scored across {2} file(s). " +
+                        @"Per-file `.scores.parquet` written next to each input. " +
+                        @"{3} and later run in their own invocations; no FDR or blib output here.",
+                        Name, totalScored, nFiles, FirstPassFdrTask.TASK_NAME));
                 }
                 else
                 {
                     ctx.LogInfo(string.Format(
-                        @"--task {0}: Stage 1-4 state loaded for {1} file(s); a per-file worker runs no join.",
-                        ctx.Config.SelectedTask.Name, nFiles));
+                        @"--task {0}: {1} scores loaded for {2} file(s); a per-file worker runs no join.",
+                        ctx.Config.SelectedTask.Name, Name, nFiles));
                 }
                 ctx.ExitCode = 0;
                 return false;

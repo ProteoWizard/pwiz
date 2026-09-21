@@ -99,16 +99,16 @@ namespace pwiz.Osprey.Tasks
             if (config.InputFiles.Count < 2)
             {
                 return string.Format(
-                    @"--task {0} requires --input with 2+ files (got {1}). The Stage 5 -> Stage 6 " +
-                    @"boundary file pair is only meaningful for multi-file fan-back-in.",
-                    Name, config.InputFiles.Count);
+                    @"--task {0} requires --input with 2+ files (got {1}). The boundary files it writes for " +
+                    @"{2} are only meaningful for multi-file fan-back-in.",
+                    Name, config.InputFiles.Count, PerFileRescoreTask.TASK_NAME);
             }
             if (!config.Reconciliation.Enabled)
             {
                 return string.Format(
                     @"--task {0} requires Reconciliation.Enabled = true (got false from config). " +
-                    @"The Stage 5 -> Stage 6 boundary file pair is only meaningful when reconciliation runs.",
-                    Name);
+                    @"The boundary files it writes for {1} are only meaningful when reconciliation runs.",
+                    Name, PerFileRescoreTask.TASK_NAME);
             }
             return null;
         }
