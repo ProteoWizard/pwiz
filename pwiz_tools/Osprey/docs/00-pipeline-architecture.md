@@ -433,21 +433,44 @@ length prefix, or a two-phase protocol. The claim is checkable rather than aspir
 [14-intermediate-files](14-intermediate-files.md) enumerates the call sites, and a new
 durable artifact that does not appear there is a defect.
 
-**One artifact does not yet obey this, and it is a defect rather than an exception.** The
-Stage-7 reports `<output>.protein_groups.tsv` and `<output>.stats.tsv` (both default on)
-commit through `FileSaver` via `OspreyReportWriter.WriteTsv`, so a kill during Stage 7
-leaves the previous run's report or none, never a half-written one. Because nothing
-downstream reads them and the blib has not been written yet when they run, a report that
-cannot be written - the previous run's copy still open in Excel is the common case, which
-makes the commit's replace throw - is logged as a warning naming the path and skipped,
-not turned into a pipeline failure. The remaining non-exempt truncating writer is
-`--write-pin`'s `<stem>.cs_features.tsv` (`PerFileScoringTask.WriteFeatureDump`, opt-in
-via `OspreyCommandArgs.ARG_WRITE_PIN`), a plain `StreamWriter` with no staging. It is not
-in the contract table below - nothing in the pipeline reads it - but the "presence proves
-completeness" guarantee a *user* draws from it is exactly as strong as `FileSaver`, which
-is to say currently absent for that one file. `cs_cal_sample.txt` and the other env-gated
-diagnostic dumps are exempt under the rule in
-[14-intermediate-files](14-intermediate-files.md).
+**"Durable artifact" is not narrowed to what the pipeline reads back.** The Stage-7
+reports `<output>.protein_groups.tsv` and `<output>.stats.tsv` (both default on) commit
+through `FileSaver` via `OspreyReportWriter.WriteTsv`, so a kill during Stage 7 leaves the
+previous run's report or none, never a half-written one. Because nothing downstream reads
+them and the blib has not been written yet when they run, a report that cannot be written
+- the previous run's copy still open in Excel is the common case, which makes the
+commit's replace throw - is logged as a warning naming the path and skipped, not turned
+into a pipeline failure. `--write-pin`'s `<stem>.cs_features.tsv`
+(`PerFileScoringTask.WriteFeatureDump`) and every `-d` diagnostic dump
+(`OspreyFileDiagnostics`, `FdrDiagnostics`, `PercolatorDiagnosticsDump`,
+`PickCandidateDump`, `PeakDataExtractor`'s search-XIC dump) commit the same way: nothing
+in the pipeline reads any of them back, but a bisection session trusts presence to mean
+"this run wrote something," same as every other artifact, and a truncated dump that
+LOOKS complete is worse than a missing one - the exact hazard P8 exists to close, just
+for a file a human reads instead of a downstream task. Two writers commit
+unconditionally rather than only on success, and both say why at the call site:
+`FdrDiagnostics.CoAssignRowDump`'s row stream, because seeing however far a large panel
+build got before a throw is the dump's whole reason to stream instead of buffer, and
+`WriteStage6CalibrationDump`, which accumulates one dump across many per-file calls
+serialized by a lock rather than the OS's append semantics (a fresh `FileSaver` per call
+turns append into read-existing, rewrite, commit).
+
+**One exemption is structural rather than a gap: the `--log-file` stream**
+(`CommandStatusWriter` over `config.LogFilePath` in `Program.cs`). It is written
+incrementally for the life of the run specifically so it can be tailed while the run is
+still going - `ai/CLAUDE.md` directs sessions to use it for exactly that. `FileSaver`'s
+model makes the real path invisible until `Commit()` at the very end, which would break
+live tailing and leave nothing at all after a crash, the opposite of what a log is for.
+`ArtifactPaths.ProbeWritable`'s zero-byte, self-deleting writability check is not a
+content write in the first place, so the P8 contract does not apply to it.
+
+For forensic inspection of what a write got through before an exception abandoned it -
+without weakening the guarantee for every normal reader - set
+`OspreyEnvironment.KeepFailedWrites` (`OSPREY_KEEP_FAILED_WRITES`): `FileSaver.Dispose()`
+leaves an uncommitted temp in place instead of deleting it. It never touches the real
+path, so presence still proves completeness there; only a developer who knows to look
+for the temp sees the partial write.
+[14-intermediate-files](14-intermediate-files.md) enumerates every writer.
 
 **P9. A validity key answers set inclusion, not completeness.** This follows from P8
 and is the most easily confused point in the design. Because atomic placement already

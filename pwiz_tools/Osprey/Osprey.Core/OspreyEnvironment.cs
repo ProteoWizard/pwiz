@@ -57,6 +57,20 @@ namespace pwiz.Osprey.Core
         public static readonly int MaxParallelFiles = ParseIntOrZero(@"OSPREY_MAX_PARALLEL_FILES");
 
         /// <summary>
+        /// OSPREY_KEEP_FAILED_WRITES: forensic opt-in for <see cref="FileSaver"/>. Every
+        /// durable write, diagnostic dumps included, goes through <c>FileSaver</c>, which
+        /// normally deletes its sibling temp file when an exception unwinds before
+        /// <c>Commit()</c> -- the real path then holds the previous content or nothing,
+        /// never a partial write (see <c>FileSaver</c>'s own doc comment). Set this to
+        /// inspect what a write got through before it was abandoned: on an uncommitted
+        /// <c>Dispose()</c>, the temp is left in place (same directory as the real path,
+        /// its normal <c>~OS</c>-prefixed name) instead of deleted. It never touches the
+        /// real path, so presence-proves-completeness still holds for every consumer;
+        /// only a developer who knows to look for the temp sees the partial content.
+        /// </summary>
+        public static bool KeepFailedWrites { get; set; } = IsSetAndNotZero(@"OSPREY_KEEP_FAILED_WRITES");
+
+        /// <summary>
         /// OSPREY_MAX_SCORING_WINDOWS: limits main-search isolation windows
         /// scored in Stage 4. Used for fast iteration during dotTrace
         /// profiling and parity bisection. 0 or unset means "score them all".

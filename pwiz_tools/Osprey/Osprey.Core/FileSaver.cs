@@ -112,10 +112,22 @@ namespace pwiz.Osprey.Core
         /// <c>using (var fs = new FileSaver(path)) { ... write to
         /// fs.SafeName ... fs.Commit(); }</c> which leaves no temp on
         /// success and no partial destination on failure.
+        ///
+        /// Under <see cref="OspreyEnvironment.KeepFailedWrites"/>, an
+        /// uncommitted temp is left in place instead of deleted, for a
+        /// developer doing forensic analysis on whatever a write got
+        /// through before an exception abandoned it. It stays under its
+        /// own temp name -- Dispose never touches <see cref="RealName"/> --
+        /// so this changes nothing about what a normal caller sees.
         /// </summary>
         public void Dispose()
         {
             if (!File.Exists(SafeName)) return;
+            if (OspreyEnvironment.KeepFailedWrites)
+            {
+                SafeName = null;
+                return;
+            }
             File.Delete(SafeName);
             SafeName = null;
         }

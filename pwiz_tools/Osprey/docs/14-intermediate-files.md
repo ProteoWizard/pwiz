@@ -82,11 +82,30 @@ durable artifact writer in the tree, as of this document's last verification:
 | `ModelDiagnosticsReport` (2 sites) | `<output>.model-diagnostics.{html,data.json}` |
 | `FdrBenchInputWriter` (2 sites) | `--fdrbench` input + pairing manifest |
 | `OspreyReportWriter` (1 site, `WriteTsv`, both reports) | `<output>.protein_groups.tsv`, `<output>.stats.tsv` |
+| `PerFileScoringTask.WriteFeatureDump` | `--write-pin`'s `<stem>.cs_features.tsv` |
+
+Every `-d` diagnostic dump commits the same way, though nothing in the pipeline reads any
+of them back - see P8 in [00-pipeline-architecture](00-pipeline-architecture.md) for why
+that does not exempt them:
+
+| Writer | Artifact(s) |
+|---|---|
+| `OspreyFileDiagnostics` (25 methods) | `cs_cal_sample.txt`, `cs_cal_scalars.txt`, `cs_cal_grid.txt`, `cs_cal_windows.txt`, `cs_cal_match.txt`, `cs_ms2_cal_errors.txt`, `cs_lda_scores.txt`, `cs_loess_input.txt`, `cs_cal_summary.txt`, `cs_xic_entry_<id>.txt`, `cs_search_xic_entry_<id>.txt`, `cs_mp_diag.txt`, `cs_stage5_percolator.tsv`, `cs_stage6_rescored.tsv`, `cs_stage6_consensus.tsv`, `cs_stage6_multicharge.tsv`, `cs_stage6_refit.tsv`, `cs_stage6_reconciliation.tsv`, `cs_stage6_calibration.tsv`, `cs_stage6_inv_predict.tsv`, `cs_stage6_protein_fdr.tsv`, `cs_stage7_protein_fdr.tsv`, `cs_stage6_loess_fit.tsv`, `cs_stage7_detected_peptides.txt`, and the three held-open streams below |
+| `OspreyFileDiagnostics` held-open streams (3, one `FileSaver` per dump opened alongside the writer, committed in its `CloseXDump`) | `cs_stage6_mp_inputs.tsv`, `cs_stage6_predict_rt.tsv`, `cs_stage6_cwt_path.tsv` |
+| `FdrDiagnostics.CoAssignRowDump` (rows: commits unconditionally in `Dispose`, see its doc comment; cutoffs: ordinary) | `cs_coassign_pass<N>_rows[.<seq>].tsv`, `cs_coassign_pass<N>_cutoffs[.<seq>].tsv` |
+| `FdrDiagnostics` (2 more) | `cs_stage7_winners.tsv`, `cs_best_peptide_scores.tsv` |
+| `PercolatorDiagnosticsDump` (4 sites) | `cs_stage5_standardizer.tsv`, `cs_stage5_perc_input.tsv`, `cs_stage5_subsample.tsv`, `cs_stage5_svm_weights.tsv` |
+| `PickCandidateDump.Flush` | `OSPREY_PICK_DUMP_CANDIDATES`'s caller-named path |
+| `PeakDataExtractor` (search-XIC append, read-existing + rewrite through a fresh `FileSaver` per call) | `cs_search_xic_entry_<id>.txt` |
 
 **A new durable artifact that does not commit through `FileSaver` is a defect**, because
-every reader in the pipeline treats presence as proof of completeness. **Exempt**: `-d`
-diagnostic dumps, the streaming CLI log, and test fixtures - transient or append-streaming
-files that no later stage reads back.
+every reader - a pipeline task or a developer doing bisection - treats presence as proof
+of completeness. **Exempt**: the streaming CLI log (`--log-file`, written for the life of
+the run so it can be tailed while still running - see P8) and test fixtures. Forensic
+inspection of an abandoned write (any writer above, on an exception) is
+`OspreyEnvironment.KeepFailedWrites` (`OSPREY_KEEP_FAILED_WRITES`), not a bypass of
+`FileSaver` - it leaves the temp in place instead of deleting it, under its own name, so
+presence at the real path still proves completeness for every ordinary reader.
 
 ---
 

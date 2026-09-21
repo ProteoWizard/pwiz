@@ -108,15 +108,23 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// The <see cref="CreateCoAssignRowDump"/> sink. Disposing closes both files;
-        /// a run that throws mid-panel still leaves the rows written so far, which is
-        /// the point of streaming them.
+        /// The <see cref="CreateCoAssignRowDump"/> sink. Disposing closes both files and
+        /// commits the rows file through <see cref="FileSaver"/> -- UNCONDITIONALLY,
+        /// deliberately, the one write in the tree that does not follow "commit only on
+        /// the success path": the caller's <c>using</c> block guarantees <c>Dispose</c>
+        /// runs even when a throw unwinds mid-panel, and committing there is what
+        /// preserves this dump's whole reason to stream rather than buffer -- seeing
+        /// however far a panel got is the point (a TSV degrades to a readable partial
+        /// file; nothing downstream reads this back to gate correctness, so presence
+        /// not proving completeness costs nothing here). <c>WriteCutoffs</c> is a
+        /// separate, ordinary one-shot FileSaver write with no such exception.
         /// </summary>
         public sealed class CoAssignRowDump : IDisposable
         {
             private readonly string _dir;
             private readonly int _pass;
             private readonly int _seq;
+            private readonly FileSaver _rowsSaver;
             private readonly StreamWriter _rows;
 
             /// <summary>
@@ -149,7 +157,8 @@ namespace pwiz.Osprey.FDR
                 _pass = pass;
                 Directory.CreateDirectory(dir);
                 _seq = NextSequence(dir, pass);
-                _rows = new StreamWriter(NameFor(dir, pass, _seq, @"rows"));
+                _rowsSaver = new FileSaver(NameFor(dir, pass, _seq, @"rows"));
+                _rows = new StreamWriter(_rowsSaver.SafeName);
                 _rows.WriteLine(
                     "file_idx\tfile\tentry_id\tbase_id\tis_decoy\tclass\tscore\texp_agg_score\t" +
                     "run_q\texp_q\tapex_rt\tcharge\tincluded\tmodified_sequence");
@@ -188,28 +197,34 @@ namespace pwiz.Osprey.FDR
                 double experimentCutoffOffStratum, int acceptedInStratum, int acceptedOffStratum)
             {
                 var inv = CultureInfo.InvariantCulture;
-                using (var sw = new StreamWriter(NameFor(_dir, _pass, _seq, @"cutoffs")))
+                using (var saver = new FileSaver(NameFor(_dir, _pass, _seq, @"cutoffs")))
                 {
-                    sw.WriteLine("scope\tfile_idx\tfile\tvalue");
-                    for (int f = 0; f < runNames.Length; f++)
+                    using (var sw = new StreamWriter(saver.SafeName))
                     {
-                        sw.WriteLine(string.Format(inv, "run\t{0}\t{1}\t{2}",
-                            f, runNames[f], Diagnostics.FormatF64Roundtrip(runCutoffByFile(f))));
+                        sw.WriteLine("scope\tfile_idx\tfile\tvalue");
+                        for (int f = 0; f < runNames.Length; f++)
+                        {
+                            sw.WriteLine(string.Format(inv, "run\t{0}\t{1}\t{2}",
+                                f, runNames[f], Diagnostics.FormatF64Roundtrip(runCutoffByFile(f))));
+                        }
+                        sw.WriteLine(string.Format(inv, "experiment\t-1\t-\t{0}",
+                            Diagnostics.FormatF64Roundtrip(experimentCutoff)));
+                        sw.WriteLine(string.Format(inv, "experimentInStratum\t-1\t-\t{0}",
+                            Diagnostics.FormatF64Roundtrip(experimentCutoffInStratum)));
+                        sw.WriteLine(string.Format(inv, "experimentOffStratum\t-1\t-\t{0}",
+                            Diagnostics.FormatF64Roundtrip(experimentCutoffOffStratum)));
+                        sw.WriteLine(string.Format(inv, "acceptedInStratum\t-1\t-\t{0}", acceptedInStratum));
+                        sw.WriteLine(string.Format(inv, "acceptedOffStratum\t-1\t-\t{0}", acceptedOffStratum));
                     }
-                    sw.WriteLine(string.Format(inv, "experiment\t-1\t-\t{0}",
-                        Diagnostics.FormatF64Roundtrip(experimentCutoff)));
-                    sw.WriteLine(string.Format(inv, "experimentInStratum\t-1\t-\t{0}",
-                        Diagnostics.FormatF64Roundtrip(experimentCutoffInStratum)));
-                    sw.WriteLine(string.Format(inv, "experimentOffStratum\t-1\t-\t{0}",
-                        Diagnostics.FormatF64Roundtrip(experimentCutoffOffStratum)));
-                    sw.WriteLine(string.Format(inv, "acceptedInStratum\t-1\t-\t{0}", acceptedInStratum));
-                    sw.WriteLine(string.Format(inv, "acceptedOffStratum\t-1\t-\t{0}", acceptedOffStratum));
+                    saver.Commit();
                 }
             }
 
             public void Dispose()
             {
                 _rows.Dispose();
+                _rowsSaver.Commit();
+                _rowsSaver.Dispose();
             }
         }
 
@@ -226,18 +241,22 @@ namespace pwiz.Osprey.FDR
         {
             const string path = @"cs_stage7_winners.tsv";
             var inv = CultureInfo.InvariantCulture;
-            using (var sw = new StreamWriter(path))
+            using (var saver = new FileSaver(path))
             {
-                sw.WriteLine("rank\tscore\tis_decoy\traw_qvalue\tmonotonic_qvalue");
-                for (int i = 0; i < winners.Count; i++)
+                using (var sw = new StreamWriter(saver.SafeName))
                 {
-                    sw.WriteLine(string.Format(inv, "{0}\t{1}\t{2}\t{3}\t{4}",
-                        i,
-                        Diagnostics.FormatF64Roundtrip(winners[i].Score),
-                        winners[i].IsDecoy ? "true" : "false",
-                        Diagnostics.FormatF64Roundtrip(rawQvalues[i]),
-                        Diagnostics.FormatF64Roundtrip(monotonicQvalues[i])));
+                    sw.WriteLine("rank\tscore\tis_decoy\traw_qvalue\tmonotonic_qvalue");
+                    for (int i = 0; i < winners.Count; i++)
+                    {
+                        sw.WriteLine(string.Format(inv, "{0}\t{1}\t{2}\t{3}\t{4}",
+                            i,
+                            Diagnostics.FormatF64Roundtrip(winners[i].Score),
+                            winners[i].IsDecoy ? "true" : "false",
+                            Diagnostics.FormatF64Roundtrip(rawQvalues[i]),
+                            Diagnostics.FormatF64Roundtrip(monotonicQvalues[i])));
+                    }
                 }
+                saver.Commit();
             }
         }
 
@@ -251,18 +270,22 @@ namespace pwiz.Osprey.FDR
             var inv = CultureInfo.InvariantCulture;
             var keys = new List<string>(best.Keys);
             keys.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only (not parity-sensitive); keys are unique dictionary keys so the comparator never ties anyway
-            using (var sw = new StreamWriter(path))
+            using (var saver = new FileSaver(path))
             {
-                sw.WriteLine("modified_sequence\tscore\tis_decoy\tbest_qvalue");
-                foreach (var seq in keys)
+                using (var sw = new StreamWriter(saver.SafeName))
                 {
-                    var ps = best[seq];
-                    sw.WriteLine(string.Format(inv, "{0}\t{1}\t{2}\t{3}",
-                        seq,
-                        Diagnostics.FormatF64Roundtrip(ps.Score),
-                        ps.IsDecoy ? "true" : "false",
-                        Diagnostics.FormatF64Roundtrip(ps.BestQvalue)));
+                    sw.WriteLine("modified_sequence\tscore\tis_decoy\tbest_qvalue");
+                    foreach (var seq in keys)
+                    {
+                        var ps = best[seq];
+                        sw.WriteLine(string.Format(inv, "{0}\t{1}\t{2}\t{3}",
+                            seq,
+                            Diagnostics.FormatF64Roundtrip(ps.Score),
+                            ps.IsDecoy ? "true" : "false",
+                            Diagnostics.FormatF64Roundtrip(ps.BestQvalue)));
+                    }
                 }
+                saver.Commit();
             }
         }
     }
