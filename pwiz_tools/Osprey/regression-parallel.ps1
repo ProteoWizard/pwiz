@@ -60,7 +60,7 @@ $ErrorActionPreference = 'Stop'
 
 $scriptRoot = Split-Path -Parent $PSCommandPath
 $regression = Join-Path $scriptRoot 'regression.ps1'
-$ospreyExe  = Join-Path $scriptRoot 'Osprey\bin\x64\Release\net8.0\Osprey.exe'
+$ospreyExe  = Join-Path $scriptRoot 'Osprey\bin\x64\Release\net10.0\Osprey.exe'
 if (-not $LogDir) { $LogDir = Join-Path $scriptRoot 'TestResults' }
 if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Path $LogDir -Force | Out-Null }
 
@@ -91,8 +91,8 @@ Write-Host ("==> {0} lane(s), {1} thread(s) each, {2} logical processor(s)" -f
 
 # --- Build ONCE, here, so the lanes cannot race each other's build output ---------
 if (-not $NoBuild) {
-    Write-Host '==> Building Osprey (Release, net8.0) once for both lanes' -ForegroundColor Cyan
-    & (Join-Path $scriptRoot 'build.ps1') -Configuration Release -Framework net8.0 -NoTests
+    Write-Host '==> Building Osprey (Release, net10.0) once for both lanes' -ForegroundColor Cyan
+    & (Join-Path $scriptRoot 'build.ps1') -Configuration Release -NoTests
     if ($LASTEXITCODE -ne 0) { Write-Host "ERROR: Osprey build failed (exit $LASTEXITCODE)" -ForegroundColor Red; exit $LASTEXITCODE }
 }
 if (-not (Test-Path $ospreyExe)) {
