@@ -263,7 +263,7 @@ namespace pwiz.Osprey.Tasks
                        string.Format(@"Per-replicate protein FDR over {0} run(s)", nFiles),
                        nFiles, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
-                foreach (var kvp in rescored.Files())
+                foreach (var kvp in rescored.StreamFiles())
                 {
                     progress.Report(++runIdx);
                     AccumulatePrecursorsPeptides(kvp.Value, level, config, runLevel: false,

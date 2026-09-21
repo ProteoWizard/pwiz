@@ -22,6 +22,7 @@
  */
 
 using System;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 
@@ -460,85 +461,76 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestEscapeForRustDebugMatchesRustOutput()
+        public void TestSearchHashFoldsDecoyPairingManifestIdentity()
         {
-            // Rust's {:?} on String escapes \, ", \n, \r, \t, \0, and
-            // sub-0x20 / 0x7F control chars. Windows paths with
-            // backslashes are the load-bearing case: a Windows manifest
-            // path must hash identically under Rust and C#. Linux paths
-            // (forward slashes) contain no special chars under either
-            // formatter, so the function is platform-neutral -- it just
-            // mirrors Rust's debug-format on whatever string it is given.
-            // Expected outputs below pin the exact char sequence Rust's
-            // {:?} would produce on the same input.
-            Assert.AreEqual(@"T:\\test\\manifest.tsv",
-                SearchIdentity.EscapeForRustDebug(@"T:\test\manifest.tsv"));
-            Assert.AreEqual(@"/srv/data/manifest.tsv",
-                SearchIdentity.EscapeForRustDebug(@"/srv/data/manifest.tsv"));
-            Assert.AreEqual(@"line1\nline2",
-                SearchIdentity.EscapeForRustDebug("line1\nline2"));
-            Assert.AreEqual(@"with \""quotes\""",
-                SearchIdentity.EscapeForRustDebug("with \"quotes\""));
-            Assert.AreEqual(@"\t\r\n\0",
-                SearchIdentity.EscapeForRustDebug("\t\r\n\0"));
-            // DEL (0x7F) and sub-0x20 control chars render as Rust's
-            // `\u{HEX}` form.
-            Assert.AreEqual(@"a\u{7f}b",
-                SearchIdentity.EscapeForRustDebug("ab"));
-            Assert.AreEqual(@"\u{1}\u{1f}",
-                SearchIdentity.EscapeForRustDebug(""));
-            Assert.AreEqual(@"plain-ascii-7",
-                SearchIdentity.EscapeForRustDebug(@"plain-ascii-7"));
-            Assert.AreEqual(string.Empty,
-                SearchIdentity.EscapeForRustDebug(string.Empty));
-        }
-
-        [TestMethod]
-        public void TestSearchHashFoldsDecoyPairingManifestPath()
-        {
-            // The manifest path is folded into the search hash as
-            // `decoy_pairing_manifest:None\n` or
-            // `decoy_pairing_manifest:Some("ESCAPED")\n`. We pin (a) the
-            // exact escaped representation for the load-bearing Windows
-            // and Linux path shapes, and (b) that identical inputs
-            // produce identical hashes while distinct inputs diverge.
+            // The manifest is folded into the search hash by IDENTITY -- file name, size
+            // and mtime, the same recipe as LibraryIdentityHash -- and not by path. The
+            // two properties that buys, and that this test exists to hold:
             //
-            // Paths use the imaginary T:\ drive and a non-existent /srv
-            // tree so the test is portable across developer machines
-            // (no filesystem touch required; the hash is purely a string
-            // operation).
-            const string winPath = @"T:\test\manifest.tsv";
-            const string linuxPath = @"/srv/test/manifest.tsv";
-            const string winPathAlt = @"T:\test\manifesx.tsv";
-
-            // Pin the exact pre-hash escape that goes into Some("...").
-            Assert.AreEqual(@"T:\\test\\manifest.tsv",
-                SearchIdentity.EscapeForRustDebug(winPath));
-            Assert.AreEqual(linuxPath,
-                SearchIdentity.EscapeForRustDebug(linuxPath));
-
+            //   MOVING a manifest is free.          Same name/size/mtime -> same hash.
+            //   EDITING one in place invalidates.   Same path, new bytes -> new hash.
+            //
+            // The full-path form had both backwards: every scored parquet stayed "valid"
+            // against a manifest that had been edited underneath it, and re-scored for
+            // nothing when the file was merely moved. The manifest decides decoy
+            // classification, pairing and the protein accessions protein FDR runs on, so
+            // a stale accept there is an FDR-relevant answer, not a cache question.
             var configEmpty = new OspreyConfig();
+            // No manifest emits exactly `None`, unchanged by this work: a generated-decoy
+            // analysis must hash byte-identically to before and invalidate nothing.
+            Assert.AreEqual(@"None", configEmpty.Identity.DecoyPairingManifestTerm());
             string hashEmpty = configEmpty.Identity.SearchParameterHash();
 
-            var configWin = new OspreyConfig { DecoyPairingManifestPath = winPath };
-            string hashWin = configWin.Identity.SearchParameterHash();
-            // Hash determinism: identical config -> identical hash.
-            Assert.AreEqual(hashWin, configWin.Identity.SearchParameterHash());
-            // Sensitivity: setting a manifest path changes the hash.
-            Assert.AreNotEqual(hashEmpty, hashWin);
+            string dirA = Path.Combine(Path.GetTempPath(), @"osprey_mf_a_" + Path.GetRandomFileName());
+            string dirB = Path.Combine(Path.GetTempPath(), @"osprey_mf_b_" + Path.GetRandomFileName());
+            Directory.CreateDirectory(dirA);
+            Directory.CreateDirectory(dirB);
+            try
+            {
+                string pathA = Path.Combine(dirA, @"pairing.tsv");
+                string pathB = Path.Combine(dirB, @"pairing.tsv");
+                File.WriteAllText(pathA, "target\tdecoy\nPEPTIDEK\tDECOY_PEPTIDEK\n");
+                File.Copy(pathA, pathB);
+                // Pin the mtime on both so the move case tests the DIRECTORY only -- a copy
+                // that landed a second later would otherwise test nothing.
+                var mtime = new DateTime(2026, 6, 30, 12, 0, 0, DateTimeKind.Utc);
+                File.SetLastWriteTimeUtc(pathA, mtime);
+                File.SetLastWriteTimeUtc(pathB, mtime);
 
-            var configLinux = new OspreyConfig { DecoyPairingManifestPath = linuxPath };
-            string hashLinux = configLinux.Identity.SearchParameterHash();
-            Assert.AreEqual(hashLinux, configLinux.Identity.SearchParameterHash());
-            // Distinct path shapes (different escape semantics) produce
-            // distinct hashes.
-            Assert.AreNotEqual(hashWin, hashLinux);
+                var configA = new OspreyConfig { DecoyPairingManifestPath = pathA };
+                string hashA = configA.Identity.SearchParameterHash();
+                // Determinism, and sensitivity to having a manifest at all.
+                Assert.AreEqual(hashA, configA.Identity.SearchParameterHash());
+                Assert.AreNotEqual(hashEmpty, hashA);
 
-            // Off-by-one: paths differing in a single character produce
-            // distinct hashes (catches accidental aliasing in the escape
-            // path).
-            var configWinAlt = new OspreyConfig { DecoyPairingManifestPath = winPathAlt };
-            Assert.AreNotEqual(hashWin, configWinAlt.Identity.SearchParameterHash());
+                // MOVED: different directory, same name/size/mtime -> same hash.
+                var configB = new OspreyConfig { DecoyPairingManifestPath = pathB };
+                Assert.AreEqual(hashA, configB.Identity.SearchParameterHash());
+
+                // EDITED IN PLACE, size changed: same path -> different hash.
+                File.WriteAllText(pathA, "target\tdecoy\nPEPTIDEK\tDECOY_PEPTIDEK\nPEPTIDER\tDECOY_PEPTIDER\n");
+                File.SetLastWriteTimeUtc(pathA, mtime);
+                string hashEditedSize = configA.Identity.SearchParameterHash();
+                Assert.AreNotEqual(hashA, hashEditedSize);
+
+                // EDITED IN PLACE, same size, later mtime: still a different hash. Size
+                // alone would miss an in-place correction of equal length, which is exactly
+                // what fixing a mislabelled accession looks like.
+                File.SetLastWriteTimeUtc(pathA, mtime.AddSeconds(1));
+                Assert.AreNotEqual(hashEditedSize, configA.Identity.SearchParameterHash());
+
+                // A different manifest NAME in the same directory is a different manifest.
+                string pathRenamed = Path.Combine(dirB, @"pairing2.tsv");
+                File.Copy(pathB, pathRenamed);
+                File.SetLastWriteTimeUtc(pathRenamed, mtime);
+                var configRenamed = new OspreyConfig { DecoyPairingManifestPath = pathRenamed };
+                Assert.AreNotEqual(hashA, configRenamed.Identity.SearchParameterHash());
+            }
+            finally
+            {
+                Directory.Delete(dirA, true);
+                Directory.Delete(dirB, true);
+            }
         }
 
         [TestMethod]
@@ -632,6 +624,54 @@ namespace pwiz.Osprey.Test
             (NeutralLossCode Code, double CustomMass) actual)
         {
             Assert.AreEqual(expected, actual.Code);
+        }
+
+        #endregion
+
+        #region Environment flag gating (issue #4673)
+
+        /// <summary>
+        /// <c>OSPREY_LOG_MEMORY=0</c> must mean OFF. The dataset runners write exactly that
+        /// value for the off case, and the memory probes it gates each force a blocking
+        /// <c>GC.Collect()</c> pair - one per file in the diagnostics fold, 446 of them on the
+        /// CHS cohort. Gating them on a plain "is the variable set" test turns them ON for "0",
+        /// which is what issue #4673 was: every runner-launched run carried the forced
+        /// collections while its banner reported "memprobe : off ... no forced GCs".
+        ///
+        /// <para>This pins the HELPER's contract, which is what the fix changed. It cannot pin
+        /// the wiring - <c>OspreyEnvironment.LogMemory</c> and
+        /// <c>ProfilerHooks.MemoryLoggingEnabled</c> are <c>static readonly</c>, evaluated once
+        /// at type load, so no test can vary the environment underneath them. The wiring was
+        /// verified by running the identical 446-file fold on the identical staged bed before
+        /// and after: 451 <c>[MEM ...]</c> lines became 0.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestEnvFlagZeroCountsAsOff()
+        {
+            const string name = @"OSPREY_TEST_FLAG_4673";
+            string saved = Environment.GetEnvironmentVariable(name);
+            try
+            {
+                // The trap, asserted rather than described: "0" is a non-empty string, so the
+                // !IsNullOrEmpty test the probes used to be gated on reports it as SET.
+                Environment.SetEnvironmentVariable(name, @"0");
+                Assert.IsFalse(string.IsNullOrEmpty(Environment.GetEnvironmentVariable(name)),
+                    @"'0' is a non-empty value - this is why an IsNullOrEmpty gate turns on for it");
+                Assert.IsFalse(OspreyEnvironment.IsSetAndNotZero(name), @"'0' must count as OFF");
+
+                Environment.SetEnvironmentVariable(name, @"1");
+                Assert.IsTrue(OspreyEnvironment.IsSetAndNotZero(name), @"'1' must count as ON");
+
+                Environment.SetEnvironmentVariable(name, null);
+                Assert.IsFalse(OspreyEnvironment.IsSetAndNotZero(name), @"unset must count as OFF");
+
+                Environment.SetEnvironmentVariable(name, string.Empty);
+                Assert.IsFalse(OspreyEnvironment.IsSetAndNotZero(name), @"empty must count as OFF");
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(name, saved);
+            }
         }
 
         #endregion

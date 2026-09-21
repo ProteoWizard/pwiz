@@ -143,8 +143,11 @@ namespace pwiz.Common.Collections
         {
             return string.Join(@"&",
                 Enumerable.Range(0, _nameValueCollection.Count).Select(i =>
-                    Uri.EscapeDataString(_nameValueCollection.Keys[i]) + @"=" +
-                    Uri.EscapeDataString(_nameValueCollection.Get(i))));
+                    // A NameValueCollection can hold a null key, and a name with no value reads
+                    // back as null. EscapeDataString throws on null, so both would crash here
+                    // rather than round-trip; empty is what the query string represents anyway.
+                    Uri.EscapeDataString(_nameValueCollection.Keys[i] ?? string.Empty) + @"=" +
+                    Uri.EscapeDataString(_nameValueCollection.Get(i) ?? string.Empty)));
         }
 
         // we need serialization methods because URLs can be stored in properties as strings
