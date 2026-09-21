@@ -60,7 +60,7 @@ namespace pwiz.Osprey.Core
         /// OSPREY_KEEP_FAILED_WRITES: forensic opt-in for <see cref="FileSaver"/>. Every
         /// durable write, diagnostic dumps included, goes through <c>FileSaver</c>, which
         /// normally deletes its sibling temp file when an exception unwinds before
-        /// <c>Commit()</c> -- the real path then holds the previous content or nothing,
+        /// <c>Commit()</c> - the real path then holds the previous content or nothing,
         /// never a partial write (see <c>FileSaver</c>'s own doc comment). Set this to
         /// inspect what a write got through before it was abandoned: on an uncommitted
         /// <c>Dispose()</c>, the temp is left in place (same directory as the real path,

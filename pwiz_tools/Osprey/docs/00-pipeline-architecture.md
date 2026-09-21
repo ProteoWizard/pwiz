@@ -447,13 +447,18 @@ into a pipeline failure. `--write-pin`'s `<stem>.cs_features.tsv`
 in the pipeline reads any of them back, but a bisection session trusts presence to mean
 "this run wrote something," same as every other artifact, and a truncated dump that
 LOOKS complete is worse than a missing one - the exact hazard P8 exists to close, just
-for a file a human reads instead of a downstream task. Two writers commit
-unconditionally rather than only on success, and both say why at the call site:
-`FdrDiagnostics.CoAssignRowDump`'s row stream, because seeing however far a large panel
-build got before a throw is the dump's whole reason to stream instead of buffer, and
-`WriteStage6CalibrationDump`, which accumulates one dump across many per-file calls
-serialized by a lock rather than the OS's append semantics (a fresh `FileSaver` per call
-turns append into read-existing, rewrite, commit).
+for a file a human reads instead of a downstream task. Four dumps that accumulate across
+many calls (`OspreyFileDiagnostics`' `cs_stage6_mp_inputs.tsv`, `cs_stage6_cwt_path.tsv`
+and `cs_stage6_calibration.tsv`; `PeakDataExtractor`'s search-XIC dump) hold a `FileSaver`
+open across the calls instead of a `using` block per call, and commit only when explicitly
+closed - a call site's own close (mode 3's rescore loop closes the first two at its
+natural end) or, failing that, `CloseAll`, registered against process exit so any of the
+two dozen `Environment.Exit` early-exit paths still commits what accumulated rather than
+abandoning the temp. One writer commits UNCONDITIONALLY rather than only on success, the
+opposite of a truncated dump masquerading as complete: `FdrDiagnostics.CoAssignRowDump`'s
+row stream, because seeing however far a large panel build got before a throw is the
+dump's whole reason to stream instead of buffer, and its caller's `using` block guarantees
+`Dispose` runs even on that throw.
 
 **One exemption is structural rather than a gap: the `--log-file` stream**
 (`CommandStatusWriter` over `config.LogFilePath` in `Program.cs`). It is written

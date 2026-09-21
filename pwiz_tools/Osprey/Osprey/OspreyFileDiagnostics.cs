@@ -936,6 +936,11 @@ namespace pwiz.Osprey
         {
             string diagXicPath = @"cs_xic_entry_" + entry.Id + @".txt";
             var inv = CultureInfo.InvariantCulture;
+            // Two file-threads can both match ShouldDumpCalXicFor for the same entry before
+            // either reaches Environment.Exit below; the lock keeps their FileSaver commits
+            // from racing (see WriteSearchXicDump for the same reasoning at higher volume).
+            lock (DiagnosticFileLock.For(diagXicPath))
+            {
             using (var saver = new FileSaver(diagXicPath))
             {
                 using (var dw = new StreamWriter(saver.SafeName))
@@ -1014,6 +1019,7 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
+            }
             LogAction(string.Format(inv,
                 @"[BISECT] OSPREY_DIAG_XIC_ENTRY_ID matched on pass {0} - wrote {1} and exiting",
                 currentPass, diagXicPath));
@@ -1044,6 +1050,12 @@ namespace pwiz.Osprey
         {
             string dumpPath = @"cs_search_xic_entry_" + candidate.Id + @".txt";
             var inv = CultureInfo.InvariantCulture;
+            // Shares DiagnosticFileLock.For(dumpPath) with PeakDataExtractor's own append to
+            // this SAME path later in one candidate's scoring - two independent FileSaver
+            // commits to one file, uncoordinated, would otherwise let whichever Commit lands
+            // last silently win (or interleave foreign content on a read-existing rewrite).
+            lock (DiagnosticFileLock.For(dumpPath))
+            {
             using (var saver = new FileSaver(dumpPath))
             {
                 using (var dw = new StreamWriter(saver.SafeName))
@@ -1087,7 +1099,7 @@ namespace pwiz.Osprey
                     // CWT CONSENSUS: per-scan median consensus value across
                     // the fragment CWT coefficients. Cross-impl diff at this
                     // section pinpoints the first scan where the consensus
-                    // signal diverges -- the seam upstream of peak detection.
+                    // signal diverges - the seam upstream of peak detection.
                     // Use round-trip-safe formatting so f64 bits compare
                     // exactly between Rust (format_f64_roundtrip) and C#.
                     var xicList = xics is List<XicData> xicL ? xicL : new List<XicData>(xics);
@@ -1108,6 +1120,7 @@ namespace pwiz.Osprey
                     }
                 }
                 saver.Commit();
+            }
             }
             LogAction(string.Format(inv,
                 @"[BISECT] Search XIC dump for entry {0}: {1} xics, {2} scans -> {3}",
@@ -1231,7 +1244,16 @@ namespace pwiz.Osprey
                 if (_mpInputsWriter == null)
                 {
                     _mpInputsSaver = new FileSaver(@"cs_stage6_mp_inputs.tsv");
-                    _mpInputsWriter = new StreamWriter(_mpInputsSaver.SafeName);
+                    try
+                    {
+                        _mpInputsWriter = new StreamWriter(_mpInputsSaver.SafeName);
+                    }
+                    catch
+                    {
+                        _mpInputsSaver.Dispose();
+                        _mpInputsSaver = null;
+                        throw;
+                    }
                     _mpInputsWriter.NewLine = LF;
                     _mpInputsWriter.WriteLine(
                         "# entry_id\tapex_scan\tfrag_pos\tfrag_idx\tscan_idx\trt\tintensity");
@@ -1282,7 +1304,16 @@ namespace pwiz.Osprey
             if (_predictRtWriter != null)
                 return;
             _predictRtSaver = new FileSaver(@"cs_stage6_predict_rt.tsv");
-            _predictRtWriter = new StreamWriter(_predictRtSaver.SafeName);
+            try
+            {
+                _predictRtWriter = new StreamWriter(_predictRtSaver.SafeName);
+            }
+            catch
+            {
+                _predictRtSaver.Dispose();
+                _predictRtSaver = null;
+                throw;
+            }
             _predictRtWriter.NewLine = LF;
             _predictRtWriter.WriteLine(
                 "# section\tfile_name_or_entry_id\tarray_or_apex\tidx_or_lib_rt\tvalue_or_expected_rt");
@@ -1430,7 +1461,16 @@ namespace pwiz.Osprey
                 if (_cwtPathWriter == null)
                 {
                     _cwtPathSaver = new FileSaver(@"cs_stage6_cwt_path.tsv");
-                    _cwtPathWriter = new StreamWriter(_cwtPathSaver.SafeName);
+                    try
+                    {
+                        _cwtPathWriter = new StreamWriter(_cwtPathSaver.SafeName);
+                    }
+                    catch
+                    {
+                        _cwtPathSaver.Dispose();
+                        _cwtPathSaver = null;
+                        throw;
+                    }
                     _cwtPathWriter.NewLine = LF;
                     _cwtPathWriter.WriteLine(
                         "file_name\tentry_id\tn_cwt_peaks\tn_final_peaks\tn_scored\tscored\tsigma\tconsensus_l1\tconsensus_max_abs\tconsensus_argmax");
@@ -1895,55 +1935,100 @@ namespace pwiz.Osprey
                 path, rows.Count));
         }
 
+        // ----- Stage 6 calibration arrays (cross-impl bisection) -----
+
+        // Held open across calls, like _mpInputsWriter/_cwtPathWriter above: one call per
+        // rescored file, so re-reading and rewriting the whole accumulated file on every
+        // call (the previous shape) was O(files^2) total I/O - real cost at the 446-file
+        // production scale this task type runs at, not bounded to a small bisection run.
+        // Flushed and committed in CloseStage6CalibrationDump, which CloseAll (below) calls,
+        // so a normal Environment.Exit still commits it.
+        private StreamWriter _stage6CalibrationWriter;
+        private FileSaver _stage6CalibrationSaver;
+        private readonly object _stage6CalibrationLock = new object();
+
         /// <summary>
         /// Append the loaded calibration arrays for one file to
         /// cs_stage6_calibration.tsv. Mirrors Rust dump_stage6_calibration.
-        /// Header is written on the first call (file does not yet exist),
-        /// subsequent calls append. Each call writes one row per
-        /// (libraryRts[i], fittedValues[i]) pair. Used for cross-impl
-        /// JSON-decode bisection — see DumpCalibration docs.
+        /// Each call writes one row per (libraryRts[i], fittedValues[i]) pair.
+        /// Used for cross-impl JSON-decode bisection — see DumpCalibration docs.
         /// </summary>
-        private static readonly object s_stage6CalibrationLock = new object();
-
         public void WriteStage6CalibrationDump(
             string fileName, double[] libraryRts, double[] fittedValues)
         {
-            const string path = @"cs_stage6_calibration.tsv";
-            // A fresh FileSaver per call turns "append" into read-existing,
-            // write-existing-plus-new-row, commit -- so this is serialized
-            // process-wide rather than relying on the OS to interleave concurrent
-            // opens of the same path safely (it did not, even before this change).
-            // Called once per rescored file, gated by OSPREY_DUMP_CALIBRATION, so
-            // the O(files^2) re-write cost is bounded by a bisection run's file
-            // count, not the default path.
-            lock (s_stage6CalibrationLock)
+            int n = Math.Min(libraryRts.Length, fittedValues.Length);
+            lock (_stage6CalibrationLock)
             {
-                bool headerNeeded = !File.Exists(path);
-                string existing = headerNeeded ? null : File.ReadAllText(path);
-                using (var saver = new FileSaver(path))
+                if (_stage6CalibrationWriter == null)
                 {
-                    using (var sw = new StreamWriter(saver.SafeName))
+                    _stage6CalibrationSaver = new FileSaver(@"cs_stage6_calibration.tsv");
+                    try
                     {
-                        sw.NewLine = "\n";
-                        if (existing != null)
-                            sw.Write(existing);
-                        if (headerNeeded)
-                            sw.WriteLine(@"file_name	idx	library_rt	fitted_value");
-                        int n = Math.Min(libraryRts.Length, fittedValues.Length);
-                        for (int i = 0; i < n; i++)
-                        {
-                            sw.Write(fileName);
-                            sw.Write('\t'); sw.Write(i.ToString(CultureInfo.InvariantCulture));
-                            sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(libraryRts[i]));
-                            sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(fittedValues[i]));
-                        }
+                        _stage6CalibrationWriter = new StreamWriter(_stage6CalibrationSaver.SafeName);
                     }
-                    saver.Commit();
+                    catch
+                    {
+                        _stage6CalibrationSaver.Dispose();
+                        _stage6CalibrationSaver = null;
+                        throw;
+                    }
+                    _stage6CalibrationWriter.NewLine = "\n";
+                    _stage6CalibrationWriter.WriteLine(@"file_name	idx	library_rt	fitted_value");
                 }
-                LogAction(string.Format(
-                    @"Appended {0} calibration rows for {1} to {2}",
-                    Math.Min(libraryRts.Length, fittedValues.Length), fileName, path));
+                for (int i = 0; i < n; i++)
+                {
+                    _stage6CalibrationWriter.Write(fileName);
+                    _stage6CalibrationWriter.Write('\t');
+                    _stage6CalibrationWriter.Write(i.ToString(CultureInfo.InvariantCulture));
+                    _stage6CalibrationWriter.Write('\t');
+                    _stage6CalibrationWriter.Write(Diagnostics.FormatF64Roundtrip(libraryRts[i]));
+                    _stage6CalibrationWriter.Write('\t');
+                    _stage6CalibrationWriter.WriteLine(Diagnostics.FormatF64Roundtrip(fittedValues[i]));
+                }
             }
+            LogAction(string.Format(
+                @"Appended {0} calibration rows for {1} to cs_stage6_calibration.tsv", n, fileName));
+        }
+
+        /// <summary>
+        /// Flush and close the cs_stage6_calibration.tsv writer. Safe to call when the
+        /// writer was never opened (no-op), and safe to call more than once.
+        /// </summary>
+        public void CloseStage6CalibrationDump()
+        {
+            lock (_stage6CalibrationLock)
+            {
+                if (_stage6CalibrationWriter == null)
+                    return;
+                _stage6CalibrationWriter.Flush();
+                _stage6CalibrationWriter.Dispose();
+                _stage6CalibrationWriter = null;
+                _stage6CalibrationSaver.Commit();
+                _stage6CalibrationSaver.Dispose();
+                _stage6CalibrationSaver = null;
+            }
+        }
+
+        /// <summary>
+        /// Close every held-open dump writer. Registered against
+        /// <see cref="AppDomain.ProcessExit"/> in <c>OspreyDiagnostics.Initialize</c> so a
+        /// mid-run <c>Environment.Exit</c> (there are two dozen call sites, mostly the
+        /// <c>*_ONLY</c> bisection early-exits) still commits whatever these writers
+        /// accumulated, rather than abandoning the FileSaver temp - unlike a plain direct
+        /// write, nothing appears at the real path until Commit runs. Each Close method is
+        /// idempotent, so calling this after a task's own explicit close (mode 3's rescore
+        /// loop already calls CloseMpInputsDump/CloseCwtPathDump at its natural end) is a
+        /// safe no-op for those two.
+        /// </summary>
+        public void CloseAll()
+        {
+            CloseMpInputsDump();
+            CloseCwtPathDump();
+            CloseStage6CalibrationDump();
+            // ClosePredictRtDump is deliberately NOT called here: neither WritePredictRtArrays
+            // nor WritePredictRtCall has a live caller (disabled as a perf hotspot; see the
+            // commented-out call in PerFileRescoreTask.cs), so _predictRtWriter is never
+            // opened and this would be a no-op today regardless.
         }
 
         /// <summary>

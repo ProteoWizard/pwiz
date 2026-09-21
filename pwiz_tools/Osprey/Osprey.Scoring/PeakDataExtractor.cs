@@ -44,8 +44,6 @@ namespace pwiz.Osprey.Scoring
     /// </summary>
     internal sealed class PeakDataExtractor
     {
-        private static readonly object s_searchXicLock = new object();
-
         private readonly IScoringDiagnostics _diagnostics;
 
         public PeakDataExtractor(IScoringDiagnostics diagnostics)
@@ -394,14 +392,15 @@ namespace pwiz.Osprey.Scoring
             if (_diagnostics?.ShouldDumpSearchXicFor(candidate.Id) ?? false)
             {
                 string peakDumpPath = "cs_search_xic_entry_" + candidate.Id + ".txt";
-                // A fresh FileSaver per call, same reasoning as
-                // OspreyFileDiagnostics.WriteStage6CalibrationDump: "append" becomes
-                // read-existing, write-existing-plus-new-section, commit. Serialized
-                // process-wide by s_searchXicLock rather than relying on the OS to
-                // interleave concurrent opens of the same path (it does not). Gated
-                // to specific candidate ids via OSPREY_DUMP_SEARCH_XIC, so call
-                // volume and the re-read cost are both small.
-                lock (s_searchXicLock)
+                // A fresh FileSaver per call: "append" becomes read-existing,
+                // write-existing-plus-new-section, commit. DiagnosticFileLock.For is
+                // keyed by path and shared with OspreyFileDiagnostics.WriteSearchXicDump,
+                // which writes this SAME file earlier in one candidate's scoring - without
+                // a shared lock, two independent FileSaver commits to one path race
+                // silently instead of the OS-level open conflict a plain writer would have
+                // thrown. Gated to specific candidate ids via OSPREY_DUMP_SEARCH_XIC, so
+                // call volume and the re-read cost are both small.
+                lock (DiagnosticFileLock.For(peakDumpPath))
                 {
                     string existing = File.Exists(peakDumpPath) ? File.ReadAllText(peakDumpPath) : null;
                     using (var saver = new FileSaver(peakDumpPath))

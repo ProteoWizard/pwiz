@@ -124,7 +124,7 @@ namespace pwiz.Osprey.Test
                     abandonedTemp = saver.SafeName;
                     File.WriteAllText(saver.SafeName, "left for forensics");
                 }
-                // Left in place, under its own temp name -- never renamed onto the
+                // Left in place, under its own temp name - never renamed onto the
                 // destination, so a normal reader of `dest` sees nothing new.
                 Assert.IsTrue(File.Exists(abandonedTemp));
                 Assert.AreEqual("left for forensics", File.ReadAllText(abandonedTemp));

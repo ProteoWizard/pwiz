@@ -117,7 +117,7 @@ namespace pwiz.Osprey.Core
         /// uncommitted temp is left in place instead of deleted, for a
         /// developer doing forensic analysis on whatever a write got
         /// through before an exception abandoned it. It stays under its
-        /// own temp name -- Dispose never touches <see cref="RealName"/> --
+        /// own temp name - Dispose never touches <see cref="RealName"/> -
         /// so this changes nothing about what a normal caller sees.
         /// </summary>
         public void Dispose()
