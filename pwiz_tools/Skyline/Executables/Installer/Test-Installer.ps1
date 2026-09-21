@@ -97,6 +97,9 @@ if (-not $appIds.ContainsKey($appName)) {
     Fail "$SetupPath reports product '$appName', not Skyline or Skyline-daily."
 }
 $uninstallKeyPath = "$uninstallRoot\$($appIds[$appName])_is1"
+# The channel's ProgIds drop the hyphen (Skyline-daily -> SkylineDaily.Document.1): a ProgId
+# allows no punctuation but periods.
+$progId = ($appName -replace '-daily$', 'Daily') + '.Document.1'
 $scope = if ($AllUsers) { 'per-machine' } else { 'per-user' }
 Write-Host "==> $appName $version, ${scope}: $SetupPath" -ForegroundColor Cyan
 
@@ -153,7 +156,6 @@ try {
     if (-not (Test-Path $shortcut)) { throw "Start Menu shortcut missing: $shortcut" }
 
     if ($WithAssociations) {
-        $progId = "$appName.Document.1"
         if ((Get-RegistryValue 'Software\Classes\.sky' '') -ne $progId) {
             throw ".sky is not associated with $progId."
         }
@@ -194,11 +196,11 @@ if ($null -ne (Get-RegistryValue $uninstallKeyPath 'UninstallString')) { Fail "T
 if (Test-Path $installDir) { Fail "The install directory is still present after uninstall: $installDir" }
 if ($null -ne (Open-RegistryKey "Software\MacCossLabUW\$appName")) { Fail "Software\MacCossLabUW\$appName is still present after uninstall." }
 if (Test-Path $shortcut) { Fail "The Start Menu shortcut is still present after uninstall: $shortcut" }
-if ($WithAssociations -and (Get-RegistryValue 'Software\Classes\.sky' '') -eq "$appName.Document.1") {
-    Fail ".sky is still associated with $appName.Document.1 after uninstall."
+if ($WithAssociations -and (Get-RegistryValue 'Software\Classes\.sky' '') -eq $progId) {
+    Fail ".sky is still associated with $progId after uninstall."
 }
-if ($WithAssociations -and $null -ne (Open-RegistryKey "Software\Classes\$appName.Document.1")) {
-    Fail "$appName.Document.1 is still registered after uninstall."
+if ($WithAssociations -and $null -ne (Open-RegistryKey "Software\Classes\$progId")) {
+    Fail "$progId is still registered after uninstall."
 }
 
 Write-Host "PASSED: $appName $version $scope install, smoke and uninstall" -ForegroundColor Green

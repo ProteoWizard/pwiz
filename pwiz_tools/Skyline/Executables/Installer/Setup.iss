@@ -45,12 +45,14 @@
 ; One stable AppId per channel. Inno keys every install on it: same AppId means
 ; "upgrade in place", so each channel has exactly one install per install mode.
 ; Not the WiX UpgradeCodes - an Inno install and an MSI are unrelated records.
+; The ProgId prefix is the channel name minus the hyphen: a ProgId is
+; Vendor.Component.Version with no punctuation but the periods.
 #if SkylineAppName == "Skyline"
   #define MyAppId "{67DE971E-A042-4EF7-A93C-3F85D2A3D241}"
   #define ProgIdPrefix "Skyline"
 #elif SkylineAppName == "Skyline-daily"
   #define MyAppId "{C701F69C-B553-4E3E-90D0-5676DD615570}"
-  #define ProgIdPrefix "Skyline-daily"
+  #define ProgIdPrefix "SkylineDaily"
 #else
   #error SkylineAppName must be Skyline or Skyline-daily
 #endif
