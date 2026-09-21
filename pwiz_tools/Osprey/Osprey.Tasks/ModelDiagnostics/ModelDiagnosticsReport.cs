@@ -41,13 +41,6 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
     /// </summary>
     public static class ModelDiagnosticsReport
     {
-        /// <summary>
-        /// The <c>--task</c> selector that regenerates only this report from a completed
-        /// analysis. It has no <c>OspreyTask</c> of its own (it runs the canonical pipeline
-        /// with artifact writes suppressed), so the report owns the name.
-        /// </summary>
-        public const string TASK_NAME = @"ModelDiagnostics";
-
         public const string HtmlSuffix = ".model-diagnostics.html";
 
         /// <summary>
@@ -602,7 +595,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             // directory, where nothing read it - present, complete, wrong, and invisible.
             // Relaying it is what turned a harmless stray file into a corrupt report, so the
             // guard earned its place here rather than in the relay.
-            if (config.NoJoin)
+            if (config.SelectedTask?.IsPerFileWorker == true)
             {
                 logWarning(@"[MODEL-DIAGNOSTICS] fan-out worker: not writing the experiment-wide " +
                            @"pass-1 diagnostics product (this node holds one run; FirstPassFDR owns it).");

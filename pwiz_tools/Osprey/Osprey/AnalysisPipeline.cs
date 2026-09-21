@@ -47,16 +47,27 @@ namespace pwiz.Osprey
         /// Run the complete analysis pipeline.
         /// </summary>
         /// <param name="config">Analysis configuration.</param>
+        /// <param name="pipeline">The stages this run walks, in execution order - the list
+        /// <see cref="OspreyConfig.SelectTask"/> was given (<see cref="OspreyTasks.PipelineFor"/>),
+        /// so the driver and the selection share instances.</param>
         /// <returns>0 on success, non-zero on failure.</returns>
-        public int Run(OspreyConfig config)
+        public int Run(OspreyConfig config, IReadOnlyList<OspreyTask> pipeline)
         {
             var stopwatch = Stopwatch.StartNew();
+
+            // The driver walks the same instances the selection was resolved against, or the
+            // by-reference membership rule fails silently: every stage excluded (a no-op
+            // "Analysis complete") for a second list, or every stage included for a namesake
+            // selection. Program.Main hands SelectTask and this method one variable; refuse
+            // anything else rather than run a pipeline the config does not describe.
+            if (!ReferenceEquals(config.Pipeline, pipeline))
+                throw new ArgumentException(@"The pipeline to run must be the one the config's task was selected with.", nameof(pipeline));
 
             try
             {
                 // Select the diagnostics sink before any task runs -- the single
-                // chokepoint every entry point reaches the pipeline through
-                // (Program.Main and the rescore worker). -d forces the dump
+                // chokepoint every invocation reaches the pipeline through
+                // (Program.Main, whatever --task it selected). -d forces the dump
                 // bundle on; otherwise the sink self-enables only if an
                 // OSPREY_DUMP_* / OSPREY_DIAG_* env var is set.
                 OspreyDiagnostics.Initialize(config.Diagnostics);
@@ -69,29 +80,23 @@ namespace pwiz.Osprey
                 // task now receives the stems it needs on -i, which is the direction the
                 // derivation was always going.
 
-                // --task SpectraCache stages data rather than analyzing it: it runs
-                // its own one-task pipeline instead of the canonical four. Selecting
-                // it by list, not by an IsIncluded gate on every other task, keeps the
-                // canonical pipeline's membership rules about the analysis itself.
-                var pipelineTasks = config.SelectedTask == HpcTask.SpectraCache
-                    ? SpectraCachePipeline()
-                    : CanonicalPipeline();
-                var ctx = new PipelineContext(config, pipelineTasks,
+                var ctx = new PipelineContext(config, pipeline,
                     LogInfo, LogWarning, LogError, OspreyDiagnostics.Active);
 
-                // Phase B5 driver-owned dataflow: walk the canonical pipeline
-                // and run each INCLUDED task whose outputs are not already
-                // valid on disk. Membership is a per-task fact
-                // (OspreyTask.IsIncluded) rather than a contiguous
-                // [StartAt..StopAfter] window. Excluded tasks -- and included
-                // tasks whose outputs already exist (ctx.CanRehydrate) -- are
+                // Phase B5 driver-owned dataflow: walk the pipeline and run each
+                // INCLUDED stage whose outputs are not already valid on disk.
+                // Membership is one rule over the selection and the pipeline
+                // (OspreyConfig.Includes: everything, or the selected stage alone)
+                // rather than a contiguous [StartAt..StopAfter] window or a
+                // per-task predicate over flags. Excluded stages - and included
+                // stages whose outputs already exist (ctx.CanRehydrate) - are
                 // not run here; their state lazy-rehydrates through ctx.Demand
-                // when a running task reaches for it. A task returning false is
+                // when a running stage reaches for it. A task returning false is
                 // still the signal to stop and propagate ctx.ExitCode (e.g. an
                 // empty score set or a sidecar-write failure).
-                foreach (var task in pipelineTasks)
+                foreach (var task in pipeline)
                 {
-                    if (!task.IsIncluded(ctx))
+                    if (!config.Includes(task))
                         continue;
 
                     if (ctx.CanRehydrate(task))
@@ -123,40 +128,6 @@ namespace pwiz.Osprey
                 LogError(string.Format("Pipeline failed: {0}", ex));
                 return 1;
             }
-        }
-
-        /// <summary>
-        /// The canonical four-task pipeline in execution order:
-        /// PerFileScoring -> FirstPassFDR -> PerFileRescore -> SecondPassFDR.
-        /// Single source of truth for the task list. Tasks read upstream
-        /// state through ctx.Demand&lt;T&gt;().GetX() rather than constructor
-        /// args; the driver runs each task that is
-        /// <see cref="OspreyTask.IsIncluded"/> for the current config and whose
-        /// outputs are not already valid on disk. Returning false from any task
-        /// is the signal to stop and propagate ctx.ExitCode.
-        /// </summary>
-        internal static OspreyTask[] CanonicalPipeline()
-        {
-            return new OspreyTask[]
-            {
-                new PerFileScoringTask(),
-                new FirstPassFdrTask(),
-                new PerFileRescoreTask(),
-                new SecondPassFdrTask(),
-            };
-        }
-
-        /// <summary>
-        /// The one-task pipeline behind <c>--task SpectraCache</c>: build every
-        /// input's <c>.spectra.bin</c> and stop, without a library or any of the
-        /// analysis stages.
-        /// </summary>
-        internal static OspreyTask[] SpectraCachePipeline()
-        {
-            return new OspreyTask[]
-            {
-                new SpectraCacheTask(),
-            };
         }
 
         #region Utility Methods

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -56,18 +56,13 @@ namespace pwiz.Osprey.Tasks
         public override string Name => TASK_NAME;
 
         /// <summary>
-        /// Computes Stage 7-8 (2nd-pass FDR + protein FDR + blib) in
-        /// straight-through, the --task SecondPassFDR stage, and the --input-scores
-        /// full-pipeline. Excluded in --task PerFileScoring, --task FirstPassFDR,
-        /// and --task PerFileRescoring (all of which stop before SecondPassFDR).
+        /// Every input's reconciled parquet must carry <c>osprey.reconciled = "true"</c> in
+        /// its footer: the post-Stage-6 entry point. Also arms the strict-reconciled-input
+        /// gate that check implements.
         /// </summary>
-        public override bool IsIncluded(PipelineContext ctx)
+        public override void ApplySelection(OspreyConfig config)
         {
-            var c = ctx.Config;
-            // Its own node always, and the full pipeline unless something stops earlier.
-            // StopAfterStage5 means that boundary whatever the inputs look like, for the
-            // reason PerFileRescoreTask.IsIncluded states.
-            return c.ExpectReconciledInput || (!c.NoJoin && !c.StopAfterStage5);
+            config.ExpectReconciledInput = true;
         }
 
         // Phase B resume surface. Reads each file's reconciled
@@ -179,11 +174,11 @@ namespace pwiz.Osprey.Tasks
             // one step later: CanRehydrate requires every declared output to exist, so the task
             // was never skippable and every invocation re-ran pass-2 Percolator, protein FDR and
             // the whole .blib write, still producing no report.
-            if (ctx.Config.ModelDiagnostics && FirstPassFdrTask.IsIncludedFor(ctx.Config))
+            if (ctx.Config.ModelDiagnostics && ScoringTaskShared.Includes<FirstPassFdrTask>(ctx.Config))
                 yield return ModelDiagnosticsReport.ReportPath(ctx.Config);
 
             // The pass-2 diagnostics PRODUCT, declared whenever the flag is on and WITHOUT the
-            // IsIncludedFor term above - because on `--task SecondPassFDR` that term is false,
+            // Includes term above - because on `--task SecondPassFDR` that term is false,
             // so nothing this task owns was outstanding on a completed cohort, the driver
             // skipped the task as already-done, and the pay-later fold could never run. Measured:
             // a 10-file bed with every artifact current logged `SecondPassFDR: skipping (outputs
