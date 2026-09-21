@@ -1231,7 +1231,8 @@ function Compare-DirFingerprint {
 # the driver's own log, so these helpers read it.
 #
 # The canonical four-task pipeline, in execution order. These are the
-# OspreyTask.Name values (AnalysisPipeline.CanonicalPipeline): the same tokens
+# OspreyTask.Name values (OspreyTasks.Create().Pipeline, the explicit ordered list the
+# task set declares): the same tokens
 # Invoke-ResumeInvalidation keys off, and the ones the driver stamps into both its
 # [TASK] log lines and the .<Name>.osprey.task validity sidecars.
 $pipelineTaskNames = @('PerFileScoring', 'FirstPassFDR', 'PerFileRescoring', 'SecondPassFDR')
@@ -2004,7 +2005,7 @@ function Invoke-HpcChain {
     # file at all (Osprey tolerates a missing data file once the cache exists -- the real
     # 6 GB mzML is never shipped to a rescore worker). Plus the Stage 4 parquet/calibration + the
     # Stage 5 sidecar pair; writes <stem>.scores-reconciled.parquet. NOT the 2nd-pass bin:
-    # --task PerFileRescoring sets NoJoin, which excludes SecondPassFdrTask entirely, so
+    # --task PerFileRescoring runs alone (the membership rule includes only the selected stage), so
     # phase 4 is the only node that writes one.
     $ph3Dirs = @{}
     foreach ($s in $stemList) {
@@ -2185,8 +2186,8 @@ function Invoke-HpcChain {
         $ph3diag = Join-Path $ph3 'output.1st-pass.model-diagnostics.json'
         if (Test-Path $ph3diag) { Copy-Item $ph3diag (Join-Path $ph4 'output.1st-pass.model-diagnostics.json') -Force }
         # No 2nd-pass bin relay. There was a `if (Test-Path ...) { Copy-Item ... }` here, and
-        # it could never fire: --task PerFileRescoring sets NoJoin, so SecondPassFdrTask is not
-        # in a phase-3 worker's pipeline and no such file exists to copy. Worse than dead - had
+        # it could never fire: --task PerFileRescoring runs alone (the membership rule includes only
+        # the selected stage), so SecondPassFdrTask never runs on a phase-3 worker and no such file exists to copy. Worse than dead - had
         # it fired it would have handed phase 4 a CURRENT 2nd-pass sidecar, and phase 4 would
         # then have skipped computing its own, quietly turning mode 3 into a test of a copy.
         # Phase 4 is the only node that writes these.
@@ -3329,7 +3330,7 @@ foreach ($name in $selected) {
     # The per-leg expectations are calibrated against an observed run, NOT derived from
     # reading the C# -- deriving them is how the original defects got in. Two surprises
     # from that observation are encoded here: --task PerFileRescoring DOES release
-    # (FirstPassFdrTask.Rehydrate is reached through a lazy Demand even though IsIncluded
+    # (FirstPassFdrTask.Rehydrate is reached through a lazy Demand even though the membership rule
     # excludes it from that leg), and the warm re-run legitimately logs nothing at all
     # because a fully cached run does no work -- asserting a release there would be a
     # false red on every run.
