@@ -151,6 +151,8 @@ namespace SkylineTool
         public string[] GetSettingsListTypes() { return CallTyped<string[]>(nameof(GetSettingsListTypes)); }
         public TutorialListItem[] GetAvailableTutorials() { return CallTyped<TutorialListItem[]>(nameof(GetAvailableTutorials)); }
         public string GetProcessId() { return Call(nameof(GetProcessId)); }
+        public JobInfo[] GetRunningJobs() { return CallTyped<JobInfo[]>(nameof(GetRunningJobs)); }
+        public ActionResult CancelJob(string jobId) { return CallTyped<ActionResult>(nameof(CancelJob), jobId); }
         public int ModalNestingCount() { return CallTyped<int>(nameof(ModalNestingCount)); }
         public FormInfo[] GetOpenForms() { return CallTyped<FormInfo[]>(nameof(GetOpenForms)); }
         public ControlInfo[] GetControls(string formId) { return CallTyped<ControlInfo[]>(nameof(GetControls), formId); }

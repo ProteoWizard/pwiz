@@ -126,7 +126,11 @@ namespace pwiz.Skyline.ToolsUI
         private readonly Thread _serverThread;
         private readonly Dictionary<string, MethodInfo> _methods;
         private volatile bool _stopping;
-        private ToolLog _currentLog;
+
+        // The diagnostic log of the request being served ON THIS THREAD. Thread-local for the same reason
+        // _requestCancellation is: a request whose client disconnected goes on running on its own thread while the
+        // next one is already being served, and the two must not write into each other's log.
+        private static readonly ThreadLocal<ToolLog> _currentLog = new ThreadLocal<ToolLog>();
 
         // ===== Client-disconnect cancellation =====
 
@@ -150,8 +154,8 @@ namespace pwiz.Skyline.ToolsUI
         private static CancellationToken RequestCancellation =>
             _requestCancellation.Value?.Token ?? CancellationToken.None;
 
-        // How often the watchdog peeks the pipe while a request is in flight: free enough to run continuously, quick
-        // enough that a client which gave up does not wait noticeably for the server to notice it is gone.
+        // How often the pipe is peeked while a request is in flight: free enough to run continuously, quick enough
+        // that a client which gave up does not wait noticeably for the server to notice it is gone.
         private const int DISCONNECT_POLL_MILLIS = 200;
 
         public string PipeName { get { return _pipeName; } }
@@ -309,52 +313,71 @@ namespace pwiz.Skyline.ToolsUI
         /// up and disconnects abandons it. Without this the server thread stays parked in a long verb (a document
         /// load riding its LongWaitDlg) and -- being the single instance's only thread -- nothing else can get in,
         /// not even the request that would cancel the dialog.
+        ///
+        /// <para>The request runs on a thread of its own, and only the WAIT for it is given up when the client
+        /// disconnects: this returns while the WORK GOES ON. That is what frees the single-instance server to take
+        /// the next connection -- the one that lists what is still running (<see cref="GetRunningJobs"/>) and stops
+        /// it (<see cref="CancelJob"/>). A verb that watches <see cref="RequestCancellation"/> itself gives up its
+        /// own wait when the client goes (that is how a verb driving the UI thread lets go of a LongWaitDlg it will
+        /// never see finish), but a verb with no such wait -- a report export grinding through rows -- has nothing
+        /// to notice the disconnect with, and would otherwise hold the server for as long as it ran.</para>
         /// </summary>
         private string HandleRequestWatchingForDisconnect(NamedPipeServerStream pipe, byte[] requestBytes)
         {
-            using var cancellation = new CancellationTokenSource();
-            // The watchdog runs on ANOTHER thread, so it is given the source directly rather than reading it below.
-            var watchdog = new Thread(() => WatchForDisconnect(pipe, cancellation))
-            {
-                Name = @"JsonToolServerDisconnectWatchdog-" + _pipeName,
-                IsBackground = true
-            };
-            watchdog.Start();
-            try
-            {
-                // Publish it for this thread: the verbs read it (RequestCancellation) and hand it to every element
-                // they build. Set and cleared inside the try/finally, so a verb that throws leaves nothing behind.
-                _requestCancellation.Value = cancellation;
-                return HandleRequest(requestBytes);
-            }
-            finally
-            {
-                _requestCancellation.Value = null;
-                // Cancelling is ALSO how the watchdog is told the request is over -- on every path, not just a
-                // disconnect. Nothing reads the token by now (the call has returned), so cancelling it costs nothing
-                // and saves a second signal. Then WAIT for the watchdog before the source is disposed: it may be in
-                // the middle of cancelling, and cancelling a disposed source throws, on a thread with no one to catch it.
-                cancellation.Cancel();
-                watchdog.Join();
-            }
-        }
+            var cancellation = new CancellationTokenSource();
+            // How the thread serving the request reports back. The event is never disposed: nothing asks it for a
+            // WaitHandle, so it holds no handle to release, and the request may be inside Set() on it right up to
+            // the moment this returns.
+            var finished = new ManualResetEventSlim(false);
+            string response = null;
 
-        // Peeks the pipe until the client goes away (abandoning the request) or the request ends -- which the request
-        // thread signals by cancelling the source, so this parks on the token itself and wakes the moment either
-        // happens. Takes the source as an argument: it runs on its own thread, so it cannot read the request thread's
-        // thread-local.
-        private static void WatchForDisconnect(NamedPipeServerStream pipe, CancellationTokenSource cancellation)
-        {
-            while (!cancellation.Token.WaitHandle.WaitOne(DISCONNECT_POLL_MILLIS))
+            ActionUtil.RunAsync(() =>
+            {
+                try
+                {
+                    // Published HERE, on the thread that actually serves the request: the verbs read it
+                    // (RequestCancellation) and hand it to every element they build, and a thread-local can
+                    // only be read on the thread that set it.
+                    _requestCancellation.Value = cancellation;
+                    response = HandleRequest(requestBytes);
+                }
+                finally
+                {
+                    _requestCancellation.Value = null;
+                    finished.Set();     // LAST: this is what says the token is no longer being read
+                }
+            }, @"JsonToolServerRequest-" + _pipeName);
+
+            // Wait for the request, peeking the pipe as we go -- this thread has nothing else to do until one of
+            // the two happens. Waking to peek costs nothing: the wait returns the instant the request finishes,
+            // whatever the poll interval, so the interval only bounds how long a client that has gone goes
+            // unnoticed. (Peeking is the only way to notice: NamedPipeServerStream.IsConnected does not detect a
+            // disconnect without I/O, and there is no read in progress while a request is being served.)
+            while (!finished.Wait(DISCONNECT_POLL_MILLIS))
             {
                 if (IsClientConnected(pipe))
                     continue;
+
+                // The client is gone. Tell the verbs still running on the other thread that no one is listening,
+                // and stop waiting -- the work goes on as a job, and this thread goes back to accept the next
+                // connection, which is the one that can list and cancel that job.
                 cancellation.Cancel();
-                return;
+                // This response goes nowhere -- writing it fails on the closed pipe, which is what ends this
+                // connection -- but the server answers every request it reads, and an abandoned call is an error.
+                // The id is not known here (the request is parsed on the other thread), so it is reported as 0,
+                // the same as for a request that could not be parsed at all.
+                return SerializeError(new OperationCanceledException(
+                    @"The client disconnected before this call finished. The work is still running as a job."),
+                    0, JsonToolConstants.ERROR_INTERNAL);
             }
+
+            // The request is over, so nothing can be reading the token any more. (An ABANDONED request still is,
+            // which is why the source is disposed only here, on the path that waited for the end.)
+            cancellation.Dispose();
+            return response;
         }
 
-        // Reliable "client still connected" check for a server thread busy in a verb (no read in progress).
+        // Reliable "client still connected" check while a request is being served (no read in progress).
         // NamedPipeServerStream.IsConnected does not detect a disconnect without I/O, so peek the pipe --
         // PeekNamedPipe returns false once the client has closed its end.
         private static bool IsClientConnected(NamedPipeServerStream pipe)
@@ -392,7 +415,7 @@ namespace pwiz.Skyline.ToolsUI
                 id = request.Id;
                 JToken[] args = request.Params ?? Array.Empty<JToken>();
 
-                _currentLog = request.Log ? new ToolLog() : null;
+                _currentLog.Value = request.Log ? new ToolLog() : null;
 
                 try
                 {
@@ -401,7 +424,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 finally
                 {
-                    _currentLog = null;
+                    _currentLog.Value = null;
                 }
             }
             catch (JsonReaderException ex)
@@ -424,7 +447,7 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         protected void Log(string message)
         {
-            _currentLog?.Write(message);
+            _currentLog.Value?.Write(message);
         }
 
         private object Dispatch(string method, JToken[] args)
@@ -509,6 +532,87 @@ namespace pwiz.Skyline.ToolsUI
         public string GetProcessId()
         {
             return Process.GetCurrentProcess().Id.ToString();
+        }
+
+        // --- Jobs ---
+
+        public JobInfo[] GetRunningJobs()
+        {
+            return BackgroundJobs.Running.Select(job => new JobInfo
+            {
+                Id = job.JobId.ToString(),
+                Description = job.Description,
+                Message = job.Message,
+                PercentComplete = job.PercentComplete,
+                CancelRequested = BackgroundJobs.IsCancelRequested(job.JobId)
+            }).ToArray();
+        }
+
+        public ActionResult CancelJob(string jobId)
+        {
+            if (!Guid.TryParse(jobId, out var id))
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"{0} is not a job id. Job ids come from get_running_jobs.", (jobId ?? string.Empty).SingleQuote()));
+            }
+
+            if (BackgroundJobs.Cancel(id))
+                return new ActionResult { Completed = true };
+
+            // Not an error: the job most likely finished between the caller listing it and cancelling it, which is
+            // the outcome the caller wanted anyway.
+            return new ActionResult
+            {
+                Completed = false,
+                Message = LlmInstruction.Format(
+                    @"No job {0} is running. It has most likely already finished.", jobId.SingleQuote())
+            };
+        }
+
+        /// <summary>
+        /// Runs <paramref name="work"/> as a job: its progress is reported to the main window for as long as it
+        /// runs, which is both how the user sees it in the status bar and how <see cref="GetRunningJobs"/> and
+        /// <see cref="CancelJob"/> find it. That matters when the caller has given up waiting: the request is
+        /// abandoned, but the work goes on, and a later call can then ask what is still running and stop it.
+        ///
+        /// <para>The work is handed the job to report progress against (pass it as the status) and the token that
+        /// <see cref="CancelJob"/> trips, which it must watch to be stoppable -- directly, and through a
+        /// <see cref="JobProgressMonitor"/> for work that asks its progress monitor instead.</para>
+        /// </summary>
+        internal static T RunJob<T>(string description, Func<JobProgressStatus, CancellationToken, T> work)
+        {
+            using (var job = BackgroundJobs.Start(description))
+            {
+                return work(job.Status, job.CancellationToken);
+            }
+        }
+
+        /// <summary>
+        /// Forwards a job's progress to Skyline's status bar (the main window) but answers for cancellation itself,
+        /// which the main window knows nothing about: <see cref="SkylineWindow"/> reports canceled only when it is
+        /// closing, so work that asks its monitor whether to stop -- the report exporter asks once per row -- would
+        /// never see a <see cref="CancelJob"/>.
+        /// </summary>
+        private class JobProgressMonitor : IProgressMonitor
+        {
+            private readonly IProgressMonitor _progressMonitor;
+            private readonly CancellationToken _cancellationToken;
+
+            public JobProgressMonitor(IProgressMonitor progressMonitor, CancellationToken cancellationToken)
+            {
+                _progressMonitor = progressMonitor;
+                _cancellationToken = cancellationToken;
+            }
+
+            public bool IsCanceled => _cancellationToken.IsCancellationRequested || _progressMonitor.IsCanceled;
+
+            public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+            {
+                var response = _progressMonitor.UpdateProgress(status);
+                return _cancellationToken.IsCancellationRequested ? UpdateProgressResponse.cancel : response;
+            }
+
+            public bool HasUI => _progressMonitor.HasUI;
         }
 
         public string[] GetSettingsListTypes()
@@ -1163,56 +1267,64 @@ namespace pwiz.Skyline.ToolsUI
             string[] columns, ReportFilter[] filter, bool includeMaxLength, string culture)
         {
             ValidateWindow(offset, count);
-            var localizer = ParseCulture(culture);
-            var document = Program.MainWindow.Document;
-            var dataSchema = SkylineDataSchema.MemoryDataSchema(document, localizer, Program.MainWindow.ModeUI);
-            var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
+            return RunJob(string.Format(ToolsUIResources.JsonToolServer_ExportReport_Exporting_report___0__, reportName),
+                (job, cancellationToken) =>
+            {
+                var localizer = ParseCulture(culture);
+                var document = Program.MainWindow.Document;
+                var dataSchema = SkylineDataSchema.MemoryDataSchema(document, localizer, Program.MainWindow.ModeUI);
+                var rowFactories = RowFactories.GetRowFactories(cancellationToken, dataSchema);
 
-            var viewName = FindReportViewName(reportName);
-            var viewSpecList = Settings.Default.PersistedViews.GetViewSpecList(viewName.GroupId);
-            var viewSpec = viewSpecList.GetView(viewName.Name);
-            var layout = viewSpecList.GetViewLayouts(viewName.Name).DefaultLayout;
+                var viewName = FindReportViewName(reportName);
+                var viewSpecList = Settings.Default.PersistedViews.GetViewSpecList(viewName.GroupId);
+                var viewSpec = viewSpecList.GetView(viewName.Name);
+                var layout = viewSpecList.GetViewLayouts(viewName.Name).DefaultLayout;
 
-            if (filter != null && filter.Length > 0)
-                viewSpec = ApplyFilterToNamedReport(viewSpec, filter, dataSchema);
+                if (filter != null && filter.Length > 0)
+                    viewSpec = ApplyFilterToNamedReport(viewSpec, filter, dataSchema);
 
-            return MaterializeReportRows(viewSpec, layout, rowFactories, dataSchema,
-                offset, count, includeMaxLength, columns, reportName, localizer);
+                return MaterializeReportRows(viewSpec, layout, rowFactories, dataSchema,
+                    offset, count, includeMaxLength, columns, reportName, localizer, job, cancellationToken);
+            });
         }
 
         public ReportRowsResult GetReportFromDefinitionRows(ReportDefinition definition,
             int offset, int count, bool includeMaxLength, string culture)
         {
             ValidateWindow(offset, count);
-            var localizer = ParseCulture(culture);
-            var document = Program.MainWindow.Document;
-            var dataSchema = SkylineDataSchema.MemoryDataSchema(document, localizer, Program.MainWindow.ModeUI);
-            var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
-
-            var viewSpec = ResolveReportDefinition(definition, dataSchema);
-            var sortSpecs = ParseSortSpecs(definition);
-            var rowTransforms = new List<IRowTransform>();
-            if (sortSpecs != null && sortSpecs.Count > 0)
-                rowTransforms.Add(RowFilter.Empty.SetColumnSorts(sortSpecs));
-            if (viewSpec.HasTotals && rowTransforms.Count == 0)
+            return RunJob(string.Format(ToolsUIResources.JsonToolServer_ExportReport_Exporting_report___0__,
+                definition.Name ?? JsonToolConstants.DEFAULT_REPORT_NAME), (job, cancellationToken) =>
             {
-                var groupByCol = viewSpec.Columns.FirstOrDefault(c => c.Total == TotalOperation.GroupBy);
-                if (groupByCol != null)
-                {
-                    rowTransforms.Add(RowFilter.Empty.SetColumnSorts(new[]
-                    {
-                        new RowFilter.ColumnSort(new ColumnId(groupByCol.PropertyPath.ToString()),
-                            ListSortDirection.Ascending)
-                    }));
-                }
-            }
-            ViewLayout layout = rowTransforms.Count > 0
-                ? new ViewLayout(string.Empty).ChangeRowTransforms(rowTransforms)
-                : null;
+                var localizer = ParseCulture(culture);
+                var document = Program.MainWindow.Document;
+                var dataSchema = SkylineDataSchema.MemoryDataSchema(document, localizer, Program.MainWindow.ModeUI);
+                var rowFactories = RowFactories.GetRowFactories(cancellationToken, dataSchema);
 
-            string reportName = viewSpec.Name ?? JsonToolConstants.DEFAULT_REPORT_NAME;
-            return MaterializeReportRows(viewSpec, layout, rowFactories, dataSchema,
-                offset, count, includeMaxLength, null, reportName, localizer);
+                var viewSpec = ResolveReportDefinition(definition, dataSchema);
+                var sortSpecs = ParseSortSpecs(definition);
+                var rowTransforms = new List<IRowTransform>();
+                if (sortSpecs != null && sortSpecs.Count > 0)
+                    rowTransforms.Add(RowFilter.Empty.SetColumnSorts(sortSpecs));
+                if (viewSpec.HasTotals && rowTransforms.Count == 0)
+                {
+                    var groupByCol = viewSpec.Columns.FirstOrDefault(c => c.Total == TotalOperation.GroupBy);
+                    if (groupByCol != null)
+                    {
+                        rowTransforms.Add(RowFilter.Empty.SetColumnSorts(new[]
+                        {
+                            new RowFilter.ColumnSort(new ColumnId(groupByCol.PropertyPath.ToString()),
+                                ListSortDirection.Ascending)
+                        }));
+                    }
+                }
+                ViewLayout layout = rowTransforms.Count > 0
+                    ? new ViewLayout(string.Empty).ChangeRowTransforms(rowTransforms)
+                    : null;
+
+                string reportName = viewSpec.Name ?? JsonToolConstants.DEFAULT_REPORT_NAME;
+                return MaterializeReportRows(viewSpec, layout, rowFactories, dataSchema,
+                    offset, count, includeMaxLength, null, reportName, localizer, job, cancellationToken);
+            });
         }
 
         public string GetSettingsListItem(string listType, string itemName)
@@ -1371,30 +1483,48 @@ namespace pwiz.Skyline.ToolsUI
         private ReportMetadata ExportNamedReport(string reportName, string filePath, DataSchemaLocalizer localizer)
         {
             Log(string.Format(@"Exporting named report '{0}'", reportName));
-            var document = Program.MainWindow.Document;
-            var dataSchema = SkylineDataSchema.MemoryDataSchema(document, localizer, Program.MainWindow.ModeUI);
-            var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
-
-            var viewName = FindReportViewName(reportName);
-            string ext = Path.GetExtension(filePath);
-            var exporter = ReportExporters.ForFilenameExtension(localizer, ext, TextUtil.EXT_CSV);
-
-            DirectoryEx.CreateForFilePath(filePath);
-
-            using (var saver = new FileSaver(filePath, true))
+            return RunJob(string.Format(ToolsUIResources.JsonToolServer_ExportReport_Exporting_report___0__, reportName),
+                (job, cancellationToken) =>
             {
-                if (!saver.CanSave())
-                    throw new IOException(LlmInstruction.SpaceSeparate(@"Cannot write to", filePath));
-                IProgressStatus status = new ProgressStatus(string.Empty);
-                rowFactories.ExportReport(saver.Stream, viewName, exporter,
-                    Program.MainWindow, ref status);
-                saver.Commit();
-            }
+                var document = Program.MainWindow.Document;
+                var dataSchema = SkylineDataSchema.MemoryDataSchema(document, localizer, Program.MainWindow.ModeUI);
+                var rowFactories = RowFactories.GetRowFactories(cancellationToken, dataSchema);
 
-            return BuildReportMetadata(filePath, reportName);
+                var viewName = FindReportViewName(reportName);
+                string ext = Path.GetExtension(filePath);
+                var exporter = ReportExporters.ForFilenameExtension(localizer, ext, TextUtil.EXT_CSV);
+
+                DirectoryEx.CreateForFilePath(filePath);
+
+                using (var saver = new FileSaver(filePath, true))
+                {
+                    if (!saver.CanSave())
+                        throw new IOException(LlmInstruction.SpaceSeparate(@"Cannot write to", filePath));
+                    // The JOB is the status the export reports against, which is what makes its progress the job's
+                    // progress -- the same entry in the status bar, and the percentage GetRunningJobs reports.
+                    IProgressStatus status = job;
+                    rowFactories.ExportReport(saver.Stream, viewName, exporter,
+                        new JobProgressMonitor(Program.MainWindow, cancellationToken), ref status);
+                    // A cancelled export just stops mid-file (its row enumerator ends early), so nothing may be
+                    // committed: throwing leaves the FileSaver to discard the partial file it wrote.
+                    cancellationToken.ThrowIfCancellationRequested();
+                    saver.Commit();
+                }
+
+                return BuildReportMetadata(filePath, reportName);
+            });
         }
 
         private ReportMetadata ExportJsonDefinitionReport(ReportDefinition definition, string filePath, DataSchemaLocalizer localizer)
+        {
+            return RunJob(string.Format(ToolsUIResources.JsonToolServer_ExportReport_Exporting_report___0__,
+                definition.Name ?? JsonToolConstants.DEFAULT_REPORT_NAME),
+                (job, cancellationToken) =>
+                    ExportJsonDefinitionReport(definition, filePath, localizer, job, cancellationToken));
+        }
+
+        private ReportMetadata ExportJsonDefinitionReport(ReportDefinition definition, string filePath,
+            DataSchemaLocalizer localizer, JobProgressStatus job, CancellationToken cancellationToken)
         {
             var document = Program.MainWindow.Document;
             var dataSchema = SkylineDataSchema.MemoryDataSchema(document, localizer, Program.MainWindow.ModeUI);
@@ -1402,7 +1532,7 @@ namespace pwiz.Skyline.ToolsUI
             var viewSpec = ResolveReportDefinition(definition, dataSchema);
             var sortSpecs = ParseSortSpecs(definition);
 
-            var rowFactories = RowFactories.GetRowFactories(CancellationToken.None, dataSchema);
+            var rowFactories = RowFactories.GetRowFactories(cancellationToken, dataSchema);
 
             string ext = Path.GetExtension(filePath);
             var exporter = ReportExporters.ForFilenameExtension(localizer, ext, TextUtil.EXT_CSV);
@@ -1443,9 +1573,11 @@ namespace pwiz.Skyline.ToolsUI
             {
                 if (!saver.CanSave())
                     throw new IOException(LlmInstruction.SpaceSeparate(@"Cannot write to", filePath));
-                IProgressStatus status = new ProgressStatus(string.Empty);
+                // Reported against the job, and cancelled with it - see ExportNamedReport.
+                IProgressStatus status = job;
                 rowFactories.ExportReport(saver.Stream, viewSpec, layout, exporter,
-                    Program.MainWindow, ref status);
+                    new JobProgressMonitor(Program.MainWindow, cancellationToken), ref status);
+                cancellationToken.ThrowIfCancellationRequested();
                 saver.Commit();
             }
 
@@ -1673,7 +1805,8 @@ namespace pwiz.Skyline.ToolsUI
         private ReportRowsResult MaterializeReportRows(ViewSpec viewSpec, ViewLayout layout,
             RowFactories rowFactories, SkylineDataSchema dataSchema,
             int offset, int count, bool includeMaxLength, string[] requestedColumns,
-            string reportName, DataSchemaLocalizer localizer)
+            string reportName, DataSchemaLocalizer localizer, JobProgressStatus job,
+            CancellationToken cancellationToken)
         {
             if (!rowFactories.TryGetRowSource(viewSpec.RowSource, out var rowSource, out var rowSourceType))
             {
@@ -1694,11 +1827,11 @@ namespace pwiz.Skyline.ToolsUI
             {
                 if (layout == null || layout.RowTransforms.Count == 0)
                 {
-                    enumerator = viewInfo.GetStreamingRowItemEnumerator(CancellationToken.None, rowSource);
+                    enumerator = viewInfo.GetStreamingRowItemEnumerator(cancellationToken, rowSource);
                 }
                 if (enumerator == null)
                 {
-                    bindingListSource = new BindingListSource(CancellationToken.None);
+                    bindingListSource = new BindingListSource(cancellationToken);
                     if (layout != null)
                         bindingListSource.ApplyLayout(layout);
                     bindingListSource.SetView(viewInfo, rowSource);
@@ -1708,6 +1841,9 @@ namespace pwiz.Skyline.ToolsUI
                     };
                 }
                 layout?.ApplyFormats(enumerator.ColumnFormats);
+                // Reporting against the job is what shows the read in the status bar and gives GetRunningJobs its
+                // percentage; the monitor is also what ends the row loop below when the job is cancelled.
+                enumerator.SetProgressMonitor(new JobProgressMonitor(Program.MainWindow, cancellationToken), job);
 
                 // Total can come from two cheap sources:
                 //  - non-streaming: BindingListSource has materialized the rows already
@@ -1722,13 +1858,21 @@ namespace pwiz.Skyline.ToolsUI
                                   ?? enumerator.Length;
                 if (totalLong.HasValue)
                     knownTotal = totalLong.Value > int.MaxValue ? int.MaxValue : (int)totalLong.Value;
-                return BuildReportRowsResult(enumerator, localizer, offset, count,
+                var result = BuildReportRowsResult(enumerator, localizer, offset, count,
                     includeMaxLength, requestedColumns, reportName, knownTotal);
+                // A cancelled read ends its row loop early, which would otherwise be reported as a short report
+                // rather than as the cancellation it is.
+                cancellationToken.ThrowIfCancellationRequested();
+                return result;
             }
             finally
             {
+                // Both stay conditional: this also runs when the enumerator is what threw, and there is nothing to
+                // dispose then. (ReSharper judges only the path that got here normally, where both exist.)
+                // ReSharper disable ConstantConditionalAccessQualifier
                 enumerator?.Dispose();
                 bindingListSource?.Dispose();
+                // ReSharper restore ConstantConditionalAccessQualifier
             }
         }
 
@@ -2007,7 +2151,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 Result = result,
                 Id = id,
-                Log = _currentLog?.HasContent == true ? _currentLog.ToString() : null,
+                Log = _currentLog.Value?.HasContent == true ? _currentLog.Value.ToString() : null,
             };
             return JsonConvert.SerializeObject(response, _snakeCaseSettings);
         }
@@ -2018,7 +2162,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 Error = new JsonRpcError { Code = code, Message = ex.Message },
                 Id = id,
-                Log = _currentLog?.HasContent == true ? _currentLog.ToString() : null,
+                Log = _currentLog.Value?.HasContent == true ? _currentLog.Value.ToString() : null,
             };
             return JsonConvert.SerializeObject(response);
         }
