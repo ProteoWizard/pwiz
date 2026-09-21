@@ -4,11 +4,33 @@
     Override the NuGet-resolved Parquet.Net assembly (Parquet.dll) with the
     patched build that lives in pwiz_tools/Shared/Lib/Parquet/ParquetNet.dll.
 
-    The patch fixes a struct-skip bug in Parquet.Net's ThriftCompactProtocolReader
-    (see C:\proj\maccoss-developers\skylinedev\Parquet.Net\PATCH-NOTES.md) that
-    prevents reading parquet files written by parquet-rs >= 58 (the Rust crate
-    used by maccoss/osprey) when those files include the cross-tool .scores.parquet
-    branch consumes.
+    SOURCE OF TRUTH for this binary: the `maccoss-developers` repo, path
+    skylinedev/Parquet.Net - a SIBLING checkout under the same project root as
+    pwiz, not a folder inside this repo. Full rationale lives in that folder's
+    PATCH-NOTES.md. The binary checked in here is byte-identical to that repo's
+    BinariesForProteoWizard/ParquetNet.dll (sha256 2611b7d25c6050fa...), built
+    from fork commit 9d34f80.
+
+    The fork now carries THREE deltas from stock 4.25.0, not just the original one:
+      1. ThriftCompactProtocolReader struct-skip fix - lets us read parquet
+         written by parquet-rs >= 58 (the Rust crate maccoss/osprey uses). This
+         was the original and, for a long time, the only reason for the fork.
+      2. ParquetRowGroupWriter.WriteColumnsAsync - NEW PUBLIC API for parallel
+         column compression. Because it ADDS API, the runtime-only swap this
+         target performs is no longer enough to compile against; see
+         Osprey.IO.csproj, which also takes a direct <Reference> alongside
+         ExcludeAssets="compile" on the PackageReference.
+      3. ParquetPlainEncoder bool fix - CHANGES WRITTEN BYTES. Bool column pages
+         whose row count is a multiple of 8 lose a trailing uninitialised byte.
+         Decoded values are unaffected; anything asserting on parquet BYTES is not.
+
+    A fourth delta, Compressor ThreadLocal<Iron>, was REVERTED on 2026-09-10: it
+    never fixed the byte drift it was introduced for and it rewrote the
+    DECOMPRESSION path Skyline uses. Do not reintroduce it.
+
+    Delta 3 reaches Skyline, not just Osprey, because Skyline references the
+    same binary (see below). Keep this list current - a stale comment here is what
+    makes a reviewer conclude the fork is undocumented or its source lost.
 
     Skyline already references Lib/Parquet/ParquetNet.dll directly via <Reference>
     (see pwiz_tools/Skyline/Skyline.csproj). Osprey uses the upstream NuGet

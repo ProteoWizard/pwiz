@@ -24,6 +24,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -68,6 +71,34 @@ namespace pwiz.Osprey.IO
         public static List<LibraryEntry> Load(OspreyConfig config, LibraryLoadOptions options,
             Action<string> logInfo, Action<string> logWarning)
         {
+            var loaded = Load(config, options, logInfo, logWarning, out string error);
+            if (error != null)
+                throw new InvalidDataException(error);
+            return loaded;
+        }
+
+        /// <summary>
+        /// Load the library AND finish it: for a supplied-decoy library that means marking the
+        /// decoys and pairing each to its target BEFORE the <c>.libcache</c> is written, so the
+        /// cache holds the library the rest of the pipeline actually uses (issue #4650).
+        ///
+        /// <para>That is the whole point of the encapsulation. Pairing rewrites a decoy's Id to
+        /// <c>target_id | DECOY_ID_BIT</c> and marking completes <c>IsDecoy</c>; while both ran
+        /// at the CALLER, after this method returned, the cache stored neither and every caller
+        /// had to finish the library the same way. A consumer keyed on a final base_id - the
+        /// retained-set skip - could not address the decoy rows at all, because the ids it was
+        /// filtering were parse-order ids that pairing had not reached yet.</para>
+        ///
+        /// <para><paramref name="error"/> is the failure channel the move requires. The two
+        /// pairing faults (no decoys matched; paired fraction under the threshold) used to set
+        /// <c>ExitCode = 1</c> at the caller, and they must still stop the run rather than
+        /// degrade - so they are returned here, with the same messages, for the caller to report
+        /// exactly as before. A null return with a null error means the library was empty.</para>
+        /// </summary>
+        public static List<LibraryEntry> Load(OspreyConfig config, LibraryLoadOptions options,
+            Action<string> logInfo, Action<string> logWarning, out string error)
+        {
+            error = null;
             // A null carrier means "no special handling" (a full load).
             options = options ?? LibraryLoadOptions.Default;
             // Default the injected log callbacks to no-ops so a null delegate
@@ -96,7 +127,16 @@ namespace pwiz.Osprey.IO
             // A null hash (source missing) skips the check and trusts the
             // cache, since it is then the only copy available.
             bool sourceExists = !string.IsNullOrEmpty(path) && File.Exists(path);
-            string libraryHash = sourceExists ? config.Identity.LibraryIdentityHash() : null;
+            // COMPOSITION, not just the source file. The cache now holds a FINISHED library -
+            // decoys marked, paired, and their protein_ids rewritten from the pairing manifest -
+            // so the things that decide those bytes have to be in the key that admits the cache.
+            // Keyed on the library alone, a cache built with one manifest would be reused under
+            // another and silently supply the first manifest's accessions to protein parsimony
+            // and protein FDR: a wrong answer with nothing in the run to show for it. This is
+            // the same failure the library-identity check already existed to prevent, one input
+            // wider. An old v2 cache also hashes differently here and is rebuilt, which is the
+            // intended outcome - its contents are a half-built library.
+            string libraryHash = sourceExists ? LibraryCompositionHash(config) : null;
             if (File.Exists(cachePath))
             {
                 try
@@ -107,7 +147,8 @@ namespace pwiz.Osprey.IO
                     // OmitFragments has it read-and-discard the fragment blocks so
                     // the returned entries stay lean (no ~3.2 GB of peak arrays).
                     var cached = LibraryCache.LoadCache(
-                        cachePath, libraryHash, options.OmitFragments, logInfo, out status);
+                        cachePath, libraryHash, options.OmitFragments, logInfo, out status,
+                        options.RetainFragmentsFor);
                     if (cached != null && cached.Count > 0)
                     {
                         logInfo(string.Format(
@@ -119,6 +160,33 @@ namespace pwiz.Osprey.IO
                         // load identical to a fresh parse instead of making the protein report
                         // depend on whether a cache happened to be present.
                         CarafeProteinIdNormalizer.Normalize(cached, logWarning);
+                        // Said out loud, because otherwise the saving is invisible. The Stage 7
+                        // library-fragment release that used to report it now correctly reports
+                        // 0 - it freed nothing because nothing was allocated - and that zero is
+                        // indistinguishable in a log from the zero of a broken call site, which
+                        // is exactly what the gate's -RequireFreed exists to catch. So the leg
+                        // that took the saving at load has to claim it (issue #4650).
+                        if (options.RetainFragmentsFor != null)
+                        {
+                            int skipped = 0;
+                            foreach (var entry in cached)
+                            {
+                                if (entry.IsSpectrumReleased)
+                                    skipped++;
+                            }
+                            logInfo(string.Format(
+                                @"Skipped library fragments for {0} of {1} entries at load " +
+                                @"({2} base_ids retained for the 1st-pass retained set)",
+                                skipped, cached.Count, options.RetainFragmentsFor.Count));
+                        }
+                        // ALREADY FINISHED. A v3 cache was written after marking and pairing, so
+                        // re-running them here would redo work whose result is in the bytes -
+                        // and, for the manifest arm, re-read a file the composition hash has
+                        // already proven unchanged. The summary is still reported, recovered
+                        // from the finished library, so a cached run is not silent about the
+                        // pairing fraction (issue #4650).
+                        if (LibrarySuppliesDecoys(config))
+                            LogCachedPairingSummary(RecoverPairingStats(cached), logInfo);
                         return cached;
                     }
                     if (status == LibraryCache.LibraryCacheStatus.IdentityMismatch)
@@ -184,6 +252,19 @@ namespace pwiz.Osprey.IO
                         "BiblioSpec MS1 feature finding and are not valid for DIA search.",
                         entry.Id, entry.ModifiedSequence));
 
+            // FINISH the library before it is cached. Marking and pairing used to run at the
+            // caller, after this method returned, so the cache stored a half-built library and
+            // every caller had to complete it the same way (issue #4650). Here, ahead of the
+            // save, the cached bytes ARE the library: decoys marked, Ids paired, protein_ids
+            // rewritten from the manifest. Ordering against Normalize and Deduplicate above is
+            // unchanged - both still run first, which is what the cross-impl byte parity rests
+            // on.
+            if (LibrarySuppliesDecoys(config) &&
+                !TryFinishSuppliedDecoys(entries, config, logInfo, out error))
+            {
+                return null;
+            }
+
             // Save binary cache for next run
             try
             {
@@ -210,8 +291,319 @@ namespace pwiz.Osprey.IO
                 foreach (var entry in entries)
                     entry.Fragments = Array.Empty<LibraryFragment>();
             }
+            // RetainFragmentsFor is deliberately NOT applied here. It is a read-time skip, and
+            // this path has already paid for every fragment by the time it gets here, so there
+            // is nothing left to save. More importantly the ids are not final yet: pairing runs
+            // after Load returns (PerFileScoringTask.LoadLibraryAndDecoys ->
+            // LibraryDecoyPairing), and it REWRITES a supplied decoy's Id to
+            // target_id | DECOY_ID_BIT - so filtering on entry.Id here would test a parse-order
+            // id against a set expressed in final base_ids and release the wrong entries. The
+            // cache arm has no such problem: the ids it reads are the ones that were written
+            // after pairing. A source-parsed library therefore stays fat until the Stage 7
+            // library-fragment release drops the same set, by which point the ids ARE final,
+            // and the two paths converge on the state every later reader sees.
 
             return entries;
+        }
+        /// <summary>
+        /// Finish a supplied-decoy library: mark the decoys, then pair each to its target.
+        /// Returns false with <paramref name="error"/> set on the two faults that make the
+        /// library unusable - no decoys matched at all, and a paired fraction below the
+        /// configured threshold.
+        ///
+        /// <para>INSIDE the load, and ahead of the cache write, deliberately (issue #4650).
+        /// Pairing REWRITES a decoy's Id to <c>target_id | DECOY_ID_BIT</c>, and marking
+        /// completes <c>IsDecoy</c> for the rows whose protein accessions carry a decoy prefix
+        /// but no Decoy column. While both ran at the CALLER, a <c>.libcache</c> held neither -
+        /// so the cached ids were parse-order ids and the cached <c>IsDecoy</c> was incomplete,
+        /// and "the library cache" was a cache of a half-built library that every caller had to
+        /// finish the same way. Anything keyed on a FINAL base_id - the retained-set skip this
+        /// issue exists to enable - could not address those rows at all.</para>
+        ///
+        /// <para>The caller keeps the failure semantics it always had: these two faults are
+        /// errors that stop the run, not warnings, because FDR estimates without proper
+        /// target-decoy competition are not worth producing.</para>
+        /// </summary>
+        private static bool TryFinishSuppliedDecoys(
+            List<LibraryEntry> library, OspreyConfig config, Action<string> logInfo,
+            out string error)
+        {
+            error = null;
+
+            LibraryDecoyMarker.ApplyLibraryDecoyMarking(
+                library, config.DecoyPrefixes, out var markingStats);
+            logInfo(string.Format(
+                @"Library-decoy mode: matched prefixes {0}",
+                FormatPrefixList(config.DecoyPrefixes)));
+            logInfo(string.Format(
+                @"[COUNT] Library-decoy mode: {0} flagged ({1} via Decoy column, {2} via protein-accession prefix)",
+                markingStats.NMarked, markingStats.NViaColumn, markingStats.NViaPrefix));
+
+            int nLibraryTargets = 0;
+            foreach (var entry in library)
+            {
+                if (!entry.IsDecoy)
+                    nLibraryTargets++;
+            }
+
+            // Match Rust pipeline.rs at v26.6.0 (bcd7249): the "no decoys at all" check runs
+            // BEFORE manifest application. The manifest CAN flip predictor-stripped entries to
+            // IsDecoy=true (the Carafe failure mode commit d23d496 was built for), so this
+            // ordering means a manifest cannot rescue a load that the prefix scan misses
+            // entirely. Ordering preserved through the move for byte parity on the cross-impl
+            // gate.
+            int nLibraryDecoys = library.Count - nLibraryTargets;
+            if (nLibraryDecoys == 0)
+            {
+                error = string.Format(
+                    @"decoys_in_library mode requested but no library entries match prefixes {0}. " +
+                    @"Check that the library actually contains decoys with one of these prefixes on " +
+                    @"a protein accession, or unset decoys_in_library so Osprey generates decoys.",
+                    FormatPrefixList(config.DecoyPrefixes));
+                return false;
+            }
+
+            // Hybrid pairing. Net result on real Carafe-generated entrapment libraries:
+            // ~30% via manifest, ~70% via composition, >99% total.
+            var pairingState = new PairingState();
+            LibraryDecoyPairing.CountTargetsAndDecoys(library,
+                out int nTargetsForStats, out int nDecoysForStats);
+            var pairingStats = new PairingStats
+            {
+                NTargets = nTargetsForStats,
+                NDecoys = nDecoysForStats,
+            };
+            if (!string.IsNullOrEmpty(config.DecoyPairingManifestPath))
+            {
+                logInfo(string.Format(
+                    @"Loading decoy pairing manifest from {0}",
+                    config.DecoyPairingManifestPath));
+                DecoyPairingManifest manifest;
+                try
+                {
+                    manifest = DecoyPairingManifest.FromTsv(config.DecoyPairingManifestPath);
+                }
+                catch (Exception ex)
+                {
+                    error = string.Format(
+                        @"Failed to read decoy pairing manifest {0}: {1}",
+                        config.DecoyPairingManifestPath, ex.Message);
+                    return false;
+                }
+                var manifestStats = manifest.ApplyToLibrary(library, pairingState, logInfo);
+                pairingStats.NPairedViaManifest = manifestStats.NPaired;
+                if (manifestStats.NProteinsReplaced > 0)
+                {
+                    logInfo(string.Format(
+                        @"Library-decoy mode: manifest replaced protein_ids on {0} library " +
+                        @"entries (clean source-protein accessions from the manifest's " +
+                        @"`proteins` column)",
+                        manifestStats.NProteinsReplaced));
+                }
+                if (manifestStats.NNewlyMarkedDecoy > 0)
+                {
+                    // Manifest classified entries as decoy that were loaded as targets (the
+                    // predictor stripped the decoy prefix). Update the decoy count so the
+                    // pairing fraction is honest.
+                    logInfo(string.Format(
+                        @"Library-decoy mode: manifest classified {0} additional library " +
+                        @"entries as decoys (their protein accessions lacked a decoy prefix)",
+                        manifestStats.NNewlyMarkedDecoy));
+                    LibraryDecoyPairing.CountTargetsAndDecoys(library,
+                        out nTargetsForStats, out nDecoysForStats);
+                    pairingStats.NTargets = nTargetsForStats;
+                    pairingStats.NDecoys = nDecoysForStats;
+                }
+            }
+            else
+            {
+                logInfo(
+                    @"Pairing library decoys to targets by amino-acid composition " +
+                    @"(no manifest provided).");
+            }
+            pairingStats.NPairedViaComposition =
+                LibraryDecoyPairing.PairLibraryDecoysByComposition(
+                    library, config.DecoyPrefixes, pairingState);
+            pairingStats.NPaired = pairingStats.NPairedViaManifest +
+                pairingStats.NPairedViaComposition;
+            // Defense-in-depth saturating subtract (matches Rust's saturating_sub intent; not
+            // load-bearing).
+            pairingStats.NUnpairedDecoys = Math.Max(0,
+                pairingStats.NDecoys - pairingStats.NPaired);
+            pairingStats.NUnpairedTargets = Math.Max(0,
+                pairingStats.NTargets - pairingState.ClaimedTargets.Count);
+            LogPairingSummary(pairingStats, logInfo);
+            if (pairingStats.PairedFraction < config.DecoyPairMinFraction)
+            {
+                error = string.Format(
+                    @"Library-decoy pairing failed: only {0:F1}% of decoys paired with a target " +
+                    @"(threshold: {1:F0}%). FDR estimates would be unreliable without proper " +
+                    @"target-decoy competition. Either supply a pairing manifest, ensure the " +
+                    @"library uses matching protein accessions with one of `decoy_prefixes` " +
+                    @"({2}), or unset `decoys_in_library` so Osprey generates its own decoys.",
+                    pairingStats.PairedFraction * 100.0,
+                    config.DecoyPairMinFraction * 100.0,
+                    FormatPrefixList(config.DecoyPrefixes));
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// The pairing summary line, shared by the path that PAIRS and the path that loads an
+        /// already-paired cache. A cached load does no pairing work, but the operator still
+        /// needs the fraction - it is how a library with poor target-decoy correspondence is
+        /// noticed - so the cached path recovers the same numbers from the finished library
+        /// rather than going quiet on every run after the first.
+        /// </summary>
+        private static void LogPairingSummary(PairingStats stats, Action<string> logInfo)
+        {
+            logInfo(string.Format(
+                @"Library-decoy pairing: paired {0}/{1} decoys ({2:F1}%); " +
+                @"manifest={3}, composition={4}; {5} unpaired decoys, {6} unpaired targets",
+                stats.NPaired, stats.NDecoys, stats.PairedFraction * 100.0,
+                stats.NPairedViaManifest, stats.NPairedViaComposition,
+                stats.NUnpairedDecoys, stats.NUnpairedTargets));
+        }
+
+        /// <summary>
+        /// The same summary for a library that arrived ALREADY paired from the cache. Its own
+        /// line, and not the one above, because the manifest / composition split is the one
+        /// thing a finished library does not record: reporting the total under "composition"
+        /// would say the manifest paired nothing, and on the CHS cohort that reads as
+        /// <c>manifest=0, composition=3085757</c> against the cold run's
+        /// <c>manifest=3085756, composition=1</c> - the same 99.9% arrived at, apparently, by a
+        /// different mechanism. An operator diffing two runs would chase that. The total is
+        /// recoverable and is what the threshold is about, so the total is what this reports.
+        /// </summary>
+        private static void LogCachedPairingSummary(PairingStats stats, Action<string> logInfo)
+        {
+            logInfo(string.Format(
+                @"Library-decoy pairing: paired {0}/{1} decoys ({2:F1}%) - from the library " +
+                @"cache, which records the pairing but not which mechanism made it; " +
+                @"{3} unpaired decoys, {4} unpaired targets",
+                stats.NPaired, stats.NDecoys, stats.PairedFraction * 100.0,
+                stats.NUnpairedDecoys, stats.NUnpairedTargets));
+        }
+
+        /// <summary>
+        /// Recover the pairing statistics from a library that is ALREADY paired, so a cache hit
+        /// reports what the cache-miss path reported. Paired-ness is readable from the finished
+        /// library: a decoy is paired exactly when its Id is <c>target | DECOY_ID_BIT</c> for a
+        /// target present in the same library, which is what pairing wrote.
+        ///
+        /// <para>The manifest / composition split is NOT recoverable - the finished library does
+        /// not record which mechanism claimed each pair - so those are reported as the total
+        /// under composition, and the summary line says "from cache" so the two are not confused
+        /// with a fresh pairing's split.</para>
+        /// </summary>
+        private static PairingStats RecoverPairingStats(List<LibraryEntry> library)
+        {
+            var targetIds = new HashSet<uint>();
+            foreach (var entry in library)
+            {
+                if (!entry.IsDecoy)
+                    targetIds.Add(entry.Id);
+            }
+            var stats = new PairingStats();
+            int claimedTargets = 0;
+            var claimed = new HashSet<uint>();
+            foreach (var entry in library)
+            {
+                if (!entry.IsDecoy)
+                {
+                    stats.NTargets++;
+                    continue;
+                }
+                stats.NDecoys++;
+                uint targetId = entry.Id & ~LibraryEntry.DECOY_ID_BIT;
+                if ((entry.Id & LibraryEntry.DECOY_ID_BIT) != 0 && targetIds.Contains(targetId))
+                {
+                    stats.NPaired++;
+                    if (claimed.Add(targetId))
+                        claimedTargets++;
+                }
+            }
+            stats.NPairedViaComposition = stats.NPaired;
+            stats.NUnpairedDecoys = Math.Max(0, stats.NDecoys - stats.NPaired);
+            stats.NUnpairedTargets = Math.Max(0, stats.NTargets - claimedTargets);
+            return stats;
+        }
+
+        private static string FormatPrefixList(IList<string> prefixes)
+        {
+            var sb = new StringBuilder("[");
+            if (prefixes != null)
+            {
+                for (int i = 0; i < prefixes.Count; i++)
+                {
+                    if (i > 0) sb.Append(", ");
+                    sb.Append('"').Append(prefixes[i] ?? string.Empty).Append('"');
+                }
+            }
+            sb.Append(']');
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Identity of the FINISHED library: the source file (name, size, mtime - the recipe
+        /// <c>.scores.parquet</c> uses) plus everything that decides how the load finishes it.
+        /// Stamped into the <c>.libcache</c> header and checked on read.
+        ///
+        /// <para>The decoy terms are here because the cache now contains their effects. A
+        /// supplied-decoy library's cached rows carry marked <c>IsDecoy</c>, paired
+        /// <c>Id</c>s and manifest-rewritten <c>ProteinIds</c>; change the prefixes, the
+        /// manifest, or whether decoys come from the library at all, and those bytes are wrong
+        /// for the new configuration while remaining perfectly readable. The manifest is
+        /// identified the same way the library is, so editing it in place invalidates the cache
+        /// without anyone having to remember to.</para>
+        /// </summary>
+        private static string LibraryCompositionHash(OspreyConfig config)
+        {
+            var sb = new StringBuilder();
+            sb.AppendFormat("library:{0}\n", config.Identity.LibraryIdentityHash());
+            sb.AppendFormat(CultureInfo.InvariantCulture, "decoys_in_library:{0}\n",
+                config.DecoysInLibrary);
+            sb.AppendFormat("decoy_method:{0}\n", config.DecoyMethod);
+            sb.AppendFormat("decoy_prefixes:{0}\n", FormatPrefixList(config.DecoyPrefixes));
+            AppendFileIdentity(sb, @"pairing_manifest", config.DecoyPairingManifestPath);
+            using (var sha256 = SHA256.Create())
+            {
+                byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
+                var result = new StringBuilder(64);
+                for (int i = 0; i < hashBytes.Length; i++)
+                    result.Append(hashBytes[i].ToString(@"x2", CultureInfo.InvariantCulture));
+                return result.ToString();
+            }
+        }
+
+        /// <summary>Name, size and mtime of one file, or just its name when it is absent.</summary>
+        private static void AppendFileIdentity(StringBuilder sb, string label, string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath))
+            {
+                sb.AppendFormat("{0}:none\n", label);
+                return;
+            }
+            sb.AppendFormat("{0}_name:{1}\n", label, Path.GetFileName(filePath));
+            if (!File.Exists(filePath))
+                return;
+            var info = new FileInfo(filePath);
+            sb.AppendFormat(CultureInfo.InvariantCulture, "{0}_size:{1}\n", label, info.Length);
+            long mtimeSecs = (long)(info.LastWriteTimeUtc
+                - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
+            sb.AppendFormat(CultureInfo.InvariantCulture, "{0}_mtime:{1}\n", label, mtimeSecs);
+        }
+
+        /// <summary>
+        /// Whether the library supplies its own decoys, so the load must mark and pair them.
+        /// The same predicate the caller used to apply - <c>DecoyMethod.FromLibrary</c> is a
+        /// synonym for <c>DecoysInLibrary</c>, and treating it as one is what fixed library-decoy
+        /// mode silently falling through to Reverse generation.
+        /// </summary>
+        private static bool LibrarySuppliesDecoys(OspreyConfig config)
+        {
+            return config.DecoysInLibrary || config.DecoyMethod == DecoyMethod.FromLibrary;
         }
     }
 }
