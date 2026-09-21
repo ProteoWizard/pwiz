@@ -39,10 +39,15 @@ namespace pwiz.Skyline.Model.Results
         private SortedBlockedList<float> Times { get; set; }
         private BlockedList<float> MassErrors { get; set; }
         private BlockedList<int> Scans { get; set; }
+        // True when this collector owns its own time array (single-time mode).
+        // Distinct from "Times != null", which also becomes true after SetTimes
+        // attaches a shared time list in grouped/shared mode.
+        private readonly bool _ownsTimes;
 
         public ChromCollector(int statusId, bool hasTimes, bool hasMassErrors)
         {
             StatusId = statusId;
+            _ownsTimes = hasTimes;
             Intensities = new BlockedList<float>();
             if (hasTimes)
                 Times = new SortedBlockedList<float>();
@@ -70,9 +75,16 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// Add intensity and mass error (if needed) to the given chromatogram.
+        /// When this collector owns its time array (single-time mode), the
+        /// caller is expected to have called AddTime first; if it didn't,
+        /// silently ignore so a "fill missing scan with zero" call from a
+        /// caller that doesn't know about single-time mode can't desync the
+        /// times and intensities arrays.
         /// </summary>
         public void AddPoint(int chromatogramIndex, float intensity, float? massError, BlockWriter writer)
         {
+            if (_ownsTimes && Intensities.Count >= Times.Count)
+                return;
             if (MassErrors != null)
                 // ReSharper disable once PossibleInvalidOperationException
                 MassErrors.Add(chromatogramIndex, massError.Value, writer); // If massError is required, this won't be null (and if it is, we want to hear about it)
@@ -81,9 +93,14 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// Fill a number of intensity and mass error values for the given chromatogram with zeroes.
+        /// In single-time mode this collector owns its own time array and back-filling
+        /// only intensities would desync the arrays, so the operation is ignored — the
+        /// caller is responsible for keeping times and intensities aligned via AddTime.
         /// </summary>
         public void FillZeroes(int chromatogramIndex, int count, BlockWriter writer)
         {
+            if (_ownsTimes)
+                return;
             if (MassErrors != null)
                 MassErrors.FillZeroes(chromatogramIndex, count, writer);
             Intensities.FillZeroes(chromatogramIndex, count, writer);

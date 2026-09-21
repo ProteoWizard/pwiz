@@ -585,8 +585,8 @@
     <value>30</value>
   </data>
   <data name="textTemplateFile.ToolTip" xml:space="preserve">
-    <value>エクスポートされたメソッドで使用される設定を含む既存のメソッドファイル。
-Skylineによりコントロールされていないトランジション値については、単一のテンプレートトランジションも必要になる場合があります。</value>
+    <value>エクスポートするメソッドで使用される設定を含む既存のメソッドファイルです。
+Skylineで制御できないトランジション値については、単一のテンプレートトランジションが必要になる場合があります。</value>
   </data>
   <data name="&gt;&gt;textTemplateFile.Name" xml:space="preserve">
     <value>textTemplateFile</value>

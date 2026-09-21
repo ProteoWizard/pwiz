@@ -615,18 +615,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private Dictionary<Target, double> GetRetentionTimes(RetentionTimeSource retentionTimeSource)
-        {
-            var libraries = Document.Settings.PeptideSettings.Libraries;
-            var library = libraries.Libraries.FirstOrDefault(lib => lib.Name == retentionTimeSource.Library);
-            if (true != library?.IsLoaded)
-            {
-                return new Dictionary<Target, double>();
-            }
-
-            return library.GetAllRetentionTimes(new[] { retentionTimeSource.Name })?[0] ?? new Dictionary<Target, double>();
-        }
-
         #region Functional test support
 
         public ComboBox ComboAlignAgainst { get { return comboAlignAgainst; } }

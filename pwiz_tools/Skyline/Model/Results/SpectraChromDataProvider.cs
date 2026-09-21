@@ -67,6 +67,12 @@ namespace pwiz.Skyline.Model.Results
         private BlockWriter _blockWriter;
         private bool _isSrm;
 
+        // For SRM delivered as spectra: the union of product m/z channels measured at each precursor
+        // m/z, collected in a pre-scan. A single SRM spectrum carries only part of a Q1's channels (a
+        // compound's transitions can arrive in separate scans), so a peptide must be matched to a
+        // shared Q1 against this aggregate rather than any one spectrum.
+        private Dictionary<SignedMz, List<SignedMz>> _srmProductsByPrecursor;
+
         private readonly ChromatogramSet _chromatogramSet;
 
         private readonly object _disposeLock = new object();
@@ -186,6 +192,14 @@ namespace pwiz.Skyline.Model.Results
 
         private void InitSpectrumReader(MsDataFileImpl dataFile)
         {
+            // SRM delivered as spectra: pre-scan the file to collect, per precursor m/z, the union of
+            // product channels actually measured. The per-spectrum view is incomplete (a Q1's
+            // transitions can arrive in separate scans), so resolving which peptide(s) a shared Q1
+            // belongs to must use this aggregate. Reads the spectra once up front -- acceptable for
+            // this uncommon SRM-as-spectra path.
+            if (dataFile.HasSrmSpectra)
+                _srmProductsByPrecursor = BuildSrmProductsByPrecursor(dataFile);
+
             // Create the spectra object responsible for delivering spectra for extraction
             _spectra = new Spectra(_document, _filter, _allChromData, dataFile);
 
@@ -197,6 +211,36 @@ namespace pwiz.Skyline.Model.Results
             {
                 _spectra.RunAsync();
             }
+        }
+
+        /// <summary>
+        /// Collect, per precursor m/z, the union of product m/z channels measured across every SRM
+        /// spectrum in the file. Used to match peptides to a shared Q1 against the complete set of
+        /// channels actually targeted, since any single spectrum may carry only some of them.
+        /// </summary>
+        private static Dictionary<SignedMz, List<SignedMz>> BuildSrmProductsByPrecursor(MsDataFileImpl dataFile)
+        {
+            var result = new Dictionary<SignedMz, List<SignedMz>>();
+            int count = dataFile.SpectrumCount;
+            for (int i = 0; i < count; i++)
+            {
+                // Read each scan once, in forward order. GetSrmSpectrum returns an empty spectrum
+                // (no precursors) for non-SRM scans, which the guard below skips, so no separate
+                // metadata pre-check is needed.
+                var spectrum = dataFile.GetSrmSpectrum(i);
+                if (spectrum?.Precursors == null || spectrum.Precursors.Count == 0 || spectrum.Mzs == null)
+                    continue;
+                var precursorMz = spectrum.Precursors[0].PrecursorMz ?? SignedMz.ZERO;
+                if (!result.TryGetValue(precursorMz, out var products))
+                    result[precursorMz] = products = new List<SignedMz>();
+                foreach (var mz in spectrum.Mzs)
+                {
+                    var productMz = new SignedMz(mz, precursorMz.IsNegative);
+                    if (!products.Contains(productMz)) // product lists per Q1 are small
+                        products.Add(productMz);
+                }
+            }
+            return result;
         }
 
         private void InitChromatogramExtraction()
@@ -268,9 +312,32 @@ namespace pwiz.Skyline.Model.Results
             var chromMapGlobal = new ChromDataCollectorSet(ChromSource.unknown, TimeSharing.single, _allChromData, _blockWriter);
             var chromMaps = new[] {chromMap, chromMapSim, chromMapMs1Pos, chromMapMs1Neg, chromMapGlobal};
 
-            var dictPrecursorMzToIndex = new Dictionary<SignedMz, int>(); // For SRM processing
+            // Key includes the matched peptide's GlobalIndex so that compounds
+            // sharing a Q1 m/z each get their own ChromDataCollector. Keying by
+            // PeptideDocNode directly would dispatch to its structural Equals,
+            // which is the wrong primitive for reference-style identity; -1
+            // serves as the no-match sentinel (GlobalIndex is always >= 1).
+            // ValueTuple avoids per-spectrum heap allocations in this hot loop.
+            // Collapsing same-Q1 peptides onto a single filterIndex routes one
+            // of them to a collector tagged with the other's ChromatogramGroupId,
+            // and the losing peptide ends up with an empty ChromInfoList after import.
+            var dictKeyToIndex = new Dictionary<(SignedMz, int), int>(); // For SRM processing
 
             var peptideFinder = _spectra.HasSrmSpectra ? new PeptideFinder(_document) : null;
+
+            // Per precursor m/z, the peptides this file actually targets: those matching at least half
+            // of their transitions against the aggregate product channels measured at that Q1 (see
+            // PeptideFinder.FindMatchingPeptides). Resolved once so a same-Q1 collision is handled
+            // consistently for every spectrum, and an incidental Q1 neighbor is not handed another
+            // compound's signal.
+            Dictionary<SignedMz, List<PeptideDocNode>> srmPeptidesByPrecursor = null;
+            if (peptideFinder != null && _srmProductsByPrecursor != null)
+            {
+                srmPeptidesByPrecursor = new Dictionary<SignedMz, List<PeptideDocNode>>();
+                foreach (var entry in _srmProductsByPrecursor)
+                    srmPeptidesByPrecursor[entry.Key] =
+                        peptideFinder.FindMatchingPeptides(entry.Key, entry.Value).ToList();
+            }
 
             while (_spectra.NextSpectrum())
             {
@@ -303,24 +370,55 @@ namespace pwiz.Skyline.Model.Results
                 {
 
                     var precursorMz = dataSpectrum.Precursors[0].PrecursorMz ?? SignedMz.ZERO;
-                    int filterIndex;
-                    if (!dictPrecursorMzToIndex.TryGetValue(precursorMz, out filterIndex))
+
+                    // Build the spectrum-level arrays once and share them across
+                    // every colliding peptide's emit (read-only after this point),
+                    // so the per-peptide loop doesn't re-convert the same data.
+                    var intensitiesIn = dataSpectrum.Intensities;
+                    var intensityFloats = new float[intensitiesIn.Length];
+                    for (int i = 0; i < intensitiesIn.Length; i++)
+                        intensityFloats[i] = (float) intensitiesIn[i];
+                    var mzsIn = dataSpectrum.Mzs;
+                    var productFilters = new SpectrumProductFilter[mzsIn.Length];
+                    for (int i = 0; i < mzsIn.Length; i++)
+                        productFilters[i] = new SpectrumProductFilter(new SignedMz(mzsIn[i], precursorMz.IsNegative), 0, 0);
+                    var time = (float) dataSpectrum.RetentionTime.Value;
+
+                    void EmitForPeptide(PeptideDocNode peptideNode)
                     {
-                        filterIndex = dictPrecursorMzToIndex.Count;
-                        dictPrecursorMzToIndex.Add(precursorMz, filterIndex);
+                        var key = (precursorMz, peptideNode?.Id.GlobalIndex ?? -1);
+                        if (!dictKeyToIndex.TryGetValue(key, out var filterIndex))
+                        {
+                            filterIndex = dictKeyToIndex.Count;
+                            dictKeyToIndex.Add(key, filterIndex);
+                        }
+
+                        var spectrum = new ExtractedSpectrum(
+                            ChromatogramGroupId.ForPeptide(peptideNode, null),
+                            peptideNode != null ? peptideNode.Color : PeptideDocNode.UNKNOWN_COLOR,
+                            precursorMz,
+                            IonMobilityFilter.EMPTY, // ion mobility unknown
+                            ChromExtractor.summed, filterIndex, productFilters, intensityFloats, null);
+                        chromMap.ProcessExtractedSpectrum(time, _collectors, -1, spectrum, null);
                     }
 
-                    // Process the one SRM spectrum
-                    var peptideNode = peptideFinder != null ? peptideFinder.FindPeptide(precursorMz) : null;
-                    ProcessSrmSpectrum(
-                        (float) dataSpectrum.RetentionTime.Value,
-                        ChromatogramGroupId.ForPeptide(peptideNode, null),
-                        peptideNode != null ? peptideNode.Color : PeptideDocNode.UNKNOWN_COLOR,
-                        precursorMz,
-                        filterIndex,
-                        dataSpectrum.Mzs,
-                        dataSpectrum.Intensities,
-                        chromMap);
+                    // Emit one chromatogram per peptide whose Q1 AND product ions match this
+                    // spectrum, so same-Q1 compounds each get their own data while an incidental
+                    // Q1 neighbor (matching only a strict subset of another's transitions) is not
+                    // handed that compound's signal. If nothing matches, emit once with null so
+                    // unmatched data still surfaces in the cache.
+                    var matched = false;
+                    if (srmPeptidesByPrecursor != null &&
+                        srmPeptidesByPrecursor.TryGetValue(precursorMz, out var matchedPeptides))
+                    {
+                        foreach (var peptideNode in matchedPeptides)
+                        {
+                            matched = true;
+                            EmitForPeptide(peptideNode);
+                        }
+                    }
+                    if (!matched)
+                        EmitForPeptide(null);
                 }
                 else if (_filter.EnabledMsMs || _filter.EnabledMs)
                 {
@@ -532,25 +630,6 @@ namespace pwiz.Skyline.Model.Results
                     chromMap.ProcessExtractedSpectrum(rt, _collectors, GetScanIdIndex(spectrumMetadata), spectrum, AddChromCollector);
                 }
             }
-        }
-
-        private void ProcessSrmSpectrum(float time,
-                                               ChromatogramGroupId chromatogramGroupId,
-                                               Color peptideColor,
-                                               SignedMz precursorMz,
-                                               int filterIndex,
-                                               double[] mzs,
-                                               double[] intensities,
-                                               ChromDataCollectorSet chromMap)
-        {
-            float[] intensityFloats = new float[intensities.Length];
-            for (int i = 0; i < intensities.Length; i++)
-                intensityFloats[i] = (float) intensities[i];
-            var productFilters = mzs.Select(mz => new SpectrumProductFilter(new SignedMz(mz, precursorMz.IsNegative), 0, 0)).ToArray();
-            var spectrum = new ExtractedSpectrum(chromatogramGroupId, peptideColor, precursorMz,
-            IonMobilityFilter.EMPTY, // ion mobility unknown
-                ChromExtractor.summed, filterIndex, productFilters, intensityFloats, null);
-            chromMap.ProcessExtractedSpectrum(time, _collectors, -1, spectrum, null);
         }
 
         public override IEnumerable<ChromKeyProviderIdPair> ChromIds
@@ -1754,6 +1833,7 @@ namespace pwiz.Skyline.Model.Results
                     chromCollector = new ChromCollector(chromIndex, IsSingleTime, spectrum.MassErrors != null);
                     // If more than a single ion scan, add any zeros necessary
                     // to make this new chromatogram have an entry for each time.
+                    // (No-op when this collector owns its own times — see ChromCollector.FillZeroes.)
                     if (ionScanCount > 1 && lenTimes > 1)
                     {
                         chromCollector.FillZeroes(chromIndex, lenTimes - 1, _blockWriter);
@@ -1782,6 +1862,7 @@ namespace pwiz.Skyline.Model.Results
 
             // If this was a multiple ion scan and not all ions had measurements,
             // make sure missing ions have zero intensities in the chromatogram.
+            // (No-op for collectors that own their own times — see ChromCollector.AddPoint.)
             if (ionScanCount > 1 &&
                 (ionCount != ionScanCount || ionCount != collector.ProductIntensityMap.Count))
             {

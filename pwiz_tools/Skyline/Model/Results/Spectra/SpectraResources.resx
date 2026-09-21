@@ -145,7 +145,16 @@
   <data name="SpectrumClassFilter_Ms2FilterPage_MS2_" xml:space="preserve">
     <value>MS2+</value>
   </data>
+  <data name="SpectrumClassFilter_ValidateFilterString_Unknown_spectrum_property___0__" xml:space="preserve">
+    <value>Unknown spectrum property '{0}'.</value>
+  </data>
+  <data name="SpectrumClassFilter_ParseFilterString_Invalid_spectrum_filter_format" xml:space="preserve">
+    <value>Invalid spectrum filter: {0}. Use the form '&lt;Property&gt; &lt;Operator&gt; &lt;Value&gt;', for example 'CollisionEnergy = 17' (note the spaces), and combine criteria with 'and' and 'or', for example 'MsLevel = 1 or (MsLevel &gt; 1 and CollisionEnergy = 17)'.</value>
+  </data>
   <data name="SpectrumClassFilter_GetText_All" xml:space="preserve">
     <value>All</value>
+  </data>
+  <data name="SpectrumClassFilter_MakePredicate_Error_evaluating_the_spectrum_filter___0_" xml:space="preserve">
+    <value>Error evaluating the spectrum filter: {0}</value>
   </data>
 </root>

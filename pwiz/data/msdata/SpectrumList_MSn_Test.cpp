@@ -681,9 +681,17 @@ void test(SpectrumListPtr sl, int msLevel)
         copy(pairs.begin(), pairs.end(), ostream_iterator<MZIntensityPair>(*os_, "\n"));
         *os_ << endl;
     }
+
+    // an out of bounds index must throw, including the size() sentinel returned by find() for an unknown id
+
+    unit_assert(sl->find("scan=999") == sl->size());
+    unit_assert_throws_what(sl->spectrumIdentity(sl->size()), runtime_error, "[SpectrumList_MSn::spectrumIdentity] Index out of bounds");
+    unit_assert_throws_what(sl->spectrumIdentity(sl->size() + 1), runtime_error, "[SpectrumList_MSn::spectrumIdentity] Index out of bounds");
+    unit_assert_throws_what(sl->spectrum(sl->size(), false), runtime_error, "[SpectrumList_MSn::spectrum] Index out of bounds");
+    unit_assert_throws_what(sl->spectrum(sl->size() + 1, false), runtime_error, "[SpectrumList_MSn::spectrum] Index out of bounds");
 }
 
-void test_v3(SpectrumListPtr sl, int msLevel) 
+void test_v3(SpectrumListPtr sl, int msLevel)
 {
     if (os_)
     {

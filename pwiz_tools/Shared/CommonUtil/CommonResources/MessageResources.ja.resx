@@ -182,10 +182,10 @@
     <value>{0} / {1}</value>
   </data>
   <data name="HttpClientWithProgress_CreateResponseFailedException_Response_status_code_does_not_indicate_success___0____1___for__2_" xml:space="preserve">
-    <value>応答ステータスコードは成功を示していません：{2}に対して{0}（{1}） </value>
+    <value>応答ステータスコードが成功を示していません：{0}（{1}）（対象{2}）</value>
   </data>
   <data name="FileLockingProcessFinder_ToFileLockingException_The_file___0___was_locked_but_has_since_been_deleted_from___1__" xml:space="preserve">
-    <value>ファイル「{0}」はロックされましたが、「{1}」から削除されました</value>
+    <value>ファイル「{0}」はロックされていましたが、その後「{1}」から削除されました</value>
   </data>
   <data name="FileLockingProcessFinder_ToFileLockingException_this_process" xml:space="preserve">
     <value>このプロセス</value>

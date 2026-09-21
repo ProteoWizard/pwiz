@@ -402,7 +402,14 @@ void MaxQuantReader::initEvidence()
                 break;
             boost::split(columns, line, boost::is_any_of("\t"));
             if (colInvK0 >= 0)
-                inverseK0_.push_back(boost::lexical_cast<double>(columns[colInvK0]));
+            {
+                // Blank 1/K0 values appear in evidence.txt for some runs; treat as "no IM" (0)
+                // rather than throwing, so a single blank row doesn't strip IM from the whole file.
+                // Must preserve row alignment because inverseK0_ is indexed by evidenceID.
+                string val = (colInvK0 < (int)columns.size()) ? columns[colInvK0] : string();
+                boost::trim(val);
+                inverseK0_.push_back(val.empty() ? 0.0 : boost::lexical_cast<double>(val));
+            }
             /* Some versions of MaxQuant are known to emit incorrect CCS values. Until we figure out how to tell them apart, best to just ignore. (bspratt July 2019)
             if (colCCS >= 0)
                 CCS_.push_back(boost::lexical_cast<double>(columns[colCCS]));

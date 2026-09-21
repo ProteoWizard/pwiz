@@ -61,8 +61,8 @@ using System::Threading::Tasks::TaskScheduler;
 using System::Threading::Tasks::Schedulers::QueuedTaskScheduler;
 using System::Net::Http::HttpClient;
 using System::Uri;
-using IdentityModel::Client::TokenClient;
 using IdentityModel::Client::TokenResponse;
+using pwiz::Common::SystemUtil::OAuthPasswordGrantClient;
 using std::size_t;
 #include "WatersConnectProtobuf.hpp"
 
@@ -433,11 +433,32 @@ private:
         downloadInfo->lastSpectrumRetrievedTime = DateTime::UtcNow;
     }
 
+    // Returns the logical (RT-sorted) index of the first spectrum of the chunk that
+    // contains spectrum `index`, where chunks are aligned to _chunkSize-sized blocks
+    // within a channel's scan-index space. This is what `_tasksByIndex` keys on, so
+    // all spectra within the same chunk must resolve to the same task index for
+    // dedup of in-flight tasks to work.
     size_t taskIndexFromSpectrumIndex(const ChannelInfo& ci, size_t index)
     {
-        return index;
-        //int naiveTaskIndex = (index / _chunkSize) * _chunkSize;
-        //return std::max(ci.scanIndexOffset, naiveTaskIndex);
+        int scanIndex = _spectrumIndex[index].scanIndexInChannel;
+        int alignedScanIndex = (scanIndex / _chunkSize) * _chunkSize;
+        auto findItr = _spectrumIdByChannelAndScanIndex.find(make_pair(ci.index, alignedScanIndex));
+        if (findItr == _spectrumIdByChannelAndScanIndex.end())
+            return index;
+        return findItr->second;
+    }
+
+    // Returns the logical index of the first spectrum in the next chunk after
+    // `currentChunkScanStart` in the given channel, or -1 if there is no next chunk.
+    int nextChunkTaskIndex(const ChannelInfo& ci, int currentChunkScanStart, int chunksAhead) const
+    {
+        int nextChunkScanStart = currentChunkScanStart + _chunkSize * chunksAhead;
+        if (nextChunkScanStart >= ci.numSpectra)
+            return -1;
+        auto findItr = _spectrumIdByChannelAndScanIndex.find(make_pair(ci.index, nextChunkScanStart));
+        if (findItr == _spectrumIdByChannelAndScanIndex.end())
+            return -1;
+        return static_cast<int>(findItr->second);
     }
 
     size_t networkIndexFromLogicalIndex(size_t logicalIndex)
@@ -454,14 +475,8 @@ private:
 
     static Object^ getAccessTokenResult(String^ uri, AccessTokenRequest^ request)
     {
-        auto fields = gcnew System::Collections::Generic::Dictionary<System::String^, System::String^>();
-        fields->Add(IdentityModel::OidcConstants::TokenRequest::GrantType, IdentityModel::OidcConstants::GrantTypes::Password);
-        fields->Add(IdentityModel::OidcConstants::TokenRequest::UserName, request->Username);
-        fields->Add(IdentityModel::OidcConstants::TokenRequest::Password, request->Password);
-        fields->Add(IdentityModel::OidcConstants::TokenRequest::Scope, request->Scope);
-
-        auto tokenClient = gcnew TokenClient(request->Uri, request->ClientId, request->Secret, nullptr);
-        TokenResponse^ response = tokenClient->RequestAsync(fields, System::Threading::CancellationToken::None)->Result;
+        TokenResponse^ response = OAuthPasswordGrantClient::RequestToken(gcnew Uri(request->Uri), request->ClientId, request->Secret,
+            OAuthPasswordGrantClient::PasswordGrantForm(request->Username, request->Password, request->Scope));
         if (response->IsError)
             throw user_error("authentication error: incorrect hostname, username or password? (" + ToStdString(response->Error) + ")");
         return gcnew KeyValuePair<String^, DateTime>(response->AccessToken, DateTime::UtcNow.AddSeconds(response->ExpiresIn));
@@ -1265,20 +1280,20 @@ private:
             auto& queue = channelInfo.channelQueue;
 
             auto cache = doCentroid ? _centroidCache : _profileCache;
+            int currentChunkScanStart = _spectrumIndex[taskIndex].scanIndexInChannel;
             if (cache->TryGet(networkIndex, spectrum))
             {
                 convertWatersToPwizSpectrum(spectrum, result, index, getBinaryData, channelInfo);
 
-                // also queue the next _chunkReadahead chunks
+                // also queue the next _chunkReadahead chunks (stepping in scan-in-channel space
+                // so each readahead targets a distinct chunk in this channel rather than overlapping)
                 for (int i = 1; i < _chunkReadahead; ++i)
                 {
-                    if ((taskIndex + _chunkSize * i) > _numNetworkSpectra)
+                    int nextTaskIndex = nextChunkTaskIndex(channelInfo, currentChunkScanStart, i);
+                    if (nextTaskIndex < 0)
                         break;
-                    //Console::WriteLine("Queueing chunk {0} after finding {1} in cache", taskIndex + _chunkSize * i, taskIndex);
-
-                    int lastNetworkIndexOfChunk = taskIndex + ((_chunkSize + 1) * i - 1);
-                    if (!cache->Contains(lastNetworkIndexOfChunk)) // if cache contains last index for chunk, don't requeue it
-                        queue->getChunkTask(taskIndex + _chunkSize * i, doCentroid, false, false);
+                    if (!cache->Contains(nextTaskIndex)) // chunk-start in cache implies the chunk has been downloaded
+                        queue->getChunkTask(nextTaskIndex, doCentroid, false, false);
                 }
 
                 // remove earlier spectra from the cache
@@ -1298,16 +1313,14 @@ private:
             // if cache is empty, wait for primary chunk download to start before starting other chunks
             auto chunkTask = queue->getChunkTask(taskIndex, doCentroid, true, cache->Count == 0);
 
-            // also queue the next _chunkReadahead chunks
+            // also queue the next _chunkReadahead chunks (stepping in scan-in-channel space)
             for (int i = 1; i < _chunkReadahead; ++i)
             {
-                if ((taskIndex + _chunkSize * i) > _numNetworkSpectra)
+                int nextTaskIndex = nextChunkTaskIndex(channelInfo, currentChunkScanStart, i);
+                if (nextTaskIndex < 0)
                     break;
-                //Console::WriteLine("Queueing chunk {0} after waiting for {1}", taskIndexFromSpectrumIndex(index) + _chunkSize * i, taskIndex);
-
-                int lastNetworkIndexOfChunk = taskIndex + ((_chunkSize + 1) * i - 1);
-                if (!cache->Contains(lastNetworkIndexOfChunk)) // if cache contains last index for chunk, don't requeue it
-                    queue->getChunkTask(taskIndex + _chunkSize * i, doCentroid, false, false);
+                if (!cache->Contains(nextTaskIndex))
+                    queue->getChunkTask(nextTaskIndex, doCentroid, false, false);
             }
             if (_wcDebug)
                 Console::Error->WriteLine("WAITING for chunk {0}", taskIndex);

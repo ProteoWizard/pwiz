@@ -202,6 +202,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             var viewSpec = new ViewSpec()
                 .SetName(AbstractViewContext.DefaultViewName)
                 .SetRowType(typeof(FoldChangeRow))
+                .SetUiMode(_skylineDataSchema.DefaultUiMode)
                 .SetColumns(columns.Select(col => new ColumnSpec(col)));
             return viewSpec;
         }

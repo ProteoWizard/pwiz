@@ -265,7 +265,7 @@
     <value>0, 0</value>
   </data>
   <data name="dataGridViewEx1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>671, 168</value>
+    <value>671, 180</value>
   </data>
   <data name="dataGridViewEx1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -283,7 +283,7 @@
     <value>0</value>
   </data>
   <metadata name="toolStripFilter.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
+    <value>17, 17</value>
   </metadata>
   <data name="toolStripFilter.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Right</value>
@@ -313,7 +313,7 @@
     <value>671, 0</value>
   </data>
   <data name="toolStripFilter.Size" type="System.Drawing.Size, System.Drawing">
-    <value>24, 168</value>
+    <value>24, 180</value>
   </data>
   <data name="toolStripFilter.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -337,10 +337,10 @@
     <value>Fill</value>
   </data>
   <data name="panelClauses.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 58</value>
+    <value>9, 46</value>
   </data>
   <data name="panelClauses.Size" type="System.Drawing.Size, System.Drawing">
-    <value>695, 168</value>
+    <value>695, 180</value>
   </data>
   <data name="panelClauses.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -396,28 +396,88 @@
   <data name="&gt;&gt;lblDescription.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="panelPages.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+  <data name="tabPageCriteria.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabPageCriteria.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabPageCriteria.Size" type="System.Drawing.Size, System.Drawing">
+    <value>687, 0</value>
+  </data>
+  <data name="tabPageCriteria.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="tabPageCriteria.Text" xml:space="preserve">
+    <value>Criteria</value>
+  </data>
+  <data name="&gt;&gt;tabPageCriteria.Name" xml:space="preserve">
+    <value>tabPageCriteria</value>
+  </data>
+  <data name="&gt;&gt;tabPageCriteria.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPageCriteria.Parent" xml:space="preserve">
+    <value>tabClauses</value>
+  </data>
+  <data name="&gt;&gt;tabPageCriteria.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tabPageNewAlternative.ImageKey" xml:space="preserve">
+    <value>add</value>
+  </data>
+  <data name="tabPageNewAlternative.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabPageNewAlternative.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabPageNewAlternative.Size" type="System.Drawing.Size, System.Drawing">
+    <value>687, 0</value>
+  </data>
+  <data name="tabPageNewAlternative.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="tabPageNewAlternative.Text" xml:space="preserve">
+    <value>+ Add Alternative</value>
+  </data>
+  <data name="&gt;&gt;tabPageNewAlternative.Name" xml:space="preserve">
+    <value>tabPageNewAlternative</value>
+  </data>
+  <data name="&gt;&gt;tabPageNewAlternative.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPageNewAlternative.Parent" xml:space="preserve">
+    <value>tabClauses</value>
+  </data>
+  <data name="&gt;&gt;tabPageNewAlternative.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="tabClauses.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Top</value>
   </data>
-  <data name="panelPages.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="tabClauses.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 22</value>
   </data>
-  <data name="panelPages.Size" type="System.Drawing.Size, System.Drawing">
-    <value>695, 36</value>
+  <data name="tabClauses.ShowToolTips" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
-  <data name="panelPages.TabIndex" type="System.Int32, mscorlib">
+  <data name="tabClauses.Size" type="System.Drawing.Size, System.Drawing">
+    <value>695, 24</value>
+  </data>
+  <data name="tabClauses.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
   </data>
-  <data name="&gt;&gt;panelPages.Name" xml:space="preserve">
-    <value>panelPages</value>
+  <data name="&gt;&gt;tabClauses.Name" xml:space="preserve">
+    <value>tabClauses</value>
   </data>
-  <data name="&gt;&gt;panelPages.Type" xml:space="preserve">
-    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;tabClauses.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;panelPages.Parent" xml:space="preserve">
+  <data name="&gt;&gt;tabClauses.Parent" xml:space="preserve">
     <value>panelEditor</value>
   </data>
-  <data name="&gt;&gt;panelPages.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tabClauses.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="panelEditor.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -448,7 +508,7 @@
     <value>0</value>
   </data>
   <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>280, 17</value>
+    <value>142, 17</value>
   </metadata>
   <data name="buttonPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Right</value>

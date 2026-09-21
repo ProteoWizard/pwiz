@@ -11,6 +11,7 @@
     <RootNamespace>pwiz.ProteowizardWrapper</RootNamespace>
     <AssemblyName>ProteowizardWrapper</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <RuntimeIdentifiers>win;win-x64;win-x86</RuntimeIdentifiers>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -83,7 +84,11 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>obj\$(Platform)\SCIEX.Apis.Data.v1.dll</HintPath>
     </Reference>
-    <Reference Include="pwiz_data_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU">
+    <Reference Include="$(PwizCliAssembly)" Condition="'$(PwizCliAssembly)' != ''">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(PwizCliHintPath)</HintPath>
+    </Reference>
+    <Reference Include="pwiz_data_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU" Condition="'$(PwizCliAssembly)' == ''">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>obj\$(Platform)\pwiz_data_cli.dll</HintPath>
     </Reference>

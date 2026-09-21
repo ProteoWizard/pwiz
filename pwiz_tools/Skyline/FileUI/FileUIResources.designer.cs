@@ -19,7 +19,7 @@ namespace pwiz.Skyline.FileUI {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class FileUIResources {
@@ -1204,6 +1204,15 @@ namespace pwiz.Skyline.FileUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Spectrum Filter.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_GetKnownHeaderTypes_Spectrum_Filter {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_GetKnownHeaderTypes_Spectrum_Filter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Import Assay Library: Identify Columns.
         /// </summary>
         public static string ImportTransitionListColumnSelectDlg_Import_Assay_Library__Identify_Columns {
@@ -1999,6 +2008,60 @@ namespace pwiz.Skyline.FileUI {
         public static string WatersConnectSelectMethodFileDialog_SelectButtonText {
             get {
                 return ResourceManager.GetString("WatersConnectSelectMethodFileDialog_SelectButtonText", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Creating folder.
+        /// </summary>
+        public static string WatersConnectSaveMethodFileDialog_CreateNewFolder_Creating_folder {
+            get {
+                return ResourceManager.GetString("WatersConnectSaveMethodFileDialog_CreateNewFolder_Creating_folder", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Created by {0} using Skyline.
+        /// </summary>
+        public static string WatersConnectSaveMethodFileDialog_CreateNewFolder_Created_by__0__using_Skyline {
+            get {
+                return ResourceManager.GetString("WatersConnectSaveMethodFileDialog_CreateNewFolder_Created_by__0__using_Skyline", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to You do not have permission to create folders in this location..
+        /// </summary>
+        public static string WatersConnectSaveMethodFileDialog_CreateNewFolder_You_do_not_have_permission_to_create_folders_in_this_location_ {
+            get {
+                return ResourceManager.GetString("WatersConnectSaveMethodFileDialog_CreateNewFolder_You_do_not_have_permission_to_create_folders_in_this_location_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to You do not have permission to create the folder '{0}'..
+        /// </summary>
+        public static string WatersConnectSaveMethodFileDialog_CreateNewFolder_You_do_not_have_permission_to_create_the_folder__0__ {
+            get {
+                return ResourceManager.GetString("WatersConnectSaveMethodFileDialog_CreateNewFolder_You_do_not_have_permission_to_create_the_folder__0__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to A folder named '{0}' already exists..
+        /// </summary>
+        public static string WatersConnectSaveMethodFileDialog_CreateNewFolder_A_folder_named__0__already_exists_ {
+            get {
+                return ResourceManager.GetString("WatersConnectSaveMethodFileDialog_CreateNewFolder_A_folder_named__0__already_exists_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Could not create the folder '{0}'..
+        /// </summary>
+        public static string WatersConnectSaveMethodFileDialog_CreateNewFolder_Could_not_create_the_folder__0__ {
+            get {
+                return ResourceManager.GetString("WatersConnectSaveMethodFileDialog_CreateNewFolder_Could_not_create_the_folder__0__", resourceCulture);
             }
         }
     }

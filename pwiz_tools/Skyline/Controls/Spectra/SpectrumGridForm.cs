@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -878,7 +879,8 @@ namespace pwiz.Skyline.Controls.Spectra
             foreach (var classColumn in activeClassColumns)
             {
                 object value = classColumn.GetValue(row.Properties);
-                var filterPredicate = FilterPredicate.CreateFilterPredicate(FilterOperations.OP_EQUALS, value);
+                var filterPredicate = FilterPredicate.Create(FilterOperations.OP_EQUALS,
+                    Convert.ToString(value, CultureInfo.InvariantCulture));
                 filterSpecs.Add(new FilterSpec(classColumn.PropertyPath, filterPredicate));
             }
             return new FilterClause(filterSpecs);

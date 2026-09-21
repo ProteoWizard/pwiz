@@ -43,10 +43,10 @@ td {
 }</style>
 </head><body>
 <h2>キーボードショートカット</h2>
-<p>Skylineではメニューコマンドにアクセスする2種類の方法が提供されています：</p>
+<p>Skylineではメニューコマンドに対して2種類のキーボード操作を提供しています：</p>
 <ul>
-<li><strong>キーボードショートカット</strong> キーボードショートカットは（Ctrl+Nのような）キーの組み合わせを同時に押すことで、メニューの操作を直接実行するために使用できます。 これらのショートカットは、メニューに表示されるテキストの右側に示されています。</li>
-<li><strong>メニューニーモニック</strong> ニーモニックはメニューテキスト内の下線付きの文字で、Altキーを押すと表示されます。これらの文字を使用すると、キーボードを使用してメニューを移動することができ、マウスを使用せずにキーを押すだけでメニューコマンドにアクセスすることができます。</li>
+<li><strong>キーボードショートカット</strong> キーボードショートカットは（Ctrl+Nのような）キーの組み合わせを同時に押すことで、メニューの操作を直接実行できます。 これらのショートカットは、メニューに表示されるテキストの右側に示されています。</li>
+<li><strong>メニューアクセスキー</strong> アクセスキーはメニューテキスト内の下線付きの文字で、Altキーを押すと表示されます。これらの文字を使用すると、キーボードを使用してメニューを移動することができ、マウスを使用せずにキーを押すだけでメニューコマンドにアクセスすることができます。</li>
 </ul>
 <h3>キーボードショートカット</h3>
 <table border="1" cellspacing="0" cellpadding="4">
@@ -108,9 +108,9 @@ td {
 <tr><td>ビュー(V) → 質量誤差(E) → 繰り返し測定の比較(R)</td><td>F6</td></tr>
 <tr><td>ビュー(V) → 質量誤差(E) → ペプチドの比較(P)</td><td>Ctrl+F6</td></tr>
 </tbody></table>
-<h3>メニューニーモニック</h3>
+<h3>メニューアクセスキー</h3>
 <table border="1" cellspacing="0" cellpadding="4">
-<thead><tr><th>メニュー</th><th>ニーモニック</th></tr></thead><tbody>
+<thead><tr><th>メニュー</th><th>アクセスキー</th></tr></thead><tbody>
 <tr><td>ファイル(F) → 開始(T)</td><td>Alt+F,T</td></tr>
 <tr><td>ファイル(F) → 新規(N)</td><td>Alt+F,N</td></tr>
 <tr><td>ファイル(F) → 開く(O)</td><td>Alt+F,O</td></tr>
@@ -123,6 +123,7 @@ td {
 <tr><td>ファイル(F) → Ardiaにアップロード(D)</td><td>Alt+F,D</td></tr>
 <tr><td>ファイル(F) → 検索(R) → ペプチド検索の実行(R)</td><td>Alt+F,R,R</td></tr>
 <tr><td>ファイル(F) → 検索(R) → EncyclopeDIA検索</td><td>Alt+F,R,E</td></tr>
+<tr><td>ファイル(F) → 検索(R) → DIA-NN Search</td><td>Alt+F,R,D</td></tr>
 <tr><td>ファイル(F) → 検索(R) → フィーチャーの検出(F)</td><td>Alt+F,R,F</td></tr>
 <tr><td>ファイル(F) → 検索(R)</td><td>Alt+F,R</td></tr>
 <tr><td>ファイル(F) → インポート(I) → 結果(R)</td><td>Alt+F,I,R</td></tr>
@@ -133,6 +134,7 @@ td {
 <tr><td>ファイル(F) → インポート(I) → トランジションリスト(T)</td><td>Alt+F,I,T</td></tr>
 <tr><td>ファイル(F) → インポート(I) → ドキュメント(D)</td><td>Alt+F,I,D</td></tr>
 <tr><td>ファイル(F) → インポート(I) → 注釈(N)</td><td>Alt+F,I,N</td></tr>
+<tr><td>ファイル(F) → インポート(I) → Window Layout</td><td>Alt+F,I,W</td></tr>
 <tr><td>ファイル(F) → インポート(I)</td><td>Alt+F,I</td></tr>
 <tr><td>ファイル(F) → エクスポート(E) → トランジションリスト(T)</td><td>Alt+F,E,T</td></tr>
 <tr><td>ファイル(F) → エクスポート(E) → 単離リスト(I)</td><td>Alt+F,E,I</td></tr>
@@ -142,6 +144,7 @@ td {
 <tr><td>ファイル(F) → エクスポート(E) → クロマトグラム(C)</td><td>Alt+F,E,C</td></tr>
 <tr><td>ファイル(F) → エクスポート(E) → mProphet機能(P)</td><td>Alt+F,E,P</td></tr>
 <tr><td>ファイル(F) → エクスポート(E) → 注釈(A)</td><td>Alt+F,E,A</td></tr>
+<tr><td>ファイル(F) → エクスポート(E) → Window Layout</td><td>Alt+F,E,W</td></tr>
 <tr><td>ファイル(F) → エクスポート(E)</td><td>Alt+F,E</td></tr>
 <tr><td>ファイル(F) → 終了(X)</td><td>Alt+F,X</td></tr>
 <tr><td>編集(E) → 元に戻す(U)</td><td>Alt+E,U</td></tr>
@@ -327,7 +330,7 @@ td {
 <table border="1" cellspacing="0" cellpadding="4">
 <thead><tr><th>メニュー</th><th>操作</th></tr></thead><tbody>
 <tr><td>Ctrl+D</td><td>フィルダウン（Excel形式）</td></tr>
-<tr><td>Ctrl+R</td><td>フィルライト（Excel形式）</td></tr>
+<tr><td>Ctrl+R</td><td>右方向にフィル（Excel形式）</td></tr>
 <tr><td>F2</td><td>セルの編集モードに入る</td></tr>
 <tr><td>Escape</td><td>編集モードをキャンセル</td></tr>
 <tr><td>Enter</td><td>編集を確定して下方向に移動</td></tr>

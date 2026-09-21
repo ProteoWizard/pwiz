@@ -19,7 +19,7 @@ namespace pwiz.Skyline.EditUI {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class EditUIResources {
@@ -629,6 +629,42 @@ namespace pwiz.Skyline.EditUI {
             get {
                 return ResourceManager.GetString("EditPepModsDlg_OkDialog_One_or_more_of_the_crosslinked_peptides_are_no_longer_att" +
                         "ached_to_this_peptide__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to + Add Alternative.
+        /// </summary>
+        public static string EditSpectrumFilterDlg_GetFilterTabNames___Add_Alternative {
+            get {
+                return ResourceManager.GetString("EditSpectrumFilterDlg_GetFilterTabNames___Add_Alternative", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Criteria.
+        /// </summary>
+        public static string EditSpectrumFilterDlg_GetFilterTabNames_Criteria {
+            get {
+                return ResourceManager.GetString("EditSpectrumFilterDlg_GetFilterTabNames_Criteria", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Criteria {0}.
+        /// </summary>
+        public static string EditSpectrumFilterDlg_GetFilterTabNames_Criteria__0_ {
+            get {
+                return ResourceManager.GetString("EditSpectrumFilterDlg_GetFilterTabNames_Criteria__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New Alternative.
+        /// </summary>
+        public static string EditSpectrumFilterDlg_MakeNewAlternativeTabPage_New_Alternative {
+            get {
+                return ResourceManager.GetString("EditSpectrumFilterDlg_MakeNewAlternativeTabPage_New_Alternative", resourceCulture);
             }
         }
         

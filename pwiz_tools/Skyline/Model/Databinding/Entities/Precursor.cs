@@ -31,6 +31,7 @@ using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Skyline.Model.Results.Spectra;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
@@ -452,7 +453,27 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        public string SpectrumFilter { get { return DocNode.SpectrumClassFilter.ToString(); } }
+        [DataTypeSpecifier(typeof(SpectrumFilterColumnType))]
+        [Format(Width = 300)]
+        public string SpectrumFilter
+        {
+            get { return DocNode.SpectrumClassFilter.ToFilterString(); }
+            set
+            {
+                var newFilter = SpectrumClassFilter.ParseFilterString(value);
+                ChangeDocNode(EditColumnDescription(nameof(SpectrumFilter), value), docNode=>docNode.ChangeSpectrumClassFilter(newFilter));
+            }
+        }
+
+        /// <summary>
+        /// Applies an already-constructed filter (e.g. from the spectrum filter dialog),
+        /// bypassing the locale-sensitive text parse used by the <see cref="SpectrumFilter"/> setter.
+        /// </summary>
+        public void SetSpectrumClassFilter(SpectrumClassFilter spectrumClassFilter)
+        {
+            ChangeDocNode(EditColumnDescription(nameof(SpectrumFilter), spectrumClassFilter.ToFilterString()),
+                docNode => docNode.ChangeSpectrumClassFilter(spectrumClassFilter));
+        }
 
         [InvariantDisplayName("PrecursorNote")]
         [Importable]
@@ -729,5 +750,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return string.Format(@"RT: {0} Area: {1}", BestRetentionTime, TotalArea); // CONSIDER: localize?
         }
 
+    }
+
+    /// <summary>
+    /// Marker type used with DataTypeSpecifierAttribute to indicate that a string property
+    /// represents a spectrum filter and should use SpectrumFilterDataGridViewColumn in the UI
+    /// (which edits via the spectrum filter dialog) without creating a compile-time dependency
+    /// from Model to UI.
+    /// </summary>
+    public class SpectrumFilterColumnType
+    {
     }
 }

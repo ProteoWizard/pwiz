@@ -17,16 +17,20 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
-using pwiz.Common.Collections;
+using pwiz.Common.CommonResources;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.Spectra;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
@@ -39,34 +43,123 @@ namespace pwiz.SkylineTest
     public class SpectrumClassFilterTest : AbstractUnitTest
     {
         [TestMethod]
-        public void TestSpectrumPrecursorFilterOperand()
+        public void TestSpectrumClassFilter()
+        {
+            TestSpectrumPrecursorFilterOperand();
+            TestCollisionEnergyFilter();
+            TestCollisionEnergyComparisonLengthMismatch();
+            TestSpectrumClassFilterSerialization();
+            TestTransitionGroupSpectrumClassFilter();
+            TestRoundTripSpectrumFilters();
+        }
+
+        private void TestSpectrumPrecursorFilterOperand()
         {
             double precursorMz = 422.5;
             var expectedSpectrumPrecursors =
-                new SpectrumPrecursors(ImmutableList.Singleton(new SpectrumPrecursor(new SignedMz(precursorMz))));
-            var dataSchema = new DataSchema(new DataSchemaLocalizer(CultureInfo.CurrentCulture, CultureInfo.CurrentCulture));
-            var filterPredicate = FilterPredicate.CreateFilterPredicate(dataSchema, typeof(SpectrumPrecursors),
-                FilterOperations.OP_EQUALS, expectedSpectrumPrecursors.ToString(null, CultureInfo.CurrentCulture));
+                ListColumnValue.FromItems(new object[] { PrecisionNumber.WithDecimalPlaces((decimal)precursorMz, 1) });
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(new SrmDocument(SrmSettingsList.GetDefault()),
+                SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            var filterPredicate = FilterPredicate.Parse(dataSchema, typeof(SpectrumPrecursors),
+                FilterOperations.OP_EQUALS, precursorMz.ToString(null, CultureInfo.CurrentCulture));
             var operandValue = filterPredicate.GetOperandValue(dataSchema, typeof(SpectrumPrecursors));
-            Assert.IsInstanceOfType(operandValue, typeof(SpectrumPrecursors));
-            var spectrumPrecursors = operandValue as SpectrumPrecursors;
-            Assert.AreEqual(expectedSpectrumPrecursors, spectrumPrecursors);
+            Assert.IsInstanceOfType(operandValue, typeof(ListColumnValue<object>));
+            Assert.AreEqual(expectedSpectrumPrecursors, operandValue);
         }
 
-        [TestMethod]
-        public void TestSpectrumClassFilterSerialization()
+        private void TestCollisionEnergyFilter()
+        {
+            // Collision energy is read straight from the spectrum file as a positive magnitude (the
+            // mzML/PSI convention), regardless of scan polarity, and the filter compares it as a plain
+            // signed number with no magnitude folding: the value the user filters against is the value
+            // shown in the grid. Scan polarity is pinned by the precursor charge, so it is never part of
+            // a collision energy criterion.
+            Predicate<SpectrumMetadata> Predicate(string criterion) =>
+                SpectrumClassFilter.ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + criterion).MakePredicate();
+
+            SpectrumMetadata CeSpectrum(string id, double ce) => new SpectrumMetadata(id, 1.0)
+                .ChangePrecursors(new[] { new[] { new SpectrumPrecursor(new SignedMz(500.0)).ChangeCollisionEnergy(ce) } });
+
+            var spectrum = CeSpectrum(@"ce17", 17.0);
+            Assert.IsTrue(Predicate(@" = 17")(spectrum));
+            Assert.IsFalse(Predicate(@" = 25")(spectrum));
+
+            // The entered precision controls the match tolerance (number of decimal places): CE 17.4 is
+            // within integer tolerance of 17 but well outside the tolerance of 17.00.
+            Assert.IsTrue(Predicate(@" = 17.00")(spectrum));
+            Assert.IsFalse(Predicate(@" = 17.00")(CeSpectrum(@"ce17_4", 17.4)));
+
+            // CollisionEnergy is a PositiveNumber column, so a negative operand is rejected at parse time
+            // (by PositiveNumberFilterHandler) with the "cannot be negative" message. Zero is allowed.
+            AssertEx.ThrowsException<FormatException>(
+                () => SpectrumClassFilter.ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + @" = -17"),
+                MessageResources.PositiveNumberFilterHandler_RejectNegative_The_filter_value_cannot_be_negative_);
+
+            // Ordered comparison operators work on the list-valued CollisionEnergy: the operator is
+            // applied to each MS-level CE and, for a single operand, the criterion holds only if every
+            // CE satisfies it. With a single CE of 17:
+            Assert.IsTrue(Predicate(@" > 15")(spectrum));
+            Assert.IsFalse(Predicate(@" > 17")(spectrum));   // strict ">" uses exact precision
+            Assert.IsTrue(Predicate(@" < 20")(spectrum));
+            Assert.IsTrue(Predicate(@" >= 17")(spectrum));
+            Assert.IsTrue(Predicate(@" <= 17")(spectrum));
+
+            // A spectrum with a CE per MS level: "> 15" holds only if every CE exceeds 15.
+            var multiCe = new SpectrumMetadata(@"multi", 1.0).ChangePrecursors(new[]
+            {
+                new[] { new SpectrumPrecursor(new SignedMz(500.0)).ChangeCollisionEnergy(17.0) },
+                new[] { new SpectrumPrecursor(new SignedMz(250.0)).ChangeCollisionEnergy(35.0) }
+            });
+            Assert.IsTrue(Predicate(@" > 15")(multiCe));     // both 17 and 35 are > 15
+            Assert.IsFalse(Predicate(@" > 20")(multiCe));    // 17 is not > 20
+
+            // A negative collision energy is still rejected regardless of the operator: with comparisons
+            // now allowed, the negative value (not the operator) is the problem.
+            AssertEx.ThrowsException<FormatException>(
+                () => SpectrumClassFilter.ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + @" > -20"),
+                MessageResources.PositiveNumberFilterHandler_RejectNegative_The_filter_value_cannot_be_negative_);
+        }
+
+        private void TestCollisionEnergyComparisonLengthMismatch()
+        {
+            // A multi-value comparison operand pairwise-compares against the spectrum's CE list. This is
+            // the predicate the extraction layer (SpectrumFilterPair.MatchesSpectrum) invokes per spectrum.
+            // (Built directly: the spectrum-filter string grammar broadcasts a single value for a
+            // comparison rather than accepting a multi-value operand, so this is only reachable
+            // programmatically — but the predicate must still behave predictably.)
+            var filter = new SpectrumClassFilter(new FilterClause(new[]
+            {
+                new FilterSpec(SpectrumClassColumn.CollisionEnergy.PropertyPath, FilterOperations.OP_IS_GREATER_THAN, @"15,30")
+            }));
+            var predicate = filter.MakePredicate();
+
+            SpectrumMetadata CeSpectrum(string id, params double[] ces) => new SpectrumMetadata(id, 1.0)
+                .ChangePrecursors(ces.Select(ce => (IEnumerable<SpectrumPrecursor>)
+                    new[] { new SpectrumPrecursor(new SignedMz(500.0)).ChangeCollisionEnergy(ce) }));
+
+            // Equal lengths compare pairwise: a multi-value comparison is perfectly valid when it lines up.
+            Assert.IsTrue(predicate(CeSpectrum(@"ok", 17, 35)));    // 17 > 15 and 35 > 30
+            Assert.IsFalse(predicate(CeSpectrum(@"no", 17, 25)));   // 25 is not > 30
+
+            // Length mismatch (3 vs 2), neither a single value: the comparison throws rather than
+            // silently returning a misleading false. MakePredicate wraps it as an InvalidDataException with
+            // spectrum-filter context, so chromatogram extraction reports a clear, meaningful error (which
+            // its standard exception handling surfaces) rather than faulting with an opaque exception.
+            AssertEx.ThrowsException<InvalidDataException>(
+                () => predicate(CeSpectrum(@"mismatch", 17, 35, 50)),
+                string.Format(SpectraResources.SpectrumClassFilter_MakePredicate_Error_evaluating_the_spectrum_filter___0_,
+                    string.Format(
+                        MessageResources.ListFilterHandler_MatchesComparison_Cannot_compare_a_list_of__0__values_with_a_list_of__1__values_,
+                        3, 2)));
+        }
+
+        private void TestSpectrumClassFilterSerialization()
         {
             var spectrumClassFilter = CreateTestSpectrumClassFilter();
-            var xmlSerializer = new XmlSerializer(typeof(FilterClause));
-            var stream = new MemoryStream();
-            xmlSerializer.Serialize(stream, spectrumClassFilter.Clauses[0]);
-            stream.Seek(0, SeekOrigin.Begin);
-            var roundTrip = xmlSerializer.Deserialize(stream);
-            Assert.AreEqual(spectrumClassFilter.Clauses[0], roundTrip);
+            VerifyRoundTrip(spectrumClassFilter);
         }
 
-        [TestMethod]
-        public void TestTransitionGroupSpectrumClassFilter()
+        private void TestTransitionGroupSpectrumClassFilter()
         {
             var peptide = new Peptide("ELVIS");
             var srmSettings = SrmSettingsList.GetDefault();
@@ -80,22 +173,71 @@ namespace pwiz.SkylineTest
                 new PeptideGroupDocNode(new PeptideGroup(), "MyPeptideGroup", null, new[] {peptideDocNode});
             var srmDocument = (SrmDocument) new SrmDocument(srmSettings).ChangeChildren(new[] {peptideGroupDocNode});
             AssertEx.Serializable(srmDocument);
-            
+        }
+
+        private void TestRoundTripSpectrumFilters()
+        {
+            var filterSpecs = new[]
+            {
+                new FilterSpec(SpectrumClassColumn.Ms2Precursors.PropertyPath,
+                    FilterPredicate.Create(FilterOperations.OP_EQUALS, "422.5,475.7")),
+                new FilterSpec(SpectrumClassColumn.MsLevel.PropertyPath,
+                    FilterPredicate.Create(FilterOperations.OP_EQUALS, 1)),
+                new FilterSpec(SpectrumClassColumn.MsLevel.PropertyPath, FilterPredicate.Create(FilterOperations.OP_IS_GREATER_THAN, 1)),
+                new FilterSpec(SpectrumClassColumn.PresetScanConfiguration.PropertyPath, new FilterPredicate(FilterOperations.OP_IS_BLANK, null )),
+                new FilterSpec(SpectrumClassColumn.ScanDescription.PropertyPath, new FilterPredicate(FilterOperations.OP_CONTAINS, "hello"))
+            };
+            var clauses = Enumerable.Range(1, filterSpecs.Length - 1).SelectMany(count => new[]
+            {
+                new FilterClause(filterSpecs.Take(count)),
+                new FilterClause(filterSpecs.Reverse().Take(count))
+            }).ToList();
+            foreach (var clause1 in clauses)
+            {
+                VerifyRoundTrip(new SpectrumClassFilter(clause1));
+                foreach (var clause2 in clauses)
+                {
+                    VerifyRoundTrip(new SpectrumClassFilter(clause1, clause2));
+                    foreach (var clause3 in clauses)
+                    {
+                        VerifyRoundTrip(new SpectrumClassFilter(clause1, clause2, clause3));
+                    }
+                }
+            }
+        }
+
+        private void VerifyRoundTrip(SpectrumClassFilter spectrumClassFilter)
+        {
+            foreach (var filterClause in spectrumClassFilter.Clauses)
+            {
+                VerifyXmlRoundTrip(filterClause);
+            }
+            VerifyToFilterStringRoundTrip(spectrumClassFilter);
+        }
+
+        private void VerifyXmlRoundTrip(FilterClause filterClause)
+        {
+            var xmlSerializer = new XmlSerializer(typeof(FilterClause));
+            var stream = new MemoryStream();
+            xmlSerializer.Serialize(stream, filterClause);
+            stream.Seek(0, SeekOrigin.Begin);
+            var roundTrip = xmlSerializer.Deserialize(stream);
+            Assert.AreEqual(filterClause, roundTrip);
+        }
+
+        private void VerifyToFilterStringRoundTrip(SpectrumClassFilter spectrumClassFilter)
+        {
+            var text = spectrumClassFilter.ToFilterString();
+            var roundTrip = SpectrumClassFilter.ParseFilterString(text);
+            Assert.AreEqual(spectrumClassFilter, roundTrip);
         }
 
         private SpectrumClassFilter CreateTestSpectrumClassFilter()
         {
-            var spectrumPrecursors = new SpectrumPrecursors(new[]
-            {
-                new SpectrumPrecursor(new SignedMz(422.5)),
-                new SpectrumPrecursor(new SignedMz(475.7))
-            });
             var filterSpecs = new[]
             {
-                new FilterSpec(SpectrumClassColumn.Ms2Precursors.PropertyPath,
-                    FilterPredicate.CreateFilterPredicate(FilterOperations.OP_EQUALS, spectrumPrecursors)),
-                new FilterSpec(SpectrumClassColumn.ScanDescription.PropertyPath,
-                    FilterPredicate.CreateFilterPredicate(FilterOperations.OP_CONTAINS, "SCAN"))
+                new FilterSpec(SpectrumClassColumn.Ms2Precursors.PropertyPath,FilterOperations.OP_EQUALS, "422.5,475.7"),
+                new FilterSpec(SpectrumClassColumn.ScanDescription.PropertyPath, FilterOperations.OP_CONTAINS, "SCAN")
             };
             return new SpectrumClassFilter(new FilterClause(filterSpecs));
         }

@@ -42,6 +42,14 @@ class user_error : public std::runtime_error
     public: user_error(const std::string& what) : std::runtime_error(what) {}
 };
 
+// Thrown when an error occurs while enumerating a single spectrum or chromatogram during
+// serialization. Lets callers distinguish per-item enumeration errors (which --continueOnError
+// can skip) from other write-time errors (e.g. I/O, permissions, unsupported format).
+class enumeration_error : public std::runtime_error
+{
+    public: enumeration_error(const std::string& what) : std::runtime_error(what) {}
+};
+
 } // namespace util
 } // namespace pwiz
 

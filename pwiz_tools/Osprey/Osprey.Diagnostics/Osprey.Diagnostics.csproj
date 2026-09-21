@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Types live in the pwiz.Osprey namespace (not a .Diagnostics child)
+         on purpose: a child namespace named Diagnostics would shadow the
+         pwiz.Osprey.Core.Diagnostics float-format helper (referenced by
+         its bare name across the tree). Assembly name stays Osprey.Diagnostics. -->
+    <RootNamespace>pwiz.Osprey</RootNamespace>
+    <AssemblyName>Osprey.Diagnostics</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Osprey.Test" />
+  </ItemGroup>
+
+  <!-- The cross-impl dump surface (IOspreyDiagnostics) names domain types from
+       these layers: Chromatography (IsolationWindow, XicData, RTCalibration,
+       XICPeakBounds), Core (LibraryEntry, Spectrum), Scoring
+       (TukeyMedianPolishResult), and FDR (FdrEntry, ProteinParsimonyResult,
+       ReconcileAction, PeptideScore, ...). This is the union of references the
+       former exe-only OspreyFileDiagnostics sink needed. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
+    <ProjectReference Include="..\Osprey.Chromatography\Osprey.Chromatography.csproj" />
+    <ProjectReference Include="..\Osprey.Scoring\Osprey.Scoring.csproj" />
+    <ProjectReference Include="..\Osprey.FDR\Osprey.FDR.csproj" />
+  </ItemGroup>
+
+</Project>

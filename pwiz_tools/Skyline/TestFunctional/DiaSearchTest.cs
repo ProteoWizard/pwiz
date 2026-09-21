@@ -47,7 +47,7 @@ namespace pwiz.SkylineTestFunctional
             public string DocumentPath { get; set; }
             public IEnumerable<string> SearchFiles { get; set; }
             public string FastaPath { get; set; }
-            public SearchSettingsControl.SearchEngine SearchEngine { get; set; }
+            public SearchEngine SearchEngine { get; set; }
             public MzTolerance PrecursorMzTolerance { get; set; }
             public MzTolerance FragmentMzTolerance { get; set; }
             public List<KeyValuePair<string, string>> AdditionalSettings { get; set; }
@@ -128,7 +128,7 @@ namespace pwiz.SkylineTestFunctional
 
             SetupDiaSearchVariableWindows();
             _testDetails.SearchFiles = _testDetails.SearchFiles.Take(1);
-            _testDetails.SearchEngine = SearchSettingsControl.SearchEngine.MSGFPlus;
+            _testDetails.SearchEngine = SearchEngine.MSGFPlus;
             _testDetails.Initial = new TestDetails.DocumentCounts { ProteinCount = 877, PeptideCount = 38, PrecursorCount = 38, TransitionCount = 342 };
             _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 38, PeptideCount = 38, PrecursorCount = 38, TransitionCount = 342 };
 
@@ -143,7 +143,7 @@ namespace pwiz.SkylineTestFunctional
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
 
             SetupDiaSearchVariableWindows();
-            _testDetails.SearchEngine = SearchSettingsControl.SearchEngine.MSFragger;
+            _testDetails.SearchEngine = SearchEngine.MSFragger;
             _testDetails.PrecursorMzTolerance = new MzTolerance(25, MzTolerance.Units.ppm);
             _testDetails.FragmentMzTolerance = new MzTolerance(25, MzTolerance.Units.ppm);
             _testDetails.Initial = new TestDetails.DocumentCounts { ProteinCount = 877, PeptideCount = 78, PrecursorCount = 91, TransitionCount = 819 };
@@ -233,7 +233,7 @@ namespace pwiz.SkylineTestFunctional
                     });
                 },
             };
-            _testDetails.SearchEngine = SearchSettingsControl.SearchEngine.MSFragger;
+            _testDetails.SearchEngine = SearchEngine.MSFragger;
             _testDetails.PrecursorMzTolerance = new MzTolerance(25, MzTolerance.Units.ppm);
             _testDetails.FragmentMzTolerance = new MzTolerance(25, MzTolerance.Units.ppm);
             _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 128, PeptideCount = 137, PrecursorCount = 163, TransitionCount = 1467 };
@@ -467,7 +467,7 @@ namespace pwiz.SkylineTestFunctional
 
             if (HasMissingDependencies())
             {
-                if (testDetails.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
+                if (testDetails.SearchEngine == SearchEngine.MSFragger)
                 {
                     var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
                     if (msfraggerDownloaderDlg != null)
@@ -477,7 +477,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
 
-                if (testDetails.SearchEngine != SearchSettingsControl.SearchEngine.MSAmanda)
+                if (testDetails.SearchEngine != SearchEngine.MSAmanda)
                 {
                     var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
                     if (downloaderDlg != null)
@@ -730,11 +730,11 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
 
                 // MSFragger should be selected by default
-                Assert.AreEqual(SearchSettingsControl.SearchEngine.MSFragger, importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine);
+                Assert.AreEqual(SearchEngine.MSFragger, importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine);
             });
 
             // selecting something other than MSFragger should show an error
-            RunDlg<MessageDlg>(() => importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = SearchSettingsControl.SearchEngine.MSAmanda,
+            RunDlg<MessageDlg>(() => importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = SearchEngine.MSAmanda,
                 messageDlg =>
                 {
                     Assert.AreEqual(DdaSearchResources.SearchSettingsControl_SelectedIndexChanged_Only_MSFragger_is_currently_supported, messageDlg.Message);
@@ -759,7 +759,7 @@ namespace pwiz.SkylineTestFunctional
 
             if (HasMissingDependencies())
             {
-                if (testDetails.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
+                if (testDetails.SearchEngine == SearchEngine.MSFragger)
                 {
                     var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
                     if (msfraggerDownloaderDlg != null)
@@ -769,7 +769,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
 
-                if (testDetails.SearchEngine != SearchSettingsControl.SearchEngine.MSAmanda)
+                if (testDetails.SearchEngine != SearchEngine.MSAmanda)
                 {
                     var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
                     if (downloaderDlg != null)

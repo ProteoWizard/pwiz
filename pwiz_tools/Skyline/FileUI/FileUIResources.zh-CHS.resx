@@ -703,14 +703,17 @@
   <data name="ExportMethodDlg_btnBrowseTemplate_Click_Selected_account_does_not_support_method_development__Please__create_or_select_another_account_" xml:space="preserve">
     <value>所选帐户不支持方法开发。请创建或选择其它帐户。</value>
   </data>
-  <data name="ExportMethodDlg_OkDialog_Selected_waters_connect_account_does_not_support_method_development_" xml:space="preserve">
-    <value>所选 waters_connect 帐户不支持方法开发。</value>
+  <data name="ExportMethodDlg_btnBrowseTemplate_Click_Account_for_this_template_does_not_support_method_development_" xml:space="preserve">
+    <value>Account for this template does not support method development.
+Reason: {0}</value>
+    <comment>Needs Review:English text changed
+Old English:Account for this template does not support method development.
+Current English:Account for this template does not support method development.
+Reason: {0}
+Old Localized:所选帐户不支持方法开发。</comment>
   </data>
   <data name="ExportMethodDlg_OkDialog_Cannot_find_waters_connect_account_for_the_selected_URL_" xml:space="preserve">
     <value>无法为所选 URL 找到 waters_connect 帐户。</value>
-  </data>
-  <data name="WatersConnectMethodFileDialog_ListViewPostprocessing_This_account_does_not_support_method_development" xml:space="preserve">
-    <value>此帐户不支持方法开发</value>
   </data>
   <data name="ExportDlgProperties_PerformLongExport_The_server_returns_the_following_message" xml:space="preserve">
     <value>

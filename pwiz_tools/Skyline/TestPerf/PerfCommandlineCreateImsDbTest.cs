@@ -23,6 +23,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline;
+using Argument = pwiz.Common.CommandLine.Argument<pwiz.Skyline.CommandArgs>;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
@@ -177,17 +178,17 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             return output;
         }
 
-        private string GetArg(CommandArgs.Argument arg, string value)
+        private string GetArg(Argument arg, string value)
         {
             return arg.GetArgumentTextWithValue(value);
         }
 
-        private string GetOptionalArg(CommandArgs.Argument arg, string value)
+        private string GetOptionalArg(Argument arg, string value)
         {
             return string.IsNullOrEmpty(value) ? string.Empty : GetArg(arg, value);
         }
 
-        private string GetPathArg(CommandArgs.Argument arg, string value)
+        private string GetPathArg(Argument arg, string value)
         {
             return GetArg(arg, GetTestPath(value));
         }

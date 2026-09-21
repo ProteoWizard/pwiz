@@ -301,7 +301,7 @@
     <value>284, 22</value>
   </data>
   <data name="imputePeakBoundariesMenuItem.Text" xml:space="preserve">
-    <value>ピーク境界を補間</value>
+    <value>ピーク境界を補完</value>
   </data>
   <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
     <value>281, 6</value>

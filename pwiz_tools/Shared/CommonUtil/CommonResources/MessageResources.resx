@@ -100,6 +100,9 @@
   <data name="StreamEx_ReadOrThrow_Failed_reading__0__bytes__Source_may_be_corrupted_" xml:space="preserve">
     <value>Failed reading {0} bytes. Source may be corrupted.</value>
   </data>
+  <data name="ProcessRunner_KillAndWaitForExit_Warning__process__0__had_not_exited__1__seconds_after_being_killed__files_it_has_open_may_still_be_locked_" xml:space="preserve">
+    <value>Warning: process {0} had not exited {1} seconds after being killed; files it has open may still be locked.</value>
+  </data>
   <data name="ProcessRunner_Run_Run_command_" xml:space="preserve">
     <value>Run command:</value>
   </data>
@@ -192,5 +195,14 @@
   </data>
   <data name="FileLockingProcessFinder_ToFileLockingException_The_file___0___is_locked_by___1_" xml:space="preserve">
     <value>The file '{0}' is locked by: {1}</value>
+  </data>
+  <data name="PrecisionNumber_Parse_Unable_to_parse___0___as_a_number" xml:space="preserve">
+    <value>Unable to parse '{0}' as a number</value>
+  </data>
+  <data name="PositiveNumberFilterHandler_RejectNegative_The_filter_value_cannot_be_negative_" xml:space="preserve">
+    <value>The filter value cannot be negative.</value>
+  </data>
+  <data name="ListFilterHandler_MatchesComparison_Cannot_compare_a_list_of__0__values_with_a_list_of__1__values_" xml:space="preserve">
+    <value>Cannot compare a list of {0} values with a list of {1} values.</value>
   </data>
 </root>

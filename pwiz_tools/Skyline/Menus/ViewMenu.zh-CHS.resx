@@ -780,6 +780,9 @@
   <data name="areaRelativeAbundanceMenuItem.Text" xml:space="preserve">
     <value>相对丰度(&amp;A)</value>
   </data>
+  <data name="areaAbundanceComparisonMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
   <data name="areaCVHistogramMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
   </data>
@@ -1480,6 +1483,12 @@
     <value>areaRelativeAbundanceMenuItem</value>
   </data>
   <data name="&gt;&gt;areaRelativeAbundanceMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;areaAbundanceComparisonMenuItem.Name" xml:space="preserve">
+    <value>areaAbundanceComparisonMenuItem</value>
+  </data>
+  <data name="&gt;&gt;areaAbundanceComparisonMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;areaCVHistogramMenuItem.Name" xml:space="preserve">

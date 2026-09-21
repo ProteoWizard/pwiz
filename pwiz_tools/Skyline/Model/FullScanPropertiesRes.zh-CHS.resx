@@ -320,9 +320,9 @@
     <value>分离法</value>
   </data>
   <data name="ConstantNeutralLoss" xml:space="preserve">
-    <value>恒定中性损耗</value>
+    <value>恒定中性损失</value>
   </data>
   <data name="Description_ConstantNeutralLoss" xml:space="preserve">
-    <value>分析仪偏移值用于恒定中性损耗谱图（中性增益使用负值）</value>
+    <value>恒定中性损耗谱图的分析仪偏移量（恒定中性增益为负值）</value>
   </data>
 </root>

@@ -117,7 +117,11 @@ namespace pwiz.Skyline.Model
             }
             res.Instrument.InstrumentSerialNumber = spectrum.InstrumentSerialNumber;
 
-            res.IsCentroided = spectrum.Centroided.ToString(CultureInfo.CurrentCulture);
+            res.IsCentroided = spectrum.Centroided ? FullScanPropertiesRes.True : FullScanPropertiesRes.False;
+
+            res.Polarity = spectrum.NegativeCharge
+                ? FullScanPropertiesRes.Polarity_Negative
+                : FullScanPropertiesRes.Polarity_Positive;
 
             if (spectrum.Metadata.ConstantNeutralLoss.HasValue)
             {
@@ -132,6 +136,12 @@ namespace pwiz.Skyline.Model
             if (spectrum.Metadata.SourceOffsetVoltage != 0)
             {
                 res.SourceOffsetVoltage = spectrum.Metadata.SourceOffsetVoltage.ToString(Formats.OPT_PARAMETER, CultureInfo.CurrentCulture);
+            }
+
+            var otherMetadata = new OtherMetadataInfo(spectrum.Metadata.OtherParams);
+            if (otherMetadata.Any)
+            {
+                res.OtherMetadata = otherMetadata;
             }
             return res;
         }
@@ -161,6 +171,7 @@ namespace pwiz.Skyline.Model
         [Category("AcquisitionInfo")] public string TotalIonCurrent { get; set; }
         [Category("AcquisitionInfo")] public string InjectionTime { get; set; }
         [Category("AcquisitionInfo")] public string IsCentroided { get; set; }
+        [Category("AcquisitionInfo")] public string Polarity { get; set; }
         [Category("AcquisitionInfo")] public string WindowGroup { get; set; } // For Bruker PASEF
         [Category("AcquisitionInfo")] public string SourceOffsetVoltage { get; set; }
         [Category("MatchInfo")] public string dotp { get; set; }
@@ -177,5 +188,16 @@ namespace pwiz.Skyline.Model
                 FileName = Path.GetFileName(fileName);
             }
         }
+
+        /// <summary>
+        /// The displayed scan's uninterpreted mzML CV/user parameters, shown as an expandable
+        /// "Other Metadata" node (in the Acquisition category) whose children are the terms. Null when
+        /// the scan reports none. Excluded from the property-sheet comparison/serialization (its terms
+        /// are file-specific and covered by their own test); this only affects comparison, not display.
+        /// </summary>
+        [UseToCompare(false)]
+        [Category("AcquisitionInfo")]
+        [TypeConverter(typeof(ExpandableObjectConverter))]
+        public OtherMetadataInfo OtherMetadata { get; set; }
     }
 }

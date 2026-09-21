@@ -149,7 +149,7 @@
     <value>ドキュメントを公開できません。サーバーとの通信中に問題が発生しました。</value>
   </data>
   <data name="FileUpload_Error_DocumentTooLargeForServer" xml:space="preserve">
-    <value>ドキュメントを公開できません。ドキュメントのサイズはサーバー上で利用可能なストレージスペースを超えています。</value>
+    <value>ドキュメントを公開できません。ドキュメントのサイズはサーバー上で利用可能な保存容量を超えています。</value>
   </data>
   <data name="OpenFolder_Title" xml:space="preserve">
     <value>フォルダを開いています {0}</value>
@@ -176,7 +176,7 @@
     <value>フォルダ「{0}」を作成できません。サーバーとの通信中に問題が発生しました。</value>
   </data>
   <data name="CreateFolder_InputValidationError_BlankName" xml:space="preserve">
-    <value>フォルダ名はブランクにできません。</value>
+    <value>フォルダ名は空白にできません。</value>
   </data>
   <data name="CreateFolder_InputValidationError_IllegalCharacter" xml:space="preserve">
     <value>フォルダ名にこれらの文字{0}を含めることはできません。</value>

@@ -368,7 +368,7 @@
     <value>インストールを完了するには管理者権限が必要です。必要な場合はシステム管理者に連絡してください。継続しますか？</value>
   </data>
   <data name="PythonInstaller_Install_Nvidia_Library" xml:space="preserve">
-    <value>Skylineはこのコンピュータ上にNvidia GPUを検出しました。Nvidia GPU演算を設定して、より高速のAI処理を有効にしますか？この機能をインストールするには、権限昇格が必要です。</value>
+    <value>SkylineはこのコンピュータにNvidia GPUを検出しました。Nvidia GPU計算を設定して、AI処理を高速化しますか？この機能をインストールするには、権限昇格が必要です。</value>
   </data>
   <data name="PythonInstaller_Downloading_Nvidia_Library" xml:space="preserve">
     <value>Nvidia Cuda ToolkitとDeep Neural Networkソフトウェアをダウンロード中です。</value>
@@ -392,10 +392,10 @@
     <value>ログインがキャンセルされました</value>
   </data>
   <data name="EditRemoteAccountDlg_Ardia_OneAccountSupported" xml:space="preserve">
-    <value>Skylineは2番目のArdiaアカウントの追加をサポートしません。新しいアカウントを使用するには、現在のアカウントを削除してから新しいアカウントを追加してください。</value>
+    <value>Skylineは2つ目のArdiaアカウントを追加することはできません。新しいアカウントを使用するには、現在のアカウントを削除してから追加してください。</value>
   </data>
   <data name="EditRemoteAccountDlg_TestAccount_Testing_remote_account_connection" xml:space="preserve">
-    <value>リモートアカウントの接続をテスト中です</value>
+    <value>リモートアカウントへの接続を確認しています</value>
   </data>
   <data name="ConfigureToolsDlg_btnFindCommand_Click_Exe_Files" xml:space="preserve">
     <value>実行ファイル</value>
@@ -429,7 +429,9 @@
   </data>
   <data name="EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret" xml:space="preserve">
     <value>waters_connectインスタンスに接続できませんでした。
+
 waters_connectへのエクスポートとインポートは無効になっています。
+
 waters_connect V4.2以降、TQ Skyline Adapter V1.0以降、関連するMSドライバーV2.0以降がインストールされていることを確認してください。</value>
   </data>
   <data name="EditRemoteAccountDlg_TestAccount_Settings_are_correct__but_this_Waters_Connect_instance_does_not_support_method_development__Method_upload_will_be_disabled_" xml:space="preserve">

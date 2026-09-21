@@ -22,6 +22,9 @@ TestDiaQeDiaUmpireTutorialExtra
 TestDiaQeDiaUmpireTutorialFullFileset
 TestDiaQeFullSearchTutorialExtra
 TestDiaSearchQeTutorialDraft
+# Imports ~36 GB of GPF DIA mzML and assembles a second copy of them, so it needs more free disk than the PR
+# perf agent has -- skip it there. (Runs fine where there is room; remove this to re-enable.)
+TestDiaToSrmTutorial
 TestEncyclopeDiaSearchTutorialFullFileset
 TestFeatureDetectionTutorialFuture
 #TestImportHundredsOfReplicates

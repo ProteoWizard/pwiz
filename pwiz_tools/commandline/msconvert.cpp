@@ -917,6 +917,22 @@ void calculateSourceFilePtrSHA1(const SourceFilePtr& sourceFilePtr)
 }
 
 
+/// Writes an MSData object to a .partial file first, then renames it onto the final filename on
+/// success, so that incomplete output from a failed conversion is not mistaken for a valid file.
+/// bfs::rename atomically replaces any existing output (MoveFileEx with MOVEFILE_REPLACE_EXISTING
+/// on Windows, ::rename on POSIX); since .partial sits in the same directory as the output, the
+/// replacement is on the same volume and therefore atomic.
+void writeAtomically(const MSData& msd,
+                     const string& outputFilename,
+                     const MSDataFile::WriteConfig& writeConfig,
+                     const IterationListenerRegistry* pILR)
+{
+    string partialFilename = outputFilename + ".partial";
+    MSDataFile::write(msd, partialFilename, writeConfig, pILR);
+    bfs::rename(partialFilename, outputFilename);
+}
+
+
 /// Combines multiple input files into a single MSData object. Called
 /// when the --merge argument is present on the command line.
 int mergeFiles(const vector<string>& filenames, const Config& config, const ReaderList& readers)
@@ -993,12 +1009,18 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
         if (config.outputPath == "-")
             MSDataFile::write(msd, cout, configCopy.writeConfig);
         else
-            MSDataFile::write(msd, outputFilename, configCopy.writeConfig, pILR);
+            writeAtomically(msd, outputFilename, configCopy.writeConfig, pILR);
+    }
+    catch (pwiz::util::enumeration_error& e)
+    {
+        failedFileCount = (int)filenames.size();
+        cerr << "Error merging files (aborting): " << e.what() << endl;
+        cerr << "  To skip problematic spectra and write the remaining data, re-run with --continueOnError." << endl;
     }
     catch (exception& e)
     {
         failedFileCount = (int)filenames.size();
-        cerr << "Error merging files: " << e.what() << endl;
+        cerr << "Error merging files (aborting): " << e.what() << endl;
     }
 
     return failedFileCount;
@@ -1085,16 +1107,22 @@ void processFile(const string& filename, const Config& config, const ReaderList&
                 {
                     throw user_error("[msconvert] Output filepath is the same as input filepath");
                 }
-                MSDataFile::write(msd, outputFilename, configCopy.writeConfig, pILR);
+                writeAtomically(msd, outputFilename, configCopy.writeConfig, pILR);
             }
         }
         catch (user_error&)
         {
             throw;
         }
+        catch (pwiz::util::enumeration_error& e)
+        {
+            cerr << "Error writing run " << (i+1) << " (aborting conversion of this run): " << e.what() << endl;
+            cerr << "  To skip problematic spectra and write the remaining data, re-run with --continueOnError." << endl;
+            ++failedRuns;
+        }
         catch (exception& e)
         {
-            cerr << "Error writing run " << (i+1) << ":\n" << e.what() << endl;
+            cerr << "Error writing run " << (i+1) << " (aborting conversion of this run): " << e.what() << endl;
             ++failedRuns;
         }
     }

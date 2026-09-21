@@ -65,6 +65,10 @@ namespace pwiz.Skyline.Alerts
         {
         }
 
+        /// <summary>The exception message shown in the dialog (what went wrong) -- e.g. so the AI connector's
+        /// form gate can report this "Unexpected Error" dialog the way it reports a CommonAlertDlg.</summary>
+        public override string DetailedMessage => _exceptionMessage;
+
         public ReportErrorDlg(Exception e, StackTrace stackTraceExceptionCaughtAt)
         {
             Init(e.GetType().Name, e.Message, ExceptionUtil.GetExceptionText(e, stackTraceExceptionCaughtAt));

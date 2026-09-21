@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>pwiz.Osprey.Chromatography</RootNamespace>
+    <AssemblyName>Osprey.Chromatography</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
+  </ItemGroup>
+
+</Project>

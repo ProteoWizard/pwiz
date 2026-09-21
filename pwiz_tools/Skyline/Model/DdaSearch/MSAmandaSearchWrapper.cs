@@ -122,6 +122,28 @@ namespace pwiz.Skyline.Model.DdaSearch
             base.Dispose();
         }
 
+        // Issue #4193: MSHelper.WriteMessage opens its log file unconditionally; if the
+        // Logs subdirectory created by InitLogWriter has been removed externally (e.g.
+        // by antivirus or Storage Sense cleaning up an empty temp folder), it throws
+        // DirectoryNotFoundException. The wrapper's exception-handling catch blocks
+        // call WriteMessage to report the underlying error, so a secondary failure
+        // there masks the real error and crashes the search before it can finish.
+        // Re-create the directory defensively and swallow any secondary failure so the
+        // original error survives in the search log and _success/SearchFinished still run.
+        private void SafeWriteMessage(string message)
+        {
+            try
+            {
+                Directory.CreateDirectory(Path.Combine(_baseDir.DirPath, @"Logs"));
+                helper.WriteMessage(message, true);
+            }
+// ReSharper disable once EmptyGeneralCatchClause
+            catch
+            {
+                // ignore: search is already failing; don't let a logging glitch mask the cause
+            }
+        }
+
         private void Helper_SearchProgressChanged(string message)
         {
             if (message.Contains(@"Identifying Peptides") || message.Contains(@"decoy peptide hits"))
@@ -298,7 +320,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             {
                 if (e.InnerException is TaskCanceledException)
                 {
-                    helper.WriteMessage(DdaSearchResources.DdaSearch_Search_is_canceled, true);
+                    SafeWriteMessage(DdaSearchResources.DdaSearch_Search_is_canceled);
                 }
                 else
                     Program.ReportException(e);
@@ -306,12 +328,12 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
             catch (OperationCanceledException)
             {
-                helper.WriteMessage(DdaSearchResources.DdaSearch_Search_is_canceled, true);
+                SafeWriteMessage(DdaSearchResources.DdaSearch_Search_is_canceled);
                 _success = false;
             }
             catch (Exception ex)
             {
-                helper.WriteMessage(string.Format(DdaSearchResources.DdaSearch_Search_failed__0, ex.Message), true);
+                SafeWriteMessage(string.Format(DdaSearchResources.DdaSearch_Search_failed__0, ex.Message));
                 _success = false;
             }
             finally

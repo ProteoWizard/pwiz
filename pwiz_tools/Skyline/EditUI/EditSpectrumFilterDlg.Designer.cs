@@ -42,7 +42,9 @@ namespace pwiz.Skyline.EditUI
             this.btnDeleteFilter = new System.Windows.Forms.ToolStripButton();
             this.lblDescription = new System.Windows.Forms.Label();
             this.panelEditor = new System.Windows.Forms.Panel();
-            this.panelPages = new System.Windows.Forms.FlowLayoutPanel();
+            this.tabClauses = new System.Windows.Forms.TabControl();
+            this.tabPageCriteria = new System.Windows.Forms.TabPage();
+            this.tabPageNewAlternative = new System.Windows.Forms.TabPage();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.buttonPanel = new System.Windows.Forms.Panel();
             this.dataGridViewEx1 = new pwiz.Skyline.Controls.DataGridViewEx();
@@ -52,6 +54,7 @@ namespace pwiz.Skyline.EditUI
             this.panelClauses.SuspendLayout();
             this.toolStripFilter.SuspendLayout();
             this.panelEditor.SuspendLayout();
+            this.tabClauses.SuspendLayout();
             this.buttonPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).BeginInit();
             this.SuspendLayout();
@@ -113,15 +116,31 @@ namespace pwiz.Skyline.EditUI
             // panelEditor
             // 
             this.panelEditor.Controls.Add(this.panelClauses);
-            this.panelEditor.Controls.Add(this.panelPages);
+            this.panelEditor.Controls.Add(this.tabClauses);
             this.panelEditor.Controls.Add(this.lblDescription);
             resources.ApplyResources(this.panelEditor, "panelEditor");
             this.panelEditor.Name = "panelEditor";
             // 
-            // panelPages
+            // tabClauses
             // 
-            resources.ApplyResources(this.panelPages, "panelPages");
-            this.panelPages.Name = "panelPages";
+            this.tabClauses.Controls.Add(this.tabPageCriteria);
+            this.tabClauses.Controls.Add(this.tabPageNewAlternative);
+            resources.ApplyResources(this.tabClauses, "tabClauses");
+            this.tabClauses.Name = "tabClauses";
+            this.tabClauses.SelectedIndex = 0;
+            this.tabClauses.SelectedIndexChanged += new System.EventHandler(this.tabClauses_SelectedIndexChanged);
+            // 
+            // tabPageCriteria
+            // 
+            resources.ApplyResources(this.tabPageCriteria, "tabPageCriteria");
+            this.tabPageCriteria.Name = "tabPageCriteria";
+            this.tabPageCriteria.UseVisualStyleBackColor = true;
+            // 
+            // tabPageNewAlternative
+            // 
+            resources.ApplyResources(this.tabPageNewAlternative, "tabPageNewAlternative");
+            this.tabPageNewAlternative.Name = "tabPageNewAlternative";
+            this.tabPageNewAlternative.UseVisualStyleBackColor = true;
             // 
             // buttonPanel
             // 
@@ -168,6 +187,7 @@ namespace pwiz.Skyline.EditUI
             dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.dataGridViewEx1.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            this.dataGridViewEx1.CellErrorTextNeeded += new System.Windows.Forms.DataGridViewCellErrorTextNeededEventHandler(this.dataGridViewEx1_CellErrorTextNeeded);
             this.dataGridViewEx1.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dataGridViewEx1_DataError);
             this.dataGridViewEx1.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(this.dataGridViewEx1_EditingControlShowing);
             // 
@@ -215,6 +235,7 @@ namespace pwiz.Skyline.EditUI
             this.toolStripFilter.PerformLayout();
             this.panelEditor.ResumeLayout(false);
             this.panelEditor.PerformLayout();
+            this.tabClauses.ResumeLayout(false);
             this.buttonPanel.ResumeLayout(false);
             this.buttonPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).EndInit();
@@ -232,13 +253,15 @@ namespace pwiz.Skyline.EditUI
         private System.Windows.Forms.Panel panelClauses;
         private System.Windows.Forms.ToolStrip toolStripFilter;
         private System.Windows.Forms.ToolStripButton btnDeleteFilter;
+        private System.Windows.Forms.Label lblDescription;
+        private System.Windows.Forms.Panel panelEditor;
+        private System.Windows.Forms.TabControl tabClauses;
+        private System.Windows.Forms.TabPage tabPageCriteria;
+        private System.Windows.Forms.TabPage tabPageNewAlternative;
+        private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.Panel buttonPanel;
         private System.Windows.Forms.DataGridViewComboBoxColumn propertyColumn;
         private System.Windows.Forms.DataGridViewComboBoxColumn operationColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn valueColumn;
-        private System.Windows.Forms.Label lblDescription;
-        private System.Windows.Forms.Panel panelEditor;
-        private System.Windows.Forms.FlowLayoutPanel panelPages;
-        private System.Windows.Forms.ToolTip toolTip1;
-        private System.Windows.Forms.Panel buttonPanel;
     }
 }

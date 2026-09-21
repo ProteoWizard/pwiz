@@ -951,6 +951,14 @@ else
     .installer-vendor-files-location = $(PWIZ_BUILD_PATH)/without-cxt/$(PLATFORM) ;
 }
 
+# Assemblies that every installer already declares for itself. They reach the <assembly>
+# enumeration below because a vendor API references them, but listing them here as well would
+# declare the same file twice and fail the WiX link with LGHT0091 (duplicate symbol).
+# pwiz.CommonUtil.dll is ours rather than a vendor redistributable, and is named directly by
+# scripts/wix/pwiz-setup.wxs.template, pwiz_tools/Bumbershoot/idpicker/Deploy/Deploy.wxs.template
+# and pwiz_tools/Skyline/Executables/Installer/FileList64-template.txt.
+.installer-vendor-files-exclusions = pwiz.CommonUtil.dll ;
+
 rule make_INSTALLER_VENDOR_FILES ( targets * : sources * : properties * )
 {
     # enumerate .NET assemblies and their native DLL dependencies
@@ -961,7 +969,8 @@ rule make_INSTALLER_VENDOR_FILES ( targets * : sources * : properties * )
         for local assembly in $(assemblies)
         {
             local assembly-path = [ path.basename [ $(assembly).name ] ] ;
-            if ! $(assembly-path:L) in $(.unique-vendor-files:L)
+            if ! $(assembly-path:L) in $(.unique-vendor-files:L) &&
+               ! $(assembly-path:L) in $(.installer-vendor-files-exclusions:L)
             {
                 .unique-vendor-files += $(assembly-path) ;
             }
@@ -1268,7 +1277,17 @@ rule msparser-path ( properties * )
     }
     else if <toolset>msvc in $(properties)
     {
-        if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.0" "14.1" "14.2" "14.3" "14.5"
+        if <address-model>32 in $(properties)
+        {
+            # Only a 64-bit Mascot Parser library is bundled, so disable Mascot support in 32-bit builds.
+            if ! $(.warn-once-mascot32)
+            {
+                .warn-once-mascot32 = true ;
+                echo "Note: Not using Mascot Parser in 32-bit builds (only a 64-bit msparser library is bundled)." ;
+            }
+            lib-location = "" ;
+        }
+        else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.0" "14.1" "14.2" "14.3" "14.5"
         {
             lib-location = "$(PWIZ_LIBRARIES_PATH)\\msparser_3_1_0_x86_win64\\vs2015" ;
         }
@@ -1749,7 +1768,7 @@ tar.create boost_$(BOOST_VERSION:J=_).tar.bz2
     "exclude:pwiz_tools/Shared/BiblioSpec"
     "exclude:pwiz_tools/Shared/Crawdad"
     "exclude:pwiz_tools/Shared/ProteomeDb"
-    "exclude:pwiz_tools/Shared/ProteowizardWrapper"
+    # ProteowizardWrapper is needed by MSConvertGUI.sln (shared remote dialog refactor)
     "exclude:pwiz_tools/Shared/Lib/Microsoft.Diagnostics.Runtime"
     "exclude:pwiz_tools/Shared/Lib/MSAmanda"
     "exclude:pwiz_tools/Shared/Lib/DotNetZip"

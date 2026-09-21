@@ -61,7 +61,7 @@ PWIZ_API_DECL size_t ChromatogramList_Mobilion::size() const
 PWIZ_API_DECL const ChromatogramIdentity& ChromatogramList_Mobilion::chromatogramIdentity(size_t index) const
 {
     boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Mobilion::createIndex, this));
-    if (index>size_)
+    if (index>=size_)
         throw runtime_error(("[ChromatogramList_Mobilion::chromatogramIdentity()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
     return index_[index];
@@ -88,7 +88,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Mobilion::chromatogram(size_t ind
 PWIZ_API_DECL ChromatogramPtr ChromatogramList_Mobilion::chromatogram(size_t index, DetailLevel detailLevel) const
 {
     boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Mobilion::createIndex, this));
-    if (index>size_)
+    if (index>=size_)
         throw runtime_error(("[ChromatogramList_Mobilion::chromatogram()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
 

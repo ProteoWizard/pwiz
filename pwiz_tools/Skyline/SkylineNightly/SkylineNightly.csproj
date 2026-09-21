@@ -93,6 +93,7 @@
   <ItemGroup>
     <Compile Include="LogFileMonitor.cs" />
     <Compile Include="Nightly.cs" />
+    <Compile Include="TeamCityNightlyAuth.cs" />
     <Compile Include="SkylineNightly.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -100,6 +101,7 @@
       <DependentUpon>SkylineNightly.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
+    <Compile Include="RunSpec.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Xml.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">

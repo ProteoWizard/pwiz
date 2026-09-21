@@ -16,14 +16,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Util.Extensions;
-using pwiz.SkylineTestUtil;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Parquet;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Util.Extensions;
+using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -60,9 +62,24 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.IsFalse(exportReportDlg.InvariantLanguage);
                 exportReportDlg.ReportName = "PRISM";
-                exportReportDlg.OkDialog(parquetFilePath, TextUtil.CsvSeparator);
+                exportReportDlg.OkDialog(parquetFilePath);
             });
-
+            var csvFilePath = TestFilesDir.GetTestPath("prism.csv");
+            RunDlg<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog, exportReportDlg =>
+            {
+                exportReportDlg.ReportName = "PRISM";
+                exportReportDlg.OkDialog(csvFilePath, TextUtil.CsvSeparator);
+            });
+            using var csvReader = new DsvFileReader(csvFilePath, TextUtil.CsvSeparator);
+            // Parquet.Net's reader resumes on the caller's SynchronizationContext, which the
+            // thread running DoTest happens not to have. Read without one anyway, so that
+            // moving this line inside a RunUI does not turn it into a deadlock.
+            var parquetColumnNames = ActionUtil.CallWithoutSynchronizationContext(() =>
+            {
+                using var reader = ParquetReader.CreateAsync(parquetFilePath).GetAwaiter().GetResult();
+                return reader.Schema.Fields.Select(f => f.Name).ToArray();
+            });
+            Assert.AreEqual(TextUtil.SpaceSeparate(ParquetReportExporter.MakeValidColumnNames(csvReader.FieldNames)), TextUtil.SpaceSeparate(parquetColumnNames));
         }
     }
 }

@@ -46,6 +46,9 @@
 #include "boost/locale/encoding_utf.hpp"
 #include "pwiz/data/msdata/Serializer_mzML.hpp"
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
+#include <thread>
+#include <chrono>
+#include <algorithm>
 
 
 using namespace pwiz::util;
@@ -279,6 +282,48 @@ string headStream(istream& is, size_t maxLength)
 }
 
 
+/// Every spectrum of a round trip really came back in ascending m/z order.
+///
+/// The companion to DiffConfig::ignorePeakOrder. That flag lets a format which drops the mobility
+/// array compare equal despite presenting its peaks in a different order; on its own it would
+/// accept any permutation whatsoever, including a scrambled one. This is what pins the order down.
+void assertMzAscending(const MSData& msd, const string& format)
+{
+    if (!msd.run.spectrumListPtr.get())
+        return;
+
+    for (size_t i = 0, end = msd.run.spectrumListPtr->size(); i < end; ++i)
+    {
+        SpectrumPtr s = msd.run.spectrumListPtr->spectrum(i, true);
+        if (!s.get() || !s->getMZArray().get() || hasNonMzOrderingAxis(*s))
+            continue;
+        const BinaryData<double>& mzs = s->getMZArray()->data;
+        if (!std::is_sorted(mzs.begin(), mzs.end()))
+            throw runtime_error(unit_assert_message(__FILE__, __LINE__,
+                (format + " spectrum " + lexical_cast<string>(i) + " (\"" + s->id +
+                 "\") is not in ascending m/z order").c_str()));
+    }
+}
+
+
+#ifndef WITHOUT_MZ5
+/// An mz5 configuration that stores m/z verbatim.
+///
+/// mz5 delta encodes m/z by default, and that only inverts exactly while m/z ascends. A combined ion
+/// mobility spectrum's does not - it drops back to the low end of the range at every mobility bin -
+/// so the values come back a few ulps out, and peaks that shared an m/z going in no longer share one
+/// coming out. The peak-set comparisons below depend on exactly that, since they normalize each side
+/// by sorting on m/z. The reader is what these tests are about rather than mz5's compression scheme,
+/// so take the encoding out of the picture. Serializer_mz5_Test covers the encoding itself.
+pwiz::msdata::mz5::Configuration_mz5 losslessMz5Config()
+{
+    pwiz::msdata::mz5::Configuration_mz5 config;
+    config.setTranslating(false);
+    return config;
+}
+#endif
+
+
 // filters out non-MSn spectra, MS1 spectra, and filters the metadata from MSn spectra
 class SpectrumList_MGF_Filter : public SpectrumListWrapper
 {
@@ -455,16 +500,33 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
             {
                 TemporaryFile targetResultFilename_mz5(targetResultFilename.filename().replace_extension().string(), ".mz5");
                 MSData msd_mz5;
-                Serializer_mz5 serializer_mz5;
+
+                // Only a combined ion mobility spectrum needs the encoding taken out of the picture
+                // (see losslessMz5Config's comment). Every other file keeps mz5's default, translating
+                // configuration - the one msconvert actually writes - so this round trip still covers it.
+                Serializer_mz5 serializer_mz5(config.combineIonMobilitySpectra
+                    ? losslessMz5Config() : pwiz::msdata::mz5::Configuration_mz5());
                 serializer_mz5.write(targetResultFilename_mz5.path().string(), vendorMsd);
                 serializer_mz5.read(targetResultFilename_mz5.path().string(), msd_mz5);
 
                 DiffConfig diffConfig_mz5(diffConfig);
                 diffConfig_mz5.ignoreExtraBinaryDataArrays = true;
+
+                // mz5 keeps only the m/z and intensity arrays, so a combined ion mobility spectrum
+                // comes back without the mobility axis that gave its peak order meaning. pwiz then
+                // presents what survives in ascending m/z order, which is what every consumer
+                // assumes, so the round trip cannot be expected to reproduce the order it went in
+                // with. Compare the peaks as a set here, and assert the ordering separately below -
+                // on its own this would accept any permutation at all.
+                diffConfig_mz5.ignorePeakOrder = config.combineIonMobilitySpectra;
+
                 TestTimer diffTimer_mz5(rawpath, "Diff_mz5", config.reportTimings);
                 Diff<MSData, DiffConfig> diff_mz5(vendorMsd, msd_mz5, diffConfig_mz5);
                 if (diff_mz5) cerr << headDiff(diff_mz5, 5000) << endl;
                 unit_assert(!diff_mz5);
+
+                // the other half of that bargain
+                assertMzAscending(msd_mz5, "mz5");
             }
         }
 #endif
@@ -549,6 +611,11 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         diffConfig_non_mzML.ignoreExtraBinaryDataArrays = true;
         diffConfig_non_mzML.ignoreChromatograms = true;
 
+        // Like mz5, none of these formats carries the mobility array, so a combined ion mobility
+        // spectrum comes back without the axis its peak order depended on and is presented in
+        // ascending m/z instead. Compare the peaks as a set; assertMzAscending checks the ordering.
+        diffConfig_non_mzML.ignorePeakOrder = config.combineIonMobilitySpectra;
+
         // check if the file type is one that loses nativeIDs in translation
         string fileType = reader.identify(rawpath, rawheader);
         if (bal::contains(fileType, "WIFF") ||
@@ -576,6 +643,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
             if (diff_MGF && !os_) cerr << "MGF:\n" << headStream(*serializedStreamPtr, 5000) << endl;
             if (diff_MGF) cerr << headDiff(diff_MGF, 5000) << endl;
             unit_assert(!diff_MGF);
+            assertMzAscending(msd_MGF, "MGF");
         }
 
         stringstreamPtr->str(" ");
@@ -716,15 +784,18 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
                 string targetResultFilename_mz5 = bfs::change_extension(targetResultFilename, ".mz5").string();
                 {
                     MSData msd_mz5;
-                    Serializer_mz5 serializer_mz5;
+                    Serializer_mz5 serializer_mz5(config.combineIonMobilitySpectra
+                        ? losslessMz5Config() : pwiz::msdata::mz5::Configuration_mz5());
                     serializer_mz5.write(targetResultFilename_mz5, msd);
                     serializer_mz5.read(targetResultFilename_mz5, msd_mz5);
 
                     DiffConfig diffConfig_mz5(diffConfig);
                     diffConfig_mz5.ignoreExtraBinaryDataArrays = true;
+                    diffConfig_mz5.ignorePeakOrder = config.combineIonMobilitySpectra;
                     Diff<MSData, DiffConfig> diff_mz5(msd, msd_mz5, diffConfig_mz5);
                     if (diff_mz5) cerr << headDiff(diff_mz5, 5000) << endl;
                     unit_assert(!diff_mz5);
+                    assertMzAscending(msd_mz5, "mz5");
                 }
                 bfs::remove(targetResultFilename_mz5);
             }
@@ -1004,18 +1075,85 @@ TestResult testReader(const Reader& reader, const vector<string>& args, bool tes
                 if (bfs::exists(rawpath))
                 {
                     // test that the reader releases any locks on the data so it can be moved/deleted
-                    try
+                    // retry briefly to absorb transient holds from AV scanners / indexers / OS
+                    // file-handle release lag on CI agents -- a real reader-side handle leak
+                    // remains pinned no matter how long we wait, so the final failure path
+                    // still surfaces those.
+                    //
+                    // Track which side of the rename round-trip we are on so that if the
+                    // forward rename succeeds but the rename-back fails, the retry only
+                    // repeats the rename-back step (rather than failing with "path not
+                    // found" because the source has already moved) and the final
+                    // diagnostic queries the path that is actually still on disk.
+                    std::string renamedPath = rawpath + ".renamed";
+                    bool isRenamed = false;
+                    bool renameOk = false;
+                    std::string lastError = "(no exception captured)";
+                    for (int attempt = 0; attempt < 5; ++attempt)
                     {
-                        bfs::rename(rawpath, rawpath + ".renamed");
-                        bfs::rename(rawpath + ".renamed", rawpath);
+                        if (attempt > 0)
+                            std::this_thread::sleep_for(std::chrono::milliseconds(250 * attempt));
+                        try
+                        {
+                            if (!isRenamed)
+                            {
+                                bfs::rename(rawpath, renamedPath);
+                                isRenamed = true;
+                            }
+                            bfs::rename(renamedPath, rawpath);
+                            isRenamed = false;
+                            renameOk = true;
+                            break;
+                        }
+                        catch (const std::exception& e) { lastError = e.what(); }
+                        catch (...) { lastError = "(unknown rename failure)"; }
                     }
-                    catch (...)
+                    if (!renameOk)
                     {
-                        // HACK: bug in CompassXtract, used only for YEP/FID formats now, keeps directory locked after opening it but has no problem with re-opening the file
-                        if (bfs::exists(bfs::path(rawpath) / "Analysis.yep"))
+                        const std::string& currentPath = isRenamed ? renamedPath : rawpath;
+                        // HACK: bug in CompassXtract, used only for YEP/FID formats now,
+                        // keeps directory locked after opening it but has no problem with
+                        // re-opening the file. Only suppress when the fixture is still intact
+                        // (forward rename never happened); a failed rename-back leaves the
+                        // fixture at <rawpath>.renamed and must surface as an error so the
+                        // test run does not continue against a broken fixture.
+                        if (!isRenamed && bfs::exists(bfs::path(rawpath) / "Analysis.yep"))
                             cerr << "Cannot rename " << rawpath << ": there are unreleased file locks!" << endl;
                         else
-                            throw runtime_error("Cannot rename " + rawpath + ": there are unreleased file locks!");
+                        {
+                            // Report the source -> target of the actual failing rename:
+                            // if isRenamed is true the forward rename succeeded and the
+                            // rename-back is the failing operation (renamedPath -> rawpath);
+                            // otherwise the forward rename itself failed (rawpath -> renamedPath).
+                            const std::string& sourcePath = isRenamed ? renamedPath : rawpath;
+                            const std::string& targetPath = isRenamed ? rawpath : renamedPath;
+                            // Distinguish "path no longer exists" (e.g. AV quarantined it)
+                            // from "RestartManager found no holders" -- the former is a
+                            // useful diagnostic; the latter is the default sentinel.
+                            std::string holders = bfs::exists(currentPath)
+                                ? find_locking_processes(currentPath)
+                                : "(path no longer exists: " + currentPath + ")";
+                            // Best-effort restoration: if the forward rename succeeded but
+                            // the rename-back is what's failing, try one last non-throwing
+                            // rename-back so subsequent tests at least see the fixture at
+                            // its expected location (locked, but locatable) rather than
+                            // missing entirely.
+                            if (isRenamed)
+                            {
+                                boost::system::error_code ec;
+                                bfs::rename(renamedPath, rawpath, ec);
+                                // result intentionally ignored; we're about to throw
+                            }
+                            // Also log to cerr before throwing -- test harnesses sometimes
+                            // truncate or reformat exception what() strings, and the
+                            // lock-holder list is exactly the information we want preserved
+                            // verbatim in CI logs.
+                            std::string msg = "Cannot rename " + sourcePath + " -> " + targetPath +
+                                              ": there are unreleased file locks! "
+                                              "Last error: " + lastError + ". Lock holders: " + holders;
+                            cerr << msg << endl;
+                            throw runtime_error(msg);
+                        }
                     }
                 }
             }

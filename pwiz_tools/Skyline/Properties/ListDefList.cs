@@ -69,6 +69,7 @@ namespace pwiz.Skyline.Properties
 
         public Type DeserialType { get { return SerialType; } }
         public Type SerialType { get { return typeof(ListDef); } }
+        public string FileExtension => @".xml";
 
         public bool SingleSelect => false;
 

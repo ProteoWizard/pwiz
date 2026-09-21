@@ -1521,10 +1521,10 @@ MS/MS谱图库。</value>
     <value>7</value>
   </data>
   <data name="groupBoxPeakImputation.Text" xml:space="preserve">
-    <value>对以下对象进行边界插补</value>
+    <value>对以下对象划定边界</value>
   </data>
   <data name="groupBoxPeakImputation.ToolTip" xml:space="preserve">
-    <value>峰边界插补是一个选择性执行的过程，可以在使用峰得分模型重新合并峰时，或在使用来自谱图库的明确峰边界时执行。
+    <value>峰值边界划定是一个可选过程，可以在使用峰值得分模型重新合并峰值时以及使用谱库中明确的峰边界时进行。
 </value>
   </data>
   <data name="&gt;&gt;groupBoxPeakImputation.Name" xml:space="preserve">

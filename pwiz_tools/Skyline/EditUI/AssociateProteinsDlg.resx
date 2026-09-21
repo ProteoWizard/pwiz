@@ -229,7 +229,7 @@
     <value>15, 14</value>
   </data>
   <data name="cbGroupProteins.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>0</value>
   </data>
   <data name="cbGroupProteins.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleRight</value>
@@ -246,27 +246,6 @@
   <data name="&gt;&gt;cbGroupProteins.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="comboSharedPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 65</value>
-  </data>
-  <data name="comboSharedPeptides.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
-  </data>
-  <data name="&gt;&gt;comboSharedPeptides.Name" xml:space="preserve">
-    <value>comboSharedPeptides</value>
-  </data>
-  <data name="&gt;&gt;comboSharedPeptides.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboSharedPeptides.Parent" xml:space="preserve">
-    <value>flowLayoutPanel</value>
-  </data>
-  <data name="&gt;&gt;comboSharedPeptides.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="gbParsimonyOptions.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
-  </data>
   <data name="lblGroupProteins.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -280,7 +259,7 @@
     <value>108, 13</value>
   </data>
   <data name="lblGroupProteins.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="lblGroupProteins.Text" xml:space="preserve">
     <value>Create protein &amp;groups</value>
@@ -352,7 +331,7 @@
     <value>15, 14</value>
   </data>
   <data name="cbGeneLevel.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
+    <value>3</value>
   </data>
   <data name="cbGeneLevel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleRight</value>
@@ -385,7 +364,7 @@
     <value>100, 13</value>
   </data>
   <data name="lblGroupAtGeneLevel.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
+    <value>4</value>
   </data>
   <data name="lblGroupAtGeneLevel.Text" xml:space="preserve">
     <value>Group at g&amp;ene level</value>
@@ -421,7 +400,7 @@
     <value>105, 13</value>
   </data>
   <data name="lblSharedPeptides.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="lblSharedPeptides.Text" xml:space="preserve">
     <value>&amp;Shared peptides are:</value>
@@ -463,7 +442,7 @@
     <value>11, 9</value>
   </data>
   <data name="lnkHelpSharedPeptides.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>6</value>
   </data>
   <data name="lnkHelpSharedPeptides.Text" xml:space="preserve">
     <value>? </value>
@@ -487,7 +466,7 @@
     <value>NoControl</value>
   </data>
   <data name="cbMinimalProteinList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>130, 68</value>
+    <value>3, 95</value>
   </data>
   <data name="cbMinimalProteinList.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 6, 0, 3</value>
@@ -496,7 +475,7 @@
     <value>15, 14</value>
   </data>
   <data name="cbMinimalProteinList.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="cbMinimalProteinList.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleRight</value>
@@ -517,7 +496,7 @@
     <value>True</value>
   </data>
   <data name="lblMinimalProteinList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>145, 68</value>
+    <value>18, 95</value>
   </data>
   <data name="lblMinimalProteinList.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 6, 0, 3</value>
@@ -526,7 +505,7 @@
     <value>232, 13</value>
   </data>
   <data name="lblMinimalProteinList.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>9</value>
   </data>
   <data name="lblMinimalProteinList.Text" xml:space="preserve">
     <value>Find &amp;minimal protein list that explains all peptides</value>
@@ -556,7 +535,7 @@
     <value>NoControl</value>
   </data>
   <data name="lnkHelpFindMinimalProteinList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>377, 62</value>
+    <value>250, 89</value>
   </data>
   <data name="lnkHelpFindMinimalProteinList.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 3, 0</value>
@@ -565,7 +544,7 @@
     <value>11, 9</value>
   </data>
   <data name="lnkHelpFindMinimalProteinList.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>10</value>
   </data>
   <data name="lnkHelpFindMinimalProteinList.Text" xml:space="preserve">
     <value>? </value>
@@ -589,7 +568,7 @@
     <value>NoControl</value>
   </data>
   <data name="cbRemoveSubsetProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 92</value>
+    <value>3, 115</value>
   </data>
   <data name="cbRemoveSubsetProteins.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 0, 3</value>
@@ -598,7 +577,7 @@
     <value>15, 14</value>
   </data>
   <data name="cbRemoveSubsetProteins.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="cbRemoveSubsetProteins.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleRight</value>
@@ -622,7 +601,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblRemoveSubsetProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 92</value>
+    <value>18, 115</value>
   </data>
   <data name="lblRemoveSubsetProteins.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 3, 0, 3</value>
@@ -631,7 +610,7 @@
     <value>121, 13</value>
   </data>
   <data name="lblRemoveSubsetProteins.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>12</value>
   </data>
   <data name="lblRemoveSubsetProteins.Text" xml:space="preserve">
     <value>&amp;Remove subset proteins</value>
@@ -661,7 +640,7 @@
     <value>NoControl</value>
   </data>
   <data name="lnkHelpRemoveSubsetProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>139, 89</value>
+    <value>139, 112</value>
   </data>
   <data name="lnkHelpRemoveSubsetProteins.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 3, 0</value>
@@ -670,7 +649,7 @@
     <value>11, 9</value>
   </data>
   <data name="lnkHelpRemoveSubsetProteins.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>13</value>
   </data>
   <data name="lnkHelpRemoveSubsetProteins.Text" xml:space="preserve">
     <value>? </value>
@@ -694,7 +673,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblMinPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 115</value>
+    <value>0, 138</value>
   </data>
   <data name="lblMinPeptides.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 6, 3, 3</value>
@@ -703,7 +682,7 @@
     <value>123, 13</value>
   </data>
   <data name="lblMinPeptides.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
+    <value>14</value>
   </data>
   <data name="lblMinPeptides.Text" xml:space="preserve">
     <value>Mi&amp;n peptides per protein:</value>
@@ -727,7 +706,7 @@
     <value>14</value>
   </data>
   <data name="numMinPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 132</value>
+    <value>3, 155</value>
   </data>
   <data name="numMinPeptides.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 0, 3, 3</value>
@@ -736,7 +715,7 @@
     <value>63, 20</value>
   </data>
   <data name="numMinPeptides.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
+    <value>15</value>
   </data>
   <data name="&gt;&gt;numMinPeptides.Name" xml:space="preserve">
     <value>numMinPeptides</value>
@@ -774,8 +753,29 @@
   <data name="&gt;&gt;flowLayoutPanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="comboSharedPeptides.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 65</value>
+  </data>
   <data name="comboSharedPeptides.Size" type="System.Drawing.Size, System.Drawing">
     <value>341, 21</value>
+  </data>
+  <data name="comboSharedPeptides.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;comboSharedPeptides.Name" xml:space="preserve">
+    <value>comboSharedPeptides</value>
+  </data>
+  <data name="&gt;&gt;comboSharedPeptides.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboSharedPeptides.Parent" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;comboSharedPeptides.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="gbParsimonyOptions.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
   </data>
   <data name="gbParsimonyOptions.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 177</value>
@@ -952,7 +952,7 @@
     <value>True</value>
   </metadata>
   <data name="headerColumn.HeaderText" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <metadata name="mappedColumn.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -985,7 +985,7 @@
     <value>dgvAssociateResults</value>
   </data>
   <data name="&gt;&gt;dgvAssociateResults.Type" xml:space="preserve">
-    <value>pwiz.Common.Controls.CommonDataGridView, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=26.1.1.159, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;dgvAssociateResults.Parent" xml:space="preserve">
     <value>$this</value>
@@ -1069,7 +1069,7 @@
     <value>0</value>
   </data>
   <data name="dataGridViewTextBoxColumn1.HeaderText" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="dataGridViewTextBoxColumn1.Width" type="System.Int32, mscorlib">
     <value>85</value>
@@ -1246,7 +1246,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=26.1.1.159, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;headerColumn.Name" xml:space="preserve">
     <value>headerColumn</value>
@@ -1306,6 +1306,6 @@
     <value>AssociateProteinsDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.ModeUIInvariantFormEx, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.ModeUIInvariantFormEx, Skyline-daily, Version=26.1.1.159, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

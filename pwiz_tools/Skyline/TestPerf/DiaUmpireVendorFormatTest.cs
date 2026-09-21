@@ -139,6 +139,10 @@ namespace TestPerf
 
         protected override void DoTest()
         {
+            string[] searchFiles = DiaFiles.Select(GetVendorFileTestPath).ToArray();
+            foreach (var searchFile in searchFiles)
+                Assert.IsTrue(File.Exists(searchFile), string.Format("File {0} does not exist.", searchFile));
+
             // Clean-up before running the test
             RunUI(() => SkylineWindow.ModifyDocument("Set default settings",
                 d => d.ChangeSettings(SrmSettingsList.GetDefault())));
@@ -151,15 +155,8 @@ namespace TestPerf
             // Launch the wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
 
-            string[] searchFiles = DiaFiles.Select(p => GetVendorFileTestPath(p)).ToArray();
-            foreach (var searchFile in searchFiles)
-            {
-                // delete -diaumpire files so they get regenerated instead of reused
-                var searchFileDir = Path.GetDirectoryName(searchFile) ?? string.Empty;
-                foreach (var diaumpireFile in Directory.GetFiles(searchFileDir, "*-diaumpire.*"))
-                    FileEx.SafeDelete(diaumpireFile);
-                Assert.IsTrue(File.Exists(searchFile), string.Format("File {0} does not exist.", searchFile));
-            }
+            // delete -diaumpire files so they get regenerated instead of reused
+            RemoveDiaUmpireFiles();
 
             string fastaPathForImport = GetFastaTestPath(_instrumentValues.FastaPath);
             Assert.IsTrue(File.Exists(fastaPathForImport));
@@ -302,19 +299,49 @@ namespace TestPerf
                 Assert.AreEqual(0.05, importPeptideSearchDlg.SearchSettingsControl.CutoffScore);
             });
 
-            RunUI(() =>
+            // The search runs DiaUmpire, which (re)writes the -diaumpire outputs. Wrap it in try/finally
+            // so they are cleaned from the persistent (shared) source dir even if the search assertion
+            // below fails. (Nothing is generated before this point, so earlier failures leave nothing.)
+            try
             {
-                // Run the search
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                RunUI(() =>
+                {
+                    // Run the search
+                    Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
-                importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
-                importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
-            });
+                    importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
+                    importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
+                });
 
-            WaitForConditionUI(120 * 600000, () => searchSucceeded.HasValue);
-            Assert.IsTrue(searchSucceeded.Value);
+                WaitForConditionUI(120 * 600000, () => searchSucceeded.HasValue);
+                Assert.IsTrue(searchSucceeded.Value);
 
-            RunUI(() => importPeptideSearchDlg.ClickCancelButton());
+                RunUI(() => importPeptideSearchDlg.ClickCancelButton());
+            }
+            finally
+            {
+                RemoveDiaUmpireFiles();
+            }
+
+            void RemoveDiaUmpireFiles()
+            {
+                // Delete the generated -diaumpire outputs (found by globbing each input's directory), and
+                // register each one we delete in its persistent dir's PotentialMissingPersistentFileSet so
+                // the persistent-dir modification check tolerates the deletion and stays in sync with the
+                // glob (same pattern as DeleteFilesForScreenshots in DiaSwathTutorialTest).
+                var testFilesDir = TestFilesDirs[0];
+                foreach (var searchFile in searchFiles)
+                {
+                    var searchFileDir = Path.GetDirectoryName(searchFile) ?? string.Empty;
+                    foreach (var diaumpireFile in Directory.GetFiles(searchFileDir, "*-diaumpire.*"))
+                    {
+                        testFilesDir.PotentialMissingPersistentFileSet ??= new HashSet<string>();
+                        testFilesDir.PotentialMissingPersistentFileSet.Add(
+                            PathEx.GetRelativePath(testFilesDir.PersistentFilesDir, diaumpireFile));
+                        FileEx.SafeDelete(diaumpireFile);
+                    }
+                }
+            }
         }
     }
 }

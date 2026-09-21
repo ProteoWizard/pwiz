@@ -54,6 +54,10 @@ void testReversedList(ProteinListPtr pl)
         unit_assert(decoy->description.empty());
         unit_assert(string(target->sequence().rbegin(), target->sequence().rend()) == decoy->sequence());
     }
+
+    // an out of bounds index must throw rather than wrapping around to the first decoy
+    unit_assert_throws_what(decoyList.protein(decoyList.size()), out_of_range, "[ProteinList_DecoyGenerator::protein] Index out of range");
+    unit_assert_throws_what(decoyList.protein(decoyList.size() + 1), out_of_range, "[ProteinList_DecoyGenerator::protein] Index out of range");
 }
 
 

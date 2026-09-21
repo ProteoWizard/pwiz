@@ -37,28 +37,41 @@ namespace CommonTest.DataBinding
         public void TestFilterSpecRoundTrips()
         {
             var propertyPath = PropertyPath.Root.Property("property");
-            var invariantDataSchema = new DataSchema();
             foreach (var cultureInfo in ListTestCultureInfos())
             {
                 var dataSchema = new DataSchema(new DataSchemaLocalizer(cultureInfo, cultureInfo));
                 foreach (var testOperand in ListTestOperands())
                 {
                     var columnType = testOperand.GetType();
-                    var filterPredicate = FilterPredicate.CreateFilterPredicate(dataSchema, columnType,
+                    var filterPredicate = FilterPredicate.Parse(dataSchema, columnType,
                         FilterOperations.OP_EQUALS, ValueToString(testOperand, cultureInfo));
-                    var invariantFilterPredicate = FilterPredicate.CreateFilterPredicate(invariantDataSchema, columnType,
-                        FilterOperations.OP_EQUALS, ValueToString(testOperand, CultureInfo.InvariantCulture));
-                    Assert.AreEqual(invariantFilterPredicate, filterPredicate);
+                    // FilterPredicate.Parse takes its locale from the schema's DataSchemaLocalizer, not the
+                    // thread culture, so re-parse the invariant operand text with an invariant-localized
+                    // schema. (Wrapping the call in CallWithCulture has no effect on the parse locale.)
+                    var invariantDataSchema = new DataSchema(
+                        new DataSchemaLocalizer(CultureInfo.InvariantCulture, CultureInfo.InvariantCulture));
+                    var invariantFilterPredicate = FilterPredicate.Parse(invariantDataSchema, columnType,
+                        FilterOperations.OP_EQUALS, filterPredicate.InvariantOperandText);
+                    Assert.AreEqual(filterPredicate, invariantFilterPredicate);
                     var filterSpec = new FilterSpec(propertyPath, filterPredicate);
                     var predicateOperandValue = filterSpec.Predicate.GetOperandValue(dataSchema, columnType);
-                    var expectedOperandValue = predicateOperandValue is double
-                        ? Convert.ChangeType(testOperand, typeof (double))
-                        : testOperand;
-                    Assert.AreEqual(expectedOperandValue, predicateOperandValue);
-                    Assert.AreEqual(ValueToString(testOperand, cultureInfo), filterSpec.Predicate.GetOperandDisplayText(dataSchema, columnType));
+                    Assert.AreEqual(ValueToString(testOperand, cultureInfo),
+                        LocalizationHelper.CallWithCulture(cultureInfo,
+                            () => filterSpec.Predicate.GetOperandDisplayText(dataSchema, columnType)));
                     var filterSpecRoundTrip = RoundTripToXml(filterSpec);
-                    Assert.AreEqual(expectedOperandValue, filterSpecRoundTrip.Predicate.GetOperandValue(dataSchema, columnType));
-                    Assert.AreEqual(ValueToString(testOperand, cultureInfo), filterSpecRoundTrip.Predicate.GetOperandDisplayText(dataSchema, columnType));
+                    Assert.AreEqual(filterSpec, filterSpecRoundTrip);
+                    if (!(predicateOperandValue is PrecisionNumber))
+                    {
+                        // IntegerFilterHandler normalizes integer-column operands to double, so the
+                        // operand value must round-trip but its CLR type need not. Compare against the
+                        // original converted to double in that case.
+                        var expectedOperandValue = predicateOperandValue is double
+                            ? Convert.ChangeType(testOperand, typeof(double))
+                            : testOperand;
+                        Assert.AreEqual(expectedOperandValue, predicateOperandValue);
+                        Assert.AreEqual(expectedOperandValue, filterSpecRoundTrip.Predicate.GetOperandValue(dataSchema, columnType));
+                        Assert.AreEqual(ValueToString(testOperand, cultureInfo), filterSpecRoundTrip.Predicate.GetOperandDisplayText(dataSchema, columnType));
+                    }
                 }
             }
         }

@@ -71,7 +71,7 @@ PWIZ_API_DECL size_t ChromatogramList_Bruker::size() const
 
 PWIZ_API_DECL const ChromatogramIdentity& ChromatogramList_Bruker::chromatogramIdentity(size_t index) const
 {
-    if (index > size_)
+    if (index >= size_)
         throw runtime_error(("[ChromatogramList_Bruker::chromatogramIdentity()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
     return index_[index];
@@ -95,7 +95,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index
 
 PWIZ_API_DECL ChromatogramPtr ChromatogramList_Bruker::chromatogram(size_t index, DetailLevel detailLevel) const
 {
-    if (index > size_)
+    if (index >= size_)
         throw runtime_error(("[ChromatogramList_Bruker::chromatogram()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
 

@@ -388,7 +388,7 @@ namespace pwiz.SkylineTestUtil
 
         public void WaitForVolcanoPlotPointCount(FoldChangeGrid grid, int expected)
         {
-            WaitForConditionUI(() => expected == grid.DataboundGridControl.RowCount && grid.DataboundGridControl.IsComplete,
+            WaitForConditionUI(() => expected == grid.DataboundGridControl.RowCount && grid.IsComplete,
                 string.Format("Expecting {0} points found {1}", expected, GetRowCount(grid)));
         }
 
@@ -600,8 +600,33 @@ namespace pwiz.SkylineTestUtil
         {
             WaitForGraphs();
             var graphChromatogram = GetGraphChrom(graphName);
-            MouseOverChromatogramInternal(graphChromatogram, x, y, paneKey);
-            RunUI(() => graphChromatogram.TestMouseDown(x, y, paneKey));
+            // Move the mouse and click in a single UI action, and click only if that move produced
+            // the tracking dot. The clicked time comes from the dot rather than from these
+            // coordinates, and a graph update landing between the move and the click recreates the
+            // curve holding it, which resets its position and leaves the click nothing to read.
+            bool clicked = false;
+            const int sleepCycles = 20;
+            const int sleepInterval = 100;
+            for (int i = 0; i < sleepCycles && !clicked; i++)
+            {
+                RunUI(() =>
+                {
+                    graphChromatogram.TestMouseMove(x, y, paneKey);
+                    if (!graphChromatogram.IsOverHighlightPoint(x, y, paneKey))
+                        return;
+                    graphChromatogram.TestMouseDown(x, y, paneKey);
+                    // Release at the same point, completing the gesture. A press that no handler claims
+                    // arms a zoom drag which only a mouse-up disarms, and leaving it armed makes every
+                    // later move draw a rubber band instead of tracking. The release itself does nothing:
+                    // ZedGraph ignores a zoom drag shorter than 5 pixels.
+                    graphChromatogram.TestMouseUp(x, y, paneKey);
+                    clicked = true;
+                });
+                if (!clicked)
+                    Thread.Sleep(sleepInterval);
+            }
+            AssertEx.IsTrue(clicked, string.Format("Full-scan dot not present after {0} tries in {1} seconds",
+                sleepCycles, sleepInterval * sleepCycles / 1000.0));
             WaitForGraphs();
             CheckFullScanSelection(graphName, x, y, paneKey, titleTime);
         }

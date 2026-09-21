@@ -869,11 +869,11 @@
 是否要继续构建此预测库？</value>
   </data>
   <data name="Alphapeptdeep_Warn_limited_modification" xml:space="preserve">
-    <value>警告：由于检测到以下修改，且默认预测模型的支持有限，预测库的质量可能较差：
+    <value>警告：由于默认预测模型对以下修改的支持有限，预测的库可能质量较差：
 
 {0}
 
-请考虑使用 Carafe 提供的微调方法来构建此库。
+请考虑使用 Carafe 提供的更精细的方法来构建此库。 
 
 是否要继续构建此预测库？</value>
   </data>
@@ -891,13 +891,13 @@
     <value>无法运行 AlphaPeptDeep 的 cmd-flow 命令来构建库。</value>
   </data>
   <data name="LibraryHelper_PreparePrecursorInputFile_Preparing_prediction_input_file" xml:space="preserve">
-    <value>正在准备预测输入文件</value>
+    <value>正在准备用于预测的输入文件</value>
   </data>
   <data name="LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file" xml:space="preserve">
-    <value>正在准备训练输入文件</value>
+    <value>正在准备用于训练的输入文件</value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file" xml:space="preserve">
-    <value>正在准备设置文件</value>
+    <value>正在准备用于设置的文件</value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep" xml:space="preserve">
     <value>正在运行 AlphaPeptDeep</value>

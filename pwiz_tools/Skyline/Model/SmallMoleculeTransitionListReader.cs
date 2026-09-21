@@ -33,6 +33,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -63,6 +64,11 @@ namespace pwiz.Skyline.Model
             var single = ColumnIndex(columnName);
             return single >= 0 ? new List<int> { single } : new List<int>();
         }
+
+        // A label for the column, for use in error messages - the column type assigned in the column
+        // select dialog, or the file's header text. Implemented by the concrete reader, which holds the
+        // column information (like ColumnIndex above).
+        public abstract string GetColumnName(int columnIndex);
 
         private double MzMatchTolerance { get; set; }
 
@@ -416,14 +422,34 @@ namespace pwiz.Skyline.Model
                 {
                     bool tranGroupFound = false;
                     var pepPath = new IdentityPath(pathPepGroup, pep.Id);
+                    SpectrumClassFilter rowSpectrumFilter;
+                    try
+                    {
+                        rowSpectrumFilter = ReadSpectrumClassFilter(row);
+                    }
+                    catch (Exception e) when (IsParserException(e))
+                    {
+                        // This path (adding to an existing molecule group) has no surrounding
+                        // IsParserException guard, so report the bad filter text as a row error here.
+                        ShowTransitionError(new PasteError
+                        {
+                            Column = INDEX_SPECTRUM_FILTER,
+                            Line = row.Index,
+                            Message = e.Message
+                        });
+                        return true; // Error
+                    }
                     foreach (var tranGroup in pep.TransitionGroups)
                     {
                         var pathGroup = new IdentityPath(pepPath, tranGroup.Id);
                         if (precursor.SignedMz.CompareTolerant(tranGroup.PrecursorMz, MzMatchTolerance) == 0)
                         {
-                            // Special case for mz-only, charge-only transitions - may need to derive an isotope mass
+                            // Special case for mz-only molecules with no declared label - may need to derive an
+                            // isotope mass so a heavier sibling matches its existing precursor. This applies to any
+                            // unlabeled adduct (e.g. [M-H], [M+H]), not just charge-only ones, mirroring the
+                            // derivation done when the precursor group is first created in GetMoleculeTransitionGroup.
                             var labeledAdduct = adduct;
-                            if (adduct.IsChargeOnly && !tranGroup.CustomMolecule.HasChemicalFormula)
+                            if (!adduct.HasIsotopeLabels && !pep.CustomMolecule.HasChemicalFormula)
                             {
                                 var mzCalc = adduct.ApplyToMass(pep.CustomMolecule.MonoisotopicMass);
                                 if (!Equals(precursorMonoMz, mzCalc.Value))
@@ -444,10 +470,15 @@ namespace pwiz.Skyline.Model
                                 continue;
                             }
 
+                            if (!Equals(rowSpectrumFilter, tranGroup.SpectrumClassFilter))
+                            {
+                                continue;
+                            }
+
                             tranGroupFound = true;
                             string errmsg;
                             if (AddFragmentTransitions(ref document, row, pep, tranGroup, pathGroup, out errmsg))
-                                return true; // First fragment must succeed
+                                return true; // Returns true when a fragment was not added (absent first fragment, or a duplicate reported as a row error)
 
                             if (errmsg != null)
                             {
@@ -813,6 +844,11 @@ namespace pwiz.Skyline.Model
         private int INDEX_DECLUSTERING_POTENTIAL
         {
             get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.declusteringPotential); }
+        }
+
+        private int INDEX_SPECTRUM_FILTER
+        {
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.spectrumFilter); }
         }
 
         public static int? ValidateFormulaWithMzAndAdduct(double tolerance, bool useMonoIsotopicMass, ref string moleculeFormula, ref Adduct adduct, 
@@ -2332,6 +2368,7 @@ namespace pwiz.Skyline.Model
             string errmsg;
             try
             {
+                TransitionGroupDocNode tranGroupNode;
                 var fragmentCount = FragmentCount;
                 if (fragmentCount <= 1)
                 {
@@ -2339,28 +2376,41 @@ namespace pwiz.Skyline.Model
                     var tran = GetMoleculeTransition(document, row, pep, group, moleculeInfo.ExplicitTransitionGroupValues);
                     if (tran == null)
                         return null;
-                    return new TransitionGroupDocNode(group, annotations, document.Settings, null,
+                    tranGroupNode = new TransitionGroupDocNode(group, annotations, document.Settings, null,
                         null, moleculeInfo.ExplicitTransitionGroupValues, null, new[] { tran }, false);
                 }
-
-                // Multiple fragments per line: when any fragment-oriented column type (Product m/z,
-                // Product Formula, Product Name, etc.) is assigned to more than one column, each
-                // repeat defines a separate fragment (transition). Loop over all fragment indices,
-                // reading product values from the corresponding columns.
-                var transitions = new List<TransitionDocNode>();
-                for (int fragmentIndex = 0; fragmentIndex < fragmentCount; fragmentIndex++)
+                else
                 {
-                    var tran = GetMoleculeTransitionForFragment(document, row, pep, group,
-                        moleculeInfo.ExplicitTransitionGroupValues, fragmentIndex);
-                    if (tran == null && fragmentIndex == 0)
-                        return null; // First fragment must succeed
-                    if (tran != null)
-                        transitions.Add(tran);
+                    // Multiple fragments per line: when any fragment-oriented column type (Product m/z,
+                    // Product Formula, Product Name, etc.) is assigned to more than one column, each
+                    // repeat defines a separate fragment (transition). Loop over all fragment indices,
+                    // reading product values from the corresponding columns.
+                    var transitions = new List<TransitionDocNode>();
+                    for (int fragmentIndex = 0; fragmentIndex < fragmentCount; fragmentIndex++)
+                    {
+                        var tran = GetMoleculeTransitionForFragment(document, row, pep, group,
+                            moleculeInfo.ExplicitTransitionGroupValues, fragmentIndex);
+                        if (tran == null && fragmentIndex == 0)
+                            return null; // First fragment must succeed
+                        if (tran != null)
+                        {
+                            if (IsDuplicateFragmentOnLine(transitions, tran, row, fragmentIndex))
+                                return null; // Reported as a row error, surfaced via "Check For Errors"
+                            transitions.Add(tran);
+                        }
+                    }
+                    if (transitions.Count == 0)
+                        return null;
+                    tranGroupNode = new TransitionGroupDocNode(group, annotations, document.Settings, null,
+                        null, moleculeInfo.ExplicitTransitionGroupValues, null, transitions.ToArray(), false);
                 }
-                if (transitions.Count == 0)
-                    return null;
-                return new TransitionGroupDocNode(group, annotations, document.Settings, null,
-                    null, moleculeInfo.ExplicitTransitionGroupValues, null, transitions.ToArray(), false);
+
+                var spectrumFilter = ReadSpectrumClassFilter(row);
+                if (!spectrumFilter.IsEmpty)
+                {
+                    tranGroupNode = tranGroupNode.ChangeSpectrumClassFilter(spectrumFilter);
+                }
+                return tranGroupNode;
             }
             catch (Exception x) when (IsParserException(x))
             {
@@ -2373,6 +2423,21 @@ namespace pwiz.Skyline.Model
                 Message = errmsg
             });
             return null;
+        }
+
+        private SpectrumClassFilter ReadSpectrumClassFilter(Row row)
+        {
+            var filterString = GetCellTrimmed(row, INDEX_SPECTRUM_FILTER);
+            if (string.IsNullOrEmpty(filterString))
+                return default;
+            // Surface unparseable or unknown-property filter text as a row import error rather than
+            // letting ParseFilterString throw a FormatException that escapes the IsParserException
+            // guards and crashes the import. ValidateFilterString also flags unknown spectrum
+            // properties, which the lenient parser would otherwise accept.
+            var error = SpectrumClassFilter.ValidateFilterString(filterString);
+            if (error != null)
+                throw new InvalidDataException(error);
+            return SpectrumClassFilter.ParseFilterString(filterString);
         }
 
         private bool FragmentColumnsIdenticalToPrecursorColumns(ParsedIonInfo precursor, ParsedIonInfo fragment)
@@ -2479,10 +2544,78 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
+        /// Detects the case where a single line of the transition list declares the same fragment more
+        /// than once and reports it as a row import error (surfaced by "Check For Errors" and on import).
+        /// The multiple-fragments-per-line feature deliberately allows a product column type to be
+        /// assigned to several columns, but a line must not resolve two of its fragments to an identical
+        /// transition: one precursor cannot hold two identical transitions (see
+        /// TransitionGroupDocNode.CreateTransitionLossToChildMap). Distinct precursors may of course share
+        /// identical fragments - this only checks within a single line. Returns true (and reports the
+        /// error) when <paramref name="tran"/> duplicates a fragment already produced for this line.
+        /// </summary>
+        private bool IsDuplicateFragmentOnLine(IEnumerable<TransitionDocNode> lineTransitions, TransitionDocNode tran, Row row, int fragmentIndex)
+        {
+            // For a small-molecule custom-ion fragment the Transition is the complete identity (product
+            // ion, adduct/charge, ion type); losses and complex-fragment-ion names are peptide concepts
+            // that are always null here.
+            if (!lineTransitions.Any(t => Equals(t.Transition, tran.Transition)))
+                return false;
+            var column = GetProductColumnForDuplicateFragment(fragmentIndex);
+            ShowTransitionError(new PasteError
+            {
+                Column = column,
+                Line = row.Index,
+                Message = string.Format(
+                    ModelResources.SmallMoleculeTransitionListReader_IsDuplicateFragmentOnLine_The_same_fragment__product_m_z__0___is_declared_more_than_once_on_a_single_line_of_the_transition_list__See_column__1__,
+                    tran.Mz, GetColumnDescription(column))
+            });
+            return true;
+        }
+
+        /// <summary>
+        /// Describes a column for an error message as its 1-based number plus header name when known,
+        /// e.g. 13 "Product Charge"; falls back to just the number when there is no header row.
+        /// </summary>
+        private string GetColumnDescription(int columnIndex)
+        {
+            var columnNumber = (columnIndex + 1).ToString(CultureInfo.CurrentCulture);
+            var name = GetColumnName(columnIndex);
+            return string.IsNullOrEmpty(name)
+                ? columnNumber
+                : string.Format(ModelResources.SmallMoleculeTransitionListReader_GetColumnDescription_NumberAndName__0____1__, columnNumber, name);
+        }
+
+        /// <summary>
+        /// Identifies the product column that actually has a distinct assignment at
+        /// <paramref name="fragmentIndex"/> - i.e. the repeated column that created this fragment, rather
+        /// than a value reused via fill-forward. This is the column that turned a single declared fragment
+        /// into a duplicate (e.g. a second "Product Charge" column when there is only one "Product m/z"),
+        /// so the error points the user at the column to remove. Falls back to the Product m/z column.
+        /// </summary>
+        private int GetProductColumnForDuplicateFragment(int fragmentIndex)
+        {
+            foreach (var columnName in new[]
+            {
+                SmallMoleculeTransitionListColumnHeaders.mzProduct,
+                SmallMoleculeTransitionListColumnHeaders.formulaProduct,
+                SmallMoleculeTransitionListColumnHeaders.nameProduct,
+                SmallMoleculeTransitionListColumnHeaders.neutralLossProduct,
+                SmallMoleculeTransitionListColumnHeaders.chargeProduct,
+                SmallMoleculeTransitionListColumnHeaders.adductProduct
+            })
+            {
+                var indices = ColumnIndicesMulti(columnName);
+                if (indices.Count > fragmentIndex)
+                    return indices[fragmentIndex];
+            }
+            return INDEX_PRODUCT_MZ;
+        }
+
+        /// <summary>
         /// Add transitions for all fragments in a multi-fragment-per-line row to an existing
         /// transition group, skipping any that already exist or have empty/NA product columns.
-        /// Returns true if the first fragment fails (caller should treat as error).
-        /// Sets errmsg on parser exceptions.
+        /// Returns true (caller should treat as error) if the first fragment fails or the line declares
+        /// the same fragment twice. Sets errmsg on parser exceptions.
         /// </summary>
         private bool AddFragmentTransitions(ref SrmDocument document, Row row,
             PeptideDocNode pep, TransitionGroupDocNode tranGroup, IdentityPath pathGroup, out string errmsg)
@@ -2491,6 +2624,7 @@ namespace pwiz.Skyline.Model
             try
             {
                 var fragmentCount = FragmentCount;
+                var lineTransitions = new List<TransitionDocNode>();
                 for (int fragmentIndex = 0; fragmentIndex < fragmentCount; fragmentIndex++)
                 {
                     var tranNode = GetMoleculeTransitionForFragment(document, row, pep.Peptide,
@@ -2501,6 +2635,13 @@ namespace pwiz.Skyline.Model
                             return true; // First fragment must succeed
                         continue; // Skip empty/NA fragments
                     }
+
+                    // If a later fragment on this line is a duplicate, earlier ones may already have been
+                    // added above. That is intentional: a normal import rejects the whole row on any error,
+                    // and the leftover transitions are individually valid in the import-anyway case.
+                    if (IsDuplicateFragmentOnLine(lineTransitions, tranNode, row, fragmentIndex))
+                        return true; // Reported as a row error, surfaced via "Check For Errors"
+                    lineTransitions.Add(tranNode);
 
                     if (!tranGroup.Transitions.Any(t => Equals(tranNode.Transition.CustomIon, t.Transition.CustomIon)))
                     {
@@ -2697,6 +2838,14 @@ namespace pwiz.Skyline.Model
         {
             return _csvReader.GetFieldIndices(columnName);
         }
+
+        public override string GetColumnName(int columnIndex)
+        {
+            // FieldNames are the column labels: the types assigned in the column select dialog when
+            // provided (these override any header row), otherwise the file's header text - so a name is
+            // available even for a headerless list. ElementAtOrDefault returns null if out of range.
+            return _csvReader.FieldNames.ElementAtOrDefault(columnIndex);
+        }
     }
 
     // Custom molecule transition list internal column names, for saving to settings
@@ -2740,6 +2889,8 @@ namespace pwiz.Skyline.Model
         public const string idSMILES = "SMILES";
         public const string idKEGG = "KEGG";
         public const string ignoreColumn = "IgnoreColumn"; // We want to be able to recognize these columns to avoid throwing an error and then we ignore them
+
+        public const string spectrumFilter = "SpectrumFilter";
 
         public const string iRT = "IRT"; // For assay library use
         public const string libraryIntensity = "LibraryIntensity"; // For assay library use
@@ -2789,6 +2940,7 @@ namespace pwiz.Skyline.Model
                 idSMILES,
                 idKEGG,
                 neutralLossProduct,
+                spectrumFilter,
                 ignoreColumn, // Does not contain useful data, can be more than one in a list
                 imPrecursor_invK0, // Ion mobility with implied units 1/K0
             });
@@ -2921,6 +3073,7 @@ namespace pwiz.Skyline.Model
                     Tuple.Create(idKEGG, idKEGG),
                     Tuple.Create(neutralLossProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss),
                     Tuple.Create(libraryIntensity, ModelResources.PasteDlg_UpdateMoleculeType_Library_Intensity),
+                    Tuple.Create(spectrumFilter, spectrumFilter),
                     Tuple.Create(ignoreColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column),
                     // ReSharper restore StringLiteralTypo
                 })

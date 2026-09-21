@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using pwiz.Skyline.Alerts;
@@ -77,17 +76,13 @@ namespace pwiz.Skyline.ToolsUI
             }
             catch (Exception x)
             {
-                // Handle specific user-actionable exceptions that might be wrapped in TargetInvocationException
-                if (x is TargetInvocationException targetEx)
+                // JsonReaderException from web service is user-actionable (server maintenance issue)
+                if (x is JsonReaderException)
                 {
-                    // JsonReaderException from web service is user-actionable (server maintenance issue)
-                    if (targetEx.InnerException is JsonReaderException)
-                    {
-                        MessageDlg.Show(parent, ToolsUIResources.ToolInstallUI_InstallZipFromWeb_The_server_returned_an_invalid_response__It_might_be_down_for_maintenance__Please_check_the_Tool_Store_on_the_skyline_ms_website_);
-                        return;
-                    }
+                    MessageDlg.Show(parent, ToolsUIResources.ToolInstallUI_InstallZipFromWeb_The_server_returned_an_invalid_response__It_might_be_down_for_maintenance__Please_check_the_Tool_Store_on_the_skyline_ms_website_);
+                    return;
                 }
-                
+
                 ExceptionUtil.DisplayOrReportException(parent, x, Resources.ConfigureToolsDlg_GetZipFromWeb_Error_connecting_to_the_Tool_Store_);
             }
         }

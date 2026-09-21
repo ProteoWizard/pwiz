@@ -12,6 +12,7 @@
     <AssemblyName>seems</AssemblyName>
     <ApplicationIcon>Misc\SpectrumIcon.ico</ApplicationIcon>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <RuntimeIdentifiers>win;win-x64;win-x86</RuntimeIdentifiers>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
     </FileUpgradeFlags>

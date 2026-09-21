@@ -325,7 +325,7 @@
     <value>置信水平</value>
   </data>
   <data name="ConstantNeutralLoss">
-    <value>恒定中性损耗</value>
+    <value>恒定中性损失</value>
   </data>
   <data name="CountTruncated">
     <value>截尾计数</value>
@@ -418,28 +418,28 @@
     <value>从校准中排除</value>
   </data>
   <data name="ExemplaryEndTime">
-    <value>范例结束时间</value>
+    <value>结束时间示例</value>
   </data>
   <data name="ExemplaryFilePath">
-    <value>范例文件路径</value>
+    <value>文件路径示例</value>
   </data>
   <data name="ExemplaryLibraryName">
-    <value>范例库名称</value>
+    <value>库名称示例</value>
   </data>
   <data name="ExemplaryPeak">
-    <value>范例峰</value>
+    <value>峰示例</value>
   </data>
   <data name="ExemplaryReplicateName">
-    <value>范例重复测定名称</value>
+    <value>重复测定名称示例</value>
   </data>
   <data name="ExemplaryRetentionTime">
-    <value>范例保留时间</value>
+    <value>保留时间示例</value>
   </data>
   <data name="ExemplaryScore">
-    <value>范例得分</value>
+    <value>得分示例</value>
   </data>
   <data name="ExemplaryStartTime">
-    <value>范例起始时间</value>
+    <value>起始时间示例</value>
   </data>
   <data name="ExplicitAnalyteConcentration">
     <value>明确分析物浓度</value>
@@ -537,6 +537,9 @@
   <data name="Group">
     <value>组</value>
   </data>
+  <data name="GroupComparison">
+    <value>群组比较</value>
+  </data>
   <data name="Height">
     <value>高度</value>
   </data>
@@ -547,13 +550,13 @@
     <value>已确认的</value>
   </data>
   <data name="ImputedEndTime">
-    <value>插补结束时间</value>
+    <value>划定的结束时间</value>
   </data>
   <data name="ImputedPeak">
-    <value>插补峰</value>
+    <value>划定的峰</value>
   </data>
   <data name="ImputedStartTime">
-    <value>插补起始时间</value>
+    <value>划定的起始时间</value>
   </data>
   <data name="InChI">
     <value>InChI（国际化合物标识）</value>
@@ -1342,19 +1345,19 @@
     <value>原因</value>
   </data>
   <data name="ReintegratedEndTime">
-    <value>重新合并结束时间</value>
+    <value>重新整合的结束时间</value>
   </data>
   <data name="ReintegratedPeak">
-    <value>重新合并峰</value>
+    <value>重新整合的峰</value>
   </data>
   <data name="ReintegratedRetentionTime">
-    <value>重新合并保留时间</value>
+    <value>重新整合的保留时间</value>
   </data>
   <data name="ReintegratedScore">
-    <value>重新合并得分</value>
+    <value>重新整合的得分</value>
   </data>
   <data name="ReintegratedStartTime">
-    <value>重新合并起始时间</value>
+    <value>重新整合的起始时间</value>
   </data>
   <data name="Replicate">
     <value>重复测定</value>

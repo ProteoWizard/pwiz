@@ -200,7 +200,7 @@
     <value>最適化ライブラリを更新</value>
   </data>
   <data name="FilesTreeForm_Update_RTCalculator" xml:space="preserve">
-    <value>保持時間カルキュレータを更新</value>
+    <value>保持時間計算ツールを更新</value>
   </data>
   <data name="FilesTreeForm_Update_SpectralLibrary" xml:space="preserve">
     <value>スペクトルライブラリを更新</value>

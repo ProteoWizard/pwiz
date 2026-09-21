@@ -327,7 +327,7 @@
 電子メールを受信していない場合は、入力したメールアドレスをご確認ください。トラブルシューティングするには「詳細」をクリックしてください。</value>
   </data>
   <data name="MsFraggerDownloadDlg_RequestVerificationCode_Contacting_MS_Fragger_download_server" xml:space="preserve">
-    <value>MS Fraggerダウンロードサーバーに連絡中</value>
+    <value>MS Fraggerダウンロードサーバーに接続中</value>
   </data>
   <data name="TestToolStoreClient_GetToolZipFile_Error_downloading_tool" xml:space="preserve">
     <value>ツールのダウンロードエラー</value>

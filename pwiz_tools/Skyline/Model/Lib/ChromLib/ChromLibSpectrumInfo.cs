@@ -22,18 +22,19 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Lib.ChromLib
 {
     public class ChromLibSpectrumInfo : ICachedSpectrumInfo
     {
-        public ChromLibSpectrumInfo(LibKey key, int id, int sampleFileId, double peakArea, IndexedRetentionTimes retentionTimesByFileId, IonMobilityAndCCS ionMobility, IEnumerable<SpectrumPeaksInfo.MI> transitionAreas, string protein)
+        public ChromLibSpectrumInfo(LibKey key, int id, int sampleFileId, double peakArea, IndexedMultiArray<float> retentionTimesByFileIndex, IonMobilityAndCCS ionMobility, IEnumerable<SpectrumPeaksInfo.MI> transitionAreas, string protein)
         {
             Key = key;
             Id = id;
             SampleFileId = sampleFileId;
             PeakArea = peakArea;
-            RetentionTimesByFileId = retentionTimesByFileId;
+            RetentionTimesByFileIndex = retentionTimesByFileIndex;
             IonMobility = ionMobility ?? IonMobilityAndCCS.EMPTY;
             TransitionAreas = ImmutableList.ValueOf(transitionAreas) ?? ImmutableList.Empty<SpectrumPeaksInfo.MI>();
             Protein = protein ?? string.Empty;
@@ -43,16 +44,16 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
         public int SampleFileId { get; private set; }
         public double PeakArea { get; private set; }
         public string Protein { get; private set; } // Some .clib files provide a protein accession (or Molecule List Name for small molecules)
-        public IndexedRetentionTimes RetentionTimesByFileId { get; private set; }
+        public IndexedMultiArray<float> RetentionTimesByFileIndex { get; private set; }
         public IonMobilityAndCCS IonMobility { get; private set; }
         public IList<SpectrumPeaksInfo.MI> TransitionAreas { get; private set; }
-        public void Write(Stream stream)
+        public void Write(Stream stream, IList<int> fileIds)
         {
             Key.Write(stream);
             PrimitiveArrays.WriteOneValue(stream, Id);
             PrimitiveArrays.WriteOneValue(stream, SampleFileId);
             PrimitiveArrays.WriteOneValue(stream, PeakArea);
-            RetentionTimesByFileId.Write(stream);
+            WriteRetentionTimes(stream, RetentionTimesByFileIndex, fileIds);
             IonMobility.Write(stream);
             PrimitiveArrays.WriteOneValue(stream, TransitionAreas.Count);
             PrimitiveArrays.Write(stream, TransitionAreas.Select(mi => mi.Mz).ToArray());
@@ -71,13 +72,13 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             PrimitiveArrays.WriteString(stream, Protein);
         }
 
-        public static ChromLibSpectrumInfo Read(ValueCache valueCache, Stream stream)
+        public static ChromLibSpectrumInfo Read(ValueCache valueCache, Stream stream, IDictionary<int, int> fileIndexesById)
         {
             LibKey key = LibKey.Read(valueCache, stream);
             int id = PrimitiveArrays.ReadOneValue<int>(stream);
             int sampleFileId = PrimitiveArrays.ReadOneValue<int>(stream);
             double peakArea = PrimitiveArrays.ReadOneValue<double>(stream);
-            var retentionTimesByFileId = IndexedRetentionTimes.Read(stream);
+            var retentionTimesByFileIndex = ReadRetentionTimes(stream, fileIndexesById);
             var ionMobility = IonMobilityAndCCS.Read(stream);
             int mzCount = PrimitiveArrays.ReadOneValue<int>(stream);
             var mzs = PrimitiveArrays.Read<double>(stream, mzCount);
@@ -104,7 +105,60 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                     Annotations = annotations?[index]
                 }));
             var protein = PrimitiveArrays.ReadString(stream);
-            return new ChromLibSpectrumInfo(key, id, sampleFileId, peakArea, retentionTimesByFileId, ionMobility, mzAreas, protein);
+            return new ChromLibSpectrumInfo(key, id, sampleFileId, peakArea, retentionTimesByFileIndex, ionMobility, mzAreas, protein);
+        }
+
+        /// <summary>
+        /// Writes the times of each file, identified by its database id rather than by its index,
+        /// so that the cache format does not depend on the order of the sample files.
+        /// </summary>
+        private static void WriteRetentionTimes(Stream stream, IndexedMultiArray<float> times, IList<int> fileIds)
+        {
+            int fileCount = 0;
+            for (int fileIndex = 0; fileIndex < times.Count; fileIndex++)
+            {
+                if (times.GetCount(fileIndex) > 0)
+                {
+                    fileCount++;
+                }
+            }
+
+            PrimitiveArrays.WriteOneValue(stream, fileCount);
+            for (int fileIndex = 0; fileIndex < times.Count; fileIndex++)
+            {
+                int count = times.GetCount(fileIndex);
+                if (count == 0)
+                {
+                    continue;
+                }
+
+                PrimitiveArrays.WriteOneValue(stream, fileIds[fileIndex]);
+                PrimitiveArrays.WriteOneValue(stream, count);
+                PrimitiveArrays.Write(stream, times[fileIndex].ToArray());
+            }
+        }
+
+        private static IndexedMultiArray<float> ReadRetentionTimes(Stream stream, IDictionary<int, int> fileIndexesById)
+        {
+            int fileCount = PrimitiveArrays.ReadOneValue<int>(stream);
+            var timesByFileIndex = new List<KeyValuePair<int, float>>();
+            for (int i = 0; i < fileCount; i++)
+            {
+                int fileId = PrimitiveArrays.ReadOneValue<int>(stream);
+                int timeCount = PrimitiveArrays.ReadOneValue<int>(stream);
+                var times = PrimitiveArrays.Read<float>(stream, timeCount);
+                if (!fileIndexesById.TryGetValue(fileId, out int fileIndex))
+                {
+                    continue;
+                }
+
+                foreach (var time in times)
+                {
+                    timesByFileIndex.Add(new KeyValuePair<int, float>(fileIndex, time));
+                }
+            }
+
+            return timesByFileIndex.ToIndexedMultiArray();
         }
     }
 }
