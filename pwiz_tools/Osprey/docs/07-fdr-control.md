@@ -16,7 +16,7 @@ Primary C# code:
 | File | Role |
 |------|------|
 | `Osprey.FDR/PercolatorEngine.cs` | Orchestration: build `PercolatorEntry` input, dispatch, write results back onto stubs, best-of-runs clamp |
-| `Osprey.FDR/PercolatorFdr.cs` | Native Percolator: standardize, subsample, fold assignment, SVM training, Granholm calibration, PEP, q-values |
+| `Osprey.FDR/PercolatorTrainer.cs`, `PercolatorSampling.cs`, `PercolatorScorer.cs`, `PercolatorQValues.cs`, `StreamingFdr.cs` | Native Percolator (split out of the former `PercolatorFdr.cs` in #4490): standardize, subsample, fold assignment, SVM training, Granholm calibration, PEP, q-values |
 | `Osprey.FDR/PercolatorEntryBuilder.cs` | Build the flat `PercolatorEntry` list from `FdrEntry` stubs |
 | `Osprey.FDR/FdrController.cs` | Simple target-decoy competition (used by `--fdr-method simple`) |
 | `Osprey.FDR/FdrProjection.cs`, `FdrProjectionOutput.cs` | Thin peak-buffer projection path (issue #4355) driving the identical SVM core |
@@ -73,13 +73,13 @@ vector is *not* held resident on the streaming path — it is reloaded on demand
 delegate).
 
 Target/decoy pairing uses the high bit of `EntryId`: `base_id = EntryId & 0x7FFFFFFF`
-(`PercolatorFdr.cs:258`, `BASE_ID_MASK = 0x7FFFFFFF`). A target and its paired decoy
+(`PercolatorEntry.cs:42`, `BASE_ID_MASK = 0x7FFFFFFF`). A target and its paired decoy
 share `base_id`; the decoy has the high bit set.
 
-`PercolatorEntryBuilder.Build` (`PercolatorEngine.cs:105`) emits exactly one
+`PercolatorEntryBuilder.Build` (`PercolatorEntryBuilder.cs:52`) emits exactly one
 `PercolatorEntry` per stub in nested `(file, entry)` order. Results are later zipped
 back **by position** — the former psm_id-keyed re-join was removed as redundant
-(`PercolatorEngine.ApplyPercolatorResults`, `PercolatorEngine.cs:404`). Before
+(`PercolatorEngine.ApplyPercolatorResults`, `PercolatorEngine.cs:519`). Before
 building, each file's entries are sorted by `(EntryId, Charge, ScanNumber,
 ParquetIndex)` so the SVM working-set order is canonical across Rust and C#
 (`PercolatorEngine.cs:82`).
@@ -121,7 +121,7 @@ implementation with the XGBoost regularized objective (logistic loss, per-leaf L
 min split gain, row/column subsampling, histogram split finding), made deterministic
 with `XorShift64` and single-threaded float accumulation.
 
-Two structural differences from the SVM path (`PercolatorFdr.TrainFoldGbt`): there is
+Two structural differences from the SVM path (`PercolatorTrainer.TrainFoldGbt`, `PercolatorTrainer.cs:906`): there is
 **no `GridSearchC`** (trees have no cost parameter), and iteration selection is
 **honest** — because trees grow monotonically the in-sample passing count would always
 pick the most-overfit round, so the best iteration is chosen on a held-out inner split
@@ -140,24 +140,24 @@ default and the parity-gated path.
 
 ## Step 3 — Native Percolator (default)
 
-`PercolatorFdr.RunPercolator` (`PercolatorFdr.cs:264`) implements the semi-supervised
+`PercolatorTrainer.RunPercolator` (`PercolatorTrainer.cs:54`) implements the semi-supervised
 Percolator of Käll et al. (2007). Both targets and their paired decoys enter — no
 upstream competition. The C# port is **streaming-only**: the former sub-threshold
 "direct" branch that trained on all entries was removed to match Rust's streaming-only
 change, so C# and Rust fit the standardizer on subsets built by the same selection code at
 every scale — though **no longer on the same subset by default**, since the training
-selection below is C#-only (`PercolatorEngine.DispatchSvm`, `PercolatorEngine.cs:336`;
-`RunPercolatorStreaming`, `PercolatorEngine.cs:473`).
+selection below is C#-only (`PercolatorEngine.DispatchSvm`, `PercolatorEngine.cs:413`;
+`RunPercolatorStreaming`, `PercolatorEngine.cs:589`).
 
 ### 3a. Standardize features
 
 `FeatureStandardizer.FitTransform` standardizes every feature to zero mean / unit
-variance (`PercolatorFdr.cs:292`). On the streaming path the standardizer is fit on the
+variance (`PercolatorTrainer.cs:82`). On the streaming path the standardizer is fit on the
 **training subset**, not the full population (`RunPercolatorStreaming`).
 
 ### 3b. Best-per-precursor dedup + peptide-grouped subsample
 
-`PercolatorFdr.BuildTrainingSubset` (called at `PercolatorFdr.cs:338` and from both
+`PercolatorSampling.BuildTrainingSubset` (`PercolatorSampling.cs:161`, called at `PercolatorTrainer.cs:128` and from both
 streaming callers) does two things, keeping target/decoy pairs and all charge states of
 a peptide together:
 
@@ -188,7 +188,7 @@ a peptide together:
    maximum (`crates/osprey/src/pipeline.rs`), so the two agree only under
    `OSPREY_TRAIN_PICK_RUN=0`.
 2. **Subsample**: if the dedup set still exceeds `MaxTrainSize` (default **300000**,
-   `PercolatorConfig` ctor `PercolatorFdr.cs:123`), `SubsampleByPeptideGroup` samples
+   `PercolatorConfig` ctor `PercolatorConfig.cs:134`), `SubsampleByPeptideGroup` samples
    whole peptide groups using the same XOR-shift PRNG seed (default **42**) and
    peptide-key sort order as Rust.
 
@@ -196,7 +196,7 @@ The learned model is later applied to **all** entries, not just the subset.
 
 ### 3c. Fold assignment
 
-`CreateStratifiedFoldsByPeptide` (`PercolatorFdr.cs:390`) assigns 3 folds
+`CreateStratifiedFoldsByPeptide` (`PercolatorSampling.cs:84`) assigns 3 folds
 (`NFolds = 3`) grouping by target peptide via `base_id`, so all charge states and the
 paired decoy of a peptide land in the same fold. This enforces the critical invariant:
 splitting pairs across folds would let unpaired targets auto-win competition in a
@@ -204,45 +204,63 @@ training fold and make the SVM too permissive.
 
 ### 3d. Best initial feature
 
-`FindBestInitialFeature` (`PercolatorFdr.cs:411`) scores every entry by each single
+`FindBestInitialFeature` (`PercolatorTrainer.cs:1139`) scores every entry by each single
 standardized feature (ascending only) and counts targets passing after paired
 competition; the feature with the most passing targets seeds iteration 0. If zero pass at
-the train FDR, it relaxes to 5% (`PercolatorFdr.cs:414`). The chosen feature name is
+the train FDR, it relaxes to 5% (`PercolatorTrainer.cs:200`). The chosen feature name is
 logged via `config.FeatureInfos`.
 
 ### 3e. Iterative SVM training per fold
 
 Folds train in parallel via `OspreyParallel.For` (explicit dedicated threads, chosen over
-TPL because the TaskReplicator throttled effective parallelism) — `PercolatorFdr.cs:488`.
+TPL because the TaskReplicator throttled effective parallelism) — `PercolatorTrainer.cs:565`.
 Each fold runs `TrainFold` up to `MaxIterations = 10` iterations:
 
 1. Select the positive training set: targets passing `TrainFdr` on the current scores;
-   if fewer than `MIN_POSITIVE = 50` (`PercolatorFdr.cs:259`) pass, relax progressively.
+   if fewer than `MIN_POSITIVE = 50` (`PercolatorTrainer.cs:49`) pass, relax progressively.
 2. Build the SVM set: selected targets (positive) + all decoys (negative).
 3. Grid-search C over `CValues = {0.001, 0.01, 0.1, 1.0, 10.0, 100.0}`
-   (`PercolatorFdr.cs:122`) via inner CV each iteration.
+   (`PercolatorConfig.cs:133`) via inner CV each iteration.
 4. Train an L2-regularized linear SVM by dual coordinate descent
    (`LinearSvmClassifier.cs`).
 5. Score, count passing targets, track the best model; stop after 2 non-improving
    iterations.
 
-The selected per-fold C is reported on the console (`PercolatorFdr.cs:516`).
+The selected per-fold C is reported on the console (`PercolatorTrainer.cs:622-628`).
 
 ### 3f. Score all entries
 
 Held-out CV entries are scored by their fold's model; entries outside the training subset
-are scored by the **average** of all fold models (`PercolatorFdr.cs:565-627`). On the
+are scored by the **average** of all fold models (`ScoreEntriesWithFoldModels`, `PercolatorTrainer.cs:433-490`). On the
 streaming path this is done by `ScorePopulationAndComputeFdr` /
 `ScoreProjectionAndComputeFdrInPlace`, which average the fold weights + bias and apply
 `standardizer` + averaged model to every entry, reloading features one file at a time
-(`PercolatorFdr.cs:760`, `PercolatorFdr.cs:1110`).
+(`PercolatorScorer.cs:63`, `PercolatorScorer.cs:276`).
+
+#### Reading the feature-contribution table
+
+`--model-diagnostics` / `--verbose` print a percent-contribution table
+(`Osprey.FDR/FeatureContributions.cs`) that decomposes the trained linear model's
+target-decoy mean gap: `share_j = w_j (mu_t,j - mu_d,j) / sum_k w_k (mu_t,k - mu_d,k)`.
+It is headed "Model sanity check" and it is a **description, not feature importance**:
+
+- The decomposition is valid for any linear discriminant. SVM and LDA share the form
+  `s = w.x + b`; a q cutoff maps to a score threshold and the boundary is a hyperplane.
+  They differ only in the objective orienting `w` (max-margin vs Fisher ratio).
+- Importance ("would we lose IDs without it") needs ablation or permutation. The
+  obstacle is collinearity, not the SVM: an L2 SVM spreads weight across a covarying
+  group, so each member looks individually dispensable while the group matters, and
+  coefficients alone cannot say whether one of them is unneeded.
+- Percolator's 3-fold CV gives fold-to-fold weight stability for free; the importance
+  and redundancy diagnostics built on that (fold stability, univariate AUROC, grouped
+  contribution, permutation importance) are #4467 and #4550.
 
 ### 3g. Granholm score calibration between folds
 
-`CalibrateScoresBetweenFolds` (`PercolatorFdr.cs:2105`) linearly normalizes each fold's
+`CalibrateScoresBetweenFolds` (`PercolatorTrainer.cs:1263`) linearly normalizes each fold's
 scores per Granholm et al. (2012): the score at the FDR threshold maps to 0 and the median
 decoy score maps to -1, via `(score - thresholdScore) / (thresholdScore - medianDecoy)`
-(`PercolatorFdr.cs:2149-2154`).
+(`PercolatorTrainer.cs:1303-1312`).
 
 ### 3h. Posterior error probability (PEP)
 
@@ -251,17 +269,17 @@ decoy score maps to -1, via `(score - thresholdScore) / (thresholdScore - median
 `P(decoy | score)`, and isotonic regression (PAVA) for monotonicity (default 1000 bins,
 `DEFAULT_N_BINS`). Non-winners get `Pep = 1.0`. For byte-exact cross-impl parity the
 winner arrays are re-sorted **base_id-ascending** before the fit, because the KDE sum is
-non-associative (`ComputeStreamingCompetitionQvalues`, `PercolatorFdr.cs:977`). PEP is
+non-associative (`PercolatorQValues.ComputePepWinnerMap`, `PercolatorQValues.cs:87-101`, shared by `ComputeStreamingCompetitionQvalues`). PEP is
 Sage-derived (MIT-licensed header at `PepEstimator.cs:31`), the same origin as the Rust
 implementation.
 
 ### 3i. Q-values at four levels
 
 All q-values use the conservative `(decoys + 1) / targets` estimate with a backward
-monotonicity sweep (`ComputeQvaluesCore`, `PercolatorFdr.cs:1881`,
+monotonicity sweep (`ComputeQvaluesCore`, `PercolatorQValues.cs:374`,
 `decoyOffset = 1` for conservative). The four levels
 (`ScorePopulationAndComputeFdr` / `ComputeStreamingCompetitionQvalues`,
-`PercolatorFdr.cs:998-1019`):
+`StreamingFdr.cs:102-121`):
 
 | Level | Scope | Method |
 |-------|-------|--------|
@@ -276,7 +294,7 @@ observations collapse to the one score that competes is selectable - see
 for the opt-in mean(best-N) alternative.
 
 **Single-file shortcut**: when only one file is present, experiment q-values are a clone
-of the run q-values (`PercolatorFdr.cs:682`, `PercolatorFdr.cs:1008`) — no separate
+of the run q-values (`PercolatorTrainer.cs:348-349`, `StreamingFdr.cs:113-114`) — no separate
 aggregation.
 
 ### 3j. Best-of-runs clamp on experiment q-values
@@ -295,8 +313,8 @@ ExperimentPeptideQvalue   <- max(ExperimentPeptideQvalue,   min-over-runs runBot
 Both floors key on the target/decoy-specific identity (never the shared `base_id` or bare
 sequence), so a decoy's good run cannot lower its paired target's floor. Two identical
 implementations exist: the memory-bounded flat form `ClampExperimentQToBestRunFlat`
-runs in-pass over the score arrays (`PercolatorFdr.cs:1040`); the resident overload
-`PercolatorEngine.ClampExperimentQToBestRun` (`PercolatorEngine.cs:864`) is re-applied
+runs in-pass over the score arrays (`PercolatorQValues.cs:122`); the resident overload
+`PercolatorEngine.ClampExperimentQToBestRun` (`PercolatorEngine.cs:1009`) is re-applied
 after Stage 6 reconciliation in `SecondPassFdrTask`, because reconciliation resets the run
 q-values of moved and gap-filled peaks (issue #4390).
 
@@ -510,6 +528,18 @@ SVM decision boundary and would drag a missing unit **up** toward detection. Wit
 decoys at all the floor is 0. Non-finite decoy scores are excluded from the sample on
 both code paths.
 
+**Zero is the decision boundary everywhere, not a neutral value.** In the normalized
+discriminant (3g) the score at the q cutoff maps to 0, so a score left at `0.0` for
+"not computed" parks that entry exactly on the accept/reject line: entries whose real
+score is positive are suppressed, negative ones inflated. Where the affected population
+is label-skewed the error is directional. That was #4553: Stage 6 zeroed `score` on the
+peaks it touched, which are decoys about twice as often as targets, so the decoy null
+was suppressed harder than the target signal and picked-protein FDR (which ranks on the
+raw discriminant) reported q too low. A "not yet computed" sentinel for a discriminant
+must sit outside the acceptable range (the decoy median, or `-inf`), never at 0, and a
+reset of scoring fields has to name the consumer that reads the field before anything
+recomputes it.
+
 **The `MEANBEST2` name is historical** - it predates the best-2 to best-N
 generalization. Both toggles apply at every N.
 
@@ -661,13 +691,13 @@ All defaults are from `Osprey.Core/OspreyConfig.cs` and `Osprey/OspreyCommandArg
 | `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}` | (single-process) | HPC split. The internal `HpcTask` enum values are `PerFileScoring, FirstPassFdr, PerFileRescore, SecondPassFdr` (`OspreyConfig.cs`); note the enum spells `PerFileRescore` where the CLI takes `PerFileRescoring`. See `15-hpc-scoring-split.md`. |
 
 Internal Percolator constants (not CLI-exposed; `PercolatorConfig` ctor
-`PercolatorFdr.cs:115`): `MaxIterations = 10`, `NFolds = 3`, `Seed = 42`,
+`PercolatorConfig.cs:126`): `MaxIterations = 10`, `NFolds = 3`, `Seed = 42`,
 `CValues = {0.001,0.01,0.1,1,10,100}`, `MaxTrainSize = 300000`.
 
 **Diagnostic env vars** (Stage 5 dumps, carried in via `PercolatorDiagnosticsConfig`,
 never read directly by the engine): `OSPREY_DUMP_STANDARDIZER`, `OSPREY_DUMP_PERC_INPUT`,
 `OSPREY_DUMP_SUBSAMPLE`, `OSPREY_DUMP_SVM_WEIGHTS`, each with an `*_ONLY` variant that
-aborts after the dump (`PercolatorFdr.cs:302-534`). `OSPREY_DUMP_LDA_SCORES` affects the
+aborts after the dump (`PercolatorTrainer.cs:92-254`). `OSPREY_DUMP_LDA_SCORES` affects the
 calibration LDA, not Percolator.
 
 ---
@@ -729,8 +759,8 @@ calibration LDA, not Percolator.
   Rust doc notes the direct (non-streaming) path was removed in v26.7.0 and Percolator
   "always streams". C# matches: `DispatchSvm` always takes the streaming path and the
   in-code comments state the former sub-threshold direct branch was removed for parity
-  (`PercolatorEngine.cs:336`, `PercolatorEngine.cs:256`). This is agreement, recorded for
-  completeness. Evidence: `Osprey.FDR/PercolatorEngine.cs:336`. Severity: info.
+  (`PercolatorEngine.cs:413`). This is agreement, recorded for
+  completeness. Evidence: `Osprey.FDR/PercolatorEngine.cs:413`. Severity: info.
 
 Everything else verified matches the Rust documentation step for step: the semi-supervised
 linear-SVM algorithm (standardize → best-per-precursor dedup → peptide-grouped subsample

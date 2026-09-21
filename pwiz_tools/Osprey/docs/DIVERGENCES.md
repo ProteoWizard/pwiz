@@ -87,12 +87,12 @@ This is the section a maintainer should read first. It lists the **single PORT-E
 - **C# evidence:** `Osprey.FDR/PercolatorEngine.cs:359`
 - **Recommended action:** Diff against current Rust `simple` FDR. `--fdr-method simple` is a non-default diagnostic path, so low urgency, but the ROC-AUC selection is easy to port if Rust still has it.
 
-#### U5. No production protein report writer (`*.proteins.csv`) found — minor
+#### U5. No production protein report writer (`*.proteins.csv`) found — minor — **resolved: the writer exists**
 - **Doc:** [08-protein-parsimony.md](08-protein-parsimony.md)
 - **Rust says:** `write_protein_report()` emits `*.proteins.csv` with gene names, PEP, and q-values.
-- **C# does:** No production protein report writer found in the reviewed path (grep for `proteins.csv`/`protein_groups`/`ProteinReport` returned no emitter); only env-var-gated diagnostic dumps `cs_stage6_protein_fdr.tsv`/`cs_stage7_protein_fdr.tsv` exist.
-- **C# evidence:** `Osprey/OspreyFileDiagnostics.cs:1918,1983`
-- **Recommended action:** Lab memory references a default-emitted `protein_groups.tsv` + `stats.tsv` (see MEMORY: "Osprey protein & summary reports"), so a writer likely lives outside the reviewed files. Confirm the emitter exists and matches Rust's report columns; if it genuinely does not exist, this is a missing feature.
+- **C# does:** A production writer exists outside the files that review read: `Osprey.Tasks/OspreyReportWriter.cs` - `WriteProteinGroups` emits `<output>.protein_groups.tsv` and `WriteSummary` emits `<output>.stats.tsv`, both committed through `FileSaver`. `WriteReports` is called from `SecondPassFdrTask.RunProteinFdr` at the end of Stage 7 (skipped under `--diagnostics-only`). Both reports are ON by default (`OspreyConfig.WriteProteinReport` / `WriteSummaryReport` initialize to `true`) and there is no CLI switch to turn them off: the `--no-protein-report` / `--no-summary-report` flags named in the `OspreyConfig` doc comments are not registered in `OspreyCommandArgs.cs`. The shape is DIA-NN's `pg_matrix` / `stats.tsv` (group accessions and names, peptide counts, group q-value, pass flag, grouping and library-unique peptide lists; per-run and experiment precursor / peptide / protein counts), not Rust's `*.proteins.csv` columns - no gene names or PEP.
+- **C# evidence:** `Osprey.Tasks/OspreyReportWriter.cs` (`WriteReports`, `WriteProteinGroups`, `WriteSummary`); `Osprey.Tasks/SecondPassFdrTask.cs` (`RunProteinFdr`, the `WriteReports` call); `Osprey.Core/OspreyConfig.cs:201,212`
+- **Recommended action:** None for existence. The DIA-NN-shaped columns are a deliberate C# design (direct comparability with DIA-NN), not a port gap; a Rust-column report would be a separate feature request. The two documented-but-unregistered `--no-*-report` flags are a doc-comment / CLI mismatch to fix on either side.
 
 #### U6. Six per-row blob columns written null/zero in the reconciled parquet — minor
 - **Doc:** [11-boundary-overrides.md](11-boundary-overrides.md)
@@ -211,7 +211,7 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 |---|---|---|---|---|---|
 | **PORT** | Razor is per-peptide greedy, not group-centric set cover (**P1**) | Group-batch set cover, alphabetical, path-independent | Per-shared-peptide greedy in Dictionary order; flips assignments on cascading topologies | `ProteinFdr.cs:432-467` | minor |
 | INTENT | No `--fdr-level protein` / protein-level output filtering | `experiment_protein_qvalue` feeds protein filtering | Enum {Precursor,Peptide,Both}; CLI rejects protein; q computed/propagated but no filter path | `OspreyConfig.cs:411-416`; `OspreyCommandArgs.cs:138-157`; `ProteinFdrEngine.cs:165-170` | minor |
-| UNVER | No production protein report writer (**U5**) | `write_protein_report()` → `*.proteins.csv` | No emitter found; only env-gated diagnostic dumps; lab memory refs `protein_groups.tsv`/`stats.tsv` | `OspreyFileDiagnostics.cs:1918,1983` | minor |
+| UNVER | No production protein report writer (**U5**, resolved: writer exists) | `write_protein_report()` → `*.proteins.csv` | `OspreyReportWriter` emits `<output>.protein_groups.tsv` + `<output>.stats.tsv` (DIA-NN shape) from Stage 7, default on, no CLI off switch | `OspreyReportWriter.cs`; `SecondPassFdrTask.cs` (`RunProteinFdr`); `OspreyConfig.cs:201,212` | minor |
 | STALE | Second-pass detected set gates on `config.fdr_level` | Gates on second-pass PEPTIDE FDR | Gates `EffectiveExperimentQvalue(FdrLevel)≤fdr` (precursor default); mirrors Rust `pipeline.rs`; doc stale | `ProteinFdrEngine.cs:171-183` | info |
 
 ### [10-cross-run-reconciliation.md](10-cross-run-reconciliation.md) — matches-with-notes
@@ -285,7 +285,7 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 
 | Classification | Title | Rust says | C# does | Evidence | Sev |
 |---|---|---|---|---|---|
-| STALE | Fold assignment is round-robin over sorted groups | `fold = hash(mod_seq) % n_folds` | Round-robin `i % nFolds` over ordinal-sorted keys, no hash (matches Rust `create_stratified_folds_by_peptide`) | `PercolatorFdr.cs:2492-2504`; `CalibrationScorer.cs:402-452` | minor |
+| STALE | Fold assignment is round-robin over sorted groups | `fold = hash(mod_seq) % n_folds` | Round-robin `i % nFolds` over ordinal-sorted keys, no hash (matches Rust `create_stratified_folds_by_peptide`) | `PercolatorSampling.cs:124-133`; `CalibrationScorer.cs:402-452` | minor |
 | INTENT | TotalOrder bit-transform replaces `total_cmp` | Built-in `f64::total_cmp` | IEEE-754 total order via sign-flipped long key + stable LINQ sort; arithmetic unchanged | `TotalOrder.cs:55-70` | info |
 | INTENT | SIMD lane-reduction order differs from scalar left-fold | Sequential scalar left-fold | Per-lane partials + horizontal sum; sub-ULP drift inside 1e-9 gate at p=21 | `LinearSvmClassifier.cs:531-545` | minor |
 | INTENT | Oracle is PowerShell regression gate, not inline tests | Inline tests + manual two-blib diff | `regression.ps1` 3 legs at 1e-9 (golden/resume/HPC-chain) | `regression.ps1:14-36,490-543` | info |
