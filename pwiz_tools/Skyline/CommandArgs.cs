@@ -1787,7 +1787,8 @@ namespace pwiz.Skyline
 
         private static string[] GetAcceptedValues(IEnumerable<KeyValuePair<string, string>> keysAndDisplayNames)
         {
-            return keysAndDisplayNames.SelectMany(kd => new[] { kd.Key, kd.Value }).Distinct().ToArray();
+            return keysAndDisplayNames.SelectMany(kd => new[] { kd.Key, kd.Value })
+                .Where(v => !string.IsNullOrEmpty(v)).Distinct().ToArray();
         }
 
         private static Adduct[] ParseIonCharges(NameValuePair p, int min, int max)
@@ -1842,14 +1843,15 @@ namespace pwiz.Skyline
         private static string ParseKey(NameValuePair p, IList<KeyValuePair<string, string>> keysAndDisplayNames)
         {
             Assume.IsNotNull(p.Match); // Must be matched before accessing this
-            // Display names are compared the same way as ArgumentBase.IsValidValue, so that a value
-            // accepted by validation always resolves here.
+            // Display names are compared both ways used by ArgumentBase.IsValidValue, so that every
+            // value accepted by validation also resolves here.
             var matchers = new Func<KeyValuePair<string, string>, bool>[]
             {
                 kd => Equals(kd.Key, p.Value),
                 kd => Equals(kd.Value, p.Value),
                 kd => string.Equals(kd.Key, p.Value, StringComparison.OrdinalIgnoreCase),
-                kd => string.Equals(kd.Value, p.Value, StringComparison.CurrentCultureIgnoreCase)
+                kd => string.Equals(kd.Value, p.Value, StringComparison.CurrentCultureIgnoreCase),
+                kd => string.Equals(kd.Value, p.Value, StringComparison.OrdinalIgnoreCase)
             };
             foreach (var matches in matchers)
             {

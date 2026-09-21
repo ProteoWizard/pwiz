@@ -723,8 +723,8 @@ namespace pwiz.SkylineTestData
             AssertEx.AreNotEqual(IsotopeEnrichmentsList.DEFAULT.Name, enrichmentDisplayName, "Test requires a translated display name");
 
             // Invariant names in upper case, to verify case-insensitive matching, and localized labels.
-            ValidateFragmentFinderValues(docPath, startIon.Name.ToUpperInvariant(), endIon.Name.ToUpperInvariant());
-            ValidateFragmentFinderValues(docPath, startIon.Label, endIon.Label);
+            ValidateFragmentFinderValues(docPath, startIon, endIon, startIon.Name.ToUpperInvariant(), endIon.Name.ToUpperInvariant());
+            ValidateFragmentFinderValues(docPath, startIon, endIon, startIon.Label, endIon.Label);
 
             foreach (var enrichmentText in new[] { IsotopeEnrichmentsList.DEFAULT.Name, enrichmentDisplayName })
             {
@@ -742,7 +742,8 @@ namespace pwiz.SkylineTestData
             }
         }
 
-        private void ValidateFragmentFinderValues(string docPath, string startIonText, string endIonText)
+        private void ValidateFragmentFinderValues(string docPath, LabeledValues<string> startIon, LabeledValues<string> endIon,
+            string startIonText, string endIonText)
         {
             FileEx.SafeDelete(docPath);
             string output = RunCommand("--new=" + docPath,
@@ -750,8 +751,8 @@ namespace pwiz.SkylineTestData
                 CommandArgs.ARG_TRAN_PRODUCT_END_ION.ArgumentText + "=" + endIonText);
             AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Error);
             var filter = ResultsUtil.DeserializeDocument(docPath).Settings.TransitionSettings.Filter;
-            AssertEx.AreEqual(TransitionFilter.StartFragmentFinder.ION_3.Name, filter.StartFragmentFinderLabel.Name);
-            AssertEx.AreEqual(TransitionFilter.EndFragmentFinder.IONS_4.Name, filter.EndFragmentFinderLabel.Name);
+            AssertEx.AreEqual(startIon.Name, filter.StartFragmentFinderLabel.Name);
+            AssertEx.AreEqual(endIon.Name, filter.EndFragmentFinderLabel.Name);
         }
 
         /// <summary>
@@ -760,9 +761,10 @@ namespace pwiz.SkylineTestData
         /// </summary>
         public static void ValidateParsedKey(Argument arg, string value, Func<CommandArgs, string> getKey, string expectedKey)
         {
-            var commandArgs = new CommandArgs(new CommandStatusWriter(new StringWriter()), false);
+            var parseOutput = new StringWriter();
+            var commandArgs = new CommandArgs(new CommandStatusWriter(parseOutput), false);
             commandArgs.ParseArgs(new[] { arg.ArgumentText + "=" + value });
-            AssertEx.AreEqual(expectedKey, getKey(commandArgs));
+            AssertEx.AreEqual(expectedKey, getKey(commandArgs), parseOutput.ToString());
         }
 
         [TestMethod]

@@ -437,6 +437,7 @@ namespace pwiz.SkylineTestData
             // A default removed from the settings list is not a valid value.
             var dpList = Settings.Default.DeclusterPotentialList;
             Assert.IsTrue(dpList.TryGetValue("SCIEX", out var sciex));
+            int sciexIndex = dpList.IndexOf(sciex);
             dpList.Remove(sciex);
             try
             {
@@ -448,7 +449,7 @@ namespace pwiz.SkylineTestData
             }
             finally
             {
-                dpList.Add(sciex);
+                dpList.Insert(sciexIndex, sciex);
             }
         }
 

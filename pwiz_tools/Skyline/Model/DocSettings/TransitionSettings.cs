@@ -1268,7 +1268,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static IEnumerable<StartFragmentFinder> GetAllStartFragmentFinders()
         {
-            return FragmentStartFinders;
+            return FragmentStartFinders.ToArray();
         }
 
         public static string GetStartFragmentNameFromLabel(string label)
@@ -1334,7 +1334,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static IEnumerable<EndFragmentFinder> GetAllEndFragmentFinders()
         {
-            return FragmentEndFinders;
+            return FragmentEndFinders.ToArray();
         }
 
         public static string GetEndFragmentNameFromLabel(string label)

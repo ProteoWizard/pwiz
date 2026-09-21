@@ -86,14 +86,16 @@ namespace pwiz.Common.CommandLine
         }
 
         /// <summary>
-        /// True if the value is one of <see cref="Values"/> or <see cref="AcceptedValues"/>, ignoring case.
-        /// False for an argument that lists neither, and so has nothing to check the value against.
+        /// True if the value is one of <see cref="Values"/> or <see cref="AcceptedValues"/>, ignoring case,
+        /// or if the argument lists neither and so has nothing to check the value against.
         /// </summary>
         public bool IsValidValue(string value)
         {
-            if (Values != null && Values.Any(v => v.Equals(value, StringComparison.CurrentCultureIgnoreCase)))
+            if (Values == null && AcceptedValues == null)
                 return true;
-            return AcceptedValues != null && AcceptedValues().Any(v => v.Equals(value, StringComparison.OrdinalIgnoreCase));
+            if (Values != null && Values.Any(v => string.Equals(v, value, StringComparison.CurrentCultureIgnoreCase)))
+                return true;
+            return AcceptedValues != null && AcceptedValues().Any(v => string.Equals(v, value, StringComparison.OrdinalIgnoreCase));
         }
 
         public static string operator +(ArgumentBase arg, string value)
