@@ -99,18 +99,31 @@ namespace pwiz.Osprey.Tasks
             if (config.InputFiles.Count < 2)
             {
                 return string.Format(
-                    @"--task {0} requires --input with 2+ files (got {1}). The boundary files it writes for " +
-                    @"{2} are only meaningful for multi-file fan-back-in.",
+                    @"--task {0} requires --input with 2+ files (got {1}). The intermediate files it writes for " +
+                    @"{2} are only meaningful when there are other runs to reconcile against.",
                     Name, config.InputFiles.Count, PerFileRescoreTask.TASK_NAME);
             }
             if (!config.Reconciliation.Enabled)
             {
                 return string.Format(
                     @"--task {0} requires Reconciliation.Enabled = true (got false from config). " +
-                    @"The boundary files it writes for {1} are only meaningful when reconciliation runs.",
+                    @"The intermediate files it writes for {1} are only meaningful when cross-run reconciliation runs.",
                     Name, PerFileRescoreTask.TASK_NAME);
             }
             return null;
+        }
+
+        /// <summary>
+        /// The first join writes per-run intermediate files and the analysis-wide ones beside
+        /// <c>--output</c>, never the blib; naming the blib would read as "the blib is being
+        /// rebuilt".
+        /// </summary>
+        public override string DescribeOutput(OspreyConfig config)
+        {
+            return string.Format(
+                @"per-run first-pass intermediate files next to each input's .scores.parquet, and the " +
+                @"analysis-wide ones beside {0} (which is not written)",
+                config.OutputBlib);
         }
 
         /// <summary>

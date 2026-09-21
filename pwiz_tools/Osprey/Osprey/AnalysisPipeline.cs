@@ -55,6 +55,14 @@ namespace pwiz.Osprey
         {
             var stopwatch = Stopwatch.StartNew();
 
+            // The driver walks the same instances the selection was resolved against, or the
+            // by-reference membership rule fails silently: every stage excluded (a no-op
+            // "Analysis complete") for a second list, or every stage included for a namesake
+            // selection. Program.Main hands SelectTask and this method one variable; refuse
+            // anything else rather than run a pipeline the config does not describe.
+            if (!ReferenceEquals(config.Pipeline, pipeline))
+                throw new ArgumentException(@"The pipeline to run must be the one the config's task was selected with.", nameof(pipeline));
+
             try
             {
                 // Select the diagnostics sink before any task runs -- the single
@@ -80,8 +88,8 @@ namespace pwiz.Osprey
                 // Membership is one rule over the selection and the pipeline
                 // (OspreyConfig.Includes: everything, or the selected stage alone)
                 // rather than a contiguous [StartAt..StopAfter] window or a
-                // per-task predicate over flags. Excluded stages -- and included
-                // stages whose outputs already exist (ctx.CanRehydrate) -- are
+                // per-task predicate over flags. Excluded stages - and included
+                // stages whose outputs already exist (ctx.CanRehydrate) - are
                 // not run here; their state lazy-rehydrates through ctx.Demand
                 // when a running stage reaches for it. A task returning false is
                 // still the signal to stop and propagate ctx.ExitCode (e.g. an

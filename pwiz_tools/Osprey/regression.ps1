@@ -1951,7 +1951,7 @@ function Invoke-HpcChain {
     # stub is enough for path derivation and forces a cache hit -- the real 6 GB mzML is
     # never shipped to a rescore worker). Plus the Stage 4 parquet/calibration + the
     # Stage 5 sidecar pair; writes <stem>.scores-reconciled.parquet. NOT the 2nd-pass bin:
-    # --task PerFileRescoring sets NoJoin, which excludes SecondPassFdrTask entirely, so
+    # --task PerFileRescoring runs alone (the membership rule includes only the selected stage), so
     # phase 4 is the only node that writes one.
     $ph3Dirs = @{}
     foreach ($s in $stemList) {
@@ -2134,8 +2134,8 @@ function Invoke-HpcChain {
         $ph3diag = Join-Path $ph3 'output.1st-pass.model-diagnostics.json'
         if (Test-Path $ph3diag) { Copy-Item $ph3diag (Join-Path $ph4 'output.1st-pass.model-diagnostics.json') -Force }
         # No 2nd-pass bin relay. There was a `if (Test-Path ...) { Copy-Item ... }` here, and
-        # it could never fire: --task PerFileRescoring sets NoJoin, so SecondPassFdrTask is not
-        # in a phase-3 worker's pipeline and no such file exists to copy. Worse than dead - had
+        # it could never fire: --task PerFileRescoring runs alone (the membership rule includes only
+        # the selected stage), so SecondPassFdrTask never runs on a phase-3 worker and no such file exists to copy. Worse than dead - had
         # it fired it would have handed phase 4 a CURRENT 2nd-pass sidecar, and phase 4 would
         # then have skipped computing its own, quietly turning mode 3 into a test of a copy.
         # Phase 4 is the only node that writes these.

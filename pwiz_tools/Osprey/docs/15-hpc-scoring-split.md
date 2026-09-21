@@ -25,7 +25,7 @@ There is one task set, `OspreyTasks.Create()` (`Osprey.Tasks/OspreyTasks.cs`), h
 
 - `SpectraCache` and `ModelDiagnostics` are **not pipeline stages**: both are reachable only by naming them in `--task`, and neither belongs in an HPC relay plan. What each runs when selected is declared in the set (`OspreyTasks.PipelineFor`): `SpectraCache` a one-task pipeline of its own, `ModelDiagnostics` the canonical stages (which rehydrate from their stamps and fold the report with every other write suppressed). `ModelDiagnosticsTask` is therefore never in a pipeline list and its `Run` / `Rehydrate` are unreachable; what it owns is the name, what it consumes, and the two flags the selection implies. See 00-pipeline-architecture.md, "Two selectable tasks that are not pipeline tasks".
 - The residual spelling to read carefully is `PerFileRescoring` (the name) vs `PerFileRescoreTask` (the class); everything else differs only in the `Fdr`/`FDR` casing, which follows this codebase's own type convention (`FdrEntry`, `FdrController`) rather than the all-caps `pwiz.Osprey.FDR` namespace.
-- **Adding a stage** is one class deriving from `OspreyTask` (its `TASK_NAME`, its overrides) plus its place in the two lists of `OspreyTasks.Create()`; a selector-only task additionally declares there which pipeline it runs. Nothing in `Program`, `OspreyCommandArgs` or `ScoringTaskShared` switches on a task name; `PipelineMembershipTest` goes red until the new task has its rows (and a subclass missing from the set fails its reflection guard), and the `--task` help prose (`OspreyCommandArgs`) and [20-command-line.md](20-command-line.md) describe the selector-only tasks by name and want a sentence for a new one. A second pipeline - selectable by a future `--pipeline <name>` - would be another ordered list declared beside `Pipeline`.
+- **Adding a stage** is one class deriving from `OspreyTask` (its `TASK_NAME`, its overrides) plus its place in the two lists of `OspreyTasks.Create()`; a selector-only task additionally declares there which pipeline it runs. Nothing in `Program`, `OspreyCommandArgs` or `ScoringTaskShared` switches on a task name; `PipelineMembershipTest` goes red until the new task has its rows (and a subclass missing from the set fails its reflection guard), and the `--task` help prose (`OspreyCommandArgs`) describes the two selector-only tasks by name and wants a sentence for a new one; [20-command-line.md](20-command-line.md)'s `--task` row lists the values. A second pipeline - selectable by a future `--pipeline <name>` - would be another ordered list declared beside `Pipeline`.
 
 ## Orchestration model: `--task` + one membership rule
 
@@ -64,13 +64,13 @@ Cross-task state flows through a typed byproduct registry (`PipelineContext.Get<
 
 The exact per-stage membership per mode is pinned by `PipelineMembershipTest.TestIncludesMembershipTable`, with each row's config built by `TaskConfigs.ForTask` - i.e. through the same `SelectTask` the CLI goes through, carrying the pipeline the selection was resolved against:
 
-| Mode | `PerFileScoring` | `FirstPassFDR` | `PerFileRescore` | `SecondPassFDR` |
+| Mode | `PerFileScoring` | `FirstPassFDR` | `PerFileRescoring` | `SecondPassFDR` |
 |---|---|---|---|---|
 | straight-through (no `--task`, `-i mzML`) | run | run | run | run |
 | `--task PerFileScoring` | run | – | – | – |
-| `--task FirstPassFDR` (`StopAfterStage5`) | rehydrate | run | – | – |
+| `--task FirstPassFDR` | rehydrate | run | – | – |
 | `--task PerFileRescoring` | rehydrate | rehydrate | run | – |
-| `--task SecondPassFDR` (`ExpectReconciledInput`) | rehydrate | (skipped) | rehydrate | run |
+| `--task SecondPassFDR` | rehydrate | (skipped) | rehydrate | run |
 | `--task ModelDiagnostics` (not a stage of the pipeline it runs) | run | run | run | run |
 
 ("rehydrate" = excluded from the driver loop but lazily materialized on demand from disk; "–" = never touched.) `--task ModelDiagnostics` sets neither stop boundary and is a member of every stage, like the straight-through run, suppressing artifact WRITES rather than membership. It is listed here because a truth-table row claiming otherwise stood in this file and in a unit test. `--task SpectraCache` has no row: it walks a one-task pipeline of its own, in which it is the selection and so included.

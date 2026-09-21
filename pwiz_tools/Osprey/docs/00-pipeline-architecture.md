@@ -185,7 +185,7 @@ without violating any rule stated in terms of fan-out versus join alone.
 ### Four tasks over seven stages
 
 The pipeline is a fixed, four-element list, always in this order
-(`OspreyTasks.CanonicalPipeline`). It alternates fan-out and join:
+(`OspreyTasks.Pipeline`). It alternates fan-out and join:
 
 | Task | Stages | Shape | Nodes | May hold resident |
 |---|---|---|---|---|

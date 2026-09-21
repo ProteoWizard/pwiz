@@ -1001,7 +1001,7 @@ namespace pwiz.Osprey.Tasks
                 if (ReferenceEquals(ctx.Config.SelectedTask, this))
                 {
                     ctx.LogInfo(string.Format(
-                        @"--task {0} complete: {1} entries scored across {2} file(s). " +
+                        @"--task {0} complete: {1:N0} precursor candidates scored across {2:N0} file(s). " +
                         @"Per-file `.scores.parquet` written next to each input. " +
                         @"{3} and later run in their own invocations; no FDR or blib output here.",
                         Name, totalScored, nFiles, FirstPassFdrTask.TASK_NAME));

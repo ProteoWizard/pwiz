@@ -134,9 +134,15 @@ namespace pwiz.Osprey.Test
             Assert.IsNull(set.FindByName(@"Bogus"));
 
             // A selection from a DIFFERENT set is refused rather than silently building a
-            // pipeline whose reference checks all fail.
+            // pipeline whose reference checks all fail - at the set, and at the driver, which
+            // must be handed the very list the config's task was selected with: with any
+            // other list the membership rule excludes every stage and the run "completes"
+            // having done nothing.
             var stranger = OspreyTasks.Create().FindByName(SpectraCacheTask.TASK_NAME);
             Assert.ThrowsException<ArgumentException>(() => set.PipelineFor(stranger));
+            var config = TaskConfigs.ForTask(set, FirstPassFdrTask.TASK_NAME);
+            Assert.ThrowsException<ArgumentException>(
+                () => new AnalysisPipeline().Run(config, OspreyTasks.Create().Pipeline));
 
             // The list is complete: every concrete OspreyTask in the task library is in it,
             // so a class committed without its place in the list cannot pass as "unknown task".

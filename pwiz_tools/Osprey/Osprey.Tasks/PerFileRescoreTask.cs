@@ -170,7 +170,7 @@ namespace pwiz.Osprey.Tasks
         public override string DescribeOutput(OspreyConfig config)
         {
             return @"per-file .scores-reconciled.parquet (next to each input's .scores.parquet; " +
-                   @"--output locates the analysis-wide sidecars and is not written)";
+                   @"--output locates the analysis-wide intermediate files and is not written)";
         }
 
         // The final milestone of the shared mutable entry buffer: this task
