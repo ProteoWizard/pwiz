@@ -433,13 +433,21 @@ length prefix, or a two-phase protocol. The claim is checkable rather than aspir
 [14-intermediate-files](14-intermediate-files.md) enumerates the call sites, and a new
 durable artifact that does not appear there is a defect.
 
-**Three artifacts do not yet obey this, and they are defects rather than exceptions.** The
-Stage-7 reports `<output>.protein_groups.tsv` and `<output>.stats.tsv` are written with a
-truncating `StreamWriter`, and both flags default on, so a kill during Stage 7 destroys the
-previous run's report and leaves a half-written one. `--write-pin` output is the third.
-None of them is in the contract table below - nothing in the pipeline reads them - but the
-"presence proves completeness" guarantee a *user* draws from a report file is exactly as
-strong as `FileSaver`, which is to say currently absent for these three.
+**One artifact does not yet obey this, and it is a defect rather than an exception.** The
+Stage-7 reports `<output>.protein_groups.tsv` and `<output>.stats.tsv` (both default on)
+commit through `FileSaver` via `OspreyReportWriter.WriteTsv`, so a kill during Stage 7
+leaves the previous run's report or none, never a half-written one. Because nothing
+downstream reads them and the blib has not been written yet when they run, a report that
+cannot be written - the previous run's copy still open in Excel is the common case, which
+makes the commit's replace throw - is logged as a warning naming the path and skipped,
+not turned into a pipeline failure. The remaining non-exempt truncating writer is
+`--write-pin`'s `<stem>.cs_features.tsv` (`PerFileScoringTask.WriteFeatureDump`, opt-in
+via `OspreyCommandArgs.ARG_WRITE_PIN`), a plain `StreamWriter` with no staging. It is not
+in the contract table below - nothing in the pipeline reads it - but the "presence proves
+completeness" guarantee a *user* draws from it is exactly as strong as `FileSaver`, which
+is to say currently absent for that one file. `cs_cal_sample.txt` and the other env-gated
+diagnostic dumps are exempt under the rule in
+[14-intermediate-files](14-intermediate-files.md).
 
 **P9. A validity key answers set inclusion, not completeness.** This follows from P8
 and is the most easily confused point in the design. Because atomic placement already

@@ -10,7 +10,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- ReSharper disable once VulnerablePackage -->
     <!-- ExcludeAssets="compile" + the local Reference: compile against pwiz's Parquet fork,
          which exposes API the NuGet compile surface does not (the parallel column-compression
          path), while still taking the package's runtime assets. -->

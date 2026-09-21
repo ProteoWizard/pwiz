@@ -9,7 +9,7 @@ REM
 REM Pre-requisites on the build agent:
 REM   * pwsh (PowerShell 7+) on PATH (project standard; no powershell.exe fallback)
 REM   * Visual Studio Build Tools (MSBuild + vstest.console.exe)
-REM   * .NET 8 SDK
+REM   * .NET 10 SDK
 REM   (dotCover is restored from .config\dotnet-tools.json by the build, so it
 REM   needs no agent provisioning.)
 REM   The wix v5 tool (for the .msi) is self-provisioned below if absent, so no

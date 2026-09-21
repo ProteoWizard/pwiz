@@ -1136,7 +1136,8 @@ namespace pwiz.Osprey.Tasks
             // full per-file pool + library in hand.
             if ((config.WriteProteinReport || config.WriteSummaryReport) && !config.DiagnosticsOnly)
             {
-                OspreyReportWriter.WriteReports(result, rescored, fullLibrary, config, ctx.LogInfo);
+                OspreyReportWriter.WriteReports(result, rescored, fullLibrary, config,
+                    ctx.LogInfo, ctx.LogWarning);
             }
         }
 
