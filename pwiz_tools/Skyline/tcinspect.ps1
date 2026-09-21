@@ -42,13 +42,17 @@ param(
     # Minimal severity to report, matching the -e=WARNING the standalone config has always used.
     [ValidateSet('INFO', 'HINT', 'SUGGESTION', 'WARNING', 'ERROR')] [string] $Severity = 'WARNING',
     [string] $ReportPath = (Join-Path ([System.IO.Path]::GetTempPath()) 'skyline-inspectcode/inspectcode_report.xml'),
-    # ProteowizardWrapper links these in with <Compile Include ... Link="...">, and ReSharper
-    # loses the pwiz-sharp reference set for linked files whose own projects are not in
-    # Skyline.sln: 338 of the 403 'errors' on the net10 tree are CVID/Spectrum/MSData failing
-    # to resolve in exactly these three files, while the project itself compiles clean. They
-    # are also not Skyline's code to fix - the sandbox is a verbatim mechanical port of the
-    # legacy wrapper, so a finding there belongs to pwiz-sharp.
-    [string[]] $Exclude = @('**/ProteowizardWrapper.PwizSharp/**'),
+    # Built before inspectcode loads the solution. ReSharper resolves a project reference that
+    # points outside the solution - the pwiz-sharp libraries - by looking for its output
+    # assembly, and inspectcode loads the solution BEFORE it builds: on a cold agent the
+    # assemblies do not exist yet, every pwiz-sharp type goes unresolved, and the project model
+    # keeps that state for the whole run even though the build that follows produces them. That
+    # is the entire source of the 403 'errors' build #285 reported on a tree that compiles
+    # clean. ProteowizardWrapper is the project that carries those references - all fourteen,
+    # the four libraries and every vendor reader - so building it first produces the whole set,
+    # and inspectcode's own build is then incremental.
+    [string] $PreBuildProject = (Join-Path $PSScriptRoot '../Shared/ProteowizardWrapper/ProteowizardWrapper.csproj'),
+    [string[]] $Exclude = @(),
     # Parse a report a previous run left behind instead of running inspectcode again. The
     # inspection takes several minutes; this is how you iterate on the reporting.
     [switch] $UseExistingReport,
@@ -133,6 +137,20 @@ try {
             & dotnet tool restore
             if ($LASTEXITCODE -ne 0) {
                 Complete-Inspection 'error' "dotnet tool restore failed with code $LASTEXITCODE; inspection did not run"
+            }
+
+            if (-not [string]::IsNullOrEmpty($PreBuildProject)) {
+                Write-Host "##teamcity[progressMessage 'Building the out-of-solution pwiz-sharp references']"
+                Write-Host "##teamcity[blockOpened name='pre-build']"
+                & dotnet build $PreBuildProject -c $Configuration -p:IAgreeToVendorLicenses=true
+                $preBuildExit = $LASTEXITCODE
+                Write-Host "##teamcity[blockClosed name='pre-build']"
+                # Not fatal, and not silent: the inspection still runs, it just reports every
+                # pwiz-sharp type as unresolved again. Saying so here is what tells the two
+                # apart when the error count comes back high.
+                if ($preBuildExit -ne 0) {
+                    Write-Host "##teamcity[message text='Pre-build of $(Format-TcValue $PreBuildProject) failed with code $preBuildExit; pwiz-sharp references will not resolve' status='WARNING']"
+                }
             }
 
             Write-Host "##teamcity[progressMessage 'inspectcode over Skyline.sln']"
