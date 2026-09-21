@@ -31,6 +31,23 @@ create(DslContext.projectId, BuildType({
         pwiz_tools/Skyline/bin/staging/Release/BiblioSpec.zip
     """.trimIndent()
 
+    params {
+        // Environment for the inspection step below. These are declared at configuration
+        // level because env.* IS a build-configuration parameter: the generic runners have
+        // no per-step environment variables. param("env.X", ...) inside an exec {} block
+        // compiles and is stored as a runner property, and nothing ever reads it - build
+        // #285 ran the step with all three declared there and tcinspect.ps1 saw none of
+        // them. The steps in this file that look like counterexamples are meta-runners
+        // (RUNNER_73, RUNNER_85), where those names are the runner's declared inputs.
+        //
+        // BUILD_VCS_NUMBER needs no entry: TeamCity predefines it. That is how #285 posted
+        // nothing for the token while still resolving the commit SHA.
+        param("env.GITHUB_STATUS_TOKEN", "%GitHubAuthToken%")
+        // guest=1 so the link from GitHub opens without a TeamCity login, matching what the
+        // standalone inspection config has always linked to.
+        param("env.INSPECTION_TARGET_URL", "https://teamcity.labkey.org/buildConfiguration/%system.teamcity.buildType.id%/%teamcity.build.id%?guest=1")
+    }
+
     steps {
         exec {
             name = "Skyline code inspection"
@@ -46,11 +63,8 @@ create(DslContext.projectId, BuildType({
             // publishes, character for character, replacing that check on a PR rather than
             // adding a second one. Note there is no "teamcity - " prefix on that one, unlike
             // every other config here - verified against the GitHub status API, not inferred.
-            param("env.GITHUB_STATUS_TOKEN", "%GitHubAuthToken%")
-            param("env.BUILD_VCS_NUMBER", "%build.vcs.number%")
-            // guest=1 so the link from GitHub opens without a TeamCity login, matching what
-            // the standalone inspection config has always linked to.
-            param("env.INSPECTION_TARGET_URL", "https://teamcity.labkey.org/buildConfiguration/%system.teamcity.buildType.id%/%teamcity.build.id%?guest=1")
+            //
+            // GITHUB_STATUS_TOKEN and INSPECTION_TARGET_URL reach it from params above.
         }
         dotnetCustom {
             name = "Install dotCover"
