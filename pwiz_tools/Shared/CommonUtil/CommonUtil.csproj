@@ -90,6 +90,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="IdentityModel">
+      <HintPath>..\Lib\IdentityModel.dll</HintPath>
+    </Reference>
     <Reference Include="JetBrains.Annotations">
       <HintPath>..\Lib\JetBrains.Annotations.dll</HintPath>
     </Reference>
@@ -245,6 +248,7 @@
     <Compile Include="SystemUtil\ConcurrencyVisualizer.cs" />
     <Compile Include="SystemUtil\FormUtil.cs" />
     <Compile Include="SystemUtil\HttpClientWithProgress.cs" />
+    <Compile Include="SystemUtil\OAuthPasswordGrantClient.cs" />
     <Compile Include="SystemUtil\Immutable.cs" />
     <Compile Include="SystemUtil\IProgressMonitor.cs" />
     <Compile Include="SystemUtil\LocalizationHelper.cs" />

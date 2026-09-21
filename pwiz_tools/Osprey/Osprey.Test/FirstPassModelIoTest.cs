@@ -81,13 +81,11 @@ namespace pwiz.Osprey.Test
 
             string path = Path.Combine(Path.GetTempPath(),
                 @"osprey_model_roundtrip_" + Guid.NewGuid().ToString(@"N") + @".json");
+            string stratumPath = Path.Combine(Path.GetTempPath(),
+                @"osprey_stratum_roundtrip_" + Guid.NewGuid().ToString(@"N") + @".json");
             try
             {
-                // Deliberately unsorted, and deliberately not the insertion order a HashSet
-                // would enumerate: the stratum must survive as a SET, and the artifact must
-                // be written in a stable order regardless of how it was built.
-                var stratum = new HashSet<uint> { 900, 3, 47, 1, 12345 };
-                Assert.IsTrue(FirstPassModelIO.Save(path, model, @"mean-best-3", stratum),
+                Assert.IsTrue(FirstPassModelIO.Save(path, model, @"mean-best-3"),
                     @"SVM model should persist");
                 Assert.IsTrue(File.Exists(path), @"sidecar should exist after Save");
 
@@ -101,16 +99,34 @@ namespace pwiz.Osprey.Test
                 // actually produced the q-values instead of on its own environment.
                 Assert.AreEqual(@"mean-best-3", sidecar.ExperimentAgg, @"recorded pass-1 aggregation arm");
 
-                // The protein-compact stratum rides in the same sidecar, and a SecondPassFDR node
-                // cannot rebuild it, so a lossy round trip would silently constrain the
-                // pass-2 competition to the wrong population.
-                Assert.IsNotNull(sidecar.StratumBaseIds, @"stratum should survive the round trip");
-                Assert.IsTrue(stratum.SetEquals(sidecar.StratumBaseIds), @"stratum base ids");
+                // The stratum is a SEPARATE artifact, written when protein FDR ends rather than
+                // when training does, so the model file carries none of it. Deliberately
+                // unsorted here, and deliberately not the insertion order a HashSet would
+                // enumerate: the stratum must survive as a SET, and the artifact must be written
+                // in a stable order regardless of how it was built.
+                Assert.IsNull(sidecar.StratumBaseIds, @"model sidecar should carry no stratum");
+                var stratum = new HashSet<uint> { 900, 3, 47, 1, 12345 };
+                Assert.IsTrue(FirstPassModelIO.SaveStratum(stratumPath, stratum),
+                    @"stratum should persist");
+
+                // A SecondPassFDR node cannot rebuild the stratum, so a lossy round trip would
+                // silently constrain the pass-2 competition to the wrong population.
+                var reloadedStratum = FirstPassModelIO.LoadStratum(stratumPath);
+                Assert.IsNotNull(reloadedStratum, @"stratum should survive the round trip");
+                Assert.IsTrue(stratum.SetEquals(reloadedStratum), @"stratum base ids");
 
                 // The written order is sorted, not the set's enumeration order, so the
                 // artifact is diffable and safe to compare byte-wise between runs.
                 CollectionAssert.AreEqual(new[] { 1u, 3u, 47u, 900u, 12345u },
-                    ReadStratumInFileOrder(path), @"stratum written ascending");
+                    ReadStratumInFileOrder(stratumPath), @"stratum written ascending");
+
+                // Nothing to persist is not a failure to persist - it is how every mode but
+                // protein-compact reaches this code, and an empty file would make a resume
+                // adopt an empty stratum as if it were a computed one.
+                Assert.IsFalse(FirstPassModelIO.SaveStratum(stratumPath, new HashSet<uint>()),
+                    @"empty stratum should not persist");
+                Assert.IsFalse(FirstPassModelIO.SaveStratum(stratumPath, null),
+                    @"null stratum should not persist");
 
                 // Structural bit-parity.
                 Assert.AreEqual(model.Standardizer.NumFeatures, reloaded.Standardizer.NumFeatures, @"NumFeatures");
@@ -144,6 +160,8 @@ namespace pwiz.Osprey.Test
             {
                 if (File.Exists(path))
                     File.Delete(path);
+                if (File.Exists(stratumPath))
+                    File.Delete(stratumPath);
             }
         }
 

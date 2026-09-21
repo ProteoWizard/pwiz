@@ -41,6 +41,18 @@ namespace pwiz.Skyline.SettingsUI
             Items = items;
             bindingSource.DataSource = items;
 
+            // Assert, per test, that this BindingSource is released once the dialog closes.
+            //
+            // Disposing the dialog is not enough, and CheckAllFormsDisposed cannot see the
+            // difference: a BindingSource subscribes to its current row through
+            // PropertyDescriptor.AddValueChanged, and that subscription lives in TypeDescriptor's
+            // static cache - so the form is collected while the BindingSource, its CurrencyManager
+            // and the whole bound list stay reachable. That is exactly what happened here, and the
+            // nightly leak check did not report it: 3.83 KB/run is below the 8 KB managed
+            // threshold. Registering the BindingSource turns the same defect into an immediate
+            // failure of whichever test opened the grid, with the retention chain printed.
+            Program.GcTracker?.Register(bindingSource);
+
             _requiredColumns = new HashSet<int>();
         }
 

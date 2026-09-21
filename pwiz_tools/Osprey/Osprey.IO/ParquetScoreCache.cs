@@ -1,7 +1,7 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -246,13 +246,82 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static bool IsSubsetWithoutScoreIndex(string path)
         {
-            if (!File.Exists(path))
+            return ProbeReconciledSurvivorShape(path, out bool hasScoreIndex) && !hasScoreIndex;
+        }
+
+        /// <summary>
+        /// True when <paramref name="path"/> is a reconciled parquet THIS build can read in the
+        /// survivor-subset shape: it exists, carries the current
+        /// <see cref="RECONCILED_SURVIVORS"/> marker, and carries the <c>score_index</c> column
+        /// that ties each survivor row back to its Stage 4 ordinal.
+        ///
+        /// <para>The positive form of <see cref="IsSubsetWithoutScoreIndex"/> plus the marker
+        /// test, in one open, because two callers ask the same question about the same file and
+        /// asking it twice is what let them drift. One is the Stage 7 refusal that names the
+        /// stale files; the other is the admission a per-run fold consults BEFORE it commits to
+        /// rebuilding each run from these parquets - and that admission has to be the SAME
+        /// question the refusal asks, or a run is admitted to a fold it then aborts.</para>
+        ///
+        /// <para>Says nothing about whether Stage 6 did any rescore WORK on the file - that is
+        /// the <c>osprey.rescored</c> footer key and a different question, deciding whether a
+        /// second Percolator pass is owed. This one asks only whether the rows are readable in
+        /// the shape a survivor rebuild needs.</para>
+        /// </summary>
+        public static bool IsCurrentReconciledSurvivorSubset(string path)
+        {
+            return ProbeReconciledSurvivorShape(path, out bool hasScoreIndex) && hasScoreIndex;
+        }
+
+        /// <summary>
+        /// The one open behind <see cref="IsCurrentReconciledSurvivorSubset"/> and
+        /// <see cref="IsSubsetWithoutScoreIndex"/>: does <paramref name="path"/> carry the
+        /// current <see cref="RECONCILED_SURVIVORS"/> marker, and does it have the
+        /// <c>score_index</c> column? Returns false for anything this build cannot read as a
+        /// reconciled survivor parquet, including a file that is absent, empty, half-written
+        /// or foreign.
+        ///
+        /// <para><b>Answers, never throws.</b> Both callers are boolean predicates whose
+        /// documented false covers "not readable in that shape", and five call sites branch on
+        /// them - so ONE zero-length or partially-written parquet turning a predicate into an
+        /// unhandled stack trace pre-empts <c>SecondPassFdrTask</c>'s named, file-listing
+        /// refusal, which is the message the operator is supposed to get.
+        /// <see cref="ValidateScoresParquetGroup"/> already wrapped the identical call, so the
+        /// convention existed before this did.</para>
+        ///
+        /// <para><b>One open, not two.</b> The footer and the schema come off the same reader.
+        /// Read separately they were two opens per file per call, uncached across five call
+        /// sites - order 4,460 parquet opens on a 446-run cohort before any work begins, and
+        /// typically on a network artifact directory.</para>
+        /// </summary>
+        private static bool ProbeReconciledSurvivorShape(string path, out bool hasScoreIndex)
+        {
+            hasScoreIndex = false;
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
                 return false;
-            var footer = LoadFooterMetadata(path);
-            footer.TryGetValue(@"osprey.reconciled", out string marker);
-            if (!string.Equals(marker, RECONCILED_SURVIVORS, StringComparison.Ordinal))
+            try
+            {
+                using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
+                {
+                    reader.CustomMetadata.TryGetValue(@"osprey.reconciled", out string marker);
+                    if (!string.Equals(marker, RECONCILED_SURVIVORS, StringComparison.Ordinal))
+                        return false;
+                    foreach (var f in reader.Schema.GetDataFields())
+                    {
+                        if (!string.Equals(f.Name, FIELD_SCORE_INDEX.Name, StringComparison.Ordinal))
+                            continue;
+                        hasScoreIndex = true;
+                        break;
+                    }
+                    return true;
+                }
+            }
+            catch (Exception ex) when (!(ex is OutOfMemoryException))
+            {
+                // Unreadable IS "not a current reconciled survivor parquet". The caller that
+                // cares which file it was names it; see SecondPassFdrTask.UnusableReconciledParquets.
                 return false;
-            return !HasColumn(path, FIELD_SCORE_INDEX.Name);
+            }
         }
 
         /// <summary>Whether a parquet's schema carries a column by this name.</summary>
@@ -274,6 +343,12 @@ namespace pwiz.Osprey.IO
         // force several row groups from a handful of rows and assert the multi-group
         // round-trip is logically identical. Always null in production.
         internal static int? RowGroupRowCapForTest;
+
+        // Columns of a row group to compress concurrently. Output must be identical at
+        // any value - only the append is ordered - so this is purely a speed/memory
+        // trade. 0 lets Parquet.Net use the core count; 1 forces the sequential loop
+        // through the same code, which is how the A/B against the golden is taken.
+        private static readonly int ParquetWriteThreads = ResolveParquetWriteThreads();
 
         /// <summary>
         /// Write scored entries to a Parquet file.
@@ -692,8 +767,15 @@ namespace pwiz.Osprey.IO
         /// </summary>
         private static void WriteRowGroupColumns(ParquetRowGroupWriter group, List<DataColumn> columns)
         {
-            foreach (var column in columns)
-                RunSync(group.WriteColumnAsync(column));
+            RunSync(group.WriteColumnsAsync(columns, null, ParquetWriteThreads));
+        }
+
+        private static int ResolveParquetWriteThreads()
+        {
+            string raw = Environment.GetEnvironmentVariable(@"OSPREY_PARQUET_WRITE_THREADS");
+            if (!string.IsNullOrEmpty(raw) && int.TryParse(raw, out int n) && n > 0)
+                return n;
+            return 0;
         }
 
         /// <summary>
@@ -771,6 +853,41 @@ namespace pwiz.Osprey.IO
             if (!fieldsByName.TryGetValue(name, out field))
                 return null;
             return RunSync(groupReader.ReadColumnAsync(field)).Data as T;
+        }
+
+        /// <summary>
+        /// One row's charge, REFUSING a zero. A precursor charge is always at least 1, so a zero
+        /// here is never a real value - it is either a <c>charge</c> column that could not be
+        /// read (<see cref="ReadColumnByName"/> answers null for a field it cannot find, which is
+        /// indistinguishable from an absent one) or a column that was written corrupt.
+        ///
+        /// <para>Both used to be swallowed: the call sites substituted <c>(byte)0</c> and carried
+        /// on. That is the worst available outcome, because charge is part of the
+        /// <c>(entry_id, charge, scan_number)</c> identity - a zeroed charge does not merely lose
+        /// a field, it makes the row fail identity matching downstream, so it is silently DROPPED
+        /// from the reported pool. No error, no warning, just fewer precursors.</para>
+        ///
+        /// <para>A concrete instance: until 2026-09-17 the parallel parquet writer returned its
+        /// widening buffer to the ArrayPool before encoding from it, so roughly one write in a
+        /// thousand emitted a zeroed <c>charge</c>. It was found only because it happened to trip
+        /// an equality assertion in a unit test, and it had been dismissed as an intermittent
+        /// failure before that. A guard here would have named it the first time a file was read.
+        /// Files written in that window can still be on disk; failing them loudly is the point.</para>
+        /// </summary>
+        private static byte RequireCharge(byte[] chargeCol, int row, uint entryId, string path)
+        {
+            byte charge = chargeCol == null ? (byte)0 : chargeCol[row];
+            if (charge != 0)
+                return charge;
+            throw new InvalidDataException(string.Format(
+                @"{0} is corrupt: row {1} (entry_id {2}) has a charge of 0, which is not a " +
+                @"possible precursor charge. The charge column is either unreadable or was " +
+                @"written corrupt, and because charge is part of the row's identity, using the " +
+                @"file would silently drop precursors rather than report a wrong number. Delete " +
+                @"this file and re-run the stage that produced it. Parquet written before " +
+                @"2026-09-17 may carry this from a write race in the parallel column writer, " +
+                @"fixed in that release.",
+                path, row, entryId));
         }
 
         /// <summary>
@@ -977,7 +1094,7 @@ namespace pwiz.Osprey.IO
                                 EntryId = entryIdCol[row],
                                 ParquetIndex = parquetIndex,
                                 IsDecoy = isDecoyCol[row],
-                                Charge = chargeCol != null ? chargeCol[row] : (byte)0,
+                                Charge = RequireCharge(chargeCol, row, entryIdCol[row], path),
                                 ScanNumber = scanCol != null ? scanCol[row] : 0u,
                                 ApexRt = apexCol != null ? apexCol[row] : 0.0,
                                 StartRt = startCol != null ? startCol[row] : 0.0,
@@ -1021,7 +1138,8 @@ namespace pwiz.Osprey.IO
         ///
         /// <para>Deliberately a full column read rather than a footer probe: the whole point is
         /// the ORDER, which no metadata carries. One <c>uint</c> per row - 4.7 MB on the largest
-        /// Astral file - and nothing else is decoded.</para>
+        /// Astral file (1.18 M rows; the CHS cohort's largest is 4.18 M rows, i.e. ~17 MB of entry
+        /// ids and ~33 MB of apex RTs) - and nothing else is decoded.</para>
         /// </summary>
         public static IEnumerable<uint> StreamEntryIds(string path)
         {
@@ -1053,88 +1171,51 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Read just <c>entry_id</c> and <c>apex_rt</c> from a <c>.scores.parquet</c>, in the same
-        /// row order as <see cref="LoadFdrStubsFromParquet(string)"/> and under the identical "skip this
-        /// row group when entry_id is absent" rule, so the returned index is that method's
-        /// <c>ParquetIndex</c>.
+        /// One file's <c>apex_rt</c> column, indexed by <c>FdrProjection.ParquetIndex</c> - the
+        /// per-file parquet row ordinal. Read THROUGH <see cref="ReadFdrStubScalars"/> rather
+        /// than opening the column directly, so the ordinal this array is keyed by and the
+        /// ordinal the projection rows carry are produced by the same walk and the same
+        /// row-group skip rule. A second reader with its own copy of that rule is how a join
+        /// like this drifts.
         ///
-        /// <para>Serves the <c>--model-diagnostics</c> peak co-assignment panel (issue #4522),
-        /// which needs each first-pass row's detection apex RT. The lean first pass deliberately
-        /// carries no RT - <c>FdrProjection</c> is 32 bytes and every RT field is reload-obtained
-        /// after compaction (issue #4355) - so the panel recovers it by positionally joining this
-        /// against the file's <c>.1st-pass.fdr_scores.bin</c>, exactly as the prototype that
-        /// measured the effect did. The join is asserted on <c>entry_id</c>, never assumed.</para>
-        ///
-        /// <para>Two columns and no strings, so one file's arrays are exactly 12 bytes per row -
-        /// the modified sequence and charge behind the precursor identity are resolved from the
-        /// library by entry id instead. Both arrays are sized up front from the file's row count,
-        /// so this never pays the doubling-plus-copy an accumulating list would (which would
-        /// briefly triple the resident cost at the largest file).</para>
-        ///
-        /// <para>Returns false when the file carries no <c>apex_rt</c> column, leaving the outputs
-        /// null - the panel then degrades with a log line rather than reporting zeros.</para>
+        /// <para>ONE production caller: the RESIDENT-projection arm of the FIRST pass, the
+        /// <c>else</c> of <c>projections.IsCountsOnly</c>. Its sink assembles the per-file FDR
+        /// sidecar from projection rows, and those carry no retention time, while the sidecar
+        /// has a column for one (format v7, issue #4522). Not the 2nd pass, which this used to
+        /// claim, and NOT a cost the ordinary pipeline pays: a default run takes the lean arm
+        /// (<c>PerFileScoringTask.CanUseLeanProjection</c>), so reaching this read means the run
+        /// asked for the resident pool - <c>OSPREY_FDR_PROJECTION=0</c> or a non-Percolator
+        /// <c>FdrMethod</c> - or carries reconciled input. The STREAMING first pass needs none
+        /// of it: it already has each row's apex RT in hand from the same stream that produced
+        /// its score, which is the point of putting the column in the sidecar at all.</para>
         /// </summary>
-        public static bool TryReadEntryIdsAndApexRts(string path,
-            out uint[] entryIds, out double[] apexRts)
+        public static double[] ReadApexRtsByParquetIndex(string path)
         {
-            entryIds = null;
-            apexRts = null;
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
-            {
-                var fieldsByName = BuildFieldLookup(reader);
-                if (!fieldsByName.ContainsKey(FIELD_APEX_RT.Name))
-                    return false;
-                int total = checked((int)(reader.Metadata?.NumRows ?? 0L));
-                var ids = new uint[total];
-                var rts = new double[total];
-                int n = 0;
-                for (int g = 0; g < reader.RowGroupCount; g++)
-                {
-                    using (var groupReader = reader.OpenRowGroupReader(g))
-                    {
-                        var entryIdCol = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_ENTRY_ID.Name);
-                        var apexCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_APEX_RT.Name);
-                        if (entryIdCol == null)
-                            continue;
-                        // FAIL rather than substitute. The ContainsKey guard above only proves the
-                        // column is DECLARED; ReadColumnByName ends in an `as` cast, so a column
-                        // written as float or nullable double yields null here. Substituting 0.0
-                        // would give every row the same apex RT, so every same-m/z pair would
-                        // report |dRT| = 0 and the panel would claim ~100% co-assignment at the
-                        // tightest tolerance - a plausible page built from no data at all. Returning
-                        // false drops the panel with a log line, which is the documented contract.
-                        if (apexCol == null)
-                            return false;
-                        for (int row = 0; row < entryIdCol.Length && n < total; row++)
-                        {
-                            ids[n] = entryIdCol[row];
-                            rts[n] = apexCol[row];
-                            n++;
-                        }
-                    }
-                }
-                // A skipped row group (no entry_id) leaves the arrays long; trim so the caller's
-                // length check against the sidecar record count stays a real alignment assert.
-                if (n != total)
-                {
-                    Array.Resize(ref ids, n);
-                    Array.Resize(ref rts, n);
-                }
-                entryIds = ids;
-                apexRts = rts;
-            }
-            return true;
+            var apexRts = new List<double>();
+            ReadFdrStubScalars(path,
+                (entryId, charge, isDecoy, coelutionSum, modseq, apexRt) => apexRts.Add(apexRt),
+                StubColumns.ApexRt);
+            return apexRts.ToArray();
         }
 
         /// <summary>
         /// Streams the scalar stub columns of a <c>.scores.parquet</c> without allocating a
-        /// single <see cref="FdrEntry"/>. Reads exactly the five columns the first-pass
-        /// FdrProjection needs -- entry_id, charge, is_decoy, coelution_sum,
-        /// modified_sequence -- and invokes <paramref name="onRow"/> once per row in the
+        /// single <see cref="FdrEntry"/>. Reads exactly the six columns the first-pass score
+        /// pass needs -- entry_id, charge, is_decoy, coelution_sum, modified_sequence and
+        /// apex_rt -- and invokes <paramref name="onRow"/> once per row in the
         /// same order as <see cref="LoadFdrStubsFromParquet(string)"/>, applying the identical
         /// "skip this row group when entry_id/is_decoy are absent" rule. The caller's
         /// running row count therefore equals that method's <c>ParquetIndex</c>.
+        ///
+        /// <para><c>apex_rt</c> is the sixth column and the only OPTIONAL one: it is read so the
+        /// per-file <c>.1st-pass.fdr_scores.bin</c> can carry it (format v7, issue #4522), and it
+        /// rides this read rather than getting one of its own - the model-diagnostics
+        /// co-assignment panel used to open every <c>.scores.parquet</c> a second time for
+        /// exactly this column. <paramref name="columns"/> has no default ON PURPOSE: every call
+        /// site states whether it consumes the value, so a caller that wants it and forgets to
+        /// ask fails to COMPILE rather than receiving NaN for every row. A file whose parquet
+        /// genuinely predates the column also yields <c>double.NaN</c> - the two cases are
+        /// indistinguishable here, which is precisely why asking is mandatory.</para>
         ///
         /// Exists because rematerializing the whole 191M-row stub buffer just to convert it
         /// into 32 B projection rows cost ~53 GB on an 82-file Astral run. Osprey.IO must
@@ -1142,10 +1223,11 @@ namespace pwiz.Osprey.IO
         /// these scalars rather than returned from here.
         /// </summary>
         public static void ReadFdrStubScalars(string path,
-            Action<uint, byte, bool, double, string> onRow)
+            Action<uint, byte, bool, double, string, double> onRow, StubColumns columns)
         {
             if (onRow == null)
                 throw new ArgumentNullException(nameof(onRow));
+            bool wantApexRt = (columns & StubColumns.ApexRt) != 0;
 
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
             using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
@@ -1160,6 +1242,14 @@ namespace pwiz.Osprey.IO
                         var chargeCol = ReadColumnByName<byte[]>(groupReader, fieldsByName, FIELD_CHARGE.Name);
                         var modseqCol = ReadColumnByName<string[]>(groupReader, fieldsByName, FIELD_MODIFIED_SEQUENCE.Name);
                         var coelutionCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_COELUTION_SUM.Name);
+                        // Decoded only when the caller says it consumes the value. The parquet is
+                        // Zstd-compressed, so a column is not 8 bytes per row of IO - it is a
+                        // decompress, a page decode and a fresh large-object array per row group.
+                        // Measured on the 446-run cohort: one column is ~7% of the whole pass, and
+                        // three of the four passes that walk these scalars never look at apex RT.
+                        var apexRtCol = wantApexRt
+                            ? ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_APEX_RT.Name)
+                            : null;
 
                         if (entryIdCol == null || isDecoyCol == null)
                             continue;
@@ -1169,10 +1259,16 @@ namespace pwiz.Osprey.IO
                         {
                             onRow(
                                 entryIdCol[row],
-                                chargeCol != null ? chargeCol[row] : (byte)0,
+                                RequireCharge(chargeCol, row, entryIdCol[row], path),
                                 isDecoyCol[row],
                                 coelutionCol != null ? coelutionCol[row] : 0.0,
-                                modseqCol != null ? modseqCol[row] : string.Empty);
+                                modseqCol != null ? modseqCol[row] : string.Empty,
+                                // NaN, not 0.0, for a parquet with no apex_rt column: 0.0 is a
+                                // retention time a reader cannot tell from a measured one, and
+                                // this value's only consumer computes RT DIFFERENCES between
+                                // precursors. A pair of fabricated zeros would read as a perfect
+                                // co-elution rather than as missing data.
+                                apexRtCol != null ? apexRtCol[row] : double.NaN);
                         }
                     }
                 }
@@ -1265,6 +1361,44 @@ namespace pwiz.Osprey.IO
             }
         }
 
+        /// <summary>
+        /// The two things a resume rehydrate needs from a scores parquet, in ONE open: does it
+        /// carry the PIN feature schema, and how many rows does it declare.
+        ///
+        /// <para>Both come from the footer - no column is read and no value is decoded - and
+        /// they are returned together because the caller needs both and opening the file twice
+        /// to answer them separately is the whole cost at cohort scale. 446 files is 446 opens,
+        /// not 892.</para>
+        ///
+        /// <para>The row count is a DECLARED count, not a scan. It exists so a caller can log
+        /// the cohort size and answer "are there any rows at all" without paying the
+        /// 1,342,686,095-row scalar scan that used to produce the same number.</para>
+        ///
+        /// <para><b>The schema test covers the columns that make the declared count TRUSTWORTHY,
+        /// not just the feature schema.</b> <see cref="ReadFdrStubScalars"/> skips a row group
+        /// whose <c>entry_id</c> or <c>is_decoy</c> comes back null, and because the lookup is
+        /// over the file-level schema that is all-or-nothing per file: such a parquet declares N
+        /// rows in its footer and yields 0 on a read. While the count came from a scan the two
+        /// could not disagree; taking it from the footer makes them independent, so this probe
+        /// has to reject the shape that separates them. Otherwise the mismatch surfaces at the
+        /// END of the Stage 5 score pass as an inconsistent-row-count fault, hours later and
+        /// naming the count rather than the missing column.</para>
+        /// </summary>
+        public static (bool HasPinFeatures, long RowCount) ProbeResumeSchemaAndRows(string path)
+        {
+            if (!File.Exists(path))
+                return (false, 0L);
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
+            {
+                var fieldsByName = BuildFieldLookup(reader);
+                bool readable = fieldsByName.ContainsKey(PIN_FEATURE_NAMES[0]) &&
+                                fieldsByName.ContainsKey(FIELD_ENTRY_ID.Name) &&
+                                fieldsByName.ContainsKey(FIELD_IS_DECOY.Name);
+                return (readable, reader.Metadata?.NumRows ?? 0L);
+            }
+        }
+
         public static (long RowCount, bool HasCwtCandidatesField) ProbeCwtRowMetadata(string path)
         {
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -1339,7 +1473,7 @@ namespace pwiz.Osprey.IO
             {
                 var fieldsByName = BuildFieldLookup(reader);
                 for (int g = 0; g < reader.RowGroupCount; g++)
-                    entries.AddRange(ReadFdrEntryGroup(reader, g, fieldsByName, entries.Count, scalarsOnly));
+                    entries.AddRange(ReadFdrEntryGroup(reader, g, fieldsByName, entries.Count, path, scalarsOnly));
             }
 
             return entries;
@@ -1510,7 +1644,7 @@ namespace pwiz.Osprey.IO
 
                     for (int g = 0; g < reader.RowGroupCount; g++)
                     {
-                        var groupEntries = ReadFdrEntryGroup(reader, g, fieldsByName, origRead);
+                        var groupEntries = ReadFdrEntryGroup(reader, g, fieldsByName, origRead, originalPath);
                         for (int j = 0; j < groupEntries.Count; j++)
                         {
                             var row = groupEntries[j];
@@ -1611,7 +1745,7 @@ namespace pwiz.Osprey.IO
         /// </summary>
         private static List<FdrEntry> ReadFdrEntryGroup(ParquetReader reader, int g,
             IReadOnlyDictionary<string, DataField> fieldsByName, int startParquetIndex,
-            bool scalarsOnly = false)
+            string path, bool scalarsOnly = false)
         {
             var entries = new List<FdrEntry>();
             using (var groupReader = reader.OpenRowGroupReader(g))
@@ -1685,7 +1819,7 @@ namespace pwiz.Osprey.IO
                             ? scoreIndexCol[row]
                             : (uint)(startParquetIndex + entries.Count),
                         IsDecoy = isDecoyCol[row],
-                        Charge = chargeCol != null ? chargeCol[row] : (byte)0,
+                        Charge = RequireCharge(chargeCol, row, entryIdCol[row], path),
                         ScanNumber = scanCol != null ? scanCol[row] : 0u,
                         ApexRt = apexCol != null ? apexCol[row] : 0.0,
                         StartRt = startCol != null ? startCol[row] : 0.0,
@@ -1818,24 +1952,6 @@ namespace pwiz.Osprey.IO
                 return scoresPath.Substring(0, scoresPath.Length - ScoresParquetSuffix.Length)
                     + ReconciledScoresParquetSuffix;
             return scoresPath;
-        }
-
-        /// <summary>
-        /// The path a post-Stage-6 reader (Stage 7 feature reload, resume /
-        /// <c>--task SecondPassFDR</c>) should consume for a given original
-        /// <c>.scores.parquet</c> path: the reconciled sibling when it exists
-        /// on disk, otherwise the original. This per-file selection is the
-        /// read-side contract that makes the separate-reconciled-file design
-        /// byte-equivalent to the former in-place overwrite: files that had
-        /// reconciliation work read the reconciled bytes (which used to be
-        /// written over the original), while files with no Stage 6 work -- which
-        /// <c>PerFileRescoreTask</c> deliberately skips, leaving no reconciled
-        /// file -- read the untouched original (which used to be left in place).
-        /// </summary>
-        public static string EffectiveScoresPathFromScoresPath(string scoresPath)
-        {
-            string reconciled = ReconciledPathFromScoresPath(scoresPath);
-            return File.Exists(reconciled) ? reconciled : scoresPath;
         }
 
         /// <summary>

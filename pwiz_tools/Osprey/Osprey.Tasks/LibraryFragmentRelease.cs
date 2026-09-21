@@ -33,8 +33,8 @@ namespace pwiz.Osprey.Tasks
     /// <see cref="OspreyEnvironment.ReleaseLibraryFragments"/> carries the rationale and the
     /// safety argument.
     ///
-    /// <para>The retained-set builders are pure functions of their inputs so they can be tested
-    /// without a pipeline; <see cref="RunsOnThisLeg"/> needs the config and is the single source
+    /// <para><see cref="BuildRetainedBaseIds"/> is a pure function of its inputs so it can be
+    /// tested without a pipeline; <see cref="RunsOnThisLeg"/> needs the config and is the single source
     /// of truth for BOTH the call sites and the validity-key suffix. That is deliberate: those
     /// two must never be able to disagree, because the suffix's whole job is to record which
     /// arm produced an output directory.</para>
@@ -58,8 +58,8 @@ namespace pwiz.Osprey.Tasks
                 return false;
             if (!LegAdmitsRelease(ctx.Config))
                 return false;
-            // SecondPassFdrTask releases against the reported pool, which Stage 5's projection
-            // path has no part in; everywhere else the release rides that path.
+            // SecondPassFdrTask releases against the analysis-wide summary on disk, which Stage
+            // 5's projection path has no part in; everywhere else the release rides that path.
             return ctx.Config.ExpectReconciledInput || OspreyEnvironment.UseFdrProjection;
         }
 
@@ -105,13 +105,15 @@ namespace pwiz.Osprey.Tasks
         ///
         /// <para><c>ExpectReconciledInput</c> (<c>--task SecondPassFDR</c>) releases from
         /// <c>SecondPassFdrTask</c> instead of <c>FirstPassFdrTask</c>, which is excluded from that
-        /// leg's pipeline entirely. See
-        /// <see cref="BuildRetainedBaseIds(IEnumerable{KeyValuePair{string, List{FdrEntry}}})"/>.</para>
+        /// leg's pipeline entirely. It cannot compute the retained set - <c>FirstPassFdrTask</c>
+        /// owns both halves of it - so it reads the analysis-wide summary that task left on
+        /// disk (<c>ScoringTaskShared.ReadRetainedBaseIdsOrFail</c>).</para>
         ///
         /// <para>Everywhere else the release rides <c>FirstPassFdrTask</c>'s projection path and
-        /// inherits its config conditions. <c>--fdrbench-pass 1</c> is the one that bites: it
-        /// forces the RESIDENT first-pass pool, which computes no surviving base_id set to
-        /// release against.</para>
+        /// inherits its config conditions - today only the Percolator framework, since
+        /// <c>--fdrbench-pass 1</c> stopped forcing the resident pool (#4507; the pass-1 TSV is
+        /// emitted before compaction from the sidecars, so the release, which runs after, never
+        /// touches what it reads).</para>
         /// </summary>
         private static bool LegAdmitsRelease(OspreyConfig config)
         {
@@ -119,22 +121,38 @@ namespace pwiz.Osprey.Tasks
                 return false;
             if (config.ExpectReconciledInput)
                 return true;
-
-            bool needsResidentFirstPassPool =
-                !string.IsNullOrEmpty(config.OutputFdrBench) &&
-                config.FdrBenchPass == OspreyConfig.FDRBENCH_PASS_1;
-            return config.FdrMethod.UsesPercolatorFramework() && !needsResidentFirstPassPool;
+            return config.FdrMethod.UsesPercolatorFramework();
         }
 
         /// <summary>
         /// The base_ids whose spectra are still needed after Stage 5: the post-compaction
         /// survivors plus every gap-fill candidate.
         ///
-        /// <para>Gap-fill MUST be unioned in. <c>GapFillTargetIdentifier</c> resolves the
-        /// MISSING charge states of passing peptides through the library, so by construction it
-        /// names entries that did not survive compaction - and Stage 6 then scores them. A
-        /// retained set of survivors alone would strip exactly the spectra gap-fill is about to
-        /// ask for.</para>
+        /// <para>Gap-fill is unioned in as a belt, and the braces are that it cannot actually
+        /// add anything. This doc used to say gap-fill "resolves the MISSING charge states of
+        /// passing peptides ... so by construction it names entries that did not survive
+        /// compaction", and that is wrong in a way worth stating, because it is what left the
+        /// subset question open in issue #4650. <c>GapFillTargetIdentifier</c> emits a target
+        /// for a <c>(modified sequence, charge)</c> that PASSED in a sibling replicate and is
+        /// absent from THIS file's rows - the same precursor, not another charge of it. Its key
+        /// therefore came out of some file's post-compaction entries, so its base_id is already
+        /// in the join-wide first-pass set. "Did not survive compaction" is true of the file's
+        /// ROW, never of the base_id.</para>
+        ///
+        /// <para>The union stays because it costs one pass over a small list and the argument
+        /// above is an invariant of another class. What must NOT be built on it is a claim that
+        /// this set is strictly larger than the analysis-wide summary: it is not, which is why
+        /// Stage 7 can read that summary instead of folding every run's pool to rebuild the
+        /// set.</para>
+        ///
+        /// <para>The argument has ONE dependency worth naming, because nothing else does.
+        /// <c>GapFillTargetIdentifier</c> emits <c>libLookup[(modified sequence, charge)]</c>,
+        /// not the passing row's own <c>EntryId</c>, and those coincide only because
+        /// <c>LibraryDeduplicator</c> groups on exactly that pair - so one id per key. Re-key
+        /// dedup (add IsDecoy, protein, or source file) and two targets can share a key: the
+        /// lookup keeps one id while the passing rows carry the other, gap-fill emits an id that
+        /// is NOT in the summary, and Stage 7 releases a spectrum the blib write still reads.
+        /// Whoever changes that grouping key owns this.</para>
         ///
         /// <paramref name="firstPassBaseIds"/> is already pair-symmetric (a target and its
         /// paired decoy share a base_id), so decoys ride along without being named. It is
@@ -160,37 +178,6 @@ namespace pwiz.Osprey.Tasks
                     continue;
                 foreach (var g in kvp.Value)
                     retained.Add(g.TargetEntryId & ScoringTaskShared.BASE_ID_MASK);
-            }
-            return retained;
-        }
-
-        /// <summary>
-        /// SecondPassFDR's retained set: every base_id present in the final per-file pool.
-        ///
-        /// <para>SecondPassFDR (<c>--task SecondPassFDR</c>) cannot use the survivors +
-        /// gap-fill form above, because <c>FirstPassFdrTask</c> - which computes both halves - is
-        /// excluded from that leg's pipeline. It has the post-rescore pool instead, and that is
-        /// the tighter statement of the same fact: everything Stage 7 and the blib write can
-        /// reach is IN this pool. <c>BlibOutputWriter.PrecompressSpectra</c> reads fragments for
-        /// <c>bestByPrecursor</c>, which is derived from it by successive filtering, and nothing
-        /// else after Stage 6 reads a spectrum at all - second-pass Percolator reloads FEATURES
-        /// from the reconciled parquet, and protein parsimony reads only identity.</para>
-        ///
-        /// <para>Decoys are included rather than filtered out. Keeping them costs nothing (a
-        /// target and its paired decoy share a base_id, so a decoy row adds an entry only where
-        /// the target is absent) and it keeps this a statement about the POOL rather than about
-        /// what is believed to read it.</para>
-        /// </summary>
-        public static HashSet<uint> BuildRetainedBaseIds(
-            IEnumerable<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
-        {
-            var retained = new HashSet<uint>();
-            foreach (var kvp in perFileEntries)
-            {
-                if (kvp.Value == null)
-                    continue;
-                foreach (var e in kvp.Value)
-                    retained.Add(e.EntryId & ScoringTaskShared.BASE_ID_MASK);
             }
             return retained;
         }
