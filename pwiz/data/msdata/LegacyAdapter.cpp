@@ -148,8 +148,20 @@ PWIZ_API_DECL string LegacyAdapter_Instrument::manufacturer() const
         if (modelInfo.parentsIsA.empty())
             throw runtime_error("[LegacyAdapter_Instrument::manufacturer()] Model has no parents.");
 
+        // find the manufacturer/brand parent (named "<vendor> instrument model"); a model may
+        // also have instrument-type parents (e.g. "ion trap instrument") which are not brands
+        CVID manufacturerCvid = CVID_Unknown;
+        for (CVID parentCvid : modelInfo.parentsIsA)
+            if (bal::ends_with(cvTermInfo(parentCvid).name, "instrument model"))
+            {
+                manufacturerCvid = parentCvid;
+                break;
+            }
+        if (manufacturerCvid == CVID_Unknown)
+            manufacturerCvid = modelInfo.parentsIsA[0];
+
         // s/ instrument model//
-        string result = cvTermInfo(modelInfo.parentsIsA[0]).name;
+        string result = cvTermInfo(manufacturerCvid).name;
         string::size_type index_suffix = result.find(" instrument model");
         if (index_suffix != string::npos) result.erase(index_suffix);
         return result;

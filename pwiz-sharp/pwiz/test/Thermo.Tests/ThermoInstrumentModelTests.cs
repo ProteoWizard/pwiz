@@ -22,7 +22,10 @@ public class ThermoInstrumentModelTests
             ("LTQ Orbitrap Velos",     CVID.MS_LTQ_Orbitrap_Velos),     // Contains "ORBITRAP VELOS"
             ("Orbitrap Fusion Lumos",  CVID.MS_Orbitrap_Fusion_Lumos),  // Contains "FUSION LUMOS" (must beat "FUSION")
             ("Orbitrap Eclipse",       CVID.MS_Orbitrap_Eclipse),
+            ("Orbitrap Tribrid Apex",  CVID.MS_Orbitrap_Tribrid_Apex),
             ("Orbitrap Exploris 480",  CVID.MS_Orbitrap_Exploris_480),
+            ("Orbitrap Excedion Pro",  CVID.MS_Orbitrap_Excedion_Pro),  // must beat "ORBITRAP EXCEDION"
+            ("Orbitrap Excedion",      CVID.MS_Orbitrap_Excedion),
             ("Q Exactive",             CVID.MS_Q_Exactive),
             ("Q Exactive Plus",        CVID.MS_Q_Exactive_Plus),
             ("Q Exactive HF-X",        CVID.MS_Q_Exactive_HF_X),

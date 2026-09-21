@@ -24,6 +24,13 @@ public class OboParserTests
         is_a: MS:1000031 ! instrument model
         is_obsolete: true
 
+        [Term]
+        id: MS:1001957
+        name: (?<=[ALIV])(?\!P)
+        def: "Regular expression for leukocyte elastase." [PSI:PI]
+        synonym: "elastase \(cut after ALIV\)" EXACT []
+        is_a: MS:1001180 ! Cleavage agent regular expression
+
         [Typedef]
         id: has_units
         name: has_units
@@ -42,8 +49,8 @@ public class OboParserTests
     public void Parse_TermsAndFields()
     {
         var obo = ObOntology.Parse(new StringReader(SampleObo));
-        // [Typedef] stanzas don't become terms — only the two [Term] stanzas count.
-        Assert.AreEqual(2, obo.Terms.Count, "only [Term] stanzas count");
+        // [Typedef] stanzas don't become terms — only the three [Term] stanzas count.
+        Assert.AreEqual(3, obo.Terms.Count, "only [Term] stanzas count");
         Assert.IsTrue(obo.Terms.ContainsKey(1000031));
         Assert.IsTrue(obo.Terms.ContainsKey(1000032));
 
@@ -52,6 +59,12 @@ public class OboParserTests
         Assert.AreEqual("MS", instrumentModel.Prefix);
         Assert.AreEqual("instrument model", instrumentModel.Name);
         Assert.IsTrue(instrumentModel.Def.Contains("Instrument model", StringComparison.Ordinal));
+
+        // OBO escapes of its own syntax characters are undone in names and synonyms, as cpp
+        // obo.cpp does: "\!" would otherwise be a truncated name (the '!' starts a comment).
+        var elastaseRegex = obo.Terms[1001957];
+        Assert.AreEqual("(?<=[ALIV])(?!P)", elastaseRegex.Name);
+        CollectionAssert.Contains(elastaseRegex.ExactSynonyms, "elastase (cut after ALIV)");
     }
 
     [TestMethod]
