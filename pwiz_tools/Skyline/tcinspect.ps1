@@ -42,13 +42,29 @@ param(
     # Minimal severity to report, matching the -e=WARNING the standalone config has always used.
     [ValidateSet('INFO', 'HINT', 'SUGGESTION', 'WARNING', 'ERROR')] [string] $Severity = 'WARNING',
     [string] $ReportPath = (Join-Path ([System.IO.Path]::GetTempPath()) 'skyline-inspectcode/inspectcode_report.xml'),
-    # ProteowizardWrapper links these in with <Compile Include ... Link="...">, and ReSharper
-    # loses the pwiz-sharp reference set for linked files whose own projects are not in
-    # Skyline.sln: 338 of the 403 'errors' on the net10 tree are CVID/Spectrum/MSData failing
-    # to resolve in exactly these three files, while the project itself compiles clean. They
-    # are also not Skyline's code to fix - the sandbox is a verbatim mechanical port of the
-    # legacy wrapper, so a finding there belongs to pwiz-sharp.
-    [string[]] $Exclude = @('**/ProteowizardWrapper.PwizSharp/**'),
+    # Built before inspectcode loads the solution, and built with the SAME Platform the
+    # inspection runs under. ReSharper resolves a project reference pointing outside the
+    # solution through the referenced project's output assembly, and it evaluates that project
+    # with the properties given here: under Platform=x64 it looks in bin\x64\Release, which on
+    # a cold agent is empty, so every pwiz-sharp type goes unresolved and the project model
+    # keeps that state for the whole run. Measured on this tree with the x64 outputs deleted:
+    # 442 unresolved references, and the same 65 errors and 2347 warnings build #285 reported.
+    # Building x64 first clears them. Building AnyCPU instead fixes nothing - it fills
+    # bin\Release, which is not where the inspection looks (build #298).
+    #
+    # Skyline.csproj, not Skyline.sln, and the difference is the whole point:
+    # AssignOutOfSolutionProjectReferenceConfiguration in pwiz_tools/Directory.Build.targets
+    # fires only for a SOLUTION build and pins out-of-solution references to AnyCPU on
+    # purpose, so building the solution leaves bin\x64\Release empty no matter what Platform
+    # it is given (build #298 and a local run both measured that). A csproj build carries no
+    # solution configuration, that target stays quiet, and Platform flows down the whole
+    # reference graph. Skyline.csproj is the hub - ProteowizardWrapper and its fifteen,
+    # Bruker.PrmScheduling, and the tool projects all hang off it - so nothing here needs a
+    # list of what to build.
+    [string] $PreBuild = (Join-Path $PSScriptRoot 'Skyline.csproj'),
+    # Empty by default: with the references resolved there is nothing left for an exclusion of
+    # the ported sandbox to hide.
+    [string[]] $Exclude = @(),
     # Parse a report a previous run left behind instead of running inspectcode again. The
     # inspection takes several minutes; this is how you iterate on the reporting.
     [switch] $UseExistingReport,
@@ -133,6 +149,20 @@ try {
             & dotnet tool restore
             if ($LASTEXITCODE -ne 0) {
                 Complete-Inspection 'error' "dotnet tool restore failed with code $LASTEXITCODE; inspection did not run"
+            }
+
+            if (-not [string]::IsNullOrEmpty($PreBuild)) {
+                Write-Host "##teamcity[progressMessage 'Building $(Split-Path -Leaf $PreBuild) for the inspection']"
+                Write-Host "##teamcity[blockOpened name='pre-build']"
+                & dotnet build $PreBuild -c $Configuration -p:Platform=$Platform -p:IAgreeToVendorLicenses=true
+                $preBuildExit = $LASTEXITCODE
+                Write-Host "##teamcity[blockClosed name='pre-build']"
+                # Not fatal, and not silent: the inspection still runs, it just reports every
+                # out-of-solution type as unresolved. Saying so here is what tells that apart
+                # from a real finding when the error count comes back high.
+                if ($preBuildExit -ne 0) {
+                    Write-Host "##teamcity[message text='Pre-build of $(Format-TcValue $PreBuild) failed with code $preBuildExit; out-of-solution references will not resolve' status='WARNING']"
+                }
             }
 
             Write-Host "##teamcity[progressMessage 'inspectcode over Skyline.sln']"
