@@ -18,7 +18,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -80,16 +79,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             ImportFastaControl = new ImportFastaControl(this, skylineWindow.SequenceTree, false);
             ImportFastaControl.IsDDASearch = true;
-            AddPageControl(ImportFastaControl, fastaPage, 2, 60);
+            WizardPages.AddPageControl(ImportFastaControl, fastaPage, 2, 60);
 
             NarrowWindowResults = new ImportResultsDIAControl(this);
-            AddPageControl(NarrowWindowResults, narrowWindowPage, 2, 60);
+            WizardPages.AddPageControl(NarrowWindowResults, narrowWindowPage, 2, 60);
 
             WideWindowResults = new ImportResultsDIAControl(this);
-            AddPageControl(WideWindowResults, wideWindowPage, 2, 60);
+            WizardPages.AddPageControl(WideWindowResults, wideWindowPage, 2, 60);
 
             SearchControl = new EncyclopeDiaSearchControl(this);
-            AddPageControl(SearchControl, runSearchPage, 2, 0);
+            WizardPages.AddPageControl(SearchControl, runSearchPage, 2, 0);
             SearchControl.SearchFinished += SearchControlSearchFinished;
 
             ceCombo.Items.AddRange(Enumerable.Range(EncyclopeDiaHelpers.FastaToKoinaInputCsvConfig.MinNCE,
@@ -225,16 +224,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     EncyclopeDiaConfig,
                     SearchControl.EncyclopeDiaChromLibraryPath,
                     SearchControl.EncyclopeDiaQuantLibraryPath);
-        }
-
-        private static void AddPageControl<TControl>(TControl pageControl, TabPage tabPage, int border, int header)
-            where TControl : UserControl
-        {
-            pageControl.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            pageControl.Location = new Point(border, header);
-            pageControl.Width = tabPage.Width - border * 2;
-            pageControl.Height = tabPage.Height - header - border;
-            tabPage.Controls.Add(pageControl);
         }
 
         private readonly LibraryManager _libraryManager;

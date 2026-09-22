@@ -45,10 +45,12 @@ namespace pwiz.Skyline.EditUI
     public partial class UniquePeptidesDlg : ModeUIInvariantFormEx,  // This dialog is inherently proteomic, never wants the "peptide"->"molecule" translation
            IAuditLogModifier<UniquePeptidesDlg.UniquePeptideSettings>
     {
+        private const int HEADER_CHECKBOX_SIZE = 18;    // 96-DPI pixels
+
         private readonly CheckBox _checkBoxPeptideIncludedColumnHeader = new CheckBox
         {
             Name = @"checkBoxPeptideIncludedColumnHeader",
-            Size = new Size(18, 18),
+            Size = new Size(HEADER_CHECKBOX_SIZE, HEADER_CHECKBOX_SIZE),
             AutoCheck = false
         };
         private List<ProteinColumn> _proteinColumns;
@@ -82,6 +84,7 @@ namespace pwiz.Skyline.EditUI
         public UniquePeptidesDlg(IDocumentUIContainer documentUiContainer)
         {
             InitializeComponent();
+            DpiUtil.ScaleFixedPanel(splitContainer1);
 
             Icon = Resources.Skyline;
 
@@ -323,13 +326,15 @@ namespace pwiz.Skyline.EditUI
             Rectangle headerRectangle = PeptideIncludedColumn.HeaderCell.ContentBounds;
             headerRectangle.X = headerRectangle.Location.X;
 
+            int checkBoxSize = DpiUtil.Scale(this, HEADER_CHECKBOX_SIZE);
+            _checkBoxPeptideIncludedColumnHeader.Size = new Size(checkBoxSize, checkBoxSize);
             _checkBoxPeptideIncludedColumnHeader.Location = headerRectangle.Location;
             _checkBoxPeptideIncludedColumnHeader.Click += CheckboxPeptideIncludedColumnHeaderOnClick;
 
             dataGridView1.Controls.Add(_checkBoxPeptideIncludedColumnHeader);
 
             PeptideIncludedColumn.HeaderCell.Style.Padding =
-                new Padding(PeptideIncludedColumn.HeaderCell.Style.Padding.Left + 18,
+                new Padding(PeptideIncludedColumn.HeaderCell.Style.Padding.Left + checkBoxSize,
                     PeptideIncludedColumn.HeaderCell.Style.Padding.Top,
                     PeptideIncludedColumn.HeaderCell.Style.Padding.Right,
                     PeptideIncludedColumn.HeaderCell.Style.Padding.Bottom);

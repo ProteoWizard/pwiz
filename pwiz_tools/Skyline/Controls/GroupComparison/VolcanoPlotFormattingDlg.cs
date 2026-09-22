@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             createExpressionBtn.Resizable = DataGridViewTriState.False;
             createExpressionBtn.Text = @"...";
             createExpressionBtn.UseColumnTextForButtonValue = true;
-            createExpressionBtn.Width = createExpressionBtn.MinimumWidth = 20;
+            createExpressionBtn.Width = createExpressionBtn.MinimumWidth = DpiUtil.Scale(this, 20);
             _createExprButtonIndex = 1;
             regexColorRowGrid1.Columns.Insert(_createExprButtonIndex, createExpressionBtn);
 
@@ -180,6 +180,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             layoutLabelsBox.Checked = Settings.Default.GroupComparisonAvoidLabelOverlap;
 
             // Tooltips/accessible names for the delete/reorder toolbar (image-only buttons).
+            DpiUtil.ScaleToolStripImages(toolStripFormatting);
             btnDeleteRule.Text = GroupComparisonStrings.VolcanoPlotFormattingDlg_Delete_rule;
             btnMoveRuleUp.Text = GroupComparisonStrings.VolcanoPlotFormattingDlg_Move_rule_up;
             btnMoveRuleDown.Text = GroupComparisonStrings.VolcanoPlotFormattingDlg_Move_rule_down;

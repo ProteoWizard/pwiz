@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Common.GUI;
 using pwiz.Skyline.Util;
@@ -30,14 +31,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public WarnOnPresetChangeDlg()
         {
+            // Laid out in 96-DPI pixels, so auto-scale it the way a designer-built form is -
+            // otherwise the text grows on a high-DPI display while the buttons get clipped.
+            SuspendLayout();
+            AutoScaleDimensions = new SizeF(6F, 13F);
+            AutoScaleMode = AutoScaleMode.Font;
             Text = Program.Name;
             FormBorderStyle = FormBorderStyle.FixedDialog;
             StartPosition = FormStartPosition.CenterParent;
             MaximizeBox = false;
             MinimizeBox = false;
             ShowInTaskbar = false;
-            Width = 420;
-            Height = 160;
+            // Client size, as a designer would set it, since that is what auto-scaling scales.
+            ClientSize = new Size(412, 125);
 
             var label = new Label
             {
@@ -55,6 +61,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             Controls.AddRange(new Control[] { label, _cbDontShowAgain, btnOk, btnCancelDlg });
             AcceptButton = btnOk;
             CancelButton = btnCancelDlg;
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         public bool DontShowAgain

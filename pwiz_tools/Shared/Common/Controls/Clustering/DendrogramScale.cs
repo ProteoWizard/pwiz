@@ -37,6 +37,8 @@ namespace pwiz.Common.Controls.Clustering
         private List<DendrogramFormat> _formats;
         private bool _rectilinearLines = true;
         private DockStyle _dendrogramLocation = DockStyle.Top;
+        private const float DENDROGRAM_DEPTH = 100;     // 96-DPI pixels
+
         private float Height = 50;
         private float Width = 300;
 
@@ -94,7 +96,9 @@ namespace pwiz.Common.Controls.Clustering
             {
                 return new SizeF(0, 0);
             }
-            return new SizeF(Width, 100);
+            // The tree depth is a pixel size, so it follows the scale factor the way fonts
+            // and symbols do - otherwise the trees shrink against the heat map at high DPI
+            return new SizeF(Width, DENDROGRAM_DEPTH * scaleFactor);
         }
 
         /// <summary>
@@ -136,13 +140,13 @@ namespace pwiz.Common.Controls.Clustering
             {
                 transformScale = pane.YAxis.Scale;
                 Height = pane.CalcChartRect(graphics).Height;
-                Width = 100;
+                Width = DENDROGRAM_DEPTH * scaleFactor;
             }
             else
             {
                 transformScale = pane.XAxis.Scale;
                 Width = pane.CalcChartRect(graphics).Width;
-                Height = 100;
+                Height = DENDROGRAM_DEPTH * scaleFactor;
             }
 
             var yAxisWidth = pane.YAxis.CalcSpace(graphics, pane, scaleFactor, out float _);
