@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -84,7 +85,7 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestValidateRejectsDuplicateInputStems()
         {
-            var config = TaskConfig(HpcTask.PerFileScoring);
+            var config = TaskConfigs.ForTask(PerFileScoringTask.TASK_NAME);
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             // Forward slashes deliberately. DuplicateInputStemError derives the stem with
             // Path.GetFileNameWithoutExtension, and on Linux \ is an ordinary filename
@@ -108,21 +109,8 @@ namespace pwiz.Osprey.Test
         }
 
         // --- ValidateArgs: what each task requires -------------------------
-
-        private static OspreyConfig TaskConfig(HpcTask task)
-        {
-            // Mirror Main's wiring: ResolveTask -> SelectedTask + derived flags.
-            return new OspreyConfig
-            {
-                SelectedTask = task,
-                // The selector IS the request for the report; Main sets this so the run
-                // cannot recompute the pass-2 view and then write nothing.
-                ModelDiagnostics = task == HpcTask.ModelDiagnostics,
-                NoJoin = task == HpcTask.PerFileScoring || task == HpcTask.PerFileRescore,
-                StopAfterStage5 = task == HpcTask.FirstPassFdr,
-                ExpectReconciledInput = task == HpcTask.SecondPassFdr,
-            };
-        }
+        // Each config comes from TaskConfigs.ForTask, i.e. through the same SelectTask the
+        // CLI goes through, so the flags are the task's own and not a copy of Main's wiring.
 
         // - SpectraCache (Stage 1 alone: inputs in, .spectra.bin out) --
 
@@ -133,7 +121,7 @@ namespace pwiz.Osprey.Test
             // The defining difference from every other task is that it needs
             // NO library - caching depends only on the input file - so the
             // happy path below deliberately leaves LibrarySource null.
-            var config = TaskConfig(HpcTask.SpectraCache);
+            var config = TaskConfigs.ForTask(SpectraCacheTask.TASK_NAME);
             config.InputFiles = new List<string> { "a.raw" };
             Assert.IsNull(Program.ValidateArgs(config), "no library should be required");
 
@@ -147,7 +135,7 @@ namespace pwiz.Osprey.Test
 
         private static void AssertSpectraCacheError(Action<OspreyConfig> mutate, string expected)
         {
-            var config = TaskConfig(HpcTask.SpectraCache);
+            var config = TaskConfigs.ForTask(SpectraCacheTask.TASK_NAME);
             mutate(config);
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
@@ -160,7 +148,7 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestValidatePerFileScoringHappyPath()
         {
-            var config = TaskConfig(HpcTask.PerFileScoring);
+            var config = TaskConfigs.ForTask(PerFileScoringTask.TASK_NAME);
             config.InputFiles = new List<string> { "a.mzML" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             Assert.IsNull(Program.ValidateArgs(config));
@@ -169,7 +157,7 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestValidatePerFileScoringRequiresInput()
         {
-            var config = TaskConfig(HpcTask.PerFileScoring);
+            var config = TaskConfigs.ForTask(PerFileScoringTask.TASK_NAME);
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
@@ -180,7 +168,7 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestValidatePerFileScoringRequiresLibrary()
         {
-            var config = TaskConfig(HpcTask.PerFileScoring);
+            var config = TaskConfigs.ForTask(PerFileScoringTask.TASK_NAME);
             config.InputFiles = new List<string> { "a.mzML" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
@@ -193,7 +181,7 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestValidatePerFileRescoreHappyPath()
         {
-            var config = TaskConfig(HpcTask.PerFileRescore);
+            var config = TaskConfigs.ForTask(PerFileRescoreTask.TASK_NAME);
             config.InputFiles = new List<string> { "a.mzML" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
@@ -203,7 +191,7 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestValidatePerFileRescoreRequiresInput()
         {
-            var config = TaskConfig(HpcTask.PerFileRescore);
+            var config = TaskConfigs.ForTask(PerFileRescoreTask.TASK_NAME);
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
@@ -215,7 +203,7 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestValidatePerFileRescoreRequiresLibraryAndOutput()
         {
-            var config = TaskConfig(HpcTask.PerFileRescore);
+            var config = TaskConfigs.ForTask(PerFileRescoreTask.TASK_NAME);
             config.InputFiles = new List<string> { "a.mzML" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
@@ -228,7 +216,7 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestValidateFirstPassFdrHappyPath()
         {
-            var config = TaskConfig(HpcTask.FirstPassFdr);
+            var config = TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME);
             config.InputFiles = new List<string> { "a.mzML", "b.mzML" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
@@ -238,7 +226,7 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestValidateFirstPassFdrRequiresInput()
         {
-            var config = TaskConfig(HpcTask.FirstPassFdr);
+            var config = TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME);
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
@@ -250,7 +238,7 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestValidateFirstPassFdrRequiresLibraryAndOutput()
         {
-            var config = TaskConfig(HpcTask.FirstPassFdr);
+            var config = TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME);
             config.InputFiles = new List<string> { "a.mzML", "b.mzML" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
@@ -263,7 +251,7 @@ namespace pwiz.Osprey.Test
         {
             // FirstPassFDR writes the Stage 5 -> Stage 6 boundary pair, only
             // meaningful with siblings; a single-file run errors fast.
-            var config = TaskConfig(HpcTask.FirstPassFdr);
+            var config = TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME);
             config.InputFiles = new List<string> { "only.mzML" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
@@ -276,7 +264,7 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestValidateFirstPassFdrRequiresReconciliationEnabled()
         {
-            var config = TaskConfig(HpcTask.FirstPassFdr);
+            var config = TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME);
             config.InputFiles = new List<string> { "a.mzML", "b.mzML" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
@@ -291,7 +279,7 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestValidateSecondPassFdrHappyPath()
         {
-            var config = TaskConfig(HpcTask.SecondPassFdr);
+            var config = TaskConfigs.ForTask(SecondPassFdrTask.TASK_NAME);
             config.InputFiles = new List<string> { "a.mzML" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
@@ -304,7 +292,7 @@ namespace pwiz.Osprey.Test
             // Uncontested gap from ultrareview: --task SecondPassFDR with no inputs at
             // all used to pass validation and silently run the full pipeline. It must
             // fail fast, and the message must name the task the user typed.
-            var config = TaskConfig(HpcTask.SecondPassFdr);
+            var config = TaskConfigs.ForTask(SecondPassFdrTask.TASK_NAME);
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
@@ -316,7 +304,7 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestValidateSecondPassFdrRequiresLibraryAndOutput()
         {
-            var config = TaskConfig(HpcTask.SecondPassFdr);
+            var config = TaskConfigs.ForTask(SecondPassFdrTask.TASK_NAME);
             config.InputFiles = new List<string> { "a.mzML" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
@@ -329,31 +317,34 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestValidateModelDiagnosticsTakesTheFullPipelineArgs()
         {
-            // Deliberately the ONLY task with no case in ValidateArgs' switch. It runs the
-            // canonical pipeline so Stages 1-5 rehydrate from their stamps, which means the
-            // caller re-issues the completed run's command line verbatim plus --task
-            // ModelDiagnostics - so it must validate exactly as that command line does, and
-            // adding a task-specific rule here would reject the invocation it exists to serve.
-            var config = TaskConfig(HpcTask.ModelDiagnostics);
+            // Deliberately the one task that leaves ValidateSelection at the base default. It
+            // runs the canonical pipeline so Stages 1-5 rehydrate from their stamps, which
+            // means the caller re-issues the completed run's command line verbatim plus
+            // --task ModelDiagnostics - so it must require exactly what that command line
+            // does, and a task-specific rule here would reject the invocation it exists to
+            // serve.
+            var config = TaskConfigs.ForTask(ModelDiagnosticsTask.TASK_NAME);
             config.InputFiles = new List<string> { "a.mzML", "b.mzML" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
             Assert.IsNull(Program.ValidateArgs(config));
 
             // -i mzML is the other accepted form, same as a full run.
-            var fromMzml = TaskConfig(HpcTask.ModelDiagnostics);
+            var fromMzml = TaskConfigs.ForTask(ModelDiagnosticsTask.TASK_NAME);
             fromMzml.InputFiles = new List<string> { "a.mzML" };
             fromMzml.LibrarySource = LibrarySource.FromPath("ref.blib");
             fromMzml.OutputBlib = "out.blib";
             Assert.IsNull(Program.ValidateArgs(fromMzml));
 
-            // And the full-pipeline requirements still bite: no input at all is an error.
-            var bare = TaskConfig(HpcTask.ModelDiagnostics);
+            // And the full-pipeline requirements still bite: no input at all is an error,
+            // naming the task the user typed like every other task's message.
+            var bare = TaskConfigs.ForTask(ModelDiagnosticsTask.TASK_NAME);
             bare.LibrarySource = LibrarySource.FromPath("ref.blib");
             bare.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(bare);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "No input files");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + ModelDiagnosticsTask.TASK_NAME);
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_INPUT.ArgumentText);
         }
 
         // - Default (no --task): the full pipeline --
@@ -386,76 +377,110 @@ namespace pwiz.Osprey.Test
         // --- ResolveTask (--task) -----------------------------------------
 
         /// <summary>
-        /// Every task resolves from the name its owning class declares (<c>TASK_NAME</c>),
-        /// the --task value list is exactly that set, matching is case-insensitive, and an
-        /// unknown name is an error that names the flag and the value.
+        /// Every task in the one list resolves to ITSELF - the same instance, not a
+        /// namesake - and appears in the --task value list exactly once; matching is
+        /// case-insensitive; and an unknown name is an error that names the flag, the value
+        /// and every valid task. The list is the authority for all three, so this cannot
+        /// drift from a second spelling of it: there is none.
         /// </summary>
         [TestMethod]
         public void TestResolveTask()
         {
-            var members = (HpcTask[])Enum.GetValues(typeof(HpcTask));
-            foreach (var expected in members)
+            var tasks = OspreyTasks.Create();
+            Assert.AreEqual(tasks.All.Count, OspreyCommandArgs.ARG_TASK.Values.Length, @"every task is listed once");
+            foreach (var expected in tasks.All)
             {
-                string name = Program.TaskCliName(expected);
-                Assert.IsNull(Program.ResolveTask(name, out HpcTask task));
-                Assert.AreEqual(expected, task);
-                CollectionAssert.Contains(OspreyCommandArgs.ARG_TASK.Values, name);
+                Assert.IsNull(Program.ResolveTask(expected.Name, tasks, out OspreyTask task));
+                Assert.AreSame(expected, task, expected.Name);
+                Assert.AreEqual(1, Array.FindAll(OspreyCommandArgs.ARG_TASK.Values, v => v == expected.Name).Length,
+                    string.Format(@"{0} must appear in the --task values exactly once", expected.Name));
             }
-            Assert.AreEqual(members.Length, OspreyCommandArgs.ARG_TASK.Values.Length, @"every task is listed once");
-            Assert.AreEqual(FirstPassFdrTask.TASK_NAME, Program.TaskCliName(HpcTask.FirstPassFdr));
-            Assert.AreEqual(PerFileRescoreTask.TASK_NAME, Program.TaskCliName(HpcTask.PerFileRescore));
+            // The four canonical stages and the two selector-only tasks, by the constants the
+            // classes declare, so a task dropped from the list fails here by name.
+            CollectionAssert.AreEquivalent(
+                new[]
+                {
+                    SpectraCacheTask.TASK_NAME, PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME,
+                    PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME, ModelDiagnosticsTask.TASK_NAME
+                },
+                OspreyCommandArgs.ARG_TASK.Values);
 
-            Assert.IsNull(Program.ResolveTask(PerFileRescoreTask.TASK_NAME.ToLowerInvariant(), out HpcTask lower));
-            Assert.AreEqual(HpcTask.PerFileRescore, lower);
+            // Case-insensitive, resolving to the canonical spelling.
+            Assert.IsNull(Program.ResolveTask(PerFileRescoreTask.TASK_NAME.ToLowerInvariant(), tasks, out OspreyTask lower));
+            Assert.AreEqual(PerFileRescoreTask.TASK_NAME, lower.Name);
 
-            string err = Program.ResolveTask("Bogus", out _);
+            string err = Program.ResolveTask("Bogus", tasks, out OspreyTask none);
+            Assert.IsNull(none);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "unknown task");
             StringAssert.Contains(err, "Bogus");
             StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK.ArgumentText);
+            foreach (var task in tasks.All)
+                StringAssert.Contains(err, task.Name);
         }
 
         [TestMethod]
-        public void TestResolveTaskMapsToExpectedMembershipFlags()
+        public void TestSelectTaskSetsExpectedBehaviorFlags()
         {
-            // Each task must derive (via Main's wiring, mirrored by TaskConfig)
-            // the (NoJoin, StopAfterStage5, ExpectReconciledInput) tuple the four
-            // tasks' IsIncluded methods read. Mirrors PipelineMembershipTest.
-            //   task             | NoJoin | StopAfterStage5 | ExpectReconciled
-            //   PerFileScoring   | true   | false           | false
-            //   FirstPassFDR        | false  | true            | false
-            //   PerFileRescore   | true   | false           | false
-            //   SecondPassFDR        | false  | false           | true
-            //   SpectraCache     | false  | false           | false
-            //   ModelDiagnostics | false  | false           | false
-            // SpectraCache is all-false because it drives no membership at all:
-            // it runs its own one-task pipeline (AnalysisPipeline.SpectraCachePipeline)
-            // rather than gating tasks inside the canonical one. ModelDiagnostics is
-            // all-false for the opposite reason: it runs the CANONICAL pipeline
-            // unchanged so Stages 1-5 rehydrate from their existing stamps, and
-            // suppresses writes through DiagnosticsOnly instead of through membership.
-            var cases = new (HpcTask Task, bool NoJoin, bool StopAfterStage5, bool ExpectReconciled)[]
+            // Each task must set (through its ApplySelection, reached by SelectTask) the
+            // behavior flags its selection implies - and nothing else. These are not
+            // membership flags any more (that is OspreyConfig.Includes, pinned in
+            // PipelineMembershipTest); each is read by the arms of one task's body or by a
+            // gate below the task library.
+            //   task             | StopAfterStage5 | ExpectReconciled | DiagnosticsOnly
+            //   SpectraCache     | false           | false            | false
+            //   PerFileScoring   | false           | false            | false
+            //   FirstPassFDR     | true            | false            | false
+            //   PerFileRescoring | false           | false            | false
+            //   SecondPassFDR    | false           | true             | false
+            //   ModelDiagnostics | false           | false            | true
+            var cases = new (string Task, bool StopAfterStage5, bool ExpectReconciled, bool DiagnosticsOnly)[]
             {
-                (HpcTask.PerFileScoring, true,  false, false),
-                (HpcTask.FirstPassFdr,      false, true,  false),
-                (HpcTask.PerFileRescore, true,  false, false),
-                (HpcTask.SecondPassFdr,      false, false, true),
-                (HpcTask.SpectraCache,   false, false, false),
-                (HpcTask.ModelDiagnostics, false, false, false),
+                (SpectraCacheTask.TASK_NAME,     false, false, false),
+                (PerFileScoringTask.TASK_NAME,   false, false, false),
+                (FirstPassFdrTask.TASK_NAME,     true,  false, false),
+                (PerFileRescoreTask.TASK_NAME,   false, false, false),
+                (SecondPassFdrTask.TASK_NAME,    false, true,  false),
+                (ModelDiagnosticsTask.TASK_NAME, false, false, true),
             };
+            Assert.AreEqual(OspreyTasks.Create().All.Count, cases.Length, @"every task has a flags row");
             foreach (var c in cases)
             {
-                var config = TaskConfig(c.Task);
-                Assert.AreEqual(c.NoJoin, config.NoJoin, string.Format("{0}: NoJoin", c.Task));
+                var config = TaskConfigs.ForTask(c.Task);
+                Assert.AreEqual(c.Task, config.SelectedTask.Name);
                 Assert.AreEqual(c.StopAfterStage5, config.StopAfterStage5,
                     string.Format("{0}: StopAfterStage5", c.Task));
                 Assert.AreEqual(c.ExpectReconciled, config.ExpectReconciledInput,
                     string.Format("{0}: ExpectReconciledInput", c.Task));
-                // DiagnosticsOnly is derived from SelectedTask, so it must single out
-                // exactly one row - it is the flag every write suppression reads.
-                Assert.AreEqual(c.Task == HpcTask.ModelDiagnostics, config.DiagnosticsOnly,
+                // DiagnosticsOnly is the flag every write suppression reads, so it must
+                // single out exactly one row.
+                Assert.AreEqual(c.DiagnosticsOnly, config.DiagnosticsOnly,
                     string.Format("{0}: DiagnosticsOnly", c.Task));
             }
+            // No selection: the full pipeline, every flag off, the canonical pipeline carried.
+            var full = TaskConfigs.StraightThrough();
+            Assert.IsNull(full.SelectedTask);
+            Assert.AreEqual(4, full.Pipeline.Count);
+            Assert.IsFalse(full.StopAfterStage5 || full.ExpectReconciledInput || full.DiagnosticsOnly);
+            // A re-selection holds exactly the new task's flags and pipeline: nothing a
+            // previous selection set survives, so a config reused across selections cannot
+            // carry a stale flag into a task body.
+            var tasks = OspreyTasks.Create();
+            var reselected = TaskConfigs.ForTask(tasks, FirstPassFdrTask.TASK_NAME);
+            Assert.IsTrue(reselected.StopAfterStage5);
+            reselected.SelectTask(null, tasks.Pipeline);
+            Assert.IsFalse(reselected.StopAfterStage5, @"clearing the selection clears its flags");
+            var modelDiagnostics = tasks.FindByName(ModelDiagnosticsTask.TASK_NAME);
+            reselected.SelectTask(modelDiagnostics, tasks.PipelineFor(modelDiagnostics));
+            var secondPass = tasks.FindByName(SecondPassFdrTask.TASK_NAME);
+            reselected.SelectTask(secondPass, tasks.PipelineFor(secondPass));
+            Assert.IsFalse(reselected.DiagnosticsOnly, @"a later selection drops the earlier one's flags");
+            Assert.IsTrue(reselected.ExpectReconciledInput);
+            // ... except --model-diagnostics, which is the operator's own flag, not a
+            // selection's: ModelDiagnostics implies it but a later selection does not revoke it.
+            Assert.IsTrue(reselected.ModelDiagnostics);
+            // A selection without the pipeline it runs is refused: the two travel together.
+            Assert.ThrowsException<ArgumentNullException>(() => new OspreyConfig().SelectTask(secondPass, null));
         }
 
         // --- --task ModelDiagnostics: regenerate the report, touch nothing else ---
@@ -463,11 +488,12 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestModelDiagnosticsImpliesTheReportFlag()
         {
-            // Main turns the selector into --model-diagnostics (mirrored by TaskConfig).
-            // Without it the run recomputes the pass-2 view and writes nothing at all -
-            // a silent no-op that looks like a successful regeneration.
-            Assert.IsTrue(TaskConfig(HpcTask.ModelDiagnostics).ModelDiagnostics);
-            Assert.IsFalse(TaskConfig(HpcTask.SecondPassFdr).ModelDiagnostics);
+            // The selection turns the selector into --model-diagnostics
+            // (ModelDiagnosticsTask.ApplySelection). Without it the run recomputes the
+            // pass-2 view and writes nothing at all - a silent no-op that looks like a
+            // successful regeneration.
+            Assert.IsTrue(TaskConfigs.ForTask(ModelDiagnosticsTask.TASK_NAME).ModelDiagnostics);
+            Assert.IsFalse(TaskConfigs.ForTask(SecondPassFdrTask.TASK_NAME).ModelDiagnostics);
         }
 
         [TestMethod]
@@ -481,22 +507,20 @@ namespace pwiz.Osprey.Test
             // files). The second arm is the discriminating one: the same task with the
             // same output paths DOES declare outputs when the flag is off, so an empty
             // list here cannot be an artifact of the bare config.
-            Assert.AreEqual(0, SecondPassFdrOutputs(HpcTask.ModelDiagnostics).Count,
+            Assert.AreEqual(0, SecondPassFdrOutputs(ModelDiagnosticsTask.TASK_NAME).Count,
                 "--task ModelDiagnostics must declare no outputs");
-            Assert.AreNotEqual(0, SecondPassFdrOutputs(HpcTask.SecondPassFdr).Count,
+            Assert.AreNotEqual(0, SecondPassFdrOutputs(SecondPassFdrTask.TASK_NAME).Count,
                 "--task SecondPassFDR must still declare its outputs");
         }
 
-        private static List<string> SecondPassFdrOutputs(HpcTask task)
+        private static List<string> SecondPassFdrOutputs(string taskName)
         {
-            var config = TaskConfig(task);
+            var config = TaskConfigs.ForTask(taskName);
             config.InputFiles = new List<string> { @"a.mzML", @"b.mzML" };
             config.LibrarySource = LibrarySource.FromPath(@"ref.blib");
             config.OutputBlib = @"out.blib";
-            var tasks = AnalysisPipeline.CanonicalPipeline();
-            var ctx = new PipelineContext(config, tasks, null, null, null);
-            var secondPass = tasks[tasks.Length - 1];
-            Assert.IsInstanceOfType(secondPass, typeof(SecondPassFdrTask));
+            var ctx = TaskConfigs.ContextFor(config);
+            var secondPass = config.Pipeline.OfType<SecondPassFdrTask>().Single();
             return new List<string>(secondPass.Outputs(ctx));
         }
 
@@ -599,7 +623,9 @@ namespace pwiz.Osprey.Test
         public void TestConfigDefaultsDisableHpcMode()
         {
             var cfg = new OspreyConfig();
-            Assert.IsFalse(cfg.NoJoin, "NoJoin should default to false");
+            Assert.IsNull(cfg.SelectedTask, "no task should be selected by default");
+            Assert.IsFalse(cfg.StopAfterStage5 || cfg.ExpectReconciledInput || cfg.DiagnosticsOnly,
+                "no selection-derived flag should default to true");
         }
 
         // --- ParquetScoreCache.CheckParquetMetadata -----------------------
