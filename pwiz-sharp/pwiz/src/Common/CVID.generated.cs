@@ -1,6 +1,8 @@
-// This file is generated from pwiz/data/common/cv.hpp.
-// Do not edit by hand — run pwiz-sharp/pwiz/src/Common/generate_cvid.py to regenerate.
-// Source ontologies: psi-ms.obo, unimod.obo, unit.obo (see cv.hpp header for versions).
+// This file is generated from the OBO files below by pwiz-sharp/build/CvGen.
+// Do not edit by hand: run `dotnet run --project pwiz-sharp/build/CvGen` to regenerate.
+//   psi-ms.obo  format-version: 1.2  data-version: 4.1.257  date: 23:06:2026 22:00
+//   unimod.obo  format-version: 1.4  date: 17:02:2026 11:36
+//   unit.obo  format-version: 1.2  data-version: releases/2026-01-16
 
 // ReSharper disable All
 #pragma warning disable CS1591, CS1570, CS1572, CS1573, CS1574, CA1707, CA1028, CA1008
@@ -6450,11 +6452,20 @@ public enum CVID
     /// MS1 label-based raw feature quantitation: MS1 label-based raw feature quantitation.
     MS_MS1_label_based_raw_feature_quantitation = 1002001,
 
+    /// regular expression for a value in a key-value pair of a PEFF description line describing one sequence position followed by one PEFF term name and one optional comment: ([0-9]+|[A-Z*](|.+)?).
+    PEFF_regular_expression_for_a_value_in_a_key_value_pair_of_a_PEFF_description_line_describing_one_sequence_position_followed_by_one_PEFF_term_name_and_one_optional_comment = 201002001,
+
     /// MS1 label-based peptide level quantitation: MS1 label-based peptide level quantitation.
     MS_MS1_label_based_peptide_level_quantitation = 1002002,
 
+    /// regular expression for PEFF molecular sequence type: (AA|NA|DNA|cDNA|RNA|RNAi|tRNA|rRNA|siRNA|mDNA|mRNA|snoRNA|ncRNA|EST|[a-z0-9A-Z]+).
+    PEFF_regular_expression_for_PEFF_molecular_sequence_type = 201002002,
+
     /// MS1 label-based protein level quantitation: MS1 label-based protein level quantitation.
     MS_MS1_label_based_protein_level_quantitation = 1002003,
+
+    /// regular expression for PEFF sequence status: (Complete|Fragment|[a-z0-9A-Z]+).
+    PEFF_regular_expression_for_PEFF_sequence_status = 201002003,
 
     /// MS1 label-based proteingroup level quantitation: MS1 label-based proteingroup level quantitation.
     MS_MS1_label_based_proteingroup_level_quantitation = 1002004,
