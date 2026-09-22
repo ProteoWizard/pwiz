@@ -91,8 +91,6 @@ namespace pwiz.Common.SystemUtil.PInvoke
             WM_MOUSELEAVE = 0x02A3,
             EM_SETSEL = 0x00B1,
             EM_REPLACESEL = 0x00C2,
-            EM_SETLIMITTEXT = 0x00C5,
-            EM_GETLIMITTEXT = 0x00D5,
             BM_CLICK = 0x00F5
             // ReSharper restore InconsistentNaming IdentifierTypo
         }
