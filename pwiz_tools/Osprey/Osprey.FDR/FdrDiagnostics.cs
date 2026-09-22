@@ -108,23 +108,21 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// The <see cref="CreateCoAssignRowDump"/> sink. Disposing closes both files and
-        /// commits the rows file through <see cref="FileSaver"/> - UNCONDITIONALLY,
-        /// deliberately, the one write in the tree that does not follow "commit only on
-        /// the success path": the caller's <c>using</c> block guarantees <c>Dispose</c>
-        /// runs even when a throw unwinds mid-panel, and committing there is what
-        /// preserves this dump's whole reason to stream rather than buffer - seeing
-        /// however far a panel got is the point (a TSV degrades to a readable partial
-        /// file; nothing downstream reads this back to gate correctness, so presence
-        /// not proving completeness costs nothing here). <c>WriteCutoffs</c> is a
-        /// separate, ordinary one-shot FileSaver write with no such exception.
+        /// The <see cref="CreateCoAssignRowDump"/> sink. A log, not an artifact: it writes
+        /// the rows file directly at its final path rather than through
+        /// <see cref="FileSaver"/>. Seeing however far a panel got is the whole reason to
+        /// stream rather than buffer, so a throw mid-panel should leave whatever rows were
+        /// written, not discard them - a TSV degrades to a readable partial file, and
+        /// nothing downstream reads this back to gate correctness, so presence not proving
+        /// completeness costs nothing here. <c>WriteCutoffs</c> is a separate, ordinary
+        /// one-shot <see cref="FileSaver"/> write, since a boundary table is either fully
+        /// known or not worth having at all.
         /// </summary>
         public sealed class CoAssignRowDump : IDisposable
         {
             private readonly string _dir;
             private readonly int _pass;
             private readonly int _seq;
-            private readonly FileSaver _rowsSaver;
             private readonly StreamWriter _rows;
 
             /// <summary>
@@ -158,23 +156,12 @@ namespace pwiz.Osprey.FDR
                 Directory.CreateDirectory(dir);
                 _seq = NextSequence(dir, pass);
                 string rowsPath = NameFor(dir, pass, _seq, @"rows");
-                // Claim the real name immediately, 0 bytes, before FileSaver ever touches it.
-                // FileSaver defers the real path's existence to Commit(), so without this a
-                // second concurrent instance's NextSequence (which tests File.Exists on the
-                // real path) would not see this one's reservation and could compute the same
+                // FileMode.CreateNew claims the sequence number and opens the file for
+                // writing in one step: the file exists at its final path immediately, so a
+                // concurrent instance's NextSequence sees it and cannot compute the same
                 // _seq - the exact collision NextSequence's own doc comment exists to avoid.
-                // FileMode.CreateNew fails loudly if two instances still race this line.
-                using (new FileStream(rowsPath, FileMode.CreateNew, FileAccess.Write, FileShare.None)) { }
-                _rowsSaver = new FileSaver(rowsPath);
-                try
-                {
-                    _rows = new StreamWriter(_rowsSaver.SafeName);
-                }
-                catch
-                {
-                    _rowsSaver.Dispose();
-                    throw;
-                }
+                // Fails loudly if two instances still race this line.
+                _rows = new StreamWriter(new FileStream(rowsPath, FileMode.CreateNew, FileAccess.Write, FileShare.None));
                 _rows.WriteLine(
                     "file_idx\tfile\tentry_id\tbase_id\tis_decoy\tclass\tscore\texp_agg_score\t" +
                     "run_q\texp_q\tapex_rt\tcharge\tincluded\tmodified_sequence");
@@ -238,12 +225,11 @@ namespace pwiz.Osprey.FDR
 
             public void Dispose()
             {
-                // Commit must run even if closing the writer throws (a disk-full flush on
-                // its buffered tail, say) - the whole point of this override is that the
-                // rows written so far survive a throw, and a throw here is exactly such a
-                // case. Swallowed rather than logged: this class has no logging handle, and
-                // a dump write is never allowed to mask the panel-build exception it is
-                // trying to help diagnose.
+                // Swallowed rather than logged: this class has no logging handle, and a
+                // dump write is never allowed to mask the panel-build exception it is
+                // trying to help diagnose. Nothing to commit - rows were written directly
+                // to their final path as they came in, so whatever got through is already
+                // there.
                 try
                 {
                     _rows.Dispose();
@@ -254,8 +240,6 @@ namespace pwiz.Osprey.FDR
                 catch (ObjectDisposedException)
                 {
                 }
-                _rowsSaver.Commit();
-                _rowsSaver.Dispose();
             }
         }
 

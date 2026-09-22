@@ -1196,8 +1196,10 @@ namespace pwiz.Osprey
         // writer open across calls amortizes the OS-level append cost
         // over millions of rows (peak_xics fires once per scoring call,
         // each row is small -- per-call open/close would dominate).
+        // Written directly at its final path, not through FileSaver: this
+        // is a log, and seeing however far the rescore loop got before a
+        // throw is more useful than an all-or-nothing file.
         private StreamWriter _mpInputsWriter;
-        private FileSaver _mpInputsSaver;
         private readonly object _mpInputsLock = new object();
 
         /// <summary>
@@ -1243,17 +1245,7 @@ namespace pwiz.Osprey
             {
                 if (_mpInputsWriter == null)
                 {
-                    _mpInputsSaver = new FileSaver(@"cs_stage6_mp_inputs.tsv");
-                    try
-                    {
-                        _mpInputsWriter = new StreamWriter(_mpInputsSaver.SafeName);
-                    }
-                    catch
-                    {
-                        _mpInputsSaver.Dispose();
-                        _mpInputsSaver = null;
-                        throw;
-                    }
+                    _mpInputsWriter = new StreamWriter(@"cs_stage6_mp_inputs.tsv");
                     _mpInputsWriter.NewLine = LF;
                     _mpInputsWriter.WriteLine(
                         "# entry_id\tapex_scan\tfrag_pos\tfrag_idx\tscan_idx\trt\tintensity");
@@ -1278,9 +1270,6 @@ namespace pwiz.Osprey
                 _mpInputsWriter.Flush();
                 _mpInputsWriter.Dispose();
                 _mpInputsWriter = null;
-                _mpInputsSaver.Commit();
-                _mpInputsSaver.Dispose();
-                _mpInputsSaver = null;
             }
         }
 
@@ -1294,8 +1283,10 @@ namespace pwiz.Osprey
         // workflow handles the duplicates the predict-call site can
         // produce (same entry_id scored across multiple windows) with
         // post-hoc `sort -u`.
+        // Written directly at its final path, not through FileSaver: this is a
+        // log, and seeing however far the rescore loop got before a throw is
+        // more useful than an all-or-nothing file.
         private StreamWriter _predictRtWriter;
-        private FileSaver _predictRtSaver;
         private readonly object _predictRtLock = new object();
 
         private void OpenPredictRtWriterLocked()
@@ -1303,17 +1294,7 @@ namespace pwiz.Osprey
             // Caller must hold _predictRtLock.
             if (_predictRtWriter != null)
                 return;
-            _predictRtSaver = new FileSaver(@"cs_stage6_predict_rt.tsv");
-            try
-            {
-                _predictRtWriter = new StreamWriter(_predictRtSaver.SafeName);
-            }
-            catch
-            {
-                _predictRtSaver.Dispose();
-                _predictRtSaver = null;
-                throw;
-            }
+            _predictRtWriter = new StreamWriter(@"cs_stage6_predict_rt.tsv");
             _predictRtWriter.NewLine = LF;
             _predictRtWriter.WriteLine(
                 "# section\tfile_name_or_entry_id\tarray_or_apex\tidx_or_lib_rt\tvalue_or_expected_rt");
@@ -1386,8 +1367,10 @@ namespace pwiz.Osprey
         // Lazy-opened on first WriteCwtPathRow call. Threaded scoring
         // serializes only on the file write itself; the row-build
         // happens lock-free.
+        // Written directly at its final path, not through FileSaver: this is a
+        // log, and seeing however far scoring got before a throw is more
+        // useful than an all-or-nothing file.
         private StreamWriter _cwtPathWriter;
-        private FileSaver _cwtPathSaver;
         private readonly object _cwtPathLock = new object();
 
         /// <summary>
@@ -1460,17 +1443,7 @@ namespace pwiz.Osprey
             {
                 if (_cwtPathWriter == null)
                 {
-                    _cwtPathSaver = new FileSaver(@"cs_stage6_cwt_path.tsv");
-                    try
-                    {
-                        _cwtPathWriter = new StreamWriter(_cwtPathSaver.SafeName);
-                    }
-                    catch
-                    {
-                        _cwtPathSaver.Dispose();
-                        _cwtPathSaver = null;
-                        throw;
-                    }
+                    _cwtPathWriter = new StreamWriter(@"cs_stage6_cwt_path.tsv");
                     _cwtPathWriter.NewLine = LF;
                     _cwtPathWriter.WriteLine(
                         "file_name\tentry_id\tn_cwt_peaks\tn_final_peaks\tn_scored\tscored\tsigma\tconsensus_l1\tconsensus_max_abs\tconsensus_argmax");
@@ -1494,9 +1467,6 @@ namespace pwiz.Osprey
                 _cwtPathWriter.Flush();
                 _cwtPathWriter.Dispose();
                 _cwtPathWriter = null;
-                _cwtPathSaver.Commit();
-                _cwtPathSaver.Dispose();
-                _cwtPathSaver = null;
             }
         }
 
@@ -1513,9 +1483,6 @@ namespace pwiz.Osprey
                 _predictRtWriter.Flush();
                 _predictRtWriter.Dispose();
                 _predictRtWriter = null;
-                _predictRtSaver.Commit();
-                _predictRtSaver.Dispose();
-                _predictRtSaver = null;
             }
         }
 
@@ -1941,10 +1908,12 @@ namespace pwiz.Osprey
         // rescored file, so re-reading and rewriting the whole accumulated file on every
         // call (the previous shape) was O(files^2) total I/O - real cost at the 446-file
         // production scale this task type runs at, not bounded to a small bisection run.
-        // Flushed and committed in CloseStage6CalibrationDump, which CloseAll (below) calls,
-        // so a normal Environment.Exit still commits it.
+        // Flushed in CloseStage6CalibrationDump, which CloseAll (below) calls, so a
+        // normal Environment.Exit still flushes its buffered tail. Written directly
+        // at its final path, not through FileSaver: this is a log, and seeing however
+        // far the rescore loop got before a throw is more useful than an
+        // all-or-nothing file.
         private StreamWriter _stage6CalibrationWriter;
-        private FileSaver _stage6CalibrationSaver;
         private readonly object _stage6CalibrationLock = new object();
 
         /// <summary>
@@ -1961,17 +1930,7 @@ namespace pwiz.Osprey
             {
                 if (_stage6CalibrationWriter == null)
                 {
-                    _stage6CalibrationSaver = new FileSaver(@"cs_stage6_calibration.tsv");
-                    try
-                    {
-                        _stage6CalibrationWriter = new StreamWriter(_stage6CalibrationSaver.SafeName);
-                    }
-                    catch
-                    {
-                        _stage6CalibrationSaver.Dispose();
-                        _stage6CalibrationSaver = null;
-                        throw;
-                    }
+                    _stage6CalibrationWriter = new StreamWriter(@"cs_stage6_calibration.tsv");
                     _stage6CalibrationWriter.NewLine = "\n";
                     _stage6CalibrationWriter.WriteLine(@"file_name	idx	library_rt	fitted_value");
                 }
@@ -2003,9 +1962,6 @@ namespace pwiz.Osprey
                 _stage6CalibrationWriter.Flush();
                 _stage6CalibrationWriter.Dispose();
                 _stage6CalibrationWriter = null;
-                _stage6CalibrationSaver.Commit();
-                _stage6CalibrationSaver.Dispose();
-                _stage6CalibrationSaver = null;
             }
         }
 
@@ -2013,12 +1969,14 @@ namespace pwiz.Osprey
         /// Close every held-open dump writer. Registered against
         /// <see cref="AppDomain.ProcessExit"/> in <c>OspreyDiagnostics.Initialize</c> so a
         /// mid-run <c>Environment.Exit</c> (there are two dozen call sites, mostly the
-        /// <c>*_ONLY</c> bisection early-exits) still commits whatever these writers
-        /// accumulated, rather than abandoning the FileSaver temp - unlike a plain direct
-        /// write, nothing appears at the real path until Commit runs. Each Close method is
-        /// idempotent, so calling this after a task's own explicit close (mode 3's rescore
-        /// loop already calls CloseMpInputsDump/CloseCwtPathDump at its natural end) is a
-        /// safe no-op for those two.
+        /// <c>*_ONLY</c> bisection early-exits) still flushes whatever these writers
+        /// accumulated. Each writer is opened directly at its final path, so the rows
+        /// written so far are already there regardless of how the process ends; this
+        /// only covers the buffered tail a <see cref="StreamWriter"/> has not yet handed
+        /// to the OS. Each Close method is idempotent, so calling this after a task's own
+        /// explicit close (mode 3's rescore loop already calls
+        /// CloseMpInputsDump/CloseCwtPathDump at its natural end) is a safe no-op for
+        /// those two.
         /// </summary>
         public void CloseAll()
         {

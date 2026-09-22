@@ -441,24 +441,46 @@ them and the blib has not been written yet when they run, a report that cannot b
 - the previous run's copy still open in Excel is the common case, which makes the
 commit's replace throw - is logged as a warning naming the path and skipped, not turned
 into a pipeline failure. `--write-pin`'s `<stem>.cs_features.tsv`
-(`PerFileScoringTask.WriteFeatureDump`) and every `-d` diagnostic dump
-(`OspreyFileDiagnostics`, `FdrDiagnostics`, `PercolatorDiagnosticsDump`,
-`PickCandidateDump`, `PeakDataExtractor`'s search-XIC dump) commit the same way: nothing
-in the pipeline reads any of them back, but a bisection session trusts presence to mean
-"this run wrote something," same as every other artifact, and a truncated dump that
-LOOKS complete is worse than a missing one - the exact hazard P8 exists to close, just
-for a file a human reads instead of a downstream task. Four dumps that accumulate across
-many calls (`OspreyFileDiagnostics`' `cs_stage6_mp_inputs.tsv`, `cs_stage6_cwt_path.tsv`
-and `cs_stage6_calibration.tsv`; `PeakDataExtractor`'s search-XIC dump) hold a `FileSaver`
-open across the calls instead of a `using` block per call, and commit only when explicitly
-closed - a call site's own close (mode 3's rescore loop closes the first two at its
-natural end) or, failing that, `CloseAll`, registered against process exit so any of the
-two dozen `Environment.Exit` early-exit paths still commits what accumulated rather than
-abandoning the temp. One writer commits UNCONDITIONALLY rather than only on success, the
-opposite of a truncated dump masquerading as complete: `FdrDiagnostics.CoAssignRowDump`'s
-row stream, because seeing however far a large panel build got before a throw is the
-dump's whole reason to stream instead of buffer, and its caller's `using` block guarantees
-`Dispose` runs even on that throw.
+(`PerFileScoringTask.WriteFeatureDump`) and most `-d` diagnostic dumps
+(`OspreyFileDiagnostics`'s one-shot dumps, `FdrDiagnostics.WriteCutoffs`,
+`PercolatorDiagnosticsDump`, `PickCandidateDump`, `PeakDataExtractor`'s search-XIC dump)
+commit the same way: nothing in the pipeline reads any of them back, but a bisection
+session - a human or a Claude session doing cross-impl debugging, since that is who
+actually opens these files - trusts presence to mean "this run wrote something," same as
+every other artifact, and a truncated dump that LOOKS complete is worse than a missing
+one - the exact hazard P8 exists to close, just for a file a reader interprets instead of
+a downstream task consumes.
+
+**A second class of exemption, alongside `--log-file` below: dumps whose whole value is
+showing how far processing got before a crash.** `FdrDiagnostics.CoAssignRowDump`'s row
+stream and `OspreyFileDiagnostics`'s four held-open streams (`cs_stage6_mp_inputs.tsv`,
+`cs_stage6_predict_rt.tsv` - unreachable today, no live caller - `cs_stage6_cwt_path.tsv`,
+`cs_stage6_calibration.tsv`) write directly to their final path, not through `FileSaver`.
+Each streams rows across a long loop - a multi-file cohort walk, a per-scan rescore loop -
+specifically so a bisection session can see whatever got through before an exception
+ended it; discarding that on a throw, `FileSaver`'s whole point for a downstream reader,
+would throw away the one thing these dumps exist to preserve. A session that turned on
+the dump's own env var and hit a crash should not also need to know a second flag
+(`KeepFailedWrites`, below) exists to recover what was written - these dumps just leave it
+at their documented name unconditionally. `CoAssignRowDump` additionally needs to claim a
+unique sequence number per rebuild (a directory can hold both a straight-through Stage 7
+run and a later `--task ModelDiagnostics` regeneration), which `FileMode.CreateNew` on the
+real path gives it directly - no separate reservation step, unlike the workaround
+`FileSaver`'s deferred-existence-until-`Commit` would otherwise require. The four
+`OspreyFileDiagnostics` streams still register `CloseAll` against process exit, but only
+to flush each writer's OS-buffered tail before `Environment.Exit` returns - not to commit
+anything, since the rows are already at their final path as they are written.
+
+This differs from `PeakDataExtractor`'s search-XIC dump, which DOES commit through
+`FileSaver` despite also accumulating across calls: two independent call sites write the
+same `cs_search_xic_entry_<id>.txt` for one candidate, so the hazard there is a
+lost-update race between writers, not a crash discarding partial rows - the
+read-existing/write-whole/commit pattern under `DiagnosticFileLock` is what keeps one
+writer's update from clobbering the other's, and gated call volume keeps the re-read cost
+small. A concurrent-writer hazard is answered by atomicity even when nothing downstream
+reads the file; a want-partial-progress hazard is answered by NOT wrapping it in
+atomicity. Same "nothing downstream reads this" starting point, opposite conclusion,
+because the failure being guarded against is different.
 
 **One exemption is structural rather than a gap: the `--log-file` stream**
 (`CommandStatusWriter` over `config.LogFilePath` in `Program.cs`). It is written
@@ -469,12 +491,13 @@ live tailing and leave nothing at all after a crash, the opposite of what a log 
 `ArtifactPaths.ProbeWritable`'s zero-byte, self-deleting writability check is not a
 content write in the first place, so the P8 contract does not apply to it.
 
-For forensic inspection of what a write got through before an exception abandoned it -
-without weakening the guarantee for every normal reader - set
+For forensic inspection of what an ARTIFACT-shaped write got through before an exception
+abandoned it - without weakening the guarantee for every normal reader - set
 `OspreyEnvironment.KeepFailedWrites` (`OSPREY_KEEP_FAILED_WRITES`): `FileSaver.Dispose()`
 leaves an uncommitted temp in place instead of deleting it. It never touches the real
 path, so presence still proves completeness there; only a developer who knows to look
-for the temp sees the partial write.
+for the temp sees the partial write. It has no effect on the log-shaped dumps above, which
+need no such flag because they never wrapped the write in `FileSaver` to begin with.
 [14-intermediate-files](14-intermediate-files.md) enumerates every writer.
 
 **P9. A validity key answers set inclusion, not completeness.** This follows from P8
