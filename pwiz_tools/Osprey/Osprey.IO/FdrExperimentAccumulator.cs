@@ -134,5 +134,69 @@ namespace pwiz.Osprey.IO
                 r.ExperimentPrecursorQvalue, r.ExperimentPeptideQvalue,
                 proteinQvalue, r.ExperimentAggregateScore, r.Pep);
         }
+
+        /// <summary>
+        /// Raise every record's two experiment q-values to this entry's best-of-runs floors -
+        /// the min-over-runs combined run q for the entry_id, and for its peptide identity -
+        /// returning how many values were raised.
+        ///
+        /// <para>Applied HERE, before the records are written, because this is the last moment
+        /// the analysis holds both the value and its floor. Experiment-scope FDR competes each
+        /// precursor's single best observation against a thinner de-duplicated decoy null, so a
+        /// raw experiment q can fall below every per-run q - a peptide reported with no
+        /// run-level ID line (<c>docs/07-fdr-control.md</c> 3j). The first pass already floors
+        /// before it writes; the second pass did not, and persisted a q-value the pipeline then
+        /// overrode downstream. Measured on the 446-run CHS cohort: 1,125,526 values, 0.19% of
+        /// rows (issue #4522).</para>
+        ///
+        /// <para>Raised in place rather than stored beside the raw value. This file holds
+        /// DERIVED numbers - the model q-values cannot be reconstructed from it in any case - so
+        /// keeping the un-floored competition result to make the correction re-derivable later
+        /// would preserve only which ~0.1% of entries the floor moved, at the price of a wider
+        /// record and a format version. Flooring at the source makes "experiment q is never more
+        /// confident than its own best run" true by construction instead of checkable.</para>
+        ///
+        /// <para><see cref="double.NaN"/> for either floor means "not known" and raises nothing:
+        /// every comparison against NaN is false, so an entry the fold never saw keeps its
+        /// value rather than being moved by a default that looks like an answer.</para>
+        /// </summary>
+        public int ApplyRunQFloors(Func<uint, (double Entry, double Peptide)> floorsFor)
+        {
+            if (floorsFor == null)
+                throw new ArgumentNullException(nameof(floorsFor));
+            // The keys are snapshotted before the sweep. Overwriting an existing key's value
+            // during enumeration is legal on .NET Core and NOT on .NET Framework, and this
+            // assembly targets both, so an in-place sweep would pass every test on net8.0 and
+            // throw InvalidOperationException on net472.
+            var entryIds = new uint[_byEntryId.Count];
+            _byEntryId.Keys.CopyTo(entryIds, 0);
+            int raised = 0;
+            foreach (uint entryId in entryIds)
+            {
+                var r = _byEntryId[entryId];
+                var floors = floorsFor(entryId);
+                double precursorQ = r.ExperimentPrecursorQvalue;
+                double peptideQ = r.ExperimentPeptideQvalue;
+                if (floors.Entry > precursorQ)
+                {
+                    precursorQ = floors.Entry;
+                    raised++;
+                }
+                if (floors.Peptide > peptideQ)
+                {
+                    peptideQ = floors.Peptide;
+                    raised++;
+                }
+                if (precursorQ.Equals(r.ExperimentPrecursorQvalue) &&
+                    peptideQ.Equals(r.ExperimentPeptideQvalue))
+                {
+                    continue;
+                }
+                _byEntryId[entryId] = new FdrExperimentRecord(r.EntryId,
+                    precursorQ, peptideQ,
+                    r.ExperimentProteinQvalue, r.ExperimentAggregateScore, r.Pep);
+            }
+            return raised;
+        }
     }
 }

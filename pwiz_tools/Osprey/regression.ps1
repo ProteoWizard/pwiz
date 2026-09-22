@@ -73,7 +73,13 @@
               outright: they can catch an OVER-release (the tripwire throws) but
               are structurally blind to it silently not happening. Every defect
               found reviewing #4534 was in that blind spot. Asserts presence and
-              non-zero counts, never exact counts. See Test-LibraryFragmentRelease.
+              non-zero counts, never exact counts - with ONE relative exception
+              (issue #4650): on a leg that re-ran FirstPassFDR, Stage 7's retained
+              count must EQUAL the count that leg's own summary write reported, which
+              is what says Stage 7 READ the analysis-wide summary rather than folding
+              every run's final pool to rebuild it. Still not an absolute count: both
+              sides move together with any scoring change.
+              See Test-LibraryFragmentRelease.
 
       mode 7  --task ModelDiagnostics regeneration acceptance (issue #4573) - re-enters
               the COMPLETED straight-through run and asserts the task's whole contract:
@@ -1105,13 +1111,31 @@ $coldRescoreMarker = 'Re-scoring file '
 
 # The library-fragment release (issue #4532). Two scopes, distinguished by the
 # tail of the line: FirstPassFdrTask retains "for rescore + gap-fill", SecondPassFdrTask
-# retains "for the reported pool". Captured rather than merely matched, because
+# "for the 1st-pass retained set". Captured rather than merely matched, because
 # the count is the whole point -- see Test-LibraryFragmentRelease.
 $releaseLinePattern =
-    'Released library fragments for (\d+) of (\d+) entries \((\d+) base_ids retained for ([^)]+)\)'
+    'Released library fragments for ([\d,]+) of ([\d,]+) entries \(([\d,]+) base_ids retained for ([^)]+)\)'
 $releaseScopeRescore  = 'rescore + gap-fill'
-$releaseScopeReported = 'the reported pool'
-
+# Stage 7's scope. It named 'the reported pool' while Stage 7 DERIVED its set by folding
+# every run's final pool; issue #4650 replaced that fold with a read of the analysis-wide
+# summary FirstPassFDR wrote, and the token follows the source. Renaming it is what keeps
+# this gate honest rather than merely green: the two legs must stay distinguishable, and a
+# scope string that still said 'pool' would assert nothing about where the set came from.
+$releaseScopeSummary  = 'the 1st-pass retained set'
+# The line the summary's PRODUCER logs. Stage 7's retained count must equal this one on any
+# leg that re-ran FirstPassFDR, which is the whole claim of #4650 stated as an oracle: a
+# Stage 7 that went back to folding the pool would report the pool's count, and a Stage 7
+# reading a DIFFERENT set would report a different one. Checkable at 3 files here and in the
+# run log at 446 without writing a comparison.
+$retainedSummaryWritePattern =
+    'Wrote analysis-wide retained base_id summary: ([\d,]+) base_id\(s\)'
+# The load-time skip (issue #4650). On --task SecondPassFDR the retained set is read BEFORE
+# the library, so those spectra are never allocated - and the release that used to report
+# the saving then correctly reports 0, having freed nothing because there was nothing to
+# free. That zero reads in a log exactly like the zero of a broken call site, which is what
+# -RequireFreed exists to catch, so the saving has to be claimed somewhere. Here.
+$skippedAtLoadPattern =
+    'Skipped library fragments for ([\d,]+) of ([\d,]+) entries at load'
 function Get-TaskCacheMap {
     <#
     Classify every canonical task in one run log as 'skipped' (cache hit), 'ran'
@@ -1352,9 +1376,12 @@ function Get-ReleaseLogFacts {
     foreach ($line in (Get-Content -LiteralPath $LogPath)) {
         if ($line -match $releaseLinePattern) {
             $facts.Add(@{
-                Released = [int]$Matches[1]
-                Entries  = [int]$Matches[2]
-                Retained = [int]$Matches[3]
+                # Separators tolerated on the way in. The log-readability sprint owes these
+                # exact lines {0:N0}, and a gate that reds on its own project's formatting rule
+                # -- with a message blaming C# wording drift -- is worse than no gate.
+                Released = [int]($Matches[1] -replace ',', '')
+                Entries  = [int]($Matches[2] -replace ',', '')
+                Retained = [int]($Matches[3] -replace ',', '')
                 Scope    = $Matches[4]
             })
         }
@@ -1458,6 +1485,34 @@ function Test-LibraryFragmentRelease {
     having freed ZERO bytes directly above a [MEM] probe, and the SecondPassFDR node
     realized nothing at all. None was an over-release. This closes that column.
 
+    -MatchesSummaryScope names the scope Stage 7 releases under, and -SummaryLog the log
+    carrying the producer's "Wrote analysis-wide retained base_id summary: N base_id(s)"
+    line -- the same log on an in-process leg, phase2.log on the HPC chain, where the
+    producer and the consumer are different processes. Issue #4650's oracle, in three
+    parts, because the equality alone is nearly free:
+
+      * Stage 7's retained count equals N. Says it read THAT file rather than folding
+        every run's final pool to rebuild the set (36,308,041 entries over 446 runs, 11
+        minutes and a 41.5 GB peak, for an answer already on disk).
+      * Stage 5's retained count is not GREATER than N. A direction, not an equality: the
+        relationship is documented as asymmetric, and Stage 5 holding MORE is the one
+        direction that makes Stage 7 release spectra Stage 5 kept - which otherwise
+        surfaces only as a thrown released-spectrum at the blib write on a real cohort.
+        Note what it does NOT cover: on the Run/projection leg Stage 5's gap-fill term is
+        null by the time the release reads it (FirstPassFdrTask nulls the field one line
+        earlier), so there the comparison is survivors against the summary and says
+        nothing about gap-fill.
+      * Stage 7 releases 0 wherever Stage 5 released in the SAME process. The issue quotes
+        exactly this pair ("625620 base_ids", "Released ... 0 of 6175389"); a non-zero
+        count here means the two sets diverged. Skipped where Stage 5 did not run in this
+        process, which is the HPC SecondPassFDR node -- there the release is real and
+        -RequireFreed asserts the opposite.
+
+    Arm it on EVERY leg that runs Stage 7's release, not only the ones that re-run
+    FirstPassFDR. The node where the 11 minutes was measured is the distributed one, so
+    leaving it unarmed there would let the fold come back on exactly the leg it was
+    measured on with mode 6 still green.
+
     -ExpectScopes names the release scopes the log must contain. -RequireFreed
     names the subset that must additionally have freed a non-zero count; it is a
     separate list because the SecondPassFDR node legitimately reports 0 on a
@@ -1478,12 +1533,19 @@ function Test-LibraryFragmentRelease {
         [Parameter(Mandatory = $true)][string]$LogPath,
         [string[]]$ExpectScopes = @(),
         [string[]]$RequireFreed = @(),
+        [string]$MatchesSummaryScope,
+        [string]$SummaryLog,
+        [switch]$ReleasedInSameProcess,
         [switch]$ExpectNone
     )
     $issues = [System.Collections.Generic.List[string]]::new()
+    # Did the #4650 oracle actually EVALUATE on this leg? Reported so a green mode 6 says how
+    # many legs it covered. Without it the summary line is identical whether the oracle ran on
+    # four legs or on none - which is how an oracle wired to the wrong key goes unnoticed.
+    $oracleRan = 0
     if (-not (Test-Path -LiteralPath $LogPath)) {
         $issues.Add("release assertion: run log not found: $LogPath")
-        return @{ Pass = $false; Issues = $issues }
+        return @{ Pass = $false; Issues = $issues; Oracle = 0 }
     }
     $logName = Split-Path -Leaf $LogPath
     # @() is REQUIRED, not defensive habit. A function returning a List<T> UNROLLS it
@@ -1507,7 +1569,7 @@ function Test-LibraryFragmentRelease {
         # log line makes $facts empty and this branch reports PASS having verified
         # nothing. The run-wide liveness assertion in the mode 6 block closes that -
         # a negative assertion cannot fail closed by itself.
-        return @{ Pass = ($issues.Count -eq 0); Issues = $issues; Matched = $facts.Count }
+        return @{ Pass = ($issues.Count -eq 0); Issues = $issues; Matched = $facts.Count; Oracle = 0 }
     }
 
     foreach ($scope in $ExpectScopes) {
@@ -1522,9 +1584,17 @@ function Test-LibraryFragmentRelease {
             continue
         }
         if ($RequireFreed -notcontains $scope) { continue }
-        if ($matching[0].Released -le 0) {
-            $issues.Add((("{0}: release line for scope '{1}' freed 0 of {2} entries - the " +
-                "call site ran but released nothing, which is the fabricated-saving shape") -f
+        # The saving may have been taken EARLIER, at the library load, in which case the
+        # release correctly frees 0 because nothing was allocated (#4650). Accept either, but
+        # require ONE of them: freed 0 AND skipped 0 is still the fabricated-saving shape.
+        $skipped = @(Select-String -LiteralPath $LogPath -Pattern $skippedAtLoadPattern)
+        $skippedCount = if ($skipped.Count -gt 0) {
+            [int]($skipped[0].Matches[0].Groups[1].Value -replace ',', '')
+        } else { 0 }
+        if ($matching[0].Released -le 0 -and $skippedCount -le 0) {
+            $issues.Add((("{0}: release line for scope '{1}' freed 0 of {2} entries and no " +
+                "load-time skip was logged either - the saving happened nowhere, which is " +
+                "the fabricated-saving shape") -f
                 $logName, $scope, $matching[0].Entries))
         }
         if ($matching[0].Retained -le 0) {
@@ -1533,7 +1603,86 @@ function Test-LibraryFragmentRelease {
                 "released tripwire") -f $logName, $scope))
         }
     }
-    return @{ Pass = ($issues.Count -eq 0); Issues = $issues; Matched = $facts.Count }
+
+    if ($MatchesSummaryScope) {
+        $scoped = @($facts | Where-Object { $_.Scope -eq $MatchesSummaryScope })
+        # -LiteralPath, like every other file access in this function. -Path globs, so a run
+        # dir holding a PowerShell metacharacter (the dataset name and mzML stems are both in
+        # these paths) silently matches nothing and the miss is reported below as a C#
+        # wording drift - a harness quoting bug wearing the failure message of a code defect.
+        # @() for the reason Get-ReleaseLogFacts documents: one match is not an array.
+        $summaryLogPath = if ($SummaryLog) { $SummaryLog } else { $LogPath }
+        $summaryName = Split-Path -Leaf $summaryLogPath
+        # Test-Path FIRST, like $LogPath at the top of this function. $ErrorActionPreference is
+        # 'Stop' for the whole script, and Select-String on a missing -LiteralPath is a
+        # TERMINATING error - so without this one absent log does not fail mode 6, it kills the
+        # run and takes every remaining dataset and mode with it.
+        $written = if (Test-Path -LiteralPath $summaryLogPath) {
+            @(Select-String -LiteralPath $summaryLogPath -Pattern $retainedSummaryWritePattern)
+        } else { @() }
+        if ($scoped.Count -eq 0) {
+            # Its own issue, not a silent skip. Without this the oracle FAILS OPEN on the one
+            # regression it exists to catch: delete Stage 7's release, keep a log that still
+            # carries the producer line, and every check below is simply not reached.
+            $issues.Add((("{0}: no release line for scope '{1}', so the #4650 oracle asserted " +
+                "NOTHING. Either Stage 7's release is gone or its scope wording drifted") -f
+                $logName, $MatchesSummaryScope))
+        }
+        elseif ($written.Count -eq 0) {
+            $issues.Add((("{0}: no 'Wrote analysis-wide retained base_id summary' line in {1} - " +
+                "the summary Stage 7 reads must be PRODUCED by this run. Either the write no " +
+                "longer happens (every later leg then fails on a file that is not there) or " +
+                "the wording drifted from this assertion") -f $logName, $summaryName))
+        }
+        else {
+            # Both ends taken first-match-wins, like every other selection in this file. Mixing
+            # ends pairs one pass's write with another's release, which on a log holding
+            # successive invocations reds two internally consistent passes and hides a pass
+            # that read a stale summary.
+            $summaryCount = [int]($written[0].Matches[0].Groups[1].Value -replace ',', '')
+            $oracleRan = 1
+            if ($scoped[0].Retained -ne $summaryCount) {
+                $issues.Add((("{0}: scope '{1}' retained {2} base_ids but the summary written " +
+                    "in {3} names {4} - Stage 7 is not reading that summary. It used to DERIVE " +
+                    "this set by folding every run's final pool (issue #4650), which is " +
+                    "O(files) and was 11 minutes / 41.5 GB at 446 runs; a count that is not " +
+                    "the summary's is that fold, or another source, coming back") -f
+                    $logName, $MatchesSummaryScope, $scoped[0].Retained, $summaryName, $summaryCount))
+            }
+            # DIRECTION, not equality. The relationship is documented as asymmetric at
+            # FirstPassFdrTask.cs ("the compaction retains the global set UNION the planner's
+            # action targets, so the global set alone can be a strict subset of what
+            # survives ... that gap is believed unreachable today"). Today the two counts match,
+            # because action targets only ever name already-compacted rows. If that stops
+            # holding, the summary becomes the strict SUPERSET, Stage 7 retains MORE and releases
+            # less - which is safe - and an equality check would red on it with a message
+            # describing the opposite failure. What is NOT safe is Stage 5 retaining more than
+            # the summary: then Stage 7 releases spectra Stage 5 deliberately kept, and that
+            # surfaces only as a thrown released-spectrum at the blib write on a real cohort.
+            # So assert only the unsafe direction.
+            $rescore = @($facts | Where-Object { $_.Scope -eq $releaseScopeRescore })
+            if ($rescore.Count -gt 0 -and $rescore[0].Retained -gt $summaryCount) {
+                $issues.Add((("{0}: Stage 5 retained {1} base_ids for '{2}' but the summary " +
+                    "names only {3}, so Stage 7 releases spectra Stage 5 deliberately kept. " +
+                    "The two are supposed to be the same set - a gap-fill target passed in a " +
+                    "sibling replicate, so its base_id is already in the join-wide first-pass " +
+                    "set - and Stage 5 holding MORE is the direction that breaks the blib " +
+                    "write") -f
+                    $logName, $rescore[0].Retained, $releaseScopeRescore, $summaryCount))
+            }
+            # The issue's own oracle: where Stage 5 released in THIS process, Stage 7 has
+            # nothing left to free. Not asserted on the HPC SecondPassFDR node, where Stage 5
+            # ran in a different process and the release is real - there -RequireFreed asserts
+            # the opposite, and the two must not both be claimed of one leg.
+            if ($ReleasedInSameProcess -and $scoped[0].Released -ne 0) {
+                $issues.Add((("{0}: scope '{1}' released {2} entries, expected 0 - Stage 5 " +
+                    "already released in this same process and ReleaseSpectrum is idempotent, " +
+                    "so a non-zero count means the two stages are working from different sets") -f
+                    $logName, $MatchesSummaryScope, $scoped[0].Released))
+            }
+        }
+    }
+    return @{ Pass = ($issues.Count -eq 0); Issues = $issues; Matched = $facts.Count; Oracle = $oracleRan }
 }
 
 # --- mode 3: HPC 4-task worker chain ------------------------------------------
@@ -2253,7 +2402,9 @@ foreach ($name in $selected) {
                     $expStraight[0].Name, $expDiff.LengthExpected, $expDiff.LengthActual,
                     $expDiff.FirstDiffOffset, $expDiff.DiffCount))
             } else {
-                $m3sCompared += [int](([System.IO.FileInfo]$expStraight[0].FullName).Length - 32) / 36
+                $m3sCompared += [int](([System.IO.FileInfo]$expStraight[0].FullName).Length -
+                    [OspreyFdrSidecarComparer]::ExperimentHeaderLen) /
+                    [OspreyFdrSidecarComparer]::ExperimentRecordLen
             }
         }
 
@@ -3053,8 +3204,9 @@ foreach ($name in $selected) {
     $releaseChecks = [System.Collections.Generic.List[hashtable]]::new()
     $releaseChecks.Add(@{
         Label = 'straight-through'; Log = (Join-Path $straightDir 'straight.log')
-        Scopes = @($releaseScopeRescore, $releaseScopeReported)
+        Scopes = @($releaseScopeRescore, $releaseScopeSummary)
         Freed  = @($releaseScopeRescore)
+        MatchesSummary = $releaseScopeSummary; SameProcess = $true
     })
     # Gated on the SAME condition that decides whether mode 2 runs, not on whether
     # resume.log happens to exist. This leg asserts the release fired on every leg that
@@ -3069,8 +3221,9 @@ foreach ($name in $selected) {
         # coverage. The rehydrate arms are covered below and on the phase-3 workers.
         $releaseChecks.Add(@{
             Label = 'resume (FirstPassFDR re-runs)'; Log = (Join-Path $straightDir 'resume.log')
-            Scopes = @($releaseScopeRescore, $releaseScopeReported)
+            Scopes = @($releaseScopeRescore, $releaseScopeSummary)
             Freed  = @($releaseScopeRescore)
+            MatchesSummary = $releaseScopeSummary; SameProcess = $true
         })
     }
     if (-not $SkipRehydrate -and -not (Test-ModeCut $cfg 5)) {
@@ -3087,8 +3240,13 @@ foreach ($name in $selected) {
         # release from it, run -SkipHpcChain, and mode 6 still reports PASS.
         $releaseChecks.Add(@{
             Label = 'own-sidecar rehydrate'; Log = (Join-Path $straightDir 'rehydrate.log')
-            Scopes = @($releaseScopeRescore, $releaseScopeReported)
+            Scopes = @($releaseScopeRescore, $releaseScopeSummary)
             Freed  = @($releaseScopeRescore)
+            # The producer line is in straight.log: this leg REHYDRATES Stage 5 from its own
+            # sidecars rather than re-running it, so it consumes a summary an earlier process
+            # wrote. Cross-log is what lets the oracle cover it at all.
+            MatchesSummary = $releaseScopeSummary; SameProcess = $true
+            SummaryLog = (Join-Path $straightDir 'straight.log')
         })
     }
     if (-not $SkipHpcChain -and -not (Test-ModeCut $cfg 3)) {
@@ -3115,21 +3273,31 @@ foreach ($name in $selected) {
         $releaseChecks.Add(@{
             Label = 'HPC SecondPassFDR node'
             Log = (Join-Path $releaseLogDir 'phase4.log')
-            Scopes = @($releaseScopeReported); Freed = @($releaseScopeReported)
+            Scopes = @($releaseScopeSummary); Freed = @($releaseScopeSummary)
+            # The one leg where the 11 minutes / 41.5 GB was actually measured, so the one that
+            # most needs the oracle. Its producer is phase 2, a different PROCESS, which is why
+            # the check takes a separate summary log. NOT SameProcess: Stage 5 released in
+            # phase 3, so this node's release is real and Freed above asserts it is non-zero.
+            MatchesSummary = $releaseScopeSummary
+            SummaryLog = (Join-Path $releaseLogDir 'phase2.log')
         })
     }
 
     Write-Progress-Tc "${name}: library-fragment release engagement (mode 6)"
     $m6Issues = [System.Collections.Generic.List[string]]::new()
     $m6Matched = 0
+    $m6Oracles = 0
     foreach ($check in $releaseChecks) {
         $r = if ($check.None) {
             Test-LibraryFragmentRelease -LogPath $check.Log -ExpectNone
         } else {
             Test-LibraryFragmentRelease -LogPath $check.Log `
-                -ExpectScopes $check.Scopes -RequireFreed $check.Freed
+                -ExpectScopes $check.Scopes -RequireFreed $check.Freed `
+                -MatchesSummaryScope $check.MatchesSummary -SummaryLog $check.SummaryLog `
+                -ReleasedInSameProcess:([bool]$check.SameProcess)
         }
         $m6Matched += $r.Matched
+        $m6Oracles += $r.Oracle
         if (-not $r.Pass) {
             $r.Issues | ForEach-Object { $m6Issues.Add("$($check.Label): $_") }
         }
@@ -3141,6 +3309,16 @@ foreach ($name in $selected) {
     # accident of which legs are enabled: -SkipHpcChain -SkipResume -SkipRehydrate leaves
     # only positive checks whose absence is indistinguishable from a dead regex. Asserting
     # that SOMETHING matched somewhere makes the drift itself the failure.
+    # Denominator is the legs that ASKED for the oracle, not every leg. $releaseChecks is
+    # never empty (the straight-through entry is unconditional), so the old term could not
+    # fail and this guard asserted nothing.
+    $m6OracleLegs = @($releaseChecks | Where-Object { $_.MatchesSummary }).Count
+    if ($m6Oracles -eq 0 -and $m6OracleLegs -gt 0) {
+        $m6Issues.Add(("no leg evaluated the #4650 count oracle - every check either named no " +
+            "MatchesSummary scope or found no release line to compare, so the assertion that " +
+            "Stage 7 READS the analysis-wide summary rather than folding every run's pool to " +
+            "rebuild it was made zero times"))
+    }
     if ($m6Matched -eq 0) {
         $m6Issues.Add((("no leg logged a single release line matching '{0}' - the release " +
             "is off for the whole run, or the C# wording drifted from this pattern and " +
@@ -3150,7 +3328,8 @@ foreach ($name in $selected) {
         # Report the leg COUNT. This leg's strength is how many library-holding legs it
         # covers, and that set shrinks silently when a dataset skips one of them - a
         # green "PASS" over three legs looks identical to a green one over five.
-        $summaryLines.Add("$name mode6 (library-fragment release engaged): PASS ($($releaseChecks.Count) leg(s))")
+        $summaryLines.Add("$name mode6 (library-fragment release engaged): PASS " +
+            "($($releaseChecks.Count) leg(s), #4650 count oracle on $m6Oracles)")
     } else {
         $overallFail = $true
         Write-Problem-Tc "$name mode6 (library-fragment release engaged): FAIL - $($m6Issues.Count) issue(s)"
@@ -3346,10 +3525,16 @@ foreach ($name in $selected) {
             # ORACLE 1b: and the join did NOT run. The positive marker alone is not enough -
             # one pass could fold while the other re-computes, and the artifact would still be
             # correct. These are lines only genuine analysis emits.
+            # The experiment-q floor traversal is here because it is a whole pass over every run
+            # that this arm must not perform. It used to run unconditionally before the .blib,
+            # re-deriving floors the second pass now applies before it writes (issue #4522), and
+            # nothing about the REPORT would change if it came back - only the wall clock and the
+            # working set, which is exactly what the byte comparisons cannot see.
             $m11Forbidden = @(
                 @{ What = 'a second-pass FDR compute'; Pattern = '[STAGE-WALL] second-pass-fdr' }
                 @{ What = 'protein-level FDR';         Pattern = 'Running protein-level FDR' }
-                @{ What = 'a per-file rescore';        Pattern = 'Re-scoring file ' })
+                @{ What = 'a per-file rescore';        Pattern = 'Re-scoring file ' }
+                @{ What = 'an experiment-q floor fold over the runs'; Pattern = 'Folding experiment-q floors' })
             foreach ($fb in $m11Forbidden) {
                 $hit = @(Select-String -Path $r11.Log -Pattern $fb.Pattern -SimpleMatch `
                     -ErrorAction SilentlyContinue)
@@ -3470,13 +3655,237 @@ foreach ($name in $selected) {
                         "report: {0}" -f $c))
                 }
             }
+
+            # ---- the same fold, asked for the four OTHER ways --------------------------
+            # Everything above asserts ONE entry point: `--task ModelDiagnostics`. It is the
+            # only one any leg has ever asserted, and an operator reaches the same intent by
+            # four others against this exact state - every analysis artifact current, the
+            # diagnostics products the only thing outstanding. They share this leg's setup,
+            # so each costs a few seconds on top of it:
+            #
+            #   cell C  the whole pipeline, --model-diagnostics, both products PRESENT - a
+            #           no-op; every task including SecondPassFDR must find nothing to do
+            #   cell D  the same command with both products ABSENT - this leg's fold reached
+            #           the ordinary way, with the PerFile tasks interrogated and skipped on
+            #           the way past, which is what --task ModelDiagnostics never exercises
+            #   cell A  --task FirstPassFDR  --model-diagnostics - the pass-1 fold alone
+            #   cell B  --task SecondPassFDR --model-diagnostics - the pass-2 fold alone
+            #
+            # Measured on the 446-run CHS cohort, 2026-09-13, and two did not hold. Cell A
+            # re-ran the entire first pass including Percolator training, which forces the
+            # RESIDENT pre-compaction pool - 109 GB at file 165 of 446 - because Run
+            # materializes that pool before it can ask whether it owes any analysis at all.
+            # Cell C re-entered SecondPassFDR and reloaded the scored pool with every product
+            # already on disk and current, while the three tasks ahead of it reported hits.
+            #
+            # Asserted from the LOG, like everything else in this leg: a re-analysis produces
+            # the RIGHT artifact, so no comparison of bytes can separate it from a fold.
+
+            # The products AND their validity stamps, dropped before each cell that wants them
+            # absent. The stamp is what a later run reads to decide the product is current, so
+            # leaving one behind describes a state no interruption produces. Dropping per cell
+            # rather than once keeps a red cell from cascading into a later failure that means
+            # something else.
+            $m11Drop = {
+                foreach ($p in @($m11Pass1, $m11Pass2)) {
+                    foreach ($f in @(Get-ChildItem ($p + '*') -ErrorAction SilentlyContinue)) {
+                        Remove-Item $f.FullName -Force
+                    }
+                }
+            }
+
+            # Everything the fold above produced, validity stamps included, so whatever the
+            # cells leave behind can be put back exactly. $m11Ref holds only the JSON, and a
+            # product restored without its stamp is not the state the legs after this expect.
+            $m11CellsRef = Join-Path (Join-Path $runRoot $name) 'mode11-cells-reference'
+            if (Test-Path $m11CellsRef) { Remove-Item $m11CellsRef -Recurse -Force }
+            New-Item -ItemType Directory -Path $m11CellsRef -Force | Out-Null
+            foreach ($p in @($m11Pass1, $m11Pass2)) {
+                foreach ($f in @(Get-ChildItem ($p + '*') -ErrorAction SilentlyContinue)) {
+                    Copy-Item $f.FullName $m11CellsRef -Force
+                }
+            }
+
+            # The precise symptoms measured at 446 files. The first group is the O(files)
+            # resident pre-compaction pool the first pass materializes before it can ask
+            # whether it owes any analysis; the second is the scored-entry pool the second
+            # pass loads. Substrings, so surrounding prose can change without breaking this.
+            # NOT 'Loading N per-file score parquet(s)': cell B emits that line and follows it
+            # with "no all-runs pre-load", so it appears on the bounded per-run route as well.
+            # The line that names the O(files) pool is the warning that announces it.
+            $m11NoFirstPass = @(
+                'requires the RESIDENT pre-compaction first-pass pool',
+                'Re-scoring file ')
+            $m11NoSecondPass = @(
+                'Loading scored entries',
+                '[STAGE-WALL] second-pass-fdr',
+                'Running protein-level FDR')
+            # O(files x entries), and the reason this set is not just about analysis: after the
+            # resident pre-compaction pool was removed from the fold-only leg, cell A still built
+            # THIS - a whole-cohort structure to render a page that reads none of it. Mode 11's
+            # own leg asserts it through Test-NoAllRunsBundle; the cells assert it here.
+            $m11NoBundle = @('ALL-RUNS reconciliation bundle')
+            $m11NoAnalysis = $m11NoFirstPass + $m11NoSecondPass + $m11NoBundle
+            $m11Fold1 = 'folding the report from the completed first pass'
+            $m11Fold2 = 'folding the pass-2 report from the completed second pass'
+
+            # One shape for all four cells. LIVENESS FIRST, for Test-NoAllRunsBundle's reason:
+            # a negative assertion passes on a log that says nothing at all, so the absence of
+            # a marker is evidence only once the log is known to describe a real run. The
+            # anchor is the startup banner every invocation emits after parsing its arguments
+            # and BEFORE it chooses any route.
+            $m11CellCheck = {
+                param($Label, $LogPath, $ExitCode, $Required, $Forbidden, $ExpectExitCode)
+                $out = [System.Collections.Generic.List[string]]::new()
+                if (-not (Test-Path -LiteralPath $LogPath)) {
+                    $out.Add("${Label}: run log not found: $LogPath")
+                    return $out
+                }
+                $text = @(Get-Content -LiteralPath $LogPath)
+                if (@($text | Where-Object { $_.Contains('Threads:') }).Count -eq 0) {
+                    $out.Add((("{0}: the log carries no startup banner, so neither what it says " +
+                        "nor what it omits is evidence") -f $Label))
+                    return $out
+                }
+                if ($null -eq $ExpectExitCode) { $ExpectExitCode = 0 }
+                if ($ExitCode -ne $ExpectExitCode) {
+                    $out.Add((("{0}: Osprey exited {1}, expected {2} - a fold that can run must " +
+                        "produce its product, and one that cannot must refuse; neither may be " +
+                        "reported as the other") -f $Label, $ExitCode, $ExpectExitCode))
+                }
+                foreach ($m in $Required) {
+                    if (@($text | Where-Object { $_.Contains($m) }).Count -eq 0) {
+                        $out.Add((("{0}: no '{1}' marker in the log - the report was produced by " +
+                            "re-running the analysis, which yields the RIGHT artifact and is " +
+                            "exactly what this leg exists to catch") -f $Label, $m))
+                    }
+                }
+                foreach ($m in $Forbidden) {
+                    if (@($text | Where-Object { $_.Contains($m) }).Count -gt 0) {
+                        $out.Add((("{0}: '{1}' appears in the log - asking for the report re-ran " +
+                            "the analysis") -f $Label, $m))
+                    }
+                }
+                return $out
+            }
+
+            # ---- cell C: the whole pipeline, both products PRESENT --------------------
+            # Runs first: the fold above has just written both products, so this cell's
+            # precondition is the state this leg is already in. Mode 4 asserts the same no-op
+            # from the post-straight-through state and is green, so a red here is specifically
+            # about re-entering a run whose diagnostics products were produced by a FOLD.
+            $m11LC = 'cell C (whole pipeline, products present)'
+            $rC = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library `
+                -Resolution $cfg.Resolution -WorkDir $straightDir -LogName 'paylater-c.log' `
+                -Spec $cfg -Manifest $inputs.Manifest -FdrBench:([bool]$cfg.FdrBench) `
+                -AllowNonZeroExit
+            Write-Host ("  {0} wall {1:N1}s" -f $m11LC, $rC.Wall.TotalSeconds)
+            @(& $m11CellCheck $m11LC $rC.Log $rC.ExitCode @() $m11NoAnalysis) |
+                ForEach-Object { $m11Issues.Add($_) }
+            $m11TasksC = Test-TaskCacheHits -LogPath $rC.Log -ExpectSkipped $pipelineTaskNames `
+                -NoColdScoring -NoColdRescoring
+            $m11TasksC.Issues | ForEach-Object { $m11Issues.Add("${m11LC}: $_") }
+
+            # ---- cell D: the whole pipeline, both products ABSENT ---------------------
+            $m11LD = 'cell D (whole pipeline, products absent)'
+            & $m11Drop
+            $rD = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library `
+                -Resolution $cfg.Resolution -WorkDir $straightDir -LogName 'paylater-d.log' `
+                -Spec $cfg -Manifest $inputs.Manifest -FdrBench:([bool]$cfg.FdrBench) `
+                -AllowNonZeroExit
+            Write-Host ("  {0} wall {1:N1}s" -f $m11LD, $rD.Wall.TotalSeconds)
+            @(& $m11CellCheck $m11LD $rD.Log $rD.ExitCode @($m11Fold1, $m11Fold2) $m11NoAnalysis) |
+                ForEach-Object { $m11Issues.Add($_) }
+            $m11TasksD = Test-TaskCacheHits -LogPath $rD.Log `
+                -ExpectSkipped @('PerFileScoring', 'PerFileRescoring') `
+                -NoColdScoring -NoColdRescoring
+            $m11TasksD.Issues | ForEach-Object { $m11Issues.Add("${m11LD}: $_") }
+            foreach ($p in @($m11Pass1, $m11Pass2)) {
+                if (-not (Test-Path $p)) {
+                    $m11Issues.Add(("{0}: {1} was not produced - the entry point folded nothing" -f
+                        $m11LD, (Split-Path -Leaf $p)))
+                }
+            }
+
+            # ---- cell A: --task FirstPassFDR --model-diagnostics ----------------------
+            $m11LA = 'cell A (--task FirstPassFDR, products absent)'
+            & $m11Drop
+            $rA = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library `
+                -Resolution $cfg.Resolution -WorkDir $straightDir -LogName 'paylater-a.log' `
+                -Spec $cfg -Manifest $inputs.Manifest -TaskName 'FirstPassFDR' `
+                -FdrBench:([bool]$cfg.FdrBench) -AllowNonZeroExit
+            Write-Host ("  {0} wall {1:N1}s" -f $m11LA, $rA.Wall.TotalSeconds)
+            @(& $m11CellCheck $m11LA $rA.Log $rA.ExitCode @($m11Fold1) $m11NoAnalysis) |
+                ForEach-Object { $m11Issues.Add($_) }
+            if (-not (Test-Path $m11Pass1)) {
+                $m11Issues.Add((("{0}: the pass-1 product was not produced - the entry point " +
+                    "folded nothing") -f $m11LA))
+            }
+
+            # ---- cell B: --task SecondPassFDR, BOTH products absent -------------------
+            # The pass-2 page is an ENRICHMENT of the pass-1 page, so from this state there is
+            # nothing to enrich and the only correct answer is a refusal. What must not happen is
+            # what this cell caught on 2026-09-13: "folding the pass-2 report from the completed
+            # second pass", SecondPassFDR:done, exit 0, and no product - success reported for
+            # nothing, which an operator cannot tell from the real thing.
+            $m11LB = 'cell B (--task SecondPassFDR, both products absent)'
+            & $m11Drop
+            $rB = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library `
+                -Resolution $cfg.Resolution -WorkDir $straightDir -LogName 'paylater-b.log' `
+                -Spec $cfg -Manifest $inputs.Manifest -TaskName 'SecondPassFDR' `
+                -FdrBench:([bool]$cfg.FdrBench) -AllowNonZeroExit
+            Write-Host ("  {0} wall {1:N1}s" -f $m11LB, $rB.Wall.TotalSeconds)
+            @(& $m11CellCheck $m11LB $rB.Log $rB.ExitCode @() $m11NoAnalysis 1) |
+                ForEach-Object { $m11Issues.Add($_) }
+            # A refusal that does not say WHICH half is missing sends the operator to the logs of
+            # a run that did nothing, so the message is part of the contract, not decoration.
+            if (@(Select-String -Path $rB.Log -Pattern 'enrichment of the pass-1 report' `
+                    -SimpleMatch -ErrorAction SilentlyContinue).Count -eq 0) {
+                $m11Issues.Add((("{0}: the refusal does not name the pass-1 report as the missing " +
+                    "half, so it does not tell the operator what to run") -f $m11LB))
+            }
+            if (Test-Path $m11Pass2) {
+                $m11Issues.Add((("{0}: a pass-2 product exists after a run that refused to " +
+                    "produce one") -f $m11LB))
+            }
+
+            # ---- cell B2: --task SecondPassFDR, ONLY the pass-2 product absent --------
+            # The state cell B's refusal tells the operator to reach, so the refusal is only
+            # sound if this one works. Withholds pass 2 alone, leaving pass 1 to enrich.
+            $m11LB2 = 'cell B2 (--task SecondPassFDR, pass-2 product absent)'
+            & $m11Drop
+            foreach ($f in @(Get-ChildItem -LiteralPath $m11CellsRef -File |
+                    Where-Object { $_.Name -like '*1st-pass*' })) {
+                Copy-Item $f.FullName (Join-Path $straightDir $f.Name) -Force
+            }
+            $rB2 = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library `
+                -Resolution $cfg.Resolution -WorkDir $straightDir -LogName 'paylater-b2.log' `
+                -Spec $cfg -Manifest $inputs.Manifest -TaskName 'SecondPassFDR' `
+                -FdrBench:([bool]$cfg.FdrBench) -AllowNonZeroExit
+            Write-Host ("  {0} wall {1:N1}s" -f $m11LB2, $rB2.Wall.TotalSeconds)
+            @(& $m11CellCheck $m11LB2 $rB2.Log $rB2.ExitCode @($m11Fold2) `
+                ($m11NoSecondPass + $m11NoBundle) 0) | ForEach-Object { $m11Issues.Add($_) }
+            if (-not (Test-Path $m11Pass2)) {
+                $m11Issues.Add((("{0}: the pass-2 product was not produced - the entry point " +
+                    "folded nothing") -f $m11LB2))
+            }
+
+            # Restored to exactly what the fold above produced, stamps included, whatever the
+            # cells left behind. Mode 8 follows and needs a cohort that is complete, and a
+            # product a red cell failed to produce must not read as this run's output.
+            & $m11Drop
+            foreach ($f in @(Get-ChildItem -LiteralPath $m11CellsRef -File)) {
+                Copy-Item $f.FullName (Join-Path $straightDir $f.Name) -Force
+            }
+            Remove-Item $m11CellsRef -Recurse -Force -ErrorAction SilentlyContinue
         }
         Remove-Item $m11Ref -Recurse -Force -ErrorAction SilentlyContinue
 
         if ($m11Issues.Count -eq 0) {
-            $summaryLines.Add(("$name mode11 (pay-later diagnostics: folded, no analysis, same " +
-                "report): PASS (pass-2 byte-exact; pass-1 exact except the views no pay-later " +
-                "path can rebuild today: {0})") -f ($m11Pass1Unavailable -join ', '))
+            $summaryLines.Add(("$name mode11 (pay-later diagnostics: folded, no analysis, " +
+                "same report, from every entry point): PASS (pass-2 byte-exact; pass-1 " +
+                "exact except the views no pay-later path can rebuild today: {0})") -f
+                ($m11Pass1Unavailable -join ', '))
         } else {
             $overallFail = $true
             Write-Problem-Tc "$name mode11 (pay-later diagnostics): FAIL - $($m11Issues.Count) issue(s)"

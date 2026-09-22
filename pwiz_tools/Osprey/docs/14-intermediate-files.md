@@ -28,12 +28,14 @@ experiment-wide, **exp/rep** = experiment-wide content replicated under each run
 | `<stem>.spectra.bin` | run | Custom binary v4 | `Osprey.IO/SpectraCache.cs` | Decoded MS1/MS2 spectra for fast reload - and the only copy once the source is deleted |
 | `<stem>.scores.parquet` | run | Apache Parquet (ZSTD) | `Osprey.IO/ParquetScoreCache.cs` | Scored entries: 21 PIN features, fragments, CWT candidates + footer metadata |
 | `<stem>.scores-reconciled.parquet` | run | Apache Parquet (ZSTD) | `Osprey.Tasks/ReconciledParquetWriter.cs` | Stage 6 reconciled rewrite (separate file, not in-place) |
-| `<stem>.1st-pass.fdr_scores.bin` | run | Custom binary **v6**, 32-byte header + 28-byte records | `Osprey.IO/FdrScoresSidecar.cs` | entry_id, SVM score, run precursor q, run peptide q. The experiment-scope columns moved OUT at v5 (#4486) - see the experiment sidecar row |
-| `<stem>.2nd-pass.fdr_scores.bin` | run | Custom binary **v6**, same layout | `Osprey.IO/FdrScoresSidecar.cs` | Same record shape after second-pass Percolator |
+| `<stem>.1st-pass.fdr_scores.bin` | run | Custom binary **v7**, 32-byte header + 36-byte records | `Osprey.IO/FdrScoresSidecar.cs` | entry_id, SVM score, run precursor q, run peptide q, detection apex RT. The experiment-scope columns moved OUT at v5 (#4486) - see the experiment sidecar row; apex RT arrived at v7 (#4522), so the diagnostics co-assignment panel stops opening every `.scores.parquet` a second time for it |
+| `<stem>.2nd-pass.fdr_scores.bin` | run | Custom binary **v7**, same layout | `Osprey.IO/FdrScoresSidecar.cs` | Same record shape after second-pass Percolator |
 | `<stem>.2nd-pass.fdr_decoys.bin` | run | Custom binary v1 | `Osprey.IO/Pass2CompetitionDecoys.cs` | Per-run second-pass competition decoys; written before the scores sidecar |
 | `<stem>.reconciliation.json` | run | JSON (Newtonsoft) | `Osprey.IO/ReconciliationFile.cs` | Stage 5 planner output: actions, gap-fill targets, refined RT calibration |
-| `<blib-stem>.{1st,2nd}-pass.fdr_experiment.bin` | exp | Custom binary **v2**, 32-byte header + 44-byte records | `Osprey.IO/FdrExperimentSidecar.cs` | The experiment-scope columns: precursor q, peptide q, PEP, protein q, aggregate score. **Name** from the output blib, **directory** from `ResolveOutputDir` |
-| `<stem>.1st-pass.model.json` | exp/rep | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | Frozen first-pass Percolator model, plus the protein-compact stratum when that mode is active |
+| `<blib-stem>.{1st,2nd}-pass.fdr_experiment.bin` | exp | Custom binary **v2**, 32-byte header + 44-byte records | `Osprey.IO/FdrExperimentSidecar.cs` | The experiment-scope columns: precursor q, peptide q, PEP, protein q, aggregate score. Both q-values are FLOORED to the precursor's best run before they are written (#4522) - see 07-fdr-control.md 3j. **Name** from the output blib, **directory** from `ResolveOutputDir` |
+| `<blib-stem>.1st-pass.retained_base_ids.bin` | exp | Custom binary **v1**, 32-byte header + 4-byte records | `Osprey.IO/RetainedBaseIdSidecar.cs` | The join-wide compaction set: every base_id the Stage 6 rescore retains, ascending. Written once when Stage 6 planning ends, because the second half of it (reconciliation action targets) is not known until the LAST run is planned. Bounded by the library, not by run count - on the 446-run CHS cohort of #4650 it is 2,502,512 bytes for 625,620 ids, against the megabytes each of the 446 `reconciliation.json` envelopes spends restating the first half. (Counts travel with their run: `RetainedBaseIdSidecar` quotes 744,943 ids / 2.98 MB from a different arm of the same cohort.) Seven read sites across four tasks: `FirstPassFdrTask` (x3), `PerFileScoringTask`, `PerFileRescoreTask` (x2, one of them the streamed Stage 7 join) and Stage 7's library-fragment release (#4650). **Absence is fatal at most of them, and deliberately so** - the fallback would be rebuilding the union from every envelope, the O(runs) pre-pass this file exists to delete - but not at all of them: `PerFileRescoreTask.BuildPerRunHydrate` takes the null-returning reader and declines the per-run shape, because the run is by then already failing elsewhere for a named reason |
+| `<stem>.1st-pass.model.json` | exp/rep | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | Frozen first-pass Percolator model (weights, biases, normalization). The protein-compact stratum is NOT in it - see the next row |
+| `<stem>.1st-pass.stratum.json` | exp/rep | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | The protein-compact stratum: base ids of every library precursor whose peptide belongs to a protein with >=2 detected peptides. Absent under every mode but protein-compact. A SECOND file rather than a member of the model sidecar because a different PHASE produces it - the model exists when training ends, the stratum only after first-pass protein FDR resolves which proteins carry two detected peptides. Writing one file meant holding the model in memory for the whole first pass, which made a run killed in the score passes unrecoverable. `LoadFromAny` merges the two on read, and still falls back to a pre-split model sidecar's embedded copy |
 | `<output>.<TaskName>.osprey.task` | its artifact's | JSON (hand-rolled) | `Osprey.Tasks/TaskValiditySidecar.cs` | **C# addition**: per-(output, task) resume validity record |
 | `<lib>.<...>` library cache | exp | Custom binary v2 | `Osprey.IO/LibraryCache.cs` | Parsed spectral library reload cache |
 | `<output>.blib` | exp | SQLite (BiblioSpec) | `Osprey.IO/BlibWriter.cs` | Final output; see 13-blib-output-schema.md |
@@ -71,9 +73,10 @@ durable artifact writer in the tree, as of this document's last verification:
 | `ParquetScoreCache` (2 sites) | `<stem>.scores.parquet`, `<stem>.scores-reconciled.parquet` |
 | `FdrScoresSidecar` | `<stem>.{1st,2nd}-pass.fdr_scores.bin` |
 | `FdrExperimentSidecar` | `<blib-stem>.{1st,2nd}-pass.fdr_experiment.bin` |
+| `RetainedBaseIdSidecar` | `<blib-stem>.1st-pass.retained_base_ids.bin` |
 | `Pass2CompetitionDecoys` | `<stem>.2nd-pass.fdr_decoys.bin` |
 | `ReconciliationFile` | `<stem>.reconciliation.json` |
-| `FirstPassModelIO` | `<stem>.1st-pass.model.json` |
+| `FirstPassModelIO` (2 sites) | `<stem>.1st-pass.model.json`, `<stem>.1st-pass.stratum.json` |
 | `TaskValiditySidecar` | `<output>.<TaskName>.osprey.task` |
 | `BlibOutputWriter` | `<output>.blib` |
 | `ModelDiagnosticsReport` (2 sites) | `<output>.model-diagnostics.{html,data.json}` |
@@ -266,13 +269,15 @@ The Stage 6 reconciled rewrite (`ReconciledParquetWriter.BuildReconciliationMeta
 `ReconciledParquetWriter.cs:192`) sets `osprey.reconciled = "true"` and adds
 `osprey.reconciliation_hash` = `SearchIdentity.ReconciliationParameterHash[ForStems]()`.
 
-**Hash recipes** (`Osprey.Core/SearchIdentity.cs`, must stay byte-identical to Rust
-`osprey-core/src/config.rs`):
+**Hash recipes** (`Osprey.Core/SearchIdentity.cs`, following Rust
+`osprey-core/src/config.rs` except for the manifest term, noted below):
 
 - `SearchParameterHash()` (`SearchIdentity.cs:60`): resolution mode; fragment + precursor
   tolerance (value + unit); prefilter enabled; decoy method; decoys-in-library; sorted
-  lowercased decoy prefixes; decoy pairing manifest path (Rust `{:?}` `Some/None` escaping,
-  `SearchIdentity.cs:186`); decoy pair min fraction; all RT-calibration parameters (enabled,
+  lowercased decoy prefixes; decoy pairing manifest IDENTITY - `None`, or `Some(<hash>)` over
+  the manifest's file name + size + mtime, the same recipe as `LibraryIdentityHash` and for the
+  same reason, so moving a manifest is free and editing one in place invalidates
+  (`SearchIdentity.DecoyPairingManifestTerm`); decoy pair min fraction; all RT-calibration parameters (enabled,
   fallback tolerance, tolerance factor, min/max tolerance, LOESS bandwidth, min calibration
   points, sample size, retry factor); and `reconciliation.top_n_peaks`. Booleans lowercased,
   invariant culture (`SearchIdentity.cs:69`) for cross-impl parity.
@@ -338,9 +343,9 @@ second-pass FDR. Carries the SVM discriminant plus every q-value needed for down
 and protein-FDR-aware compaction.
 
 > **STALE - do not implement a reader from the layout below.** It documents v4: a 68-byte
-> record carrying the experiment-scope columns. The current format is **v6 with 28-byte
-> records** (`FdrScoresSidecar.FormatVersion`, `RecordLength`), holding only entry_id, SVM
-> score, run precursor q and run peptide q - the experiment columns moved to
+> record carrying the experiment-scope columns. The current format is **v7 with 36-byte
+> records** (`FdrScoresSidecar.FormatVersion`, `RecordLength`), holding entry_id, SVM
+> score, run precursor q, run peptide q and the detection apex RT - the experiment columns moved to
 > `<blib-stem>.{1st,2nd}-pass.fdr_experiment.bin` at v5 (issue #4486). The header is still
 > 32 bytes. Re-verifying and rewriting this subsection against `WriteRecord` is tracked as
 > follow-up work; it was not rewritten in the PR that added this warning because that PR
