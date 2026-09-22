@@ -2511,11 +2511,11 @@ namespace pwiz.Osprey.Test
 
                 // The two passes that run BEFORE Stage 6 read the Stage 4 file even though
                 // the reconciled sibling is sitting beside it.
-                AssertScoresPathForTask(input, HpcTask.FirstPassFdr, original);
-                AssertScoresPathForTask(input, HpcTask.PerFileRescore, original);
+                AssertScoresPathForTask(input, FirstPassFdrTask.TASK_NAME, original);
+                AssertScoresPathForTask(input, PerFileRescoreTask.TASK_NAME, original);
 
                 // The join reads the reconciled one - the only artifact its node is shipped.
-                AssertScoresPathForTask(input, HpcTask.SecondPassFdr, reconciled);
+                AssertScoresPathForTask(input, SecondPassFdrTask.TASK_NAME, reconciled);
             }
             finally
             {
@@ -2527,13 +2527,10 @@ namespace pwiz.Osprey.Test
         /// One input, one task, one expected parquet - through the same helper the pipeline
         /// calls, so the test cannot agree with a rule the tasks do not use.
         /// </summary>
-        private static void AssertScoresPathForTask(string input, HpcTask task, string expected)
+        private static void AssertScoresPathForTask(string input, string taskName, string expected)
         {
-            var config = new OspreyConfig
-            {
-                SelectedTask = task,
-                InputFiles = new List<string> { input }
-            };
+            var config = TaskConfigs.ForTask(taskName);
+            config.InputFiles = new List<string> { input };
             var paths = ScoringTaskShared.ScoresPathsForInputs(config);
             Assert.AreEqual(1, paths.Count);
             Assert.AreEqual(expected, paths[0]);
@@ -5292,7 +5289,7 @@ namespace pwiz.Osprey.Test
 
         #region TaskValiditySidecar Tests
 
-        private const string TASK_NAME = "PerFileScoring";
+        private const string TASK_NAME = PerFileScoringTask.TASK_NAME;
         private const string TASK_VERSION = "26.6.0";
 
         /// <summary>
@@ -5439,22 +5436,22 @@ namespace pwiz.Osprey.Test
                 const string scoringKey = "scoring-key";
                 const string rescoreKey = "rescore-key";
 
-                TaskValiditySidecar.Write(output, "PerFileScoring", TASK_VERSION,
+                TaskValiditySidecar.Write(output, PerFileScoringTask.TASK_NAME, TASK_VERSION,
                     scoringKey, new string[0]);
-                TaskValiditySidecar.Write(output, "PerFileRescoring", TASK_VERSION,
+                TaskValiditySidecar.Write(output, PerFileRescoreTask.TASK_NAME, TASK_VERSION,
                     rescoreKey, new string[0]);
 
-                string scoringPath = TaskValiditySidecar.PathFor(output, "PerFileScoring");
-                string rescorePath = TaskValiditySidecar.PathFor(output, "PerFileRescoring");
+                string scoringPath = TaskValiditySidecar.PathFor(output, PerFileScoringTask.TASK_NAME);
+                string rescorePath = TaskValiditySidecar.PathFor(output, PerFileRescoreTask.TASK_NAME);
                 Assert.AreNotEqual(scoringPath, rescorePath);
                 Assert.IsTrue(File.Exists(scoringPath));
                 Assert.IsTrue(File.Exists(rescorePath));
 
                 // Each task's IsValid sees its own key, not the other's.
-                Assert.IsTrue(TaskValiditySidecar.IsValid(output, "PerFileScoring", scoringKey));
-                Assert.IsTrue(TaskValiditySidecar.IsValid(output, "PerFileRescoring", rescoreKey));
-                Assert.IsFalse(TaskValiditySidecar.IsValid(output, "PerFileScoring", rescoreKey));
-                Assert.IsFalse(TaskValiditySidecar.IsValid(output, "PerFileRescoring", scoringKey));
+                Assert.IsTrue(TaskValiditySidecar.IsValid(output, PerFileScoringTask.TASK_NAME, scoringKey));
+                Assert.IsTrue(TaskValiditySidecar.IsValid(output, PerFileRescoreTask.TASK_NAME, rescoreKey));
+                Assert.IsFalse(TaskValiditySidecar.IsValid(output, PerFileScoringTask.TASK_NAME, rescoreKey));
+                Assert.IsFalse(TaskValiditySidecar.IsValid(output, PerFileRescoreTask.TASK_NAME, scoringKey));
             }
             finally
             {

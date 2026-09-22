@@ -15,7 +15,7 @@ not the drill-down.
 | File | Role |
 |------|------|
 | `../regression.ps1` | the harness — acquire data, run, compare, report |
-| `../tctest.bat` | scheduled TeamCity entry point (`regression.ps1 -TeamCity -Dataset All`) |
+| `../tctest.bat` | scheduled TeamCity entry point (`regression-parallel.ps1 -TeamCity -Dataset All`: two lanes, one `regression.ps1` invocation per dataset) |
 | `RegressionData.ps1` | download + unzip + skip-if-present (TestPerf-style) |
 | `BlibGolden.ps1` | blib projection schema + golden capture/compare + full blib-vs-blib |
 | `DiagnosticsGolden.ps1` | model-diagnostics metric projection + golden compare + fixed FDR sanity bounds |
@@ -25,7 +25,8 @@ not the drill-down.
 | Dataset | Decoys | Entrapment | Resolution | Role |
 |---|---|---|---|---|
 | `Stellar` | generated (reverse) | no | unit | fast local pre-commit gate |
-| `StellarLibDecoy` | library-supplied (Carafe) | yes, r=1.0 | unit | the recommended path; the only one that can measure true FDP |
+| `StellarLibDecoy` | library-supplied (Carafe) | yes, r=1.0 | unit | the recommended path; measures true FDP against library decoys — `DecoyGenerator` never runs |
+| `StellarGenDecoyEntrap` | generated (reverse), from the same library file with `StripDecoys` | yes, retained | unit | the only leg that guards `DecoyGenerator` against a true-FDP oracle |
 | `Astral` | generated (reverse) | no | hram | larger, HRAM, MS1 features live |
 
 `StellarLibDecoy` reuses the **same** Stellar mzML (via the spec's `LibraryFolder`),

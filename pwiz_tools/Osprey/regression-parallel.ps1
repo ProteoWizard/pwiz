@@ -52,7 +52,13 @@ param(
     [int]$Threads = 0,   # 0 = auto: logical processors / lane count
     [switch]$NoBuild,
     [switch]$TeamCity,
-    [string]$LogDir
+    [string]$LogDir,
+    # Retention, forwarded to every regression.ps1 invocation (see $retainOutput there).
+    # One invocation per dataset means one run dir per dataset, so the keep count is
+    # per DATASET here: the default keeps the previous full run, whatever its size.
+    [int]$KeepRunDirs = -1,
+    [switch]$KeepOutput,
+    [switch]$CleanOutput
 )
 
 $ErrorActionPreference = 'Stop'
@@ -60,12 +66,23 @@ $ErrorActionPreference = 'Stop'
 
 $scriptRoot = Split-Path -Parent $PSCommandPath
 $regression = Join-Path $scriptRoot 'regression.ps1'
-$ospreyExe  = Join-Path $scriptRoot 'Osprey\bin\x64\Release\net8.0\Osprey.exe'
+$ospreyExe  = Join-Path $scriptRoot 'Osprey\bin\x64\Release\net10.0\Osprey.exe'
 if (-not $LogDir) { $LogDir = Join-Path $scriptRoot 'TestResults' }
 if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Path $LogDir -Force | Out-Null }
 
 $all = @('Stellar', 'StellarLibDecoy', 'StellarGenDecoyEntrap', 'Astral')
 $selected = if ($Dataset -contains 'All') { $all } else { @($Dataset) }
+# Not retaining (TeamCity / -CleanOutput without -KeepOutput) keeps no predecessors
+# either, mirroring regression.ps1's own default for an unbound -KeepRunDirs.
+if ($KeepRunDirs -lt 0) {
+    $KeepRunDirs = if (($TeamCity -or $CleanOutput) -and -not $KeepOutput) { 0 } else { $selected.Count }
+}
+# The same three retention switches on every regression.ps1 call this script makes,
+# staging included (the -StageOnly call runs the startup prune too).
+$retention = @{ KeepRunDirs = $KeepRunDirs }
+if ($KeepOutput)  { $retention['KeepOutput']  = $true }
+if ($CleanOutput) { $retention['CleanOutput'] = $true }
+$retentionArgs = " -KeepRunDirs $KeepRunDirs" + $(if ($KeepOutput) { ' -KeepOutput' } else { '' }) + $(if ($CleanOutput) { ' -CleanOutput' } else { '' })
 
 # Astral leads one lane and takes StellarGenDecoyEntrap, the cheapest dataset under the
 # sparse matrix, as its partner; Stellar and StellarLibDecoy make the other. Derived from
@@ -91,8 +108,8 @@ Write-Host ("==> {0} lane(s), {1} thread(s) each, {2} logical processor(s)" -f
 
 # --- Build ONCE, here, so the lanes cannot race each other's build output ---------
 if (-not $NoBuild) {
-    Write-Host '==> Building Osprey (Release, net8.0) once for both lanes' -ForegroundColor Cyan
-    & (Join-Path $scriptRoot 'build.ps1') -Configuration Release -Framework net8.0 -NoTests
+    Write-Host '==> Building Osprey (Release, net10.0) once for both lanes' -ForegroundColor Cyan
+    & (Join-Path $scriptRoot 'build.ps1') -Configuration Release -NoTests
     if ($LASTEXITCODE -ne 0) { Write-Host "ERROR: Osprey build failed (exit $LASTEXITCODE)" -ForegroundColor Red; exit $LASTEXITCODE }
 }
 if (-not (Test-Path $ospreyExe)) {
@@ -106,7 +123,7 @@ if (-not (Test-Path $ospreyExe)) {
 if ($lanes.Count -ge 2) {
     Write-Host '==> Staging regression data once for both lanes' -ForegroundColor Cyan
     foreach ($ds in $selected) {
-        & $regression -Dataset $ds -NoBuild -StageOnly
+        & $regression -Dataset $ds -NoBuild -StageOnly @retention
         if ($LASTEXITCODE -ne 0) { Write-Host "ERROR: staging $ds failed (exit $LASTEXITCODE)" -ForegroundColor Red; exit $LASTEXITCODE }
     }
 }
@@ -115,7 +132,7 @@ if ($lanes.Count -lt 2) {
     Write-Host "==> One lane only ($($selected -join ', ')); running serially" -ForegroundColor Cyan
     # Splat a hashtable rather than appending a conditional array, which would arrive
     # as a POSITIONAL argument rather than as -TeamCity.
-    $serial = @{ Dataset = $selected; Threads = $Threads; NoBuild = $true }
+    $serial = @{ Dataset = $selected; Threads = $Threads; NoBuild = $true } + $retention
     if ($TeamCity) { $serial['TeamCity'] = $true }
     & $regression @serial
     exit $LASTEXITCODE
@@ -143,7 +160,7 @@ foreach ($lane in $lanes) {
     $tcArg = if ($TeamCity) { " -TeamCity" } else { "" }
     $body = @("`$worst = 0")
     foreach ($ds in $lane) {
-        $body += "& `"$regression`" -Dataset $ds -Threads $Threads -NoBuild$tcArg"
+        $body += "& `"$regression`" -Dataset $ds -Threads $Threads -NoBuild$tcArg$retentionArgs"
         $body += "if (`$LASTEXITCODE -ne 0) { `$worst = `$LASTEXITCODE }"
     }
     $body += "exit `$worst"

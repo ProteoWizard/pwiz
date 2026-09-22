@@ -50,9 +50,10 @@ file, one LC-MS/MS acquisition. It is the unit the pipeline fans out over.
 
 The code spells this concept `file`, because a run arrives as a file and is keyed by
 its file stem. The two fan-out tasks are `PerFileScoring` and `PerFileRescoring` in the
-CLI and in the `.osprey.task` sidecar names; the `HpcTask` enum spells three of the four
-differently (`FirstPassFdr`, `PerFileRescore`, `SecondPassFdr`), so a name copied from the
-enum will not match a filename. Stage 6's canonical name is "Per-file rescore".
+CLI and in the `.osprey.task` sidecar names - each task's `Name`, the one spelling; the
+class names differ (`FirstPassFdrTask`, `PerFileRescoreTask`, `SecondPassFdrTask`), so a
+name copied from a class will not match a filename. Stage 6's canonical name is
+"Per-file rescore".
 **Proper names are quoted as they are spelled** -
 tasks, types, paths, stage names - and this document says **run** everywhere else,
 because "per-run versus experiment-wide" is the distinction that carries the
@@ -184,7 +185,7 @@ without violating any rule stated in terms of fan-out versus join alone.
 ### Four tasks over seven stages
 
 The pipeline is a fixed, four-element list, always in this order
-(`AnalysisPipeline.CanonicalPipeline()`). It alternates fan-out and join:
+(`OspreyTasks.Pipeline`). It alternates fan-out and join:
 
 | Task | Stages | Shape | Nodes | May hold resident |
 |---|---|---|---|---|
@@ -197,7 +198,7 @@ Stages 1-4 are library preparation, mzML processing, calibration, and the main
 first-pass search that computes the 21 PIN features. Stage 5 is first-pass FDR plus the
 Stage 6 reconciliation plan. Stage 6 is the per-run rescore and gap-fill. Stage 7 is
 second-pass FDR, protein FDR, and the `.blib` write. The stage-to-document map is in
-[README.md](README.md); the task-name-to-enum-to-class map is in
+[README.md](README.md); the task-name-to-class map is in
 [15-hpc-scoring-split](15-hpc-scoring-split.md).
 
 A fan-out task's node count is free. One node per run, five runs per node, or all 500
@@ -207,10 +208,11 @@ section exists to preserve it.
 
 ### Two selectable tasks that are not pipeline tasks
 
-The `HpcTask` enum has six members, but only the four above are pipeline stages.
-`AnalysisPipeline.CanonicalPipeline()` contains those four and nothing else; the other
-two are reachable only by naming them in `--task`, and neither participates in a run
-that does not:
+The task set (`OspreyTasks.Create()`) lists six selectable tasks, but only the four above are
+pipeline stages. The canonical pipeline (`OspreyTasks.Pipeline`, an explicit ordered list
+the set declares beside `All`) contains those four and nothing else; the other two
+are reachable only by naming them in `--task`, and neither participates in a run that
+does not:
 
 - **`--task SpectraCache`** builds each input's `.spectra.bin` and stops. It is the
   data-staging step *ahead* of the pipeline, not a node within it, which is why it needs
@@ -433,13 +435,21 @@ length prefix, or a two-phase protocol. The claim is checkable rather than aspir
 [14-intermediate-files](14-intermediate-files.md) enumerates the call sites, and a new
 durable artifact that does not appear there is a defect.
 
-**Three artifacts do not yet obey this, and they are defects rather than exceptions.** The
-Stage-7 reports `<output>.protein_groups.tsv` and `<output>.stats.tsv` are written with a
-truncating `StreamWriter`, and both flags default on, so a kill during Stage 7 destroys the
-previous run's report and leaves a half-written one. `--write-pin` output is the third.
-None of them is in the contract table below - nothing in the pipeline reads them - but the
-"presence proves completeness" guarantee a *user* draws from a report file is exactly as
-strong as `FileSaver`, which is to say currently absent for these three.
+**One artifact does not yet obey this, and it is a defect rather than an exception.** The
+Stage-7 reports `<output>.protein_groups.tsv` and `<output>.stats.tsv` (both default on)
+commit through `FileSaver` via `OspreyReportWriter.WriteTsv`, so a kill during Stage 7
+leaves the previous run's report or none, never a half-written one. Because nothing
+downstream reads them and the blib has not been written yet when they run, a report that
+cannot be written - the previous run's copy still open in Excel is the common case, which
+makes the commit's replace throw - is logged as a warning naming the path and skipped,
+not turned into a pipeline failure. The remaining non-exempt truncating writer is
+`--write-pin`'s `<stem>.cs_features.tsv` (`PerFileScoringTask.WriteFeatureDump`, opt-in
+via `OspreyCommandArgs.ARG_WRITE_PIN`), a plain `StreamWriter` with no staging. It is not
+in the contract table below - nothing in the pipeline reads it - but the "presence proves
+completeness" guarantee a *user* draws from it is exactly as strong as `FileSaver`, which
+is to say currently absent for that one file. `cs_cal_sample.txt` and the other env-gated
+diagnostic dumps are exempt under the rule in
+[14-intermediate-files](14-intermediate-files.md).
 
 **P9. A validity key answers set inclusion, not completeness.** This follows from P8
 and is the most easily confused point in the design. Because atomic placement already

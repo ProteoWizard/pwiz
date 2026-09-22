@@ -3,7 +3,7 @@
 > Pipeline stage: Stage 7 (`SecondPassFDR`). C#-originated; the Rust reference is
 > porting these modes back (maccoss/osprey#57), so there is no Rust `docs/` source
 > for this document. Corresponds to `Osprey.Tasks/Pass2FdrSidecar.cs`,
-> `Osprey.FDR/FrozenModelScorer.cs`, `Osprey.FDR/PercolatorFdr.cs`.
+> `Osprey.FDR/FrozenModelScorer.cs`, `Osprey.FDR/PercolatorScorer.cs`.
 
 After cross-run reconciliation (see [10-cross-run-reconciliation.md](10-cross-run-reconciliation.md))
 re-scores moved / gap-filled peaks, SecondPassFDR recomputes FDR over the
@@ -58,9 +58,12 @@ at a nominal 1%, accepting 34,325**, against **1.53% and 37,624** for `protein-c
 is dominated on both axes, which is why it is a removal rather than a demotion.
 
 `protein-compact` has the same paired-subsetting bias - its stratum gate is target-conditioned
-too, tracked as **[#4581](https://github.com/ProteoWizard/pwiz/issues/4581)** (open), with
-[#4560](https://github.com/ProteoWizard/pwiz/issues/4560) on the mixed-pass statistics that
-ride along. The difference is that `protein-compact` also brings genuinely new protein-level
+too, tracked as **[#4581](https://github.com/ProteoWizard/pwiz/issues/4581)** (open). The
+mixed-pass statistics that ride along were [#4560](https://github.com/ProteoWizard/pwiz/issues/4560),
+closed 2026-09-18 by contract rather than by a code change: an off-stratum survivor carries
+pass-2 run-scope statistics and pass-1 experiment-scope statistics, `Score` stays pass 2 so
+it pairs with the run q it competed on, and an unchanged row takes run q 1.0 as "did not
+compete" (`Pass2FdrSidecar.FinishRecord`). The difference is that `protein-compact` also brings genuinely new protein-level
 evidence to the ranking, where `transfer-compete` brought none. See also issue #4484 (closed)
 for the default decision, and #4363 (closed) for the depleted-null finding.
 
@@ -101,7 +104,7 @@ Bourgon 2010).
   standardizer for the SVM, or the fold GBT ensembles — to the reconciled
   features with **no new training**. It routes through `FrozenModelScorer`
   (`TryCreate` averages fold weights or takes the tree ensemble; `Score` goes
-  through `PercolatorFdr.ScoreStandardizedRow`, so it is classifier-agnostic and
+  through `PercolatorScorer.ScoreStandardizedRow`, so it is classifier-agnostic and
   works for `--fdr-method gbdt` too). The model is captured on the streaming
   first pass via the `captureModel` hook.
 - **Retrain** trained a fresh SVM/GBDT on the post-reconciliation pool. **It is gone.**
