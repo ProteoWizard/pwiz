@@ -218,28 +218,32 @@ namespace pwiz.Skyline.Model.Databinding
                 if (ListElementType != null)
                 {
                     // This is a list column
-                    // Use nullable storage type so the array can hold nulls for absent lists
-                    ElementStorageType = DecideStorageType(ListElementType);
-                    StorageType = typeof(IEnumerable<>).MakeGenericType(ElementStorageType);
-                    // Element is nullable so individual list slots can hold nulls
-                    var elementField = new DataField(@"element", ElementStorageType,
+                    // The element storage type is nullable so individual list slots can hold nulls
+                    StorageType = new StorageType(typeof(IEnumerable<>).MakeGenericType(ListElementType.Type));
+                    var elementField = new DataField(@"element", ListElementType.Type,
                         isNullable: true, isArray: false);
                     SchemaField = new ListField(Name, elementField);
                     DataField = elementField;
                 }
                 else
                 {
-                    StorageType = DecideStorageType(valueType);
-                    DataField = new DataField(Name, StorageType);
+                    StorageType = new StorageType(DecideStorageType(valueType));
+                    DataField = new DataField(Name, StorageType.Type);
                     SchemaField = DataField;
                 }
             }
 
             public string Name { get; }
             public DataPropertyDescriptor PropertyDescriptor { get; }
-            public Type StorageType { get; }
-            public Type ListElementType { get; }
-            public Type ElementStorageType { get; }
+            /// <summary>
+            /// The type of the values in the array that holds a chunk of this column.
+            /// For list columns this is an IEnumerable of <see cref="ListElementType"/>.
+            /// </summary>
+            public StorageType StorageType { get; }
+            /// <summary>
+            /// For list columns, the storage type of each list element. Otherwise null.
+            /// </summary>
+            public StorageType ListElementType { get; }
             public Field SchemaField { get; }
             public DataField DataField { get; }
 
@@ -251,7 +255,7 @@ namespace pwiz.Skyline.Model.Databinding
 
             public Array CreateArray(int rowCount)
             {
-                return Array.CreateInstance(StorageType, rowCount);
+                return Array.CreateInstance(StorageType.Type, rowCount);
             }
 
             public DataColumn CreateDataColumn(Array chunkArray)
@@ -286,7 +290,7 @@ namespace pwiz.Skyline.Model.Databinding
                 }
 
                 // Create flattened array of the element storage type
-                var flattenedArray = Array.CreateInstance(ElementStorageType, allElements.Count);
+                var flattenedArray = Array.CreateInstance(ListElementType.Type, allElements.Count);
                 for (int i = 0; i < allElements.Count; i++)
                 {
                     flattenedArray.SetValue(allElements[i], i);
@@ -310,7 +314,7 @@ namespace pwiz.Skyline.Model.Databinding
                 }
                 else
                 {
-                    value = ConvertToStorageType(value, StorageType);
+                    value = StorageType.ConvertValue(value);
                 }
                 values.SetValue(value, rowIndex);
             }
@@ -324,15 +328,15 @@ namespace pwiz.Skyline.Model.Databinding
                     return null;
                 }
 
-                if (array.GetType().GetElementType() == ListElementType)
+                if (array.GetType().GetElementType() == ListElementType.Type)
                 {
                     return array;
                 }
 
-                var convertedArray = Array.CreateInstance(ListElementType, array.Length);
+                var convertedArray = Array.CreateInstance(ListElementType.Type, array.Length);
                 for (int i = 0; i < array.Length; i++)
                 {
-                    var value = ConvertToStorageType(array.GetValue(i), ListElementType);
+                    var value = ListElementType.ConvertValue(array.GetValue(i));
                     if (value != null)
                     {
                         convertedArray.SetValue(value, i);
@@ -342,7 +346,11 @@ namespace pwiz.Skyline.Model.Databinding
                 return convertedArray;
             }
         }
-        private static Type GetListColumnValueStorageType(Type type)
+        /// <summary>
+        /// If the type is a ListColumnValue, returns the storage type of the list elements.
+        /// Otherwise returns null.
+        /// </summary>
+        private static StorageType GetListColumnValueStorageType(Type type)
         {
             var elementType = ListColumnValue.GetElementType(type);
             if (elementType == null)
@@ -350,7 +358,7 @@ namespace pwiz.Skyline.Model.Databinding
                 return null;
             }
 
-            return DecideStorageType(elementType);
+            return new StorageType(DecideStorageType(elementType));
         }
 
         private static Dictionary<Type, Type> _storageTypes = new Dictionary<Type, Type>
@@ -384,29 +392,57 @@ namespace pwiz.Skyline.Model.Databinding
             return typeof(string);
         }
 
-        public static object ConvertToStorageType(object value, Type type)
+        /// <summary>
+        /// The .NET type that a column's values are held in before being written to Parquet.
+        /// The nullable underlying type is computed once in the constructor so that converting
+        /// each value does not have to call <see cref="Nullable.GetUnderlyingType"/>, which is slow.
+        /// </summary>
+        public class StorageType
         {
-            if (value == null)
+            public StorageType(Type type)
             {
-                return null;
+                Type = type;
+                NullableUnderlyingType = Nullable.GetUnderlyingType(type);
             }
 
-            if (value.GetType() == type)
-            {
-                return value;
-            }
+            public Type Type { get; }
+            /// <summary>
+            /// If <see cref="Type"/> is a <see cref="Nullable{T}"/>, then T. Otherwise null.
+            /// </summary>
+            public Type NullableUnderlyingType { get; }
 
-            var nullableUnderlyingType = Nullable.GetUnderlyingType(type);
-            if (nullableUnderlyingType != null)
+            /// <summary>
+            /// Converts a value to something which can be stored in an array whose element type is <see cref="Type"/>.
+            /// Note that a boxed <see cref="Nullable{T}"/> with a value is a boxed T, so for a nullable
+            /// storage type the returned value is a boxed T.
+            /// </summary>
+            public object ConvertValue(object value)
             {
-                value = ConvertToStorageType(value, nullableUnderlyingType);
-                return value == null ? null : Activator.CreateInstance(type, value);
+                if (value == null)
+                {
+                    return null;
+                }
+
+                var valueType = value.GetType();
+                if (valueType == Type)
+                {
+                    return value;
+                }
+
+                if (NullableUnderlyingType != null)
+                {
+                    if (valueType == NullableUnderlyingType)
+                    {
+                        return value;
+                    }
+                    return Convert.ChangeType(value, NullableUnderlyingType);
+                }
+                if (Type == typeof(string))
+                {
+                    return value.ToString();
+                }
+                return Convert.ChangeType(value, Type);
             }
-            if (type == typeof(string))
-            {
-                return value.ToString();
-            }
-            return Convert.ChangeType(value, type);
         }
 
         /// <summary>

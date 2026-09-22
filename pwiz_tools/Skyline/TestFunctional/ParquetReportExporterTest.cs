@@ -42,9 +42,9 @@ namespace pwiz.SkylineTestFunctional
         {
             // Boxing a Nullable<T> with HasValue produces a boxed T, so assert
             // against the underlying value type rather than the nullable wrapper.
-            var nullableDateTime = ParquetReportExporter.ConvertToStorageType(DateTime.UtcNow, typeof(DateTime?));
+            var nullableDateTime = new ParquetReportExporter.StorageType(typeof(DateTime?)).ConvertValue(DateTime.UtcNow);
             Assert.IsInstanceOfType(nullableDateTime, typeof(DateTime));
-            var nullableFloat = ParquetReportExporter.ConvertToStorageType(1f, typeof(float?));
+            var nullableFloat = new ParquetReportExporter.StorageType(typeof(float?)).ConvertValue(1f);
             Assert.IsInstanceOfType(nullableFloat, typeof(float?));
         }
 

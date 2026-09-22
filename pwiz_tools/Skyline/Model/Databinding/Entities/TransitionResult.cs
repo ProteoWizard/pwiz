@@ -176,12 +176,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return DataSchema.AnnotationCalculator.GetAnnotation(annotationDef, this, ChromInfo.Annotations);
         }
 
+        private PrecursorResult _precursorResult;
         [HideWhen(AncestorOfType = typeof(SkylineDocument))]
         public PrecursorResult PrecursorResult 
         {
             get
             {
-                return new PrecursorResult(Transition.Precursor, GetResultFile());
+                return _precursorResult ??= new PrecursorResult(Transition.Precursor, GetResultFile());
             }
         }
         public override string ToString()
