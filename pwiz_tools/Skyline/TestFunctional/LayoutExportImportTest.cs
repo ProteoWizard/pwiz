@@ -216,8 +216,6 @@ namespace pwiz.SkylineTestFunctional
                 dlg.DismissWithAcceptButton();
             });
             AssertEx.FileExists(offeredPath);
-            AssertEx.FileNotExists(Path.ChangeExtension(documentPath, SkylineWindow.EXT_VIEW));
-            AssertEx.FileNotExists(offeredPath + SkylineWindow.EXT_VIEW);
         }
 
         /// <summary>

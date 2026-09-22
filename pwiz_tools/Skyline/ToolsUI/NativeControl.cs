@@ -22,7 +22,6 @@ using System;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil.PInvoke;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -119,8 +118,12 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>Replaces the text in the text box as if the user had typed it.</summary>
         public void SetText(string text)
         {
-            User32.SendMessage(Hwnd, User32.WinMessageType.EM_SETSEL, IntPtr.Zero, new IntPtr(-1));
-            User32.SendMessage(Hwnd, User32.WinMessageType.EM_REPLACESEL, new IntPtr(1), text);
+            // Typed text is cut at the box's limit (MAX_PATH on a file dialog), which several quoted file names exceed
+            var limit = (int) User32.SendMessage(Hwnd, User32.WinMessageType.EM_GETLIMITTEXT, IntPtr.Zero, IntPtr.Zero);
+            if (text.Length > limit)
+                User32.SendMessage(Hwnd, User32.WinMessageType.EM_SETLIMITTEXT, (IntPtr) text.Length, IntPtr.Zero);
+            User32.SendMessage(Hwnd, User32.WinMessageType.EM_SETSEL, IntPtr.Zero, (IntPtr) (-1)); // select all
+            User32.SendMessage(Hwnd, User32.WinMessageType.EM_REPLACESEL, User32.True, text); // undoable, as typing is
         }
     }
 
