@@ -408,10 +408,6 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr SendMessage(IntPtr hWnd, WinMessageType msgType, IntPtr wParam, IntPtr lParam);
 
-        /// <summary>The form for messages whose lParam is a string.</summary>
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        public static extern IntPtr SendMessage(IntPtr hWnd, WinMessageType msgType, IntPtr wParam, string lParam);
-
         [DllImport("user32.dll")]
         public static extern bool SetForegroundWindow(IntPtr hWnd);
 

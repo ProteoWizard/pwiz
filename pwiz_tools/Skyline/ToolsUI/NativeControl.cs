@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil.PInvoke;
@@ -119,7 +120,16 @@ namespace pwiz.Skyline.ToolsUI
         public void SetText(string text)
         {
             User32.SendMessage(Hwnd, User32.WinMessageType.EM_SETSEL, IntPtr.Zero, (IntPtr) (-1)); // select all
-            User32.SendMessage(Hwnd, User32.WinMessageType.EM_REPLACESEL, User32.True, text); // undoable, as typing is
+            // The send blocks until the box has copied the text, so the string is valid for as long as it is read
+            var textPtr = Marshal.StringToHGlobalUni(text);
+            try
+            {
+                User32.SendMessage(Hwnd, User32.WinMessageType.EM_REPLACESEL, User32.True, textPtr); // undoable, as typing is
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(textPtr);
+            }
         }
     }
 
