@@ -89,6 +89,8 @@ namespace pwiz.Common.SystemUtil.PInvoke
             WM_LBUTTONDOWN = 0x0201,
             WM_LBUTTONUP = 0x0202,
             WM_MOUSELEAVE = 0x02A3,
+            EM_SETSEL = 0x00B1,
+            EM_REPLACESEL = 0x00C2,
             BM_CLICK = 0x00F5
             // ReSharper restore InconsistentNaming IdentifierTypo
         }
@@ -293,11 +295,6 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport("user32.dll")]
         public static extern IntPtr GetParent(IntPtr hwnd);
 
-        /// <summary>Sets a window's text (a WM_SETTEXT send), e.g. to type a path into a native dialog's
-        /// file-name field. Blocks until the owning thread pumps it, so it is safe to call from any thread.</summary>
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern bool SetWindowText(IntPtr hwnd, string text);
-
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
 
@@ -410,6 +407,10 @@ namespace pwiz.Common.SystemUtil.PInvoke
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr SendMessage(IntPtr hWnd, WinMessageType msgType, IntPtr wParam, IntPtr lParam);
+
+        /// <summary>The string-lParam form, for the Edit messages that take text (EM_REPLACESEL).</summary>
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern IntPtr SendMessage(IntPtr hWnd, WinMessageType msgType, IntPtr wParam, string lParam);
 
         [DllImport("user32.dll")]
         public static extern bool SetForegroundWindow(IntPtr hWnd);
