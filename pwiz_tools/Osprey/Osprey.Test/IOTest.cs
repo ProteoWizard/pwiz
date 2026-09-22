@@ -2511,11 +2511,11 @@ namespace pwiz.Osprey.Test
 
                 // The two passes that run BEFORE Stage 6 read the Stage 4 file even though
                 // the reconciled sibling is sitting beside it.
-                AssertScoresPathForTask(input, HpcTask.FirstPassFdr, original);
-                AssertScoresPathForTask(input, HpcTask.PerFileRescore, original);
+                AssertScoresPathForTask(input, FirstPassFdrTask.TASK_NAME, original);
+                AssertScoresPathForTask(input, PerFileRescoreTask.TASK_NAME, original);
 
                 // The join reads the reconciled one - the only artifact its node is shipped.
-                AssertScoresPathForTask(input, HpcTask.SecondPassFdr, reconciled);
+                AssertScoresPathForTask(input, SecondPassFdrTask.TASK_NAME, reconciled);
             }
             finally
             {
@@ -2527,13 +2527,10 @@ namespace pwiz.Osprey.Test
         /// One input, one task, one expected parquet - through the same helper the pipeline
         /// calls, so the test cannot agree with a rule the tasks do not use.
         /// </summary>
-        private static void AssertScoresPathForTask(string input, HpcTask task, string expected)
+        private static void AssertScoresPathForTask(string input, string taskName, string expected)
         {
-            var config = new OspreyConfig
-            {
-                SelectedTask = task,
-                InputFiles = new List<string> { input }
-            };
+            var config = TaskConfigs.ForTask(taskName);
+            config.InputFiles = new List<string> { input };
             var paths = ScoringTaskShared.ScoresPathsForInputs(config);
             Assert.AreEqual(1, paths.Count);
             Assert.AreEqual(expected, paths[0]);

@@ -80,7 +80,7 @@ namespace pwiz.Osprey.Test
                     OutputBlib = @"C:\runs\out.blib",
                     ModelDiagnostics = wanted
                 };
-                var tasks = AnalysisPipeline.CanonicalPipeline();
+                var tasks = OspreyTasks.Create().Pipeline;
                 var ctx = new PipelineContext(config, tasks, null, null, null);
                 OspreyTask second = null;
                 foreach (var t in tasks)
@@ -202,7 +202,7 @@ namespace pwiz.Osprey.Test
         /// </summary>
         private static void AssertEveryTaskCarriesTheSuffixesItNeeds()
         {
-            var tasks = AnalysisPipeline.CanonicalPipeline();
+            var tasks = OspreyTasks.Create().Pipeline;
             var ctx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
             string pick = OspreyEnvironment.PickValidityKeySuffix();
             string pass2 = OspreyEnvironment.Pass2QValueValidityKeySuffix();
@@ -252,7 +252,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 OspreyEnvironment.ReleaseLibraryFragments = false;
-                var tasks = AnalysisPipeline.CanonicalPipeline();
+                var tasks = OspreyTasks.Create().Pipeline;
                 var ctx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
                 string libfrag = LibraryFragmentRelease.ValidityKeySuffix(ctx);
 
