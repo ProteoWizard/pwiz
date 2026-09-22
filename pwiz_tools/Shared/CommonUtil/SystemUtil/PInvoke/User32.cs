@@ -408,6 +408,19 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr SendMessage(IntPtr hWnd, WinMessageType msgType, IntPtr wParam, IntPtr lParam);
 
+        // Private: whether a message's lParam is a string, and how it is marshaled, depends on the message, so each
+        // message that takes one gets its own public method here rather than a caller choosing this overload.
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        private static extern IntPtr SendMessage(IntPtr hWnd, WinMessageType msgType, IntPtr wParam, string lParam);
+
+        /// <summary>Replaces the text in an edit box as if the user had typed it: selects everything, then replaces
+        /// the selection. Each send blocks until the box's owning thread pumps it, so this is safe from any thread.</summary>
+        public static void ReplaceEditText(IntPtr hwndEdit, string text)
+        {
+            SendMessage(hwndEdit, WinMessageType.EM_SETSEL, IntPtr.Zero, (IntPtr) (-1)); // select all
+            SendMessage(hwndEdit, WinMessageType.EM_REPLACESEL, True, text); // undoable, as typing is
+        }
+
         [DllImport("user32.dll")]
         public static extern bool SetForegroundWindow(IntPtr hWnd);
 
