@@ -337,7 +337,7 @@ namespace pwiz.Skyline.Model.Results
         private int _truncated;
         public int? Truncated
         {
-            get { return _truncated >= 0 ? _truncated : (int?) null; }
+            get { return _truncated >= 0 ? _truncated : null; }
             private set { _truncated = value ?? -1; }
         }
 
@@ -437,7 +437,7 @@ namespace pwiz.Skyline.Model.Results
 
         private T? GetOptional<T>(T field, Flags flag) where T:struct
         {
-            return GetFlag(flag) ? field : (T?) null;
+            return GetFlag(flag) ? field : null;
         }
 
         private T SetOptional<T>(T? value, Flags flag) where T : struct
@@ -513,7 +513,7 @@ namespace pwiz.Skyline.Model.Results
             var differences = members
                 .Where(m => !Equals(m.Mine, m.Theirs))
                 .Select(m => string.Format(@"{0} {1} vs {2}",
-                    m.Name, m.Mine ?? (object)@"(null)", m.Theirs ?? (object)@"(null)"))
+                    m.Name, m.Mine ?? @"(null)", m.Theirs ?? @"(null)"))
                 .ToList();
             return differences.Count == 0 ? null : TextUtil.LineSeparate(differences);
         }
@@ -763,7 +763,7 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                return GetFlag(Flags.HasPointsAcrossPeak) ? _pointsAcrossPeak : (short?) null;
+                return GetFlag(Flags.HasPointsAcrossPeak) ? _pointsAcrossPeak : null;
             }
             private set
             {
@@ -774,7 +774,7 @@ namespace pwiz.Skyline.Model.Results
 
         public PeakShapeValues? PeakShapeValues
         {
-            get { return GetFlag(Flags.HasPeakShape) ? _peakShapeValue : (PeakShapeValues?) null; }
+            get { return GetFlag(Flags.HasPeakShape) ? _peakShapeValue : null; }
             private set
             {
                 SetFlag(Flags.HasPeakShape, value.HasValue);

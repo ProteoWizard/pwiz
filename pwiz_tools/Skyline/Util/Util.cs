@@ -1836,7 +1836,7 @@ namespace pwiz.Skyline.Util
         public static double? ParseNullableDouble(string s)
         {
             double d;
-            return double.TryParse(s, out d) ? d : (double?)null;
+            return double.TryParse(s, out d) ? d : null;
         }
 
         public static string NullableDoubleToString(double? d)
@@ -2010,7 +2010,7 @@ namespace pwiz.Skyline.Util
         {
             try
             {
-                control.Invoke(new Action(() =>
+                control.Invoke(() =>
                 {
                     lock (_timers)
                     {
@@ -2026,7 +2026,7 @@ namespace pwiz.Skyline.Util
                         _timers[id] = new AlarmInfo {Timer = timer, Ticks = alarmTicks};
                         timer.Start();
                     }
-                }));
+                });
             }
             catch (InvalidOperationException)
             {

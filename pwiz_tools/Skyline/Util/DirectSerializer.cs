@@ -65,7 +65,7 @@ namespace pwiz.Skyline.Util
                     stream.Flush();
                     stream.Position = logicalPos;
                     var result = _readFunc(stream.SafeFileHandle, count);
-                    stream.Position = logicalPos + System.Runtime.InteropServices.Marshal.SizeOf<TItem>() * (long)count;
+                    stream.Position = logicalPos + Marshal.SizeOf<TItem>() * (long)count;
                     return result;
                 }
                 catch (BulkReadException)
@@ -90,7 +90,7 @@ namespace pwiz.Skyline.Util
                     stream.Flush();
                     stream.Position = logicalPos;
                     _writeAction(stream.SafeFileHandle, items);
-                    stream.Position = logicalPos + System.Runtime.InteropServices.Marshal.SizeOf<TItem>() * (long)items.Length;
+                    stream.Position = logicalPos + Marshal.SizeOf<TItem>() * (long)items.Length;
                     return true;
                 }
                 catch (BulkReadException)

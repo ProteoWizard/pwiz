@@ -102,7 +102,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
         /// <summary>
         /// Combined wParam for WM_CHANGEUISTATE to hide both focus rectangles and mnemonic underscores.
         /// </summary>
-        public static readonly IntPtr UISF_HIDEALL = (IntPtr)(UIS_SET | ((UISF_HIDEFOCUS | UISF_HIDEACCEL) << 16));
+        public static readonly IntPtr UISF_HIDEALL = (UIS_SET | ((UISF_HIDEFOCUS | UISF_HIDEACCEL) << 16));
         // ReSharper restore InconsistentNaming
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]

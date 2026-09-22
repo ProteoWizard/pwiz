@@ -85,7 +85,7 @@ namespace pwiz.SkylineTest.ProtocolBuffers
 
         public static double? FromOptional(LegacySkylineDocumentProto.Types.OptionalDouble optionalDouble)
         {
-            return optionalDouble == null ? (double?)null : optionalDouble.Value;
+            return optionalDouble == null ? null : optionalDouble.Value;
         }
 
         public static LegacySkylineDocumentProto.Types.OptionalDouble ToOptional(double? doubleValue)
@@ -95,7 +95,7 @@ namespace pwiz.SkylineTest.ProtocolBuffers
         }
         public static double? FromOptional(LegacySkylineDocumentProto.Types.OptionalFloat optionalFloat)
         {
-            return optionalFloat == null ? (double?)null : optionalFloat.Value;
+            return optionalFloat == null ? null : optionalFloat.Value;
         }
 
         public static LegacySkylineDocumentProto.Types.OptionalFloat ToOptional(float? floatValue)

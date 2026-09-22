@@ -29,17 +29,13 @@ using System.Threading;
 
 
 using Pwiz.Analysis;
-using Pwiz.Analysis.DiaUmpire;
 using Pwiz.Analysis.PeakPicking;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData;
 using Pwiz.Data.MsData.Instruments;
-using Pwiz.Data.MsData.Processing;
 using Pwiz.Data.MsData.Readers;
-using Pwiz.Data.MsData.Sources;
 using Pwiz.Data.MsData.Spectra;
-using Pwiz.Util;
 
 namespace pwiz.ProteowizardWrapper
 {
@@ -1965,7 +1961,7 @@ namespace pwiz.ProteowizardWrapper
                     total += param;
                 }
             }
-            return count == 0 ? (double?) null : total;
+            return count == 0 ? null : total;
         }
 
         private double GetSourceOffsetVoltage(Spectrum spectrum)

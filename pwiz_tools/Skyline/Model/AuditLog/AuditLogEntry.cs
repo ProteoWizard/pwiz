@@ -1143,7 +1143,7 @@ namespace pwiz.Skyline.Model.AuditLog
             var diffTree = DiffTree.FromEnumerator(
                 Reflector<Targets>.EnumerateDiffNodes(objInfo, property, docType, false,
                     ignoreTransitions
-                        ? (Func<DiffNode, bool>) (node => !IsTransitionDiff(node.Property.PropertyType))
+                        ? (node => !IsTransitionDiff(node.Property.PropertyType))
                         : null));
 
             if (diffTree.Root != null)

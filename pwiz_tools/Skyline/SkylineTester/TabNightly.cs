@@ -177,7 +177,7 @@ namespace SkylineTester
                 td.Settings.Priority = ProcessPriorityClass.High;
 
                 // Add a trigger that will fire the task every other day
-                DailyTrigger dt = (DailyTrigger) td.Triggers.Add(new DailyTrigger {DaysInterval = 1});
+                DailyTrigger dt = td.Triggers.Add(new DailyTrigger {DaysInterval = 1});
                 dt.StartBoundary = startTime;
                 dt.ExecutionTimeLimit = new TimeSpan(23, 30, 0);
                 dt.Enabled = true;
@@ -327,7 +327,7 @@ namespace SkylineTester
                 lock (MainWindow.NewNightlyRun)
                 {
                     MainWindow.NewNightlyRun.Revision = _revision = revision;
-                    MainWindow.Invoke(new System.Action(() => MainWindow.UpdateRun(MainWindow.NewNightlyRun, MainWindow.NightlyRunDate)));
+                    MainWindow.Invoke(() => MainWindow.UpdateRun(MainWindow.NewNightlyRun, MainWindow.NightlyRunDate));
                 }
             };
             revisionWorker.RunWorkerAsync();

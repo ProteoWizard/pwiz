@@ -1282,7 +1282,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             refSpectra.RetentionTime = spectrum.RetentionTime.GetValueOrDefault();
 
             refSpectra.FileId = spectrum.FilePath != null
-                ? (long?)GetSpectrumSourceId(session, spectrum.FilePath, dictFiles,
+                ? GetSpectrumSourceId(session, spectrum.FilePath, dictFiles,
                     spectrum.SpectrumHeaderInfo?.ScoreType, spectrumSourceFile)
                 : null;
             refSpectra.SpecIdInFile = null;

@@ -382,7 +382,7 @@ namespace SkylineTester
         private void BackgroundLoadCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             if (_autoRun)
-                BeginInvoke(new System.Action(Run));
+                BeginInvoke(Run);
         }
 
         private void BackgroundLoad(object sender, DoWorkEventArgs e)

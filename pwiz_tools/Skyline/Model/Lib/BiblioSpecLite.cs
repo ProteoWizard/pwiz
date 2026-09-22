@@ -685,7 +685,7 @@ namespace pwiz.Skyline.Model.Lib
                                 ? null
                                 : reader.GetString(iIdFilename);
                             int id = reader.GetInt32(iId);
-                            double? cutoffScore = iIdCutoffScore < 0 || reader.IsDBNull(iIdCutoffScore) ? (double?) null : reader.GetDouble(iIdCutoffScore);
+                            double? cutoffScore = iIdCutoffScore < 0 || reader.IsDBNull(iIdCutoffScore) ? null : reader.GetDouble(iIdCutoffScore);
                             WorkflowType workflowType = iWorkflowType < 0 || reader.IsDBNull(iWorkflowType)
                                 ? WorkflowType.DDA
                                 : (WorkflowType) reader.GetInt32(iWorkflowType);
@@ -1841,7 +1841,7 @@ namespace pwiz.Skyline.Model.Lib
 
                         if (hasScores)
                         {
-                            sheetInfo.Score = reader.IsDBNull(iScore) ? (double?)null : reader.GetDouble(iScore);
+                            sheetInfo.Score = reader.IsDBNull(iScore) ? null : reader.GetDouble(iScore);
                             var scoreType = reader.IsDBNull(iScoreType) ? null : reader.GetString(iScoreType);
                             var probabilityType = reader.IsDBNull(iProbabilityType) ? null : reader.GetString(iProbabilityType);
                             if (ScoreType.INVARIANT_NAMES.Contains(scoreType))
@@ -2339,7 +2339,7 @@ namespace pwiz.Skyline.Model.Lib
                             return null;
                         }
                         bool isCcs = ionMobilityType == (int) IonMobilityType.collisionalCrossSection;
-                        return IonMobilityAndCCS.GetIonMobilityAndCCS(isCcs ? IonMobilityValue.EMPTY : IonMobilityValue.GetIonMobilityValue(ionMobilityValue, eIonMobilityUnits.drift_time_msec), isCcs ? ionMobilityValue : (double?)null, highEnergyOffset);
+                        return IonMobilityAndCCS.GetIonMobilityAndCCS(isCcs ? IonMobilityValue.EMPTY : IonMobilityValue.GetIonMobilityValue(ionMobilityValue, eIonMobilityUnits.drift_time_msec), isCcs ? ionMobilityValue : null, highEnergyOffset);
                     }
                 }
             }

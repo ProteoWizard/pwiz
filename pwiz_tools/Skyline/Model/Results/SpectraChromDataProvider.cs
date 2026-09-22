@@ -926,7 +926,7 @@ namespace pwiz.Skyline.Model.Results
 
             public bool? CurrentSpectrumIsNegative
             {
-                get { return _currentInfo != null ? _currentInfo.DataSpectrum.NegativeCharge : (bool?)null; }
+                get { return _currentInfo != null ? _currentInfo.DataSpectrum.NegativeCharge : null; }
             }
 
             public MsDataSpectrum[] CurrentSpectra
@@ -1852,7 +1852,7 @@ namespace pwiz.Skyline.Model.Results
                     intensity = float.NaN;
                 chromCollector.AddPoint(chromIndex,
                     intensity,
-                    spectrum.MassErrors != null ? spectrum.MassErrors[j] : (float?)null,
+                    spectrum.MassErrors != null ? spectrum.MassErrors[j] : null,
                     _blockWriter);
             }
 

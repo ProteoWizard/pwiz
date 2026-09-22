@@ -985,7 +985,7 @@ namespace pwiz.Skyline.Controls.Graphs
             private void CalcDataPositionsIncremental(GraphData priorData, ProductionMonitor productionMonitor)
             {
                 var schema = SkylineDataSchema.MemoryDataSchema(Document, SkylineDataSchema.GetLocalizedSchemaLocalizer());
-                int? resultIndex = ShowReplicate == ReplicateDisplay.single ? (int?)ResultsIndex : null;
+                int? resultIndex = ShowReplicate == ReplicateDisplay.single ? ResultsIndex : null;
                 var moleculeGroups = GetFilteredMoleculeGroups();
 
                 // Step 1: Build map of new doc nodes by identity for two-phase change detection
@@ -1261,7 +1261,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var minY = double.MaxValue;
 
                 var pointPairList = new PointPairList();
-                int? resultIndex = ShowReplicate == ReplicateDisplay.single ? (int?)ResultsIndex : null;
+                int? resultIndex = ShowReplicate == ReplicateDisplay.single ? ResultsIndex : null;
 
                 foreach (var dataPoint in listPoints)
                 {

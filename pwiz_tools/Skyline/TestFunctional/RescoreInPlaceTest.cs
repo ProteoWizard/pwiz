@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -119,7 +118,7 @@ namespace pwiz.SkylineTestFunctional
                 });
                 while (!transitionSettingsUiClosed)
                 {
-                    SkylineWindow.BeginInvoke(new Action(() => transitionSettingsUi.OkDialog()));
+                    SkylineWindow.BeginInvoke(() => transitionSettingsUi.OkDialog());
                     WaitForConditionUI(() => transitionSettingsUiClosed || FindOpenForm<AlertDlg>() != null);
                     AlertDlg alertDlg = FindOpenForm<AlertDlg>();
                     if (alertDlg != null)

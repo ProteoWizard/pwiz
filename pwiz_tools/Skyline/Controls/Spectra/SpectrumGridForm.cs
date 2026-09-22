@@ -29,7 +29,6 @@ using pwiz.Common.Controls;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.Spectra;
-using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
@@ -101,7 +100,7 @@ namespace pwiz.Skyline.Controls.Spectra
             }
 
             _updatePending = true;
-            BeginInvoke(new Action(UpdateSpectrumRows));
+            BeginInvoke(UpdateSpectrumRows);
         }
 
         private IList<RowSourceInfo> MakeRowSourceInfos()

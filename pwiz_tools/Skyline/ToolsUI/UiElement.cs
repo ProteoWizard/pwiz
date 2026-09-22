@@ -700,7 +700,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             var handle = Control.Handle;
             foreach (char c in text)
-                User32.SendMessage(handle, User32.WinMessageType.WM_CHAR, (IntPtr) c, IntPtr.Zero);
+                User32.SendMessage(handle, User32.WinMessageType.WM_CHAR, c, IntPtr.Zero);
         }
 
         /// <summary>PRESSES ONE KEY on the control, named with its modifiers - "Ctrl+V", "Down", "Enter",
@@ -1613,7 +1613,7 @@ namespace pwiz.Skyline.ToolsUI
                 case int i: return i;
                 case long l: return (int) l;
                 case JToken token:
-                    return token.Type == JTokenType.Integer ? (object) (int) token : token.Value<string>();
+                    return token.Type == JTokenType.Integer ? (int) token : token.Value<string>();
                 default: return segment as string;
             }
         }

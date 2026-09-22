@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             get
             {
-                return IsEmpty ? (IonType?) null : _ionType;
+                return IsEmpty ? null : _ionType;
             }
         }
 

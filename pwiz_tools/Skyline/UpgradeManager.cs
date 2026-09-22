@@ -23,8 +23,6 @@ using System.ComponentModel;
 // System.Deployment.Application is net472-only). We need TrustNotGrantedException on both
 // frameworks so the trust-exception path in updateCheck_Complete compiles and runs on net8.
 using System.Deployment.Application;
-using System.Diagnostics;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;

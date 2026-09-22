@@ -229,7 +229,7 @@ namespace TestPerf
                 // opening DiannSearchDlg. The prompt is modal and blocks the UI thread, so
                 // we BeginInvoke (fire-and-forget) and then poll for whichever dialog comes
                 // up — MultiButtonMsgDlg first if it appears, then DiannSearchDlg.
-                SkylineWindow.BeginInvoke(new Action(SkylineWindow.ShowDiannSearchDlg));
+                SkylineWindow.BeginInvoke(SkylineWindow.ShowDiannSearchDlg);
                 var useExisting = TryWaitForOpenForm<MultiButtonMsgDlg>(5000);
                 if (useExisting != null)
                     OkDialog(useExisting, () => useExisting.DialogResult = DialogResult.Yes);

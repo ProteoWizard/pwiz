@@ -108,14 +108,14 @@ namespace pwiz.Skyline.Model.IonMobility
 
         public virtual double? CollisionalCrossSectionNullable
         {
-            get { return CollisionalCrossSectionSqA == 0 ? (double?)null : CollisionalCrossSectionSqA; }
+            get { return CollisionalCrossSectionSqA == 0 ? null : CollisionalCrossSectionSqA; }
             set { CollisionalCrossSectionSqA = value ?? 0; }
         }
 
         public virtual double IonMobility { get; set; }
         public virtual double? IonMobilityNullable
         {
-            get { return IonMobility == 0 ? (double?)null : IonMobility; }
+            get { return IonMobility == 0 ? null : IonMobility; }
             set { IonMobility = value ?? 0; }
         }
 
@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Model.IonMobility
 
         public virtual double? HighEnergyIonMobilityOffsetNullable
         {
-            get { return HighEnergyIonMobilityOffset == 0 ? (double?)null : HighEnergyIonMobilityOffset; }
+            get { return HighEnergyIonMobilityOffset == 0 ? null : HighEnergyIonMobilityOffset; }
             set { HighEnergyIonMobilityOffset = value ?? 0; }
         }
 

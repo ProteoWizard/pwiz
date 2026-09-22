@@ -29,7 +29,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model.AuditLog;
@@ -37,7 +36,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.DdaSearch
 {

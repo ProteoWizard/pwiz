@@ -297,7 +297,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                return comboFiles.SelectedItem != null ? comboFiles.SelectedIndex : (int?) null;
+                return comboFiles.SelectedItem != null ? comboFiles.SelectedIndex : null;
             }
             set
             {

@@ -713,9 +713,9 @@ namespace pwiz.Skyline.Model.Lib
 
                     float tfRatio = PrimitiveArrays.ReadOneValue<float>(stream);
                     bool hasRt = PrimitiveArrays.ReadOneValue<bool>(stream);
-                    double? rt = hasRt ? PrimitiveArrays.ReadOneValue<double>(stream) : (double?)null;
+                    double? rt = hasRt ? PrimitiveArrays.ReadOneValue<double>(stream) : null;
                     bool hasIrt = PrimitiveArrays.ReadOneValue<bool>(stream);
-                    double? irt = hasIrt ? PrimitiveArrays.ReadOneValue<double>(stream) : (double?)null;
+                    double? irt = hasIrt ? PrimitiveArrays.ReadOneValue<double>(stream) : null;
                     float totalIntensity = PrimitiveArrays.ReadOneValue<float>(stream);
                     int copies = ReadSize(stream);
                     int numPeaks = ReadSize(stream);

@@ -414,7 +414,7 @@ namespace pwiz.Skyline.Model
                 return null;
             return result.GetAverageValue(chromInfo => chromInfo.RetentionTime.HasValue
                                              ? chromInfo.RetentionTime.Value
-                                             : (float?)null);
+                                             : null);
         }
 
         public float? AverageMeasuredRetentionTime
@@ -423,7 +423,7 @@ namespace pwiz.Skyline.Model
             {
                 return GetAverageResultValue(chromInfo => chromInfo.RetentionTime.HasValue
                                              ? chromInfo.RetentionTime.Value
-                                             : (float?)null);
+                                             : null);
             }
         }
 

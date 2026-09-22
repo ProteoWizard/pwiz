@@ -595,7 +595,7 @@ namespace TestPerf
             // on-demand MSAmanda download prompt. On net8 MSAmanda is downloaded on demand (a modal
             // "Download MSAmanda" MultiButtonMsgDlg shown synchronously by ClickNextButton); on net472
             // MSAmanda is bundled and no dialog appears, so TryWaitForOpenForm just times out (no-op).
-            SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));
+            SkylineWindow.BeginInvoke(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
             if (downloaderDlg != null)

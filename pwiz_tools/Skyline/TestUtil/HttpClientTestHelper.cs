@@ -1120,7 +1120,7 @@ namespace pwiz.SkylineTestUtil
                     Url = uri?.ToString(),
                     Method = response?.RequestMessage?.Method?.Method,
                     ContentType = response?.Content?.Headers?.ContentType?.ToString(),
-                    StatusCode = response != null ? (int)response.StatusCode : (int?)null
+                    StatusCode = response != null ? (int)response.StatusCode : null
                 };
                 entry = new RecordingEntry(interaction);
                 lock (_lock)

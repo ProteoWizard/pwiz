@@ -116,7 +116,7 @@ namespace pwiz.Skyline.Model.Results
 
         public int Count { get { return Intensities.Count; } }
 
-        public int? MassErrorsCount { get { return MassErrors == null ? (int?)null : MassErrors.Count; } }
+        public int? MassErrorsCount { get { return MassErrors == null ? null : MassErrors.Count; } }
 
         /// <summary>
         /// Get a chromatogram with properly sorted time values.
