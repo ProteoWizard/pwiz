@@ -19,7 +19,40 @@ csharp_prefer_braces = true
 
 # WFO1000 ("property does not configure the code serialization for its property content")
 # is new in the .NET 9+ WinForms SDK and ships at Error severity, so WarningsNotAsErrors
-# cannot demote it. It fires on runtime-only properties in the vendored ZedGraph fork, the
-# ported SeeMS and MsConvertGUI - none of which are designer-edited, so the designer never
-# serializes them. Demoted to a warning (kept visible) rather than silenced with NoWarn.
-dotnet_diagnostic.WFO1000.severity = warning
+# cannot demote it. It wants [DesignerSerializationVisibility] on every public property of
+# a Form or UserControl. Ours are test-automation and runtime-wiring accessors added to
+# dialogs by hand (RefineDlg.MaxTransitionPeakRank, the TransitionSettingsUI settings
+# properties) plus runtime-only properties in the vendored ZedGraph fork, the ported SeeMS
+# and MsConvertGUI. None of them are designer-edited, so the designer never serializes
+# them: 805 occurrences across the Skyline solution with nothing to act on. Off rather
+# than a warning nobody can ever clear.
+dotnet_diagnostic.WFO1000.severity = none
+
+# ReSharper's PossibleNullReferenceException only fires where something carries a
+# nullability annotation, and with <Nullable>disable</Nullable> everywhere that means a
+# framework member: the .NET 10 reference assemblies annotate ComboBox.SelectedItem,
+# Control.Parent, Form.CancelButton, DataGridViewCell.Value and TreeView.SelectedNode as
+# nullable where net472 said nothing, so the port lit up 901 occurrences without a line of
+# code changing. Nothing written in our code clears one - only a null check the framework
+# annotation still does not believe, or a suppression - so it is a suggestion rather than
+# a warning: visible in the IDE, out of the inspection report.
+#
+# Both severities live here rather than in Skyline.sln.DotSettings, where the other ~100
+# inspection severities are: an InspectionSeverities entry in that file OVERRIDES the
+# .editorconfig value for the same inspection, which would silently un-do the test-tree
+# section below. Measured 2026-09-17 on TestFunctional - with the entry in DotSettings the
+# suppression here stopped applying.
+resharper_possible_null_reference_exception_highlighting = suggestion
+
+# AssignNullToNotNullAttribute is the same phenomenon pointing the other way: a value the
+# framework now annotates nullable assigned to a target it now annotates non-null, e.g.
+# base.Text = text through the Control.Text setter, or Path.GetDirectoryName, which returns
+# string? on net10. 163 occurrences, same cause, same lack of anything to do about them.
+resharper_assign_null_to_not_null_attribute_highlighting = suggestion
+
+# Test code drives dialogs through exactly those members - dlg.CancelButton.PerformClick(),
+# comboBox.SelectedItem.ToString() - and accounted for 463 of the 901. A null there fails
+# the test on the spot, so the inspection says nothing the run does not; off entirely.
+[pwiz_tools/Skyline/{CommonTest,Test,TestConnected,TestData,TestFunctional,TestPerf,TestTutorial,TestUtil}/**.cs]
+resharper_possible_null_reference_exception_highlighting = none
+resharper_assign_null_to_not_null_attribute_highlighting = none
