@@ -150,8 +150,10 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public static Stream CreateReadStream(string path)
         {
-            return new HashingStream(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096,
-                FileOptions.SequentialScan), false);
+            var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096,
+                FileOptions.SequentialScan);
+            // Reads ahead on its own thread so the file keeps transferring while the XML is parsed
+            return new HashingStream(new SequentialStream(fileStream), false);
         }
 
         public override int Read(byte[] buffer, int offset, int count)

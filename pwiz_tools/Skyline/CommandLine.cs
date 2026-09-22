@@ -1578,7 +1578,9 @@ namespace pwiz.Skyline
             {
                 var progressMonitor = CreateProgressMonitor(new ProgressStatus(string.Empty));
                 using var fileStream = File.OpenRead(skylineFile);
-                using var progressStream = new ProgressStream(fileStream);
+                // Reads ahead on its own thread so the file keeps transferring while the XML is parsed
+                using var sequentialStream = new SequentialStream(fileStream);
+                using var progressStream = new ProgressStream(sequentialStream);
                 progressStream.SetProgressMonitor(progressMonitor, new ProgressStatus(Path.GetFileName(skylineFile)), true);
                 using var hashingStream = new HashingStream(progressStream, true);
                 // Wrap stream in XmlReader so that BaseUri is known

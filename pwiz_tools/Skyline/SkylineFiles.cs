@@ -332,7 +332,9 @@ namespace pwiz.Skyline
                     longWaitDlg.PerformWork(parentWindow ?? this, 500, progressMonitor =>
                     {
                         using var fileStream = File.OpenRead(path);
-                        using var progressStream = new ProgressStream(fileStream);
+                        // Reads ahead on its own thread so the file keeps transferring while the XML is parsed
+                        using var sequentialStream = new SequentialStream(fileStream);
+                        using var progressStream = new ProgressStream(sequentialStream);
                         progressStream.SetProgressMonitor(progressMonitor, new ProgressStatus(Path.GetFileName(path)), true);
                         using var hashingStream = new HashingStream(progressStream, true);
                         // Wrap stream in XmlReader so that BaseUri is known
