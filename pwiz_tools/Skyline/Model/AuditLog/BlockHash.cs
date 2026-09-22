@@ -18,7 +18,9 @@
  */
 using System;
 using System.IO;
+using System.Runtime.ExceptionServices;
 using System.Security.Cryptography;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.AuditLog
 {
@@ -107,12 +109,28 @@ namespace pwiz.Skyline.Model.AuditLog
         }
     }
 
+    /// <summary>
+    /// Wraps a stream and computes the SHA1 hash of every byte read from or written to it.
+    /// The hashing happens on a background thread so that Read and Write return as soon as
+    /// the bytes have been copied and handed to that thread. <see cref="HashBytes"/> and <see cref="Done"/>
+    /// wait for the background thread to catch up.
+    /// </summary>
     public class HashingStream : Stream
     {
+        /// <summary>
+        /// Maximum number of Read or Write buffers waiting to be hashed. Read and Write block when
+        /// the queue is full so that memory use stays bounded if hashing falls behind the I/O.
+        /// Hashing is expected to be much faster than the I/O, so the queue should rarely fill,
+        /// but the bound must be large enough that the I/O thread does not stall waiting for the
+        /// hashing thread to wake up: callers typically pass only 1-4KB per call.
+        /// </summary>
+        private const int MAX_QUEUED_BUFFERS = 256;
+
         private readonly Stream _inner;
         private readonly SHA1CryptoServiceProvider _sha1;
         private readonly BlockHash _blockHash;
         private readonly bool _keepOpen;
+        private readonly QueueWorker<byte[]> _hashWorker;
 
         public HashingStream(Stream inner, bool keepOpen)
         {
@@ -120,6 +138,8 @@ namespace pwiz.Skyline.Model.AuditLog
             _keepOpen = keepOpen;
             _sha1 = new SHA1CryptoServiceProvider();
             _blockHash = new BlockHash(_sha1);
+            _hashWorker = new QueueWorker<byte[]>(consume: HashBuffer);
+            _hashWorker.RunAsync(1, @"HashingStream", MAX_QUEUED_BUFFERS);
         }
 
         public static Stream CreateWriteStream(string path)
@@ -139,7 +159,7 @@ namespace pwiz.Skyline.Model.AuditLog
             var bytesRead = _inner.Read(buffer, offset, count);
             if (bytesRead <= 0)
                 return bytesRead;
-            _blockHash.ProcessBytes(buffer, bytesRead);
+            AddBytesToHash(buffer, offset, bytesRead);
 
             return bytesRead;
         }
@@ -148,22 +168,30 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             _inner.Write(buffer, offset, count);
 
-            _blockHash.ProcessBytes(buffer, count);
+            AddBytesToHash(buffer, offset, count);
         }
-
 
         public string Hash
         {
             get { return BlockHash.SafeToBase64(HashBytes); }
         }
 
+        /// <summary>
+        /// Waits for the hashing thread to catch up and returns the hash bytes.
+        /// This is null until <see cref="Done"/> has been called.
+        /// </summary>
         public byte[] HashBytes
         {
-            get { return _blockHash.HashBytes; }
+            get
+            {
+                WaitForHashing();
+                return _blockHash.HashBytes;
+            }
         }
 
         public string Done()
         {
+            WaitForHashing();
             _blockHash.FinalizeHashBytes();
             return Hash;
         }
@@ -174,11 +202,57 @@ namespace pwiz.Skyline.Model.AuditLog
 
             if (disposing)
             {
+                // Stops the hashing thread, discarding anything it has not hashed yet
+                _hashWorker.Dispose();
                 if (!_keepOpen)
                 {
                     _inner.Dispose();
                 }
                 _sha1.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Copies the bytes and hands them to the hashing thread. The caller's buffer must be
+        /// copied because the caller is free to reuse it as soon as Read or Write returns.
+        /// </summary>
+        private void AddBytesToHash(byte[] buffer, int offset, int count)
+        {
+            if (count <= 0)
+            {
+                return;
+            }
+            // Checking before every Add means at most one buffer can be queued after the
+            // hashing thread has stopped, so Add never blocks on a queue nobody is draining
+            ThrowIfHashingFailed();
+            var bytes = new byte[count];
+            Array.Copy(buffer, offset, bytes, 0, count);
+            _hashWorker.Add(bytes);
+        }
+
+        /// <summary>
+        /// Waits until the hashing thread has hashed everything handed to it so far.
+        /// </summary>
+        private void WaitForHashing()
+        {
+            _hashWorker.Wait();
+            ThrowIfHashingFailed();
+        }
+
+        /// <summary>
+        /// Runs on the hashing thread. Each array is exactly the bytes to be hashed.
+        /// </summary>
+        private void HashBuffer(byte[] bytes, int threadIndex)
+        {
+            _blockHash.ProcessBytes(bytes);
+        }
+
+        private void ThrowIfHashingFailed()
+        {
+            var exception = _hashWorker.Exception;
+            if (exception != null)
+            {
+                ExceptionDispatchInfo.Capture(exception).Throw();
             }
         }
 
