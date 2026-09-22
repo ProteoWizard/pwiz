@@ -755,7 +755,7 @@ namespace SkylineTester
 
         private Thread _waitForClose;
 
-        protected override void OnClosing(CancelEventArgs e)
+        protected override void OnFormClosing(FormClosingEventArgs e)
         {
             // If child process is attached to debugger, don't shut down without asking
             if (commandShell.IsDebuggerAttached)
@@ -809,17 +809,17 @@ namespace SkylineTester
                 if (isNightly)
                     Program.UserKilledTestRun = true;
             }
-            base.OnClosing(e);
+            base.OnFormClosing(e);
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
             _runningTab = null;
             var preserveHungProcesses = IsNightlyRun();
             commandShell.Stop(preserveHungProcesses);
             Settings.Default.SavedSettings = SaveSettings();
             Settings.Default.Save();
-            base.OnClosed(e);
+            base.OnFormClosed(e);
         }
 
         private int _previousTab;

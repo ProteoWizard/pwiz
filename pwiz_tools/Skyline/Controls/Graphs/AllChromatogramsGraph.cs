@@ -101,9 +101,10 @@ namespace pwiz.Skyline.Controls.Graphs
             elapsedTimer.Tick += ElapsedTimer_Tick;
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
             graphChromatograms.Finish();
+            base.OnFormClosed(e);
         }
 
         private bool _inCreateHandle;

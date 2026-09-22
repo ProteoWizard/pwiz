@@ -1141,7 +1141,7 @@ namespace pwiz.Skyline
             return base.ProcessCmdKey(ref msg, keyData);
         }
 
-        protected override void OnClosing(CancelEventArgs e)
+        protected override void OnFormClosing(FormClosingEventArgs e)
         {
             e.Cancel = false;
 
@@ -1194,13 +1194,13 @@ namespace pwiz.Skyline
             
             DestroyAllChromatogramsGraph();
             DestroyFilesTreeForm(); // Stop FileSystemWatchers and their threads
-            base.OnClosing(e);
+            base.OnFormClosing(e);
 
             foreach (var control in new IMenuControlImplementer[] { _graphFullScan, _graphSpectrum, ViewMenu })
                 control?.DisconnectHandlers();
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
             _immediateWindowWarningListener.Dispose();
             _chromatogramManager.Dispose();
@@ -1234,7 +1234,7 @@ namespace pwiz.Skyline
                 // ReSharper disable LocalizableElement
                 LogManager.GetLogger(typeof(SkylineWindow)).Info("Skyline closed.\r\n-----------------------");
             // ReSharper restore LocalizableElement
-            base.OnClosed(e);
+            base.OnFormClosed(e);
         }
 
         protected override void OnHandleDestroyed(EventArgs e)

@@ -221,7 +221,6 @@ namespace pwiz.Skyline
             CommonApplicationSettings.ProgramNameAndVersion = Install.ProgramNameAndVersion;
             CommonActionUtil.ExceptionReporter = ReportException;
             SkylineRemoteAccountServices.Initialize();
-            SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections
 
             // For testing and debugging Skyline command-line interface.
             // Scan every arg, not just args[0], so --opendoc composes order-independently
