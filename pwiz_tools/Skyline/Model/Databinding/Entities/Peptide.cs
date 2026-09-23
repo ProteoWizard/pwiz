@@ -127,8 +127,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                // Cached because a report asks for it once per result row of every transition in the peptide
-                return _cachedValues.GetValue3(this);
+                return ProteomicSequence.GetProteomicSequence(SrmDocument.Settings, DocNode, IsotopeLabelType.light);
             }
         }
 
@@ -559,7 +558,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         private class CachedValues : CachedValues<Peptide, CalibrationCurveFitter, ImmutableList<Precursor>,
-            IDictionary<ResultKey, PeptideResult>, ProteomicSequence>
+            IDictionary<ResultKey, PeptideResult>>
         {
             protected override SrmDocument GetDocument(Peptide owner)
             {
@@ -582,11 +581,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             protected override IDictionary<ResultKey, PeptideResult> CalculateValue2(Peptide owner)
             {
                 return owner.MakeResults();
-            }
-
-            protected override ProteomicSequence CalculateValue3(Peptide owner)
-            {
-                return ProteomicSequence.GetProteomicSequence(owner.SrmDocument.Settings, owner.DocNode, IsotopeLabelType.light);
             }
         }
     }
