@@ -16,3 +16,10 @@ end_of_line = lf
 
 # IDE0011: Add braces
 csharp_prefer_braces = true
+
+# WFO1000 ("property does not configure the code serialization for its property content")
+# is new in the .NET 9+ WinForms SDK and ships at Error severity, so WarningsNotAsErrors
+# cannot demote it. It fires on runtime-only properties in the vendored ZedGraph fork, the
+# ported SeeMS and MsConvertGUI - none of which are designer-edited, so the designer never
+# serializes them. Demoted to a warning (kept visible) rather than silenced with NoWarn.
+dotnet_diagnostic.WFO1000.severity = warning

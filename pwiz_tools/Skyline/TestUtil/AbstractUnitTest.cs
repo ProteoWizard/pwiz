@@ -1,6 +1,7 @@
 /*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2013 University of Washington - Seattle, WA
  * 
@@ -26,6 +27,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Util;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -163,6 +165,13 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public bool IsRunningInTestRunner
         {
+            // Same check on both frameworks. This was once #if'd to a hardcoded false on net8,
+            // on the belief that TestRunnerContext was TestRunner.exe-only - it is not:
+            // TestRunnerLib targets net472 AND net8.0-windows, defines a net8 TestRunnerContext
+            // for MSTest 3.x, and TestUtil references it. The stub silently made every
+            // IsRunningInTestRunner caller take its "not TestRunner" path on net8, which meant
+            // SkipWiff2TestInTestExplorer skipped FileTypeTest and Wiff2ResultsTest everywhere,
+            // including under TestRunner - so the wiff2 path had no coverage at all.
             get { return TestContext is TestRunnerContext; }
         }
 
@@ -445,6 +454,11 @@ namespace pwiz.SkylineTestUtil
             Program.TestName = TestContext.TestName;
             Program.DoNotTestUnicodeHandling = TestContext.Properties["UnicodeDecoration"]==null;
 
+            // The loader trace ring is static and this process runs test after test, so anything
+            // left in it belongs to a previous test and would be presented as evidence for this
+            // one's failure.
+            Skyline.Model.BackgroundLoader.ClearLoaderTrace();
+
             // Stop profiler if we are profiling.  The unit test will start profiling explicitly when it wants to.
             DotTraceProfile.Stop(true);
 
@@ -498,7 +512,9 @@ namespace pwiz.SkylineTestUtil
             // Prevent any weird interactions between tests on reused processes
             Program.UnitTest = Program.FunctionalTest = false;
             Program.TestName = null;
-
+            // Perf tests turn on real MsDataFileImpl performance timers and rely on this to turn
+            // them off again. Left on, a two-pass chromatogram import in a later test fails.
+            MsDataFileImpl.PerfUtilFactory.Reset();
         }
 
         /// <summary>

@@ -59,15 +59,13 @@ namespace pwiz.SkylineTestTutorial
     [TestClass]
     public class TargetedMsmsTutorialTest : AbstractFunctionalTestEx
     {
-        [TestMethod,
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+        [TestMethod]
         public void TestTargetedMSMSTutorial()
         {
             DoTestTargetedMSMSTutorial(RefinementSettings.ConvertToSmallMoleculesMode.none);
         }
 
-        [TestMethod,
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+        [TestMethod]
         // N.B. it's not clear to me that this test makes perfect sense right now, but implementing it
         // did uncover some issues with the new small molecule work so it is still worthwhile
         public void TestTargetedMSMSTutorialAsSmallMolecules()
@@ -75,8 +73,7 @@ namespace pwiz.SkylineTestTutorial
             DoTestTargetedMSMSTutorial(RefinementSettings.ConvertToSmallMoleculesMode.formulas);
         }
 
-        [TestMethod,
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once 
+        [TestMethod]
         // N.B. it's not clear to me that this test makes perfect sense right now, but implementing it
         // did uncover some issues with the new small molecule work so it is still worthwhile
         public void TestTargetedMSMSTutorialAsSmallMoleculeMasses()

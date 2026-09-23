@@ -392,38 +392,56 @@ namespace pwiz.Osprey.Scoring
             if (_diagnostics?.ShouldDumpSearchXicFor(candidate.Id) ?? false)
             {
                 string peakDumpPath = "cs_search_xic_entry_" + candidate.Id + ".txt";
-                using (var dw = new StreamWriter(peakDumpPath, true))
+                // A fresh FileSaver per call: "append" becomes read-existing,
+                // write-existing-plus-new-section, commit. DiagnosticFileLock.For is
+                // keyed by path and shared with OspreyFileDiagnostics.WriteSearchXicDump,
+                // which writes this SAME file earlier in one candidate's scoring - without
+                // a shared lock, two independent FileSaver commits to one path race
+                // silently instead of the OS-level open conflict a plain writer would have
+                // thrown. Gated to specific candidate ids via OSPREY_DUMP_SEARCH_XIC, so
+                // call volume and the re-read cost are both small.
+                lock (DiagnosticFileLock.For(peakDumpPath))
                 {
-                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                        "# CWT PEAKS: {0} candidates", peaks.Count));
-                    dw.WriteLine("peak\tidx\tstart\tapex\tend\tcorr_score");
-                    for (int pi = 0; pi < peaks.Count; pi++)
+                    string existing = File.Exists(peakDumpPath) ? File.ReadAllText(peakDumpPath) : null;
+                    using (var saver = new FileSaver(peakDumpPath))
                     {
-                        var p = peaks[pi];
-                        int pLen = p.EndIndex - p.StartIndex + 1;
-                        double corrScore = 0.0;
-                        if (pLen >= 3)
+                        using (var dw = new StreamWriter(saver.SafeName))
                         {
-                            double psum = 0.0; int pcnt = 0;
-                            for (int ii = 0; ii < xics.Count; ii++)
-                                for (int jj = ii + 1; jj < xics.Count; jj++)
+                            if (existing != null)
+                                dw.Write(existing);
+                            dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                                "# CWT PEAKS: {0} candidates", peaks.Count));
+                            dw.WriteLine("peak\tidx\tstart\tapex\tend\tcorr_score");
+                            for (int pi = 0; pi < peaks.Count; pi++)
+                            {
+                                var p = peaks[pi];
+                                int pLen = p.EndIndex - p.StartIndex + 1;
+                                double corrScore = 0.0;
+                                if (pLen >= 3)
                                 {
-                                    double c = ScoringMath.PearsonCorrelationInRange(xics[ii].Intensities, xics[jj].Intensities,
-                                        p.StartIndex, p.EndIndex);
-                                    if (!double.IsNaN(c)) { psum += c; pcnt++; }
+                                    double psum = 0.0; int pcnt = 0;
+                                    for (int ii = 0; ii < xics.Count; ii++)
+                                        for (int jj = ii + 1; jj < xics.Count; jj++)
+                                        {
+                                            double c = ScoringMath.PearsonCorrelationInRange(xics[ii].Intensities, xics[jj].Intensities,
+                                                p.StartIndex, p.EndIndex);
+                                            if (!double.IsNaN(c)) { psum += c; pcnt++; }
+                                        }
+                                    corrScore = pcnt > 0 ? psum / pcnt : 0.0;
                                 }
-                            corrScore = pcnt > 0 ? psum / pcnt : 0.0;
+                                dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                                    "peak\t{0}\t{1}\t{2}\t{3}\t{4:F10}",
+                                    pi, p.StartIndex, p.ApexIndex, p.EndIndex, corrScore));
+                            }
+                            dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                                "# BEST PEAK: idx={0} start={1} apex={2} end={3}",
+                                bestPeakIdx,
+                                bestPeak != null ? bestPeak.StartIndex : -1,
+                                bestPeak != null ? bestPeak.ApexIndex : -1,
+                                bestPeak != null ? bestPeak.EndIndex : -1));
                         }
-                        dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                            "peak\t{0}\t{1}\t{2}\t{3}\t{4:F10}",
-                            pi, p.StartIndex, p.ApexIndex, p.EndIndex, corrScore));
+                        saver.Commit();
                     }
-                    dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                        "# BEST PEAK: idx={0} start={1} apex={2} end={3}",
-                        bestPeakIdx,
-                        bestPeak != null ? bestPeak.StartIndex : -1,
-                        bestPeak != null ? bestPeak.ApexIndex : -1,
-                        bestPeak != null ? bestPeak.EndIndex : -1));
                 }
             }
 

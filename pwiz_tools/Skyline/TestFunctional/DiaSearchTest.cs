@@ -105,8 +105,7 @@ namespace pwiz.SkylineTestFunctional
         public bool HasMissingDependencies() => CallUI(() => !SearchSettingsControl.HasRequiredFilesDownloaded(_testDetails.SearchEngine));
 
         [TestMethod,
-         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDiaSearchVariableWindows()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
@@ -114,14 +113,16 @@ namespace pwiz.SkylineTestFunctional
             SetupDiaSearchVariableWindows();
             _testDetails.SearchFiles = _testDetails.SearchFiles.Take(1);
             _testDetails.Initial = new TestDetails.DocumentCounts { ProteinCount = 877, PeptideCount = 82, PrecursorCount = 89, TransitionCount = 801 };
-            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 85, PeptideCount = 92, PrecursorCount = 103, TransitionCount = 927 };
+            // net8: standalone MS Amanda 3.0.22.864 + bundled Percolator is more conservative on the noisy collinsb
+            // DIA-Umpire pseudo-spectra than the retired in-process integration (only percolator-validated PSMs enter
+            // the library), so these are deterministically lower. Same OOP re-baseline as TestDdaSearch. (64-bit only.)
+            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 48, PeptideCount = 53, PrecursorCount = 64, TransitionCount = 576 };
 
             RunFunctionalTest();
         }
 
         [TestMethod,
-         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDiaSearchVariableWindowsMsgfPlus()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
@@ -136,8 +137,7 @@ namespace pwiz.SkylineTestFunctional
         }
 
         [TestMethod,
-         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDiaSearchVariableWindowsMsFragger()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
@@ -477,7 +477,9 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
 
-                if (testDetails.SearchEngine != SearchEngine.MSAmanda)
+                // All engines reaching here may still need the generic download-confirmation
+                // dialog handled (MSAmanda and MSFragger's Java/Crux deps are on-demand on net8);
+                // excluding an engine leaves its "Download <engine>" dialog open -> 10s timeout.
                 {
                     var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
                     if (downloaderDlg != null)
@@ -769,7 +771,9 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
 
-                if (testDetails.SearchEngine != SearchEngine.MSAmanda)
+                // All engines reaching here may still need the generic download-confirmation
+                // dialog handled (MSAmanda and MSFragger's Java/Crux deps are on-demand on net8);
+                // excluding an engine leaves its "Download <engine>" dialog open -> 10s timeout.
                 {
                     var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
                     if (downloaderDlg != null)

@@ -1,0 +1,192 @@
+digraph pwiz_module_detail {
+  rankdir=TB;
+  labelloc=t;
+  label=<<b>pwiz/data/msdata — file-level port status</b><br/><font point-size="10">one node per .cpp/.hpp pair (test fixtures omitted); each group is its own row, top-to-bottom</font>>;
+  fontname="Segoe UI";
+  node [shape=box, style="filled,rounded", fontname="Segoe UI", fontsize=10];
+  edge [color="#444"];
+  ranksep=0.6; nodesep=0.2;
+  compound=true;
+  newrank=true;
+  splines=false;
+  subgraph cluster_data_msdata_Core_model {
+    label=<<b>Core model</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__msdata__ChromatogramListBase [label="ChromatogramListBase", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Same as SpectrumListBase but for ChromatogramList. Ported as MsData/Chromatograms/ChromatogramListBase.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/ChromatogramListBase.hpp", target="_blank"];
+    n_data__msdata__Diff [label="Diff", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="MSData-specific diff specialization (knows how to walk Run/Spectrum/CV nesting).&#10;Ported as MsData/Diff/MSDataDiff.cs. Drives msconvert-cpp parity tests.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/Diff.cpp", target="_blank"];
+    n_data__msdata__LegacyAdapter [label="LegacyAdapter", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a", tooltip="Pre-2010 adapter that synthesized PSI-MS terms from old free-text fields.&#10;Not needed: modern vendor readers set CV terms directly. SKIPPED.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/LegacyAdapter.cpp", target="_blank"];
+    n_data__msdata__MSData [label="MSData", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Top-level MSData container model.&#10;Ported as MsData/MSData.cs + Run.cs + FileDescription.cs + Software.cs +&#10;Scan/Spectrum/Chromatogram property bags. All field names PascalCase, IDisposable&#10;for vendor handles.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/MSData.cpp", target="_blank"];
+    n_data__msdata__MSDataFile [label="MSDataFile", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="✓ calculateSHA1Checksums   →  MSDataFile.CalculateSha1Checksums()&#10;✓ WriteConfig + Format     →  Pwiz.Data.MsData.WriteConfig + WriteFormat&#10;✓ Precision / Compression  →  Encoding.BinaryPrecision / BinaryCompression&#10;✓ write(msd,path,cfg)      →  MSDataFile.Write — dispatches to MzmlWriter /&#10;                              MzxmlWriter / MgfSerializer based on WriteConfig.Format&#10;✗ detect(filename)         →  not yet ported; Reader.Identify() does sniff-by-extension", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/MSDataFile.cpp", target="_blank"];
+    n_data__msdata__MSDataMerger [label="MSDataMerger", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000", tooltip="PARTIAL — multi-file merge into a single MSData.&#10;Done inline inside MsConvert/Converter.MergeRun (concatenates SourceFiles +&#10;Software + spectra). No standalone class yet.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/MSDataMerger.cpp", target="_blank"];
+    n_data__msdata__References [label="References", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Resolves IDREF cross-references inside an MSData graph (e.g., scan.spectrumRef → spectrum).&#10;Ported as MsData/References.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/References.cpp", target="_blank"];
+    n_data__msdata__SpectrumInfo [label="SpectrumInfo", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Lightweight per-scan metadata struct. Ported as MsData/Spectra/SpectrumInfo.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/SpectrumInfo.cpp", target="_blank"];
+    n_data__msdata__SpectrumIterator [label="SpectrumIterator", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Scan-time spectrum iterator. Ported as MsData/Spectra/SpectrumIterator.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/SpectrumIterator.cpp", target="_blank"];
+    n_data__msdata__SpectrumListBase [label="SpectrumListBase", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Base class with shared SpectrumList plumbing. Ported as MsData/Spectra/SpectrumListBase.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/SpectrumListBase.cpp", target="_blank"];
+    n_data__msdata__SpectrumListCache [label="SpectrumListCache", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="LRU-caching SpectrumList decorator. Ported as MsData/Spectra/SpectrumListCache.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/SpectrumListCache.cpp", target="_blank"];
+    n_data__msdata__SpectrumListWrapper [label="SpectrumListWrapper", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Spectrum-list pass-through base class. Ported as Analysis/SpectrumListWrapper.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/SpectrumListWrapper.hpp", target="_blank"];
+    n_data__msdata__ChromatogramListBase -> n_data__msdata__Diff -> n_data__msdata__LegacyAdapter -> n_data__msdata__MSData -> n_data__msdata__MSDataFile -> n_data__msdata__MSDataMerger -> n_data__msdata__References -> n_data__msdata__SpectrumInfo -> n_data__msdata__SpectrumIterator -> n_data__msdata__SpectrumListBase -> n_data__msdata__SpectrumListCache -> n_data__msdata__SpectrumListWrapper [style=invis, constraint=false];
+  }
+  subgraph cluster_data_msdata_Encoding {
+    label=<<b>Encoding</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__msdata__BinaryDataEncoder [label="BinaryDataEncoder", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="32-/64-bit float + zlib + numpress encoder for mzML binaryDataArrays.&#10;Ported as MsData/BinaryDataEncoder.cs with full numpress (Pic/Linear/Slof) +&#10;MS-NUMPRESS Apache port.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/BinaryDataEncoder.cpp", target="_blank"];
+    n_data__msdata__MSNumpress [label="MSNumpress", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="MS-NUMPRESS algorithm. Ported as MsData/Encoding/MsNumpress.cs (line-by-line port).", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/MSNumpress.cpp", target="_blank"];
+    n_data__msdata__SHA1OutputObserver [label="SHA1OutputObserver", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Streaming SHA-1 + byte counter wrapper around an std::ostream.&#10;Ported as MsData/Mzml/HashingCountingStream.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/SHA1OutputObserver.hpp", target="_blank"];
+    n_data__msdata__BinaryDataEncoder -> n_data__msdata__MSNumpress -> n_data__msdata__SHA1OutputObserver [style=invis, constraint=false];
+  }
+  subgraph cluster_data_msdata_Serializers_writers {
+    label=<<b>Serializers / writers</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__msdata__Serializer_MGF [label="Serializer_MGF", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="MGF writer (Mascot Generic Format — MS2 peak-list export).&#10;Ported as MsData/Mgf/MgfSerializer.cs (text-mode writer with TPP-compat title formats).", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/Serializer_MGF.cpp", target="_blank"];
+    n_data__msdata__Serializer_MSn [label="Serializer_MSn", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="MS1/MS2/BMS1/BMS2/CMS1/CMS2 legacy format. Ported as MsData/MSn/SerializerMSn.cs with all 6 variants — text (MS1/MS2), uncompressed binary (BMS1/BMS2), and zlib-compressed binary (CMS1/CMS2). Folds in the SpectrumList parse path that cpp puts in SpectrumList_MSn.cpp.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/Serializer_MSn.cpp", target="_blank"];
+    n_data__msdata__Serializer_mz5 [label="Serializer_mz5", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000", tooltip="HDF5-based mz5 serializer. READ ported as Mz5ReaderAdapter + Mz5Connection + Mz5ReferenceRead + Mz5SpectrumList + Mz5ChromatogramList (under MsData/Mz5/). Writer not done — round-trip tests shell out to cpp msconvert --mz5 for the write side.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/Serializer_mz5.cpp", target="_blank"];
+    n_data__msdata__Serializer_mzML [label="Serializer_mzML", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Full mzML reader+writer. Ported as MsData/Mzml/MzmlReader.cs + MzmlWriter.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/Serializer_mzML.cpp", target="_blank"];
+    n_data__msdata__Serializer_mzXML [label="Serializer_mzXML", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Full mzXML reader+writer. Ported as MsData/MzXml/MzxmlReader.cs + MzxmlWriter.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/Serializer_mzXML.cpp", target="_blank"];
+    n_data__msdata__TextWriter [label="TextWriter", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a", tooltip="Format_Text output (a pwiz-internal pretty-print).&#10;Never wired in any GUI/CLI we care about. NOT PORTED.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/TextWriter.hpp", target="_blank"];
+    n_data__msdata__Serializer_MGF -> n_data__msdata__Serializer_MSn -> n_data__msdata__Serializer_mz5 -> n_data__msdata__Serializer_mzML -> n_data__msdata__Serializer_mzXML -> n_data__msdata__TextWriter [style=invis, constraint=false];
+  }
+  subgraph cluster_data_msdata_mzML_stream_parser {
+    label=<<b>mzML stream parser</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__msdata__IO [label="IO", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Streaming mzML element-by-element reader + writer.&#10;Ported as MsData/Mzml/MzmlReader.cs + MzmlWriter.cs (System.Xml.XmlReader/XmlWriter&#10;instead of cpp's SAXParser/XMLWriter).", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/IO.cpp", target="_blank"];
+    n_data__msdata__Index_mzML [label="Index_mzML", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="mzML spectrum/chromatogram offset index reader.&#10;Ported as MsData/Mzml/MzmlIndexReader.cs. Reads <indexList> trailer to seek to&#10;individual spectra without parsing the full file.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/Index_mzML.cpp", target="_blank"];
+    n_data__msdata__IO -> n_data__msdata__Index_mzML [style=invis, constraint=false];
+  }
+  subgraph cluster_data_msdata_SpectrumList_ {
+    label=<<b>SpectrumList_*</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__msdata__SpectrumList_BTDX [label="SpectrumList_BTDX", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Bruker BioTools DataExchange XML. Ported as MsData/Btdx/SpectrumListBtdx.cs + MsData/BtdxReaderAdapter.cs. Read-only (cpp has no writer either).", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/SpectrumList_BTDX.cpp", target="_blank"];
+    n_data__msdata__SpectrumList_MGF [label="SpectrumList_MGF", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Lazy-load MGF SpectrumList. Ported as MsData/Mgf/SpectrumList_Mgf.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/SpectrumList_MGF.cpp", target="_blank"];
+    n_data__msdata__SpectrumList_MSn [label="SpectrumList_MSn", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Legacy MS1/MS2 SpectrumList. Read path folded into MsData/MSn/SerializerMSn.cs's parser (no separate lazy-load list class — eager parse into SpectrumListSimple, matching MGF / BTDX patterns).", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/SpectrumList_MSn.cpp", target="_blank"];
+    n_data__msdata__SpectrumList_mz5 [label="SpectrumList_mz5", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="mz5 SpectrumList. Ported as MsData/Mz5/Mz5SpectrumList.cs — lazy slicer over the global SpectrumMZ + SpectrumIntensity datasets via SpectrumIndex end-offsets. Reverses delta-mz encoding via cumulative sum when FileInformation.deltaMZ is set.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/SpectrumList_mz5.cpp", target="_blank"];
+    n_data__msdata__SpectrumList_mzML [label="SpectrumList_mzML", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Lazy-load mzML SpectrumList implementation. Ported as MsData/Mzml/SpectrumList_Mzml.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/SpectrumList_mzML.cpp", target="_blank"];
+    n_data__msdata__SpectrumList_mzXML [label="SpectrumList_mzXML", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Lazy-load mzXML SpectrumList. Ported as MsData/MzXml/SpectrumList_Mzxml.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/SpectrumList_mzXML.cpp", target="_blank"];
+    n_data__msdata__SpectrumList_BTDX -> n_data__msdata__SpectrumList_MGF -> n_data__msdata__SpectrumList_MSn -> n_data__msdata__SpectrumList_mz5 -> n_data__msdata__SpectrumList_mzML -> n_data__msdata__SpectrumList_mzXML [style=invis, constraint=false];
+  }
+  subgraph cluster_data_msdata_ChromatogramList_ {
+    label=<<b>ChromatogramList_*</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__msdata__ChromatogramList_mz5 [label="ChromatogramList_mz5", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="mz5 ChromatogramList. Ported as MsData/Mz5/Mz5ChromatogramList.cs — lazy slicer over ChromatogramTime + ChromatogramIntensity via ChromatogramIndex. No translator (mz5's delta encoding only applies to m/z, not time).", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/ChromatogramList_mz5.cpp", target="_blank"];
+    n_data__msdata__ChromatogramList_mzML [label="ChromatogramList_mzML", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Lazy-load mzML ChromatogramList. Ported as MsData/Mzml/ChromatogramList_Mzml.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/ChromatogramList_mzML.cpp", target="_blank"];
+    n_data__msdata__ChromatogramList_mz5 -> n_data__msdata__ChromatogramList_mzML [style=invis, constraint=false];
+  }
+  subgraph cluster_data_msdata_Reader_dispatch {
+    label=<<b>Reader dispatch</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__msdata__DefaultReaderList [label="DefaultReaderList", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Reader dispatcher (mzML / mzXML / MGF + vendor extension points).&#10;Ported as MsData/Readers/ReaderList.cs. Vendor readers register at startup&#10;(see MsConvert/Converter ctor).", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/DefaultReaderList.cpp", target="_blank"];
+    n_data__msdata__Reader [label="Reader", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="IReader interface + ReaderConfig. Ported as MsData/IReader.cs.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/Reader.cpp", target="_blank"];
+    n_data__msdata__DefaultReaderList -> n_data__msdata__Reader [style=invis, constraint=false];
+  }
+  subgraph cluster_data_msdata_Misc {
+    label=<<b>Misc</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__msdata__MemoryMRUCache [label="MemoryMRUCache", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Bounded LRU cache (least-recently-used eviction).&#10;Ported as Util/Collections/LruCache.cs. Used by SpectrumList_ChargeFromIsotope&#10;for parent MS1 spectra.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/MemoryMRUCache.hpp", target="_blank"];
+    n_data__msdata__RAMPAdapter [label=<<s>RAMPAdapter</s>>, fillcolor="#dcdcdc", color="#888888", fontcolor="#555555", tooltip="Legacy C-API shim wrapping pwiz to look like ISB RAMP — used by older readers.&#10;Not used by msconvert / Skyline. SKIPPED.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/RAMPAdapter.cpp", target="_blank"];
+    n_data__msdata__SpectrumWorkerThreads [label="SpectrumWorkerThreads", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a", tooltip="Multi-threaded spectrum reader (used by mzML writer to overlap read+encode).&#10;Not ported: pwiz-sharp is single-threaded for now; the speed gap is small for&#10;modern hardware vs. the porting risk.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/SpectrumWorkerThreads.cpp", target="_blank"];
+    n_data__msdata__examples [label="examples", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="Canonical example MSData fixture builder. Ported as MsData/Examples.cs.&#10;InitializeTiny → 5 spectra (MS1/MS2 CID/no-data/MS2 ETD+CID/MALDI) + 2 chromatograms&#10;(TIC + SIC). AddMiapeExampleMetadata layers MIAPE-compliant metadata on top.&#10;Used by round-trip / Diff / serializer parity tests.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/examples.cpp", target="_blank"];
+    n_data__msdata__MemoryMRUCache -> n_data__msdata__RAMPAdapter -> n_data__msdata__SpectrumWorkerThreads -> n_data__msdata__examples [style=invis, constraint=false];
+  }
+  subgraph cluster_data_msdata_HDF5_mz5_ {
+    label=<<b>HDF5 (mz5)</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__msdata__mz5__Configuration_mz5 [label="Configuration_mz5", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="mz5/HDF5 file-level config. Ported as MsData/Mz5/Mz5Configuration.cs + Mz5Datasets.cs (dataset-name enum + version/length constants matching cpp).", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mz5/Configuration_mz5.cpp", target="_blank"];
+    n_data__msdata__mz5__Connection_mz5 [label="Connection_mz5", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000", tooltip="mz5 H5File wrapper. Read paths ported as MsData/Mz5/Mz5Connection.cs — file open + ReadFull/ReadDoubles + vlen-reclaim + refcounted shared ownership for SpectrumList + ChromatogramList. Write paths not done.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mz5/Connection_mz5.cpp", target="_blank"];
+    n_data__msdata__mz5__Datastructures_mz5 [label="Datastructures_mz5", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="mz5 typed structs. Ported as MsData/Mz5/Mz5Types.cs — all 25 POD record types with HDF5 compound type registrations whose field names match cpp's exactly (HDF5 matches compound fields by name on read — mismatches silently leave struct fields at zero).", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mz5/Datastructures_mz5.cpp", target="_blank"];
+    n_data__msdata__mz5__ReferenceRead_mz5 [label="ReferenceRead_mz5", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="mz5 ID-resolution on read. Ported as MsData/Mz5/Mz5ReferenceRead.cs — walks document-level metadata in cpp's dependency order (CVs → CVReference → CVParam/UserParam/RefParam tables → ParamGroups → SourceFiles / Software / DataProcessings / Samples / ScanSettings / InstrumentConfigurations → Run → Spectrum/Chromatogram lists). Memoizes CVID lookups.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mz5/ReferenceRead_mz5.cpp", target="_blank"];
+    n_data__msdata__mz5__ReferenceWrite_mz5 [label=<<s>ReferenceWrite_mz5</s>>, fillcolor="#dcdcdc", color="#888888", fontcolor="#555555", tooltip="mz5 write-side ID resolution. Intentionally NOT PORTED — pwiz-sharp covers HDF5-backed output via mzMLb; mz5 stays read-only so we don't carry two parallel writers.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mz5/ReferenceWrite_mz5.cpp", target="_blank"];
+    n_data__msdata__mz5__Translator_mz5 [label="Translator_mz5", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000", tooltip="mz5 ↔ MSData translation. Reverse direction (delta-mz cumulative-sum + log-intensity decode on read) is in Mz5Connection / Mz5SpectrumList; forward translation for write intentionally not ported.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mz5/Translator_mz5.cpp", target="_blank"];
+    n_data__msdata__mz5__Configuration_mz5 -> n_data__msdata__mz5__Connection_mz5 -> n_data__msdata__mz5__Datastructures_mz5 -> n_data__msdata__mz5__ReferenceRead_mz5 -> n_data__msdata__mz5__ReferenceWrite_mz5 -> n_data__msdata__mz5__Translator_mz5 [style=invis, constraint=false];
+  }
+  subgraph cluster_data_msdata_HDF5_mzMLb_ {
+    label=<<b>HDF5 (mzMLb)</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__msdata__mzmlb__Connection_mzMLb [label="Connection_mzMLb", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10", tooltip="mzMLb (HDF5-backed mzML) connection wrapper. Ported as Pwiz.Data.MsData.MzMlb.MzMlbConnection (HDF.PInvoke-backed, exposes mzML XML as a seekable Stream + typed Append/Read for binary datasets). Reader/Writer adapters at MzMlbReaderAdapter / MzMlbWriter; integration into MzmlReader/MzmlWriter via IExternalBinarySource/Sink. Bidirectional cpp parity verified.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/mzmlb/Connection_mzMLb.cpp", target="_blank"];
+  }
+  subgraph cluster_data_msdata_Other {
+    label=<<b>Other</b>>;
+    style="rounded,dashed";
+    color="#888";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=10;
+    rank=same;
+    n_data__msdata__ramp__ramp [label=<<s>ramp</s>>, fillcolor="#dcdcdc", color="#888888", fontcolor="#555555", tooltip="Legacy mzXML-style reader (ramp.h / ramp.cpp). Intentionally NOT PORTED — superseded by Pwiz.Data.MsData.Mzml.MzmlReader; deprecated in upstream cpp too.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/ramp/ramp.cpp", target="_blank"];
+    n_data__msdata__ramp__ramp_base64 [label=<<s>ramp_base64</s>>, fillcolor="#dcdcdc", color="#888888", fontcolor="#555555", tooltip="Standalone base64 helper paired with ramp. Intentionally NOT PORTED — System.Convert covers the same surface in C#.", href="https://github.com/ProteoWizard/pwiz/blob/master/pwiz/data/msdata/ramp/ramp_base64.cpp", target="_blank"];
+    n_data__msdata__ramp__ramp -> n_data__msdata__ramp__ramp_base64 [style=invis, constraint=false];
+  }
+  n_data__msdata__ChromatogramListBase -> n_data__msdata__BinaryDataEncoder [style=invis, minlen=1];
+  n_data__msdata__BinaryDataEncoder -> n_data__msdata__Serializer_MGF [style=invis, minlen=1];
+  n_data__msdata__Serializer_MGF -> n_data__msdata__IO [style=invis, minlen=1];
+  n_data__msdata__IO -> n_data__msdata__SpectrumList_BTDX [style=invis, minlen=1];
+  n_data__msdata__SpectrumList_BTDX -> n_data__msdata__ChromatogramList_mz5 [style=invis, minlen=1];
+  n_data__msdata__ChromatogramList_mz5 -> n_data__msdata__DefaultReaderList [style=invis, minlen=1];
+  n_data__msdata__DefaultReaderList -> n_data__msdata__MemoryMRUCache [style=invis, minlen=1];
+  n_data__msdata__MemoryMRUCache -> n_data__msdata__mz5__Configuration_mz5 [style=invis, minlen=1];
+  n_data__msdata__mz5__Configuration_mz5 -> n_data__msdata__mzmlb__Connection_mzMLb [style=invis, minlen=1];
+  n_data__msdata__mzmlb__Connection_mzMLb -> n_data__msdata__ramp__ramp [style=invis, minlen=1];
+  subgraph cluster_legend {
+    label=<<b>Status</b>>;
+    style="rounded";
+    color="#444";
+    fontname="Segoe UI";
+    fontsize=11;
+    margin=8;
+    rank=same;
+    legend_full [label="ported", fillcolor="#9ee5a3", color="#2c7a32", fontcolor="#0a3d10"];
+    legend_partial [label="partial", fillcolor="#ffe48a", color="#a87000", fontcolor="#4a3000"];
+    legend_none [label="not yet ported", fillcolor="#f5a8a8", color="#a02020", fontcolor="#3d0a0a"];
+    legend_skipped [label=<<s>won't port (BCL/legacy)</s>>, fillcolor="#dcdcdc", color="#888888", fontcolor="#555555"];
+    legend_full -> legend_partial -> legend_none -> legend_skipped [style=invis, constraint=false];
+  }
+  n_data__msdata__ramp__ramp -> legend_full [style=invis, minlen=1];
+}

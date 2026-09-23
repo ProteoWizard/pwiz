@@ -151,6 +151,34 @@
                             true-FDP oracle.
       Astral                hram, generated decoys, larger and slower.
 
+.PARAMETER Source
+    Which acquisition of the SAME data to search: mzML (default) or raw.
+
+    Osprey reads Thermo .raw through ProteoWizard now (issue #4497), so a raw run
+    is expected to reproduce the mzML run EXACTLY - both are compared against the
+    same committed goldens, and that identity is the assertion. A divergence here
+    is a defect to characterize, never something to rebaseline with -CreateGolden.
+
+    The two acquisitions ship as separate panorama zips extracting to separate
+    roots, so a machine can hold both. Only the -v2 zips can be compared this way:
+    their mzML was converted by an msconvert carrying PR #4501, without which the
+    conversion shifts most retention times by an ULP relative to a direct raw read
+    (the mismatch #4496 recorded; PR #4500 was closed rather than merged).
+
+.PARAMETER IAgreeToVendorLicenses
+    Acknowledge the vendor SDK licences so the build links the real Thermo reader.
+    Required with -Source raw (unless -NoBuild), and a no-op otherwise.
+
+    Passed by the invoker on purpose. This script will not set it for you just
+    because -Source raw was requested: the agreement is the builder's act, and a
+    committed file that asserts it on their behalf would invalidate the licence it
+    claims to record.
+
+    That constraint is why no CI config runs -Source raw today. Doing so means
+    configuring the agreement in TeamCity itself - a parameter or secret supplied by
+    the build configuration, never a file in this repo - which is its own piece of
+    work, alongside code signing.
+
 .PARAMETER CreateGolden
     Capture/refresh the committed golden from this run instead of comparing
     against it. Use only on an intentional, reviewed behavior change.
@@ -194,21 +222,47 @@
 .PARAMETER NoBuild
     Skip the Osprey build step (use the existing Release binary).
 
+.PARAMETER SkipAltPass2
+    Skip the mode-10 non-default pass-2 arm (OSPREY_PASS2_QVALUE=transfer with
+    OSPREY_EXPERIMENT_AGG=mean-best-2), which runs on the one dataset that opts in
+    (StellarLibDecoy, library-supplied decoys - the provenance the arms are used with on
+    real cohorts). The overnight gate leaves it on: leaving these arms unrun is how
+    transfer reached production writing no experiment sidecar. Fast local iteration only,
+    like -SkipHpcChain.
+
 .PARAMETER KeepRunDirs
-    Number of most-recent TestResults\regression-* run dirs to keep when pruning
-    ORPHANS at startup (default 0 -- keep none). A normal run now removes its own
-    output when it finishes (see -KeepOutput), so this only clears dirs left behind
-    by a previously killed run (TeamCity timeout / OOM). Raise it to retain old run
-    dirs on a roomy local disk.
+    How many COMPLETED TestResults\regression-* run dirs the startup prune leaves in
+    place (default 1). The prune runs at the start of the NEXT run, before that run
+    creates its own root, so between runs the disk holds KeepRunDirs+1 sets (two by
+    default) and 0 keeps only the current run's output. Live run dirs are never
+    pruned; dirs with no run.complete stamp (an aborted run, a failed staging call)
+    never count toward the keep and are always pruned. Defaults to 0 when the run is
+    not retaining output (-TeamCity / -CleanOutput). The rule itself is stated once,
+    at $retainOutput below the param block.
 
 .PARAMETER KeepOutput
-    Keep this run's TestResults\regression-<stamp> output instead of deleting it. By
-    default the run deletes its scratch as it goes -- each HPC-chain phase and each
-    dataset as soon as it is consumed, then the whole run root at the end -- so it
-    leaves no multi-GB output behind to starve the next run on a shared build agent.
-    The raw input data (downloaded mzML/library) is NEVER touched. Pass this locally
-    to retain output for post-mortem; a red CI gate's diagnosis lives in the build
-    log, not these files.
+    Retain EVERYTHING this run writes, including the staged input copies the HPC chain
+    makes (per-worker spectra.bin / library / .libcache / parquet copies, the consumed
+    phase dirs). A local run already retains its PRODUCTS - <dataset>\straight, the
+    chain's phase 3/4 outputs and logs, every comparison input a red leg needs - and
+    drops the copies as they are consumed, because they are byte-identical to what
+    the straight leg holds and were 69% of a retained Stellar run. Pass this to keep
+    the copies too, or to force retention under -TeamCity / -CleanOutput. The raw
+    input data (downloaded mzML/library) is NEVER touched.
+
+.PARAMETER CleanOutput
+    Delete this run's scratch as it goes -- each dataset as soon as its legs finish,
+    then the whole run root at the end. Implied by -TeamCity (the shared agent is
+    disk-bound and a red gate's diagnosis lives in the build log, not these files);
+    pass it locally on a full disk. Unless -KeepRunDirs is given it also prunes every
+    earlier run dir at startup. -KeepOutput wins over both.
+
+.PARAMETER Tolerance
+    Absolute numeric tolerance for every compare leg (default 1e-9): the mode-1 blib
+    projection + protein-FDR dump vs the committed golden, the mode-1b diagnostics metric
+    projection, and every full blib-vs-blib and sidecar self-consistency compare (resume,
+    HPC chain, rehydrate, warm re-run). It does not loosen the fixed FDR sanity bounds of
+    mode 1b or the golden summary's separate relative tolerance (1e-6 in BlibGolden.ps1).
 
 .EXAMPLE
     # Local: run Stellar straight-through + resume against the committed golden
@@ -225,6 +279,32 @@
 param(
     [ValidateSet('Stellar', 'StellarLibDecoy', 'StellarGenDecoyEntrap', 'Astral', 'All')]
     [string]$Dataset = 'All',
+    # Which acquisition of the SAME data to search: the msconvert mzML conversions, or
+    # the Thermo .raw files they were converted from. Osprey reads both through
+    # ProteoWizard now (issue #4497), so the two must produce IDENTICAL results and are
+    # compared against the SAME goldens - proving that identity is why both zips exist,
+    # and it is a real assertion rather than a convenience switch.
+    #
+    # This is only a fair test because of the -v2 zips specifically: their mzML was
+    # converted by an msconvert carrying PR #4501, so its scan start times no longer go
+    # through the TimeInSeconds()/60 round trip that shifted most retention times by an
+    # ULP. Against a pre-#4501 conversion the two acquisitions could not agree, and
+    # #4496 recorded exactly that mismatch (PR #4500 was closed rather than merged).
+    # If a future dataset is published without that property, this switch stops being a
+    # parity check and becomes a source of unexplained ULP noise.
+    [ValidateSet('mzML', 'raw')]
+    [string]$Source = 'mzML',
+    # Acknowledge the vendor SDK licences, forwarded to build.ps1 as
+    # -p:IAgreeToVendorLicenses=true. REQUIRED with -Source raw unless -NoBuild, because
+    # a build without it compiles the vendor readers in NO_VENDOR_SUPPORT mode, where
+    # Read() throws on every .raw.
+    #
+    # A switch the INVOKER passes, deliberately, rather than something this script sets
+    # on its own when it notices -Source raw. Agreeing to a licence has to be the
+    # builder's act; a repo file that asserts it on the builder's behalf would invalidate
+    # the agreement it claims to record. Same reason Jamfile.jam only emits the property
+    # when --i-agree-to-the-vendor-licenses appears on the command line.
+    [switch]$IAgreeToVendorLicenses,
     [switch]$CreateGolden,
     [switch]$SkipResume,
     [switch]$SkipWarmRerun,
@@ -240,18 +320,40 @@ param(
     [switch]$NoBuild,
     [switch]$StageOnly,
     [ValidateRange(0, [int]::MaxValue)]
-    [int]$KeepRunDirs = 0,
+    [int]$KeepRunDirs = 1,
     [switch]$KeepOutput,
+    [switch]$CleanOutput,
     [double]$Tolerance = 1e-9
 )
 
 $ErrorActionPreference = 'Stop'
+
+# Clean BEFORE a run, not after. Stated ONCE here; every other comment on cleanup points
+# back to this block rather than restating it (copies drift - this PR replaced eight).
+#   $retainOutput  - the run's PRODUCTS survive it: <dataset>\straight, the chain's phase 3/4
+#                    outputs and chain\logs, and every comparison input a red leg needs
+#                    (Remove-Scratch honors it). True for a local run, because a passing
+#                    run's output has readers - a later A/B, a memory profile, the streamed
+#                    diagnostics HTML - and two 30-40 minute gates were re-run in one month
+#                    only to regenerate files a passing run had produced and then deleted.
+#                    False under -TeamCity or -CleanOutput; -KeepOutput forces it.
+#   $retainStaging - the staged input COPIES survive too: per-worker spectra.bin / library /
+#                    .libcache / parquet copies and the consumed phase dirs (Remove-Staging
+#                    honors it). Only -KeepOutput: the copies are byte-identical to what the
+#                    straight leg already holds and were 69% of a retained Stellar run dir,
+#                    ~67 GB of an Astral one.
+#   $KeepRunDirs   - the startup prune below keeps this many COMPLETED earlier run dirs, so
+#                    between runs the disk holds KeepRunDirs+1 sets. A run that is not
+#                    retaining output keeps none of its predecessors either, unless asked.
+$retainOutput  = $KeepOutput -or -not ($TeamCity -or $CleanOutput)
+$retainStaging = [bool]$KeepOutput
+if (-not $retainOutput -and -not $PSBoundParameters.ContainsKey('KeepRunDirs')) { $KeepRunDirs = 0 }
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 $scriptRoot   = Split-Path -Parent $PSCommandPath
 $regressionDir = Join-Path $scriptRoot 'Regression'
 $goldenRoot   = Join-Path $scriptRoot 'osprey-regression.data'
-$ospreyBinDir = Join-Path $scriptRoot 'Osprey\bin\x64\Release\net8.0'
+$ospreyBinDir = Join-Path $scriptRoot 'Osprey\bin\x64\Release\net10.0'
 $ospreyExe    = Join-Path $ospreyBinDir 'Osprey.exe'
 
 # Bit-parity version pin. The build stamps a daily Skyline-scheme version
@@ -291,14 +393,13 @@ $env:OSPREY_PASS2_VERIFY_WORKER = '1'
 # required where a guard demands one, so a resident path that no guard covers is
 # invisible in a token audit. #4536 was exactly that until it landed - the rehydrate
 # published no survivor loader, so Stage6ResidentHandoffGuardError no-oped and nothing
-# asked for a token. #4486 was the standing example: the survivor buffer is rebuilt for
-# SecondPassFDR to read, so it is resident for the whole of Stage 7 on EVERY path (#4597
-# moved the rebuild onto SecondPassFDR's own pull, which changes WHO pays for it and not
-# how big it is), and no guard covers that because it is not a resume or a mode - it is
-# what Stage 7 takes as input. It is still uncovered, and now MEASURED: 0.196 GB/file
-# live, post-GC, which is not what fails at scale. What did was the --task SecondPassFDR
-# pre-compaction RELOAD at 2.07 GB/file (~186 GB projected at 82 files), streamed by
-# #4486. Zero tokens therefore does NOT mean zero gaps, and this table keeps that legible.
+# asked for a token. #4486 was the standing example while it was open: the survivor
+# buffer was rebuilt for SecondPassFDR to read, resident for the whole of Stage 7 on every
+# path, and no guard covered it because it was not a resume or a mode - it was what Stage
+# 7 took as input. That is now closed (#4486): every default leg folds run by run, and the
+# one route that still takes the pool is the transfer pass-2 mode, tracked as #4665 in the
+# row below. Zero tokens therefore does NOT mean zero gaps, and this table keeps that
+# legible.
 #
 # Printed in the run summary (not just parked in a comment) so every CI log states the
 # outstanding gaps, and so a fixed entry left here shows up as a stale line in output
@@ -321,9 +422,9 @@ $knownResidentGaps = @(
     # above names it, and a table that omits the one gap the preamble names is worse than
     # no table. Token NONE, so it does not inflate the required-token count below.
     @{
-        Issue = '#4486'
+        Issue = '#4665'
         Token = 'NONE'
-        Path  = 'SecondPassFDR pulling RescoredEntries rebuilds the whole-run survivor buffer it reads (#4597 moved the build off the end of Stage 6, which does not shrink it); resident for the whole of Stage 7.'
+        Path  = 'Transfer pass-2 (OSPREY_PASS2_QVALUE=transfer) computes its per-file half in Stage 7 over the whole pool (TransferOneFile runs from TransferPerRunQ, not from Pass2PerFileWorker); resident for the whole of Stage 7. #4486, the original tracker, is closed.'
         # One model, stated explicitly: a fixed library term plus a per-file slope, both from
         # the 4/8/16-file A/B. Quoting a straight-through 82-file endpoint next to that rig's
         # marginal slope produced three numbers no single model reproduced (24.43/82 = 0.298,
@@ -399,14 +500,26 @@ if (-not [string]::IsNullOrWhiteSpace($env:OSPREY_ALLOW_UNFIXED_RESIDENT)) {
 # but not live-set MAGNITUDE.
 $memStampArgs = @('--timestamp', '--memstamp')
 
-# The mzML data zip on panorama (raw-data zip is future work). The URL's
-# second-to-last segment ("perftests") maps to <Downloads>\Perftests.
+# The data zip on panorama, chosen by -Source. The URL's second-to-last segment
+# ("perftests") maps to <Downloads>\Perftests, and each zip extracts to its own root,
+# so both acquisitions can sit on one machine and neither invalidates the other.
 #
 # -v2 adds the stellar-libdecoy library WITHOUT disturbing the v1 zip: acquisition
 # is skip-if-present on the EXTRACTED ROOT, so re-publishing under the same name
 # would never reach a machine that already has the tree. A new name also leaves
 # older branches pinned to the v1 URL working exactly as before.
-$dataUrl = 'https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/osprey-testfiles-mzML-v2.zip'
+$dataUrls = @{
+    mzML = 'https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/osprey-testfiles-mzML-v2.zip'
+    raw  = 'https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/osprey-testfiles-v2.zip'
+}
+$dataUrl = $dataUrls[$Source]
+
+# The input extension the selected acquisition uses. Everything downstream keys off
+# these two rather than a literal '.mzML': file discovery and the straight-through
+# leg's input copies. A Thermo .raw is a FILE (Waters/Agilent/Bruker directories would
+# not survive the copy, which is why this switch is Thermo-only today).
+$sourceExt    = if ($Source -eq 'raw') { '.raw' } else { '.mzML' }
+$sourceFilter = "*$sourceExt"
 
 # The Stellar library-decoy library, published SEPARATELY from the mzML bundle.
 #
@@ -602,16 +715,15 @@ if ($dupGolden.Count -gt 0) {
     exit 1
 }
 
-# --- Reclaim disk: prune orphaned TestResults run dirs ------------------------
-# A normal run now removes its OWN TestResults\regression-<stamp> dir as it goes
-# (each HPC-chain phase + dataset when consumed, then the run root at the end --
-# see the cleanup below and -KeepOutput), so between runs there is normally nothing
-# here. This startup prune is the safety net for ORPHANS: a dir left by a run that
-# was killed (TeamCity timeout / OOM) before it reached its own cleanup. Run here
-# FIRST -- before the build, data acquisition, and the new run dir -- so even a
-# near-full disk can run it (deleting needs ~no free space) and the rest of the run
-# has the reclaimed space. Keeps the most recent $KeepRunDirs (default 0 = keep
-# none). The dir names sort chronologically (regression-YYYYMMDD_HHMMSS), so a Name
+# --- Reclaim disk: prune earlier TestResults run dirs --------------------------
+# This is where the disk is bounded (see $retainOutput). A local run retains its output,
+# so the run dirs of earlier runs are here at startup; this prune keeps the most recent
+# $KeepRunDirs COMPLETED ones and deletes the rest, including every dir with no
+# run.complete stamp (an aborted run, a failed staging call), which never counts toward
+# the keep - otherwise a fragment would displace the last complete set. Run here FIRST
+# -- before the build, data acquisition, and the new run dir -- so even a near-full disk
+# can run it (deleting needs ~no free space) and the rest of the run has the reclaimed
+# space. The dir names sort chronologically (regression-YYYYMMDD_HHMMSS_pid), so a Name
 # sort orders oldest-first.
 function Test-RunDirLive([string]$Name) {
     <#
@@ -629,6 +741,11 @@ function Test-RunDirLive([string]$Name) {
     # orphan from before this naming and safe to prune.
     if ($Name -notmatch '^regression-\d{8}_\d{6}_(\d+)$') { return $false }
     $processId = [int]$Matches[1]
+    # A dir stamped with THIS process's pid is an earlier run from the same long-lived
+    # shell (`.\regression.ps1` from a terminal runs in-process, so every run from that
+    # window shares its pid). A process runs one gate at a time, and this prune runs
+    # before the current run creates its own root, so such a dir is never live.
+    if ($processId -eq $PID) { return $false }
     $p = Get-Process -Id $processId -ErrorAction SilentlyContinue
     if ($null -eq $p) { return $false }   # the pid is gone: a genuine orphan
     # Check the IMAGE too, because PIDs are reused. Leaving one orphan behind for the
@@ -655,16 +772,20 @@ function Test-RunDirLive([string]$Name) {
     }
 }
 
+$runCompleteStamp = 'run.complete'
 function Remove-StaleRunDirs([string]$TestResultsDir, [int]$Keep) {
     if (-not (Test-Path $TestResultsDir)) { return }
     # Live dirs are excluded BEFORE $Keep is applied, so a concurrent lane's dir is
-    # never a prune candidate and never displaces a genuine orphan from the count.
+    # never a prune candidate and never displaces a completed run from the count.
     $runDirs = @(Get-ChildItem -Path $TestResultsDir -Directory -Filter 'regression-*' `
         -ErrorAction SilentlyContinue | Sort-Object Name |
         Where-Object { -not (Test-RunDirLive $_.Name) })
-    if ($runDirs.Count -le $Keep) { return }
-    $stale = $runDirs[0..($runDirs.Count - $Keep - 1)]
-    Write-Progress-Tc ("Pruning {0} stale TestResults run dir(s), keeping the most recent {1}" -f $stale.Count, $Keep)
+    # Only COMPLETED runs count toward the keep; a dir with no stamp is a fragment.
+    $complete   = @($runDirs | Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName $runCompleteStamp) })
+    $stale      = @($runDirs | Where-Object { -not (Test-Path -LiteralPath (Join-Path $_.FullName $runCompleteStamp)) })
+    if ($complete.Count -gt $Keep) { $stale += $complete[0..($complete.Count - $Keep - 1)] }
+    if ($stale.Count -eq 0) { return }
+    Write-Progress-Tc ("Pruning {0} stale TestResults run dir(s), keeping the most recent {1} completed" -f $stale.Count, $Keep)
     foreach ($d in $stale) {
         try {
             Remove-Item -LiteralPath $d.FullName -Recurse -Force -ErrorAction Stop
@@ -676,20 +797,43 @@ function Remove-StaleRunDirs([string]$TestResultsDir, [int]$Keep) {
 }
 Remove-StaleRunDirs (Join-Path $scriptRoot 'TestResults') $KeepRunDirs
 
-# Best-effort recursive delete of a scratch path (a run/phase/dataset output dir or
-# a single dead-weight input copy). Swallows errors -- reclaiming disk must never
-# fail the gate. Honors -KeepOutput so a local post-mortem can retain everything.
+# Best-effort recursive deletes. Both swallow errors -- reclaiming disk must never fail
+# the gate. Which one a site calls is the whole retention design (see $retainOutput):
+# Remove-Scratch is for PRODUCTS (a dataset's output, the run root, a leg's comparison
+# input once compared) and is a no-op while the run retains output; Remove-Staging is
+# for the HPC chain's staged input COPIES and consumed phase dirs, kept only by
+# -KeepOutput.
 function Remove-Scratch([string]$Path) {
-    if ($KeepOutput) { return }
+    if ($retainOutput) { return }
+    if ([string]::IsNullOrEmpty($Path) -or -not (Test-Path -LiteralPath $Path)) { return }
+    Remove-Item -LiteralPath $Path -Recurse -Force -ErrorAction SilentlyContinue
+}
+function Remove-Staging([string]$Path) {
+    if ($retainStaging) { return }
     if ([string]::IsNullOrEmpty($Path) -or -not (Test-Path -LiteralPath $Path)) { return }
     Remove-Item -LiteralPath $Path -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 # --- Build (unless -NoBuild) --------------------------------------------------
 if (-not $NoBuild) {
-    Write-Progress-Tc 'Building Osprey (Release, net8.0)'
+    # Refuse -Source raw without the licence rather than building a reader that cannot
+    # open the data and failing three minutes later inside the first run, where the
+    # message is about one file rather than about the build.
+    if ($Source -eq 'raw' -and -not $IAgreeToVendorLicenses) {
+        Write-Problem-Tc ("-Source raw needs the vendor SDKs: re-run with " +
+            "-IAgreeToVendorLicenses (or -NoBuild, if the Osprey.exe already built " +
+            "there has them). Without it the vendor readers compile in " +
+            "NO_VENDOR_SUPPORT mode and every .raw throws.")
+        exit 2
+    }
+    Write-Progress-Tc 'Building Osprey (Release, net10.0)'
     $buildPs1 = Join-Path $scriptRoot 'build.ps1'
-    & $buildPs1 -Configuration Release -Framework net8.0 -NoTests
+    if ($IAgreeToVendorLicenses) {
+        & $buildPs1 -Configuration Release -NoTests -IAgreeToVendorLicenses
+    }
+    else {
+        & $buildPs1 -Configuration Release -NoTests
+    }
     if ($LASTEXITCODE -ne 0) { Write-Problem-Tc "Osprey build failed (exit $LASTEXITCODE)"; exit $LASTEXITCODE }
 }
 if (-not (Test-Path $ospreyExe)) {
@@ -827,8 +971,8 @@ function Resolve-DatasetInputs {
     param([hashtable]$Spec)
     $dir = Join-Path $extractedRoot $Spec.Folder
     if (-not (Test-Path $dir)) { throw "Dataset folder not found in data: $dir" }
-    $mzmls = @(Get-ChildItem -Path $dir -Filter '*.mzML' -File | Sort-Object Name | ForEach-Object { $_.FullName })
-    if ($mzmls.Count -eq 0) { throw "No .mzML files in $dir" }
+    $mzmls = @(Get-ChildItem -Path $dir -Filter $sourceFilter -File | Sort-Object Name | ForEach-Object { $_.FullName })
+    if ($mzmls.Count -eq 0) { throw "No $sourceExt files in $dir" }
 
     $libDir = if ($Spec.LibraryFolder) { Join-Path $extractedRoot $Spec.LibraryFolder } else { $dir }
     if (-not (Test-Path $libDir)) { throw "Library folder not found in data: $libDir" }
@@ -1087,7 +1231,8 @@ function Compare-DirFingerprint {
 # the driver's own log, so these helpers read it.
 #
 # The canonical four-task pipeline, in execution order. These are the
-# OspreyTask.Name values (AnalysisPipeline.CanonicalPipeline): the same tokens
+# OspreyTask.Name values (OspreyTasks.Create().Pipeline, the explicit ordered list the
+# task set declares): the same tokens
 # Invoke-ResumeInvalidation keys off, and the ones the driver stamps into both its
 # [TASK] log lines and the .<Name>.osprey.task validity sidecars.
 $pipelineTaskNames = @('PerFileScoring', 'FirstPassFDR', 'PerFileRescoring', 'SecondPassFDR')
@@ -1830,17 +1975,10 @@ function Invoke-HpcChain {
         Invoke-OspreyTaskRun -WorkDir $d1 -CliArgs $a1 -LogName 'phase1.log'
         Copy-Item (Join-Path $d1 'phase1.log') (Join-Path $chainLogDir "phase1_$stem.log") -Force
     }
-    # Phase 1's copied mzMLs are dead weight once it has run: phase 2/3 read its
-    # parquets + calibration, never its mzML (phase 3 re-copies the mzML from the
-    # data dir). Drop them so they don't sit on disk through the per-file rescore loop.
-    if (-not $KeepOutput) {
-        Get-ChildItem -Path $ph1Root -Recurse -Filter '*.mzML' -File -ErrorAction SilentlyContinue |
-            Remove-Item -Force -ErrorAction SilentlyContinue
-    }
 
     # Phase 2: FirstPassFDR (Stage 5). Consumes the per-file parquets, writes the
-    # <stem>.1st-pass.fdr_scores.bin + <stem>.reconciliation.json sidecar pair. A
-    # 0-byte stub mzML lets the task derive sidecar paths without reading spectra.
+    # <stem>.1st-pass.fdr_scores.bin + <stem>.reconciliation.json sidecar pair. No
+    # input file is staged; the task derives sidecar paths from the -i names alone.
     $ph2 = Join-Path $ChainRoot 'phase2_FirstPassFDR'
     New-Item -ItemType Directory -Path $ph2 -Force | Out-Null
     foreach ($s in $stemList) {
@@ -1863,12 +2001,11 @@ function Invoke-HpcChain {
 
     # Phase 3: per-file rescore workers (Stage 6), one independent worker per
     # file. Stage 6 STREAMS its MS2 from the .spectra.bin cache phase 1 wrote (there is
-    # no mzML fallback), so each worker gets phase 1's <stem>.spectra.bin + a 0-byte stub
-    # <stem>.mzML (the cache fingerprint check is skipped for a 0-byte source, so the
-    # stub is enough for path derivation and forces a cache hit -- the real 6 GB mzML is
-    # never shipped to a rescore worker). Plus the Stage 4 parquet/calibration + the
+    # no mzML fallback), so each worker gets phase 1's <stem>.spectra.bin and no input
+    # file at all (Osprey tolerates a missing data file once the cache exists -- the real
+    # 6 GB mzML is never shipped to a rescore worker). Plus the Stage 4 parquet/calibration + the
     # Stage 5 sidecar pair; writes <stem>.scores-reconciled.parquet. NOT the 2nd-pass bin:
-    # --task PerFileRescoring sets NoJoin, which excludes SecondPassFdrTask entirely, so
+    # --task PerFileRescoring runs alone (the membership rule includes only the selected stage), so
     # phase 4 is the only node that writes one.
     $ph3Dirs = @{}
     foreach ($s in $stemList) {
@@ -1936,23 +2073,21 @@ function Invoke-HpcChain {
         # worker's 6 GB spectra.bin + library copy is on disk at a time (the
         # out-of-disk failure was several of them coexisting with the
         # straight-through leg's spectra caches).
-        if (-not $KeepOutput) {
-            Remove-Item (Join-Path $ph3 "$s.spectra.bin") -Force -ErrorAction SilentlyContinue
-            Remove-Item (Join-Path $ph3 "$s.mzML") -Force -ErrorAction SilentlyContinue
-            Remove-Item (Join-Path $ph3 "$s.scores.parquet") -Force -ErrorAction SilentlyContinue
-            Remove-Item (Join-Path $ph3 $libName) -Force -ErrorAction SilentlyContinue
-            Remove-Item (Join-Path $ph3 ($libName + '.libcache')) -Force -ErrorAction SilentlyContinue
-        }
+        Remove-Staging (Join-Path $ph3 "$s.spectra.bin")
+        Remove-Staging (Join-Path $ph3 "$s.scores.parquet")
+        Remove-Staging (Join-Path $ph3 $libName)
+        Remove-Staging (Join-Path $ph3 ($libName + '.libcache'))
     }
 
     # Phases 1 and 2 are fully consumed once every rescore worker has copied its
-    # inputs (phase 4 reads only phase-3 outputs). Free them before SecondPassFDR.
-    Remove-Scratch $ph1Root
-    Remove-Scratch $ph2
+    # inputs (phase 4 reads only phase-3 outputs, and their logs are already in
+    # chain\logs). Free them before SecondPassFDR.
+    Remove-Staging $ph1Root
+    Remove-Staging $ph2
 
     # Phase 4: SecondPassFDR (Stage 7 + blib). Consumes each worker's
-    # reconciled parquet + sidecars (never the original Stage 4 parquet, and never
-    # an mzML -- a 0-byte stub provides path derivation only) and writes the blib.
+    # reconciled parquet + sidecars (never the original Stage 4 parquet, and no
+    # input file at all) and writes the blib.
     $ph4 = Join-Path $ChainRoot 'phase4_SecondPassFDR'
     New-Item -ItemType Directory -Path $ph4 -Force | Out-Null
     # Where the phase-3 workers' own outputs are kept for comparison after their dirs are cleaned.
@@ -2051,15 +2186,15 @@ function Invoke-HpcChain {
         $ph3diag = Join-Path $ph3 'output.1st-pass.model-diagnostics.json'
         if (Test-Path $ph3diag) { Copy-Item $ph3diag (Join-Path $ph4 'output.1st-pass.model-diagnostics.json') -Force }
         # No 2nd-pass bin relay. There was a `if (Test-Path ...) { Copy-Item ... }` here, and
-        # it could never fire: --task PerFileRescoring sets NoJoin, so SecondPassFdrTask is not
-        # in a phase-3 worker's pipeline and no such file exists to copy. Worse than dead - had
+        # it could never fire: --task PerFileRescoring runs alone (the membership rule includes only
+        # the selected stage), so SecondPassFdrTask never runs on a phase-3 worker and no such file exists to copy. Worse than dead - had
         # it fired it would have handed phase 4 a CURRENT 2nd-pass sidecar, and phase 4 would
         # then have skipped computing its own, quietly turning mode 3 into a test of a copy.
         # Phase 4 is the only node that writes these.
     }
-    # SecondPassFDR now has every worker's reconciled output copied in; the phase-3
-    # worker dirs are done.
-    foreach ($d in $ph3Dirs.Values) { Remove-Scratch $d }
+    # SecondPassFDR now has every worker's reconciled output copied in (and kept under
+    # phase3_outputs for comparison); the phase-3 worker dirs are done.
+    foreach ($d in $ph3Dirs.Values) { Remove-Staging $d }
     Copy-LibraryInto -Library $Library -Dir $ph4 -Manifest $Manifest
     # -i again, and the RECONCILED parquet is what each run resolves to - because the TASK
     # says so (ScoringTaskShared.ReadsReconciledScores), not because it is the only file
@@ -2117,10 +2252,8 @@ if ($StageOnly) {
     exit 0
 }
 
-# Self-cleaning: each dataset's scratch is removed as soon as its legs finish, and
-# the whole run root in the finally below -- so the run leaves no multi-GB output
-# behind to starve the next run on a shared agent. -KeepOutput (honored by
-# Remove-Scratch) opts out for local post-mortem.
+# Per-dataset and run-root cleanup below go through Remove-Scratch, i.e. they happen
+# only when the run is not retaining output (see $retainOutput).
 try {
 foreach ($name in $selected) {
     $cfg = $datasets[$name]
@@ -3197,7 +3330,7 @@ foreach ($name in $selected) {
     # The per-leg expectations are calibrated against an observed run, NOT derived from
     # reading the C# -- deriving them is how the original defects got in. Two surprises
     # from that observation are encoded here: --task PerFileRescoring DOES release
-    # (FirstPassFdrTask.Rehydrate is reached through a lazy Demand even though IsIncluded
+    # (FirstPassFdrTask.Rehydrate is reached through a lazy Demand even though the membership rule
     # excludes it from that leg), and the warm re-run legitimately logs nothing at all
     # because a fully cached run does no work -- asserting a release there would be a
     # false red on every run.
@@ -3600,8 +3733,9 @@ foreach ($name in $selected) {
                         ConvertTo-Json $o -Depth 64 -Compress
                     }
                     if ($stripped[0] -ne $stripped[1]) {
-                        # Its PARENT, not $runRoot: the finally block drops $runRoot, which would
-                        # delete the only evidence of the failure it just reported.
+                        # Its PARENT, not $runRoot: under -TeamCity / -CleanOutput the finally
+                        # block drops $runRoot, which would delete the only evidence of the
+                        # failure it just reported.
                         $keep = Join-Path (Split-Path $runRoot -Parent) ('mode11-diff-' + $name)
                         New-Item -ItemType Directory -Path $keep -Force | Out-Null
                         Copy-Item $ref (Join-Path $keep ($leaf + '.upfront')) -Force
@@ -3617,10 +3751,9 @@ foreach ($name in $selected) {
                 $b = [IO.File]::ReadAllBytes($p)
                 if ($a.Length -ne $b.Length -or
                     [Convert]::ToBase64String($a) -ne [Convert]::ToBase64String($b)) {
-                    # Both copies are kept for diagnosis: "differs" is not actionable, and the
-                    # run directory is deleted when the dataset finishes.
-                    # Its PARENT, not $runRoot: the finally block drops $runRoot, which would
-                        # delete the only evidence of the failure it just reported.
+                    # Both copies are kept for diagnosis: "differs" is not actionable, and under
+                    # -TeamCity / -CleanOutput the run directory is deleted when the dataset
+                    # finishes. Its PARENT, not $runRoot, for the same reason.
                         $keep = Join-Path (Split-Path $runRoot -Parent) ('mode11-diff-' + $name)
                     New-Item -ItemType Directory -Path $keep -Force | Out-Null
                     Copy-Item $ref (Join-Path $keep ($leaf + '.upfront')) -Force
@@ -3879,7 +4012,7 @@ foreach ($name in $selected) {
             }
             Remove-Item $m11CellsRef -Recurse -Force -ErrorAction SilentlyContinue
         }
-        Remove-Item $m11Ref -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Scratch $m11Ref
 
         if ($m11Issues.Count -eq 0) {
             $summaryLines.Add(("$name mode11 (pay-later diagnostics: folded, no analysis, " +
@@ -3948,7 +4081,7 @@ foreach ($name in $selected) {
         $m8 = Compare-BlibFull -BlibExpected $m8Expected `
             -BlibActual (Join-Path $straightDir 'output.blib') -Tolerance $Tolerance
         foreach ($issue in $m8.Issues) { $m8Issues.Add($issue) }
-        Remove-Item $m8Expected -Force -ErrorAction SilentlyContinue
+        Remove-Scratch $m8Expected
 
         if ($m8Issues.Count -eq 0) {
             $summaryLines.Add("$name mode8 (partial rescore resume): PASS ($($m8Cut.Cut) of $($m8Cut.Runs) run(s) re-scored)")
@@ -4011,7 +4144,7 @@ foreach ($name in $selected) {
         $m9Blib = Compare-BlibFull -BlibExpected $m9Expected `
             -BlibActual (Join-Path $straightDir 'output.blib') -Tolerance $Tolerance
         foreach ($issue in $m9Blib.Issues) { $m9Issues.Add($issue) }
-        Remove-Item $m9Expected -Force -ErrorAction SilentlyContinue
+        Remove-Scratch $m9Expected
 
         if ($m9Issues.Count -eq 0) {
             $summaryLines.Add("$name mode9 (crash-shaped half-done resume): PASS ($($m9Cut.Cut) of $($m9Cut.Runs) run(s) re-scored)")
@@ -4023,8 +4156,9 @@ foreach ($name in $selected) {
         }
     }
 
-    # All legs for this dataset are done -- free its scratch now so peak disk stays
-    # at ~one dataset (the next dataset / the perf-gate step gets the space back).
+    # All legs for this dataset are done. When not retaining output, free its scratch
+    # now so peak disk stays at ~one dataset (the next dataset / the perf-gate step gets
+    # the space back); a retaining run keeps it (see $retainOutput).
     Remove-Scratch (Join-Path $runRoot $name)
 }
 }
@@ -4051,8 +4185,16 @@ finally {
     } else {
         $env:OSPREY_ALLOW_UNFIXED_RESIDENT = $script:priorAllowResident
     }
-    # Safety net for a dataset that threw before its own cleanup -- drop the whole
-    # run root. Raw input data lives outside $runRoot and is untouched.
+    # The run reached the end of its legs (or threw from inside one): stamp it as a
+    # complete run so the next startup prune counts it toward -KeepRunDirs instead of
+    # treating it as a fragment. Written before the cleanup below, which removes it
+    # again when the run is not retaining output.
+    if (Test-Path -LiteralPath $runRoot) {
+        Set-Content -LiteralPath (Join-Path $runRoot $runCompleteStamp) -Value ((Get-Date).ToString('o')) -Encoding ascii
+    }
+    # When not retaining output: safety net for a dataset that threw before its own
+    # cleanup -- drop the whole run root. Raw input data lives outside $runRoot and is
+    # untouched.
     Remove-Scratch $runRoot
 }
 
@@ -4060,7 +4202,8 @@ finally {
 # Compared against the fingerprint taken before the first dataset ran, so this
 # covers every leg of every dataset (the per-dataset check above only sees the
 # straight-through leg). Deliberately outside the try/finally cleanup: the run
-# root is gone by now, and the data dirs are the only thing still being asserted.
+# root may be gone by now (-TeamCity / -CleanOutput), and the data dirs are the only
+# thing still being asserted.
 foreach ($d in $watchedDirs) {
     $changed = Compare-DirFingerprint -Before $runStartFp[$d] -Dir $d
     if ($changed.Count -eq 0) {
@@ -4127,11 +4270,11 @@ if ($knownResidentGaps.Count -eq 0) {
     Write-Host (("  Tokens REQUIRED by this gate: {0} (target: 0). Each must have an open " +
         "issue to remove it.") -f $requiredTokens.Count)
 }
-# No artifacts are published, and the run's scratch under TestResults is deleted on
-# completion (the downloaded raw input data is kept). A red gate's diagnosis lives in
-# the build log (every per-file log is Tee'd to the console TeamCity captures) and
-# the buildProblem line (which names the failing dataset + leg + first divergent
-# columns), NOT in the run output files. Pass -KeepOutput to retain them locally.
+# No artifacts are published (the downloaded raw input data is kept; what happens to
+# the run's scratch is $retainOutput's call). A red gate's diagnosis lives in the build
+# log (every per-file log is Tee'd to the console TeamCity captures) and the
+# buildProblem line (which names the failing dataset + leg + first divergent columns),
+# NOT in the run output files.
 if ($overallFail) {
     Write-Problem-Tc 'Osprey regression FAILED'
     exit 1

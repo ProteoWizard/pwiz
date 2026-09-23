@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using Ionic.Zip;
 using Microsoft.Win32;
 using SharedBatch.Properties;
+using pwiz.Common.SystemUtil;
 
 namespace SharedBatch
 {
@@ -502,7 +503,8 @@ namespace SharedBatch
 
         public static string OpenFolder(string initialPath)
         {
-            var dialog = new FolderBrowserDialog();
+            // TODO: classic Browse-For-Folder, for parity with .NET Framework; revisit to adopt the newer picker
+            var dialog = FormUtil.CreateFolderBrowserDialog();
             dialog.SelectedPath = initialPath;
             var dialogOpenedTime = DateTime.Now;
             if (dialog.ShowDialog() == DialogResult.OK)

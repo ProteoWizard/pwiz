@@ -1693,6 +1693,13 @@ namespace pwiz.Skyline.Properties
     [LlmName("Search Tools")]
     public sealed class SearchToolList : SettingsList<SearchTool>
     {
+        // SearchToolList is a process-wide singleton (Settings.Default.SearchToolList) whose
+        // FileAlreadyDownloaded check mutates it as a side effect. On net8 the DDA import wizard
+        // can reach it from both the UI thread and the functional-test thread at once, corrupting
+        // the underlying Dictionary (e.g. "an item with the same key Java has already been added").
+        // Serialize all keyed access on this lock.
+        private readonly object _sync = new object();
+
         public override IEnumerable<SearchTool> GetDefaults(int revisionIndex)
         {
             yield break;
@@ -1724,21 +1731,78 @@ namespace pwiz.Skyline.Properties
             return listCopy;
         }
 
-        public bool ContainsKey(SearchToolType toolType) => ContainsKey(toolType.ToString());
-        public SearchTool this[SearchToolType toolType] => this[toolType.ToString()];
+        public bool ContainsKey(SearchToolType toolType)
+        {
+            lock (_sync)
+            {
+                return ContainsKey(toolType.ToString());
+            }
+        }
+
+        public SearchTool this[SearchToolType toolType]
+        {
+            get
+            {
+                lock (_sync)
+                {
+                    return this[toolType.ToString()];
+                }
+            }
+        }
 
         public string GetToolPathOrDefault(SearchToolType toolType, string defaultPath)
         {
-            if (ContainsKey(toolType.ToString()))
-                return this[toolType.ToString()].Path;
-            return defaultPath;
+            lock (_sync)
+            {
+                if (ContainsKey(toolType.ToString()))
+                    return this[toolType.ToString()].Path;
+                return defaultPath;
+            }
         }
 
         public string GetToolArgsOrDefault(SearchToolType toolType, string defaultArgs)
         {
-            if (ContainsKey(toolType.ToString()))
-                return this[toolType.ToString()].ExtraCommandlineArgs;
-            return defaultArgs;
+            lock (_sync)
+            {
+                if (ContainsKey(toolType.ToString()))
+                    return this[toolType.ToString()].ExtraCommandlineArgs;
+                return defaultArgs;
+            }
+        }
+
+        // Serialize the MappedList mutators: RemoveExisting + _dict.Add inside InsertItem are not
+        // atomic across threads, so two threads passing the external ContainsKey guard can both
+        // reach _dict.Add. lock is reentrant, so the locked keyed accessors above remain safe.
+        protected override void InsertItem(int index, SearchTool item)
+        {
+            lock (_sync)
+            {
+                base.InsertItem(index, item);
+            }
+        }
+
+        protected override void RemoveItem(int index)
+        {
+            lock (_sync)
+            {
+                base.RemoveItem(index);
+            }
+        }
+
+        protected override void SetItem(int index, SearchTool item)
+        {
+            lock (_sync)
+            {
+                base.SetItem(index, item);
+            }
+        }
+
+        protected override void ClearItems()
+        {
+            lock (_sync)
+            {
+                base.ClearItems();
+            }
         }
     }
 
@@ -2579,7 +2643,7 @@ namespace pwiz.Skyline.Properties
             {
                 foreach (var calc in defaultCalculators)
                     Remove(calc);
-                foreach (var calc in defaultCalculators.Reverse())
+                foreach (var calc in Enumerable.Reverse(defaultCalculators))
                     Insert(0, calc);
             }
         }
@@ -2740,7 +2804,7 @@ namespace pwiz.Skyline.Properties
             {
                 foreach (var library in defaultLibraries)
                     Remove(library);
-                foreach (var library in defaultLibraries.Reverse())
+                foreach (var library in Enumerable.Reverse(defaultLibraries))
                     Insert(0, library);
             }
         }
@@ -2796,7 +2860,7 @@ namespace pwiz.Skyline.Properties
             {
                 foreach (var scoringModel in defaultScoringModels)
                     Remove(scoringModel);
-                foreach (var scoringModel in defaultScoringModels.Reverse())
+                foreach (var scoringModel in Enumerable.Reverse(defaultScoringModels))
                     Insert(0, scoringModel);
             }
         }

@@ -51,7 +51,8 @@ namespace pwiz.SkylineTestData
                      {
                          typeof(SkylineWindow).Assembly, // Skyline
                          typeof(ProteomeDb).Assembly, // ProteomeDb
-                         typeof(FormUtil).Assembly, // CommonUtil
+                         typeof(FormUtil).Assembly, // CommonBaseUI
+                         typeof(Assume).Assembly, // CommonUtil
                          typeof(ViewEditor).Assembly, // Common
                          typeof(PanoramaClient.AbstractPanoramaClient).Assembly, // PanoramaClient
                          typeof(MsDataFileImpl).Assembly, // ProteowizardWrapper

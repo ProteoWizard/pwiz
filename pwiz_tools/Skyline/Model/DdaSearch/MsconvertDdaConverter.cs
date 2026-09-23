@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     string tmpFilepath = Path.Combine(Path.GetTempPath(), PathEx.GetRandomFileName() + MsConvertOutputExtension); // N.B. FileEx.GetRandomFileName adds unusual characters in test mode
 
                     var pr = new ProcessRunner();
-                    var psi = new ProcessStartInfo(MSCONVERT_EXE)
+                    var psi = new ProcessStartInfo(PathEx.ResolveBundledExe(MSCONVERT_EXE))
                     {
                         CreateNoWindow = true,
                         UseShellExecute = false,

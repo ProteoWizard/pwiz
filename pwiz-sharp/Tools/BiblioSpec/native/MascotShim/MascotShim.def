@@ -1,0 +1,30 @@
+; Windows DLL exports for MascotShim. CMake adds this via /DEF when targeting
+; MSVC; Linux uses default symbol visibility via __attribute__((visibility))
+; on the extern "C" prototypes in MascotShim.h. Keep this list alphabetised so
+; new entry points slot in obviously.
+LIBRARY MascotShim
+EXPORTS
+    mascot_dat_close
+    mascot_dat_close_psm_iter
+    mascot_dat_enumerate_distiller_raw_files
+    mascot_dat_get_fixed_mod
+    mascot_dat_get_global_param
+    mascot_dat_get_quant_component_diffs
+    mascot_dat_get_quant_component_name
+    mascot_dat_get_quant_name
+    mascot_dat_get_query_peak_count
+    mascot_dat_get_query_peaks
+    mascot_dat_get_query_rt
+    mascot_dat_get_query_title
+    mascot_dat_get_var_mod
+    mascot_dat_is_msms
+    mascot_dat_next_psm
+    mascot_dat_num_fixed_mods
+    mascot_dat_num_quant_components
+    mascot_dat_num_queries
+    mascot_dat_num_var_mods
+    mascot_dat_open
+    mascot_dat_open_psm_iter
+    mascot_dat_set_quant_config_dir
+    mascot_get_version
+    mascot_last_error

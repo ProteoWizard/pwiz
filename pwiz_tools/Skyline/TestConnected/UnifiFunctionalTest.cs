@@ -43,6 +43,15 @@ namespace pwiz.SkylineTestConnected
         private int _curvesPerReplicate;
         private PointF? _chromatogramPoint;
 
+        // .NET Framework and .NET 8 surface a failed socket connection with different text: net472's
+        // WebException wrapper vs net8's raw socket message. Derive the net8 expectation from the OS socket
+        // layer (the same source HttpClient's message comes from) so it follows the machine locale rather
+        // than being a hardcoded English literal.
+        private static readonly string ConnectionRefusedMessage =
+            new System.Net.Sockets.SocketException((int)System.Net.Sockets.SocketError.ConnectionRefused).Message;
+        private static readonly string DnsResolutionFailedMessage =
+            new System.Net.Sockets.SocketException((int)System.Net.Sockets.SocketError.HostNotFound).Message;
+
         [TestMethod]
         public void TestUnifi()
         {
@@ -106,9 +115,11 @@ namespace pwiz.SkylineTestConnected
             RunUI(() => editAccountDlg.SetRemoteAccount(_testAccount.ChangeServerUrl("localhost")));
             AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), ToolsUIResources.EditRemoteAccountDlg_ValidateValues_Invalid_server_URL_);
             RunUI(() => editAccountDlg.SetRemoteAccount(_testAccount.ChangeServerUrl("https://localhost:12345"))); // resolves, but no server there
-            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), "Unable to connect to the remote server");
+            // .NET Framework's WebException said "Unable to connect to the remote server"; .NET 8's HttpClient
+            // surfaces the raw Winsock error instead. Both wrap the same socket failure.
+            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), ConnectionRefusedMessage);
             RunUI(() => editAccountDlg.SetRemoteAccount(_testAccount.ChangeServerUrl("https://asdfdsafads.local"))); // non-resolving hostname
-            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), "The remote name could not be resolved");
+            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), DnsResolutionFailedMessage);
 
             // waters_connect only below this point: hard-cast client id/scope/secret manipulation,
             // and the invalid-password message text, which is the wire text from the Waters server
