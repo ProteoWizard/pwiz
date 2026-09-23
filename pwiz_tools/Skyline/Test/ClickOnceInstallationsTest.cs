@@ -40,6 +40,8 @@ namespace pwiz.SkylineTest
         private const string COMPANY_FOLDER = @"University_of_Washington";
         private const string INSTALLED_VERSION = @"26.1.1.209";
         private const string UNINSTALLED_VERSION = @"26.1.1.231";
+        private const string UNINSTALL_COMMAND =
+            @"rundll32.exe dfshim.dll,ShArpMaintain Skyline-daily.application, Culture=neutral, PublicKeyToken=9286511f3362df93, processorArchitecture=msil";
 
         [TestMethod]
         public void TestClickOnceInstallations()
@@ -106,16 +108,21 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(2, candidates.Count);
 
             var current = candidates[INSTALLED_VERSION];
+            Assert.AreEqual(ASSEMBLY_NAME, current.ProductName);
             Assert.AreEqual(currentFolder, current.ExecutableFolder);
             Assert.AreEqual(currentConfig, current.UserConfigFile);
             Assert.IsTrue(current.IsCurrentlyInstalled);
+            // Listed in Programs and Features, so it can be uninstalled, with the command found there.
+            Assert.IsTrue(current.CanUninstall);
+            Assert.AreEqual(UNINSTALL_COMMAND, current.UninstallCommand);
 
             // Still a candidate, and still paired with its own folder, even though Programs and
-            // Features no longer lists it.
+            // Features no longer lists it. Nothing left to uninstall, though.
             var removed = candidates[UNINSTALLED_VERSION];
             Assert.AreEqual(removedFolder, removed.ExecutableFolder);
             Assert.AreEqual(removedConfig, removed.UserConfigFile);
             Assert.IsFalse(removed.IsCurrentlyInstalled);
+            Assert.IsFalse(removed.CanUninstall);
         }
 
         /// <summary>
@@ -171,15 +178,15 @@ namespace pwiz.SkylineTest
         /// through to the registry of whatever machine the test is running on, and AssemblyName
         /// too, so the assembly handed to the constructor does not matter here.
         /// </summary>
-        private static IDictionary<string, ClickOnceInstallations.Candidate> ListCandidates(string localAppData)
+        private static IDictionary<string, SkylineInstallation> ListCandidates(string localAppData)
         {
-            var ClickOnceInstallations = new StubClickOnceInstallations(typeof(ClickOnceInstallations).Assembly)
+            var clickOnceInstallations = new StubClickOnceInstallations(typeof(ClickOnceInstallations).Assembly)
             {
                 AssemblyName = ASSEMBLY_NAME,
                 LocalApplicationDataFolder = localAppData,
-                InstalledVersions = new[] { INSTALLED_VERSION }
+                InstalledVersions = new Dictionary<string, string> { { INSTALLED_VERSION, UNINSTALL_COMMAND } }
             };
-            return ClickOnceInstallations.ListCandidates().ToDictionary(candidate => candidate.Version);
+            return clickOnceInstallations.ListCandidates().ToDictionary(candidate => candidate.Version);
         }
 
         private string CreateLocalAppData(string name)

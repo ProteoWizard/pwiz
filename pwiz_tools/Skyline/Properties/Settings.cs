@@ -63,6 +63,13 @@ namespace pwiz.Skyline.Properties
     //  The PropertyChanged event is raised after a setting's value is changed.
     //  The SettingsLoaded event is raised after the setting values are loaded.
     //  The SettingsSaving event is raised before the setting values are saved.
+    //
+    // The SettingsProvider attribute is here, on the hand written half of the partial class,
+    // rather than in Settings.Designer.cs, so that regenerating the designer file does not
+    // discard it. It puts user scoped settings in a user.config file beside the executable
+    // instead of under %LOCALAPPDATA%, which means Skyline.exe, Skyline-daily.exe and
+    // SkylineCmd.exe in one installation folder all share their settings.
+    [SettingsProvider(typeof(UserConfigSettingsProvider))]
     public sealed partial class Settings
     {
         /// <devdoc>
@@ -127,6 +134,25 @@ namespace pwiz.Skyline.Properties
         }
 
         /// <summary>
+        /// The provider that reads and writes the user scoped settings. Tests point its
+        /// ConfigFolder at a folder of their own to keep a settings file of their own.
+        /// </summary>
+        public UserConfigSettingsProvider UserConfigProvider
+        {
+            get { return Providers.OfType<UserConfigSettingsProvider>().First(); }
+        }
+
+        /// <summary>
+        /// Path of the file that user scoped settings are read from and written to, which is
+        /// what Tools > Options > Miscellaneous shows the user. Asks the provider rather than
+        /// recomputing the path, so this cannot drift away from where the settings really are.
+        /// </summary>
+        public string SettingsFilePath
+        {
+            get { return UserConfigProvider.ConfigFilePath; }
+        }
+
+        /// <summary>
         /// Clears internal cache of original serialized settings values and resets all settings to their default value.
         /// </summary>
         public new void Reset()
@@ -135,6 +161,20 @@ namespace pwiz.Skyline.Properties
             {
                 _originalSerializedValues.Clear();
                 base.Reset();
+            }
+        }
+
+        /// <summary>
+        /// Drops every cached value so that the next read comes from the settings file, including
+        /// the values this instance changed. <see cref="ReloadAndMerge"/> is the alternative
+        /// that keeps those.
+        /// </summary>
+        public new void Reload()
+        {
+            lock (this)
+            {
+                _originalSerializedValues.Clear();
+                base.Reload();
             }
         }
 
@@ -155,7 +195,6 @@ namespace pwiz.Skyline.Properties
                         modifiedValues.Add(new KeyValuePair<string, object>(propertyName, currentValue));
                     }
                 }
-                _originalSerializedValues.Clear();
                 Reload();
                 foreach (var pair in modifiedValues)
                 {

@@ -67,39 +67,6 @@ namespace pwiz.Skyline.Util
         private const string CLICK_ONCE_STORE_FOLDER = @"Apps\2.0";
 
         /// <summary>
-        /// One installation the settings could come from. Both halves are needed: the settings
-        /// are in the user.config, and the external tools they name are under the Tools folder of
-        /// the installation that wrote them, which is why the executable folder travels with it.
-        /// </summary>
-        public class Candidate
-        {
-            /// <summary>
-            /// Version of the installed executable, which is also the name of the folder holding
-            /// its user.config.
-            /// </summary>
-            public string Version { get; set; }
-
-            /// <summary>
-            /// Folder the installed executable is in, and so the folder its Tools folder is in.
-            /// </summary>
-            public string ExecutableFolder { get; set; }
-
-            public string UserConfigFile { get; set; }
-
-            /// <summary>
-            /// Whether Programs and Features still lists this version. False for an installation
-            /// that was uninstalled but left its folders behind, whose settings are older news
-            /// than a listed one's, though not necessarily less complete.
-            /// </summary>
-            public bool IsCurrentlyInstalled { get; set; }
-
-            public override string ToString()
-            {
-                return $@"{Version} {ExecutableFolder}";
-            }
-        }
-
-        /// <summary>
         /// The deployment manifest name in a ClickOnce uninstall command, for example
         /// "Skyline-daily.application" out of:
         ///
@@ -130,9 +97,15 @@ namespace pwiz.Skyline.Util
         /// typeof(Program).Assembly rather than the entry assembly: SkylineCmd.exe and
         /// Skyline-daily.exe start different entry assemblies but are the same product, and all
         /// of them should inherit that product's old settings.</param>
-        public ClickOnceInstallations(Assembly assembly)
+        public ClickOnceInstallations(Assembly assembly) : this(assembly.GetName().Name)
         {
-            AssemblyName = assembly.GetName().Name;
+        }
+
+        /// <param name="assemblyName">See <see cref="AssemblyName"/>. For looking up a product
+        /// other than the running one, such as Skyline-daily from Skyline.</param>
+        public ClickOnceInstallations(string assemblyName)
+        {
+            AssemblyName = assemblyName;
             LocalApplicationDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         }
 
@@ -151,21 +124,22 @@ namespace pwiz.Skyline.Util
         public string LocalApplicationDataFolder { get; set; }
 
         /// <summary>
-        /// Versions of this assembly that Programs and Features currently lists, used only to set
-        /// <see cref="Candidate.IsCurrentlyInstalled"/>. Left null to read the registry; a test
-        /// sets it to say what it wants found.
+        /// Versions of this assembly that Programs and Features currently lists, each with the
+        /// command that uninstalls it. Used to set <see cref="SkylineInstallation.IsCurrentlyInstalled"/>
+        /// and <see cref="SkylineInstallation.UninstallCommand"/>. Left null to read the registry;
+        /// a test sets it to say what it wants found.
         /// </summary>
-        public ICollection<string> InstalledVersions { get; set; }
+        public IDictionary<string, string> InstalledVersions { get; set; }
 
         /// <summary>
         /// Every installation whose settings could be inherited, in no particular order. The
-        /// caller chooses; see <see cref="Candidate"/> for what it has to choose on.
+        /// caller chooses; see <see cref="SkylineInstallation"/> for what it has to choose on.
         ///
         /// An installation only counts when both halves are present, since one is no use without
         /// the other: a folder whose version was never run has no settings to take, and settings
         /// whose installation folder the store has since cleaned up have no Tools to go with them.
         /// </summary>
-        public IEnumerable<Candidate> ListCandidates()
+        public IEnumerable<SkylineInstallation> ListCandidates()
         {
             if (string.IsNullOrEmpty(AssemblyName) || string.IsNullOrEmpty(LocalApplicationDataFolder))
                 yield break;
@@ -181,12 +155,15 @@ namespace pwiz.Skyline.Util
                 var userConfigFile = FindUserConfigFile(version);
                 if (userConfigFile == null)
                     continue;
-                yield return new Candidate
+                installedVersions.TryGetValue(version, out var uninstallCommand);
+                yield return new SkylineInstallation
                 {
+                    ProductName = AssemblyName,
                     Version = version,
                     ExecutableFolder = executableFolder,
                     UserConfigFile = userConfigFile,
-                    IsCurrentlyInstalled = installedVersions.Contains(version)
+                    IsCurrentlyInstalled = installedVersions.ContainsKey(version),
+                    UninstallCommand = uninstallCommand
                 };
             }
         }
@@ -251,14 +228,15 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Versions of this assembly that Programs and Features lists. ClickOnce registers per
-        /// user, so only the current user's hive is worth reading. This is a hint and not the
-        /// search itself: an installation that was removed from Programs and Features can still
-        /// have both a store folder and settings, and is still worth offering to the caller.
+        /// Versions of this assembly that Programs and Features lists, by version, each with its
+        /// uninstall command. ClickOnce registers per user, so only the current user's hive is
+        /// worth reading. This is a hint and not the search itself: an installation that was
+        /// removed from Programs and Features can still have both a store folder and settings,
+        /// and is still worth offering to the caller.
         /// </summary>
-        private ICollection<string> ReadInstalledClickOnceVersions()
+        private IDictionary<string, string> ReadInstalledClickOnceVersions()
         {
-            var versions = new HashSet<string>();
+            var versions = new Dictionary<string, string>();
             try
             {
                 using (var uninstallKey = Registry.CurrentUser.OpenSubKey(UNINSTALL_KEY_PATH))
@@ -266,11 +244,7 @@ namespace pwiz.Skyline.Util
                     if (uninstallKey == null)
                         return versions;
                     foreach (var subKeyName in uninstallKey.GetSubKeyNames())
-                    {
-                        var version = ReadClickOnceVersion(uninstallKey, subKeyName);
-                        if (version != null)
-                            versions.Add(version);
-                    }
+                        AddClickOnceVersion(versions, uninstallKey, subKeyName);
                 }
             }
             catch (Exception)
@@ -281,19 +255,22 @@ namespace pwiz.Skyline.Util
             return versions;
         }
 
-        private string ReadClickOnceVersion(RegistryKey uninstallKey, string subKeyName)
+        private void AddClickOnceVersion(IDictionary<string, string> versions, RegistryKey uninstallKey,
+            string subKeyName)
         {
             using (var subKey = uninstallKey.OpenSubKey(subKeyName))
             {
                 var uninstallString = subKey?.GetValue(UNINSTALL_STRING) as string;
                 if (uninstallString == null)
-                    return null;
+                    return;
                 if (!string.Equals(AssemblyName + DEPLOYMENT_MANIFEST_EXTENSION,
                         GetDeploymentName(uninstallString), StringComparison.OrdinalIgnoreCase))
                 {
-                    return null;
+                    return;
                 }
-                return subKey.GetValue(DISPLAY_VERSION) as string;
+                var version = subKey.GetValue(DISPLAY_VERSION) as string;
+                if (version != null)
+                    versions[version] = uninstallString;
             }
         }
 

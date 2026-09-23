@@ -237,6 +237,7 @@ ToolOptionsUI.LanguageTab,TestAccessServer
 ToolOptionsUI.MiscellaneousTab,TestAccessServer
 ToolOptionsUI.DisplayTab,TestAccessServer
 ToolOptionsUI.KoinaTab,TestAccessServer
+ImportSettingsDlg,TestImportSettings
 ToolStoreDlg,TestToolStore
 ToolUpdatesDlg,TestToolUpdates
 TransitionSettingsUI.FilterTab,TestMethodEditTutorial

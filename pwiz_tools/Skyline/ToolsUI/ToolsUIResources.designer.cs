@@ -586,7 +586,16 @@ namespace pwiz.Skyline.ToolsUI {
                 return ResourceManager.GetString("EditServerDlg_OkDialog_Verifying_server_information", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Choose the installation to import settings from..
+        /// </summary>
+        public static string ImportSettingsDlg_OkDialog_Choose_the_installation_to_import_settings_from_ {
+            get {
+                return ResourceManager.GetString("ImportSettingsDlg_OkDialog_Choose_the_installation_to_import_settings_from_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Add spectral library.
         /// </summary>
@@ -846,7 +855,34 @@ namespace pwiz.Skyline.ToolsUI {
                         "_be_undone_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to import settings from {0}.
+        /// </summary>
+        public static string ToolOptionsUI_ImportSettings_Failed_to_import_settings_from__0_ {
+            get {
+                return ResourceManager.GetString("ToolOptionsUI_ImportSettings_Failed_to_import_settings_from__0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Importing settings.
+        /// </summary>
+        public static string ToolOptionsUI_ImportSettings_Importing_settings {
+            get {
+                return ResourceManager.GetString("ToolOptionsUI_ImportSettings_Importing_settings", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to No other installed Skyline with saved settings was found..
+        /// </summary>
+        public static string ToolOptionsUI_ImportSettings_No_other_installed_Skyline_with_saved_settings_was_found_ {
+            get {
+                return ResourceManager.GetString("ToolOptionsUI_ImportSettings_No_other_installed_Skyline_with_saved_settings_was_found_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Default ({0}).
         /// </summary>

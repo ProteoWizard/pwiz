@@ -66,6 +66,8 @@
   <ItemGroup>
     <None Include="ChromatogramExporterTest.zip" CopyToOutputDirectory="PreserveNewest" />
     <None Include="ClickOnceInstallationsTest.zip" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="RegisteredInstallationsTest.zip" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="UserConfigSettingsProviderTest.zip" CopyToOutputDirectory="PreserveNewest" />
     <None Include="CommandLineAssayImportTest.zip" CopyToOutputDirectory="PreserveNewest" />
     <None Include="CommandLineImportAnnotationsTest.zip" CopyToOutputDirectory="PreserveNewest" />
     <None Include="CommandLineMProphetTest.zip" CopyToOutputDirectory="PreserveNewest" />

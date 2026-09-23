@@ -41,7 +41,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
@@ -154,6 +153,9 @@ namespace pwiz.Skyline
         public static bool MultiProcImport { get; set; }
  
         private static bool _initialized;                           // Flag to do some initialization just once per process.
+        // Set when this run took its settings from a ClickOnce installation, so that once the UI
+        // is up the external tools those settings name can be brought across with progress shown.
+        private static bool _settingsMigratedFromClickOnce;
         [ThreadStatic] private static bool _uiExceptionHandlingInitialized;   // Per-THREAD, see InitUiThreadExceptionHandling
         private static string _name;                                // Program name.
 
@@ -202,8 +204,7 @@ namespace pwiz.Skyline
         {
             // Must come before the first Settings.Default use on the next line. Every setting is
             // read from the provider and cached the first time any one of them is touched, so a
-            // user.config put in place after that point would go unseen until a Reload, and
-            // CopyOldTools further down has nothing to copy without the migrated tool lists.
+            // user.config put in place after that point would go unseen until a Reload.
             MigrateSettingsFromClickOnceInstallation();
             SetDefaultFont();
 
@@ -333,23 +334,28 @@ namespace pwiz.Skyline
 
                 try
                 {
-                    // If this is a new installation copy over installed external tools from previous installation location.
-                    var toolsDirectory = ToolDescriptionHelpers.GetToolsDirectory();
-                    if (!Directory.Exists(toolsDirectory))
+                    if (_settingsMigratedFromClickOnce)
                     {
+                        // The settings brought over at the top of Main name external tools under
+                        // the old installation's Tools folder. Bringing those across is the slow
+                        // half of the migration, and waits until here so it can show progress.
                         using (var longWaitDlg = new LongWaitDlg())
                         {
                             longWaitDlg.Text = Name;
                             longWaitDlg.Message = SkylineResources.Program_Main_Copying_external_tools_from_a_previous_installation;
                             longWaitDlg.ProgressValue = 0;
-                            longWaitDlg.PerformWork(null, 1000*3, broker => CopyOldTools(toolsDirectory, broker));
+                            longWaitDlg.PerformWork(null, 1000*3, broker => new SettingsImporter(null).CopyTools(broker));
                         }
+                    }
+                    else
+                    {
+                        new ImportedSettingsUpdater().UpdateIfChanged();
                     }
                 }
                 // ReSharper disable once EmptyGeneralCatchClause
                 catch
                 {
-                    
+
                 }
 
                 if (ReportShutdownDlg.HadUnexpectedShutdown())
@@ -660,8 +666,8 @@ namespace pwiz.Skyline
         /// folder find the settings already there with nothing to look for.
         ///
         /// A missing user.config is what identifies a first run. Everything else the migration
-        /// needs follows from the settings it brings over, including the tool lists that
-        /// <see cref="CopyOldTools"/> reads to decide which external tools to bring along.
+        /// needs follows from the settings it brings over, including the tool lists that say
+        /// which external tools to bring along once the UI is up; see <see cref="_settingsMigratedFromClickOnce"/>.
         /// </summary>
         private static void MigrateSettingsFromClickOnceInstallation()
         {
@@ -680,6 +686,7 @@ namespace pwiz.Skyline
                 if (candidate == null)
                     return;
                 File.Copy(candidate.UserConfigFile, configFile);
+                _settingsMigratedFromClickOnce = true;
             }
             catch (Exception)
             {
@@ -693,10 +700,9 @@ namespace pwiz.Skyline
         /// Features still lists is the one being replaced, so it wins; among installations that
         /// are equally current, or equally not, the highest version is the most recent.
         /// </summary>
-        private static ClickOnceInstallations.Candidate ChooseClickOnceInstallation(
-            IEnumerable<ClickOnceInstallations.Candidate> candidates)
+        private static SkylineInstallation ChooseClickOnceInstallation(IEnumerable<SkylineInstallation> candidates)
         {
-            ClickOnceInstallations.Candidate best = null;
+            SkylineInstallation best = null;
             foreach (var candidate in candidates)
             {
                 if (best == null || IsBetterClickOnceInstallation(candidate, best))
@@ -705,8 +711,7 @@ namespace pwiz.Skyline
             return best;
         }
 
-        private static bool IsBetterClickOnceInstallation(ClickOnceInstallations.Candidate candidate,
-            ClickOnceInstallations.Candidate best)
+        private static bool IsBetterClickOnceInstallation(SkylineInstallation candidate, SkylineInstallation best)
         {
             if (candidate.IsCurrentlyInstalled != best.IsCurrentlyInstalled)
                 return candidate.IsCurrentlyInstalled;
@@ -714,90 +719,6 @@ namespace pwiz.Skyline
             if (!Version.TryParse(candidate.Version, out var candidateVersion))
                 return false;
             return !Version.TryParse(best.Version, out var bestVersion) || candidateVersion > bestVersion;
-        }
-
-        private static void CopyOldTools(string outerToolsFolderPath, ILongWaitBroker broker)
-        {
-            //Copy tools to a different folder then Directory.Move if successful.
-            string tempOuterToolsFolderPath = string.Concat(outerToolsFolderPath, @"_installing");
-            if (Directory.Exists(tempOuterToolsFolderPath))
-            {
-                DirectoryEx.SafeDelete(tempOuterToolsFolderPath);
-                // Not sure this is necessay, but just to be safe
-                if (Directory.Exists(tempOuterToolsFolderPath))
-                    throw new Exception(SkylineResources.Program_CopyOldTools_Error_copying_external_tools_from_previous_installation);
-            }
-            
-            // Must create the tools directory to avoid ending up here again next time
-            Directory.CreateDirectory(tempOuterToolsFolderPath);
-
-            int numTools = Settings.Default.ToolList.Count + Settings.Default.SearchToolList.Count;
-            const int endValue = 100;
-            int progressValue = 0;
-            // ReSharper disable once UselessBinaryOperation (in case we decide to start at progress>0 for display purposes)
-            int increment = (endValue - progressValue) / (numTools + 1);
-            
-            CopyOldExternalTools(outerToolsFolderPath, tempOuterToolsFolderPath, broker, increment);
-            CopyOldSearchTools(outerToolsFolderPath, tempOuterToolsFolderPath, broker, increment);
-            
-            Directory.Move(tempOuterToolsFolderPath, outerToolsFolderPath);
-        }
-        
-        private static void CopyOldExternalTools(string outerToolsFolderPath, string tempOuterToolsFolderPath, ILongWaitBroker broker, int increment)
-        {
-            ToolList toolList = Settings.Default.ToolList;
-            foreach (var tool in toolList)
-            {
-                string toolDirPath = tool.ToolDirPath;
-                if (!string.IsNullOrEmpty(toolDirPath) && Directory.Exists(toolDirPath))
-                {
-                    string foldername = Path.GetFileName(toolDirPath);
-                    string newDir = Path.Combine(outerToolsFolderPath, foldername);
-                    string tempNewDir = Path.Combine(tempOuterToolsFolderPath, foldername);
-                    if (!Directory.Exists(tempNewDir))
-                        DirectoryEx.DirectoryCopy(toolDirPath, tempNewDir, true);
-                    tool.ToolDirPath = newDir; // Update the tool to point to its new directory.
-                    tool.ArgsCollectorDllPath = tool.ArgsCollectorDllPath.Replace(toolDirPath, newDir);
-                }
-                if (broker.IsCanceled)
-                {
-                    // Don't leave around a corrupted directory
-                    DirectoryEx.SafeDelete(tempOuterToolsFolderPath);
-                    return;
-                }
-
-                broker.ProgressValue += increment;
-            }
-            Settings.Default.ToolList = ToolList.CopyTools(toolList);
-        }
-        
-        private static void CopyOldSearchTools(string outerToolsFolderPath, string tempOuterToolsFolderPath, ILongWaitBroker broker, int increment)
-        {
-            var toolList = Settings.Default.SearchToolList;
-            foreach (var tool in toolList)
-            {
-                string toolDirPath = tool.InstallPath; // old path like: C:\path\to\old\Skyline\Tools\searchTool
-                // if tool was AutoInstalled, copy it to new path like C:\path\to\new\Skyline\Tools\
-                if (!string.IsNullOrEmpty(toolDirPath) && tool.AutoInstalled && Directory.Exists(toolDirPath))
-                {
-                    string foldername = Path.GetFileName(toolDirPath);
-                    string newDir = Path.Combine(outerToolsFolderPath, foldername);
-                    string tempNewDir = Path.Combine(tempOuterToolsFolderPath, foldername);
-                    if (!Directory.Exists(tempNewDir))
-                        DirectoryEx.DirectoryCopy(toolDirPath, tempNewDir, true);
-                    tool.InstallPath = newDir; // Update the tool to point to its new directory.
-                    tool.Path = tool.Path.Replace(toolDirPath, newDir);
-                }
-                if (broker.IsCanceled)
-                {
-                    // Don't leave around a corrupted directory
-                    DirectoryEx.SafeDelete(tempOuterToolsFolderPath);
-                    return;
-                }
-
-                broker.ProgressValue += increment;
-            }
-            Settings.Default.SearchToolList = SearchToolList.CopyTools(toolList);
         }
 
         /// <summary>

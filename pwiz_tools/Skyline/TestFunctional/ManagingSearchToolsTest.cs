@@ -50,8 +50,8 @@ namespace pwiz.SkylineTestFunctional
         public void TestManagingSearchTools()
         {
             TestFilesZip = @"TestFunctional\ManagingSearchToolsTest.data";
-            
-            // make sure tools directory does not exist so Skyline will try to copy over "old" tools
+
+            // make sure tools directory does not exist so that the "old" tool has to be copied over
             var toolsDir = ToolDescriptionHelpers.GetToolsDirectory();
             DirectoryEx.SafeDelete(toolsDir);
             // Initialize old dir to be unique per test+culture and in the same folder as the new Tools directory
@@ -81,7 +81,9 @@ namespace pwiz.SkylineTestFunctional
         
         protected override void DoTest()
         {
-            // test that the auto-installed tool was copied to the current version's tools directory
+            // Importing settings from another installation copies the auto-installed tool they name
+            // into the current version's tools directory
+            RunUI(() => new SettingsImporter(null).CopyTools(null));
             StringAssert.StartsWith(Settings.Default.SearchToolList[SearchToolType.EncyclopeDIA].Path, ToolDescriptionHelpers.GetToolsDirectory());
             AssertEx.FileExists(Settings.Default.SearchToolList[SearchToolType.EncyclopeDIA].Path);
 

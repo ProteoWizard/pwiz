@@ -586,9 +586,6 @@
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama" xml:space="preserve">
     <value>正在向 Panorama 上传文档</value>
   </data>
-  <data name="Program_CopyOldTools_Error_copying_external_tools_from_previous_installation" xml:space="preserve">
-    <value>从先前的安装复制外部工具出错</value>
-  </data>
   <data name="Program_Main_Copying_external_tools_from_a_previous_installation" xml:space="preserve">
     <value>从先前的安装复制外部工具</value>
   </data>

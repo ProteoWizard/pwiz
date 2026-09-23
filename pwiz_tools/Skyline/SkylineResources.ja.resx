@@ -586,9 +586,6 @@
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama" xml:space="preserve">
     <value>ドキュメントをPanoramaにアップロード中</value>
   </data>
-  <data name="Program_CopyOldTools_Error_copying_external_tools_from_previous_installation" xml:space="preserve">
-    <value>以前のインストールからの外部ツールのコピーエラー</value>
-  </data>
   <data name="Program_Main_Copying_external_tools_from_a_previous_installation" xml:space="preserve">
     <value>以前のインストールから外部ツールのコピー中</value>
   </data>

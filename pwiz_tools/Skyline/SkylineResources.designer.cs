@@ -1813,15 +1813,6 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error copying external tools from previous installation.
-        /// </summary>
-        public static string Program_CopyOldTools_Error_copying_external_tools_from_previous_installation {
-            get {
-                return ResourceManager.GetString("Program_CopyOldTools_Error_copying_external_tools_from_previous_installation", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Copying external tools from a previous installation.
         /// </summary>
         public static string Program_Main_Copying_external_tools_from_a_previous_installation {
