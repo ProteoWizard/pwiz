@@ -14,7 +14,7 @@
 ;     install side by side; within a product a newer version replaces the
 ;     previous one in place. A private build can be given another product
 ;     name (/DProductName), making it a third product with its own folder,
-;     shortcut, file types and installer name.
+;     shortcut and installer name; it registers its channel's file types.
 ;   - Start Menu shortcut under "MacCoss Lab, UW", optional Desktop shortcut,
 ;     .sky / .skyd / .skyp associations, Programs and Features entry, and a
 ;     registry record of the install location for SkylineRunner, SkylineBatch
@@ -57,17 +57,22 @@
 ; The two channels keep the GUIDs they shipped with; any other product name is
 ; its own AppId (Inno accepts any string), and the doubled brace that escapes a
 ; GUID's opening brace is part of the value here so the plain name needs none.
-; The ProgId prefix is the product name minus the hyphen: a ProgId is
-; Vendor.Component.Version with no punctuation but the periods.
 #if ProductName == "Skyline"
   #define MyAppId "{{67DE971E-A042-4EF7-A93C-3F85D2A3D241}"
-  #define ProgIdPrefix "Skyline"
 #elif ProductName == "Skyline-daily"
   #define MyAppId "{{C701F69C-B553-4E3E-90D0-5676DD615570}"
-  #define ProgIdPrefix "SkylineDaily"
 #else
   #define MyAppId ProductName
-  #define ProgIdPrefix StringChange(ProductName, "-", "")
+#endif
+
+; The ProgId prefix is the channel's, whatever the product is called, so every
+; build of a channel registers the same file types: Skyline or SkylineDaily,
+; the channel name minus the hyphen, since a ProgId is Vendor.Component.Version
+; with no punctuation but the periods.
+#if SkylineAppName == "Skyline"
+  #define ProgIdPrefix "Skyline"
+#else
+  #define ProgIdPrefix "SkylineDaily"
 #endif
 
 #ifndef StagingDir
@@ -170,7 +175,7 @@ Root: HKA; Subkey: "Software\MacCossLabUW\{#ProductName}"; \
 Root: HKA; Subkey: "Software\MacCossLabUW\{#ProductName}"; \
     ValueType: string; ValueName: "Version"; ValueData: "{#MyAppVersion}"
 
-; File associations. Each product owns its own ProgIds, and they are new names:
+; File associations. Each channel owns its own ProgIds, and they are new names:
 ; every ClickOnce install, daily or release, registered Skyline.Document.0 /
 ; .Data.0 / .Pointer.0 per-user (the legacy csproj hard-codes them for both
 ; channels), and those must stay intact while a ClickOnce Skyline coexists with

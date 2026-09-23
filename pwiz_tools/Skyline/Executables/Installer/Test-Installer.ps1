@@ -100,9 +100,6 @@ if (-not $appName) {
 }
 $appId = if ($appIds.ContainsKey($appName)) { $appIds[$appName] } else { $appName }
 $uninstallKeyPath = "$uninstallRoot\${appId}_is1"
-# The product's ProgIds drop the hyphen (Skyline-daily -> SkylineDaily.Document.1, any other
-# product name loses its hyphens): a ProgId allows no punctuation but periods.
-$progId = $(if ($appName -eq 'Skyline-daily') { 'SkylineDaily' } else { $appName -replace '-', '' }) + '.Document.1'
 $scope = if ($AllUsers) { 'per-machine' } else { 'per-user' }
 Write-Host "==> $appName $version, ${scope}: $SetupPath" -ForegroundColor Cyan
 
@@ -146,6 +143,9 @@ try {
     $channelExe = @('Skyline-daily.exe', 'Skyline.exe') | Where-Object { Test-Path (Join-Path $installDir $_) } | Select-Object -First 1
     if (-not $channelExe) { throw "Neither Skyline-daily.exe nor Skyline.exe is in the install." }
     $channelDll = [System.IO.Path]::ChangeExtension($channelExe, '.dll')
+    # The channel's ProgIds, whatever the product is called; they drop the hyphen
+    # (Skyline-daily -> SkylineDaily.Document.1), as a ProgId allows no punctuation but periods.
+    $progId = $(if ($channelExe -eq 'Skyline-daily.exe') { 'SkylineDaily' } else { 'Skyline' }) + '.Document.1'
     foreach ($file in @($channelDll, 'SkylineCmd.exe', 'msconvert.exe', 'BlibBuild.exe', 'SkylineDoc.ico')) {
         if (-not (Test-Path (Join-Path $installDir $file))) { throw "Required file missing from the install: $file" }
     }

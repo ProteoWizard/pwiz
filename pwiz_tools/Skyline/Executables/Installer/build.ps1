@@ -183,7 +183,7 @@ if (-not $urlNode -or -not $productNode) {
     throw "InstallUrl and ProductName are not both in $configPath; the update manifest cannot be named."
 }
 if ($ProductName -and $ProductName -notmatch '^[A-Za-z0-9][A-Za-z0-9.-]*$') {
-    throw "ProductName '$ProductName' must be letters, digits, periods and hyphens: it names a folder, a registry key and a ProgId."
+    throw "ProductName '$ProductName' must be letters, digits, periods and hyphens: it names a folder and a registry key."
 }
 if ($ProductName) { $productNode.InnerText = $ProductName }
 if ($InstallUrl) { $urlNode.InnerText = $InstallUrl }
