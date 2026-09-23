@@ -80,12 +80,12 @@ namespace pwiz.Osprey.Test
                     OutputBlib = @"C:\runs\out.blib",
                     ModelDiagnostics = wanted
                 };
-                var tasks = AnalysisPipeline.CanonicalPipeline();
+                var tasks = OspreyTasks.Create().Pipeline;
                 var ctx = new PipelineContext(config, tasks, null, null, null);
                 OspreyTask second = null;
                 foreach (var t in tasks)
                 {
-                    if (t.Name == @"SecondPassFDR")
+                    if (t.Name == SecondPassFdrTask.TASK_NAME)
                         second = t;
                 }
                 Assert.IsNotNull(second, @"SecondPassFDR must be in the canonical pipeline");
@@ -202,7 +202,7 @@ namespace pwiz.Osprey.Test
         /// </summary>
         private static void AssertEveryTaskCarriesTheSuffixesItNeeds()
         {
-            var tasks = AnalysisPipeline.CanonicalPipeline();
+            var tasks = OspreyTasks.Create().Pipeline;
             var ctx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
             string pick = OspreyEnvironment.PickValidityKeySuffix();
             string pass2 = OspreyEnvironment.Pass2QValueValidityKeySuffix();
@@ -219,13 +219,13 @@ namespace pwiz.Osprey.Test
                 string key = task.ValidityKey(ctx);
                 StringAssert.Contains(key, pick, string.Format(
                     @"{0} must key on the peak-pick arm", task.Name));
-                bool expectPass2 = task.Name != @"PerFileScoring";
+                bool expectPass2 = task.Name != PerFileScoringTask.TASK_NAME;
                 Assert.AreEqual(expectPass2, key.Contains(pass2), string.Format(
                     @"{0} must {1} key on the 2nd-pass q-value mode",
                     task.Name, expectPass2 ? @"" : @"NOT "));
-                bool expectTrain = task.Name == @"FirstPassFDR" ||
-                                   task.Name == @"PerFileRescoring" ||
-                                   task.Name == @"SecondPassFDR";
+                bool expectTrain = task.Name == FirstPassFdrTask.TASK_NAME ||
+                                   task.Name == PerFileRescoreTask.TASK_NAME ||
+                                   task.Name == SecondPassFdrTask.TASK_NAME;
                 Assert.AreEqual(expectTrain, key.Contains(train), string.Format(
                     @"{0} must {1} key on the first-pass training selection",
                     task.Name, expectTrain ? @"" : @"NOT "));
@@ -252,7 +252,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 OspreyEnvironment.ReleaseLibraryFragments = false;
-                var tasks = AnalysisPipeline.CanonicalPipeline();
+                var tasks = OspreyTasks.Create().Pipeline;
                 var ctx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
                 string libfrag = LibraryFragmentRelease.ValidityKeySuffix(ctx);
 
@@ -275,7 +275,7 @@ namespace pwiz.Osprey.Test
                 // keying it here would re-run hours of scoring to reproduce a byte-identical file.
                 foreach (var task in tasks)
                 {
-                    bool expectLibfrag = task.Name != @"PerFileScoring";
+                    bool expectLibfrag = task.Name != PerFileScoringTask.TASK_NAME;
                     Assert.AreEqual(expectLibfrag, task.ValidityKey(ctx).Contains(libfrag),
                         string.Format(@"{0} must {1}key on the library-fragment release arm",
                             task.Name, expectLibfrag ? string.Empty : @"NOT "));

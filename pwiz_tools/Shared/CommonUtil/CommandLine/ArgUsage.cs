@@ -1,6 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -62,12 +63,24 @@ namespace pwiz.Common.CommandLine
         public const string FORMAT_NO_BORDERS = "no-borders";
 
         /// <summary>
-        /// Separator rendered between an argument and its value example in usage help
-        /// (e.g. <c>--name=&lt;value&gt;</c>). Defaults to <c>"="</c> for hosts whose grammar is
-        /// <c>--name=value</c> (Skyline); a host with space-separated values (Osprey) sets
-        /// it to a space so the generated help matches what its parser actually accepts.
+        /// Separator between an argument and its value, both in the usage help
+        /// (e.g. <c>--name=&lt;value&gt;</c>) and in a token built by
+        /// <see cref="ArgumentBase.GetArgumentTextWithValue"/> / the <c>+</c> operator.
+        /// Defaults to <c>"="</c> for hosts whose grammar is <c>--name=value</c> (Skyline); a
+        /// host with space-separated values (Osprey) sets it to a space so the generated help
+        /// and the tokens its tests build both match what its parser actually accepts.
         /// </summary>
         public static string ArgumentValueSeparator { get; set; } = "=";
+
+        /// <summary>
+        /// Culture a non-string value is formatted with by the <c>+</c> operator, so that
+        /// <c>ARG_THRESHOLD + 0.05</c> renders the way the HOST parses. <c>null</c> (the
+        /// default) means the current culture at the time of the call, right for a host whose
+        /// parser tries the current culture first (Skyline); a host that parses numbers
+        /// invariantly (Osprey) sets <see cref="System.Globalization.CultureInfo.InvariantCulture"/>,
+        /// and moves this in the same change that moves its parser.
+        /// </summary>
+        public static IFormatProvider ValueFormatProvider { get; set; }
 
         /// <summary>
         /// Host-supplied descriptions, headers and value-error messages. Defaults to a provider
