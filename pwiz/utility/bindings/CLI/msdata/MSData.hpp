@@ -1432,7 +1432,7 @@ public ref class SpectrumList
 
     /// <summary>
     // returns true if the source data contains calibration spectra that is being skipped over as with msconvert's --ignoreCalibrationScans flag
-    // currently this is only for Waters lockmass functions
+    // covers Waters lockmass functions, UIMF calibration frames, and MS:1000928 labeled spectra in mzML/mzMLb/mz5
     /// </summary>
     virtual bool calibrationSpectraAreOmitted();
 };

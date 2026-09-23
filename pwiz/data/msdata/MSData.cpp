@@ -1236,7 +1236,7 @@ PWIZ_API_DECL DetailLevel SpectrumList::min_level_accepted(std::function<boost::
 
 PWIZ_API_DECL bool SpectrumList::calibrationSpectraAreOmitted() const
 {
-    return false; // Default implementation, currently only Waters lockmass functions are actually handled
+    return false; // Default implementation; lists that can actually omit them override this
 }
 
 //

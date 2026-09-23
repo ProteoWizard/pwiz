@@ -519,9 +519,16 @@ void testMSLevelSet(SpectrumListPtr sl)
 }
 
 
-// "calibration spectrum" is a child of "spectrum type" but not of "mass spectrum", and the UIMF
-// reader writes it as the sole type on a frame that still carries an ms level. Such a spectrum must
-// be filtered on the level it declares, not treated as ms level 0 the way a type-only spectrum is.
+// "calibration spectrum" is not under "mass spectrum", and two shapes reach this code carrying it:
+// the UIMF reader writes it as a frame's sole type, while mzML in the wild marks a Waters lockspray
+// scan as both an MS1 spectrum and a calibration spectrum. Both declare an ms level, so both are
+// filtered on the level they declare rather than being taken for level 0. Dropping calibration data
+// altogether is Reader::Config::ignoreCalibrationScans' job, not this filter's.
+//
+// Because a declared level is read before the type is consulted at all, these assertions hold
+// however the CV happens to attach "calibration spectrum" to "spectrum type" - is_a here, has-a in
+// a later release, which cvIsA would not follow.
+//
 // Uses its own list, since the shared one is pinned by exact sizes and ids throughout this file.
 void testMSLevelSetCalibrationSpectrum()
 {
@@ -536,6 +543,7 @@ void testMSLevelSetCalibrationSpectrum()
     ms1->set(MS_MS1_spectrum);
     sl->spectra.push_back(ms1);
 
+    // The UIMF reader writes calibration as the sole type on a frame that still declares an ms level
     SpectrumPtr calibration(new Spectrum);
     calibration->index = 1;
     calibration->id = "scan=2";
@@ -550,6 +558,26 @@ void testMSLevelSetCalibrationSpectrum()
     emission->set(MS_emission_spectrum);
     sl->spectra.push_back(emission);
 
+    // A Waters lockspray scan carries both terms and is a real MS1
+    SpectrumPtr lockspray(new Spectrum);
+    lockspray->index = 3;
+    lockspray->id = "scan=4";
+    lockspray->set(MS_ms_level, 1);
+    lockspray->set(MS_MS1_spectrum);
+    lockspray->set(MS_calibration_spectrum);
+    sl->spectra.push_back(lockspray);
+
+    // A declared level and no spectrum type at all. This is the case that separates reading the
+    // level first from consulting the type first: the type-first form finds no child of "spectrum
+    // type", answers indeterminate, and SpectrumList_Filter drops the spectrum once it runs out of
+    // detail levels to try. It is also what a UIMF calibration frame becomes once psi-ms-CV #541
+    // reparents "calibration spectrum" under "spectrum attribute", which is why the level has to win.
+    SpectrumPtr levelOnly(new Spectrum);
+    levelOnly->index = 4;
+    levelOnly->id = "scan=5";
+    levelOnly->set(MS_ms_level, 1);
+    sl->spectra.push_back(levelOnly);
+
     {
         SpectrumList_Filter filter(sl, SpectrumList_FilterPredicate_MSLevelSet(IntegerSet(1)));
         if (os_)
@@ -557,10 +585,13 @@ void testMSLevelSetCalibrationSpectrum()
             printSpectrumList(filter, *os_);
             *os_ << endl;
         }
-        // The calibration spectrum declares ms level 1, so asking for level 1 must keep it
-        unit_assert_operator_equal(2, filter.size());
+        // Everything that declares ms level 1 is kept, whether its type is a mass spectrum, a
+        // calibration spectrum, both, or absent altogether
+        unit_assert_operator_equal(4, filter.size());
         unit_assert(filter.spectrumIdentity(0).id == "scan=1");
         unit_assert(filter.spectrumIdentity(1).id == "scan=2");
+        unit_assert(filter.spectrumIdentity(2).id == "scan=4");
+        unit_assert(filter.spectrumIdentity(3).id == "scan=5");
     }
 
     {
@@ -570,7 +601,7 @@ void testMSLevelSetCalibrationSpectrum()
             printSpectrumList(filter, *os_);
             *os_ << endl;
         }
-        // And asking for level 0 must not, leaving only the spectrum that declares no level
+        // And level 0 catches only the spectrum that declares no level at all
         unit_assert_operator_equal(1, filter.size());
         unit_assert(filter.spectrumIdentity(0).id == "scan=3");
     }

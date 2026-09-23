@@ -751,7 +751,7 @@ bool SpectrumList::benefitsFromWorkerThreads()
         return false;
 }
 
-// Currently only supported for Waters lockmass functions, as in msconvert with --ignoreCalibrationSpectra
+// Waters lockmass functions, UIMF calibration frames, and MS:1000928 labeled spectra, as in msconvert with --ignoreCalibrationScans
 bool SpectrumList::calibrationSpectraAreOmitted()
 {
     try {return (*base_)->calibrationSpectraAreOmitted();} CATCH_AND_FORWARD

@@ -118,22 +118,23 @@ namespace pwiz.SkylineTestData
         }
 
         /// <summary>
-        /// Waters lockspray scans have to be recognized whether or not the writer labeled them with
-        /// MS:1000928, and the waters_connect nativeID dialect must not be read as if it carried
-        /// MassLynx function numbers.
+        /// Waters lockspray scans have to be kept out of chromatogram extraction whether or not the
+        /// writer labeled them with MS:1000928 - pwiz drops the labeled ones, Skyline recognizes the
+        /// rest by function number - and the waters_connect nativeID dialect must not be read as if
+        /// it carried MassLynx function numbers.
         /// </summary>
         [TestMethod]
         public void TestWatersCalibrationSpectrum()
         {
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\WatersLockmassMzml.zip");
 
-            // Same three spectra either way - lockspray is function 3, and it sorts first. Our own
-            // msconvert writes the untagged form. The tagged one stands in for a writer that labels,
-            // declaring "calibration spectrum" as the lockspray scan's sole spectrum type exactly as
-            // the UIMF reader does - that term is a child of "spectrum type" but not of "mass
-            // spectrum", so it replaces MS1 rather than joining it, while the ms level still says 1.
-            VerifyLockmassSpectrum(TestFilesDir.GetTestPath("MSe_Short_untagged.mzML"), false);
-            VerifyLockmassSpectrum(TestFilesDir.GetTestPath("MSe_Short_tagged.mzML"), true);
+            // Lockspray is function 3 in both files, and sorts first. Our own msconvert writes the
+            // untagged form, where the function number is the only thing that gives it away, so
+            // Skyline has to spot that one itself. The tagged form stands in for a writer that
+            // labels, declaring "calibration spectrum" as the lockspray scan's sole spectrum type
+            // exactly as the UIMF reader does - pwiz removes those before Skyline sees them.
+            VerifyUntaggedLockmassSpectrum(TestFilesDir.GetTestPath("MSe_Short_untagged.mzML"));
+            VerifyTaggedLockmassSpectrumOmitted(TestFilesDir.GetTestPath("MSe_Short_tagged.mzML"));
 
             // And the shape that was reported broken, where reading channels as functions discarded
             // every spectrum in the file
@@ -160,7 +161,11 @@ namespace pwiz.SkylineTestData
             }
         }
 
-        private static void VerifyLockmassSpectrum(string path, bool expectLabeled)
+        /// <summary>
+        /// Nothing in this file is labeled, so pwiz has no way to recognize the lockspray scan and
+        /// hands over all three. Identifying it by function number is Skyline's job here.
+        /// </summary>
+        private static void VerifyUntaggedLockmassSpectrum(string path)
         {
             using var msDataFile = new MsDataFileImpl(path);
             AssertEx.AreEqual(3, msDataFile.SpectrumCount, path);
@@ -168,19 +173,17 @@ namespace pwiz.SkylineTestData
             for (var i = 0; i < msDataFile.SpectrumCount; i++)
             {
                 var spectrum = msDataFile.GetSpectrum(i);
-                // Only the tagged file labels its lockspray scan, and only that scan
-                AssertEx.AreEqual(expectLabeled && spectrum.WatersFunctionNumber == 3, spectrum.IsCalibrationSpectrum, path);
+                AssertEx.IsFalse(spectrum.IsCalibrationSpectrum, path);
                 if (msDataFile.IsWatersLockmassSpectrum(spectrum))
                     lockmassFunctions.Add(spectrum.WatersFunctionNumber ?? 0);
             }
-            // Either way, function 3 and only function 3 is treated as lockspray
+            // Function 3 and only function 3 is treated as lockspray
             CollectionAssert.AreEqual(new[] { 3 }, lockmassFunctions, path);
 
-            // In these files the lockspray sorts first, so the function-number heuristic would identify it
-            // even with no tag - which means the assertions above cannot tell whether MS:1000928 is being
-            // honored. Check that directly: a labeled spectrum carrying no function number to fall back
-            // on, as a waters_connect file would produce, must still be recognized. Id is deliberately
-            // left unset - IsWatersLockmassSpectrum no longer reads it, and setting it would suggest
+            // A labeled spectrum with no function number to fall back on must still be recognized,
+            // for any path that hands one to Skyline. Constructed directly, since a file that labels
+            // its lockspray no longer reaches Skyline still carrying it. Id is deliberately left
+            // unset - IsWatersLockmassSpectrum no longer reads it, and setting it would suggest
             // otherwise.
             var taggedWithoutFunction = new MsDataSpectrum { IsCalibrationSpectrum = true, WatersFunctionNumber = null };
             AssertEx.IsTrue(msDataFile.IsWatersLockmassSpectrum(taggedWithoutFunction), path);
@@ -188,6 +191,38 @@ namespace pwiz.SkylineTestData
             // And the converse: no tag and no function number is not something to guess about
             var untaggedWithoutFunction = new MsDataSpectrum { IsCalibrationSpectrum = false, WatersFunctionNumber = null };
             AssertEx.IsFalse(msDataFile.IsWatersLockmassSpectrum(untaggedWithoutFunction), path);
+        }
+
+        /// <summary>
+        /// The same run, with its lockspray scan labeled MS:1000928 and declared in fileContent.
+        /// ReaderConfig.ignoreCalibrationScans is set for every file Skyline opens, and pwiz now
+        /// honors it for mzML, so the scan is gone before Skyline can ask about it.
+        /// </summary>
+        private static void VerifyTaggedLockmassSpectrumOmitted(string path)
+        {
+            using var msDataFile = new MsDataFileImpl(path);
+
+            // One fewer than the untagged copy of the same run, which keeps all three
+            AssertEx.AreEqual(2, msDataFile.SpectrumCount, path);
+
+            // The lockspray is function 3 and sorts first, so what survives is functions 1 and 2 -
+            // asserted by value rather than as an upper bound, since WatersFunctionNumber is int?
+            // and a lifted comparison against null is false whichever bound is written
+            var functions = new List<int?>();
+            for (var i = 0; i < msDataFile.SpectrumCount; i++)
+            {
+                var spectrum = msDataFile.GetSpectrum(i);
+                AssertEx.IsFalse(spectrum.IsCalibrationSpectrum, path);
+                AssertEx.IsFalse(msDataFile.IsWatersLockmassSpectrum(spectrum), path);
+                functions.Add(spectrum.WatersFunctionNumber);
+            }
+            CollectionAssert.AreEqual(new int?[] { 1, 2 }, functions, path);
+
+            // The assertions above cannot tell whether the calibrationSpectraAreOmitted handshake
+            // works: with function 3 removed the first surviving spectrum is function 1, so the
+            // probe would decline to infer a lockmass function even if it did run. Check the
+            // property pwiz actually reports, which is what MsDataFileImpl gates that probe on.
+            AssertEx.IsTrue(msDataFile.CalibrationSpectraAreOmitted, path);
         }
 
         /// <summary>
@@ -226,6 +261,7 @@ namespace pwiz.SkylineTestData
             CollectionAssert.AreEqual(new[] { 1, 2 }, msLevels, path);
         }
    
+        /// <summary>
         /// Ascending m/z is nowhere required by the mzML specification, but it is what every consumer
         /// assumes, and extraction binary searches the m/z axis - so on a file presented in any other
         /// order the search lands nowhere useful and every chromatogram comes out empty, with no

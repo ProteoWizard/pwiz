@@ -26,6 +26,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/ChromatogramListBase.hpp"
+#include "pwiz/data/msdata/Reader.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 
 
@@ -52,11 +53,12 @@ public:
     virtual ChromatogramPtr chromatogram(size_t index, DetailLevel detailLevel) const;
 
 #ifdef PWIZ_READER_UIMF
-    ChromatogramList_UIMF(UIMFReaderPtr reader);
+    ChromatogramList_UIMF(UIMFReaderPtr reader, const Reader::Config& config);
 
     private:
 
     UIMFReaderPtr rawfile_;
+    Reader::Config config_;
 
     mutable util::once_flag_proxy indexInitialized_;
 

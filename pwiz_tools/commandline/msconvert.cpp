@@ -446,7 +446,7 @@ Config parseCommandLine(int argc, char** argv)
             ": if supported by vendor; combine MS2 spectra referring to the same precursor and survey scan, and calculate accurate precursor masses.")
         ("ignoreCalibrationScans",
             po::value<bool>(&config.ignoreCalibrationScans)->zero_tokens(),
-            ": do not process calibration scans (currently only applies to Waters lockmass function)")
+            ": do not process calibration scans (Waters lockmass function, UIMF calibration frames, and spectra labeled MS:1000928 in mzML/mzMLb/mz5)")
         ("acceptZeroLengthSpectra",
             po::value<bool>(&config.acceptZeroLengthSpectra)->zero_tokens(),
             ": some vendor readers have an efficient way of filtering out empty spectra, but it takes more time to open the file")

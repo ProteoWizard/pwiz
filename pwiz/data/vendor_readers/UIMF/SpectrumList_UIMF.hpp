@@ -70,6 +70,8 @@ class PWIZ_API_DECL SpectrumList_UIMF : public SpectrumListIonMobilityBase
 #ifdef PWIZ_READER_UIMF
     SpectrumList_UIMF(const MSData& msd, UIMFReaderPtr rawfile, const Reader::Config& config);
 
+    virtual bool calibrationSpectraAreOmitted() const;
+
     private:
 
     const MSData& msd_;
@@ -82,6 +84,9 @@ class PWIZ_API_DECL SpectrumList_UIMF : public SpectrumListIonMobilityBase
 
     struct IndexEntry : public SpectrumIdentity
     {
+        /// Position in UIMFReader's own index. Tracked separately from the inherited index because
+        /// ignoreCalibrationScans leaves gaps, so the two stop agreeing.
+        size_t rawIndex;
     };
 
     mutable vector<IndexEntry> index_;

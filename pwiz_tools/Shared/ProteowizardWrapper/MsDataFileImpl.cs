@@ -869,6 +869,12 @@ namespace pwiz.ProteowizardWrapper
         public bool HasCombinedIonMobilitySpectra => SpectrumList != null && IonMobilityUnits != eIonMobilityUnits.none &&  _ionMobilitySpectrumList != null && _ionMobilitySpectrumList.hasCombinedIonMobility();
 
         /// <summary>
+        /// True when the reader has already left calibration scans out of the spectrum list, which is
+        /// what tells us not to go looking for a Waters lockmass function ourselves.
+        /// </summary>
+        public bool CalibrationSpectraAreOmitted => SpectrumList != null && SpectrumList.calibrationSpectraAreOmitted();
+
+        /// <summary>
         /// Gets the value of the MS_sample_name CV param of first sample in the MSData object, or null if there is no sample information.
         /// </summary>
         public string GetSampleId()
