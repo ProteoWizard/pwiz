@@ -45,8 +45,53 @@ if [ modules.peek : NT ]
                    System.Memory.dll
                    System.Numerics.Vectors.dll
                    System.Runtime.CompilerServices.Unsafe.dll
+                   System.Text.Json.dll
                    System.Threading.Tasks.Extensions.dll
                    System.ValueTuple.dll ;
+
+# pwiz.CommonUtil.dll supplies OAuthPasswordGrantClient - the IdentityModel-7-compatible OAuth
+# password-grant request shared with the managed WatersConnect/Unifi account classes, so this
+# native reader does not duplicate that request logic in C++/CLI. Unlike everything in
+# .shared-assemblies it is built from this repo rather than vendored, so it is declared as a
+# target here and referenced by target ID below: <assembly> is a dependency feature, so bjam
+# builds this before compiling anything that references it, and msvc.jam's copy-assemblies
+# stages it next to each consuming binary.
+#
+# MSBuild, not "dotnet build": the .NET SDK's MSBuild resolves cultures through ICU, which does
+# not know the legacy zh-CHS of CommonUtil's satellite .resx files, so it gives them the same
+# manifest name as the neutral resources and fails with MSB3577. Framework/VS MSBuild uses NLS
+# and still recognizes zh-CHS.
+rule build-common-util-properties ( targets + : sources * : properties * )
+{
+    local .msvcSetupScript = [ get-current-msvc-setup-script $(properties) ] ;
+    JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
+    MSVC_CURRENT_SETUP_SCRIPT on $(targets) = $(.msvcSetupScript) ;
+}
+
+rule do_build_common_util ( targets + : sources * : properties * )
+{
+    return [ build-common-util-properties $(targets) : $(sources) : $(properties) ] ;
+}
+
+actions do_build_common_util
+{
+    $(MSVC_CURRENT_SETUP_SCRIPT)
+    echo Building pwiz.CommonUtil.dll for pwiz_vendor_api_unifi
+    msbuild "$(PWIZ_ROOT_PATH)\pwiz_tools\Shared\CommonUtil\CommonUtil.csproj" /p:Configuration=Release;Platform=x64;OutDir=$(<:D)\ /nologo /verbosity:minimal
+    set status=%ERRORLEVEL%
+    exit %status%
+}
+
+make pwiz.CommonUtil.dll
+    : # sources
+    : # actions
+        @do_build_common_util
+    : # requirements
+        <conditional>@no-express-requirement
+        <conditional>@msvc-dotnet-requirement
+    ;
+
+explicit pwiz.CommonUtil.dll ;
 
 rule vendor-api-requirements ( properties * )
 {
@@ -67,6 +112,7 @@ rule vendor-api-requirements ( properties * )
         #result += <assembly>$(dll_location)/unifi-protobuf-net.dll ;
         result += <assembly>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI/protobuf-net.dll ;
         result += <assembly>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.shared-assemblies) ;
+        result += <assembly>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/UNIFI//pwiz.CommonUtil.dll ;
         result += <assembly>$(dll_location)/System.Runtime.Caching.Generic.dll ;
         result += <assembly>$(dll_location)/ParallelExtensionsExtras.dll ;
         result += <include>$(dll_location) ;

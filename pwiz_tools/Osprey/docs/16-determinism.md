@@ -134,8 +134,10 @@ is seeded and deterministic. There are **two**, structurally different:
    which run survives follows FILE ORDER. A cross-run maximum was commutative and did not.
    Re-running the same file list in the same order reproduces the same model; re-running it
    in a different order does not, and file order is not part of the task validity key.
-   `Program.ResolveInputScores` sorts the single-directory form but preserves caller order
-   for the explicit multi-path `--input-scores` form.
+   Order is the CALLER's: `--input-scores` used to sort a globbed directory on the caller's
+   behalf, and with it retired an orchestrator states the order explicitly (`--input-list`
+   takes a sorted file). A stray parquet in a directory can no longer change the cohort
+   either, which is the other half of the same trade.
 
 `XorShift64` (`Osprey.ML/LinearSvmClassifier.cs:266`)
 matches the Rust generator exactly (`x ^= x << 13; x ^= x >> 7; x ^= x << 17`).
@@ -192,11 +194,12 @@ on it. The scoring task orders entries and writes them to the per-file
 `PerFileRescoreTask.SortFileEntriesCanonical` (`Osprey.Tasks/PerFileRescoreTask.cs:1301`)
 re-imposes the exact `(EntryId, Charge, ScanNumber, ParquetIndex)` order a cold
 run establishes, with `ParquetIndex` as a unique terminal key so the sort never
-ties (`:1306-1315`). The comment at `:1287-1299` explains why this is applied to
-**every** file (even no-work files with no reconciled Parquet): otherwise
+ties (`:1306-1315`). Its comment explains why this is applied to **every** file the
+resume overlays, including a file with no reconciliation work: otherwise
 `SecondPassFDR`'s `BuildSharedBoundaries` could iterate a different order and, on a
 q-value tie between charge states, pick a different shared `(modseq, file)`
-boundary. Parquet preserves exact IEEE-754 values, so a rehydrated entry is
+boundary. A file the resume loads from its reconciled Parquet instead arrives in
+that order already, from `FirstPassSurvivorLoader`'s own canonical sort. Parquet preserves exact IEEE-754 values, so a rehydrated entry is
 bit-identical to the in-memory original (see 14-intermediate-files.md).
 
 The PEP estimator is fed a `base_id`-ascending-sorted union so its

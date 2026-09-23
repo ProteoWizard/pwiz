@@ -73,6 +73,13 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             private readonly string[] _runNames;
             private readonly int _nFiles;
 
+            // 1 = pre-compaction first pass, 2 = final reported pool. The reductions are the
+            // same either way; this decides which ones are folded at all and which Build method
+            // may be called. The Frontier is the one pass-1-only fold, and skipping it in pass 2
+            // is not a micro-optimisation: it is a dictionary lookup and update per target row
+            // over the whole reported pool, and nothing in Pass2Data reads the result.
+            private readonly int _pass;
+
             // Best-per-precursor, keyed modseq|charge (== ReduceToPrecs).
             private readonly Dictionary<string, Prec> _best =
                 new Dictionary<string, Prec>(StringComparer.Ordinal);
@@ -84,12 +91,20 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             private readonly int[] _fileDecoys;
             private readonly int[] _fileEntrap;
 
-            // Per-file passing key-sets for the cross-run reproducibility view
-            // (== BuildCrossRunDetection): real targets (run/exp gate) + entrapment (run/exp gate).
-            private readonly List<HashSet<string>> _runSets;
-            private readonly List<HashSet<string>> _expSets;
-            private readonly List<HashSet<string>> _entRunSets;
-            private readonly List<HashSet<string>> _entExpSets;
+            // Cross-run reproducibility membership (== BuildCrossRunDetection): real targets
+            // (run/exp gate) + entrapment (run/exp gate).
+            //
+            // FOLDED per run, not RETAINED per run. These were four List<HashSet<string>> sized
+            // _nFiles - one passing-key set per run - which is the O(runs x entries) shape doc 00
+            // names as "the single failure mode this architecture exists to prevent". Measured on
+            // a 446-run CHS cohort: ~94 MB per run and still climbing at run 263, projecting
+            // ~72 GB against a 63.7 GB box, so --model-diagnostics could not describe the cohort
+            // it was asked about. Each stream now holds O(distinct) running state plus ONE run's
+            // keys, and the view it produces is unchanged.
+            private readonly CrossRunStream _runStream;
+            private readonly CrossRunStream _expStream;
+            private readonly CrossRunStream _entRunStream;
+            private readonly CrossRunStream _entExpStream;
             private bool _anyEntrapment;
 
             // Win fraction: base_id -> [best target score, best decoy score] + target-side class
@@ -116,14 +131,20 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// <param name="entrapmentRatio">entrapment-to-target DB ratio r.</param>
             /// <param name="runFdr">configured run-level FDR.</param>
             /// <param name="fdrLevel">reported FDR control level (drives EffectiveRunQvalue).</param>
+            /// <param name="pass">1 for the pre-compaction first pass (<see cref="Build"/>),
+            /// 2 for the final reported pool (<see cref="BuildPass2"/>). Decides which folds run.</param>
             public Accumulator(
                 string[] runNames,
                 IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
                 IReadOnlyDictionary<uint, uint> pairByBaseId,
                 double entrapmentRatio,
                 double runFdr,
-                FdrLevel fdrLevel)
+                FdrLevel fdrLevel,
+                int pass = 1)
             {
+                if (pass != 1 && pass != 2)
+                    throw new ArgumentOutOfRangeException(nameof(pass));
+                _pass = pass;
                 _runNames = runNames ?? throw new ArgumentNullException(nameof(runNames));
                 _nFiles = runNames.Length;
                 _classByBaseId = classByBaseId;
@@ -136,10 +157,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 _fileTargets = new int[_nFiles];
                 _fileDecoys = new int[_nFiles];
                 _fileEntrap = new int[_nFiles];
-                _runSets = NewSets(_nFiles);
-                _expSets = NewSets(_nFiles);
-                _entRunSets = NewSets(_nFiles);
-                _entExpSets = NewSets(_nFiles);
+                _runStream = new CrossRunStream(_nFiles);
+                _expStream = new CrossRunStream(_nFiles);
+                _entRunStream = new CrossRunStream(_nFiles);
+                _entExpStream = new CrossRunStream(_nFiles);
             }
 
             /// <summary>
@@ -151,13 +172,6 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// </summary>
             public IReadOnlyDictionary<uint, EntrapmentClass> ClassByBaseId => _classByBaseId;
 
-            private static List<HashSet<string>> NewSets(int n)
-            {
-                var list = new List<HashSet<string>>(n);
-                for (int i = 0; i < n; i++)
-                    list.Add(new HashSet<string>(StringComparer.Ordinal));
-                return list;
-            }
 
             /// <summary>
             /// Fold one scored, pre-compaction first-pass row into the reduced state, mirroring the
@@ -231,24 +245,25 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         bool expOk = q.EffectiveExperimentQvalue(_fdrLevel) <= _runFdr;
                         if (isEntrap)
                         {
-                            _entRunSets[fileIdx].Add(key);
+                            _entRunStream.Add(fileIdx, key);
                             if (expOk)
-                                _entExpSets[fileIdx].Add(key);
+                                _entExpStream.Add(fileIdx, key);
                             _anyEntrapment = true;
                         }
                         else
                         {
-                            _runSets[fileIdx].Add(key);
+                            _runStream.Add(fileIdx, key);
                             if (expOk)
-                                _expSets[fileIdx].Add(key);
+                                _expStream.Add(fileIdx, key);
                         }
                     }
                 }
 
                 // Frontier: fold the UN-GATED first-pass row into the within-file run-q tally
                 // (target side only). On a new file, flush the previous file's per-precursor best
-                // run-q into the bins first (rows arrive in file-major order).
-                if (!isDecoy)
+                // run-q into the bins first (rows arrive in file-major order). Pass 1 only -
+                // Pass2Data has no Frontier card, so in pass 2 this is work with no reader.
+                if (_pass == 1 && !isDecoy)
                 {
                     if (fileIdx != _frontierCurFile)
                     {
@@ -287,6 +302,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// </summary>
             public ModelDiagnosticsData Build(FeatureContributions contributions)
             {
+                if (_pass != 1)
+                    throw new InvalidOperationException(PassMismatch(1, nameof(BuildPass2)));
                 var precs = _best.Values.ToList();
                 var data = new ModelDiagnosticsData
                 {
@@ -338,11 +355,19 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 data.IdYield = BuildIdYield(precs);
 
                 double r = _entrapmentRatio > 0 ? _entrapmentRatio : 1.0;
+                // Close the run in progress and any trailing runs that contributed nothing, so
+                // every file index has its entry - the batch loop gives an empty set the same
+                // treatment. Same obligation as FrontierFlushFile below, for the same reason.
+                _runStream.Finish();
+                _expStream.Finish();
+                _entRunStream.Finish();
+                _entExpStream.Finish();
+
                 data.CrossRun = new CrossRunDetection
                 {
                     RunNames = _runNames,
-                    PerRun = ComputeCrossRunView(_runSets, _anyEntrapment ? _entRunSets : null, _nFiles, r),
-                    Experiment = ComputeCrossRunView(_expSets, _anyEntrapment ? _entExpSets : null, _nFiles, r),
+                    PerRun = ComputeCrossRunView(_runStream, _anyEntrapment ? _entRunStream : null, _nFiles, r),
+                    Experiment = ComputeCrossRunView(_expStream, _anyEntrapment ? _entExpStream : null, _nFiles, r),
                 };
 
                 data.WinFraction = BuildWinFractionFromReduced(_bt, _tClass);
@@ -358,6 +383,196 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 }
 
                 return data;
+            }
+
+            /// <summary>
+            /// Assemble the pass-2 <see cref="Pass2Data"/> from the accumulated reductions,
+            /// running the SAME downstream builders the batch <see cref="BuildPass2"/> uses over
+            /// the resident pool. This is the streamed half of the fix for the last
+            /// O(runs x entries) structure in Stage 7: the batch method takes
+            /// <c>IReadOnlyList&lt;KeyValuePair&lt;string, List&lt;FdrEntry&gt;&gt;&gt;</c> and
+            /// means it, so <c>--model-diagnostics</c> forced SecondPassFDR to hold every run's
+            /// survivors resident and <c>CanStreamStage7Join</c> declined the streamed join
+            /// outright whenever the report was asked for.
+            ///
+            /// <para>Eight of the nine pass-2 cards are reductions this accumulator already
+            /// holds - best-per-precursor, per-file passing counts, cross-run membership and the
+            /// per-base_id win-fraction maxima - so they cost a walk of the O(distinct) reduced
+            /// state here rather than a walk of the pool. The ninth,
+            /// <see cref="Pass2Data.CoAssignment"/>, is NOT foldable in one pass: its acceptance
+            /// boundary is a reduction over every row that its per-row verdicts are then compared
+            /// against, so it needs the pool twice. It is therefore built by the CALLER, from a
+            /// second stream pass, and passed in - the same division pass 1 makes, where the
+            /// panel comes from <c>PeakCoAssignmentSource</c> rather than from the fold.</para>
+            ///
+            /// <para>No <see cref="ProgressReporter"/> here, deliberately, where the batch
+            /// BuildPass2 carries one per card (#4571). There the cards WERE the expensive part -
+            /// six independent whole-pool walks. Here the pool walk has already happened in the
+            /// caller's stream, which reports per run, and what is left walks only the reduced
+            /// state. A card reporter would print six lines inside one second, on every run
+            /// forever.</para>
+            /// </summary>
+            /// <param name="contributions">The retrained second-pass model, or null under
+            /// confidence-transfer mode, which leaves the structural half null exactly as the
+            /// batch path does.</param>
+            /// <param name="coAssignment">The pass-2 co-assignment panel built from the caller's
+            /// second stream pass; null leaves the panel out.</param>
+            public Pass2Data BuildPass2(FeatureContributions contributions,
+                CoAssignmentData coAssignment)
+            {
+                if (_pass != 2)
+                    throw new InvalidOperationException(PassMismatch(2, nameof(Build)));
+                var precs = _best.Values.ToList();
+                var pass2 = new Pass2Data();
+
+                // Q-driven half: available whenever a second pass produced reported q-values
+                // (retrain OR confidence transfer). Entrapment-independent except FdpViews.
+                var perFile = new List<FileSummaryRow>(_nFiles);
+                for (int f = 0; f < _nFiles; f++)
+                {
+                    perFile.Add(new FileSummaryRow
+                    {
+                        File = _runNames[f],
+                        Targets = _fileTargets[f],
+                        Decoys = _fileDecoys[f],
+                        Entrapment = _fileEntrap[f],
+                    });
+                }
+                pass2.PerFile = perFile;
+                pass2.IdYield = BuildIdYield(precs);
+
+                double r = _entrapmentRatio > 0 ? _entrapmentRatio : 1.0;
+                // Close the run in progress and any trailing runs that contributed nothing, so
+                // every file index has its entry - the same obligation Build has, for the same
+                // reason, and the one place a streamed reduction can silently disagree with the
+                // batch one.
+                _runStream.Finish();
+                _expStream.Finish();
+                _entRunStream.Finish();
+                _entExpStream.Finish();
+                pass2.CrossRun = new CrossRunDetection
+                {
+                    RunNames = _runNames,
+                    PerRun = ComputeCrossRunView(_runStream, _anyEntrapment ? _entRunStream : null, _nFiles, r),
+                    Experiment = ComputeCrossRunView(_expStream, _anyEntrapment ? _entExpStream : null, _nFiles, r),
+                };
+
+                pass2.FdpViews = BuildPass2FdpViews(precs, _entrapmentRatio);
+                pass2.CoAssignment = coAssignment;
+
+                // Structural half: only when the second pass retrained on the reported pool.
+                // Null contributions (transfer mode) leave Model, DensityRatio and WinFraction
+                // null and the report's structural cards show their n/a note.
+                pass2.Model = BuildModelPass2(contributions, precs);
+                if (pass2.Model != null)
+                {
+                    bool hasEntrapment = precs.Any(p => p.Class == EntrapmentClass.PTarget);
+                    pass2.DensityRatio = BuildDensityRatio(pass2.Model.Scores, hasEntrapment);
+                    pass2.WinFraction = BuildWinFractionFromReduced(_bt, _tClass);
+                }
+                return pass2;
+            }
+
+            // Both Build methods read reductions that only their own pass folds, so calling the
+            // wrong one returns a plausible-looking object built from partly unfolded state
+            // rather than failing. Name the other method: the caller's mistake is always that
+            // the pass argument and the Build call disagree.
+            private string PassMismatch(int expected, string otherMethod)
+            {
+                return string.Format(
+                    @"ModelDiagnosticsData.Accumulator was constructed for pass {0} but built for pass {1}. Use {2} instead, or construct it with pass: {1}.",
+                    _pass, expected, otherMethod);
+            }
+
+            /// <summary>
+            /// One cross-run membership reduction, folded run by run instead of retained run by
+            /// run. Replaces a <c>List&lt;HashSet&lt;string&gt;&gt;</c> of N per-run key sets with
+            /// O(distinct) running state plus ONE run's keys.
+            ///
+            /// <para>The reductions are exactly the ones the set-based
+            /// <c>ComputeCrossRunView</c> loop performs, executed as each run completes rather
+            /// than over N retained sets at the end: the per-run passing count, the cumulative
+            /// union, the cumulative intersection, and the per-key run-count tally the histogram
+            /// is binned from. Nothing here is a different formula - only a different moment.</para>
+            ///
+            /// <para><b>A run that contributes no rows still gets its entry.</b> The batch loop
+            /// walks every index and hands an empty set to each, so a run whose rows were all
+            /// filtered - or which had none at all, and for which <see cref="Add"/> is therefore
+            /// never called - must still record its count, its union and its (empty) intersection.
+            /// <see cref="CloseThrough"/> is what closes those skipped indices, and it is the one
+            /// place a streamed reduction can silently disagree with the batch one.</para>
+            /// </summary>
+            internal sealed class CrossRunStream
+            {
+                private readonly int _nFiles;
+                private readonly HashSet<string> _current = new HashSet<string>(StringComparer.Ordinal);
+                private readonly HashSet<string> _union = new HashSet<string>(StringComparer.Ordinal);
+                private readonly Dictionary<string, int> _runCount =
+                    new Dictionary<string, int>(StringComparer.Ordinal);
+                // Null until the first run closes, mirroring the batch loop's `inter == null`
+                // seed: the intersection starts as run 0's set, not as the empty set.
+                private HashSet<string> _inter;
+                private int _curFile = -1;
+
+                internal CrossRunStream(int nFiles)
+                {
+                    _nFiles = nFiles;
+                    PerRunCount = new int[nFiles];
+                    CumUnion = new int[nFiles];
+                    CumIntersection = new int[nFiles];
+                }
+
+                internal int[] PerRunCount { get; }
+                internal int[] CumUnion { get; }
+                internal int[] CumIntersection { get; }
+                internal IReadOnlyDictionary<string, int> RunCount => _runCount;
+
+                /// <summary>Record <paramref name="key"/> as passing in run <paramref name="fileIdx"/>.
+                /// Rows arrive in file-major order, so a change of index closes the previous run.</summary>
+                internal void Add(int fileIdx, string key)
+                {
+                    if (fileIdx != _curFile)
+                    {
+                        CloseThrough(fileIdx);
+                        _curFile = fileIdx;
+                    }
+                    _current.Add(key);
+                }
+
+                /// <summary>Close the run in progress and every remaining run, so all
+                /// <see cref="_nFiles"/> entries are populated however few runs contributed.</summary>
+                internal void Finish()
+                {
+                    CloseThrough(_nFiles);
+                    _curFile = _nFiles;
+                }
+
+                /// <summary>
+                /// Close each file index from the one in progress up to (but excluding)
+                /// <paramref name="target"/>. The run in progress closes with the keys it
+                /// gathered; every index between it and the target closes EMPTY, which is what
+                /// the batch loop does for a run whose set holds nothing.
+                /// </summary>
+                private void CloseThrough(int target)
+                {
+                    for (int i = Math.Max(_curFile, 0); i < target && i < _nFiles; i++)
+                    {
+                        PerRunCount[i] = _current.Count;
+                        _union.UnionWith(_current);
+                        CumUnion[i] = _union.Count;
+                        if (_inter == null)
+                            _inter = new HashSet<string>(_current, StringComparer.Ordinal);
+                        else
+                            _inter.IntersectWith(_current);
+                        CumIntersection[i] = _inter.Count;
+                        foreach (var key in _current)
+                        {
+                            _runCount.TryGetValue(key, out int c);
+                            _runCount[key] = c + 1;
+                        }
+                        _current.Clear();
+                    }
+                }
             }
         }
     }

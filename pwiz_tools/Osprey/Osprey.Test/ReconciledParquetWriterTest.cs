@@ -24,6 +24,7 @@
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
@@ -38,10 +39,10 @@ namespace pwiz.Osprey.Test
     public class ReconciledParquetWriterTest
     {
         /// <summary>
-        /// BuildOverlay must: key each re-scored row (Features != null,
-        /// ParquetIndex != uint.MaxValue) into the overlay map by its original
-        /// ParquetIndex, skip hydrated stubs (Features == null), and collect
-        /// gap-fill rows (ParquetIndex == uint.MaxValue) into the append list.
+        /// BuildOverlay must: key each re-scored row (Features != null, resolved
+        /// ParquetIndex) into the overlay map by its original ParquetIndex, skip
+        /// hydrated stubs (Features == null), and collect gap-fill rows (null
+        /// ParquetIndex - no Stage 4 row) into the append list.
         /// Out-of-range detection is the streaming write's job, so an out-of-range
         /// index still lands in the overlay map here.
         /// </summary>
@@ -50,7 +51,7 @@ namespace pwiz.Osprey.Test
         {
             var rescored = new FdrEntry { EntryId = 201, ParquetIndex = 1, Features = new[] { 1.0 } };
             var hydratedStub = new FdrEntry { EntryId = 202, ParquetIndex = 0, Features = null };
-            var gapFillEntry = new FdrEntry { EntryId = 203, ParquetIndex = uint.MaxValue, Features = new[] { 2.0 } };
+            var gapFillEntry = new FdrEntry { EntryId = 203, ParquetIndex = null, Features = new[] { 2.0 } };
             var outOfRange = new FdrEntry { EntryId = 204, ParquetIndex = 99, Features = new[] { 3.0 } };
             var fdrEntries = new List<FdrEntry> { rescored, hydratedStub, gapFillEntry, outOfRange };
 
@@ -92,7 +93,7 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(OspreyVersion.Current, metadata["osprey.version"]);
                 Assert.AreEqual(config.Identity.SearchParameterHash(), metadata["osprey.search_hash"]);
                 Assert.AreEqual(config.Identity.LibraryIdentityHash(), metadata["osprey.library_hash"]);
-                Assert.AreEqual("true", metadata["osprey.reconciled"]);
+                Assert.AreEqual(ParquetScoreCache.RECONCILED_SURVIVORS, metadata["osprey.reconciled"]);
             }
 
             // Stems supplied -> join-wide hash; absent/empty -> config-derived hash.

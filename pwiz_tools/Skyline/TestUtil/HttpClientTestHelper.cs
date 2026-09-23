@@ -654,8 +654,10 @@ namespace pwiz.SkylineTestUtil
                 }
             }
 
-            // Fall back to URL-based lookup
-            if (request.RequestUri != null)
+            // Fall back to URL-based lookup for GET only: the URI-keyed and blanket mocks
+            // describe downloads, and letting them answer other verbs would stub out probes
+            // like HEAD connectivity checks with unrelated bytes.
+            if (request.Method == HttpMethod.Get && request.RequestUri != null)
             {
                 return GetMockResponseStream(request.RequestUri, out _);
             }
