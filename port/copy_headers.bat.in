@@ -1,0 +1,6 @@
+xcopy pwiz\*.hpp "@HEADERS_DEST_DIR@\pwiz\" /sy
+xcopy pwiz_aux\*.hpp "@HEADERS_DEST_DIR@\pwiz_aux\" /sy
+xcopy pwiz_tools\*.hpp "@HEADERS_DEST_DIR@\pwiz_tools\" /sy
+xcopy libraries\boost_1_86_0\*.hpp "@HEADERS_DEST_DIR@\libraries\boost_1_86_0\" /sy
+xcopy libraries\boost_aux\*.hpp "@HEADERS_DEST_DIR@\libraries\boost_aux\" /sy
+
