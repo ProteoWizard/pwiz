@@ -291,6 +291,25 @@
             </summary>
             <returns>Data column statistics or null</returns>
         </member>
+        <member name="M:Parquet.File.DataColumnWriter.PrepareAsync``1(Parquet.WritingColumn{``0},System.Threading.CancellationToken)">
+            <summary>
+            Encodes and compresses the column's pages into memory. This is the expensive part of writing a
+            column and it touches nothing shared with other columns, so several columns can be prepared
+            concurrently. <see cref="M:Parquet.File.DataColumnWriter.EmitAsync(Parquet.File.DataColumnWriter.PreparedColumnChunk,Parquet.Schema.FieldPath,System.Threading.CancellationToken)"/> appends a prepared chunk to the file, which has to happen
+            in schema order because the chunk records its position in the file.
+            </summary>
+        </member>
+        <member name="M:Parquet.File.DataColumnWriter.EmitAsync(Parquet.File.DataColumnWriter.PreparedColumnChunk,Parquet.Schema.FieldPath,System.Threading.CancellationToken)">
+            <summary>
+            Appends a prepared column chunk to the file and returns its metadata. The bytes written are
+            exactly those <see cref="M:Parquet.File.DataColumnWriter.WriteAsync``1(Parquet.Schema.FieldPath,Parquet.WritingColumn{``0},System.Threading.CancellationToken)"/> writes for the same column.
+            </summary>
+        </member>
+        <member name="T:Parquet.File.DataColumnWriter.PreparedColumnChunk">
+            <summary>
+            A column chunk's pages, encoded and compressed into memory, with what the chunk's metadata needs.
+            </summary>
+        </member>
         <member name="T:Parquet.EncodingHint">
             <summary>
             Encoding hint per column. This should be used from <see cref="T:Parquet.ParquetOptions"/>
@@ -1993,6 +2012,32 @@
             <param name="cancellationToken"></param>
             <typeparam name="T"></typeparam>
         </member>
+        <member name="M:Parquet.ParquetRowGroupWriter.PrepareColumnAsync``1(Parquet.Schema.DataField,System.ReadOnlyMemory{``0},System.Nullable{System.ReadOnlyMemory{System.Int32}},System.Nullable{System.ReadOnlyMemory{System.Int32}},System.Threading.CancellationToken)">
+            <summary>
+            Encodes and compresses a column into memory without writing it. Preparing is the expensive part
+            of writing a column and touches nothing shared between columns, so a caller can prepare the
+            columns of a row group concurrently, on threads of its own choosing, and then write them in
+            schema order with <see cref="M:Parquet.ParquetRowGroupWriter.WritePreparedColumnAsync(Parquet.PreparedColumn,System.Threading.CancellationToken)"/>. The result is byte-for-byte what
+            <see cref="M:Parquet.ParquetRowGroupWriter.WriteAllPartsAsync``1(Parquet.Schema.DataField,System.ReadOnlyMemory{``0},System.Nullable{System.ReadOnlyMemory{System.Int32}},System.Nullable{System.ReadOnlyMemory{System.Int32}},System.Threading.CancellationToken)"/> writes for the same column. Like that method, this one
+            expects definition levels to be supplied for a nullable column.
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupWriter.WritePreparedColumnAsync(Parquet.PreparedColumn,System.Threading.CancellationToken)">
+            <summary>
+            Writes a column prepared by <see cref="M:Parquet.ParquetRowGroupWriter.PrepareColumnAsync``1(Parquet.Schema.DataField,System.ReadOnlyMemory{``0},System.Nullable{System.ReadOnlyMemory{System.Int32}},System.Nullable{System.ReadOnlyMemory{System.Int32}},System.Threading.CancellationToken)"/> as the next column of the row
+            group, and disposes it.
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupWriter.TakeNextSchemaElement(Parquet.Schema.DataField)">
+            <summary>
+            Checks that the field is the next column in the schema and advances to it.
+            </summary>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupWriter.ValidateRowCount(Parquet.Schema.DataField,System.Int64)">
+            <summary>
+            The first column decides the row group's row count; every later column has to match it.
+            </summary>
+        </member>
         <member name="M:Parquet.ParquetRowGroupWriter.CompleteValidate">
             <summary>
             Call to indicate that all columns have been written, to validate completeness.
@@ -2036,6 +2081,23 @@
         <member name="M:Parquet.ParquetWriter.DisposeAsync">
             <summary>
             Dispose the writer asynchronously
+            </summary>
+        </member>
+        <member name="T:Parquet.PreparedColumn">
+            <summary>
+            A column of a row group which <see cref="M:Parquet.ParquetRowGroupWriter.PrepareColumnAsync``1(Parquet.Schema.DataField,System.ReadOnlyMemory{``0},System.Nullable{System.ReadOnlyMemory{System.Int32}},System.Nullable{System.ReadOnlyMemory{System.Int32}},System.Threading.CancellationToken)"/> has encoded
+            and compressed into memory, waiting to be written by
+            <see cref="M:Parquet.ParquetRowGroupWriter.WritePreparedColumnAsync(Parquet.PreparedColumn,System.Threading.CancellationToken)"/>. Dispose it if it is never written.
+            </summary>
+        </member>
+        <member name="P:Parquet.PreparedColumn.Field">
+            <summary>
+            The field this column belongs to.
+            </summary>
+        </member>
+        <member name="M:Parquet.PreparedColumn.Dispose">
+            <summary>
+            Releases the memory holding the prepared pages.
             </summary>
         </member>
         <member name="T:Parquet.ReadingColumn`1">

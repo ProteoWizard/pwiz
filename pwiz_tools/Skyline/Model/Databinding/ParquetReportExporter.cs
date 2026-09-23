@@ -259,10 +259,29 @@ namespace pwiz.Skyline.Model.Databinding
                 {
                     using (var groupWriter = _writer.CreateRowGroup())
                     {
-                        // A row group's columns have to be written in schema order, one after another
-                        foreach (var buffer in buffers)
+                        // Encoding and compressing the columns is the expensive part, and Parquet.Net
+                        // can do it for several columns at once into memory. Only appending them to the
+                        // file has to happen one after another, in schema order.
+                        var preparedColumns = new PreparedColumn[buffers.Length];
+                        try
                         {
-                            buffer.WriteAsync(groupWriter, _cancellationToken).GetAwaiter().GetResult();
+                            ParallelEx.For(0, buffers.Length, colIndex =>
+                            {
+                                preparedColumns[colIndex] = buffers[colIndex]
+                                    .PrepareAsync(groupWriter, _cancellationToken).GetAwaiter().GetResult();
+                            }, threadName: @"Parquet Column Compression");
+                            foreach (var preparedColumn in preparedColumns)
+                            {
+                                groupWriter.WritePreparedColumnAsync(preparedColumn, _cancellationToken).GetAwaiter().GetResult();
+                            }
+                        }
+                        finally
+                        {
+                            // Columns prepared but not written when something went wrong
+                            foreach (var preparedColumn in preparedColumns)
+                            {
+                                preparedColumn?.Dispose();
+                            }
                         }
                     }
                     // Nothing refers to the buffers any more, so the next chunk can be stored in them
@@ -631,9 +650,9 @@ namespace pwiz.Skyline.Model.Databinding
             /// </summary>
             public abstract void Pack();
             /// <summary>
-            /// Writes the packed chunk as the next column of the row group.
+            /// Encodes and compresses the packed chunk into memory, ready to be written as a column of the row group.
             /// </summary>
-            public abstract Task WriteAsync(ParquetRowGroupWriter groupWriter, CancellationToken cancellationToken);
+            public abstract Task<PreparedColumn> PrepareAsync(ParquetRowGroupWriter groupWriter, CancellationToken cancellationToken);
 
             /// <summary>
             /// Converts a stored value to the type Parquet.Net stores the field's values as. A value from
@@ -701,9 +720,9 @@ namespace pwiz.Skyline.Model.Databinding
                 }
             }
 
-            public override Task WriteAsync(ParquetRowGroupWriter groupWriter, CancellationToken cancellationToken)
+            public override Task<PreparedColumn> PrepareAsync(ParquetRowGroupWriter groupWriter, CancellationToken cancellationToken)
             {
-                return groupWriter.WriteAllPartsAsync(_field, new ReadOnlyMemory<T>(_values, 0, _valueCount),
+                return groupWriter.PrepareColumnAsync(_field, new ReadOnlyMemory<T>(_values, 0, _valueCount),
                     new ReadOnlyMemory<int>(_definitionLevels, 0, _rowCount), null, cancellationToken);
             }
         }
@@ -797,9 +816,9 @@ namespace pwiz.Skyline.Model.Databinding
                 }
             }
 
-            public override Task WriteAsync(ParquetRowGroupWriter groupWriter, CancellationToken cancellationToken)
+            public override Task<PreparedColumn> PrepareAsync(ParquetRowGroupWriter groupWriter, CancellationToken cancellationToken)
             {
-                return groupWriter.WriteAllPartsAsync(_elementField, new ReadOnlyMemory<T>(_values, 0, _valueCount),
+                return groupWriter.PrepareColumnAsync(_elementField, new ReadOnlyMemory<T>(_values, 0, _valueCount),
                     new ReadOnlyMemory<int>(_definitionLevels, 0, _levelCount),
                     new ReadOnlyMemory<int>(_repetitionLevels, 0, _levelCount), cancellationToken);
             }
