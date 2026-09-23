@@ -3692,7 +3692,16 @@ namespace pwiz.Skyline.Properties {
                 return ((string)(this["MsFraggerDownloadUrl"]));
             }
         }
-        
+
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://proteome.gs.washington.edu/~nicksh/InstallTest/{0}-Setup.exe")]
+        public string InstallUrl {
+            get {
+                return ((string)(this["InstallUrl"]));
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]

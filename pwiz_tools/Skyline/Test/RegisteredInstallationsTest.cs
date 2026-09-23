@@ -96,6 +96,15 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(1, otherFound.Count);
             Assert.AreEqual(RELEASE, otherFound[0].ProductName);
             Assert.AreEqual(otherProduct, otherFound[0].ExecutableFolder);
+
+            // A registered folder is one whether or not it has been run, and however the
+            // separator and case were written
+            var registered = new StubRegisteredInstallations(DAILY, entries);
+            AssertEx.IsTrue(registered.IsInstallationFolder(installed));
+            AssertEx.IsTrue(registered.IsInstallationFolder(neverRun + Path.DirectorySeparatorChar));
+            AssertEx.IsTrue(registered.IsInstallationFolder(otherProduct.ToUpperInvariant()));
+            AssertEx.IsFalse(registered.IsInstallationFolder(TestFilesDir.GetTestPath(@"Unregistered")));
+            AssertEx.IsFalse(registered.IsInstallationFolder(null));
         }
 
         /// <summary>

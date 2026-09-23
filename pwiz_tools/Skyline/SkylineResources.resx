@@ -1190,11 +1190,8 @@ Try uninstalling and reinstalling Skyline, or contact your IT department if the 
   <data name="SkylineWindow_ViewSpectralLibraries_No_libraries_to_show_Would_you_like_to_add_a_library" xml:space="preserve">
     <value>No libraries to show. Would you like to add a library?</value>
   </data>
-  <data name="UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__" xml:space="preserve">
-    <value>Upgrading to {0} (downloading {1} of {2})</value>
-  </data>
-  <data name="UpgradeManager_updateCheck_Complete_Upgrading__0_" xml:space="preserve">
-    <value>Upgrading {0}</value>
+  <data name="UpdateChecker_DownloadPublishedVersion_The_update_information_at__0__could_not_be_read_" xml:space="preserve">
+    <value>The update information at {0} could not be read.</value>
   </data>
   <data name="ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListException_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_separated_list_of_annotation_targets___2___" xml:space="preserve">
     <value>The value '{0}' is not valid for the argument {1} which requires a comma-separated list of annotation targets {2}.</value>

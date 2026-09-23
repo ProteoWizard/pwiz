@@ -1141,12 +1141,6 @@
   <data name="SkylineWindow_ViewSpectralLibraries_No_libraries_to_show_Would_you_like_to_add_a_library" xml:space="preserve">
     <value>无可显示的库。您是否想要添加一个库？</value>
   </data>
-  <data name="UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__" xml:space="preserve">
-    <value>升级到 {0}（正在下载 {1} 个，共 {2} 个）</value>
-  </data>
-  <data name="UpgradeManager_updateCheck_Complete_Upgrading__0_" xml:space="preserve">
-    <value>正在升级 {0}</value>
-  </data>
   <data name="ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListException_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_separated_list_of_annotation_targets___2___" xml:space="preserve">
     <value>值“{0}”对参数 {1} 无效，因为该参数要求使用逗号分隔的注释目标列表 {2}。</value>
   </data>

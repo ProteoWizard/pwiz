@@ -13,20 +13,3 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
-
-namespace System.Deployment.Application
-{
-    // ClickOnce ApplicationDeployment isn't available on net8 — provide a stub
-    // for source references; the net472 call sites are gone.
-    public class ApplicationDeployment
-    {
-        public static bool IsNetworkDeployed => false;
-        public static ApplicationDeployment CurrentDeployment => new ApplicationDeployment();
-    }
-
-    public class TrustNotGrantedException : Exception
-    {
-        public TrustNotGrantedException() { }
-        public TrustNotGrantedException(string message) : base(message) { }
-    }
-}

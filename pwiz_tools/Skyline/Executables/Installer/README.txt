@@ -29,7 +29,17 @@ Build:
      Inno Setup 6 is fetched by pwiz-sharp\installer\Ensure-InnoSetup.ps1 if the
      machine lacks it; the runtime EXE is cached under pwiz-sharp\installer\cache.
      Pass -SignToolCommand '<signtool command with $f>' for a signed build.
-  3. Installers land in pwiz_tools\Skyline\bin\installer\.
+  3. Installers land in pwiz_tools\Skyline\bin\installer\, with the update
+     manifest <channel>-Setup.json beside them. Skyline's startup check reads
+     the manifest to learn the published version: the InstallUrl application
+     setting (app.config, {0} standing for the channel) is where the installer
+     is downloaded from, and the manifest is that URL with the extension
+     changed to .json. To publish, upload the manifest and the bundled
+     installer to those two URLs; the build prints them.
+     A private build that should update from somewhere else is built with
+     -InstallUrl <url of its installer>; the value is written into the staged
+     <channel>.dll.config, so the installed Skyline checks there, and the
+     manifest is named from it.
   4. pwsh -File pwiz_tools\Skyline\Executables\Installer\Test-Installer.ps1
      installs the newest one silently, checks the deployment, runs
      SkylineCmd --version, uninstalls, and checks the cleanup (-AllUsers from

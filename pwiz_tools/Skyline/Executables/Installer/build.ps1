@@ -10,11 +10,16 @@ Release x64 from Visual Studio):
   2. Stage a filtered copy: everything the build put next to Skyline except the
      NuGet doc-comment XML files, the non-Windows native runtimes and any stray
      RID-named publish folder.
-  3. Make sure the .NET 10 desktop runtime installer EXE is cached (shared with
+  3. Settle where this build installs from: the InstallUrl application setting in
+     the staged <channel>.dll.config, overwritten by -InstallUrl for a private
+     build. Write the update manifest there too, the small JSON file Skyline's
+     startup check reads to learn the published version; it is published beside
+     the installer, under the installer's name with a .json extension.
+  4. Make sure the .NET 10 desktop runtime installer EXE is cached (shared with
      the pwiz-sharp installer under pwiz-sharp\installer\cache\).
-  4. Compile Setup.iss twice: the default variant bundling the runtime and the
+  5. Compile Setup.iss twice: the default variant bundling the runtime and the
      NoNetRuntime variant that only checks for it.
-  5. Report.
+  6. Report, including the two URLs to upload the manifest and the installer to.
 
 The installer itself is described in Setup.iss. Test-Installer.ps1 exercises a built
 installer end to end (silent install, SkylineCmd smoke, uninstall).
@@ -29,6 +34,14 @@ The Skyline build output directory to package. Default: the newest of
 .PARAMETER OutputDir
 Where the installers land. Default ..\..\bin\installer (gitignored).
 
+.PARAMETER InstallUrl
+Where the installed Skyline was installed from and checks for a newer version: the URL of
+the bundled installer as published, e.g.
+  https://proteome.gs.washington.edu/~nicksh/SpecialSkylines/Skyline-daily-Setup.exe
+A {0} in it stands for the channel (Skyline or Skyline-daily). Written into the staged
+<channel>.dll.config, so the installed copy carries it. Default: the value app.config
+compiled into the build, which is the official location.
+
 .PARAMETER SignToolCommand
 A complete signtool command line, e.g.
   'signtool sign /csp "DigiCert Signing Manager KSP" /kc <key> /f <cert> /tr http://timestamp.digicert.com /td SHA256 /fd SHA256 $f'
@@ -40,6 +53,7 @@ Unsigned when omitted.
 .USAGE
     pwsh -File pwiz_tools/Skyline/Executables/Installer/build.ps1
     pwsh -File pwiz_tools/Skyline/Executables/Installer/build.ps1 -SkylineBinDir C:\other\bin\x64\Release\net10.0-windows
+    pwsh -File pwiz_tools/Skyline/Executables/Installer/build.ps1 -InstallUrl https://example.org/skylines/Skyline-daily-Setup.exe
 #>
 #requires -Version 7.0
 [CmdletBinding()]
@@ -47,6 +61,7 @@ param(
     [ValidateSet('Debug', 'Release')] [string] $Configuration = 'Release',
     [string] $SkylineBinDir,
     [string] $OutputDir,
+    [string] $InstallUrl,
     [string] $SignToolCommand
 )
 $ErrorActionPreference = 'Stop'
@@ -141,7 +156,32 @@ if (Test-Path (Join-Path $stagingDir 'coreclr.dll')) {
     throw "The stage contains coreclr.dll: $SkylineBinDir looks like a self-contained publish, not the framework-dependent build the installer expects."
 }
 
-# 3. The .NET 10 desktop runtime EXE, cached beside the pwiz-sharp installer so the two
+# 3. Install URL and update manifest. Skyline reads InstallUrl from the config beside
+#    its exe (the channel name replaces the {0}), downloads a newer installer from it,
+#    and reads the manifest from that URL with the extension changed to .json. A
+#    private build gets its own URL written into the staged config here, and the
+#    manifest is named from whatever the staged config ends up saying, so the
+#    installed Skyline and the published files agree by construction.
+Write-Host "`n==> install URL" -ForegroundColor Cyan
+$configPath = Join-Path $stagingDir "$appName.dll.config"
+[xml] $config = Get-Content $configPath
+$urlNode = $config.SelectSingleNode("/configuration/applicationSettings/pwiz.Skyline.Properties.Settings/setting[@name='InstallUrl']/value")
+if (-not $urlNode) {
+    throw "InstallUrl is not in $configPath; the update manifest cannot be named."
+}
+if ($InstallUrl) {
+    $urlNode.InnerText = $InstallUrl
+    $config.Save($configPath)
+}
+$installUrl = $urlNode.InnerText -f $appName
+$manifestUrl = [System.IO.Path]::ChangeExtension(([uri] $installUrl).GetLeftPart([System.UriPartial]::Path), '.json')
+$manifestPath = Join-Path $OutputDir ([System.IO.Path]::GetFileName($manifestUrl))
+if (-not (Test-Path $OutputDir)) { New-Item -ItemType Directory $OutputDir -Force | Out-Null }
+Set-Content -Path $manifestPath -Value (@{ version = $appVersion } | ConvertTo-Json)
+Write-Host "    $installUrl$(if ($InstallUrl) { ' (from -InstallUrl)' })"
+Write-Host "    manifest $manifestPath"
+
+# 4. The .NET 10 desktop runtime EXE, cached beside the pwiz-sharp installer so the two
 #    products share one download. The aka.ms URL redirects to the latest 10.0.x.
 $dotnetRuntimeUrl = 'https://aka.ms/dotnet/10.0/windowsdesktop-runtime-win-x64.exe'
 $dotnetExe = Join-Path $cacheDir 'windowsdesktop-runtime-10.0-win-x64.exe'
@@ -153,7 +193,7 @@ if (-not (Test-Path $dotnetExe)) {
 }
 Write-Host "    $([math]::Round((Get-Item $dotnetExe).Length / 1MB, 1)) MB at $dotnetExe"
 
-# 4. ISCC, bootstrapped by the shared Ensure-InnoSetup.ps1 when the machine lacks it.
+# 5. ISCC, bootstrapped by the shared Ensure-InnoSetup.ps1 when the machine lacks it.
 $ensure = Join-Path $pwizSharpInstaller 'Ensure-InnoSetup.ps1'
 $iscc = & pwsh -NoProfile -File $ensure -PassThru | Select-Object -Last 1
 if ($LASTEXITCODE -ne 0 -or -not $iscc -or -not (Test-Path $iscc)) {
@@ -190,7 +230,7 @@ $lightName   = "$appName-NoNetRuntime-Setup-$appVersion"
 Invoke-Iscc -OutputBaseFilename $bundledName
 Invoke-Iscc -OutputBaseFilename $lightName -ExtraDefines @('/DNoNetRuntime')
 
-# 5. Report.
+# 6. Report.
 Write-Host ""
 foreach ($base in @($bundledName, $lightName)) {
     $setupPath = Join-Path $OutputDir "$base.exe"
@@ -206,3 +246,9 @@ foreach ($base in @($bundledName, $lightName)) {
     Write-Host "SHA-256: $hash"
     Write-Host ""
 }
+Write-Host "Update manifest: $manifestPath" -ForegroundColor Green
+Write-Host "To publish this version, upload:"
+Write-Host "    $manifestPath"
+Write-Host "        as $manifestUrl"
+Write-Host "    $(Join-Path $OutputDir "$bundledName.exe")"
+Write-Host "        as $installUrl"

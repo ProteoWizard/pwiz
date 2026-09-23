@@ -203,8 +203,6 @@ namespace pwiz.Skyline
 
             DocumentUIChangedEvent += AutoTrainCompleted;
 
-            checkForUpdatesMenuItem.Visible = checkForUpdatesSeparator.Visible = false;
-
             // Begin ToolStore check for updates to currently installed tools, if any
             if (ToolStoreUtil.UpdatableTools(Settings.Default.ToolList).Any())
             {
@@ -3036,11 +3034,6 @@ namespace pwiz.Skyline
 
         public void CheckForUpdate()
         {
-            // Make sure the document is saved before doing this since it could
-            // restart the application
-            if (Dirty)
-                SaveDocument();
-
             UpgradeManager.CheckForUpdateAsync(this, false);
         }
 

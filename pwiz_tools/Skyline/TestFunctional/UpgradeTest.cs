@@ -1,9 +1,10 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2016 University of Washington - Seattle, WA
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,44 +18,34 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
-using System.Deployment.Application;
-using System.Threading;
+using System.IO;
+using System.Text;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.GUI;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Startup;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {
+    /// <summary>
+    /// The startup check finds a newer version, the user accepts, and the download opens.
+    /// </summary>
     [TestClass]
     public class UpgradeBasicTest : AbstractFunctionalTest
     {
-        private TestDeployment _deployment;
-
-        internal static TestDeployment CreateDeployment()
-        {
-            var testDeployment = new TestDeployment
-            {
-                IsNetworkDeployed = true,
-                CurrentVersion = new Version(3, 6, 1, 10171),
-                UpdateVersion = new Version(3, 6, 1, 10172),
-                UpdateBytes = 34 * 1024 * 1024,
-                UpdateDurationMillis = 1500 // Show LongWaitDlg
-            };
-            UpgradeManager.AppDeployment = testDeployment;
-            return testDeployment;
-        }
+        private TestUpdateChecker _checker;
 
         [TestMethod]
         public void UpgradeBasicFunctionalTest()
         {
-            using (_deployment = CreateDeployment())
+            using (_checker = new TestUpdateChecker())
+            using (_checker.Publish(TestUpdateChecker.NEWER_VERSION))
+            {
                 RunFunctionalTest();
+            }
         }
 
         protected override void InitializeSkylineSettings()
@@ -66,37 +57,49 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             var upgradeDlg = WaitForOpenForm<UpgradeDlg>();
-            Assert.IsTrue(upgradeDlg.UpdateFound && upgradeDlg.UpdateAutomatic);
-            Assert.AreEqual(_deployment.UpdateVersion.ToString(), upgradeDlg.VersionText);
+            AssertEx.IsTrue(upgradeDlg.UpdateFound);
+            AssertEx.AreEqual(TestUpdateChecker.NEWER_VERSION.ToString(), upgradeDlg.VersionText);
             RunUI(() =>
             {
                 // Changing check at startup should update immediately
-                Assert.IsTrue(UpgradeManager.CheckAtStartup);
-                Assert.IsTrue(upgradeDlg.CheckAtStartup);
+                AssertEx.IsTrue(UpgradeManager.CheckAtStartup);
+                AssertEx.IsTrue(upgradeDlg.CheckAtStartup);
                 upgradeDlg.CheckAtStartup = false;
-                Assert.IsFalse(UpgradeManager.CheckAtStartup);
+                AssertEx.IsFalse(UpgradeManager.CheckAtStartup);
             });
             OkDialog(upgradeDlg, upgradeDlg.AcceptButton.PerformClick);
-            var longWaitDlg = WaitForOpenForm<LongWaitDlg>();
-            OkDialog(longWaitDlg, () => { });   // Do nothing and the long wait should go away.
-            WaitForCondition(() => Equals(_deployment.CurrentVersion, _deployment.UpdateVersion));
-            var noUpgradeDlg = ShowDialog<UpgradeDlg>(SkylineWindow.CheckForUpdate);
-            Assert.IsFalse(noUpgradeDlg.UpdateFound);
-            Assert.IsFalse(noUpgradeDlg.CheckAtStartup);
-            OkDialog(upgradeDlg, noUpgradeDlg.AcceptButton.PerformClick);
+            // The download opens on the UI thread as soon as the dialog closes, so a round
+            // trip through that thread is enough to know it has happened.
+            RunUI(() => AssertEx.AreEqual(1, _checker.DownloadsOpened));
+
+            // The published version is this one: a manual check finds nothing.
+            using (_checker.Publish(TestUpdateChecker.CURRENT_VERSION))
+            {
+                var noUpgradeDlg = ShowDialog<UpgradeDlg>(SkylineWindow.CheckForUpdate);
+                AssertEx.IsFalse(noUpgradeDlg.UpdateFound);
+                AssertEx.IsFalse(noUpgradeDlg.CheckAtStartup);
+                OkDialog(noUpgradeDlg, noUpgradeDlg.AcceptButton.PerformClick);
+            }
+            RunUI(() => AssertEx.AreEqual(1, _checker.DownloadsOpened));
         }
     }
 
+    /// <summary>
+    /// Declining the startup offer opens nothing and is not repeated; a manual check offers it again.
+    /// </summary>
     [TestClass]
     public class UpgradeCancelTest : AbstractFunctionalTest
     {
-        private TestDeployment _deployment;
+        private TestUpdateChecker _checker;
 
         [TestMethod]
         public void UpgradeCancelFunctionalTest()
         {
-            using (_deployment = UpgradeBasicTest.CreateDeployment())
+            using (_checker = new TestUpdateChecker())
+            using (_checker.Publish(TestUpdateChecker.NEWER_VERSION))
+            {
                 RunFunctionalTest();
+            }
         }
 
         protected override void InitializeSkylineSettings()
@@ -109,180 +112,140 @@ namespace pwiz.SkylineTestFunctional
         {
             var upgradeDlg = WaitForOpenForm<UpgradeDlg>();
             OkDialog(upgradeDlg, upgradeDlg.CancelButton.PerformClick);
-            var longWaitDlg = TryWaitForOpenForm<LongWaitDlg>(800);
-            Assert.IsNull(longWaitDlg);
+            RunUI(() => AssertEx.AreEqual(0, _checker.DownloadsOpened));
+
+            // The startup check runs once per session, not once per window
             var startPage = ShowDialog<StartPage>(SkylineWindow.OpenStartPage);
             upgradeDlg = TryWaitForOpenForm<UpgradeDlg>(200);
-            Assert.IsNull(upgradeDlg);
+            AssertEx.IsNull(upgradeDlg);
             OkDialog(startPage, startPage.Close);
-            upgradeDlg = ShowDialog<UpgradeDlg>(SkylineWindow.CheckForUpdate);
-            Assert.IsTrue(upgradeDlg.UpdateFound);
-            OkDialog(upgradeDlg, upgradeDlg.AcceptButton.PerformClick);
-            longWaitDlg = WaitForOpenForm<LongWaitDlg>();
-            OkDialog(longWaitDlg, () => { });   // Do nothing and the long wait should go away.
-            WaitForCondition(() => Equals(_deployment.CurrentVersion, _deployment.UpdateVersion));
 
-            _deployment.UpdateVersion = new Version(3, 7, 1, 10173);
             upgradeDlg = ShowDialog<UpgradeDlg>(SkylineWindow.CheckForUpdate);
-            Assert.IsTrue(upgradeDlg.UpdateFound);
-            Assert.AreEqual("3.7.1.10173", upgradeDlg.VersionText);
+            AssertEx.IsTrue(upgradeDlg.UpdateFound);
+            AssertEx.AreEqual(TestUpdateChecker.NEWER_VERSION.ToString(), upgradeDlg.VersionText);
             OkDialog(upgradeDlg, upgradeDlg.AcceptButton.PerformClick);
-            longWaitDlg = WaitForOpenForm<LongWaitDlg>();
-            OkDialog(longWaitDlg, longWaitDlg.CancelDialog);
-            Assert.IsFalse(TryWaitForCondition(100, () => Equals(_deployment.CurrentVersion, _deployment.UpdateVersion)));
+            RunUI(() => AssertEx.AreEqual(1, _checker.DownloadsOpened));
+
+            // A new release is announced by its release number alone
+            using (_checker.Publish(TestUpdateChecker.NEWER_RELEASE_VERSION))
+            {
+                upgradeDlg = ShowDialog<UpgradeDlg>(SkylineWindow.CheckForUpdate);
+                AssertEx.IsTrue(upgradeDlg.UpdateFound);
+                AssertEx.AreEqual(TestUpdateChecker.NEWER_RELEASE_TEXT, upgradeDlg.VersionText);
+                OkDialog(upgradeDlg, upgradeDlg.CancelButton.PerformClick);
+            }
+            RunUI(() => AssertEx.AreEqual(1, _checker.DownloadsOpened));
         }
     }
 
+    /// <summary>
+    /// A failed startup check is silent; a failed manual check says why and still offers the setting.
+    /// </summary>
     [TestClass]
     public class UpgradeErrorsTest : AbstractFunctionalTest
     {
-        private TestDeployment _deployment;
+        private TestUpdateChecker _checker;
 
         [TestMethod]
         public void UpgradeErrorsFunctionalTest()
         {
-            using (_deployment = UpgradeBasicTest.CreateDeployment())
+            using (_checker = new TestUpdateChecker())
+            using (HttpClientTestHelper.SimulateHttp404())
+            {
                 RunFunctionalTest();
+            }
         }
 
         protected override void InitializeSkylineSettings()
         {
             base.InitializeSkylineSettings();
-            UpgradeManager.CheckAtStartup = false;
+            UpgradeManager.CheckAtStartup = true;
         }
-
-        private const string errorText = "Update error text";
 
         protected override void DoTest()
         {
-            // Trust exception
-            var upgradeDlg = TryWaitForOpenForm<UpgradeDlg>(200);
-            Assert.IsNull(upgradeDlg);
-            _deployment.UpdateCheckError = new TrustNotGrantedException();
-            upgradeDlg = ShowDialog<UpgradeDlg>(SkylineWindow.CheckForUpdate);
-            Assert.IsTrue(upgradeDlg.UpdateFound);
-            Assert.IsFalse(upgradeDlg.UpdateAutomatic);
-            Assert.AreEqual(_deployment.UpdateVersion.ToString(), upgradeDlg.VersionText);
-            RunDlg<MessageDlg>(upgradeDlg.AcceptButton.PerformClick, dlg =>
-            {
-                Assert.AreEqual(TestDeployment.INSTALL_LINK_TEXT, dlg.Message);
-                dlg.OkDialog();
-            });
+            AssertEx.IsNull(TryWaitForOpenForm<MessageDlg>(200));
+            AssertEx.IsNull(TryWaitForOpenForm<UpgradeDlg>(200));
 
-            // Any other exception
-            _deployment.UpdateCheckError = new Exception(errorText);
-            var errorDlg = ShowDialog<MessageDlg>(SkylineWindow.CheckForUpdate);
-            Assert.AreEqual(Skyline.Properties.Resources.UpgradeManager_updateCheck_Complete_Failed_attempting_to_check_for_an_upgrade_, errorDlg.Message);
-            Assert.AreEqual(CommonAlertDlg.FormatExceptionDetailMessage(_deployment.UpdateCheckError), errorDlg.DetailMessage);
-            RunDlg<UpgradeDlg>(errorDlg.OkDialog, noUpdateDlg =>
+            // The manifest cannot be downloaded
+            using (var helper = HttpClientTestHelper.SimulateHttp404())
             {
-                Assert.IsFalse(noUpdateDlg.UpdateFound);
-                noUpdateDlg.AcceptButton.PerformClick();
-            });
+                var errorDlg = ShowDialog<MessageDlg>(SkylineWindow.CheckForUpdate);
+                AssertEx.AreEqual(Skyline.Properties.Resources.UpgradeManager_updateCheck_Complete_Failed_attempting_to_check_for_an_upgrade_, errorDlg.Message);
+                AssertEx.Contains(errorDlg.DetailMessage, helper.GetExpectedMessage(_checker.ManifestUri));
+                RunDlg<UpgradeDlg>(errorDlg.OkDialog, noUpdateDlg =>
+                {
+                    AssertEx.IsFalse(noUpdateDlg.UpdateFound);
+                    noUpdateDlg.AcceptButton.PerformClick();
+                });
+            }
 
-            // Exception during update
-            _deployment.UpdateError = _deployment.UpdateCheckError;
-            _deployment.UpdateCheckError = null;
-            upgradeDlg = ShowDialog<UpgradeDlg>(SkylineWindow.CheckForUpdate);
-            Assert.IsTrue(upgradeDlg.UpdateFound && upgradeDlg.UpdateAutomatic);
-            Assert.AreEqual(_deployment.UpdateVersion.ToString(), upgradeDlg.VersionText);
-            RunDlg<MessageDlg>(upgradeDlg.AcceptButton.PerformClick, dlg =>
+            // The manifest is not what the installer build writes
+            using (_checker.PublishManifest("not json"))
             {
-                Assert.AreEqual(Skyline.Properties.Resources.UpgradeManager_updateCheck_Complete_Failed_attempting_to_upgrade_, dlg.Message);
-                Assert.AreEqual(CommonAlertDlg.FormatExceptionDetailMessage(_deployment.UpdateError), errorDlg.DetailMessage);
-                dlg.OkDialog();
-            });
-            upgradeDlg = WaitForOpenForm<UpgradeDlg>();
-            Assert.IsTrue(upgradeDlg.UpdateFound);
-            Assert.IsFalse(upgradeDlg.UpdateAutomatic);
-            Assert.IsNull(upgradeDlg.VersionText);
-            RunDlg<MessageDlg>(upgradeDlg.AcceptButton.PerformClick, dlg =>
-            {
-                Assert.AreEqual(TestDeployment.INSTALL_LINK_TEXT, dlg.Message);
-                dlg.OkDialog();
-            });
+                var errorDlg = ShowDialog<MessageDlg>(SkylineWindow.CheckForUpdate);
+                AssertEx.AreEqual(Skyline.Properties.Resources.UpgradeManager_updateCheck_Complete_Failed_attempting_to_check_for_an_upgrade_, errorDlg.Message);
+                AssertEx.Contains(errorDlg.DetailMessage, string.Format(
+                    SkylineResources.UpdateChecker_DownloadPublishedVersion_The_update_information_at__0__could_not_be_read_,
+                    _checker.ManifestUri));
+                RunDlg<UpgradeDlg>(errorDlg.OkDialog, noUpdateDlg =>
+                {
+                    AssertEx.IsFalse(noUpdateDlg.UpdateFound);
+                    noUpdateDlg.AcceptButton.PerformClick();
+                });
+            }
+            RunUI(() => AssertEx.AreEqual(0, _checker.DownloadsOpened));
         }
     }
 
-    internal class TestDeployment : UpgradeManager.IDeployment, IDisposable
+    /// <summary>
+    /// The checker Skyline consults while this exists: a fixed current version, a download
+    /// that is counted instead of opened, and manifests served by <see cref="HttpClientTestHelper"/>.
+    /// </summary>
+    internal class TestUpdateChecker : UpdateChecker, IDisposable
     {
-        public const string INSTALL_LINK_TEXT = "Install link";
+        public const string INSTALL_URL = "https://skyline.example.org/software/Skyline-Setup.exe";
+        public const string NEWER_RELEASE_TEXT = "3.7";
+        public static readonly Version CURRENT_VERSION = new Version(3, 6, 1, 10171);
+        public static readonly Version NEWER_VERSION = new Version(3, 6, 1, 10172);
+        public static readonly Version NEWER_RELEASE_VERSION = new Version(3, 7, 0, 10173);
 
-        private bool _isCanceled;
-        private Action<UpgradeManager.UpdateProgress> _progress;
-        private Action<UpgradeManager.UpdateCompletedDetails> _completed;
-
-        public bool IsNetworkDeployed { get; set; }
-        public Version CurrentVersion { get; set; }
-        public Version UpdateVersion { get; set; }
-        public long UpdateBytes { get; set; }
-        public int UpdateDurationMillis { get; set; }
-        public Exception UpdateCheckError { get; set; }
-        public Exception UpdateError { get; set; }
-
-        public UpgradeManager.UpdateCheckDetails CheckForDetailedUpdate()
+        public TestUpdateChecker()
         {
-            if (UpdateCheckError != null)
-                throw UpdateCheckError;
-
-            return new UpgradeManager.UpdateCheckDetails(!Equals(CurrentVersion, UpdateVersion), UpdateVersion, UpdateBytes);
+            Enabled = true;
+            CurrentVersion = CURRENT_VERSION;
+            InstallUrl = INSTALL_URL;
+            UpgradeManager.Checker = this;
         }
 
-        public void UpdateAsync(Action<UpgradeManager.UpdateProgress> updateProgress,
-                                Action<UpgradeManager.UpdateCompletedDetails> updateComplete)
-        {
-            _progress = updateProgress;
-            _completed = updateComplete;
+        public int DownloadsOpened { get; private set; }
 
-            var worker = new BackgroundWorker();
-            worker.DoWork += update_DoWork;
-            worker.RunWorkerCompleted += update_Complete;
-            worker.RunWorkerAsync();
+        public override void OpenDownload(IWin32Window parent)
+        {
+            DownloadsOpened++;
         }
 
-        private void update_DoWork(object sender, DoWorkEventArgs e)
+        public HttpClientTestHelper Publish(Version version)
         {
-            const int cycles = 10;
-            long totalBytes = UpdateBytes;
-            for (int i = 0; i < cycles; i++)
+            return PublishManifest("{ \"" + VERSION_PROPERTY + "\": \"" + version + "\" }");
+        }
+
+        /// <summary>
+        /// Serves the manifest to every request until the helper is disposed. A fresh stream
+        /// per request, because the download closes the one it read.
+        /// </summary>
+        public HttpClientTestHelper PublishManifest(string json)
+        {
+            var manifestUri = ManifestUri;
+            return new HttpClientTestHelper(new HttpClientTestBehavior
             {
-                if (_isCanceled || UpdateError != null)
-                    return;
-                Thread.Sleep(UpdateDurationMillis / cycles);
-                _progress(new UpgradeManager.UpdateProgress((i + 1) * totalBytes / cycles, totalBytes));
-            }
-            CurrentVersion = UpdateVersion;
-        }
-
-        private void update_Complete(object sender, RunWorkerCompletedEventArgs e)
-        {
-            _completed(new UpgradeManager.UpdateCompletedDetails(_isCanceled, UpdateError));
-        }
-
-        public void UpdateAsyncCancel()
-        {
-            _isCanceled = true;
-        }
-
-        public void Restart()
-        {
-            // Do nothing
-        }
-
-        public Version GetVersionFromUpdateLocation()
-        {
-            return UpdateVersion;
-        }
-
-        public void OpenInstallLink(Control parentWindow)
-        {
-            MessageDlg.Show(parentWindow, INSTALL_LINK_TEXT);
+                ResponseFactory = uri => Equals(uri, manifestUri) ? new MemoryStream(Encoding.UTF8.GetBytes(json)) : null
+            });
         }
 
         public void Dispose()
         {
-            _progress = null;
-            _completed = null;
+            UpgradeManager.Checker = null;
         }
     }
 }

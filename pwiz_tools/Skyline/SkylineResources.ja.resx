@@ -1141,12 +1141,6 @@
   <data name="SkylineWindow_ViewSpectralLibraries_No_libraries_to_show_Would_you_like_to_add_a_library" xml:space="preserve">
     <value>表示するライブラリがありません。ライブラリを追加しますか？</value>
   </data>
-  <data name="UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__" xml:space="preserve">
-    <value>{0}にアップグレードしています（{1}/{2}をダウンロードしています）</value>
-  </data>
-  <data name="UpgradeManager_updateCheck_Complete_Upgrading__0_" xml:space="preserve">
-    <value>{0}をアップグレードしています</value>
-  </data>
   <data name="ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListException_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_separated_list_of_annotation_targets___2___" xml:space="preserve">
     <value>値「{0}」は、注釈ターゲット{2}のカンマ区切りリストを必要とする引数{1}には有効ではありません。</value>
   </data>

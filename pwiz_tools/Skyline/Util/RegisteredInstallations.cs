@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Microsoft.Win32;
 using pwiz.Common.SystemUtil;
 
@@ -94,6 +95,17 @@ namespace pwiz.Skyline.Util
                     UninstallCommand = entry.UninstallCommand
                 };
             }
+        }
+
+        /// <summary>
+        /// Whether Programs and Features lists an installation in the folder, which is what
+        /// tells an executable it was installed there rather than built or copied there.
+        /// </summary>
+        public bool IsInstallationFolder(string folder)
+        {
+            folder = NormalizeFolder(folder);
+            return folder != null && ReadUninstallEntries().Any(entry =>
+                string.Equals(NormalizeFolder(entry.InstallLocation), folder, StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>

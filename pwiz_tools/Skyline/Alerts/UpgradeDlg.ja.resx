@@ -180,36 +180,6 @@
   <data name="&gt;&gt;linkReleaseNotes.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="labelDetailAutomatic.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelDetailAutomatic.Location" type="System.Drawing.Point, System.Drawing">
-    <value>129, 81</value>
-  </data>
-  <data name="labelDetailAutomatic.Size" type="System.Drawing.Size, System.Drawing">
-    <value>154, 13</value>
-  </data>
-  <data name="labelDetailAutomatic.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="labelDetailAutomatic.Text" xml:space="preserve">
-    <value>自動アップグレードが利用できます。</value>
-  </data>
-  <data name="labelDetailAutomatic.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="&gt;&gt;labelDetailAutomatic.Name" xml:space="preserve">
-    <value>labelDetailAutomatic</value>
-  </data>
-  <data name="&gt;&gt;labelDetailAutomatic.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelDetailAutomatic.Parent" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;labelDetailAutomatic.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <data name="labelDirections.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>

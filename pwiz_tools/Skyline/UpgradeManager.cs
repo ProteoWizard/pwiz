@@ -1,9 +1,10 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Fable 5.1) <noreply .at. anthropic.com>
  *
  * Copyright 2016 University of Washington - Seattle, WA
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,35 +20,32 @@
 
 using System;
 using System.ComponentModel;
-// On net8 this namespace resolves to the stubs in SkylineNet8Stubs.cs (ClickOnce's real
-// System.Deployment.Application is net472-only). We need TrustNotGrantedException on both
-// frameworks so the trust-exception path in updateCheck_Complete compiles and runs on net8.
-using System.Deployment.Application;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
-using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline
 {
+    /// <summary>
+    /// Asks the <see cref="UpdateChecker"/> whether a newer Skyline has been published, once when
+    /// the first window comes up and whenever the user asks from the Help menu, and offers to
+    /// open the download when there is one.
+    /// </summary>
     public sealed class UpgradeManager
     {
         private static bool _checkedAtStartup;
+        private static UpdateChecker _checker;
 
-        public static IDeployment _appDeployment = new NullDeployment();
-
-        public static IDeployment AppDeployment
+        public static UpdateChecker Checker
         {
-            get { return _appDeployment; }
+            get { return _checker ??= new UpdateChecker(); }
             set
             {
                 _checkedAtStartup = false;
-                _appDeployment = value;
+                _checker = value;
             }
         }
 
@@ -59,9 +57,6 @@ namespace pwiz.Skyline
 
         private readonly Control _parentWindow;
         private readonly bool _startup;
-        private AutoResetEvent _endUpdateEvent;
-        private UpdateCheckDetails _updateInfo;
-        private UpdateCompletedDetails _completeArgs;
 
         public static void CheckForUpdateAsync(Control parentWindow, bool startup = true)
         {
@@ -70,12 +65,10 @@ namespace pwiz.Skyline
                 if (_checkedAtStartup)
                     return;
                 _checkedAtStartup = true;
+                if (!Checker.Enabled || !CheckAtStartup)
+                    return;
             }
-
-            if (AppDeployment.IsNetworkDeployed && (CheckAtStartup || !startup))
-            {
-                new UpgradeManager(parentWindow, startup).BeginCheck();
-            }
+            new UpgradeManager(parentWindow, startup).BeginCheck();
         }
 
         private UpgradeManager(Control parentWindow, bool startup)
@@ -91,8 +84,6 @@ namespace pwiz.Skyline
 
         private void BeginCheck()
         {
-            // Use backround worker instead of CheckForUpdateAsync to avoid
-            // saving state about update availability
             var worker = new BackgroundWorker();
             worker.DoWork += updateCheck_DoWork;
             worker.RunWorkerCompleted += updateCheck_Complete;
@@ -103,7 +94,7 @@ namespace pwiz.Skyline
         {
             try
             {
-                e.Result = AppDeployment.CheckForDetailedUpdate();
+                e.Result = Checker.CheckForNewerVersion();
             }
             catch (Exception x)
             {
@@ -113,99 +104,40 @@ namespace pwiz.Skyline
 
         private void updateCheck_Complete(object sender, RunWorkerCompletedEventArgs e)
         {
-            // A trust exception means an update exists but ClickOnce won't auto-install it, so offer
-            // the manual install link instead of surfacing a generic error dialog. Runs on net8 too:
-            // in production AppDeployment is NullDeployment (IsNetworkDeployed=false, never throws this),
-            // so this path is only exercised by tests that inject a deployment. Leaving it net472-only
-            // let the trust case fall through to the error MessageDlg below, desyncing UpgradeErrorsTest.
-            var exTrust = e.Result as TrustNotGrantedException;
-            if (exTrust != null)
+            if (e.Result is Exception ex)
             {
-                if (ShowUpgradeForm(AppDeployment.GetVersionFromUpdateLocation(), false, true))
-                    AppDeployment.OpenInstallLink(ParentWindow);
-                return;
-            }
-            var ex = e.Result as Exception;
-            if (ex != null)
-            {
-                // Show an error message box to allow a user to inspect the exception stack trace
+                // Nobody asked for the startup check, and being offline is an ordinary way for
+                // it to fail, so only a check the user requested reports the failure.
+                if (_startup)
+                {
+                    Debug.WriteLine($@"Failed to check for an update: {ex.Message}");
+                    return;
+                }
                 MessageDlg.ShowWithException(ParentWindow,
                     Resources.UpgradeManager_updateCheck_Complete_Failed_attempting_to_check_for_an_upgrade_, ex);
                 // Show no upgrade found message to allow a user to turn off or on this checking
-                ShowUpgradeForm(null, false, false);
+                ShowUpgradeForm(null, false);
                 return;
             }
-            _updateInfo = e.Result as UpdateCheckDetails;
-            if (_updateInfo != null && _updateInfo.UpdateAvailable)
+            var newerVersion = e.Result as Version;
+            if (newerVersion != null)
             {
-                if (!ShowUpgradeForm(_updateInfo.AvailableVersion, true, true))
-                    return;
-
-                using (var longWaitUpdate = new LongWaitDlg())
-                {
-                    longWaitUpdate.Text = string.Format(SkylineResources.UpgradeManager_updateCheck_Complete_Upgrading__0_, Program.Name);
-                    longWaitUpdate.Message = GetProgressMessage(0, _updateInfo.UpdateSizeBytes ?? 0);
-                    longWaitUpdate.ProgressValue = 0;
-                    AutoResetEvent endUpdateEvent = null;
-                    try
-                    {
-                        lock (this)
-                        {
-                            Assume.IsNull(_endUpdateEvent);
-                            _endUpdateEvent = endUpdateEvent = new AutoResetEvent(false);
-                        }
-
-                        longWaitUpdate.PerformWork(ParentWindow, 500, broker =>
-                        {
-                            BeginUpdate(broker);
-                            endUpdateEvent.WaitOne();
-                            broker.ProgressValue = 100;
-                        });
-                    }
-                    finally
-                    {
-                        lock (this)
-                        {
-                            if (endUpdateEvent != null)
-                            {
-                                _endUpdateEvent = null;
-                            }
-                        }
-                        endUpdateEvent?.Dispose();
-                    }
-                }
-                if (_completeArgs == null || _completeArgs.Cancelled)
-                    return;
-
-                if (_completeArgs.Error != null)
-                {
-                    MessageDlg.ShowWithException(ParentWindow,
-                        Resources.UpgradeManager_updateCheck_Complete_Failed_attempting_to_upgrade_, _completeArgs.Error);
-                    if (ShowUpgradeForm(null, false, true))
-                        AppDeployment.OpenInstallLink(ParentWindow);
-                    return;
-                }
-
-                AppDeployment.Restart();
+                if (ShowUpgradeForm(newerVersion, true))
+                    Checker.OpenDownload(ParentWindow);
             }
             else if (!_startup)
             {
-                ShowUpgradeForm(null, false, false);
+                ShowUpgradeForm(null, false);
             }
         }
 
-        private void BeginUpdate(ILongWaitBroker broker)
-        {
-            AppDeployment.UpdateAsync(ev => update_ProgressChanged(ev, broker), update_Complete);
-        }
-
-        private bool ShowUpgradeForm(Version availableVersion, bool automatic, bool updateFound)
+        private bool ShowUpgradeForm(Version availableVersion, bool updateFound)
         {
             string versionText = availableVersion != null
-                ? GetVersionDiff(AppDeployment.CurrentVersion, availableVersion)
+                ? GetVersionDiff(Checker.CurrentVersion, availableVersion)
                 : null;
 
-            using (var dlgUpgrade = new UpgradeDlg(versionText, automatic, updateFound))
+            using (var dlgUpgrade = new UpgradeDlg(versionText, updateFound))
             {
                 dlgUpgrade.Text = Program.Name;
                 try
@@ -232,7 +164,8 @@ namespace pwiz.Skyline
             // B=0 is release, B=1 is daily, B=9 is feature complete
             // Only show abbreviated version (YY.N) for actual releases (Build=0)
             // when the release number (YY.N) has changed
-            bool majorUpgrade = versionCurrent.Major != versionAvailable.Major ||
+            bool majorUpgrade = versionCurrent == null ||
+                                versionCurrent.Major != versionAvailable.Major ||
                                 versionCurrent.Minor != versionAvailable.Minor;
             bool isRelease = versionAvailable.Build == 0;
 
@@ -240,98 +173,5 @@ namespace pwiz.Skyline
                 return string.Format(@"{0}.{1}", versionAvailable.Major, versionAvailable.Minor);
             return versionAvailable.ToString();
         }
-
-        private void update_ProgressChanged(UpdateProgress e, ILongWaitBroker broker)
-        {
-            if (broker.IsCanceled)
-                AppDeployment.UpdateAsyncCancel();
-            else
-            {
-                long updateBytes = Math.Max(_updateInfo.UpdateSizeBytes ?? 0, e.BytesTotal);
-                broker.Message = GetProgressMessage(e.BytesCompleted, updateBytes);
-                broker.ProgressValue = updateBytes == 0
-                    ? 0 : (int)Math.Min(99, e.BytesCompleted * 100 / updateBytes);
-            }
-        }
-
-        private string GetProgressMessage(long bytesCompleted, long totalBytes)
-        {
-            return string.Format(SkylineResources.UpgradeManager_GetProgressMessage_Upgrading_to__0___downloading__1__of__2__, _updateInfo.AvailableVersion,
-                new FileSize(bytesCompleted), new FileSize(totalBytes));
-        }
-
-        private void update_Complete(UpdateCompletedDetails e)
-        {
-            _completeArgs = e;
-            lock (this)
-            {
-                _endUpdateEvent?.Set();
-            }
-        }
-
-        public interface IDeployment
-        {
-            bool IsNetworkDeployed { get; }
-            Version CurrentVersion { get; }
-
-            UpdateCheckDetails CheckForDetailedUpdate();
-            void UpdateAsync(Action<UpdateProgress> updateProgress, Action<UpdateCompletedDetails> updateComplete);
-            void UpdateAsyncCancel();
-            void Restart();
-
-            Version GetVersionFromUpdateLocation();
-            void OpenInstallLink(Control parentWindow);
-        }
-
-        public sealed class UpdateCheckDetails
-        {
-            public UpdateCheckDetails(bool updateAvailable, Version availableVersion, long? updateSizeBytes)
-            {
-                UpdateAvailable = updateAvailable;
-                AvailableVersion = availableVersion;
-                UpdateSizeBytes = updateSizeBytes;
-            }
-
-            public bool UpdateAvailable { get; private set; }
-            public Version AvailableVersion { get; private set; }
-            public long? UpdateSizeBytes { get; private set; }
-        }
-
-        public sealed class UpdateProgress
-        {
-            public UpdateProgress(long bytesCompleted, long bytesTotal)
-            {
-                BytesCompleted = bytesCompleted;
-                BytesTotal = bytesTotal;
-            }
-
-            public long BytesCompleted { get; private set; }
-            public long BytesTotal { get; private set; }
-        }
-
-        public sealed class UpdateCompletedDetails
-        {
-            public UpdateCompletedDetails(bool cancelled, Exception error)
-            {
-                Cancelled = cancelled;
-                Error = error;
-            }
-
-            public bool Cancelled { get; private set; }
-            public Exception Error { get; private set; }
-        }
-
-        private sealed class NullDeployment : IDeployment
-        {
-            public bool IsNetworkDeployed => false;
-            public Version CurrentVersion => null;
-            public UpdateCheckDetails CheckForDetailedUpdate() => new UpdateCheckDetails(false, null, null);
-            public void UpdateAsync(Action<UpdateProgress> updateProgress, Action<UpdateCompletedDetails> updateComplete) { }
-            public void UpdateAsyncCancel() { }
-            public void Restart() { Application.Restart(); }
-            public Version GetVersionFromUpdateLocation() => null;
-            public void OpenInstallLink(Control parentWindow) { }
-        }
-
     }
 }
