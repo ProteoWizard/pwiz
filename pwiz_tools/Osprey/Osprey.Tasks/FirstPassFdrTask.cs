@@ -69,39 +69,61 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     internal sealed class FirstPassFdrTask : OspreyTask
     {
-        public override string Name => @"FirstPassFDR";
+        /// <summary>
+        /// This task's name, as a constant so the CLI selector, the validity stamp another
+        /// task looks for, and the tests all spell it from here rather than duplicating it.
+        /// </summary>
+        public const string TASK_NAME = @"FirstPassFDR";
+
+        public override string Name => TASK_NAME;
 
         /// <summary>
-        /// Computes Stage 5 (Percolator first-pass FDR + Stage 6
-        /// planning) in straight-through, --task FirstPassFDR (StopAfterStage5), and
-        /// the --input-scores full-pipeline. Excluded in --task PerFileScoring
-        /// (stops at Stage 1-4), --task PerFileRescoring, and the --task SecondPassFDR
-        /// stage (where it rehydrates the bundle rather than recomputing).
+        /// Exit after Stage 5 + reconciliation planning, having written the boundary
+        /// files for each input. The ONLY setter of that flag.
         /// </summary>
-        public override bool IsIncluded(PipelineContext ctx) => IsIncludedFor(ctx.Config);
-
-        /// <summary>
-        /// Pure membership predicate behind <see cref="IsIncluded"/>, exposed so a caller
-        /// that needs to know whether first-pass Percolator trains in THIS process asks the
-        /// one definition instead of re-deriving it.
-        ///
-        /// <para><see cref="PerFileScoringTask"/>'s pre-compaction-pool decision used
-        /// <c>!NoJoin</c> as a proxy for exactly this question. That proxy is right for every
-        /// task except <c>--task SecondPassFDR</c>, which leaves <c>NoJoin</c> false while
-        /// setting <c>ExpectReconciledInput</c> - so this task is EXCLUDED, nothing trains,
-        /// and the resident pre-compaction pool the proxy forced was pure waste at O(files)
-        /// (issue #4486). Calling the predicate keeps the two from drifting again.</para>
-        /// </summary>
-        internal static bool IsIncludedFor(OspreyConfig c)
+        public override void ApplySelection(OspreyConfig config)
         {
-            // Three clauses over two seams collapsed to one over the task flags. The
-            // retired term was `inputs` - were parquets supplied - which the truth table
-            // above shows was never doing independent work: it tracked exactly the tasks
-            // whose flags already say so. Excluded for the two per-file workers (NoJoin)
-            // and for the Stage 7 node (ExpectReconciledInput); included for the full
-            // pipeline, for --task FirstPassFDR itself, and for --task ModelDiagnostics,
-            // which needs first-pass state to render.
-            return !c.NoJoin && !c.ExpectReconciledInput;
+            config.StopAfterStage5 = true;
+        }
+
+        /// <summary>
+        /// The Stage 5 -> Stage 6 boundary file pair is only meaningful with 2+ siblings
+        /// to reconcile against and reconciliation enabled, so both are rejected early on
+        /// top of the shared input / library / output requirement.
+        /// </summary>
+        public override string ValidateSelection(OspreyConfig config)
+        {
+            string err = base.ValidateSelection(config);
+            if (err != null)
+                return err;
+            if (config.InputFiles.Count < 2)
+            {
+                return string.Format(
+                    @"--task {0} requires --input with 2+ files (got {1}). The intermediate files it writes for " +
+                    @"{2} are only meaningful when there are other runs to reconcile against.",
+                    Name, config.InputFiles.Count, PerFileRescoreTask.TASK_NAME);
+            }
+            if (!config.Reconciliation.Enabled)
+            {
+                return string.Format(
+                    @"--task {0} requires Reconciliation.Enabled = true (got false from config). " +
+                    @"The intermediate files it writes for {1} are only meaningful when cross-run reconciliation runs.",
+                    Name, PerFileRescoreTask.TASK_NAME);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// The first join writes per-run intermediate files and the analysis-wide ones beside
+        /// <c>--output</c>, never the blib; naming the blib would read as "the blib is being
+        /// rebuilt".
+        /// </summary>
+        public override string DescribeOutput(OspreyConfig config)
+        {
+            return string.Format(
+                @"per-run first-pass intermediate files next to each input's .scores.parquet, and the " +
+                @"analysis-wide ones beside {0} (which is not written)",
+                config.OutputBlib);
         }
 
         /// <summary>
@@ -2294,7 +2316,7 @@ namespace pwiz.Osprey.Tasks
                     perFileEntries.Count));
                 // Success: return true (not false). The stop after Stage 5 is now
                 // a membership fact -- PerFileRescore and SecondPassFDR are excluded
-                // by IsIncluded under --task FirstPassFDR, so the driver loop iterates no
+                // by the membership rule under --task FirstPassFDR (OspreyConfig.Includes), so the driver loop iterates no
                 // further. The failure path above keeps ExitCode=1; return false.
                 ctx.ExitCode = 0;
                 return true;
