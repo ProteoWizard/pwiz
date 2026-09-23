@@ -139,8 +139,6 @@ namespace pwiz.Skyline
         // Internal use arguments
         public static readonly Argument ARG_INTERNAL_SCREEN_WIDTH = new Argument(@"sw", INT_VALUE,
             (c, p) => c._usageWidth = p.ValueInt) {InternalUse = true};
-        public static readonly Argument ARG_INTERNAL_CULTURE = new Argument(@"culture", () => @"en|fr|ja|zh-CHS...",
-            (c, p) => SetCulture(p.Value)) { InternalUse = true };
 
         public static readonly HashSet<Func<string>> PATH_TYPE_VALUES = new HashSet<Func<string>>
         {
@@ -161,11 +159,35 @@ namespace pwiz.Skyline
             ANNOTATION_TARGET_LIST_VALUE
         });
 
-        private static void SetCulture(string cultureName)
+        private static void SetCulture(NameValuePair pair)
         {
-            LocalizationHelper.CurrentCulture = LocalizationHelper.CurrentUICulture = new CultureInfo(cultureName);
+            Assume.IsNotNull(pair.Match); // Must be matched before accessing this
+            // Windows makes up a culture for any well-formed name (e.g. "not-a-culture") instead of failing,
+            // so check the name against the cultures it knows rather than relying on the exception alone.
+            CultureInfo culture;
+            try
+            {
+                culture = new CultureInfo(pair.Value);
+                if (!CultureInfo.GetCultures(CultureTypes.AllCultures)
+                        .Any(known => string.Equals(known.Name, pair.Value, StringComparison.OrdinalIgnoreCase)))
+                {
+                    throw new CultureNotFoundException();
+                }
+            }
+            catch (CultureNotFoundException)
+            {
+                throw new ValueInvalidException(pair.Match, pair.Value, DISPLAY_LANGUAGE_NAMES);
+            }
+            LocalizationHelper.CurrentCulture = LocalizationHelper.CurrentUICulture = culture;
             LocalizationHelper.InitThread(Thread.CurrentThread);
         }
+
+        /// <summary>
+        /// The languages Skyline has been localized to, as the culture names --culture accepts. Cached because
+        /// finding them probes every culture on the system for localized resources.
+        /// </summary>
+        private static readonly string[] DISPLAY_LANGUAGE_NAMES =
+            CultureUtil.AvailableDisplayLanguages().Select(culture => culture.Name).ToArray();
         // Multi process import
         public static readonly Argument ARG_INTERNAL_IMPORT_FILE_CACHE = new DocArgument(@"import-file-cache", PATH_TO_FILE,
             (c, p) => Program.ReplicateCachePath = p.Value) {InternalUse = true};
@@ -181,7 +203,7 @@ namespace pwiz.Skyline
             (c, p) => c.IsTestExceptions = true) { InternalUse = true };
 
         private static readonly ArgumentGroup GROUP_INTERNAL = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_INTERNAL, false,
-            ARG_INTERNAL_SCREEN_WIDTH, ARG_INTERNAL_CULTURE, ARG_INTERNAL_IMPORT_FILE_CACHE, ARG_INTERNAL_IMPORT_PROGRESS_PIPE,
+            ARG_INTERNAL_SCREEN_WIDTH, ARG_INTERNAL_IMPORT_FILE_CACHE, ARG_INTERNAL_IMPORT_PROGRESS_PIPE,
             ARG_TEST_UI, ARG_TEST_HIDEACG, ARG_TEST_NOACG, ARG_TEST_EXCEPTION);
 
         public bool HideAllChromatogramsGraph { get; private set; }
@@ -277,11 +299,15 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_VERSION = new Argument(@"version", (c, p) => c.Version());
         public static readonly Argument ARG_VERBOSE_ERRORS =
             new Argument(@"verbose-errors", (c, p) => c._out.IsVerboseExceptions = true);
+        // The listed values are the languages Skyline is localized to, but any culture name is accepted
+        // (e.g. "en-US"), so the value is checked in SetCulture rather than against the list.
+        public static readonly Argument ARG_CULTURE = new Argument(@"culture",
+            () => DISPLAY_LANGUAGE_NAMES, (c, p) => SetCulture(p)) { HasValueChecking = true };
 
         private static readonly ArgumentGroup GROUP_GENERAL_IO = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
             ARG_IN, ARG_OPEN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_SAVE_AS, ARG_SAVE_COMPACT_FORMAT, ARG_NEW, ARG_OVERWRITE,
             ARG_DISCARD_CHANGES, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
-            ARG_LOG_FILE, ARG_HELP, ARG_VERSION, ARG_VERBOSE_ERRORS)
+            ARG_LOG_FILE, ARG_CULTURE, ARG_HELP, ARG_VERSION, ARG_VERBOSE_ERRORS)
         {
             Validate = c => c.ValidateGeneralArgs()
         };

@@ -4207,6 +4207,48 @@ namespace pwiz.SkylineTestData
         }
 
         [TestMethod]
+        public void ConsoleCultureArgumentTest()
+        {
+            // --culture runs the command line in a chosen language, which the Tools > Options > Language
+            // setting cannot do. It does not restore the culture afterwards (see TestDetectError), so save it.
+            var currentCulture = LocalizationHelper.CurrentCulture;
+            var currentUiCulture = LocalizationHelper.CurrentUICulture;
+            try
+            {
+                // An unsupported language is a usage error, not a crash. Checked before the language is
+                // changed below, so the message is compared in the culture the test is running under.
+                const string notALanguage = @"not-a-culture";
+                var argCulture = CommandArgs.ARG_CULTURE;
+                string output = RunCommand(false, argCulture.ArgumentText + '=' + notALanguage);
+                AssertEx.Contains(output, string.Format(
+                    CommandArgUsage.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                    notALanguage, argCulture.ArgumentText, string.Join(@", ", argCulture.Values)));
+
+                // A specific culture is accepted, not only the languages listed in help. Callers pass names
+                // like "en-US" (see SkylineCmdTest.GetProcessStartInfo), which must not be rejected.
+                output = RunCommand(false, argCulture.ArgumentText + '=' + CultureInfo.CurrentCulture.Name,
+                    CommandArgs.ARG_IN.ArgumentText);
+                AssertEx.Contains(output, string.Format(
+                    Resources.ValueMissingException_ValueMissingException_, CommandArgs.ARG_IN.ArgumentText));
+
+                // The message for a following argument comes back in the requested language. Arguments are
+                // processed in order, so --culture only affects what comes after it.
+                var japanese = new CultureInfo(@"ja");
+                string valueMissingJapanese = Resources.ResourceManager.GetString(
+                    @"ValueMissingException_ValueMissingException_", japanese);
+                Assert.IsNotNull(valueMissingJapanese);
+                output = RunCommand(false, argCulture.ArgumentText + @"=ja", CommandArgs.ARG_IN.ArgumentText);
+                AssertEx.Contains(output, string.Format(valueMissingJapanese, CommandArgs.ARG_IN.ArgumentText));
+            }
+            finally
+            {
+                LocalizationHelper.CurrentCulture = currentCulture;
+                LocalizationHelper.CurrentUICulture = currentUiCulture;
+                LocalizationHelper.InitThread(Thread.CurrentThread);
+            }
+        }
+
+        [TestMethod]
         public void SkylineRunnerErrorDetectionTest()
         {
             TestSkylineRunnerErrorDetection(null);
