@@ -220,7 +220,7 @@ namespace pwiz.Skyline.Model.Results {
                 return ResourceManager.GetString("ChromCacheBuilder_BuildNextFileInner_Importing__0__", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Recalculating scores for {0}.
         /// </summary>
@@ -777,7 +777,34 @@ namespace pwiz.Skyline.Model.Results {
                         "_scan_targeted_at__0_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Note: the spectral library has ion mobility values for &quot;{0}&quot;, but they are being ignored because &quot;Use spectral library ion mobility values when present&quot; is not enabled. To apply ion mobility filtering, open Settings &gt; Transition Settings &gt; Ion Mobility and enable that option..
+        /// </summary>
+        public static string SpectrumFilter_IonMobilityFilteringDisabled_EnableSpectralLibrary {
+            get {
+                return ResourceManager.GetString("SpectrumFilter_IonMobilityFilteringDisabled_EnableSpectralLibrary", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Note: ion mobility values are available for &quot;{0}&quot;, but no effective filter window is configured. To apply ion mobility filtering, open Settings &gt; Transition Settings &gt; Ion Mobility and set a window type (resolving power, fixed width, or linear range) with a non-zero value..
+        /// </summary>
+        public static string SpectrumFilter_IonMobilityFilteringDisabled_SetWindow {
+            get {
+                return ResourceManager.GetString("SpectrumFilter_IonMobilityFilteringDisabled_SetWindow", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Note: the spectral library has ion mobility values for &quot;{0}&quot;, but ion mobility filtering is disabled. To apply filtering, open Settings &gt; Transition Settings &gt; Ion Mobility, set a window type (resolving power, fixed width, or linear range) with a value, and enable &quot;Use spectral library ion mobility values when present&quot;..
+        /// </summary>
+        public static string SpectrumFilter_IonMobilityFilteringDisabled_SetWindowAndEnableSpectralLibrary {
+            get {
+                return ResourceManager.GetString("SpectrumFilter_IonMobilityFilteringDisabled_SetWindowAndEnableSpectralLibrary", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to No isolation window found in {0} for precursor {1} (m/z={2:F04} {3}).
         /// </summary>
