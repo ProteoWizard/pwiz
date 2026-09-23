@@ -73,7 +73,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 AssertEx.AreEqual(1, _checker.DownloadsOpened);
-                AssertEx.AreEqual(TestUpdateChecker.INSTALL_URL + "-" + TestUpdateChecker.NEWER_VERSION + ".exe",
+                AssertEx.AreEqual(
+                    TestUpdateChecker.INSTALL_URL + TestUpdateChecker.PRODUCT_NAME + "-Setup-" + TestUpdateChecker.NEWER_VERSION + ".exe",
                     _checker.DownloadUrl);
             });
 
@@ -209,7 +210,8 @@ namespace pwiz.SkylineTestFunctional
     /// </summary>
     internal class TestUpdateChecker : UpdateChecker, IDisposable
     {
-        public const string INSTALL_URL = "https://skyline.example.org/software/Skyline-Setup";
+        public const string INSTALL_URL = "https://skyline.example.org/software/";
+        public const string PRODUCT_NAME = "Skyline";
         public const string NEWER_RELEASE_TEXT = "3.7";
         public static readonly Version CURRENT_VERSION = new Version(3, 6, 1, 10171);
         public static readonly Version NEWER_VERSION = new Version(3, 6, 1, 10172);
@@ -220,6 +222,7 @@ namespace pwiz.SkylineTestFunctional
             Enabled = true;
             CurrentVersion = CURRENT_VERSION;
             InstallUrl = INSTALL_URL;
+            ProductName = PRODUCT_NAME;
             UpgradeManager.Checker = this;
         }
 

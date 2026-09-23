@@ -29,15 +29,16 @@ namespace pwiz.Skyline.Util
 {
     /// <summary>
     /// Finds out whether a newer Skyline than this one has been published. The InstallUrl
-    /// application setting, with the product name (Skyline or Skyline-daily) substituted for
-    /// its {0}, is where this Skyline was installed from and where a newer one comes from. It
-    /// has no extension: with .json appended it is the manifest the installer build writes,
-    /// <code>{ "version": "26.1.1.260" }</code>, and with -version.exe appended it is that
-    /// version's installer, so the installer is published under the name the build gave it.
+    /// application setting is the folder this Skyline was installed from and where a newer
+    /// one comes from. In it, named by the ProductName the installer gave this installation
+    /// (Skyline or Skyline-daily unless the build said otherwise), are the manifest the
+    /// installer build writes, ProductName.json holding <code>{ "version": "26.1.1.260" }</code>,
+    /// and each version's installer, ProductName-Setup-version.exe.
     /// </summary>
     public class UpdateChecker
     {
         public const string MANIFEST_EXTENSION = ".json";
+        public const string INSTALLER_INFIX = "-Setup-";
         public const string INSTALLER_EXTENSION = ".exe";
         public const string VERSION_PROPERTY = "version";
 
@@ -49,7 +50,8 @@ namespace pwiz.Skyline.Util
             // one; a build output or a copied folder has no installation to upgrade.
             string exeFolder = Path.GetDirectoryName(typeof(Program).Assembly.Location);
             Enabled = currentVersion != null && new RegisteredInstallations(Program.Name).IsInstallationFolder(exeFolder);
-            InstallUrl = string.Format(Settings.Default.InstallUrl, Program.Name);
+            InstallUrl = Settings.Default.InstallUrl;
+            ProductName = string.IsNullOrEmpty(Settings.Default.ProductName) ? Program.Name : Settings.Default.ProductName;
         }
 
         /// <summary>
@@ -59,16 +61,27 @@ namespace pwiz.Skyline.Util
 
         public Version CurrentVersion { get; set; }
 
+        /// <summary>
+        /// The folder the installer and manifest are published in.
+        /// </summary>
         public string InstallUrl { get; set; }
+
+        public string ProductName { get; set; }
 
         public Uri ManifestUri
         {
-            get { return new Uri(InstallUrl + MANIFEST_EXTENSION); }
+            get { return GetPublishedUri(ProductName + MANIFEST_EXTENSION); }
         }
 
         public Uri GetInstallerUri(Version version)
         {
-            return new Uri(InstallUrl + @"-" + version + INSTALLER_EXTENSION);
+            return GetPublishedUri(ProductName + INSTALLER_INFIX + version + INSTALLER_EXTENSION);
+        }
+
+        private Uri GetPublishedUri(string fileName)
+        {
+            string folderUrl = InstallUrl.EndsWith(@"/") ? InstallUrl : InstallUrl + @"/";
+            return new Uri(folderUrl + fileName);
         }
 
         /// <summary>

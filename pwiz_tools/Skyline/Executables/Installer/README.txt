@@ -30,17 +30,20 @@ Build:
      machine lacks it; the runtime EXE is cached under pwiz-sharp\installer\cache.
      Pass -SignToolCommand '<signtool command with $f>' for a signed build.
   3. Installers land in pwiz_tools\Skyline\bin\installer\, with the update
-     manifest <channel>-Setup.json beside them. Skyline's startup check reads
-     the manifest to learn the published version. The InstallUrl application
-     setting (app.config, {0} standing for the channel) has no extension:
-     InstallUrl.json is the manifest and InstallUrl-<version>.exe is that
-     version's installer, which is the name the build gives it. To publish,
-     upload the manifest and the bundled installer as they are to the folder
-     the URL names; the build prints both URLs.
-     A private build that should update from somewhere else is built with
-     -InstallUrl <its URL without -<version>.exe>; the value is written into
-     the staged <channel>.dll.config, so the installed Skyline checks there,
-     and the manifest and installer are named from it.
+     manifest <product>.json beside them. Skyline's startup check reads the
+     manifest to learn the published version. The InstallUrl application
+     setting (app.config) is a folder, and in it <product>.json is the
+     manifest and <product>-Setup-<version>.exe is that version's installer,
+     which is the name the build gives it. To publish, upload the manifest and
+     the bundled installer as they are into that folder; the build prints both
+     URLs.
+     The product is the channel unless the build is given -ProductName; that
+     name is what Programs and Features, the Start Menu, the install folder,
+     the installer and the manifest are called, so a private build such as
+     SkylineNet10Preview installs beside the channels as a product of its own.
+     -InstallUrl gives a private build its own folder to check. Both values are
+     written into the staged <channel>.dll.config, so the installed Skyline
+     knows what to look for and where.
   4. pwsh -File pwiz_tools\Skyline\Executables\Installer\Test-Installer.ps1
      installs the newest one silently, checks the deployment, runs
      SkylineCmd --version, uninstalls, and checks the cleanup (-AllUsers from

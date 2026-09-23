@@ -45,7 +45,8 @@ $ErrorActionPreference = 'Stop'
 $installerDir = $PSScriptRoot
 $skylineDir = (Resolve-Path (Join-Path $installerDir '..\..')).Path
 
-# The AppIds from Setup.iss, one per channel, plus Inno's "_is1" uninstall-key suffix.
+# The AppIds from Setup.iss for the two channels, plus Inno's "_is1" uninstall-key suffix.
+# Any other product name (build.ps1 -ProductName) is its own AppId.
 $appIds = @{
     'Skyline'       = '{67DE971E-A042-4EF7-A93C-3F85D2A3D241}'
     'Skyline-daily' = '{C701F69C-B553-4E3E-90D0-5676DD615570}'
@@ -89,17 +90,19 @@ if (-not $SetupPath) {
 }
 $SetupPath = (Resolve-Path $SetupPath).Path
 
-# Setup.iss stamps AppName into ProductName and the numeric version into FileVersion.
+# Setup.iss stamps AppName (the product name) into ProductName and the numeric version
+# into FileVersion.
 $versionInfo = (Get-Item $SetupPath).VersionInfo
 $appName = $versionInfo.ProductName.Trim()
 $version = $versionInfo.FileVersion.Trim()
-if (-not $appIds.ContainsKey($appName)) {
-    Fail "$SetupPath reports product '$appName', not Skyline or Skyline-daily."
+if (-not $appName) {
+    Fail "$SetupPath reports no product name."
 }
-$uninstallKeyPath = "$uninstallRoot\$($appIds[$appName])_is1"
-# The channel's ProgIds drop the hyphen (Skyline-daily -> SkylineDaily.Document.1): a ProgId
-# allows no punctuation but periods.
-$progId = ($appName -replace '-daily$', 'Daily') + '.Document.1'
+$appId = if ($appIds.ContainsKey($appName)) { $appIds[$appName] } else { $appName }
+$uninstallKeyPath = "$uninstallRoot\${appId}_is1"
+# The product's ProgIds drop the hyphen (Skyline-daily -> SkylineDaily.Document.1, any other
+# product name loses its hyphens): a ProgId allows no punctuation but periods.
+$progId = $(if ($appName -eq 'Skyline-daily') { 'SkylineDaily' } else { $appName -replace '-', '' }) + '.Document.1'
 $scope = if ($AllUsers) { 'per-machine' } else { 'per-user' }
 Write-Host "==> $appName $version, ${scope}: $SetupPath" -ForegroundColor Cyan
 
@@ -139,7 +142,11 @@ try {
         throw "DisplayVersion is '$(Get-RegistryValue $uninstallKeyPath 'DisplayVersion')', expected $version."
     }
 
-    foreach ($file in @("$appName.exe", "$appName.dll", 'SkylineCmd.exe', 'msconvert.exe', 'BlibBuild.exe', 'SkylineDoc.ico')) {
+    # The channel exe is what runs, whatever the product is called.
+    $channelExe = @('Skyline-daily.exe', 'Skyline.exe') | Where-Object { Test-Path (Join-Path $installDir $_) } | Select-Object -First 1
+    if (-not $channelExe) { throw "Neither Skyline-daily.exe nor Skyline.exe is in the install." }
+    $channelDll = [System.IO.Path]::ChangeExtension($channelExe, '.dll')
+    foreach ($file in @($channelDll, 'SkylineCmd.exe', 'msconvert.exe', 'BlibBuild.exe', 'SkylineDoc.ico')) {
         if (-not (Test-Path (Join-Path $installDir $file))) { throw "Required file missing from the install: $file" }
     }
 
@@ -160,7 +167,7 @@ try {
             throw ".sky is not associated with $progId."
         }
         $command = Get-RegistryValue "Software\Classes\$progId\shell\open\command" ''
-        if ($command -ne "`"$installDir\$appName.exe`" --opendoc `"%1`"") {
+        if ($command -ne "`"$installDir\$channelExe`" --opendoc `"%1`"") {
             throw "$progId open command is '$command'."
         }
     }

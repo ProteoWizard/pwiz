@@ -3695,10 +3695,19 @@ namespace pwiz.Skyline.Properties {
 
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("https://proteome.gs.washington.edu/~nicksh/InstallTest/{0}-Setup")]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://proteome.gs.washington.edu/~nicksh/InstallTest/")]
         public string InstallUrl {
             get {
                 return ((string)(this["InstallUrl"]));
+            }
+        }
+
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ProductName {
+            get {
+                return ((string)(this["ProductName"]));
             }
         }
 

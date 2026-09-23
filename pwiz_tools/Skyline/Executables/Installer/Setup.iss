@@ -11,8 +11,10 @@
 ;   - Per-machine installs show the license and the directory page, defaulting
 ;     to %ProgramFiles%\<Skyline|Skyline-daily>, as the WiX .msi did.
 ;   - Skyline and Skyline-daily are distinct products (their own AppIds) that
-;     install side by side; within a channel a newer version replaces the
-;     previous one in place.
+;     install side by side; within a product a newer version replaces the
+;     previous one in place. A private build can be given another product
+;     name (/DProductName), making it a third product with its own folder,
+;     shortcut, file types and installer name.
 ;   - Start Menu shortcut under "MacCoss Lab, UW", optional Desktop shortcut,
 ;     .sky / .skyd / .skyp associations, Programs and Features entry, and a
 ;     registry record of the install location for SkylineRunner, SkylineBatch
@@ -22,6 +24,7 @@
 ;
 ; build.ps1 stages the Skyline build output and invokes ISCC with:
 ;   /DSkylineAppName=Skyline|Skyline-daily   (the channel; from the staged exe)
+;   /DProductName=...                        (what is installed; the channel by default)
 ;   /DMyAppVersion=YY.N.B.DDD                (FileVersion of the staged exe)
 ;   /DMyAppInformationalVersion=...          (ProductVersion, with the git hash)
 ;   /DStagingDir=..., /DOutputDir=..., /DOutputBaseFilename=...
@@ -30,6 +33,12 @@
 
 #ifndef SkylineAppName
   #define SkylineAppName "Skyline-daily"
+#endif
+#if SkylineAppName != "Skyline" && SkylineAppName != "Skyline-daily"
+  #error SkylineAppName must be Skyline or Skyline-daily
+#endif
+#ifndef ProductName
+  #define ProductName SkylineAppName
 #endif
 #ifndef MyAppVersion
   #define MyAppVersion "0.0.0.0"
@@ -42,19 +51,23 @@
 #define MyAppGroup "MacCoss Lab, UW"
 #define MyAppExe SkylineAppName + ".exe"
 
-; One stable AppId per channel. Inno keys every install on it: same AppId means
-; "upgrade in place", so each channel has exactly one install per install mode.
+; One stable AppId per product. Inno keys every install on it: same AppId means
+; "upgrade in place", so each product has exactly one install per install mode.
 ; Not the WiX UpgradeCodes - an Inno install and an MSI are unrelated records.
-; The ProgId prefix is the channel name minus the hyphen: a ProgId is
+; The two channels keep the GUIDs they shipped with; any other product name is
+; its own AppId (Inno accepts any string), and the doubled brace that escapes a
+; GUID's opening brace is part of the value here so the plain name needs none.
+; The ProgId prefix is the product name minus the hyphen: a ProgId is
 ; Vendor.Component.Version with no punctuation but the periods.
-#if SkylineAppName == "Skyline"
-  #define MyAppId "{67DE971E-A042-4EF7-A93C-3F85D2A3D241}"
+#if ProductName == "Skyline"
+  #define MyAppId "{{67DE971E-A042-4EF7-A93C-3F85D2A3D241}"
   #define ProgIdPrefix "Skyline"
-#elif SkylineAppName == "Skyline-daily"
-  #define MyAppId "{C701F69C-B553-4E3E-90D0-5676DD615570}"
+#elif ProductName == "Skyline-daily"
+  #define MyAppId "{{C701F69C-B553-4E3E-90D0-5676DD615570}"
   #define ProgIdPrefix "SkylineDaily"
 #else
-  #error SkylineAppName must be Skyline or Skyline-daily
+  #define MyAppId ProductName
+  #define ProgIdPrefix StringChange(ProductName, "-", "")
 #endif
 
 #ifndef StagingDir
@@ -64,14 +77,14 @@
   #define OutputDir "..\..\bin\installer"
 #endif
 #ifndef OutputBaseFilename
-  #define OutputBaseFilename SkylineAppName + "-Setup-" + MyAppVersion
+  #define OutputBaseFilename ProductName + "-Setup-" + MyAppVersion
 #endif
 
 [Setup]
-AppId={{#MyAppId}
-AppName={#SkylineAppName}
+AppId={#MyAppId}
+AppName={#ProductName}
 AppVersion={#MyAppVersion}
-AppVerName={#SkylineAppName} {#MyAppVersion}
+AppVerName={#ProductName} {#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
@@ -80,14 +93,14 @@ VersionInfoProductTextVersion={#MyAppInformationalVersion}
 ; {autopf} is %LocalAppData%\Programs for a per-user install and Program Files for
 ; a per-machine one. The directory page is only offered for the latter (see
 ; ShouldSkipPage).
-DefaultDirName={autopf}\{#SkylineAppName}
+DefaultDirName={autopf}\{#ProductName}
 DisableDirPage=no
 DefaultGroupName={#MyAppGroup}
 DisableProgramGroupPage=yes
 ; Ask "for me / for everyone" every time rather than silently reusing the
 ; previous install's mode, like the other ProteoWizard installers.
 UsePreviousPrivileges=no
-UninstallDisplayName={#SkylineAppName}
+UninstallDisplayName={#ProductName}
 UninstallDisplayIcon={app}\{#MyAppExe}
 ; Shown for per-machine installs only (see ShouldSkipPage).
 LicenseFile=SkylineLicense.rtf
@@ -121,7 +134,7 @@ RestartIfNeededByRun=no
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "associate";   Description: "&Associate Skyline document files (.sky, .skyd, .skyp) with {#SkylineAppName}"; \
+Name: "associate";   Description: "&Associate Skyline document files (.sky, .skyd, .skyp) with {#ProductName}"; \
     GroupDescription: "File associations:"
 Name: "desktopicon"; Description: "Create a &Desktop shortcut"; \
     GroupDescription: "Desktop shortcuts:"; Flags: unchecked
@@ -137,9 +150,9 @@ Source: "..\..\SkylineData.ico";       DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\SkylineDocPointer.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\{#SkylineAppName}";       Filename: "{app}\{#MyAppExe}"; WorkingDir: "{app}"; \
+Name: "{group}\{#ProductName}";       Filename: "{app}\{#MyAppExe}"; WorkingDir: "{app}"; \
     Comment: "Targeted mass spectrometry environment"
-Name: "{autodesktop}\{#SkylineAppName}"; Filename: "{app}\{#MyAppExe}"; WorkingDir: "{app}"; \
+Name: "{autodesktop}\{#ProductName}"; Filename: "{app}\{#MyAppExe}"; WorkingDir: "{app}"; \
     Tasks: desktopicon
 
 [UninstallDelete]
@@ -149,15 +162,15 @@ Name: "{autodesktop}\{#SkylineAppName}"; Filename: "{app}\{#MyAppExe}"; WorkingD
 Type: dirifempty; Name: "{app}\Tools"
 
 [Registry]
-; Where this channel is installed, for SkylineRunner / SkylineBatch / the MCP
+; Where this product is installed, for SkylineRunner / SkylineBatch / the MCP
 ; server. HKA = HKCU for a per-user install, HKLM for a per-machine one.
 Root: HKA; Subkey: "Software\MacCossLabUW"; Flags: uninsdeletekeyifempty
-Root: HKA; Subkey: "Software\MacCossLabUW\{#SkylineAppName}"; \
+Root: HKA; Subkey: "Software\MacCossLabUW\{#ProductName}"; \
     ValueType: string; ValueName: "InstallDir"; ValueData: "{app}"; Flags: uninsdeletekey
-Root: HKA; Subkey: "Software\MacCossLabUW\{#SkylineAppName}"; \
+Root: HKA; Subkey: "Software\MacCossLabUW\{#ProductName}"; \
     ValueType: string; ValueName: "Version"; ValueData: "{#MyAppVersion}"
 
-; File associations. Each channel owns its own ProgIds, and they are new names:
+; File associations. Each product owns its own ProgIds, and they are new names:
 ; every ClickOnce install, daily or release, registered Skyline.Document.0 /
 ; .Data.0 / .Pointer.0 per-user (the legacy csproj hard-codes them for both
 ; channels), and those must stay intact while a ClickOnce Skyline coexists with
@@ -212,13 +225,13 @@ Root: HKA; Subkey: "Software\Classes\.skyp\OpenWithProgids"; ValueType: string; 
 ; .NET desktop runtime: bundled EXE + [Run] entry, or the NoNetRuntime abort.
 ; Included here so its [Run] entry precedes the launch entry below.
 #define DotNetMajor "10"
-#define ProductDisplayName SkylineAppName
+#define ProductDisplayName ProductName
 #include "..\..\..\..\pwiz-sharp\installer\common\DotNetDesktopRuntime.iss"
 
 [Run]
 ; ClickOnce launched Skyline as soon as the install finished; keep that as the
 ; checked-by-default finish-page option.
-Filename: "{app}\{#MyAppExe}"; Description: "Launch {#SkylineAppName}"; \
+Filename: "{app}\{#MyAppExe}"; Description: "Launch {#ProductName}"; \
     Flags: nowait postinstall skipifsilent
 
 ; The WiX admin .msi (UpgradeCodes from Product-template.wxs, 64-bit) installed
@@ -233,10 +246,12 @@ Filename: "{app}\{#MyAppExe}"; Description: "Launch {#SkylineAppName}"; \
 #endif
 
 const
-  InstallRecordKey = 'Software\MacCossLabUW\{#SkylineAppName}';
-  UninstallKeyOfThisChannel = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#MyAppId}_is1';
+  InstallRecordKey = 'Software\MacCossLabUW\{#ProductName}';
+  { The AppId as Inno writes it into the key name: a GUID keeps its braces, and the
+    doubled brace that escaped it in [Setup] is not part of the value. }
+  UninstallKeyOfThisProduct = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{#StringChange(MyAppId, "{{", "{")}_is1';
 
-{ Refuse to overlay the legacy .msi, and warn when the channel is already installed
+{ Refuse to overlay the legacy .msi, and warn when the product is already installed
   in the other mode: the mode is asked every run (UsePreviousPrivileges=no), so a
   click-through over an existing per-machine install would otherwise silently add a
   per-user copy beside it. Silent runs continue; their mode was given explicitly. }
@@ -248,22 +263,22 @@ begin
   Result := True;
   if IsAdminInstallMode then
   begin
-    Result := LegacyMsiAbortIfInstalled('{#SkylineAppName}', ['{#LegacyMsiUpgradeCode}']);
+    Result := LegacyMsiAbortIfInstalled('{#ProductName}', ['{#LegacyMsiUpgradeCode}']);
     if not Result then
       Exit;
     OtherRoot := HKCU;
   end
   else
     OtherRoot := HKLM;
-  if RegQueryStringValue(OtherRoot, UninstallKeyOfThisChannel, 'InstallLocation', OtherDir) and
+  if RegQueryStringValue(OtherRoot, UninstallKeyOfThisProduct, 'InstallLocation', OtherDir) and
      (not WizardSilent) then
   begin
     if IsAdminInstallMode then
-      Result := MsgBox('{#SkylineAppName} is already installed for your user account at ' + OtherDir + '.' + #13#10#13#10 +
+      Result := MsgBox('{#ProductName} is already installed for your user account at ' + OtherDir + '.' + #13#10#13#10 +
                        'Installing it for all users as well creates a second, separate copy. Continue?',
                        mbConfirmation, MB_YESNO) = IDYES
     else
-      Result := MsgBox('{#SkylineAppName} is already installed for all users at ' + OtherDir + '.' + #13#10#13#10 +
+      Result := MsgBox('{#ProductName} is already installed for all users at ' + OtherDir + '.' + #13#10#13#10 +
                        'Installing it for your user account as well creates a second, separate copy that will ' +
                        'shadow the shared one. Continue?',
                        mbConfirmation, MB_YESNO) = IDYES;
@@ -287,9 +302,9 @@ end;
 
 { ----- File associations -----
   The extension default values (.sky -> ProgId) are shared with every other
-  Skyline registration on the machine: the other channel, a ClickOnce install
+  Skyline registration on the machine: another product, a ClickOnce install
   (Skyline.Document.0), the WiX .msi. Before the [Registry] section makes this
-  channel the owner, remember who owned it, so the uninstall can hand it back
+  product the owner, remember who owned it, so the uninstall can hand it back
   rather than leave the extension unregistered. }
 procedure RememberExtensionOwner(const Ext: String);
 var
