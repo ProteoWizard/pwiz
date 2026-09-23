@@ -49,8 +49,19 @@ namespace pwiz.Skyline.Model.Databinding
                 CompressionMethod = CompressionMethod.Zstd,
                 // Parquet.Net's default is SmallestSize, which is Zstd level 19 and many times slower
                 // than the level 3 that Optimal maps to, for a few percent smaller file
-                CompressionLevel = CompressionLevel.Optimal
+                CompressionLevel = CompressionLevel.Optimal,
+                // Parquet.Net 6 only dictionary-encodes a column when asked to, and decides by scanning the
+                // column's values; a sample of this many rows rejects a mostly unique column without the full scan
+                DictionaryEncodingSampleSize = 10000
             };
+            // The strings in a report are mostly repeated (protein, peptide, replicate and file names),
+            // which a dictionary shrinks a lot and makes much cheaper to encode than one string at a time.
+            // Parquet.Net's ClrType for a string field is ReadOnlyMemory<char>, so the storage type is checked.
+            // List columns are left plain because some readers cannot decode dictionary-encoded lists.
+            foreach (var column in columns.Where(col => col.ListElementType == null && col.StorageType.Type == typeof(string)))
+            {
+                options.ColumnEncodingHints[column.DataField.Path.ToString()] = EncodingHint.Dictionary;
+            }
             var writer = ParquetWriter.CreateAsync(schema, stream, options).GetAwaiter().GetResult();
             using (var pipeline = new ExportPipeline(writer, columns, columnValueTree, rowItemEnumerator))
             {

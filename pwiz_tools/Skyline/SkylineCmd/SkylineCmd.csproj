@@ -23,6 +23,9 @@
     <IsPackable>false</IsPackable>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
     <NoWarn>$(NoWarn);NU1605;NU1701</NoWarn>
+    <!-- SkylineCmd is the host process, so its runtimeconfig decides the collector Skyline runs
+         under. The <gcServer> element in app.config only applies to .NET Framework; see Skyline.csproj. -->
+    <ServerGarbageCollection>true</ServerGarbageCollection>
   </PropertyGroup>
 
 </Project>

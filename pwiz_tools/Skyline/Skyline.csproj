@@ -35,6 +35,10 @@
          downgrades that net8's runtime supersedes safely. -->
     <NoWarn>$(NoWarn);NU1605;NU1701;NU1903;SYSLIB0011</NoWarn>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- The <gcServer> element in app.config only applies to .NET Framework. Without this the
+         .NET 10 build runs the workstation collector, which stalls every thread whenever one of
+         the parallel workers allocates; a report export measured 80% slower on it. -->
+    <ServerGarbageCollection>true</ServerGarbageCollection>
     <!-- Parquet.Net, as pwiz's patched build: see ..\Shared\Lib\Parquet\ParquetNet.targets -->
     <ReferenceParquetNet>true</ReferenceParquetNet>
     <!-- Skyline ships as Skyline-daily.exe in the daily channel; honor the env
@@ -420,8 +424,15 @@
   <Target Name="_DeploySkylineCmd"
           Condition="'$(TargetFramework)' == 'net10.0-windows'"
           AfterTargets="Build">
+    <!-- SkylineCmd's output folder depends on the platform the way the SDK's default OutputPath
+         does: bin\Release for AnyCPU, bin\x64\Release for x64. Reading the AnyCPU folder for an
+         x64 build deployed a stale SkylineCmd whose runtimeconfig lacked the server GC setting. -->
+    <PropertyGroup>
+      <_SkylineCmdBin Condition="'$(PlatformName)' == 'AnyCPU'">SkylineCmd\bin\$(Configuration)\net10.0-windows\</_SkylineCmdBin>
+      <_SkylineCmdBin Condition="'$(PlatformName)' != 'AnyCPU'">SkylineCmd\bin\$(PlatformName)\$(Configuration)\net10.0-windows\</_SkylineCmdBin>
+    </PropertyGroup>
     <ItemGroup>
-      <_SkylineCmdOutput Include="SkylineCmd\bin\$(Configuration)\net10.0-windows\SkylineCmd.*" />
+      <_SkylineCmdOutput Include="$(_SkylineCmdBin)SkylineCmd.*" />
     </ItemGroup>
     <Copy SourceFiles="@(_SkylineCmdOutput)"
           DestinationFolder="$(OutDir)"
