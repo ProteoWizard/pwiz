@@ -61,20 +61,24 @@ namespace pwiz.Osprey.FDR
             var means = standardizer.Means;
             var stds = standardizer.Stds;
 
-            using (var sw = new StreamWriter(path))
+            using (var saver = new FileSaver(path))
             {
-                sw.NewLine = "\n";
-                sw.WriteLine(@"feature_idx	feature_name	mean	std");
-                for (int i = 0; i < means.Length; i++)
+                using (var sw = new StreamWriter(saver.SafeName))
                 {
-                    string name = (featureInfos != null && i < featureInfos.Length)
-                        ? featureInfos[i].Name
-                        : @"unknown";
-                    sw.Write(i.ToString(inv));
-                    sw.Write('\t'); sw.Write(name);
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(means[i]));
-                    sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(stds[i]));
+                    sw.NewLine = "\n";
+                    sw.WriteLine(@"feature_idx	feature_name	mean	std");
+                    for (int i = 0; i < means.Length; i++)
+                    {
+                        string name = (featureInfos != null && i < featureInfos.Length)
+                            ? featureInfos[i].Name
+                            : @"unknown";
+                        sw.Write(i.ToString(inv));
+                        sw.Write('\t'); sw.Write(name);
+                        sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(means[i]));
+                        sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(stds[i]));
+                    }
                 }
+                saver.Commit();
             }
             OspreyOutput.Out.WriteLine(@"Wrote Stage 5 standardizer dump: {0} ({1} features)", path, means.Length);
         }
@@ -93,41 +97,45 @@ namespace pwiz.Osprey.FDR
             const string path = @"cs_stage5_perc_input.tsv";
             var inv = CultureInfo.InvariantCulture;
             int nFeatures = entries.Count > 0 ? entries[0].Features.Length : 0;
-            using (var sw = new StreamWriter(path))
+            using (var saver = new FileSaver(path))
             {
-                sw.NewLine = "\n";
-                sw.Write(@"native_position	entry_id	is_decoy");
-                for (int i = 0; i < nFeatures; i++)
+                using (var sw = new StreamWriter(saver.SafeName))
                 {
-                    string name = (featureInfos != null && i < featureInfos.Length)
-                        ? featureInfos[i].Name
-                        : @"unknown";
-                    sw.Write('\t'); sw.Write(name);
-                }
-                sw.WriteLine();
-
-                int n = entries.Count;
-                int[] order = new int[n];
-                for (int i = 0; i < n; i++) order[i] = i;
-                Array.Sort(order, (a, b) => // Array.Sort OK: tie-break on native_position (the input index a/b) makes the comparator total
-                {
-                    int c = entries[a].EntryId.CompareTo(entries[b].EntryId);
-                    return c != 0 ? c : a.CompareTo(b);
-                });
-
-                foreach (int idx in order)
-                {
-                    var e = entries[idx];
-                    sw.Write(idx.ToString(inv));
-                    sw.Write('\t'); sw.Write(e.EntryId.ToString(inv));
-                    sw.Write('\t'); sw.Write(e.IsDecoy ? @"true" : @"false");
-                    for (int i = 0; i < e.Features.Length; i++)
+                    sw.NewLine = "\n";
+                    sw.Write(@"native_position	entry_id	is_decoy");
+                    for (int i = 0; i < nFeatures; i++)
                     {
-                        sw.Write('\t');
-                        sw.Write(Diagnostics.FormatF64Roundtrip(e.Features[i]));
+                        string name = (featureInfos != null && i < featureInfos.Length)
+                            ? featureInfos[i].Name
+                            : @"unknown";
+                        sw.Write('\t'); sw.Write(name);
                     }
                     sw.WriteLine();
+
+                    int n = entries.Count;
+                    int[] order = new int[n];
+                    for (int i = 0; i < n; i++) order[i] = i;
+                    Array.Sort(order, (a, b) => // Array.Sort OK: tie-break on native_position (the input index a/b) makes the comparator total
+                    {
+                        int c = entries[a].EntryId.CompareTo(entries[b].EntryId);
+                        return c != 0 ? c : a.CompareTo(b);
+                    });
+
+                    foreach (int idx in order)
+                    {
+                        var e = entries[idx];
+                        sw.Write(idx.ToString(inv));
+                        sw.Write('\t'); sw.Write(e.EntryId.ToString(inv));
+                        sw.Write('\t'); sw.Write(e.IsDecoy ? @"true" : @"false");
+                        for (int i = 0; i < e.Features.Length; i++)
+                        {
+                            sw.Write('\t');
+                            sw.Write(Diagnostics.FormatF64Roundtrip(e.Features[i]));
+                        }
+                        sw.WriteLine();
+                    }
                 }
+                saver.Commit();
             }
             OspreyOutput.Out.WriteLine(@"Wrote Stage 5 Percolator input dump: {0} ({1} rows)", path, entries.Count);
         }
@@ -182,23 +190,27 @@ namespace pwiz.Osprey.FDR
                 return c != 0 ? c : a.CompareTo(b);
             });
 
-            using (var sw = new StreamWriter(path))
+            using (var saver = new FileSaver(path))
             {
-                sw.NewLine = "\n";
-                sw.WriteLine(@"entry_id	native_position	charge	modified_sequence	is_decoy	base_id	in_subsample	fold_id");
-                foreach (int i in order)
+                using (var sw = new StreamWriter(saver.SafeName))
                 {
-                    var e = entries[i];
-                    uint baseId = e.EntryId & PercolatorEntry.BASE_ID_MASK;
-                    sw.Write(e.EntryId.ToString(inv));
-                    sw.Write('\t'); sw.Write(i.ToString(inv));
-                    sw.Write('\t'); sw.Write(e.Charge.ToString(inv));
-                    sw.Write('\t'); sw.Write(e.Peptide ?? string.Empty);
-                    sw.Write('\t'); sw.Write(e.IsDecoy ? @"true" : @"false");
-                    sw.Write('\t'); sw.Write(baseId.ToString(inv));
-                    sw.Write('\t'); sw.Write(inSub[i] ? @"true" : @"false");
-                    sw.Write('\t'); sw.WriteLine(foldFor[i].ToString(inv));
+                    sw.NewLine = "\n";
+                    sw.WriteLine(@"entry_id	native_position	charge	modified_sequence	is_decoy	base_id	in_subsample	fold_id");
+                    foreach (int i in order)
+                    {
+                        var e = entries[i];
+                        uint baseId = e.EntryId & PercolatorEntry.BASE_ID_MASK;
+                        sw.Write(e.EntryId.ToString(inv));
+                        sw.Write('\t'); sw.Write(i.ToString(inv));
+                        sw.Write('\t'); sw.Write(e.Charge.ToString(inv));
+                        sw.Write('\t'); sw.Write(e.Peptide ?? string.Empty);
+                        sw.Write('\t'); sw.Write(e.IsDecoy ? @"true" : @"false");
+                        sw.Write('\t'); sw.Write(baseId.ToString(inv));
+                        sw.Write('\t'); sw.Write(inSub[i] ? @"true" : @"false");
+                        sw.Write('\t'); sw.WriteLine(foldFor[i].ToString(inv));
+                    }
                 }
+                saver.Commit();
             }
             OspreyOutput.Out.WriteLine(@"Wrote Stage 5 subsample dump: {0} ({1} rows)", path, n);
         }
@@ -222,32 +234,36 @@ namespace pwiz.Osprey.FDR
             const string path = @"cs_stage5_svm_weights.tsv";
             var inv = CultureInfo.InvariantCulture;
 
-            using (var sw = new StreamWriter(path))
+            using (var saver = new FileSaver(path))
             {
-                sw.NewLine = "\n";
-                sw.WriteLine(@"fold	weight_idx	feature_name	value	fold_iterations");
-                for (int fold = 0; fold < foldModels.Length; fold++)
+                using (var sw = new StreamWriter(saver.SafeName))
                 {
-                    var model = foldModels[fold];
-                    var weights = model.Weights;
-                    int iters = fold < foldIterations.Length ? foldIterations[fold] : 0;
-                    for (int wi = 0; wi < weights.Length; wi++)
+                    sw.NewLine = "\n";
+                    sw.WriteLine(@"fold	weight_idx	feature_name	value	fold_iterations");
+                    for (int fold = 0; fold < foldModels.Length; fold++)
                     {
-                        string name = (featureInfos != null && wi < featureInfos.Length)
-                            ? featureInfos[wi].Name
-                            : @"unknown";
+                        var model = foldModels[fold];
+                        var weights = model.Weights;
+                        int iters = fold < foldIterations.Length ? foldIterations[fold] : 0;
+                        for (int wi = 0; wi < weights.Length; wi++)
+                        {
+                            string name = (featureInfos != null && wi < featureInfos.Length)
+                                ? featureInfos[wi].Name
+                                : @"unknown";
+                            sw.Write(fold.ToString(inv));
+                            sw.Write('\t'); sw.Write(wi.ToString(inv));
+                            sw.Write('\t'); sw.Write(name);
+                            sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(weights[wi]));
+                            sw.Write('\t'); sw.WriteLine(iters.ToString(inv));
+                        }
                         sw.Write(fold.ToString(inv));
-                        sw.Write('\t'); sw.Write(wi.ToString(inv));
-                        sw.Write('\t'); sw.Write(name);
-                        sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(weights[wi]));
+                        sw.Write('\t'); sw.Write(weights.Length.ToString(inv));
+                        sw.Write('\t'); sw.Write(@"bias");
+                        sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(model.Bias));
                         sw.Write('\t'); sw.WriteLine(iters.ToString(inv));
                     }
-                    sw.Write(fold.ToString(inv));
-                    sw.Write('\t'); sw.Write(weights.Length.ToString(inv));
-                    sw.Write('\t'); sw.Write(@"bias");
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(model.Bias));
-                    sw.Write('\t'); sw.WriteLine(iters.ToString(inv));
                 }
+                saver.Commit();
             }
             OspreyOutput.Out.WriteLine(@"Wrote Stage 5 SVM weights dump: {0} ({1} folds)", path, foldModels.Length);
         }

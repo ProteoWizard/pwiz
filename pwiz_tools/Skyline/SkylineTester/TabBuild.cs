@@ -1,6 +1,7 @@
 /*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2013 University of Washington - Seattle, WA
  * 
@@ -112,13 +113,23 @@ namespace SkylineTester
                 : MainWindow.BranchUrl.Text;
         }
 
+        /// <summary>
+        /// The configuration build.bat is told to build. A nightly's tests run from a staged
+        /// directory named after this configuration (GetNightlyStagingDir), so the two cannot be
+        /// allowed to drift: naming a configuration the build does not produce points the run at a
+        /// directory that never appears, and it fails as "nothing was built" rather than as
+        /// anything about the configuration.
+        /// </summary>
+        public const string BUILD_CONFIGURATION = "Release";
+
         public static bool CreateBuildCommands(
             string branchUrl, 
             string buildRoot, 
             IList<int> architectures, 
             bool nukeBuild, 
             bool updateBuild,
-            bool runBuildTests)
+            bool runBuildTests,
+            bool withTutorialPerf = false)
         {
             var commandShell = MainWindow.CommandShell;
             var branchParts = branchUrl.Split('/');
@@ -229,9 +240,17 @@ namespace SkylineTester
             // "run build verification tests" option wants that -- the nightly and quality runs test
             // afterwards under their own duration budget and requeue logic, so letting build.bat
             // test as well would double the work.
+            // --with-tutorial-perf only for the nightly. build.bat's default project set leaves
+            // TestTutorial and TestPerf out, mirroring the TeamCity split, and a nightly is the
+            // case that split does not serve: it runs the tutorial tests as part of an ordinary
+            // pass and gates perf behind its own option, so both have to be staged to be
+            // selectable. Without it TestRunner silently stages neither and the tutorial tests
+            // never run. The Build tab keeps the lean default - building both there would add
+            // the tutorial suite to every "run build verification tests" pass.
             commandShell.Add("#@ Building Skyline...\n");
-            commandShell.Add("{0} Release --i-agree-to-the-vendor-licenses{1}",
+            commandShell.Add("{0} " + BUILD_CONFIGURATION + " --i-agree-to-the-vendor-licenses{1}{2}",
                 Path.Combine(buildRoot, @"pwiz_tools\Skyline\build.bat").Quote(),
+                withTutorialPerf ? " --with-tutorial-perf" : string.Empty,
                 runBuildTests ? string.Empty : " --no-tests");
 
             commandShell.Add("# Build done.");

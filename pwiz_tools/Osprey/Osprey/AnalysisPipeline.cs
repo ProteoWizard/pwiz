@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -47,64 +47,66 @@ namespace pwiz.Osprey
         /// Run the complete analysis pipeline.
         /// </summary>
         /// <param name="config">Analysis configuration.</param>
+        /// <param name="pipeline">The stages this run walks, in execution order - the list
+        /// <see cref="OspreyConfig.SelectTask"/> was given (<see cref="OspreyTasks.PipelineFor"/>),
+        /// so the driver and the selection share instances.</param>
         /// <returns>0 on success, non-zero on failure.</returns>
-        public int Run(OspreyConfig config)
+        public int Run(OspreyConfig config, IReadOnlyList<OspreyTask> pipeline)
         {
             var stopwatch = Stopwatch.StartNew();
+
+            // The driver walks the same instances the selection was resolved against, or the
+            // by-reference membership rule fails silently: every stage excluded (a no-op
+            // "Analysis complete") for a second list, or every stage included for a namesake
+            // selection. Program.Main hands SelectTask and this method one variable; refuse
+            // anything else rather than run a pipeline the config does not describe.
+            if (!ReferenceEquals(config.Pipeline, pipeline))
+                throw new ArgumentException(@"The pipeline to run must be the one the config's task was selected with.", nameof(pipeline));
 
             try
             {
                 // Select the diagnostics sink before any task runs -- the single
-                // chokepoint every entry point reaches the pipeline through
-                // (Program.Main and the rescore worker). -d forces the dump
+                // chokepoint every invocation reaches the pipeline through
+                // (Program.Main, whatever --task it selected). -d forces the dump
                 // bundle on; otherwise the sink self-enables only if an
                 // OSPREY_DUMP_* / OSPREY_DIAG_* env var is set.
                 OspreyDiagnostics.Initialize(config.Diagnostics);
+                // An ambient/forgotten OSPREY_KEEP_FAILED_WRITES silently stops EVERY
+                // FileSaver in the process from cleaning up an abandoned temp, in every
+                // run that inherits it, not just the diagnostic session someone meant to
+                // inspect - the same class of hazard OSPREY_ALLOW_UNFIXED_RESIDENT being
+                // left set once masked a real regression for ten days. Unlike that flag
+                // this one has no per-run cost to warn about even when it does nothing
+                // (most runs leave no abandoned write), so log it unconditionally rather
+                // than only when it turns out to matter.
+                if (OspreyEnvironment.KeepFailedWrites)
+                    LogWarning(@"OSPREY_KEEP_FAILED_WRITES is set: an abandoned FileSaver write leaves its temp file on disk instead of being cleaned up.");
 
-                // Worker-mode entry normalization: in --input-scores modes
-                // without explicit -i, synthesize InputFiles from the parquet
-                // stems ONCE here, at pipeline entry, so the driver's
-                // Outputs/IsTaskAlreadyDone skip checks and every per-task
-                // accessor see a populated InputFiles regardless of which task
-                // the run starts at. (Mutation-contract: InputFiles is a
-                // pipeline-populated field that does NOT feed any identity
-                // hash, so it may be written once at entry -- see
-                // PipelineContext.Config. Previously this lived inside
-                // PerFileScoringTask's join-only load, which the driver never
-                // reached when PerFileScoring was the StartAt task, e.g.
-                // `--task PerFileScoring --input-scores`.)
-                if (config.InputScores != null && config.InputScores.Count > 0
-                    && (config.InputFiles == null || config.InputFiles.Count == 0))
-                {
-                    var synthetic = new List<string>(config.InputScores.Count);
-                    foreach (var p in config.InputScores)
-                        synthetic.Add(RescoreHydration.SyntheticInputFromParquet(p));
-                    config.InputFiles = synthetic;
-                }
+                // No worker-mode entry normalization any more, and its absence is the
+                // point. A --input-scores run arrived here with parquet paths and no
+                // InputFiles, so the pipeline's FIRST act was to convert them back into
+                // data-file names - a round trip through a synthetic <stem>.mzML that does
+                // not exist, purely so the sidecar helpers could derive from a stem. Every
+                // task now receives the stems it needs on -i, which is the direction the
+                // derivation was always going.
 
-                // --task SpectraCache stages data rather than analyzing it: it runs
-                // its own one-task pipeline instead of the canonical four. Selecting
-                // it by list, not by an IsIncluded gate on every other task, keeps the
-                // canonical pipeline's membership rules about the analysis itself.
-                var pipelineTasks = config.SelectedTask == HpcTask.SpectraCache
-                    ? SpectraCachePipeline()
-                    : CanonicalPipeline();
-                var ctx = new PipelineContext(config, pipelineTasks,
+                var ctx = new PipelineContext(config, pipeline,
                     LogInfo, LogWarning, LogError, OspreyDiagnostics.Active);
 
-                // Phase B5 driver-owned dataflow: walk the canonical pipeline
-                // and run each INCLUDED task whose outputs are not already
-                // valid on disk. Membership is a per-task fact
-                // (OspreyTask.IsIncluded) rather than a contiguous
-                // [StartAt..StopAfter] window. Excluded tasks -- and included
-                // tasks whose outputs already exist (ctx.CanRehydrate) -- are
+                // Phase B5 driver-owned dataflow: walk the pipeline and run each
+                // INCLUDED stage whose outputs are not already valid on disk.
+                // Membership is one rule over the selection and the pipeline
+                // (OspreyConfig.Includes: everything, or the selected stage alone)
+                // rather than a contiguous [StartAt..StopAfter] window or a
+                // per-task predicate over flags. Excluded stages - and included
+                // stages whose outputs already exist (ctx.CanRehydrate) - are
                 // not run here; their state lazy-rehydrates through ctx.Demand
-                // when a running task reaches for it. A task returning false is
+                // when a running stage reaches for it. A task returning false is
                 // still the signal to stop and propagate ctx.ExitCode (e.g. an
                 // empty score set or a sidecar-write failure).
-                foreach (var task in pipelineTasks)
+                foreach (var task in pipeline)
                 {
-                    if (!task.IsIncluded(ctx))
+                    if (!config.Includes(task))
                         continue;
 
                     if (ctx.CanRehydrate(task))
@@ -126,44 +128,16 @@ namespace pwiz.Osprey
             }
             catch (Exception ex)
             {
-                LogError(string.Format("Pipeline failed: {0}", ex.Message));
-                LogError(ex.StackTrace);
+                // The whole exception, not ex.Message plus ex.StackTrace. Message can be
+                // empty and a wrapper carries its real cause only in InnerException, so the
+                // pair could name the throwing frame while saying nothing about why: a
+                // 17-hour 163-file run ended in "Pipeline failed: " and a bare BlibWriter
+                // constructor frame, which leaves a file lock, a full disk and a missing
+                // native library indistinguishable. ToString() prints the type, the message,
+                // every inner exception and the stack.
+                LogError(string.Format("Pipeline failed: {0}", ex));
                 return 1;
             }
-        }
-
-        /// <summary>
-        /// The canonical four-task pipeline in execution order:
-        /// PerFileScoring -> FirstPassFDR -> PerFileRescore -> SecondPassFDR.
-        /// Single source of truth for the task list. Tasks read upstream
-        /// state through ctx.Demand&lt;T&gt;().GetX() rather than constructor
-        /// args; the driver runs each task that is
-        /// <see cref="OspreyTask.IsIncluded"/> for the current config and whose
-        /// outputs are not already valid on disk. Returning false from any task
-        /// is the signal to stop and propagate ctx.ExitCode.
-        /// </summary>
-        internal static OspreyTask[] CanonicalPipeline()
-        {
-            return new OspreyTask[]
-            {
-                new PerFileScoringTask(),
-                new FirstPassFdrTask(),
-                new PerFileRescoreTask(),
-                new SecondPassFdrTask(),
-            };
-        }
-
-        /// <summary>
-        /// The one-task pipeline behind <c>--task SpectraCache</c>: build every
-        /// input's <c>.spectra.bin</c> and stop, without a library or any of the
-        /// analysis stages.
-        /// </summary>
-        internal static OspreyTask[] SpectraCachePipeline()
-        {
-            return new OspreyTask[]
-            {
-                new SpectraCacheTask(),
-            };
         }
 
         #region Utility Methods
@@ -216,9 +190,9 @@ namespace pwiz.Osprey
             // (one task -> two pipeline stages).
             string stageName = task.Name switch
             {
-                "PerFileScoring"   => "stage1to4",
-                "FirstPassFDR"     => "stage5",
-                "PerFileRescoring" => "stage6",
+                PerFileScoringTask.TASK_NAME => "stage1to4",
+                FirstPassFdrTask.TASK_NAME => "stage5",
+                PerFileRescoreTask.TASK_NAME => "stage6",
                 _                => null,
             };
             if (stageName != null)

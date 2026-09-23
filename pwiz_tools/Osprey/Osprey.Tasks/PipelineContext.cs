@@ -42,8 +42,8 @@ namespace pwiz.Osprey.Tasks
     /// <see cref="OspreyTask.Run"/> never ran.
     ///
     /// The context is constructed once at the top of
-    /// <c>AnalysisPipeline.Run</c> (or <c>RescoreWorker.Run</c>) and
-    /// lives for the duration of the pipeline execution.
+    /// <c>AnalysisPipeline.Run</c> and lives for the duration of the
+    /// pipeline execution.
     /// </summary>
     public sealed class PipelineContext
     {
@@ -124,10 +124,14 @@ namespace pwiz.Osprey.Tasks
         /// <see cref="SearchIdentity.ReconciliationParameterHash"/> must
         /// remain stable for the life of the run, so a worker can
         /// reproduce the same hash a straight-through invocation would
-        /// stamp into its parquet footers. Pipeline-populated fields
-        /// that do NOT feed those hashes (e.g. the worker-mode
-        /// synthesis of <c>InputFiles</c> from <c>InputScores</c>) may be
-        /// written once at pipeline entry. Run-time state that is not parsed
+        /// stamp into its parquet footers. NOTHING is written to the config at
+        /// pipeline entry any more: it is complete when parsing ends
+        /// (<c>OspreyCommandArgs.ToConfig</c>, which is also where
+        /// <c>--input-list</c> is expanded into <c>InputFiles</c>). The carve-out
+        /// that stood here - pipeline-populated fields that do not feed the hashes
+        /// may be written once at entry - existed for the worker-mode synthesis of
+        /// <c>InputFiles</c> from <c>--input-scores</c> parquet stems, and it went
+        /// with that flag. Run-time state that is not parsed
         /// config (e.g. file parallelism) lives on <see cref="RunPlan"/>
         /// instead. For per-file scratch that
         /// mutates hash-affecting fields (e.g. the MS2-calibrated
@@ -157,7 +161,7 @@ namespace pwiz.Osprey.Tasks
         // that needs state from a sibling asks Get/Demand for the state, never the task.
         // The one reader this property ever had was a predicate asking whether ITS OWN
         // consumer was going to run, so it could decide whether to do whole-run work - the
-        // second copy of IsIncluded's truth table that issue #4597 deleted. Leaving the hook
+        // second copy of the membership truth table that issue #4597 deleted. Leaving the hook
         // in place is an invitation to write that predicate again.
 
         /// <summary>

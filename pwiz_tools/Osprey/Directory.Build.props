@@ -1,6 +1,12 @@
 <Project>
 
   <PropertyGroup>
+    <!-- The net472 target existed so Osprey could reach pwiz_data_cli, which has no
+         .NET Core build (issue #4496); pwiz-sharp supplies a managed data layer
+         instead, so there is nothing left for a .NET Framework target to offer.
+         Plain net10.0, not net10.0-windows: Osprey must run on Linux/WSL with no
+         Wine container, which is also why ProteowizardWrapper had to become plain
+         (the CommonUtil/CommonBaseUI split this branch sits on). -->
     <TargetFramework>net10.0</TargetFramework>
     <!-- SDK-style csproj defaults to AnyCPU, but Osprey.sln uses x64
          configurations, which VS 2026 flags as "unknown project
@@ -11,6 +17,14 @@
            * the .NET 8.0 target can still be built AnyCPU on other hosts
              (e.g. Arm64 macOS/Linux) without touching any csproj. -->
     <Platforms>AnyCPU;x64</Platforms>
+    <!-- Carry Configuration/Platform across a ProjectReference to a project that is NOT
+         in Osprey.sln. MSBuild unsets both by default for such a reference, so
+         ProteowizardWrapper, CommonUtil and pwiz-sharp fell back to their own defaults
+         and a RELEASE Osprey deployed the DEBUG build of every one of them - only the
+         Debug output existed on disk. The reader is correct either way, so this never
+         produced a wrong answer, just an unoptimized ProteoWizard doing the spectrum
+         reading, which reads as a performance problem in Osprey. -->
+    <ShouldUnsetParentConfigurationAndPlatform>false</ShouldUnsetParentConfigurationAndPlatform>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -30,9 +44,8 @@
          "<numeric>-<githash>[-dirty]"; keep the SDK from appending its own
          "+<sha>" source-revision metadata so OspreyVersion parses one clean form. -->
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
-    <!-- Server GC on .NET 8 is driven by runtimeconfig.json auto-generated
-         from these MSBuild properties. net472 ignores these and uses the
-         app.config gcServer/gcConcurrent settings instead. -->
+    <!-- Server GC is driven by runtimeconfig.json auto-generated from these
+         MSBuild properties. -->
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
   </PropertyGroup>

@@ -24,7 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -34,8 +34,9 @@ namespace pwiz.Osprey.Test
 {
     /// <summary>
     /// Tests for Osprey Program-level helpers: the HPC scoring split
-    /// flag validation (Program.ValidateArgs) and the --input-scores
-    /// directory expansion (Program.ResolveInputScores).
+    /// flag validation (Program.ValidateArgs). The --input-scores directory
+    /// expansion it also covered went with that flag: every task takes the data
+    /// files and derives its parquets from their stems.
     ///
     /// These are unit tests of CLI argument plumbing only. End-to-end
     /// scoring round-trip (Stages 1-4 → parquet → Stage 5+) is exercised
@@ -67,22 +68,49 @@ namespace pwiz.Osprey.Test
             OspreyEnvironment.MeanBestN = _savedMeanBestN;
         }
 
-        // --- ValidateArgs: --task is authoritative over input type --------
-
-        private static OspreyConfig TaskConfig(HpcTask task)
+        /// <summary>
+        /// Two inputs sharing a file-name STEM are refused, whatever directories they sit in.
+        ///
+        /// <para>Every per-run artifact is <c>&lt;stem&gt;.&lt;suffix&gt;</c> and every per-run
+        /// map is keyed the same way, so a shared stem is two runs the pipeline cannot tell
+        /// apart. Left to be discovered downstream it takes two shapes and neither names the
+        /// cause: an <c>ArgumentException</c> about a duplicate key mid-Stage-6/7, or - with
+        /// <c>--output-dir</c>, where both stems resolve into one directory - two runs quietly
+        /// sharing one parquet, no error at all.</para>
+        ///
+        /// <para>Asserted with DIFFERENT directories, which is the case that matters and the
+        /// one <c>--input-list</c> makes routine at cohort scale; identical paths would be
+        /// caught by cruder means.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestValidateRejectsDuplicateInputStems()
         {
-            // Mirror Main's wiring: ResolveTask -> SelectedTask + derived flags.
-            return new OspreyConfig
-            {
-                SelectedTask = task,
-                // The selector IS the request for the report; Main sets this so the run
-                // cannot recompute the pass-2 view and then write nothing.
-                ModelDiagnostics = task == HpcTask.ModelDiagnostics,
-                NoJoin = task == HpcTask.PerFileScoring || task == HpcTask.PerFileRescore,
-                StopAfterStage5 = task == HpcTask.FirstPassFdr,
-                ExpectReconciledInput = task == HpcTask.SecondPassFdr,
-            };
+            var config = TaskConfigs.ForTask(PerFileScoringTask.TASK_NAME);
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            // Forward slashes deliberately. DuplicateInputStemError derives the stem with
+            // Path.GetFileNameWithoutExtension, and on Linux \ is an ordinary filename
+            // character - so "plateA\run1.mzML" is one flat name whose stem is
+            // "plateA\run1", the two paths do not collide, and the check correctly finds
+            // nothing. / is an alternate separator on Windows too, so one spelling yields the
+            // stem "run1" on both platforms.
+            config.InputFiles = new List<string> { @"plateA/run1.mzML", @"plateB/run1.mzML" };
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err, "two inputs sharing a stem must be refused");
+            // The stem and BOTH colliding paths, so the operator can act without re-deriving
+            // which of several hundred inputs collided.
+            StringAssert.Contains(err, "run1");
+            StringAssert.Contains(err, @"plateA/run1.mzML");
+            StringAssert.Contains(err, @"plateB/run1.mzML");
+
+            // Distinct stems in one directory remain fine - the check is on the stem, not the
+            // directory, and a cohort in one folder is the ordinary case.
+            config.InputFiles = new List<string> { @"plateA/run1.mzML", @"plateA/run2.mzML" };
+            Assert.IsNull(Program.ValidateArgs(config));
         }
+
+        // --- ValidateArgs: what each task requires -------------------------
+        // Each config comes from TaskConfigs.ForTask, i.e. through the same SelectTask the
+        // CLI goes through, so the flags are the task's own and not a copy of Main's wiring.
 
         // - SpectraCache (Stage 1 alone: inputs in, .spectra.bin out) --
 
@@ -93,7 +121,7 @@ namespace pwiz.Osprey.Test
             // The defining difference from every other task is that it needs
             // NO library - caching depends only on the input file - so the
             // happy path below deliberately leaves LibrarySource null.
-            var config = TaskConfig(HpcTask.SpectraCache);
+            var config = TaskConfigs.ForTask(SpectraCacheTask.TASK_NAME);
             config.InputFiles = new List<string> { "a.raw" };
             Assert.IsNull(Program.ValidateArgs(config), "no library should be required");
 
@@ -102,18 +130,16 @@ namespace pwiz.Osprey.Test
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             Assert.IsNull(Program.ValidateArgs(config), "a library should be tolerated");
 
-            AssertSpectraCacheError(c => { }, "--input <file");
-            AssertSpectraCacheError(c => c.InputScores = new List<string> { "a.scores.parquet" },
-                "not --input-scores");
+            AssertSpectraCacheError(c => { }, OspreyCommandArgs.ARG_INPUT.ArgumentText);
         }
 
         private static void AssertSpectraCacheError(Action<OspreyConfig> mutate, string expected)
         {
-            var config = TaskConfig(HpcTask.SpectraCache);
+            var config = TaskConfigs.ForTask(SpectraCacheTask.TASK_NAME);
             mutate(config);
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task SpectraCache");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + SpectraCacheTask.TASK_NAME);
             StringAssert.Contains(err, expected);
         }
 
@@ -122,7 +148,7 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestValidatePerFileScoringHappyPath()
         {
-            var config = TaskConfig(HpcTask.PerFileScoring);
+            var config = TaskConfigs.ForTask(PerFileScoringTask.TASK_NAME);
             config.InputFiles = new List<string> { "a.mzML" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             Assert.IsNull(Program.ValidateArgs(config));
@@ -131,137 +157,93 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestValidatePerFileScoringRequiresInput()
         {
-            var config = TaskConfig(HpcTask.PerFileScoring);
+            var config = TaskConfigs.ForTask(PerFileScoringTask.TASK_NAME);
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task PerFileScoring");
-            StringAssert.Contains(err, "--input <mzML");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + PerFileScoringTask.TASK_NAME);
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_INPUT.ArgumentText);
         }
 
         [TestMethod]
         public void TestValidatePerFileScoringRequiresLibrary()
         {
-            var config = TaskConfig(HpcTask.PerFileScoring);
+            var config = TaskConfigs.ForTask(PerFileScoringTask.TASK_NAME);
             config.InputFiles = new List<string> { "a.mzML" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task PerFileScoring");
-            StringAssert.Contains(err, "--library");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + PerFileScoringTask.TASK_NAME);
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_LIBRARY.ArgumentText);
         }
 
-        [TestMethod]
-        public void TestValidatePerFileScoringRejectsInputScores()
-        {
-            // --task is authoritative: PerFileScoring + --input-scores must
-            // error, not silently dispatch PerFileRescore.
-            var config = TaskConfig(HpcTask.PerFileScoring);
-            config.InputScores = new List<string> { "a.scores.parquet" };
-            config.LibrarySource = LibrarySource.FromPath("ref.blib");
-            config.OutputBlib = "out.blib";
-            string err = Program.ValidateArgs(config);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task PerFileScoring");
-            StringAssert.Contains(err, "not --input-scores");
-        }
-
-        // - PerFileRescore (--input-scores in) --
+        // - PerFileRescore (one run in, its reconciled parquet out) --
 
         [TestMethod]
         public void TestValidatePerFileRescoreHappyPath()
         {
-            var config = TaskConfig(HpcTask.PerFileRescore);
-            config.InputScores = new List<string> { "a.scores.parquet" };
+            var config = TaskConfigs.ForTask(PerFileRescoreTask.TASK_NAME);
+            config.InputFiles = new List<string> { "a.mzML" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
             Assert.IsNull(Program.ValidateArgs(config));
         }
 
         [TestMethod]
-        public void TestValidatePerFileRescoreRequiresInputScores()
+        public void TestValidatePerFileRescoreRequiresInput()
         {
-            var config = TaskConfig(HpcTask.PerFileRescore);
+            var config = TaskConfigs.ForTask(PerFileRescoreTask.TASK_NAME);
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task PerFileRescoring");
-            StringAssert.Contains(err, "--input-scores");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + PerFileRescoreTask.TASK_NAME);
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_INPUT.ArgumentText);
         }
 
         [TestMethod]
         public void TestValidatePerFileRescoreRequiresLibraryAndOutput()
         {
-            var config = TaskConfig(HpcTask.PerFileRescore);
-            config.InputScores = new List<string> { "a.scores.parquet" };
-            string err = Program.ValidateArgs(config);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task PerFileRescoring");
-            StringAssert.Contains(err, "--library and --output");
-        }
-
-        [TestMethod]
-        public void TestValidatePerFileRescoreRejectsInputMzml()
-        {
-            // Authoritative: PerFileRescore + -i mzML must error, not silently
-            // dispatch PerFileScoring. Error must name the task the user typed.
-            var config = TaskConfig(HpcTask.PerFileRescore);
+            var config = TaskConfigs.ForTask(PerFileRescoreTask.TASK_NAME);
             config.InputFiles = new List<string> { "a.mzML" };
-            config.LibrarySource = LibrarySource.FromPath("ref.blib");
-            config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task PerFileRescoring");
-            StringAssert.Contains(err, "not -i <mzML>");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + PerFileRescoreTask.TASK_NAME);
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_LIBRARY.ArgumentText + @" and " + OspreyCommandArgs.ARG_OUTPUT.ArgumentText);
         }
 
-        // - FirstPassFDR (--input-scores in, 2+ files, reconciliation on) --
+        // - FirstPassFDR (2+ runs in, reconciliation on) --
 
         [TestMethod]
         public void TestValidateFirstPassFdrHappyPath()
         {
-            var config = TaskConfig(HpcTask.FirstPassFdr);
-            config.InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" };
+            var config = TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME);
+            config.InputFiles = new List<string> { "a.mzML", "b.mzML" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
             Assert.IsNull(Program.ValidateArgs(config));
         }
 
         [TestMethod]
-        public void TestValidateFirstPassFdrRequiresInputScores()
+        public void TestValidateFirstPassFdrRequiresInput()
         {
-            var config = TaskConfig(HpcTask.FirstPassFdr);
+            var config = TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME);
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task FirstPassFDR");
-            StringAssert.Contains(err, "--input-scores");
-        }
-
-        [TestMethod]
-        public void TestValidateFirstPassFdrRejectsInputMzml()
-        {
-            var config = TaskConfig(HpcTask.FirstPassFdr);
-            config.InputFiles = new List<string> { "a.mzML" };
-            config.InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" };
-            config.LibrarySource = LibrarySource.FromPath("ref.blib");
-            config.OutputBlib = "out.blib";
-            string err = Program.ValidateArgs(config);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task FirstPassFDR");
-            StringAssert.Contains(err, "cannot be combined with --input");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME);
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_INPUT.ArgumentText);
         }
 
         [TestMethod]
         public void TestValidateFirstPassFdrRequiresLibraryAndOutput()
         {
-            var config = TaskConfig(HpcTask.FirstPassFdr);
-            config.InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" };
+            var config = TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME);
+            config.InputFiles = new List<string> { "a.mzML", "b.mzML" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task FirstPassFDR");
-            StringAssert.Contains(err, "--library and --output");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME);
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_LIBRARY.ArgumentText + @" and " + OspreyCommandArgs.ARG_OUTPUT.ArgumentText);
         }
 
         [TestMethod]
@@ -269,21 +251,21 @@ namespace pwiz.Osprey.Test
         {
             // FirstPassFDR writes the Stage 5 -> Stage 6 boundary pair, only
             // meaningful with siblings; a single-file run errors fast.
-            var config = TaskConfig(HpcTask.FirstPassFdr);
-            config.InputScores = new List<string> { "only.scores.parquet" };
+            var config = TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME);
+            config.InputFiles = new List<string> { "only.mzML" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task FirstPassFDR");
-            StringAssert.Contains(err, "2+ parquet files");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME);
+            StringAssert.Contains(err, "2+ files");
         }
 
         [TestMethod]
         public void TestValidateFirstPassFdrRequiresReconciliationEnabled()
         {
-            var config = TaskConfig(HpcTask.FirstPassFdr);
-            config.InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" };
+            var config = TaskConfigs.ForTask(FirstPassFdrTask.TASK_NAME);
+            config.InputFiles = new List<string> { "a.mzML", "b.mzML" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
             config.Reconciliation.Enabled = false;
@@ -292,69 +274,42 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(err, "Reconciliation.Enabled");
         }
 
-        // - SecondPassFDR (reconciled --input-scores in) --
+        // - SecondPassFDR (every run in, reading their reconciled parquets) --
 
         [TestMethod]
         public void TestValidateSecondPassFdrHappyPath()
         {
-            var config = TaskConfig(HpcTask.SecondPassFdr);
-            config.InputScores = new List<string> { "a.scores-reconciled.parquet" };
+            var config = TaskConfigs.ForTask(SecondPassFdrTask.TASK_NAME);
+            config.InputFiles = new List<string> { "a.mzML" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
             Assert.IsNull(Program.ValidateArgs(config));
         }
 
         [TestMethod]
-        public void TestValidateSecondPassFdrRequiresInputScores()
+        public void TestValidateSecondPassFdrRequiresInput()
         {
-            // Uncontested gap from ultrareview: --task SecondPassFDR without
-            // --input-scores (even with -i mzML) used to pass validation and
-            // silently run the full pipeline. It must now fail fast.
-            var config = TaskConfig(HpcTask.SecondPassFdr);
-            config.InputFiles = new List<string> { "a.mzML" };
+            // Uncontested gap from ultrareview: --task SecondPassFDR with no inputs at
+            // all used to pass validation and silently run the full pipeline. It must
+            // fail fast, and the message must name the task the user typed.
+            var config = TaskConfigs.ForTask(SecondPassFdrTask.TASK_NAME);
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task SecondPassFDR");
-            // -i present -> the cross is reported first; either way it must not pass.
-        }
-
-        [TestMethod]
-        public void TestValidateSecondPassFdrRequiresInputScoresNoMzml()
-        {
-            var config = TaskConfig(HpcTask.SecondPassFdr);
-            config.LibrarySource = LibrarySource.FromPath("ref.blib");
-            config.OutputBlib = "out.blib";
-            string err = Program.ValidateArgs(config);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task SecondPassFDR");
-            StringAssert.Contains(err, "--input-scores");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + SecondPassFdrTask.TASK_NAME);
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_INPUT.ArgumentText);
         }
 
         [TestMethod]
         public void TestValidateSecondPassFdrRequiresLibraryAndOutput()
         {
-            var config = TaskConfig(HpcTask.SecondPassFdr);
-            config.InputScores = new List<string> { "a.scores-reconciled.parquet" };
-            string err = Program.ValidateArgs(config);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task SecondPassFDR");
-            StringAssert.Contains(err, "--library and --output");
-        }
-
-        [TestMethod]
-        public void TestValidateSecondPassFdrRejectsInputMzml()
-        {
-            var config = TaskConfig(HpcTask.SecondPassFdr);
+            var config = TaskConfigs.ForTask(SecondPassFdrTask.TASK_NAME);
             config.InputFiles = new List<string> { "a.mzML" };
-            config.InputScores = new List<string> { "a.scores-reconciled.parquet" };
-            config.LibrarySource = LibrarySource.FromPath("ref.blib");
-            config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task SecondPassFDR");
-            StringAssert.Contains(err, "cannot be combined with --input");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + SecondPassFdrTask.TASK_NAME);
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_LIBRARY.ArgumentText + @" and " + OspreyCommandArgs.ARG_OUTPUT.ArgumentText);
         }
 
         // - ModelDiagnostics (the completed run's own command line, replayed) --
@@ -362,34 +317,37 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestValidateModelDiagnosticsTakesTheFullPipelineArgs()
         {
-            // Deliberately the ONLY task with no case in ValidateArgs' switch. It runs the
-            // canonical pipeline so Stages 1-5 rehydrate from their stamps, which means the
-            // caller re-issues the completed run's command line verbatim plus --task
-            // ModelDiagnostics - so it must validate exactly as that command line does, and
-            // adding a task-specific rule here would reject the invocation it exists to serve.
-            var config = TaskConfig(HpcTask.ModelDiagnostics);
-            config.InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" };
+            // Deliberately the one task that leaves ValidateSelection at the base default. It
+            // runs the canonical pipeline so Stages 1-5 rehydrate from their stamps, which
+            // means the caller re-issues the completed run's command line verbatim plus
+            // --task ModelDiagnostics - so it must require exactly what that command line
+            // does, and a task-specific rule here would reject the invocation it exists to
+            // serve.
+            var config = TaskConfigs.ForTask(ModelDiagnosticsTask.TASK_NAME);
+            config.InputFiles = new List<string> { "a.mzML", "b.mzML" };
             config.LibrarySource = LibrarySource.FromPath("ref.blib");
             config.OutputBlib = "out.blib";
             Assert.IsNull(Program.ValidateArgs(config));
 
             // -i mzML is the other accepted form, same as a full run.
-            var fromMzml = TaskConfig(HpcTask.ModelDiagnostics);
+            var fromMzml = TaskConfigs.ForTask(ModelDiagnosticsTask.TASK_NAME);
             fromMzml.InputFiles = new List<string> { "a.mzML" };
             fromMzml.LibrarySource = LibrarySource.FromPath("ref.blib");
             fromMzml.OutputBlib = "out.blib";
             Assert.IsNull(Program.ValidateArgs(fromMzml));
 
-            // And the full-pipeline requirements still bite: no input at all is an error.
-            var bare = TaskConfig(HpcTask.ModelDiagnostics);
+            // And the full-pipeline requirements still bite: no input at all is an error,
+            // naming the task the user typed like every other task's message.
+            var bare = TaskConfigs.ForTask(ModelDiagnosticsTask.TASK_NAME);
             bare.LibrarySource = LibrarySource.FromPath("ref.blib");
             bare.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(bare);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "No input files");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + ModelDiagnosticsTask.TASK_NAME);
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_INPUT.ArgumentText);
         }
 
-        // - Default (no --task): full pipeline from -i mzML or --input-scores --
+        // - Default (no --task): the full pipeline --
 
         [TestMethod]
         public void TestValidateDefaultFullHappyPath()
@@ -416,155 +374,113 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(err, "No input files");
         }
 
-        [TestMethod]
-        public void TestValidateFullFromScoresHappyPath()
-        {
-            // No --task + --input-scores: the full pipeline started from scores
-            // (PerFileScoring lazy-rehydrates). A single file is a legal,
-            // degenerate case.
-            var config = new OspreyConfig
-            {
-                InputScores = new List<string> { "only.scores.parquet" },
-                LibrarySource = LibrarySource.FromPath("ref.blib"),
-                OutputBlib = "out.blib"
-            };
-            Assert.IsNull(Program.ValidateArgs(config));
-        }
-
-        [TestMethod]
-        public void TestValidateFullFromScoresRequiresLibraryAndOutput()
-        {
-            // No --task: the error references --input-scores, not a task the
-            // user never selected.
-            var config = new OspreyConfig
-            {
-                InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" },
-                LibrarySource = LibrarySource.FromPath("ref.blib"),
-                // missing OutputBlib
-            };
-            string err = Program.ValidateArgs(config);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--input-scores");
-            StringAssert.Contains(err, "--library and --output");
-            Assert.IsFalse(err.Contains("--task"), "full-from-scores error must not name a --task: " + err);
-        }
-
-        [TestMethod]
-        public void TestValidateFullFromScoresRejectsInputMzml()
-        {
-            var config = new OspreyConfig
-            {
-                InputFiles = new List<string> { "a.mzML" },
-                InputScores = new List<string> { "a.scores.parquet" },
-                LibrarySource = LibrarySource.FromPath("ref.blib"),
-                OutputBlib = "out.blib"
-            };
-            string err = Program.ValidateArgs(config);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, "cannot be combined with --input");
-        }
-
         // --- ResolveTask (--task) -----------------------------------------
 
+        /// <summary>
+        /// Every task in the one list resolves to ITSELF - the same instance, not a
+        /// namesake - and appears in the --task value list exactly once; matching is
+        /// case-insensitive; and an unknown name is an error that names the flag, the value
+        /// and every valid task. The list is the authority for all three, so this cannot
+        /// drift from a second spelling of it: there is none.
+        /// </summary>
         [TestMethod]
-        public void TestResolveTaskPerFileScoring()
+        public void TestResolveTask()
         {
-            Assert.IsNull(Program.ResolveTask("PerFileScoring", out HpcTask task));
-            Assert.AreEqual(HpcTask.PerFileScoring, task);
-        }
+            var tasks = OspreyTasks.Create();
+            Assert.AreEqual(tasks.All.Count, OspreyCommandArgs.ARG_TASK.Values.Length, @"every task is listed once");
+            foreach (var expected in tasks.All)
+            {
+                Assert.IsNull(Program.ResolveTask(expected.Name, tasks, out OspreyTask task));
+                Assert.AreSame(expected, task, expected.Name);
+                Assert.AreEqual(1, Array.FindAll(OspreyCommandArgs.ARG_TASK.Values, v => v == expected.Name).Length,
+                    string.Format(@"{0} must appear in the --task values exactly once", expected.Name));
+            }
+            // The four canonical stages and the two selector-only tasks, by the constants the
+            // classes declare, so a task dropped from the list fails here by name.
+            CollectionAssert.AreEquivalent(
+                new[]
+                {
+                    SpectraCacheTask.TASK_NAME, PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME,
+                    PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME, ModelDiagnosticsTask.TASK_NAME
+                },
+                OspreyCommandArgs.ARG_TASK.Values);
 
-        [TestMethod]
-        public void TestResolveTaskFirstPassFdr()
-        {
-            Assert.IsNull(Program.ResolveTask("FirstPassFDR", out HpcTask task));
-            Assert.AreEqual(HpcTask.FirstPassFdr, task);
-        }
+            // Case-insensitive, resolving to the canonical spelling.
+            Assert.IsNull(Program.ResolveTask(PerFileRescoreTask.TASK_NAME.ToLowerInvariant(), tasks, out OspreyTask lower));
+            Assert.AreEqual(PerFileRescoreTask.TASK_NAME, lower.Name);
 
-        [TestMethod]
-        public void TestResolveTaskPerFileRescore()
-        {
-            Assert.IsNull(Program.ResolveTask("PerFileRescoring", out HpcTask task));
-            Assert.AreEqual(HpcTask.PerFileRescore, task);
-        }
-
-        [TestMethod]
-        public void TestResolveTaskSecondPassFdr()
-        {
-            Assert.IsNull(Program.ResolveTask("SecondPassFDR", out HpcTask task));
-            Assert.AreEqual(HpcTask.SecondPassFdr, task);
-        }
-
-        [TestMethod]
-        public void TestResolveTaskSpectraCache()
-        {
-            Assert.IsNull(Program.ResolveTask("SpectraCache", out HpcTask task));
-            Assert.AreEqual(HpcTask.SpectraCache, task);
-        }
-
-        [TestMethod]
-        public void TestResolveTaskModelDiagnostics()
-        {
-            Assert.IsNull(Program.ResolveTask("ModelDiagnostics", out HpcTask task));
-            Assert.AreEqual(HpcTask.ModelDiagnostics, task);
-        }
-
-        [TestMethod]
-        public void TestResolveTaskIsCaseInsensitive()
-        {
-            Assert.IsNull(Program.ResolveTask("perfilerescoring", out HpcTask task));
-            Assert.AreEqual(HpcTask.PerFileRescore, task);
-        }
-
-        [TestMethod]
-        public void TestResolveTaskUnknownErrors()
-        {
-            string err = Program.ResolveTask("Bogus", out _);
+            string err = Program.ResolveTask("Bogus", tasks, out OspreyTask none);
+            Assert.IsNull(none);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "unknown task");
             StringAssert.Contains(err, "Bogus");
+            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK.ArgumentText);
+            foreach (var task in tasks.All)
+                StringAssert.Contains(err, task.Name);
         }
 
         [TestMethod]
-        public void TestResolveTaskMapsToExpectedMembershipFlags()
+        public void TestSelectTaskSetsExpectedBehaviorFlags()
         {
-            // Each task must derive (via Main's wiring, mirrored by TaskConfig)
-            // the (NoJoin, StopAfterStage5, ExpectReconciledInput) tuple the four
-            // tasks' IsIncluded methods read. Mirrors PipelineMembershipTest.
-            //   task             | NoJoin | StopAfterStage5 | ExpectReconciled
-            //   PerFileScoring   | true   | false           | false
-            //   FirstPassFDR        | false  | true            | false
-            //   PerFileRescore   | true   | false           | false
-            //   SecondPassFDR        | false  | false           | true
-            //   SpectraCache     | false  | false           | false
-            //   ModelDiagnostics | false  | false           | false
-            // SpectraCache is all-false because it drives no membership at all:
-            // it runs its own one-task pipeline (AnalysisPipeline.SpectraCachePipeline)
-            // rather than gating tasks inside the canonical one. ModelDiagnostics is
-            // all-false for the opposite reason: it runs the CANONICAL pipeline
-            // unchanged so Stages 1-5 rehydrate from their existing stamps, and
-            // suppresses writes through DiagnosticsOnly instead of through membership.
-            var cases = new (HpcTask Task, bool NoJoin, bool StopAfterStage5, bool ExpectReconciled)[]
+            // Each task must set (through its ApplySelection, reached by SelectTask) the
+            // behavior flags its selection implies - and nothing else. These are not
+            // membership flags any more (that is OspreyConfig.Includes, pinned in
+            // PipelineMembershipTest); each is read by the arms of one task's body or by a
+            // gate below the task library.
+            //   task             | StopAfterStage5 | ExpectReconciled | DiagnosticsOnly
+            //   SpectraCache     | false           | false            | false
+            //   PerFileScoring   | false           | false            | false
+            //   FirstPassFDR     | true            | false            | false
+            //   PerFileRescoring | false           | false            | false
+            //   SecondPassFDR    | false           | true             | false
+            //   ModelDiagnostics | false           | false            | true
+            var cases = new (string Task, bool StopAfterStage5, bool ExpectReconciled, bool DiagnosticsOnly)[]
             {
-                (HpcTask.PerFileScoring, true,  false, false),
-                (HpcTask.FirstPassFdr,      false, true,  false),
-                (HpcTask.PerFileRescore, true,  false, false),
-                (HpcTask.SecondPassFdr,      false, false, true),
-                (HpcTask.SpectraCache,   false, false, false),
-                (HpcTask.ModelDiagnostics, false, false, false),
+                (SpectraCacheTask.TASK_NAME,     false, false, false),
+                (PerFileScoringTask.TASK_NAME,   false, false, false),
+                (FirstPassFdrTask.TASK_NAME,     true,  false, false),
+                (PerFileRescoreTask.TASK_NAME,   false, false, false),
+                (SecondPassFdrTask.TASK_NAME,    false, true,  false),
+                (ModelDiagnosticsTask.TASK_NAME, false, false, true),
             };
+            Assert.AreEqual(OspreyTasks.Create().All.Count, cases.Length, @"every task has a flags row");
             foreach (var c in cases)
             {
-                var config = TaskConfig(c.Task);
-                Assert.AreEqual(c.NoJoin, config.NoJoin, string.Format("{0}: NoJoin", c.Task));
+                var config = TaskConfigs.ForTask(c.Task);
+                Assert.AreEqual(c.Task, config.SelectedTask.Name);
                 Assert.AreEqual(c.StopAfterStage5, config.StopAfterStage5,
                     string.Format("{0}: StopAfterStage5", c.Task));
                 Assert.AreEqual(c.ExpectReconciled, config.ExpectReconciledInput,
                     string.Format("{0}: ExpectReconciledInput", c.Task));
-                // DiagnosticsOnly is derived from SelectedTask, so it must single out
-                // exactly one row - it is the flag every write suppression reads.
-                Assert.AreEqual(c.Task == HpcTask.ModelDiagnostics, config.DiagnosticsOnly,
+                // DiagnosticsOnly is the flag every write suppression reads, so it must
+                // single out exactly one row.
+                Assert.AreEqual(c.DiagnosticsOnly, config.DiagnosticsOnly,
                     string.Format("{0}: DiagnosticsOnly", c.Task));
             }
+            // No selection: the full pipeline, every flag off, the canonical pipeline carried.
+            var full = TaskConfigs.StraightThrough();
+            Assert.IsNull(full.SelectedTask);
+            Assert.AreEqual(4, full.Pipeline.Count);
+            Assert.IsFalse(full.StopAfterStage5 || full.ExpectReconciledInput || full.DiagnosticsOnly);
+            // A re-selection holds exactly the new task's flags and pipeline: nothing a
+            // previous selection set survives, so a config reused across selections cannot
+            // carry a stale flag into a task body.
+            var tasks = OspreyTasks.Create();
+            var reselected = TaskConfigs.ForTask(tasks, FirstPassFdrTask.TASK_NAME);
+            Assert.IsTrue(reselected.StopAfterStage5);
+            reselected.SelectTask(null, tasks.Pipeline);
+            Assert.IsFalse(reselected.StopAfterStage5, @"clearing the selection clears its flags");
+            var modelDiagnostics = tasks.FindByName(ModelDiagnosticsTask.TASK_NAME);
+            reselected.SelectTask(modelDiagnostics, tasks.PipelineFor(modelDiagnostics));
+            var secondPass = tasks.FindByName(SecondPassFdrTask.TASK_NAME);
+            reselected.SelectTask(secondPass, tasks.PipelineFor(secondPass));
+            Assert.IsFalse(reselected.DiagnosticsOnly, @"a later selection drops the earlier one's flags");
+            Assert.IsTrue(reselected.ExpectReconciledInput);
+            // ... except --model-diagnostics, which is the operator's own flag, not a
+            // selection's: ModelDiagnostics implies it but a later selection does not revoke it.
+            Assert.IsTrue(reselected.ModelDiagnostics);
+            // A selection without the pipeline it runs is refused: the two travel together.
+            Assert.ThrowsException<ArgumentNullException>(() => new OspreyConfig().SelectTask(secondPass, null));
         }
 
         // --- --task ModelDiagnostics: regenerate the report, touch nothing else ---
@@ -572,11 +488,12 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestModelDiagnosticsImpliesTheReportFlag()
         {
-            // Main turns the selector into --model-diagnostics (mirrored by TaskConfig).
-            // Without it the run recomputes the pass-2 view and writes nothing at all -
-            // a silent no-op that looks like a successful regeneration.
-            Assert.IsTrue(TaskConfig(HpcTask.ModelDiagnostics).ModelDiagnostics);
-            Assert.IsFalse(TaskConfig(HpcTask.SecondPassFdr).ModelDiagnostics);
+            // The selection turns the selector into --model-diagnostics
+            // (ModelDiagnosticsTask.ApplySelection). Without it the run recomputes the
+            // pass-2 view and writes nothing at all - a silent no-op that looks like a
+            // successful regeneration.
+            Assert.IsTrue(TaskConfigs.ForTask(ModelDiagnosticsTask.TASK_NAME).ModelDiagnostics);
+            Assert.IsFalse(TaskConfigs.ForTask(SecondPassFdrTask.TASK_NAME).ModelDiagnostics);
         }
 
         [TestMethod]
@@ -590,22 +507,20 @@ namespace pwiz.Osprey.Test
             // files). The second arm is the discriminating one: the same task with the
             // same output paths DOES declare outputs when the flag is off, so an empty
             // list here cannot be an artifact of the bare config.
-            Assert.AreEqual(0, SecondPassFdrOutputs(HpcTask.ModelDiagnostics).Count,
+            Assert.AreEqual(0, SecondPassFdrOutputs(ModelDiagnosticsTask.TASK_NAME).Count,
                 "--task ModelDiagnostics must declare no outputs");
-            Assert.AreNotEqual(0, SecondPassFdrOutputs(HpcTask.SecondPassFdr).Count,
+            Assert.AreNotEqual(0, SecondPassFdrOutputs(SecondPassFdrTask.TASK_NAME).Count,
                 "--task SecondPassFDR must still declare its outputs");
         }
 
-        private static List<string> SecondPassFdrOutputs(HpcTask task)
+        private static List<string> SecondPassFdrOutputs(string taskName)
         {
-            var config = TaskConfig(task);
-            config.InputScores = new List<string> { @"a.scores.parquet", @"b.scores.parquet" };
+            var config = TaskConfigs.ForTask(taskName);
+            config.InputFiles = new List<string> { @"a.mzML", @"b.mzML" };
             config.LibrarySource = LibrarySource.FromPath(@"ref.blib");
             config.OutputBlib = @"out.blib";
-            var tasks = AnalysisPipeline.CanonicalPipeline();
-            var ctx = new PipelineContext(config, tasks, null, null, null);
-            var secondPass = tasks[tasks.Length - 1];
-            Assert.IsInstanceOfType(secondPass, typeof(SecondPassFdrTask));
+            var ctx = TaskConfigs.ContextFor(config);
+            var secondPass = config.Pipeline.OfType<SecondPassFdrTask>().Single();
             return new List<string>(secondPass.Outputs(ctx));
         }
 
@@ -618,7 +533,7 @@ namespace pwiz.Osprey.Test
             // must throw rather than silently dropping them (which would run
             // the full pipeline in the wrong mode). Replaced by --task <Name>.
             var ex = Assert.ThrowsException<ArgumentException>(
-                () => Program.ParseArgs(new[] { "--no-join", "-i", "a.mzML" }));
+                () => Parse("--no-join", OspreyCommandArgs.ARG_INPUT + @"a.mzML"));
             StringAssert.Contains(ex.Message, "--no-join");
         }
 
@@ -656,8 +571,9 @@ namespace pwiz.Osprey.Test
         public void TestParseArgsAcceptsTaskAndValidArgs()
         {
             // --task and ordinary flags must NOT throw.
-            Program.ParseArgs(new[] { "--task", "FirstPassFDR", "-l", "ref.blib", "-o", "out.blib" });
-            Program.ParseArgs(new[] { "--task=SecondPassFDR", "-l", "ref.blib", "-o", "out.blib" });
+            Parse(OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME, OspreyCommandArgs.ARG_LIBRARY + @"ref.blib", OspreyCommandArgs.ARG_OUTPUT + @"out.blib");
+            // --task=Name is the one joined form Program.Main pre-scans, so it is spelled here.
+            Parse(OspreyCommandArgs.ARG_TASK.ArgumentText + @"=" + SecondPassFdrTask.TASK_NAME, OspreyCommandArgs.ARG_LIBRARY + @"ref.blib", OspreyCommandArgs.ARG_OUTPUT + @"out.blib");
         }
 
         [TestMethod]
@@ -667,10 +583,10 @@ namespace pwiz.Osprey.Test
             // like the other required-value flags, so it can't be silently
             // ignored when ParseArgs runs outside Main's pre-scan.
             var ex = Assert.ThrowsException<ArgumentException>(
-                () => Program.ParseArgs(new[] { "--task" }));
-            StringAssert.Contains(ex.Message, "--task");
+                () => Parse(OspreyCommandArgs.ARG_TASK));
+            StringAssert.Contains(ex.Message, OspreyCommandArgs.ARG_TASK.ArgumentText);
             Assert.ThrowsException<ArgumentException>(
-                () => Program.ParseArgs(new[] { "--task", "-l", "ref.blib" }));
+                () => Parse(OspreyCommandArgs.ARG_TASK, OspreyCommandArgs.ARG_LIBRARY + @"ref.blib"));
         }
 
         [TestMethod]
@@ -683,155 +599,21 @@ namespace pwiz.Osprey.Test
             // numeric, and enum flags.
             var missingOrFlagFollowed = new[]
             {
-                new[] { "-l" },
-                new[] { "-o", "-l", "x.blib" },
-                new[] { "--output" },
-                new[] { "--resolution", "--protein-fdr", "0.01" },
-                new[] { "--protein-fdr" },
-                new[] { "--threads", "-i", "f.mzML" },
-                new[] { "--decoy-pairing-manifest" },
-                new[] { "--fdr-method", "-o", "out.blib" },
-                new[] { "--fdr-level" },
-                new[] { "--shared-peptides", "--threads", "4" },
+                ArgTokens.Split(OspreyCommandArgs.ARG_LIBRARY.ShortArgumentText),
+                ArgTokens.Split(OspreyCommandArgs.ARG_OUTPUT.ShortArgumentText, OspreyCommandArgs.ARG_LIBRARY + @"x.blib"),
+                ArgTokens.Split(OspreyCommandArgs.ARG_OUTPUT),
+                ArgTokens.Split(OspreyCommandArgs.ARG_RESOLUTION, OspreyCommandArgs.ARG_PROTEIN_FDR + 0.01),
+                ArgTokens.Split(OspreyCommandArgs.ARG_PROTEIN_FDR),
+                ArgTokens.Split(OspreyCommandArgs.ARG_THREADS, OspreyCommandArgs.ARG_INPUT + @"f.mzML"),
+                ArgTokens.Split(OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST),
+                ArgTokens.Split(OspreyCommandArgs.ARG_FDR_METHOD, OspreyCommandArgs.ARG_OUTPUT + @"out.blib"),
+                ArgTokens.Split(OspreyCommandArgs.ARG_FDR_LEVEL),
+                ArgTokens.Split(OspreyCommandArgs.ARG_SHARED_PEPTIDES, OspreyCommandArgs.ARG_THREADS + 4),
             };
             foreach (var args in missingOrFlagFollowed)
             {
                 Assert.ThrowsException<ArgumentException>(
                     () => Program.ParseArgs(args));
-            }
-        }
-
-        // --- ResolveInputScores -------------------------------------------
-
-        [TestMethod]
-        public void TestResolveExplicitFilesPassThrough()
-        {
-            string dir = NewTempDir();
-            try
-            {
-                string a = Path.Combine(dir, "a.scores.parquet");
-                string b = Path.Combine(dir, "b.scores.parquet");
-                File.WriteAllText(a, string.Empty);
-                File.WriteAllText(b, string.Empty);
-                var resolved = Program.ResolveInputScores(new List<string> { a, b });
-                CollectionAssert.AreEqual(new List<string> { a, b }, resolved);
-            }
-            finally
-            {
-                Directory.Delete(dir, true);
-            }
-        }
-
-        [TestMethod]
-        public void TestResolveExplicitMissingFileErrors()
-        {
-            string dir = NewTempDir();
-            try
-            {
-                string missing = Path.Combine(dir, "does-not-exist.scores.parquet");
-                try
-                {
-                    Program.ResolveInputScores(new List<string> { missing });
-                    Assert.Fail("Expected ArgumentException for missing file");
-                }
-                catch (ArgumentException ex)
-                {
-                    StringAssert.Contains(ex.Message, "not found");
-                }
-            }
-            finally
-            {
-                Directory.Delete(dir, true);
-            }
-        }
-
-        [TestMethod]
-        public void TestResolveDirectoryScansAndSorts()
-        {
-            string dir = NewTempDir();
-            try
-            {
-                File.WriteAllText(Path.Combine(dir, "z.scores.parquet"), string.Empty);
-                File.WriteAllText(Path.Combine(dir, "a.scores.parquet"), string.Empty);
-                File.WriteAllText(Path.Combine(dir, "m.scores.parquet"), string.Empty);
-                File.WriteAllText(Path.Combine(dir, "readme.txt"), string.Empty);
-                var resolved = Program.ResolveInputScores(new List<string> { dir });
-                Assert.AreEqual(3, resolved.Count);
-                Assert.AreEqual("a.scores.parquet", Path.GetFileName(resolved[0]));
-                Assert.AreEqual("m.scores.parquet", Path.GetFileName(resolved[1]));
-                Assert.AreEqual("z.scores.parquet", Path.GetFileName(resolved[2]));
-            }
-            finally
-            {
-                Directory.Delete(dir, true);
-            }
-        }
-
-        [TestMethod]
-        public void TestResolveDirectoryPrefersReconciledPerStem()
-        {
-            // The directory holds both Stage 4 <stem>.scores.parquet and Stage 6
-            // <stem>.scores-reconciled.parquet files. For any stem that has both,
-            // only the reconciled file is returned; never both.
-            string dir = NewTempDir();
-            try
-            {
-                File.WriteAllText(Path.Combine(dir, "a.scores.parquet"), string.Empty);
-                File.WriteAllText(Path.Combine(dir, "a.scores-reconciled.parquet"), string.Empty);
-                File.WriteAllText(Path.Combine(dir, "b.scores.parquet"), string.Empty); // no reconciled sibling
-                File.WriteAllText(Path.Combine(dir, "c.scores-reconciled.parquet"), string.Empty); // no original
-                // An input stem ending in ".reconciled" stays an original (Copilot
-                // ambiguity regression guard) - its Stage 4 file must be returned
-                // as an original, not misread as a reconciled output.
-                File.WriteAllText(Path.Combine(dir, "d.reconciled.scores.parquet"), string.Empty);
-                var resolved = Program.ResolveInputScores(new List<string> { dir });
-                CollectionAssert.AreEqual(
-                    new[] { "a.scores-reconciled.parquet", "b.scores.parquet",
-                            "c.scores-reconciled.parquet", "d.reconciled.scores.parquet" },
-                    resolved.ConvertAll(Path.GetFileName));
-                // The superseded original must not appear.
-                CollectionAssert.DoesNotContain(resolved.ConvertAll(Path.GetFileName), "a.scores.parquet");
-            }
-            finally
-            {
-                Directory.Delete(dir, true);
-            }
-        }
-
-        [TestMethod]
-        public void TestResolveEmptyDirectoryErrors()
-        {
-            string dir = NewTempDir();
-            try
-            {
-                File.WriteAllText(Path.Combine(dir, "not-a-match.txt"), string.Empty);
-                try
-                {
-                    Program.ResolveInputScores(new List<string> { dir });
-                    Assert.Fail("Expected ArgumentException for directory with no parquets");
-                }
-                catch (ArgumentException ex)
-                {
-                    StringAssert.Contains(ex.Message, "No *.scores.parquet");
-                }
-            }
-            finally
-            {
-                Directory.Delete(dir, true);
-            }
-        }
-
-        [TestMethod]
-        public void TestResolveEmptyListErrors()
-        {
-            try
-            {
-                Program.ResolveInputScores(new List<string>());
-                Assert.Fail("Expected ArgumentException for empty list");
-            }
-            catch (ArgumentException ex)
-            {
-                StringAssert.Contains(ex.Message, "at least one path");
             }
         }
 
@@ -841,8 +623,9 @@ namespace pwiz.Osprey.Test
         public void TestConfigDefaultsDisableHpcMode()
         {
             var cfg = new OspreyConfig();
-            Assert.IsFalse(cfg.NoJoin, "NoJoin should default to false");
-            Assert.IsNull(cfg.InputScores, "InputScores should default to null");
+            Assert.IsNull(cfg.SelectedTask, "no task should be selected by default");
+            Assert.IsFalse(cfg.StopAfterStage5 || cfg.ExpectReconciledInput || cfg.DiagnosticsOnly,
+                "no selection-derived flag should default to true");
         }
 
         // --- ParquetScoreCache.CheckParquetMetadata -----------------------
@@ -1001,14 +784,7 @@ namespace pwiz.Osprey.Test
             // --decoys-in-library is a flat boolean; flips DecoysInLibrary
             // to true without consuming a value. Mirrors Rust osprey's
             // --decoys-in-library semantics.
-            var args = new[]
-            {
-                @"-i", @"x.mzML",
-                @"-l", @"lib.tsv",
-                @"-o", @"out.blib",
-                @"--decoys-in-library",
-            };
-            var config = Program.ParseArgs(args);
+            var config = Parse(RequiredIoThen(OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY));
             Assert.IsTrue(config.DecoysInLibrary);
             Assert.IsTrue(string.IsNullOrEmpty(config.DecoyPairingManifestPath));
         }
@@ -1021,14 +797,8 @@ namespace pwiz.Osprey.Test
             // isolation (no companion --decoys-in-library) so a regression
             // where the flag accidentally enables library-decoy mode on
             // its own would actually fail the test.
-            var args = new[]
-            {
-                @"-i", @"x.mzML",
-                @"-l", @"lib.tsv",
-                @"-o", @"out.blib",
-                @"--decoy-pairing-manifest", @"T:\test\manifest.tsv",
-            };
-            var config = Program.ParseArgs(args);
+            var config = Parse(RequiredIoThen(
+                OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST + @"T:\test\manifest.tsv"));
             Assert.IsFalse(config.DecoysInLibrary);
             Assert.AreEqual(@"T:\test\manifest.tsv", config.DecoyPairingManifestPath);
         }
@@ -1039,16 +809,10 @@ namespace pwiz.Osprey.Test
             // A bare --decoy-pairing-manifest with no value, or a value
             // that's itself an option (--decoys-in-library), must throw
             // rather than silently consume the next token as the path.
-            var argsNoValue = new[]
-            {
-                @"-i", @"x.mzML",
-                @"-l", @"lib.tsv",
-                @"-o", @"out.blib",
-                @"--decoy-pairing-manifest",
-            };
+            var argsNoValue = RequiredIoThen(OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST);
             try
             {
-                Program.ParseArgs(argsNoValue);
+                Parse(argsNoValue);
                 Assert.Fail(@"Expected ArgumentException for bare --decoy-pairing-manifest.");
             }
             catch (ArgumentException)
@@ -1056,16 +820,11 @@ namespace pwiz.Osprey.Test
                 // expected
             }
 
-            var argsFlagAsValue = new[]
-            {
-                @"-i", @"x.mzML",
-                @"-l", @"lib.tsv",
-                @"-o", @"out.blib",
-                @"--decoy-pairing-manifest", @"--decoys-in-library",
-            };
+            var argsFlagAsValue = RequiredIoThen(
+                OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST, OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY);
             try
             {
-                Program.ParseArgs(argsFlagAsValue);
+                Parse(argsFlagAsValue);
                 Assert.Fail(@"Expected ArgumentException for next-flag-as-value.");
             }
             catch (ArgumentException)
@@ -1081,25 +840,35 @@ namespace pwiz.Osprey.Test
             // (false) and DecoyPairingManifestPath stays null. Pipeline runs
             // the existing reverse-decoy path. Pins the "library-decoy mode
             // is fully opt-in" contract.
-            var args = new[]
-            {
-                @"-i", @"x.mzML",
-                @"-l", @"lib.tsv",
-                @"-o", @"out.blib",
-            };
-            var config = Program.ParseArgs(args);
+            var config = Parse(RequiredIoThen());
             Assert.IsFalse(config.DecoysInLibrary);
             Assert.IsTrue(string.IsNullOrEmpty(config.DecoyPairingManifestPath));
         }
 
-        // --- helpers -------------------------------------------------------
-
-        private static string NewTempDir()
+        /// <summary>
+        /// <see cref="Program.ParseArgs"/> over tokens built from the Argument instances, split
+        /// into argv the way a shell would by <see cref="ArgTokens.Split"/>.
+        /// </summary>
+        private static OspreyConfig Parse(params string[] tokens)
         {
-            string dir = Path.Combine(Path.GetTempPath(),
-                "osprey_test_program_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(dir);
-            return dir;
+            return Program.ParseArgs(ArgTokens.Split(tokens));
+        }
+
+        /// <summary>
+        /// The input, library and output every parse needs, followed by the tokens under
+        /// test. Each token is one ARG instance, alone for a flag or joined to its value
+        /// with <c>+</c>, exactly as the command line the usage text documents.
+        /// </summary>
+        private static string[] RequiredIoThen(params string[] tokens)
+        {
+            var args = new List<string>
+            {
+                OspreyCommandArgs.ARG_INPUT + @"x.mzML",
+                OspreyCommandArgs.ARG_LIBRARY + @"lib.tsv",
+                OspreyCommandArgs.ARG_OUTPUT + @"out.blib"
+            };
+            args.AddRange(tokens);
+            return args.ToArray();
         }
     }
 }

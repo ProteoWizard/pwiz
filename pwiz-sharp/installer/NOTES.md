@@ -91,30 +91,61 @@ deployment tool, etc.).
 ```
 pwiz-sharp/installer/
 ├── Setup.iss              ← one Inno script; the source of truth
+├── common/                ← pieces shared with the Osprey and Skyline installers
+│   ├── DotNetDesktopRuntime.iss   bundled / NoNetRuntime runtime prerequisite
+│   └── InstallType.iss            standard vs version-specific install page
 ├── build.ps1              ← orchestrator: refresh pins → dotnet build →
 │                            stage → cache runtime → 2× ISCC → write sidecar
 │                            (the pin generator now lives in
 │                            build/VendorPinsGenerator, a net8.0 tool so it
 │                            also runs on Linux agents with no pwsh)
-├── Ensure-InnoSetup.ps1   ← idempotent winget-bootstrap of ISCC.exe;
-│                            no-op if Inno Setup is already installed
-├── cache/                 ← .NET 8 runtime EXE (~56 MB, .gitignored)
+├── Ensure-InnoSetup.ps1   ← idempotent bootstrap of ISCC.exe; no-op if Inno
+│                            Setup is already installed. Osprey's package.ps1
+│                            and Skyline's Executables/Installer/build.ps1
+│                            call it too
+├── cache/                 ← .NET 10 runtime EXE (~57 MB, .gitignored); the
+│                            Skyline installer build shares it
 └── build/                 ← output artifacts (.gitignored):
-    ├── ProteoWizard-Sharp-Setup-<ver>.exe              (~62 MB)
-    ├── ProteoWizard-Sharp-NoNetRuntime-Setup-<ver>.exe (~6.7 MB)
+    ├── ProteoWizard-Sharp-Setup-<ver>.exe              (~66 MB)
+    ├── ProteoWizard-Sharp-NoNetRuntime-Setup-<ver>.exe (~10 MB)
     ├── installer-version.txt
     └── stage/             ← filtered copy of the dotnet build output
 ```
 
+### Shared with the Osprey and Skyline installers
+
+`pwiz_tools/Osprey/Installer/Setup.iss` and
+`pwiz_tools/Skyline/Executables/Installer/Setup.iss` are built the same way (a
+`.ps1` stages a build output and runs ISCC) and `#include` the two files under
+`common/` rather than carrying their own copies:
+
+- `DotNetDesktopRuntime.iss` - the runtime detection, the bundled-EXE `[Files]` +
+  `[Run]` entries and the NoNetRuntime abort, parameterized by `DotNetMajor`.
+  pwiz-sharp and Skyline (both framework-dependent) use it; Osprey ships
+  self-contained and does not.
+- `InstallType.iss` - the standard / version-specific wizard page and the
+  `{code:...}` functions `AppId`, `DefaultDirName`-adjustment and
+  `UninstallDisplayName` route through. pwiz-sharp and Osprey use it; Skyline
+  does not (a Skyline channel always upgrades in place).
+
+Both attach their event handlers with Inno 6.1+ event attributes
+(`<event('InitializeWizard')>` etc.), so an including script keeps its own
+`InitializeWizard` / `NextButtonClick` / `ShouldSkipPage`; Inno calls all of
+them. `InstallType.iss` opens with `[Code]` and a `(* *)` comment, so it can be
+included from inside a `[Code]` section; `DotNetDesktopRuntime.iss` carries
+`[Files]` and `[Run]` sections and must be included from a non-Code position,
+after the product's `[Files]` and before its `[Run]` launch entries.
+
 ### Two installer variants from one source
 
-`Setup.iss` has a single `#ifndef NoNetRuntime` gate around the `[Files]` line
-that bundles the runtime EXE and the matching `[Run]` entry that invokes it.
-`build.ps1` runs ISCC twice over the same script:
+`common/DotNetDesktopRuntime.iss` has a single `#ifndef NoNetRuntime` gate around
+the `[Files]` line that bundles the runtime EXE and the matching `[Run]` entry
+that invokes it. `build.ps1` runs ISCC twice over the same script:
 
 - **Pass 1**: no preprocessor define → bundled variant.
-- **Pass 2**: `/DNoNetRuntime` → lightweight variant; `InitializeSetup` aborts
-  with a download-link dialog if .NET 8 is missing.
+- **Pass 2**: `/DNoNetRuntime` → lightweight variant; the include's
+  `InitializeSetup` handler aborts with a download-link dialog if the runtime is
+  missing.
 
 This is cheaper to maintain than two parallel `.iss` files (the bulk of the
 script - install dirs, shortcuts, registry entries, AppId - is identical and
@@ -140,9 +171,9 @@ Examples: `4.0.26140-345eff6`, `4.0.26140-a80263e`.
 The version threads through three places:
 
 1. **`Setup.iss` `[Setup]` block** - `AppVersion={#MyAppVersion}` is what
-   Programs and Features displays. Also gets embedded in the AppId
-   (`{guid}_{version}`) so multiple versions install side-by-side under
-   distinct uninstall slots.
+   Programs and Features displays. A version-specific install also embeds it
+   in the AppId (`{guid}_{version}`), directory and Start Menu group so it
+   gets an uninstall slot of its own.
 2. **Output filename suffix** - `ProteoWizard-Sharp-Setup-4.0.26140-gitsha.exe`
    so multiple builds can coexist in `installer/build/` without overwriting
    each other (release verification, cherry-pick smoke testing, local debug
@@ -156,26 +187,43 @@ The version threads through three places:
 ISCC invocations outside `build.ps1` still produce a versioned installer for
 local script debugging.
 
-### Side-by-side multi-version installs
+### Standard vs version-specific installs
 
-The `AppId` in `Setup.iss` embeds the version: `{{guid}}_{#MyAppVersion}`.
-Inno keys every install on `AppId`, so a versioned `AppId` means:
+Inno keys every install on `AppId`, and `Setup.iss` routes it through
+`common/InstallType.iss`, which adds a wizard page after the license page:
 
-- Each version gets its own uninstall slot in Programs and Features.
-- Each version installs into its own dir (`...\ProteoWizard-Sharp\{version}\`).
-- Same-version reinstall upgrades in place; different-version install
-  coexists side-by-side.
+- **Standard** (default): `AppId` is the bare GUID, the directory is
+  `...\ProteoWizard-Sharp\`, the Start Menu group `ProteoWizard-Sharp`. One
+  such install per install mode; a newer version upgrades it in place, which
+  is what most users want.
+- **Version-specific**: `AppId` is `{guid}_{version}`, the directory
+  `...\ProteoWizard-Sharp {version}\`, the group `ProteoWizard-Sharp {version}`
+  and any Desktop shortcut name carries the version too. Never touched by a
+  later version; each one has its own Programs and Features entry and
+  uninstalls separately. For pinning an exact build beside the current one.
+
+Silent installs choose with `/INSTALLTYPE=versioned` (default `standard`).
+Because `AppId` includes a `{code:...}` constant, Inno requires
+`UsePreviousLanguage=no` and `UsePreviousPrivileges=no`, so the install-mode
+dialog is asked on every run; and `DisableDirPage=no` so the include can decide
+when to skip the directory page (a standard install over an existing one skips
+it, a version-specific one never does - Setup looked the previous install up
+under the standard AppId before the user chose).
+
+`UsePreviousPrivileges=no` also means a silent run does not inherit the mode of
+the install it is upgrading: a scripted upgrade of a per-machine install must
+pass `/ALLUSERS` (and of a per-user one `/CURRENTUSER`), or Inno's silent
+default - per-user - installs a second copy beside it. The same holds for the
+Osprey and Skyline installers (Skyline keeps `=no` deliberately, to ask every
+time; it warns interactively when the channel is already installed in the
+other mode).
 
 Shared resources (Windows Explorer right-click verbs) use **last-installed-wins**
 semantics: each install overwrites the verb's command to point at its own EXEs;
 uninstall *doesn't* remove the verb. This is the deliberate choice that the
 "latest installed" pwiz-sharp is the one a user gets when they right-click a
-.raw file. The trade-off: if the user uninstalls every version they have, the
+.raw file. The trade-off: if the user uninstalls every install they have, the
 verb is orphaned until they install something else.
-
-Start Menu group + Desktop shortcuts ARE versioned (the names include the
-version string), so each install owns its own shortcuts and uninstall cleans
-them up.
 
 ## Alternatives considered and rejected
 
@@ -259,21 +307,24 @@ Trade-offs to be aware of:
 
 ### .NET runtime version pinning
 
-The bundled runtime is the latest stable .NET 8 at build time (resolved via
-`https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe`, which redirects
-to the current 8.0.x release). pwiz-sharp's projects target `net8.0` /
-`net8.0-windows` so any 8.0.x runtime works. If we ever pin to a specific
-8.0.x SDK + runtime pair for reproducibility, the URL becomes a versioned one
+The bundled runtime is the latest stable .NET 10 at build time (resolved via
+`https://aka.ms/dotnet/10.0/windowsdesktop-runtime-win-x64.exe`, which redirects
+to the current 10.0.x release). pwiz-sharp's projects target `net10.0` /
+`net10.0-windows` so any 10.0.x runtime works. If we ever pin to a specific
+10.0.x SDK + runtime pair for reproducibility, the URL becomes a versioned one
 and the cache filename should follow.
 
 ### TeamCity integration
 
 `tcbuild.bat` calls `installer/build.ps1` as part of the standard build via
 `build.bat`. `Installer.Tests` then exercises the bundled variant end-to-end:
-silent install per-user, file deployment check, msconvert smoke against a real
-vendor sample, silent uninstall, registry-cleanup check. The per-machine
-variant is gated `Inconclusive` when the test runner isn't elevated, so it
-self-skips on the default TC agent.
+a silent version-specific install per-user (its own AppId, so it can never
+collide with a developer's real install), file deployment check, msconvert
+smoke against real vendor samples, silent uninstall, registry-cleanup check;
+then the same for a standard install minus the smoke, skipped `Inconclusive`
+when a real standard install of that scope exists since it would be upgraded
+in place. The per-machine variant is gated `Inconclusive` when the test runner
+isn't elevated, so it self-skips on the default TC agent.
 
 The NoNetRuntime variant doesn't have its own TC test - running the same install
 flow against a different .exe doesn't add coverage when the .NET runtime is

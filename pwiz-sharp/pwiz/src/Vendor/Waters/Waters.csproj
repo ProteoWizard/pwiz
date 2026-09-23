@@ -22,10 +22,10 @@
       -->
     <WatersArchive>$(PwizVendorArchivesPath)\vendor_api_Waters.7z</WatersArchive>
     <WatersAssembliesDir>$(PwizVendorAssembliesPath)\Waters</WatersAssembliesDir>
-    <WatersNativeLib Condition="'$(OS)' == 'Windows_NT'">MassLynxRaw.dll</WatersNativeLib>
-    <WatersNativeLib Condition="'$(OS)' != 'Windows_NT'">libMassLynxRaw.so</WatersNativeLib>
-    <WatersNativeLibArchiveDir Condition="'$(OS)' == 'Windows_NT'">vc12_x64</WatersNativeLibArchiveDir>
-    <WatersNativeLibArchiveDir Condition="'$(OS)' != 'Windows_NT'">linux_x64</WatersNativeLibArchiveDir>
+    <WatersNativeLib Condition="'$(PwizTargetIsWindows)' == 'true'">MassLynxRaw.dll</WatersNativeLib>
+    <WatersNativeLib Condition="'$(PwizTargetIsWindows)' != 'true'">libMassLynxRaw.so</WatersNativeLib>
+    <WatersNativeLibArchiveDir Condition="'$(PwizTargetIsWindows)' == 'true'">vc12_x64</WatersNativeLibArchiveDir>
+    <WatersNativeLibArchiveDir Condition="'$(PwizTargetIsWindows)' != 'true'">linux_x64</WatersNativeLibArchiveDir>
     <!-- $(SevenZaExe) is deliberately NOT set here: Directory.Build.props picks 7za.exe or
          7zz per OS, and hardcoding the Windows PE breaks any non-Windows build. -->
   </PropertyGroup>

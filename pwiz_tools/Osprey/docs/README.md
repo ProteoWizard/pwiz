@@ -20,12 +20,14 @@ the Rust documentation" section**; those are consolidated in
 
 **00 sorts first and is the one document to read before changing what any task reads,
 writes, or keeps.** It has no Rust counterpart and no "Divergences" section: it states the
-architecture the C# pipeline is built to, rather than porting a Rust source doc.
+architecture the C# pipeline is built to, rather than porting a Rust source doc. **21** is
+exempt the same way: it is a C#-only review checklist for the log's vocabulary, with no
+Rust counterpart and no "Divergences" section.
 
 Three documents divide the file-and-orchestration subject, and none repeats another: **00**
 owns scope, contract, principles and relay (which file, whose, when, who may read it);
 **14** owns the bytes (headers, versions, schemas, hashing, invalidation mechanics); **15**
-owns operations (CLI flags, `--input-scores` ordering, orchestration recipes).
+owns operations (CLI flags, how a task names its runs and in what order, orchestration recipes).
 
 | # | Doc | What it covers |
 |---|-----|----------------|
@@ -44,12 +46,13 @@ owns operations (CLI flags, `--input-scores` ordering, orchestration recipes).
 | 12 | [second-pass-fdr](12-second-pass-fdr.md) | Stage-7 second-pass FDR and the frozen-model q-value modes — transfer-compete and protein-compact — selected by `OSPREY_PASS2_QVALUE`. |
 | 13 | [blib-output-schema](13-blib-output-schema.md) | BiblioSpec SQLite schema plus Osprey extension tables and the nullable `retentionTime` convention for Skyline ID lines. |
 | 14 | [intermediate-files](14-intermediate-files.md) | On-disk caches / sidecars (calibration JSON, spectra cache, `.scores.parquet`, FDR sidecars), SHA-256 footer hashing, and the tiered memory architecture. |
-| 15 | [hpc-scoring-split](15-hpc-scoring-split.md) | The four `--task` workers, their input/output files, `--input-scores` ordering rules, and validity sidecars for HPC / NextFlow orchestration. |
+| 15 | [hpc-scoring-split](15-hpc-scoring-split.md) | The four `--task` workers, their input/output files, the ordering rules a chain must observe, and validity sidecars for HPC / NextFlow orchestration. |
 | 16 | [determinism](16-determinism.md) | Patterns that keep results bit-identical across runs: thread-order independence, float stability, cross-validation fold assignment. |
 | 17 | [vectorization](17-vectorization.md) | Performance-critical vectorization — the SIMD / BLAS-equivalent paths for XCorr and matrix operations. |
 | 18 | [peptide-trace](18-peptide-trace.md) | The per-peptide diagnostic dump facility (C# `OSPREY_DUMP_*` / `OSPREY_DIAG_*` in place of the Rust `OSPREY_TRACE_PEPTIDE`). |
 | 19 | [testing](19-testing.md) | The C# test suite and the standing gates: `regression.ps1` (straight-through correctness at 1e-9) and the cross-impl drift bridge against Rust. |
 | 20 | [command-line](20-command-line.md) | Full CLI option reference (every flag, default, and value list) with copy-paste unit (Stellar) and HRAM (Astral) examples and the four-task HPC split. |
+| 21 | [user-facing-text](21-user-facing-text.md) | Vocabulary for the log, warnings and errors - the only UI Osprey has: which developer terms never appear in user text and what replaces them. |
 
 ## Supplementary
 

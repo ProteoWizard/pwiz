@@ -27,10 +27,10 @@ namespace SkylineNightly
 {
     static class Program
     {
-        private static string PerformTests(Nightly.RunMode runMode, string arg, string decorateSrcDirName = null,
+        private static string PerformTests(RunSpec runSpec, string arg, string decorateSrcDirName = null,
             bool reuseCheckout = false, bool localSkylineTester = false)
         {
-            var nightly = new Nightly(runMode, decorateSrcDirName, null, reuseCheckout, localSkylineTester);
+            var nightly = new Nightly(runSpec, decorateSrcDirName, null, reuseCheckout, localSkylineTester);
             var nightlyTask = Nightly.NightlyTask;
             // A task with no enabled trigger has no next run time, which the Task Scheduler reports as a
             // zero date. That must not be read as "the next run has already started", or every manual
@@ -49,17 +49,18 @@ namespace SkylineNightly
             return errMessage;
         }
 
-        private static void PerformTests(Nightly.RunMode runMode1, Nightly.RunMode runMode2, string arg,
+        private static void PerformTests(RunSpec runSpec1, RunSpec runSpec2, string arg,
             bool reuseCheckout = false, bool localSkylineTester = false)
         {
-            var result = PerformTests(runMode1, string.Format(@"part one of {0}", arg), runMode1 == runMode2 ? @"A" : null,
+            bool sameRun = Equals(runSpec1, runSpec2);
+            var result = PerformTests(runSpec1, string.Format(@"part one of {0}", arg), sameRun ? @"A" : null,
                 reuseCheckout, localSkylineTester);
             if (Equals(result, Nightly.SkylineTesterStoppedByUser))
             {
                 return; // If user killed the first half, assume we don't want the second half
             }
             // Don't kill existing test processes for the second run, we'd like to keep any hangs around for forensics
-            PerformTests(runMode2, string.Format(@"part two of {0}", arg), runMode1 == runMode2 ? @"B" : null,
+            PerformTests(runSpec2, string.Format(@"part two of {0}", arg), sameRun ? @"B" : null,
                 reuseCheckout, localSkylineTester);
         }
 
@@ -92,9 +93,10 @@ namespace SkylineNightly
 
         private static string UsageMessage()
         {
-            string commands = string.Join(@" | ", SkylineNightly.RunModes.Select(r => r.ToString()).ToArray());
-            return string.Format(@"Usage: SkylineNightly run [{0}] [{1}] [{2}] [{3}]",
-                commands, commands, REUSE_CHECKOUT_OPTION, LOCAL_TESTER_OPTION);
+            string branches = string.Join(@"|", Enum.GetNames(typeof(Branch)));
+            string types = string.Join(@"|", SkylineNightly.RunTypes.Select(t => t.ToString()).ToArray());
+            return string.Format(@"Usage: SkylineNightly run [{0}]/[{1}] [[{0}]/[{1}]] [{2}] [{3}]",
+                branches, types, REUSE_CHECKOUT_OPTION, LOCAL_TESTER_OPTION);
         }
 
         /// <summary>
@@ -135,7 +137,7 @@ namespace SkylineNightly
 
                 var command = args[0].ToLower();
 
-                Nightly.RunMode runMode;
+                RunSpec runSpec;
 
                 string message;
                 string errMessage = string.Empty;
@@ -145,29 +147,31 @@ namespace SkylineNightly
                 {
                     case @"run":
                     {
-                        switch (args.Length)
+                        // With no runs given, which is what the shim passes, the saved settings say what to run
+                        var runSpecs = args.Length == 1
+                            ? RunSpec.GetSavedRuns()
+                            : args.Skip(1).Select(RunSpec.Parse).ToArray();
+                        switch (runSpecs.Length)
                         {
+                            case 1:
+                            {
+                                PerformTests(runSpecs[0], runSpecs[0].ToString(), null, reuseCheckout, localSkylineTester);
+                                break;
+                            }
                             case 2:
                             {
-                                PerformTests((Nightly.RunMode) Enum.Parse(typeof(Nightly.RunMode), args[1]), args[1],
-                                    null, reuseCheckout, localSkylineTester);
+                                PerformTests(runSpecs[0], runSpecs[1], runSpecs[0] + @" then " + runSpecs[1],
+                                    reuseCheckout, localSkylineTester);
                                 break;
                             }
-                            case 3:
-                            {
-                                PerformTests((Nightly.RunMode) Enum.Parse(typeof(Nightly.RunMode), args[1]),
-                                    (Nightly.RunMode) Enum.Parse(typeof(Nightly.RunMode), args[2]),
-                                    args[1] + @" then " + args[2], reuseCheckout, localSkylineTester);
-                                break;
-                            }
-                            default: throw new Exception(@"Wrong number of run modes specified, has to be 1 or 2");
+                            default: throw new Exception(@"Wrong number of runs specified, has to be 1 or 2");
                         }
 
                         break;
                     }
                     case "indefinitely":
                     {
-                        while (string.IsNullOrEmpty(PerformTests((Nightly.RunMode) Enum.Parse(typeof(Nightly.RunMode), args[1]), args[1],
+                        while (string.IsNullOrEmpty(PerformTests(RunSpec.Parse(args[1]), args[1],
                                    null, reuseCheckout, localSkylineTester)))
                         {
                         }
@@ -176,30 +180,30 @@ namespace SkylineNightly
                     }
                     case @"/?":
                     {
-                        nightly = new Nightly(Nightly.RunMode.trunk);
+                        nightly = Nightly.ForCommand(@"help");
                         message = UsageMessage();
                         nightly.Finish(message, errMessage);
                         break;
                     }
                     case @"parse":
                     {
-                        nightly = new Nightly(Nightly.RunMode.parse);
+                        nightly = Nightly.ForCommand(command);
                         message = string.Format(@"Parse and post log {0}", nightly.GetLatestLog());
-                        nightly.StartLog(Nightly.RunMode.parse);
-                        runMode = nightly.Parse();
-                        message += string.Format(@" as runmode {0}", runMode);
-                        errMessage = nightly.Post(runMode);
+                        nightly.StartLog();
+                        runSpec = nightly.Parse();
+                        message += string.Format(@" as run {0}", runSpec);
+                        errMessage = nightly.Post(runSpec);
                         nightly.Finish(message, errMessage);
                         break;
                     }
                     case @"post":
                     {
-                        nightly = new Nightly(Nightly.RunMode.post);
+                        nightly = Nightly.ForCommand(command);
                         message = string.Format(@"Post existing XML for {0}", nightly.GetLatestLog());
-                        nightly.StartLog(Nightly.RunMode.post);
-                        runMode = nightly.Parse(null, true); // "true" means skip XML generation, just parse to figure out mode
-                        message += string.Format(@" as runmode {0}", runMode);
-                        errMessage = nightly.Post(runMode);
+                        nightly.StartLog();
+                        runSpec = nightly.Parse(null, true); // "true" means skip XML generation, just parse to figure out the run
+                        message += string.Format(@" as run {0}", runSpec);
+                        errMessage = nightly.Post(runSpec);
                         nightly.Finish(message, errMessage);
                         break;
                     }
@@ -209,20 +213,20 @@ namespace SkylineNightly
                         var dir = Path.GetDirectoryName(args[0]);
                         if (extension == @".log")
                         {
-                            nightly = new Nightly(Nightly.RunMode.parse, null, dir);
-                            nightly.StartLog(Nightly.RunMode.parse);
+                            nightly = Nightly.ForCommand(@"parse", dir);
+                            nightly.StartLog();
                             message = string.Format(@"Parse and post log {0}", args[0]);
-                            runMode = nightly.Parse(args[0]); // Create the xml for this log file
+                            runSpec = nightly.Parse(args[0]); // Create the xml for this log file
                         }
                         else
                         {
-                            nightly = new Nightly(Nightly.RunMode.post, null, dir);
-                            nightly.StartLog(Nightly.RunMode.post);
+                            nightly = Nightly.ForCommand(@"post", dir);
+                            nightly.StartLog();
                             message = string.Format(@"Post existing XML {0}", args[0]);
-                            runMode = nightly.Parse(Path.ChangeExtension(args[0], @".log"), true); // Scan the log file for this XML
+                            runSpec = nightly.Parse(Path.ChangeExtension(args[0], @".log"), true); // Scan the log file for this XML
                         }
-                        message += string.Format(@" as runmode {0}", runMode);
-                        errMessage = nightly.Post(runMode, Path.ChangeExtension(args[0], @".xml"));
+                        message += string.Format(@" as run {0}", runSpec);
+                        errMessage = nightly.Post(runSpec, Path.ChangeExtension(args[0], @".xml"));
                         nightly.Finish(message, errMessage);
                         break;
                     }

@@ -108,7 +108,7 @@ This `Program.cs` includes a runtime probe that loads + instantiates `DockPanel`
 [probe] DigitalRune.Docking instantiated OK (base: System.Windows.Forms.Panel, size: 200x100)
 ```
 
-`DigitalRune.Windows.Docking 1.3.5` (the on-disk DLL at `pwiz_tools/Shared/Lib/`) is a
+`DigitalRune.Windows.Docking 1.3.5` (the on-disk DLL, now at `pwiz_tools/Shared/Lib/DigitalRune/net472/`; the project has since moved to the `net10/` rebuild beside it, which carries a GDI+ leak fix) is a
 .NET Framework 4.x WinForms library, and it loads and instantiates cleanly on .NET 8 —
 same compatibility path the Thermo and Bruker .NET Framework SDKs in pwiz-sharp's
 vendor projects already take. .NET 8's WinForms is API-compatible with .NET Framework

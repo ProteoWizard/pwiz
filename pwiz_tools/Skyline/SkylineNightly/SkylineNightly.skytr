@@ -7,6 +7,7 @@
   <nightlyRepeat>1</nightlyRepeat>
   <nightlyRandomize>false</nightlyRandomize>
   <nightlyBuildTrunk>true</nightlyBuildTrunk>
+  <nightlyRunType>Standard</nightlyRunType>
   <nightlyRunPerfTests>false</nightlyRunPerfTests>
   <nightlyBranch>false</nightlyBranch>
   <nightlyBranchUrl></nightlyBranchUrl>

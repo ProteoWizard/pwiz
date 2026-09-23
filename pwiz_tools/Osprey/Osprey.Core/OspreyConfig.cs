@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace pwiz.Osprey.Core
 {
@@ -34,6 +35,9 @@ namespace pwiz.Osprey.Core
     {
         /// <summary>Input mzML file paths.</summary>
         public List<string> InputFiles { get; set; } = new List<string>();
+
+        /// <summary>At least one input was named on the command line.</summary>
+        public bool HasInputFiles => InputFiles != null && InputFiles.Count > 0;
 
         /// <summary>Spectral library source.</summary>
         public LibrarySource LibrarySource { get; set; }
@@ -194,9 +198,10 @@ namespace pwiz.Osprey.Core
         /// peptides supporting it, the group q-value, and whether it passes protein FDR.
         /// ON by default -- it is the user-facing answer to "which proteins did you
         /// detect, and on what evidence"; the former <c>cs_stage7_protein_fdr.tsv</c> is a
-        /// counts-only cross-impl diagnostic, not this. Disable with
-        /// <c>--no-protein-report</c>. Additive (a new file), so byte-parity gates that
-        /// compare the blib + Stage-7 dump are unaffected.
+        /// counts-only cross-impl diagnostic, not this. There is no CLI switch to turn it
+        /// off (only <c>--diagnostics-only</c> or an absent <c>-o</c> skips it). Additive
+        /// (a new file), so byte-parity gates that compare the blib + Stage-7 dump are
+        /// unaffected.
         /// </summary>
         public bool WriteProteinReport { get; set; } = true;
 
@@ -206,8 +211,8 @@ namespace pwiz.Osprey.Core
         /// experiment-level row. Modeled on DIA-NN's per-run <c>stats.tsv</c>, with the
         /// per-replicate protein count computed by an INDEPENDENT run-level protein FDR
         /// (its own parsimony + picked-protein FDR on that replicate) so it is a true
-        /// per-run number, not a slice of the experiment set. ON by default; disable with
-        /// <c>--no-summary-report</c>. Additive, so byte-parity gates are unaffected.
+        /// per-run number, not a slice of the experiment set. ON by default, with no CLI
+        /// switch to turn it off. Additive, so byte-parity gates are unaffected.
         /// </summary>
         public bool WriteSummaryReport { get; set; } = true;
 
@@ -325,58 +330,92 @@ namespace pwiz.Osprey.Core
         public FileParallelism FileParallelism { get; set; } = FileParallelism.Sequential;
 
         /// <summary>
-        /// Pipeline-membership flag (read by each task's <c>IsIncluded</c>):
-        /// include only the per-file fan-out, not the joining tasks. Set by both
-        /// <c>--task PerFileScoring</c> and <c>--task PerFileRescoring</c>; the
-        /// concrete behavior depends on the input type. With <c>-i</c> mzML it
-        /// is the Stage 1-4 worker — each input produces a
-        /// <c>{stem}.scores.parquet</c> next to it, no FDR, no blib. With
-        /// <see cref="InputScores"/> it is the Stage 6 rescore worker. The two
-        /// are told apart by input type (see <see cref="SelectedTask"/>).
-        /// </summary>
-        public bool NoJoin { get; set; }
-
-        /// <summary>
-        /// HPC scoring split: when set (non-null, non-empty), skip Stages 1-4
-        /// entirely and load these per-file scoring caches as the starting
-        /// point for Stage 5+. Set by <c>--input-scores</c>. When set,
-        /// <see cref="InputFiles"/> is ignored.
-        /// </summary>
-        public List<string> InputScores { get; set; }
-
-        /// <summary>
         /// HPC: when true, exit after Stage 5 + reconciliation planning,
         /// having written the boundary files
         /// (<c>&lt;stem&gt;.&lt;phase&gt;-pass.fdr_scores.bin</c> and
         /// <c>&lt;stem&gt;.reconciliation.json</c>) for each input file.
-        /// Skips Stage 6 + 7 + 8. Set by <c>--task FirstPassFDR</c>.
+        /// Skips Stage 6 + 7 + 8. Set by <c>--task FirstPassFDR</c>. A behavior flag the
+        /// first-pass task's own arms read (planning ends the run; no survivor loader is
+        /// built) - not a membership flag: which stages run is <see cref="Includes"/>.
         /// </summary>
         public bool StopAfterStage5 { get; set; }
 
         /// <summary>
-        /// HPC: when true, every <c>--input-scores</c> parquet must carry
+        /// HPC: when true, every run's reconciled parquet must carry
         /// <c>osprey.reconciled = "true"</c> in its footer metadata. Set
         /// by <c>--task SecondPassFDR</c>; the post-Stage-6 (reconciled)
         /// entry point. Stages 1-6 are skipped: the pipeline loads
         /// reconciled scores + the <c>.{1st,2nd}-pass.fdr_scores.bin</c>
         /// sidecars, then runs Stages 7-8 (second-pass FDR overlay,
         /// protein parsimony + picked-protein FDR, blib output). Mirrors
-        /// Rust's <c>config.expect_reconciled_input</c>.
+        /// Rust's <c>config.expect_reconciled_input</c>. A behavior flag (the strict
+        /// reconciled-footer gate lives below the task library and reads it here) - not a
+        /// membership flag: which stages run is <see cref="Includes"/>.
         /// </summary>
         public bool ExpectReconciledInput { get; set; }
 
         /// <summary>
-        /// The single pipeline task selected by <c>--task &lt;Name&gt;</c> on the
-        /// CLI, or null for the full pipeline (no <c>--task</c>). The three
-        /// membership flags above (<see cref="NoJoin"/>,
-        /// <see cref="StopAfterStage5"/>, <see cref="ExpectReconciledInput"/>)
-        /// are derived from this and drive each task's <c>IsIncluded</c>; this
-        /// property additionally lets argument validation enforce the
-        /// task&#8596;input-type contract (e.g. PerFileScoring takes mzML,
-        /// PerFileRescore takes <see cref="InputScores"/>) and name the task the
-        /// user actually typed in error messages.
+        /// The single task selected by <c>--task &lt;Name&gt;</c> on the CLI, or null for
+        /// the full pipeline (no <c>--task</c>). Set only through <see cref="SelectTask"/>,
+        /// together with the <see cref="Pipeline"/> it runs and the flags it implies, so the
+        /// CLI path cannot set one without the others or leave a previous selection's behind.
+        /// The instance is the task itself - the same one the pipeline runs - so a task can
+        /// ask whether it IS the selection by reference, and what it is is answered by the
+        /// task through <see cref="ISelectableTask"/> rather than by a switch over its name.
+        /// It has no input-KIND contract to enforce: every task takes the same data files,
+        /// and the second seam that said "you handed me parquets, so Stage 1-4 is done" has
+        /// retired.
         /// </summary>
-        public HpcTask? SelectedTask { get; set; }
+        public ISelectableTask SelectedTask { get; private set; }
+
+        /// <summary>
+        /// The stages this run walks, in execution order: the pipeline the selection was
+        /// resolved against, or the canonical pipeline when nothing is selected. Null until
+        /// <see cref="SelectTask"/> is called, which a bare config in a unit test never does;
+        /// every reader treats that as "no selection, the full pipeline". Position questions -
+        /// does this run start after per-file scoring, does it run the final join - are
+        /// answered from this list and the selection, never by a task describing where it
+        /// sits.
+        /// </summary>
+        public IReadOnlyList<ISelectableTask> Pipeline { get; private set; }
+
+        /// <summary>
+        /// Select the task a run executes - or null for the full pipeline - together with the
+        /// stages it runs, and let it set the flags it implies. The one place the selection,
+        /// its pipeline and its flags are written together: the flags a selection derives are
+        /// cleared first, so they hold exactly what this task sets and nothing a previous
+        /// selection left. <see cref="ModelDiagnostics"/> is not among them -
+        /// <c>--model-diagnostics</c> sets it on its own.
+        /// </summary>
+        public void SelectTask(ISelectableTask task, IReadOnlyList<ISelectableTask> pipeline)
+        {
+            if (task != null && pipeline == null)
+                throw new ArgumentNullException(nameof(pipeline), @"A selected task must come with the pipeline it runs.");
+            StopAfterStage5 = false;
+            ExpectReconciledInput = false;
+            DiagnosticsOnly = false;
+            SelectedTask = task;
+            Pipeline = pipeline;
+            task?.ApplySelection(this);
+        }
+
+        /// <summary>
+        /// Whether <paramref name="stage"/> is included in this run's driver loop - the one
+        /// membership rule. Every stage is when nothing is selected. A selected task that is a
+        /// stage of the pipeline it runs (an HPC node: one node = one task) is included alone,
+        /// and the stages before it materialize on demand from their artifacts on disk. A
+        /// selected task that is NOT a stage of the pipeline it runs is a selector that runs
+        /// all of it - the diagnostics render - and every stage is included. Replaces the
+        /// three membership flags (<c>NoJoin</c>, and the two above read as membership) that
+        /// each stage's own predicate used to combine, which encoded one fan-out and one
+        /// join over a pipeline that has two of each.
+        /// </summary>
+        public bool Includes(ISelectableTask stage)
+        {
+            if (SelectedTask == null || ReferenceEquals(SelectedTask, stage))
+                return true;
+            return !Pipeline.Contains(SelectedTask);
+        }
 
         /// <summary>
         /// True under <c>--task ModelDiagnostics</c>: recompute the pass-2 view and write ONLY
@@ -384,9 +423,10 @@ namespace pwiz.Osprey.Core
         /// sidecars. The point is to be able to re-judge a diagnostics change on a completed
         /// large cohort without disturbing - or waiting for - the results it already produced.
         /// Every suppressed artifact is one this run would otherwise REWRITE with the same
-        /// content it already holds, so skipping them costs nothing but the write.
+        /// content it already holds, so skipping them costs nothing but the write. Set by
+        /// that task's <see cref="ISelectableTask.ApplySelection"/>, like its two siblings.
         /// </summary>
-        public bool DiagnosticsOnly => SelectedTask == HpcTask.ModelDiagnostics;
+        public bool DiagnosticsOnly { get; set; }
 
         /// <summary>
         /// Shallow clone for per-file ProcessFile() calls. The pipeline
@@ -412,41 +452,6 @@ namespace pwiz.Osprey.Core
         /// and MUST stay byte-identical with Rust.
         /// </summary>
         public SearchIdentity Identity => new SearchIdentity(this);
-    }
-
-    /// <summary>
-    /// A single HPC pipeline task selectable via <c>--task &lt;Name&gt;</c>
-    /// (one HPC node = one task). Each member is its task's
-    /// <c>OspreyTask.Name</c> in PascalCase, so the member, the class, and the
-    /// CLI selector are one word per task rather than three to map between.
-    /// <para>The stamp is not the member: what a task writes into its
-    /// <c>.osprey.task</c> sidecars and logs as <c>[TASK] &lt;Name&gt;</c> is
-    /// <c>OspreyTask.Name</c> verbatim, which keeps the all-caps FDR acronym
-    /// (<see cref="FirstPassFdr"/> stamps <c>FirstPassFDR</c>). Anything matching
-    /// those artifacts must use the Name, never the member or the class name.
-    /// <see cref="PerFileRescore"/> differs by more than casing - its Name is
-    /// <c>PerFileRescoring</c>.</para>
-    /// </summary>
-    public enum HpcTask
-    {
-        PerFileScoring,
-        FirstPassFdr,
-        PerFileRescore,
-        SecondPassFdr,
-        // Stage 1 alone: build each input's .spectra.bin cache and stop. Not an
-        // HPC fan-out node like the four above but the data-staging step ahead of
-        // them, which is why it needs no library and publishes no byproducts.
-        // Appended rather than ordered first so the existing members keep their
-        // ordinal values.
-        SpectraCache,
-        // Regenerate ONLY the --model-diagnostics HTML for a COMPLETED analysis, from that
-        // run's own outputs. Like SpectraCache this is not one of the four HPC fan-out nodes:
-        // it runs the canonical pipeline so Stages 1-5 rehydrate from their valid stamps, then
-        // lets SecondPassFDR compute the pass-2 view while suppressing every artifact write
-        // except the report. Exists because judging a diagnostics change on a large cohort
-        // otherwise means re-running the whole search - 7 hours on the 82-file SEA-AD set -
-        // or accepting a stale page written by an older build.
-        ModelDiagnostics
     }
 
     /// <summary>

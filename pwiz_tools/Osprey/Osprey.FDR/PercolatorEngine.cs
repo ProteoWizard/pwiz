@@ -221,6 +221,7 @@ namespace pwiz.Osprey.FDR
             PercolatorDiagnosticsConfig diagnostics = null,
             string passLabel = FIRST_PASS_LABEL,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures = null,
+            Func<string, double[]> loadFileApexRts = null,
             Action<FeatureContributions> captureContributions = null,
             Action<PercolatorResults> captureModel = null)
         {
@@ -265,7 +266,7 @@ namespace pwiz.Osprey.FDR
                     @"is a bug -- the resident build is the flag-off FdrEntry path.");
 
             var percConfig = BuildProjectionPercolatorConfig(config, featureInfos, diagnostics);
-            int n = projections.TotalRows;
+            long n = projections.TotalRows;
 
             // Streaming-only (cross-impl parity with the Rust streaming-only change):
             // ALWAYS run the projection-native streaming score + compete pass, regardless
@@ -281,7 +282,7 @@ namespace pwiz.Osprey.FDR
                 passLabel, n));
             bool streamingAbort = RunStreamingIntoProjection(
                 projections.PerFile, peptideById, percConfig, logInfo, passLabel,
-                loadFileFeatures, sink, captureContributions, captureModel);
+                loadFileFeatures, loadFileApexRts, sink, captureContributions, captureModel);
             if (streamingAbort)
                 return true;
 
@@ -300,7 +301,7 @@ namespace pwiz.Osprey.FDR
         /// <summary>
         /// Projection-free 1st-pass Percolator (issue #4355 struct-shrink S3, Stage B): the
         /// FLAT-memory entry point that holds NO resident row buffer. The counterpart of the
-        /// <see cref="RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Action{FeatureContributions},System.Action{PercolatorResults})"/>
+        /// <see cref="RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Func{string,double[]},System.Action{FeatureContributions},System.Action{PercolatorResults})"/>
         /// projection overload for the lean 1st-pass case, it builds the same parity-locked
         /// <see cref="PercolatorConfig"/> and delegates to
         /// <see cref="PercolatorScorer.RunStreamingFirstPass"/>, which streams every row's identity +
@@ -312,7 +313,7 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         public static bool RunFirstPassStreaming(
             IReadOnlyList<string> fileNames,
-            Action<string, Action<uint, byte, bool, double, string>> streamFileRows,
+            Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> streamFileRows,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
             OspreyConfig config,
             OspreyFeatureInfo[] featureInfos,
@@ -789,6 +790,7 @@ namespace pwiz.Osprey.FDR
             Action<string> logInfo,
             string passLabel,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
+            Func<string, double[]> loadFileApexRts,
             IFdrOutputSink sink,
             Action<FeatureContributions> captureContributions = null,
             Action<PercolatorResults> captureModel = null)
@@ -963,7 +965,7 @@ namespace pwiz.Osprey.FDR
             // primitives re-aggregated there silently.
             PercolatorScorer.ScoreProjectionAndComputeFdrInPlace(
                 perFile, labels, entryIds, peptides, trainResults, percConfig,
-                loadFileFeatures, sink, captureContributions,
+                loadFileFeatures, loadFileApexRts, sink, captureContributions,
                 applyExperimentAgg: passLabel == FIRST_PASS_LABEL);
             return false;
         }
@@ -1055,28 +1057,45 @@ namespace pwiz.Osprey.FDR
         /// separated so a streamed consumer can fold over every file first and then apply as it
         /// revisits them - the floors are whole-run, the application is per row.
         /// </summary>
-        public static void ApplyExperimentQFloors(
+        /// <summary>
+        /// Returns how many q-values this call actually RAISED. Zero is the interesting answer:
+        /// the score pass applies the same floor before it writes (see the clamp in
+        /// <c>PercolatorScorer.ScoreProjectionAndComputeFdrInPlace</c>), so a pool rebuilt from
+        /// those persisted values should already satisfy the invariant and a re-apply should
+        /// change nothing. A caller that folds every run purely to re-derive floors that raise
+        /// no value is doing a whole traversal for a no-op, and the count is what tells it so
+        /// rather than leaving the question to argument.
+        /// </summary>
+        public static int ApplyExperimentQFloors(
             IReadOnlyList<FdrEntry> entries,
             IReadOnlyDictionary<uint, double> minRunBothByEntryId,
             IReadOnlyDictionary<(string ModifiedSequence, bool IsDecoy), double> minRunBothByPeptide)
         {
+            int raised = 0;
             {
                 foreach (var e in entries)
                 {
                     double floorPrec;
                     if (minRunBothByEntryId.TryGetValue(e.EntryId, out floorPrec) &&
                         floorPrec > e.ExperimentPrecursorQvalue)
+                    {
                         e.ExperimentPrecursorQvalue = floorPrec;
+                        raised++;
+                    }
 
                     if (!string.IsNullOrEmpty(e.ModifiedSequence))
                     {
                         double floorPept;
                         if (minRunBothByPeptide.TryGetValue((e.ModifiedSequence, e.IsDecoy), out floorPept) &&
                             floorPept > e.ExperimentPeptideQvalue)
+                        {
                             e.ExperimentPeptideQvalue = floorPept;
+                            raised++;
+                        }
                     }
                 }
             }
+            return raised;
         }
     }
 }

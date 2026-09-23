@@ -109,9 +109,16 @@ fan-out boundaries into four single-task workers — one node = one
 | `--task` | shape | reads | writes (next to the input) |
 |----------|-------|-------|-----------------------------|
 | `PerFileScoring`   | split 1 — per file | mzML (`-i`) + library (`-l`) | `<stem>.scores.parquet`, `<stem>.calibration.json` |
-| `FirstPassFDR`     | join 1 — all files | every `<stem>.scores.parquet` (`--input-scores`) | `<stem>.1st-pass.fdr_scores.bin`, `<stem>.reconciliation.json` |
+| `FirstPassFDR`     | join 1 — all files | every `<stem>.scores.parquet` | `<stem>.1st-pass.fdr_scores.bin`, `<stem>.reconciliation.json` |
 | `PerFileRescoring` | split 2 — per file | `<stem>.scores.parquet` + co-located `.1st-pass.fdr_scores.bin`, `.reconciliation.json` | `<stem>.scores-reconciled.parquet` |
-| `SecondPassFDR`    | join 2 — all files | every `<stem>.scores-reconciled.parquet` (`--input-scores`) | `<output>.blib` (+ `<stem>.2nd-pass.fdr_scores.bin` when protein FDR is on) |
+| `SecondPassFDR`    | join 2 — all files | every `<stem>.scores-reconciled.parquet` | `<output>.blib` (+ `<stem>.2nd-pass.fdr_scores.bin` when protein FDR is on) |
+
+Every task names its runs with `-i` / `--input-list`, giving the **data files**, and derives
+each run's parquet and sidecars from the input stem plus `--output-dir`. Which parquet a task
+reads is a property of the task — `FirstPassFDR` and `PerFileRescoring` read `<stem>.scores.parquet`,
+`SecondPassFDR` reads `<stem>.scores-reconciled.parquet` — not of what happens to be in the
+directory. The data file itself need not still exist: a node whose `.spectra.bin` or scores
+parquet is staged is accepted without it.
 
 The driver also writes a `<output>.<TaskName>.osprey.task` validity
 sidecar next to each output; re-running a task whose outputs already exist
@@ -128,17 +135,22 @@ Osprey -i *.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
 Osprey --task PerFileScoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
 #   -> s1.scores.parquet, s1.calibration.json   (next to s1.mzML; -o is ignored here)
 
-# Join 1 — FirstPassFDR, one process over ALL parquets (pass a DIRECTORY so order is fixed):
-Osprey --task FirstPassFDR --input-scores ./scores_dir -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+# Join 1 — FirstPassFDR, one process over ALL runs (name them in a fixed order):
+Osprey --task FirstPassFDR -i s1.mzML -i s2.mzML -i s3.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+#   reads s1.scores.parquet, s2..., s3...
 #   -> <stem>.1st-pass.fdr_scores.bin, <stem>.reconciliation.json   (next to each parquet)
 
 # Split 2 — PerFileRescoring, one process per file (parquet + its two sidecars co-located):
-Osprey --task PerFileRescoring --input-scores s1.scores.parquet -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+Osprey --task PerFileRescoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
 #   -> s1.scores-reconciled.parquet
 
-# Join 2 — SecondPassFDR, one process over ALL reconciled parquets (DIRECTORY again):
-Osprey --task SecondPassFDR --input-scores ./reconciled_dir -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
-#   -> out.blib
+# Join 2 — SecondPassFDR, one process over ALL runs (same order):
+Osprey --task SecondPassFDR -i s1.mzML -i s2.mzML -i s3.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+#   reads s1.scores-reconciled.parquet, s2..., s3...   -> out.blib
+
+# Past a few hundred runs, --input-list takes one path per line and composes with -i
+# (446 -i paths measured ~28,600 characters against a 32,767 command-line limit):
+Osprey --task SecondPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
 ```
 
 The example above shows the *commands*. What each node must actually be **shipped** at each
@@ -151,14 +163,16 @@ often proceed without them and produce a plausible wrong answer - is the relay c
 - **Same parameters on every task.** Pass an identical `-l <library>` and
   identical search flags (`--resolution`, `--protein-fdr`, ...) to all
   four tasks. The parquet integrity check (`osprey.search_hash` footer
-  metadata) rejects `--input-scores` files whose search/library hash does
-  not match the current invocation.
-- **`--input-scores` ordering is significant.** A *directory* argument is
-  globbed and sorted internally (deterministic). An explicit *file list*
-  is consumed in the order given. FirstPassFDR reconciliation is
-  order-sensitive, so for `FirstPassFDR` and `SecondPassFDR` pass a directory or a
+  metadata) rejects parquets whose search/library hash does not match the
+  current invocation.
+- **Input ORDER is significant, and it is now yours.** Runs are consumed in
+  the order given to `-i` / `--input-list`. FirstPassFDR reconciliation is
+  order-sensitive, so for `FirstPassFDR` and `SecondPassFDR` pass a
   deterministically sorted list — a workflow engine's channel order is
-  otherwise nondeterministic and would cause run-to-run drift.
+  otherwise nondeterministic and would cause run-to-run drift. The retired
+  `--input-scores` sorted a globbed directory on your behalf; naming the runs
+  means the order is stated rather than inherited from a directory listing,
+  and a stray parquet in that directory can no longer change the cohort.
 - **Outputs land next to inputs; sidecars travel with the parquet.** Each
   task writes its outputs and sidecars beside the input file (not into
   cwd or a separate output dir). `PerFileRescoring` rehydrates from
@@ -171,15 +185,16 @@ often proceed without them and produce a plausible wrong answer - is the relay c
   several files concurrently in one process) and would double-parallelize
   under a scheduler.
 - **`--help` is the authoritative flag reference** (`Osprey --help`),
-  with a Distributed / HPC group covering `--task` and `--input-scores`.
+  with a Distributed / HPC group covering `--task`, `-i` and `--input-list`.
 - **Exit codes**: a failing task returns a non-zero process exit code, so
   a workflow engine can gate on it normally.
 
 ## Build
 
-Osprey multi-targets `net472;net8.0`; the `net8.0` target framework
-is the one used on Linux. The simplest cross-platform build/run is via the
-.NET SDK (8.0+):
+Osprey targets `net8.0` only, on every platform. Spectrum reading goes
+through ProteoWizard (`pwiz-sharp`), which is managed .NET 8 as well, so a
+Linux run needs neither Wine nor a container. The simplest cross-platform
+build/run is via the .NET SDK (8.0+):
 
 ```bash
 # Framework-dependent (requires the .NET 8 runtime installed on each node):
@@ -199,7 +214,7 @@ with MSBuild directly against `Osprey/Osprey.csproj`. The
 assembly name is `Osprey`, so the produced binary is `Osprey`
 (Linux) / `Osprey.exe` (Windows).
 
-## Redistribution (ZIP / .msi)
+## Redistribution (ZIP / Setup.exe)
 
 `package.ps1` produces the canonical redistributable artifacts on top of the
 build above. Each is a self-contained `net8.0` publish (no system .NET needed),
@@ -210,8 +225,8 @@ unzipped side by side -- important for pinning an exact Osprey per HPC analysis.
 # Per-RID ZIPs into dist/ (win-x64 + linux-x64 by default)
 pwsh -File ./package.ps1
 
-# Windows ZIP + the per-machine .msi installer
-pwsh -File ./package.ps1 -Rid win-x64 -Msi
+# Windows ZIP + the Setup.exe installer
+pwsh -File ./package.ps1 -Rid win-x64 -Setup
 ```
 
 Artifacts (gitignored `dist/`):
@@ -219,12 +234,16 @@ Artifacts (gitignored `dist/`):
 ```
 Osprey-<version>-win-x64.zip      Osprey.exe + runtime DLLs + Documentation/ + README + LICENSE
 Osprey-<version>-linux-x64.zip    same layout, Linux self-contained
-Osprey-<version>-win-x64.msi      installs to C:\Program Files\Osprey (per-machine), adds PATH
+Osprey-Setup-<version>.exe        Inno Setup installer: per-user or per-machine, optional PATH entry
 ```
 
 The version is the Skyline scheme `YEAR.ORDINAL.BRANCH.DOY` shared with the
-build via `version.ps1`. The `.msi` is built with the WiX v5 dotnet tool (see
-`Installer/Osprey.wxs`); Authenticode signing is available behind `-Sign`
+build via `version.ps1`. The Setup.exe is built with Inno Setup 6 (see
+`Installer/Setup.iss`; `pwiz-sharp/installer/Ensure-InnoSetup.ps1` fetches the
+compiler when a machine lacks it). Like the ProteoWizard-Sharp installer it asks
+for a per-user or per-machine install and offers a "version-specific" install
+that keeps its own folder and Start Menu shortcuts beside other versions instead
+of being replaced by the next one. Authenticode signing is available behind `-Sign`
 (off by default -- see the script header for the `OSPREY_SIGN*` env vars). CI
 runs this via `tcpackage.bat`. This is the official artifact downstream tools
 (e.g. Carafe) should consume rather than building their own Osprey publish.

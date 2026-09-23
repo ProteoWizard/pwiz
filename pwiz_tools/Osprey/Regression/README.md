@@ -15,7 +15,7 @@ not the drill-down.
 | File | Role |
 |------|------|
 | `../regression.ps1` | the harness — acquire data, run, compare, report |
-| `../tctest.bat` | scheduled TeamCity entry point (`regression.ps1 -TeamCity -Dataset All`) |
+| `../tctest.bat` | scheduled TeamCity entry point (`regression-parallel.ps1 -TeamCity -Dataset All`: two lanes, one `regression.ps1` invocation per dataset) |
 | `RegressionData.ps1` | download + unzip + skip-if-present (TestPerf-style) |
 | `BlibGolden.ps1` | blib projection schema + golden capture/compare + full blib-vs-blib |
 | `DiagnosticsGolden.ps1` | model-diagnostics metric projection + golden compare + fixed FDR sanity bounds |
@@ -25,7 +25,8 @@ not the drill-down.
 | Dataset | Decoys | Entrapment | Resolution | Role |
 |---|---|---|---|---|
 | `Stellar` | generated (reverse) | no | unit | fast local pre-commit gate |
-| `StellarLibDecoy` | library-supplied (Carafe) | yes, r=1.0 | unit | the recommended path; the only one that can measure true FDP |
+| `StellarLibDecoy` | library-supplied (Carafe) | yes, r=1.0 | unit | the recommended path; measures true FDP against library decoys — `DecoyGenerator` never runs |
+| `StellarGenDecoyEntrap` | generated (reverse), from the same library file with `StripDecoys` | yes, retained | unit | the only leg that guards `DecoyGenerator` against a true-FDP oracle |
 | `Astral` | generated (reverse) | no | hram | larger, HRAM, MS1 features live |
 
 `StellarLibDecoy` reuses the **same** Stellar mzML (via the spec's `LibraryFolder`),
@@ -99,8 +100,15 @@ artifact**, so the multi-GB spectra caches there are harmless):
    construction: with `OSPREY_RELEASE_LIBRARY_FRAGMENTS=0` the other legs stay green
    and only mode 6 goes red.
 
-   Asserts presence and non-zero counts, **never exact counts** - those move with any
-   scoring change. One run-wide check asserts the log pattern matched *somewhere*, so
+   Asserts presence and non-zero counts, **never absolute counts** - those move with any
+   scoring change. It does assert counts against *each other* (issue #4650): on every leg
+   that runs Stage 7's release, its retained count must equal the count the summary's
+   producer logged, Stage 5's retained count must equal it too, and where Stage 5 released
+   in the same process Stage 7 must release 0. All three move together with any scoring
+   change, so none of them cries wolf, and together they say Stage 7 READ the analysis-wide
+   summary rather than folding every run's final pool to rebuild it.
+
+   One run-wide check asserts the log pattern matched *somewhere*, so
    a reworded C# line fails the gate instead of quietly satisfying the
    "must not release" leg. Always on; there is no skip switch.
 

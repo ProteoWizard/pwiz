@@ -287,7 +287,12 @@
                       Private="false" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net10.0')">
-    <Content Include="..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net10.0\**\*">
+    <!-- Exclude any RID-named publish folder: a self-contained `dotnet publish -r win-x64` run
+         from that project lands 200 MB of runtime under bin\...\net10.0\win-x64, which is not
+         part of msconvert's framework-dependent output and would otherwise ride into Skyline's
+         bin and from there into the installer. -->
+    <Content Include="..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net10.0\**\*"
+             Exclude="..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net10.0\win-*\**;..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net10.0\linux-*\**;..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net10.0\osx-*\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
       <Visible>false</Visible>
@@ -320,7 +325,34 @@
        Executables\Hardklor\Hardklor.vcxproj before this project (see pwiz_tools\Skyline\build.bat).
        This Content include deploys the pre-built exe when present. net8-only: the net472 build
        gets Hardklor.exe from the Jam toolchain. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('Executables\Hardklor\bin\x64\$(Configuration)\Hardklor.exe')">
+  <PropertyGroup>
+    <!-- $(PwizPrebuiltNativeShimDir) is the public knob; $(_PwizPrebuiltNativeShimDir) is the
+         same value guaranteed to end in a separator, so consumers can concatenate:
+         $(_PwizPrebuiltNativeShimDir)Foo.dll.
+
+         It has to be a SECOND property rather than a normalisation in place. A value that
+         arrives via -p: is a global property, and MSBuild silently ignores any PropertyGroup
+         that tries to redefine one - so normalising the public name looked correct and did
+         nothing. Callers also cannot simply pass the trailing separator themselves, because
+         a command-line value ending in a backslash makes MSBuild read the following quote
+         as escaped. Empty stays empty, so either name still doubles as the opt-in flag. -->
+    <_PwizPrebuiltNativeShimDir Condition="'$(PwizPrebuiltNativeShimDir)' != ''">$([MSBuild]::EnsureTrailingSlash('$(PwizPrebuiltNativeShimDir)'))</_PwizPrebuiltNativeShimDir>
+  </PropertyGroup>
+
+  <!-- $(PwizPrebuiltNativeShimDir) wins when set: it is the Native shims CI artifact
+       (scripts/misc/tcbuild-native-shims.bat), which is how a host without the VC++
+       toolchain gets Hardklor.exe at all. Unlike the two vendor shims, Hardklor has no
+       vendor SDK and so is cross-compilable in principle; it rides in the same bundle so
+       all three native binaries have one source of truth. The two ItemGroups are mutually
+       exclusive - both firing would duplicate the Content item. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And '$(PwizPrebuiltNativeShimDir)' != '' And Exists('$(_PwizPrebuiltNativeShimDir)Hardklor.exe')">
+    <Content Include="$(_PwizPrebuiltNativeShimDir)Hardklor.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Hardklor.exe</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And !Exists('$(_PwizPrebuiltNativeShimDir)Hardklor.exe') And Exists('Executables\Hardklor\bin\x64\$(Configuration)\Hardklor.exe')">
     <Content Include="Executables\Hardklor\bin\x64\$(Configuration)\Hardklor.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Hardklor.exe</Link>
@@ -427,10 +459,18 @@
     <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
     <PackageReference Include="System.Management" Version="8.0.0" />
     <!-- DigitalRune.Windows.Docking is a legacy WinForms DLL with no NuGet
-         equivalent. WinForms-on-net8 compat usually loads it fine - reference
-         the same binary the legacy build uses. -->
+         equivalent, and it ships as two binaries under Shared\Lib\DigitalRune:
+         net472\ is the untouched original that SeeMS and IDPicker still build
+         against, and net10\ carries the GDI+ fix - on .NET 10, Control.Region
+         leaks ~976 bytes per non-null assignment and nothing reclaims it, so
+         the docking code clips through SetWindowRgn instead. That fix is
+         guarded #if NETCOREAPP, so it exists only in the net10 build, and a
+         net10 build cannot be referenced from net472. Every consumer has to
+         pick one; a reference that has not been updated fails to resolve, on
+         purpose, so the build reports what has not been ported yet. Rebuild
+         with ai/scripts/Skyline/DigitalRune/Build-DigitalRune.ps1. -->
     <Reference Include="DigitalRune.Windows.Docking">
-      <HintPath>..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
+      <HintPath>..\Shared\Lib\DigitalRune\net10\DigitalRune.Windows.Docking.dll</HintPath>
     </Reference>
     <Reference Include="Kajabity Tools">
       <HintPath>..\Shared\Lib\Kajabity Tools.dll</HintPath>

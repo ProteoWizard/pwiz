@@ -41,4 +41,69 @@
     </PropertyGroup>
   </Target>
 
+  <!--
+    Prints the ProteoWizard build banner the bjam build used to emit, in the exact shape
+    SkylineNightly scrapes for a run's revision and git hash (the reRevision regex in
+    SkylineNightly\Nightly.cs). The net8 build never runs bjam, so without this the scrape
+    finds nothing, Nightly.cs falls back to GetRevision() and reports the revision as
+    "unknownDate.<hash>". LabKey parses that field as an integer, so every posted run is
+    rejected into the Posting Errors tab and nightly reporting stops with no visible error.
+
+    pwiz's revision is {YY}{DDD} - the same git-date pieces the assembly version is stamped
+    from, so the banner cannot drift from the build it describes. The day-of-year must stay
+    zero-padded to 3 (PwizVersionDayOfYear, not ...Raw): only 26 + 005 gives the 5-digit
+    26005 that matches the historical bjam shape, and LabKey stores whatever group 1 holds.
+    The regex needs a space after the hash, so neither field may contain one.
+    Run standalone (no restore, no ProjectReference graph) with:
+      dotnet msbuild SkylineVersion.targets -t:PrintPwizVersionBanner
+
+    The regex also anchors on a newline immediately followed by "ProteoWizard", and MSBuild
+    indents Message output by two spaces, which would never match. So the caller that needs
+    the scrapable form passes PwizVersionBannerFile and emits the file itself at column 0.
+    The Message is only visible at -v:m or higher - build.bat passes -v:q and shows the
+    human the banner by emitting the file - so it is for a direct standalone invocation.
+  -->
+  <Target Name="PrintPwizVersionBanner" DependsOnTargets="ComputePwizBuildVersion">
+    <Exec Command="git rev-parse --abbrev-ref HEAD"
+          ConsoleToMSBuild="true"
+          EchoOff="true"
+          StandardOutputImportance="low"
+          ContinueOnError="true"
+          WorkingDirectory="$(MSBuildProjectDirectory)">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_PwizBannerBranchRaw" />
+    </Exec>
+    <!-- CI agents check out a commit, not a branch ref, and on a detached HEAD the command
+         above prints the literal "HEAD". Resolve it the way SkylineTester.csproj does. -->
+    <Exec Condition="'$(_PwizBannerBranchRaw.Trim())' == 'HEAD'"
+          Command="git name-rev --name-only --exclude=tags/* HEAD"
+          ConsoleToMSBuild="true"
+          EchoOff="true"
+          StandardOutputImportance="low"
+          ContinueOnError="true"
+          WorkingDirectory="$(MSBuildProjectDirectory)">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_PwizBannerNameRev" />
+    </Exec>
+    <PropertyGroup>
+      <_PwizBannerBranch>$(_PwizBannerBranchRaw.Trim())</_PwizBannerBranch>
+      <_PwizBannerBranch Condition="'$(_PwizBannerBranch)' == 'HEAD' and '$(_PwizBannerNameRev)' != ''">$([System.Text.RegularExpressions.Regex]::Replace($(_PwizBannerNameRev.Trim()), '^(remotes/)?origin/', ''))</_PwizBannerBranch>
+      <_PwizBannerBranch>$([System.Text.RegularExpressions.Regex]::Replace($(_PwizBannerBranch), '[~^].*$', ''))</_PwizBannerBranch>
+      <!-- Shape guard, not just an emptiness test. Exec's ConsoleToMSBuild captures stderr as
+           well as stdout, and MSBuild still gathers ConsoleOutput when the command fails under
+           ContinueOnError - so a git failure ("fatal: detected dubious ownership in repository
+           at ...", which a nightly agent hits when the tree is owned by another account) lands
+           the error text here, non-empty. Multi-line output is joined with ';', and
+           WriteLinesToFile takes ITaskItem[], so a ';' would also split the banner across
+           lines. Accepting only a git-ref shape rejects all of that. -->
+      <_PwizBannerBranch Condition="'$([System.Text.RegularExpressions.Regex]::IsMatch($(_PwizBannerBranch), `^[A-Za-z0-9._/+-]+$`))' != 'true'">unknown</_PwizBannerBranch>
+      <_PwizBannerBranch Condition="'$(_PwizBannerBranch)' == 'HEAD'">unknown</_PwizBannerBranch>
+      <PwizVersionBanner>ProteoWizard 3.0.$(PwizVersionYear2)$(PwizVersionDayOfYear).$(PwizVersionGitHash) $(_PwizBannerBranch) x64 AMD64 NT</PwizVersionBanner>
+    </PropertyGroup>
+    <Message Importance="high" Text="$(PwizVersionBanner)" />
+    <WriteLinesToFile Condition="'$(PwizVersionBannerFile)' != ''"
+                      File="$(PwizVersionBannerFile)"
+                      Lines="$(PwizVersionBanner)"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="false" />
+  </Target>
+
 </Project>

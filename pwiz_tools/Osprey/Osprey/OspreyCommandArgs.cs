@@ -28,6 +28,7 @@ using System.Linq;
 using System.Text;
 using pwiz.Common.CommandLine;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey
 {
@@ -42,7 +43,8 @@ namespace pwiz.Osprey
     /// framework's strict <c>--name=value</c> grammar: it needs short aliases (<c>-i</c>),
     /// space-separated values (<c>--name value</c>), variadic consumption (<c>-i a b c</c>),
     /// and a positional-file fallback. The framework is reused for argument declaration,
-    /// grouping, and ascii/unicode/HTML help rendering only. Value coercion and the exact
+    /// grouping, ascii/unicode/HTML help rendering, and building tokens from the declared
+    /// instances (<c>ARG_THREADS + 8</c>, which the tests use). Value coercion and the exact
     /// warning strings stay in the per-argument ProcessValue handlers so the parsed
     /// <see cref="OspreyConfig"/> stays byte-identical with the former switch.
     /// </summary>
@@ -51,14 +53,21 @@ namespace pwiz.Osprey
         private const int USAGE_WIDTH = 78;
 
         // Install the host text the PortableUtil help renderer needs (descriptions + table
-        // headers). Osprey's tokenizer throws its own ArgumentExceptions for value
-        // errors, so the framework value-exception message methods are never reached.
+        // headers). Osprey's tokenizer throws its own ArgumentExceptions for value errors, so
+        // at parse time the framework value-exception message methods are not reached; the
+        // token BUILDER (ArgumentBase.operator +) does reach ValueUnexpected / ValueInvalid
+        // when a test hands a flag a value or a fixed-list argument a value it does not list.
         static OspreyCommandArgs()
         {
             ArgUsage.Provider = new OspreyArgUsageProvider();
             // Osprey's grammar is space-separated (--name value), not --name=value, so the
-            // generated help must render "--name <value>" to match what the tokenizer accepts.
+            // generated help must render "--name <value>" to match what the tokenizer accepts,
+            // and a token built from an instance is "--name value" for the same reason.
             ArgUsage.ArgumentValueSeparator = @" ";
+            // ParseInt / ParseDouble read numbers in the invariant culture, so a number a
+            // test joins to an argument must render that way too. When Osprey's locale
+            // handling is designed, this moves with the parsers.
+            ArgUsage.ValueFormatProvider = System.Globalization.CultureInfo.InvariantCulture;
         }
 
         // --- Raw parse sinks (applied to the config in ToConfig) ---------------------------
@@ -85,7 +94,8 @@ namespace pwiz.Osprey
         // deeper path tree reaches it sooner. Past it the failure is a CreateProcess error or a
         // truncated argument list, neither of which says "too many inputs".
         //
-        // --input-scores already avoids this by accepting a directory; -i had no equivalent.
+        // --input-list is the answer, and since --input-scores retired it is the ONLY one:
+        // that flag used to accept a directory, which is how the HPC tasks avoided the wall.
         // One path per line, blank lines and #-comments ignored, composable with -i and with
         // itself (both append, exactly as repeated -i does).
         public static readonly OspreyArgument ARG_INPUT_LIST = new OspreyArgument(@"input-list",
@@ -111,7 +121,7 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_RESOLUTION = new OspreyArgument(@"resolution",
             new[] { @"unit", @"hram", @"auto" }, (c, p) => c._resolution = p.Value.ToLowerInvariant());
         public static readonly OspreyArgument ARG_FRAGMENT_TOLERANCE = new OspreyArgument(@"fragment-tolerance",
-            () => @"<value>", (c, p) => c._fragmentTolerance = ParseDouble(p.Value, @"--fragment-tolerance"));
+            () => @"<value>", (c, p) => c._fragmentTolerance = ParseDouble(p));
         public static readonly OspreyArgument ARG_FRAGMENT_UNIT = new OspreyArgument(@"fragment-unit",
             new[] { @"ppm", @"mz" }, (c, p) => c._fragmentUnit = p.Value.ToLowerInvariant());
         public static readonly OspreyArgument ARG_NO_PREFILTER = new OspreyArgument(@"no-prefilter",
@@ -123,13 +133,13 @@ namespace pwiz.Osprey
 
         // --- FDR & Protein Inference ------------------------------------------------------
         public static readonly OspreyArgument ARG_RUN_FDR = new OspreyArgument(@"run-fdr",
-            () => @"<threshold>", (c, p) => c._config.RunFdr = ParseDouble(p.Value, @"--run-fdr"));
+            () => @"<threshold>", (c, p) => c._config.RunFdr = ParseDouble(p));
         public static readonly OspreyArgument ARG_EXPERIMENT_FDR = new OspreyArgument(@"experiment-fdr",
-            () => @"<threshold>", (c, p) => c._config.ExperimentFdr = ParseDouble(p.Value, @"--experiment-fdr"));
+            () => @"<threshold>", (c, p) => c._config.ExperimentFdr = ParseDouble(p));
         public static readonly OspreyArgument ARG_RECONCILIATION_COMPACTION_FDR = new OspreyArgument(@"reconciliation-compaction-fdr",
-            () => @"<threshold>", (c, p) => c._config.ReconciliationCompactionFdr = ParseDouble(p.Value, @"--reconciliation-compaction-fdr"));
+            () => @"<threshold>", (c, p) => c._config.ReconciliationCompactionFdr = ParseDouble(p));
         public static readonly OspreyArgument ARG_PROTEIN_FDR = new OspreyArgument(@"protein-fdr",
-            () => @"<threshold>", (c, p) => c._config.ProteinFdr = ParseDouble(p.Value, @"--protein-fdr"));
+            () => @"<threshold>", (c, p) => c._config.ProteinFdr = ParseDouble(p));
         public static readonly OspreyArgument ARG_FDR_METHOD = new OspreyArgument(@"fdr-method",
             new[] { @"percolator", @"gbdt", @"simple" }, (c, p) =>
             {
@@ -198,7 +208,7 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_FDRBENCH_PER_RUN = new OspreyArgument(@"fdrbench-per-run",
             (c, p) => c._config.FdrBenchPerRun = true);
         public static readonly OspreyArgument ARG_FDRBENCH_PASS = new OspreyArgument(@"fdrbench-pass",
-            new[] { @"1", @"2", @"both" }, (c, p) => c._config.FdrBenchPass = ParseFdrBenchPass(p.Value));
+            new[] { @"1", @"2", @"both" }, (c, p) => c._config.FdrBenchPass = ParseFdrBenchPass(p));
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_FDR =
             new ArgumentGroup<OspreyCommandArgs>(() => @"FDR & Protein Inference", true,
@@ -220,25 +230,19 @@ namespace pwiz.Osprey
         // --- Distributed / HPC ------------------------------------------------------------
         // --task is resolved + validated in Program.Main's pre-scan; the tokenizer here only
         // consumes its value (and rejects a missing one). Declared so it appears in help.
+        // The value list IS the task list, in its --help order, so the help and the
+        // resolution cannot disagree; six trivial constructions, once, at type init.
         public static readonly OspreyArgument ARG_TASK = new OspreyArgument(@"task",
-            new[] { @"SpectraCache", @"PerFileScoring", @"FirstPassFDR", @"PerFileRescoring", @"SecondPassFDR", @"ModelDiagnostics" },
-            (c, p) => true);
-        public static readonly OspreyArgument ARG_INPUT_SCORES = new OspreyArgument(@"input-scores",
-            () => @"<paths|dir>", (c, p) => true) { Variadic = true, ProcessVariadic = (c, toks) =>
-            {
-                // Accumulate across repeated --input-scores flags and re-resolve, matching the
-                // former switch exactly (Rust clap Vec<PathBuf>). ResolveInputScores expands a
-                // single directory and validates explicit paths.
-                var scorePaths = new List<string>();
-                if (c._config.InputScores != null)
-                    scorePaths.AddRange(c._config.InputScores);
-                scorePaths.AddRange(toks);
-                c._config.InputScores = Program.ResolveInputScores(scorePaths);
-                return true;
-            } };
+            OspreyTasks.Create().All.Select(t => t.Name).ToArray(), (c, p) => true);
+        // --input-scores is GONE. It named an input KIND - "you handed me parquets" - which is
+        // how the Rust pipeline said "Stage 1-4 is already done"; the C# port says that with
+        // --task plus the per-run validity sidecars, and two seams answering one question is
+        // what let --task ModelDiagnostics join the pipeline and demand state a diagnostics
+        // fold never publishes. Every task now takes -i and derives its parquets from the
+        // input stem, which is the direction every other sidecar already derives in.
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_HPC =
             new ArgumentGroup<OspreyCommandArgs>(() => @"Distributed / HPC", true,
-                ARG_TASK, ARG_INPUT_SCORES);
+                ARG_TASK);
 
         // --- Performance ------------------------------------------------------------------
         // OUTER vs INNER parallelism, kept deliberately separate. --parallel-files is the
@@ -261,14 +265,14 @@ namespace pwiz.Osprey
                     // 0 is the value a user most naturally types to mean "off" --
                     // map it to sequential rather than silently falling through to
                     // auto. Positive N is an explicit concurrent-file count.
-                    int n = int.Parse(p.Value);
+                    int n = ParseInt(p);
                     c._config.FileParallelism = n <= 0
                         ? FileParallelism.Sequential
                         : FileParallelism.Explicit(n);
                 }
             });
         public static readonly OspreyArgument ARG_THREADS = new OspreyArgument(@"threads",
-            () => @"<count>", (c, p) => c._config.NThreads = int.Parse(p.Value));
+            () => @"<count>", (c, p) => c._config.NThreads = ParseInt(p));
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_PERFORMANCE =
             new ArgumentGroup<OspreyCommandArgs>(() => @"Performance", true,
@@ -337,7 +341,7 @@ namespace pwiz.Osprey
                     new ParaUsageBlock(@"EXAMPLES:"),
                     new ParaUsageBlock(@"  osprey -i sample.mzML -l library.tsv -o results.blib"),
                     new ParaUsageBlock(@"  osprey -i *.mzML -l library.tsv -o results.blib --resolution hram"),
-                    new ParaUsageBlock(@"HPC SPLIT (one node = one --task): see --task / --input-scores above."),
+                    new ParaUsageBlock(@"HPC SPLIT (one node = one --task): see --task above."),
                 };
             }
         }
@@ -418,8 +422,10 @@ namespace pwiz.Osprey
                     // Consume + require the value; the selector itself is resolved in Main.
                     i++;
                     if (i >= args.Length || args[i].StartsWith(@"-"))
-                        throw new ArgumentException(
-                            @"--task requires a task name (SpectraCache, PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR, or ModelDiagnostics).");
+                    {
+                        throw new ArgumentException(string.Format(@"{0} requires a task name ({1}).",
+                            ARG_TASK.ArgumentText, string.Join(@", ", ARG_TASK.Values)));
+                    }
                     i++;
                     continue;
                 }
@@ -623,9 +629,9 @@ namespace pwiz.Osprey
         {
             foreach (var arg in AllArguments)
             {
-                if (string.Equals(token, ArgumentBase.ARG_PREFIX + arg.Name, StringComparison.Ordinal))
+                if (string.Equals(token, arg.ArgumentText, StringComparison.Ordinal))
                     return arg;
-                if (arg.ShortName != null && string.Equals(token, @"-" + arg.ShortName, StringComparison.Ordinal))
+                if (arg.ShortName != null && string.Equals(token, arg.ShortArgumentText, StringComparison.Ordinal))
                     return arg;
             }
             return null;
@@ -663,28 +669,61 @@ namespace pwiz.Osprey
             return int.TryParse(token, out int n) && n >= 0;
         }
 
-        private static double ParseDouble(string value, string flagName)
+        /// <summary>
+        /// An integer option's value, or an <see cref="ArgumentException"/> naming the flag.
+        /// The int.Parse this replaced threw FormatException (or OverflowException), which is
+        /// neither caught as a usage error nor legible: `--threads bad` reported "Input string
+        /// was not in a correct format." with a stack through the parser, for a typo. Mirrors
+        /// <see cref="ParseDouble"/>, which has always done this. The flag named in the
+        /// message comes from the pair itself, so no call site spells an option name twice.
+        /// </summary>
+        private static int ParseInt(NameValuePair p)
         {
-            double result;
-            if (!double.TryParse(value, System.Globalization.NumberStyles.Float,
+            int result;
+            if (!int.TryParse(p.Value, System.Globalization.NumberStyles.Integer,
                 System.Globalization.CultureInfo.InvariantCulture, out result))
             {
-                throw new ArgumentException(string.Format(
-                    @"Invalid value '{0}' for {1}", value, flagName));
+                throw new ArgumentException(InvalidValueMessage(p));
             }
             return result;
         }
 
-        private static int ParseFdrBenchPass(string value)
+        /// <summary>
+        /// Invariant-culture only, deliberately: <see cref="NameValuePair.ValueDouble"/> tries the
+        /// current culture first, and under a locale whose group separator is '.' that reads
+        /// <c>0.01</c> as 1. An FDR threshold cannot afford that until Osprey's locale handling
+        /// is designed as a whole.
+        /// </summary>
+        private static double ParseDouble(NameValuePair p)
         {
-            if (string.Equals(value, @"1", StringComparison.Ordinal))
+            double result;
+            if (!double.TryParse(p.Value, System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out result))
+            {
+                throw new ArgumentException(InvalidValueMessage(p));
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// The one source of "Invalid value ... for --name" text: the same provider method the
+        /// framework's own <see cref="ValueInvalidException"/> uses, with the flag spelled from
+        /// the pair, so no handler spells an option name or its value list a second time.
+        /// </summary>
+        private static string InvalidValueMessage(NameValuePair p, string[] expectedValues = null)
+        {
+            return ArgUsage.Provider.ValueInvalidMessage(ArgumentBase.ARG_PREFIX + p.Name, p.Value, expectedValues);
+        }
+
+        private static int ParseFdrBenchPass(NameValuePair p)
+        {
+            if (string.Equals(p.Value, @"1", StringComparison.Ordinal))
                 return OspreyConfig.FDRBENCH_PASS_1;
-            if (string.Equals(value, @"2", StringComparison.Ordinal))
+            if (string.Equals(p.Value, @"2", StringComparison.Ordinal))
                 return OspreyConfig.FDRBENCH_PASS_2;
-            if (string.Equals(value, @"both", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(p.Value, @"both", StringComparison.OrdinalIgnoreCase))
                 return OspreyConfig.FDRBENCH_PASS_1 | OspreyConfig.FDRBENCH_PASS_2;
-            throw new ArgumentException(string.Format(
-                @"Invalid value '{0}' for --fdrbench-pass (expected 1, 2, or both)", value));
+            throw new ArgumentException(InvalidValueMessage(p, ARG_FDRBENCH_PASS.Values));
         }
 
         // --- Help rendering (generated from the declarations; cannot drift) ---------------
@@ -805,30 +844,37 @@ namespace pwiz.Osprey
             sb.AppendLine(@"# split 1 - one process per mzML (writes &lt;stem&gt;.scores.parquet, &lt;stem&gt;.calibration.json beside each input)");
             sb.AppendLine(@"Osprey --task PerFileScoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
             sb.AppendLine();
-            sb.AppendLine(@"# join 1 - one process over ALL parquets (pass a directory so the order is deterministic)");
-            sb.AppendLine(@"Osprey --task FirstPassFDR --input-scores ./scores_dir -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
+            sb.AppendLine(@"# join 1 - one process over ALL runs (pass a sorted list so the order is deterministic)");
+            sb.AppendLine(@"Osprey --task FirstPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
             sb.AppendLine(@"#   writes beside each parquet: &lt;stem&gt;.1st-pass.fdr_scores.bin, &lt;stem&gt;.reconciliation.json");
             sb.AppendLine();
             sb.AppendLine(@"# split 2 - one process per file (parquet + its two sidecars co-located)");
-            sb.AppendLine(@"Osprey --task PerFileRescoring --input-scores s1.scores.parquet -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
+            sb.AppendLine(@"Osprey --task PerFileRescoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
             sb.AppendLine(@"#   writes: &lt;stem&gt;.scores-reconciled.parquet");
             sb.AppendLine();
-            sb.AppendLine(@"# join 2 - one process over ALL reconciled parquets (writes out.blib)");
-            sb.AppendLine(@"Osprey --task SecondPassFDR --input-scores ./reconciled_dir -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
+            sb.AppendLine(@"# join 2 - one process over ALL runs, reading their reconciled parquets (writes out.blib)");
+            sb.AppendLine(@"Osprey --task SecondPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
             sb.AppendLine(@"</pre>");
-            sb.AppendLine(@"<p><code>--input-scores</code> takes a directory (globbed and sorted internally) " +
-                @"or an explicit file list (used in the order given). FirstPassFDR reconciliation is " +
-                @"order-sensitive, so for <code>FirstPassFDR</code> and <code>SecondPassFDR</code> pass a directory or a deterministically sorted " +
-                @"list. The rehydration sidecars must travel with their parquet into each worker's " +
-                @"working directory. Let the scheduler do the fan-out (one file per split process) rather " +
-                @"than <code>--parallel-files</code>, which is the single-node multi-file mode.</p>");
+            sb.AppendLine(@"<p>EVERY task takes <code>-i</code>, naming the DATA files - the same names " +
+                @"the first split was given. A join task derives each run's parquet and sidecars from " +
+                @"the input stem, so the data file itself need not still exist: what has to be in the " +
+                @"worker's working directory (or under <code>--output-dir</code>) is that run's " +
+                @"artifacts. FirstPassFDR reconciliation is order-sensitive, so pass a " +
+                @"deterministically sorted list - <code>--input-list</code> takes one path per line and " +
+                @"is what a cohort past a few hundred runs needs, since <code>-i</code> spends the " +
+                @"command line at O(files). Let the scheduler do the fan-out (one file per split " +
+                @"process) rather than <code>--parallel-files</code>, which is the single-node " +
+                @"multi-file mode.</p>");
         }
 
         /// <summary>
         /// Inline (not yet localized) description + header provider for Osprey. Routing
         /// through the seam means swapping in a .resx later is a one-line change with no edits
-        /// to the declarations. Osprey's tokenizer raises its own value errors, so the
-        /// value-exception message members are never reached.
+        /// to the declarations. Osprey's tokenizer raises its own value errors, but it
+        /// formats them through <see cref="ValueInvalidMessage"/> (see
+        /// <see cref="OspreyCommandArgs.InvalidValueMessage"/>), and the token builder
+        /// <c>ArgumentBase.operator +</c> raises the framework's ValueUnexpected /
+        /// ValueInvalid exceptions, so these message members are live text.
         /// </summary>
         private class OspreyArgUsageProvider : IArgUsageProvider
         {
@@ -860,7 +906,6 @@ namespace pwiz.Osprey
                 { @"decoy-pairing-manifest", @"FDRBench 5-column pairing manifest (TSV), used with --decoys-in-library" },
                 { @"write-pin", @"Write PIN files for external tools" },
                 { @"task", @"HPC: run exactly one pipeline task (one node = one task). Omit for the full pipeline. SpectraCache stages the .spectra.bin caches; ModelDiagnostics regenerates only the --model-diagnostics report for a COMPLETED run, writing no other artifact." },
-                { @"input-scores", @"HPC: one or more .scores.parquet files, or a single directory (non-recursive). Mutex with --input." },
                 { @"parallel-files", @"Input files scored concurrently (OUTER). Absent: one at a time (default). No value: auto from free RAM and cores. <N>: exactly N regardless of RAM/cores. Distinct from --threads." },
                 { @"threads", @"Per-file main-search threads (INNER; default: all cores), divided across files run concurrently by --parallel-files" },
                 { @"timestamp", @"Prefix each output line with [yyyy/MM/dd HH:mm:ss]" },
@@ -883,11 +928,16 @@ namespace pwiz.Osprey
             public string ArgumentHeader { get { return @"Argument"; } }
             public string DescriptionHeader { get { return @"Description"; } }
 
-            // Osprey's tokenizer never raises framework value exceptions; these are
-            // required by the interface but unreached.
+            // ValueInvalidMessage is the text every "Invalid value" error in this file shows;
+            // ValueUnexpected / ValueInvalid are what the token builder throws.
             public string ValueMissingMessage(string argText) { return string.Format(@"{0} requires a value.", argText); }
             public string ValueUnexpectedMessage(string argText) { return string.Format(@"{0} does not take a value.", argText); }
-            public string ValueInvalidMessage(string argText, string value, string[] argValues) { return string.Format(@"Invalid value '{0}' for {1}.", value, argText); }
+            public string ValueInvalidMessage(string argText, string value, string[] argValues)
+            {
+                return argValues == null
+                    ? string.Format(@"Invalid value '{0}' for {1}.", value, argText)
+                    : string.Format(@"Invalid value '{0}' for {1} (expected {2}).", value, argText, string.Join(@", ", argValues));
+            }
             public string ValueInvalidBoolMessage(string argText, string value) { return string.Format(@"Invalid value '{0}' for {1}.", value, argText); }
             public string ValueInvalidIntMessage(string argText, string value) { return string.Format(@"Invalid value '{0}' for {1}.", value, argText); }
             public string ValueOutOfRangeIntMessage(string argText, int value, int minVal, int maxVal) { return string.Format(@"Value {0} for {1} out of range [{2}, {3}].", value, argText, minVal, maxVal); }

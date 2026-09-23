@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -311,7 +311,7 @@ namespace pwiz.Osprey.Tasks
                          .ThenBy(e => e.Charge).ThenBy(e => e.ScanNumber))
             {
                 records.Add(new FdrScoreRecord(
-                    e.EntryId, e.Score, e.RunPrecursorQvalue, e.RunPeptideQvalue));
+                    e.EntryId, e.Score, e.RunPrecursorQvalue, e.RunPeptideQvalue, e.ApexRt));
             }
             // Checked HERE rather than at the write, so a pool that arrived short fails on the
             // node that built the records instead of somewhere downstream that can only see a
