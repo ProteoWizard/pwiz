@@ -213,6 +213,41 @@ namespace SkylineAiConnector
             RemoveFromJsonConfig(GeminiCliConfigPath, MCP_SERVERS_KEY);
         }
 
+        // -- Antigravity --
+
+        private static string AntigravityConfigPath
+        {
+            get
+            {
+                return Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    ".gemini", "config", "mcp_config.json");
+            }
+        }
+
+        public static bool IsAntigravityInstalled()
+        {
+            string antigravityDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                ".gemini", "antigravity");
+            return Directory.Exists(antigravityDir) || File.Exists(AntigravityConfigPath);
+        }
+
+        public static bool IsRegisteredInAntigravity()
+        {
+            return IsRegisteredInJsonConfig(AntigravityConfigPath, MCP_SERVERS_KEY);
+        }
+
+        public static void AddToAntigravity()
+        {
+            AddToJsonConfig(AntigravityConfigPath, MCP_SERVERS_KEY, BuildServerEntry());
+        }
+
+        public static void RemoveFromAntigravity()
+        {
+            RemoveFromJsonConfig(AntigravityConfigPath, MCP_SERVERS_KEY);
+        }
+
         // -- VS Code (GitHub Copilot) --
 
         private static string VSCodeConfigPath
@@ -392,13 +427,35 @@ namespace SkylineAiConnector
 
         private static void EditJsonFile(string configPath, Action<JsonObject> edit)
         {
-            JsonObject root;
+            JsonObject root = null;
             if (File.Exists(configPath))
             {
-                string json = File.ReadAllText(configPath);
-                root = JsonNode.Parse(json)?.AsObject() ?? new JsonObject();
+                try
+                {
+                    string json = File.ReadAllText(configPath);
+                    if (!string.IsNullOrWhiteSpace(json))
+                    {
+                        // "as", not AsObject(): a well-formed file whose root is not an object (an array,
+                        // say) is as unusable to us as a malformed one, and AsObject() throws for it.
+                        root = JsonNode.Parse(json) as JsonObject;
+                        if (root == null)
+                            TryBackupFile(configPath); // Replaced below -- keep whatever was there.
+                    }
+                }
+                catch (JsonException)
+                {
+                    // The existing config is malformed. Back it up before we overwrite it with a fresh
+                    // config below, so the user can recover whatever was there if it mattered.
+                    TryBackupFile(configPath);
+                }
+                // Any other failure -- most likely the file being locked by the chat app that owns it --
+                // means we do not know what is in the config, only that something is. Overwriting it here
+                // would silently discard every other MCP server the user has registered, and the ".bak"
+                // copy would fail under the same lock, so there would be nothing to recover from. Let it
+                // out instead: every caller reports the failure and leaves the file alone.
             }
-            else
+
+            if (root == null)
             {
                 root = new JsonObject();
             }
@@ -409,6 +466,20 @@ namespace SkylineAiConnector
             if (directory != null)
                 Directory.CreateDirectory(directory);
             File.WriteAllText(configPath, root.ToJsonString(WRITE_OPTIONS));
+        }
+
+        // Makes a best-effort copy of a file alongside the original (".bak") before it is overwritten.
+        // Any failure is ignored: the backup is a convenience, not something the caller depends on.
+        private static void TryBackupFile(string filePath)
+        {
+            try
+            {
+                File.Copy(filePath, filePath + ".bak", true);
+            }
+            catch
+            {
+                // Best effort -- if the backup cannot be written, proceed with the overwrite anyway.
+            }
         }
 
         private static JsonObject EnsureObject(JsonObject parent, string key)
@@ -456,6 +527,7 @@ namespace SkylineAiConnector
             return (IsClaudeDesktopInstalled() && IsRegisteredInClaudeDesktop()) ||
                    (IsClaudeCodeInstalled() && IsRegisteredInClaudeCode()) ||
                    (IsGeminiCliInstalled() && IsRegisteredInGeminiCli()) ||
+                   (IsAntigravityInstalled() && IsRegisteredInAntigravity()) ||
                    (IsVSCodeInstalled() && IsRegisteredInVSCode()) ||
                    (IsCursorInstalled() && IsRegisteredInCursor());
         }

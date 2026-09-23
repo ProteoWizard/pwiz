@@ -62,7 +62,7 @@ PWIZ_API_DECL size_t ChromatogramList_Thermo::size() const
 PWIZ_API_DECL const ChromatogramIdentity& ChromatogramList_Thermo::chromatogramIdentity(size_t index) const
 {
     boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Thermo::createIndex, this));
-    if (index>size())
+    if (index>=size())
         throw runtime_error(("[ChromatogramList_Thermo::chromatogramIdentity()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
     return reinterpret_cast<const ChromatogramIdentity&>(index_[index]);
@@ -89,7 +89,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
 PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index, DetailLevel detailLevel) const
 {
     boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Thermo::createIndex, this));
-    if (index>size())
+    if (index>=size())
         throw runtime_error(("[ChromatogramList_Thermo::chromatogram()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
 

@@ -372,6 +372,15 @@ namespace pwiz.Common.CommonResources {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Warning: process {0} had not exited {1} seconds after being killed; files it has open may still be locked..
+        /// </summary>
+        public static string ProcessRunner_KillAndWaitForExit_Warning__process__0__had_not_exited__1__seconds_after_being_killed__files_it_has_open_may_still_be_locked_ {
+            get {
+                return ResourceManager.GetString("ProcessRunner_KillAndWaitForExit_Warning__process__0__had_not_exited__1__seconds_after_being_killed__files_it_has_open_may_still_be_locked_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Run command:.
         /// </summary>
         public static string ProcessRunner_Run_Run_command_ {

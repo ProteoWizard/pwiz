@@ -229,7 +229,7 @@ namespace pwiz.Osprey.Test
                 Score = 3.0,
                 RunPrecursorQvalue = 0.20,  // fails hard gate
                 RunPeptideQvalue = 0.02,    // fails peptide too
-                RunProteinQvalue = 0.001,   // would rescue if allowed
+                ExperimentProteinQvalue = 0.001,   // would rescue if allowed
                 ModifiedSequence = @"PEPTIDE1",
             };
             var goodTarget = PassingTarget(@"PEPTIDE2", apexRt: 20.0, score: 3.0);
@@ -270,7 +270,7 @@ namespace pwiz.Osprey.Test
                 Score = 3.0,
                 RunPrecursorQvalue = 0.005, // passes hard gate
                 RunPeptideQvalue = 0.05,    // fails borderline
-                RunProteinQvalue = 0.005,   // rescues
+                ExperimentProteinQvalue = 0.005,   // rescues
                 ModifiedSequence = @"PEPTIDE1",
             };
 
@@ -1267,7 +1267,7 @@ namespace pwiz.Osprey.Test
                 Score = score,
                 RunPrecursorQvalue = precursorQ,
                 RunPeptideQvalue = peptideQ,
-                RunProteinQvalue = 1.0,
+                ExperimentProteinQvalue = 1.0,
                 ModifiedSequence = modifiedSequence,
             };
         }

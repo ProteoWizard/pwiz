@@ -649,7 +649,12 @@ PWIZ_API_DECL int expand_pathmask(const bfs::path& pathmask,
 #ifdef WIN32
     path maskParentPath = pathmask.parent_path();
 	WIN32_FIND_DATAW fdata;
-	HANDLE srcFile = FindFirstFileExW(boost::nowide::widen(pathmask.string()).c_str(), FindExInfoStandard, &fdata, FindExSearchNameMatch, NULL, 0);
+    // A mask that does not start with a literal prefix, "*.t2d" for one, makes the filesystem
+    // walk the whole directory to answer, so how much of it is read per call decides what a
+    // large directory costs here. FIND_FIRST_EX_LARGE_FETCH asks for as much per call as the
+    // filesystem will give, and FindExInfoBasic drops the 8.3 short name, which is a separate
+    // lookup per entry and is not read below.
+	HANDLE srcFile = FindFirstFileExW(boost::nowide::widen(pathmask.string()).c_str(), FindExInfoBasic, &fdata, FindExSearchNameMatch, NULL, FIND_FIRST_EX_LARGE_FETCH);
 	if (srcFile == INVALID_HANDLE_VALUE)
 		return 0; // no matches
 

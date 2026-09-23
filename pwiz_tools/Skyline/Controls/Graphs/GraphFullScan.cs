@@ -24,6 +24,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -42,7 +43,6 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
-using Thread = System.Threading.Thread;
 using Transition = pwiz.Skyline.Model.Transition;
 using PeakType = pwiz.Skyline.Model.Results.MsDataFileScanHelper.PeakType;
 
@@ -95,6 +95,15 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly MsDataFileScanHelper _msDataFileScanHelper;
         private LibraryRankedSpectrumInfo _rmis;
 
+        // Most recent SpectrumGraphItem created by RankScan; carries ruler state
+        // (HoveredSeriesKey, PinnedSeriesKeys, SrmSettings) for the active scan.
+        private SpectrumGraphItem _currentGraphItem;
+        private readonly List<IonSeriesKey> _pinnedSeriesKeys = new List<IonSeriesKey>();
+        private bool _contextMenuOpen;
+        // Tracks the previous precursor identity so we can clear pinned rulers
+        // when the user navigates to a different peptide/precursor.
+        private object _lastPrecursorId;
+
         // status info to calculate point dot products
         private SpectrumPeaksInfo.MI[] _peaks;
         private GraphSpectrum.Precursor _precursor;
@@ -110,6 +119,9 @@ namespace pwiz.Skyline.Controls.Graphs
         // Tooltip shows realtime info about what's under the cursor
         // as it moves, goes away after a few seconds of no movement
         private readonly CursorTrackingTip _cursorTip;
+
+        // Used by PostToUiThread to get back to the UI thread without touching this form's handle
+        private readonly WindowsFormsSynchronizationContext _synchronizationContext;
 
         private MSGraphControl graphControl => graphControlExtension.Graph;
 
@@ -127,6 +139,7 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.GraphPane.AllowLabelOverlap = true;
             graphControl.ContextMenuBuilder += graphControl_ContextMenuBuilder;
             graphControl.MouseMoveEvent += graphControl_MouseMove;
+            graphControl.MouseLeave += (s, e) => { if (!_contextMenuOpen) UpdateHoveredPeak(null); };
             graphControl.MouseClick += graphControl_MouseClick;
             graphControl.ZoomEvent += graphControl_ZoomEvent;
             graphControl.Resize += graphControl_Resize;
@@ -136,6 +149,15 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.MouseDownEvent += graphControl_SplitterMouseDown;
             graphControl.MouseMove += graphControl_SplitterMouseMove;
             graphControl.MouseUpEvent += graphControl_SplitterMouseUp;
+
+            _synchronizationContext = SynchronizationContext.Current as WindowsFormsSynchronizationContext;
+            if (_synchronizationContext == null)
+            {
+                // If constructed before the WindowsFormsSynchronizationContext exists, create one.
+                // When the real one gets created it will use the same marshaling control, so the
+                // one created here does not need to be disposed. (Same as Receiver.cs)
+                _synchronizationContext = new WindowsFormsSynchronizationContext();
+            }
 
             Icon = Resources.SkylineData;
             _graphHelper = GraphHelper.Attach(graphControl);
@@ -862,7 +884,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void SetSpectra(MsDataSpectrum[] spectra)
         {
-            BeginInvoke(new Action(() => SetSpectraUI(spectra)));
+            PostToUiThread(() => SetSpectraUI(spectra));
         }
 
         private void SetSpectraUI(MsDataSpectrum[] spectra)
@@ -927,7 +949,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void HandleLoadScanException(Exception ex)
         {
-            BeginInvoke(new Action(() => HandleLoadScanExceptionUI(ex)));
+            PostToUiThread(() => HandleLoadScanExceptionUI(ex));
         }
 
         private void HandleLoadScanExceptionUI(Exception ex)
@@ -956,6 +978,11 @@ namespace pwiz.Skyline.Controls.Graphs
         }
         public void ShowSpectrum(IScanProvider scanProvider, int transitionIndex, int scanIndex, int? optStep)
         {
+            if (scanProvider != null)
+            {
+                // The full-scan viewer displays the scan's uninterpreted mzML CV/user parameters.
+                scanProvider.CaptureOtherParams = true;
+            }
             _msDataFileScanHelper.UpdateScanProvider(scanProvider, transitionIndex, scanIndex, optStep);
             if (scanProvider != null)
             {
@@ -1031,6 +1058,23 @@ namespace pwiz.Skyline.Controls.Graphs
             worker.RunWorkerAsync();
         }
 
+        /// <summary>
+        /// Runs an action on the UI thread. Use this instead of Control.Invoke or
+        /// Control.BeginInvoke for anything called from a background thread: those read
+        /// Control.Handle, which recreates a destroyed handle on the calling thread, and
+        /// that deadlocks the UI thread if it happens while this form is being disposed.
+        /// </summary>
+        private void PostToUiThread(Action action)
+        {
+            _synchronizationContext.Post(_ =>
+            {
+                // Disposing as well as IsDisposed: this can run while the form is partway
+                // through Dispose, when the child controls are already gone.
+                if (!IsDisposed && !Disposing)
+                    action();
+            }, null);
+        }
+
         private void LoadingTextIfNoChange()
         {
             // Only set the title to Loading... when it takes more than 200 miliseconds to get scans
@@ -1038,7 +1082,7 @@ namespace pwiz.Skyline.Controls.Graphs
             Thread.Sleep(200);
             if (ReferenceEquals(fullScans, _msDataFileScanHelper.MsDataSpectra))
             {
-                Invoke(new Action(() =>
+                PostToUiThread(() =>
                 {
                     // Need to check again once on the UI thread
                     if (ReferenceEquals(fullScans, _msDataFileScanHelper.MsDataSpectra))
@@ -1047,7 +1091,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         graphControl.MasterPane.Title.IsVisible = true;
                         graphControl.Refresh();
                     }
-                }));
+                });
             }
         }
 
@@ -1649,7 +1693,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // avoid control refresh if there are no changes
             if (graphControlExtension.PropertiesSheet.SelectedObject == null || graphControlExtension.PropertiesSheet.SelectedObject is FullScanProperties currentProps && !currentProps.IsSameAs(spectrumProperties))
-                graphControlExtension.PropertiesSheet.SelectedObject = spectrumProperties;
+                graphControlExtension.SetSelectedObjectPreservingExpansion(spectrumProperties);
         }
 
         private Dictionary<ReferenceValue<Identity>, double> GetPeakIntensities(
@@ -1831,6 +1875,20 @@ namespace pwiz.Skyline.Controls.Graphs
                     LineWidth = Settings.Default.SpectrumLineWidth
                 };
 
+                // Reset pinned rulers whenever the user navigates to a different precursor.
+                // precursor.Id is an Identity; compare by reference per Skyline convention.
+                if (!ReferenceEquals(_lastPrecursorId, precursor.Id))
+                {
+                    _pinnedSeriesKeys.Clear();
+                    _lastPrecursorId = precursor.Id;
+                }
+
+                // RankScan only runs when a stick spectrum is being rendered (S, S+H, or
+                // non-IM single-pane stick); heatmap-only and H+M modes don't reach here.
+                graphItem.SrmSettings = settings;
+                graphItem.PinnedSeriesKeys = _pinnedSeriesKeys.AsReadOnly();
+
+                _currentGraphItem = graphItem;
                 return graphItem;
             }
             return null;
@@ -2111,6 +2169,29 @@ namespace pwiz.Skyline.Controls.Graphs
                 double intensity = SumIntensities(fullScans, minMz, indices, minIonMobilityVal, maxIonMobilityVal);
                 maxIntensity = Math.Max(maxIntensity, intensity);
             }
+
+            if (maxMz <= 0)
+            {
+                // None of the scans have any peaks in them because they measured no ions. Show the
+                // m/z range that the instrument was scanning so that the axes still get drawn.
+                maxMz = GetMaxScanWindow(fullScans);
+            }
+        }
+
+        /// <summary>
+        /// The highest scan window upper limit declared by any of the spectra, or zero if none of
+        /// them says what m/z range it was measuring.
+        /// </summary>
+        private static double GetMaxScanWindow(IEnumerable<MsDataSpectrum> spectra)
+        {
+            double maxScanWindow = 0;
+            foreach (var spectrum in spectra)
+            {
+                var upperLimit = spectrum.Metadata?.ScanWindowUpperLimit;
+                if (upperLimit.HasValue)
+                    maxScanWindow = Math.Max(maxScanWindow, upperLimit.Value);
+            }
+            return maxScanWindow;
         }
 
         private void GetIonMobilityRange(out double minIonMobility, out double maxIonMobility)
@@ -2144,6 +2225,13 @@ namespace pwiz.Skyline.Controls.Graphs
             comboBoxScanType.Enabled = false;
             lblScanId.Text = string.Empty;
             leftButton.Enabled = rightButton.Enabled = false;
+            // The mobilogram lives in its own pane separate from the heatmap, so clear it here
+            // on every clear path or a stale mobilogram lingers after the heatmap is emptied.
+            if (_mobilogramPane != null)
+            {
+                _mobilogramPane.CurveList.Clear();
+                _mobilogramPane.GraphObjList.Clear();
+            }
             graphControl.MasterPane.Title.Text = _msDataFileScanHelper.FileName;
             graphControl.MasterPane.Title.IsVisible = true;
         }
@@ -2206,20 +2294,27 @@ namespace pwiz.Skyline.Controls.Graphs
         private void ApplyXZoomToPane(GraphPane pane)
         {
             var xScale = pane.XAxis.Scale;
-            xScale.MinAuto = xScale.MaxAuto = false;
 
             if (magnifyBtn.Checked)
             {
                 double mz = _msDataFileScanHelper.Source == ChromSource.ms1
                     ? _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex].PrecursorMz
                     : _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex].ProductMz;
+                xScale.MinAuto = xScale.MaxAuto = false;
                 xScale.Min = mz - 1.5;
                 xScale.Max = mz + 3.5;
             }
-            else if (_requestedRange != null)
+            else if (_requestedRange != null && _requestedRange.Max > _requestedRange.Min)
             {
+                xScale.MinAuto = xScale.MaxAuto = false;
                 xScale.Min = _requestedRange.Min;
                 xScale.Max = _requestedRange.Max;
+            }
+            else
+            {
+                // There is no m/z range to show. Leave the axis auto-scaled, since collapsing it to
+                // a single value makes ZedGraph skip drawing the axis entirely.
+                xScale.MinAuto = xScale.MaxAuto = true;
             }
         }
 
@@ -2393,6 +2488,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public bool HasChromatogramData => false;
 
+        /// <summary>
+        /// The maximum for an intensity axis, which is never zero. ZedGraph draws nothing at all --
+        /// not even the axes -- when the minimum of any of a pane's axis scales equals its maximum,
+        /// so a scan which measured no ions would otherwise produce a completely blank graph.
+        /// </summary>
+        private double IntensityAxisMax => _maxIntensity > 0 ? _maxIntensity * 1.1 : 1;
+
         private void ZoomYAxis()
         {
             if (_msDataFileScanHelper.ScanProvider == null || _msDataFileScanHelper.ScanProvider.Transitions.Length == 0)
@@ -2414,7 +2516,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (isSpectrum)
             {
                 yScale.Min = 0;
-                yScale.Max = _maxIntensity * 1.1;
+                yScale.Max = IntensityAxisMax;
                 if (magnifyBtn.Checked)
                 {
                     yScale.MaxAuto = true;
@@ -2475,11 +2577,11 @@ namespace pwiz.Skyline.Controls.Graphs
                             maxY = pt.Y;
                     }
                 }
-                yScale.Max = maxY > 0 ? maxY * 1.1 : _maxIntensity * 1.1;
+                yScale.Max = maxY > 0 ? maxY * 1.1 : IntensityAxisMax;
             }
             else
             {
-                yScale.Max = _maxIntensity * 1.1;
+                yScale.Max = IntensityAxisMax;
             }
             _stickSpectrumPane.AxisChange();
         }
@@ -2501,7 +2603,7 @@ namespace pwiz.Skyline.Controls.Graphs
             yScale.MinAuto = false;
             _heatMapPane.LockYAxisMinAtZero = true;
             yScale.Min = 0;
-            yScale.Max = _maxIntensity * 1.1;
+            yScale.Max = IntensityAxisMax;
             // Magnify on → auto-fit Y to data in the zoomed X range during next paint.
             yScale.MaxAuto = magnifyBtn.Checked;
         }
@@ -3190,7 +3292,28 @@ namespace pwiz.Skyline.Controls.Graphs
                 var isProteomic = (_msDataFileScanHelper.CurrentTransition?.Id as Transition)?.Group.IsProteomic;
                 (_documentContainer as GraphSpectrum.IStateProvider)
                     ?.BuildSpectrumMenu(isProteomic.GetValueOrDefault(), sender, menuStrip);
+
+                AddRulerMenuItems(menuStrip);
             }
+        }
+
+        private void AddRulerMenuItems(ContextMenuStrip menuStrip)
+        {
+            // Rulers don't apply to small molecules / crosslinks — offer no ruler items.
+            if (_currentGraphItem == null || !_currentGraphItem.RulersApplicable)
+                return;
+
+            SpectrumGraphItem.AddRulerMenuItems(
+                menuStrip,
+                _currentGraphItem?.HoveredSeriesKey,
+                _pinnedSeriesKeys,
+                graphControl,
+                open => _contextMenuOpen = open,
+                () => UpdateHoveredPeak(null),
+                ToggleRulersEnabled,
+                PinRuler,
+                UnpinRuler,
+                UnpinAllRulers);
         }
 
         private void graphControl_MouseClick(object sender, MouseEventArgs e)
@@ -3227,6 +3350,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (IsMobilogramVisible && IsInMobilogramArea(pt))
             {
                 graphControl.Cursor = Cursors.Cross;
+                UpdateHoveredPeak(null);
                 return true;
             }
 
@@ -3236,12 +3360,39 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var pane = graphControl.MasterPane.FindChartRect(pt);
                 if (!ReferenceEquals(pane, _stickSpectrumPane))
+                {
+                    UpdateHoveredPeak(null);
                     return false;
+                }
             }
 
             var nearestLabel = GetNearestLabel(pt, labelPane);
             if (nearestLabel == null || nearestLabel.Tag == null)
+            {
+                // No label under cursor — but a stick under the cursor still warrants the ruler.
+                UpdateHoveredPeakFromStick(pt, labelPane);
                 return false;
+            }
+
+            // Update ruler hover for any labeled peak with a known ion assignment, even when
+            // the label isn't clickable (no matching transition in the document) — the ion
+            // still has a valid type+charge that the ruler can display.
+            // Match by label text rather than by Tag/rank: unranked matches (e.g. zh/zhh
+            // alternates of a ranked z peak) carry Rank=0, so a rank-based lookup is
+            // ambiguous. PeaksMatched includes both ranked and unranked matches.
+            if (_showIonSeriesAnnotations && _rmis != null && _currentGraphItem != null)
+            {
+                var peakRmi = _rmis.PeaksMatched.FirstOrDefault(
+                    p => _currentGraphItem.GetLabel(p).Equals(nearestLabel.Text));
+                UpdateHoveredPeak(peakRmi);
+            }
+            else
+            {
+                UpdateHoveredPeak(null);
+            }
+
+            // The remaining checks gate cursor=Hand to clickable labels only (i.e. those that
+            // navigate to a transition in the document). Ruler hover already updated above.
             var transition = (int) nearestLabel.Tag;
             if (transition < 0 || _transitionIndex == null || transition >= _transitionIndex.Length)
                 return false;
@@ -3250,6 +3401,117 @@ namespace pwiz.Skyline.Controls.Graphs
 
             graphControl.Cursor = Cursors.Hand;
             return true;
+        }
+
+        private void UpdateHoveredPeak(LibraryRankedSpectrumInfo.RankedMI peakRmi)
+        {
+            // No hover ruler when the feature is disabled, or for small molecules / crosslinks.
+            if (!SpectrumGraphItem.RulersEnabled || (_currentGraphItem != null && !_currentGraphItem.RulersApplicable))
+                peakRmi = null;
+
+            var newKey = SpectrumGraphItem.GetBestSeriesKey(peakRmi);
+
+            if (_currentGraphItem == null)
+                return;
+            // Only redraw when the hovered ion series actually changes; same change-detection
+            // pattern as GraphSpectrum to avoid repaint loops.
+            if (Equals(newKey, _currentGraphItem.HoveredSeriesKey))
+                return;
+
+            _currentGraphItem.HoveredSeriesKey = newKey;
+            graphControl.Invalidate();
+        }
+
+        // Resolve the stick under the cursor (if any) to its matched RankedMI and update
+        // ruler hover accordingly. Used as the fallback when GetNearestLabel returns null
+        // — the user is hovering a stick body but not its label text.
+        private void UpdateHoveredPeakFromStick(PointF pt, MSGraphPane spectrumPane)
+        {
+            if (!_showIonSeriesAnnotations || _rmis == null)
+            {
+                UpdateHoveredPeak(null);
+                return;
+            }
+            if (spectrumPane.FindNearestStick(pt, out var nearestCurve, out var nearestIndex)
+                && nearestCurve != null
+                && nearestIndex >= 0 && nearestIndex < nearestCurve.NPts)
+            {
+                var observedMz = nearestCurve.Points[nearestIndex].X;
+                var peakRmi = _rmis.PeaksMatched.FirstOrDefault(p => p.ObservedMz == observedMz);
+                UpdateHoveredPeak(peakRmi);
+            }
+            else
+            {
+                UpdateHoveredPeak(null);
+            }
+        }
+
+        // Pins the ruler for a single ion series (the body of the "Pin Ruler" menu command).
+        private void PinRuler(IonSeriesKey key)
+        {
+            if (_pinnedSeriesKeys.Contains(key))
+                return;
+            _pinnedSeriesKeys.Add(key);
+            SyncPinnedSeriesToGraphItems();
+            graphControl.Invalidate();
+        }
+
+        public void UnpinRuler(IonSeriesKey key)
+        {
+            _pinnedSeriesKeys.Remove(key);
+            SyncPinnedSeriesToGraphItems();
+            graphControl.Invalidate();
+        }
+
+        public void UnpinAllRulers()
+        {
+            _pinnedSeriesKeys.Clear();
+            SyncPinnedSeriesToGraphItems();
+            graphControl.Invalidate();
+        }
+
+        // Flips the global ruler on/off preference (the Enable/Disable menu command).
+        // Turning the feature off clears this host's pinned rulers so they don't reappear
+        // when it is turned back on. Public so the functional test can drive the same path
+        // the context-menu item invokes.
+        public void ToggleRulersEnabled()
+        {
+            SpectrumGraphItem.RulersEnabled = !SpectrumGraphItem.RulersEnabled;
+            if (!SpectrumGraphItem.RulersEnabled)
+                UnpinAllRulers();
+            UpdateHoveredPeak(null);
+            graphControl.Invalidate();
+        }
+
+        private void SyncPinnedSeriesToGraphItems()
+        {
+            if (_currentGraphItem != null)
+                _currentGraphItem.PinnedSeriesKeys = _pinnedSeriesKeys.AsReadOnly();
+        }
+
+        // The sequence ruler is driven by mouse-over and context-menu commands, neither of
+        // which a functional test can synthesize. These public seams invoke the same code
+        // paths so SpectrumSequenceRulerTest can verify hover resolution and pin/unpin
+        // without a physical mouse. See ai/todos TODO-20260416_spectrumSequenceRuler.
+        public SpectrumGraphItem RulerGraphItem => _currentGraphItem;
+        public void HoverRulerPeak(LibraryRankedSpectrumInfo.RankedMI peak) => UpdateHoveredPeak(peak);
+        public void PinHoveredRuler()
+        {
+            var key = _currentGraphItem?.HoveredSeriesKey;
+            if (key.HasValue)
+                PinRuler(key.Value);
+        }
+
+        // Programmatic equivalent of clicking the "Show Annotations" toolstrip button.
+        // Annotated mode is required for the ruler to apply — in target-only mode the graph
+        // shows only document transitions, with no broader matched-peak set to align against.
+        // No-op when the toolstrip button isn't visible (the scan isn't a fragment scan).
+        public void ShowAnnotations(bool show)
+        {
+            if (!toolStripButtonShowAnnotations.Visible
+                || toolStripButtonShowAnnotations.Checked == show)
+                return;
+            toolStripButtonShowAnnotations.Checked = show;
         }
 
         // For use with CursorTrackingTip _cursorTip

@@ -34,10 +34,19 @@ namespace pwiz.Osprey.Core
     /// the SHA-256 keys that gate cached-artifact reuse and cross-impl
     /// (Rust) byte-equivalence. Split out of <see cref="OspreyConfig"/>,
     /// which previously owned both the mutable configuration bag AND this
-    /// hashing — two responsibilities. The hash recipes are unchanged and
-    /// MUST stay byte-identical with Rust's <c>osprey-core/src/config.rs</c>
-    /// (invariant culture, Rust <c>{:?}</c> escaping, lowercase booleans);
-    /// see the per-method comments.
+    /// hashing — two responsibilities. The recipes follow Rust's
+    /// <c>osprey-core/src/config.rs</c> (invariant culture, lowercase
+    /// booleans, Rust <c>{:?}</c> rendering of collections); see the
+    /// per-method comments.
+    ///
+    /// <para>One term diverges from Rust DELIBERATELY:
+    /// <see cref="DecoyPairingManifestTerm"/> identifies the manifest by file
+    /// name + size + mtime where Rust still writes its path. Nothing observes
+    /// the disagreement — each implementation validates only its OWN cached
+    /// artifacts, and no cross-impl comparator reads a search hash — and the
+    /// path form accepted a stale score against an edited manifest, which the
+    /// identity form does not. Keeping a wrong key to preserve an unobservable
+    /// match would be the worse trade.</para>
     ///
     /// Reads its inputs from the supplied <see cref="OspreyConfig"/> at call
     /// time, so it reflects the config's hash-affecting fields as of each
@@ -95,18 +104,8 @@ namespace pwiz.Osprey.Core
                 }
                 prefixList.Append(']');
                 sb.AppendFormat(ic, "decoy_prefixes:{0}\n", prefixList.ToString());
-                // Mirror Rust's `format!("decoy_pairing_manifest:{:?}\n", ...)`
-                // where the value is `Some("path")` or `None`. Rust's {:?}
-                // on String escapes \, ", \n, \r, \t, \0, and other control
-                // chars (< 0x20) -- critical for Windows paths whose `\`
-                // separators must become `\\` to match Rust's output. The
-                // path is not normalised; the user's choice (relative or
-                // absolute) is part of the hash so a moved manifest
-                // invalidates the cache.
                 sb.AppendFormat(ic, "decoy_pairing_manifest:{0}\n",
-                    string.IsNullOrEmpty(_config.DecoyPairingManifestPath)
-                        ? "None"
-                        : "Some(\"" + EscapeForRustDebug(_config.DecoyPairingManifestPath) + "\")");
+                    DecoyPairingManifestTerm());
                 sb.AppendFormat(ic, "decoy_pair_min_fraction:{0}\n", _config.DecoyPairMinFraction);
                 sb.AppendFormat(ic, "rt_cal.enabled:{0}\n", b(_config.RtCalibration.Enabled));
                 sb.AppendFormat(ic, "rt_cal.fallback_rt_tolerance:{0}\n", _config.RtCalibration.FallbackRtTolerance);
@@ -142,17 +141,65 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public string LibraryIdentityHash()
         {
-            string libPath = _config.LibrarySource != null ? _config.LibrarySource.Path : string.Empty;
+            return FileIdentityHash(_config.LibrarySource != null
+                ? _config.LibrarySource.Path
+                : string.Empty);
+        }
+
+        /// <summary>
+        /// The <c>decoy_pairing_manifest</c> term folded into
+        /// <see cref="SearchParameterHash"/>: <c>None</c> when no manifest is configured,
+        /// otherwise <c>Some(&lt;identity hash&gt;)</c> over the manifest's file name, size
+        /// and mtime -- the same recipe as <see cref="LibraryIdentityHash"/>, through the
+        /// same <see cref="FileIdentityHash"/>.
+        ///
+        /// <para>This term used to be the manifest's FULL PATH, which had the invalidation
+        /// backwards: moving a manifest re-scored every parquet, while EDITING one in place
+        /// left every scored parquet reading valid against a file that no longer says what
+        /// it said. The manifest decides decoy classification, target/decoy pairing and the
+        /// protein accessions protein FDR runs on, so accepting a stale score against an
+        /// edited manifest is an FDR-relevant answer, not a cache-efficiency question.</para>
+        ///
+        /// <para>The no-manifest term is exactly <c>None</c>, unchanged, so a
+        /// generated-decoy analysis hashes byte-identically to before this change and
+        /// invalidates nothing. Only manifest-using analyses re-score, once.</para>
+        ///
+        /// <para>The full-path form existed to mirror Rust's
+        /// <c>format!("decoy_pairing_manifest:{:?}\n", ...)</c> on a <c>PathBuf</c>
+        /// (<c>crates/osprey-core/src/config.rs</c>). That mirroring bought nothing a
+        /// cross-impl run can observe: each implementation validates only its OWN cached
+        /// artifacts, and the cross-impl comparators read blibs, the Stage-7 protein FDR
+        /// dump and the per-file FDR sidecars -- none of which carries a search hash.</para>
+        /// </summary>
+        public string DecoyPairingManifestTerm()
+        {
+            string path = _config.DecoyPairingManifestPath;
+            return string.IsNullOrEmpty(path)
+                ? @"None"
+                : @"Some(" + FileIdentityHash(path) + @")";
+        }
+
+        /// <summary>
+        /// A fast identity hash for one file: file name + size + mtime, filesystem metadata
+        /// only, no content hashing. The DIRECTORY portion is deliberately excluded so the
+        /// same file identifies identically across Rust / .NET / OS variations (drive letter
+        /// case, forward vs back slash, relative vs absolute, HPC node-local vs shared
+        /// paths) -- and so moving a file is free while editing it in place is not.
+        /// Size and mtime are omitted for a path that does not exist, leaving the name to
+        /// stand alone. Same recipe as Rust's <c>library_identity_hash</c>.
+        /// </summary>
+        private static string FileIdentityHash(string path)
+        {
             using (var sha256 = SHA256.Create())
             {
                 var sb = new StringBuilder();
-                string fileName = string.IsNullOrEmpty(libPath)
+                string fileName = string.IsNullOrEmpty(path)
                     ? string.Empty
-                    : Path.GetFileName(libPath);
+                    : Path.GetFileName(path);
                 sb.AppendFormat("file_name:{0}\n", fileName);
-                if (!string.IsNullOrEmpty(libPath) && File.Exists(libPath))
+                if (!string.IsNullOrEmpty(path) && File.Exists(path))
                 {
-                    var info = new FileInfo(libPath);
+                    var info = new FileInfo(path);
                     sb.AppendFormat(System.Globalization.CultureInfo.InvariantCulture,
                         "size:{0}\n", info.Length);
                     // Unix seconds matching Rust's library_identity_hash
@@ -168,57 +215,6 @@ namespace pwiz.Osprey.Core
                     result.Append(hashBytes[i].ToString("x2"));
                 return result.ToString();
             }
-        }
-
-        /// <summary>
-        /// Escape a string to match Rust's <c>{:?}</c> Debug formatter
-        /// output for <c>&amp;str</c> / <c>String</c>. Handles the cases
-        /// that actually appear in config values folded into the search
-        /// hash: backslashes, double quotes, common C escapes
-        /// (<c>\n</c>, <c>\r</c>, <c>\t</c>, <c>\0</c>), and other
-        /// sub-0x20 control characters via the <c>\u{...}</c> form.
-        /// Printable ASCII and non-ASCII bytes pass through unchanged --
-        /// matching Rust's default Debug output as of the language
-        /// versions in use by maccoss/osprey (1.75+). Used so cross-impl
-        /// hashes agree on Windows paths whose <c>\</c> separators must
-        /// render as <c>\\</c>.
-        /// </summary>
-        internal static string EscapeForRustDebug(string s)
-        {
-            if (string.IsNullOrEmpty(s))
-                return s ?? string.Empty;
-            var sb = new StringBuilder(s.Length + 8);
-            foreach (char c in s)
-            {
-                switch (c)
-                {
-                    case '\\': sb.Append(@"\\"); break;
-                    case '"':  sb.Append("\\\""); break;
-                    case '\n': sb.Append(@"\n"); break;
-                    case '\r': sb.Append(@"\r"); break;
-                    case '\t': sb.Append(@"\t"); break;
-                    case '\0': sb.Append(@"\0"); break;
-                    default:
-                        if (c < 0x20 || c == 0x7F)
-                        {
-                            // Rust's {:?} uses `\u{HEX}` with lowercase hex,
-                            // no padding. AppendFormat's `{0:x}` works on
-                            // net8.0 but produces `{x}` literally on net472
-                            // under the double-brace escape sequence; use
-                            // explicit ToString to avoid the regression.
-                            sb.Append(@"\u{");
-                            sb.Append(((int)c).ToString(@"x",
-                                System.Globalization.CultureInfo.InvariantCulture));
-                            sb.Append('}');
-                        }
-                        else
-                        {
-                            sb.Append(c);
-                        }
-                        break;
-                }
-            }
-            return sb.ToString();
         }
 
         /// <summary>
@@ -252,7 +248,7 @@ namespace pwiz.Osprey.Core
         /// file stems. Used by per-file Stage 6 rescore workers, whose
         /// <see cref="OspreyConfig.InputFiles"/> only carries this worker's single
         /// parquet — the hash that the downstream <c>--task SecondPassFDR</c>
-        /// merge node expects is computed over ALL files in the join, so
+        /// SecondPassFDR node expects is computed over ALL files in the join, so
         /// the worker must read the full set from the planner's
         /// <c>reconciliation.json</c> envelope and pass it in here. The
         /// stems are sorted + deduped internally so the hash is invariant

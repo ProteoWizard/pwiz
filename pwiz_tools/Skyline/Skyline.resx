@@ -520,6 +520,12 @@
   <data name="encyclopeDiaSearchMenuItem.Text" xml:space="preserve">
     <value>&amp;EncyclopeDIA Search...</value>
   </data>
+  <data name="diannSearchMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>194, 22</value>
+  </data>
+  <data name="diannSearchMenuItem.Text" xml:space="preserve">
+    <value>&amp;DIA-NN Search...</value>
+  </data>
   <data name="importFeatureDetectionMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>194, 22</value>
   </data>
@@ -586,6 +592,12 @@
   <data name="importAnnotationsMenuItem.Text" xml:space="preserve">
     <value>A&amp;nnotations...</value>
   </data>
+  <data name="importLayoutMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>170, 22</value>
+  </data>
+  <data name="importLayoutMenuItem.Text" xml:space="preserve">
+    <value>&amp;Window Layout...</value>
+  </data>
   <data name="importToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>200, 22</value>
   </data>
@@ -645,6 +657,12 @@
   </data>
   <data name="exportAnnotationsMenuItem.Text" xml:space="preserve">
     <value>&amp;Annotations...</value>
+  </data>
+  <data name="exportLayoutMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>183, 22</value>
+  </data>
+  <data name="exportLayoutMenuItem.Text" xml:space="preserve">
+    <value>&amp;Window Layout...</value>
   </data>
   <data name="exportToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>200, 22</value>
@@ -1301,6 +1319,12 @@
   <data name="&gt;&gt;importAnnotationsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;importLayoutMenuItem.Name" xml:space="preserve">
+    <value>importLayoutMenuItem</value>
+  </data>
+  <data name="&gt;&gt;importLayoutMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;exportToolStripMenuItem.Name" xml:space="preserve">
     <value>exportToolStripMenuItem</value>
   </data>
@@ -1365,6 +1389,12 @@
     <value>exportAnnotationsMenuItem</value>
   </data>
   <data name="&gt;&gt;exportAnnotationsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;exportLayoutMenuItem.Name" xml:space="preserve">
+    <value>exportLayoutMenuItem</value>
+  </data>
+  <data name="&gt;&gt;exportLayoutMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;mruBeforeToolStripSeparator.Name" xml:space="preserve">

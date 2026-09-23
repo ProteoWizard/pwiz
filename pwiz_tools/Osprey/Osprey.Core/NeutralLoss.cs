@@ -26,56 +26,78 @@ using System.Globalization;
 namespace pwiz.Osprey.Core
 {
     /// <summary>
-    /// Represents a neutral loss from a fragment ion.
-    /// Maps to osprey-core/src/types.rs NeutralLoss enum.
+    /// Neutral loss kind, carried inline on a <see cref="FragmentAnnotation"/> as
+    /// a compact value code rather than a per-fragment heap reference. The values
+    /// match the on-disk tags written by the library cache, so serialization needs
+    /// no translation table. Maps to osprey-core/src/types.rs NeutralLoss enum.
     /// </summary>
-    public class NeutralLoss
+    public enum NeutralLossCode : byte
     {
-        public static readonly NeutralLoss H2O = new NeutralLoss(18.010565);
-        public static readonly NeutralLoss NH3 = new NeutralLoss(17.026549);
-        public static readonly NeutralLoss H3PO4 = new NeutralLoss(97.976896);
+        None = 0,
+        H2O = 1,
+        NH3 = 2,
+        H3PO4 = 3,
+        Custom = 4
+    }
 
-        public double Mass { get; private set; }
+    /// <summary>
+    /// Neutral loss masses and parsing. Formerly a per-fragment reference type;
+    /// now a static helper so a <see cref="FragmentAnnotation"/> can hold a
+    /// <see cref="NeutralLossCode"/> plus a custom mass entirely by value.
+    /// </summary>
+    public static class NeutralLoss
+    {
+        public const double H2OMass = 18.010565;
+        public const double NH3Mass = 17.026549;
+        public const double H3PO4Mass = 97.976896;
 
-        private NeutralLoss(double mass)
+        /// <summary>
+        /// Mass of the neutral loss for the given code, using
+        /// <paramref name="customMass"/> only when the code is
+        /// <see cref="NeutralLossCode.Custom"/>. Returns 0 for
+        /// <see cref="NeutralLossCode.None"/>.
+        /// </summary>
+        public static double MassFor(NeutralLossCode code, double customMass)
         {
-            Mass = mass;
+            switch (code)
+            {
+                case NeutralLossCode.H2O: return H2OMass;
+                case NeutralLossCode.NH3: return NH3Mass;
+                case NeutralLossCode.H3PO4: return H3PO4Mass;
+                case NeutralLossCode.Custom: return customMass;
+                default: return 0.0;
+            }
         }
 
         /// <summary>
-        /// Creates a custom neutral loss with the specified mass.
+        /// Parses a string to a neutral loss. Returns
+        /// (<see cref="NeutralLossCode.None"/>, 0) for empty, "NOLOSS", or
+        /// unrecognized input; a named code for known losses; and
+        /// (<see cref="NeutralLossCode.Custom"/>, mass) for a numeric mass.
         /// </summary>
-        public static NeutralLoss Custom(double mass)
-        {
-            return new NeutralLoss(mass);
-        }
-
-        /// <summary>
-        /// Parses a string to a <see cref="NeutralLoss"/>. Returns null for empty, "NOLOSS", or unrecognized input.
-        /// </summary>
-        public static NeutralLoss Parse(string s)
+        public static (NeutralLossCode Code, double CustomMass) Parse(string s)
         {
             if (string.IsNullOrEmpty(s))
-                return null;
+                return (NeutralLossCode.None, 0.0);
 
             switch (s.ToUpperInvariant())
             {
                 case "H2O":
                 case "WATER":
-                    return H2O;
+                    return (NeutralLossCode.H2O, 0.0);
                 case "NH3":
                 case "AMMONIA":
-                    return NH3;
+                    return (NeutralLossCode.NH3, 0.0);
                 case "H3PO4":
                 case "PHOSPHO":
-                    return H3PO4;
+                    return (NeutralLossCode.H3PO4, 0.0);
                 case "NOLOSS":
-                    return null;
+                    return (NeutralLossCode.None, 0.0);
                 default:
                     double mass;
                     if (double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out mass))
-                        return Custom(mass);
-                    return null;
+                        return (NeutralLossCode.Custom, mass);
+                    return (NeutralLossCode.None, 0.0);
             }
         }
     }

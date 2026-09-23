@@ -396,7 +396,7 @@ namespace pwiz.Osprey.IO
         /// Write modifications to the Modifications table.
         /// Positions are converted from 0-based (internal) to 1-based (blib/Skyline).
         /// </summary>
-        public void AddModifications(long refId, List<Modification> modifications)
+        public void AddModifications(long refId, IReadOnlyList<Modification> modifications)
         {
             foreach (var mod in modifications)
             {
@@ -411,7 +411,7 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Add protein accession mappings for a spectrum.
         /// </summary>
-        public void AddProteinMapping(long refId, List<string> proteinIds)
+        public void AddProteinMapping(long refId, IReadOnlyList<string> proteinIds)
         {
             foreach (string accession in proteinIds)
             {

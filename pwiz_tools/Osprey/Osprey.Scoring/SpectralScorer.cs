@@ -85,9 +85,9 @@ namespace pwiz.Osprey.Scoring
         /// can be reused across all library entries scored against this spectrum.
         /// Matches Rust's <c>preprocess_spectrum_for_xcorr</c> in pipeline.rs.
         /// Calibration + unit-res use this f64 path for bit-identical parity.
-        /// The f32 variant <see cref="PreprocessSpectrumForXcorrInto"/> is used
-        /// only by the HRAM main-search per-window cache, where halving the
-        /// 800 KB / 400 KB per spectrum matters for parallel-file memory.
+        /// The HRAM main-search per-window cache instead uses the sparse form
+        /// <see cref="PreprocessSpectrumForXcorrSparse"/>, which avoids the dense
+        /// per-spectrum LOH cost (issue #4398).
         /// </summary>
         public double[] PreprocessSpectrumForXcorr(Spectrum spectrum)
         {
@@ -106,56 +106,6 @@ namespace pwiz.Osprey.Scoring
 
             double[] windowed = ApplyWindowingNormalizationD(binned);
             return ApplySlidingWindowD(windowed);
-        }
-
-        /// <summary>
-        /// Pool-aware preprocessing that writes the final sliding-window
-        /// result into the caller-supplied f32 <paramref name="output"/>
-        /// buffer (the per-spectrum HRAM cache). Internal binning,
-        /// windowing, and sliding-window math run in f64 on the pooled
-        /// double[] scratch fields; only the final cache store narrows to
-        /// f32. The cache stays f32 to preserve the 400 KB-per-spectrum
-        /// HRAM budget, while values now carry single-cast precision
-        /// rather than f32-cascade noise. Bit-equal cross-impl with Rust
-        /// <c>preprocess_spectrum_for_xcorr_into</c>.
-        /// </summary>
-        public void PreprocessSpectrumForXcorrInto(
-            Spectrum spectrum, XcorrScratch scratch, float[] output)
-        {
-            if (output == null)
-                throw new ArgumentNullException();
-            int n = _binConfig.NBins;
-            if (output.Length < n)
-                throw new ArgumentException("output length < NBins");
-
-            if (spectrum == null || spectrum.Mzs == null || spectrum.Mzs.Length == 0)
-            {
-                Array.Clear(output, 0, n);
-                return;
-            }
-
-            // True scratch-pool path: f64 scratch (Binned / Windowed /
-            // Prefix double[]) for the windowing cascade; final sliding-
-            // window result is narrowed to f32 directly into `output`.
-            // No per-call allocation, no intermediate copy.
-            //
-            // Fallback: if no scratch was passed in, allocate as before.
-            // The fallback exists only for safety and code that hasn't
-            // been migrated; the HRAM per-window path (the hot one)
-            // always supplies scratch.
-            if (scratch != null && scratch.Binned.Length >= n)
-            {
-                // Binned accumulates via +=, so zero it per spectrum.
-                Array.Clear(scratch.Binned, 0, n);
-                PreprocessSpectrumForXcorrF32IntoBuffers(
-                    spectrum, n, scratch.Binned, scratch.Windowed,
-                    scratch.Prefix, output);
-            }
-            else
-            {
-                float[] pre = PreprocessSpectrumForXcorrF32(spectrum);
-                Array.Copy(pre, output, n);
-            }
         }
 
         /// <summary>
@@ -263,6 +213,102 @@ namespace pwiz.Osprey.Scoring
         }
 
         /// <summary>
+        /// Compute XCorr from a <see cref="SparseXcorrSpectrum"/>, which recovers
+        /// each probed bin's centered value on demand instead of retaining the dense
+        /// <c>float[NBins]</c> cache (issue #4398). Bit-identical to the f32 overload
+        /// above: <see cref="SparseXcorrSpectrum.CenteredAt"/> reproduces the same
+        /// f64 arithmetic and the same final narrowing to <c>float</c>, and the
+        /// fragment-bin dedup and scaling here are the same.
+        /// </summary>
+        public double XcorrFromSparse(SparseXcorrSpectrum preprocessed, LibraryEntry entry, bool[] visitedBins)
+        {
+            if (preprocessed == null || entry == null ||
+                entry.Fragments == null || entry.Fragments.Count == 0)
+                return 0.0;
+
+            int n = preprocessed.NBins;
+            double xcorrRaw = 0.0;
+            int nVisited = 0;
+            for (int f = 0; f < entry.Fragments.Count; f++)
+            {
+                int bin = _binConfig.MzToBin(entry.Fragments[f].Mz);
+                if (bin >= 0 && bin < n && !visitedBins[bin])
+                {
+                    visitedBins[bin] = true;
+                    xcorrRaw += preprocessed.CenteredAt(bin);
+                    nVisited++;
+                }
+            }
+            if (nVisited > 0)
+            {
+                for (int f = 0; f < entry.Fragments.Count; f++)
+                {
+                    int bin = _binConfig.MzToBin(entry.Fragments[f].Mz);
+                    if (bin >= 0 && bin < n)
+                        visitedBins[bin] = false;
+                }
+            }
+            return xcorrRaw * XCORR_SCALING;
+        }
+
+        /// <summary>
+        /// Build the sparse form of the Comet fast-XCorr preprocessed spectrum: bin
+        /// and windowing-normalize exactly as the dense path does, then retain only
+        /// the nonzero bins plus a prefix sum over them. The sliding-window
+        /// subtraction is deferred to <see cref="SparseXcorrSpectrum.CenteredAt"/>.
+        ///
+        /// Reuses the caller's pooled <paramref name="scratch"/> f64 buffers, so the
+        /// only surviving allocation is the sparse triple (~20 B per retained peak,
+        /// vs 391 KB for the dense f32 cache this replaces).
+        /// </summary>
+        public SparseXcorrSpectrum PreprocessSpectrumForXcorrSparse(Spectrum spectrum, XcorrScratch scratch)
+        {
+            int n = _binConfig.NBins;
+
+            if (spectrum == null || spectrum.Mzs == null || spectrum.Mzs.Length == 0)
+                return new SparseXcorrSpectrum(new int[0], new double[0], new double[1], n, XCORR_WINDOW_OFFSET);
+
+            // Exact length, not >=: ApplyWindowingNormalizationD derives its window
+            // size from the array's Length, so an oversized scratch buffer would
+            // silently change the normalization windows.
+            double[] binned = scratch != null && scratch.Binned.Length == n ? scratch.Binned : new double[n];
+            double[] windowed = scratch != null && scratch.Windowed.Length == n ? scratch.Windowed : new double[n];
+
+            // Binned accumulates via +=, so zero it per spectrum.
+            Array.Clear(binned, 0, n);
+            for (int i = 0; i < spectrum.Mzs.Length; i++)
+            {
+                int bin = _binConfig.MzToBin(spectrum.Mzs[i]);
+                if (bin >= 0 && bin < n)
+                    binned[bin] += Math.Sqrt(spectrum.Intensities[i]);
+            }
+            ApplyWindowingNormalizationD(binned, windowed);
+
+            int nonzero = 0;
+            for (int i = 0; i < n; i++)
+                if (windowed[i] != 0.0)
+                    nonzero++;
+
+            var bins = new int[nonzero];
+            var values = new double[nonzero];
+            var prefix = new double[nonzero + 1];
+            prefix[0] = 0.0;
+            int k = 0;
+            for (int i = 0; i < n; i++)
+            {
+                if (windowed[i] == 0.0)
+                    continue;
+                bins[k] = i;
+                values[k] = windowed[i];
+                // Ascending bin order, skipping the zeros the dense prefix would have
+                // added: x + 0.0 == x exactly, so this matches the dense prefix.
+                prefix[k + 1] = prefix[k] + windowed[i];
+                k++;
+            }
+            return new SparseXcorrSpectrum(bins, values, prefix, n, XCORR_WINDOW_OFFSET);
+        }
+
+        /// <summary>
         /// Compute XCorr at a single spectrum against a library entry. Direct port
         /// of Rust's <c>SpectralScorer::xcorr_at_scan</c> / <c>xcorr()</c> in
         /// osprey-scoring/src/lib.rs. Performs:
@@ -315,8 +361,8 @@ namespace pwiz.Osprey.Scoring
 
             // (1) Bin observed spectrum - ACCUMULATE sqrt intensities in each bin.
             // f64 throughout to preserve calibration parity; the HRAM main-
-            // search path stores a narrowed f32 cache via
-            // PreprocessSpectrumForXcorrInto, but this in-place scan path is
+            // search path caches each spectrum in the sparse form via
+            // PreprocessSpectrumForXcorrSparse, but this in-place scan path is
             // used by calibration fallback and unit-res scoring where the
             // full f64 precision is required. Scratch.Binned arrives zeroed
             // from Return().

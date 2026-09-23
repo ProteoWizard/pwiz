@@ -27,6 +27,7 @@
 #include <boost/type_index.hpp>
 #include <pwiz/data/proteome/AminoAcid.hpp>
 #include <boost/range/algorithm/find.hpp>
+#include <set>
 //#include "pwiz/data/msdata/MSDataFile.hpp"
 
 namespace BiblioSpec
@@ -683,7 +684,8 @@ class DiaNNSpecLibReader::Impl
 #ifdef USE_PARQUET_READER
             unique_ptr<parquet::arrow::FileReader> reader_;
             vector<string> columnNames_; // and order
-            vector<int> columnIndices_;
+            vector<int> columnIndices_; // -1 means "missing column, tolerated by ignore_missing_column"
+            io::ignore_column ignore_policy_ = io::ignore_no_column;
             int64_t numRowGroups_;
             int64_t rowIndex_ = 0;
             int64_t rowGroup_ = -1;
@@ -745,6 +747,7 @@ class DiaNNSpecLibReader::Impl
             void close() {}
             template<class ...ColNames> void read_header(io::ignore_column ignore_policy, ColNames...cols) {}
             bool has_column(const std::string& name) const { return false; }
+            void assert_present_except(const std::set<std::string>&) const {}
             template<class ...ColType> bool read_row(ColType& ...cols) { return false; }
             void seek_begin() {}
             uint64_t num_rows() const { return 0; }
@@ -765,9 +768,10 @@ class DiaNNSpecLibReader::Impl
             void read_header_helper(const std::shared_ptr<arrow::Schema>& schema, const char* columnName)
             {
                 int fieldIndex = schema->GetFieldIndex(columnName);
-                if (fieldIndex < 0)
+                if (fieldIndex < 0 && !(ignore_policy_ & io::ignore_missing_column))
                     Verbosity::error("file %s does not have a column called %s", filepath_.c_str(), columnName);
 
+                // -1 marks the slot as missing-but-tolerated; read_row will plug in a default.
                 read_header_helper(fieldIndex, columnName);
             }
 
@@ -781,6 +785,7 @@ class DiaNNSpecLibReader::Impl
             template<class ...ColNames>
             void read_header(io::ignore_column ignore_policy, ColNames...cols)
             {
+                ignore_policy_ = ignore_policy;
                 std::shared_ptr<arrow::Schema> schema;
                 auto got_schema = reader_->GetSchema(&schema);
                 if (!got_schema.ok())
@@ -788,7 +793,21 @@ class DiaNNSpecLibReader::Impl
 
                 read_header_helper(schema, cols...);
 
-                auto got_table = reader_->ReadTable(columnIndices_ , &table_);
+                // Guard against ALL requested columns being missing: Arrow's ReadTable
+                // treats an empty index vector as "read every column", which combined
+                // with read_column's nullptr fallback would silently emit default-valued
+                // rows for the entire library instead of failing.
+                if (!columnIndices_.empty() &&
+                    std::all_of(columnIndices_.begin(), columnIndices_.end(),
+                                [](int i) { return i < 0; }))
+                {
+                    Verbosity::error("file %s has none of the requested columns", filepath_.c_str());
+                }
+
+                // Arrow's ReadTable rejects -1 indices, so pass only the real columns.
+                std::vector<int> presentIndices;
+                for (int idx : columnIndices_) if (idx >= 0) presentIndices.push_back(idx);
+                auto got_table = reader_->ReadTable(presentIndices, &table_);
                 if (!got_table.ok())
                     Verbosity::error("cannot read table from %s: %s", filepath_.c_str(), got_table.message().c_str());
             }
@@ -799,38 +818,58 @@ class DiaNNSpecLibReader::Impl
                 return boost::range::find(column_names, name) != column_names.end();
             }
 
+            /// Error out if any column declared in read_header() but NOT in `optional`
+            /// was actually missing (sentinel -1 in columnIndices_). Lets the caller
+            /// scope ignore_missing_column to a small allowlist of optional fields.
+            void assert_present_except(const std::set<std::string>& optional) const
+            {
+                for (size_t i = 0; i < columnIndices_.size(); ++i)
+                {
+                    if (columnIndices_[i] < 0 && !optional.count(columnNames_[i]))
+                        Verbosity::error("file %s missing required column %s",
+                            filepath_.c_str(), columnNames_[i].c_str());
+                }
+            }
+
+            // For missing-but-tolerated columns columnArrays_[i] is nullptr — write a default.
             void read_column(std::size_t i, int& t) const
             {
+                if (!columnArrays_[i]) { t = 0; return; }
                 const auto& intArray = std::static_pointer_cast<arrow::Int64Array>(columnArrays_[i]);
                 t = intArray->Value(rowIndex_);
             }
 
             void read_column(std::size_t i, int64_t& t) const
             {
+                if (!columnArrays_[i]) { t = 0; return; }
                 const auto& intArray = std::static_pointer_cast<arrow::Int64Array>(columnArrays_[i]);
                 t = intArray->Value(rowIndex_);
             }
 
             void read_column(std::size_t i, float& t) const
             {
+                if (!columnArrays_[i]) { t = 0.0f; return; }
                 const auto& fpArray = std::static_pointer_cast<arrow::FloatArray>(columnArrays_[i]);
                 t = fpArray->Value(rowIndex_);
             }
 
             void read_column(std::size_t i, double& t) const
             {
+                if (!columnArrays_[i]) { t = 0.0; return; }
                 const auto& fpArray = std::static_pointer_cast<arrow::FloatArray>(columnArrays_[i]);
                 t = fpArray->Value(rowIndex_);
             }
 
             void read_column(std::size_t i, std::string_view& t) const
             {
+                if (!columnArrays_[i]) { t = std::string_view{}; return; }
                 const auto& strArray = std::static_pointer_cast<arrow::StringArray>(columnArrays_[i]);
                 t = strArray->Value(rowIndex_);
             }
 
             void read_column(std::size_t i, std::string& t) const
             {
+                if (!columnArrays_[i]) { t.clear(); return; }
                 const auto& strArray = std::static_pointer_cast<arrow::StringArray>(columnArrays_[i]);
                 t = strArray->Value(rowIndex_);
             }
@@ -857,7 +896,9 @@ class DiaNNSpecLibReader::Impl
                         return false;
 
                     rowIndex_ = 0;
-                    auto got_row_group = reader_->ReadRowGroup(rowGroup_, columnIndices_, &table_);
+                    std::vector<int> presentIndices;
+                    for (int idx : columnIndices_) if (idx >= 0) presentIndices.push_back(idx);
+                    auto got_row_group = reader_->ReadRowGroup(rowGroup_, presentIndices, &table_);
                     if (!got_row_group.ok())
                         Verbosity::error("cannot read row group %d from %s", rowGroup_, filepath_.c_str());
 
@@ -866,7 +907,9 @@ class DiaNNSpecLibReader::Impl
 
                     columnArrays_.clear();
                     for (size_t i = 0; i < columnNames_.size(); ++i)
-                        columnArrays_.emplace_back(get_arrow_column_chunk(table_, columnNames_[i]));
+                        columnArrays_.emplace_back(columnIndices_[i] >= 0
+                            ? get_arrow_column_chunk(table_, columnNames_[i])
+                            : nullptr); // missing-but-tolerated; read_column returns default
                 }
 
                 read_row_helper(0, cols...);
@@ -916,6 +959,16 @@ class DiaNNSpecLibReader::Impl
                 parquetReader_->read_header(ignore_policy, std::forward<ColNames>(cols)...);
         }
 
+        /// After a read_header() call with io::ignore_missing_column, fail loudly if any
+        /// requested column outside `optional` was actually missing. Keeps the tolerance
+        /// scoped to the names the caller declares as optional, instead of silently
+        /// accepting any schema mismatch.
+        void assert_present_except(const std::set<std::string>& optional) const
+        {
+            if (csvReader_) return; // CSV reader keeps the strict-by-name semantics already
+            parquetReader_->assert_present_except(optional);
+        }
+
         bool has_column(const std::string& name) const
         {
             if (csvReader_)
@@ -956,11 +1009,18 @@ class DiaNNSpecLibReader::Impl
     {
         Reader<16> reader;
         reader.open_file(filepath);
-        reader.read_header(io::ignore_extra_column,
+        // DIA-NN 1.9.1 doesn't emit a Flags column — tolerate the missing column and let
+        // read_column default the flags to 0 for those rows. (The Flags bits aren't
+        // consumed downstream in BiblioSpec anyway.) Every OTHER column is required:
+        // a future DIA-NN release that renames or drops e.g. Modified.Sequence should
+        // surface a clean error here rather than silently filling rows with defaults.
+        reader.read_header(io::ignore_extra_column | io::ignore_missing_column,
             "Precursor.Id", "Modified.Sequence", "Precursor.Charge", "Precursor.Mz",
             "RT", "IM", "Q.Value", "Decoy", "Proteotypic", "Flags",
             "Product.Mz", "Relative.Intensity", "Fragment.Type",
             "Fragment.Charge", "Fragment.Series.Number", "Fragment.Loss.Type");
+        const std::set<std::string> optionalColumns = { "Flags" };
+        reader.assert_present_except(optionalColumns);
 
         std::string precursorId, modSeq, fragType, fragLoss;
         int64_t charge, decoy, proteotypic, flags, fragCharge, fragSeries;

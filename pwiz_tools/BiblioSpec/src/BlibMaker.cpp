@@ -182,11 +182,19 @@ void BlibMaker::init()
         // Remove it, if this is to be an overwrite
         if (overwrite) {
             libName.close();
-            bfs::remove(lib_name);
+            // Use the error_code overload so a lock failure here doesn't throw
+            // boost::filesystem::filesystem_error out of init(). The real guard is
+            // the libName2.good() check that follows — Verbosity::error fires either
+            // way if the file is still on disk. (Same hardening as
+            // abort_current_library; see comment there.)
+            boost::system::error_code ec;
+            bfs::remove(lib_name, ec);
             ifstream libName2(lib_name);
             if (libName2.good()) {
-                Verbosity::error("Failed to remove existing redundant "
-                                 "library '%s'.", lib_name);
+                Verbosity::error("Failed to remove existing redundant library '%s'%s%s.",
+                                 lib_name,
+                                 ec ? ": " : "",
+                                 ec ? ec.message().c_str() : "");
             }
         } else {
             // Overwrite, if it is a zero length file
@@ -249,12 +257,24 @@ void BlibMaker::abort_current_library(){
 
     // close db
     if (db != NULL){
-        sqlite3_close(db);
+        // sqlite3_close returns SQLITE_BUSY (and keeps the file locked) if there
+        // are unfinalized statements or pending journals. _v2 schedules a
+        // deferred close once those are released, which is what we want before
+        // unlinking the file. Without this, an empty-result build (e.g. when
+        // DIA-NN produces 0 precursors) fails the subsequent bfs::remove with
+        // "process cannot access the file because it is being used by another
+        // process".
+        sqlite3_close_v2(db);
         db = NULL;
     }
 
     // delete file
-    bfs::remove(lib_name);
+    boost::system::error_code ec;
+    bfs::remove(lib_name, ec);
+    if (ec) {
+        Verbosity::warn("Could not remove '%s' during abort: %s",
+                        lib_name, ec.message().c_str());
+    }
 }
 
 /**

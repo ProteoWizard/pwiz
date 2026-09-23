@@ -19,6 +19,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.MSGraph;
 using pwiz.Skyline.Controls.Graphs;
@@ -57,6 +58,71 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
             }
+
+            TestStaleSelection();
+        }
+
+        /// <summary>
+        /// Regression test for exception report skyline.ms #75292: a NullReferenceException in
+        /// GraphChromatogram.GetColorIndex while displaying peptide totals. While a document change
+        /// is being dispatched, the chromatogram graph can update with its cached transition-group
+        /// paths still referencing a peptide that is no longer in the current document, so
+        /// DocumentUI.FindNode(path.Parent) returns null. The graph must tolerate the transient
+        /// stale path rather than crash.
+        /// </summary>
+        private void TestStaleSelection()
+        {
+            var doc = SkylineWindow.Document;
+            var peptideGroup = doc.MoleculeGroups.First(g => g.Peptides.Any());
+            var peptide = peptideGroup.Peptides.First();
+
+            // Show the peptide totals chromatogram - the DisplayTotals path that resolves a color
+            // per transition group via DocumentUI.FindNode.
+            RunUI(() =>
+            {
+                SkylineWindow.SelectedPath = new IdentityPath(peptideGroup.Id, peptide.Id);
+                SkylineWindow.SetDisplayTypeChrom(DisplayTypeChrom.total);
+            });
+            WaitForGraphs();
+
+            var graphChrom = FindOpenForm<GraphChromatogram>();
+            Assert.IsNotNull(graphChrom);
+
+            // The race between the document-change dispatch and the tree selection cannot be
+            // triggered deterministically through the public UI, so seed the equivalent stale state
+            // directly: leave _nodeGroups untouched (so the UpdateGroups reference-equality
+            // short-circuit keeps the graph's cached chromatograms and preserves the paths we seed
+            // below) but point the cached paths at a peptide that is absent from the document,
+            // exactly as FindNode would fail to resolve after the peptide was removed.
+            RunUI(() =>
+            {
+                var nodeGroupsField = typeof(GraphChromatogram).GetField(@"_nodeGroups",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                var groupPathsField = typeof(GraphChromatogram).GetField(@"_groupPaths",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                Assert.IsNotNull(nodeGroupsField);
+                Assert.IsNotNull(groupPathsField);
+
+                var nodeGroups = (TransitionGroupDocNode[]) nodeGroupsField.GetValue(graphChrom);
+                Assert.IsNotNull(nodeGroups);
+                Assert.IsTrue(nodeGroups.Length > 0);
+
+                var stalePaths = nodeGroups
+                    .Select(g => new IdentityPath(peptideGroup.Id, new Peptide(@"ELVISLIVES"), g.Id))
+                    .ToArray();
+                groupPathsField.SetValue(graphChrom, stalePaths);
+
+                // Before the fix this threw NullReferenceException in GetColorIndex.
+                graphChrom.UpdateUI();
+            });
+            WaitForGraphs();
+
+            // The graph survived the stale selection without throwing. Every group shared the
+            // absent peptide, so all were skipped - a deterministic 0 curves. This also guards
+            // against a future false-green: if the seeded paths were ever discarded (e.g. the
+            // short-circuit stopped preserving them), the curves would reappear and this would fail.
+            var graphControl = (MSGraphControl) graphChrom.Controls.Find(@"graphControl", true).First();
+            Assert.AreEqual(0, GetChromatogramCount(graphControl.GraphPane));
         }
 
         /// <summary>

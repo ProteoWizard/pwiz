@@ -59,7 +59,7 @@ PWIZ_API_DECL size_t ChromatogramList_Waters::size() const
 PWIZ_API_DECL const ChromatogramIdentity& ChromatogramList_Waters::chromatogramIdentity(size_t index) const
 {
     boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Waters::createIndex, this));
-    if (index>size_)
+    if (index>=size_)
         throw runtime_error(("[ChromatogramList_Waters::chromatogramIdentity()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
     return index_[index];
@@ -91,7 +91,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
 PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, DetailLevel detailLevel, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance) const
 {
     boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Waters::createIndex, this));
-    if (index>size_)
+    if (index>=size_)
         throw runtime_error(("[ChromatogramList_Waters::chromatogram()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
 

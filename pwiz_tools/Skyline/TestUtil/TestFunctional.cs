@@ -62,6 +62,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using TestRunnerLib;
@@ -432,6 +433,41 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
+        /// Waits for a native dialog (a Win32 "#32770") of the given type to appear in this process and returns its
+        /// automation wrapper -- the native-dialog analog of <see cref="WaitForOpenForm{TDlg}(int)"/>.
+        /// </summary>
+        protected static TDlg WaitForNativeDlg<TDlg>() where TDlg : NativeDialog
+        {
+            TDlg dlg = null;
+            WaitForCondition(() => null != (dlg = NativeDialog.GetOpenDialogs(CancellationToken.None)
+                .OfType<TDlg>().FirstOrDefault()));
+            return dlg;
+        }
+
+        /// <summary>
+        /// Shows a native dialog and drives it with an action that runs on the TEST thread, the way the connector
+        /// drives one from the pipe thread. A native dialog is driven by thread-agnostic Win32 messages that its
+        /// modal loop (running on the UI thread) pumps, so the action has to run off the UI thread, leaving that
+        /// loop free to pump each step -- an action marshaled onto the UI thread would block the loop instead, and
+        /// the gestures that go through the dialog-watch refuse to run there.
+        /// </summary>
+        protected static void RunLongNativeDlg<TDlg>([InstantHandle] Action showDlgAction,
+            [InstantHandle] [NotNull] Action<TDlg> exerciseDlgAction) where TDlg : NativeDialog
+        {
+            bool showDlgActionCompleted = false;
+            SkylineBeginInvoke(() =>
+            {
+                showDlgAction();
+                showDlgActionCompleted = true;
+            });
+            var dlg = WaitForNativeDlg<TDlg>();
+            // The gestures wait on the dialog with no deadline of their own (see NativeFileDialog.EnterPath), so a
+            // dialog that never reaches the state one is waiting for would hang the run without a thread dump.
+            HangDetection.InterruptWhenHung(() => exerciseDlgAction(dlg));
+            WaitForConditionUI(() => showDlgActionCompleted);
+        }
+
+        /// <summary>
         /// Shows a dialog and tests the dialog by invoking an action on the test thread.
         /// Unlike <see cref="RunDlg{TDlg}"/>, the test action runs on the test thread instead of the
         /// event thread. This method can be used for testing dialogs which in turn bring up other dialogs,
@@ -476,6 +512,22 @@ namespace pwiz.SkylineTestUtil
         protected static void ShowAndCancelDlg<TDlg>(Action showAction) where TDlg : Form
         {
             ShowAndDismissDlg<TDlg>(showAction, dlg=>dlg.CancelButton.PerformClick());
+        }
+
+        /// <summary>
+        /// Opens a document the way a user would: by bringing up the native Open dialog via
+        /// the same code path as the File &gt; Open menu command, then driving that dialog with
+        /// UI Automation to type the path and click Open. Use this in place of calling
+        /// <see cref="SkylineWindow"/>.OpenFile directly when a test should exercise the real
+        /// open-file UI. Waits for the document to finish loading before returning.
+        /// </summary>
+        public static void FileOpen(string path)
+        {
+            RunLongNativeDlg<NativeOpenFileDialog>(SkylineWindow.ShowOpenFileDialog, dlg =>
+            {
+                dlg.EnterPath(path);
+                dlg.Accept();
+            });
         }
 
         protected static void FocusDocument()
@@ -1182,7 +1234,9 @@ namespace pwiz.SkylineTestUtil
                 var msg = (timeoutMessage == null)
                     ? string.Empty
                     : " (" + timeoutMessage + ")";
-                AssertEx.Fail(@"Timeout {0} seconds exceeded in WaitForCondition{1}. Open forms: {2}", waitCycles * SLEEP_INTERVAL / 1000, msg, GetOpenFormsString());
+                AssertEx.Fail(@"Timeout {0} seconds exceeded in WaitForCondition{1}. Open forms: {2}{3}{4}",
+                    waitCycles * SLEEP_INTERVAL / 1000, msg, GetOpenFormsString(),
+                    Environment.NewLine, HangDetection.TryGetThreadDump());
             }
             return false;
         }
@@ -1246,7 +1300,9 @@ namespace pwiz.SkylineTestUtil
                 if (timeoutMessage != null)
                     RunUI(() => msg = " (" + timeoutMessage() + ")");
 
-                AssertEx.Fail(@"Timeout {0} seconds exceeded in WaitForConditionUI{1}. Open forms: {2}", waitCycles * SLEEP_INTERVAL / 1000, msg, GetOpenFormsString());
+                AssertEx.Fail(@"Timeout {0} seconds exceeded in WaitForConditionUI{1}. Open forms: {2}{3}{4}",
+                    waitCycles * SLEEP_INTERVAL / 1000, msg, GetOpenFormsString(),
+                    Environment.NewLine, HangDetection.TryGetThreadDump());
             }
             return false;
         }
@@ -1264,7 +1320,9 @@ namespace pwiz.SkylineTestUtil
 
         public static void WaitForGraphs(bool throwOnProgramException = true)
         {
-            WaitForConditionUI(WAIT_TIME, () => !SkylineWindow.IsGraphUpdatePending, null, true, throwOnProgramException);
+            WaitForConditionUI(WAIT_TIME, () => !SkylineWindow.IsGraphUpdatePending,
+                () => string.Format("Graph update still pending: {0}", SkylineWindow.GraphUpdatePendingDescription),
+                true, throwOnProgramException);
         }
 
         public static void WaitForRegression()
@@ -1411,12 +1469,19 @@ namespace pwiz.SkylineTestUtil
             get { return TestContext.TestName.Contains("Tutorial"); }
         }
 
+        /// <summary>
+        /// The folder under Documentation that holds this tutorial's screenshots. Published tutorials live in
+        /// "Tutorials"; a tutorial still under development overrides this to return "Tutorial-Drafts", and the
+        /// override is removed when the tutorial is published.
+        /// </summary>
+        protected virtual string TutorialDocumentationFolder => "Tutorials";
+
         protected string TutorialPath
         {
             get
             {
                 return IsTutorial
-                    ? TestContext.GetProjectDirectory($"Documentation\\Tutorials\\{CoverShotName}\\{GetFolderNameForLanguage(CultureInfo.CurrentCulture)}")
+                    ? TestContext.GetProjectDirectory($"Documentation\\{TutorialDocumentationFolder}\\{CoverShotName}\\{GetFolderNameForLanguage(CultureInfo.CurrentCulture)}")
                     : null;
             }
         }
@@ -2117,6 +2182,31 @@ namespace pwiz.SkylineTestUtil
             _shotManager.TakeShot(screenshotForm, fullScreen, filePath, processShot);
         }
 
+        /// <summary>
+        /// Saves a screenshot captured through the connector (IFormElement.CaptureImage) as the next numbered
+        /// tutorial screenshot (s-NN.png), advancing the screenshot counter. The image is taken (via the passed
+        /// delegate) only when recording screenshots; the counter advances either way so numbering stays stable.
+        /// This is the connector-driven counterpart to <see cref="PauseForScreenShot(string,int?,Func{Bitmap,Bitmap})"/>,
+        /// used by JsonTutorialTest so a tutorial can be captured through the JSON tool service rather than the
+        /// screen-grab path.
+        /// </summary>
+        protected void SaveMcpConnectorScreenShot(Func<Bitmap> captureImage)
+        {
+            if (IsRecordingScreenShots)
+            {
+                _shotManager ??= new ScreenshotManager(SkylineWindow, TutorialPath);
+                using (var bitmap = captureImage())
+                {
+                    // The connector returns no image data when there is no desktop to capture. Say that,
+                    // rather than letting the null reach SaveToFile as a NullReferenceException.
+                    AssertEx.IsNotNull(bitmap,
+                        $@"No image captured for screenshot {ScreenshotCounter}. The connector returned no image data, which happens when no desktop is available to capture.");
+                    ScreenCapture.SaveToFile(_shotManager.ScreenshotDestFile(ScreenshotCounter), bitmap);
+                }
+            }
+            ScreenshotCounter++;
+        }
+
         protected virtual Bitmap ProcessCoverShot(Bitmap bmp)
         {
             // Override to modify the cover shot before it is saved or put on the clipboard
@@ -2384,6 +2474,14 @@ namespace pwiz.SkylineTestUtil
             get { return TestContext.GetProjectDirectory(@"TestTutorial\TutorialAuditLogs"); }
         }
 
+        /// <summary>
+        /// The file this test records its audit log entries to, for tests that need to manipulate it.
+        /// </summary>
+        protected string RecordedAuditLogFilePath
+        {
+            get { return GetLogFilePath(AuditLogDir); }
+        }
+
         private readonly HashSet<AuditLogEntry> _setSeenEntries = new HashSet<AuditLogEntry>();
         private readonly Dictionary<int, AuditLogEntry> _lastLoggedEntries = new Dictionary<int, AuditLogEntry>();
 
@@ -2576,14 +2674,7 @@ namespace pwiz.SkylineTestUtil
 
         private void WriteDiffEntryToFile(string folderPath, AuditLogEntry entry, AuditLogEntry lastLoggedEntry)
         {
-            var filePath = GetLogFilePath(folderPath);
-            using (var fs = File.Open(filePath, FileMode.Append))
-            {
-                using (var sw = new StreamWriter(fs))
-                {
-                    sw.Write(AuditLogEntryDiffToString(entry, lastLoggedEntry));
-                }
-            }
+            AppendToLogFile(GetLogFilePath(folderPath), AuditLogEntryDiffToString(entry, lastLoggedEntry));
         }
 
         private string AuditLogEntryDiffToString(AuditLogEntry entry, AuditLogEntry lastLoggedEntry)
@@ -2611,13 +2702,37 @@ namespace pwiz.SkylineTestUtil
 
         private void WriteEntryToFile(string folderPath, AuditLogEntry entry)
         {
-            var filePath = GetLogFilePath(folderPath);
-            using (var fs = File.Open(filePath, FileMode.Append))
+            AppendToLogFile(GetLogFilePath(folderPath), AuditLogEntryToString(entry) + Environment.NewLine);
+        }
+
+        /// <summary>
+        /// Appends to the audit log recorded for this test. The file is opened and closed once per
+        /// logged entry, which invites transient sharing violations from virus scanners and file
+        /// indexers, so share the file with them and retry when they get there first.
+        /// </summary>
+        private void AppendToLogFile(string filePath, string text)
+        {
+            // Write in a single call so that a retry cannot append what a partial write already recorded
+            var bytes = Encoding.UTF8.GetBytes(text);
+            try
             {
-                using (var sw = new StreamWriter(fs))
+                // Short retry interval because this runs on the UI thread during SetDocument
+                TryHelper.TryTwice(() =>
                 {
-                    sw.WriteLine(AuditLogEntryToString(entry));
-                }
+                    using (var fs = File.Open(filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+                    {
+                        fs.Write(bytes, 0, bytes.Length);
+                    }
+                }, 3, 100, nameof(AppendToLogFile));
+            }
+            catch (Exception x)
+            {
+                // This runs during SetDocument, so the exception ends up in a message box shown by
+                // SkylineWindow.ModifyDocument. Name the process holding the lock while it is still known.
+                var described = FileLockingProcessFinder.ToFileLockingException(x, Path.GetDirectoryName(filePath));
+                if (ReferenceEquals(described, x))
+                    throw;  // Nothing to add, so keep the original stack trace
+                throw described;
             }
         }
 
@@ -2635,9 +2750,6 @@ namespace pwiz.SkylineTestUtil
 
             return result.ToString();
         }
-
-        // could get more codes from https://github.com/joshudson/Emet/blob/master/FileSystems/IOErrors.cs
-        private const int ERROR_SHARING_VIOLATION = unchecked((int)0x80070020);
 
         private void WaitForSkyline()
         {
@@ -2672,29 +2784,9 @@ namespace pwiz.SkylineTestUtil
             }
             catch (Exception x)
             {
-                // if it's a file locking issue, wrap the exception to report the locking process
-                if (x is IOException ioException && ioException.HResult == ERROR_SHARING_VIOLATION)
-                {
-                    var match = Regex.Match(ioException.Message, "'(.*)'");
-                    if (match.Success)
-                    {
-                        string lockedFilepath = match.Captures[0].Value.Trim('\'');
-                        if (!File.Exists(lockedFilepath))
-                        {
-                            x = new IOException(string.Format("file '{0}' was locked but has since been deleted", lockedFilepath), x);
-                        }
-                        else
-                        {
-                            int currentProcessId = System.Diagnostics.Process.GetCurrentProcess().Id;
-                            Func<int, string> pidOrThisProcess = pid => pid == currentProcessId ? "this process" : $"PID: {pid}";
-                            var processesLockingFile = FileLockingProcessFinder.GetProcessesUsingFile(lockedFilepath);
-                            var names = string.Join(@", ", processesLockingFile.Select(p => $"{p.ProcessName} ({pidOrThisProcess(p.Id)})"));
-                            x = new IOException(string.Format("file '{0}' locked by: {1}", lockedFilepath, names), x);
-                        }
-                    }
-                }
-                // Save exception for reporting from main thread.
-                Program.AddTestException(x);
+                // Save exception for reporting from main thread, naming the locking process if that is the issue.
+                // The exception message carries a full path here, so no containing directory is needed.
+                Program.AddTestException(FileLockingProcessFinder.ToFileLockingException(x, null));
             }
 
             EndTest();

@@ -23,6 +23,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -330,9 +331,9 @@ namespace pwiz.Osprey.Test
             {
                 var m = DecoyPairingManifest.FromTsv(path);
                 var libEntry1 = MakeEntry(1, @"PEPTIDE", 2, false);
-                libEntry1.ProteinIds.Add(@"sp|P12345_pep00001|GENE_A");
+                libEntry1.ProteinIds = new[] { @"sp|P12345_pep00001|GENE_A" };
                 var libEntry2 = MakeEntry(2, @"AEPTPID", 2, false);
-                libEntry2.ProteinIds.Add(@"decoy_sp|P12345_pep00001|GENE_A");
+                libEntry2.ProteinIds = new[] { @"decoy_sp|P12345_pep00001|GENE_A" };
                 var lib = new List<LibraryEntry> { libEntry1, libEntry2 };
 
                 var state = new PairingState();
@@ -342,10 +343,10 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(2, stats.NProteinsReplaced);
                 CollectionAssert.AreEqual(
                     new[] { @"sp|P12345|GENE_A", @"sp|Q67890|GENE_B" },
-                    libEntry1.ProteinIds);
+                    libEntry1.ProteinIds.ToArray());
                 CollectionAssert.AreEqual(
                     new[] { @"decoy_sp|P12345|GENE_A", @"decoy_sp|Q67890|GENE_B" },
-                    libEntry2.ProteinIds);
+                    libEntry2.ProteinIds.ToArray());
             }
             finally
             {
@@ -367,17 +368,17 @@ namespace pwiz.Osprey.Test
             {
                 var m = DecoyPairingManifest.FromTsv(path);
                 var libEntry1 = MakeEntry(1, @"PEPTIDE", 2, false);
-                libEntry1.ProteinIds.Add(@"sp|original|FROM_LIB");
+                libEntry1.ProteinIds = new[] { @"sp|original|FROM_LIB" };
                 var libEntry2 = MakeEntry(2, @"AEPTPID", 2, false);
-                libEntry2.ProteinIds.Add(@"sp|orig_decoy|FROM_LIB");
+                libEntry2.ProteinIds = new[] { @"sp|orig_decoy|FROM_LIB" };
                 var lib = new List<LibraryEntry> { libEntry1, libEntry2 };
                 var state = new PairingState();
                 var stats = m.ApplyToLibrary(lib, state);
                 Assert.AreEqual(0, stats.NProteinsReplaced);
                 CollectionAssert.AreEqual(
-                    new[] { @"sp|original|FROM_LIB" }, libEntry1.ProteinIds);
+                    new[] { @"sp|original|FROM_LIB" }, libEntry1.ProteinIds.ToArray());
                 CollectionAssert.AreEqual(
-                    new[] { @"sp|orig_decoy|FROM_LIB" }, libEntry2.ProteinIds);
+                    new[] { @"sp|orig_decoy|FROM_LIB" }, libEntry2.ProteinIds.ToArray());
                 // The second manifest row classifies AEPTPID as `decoy`
                 // and the library entry is loaded as a target, so the
                 // manifest's sequence-based classification flips IsDecoy
@@ -441,8 +442,9 @@ namespace pwiz.Osprey.Test
 
         private static LibraryEntry AddProteins(LibraryEntry e, params string[] proteins)
         {
-            foreach (var p in proteins)
-                e.ProteinIds.Add(p);
+            var ids = new List<string>(e.ProteinIds);
+            ids.AddRange(proteins);
+            e.ProteinIds = ids;
             return e;
         }
 

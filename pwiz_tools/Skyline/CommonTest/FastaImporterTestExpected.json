@@ -229,11 +229,11 @@
       "Results": [
         {
           "Name": "CGI_10000780",
-          "Description": "Uncharacterized protein",
-          "PreferredName": "K1QN71_MAGGI",
-          "Accession": "K1QN71",
-          "Gene": "CGI_10000780",
-          "Species": "Magallana gigas (Pacific oyster) (Crassostrea gigas)",
+          "Description": null,
+          "PreferredName": null,
+          "Accession": null,
+          "Gene": null,
+          "Species": null,
           "SequenceLength": 449,
           "WellFormed": false,
           "WebSearchInfo": "X#UCGI_10000780"
@@ -300,24 +300,24 @@
         {
           "Name": "gi|16763210|ref|NP_458827.1|",
           "Description": "30s ribosomal subunit protein S18 [Salmonella enterica subsp. enterica serovar Typhi]",
-          "PreferredName": "A0A718ARV1_SALTI",
-          "Accession": "A0A718ARV1",
-          "Gene": "rpsR G1V83_19805 GYJ61_18895",
+          "PreferredName": "ref|NP_458827.1|",
+          "Accession": "WP_000135199.1",
+          "Gene": null,
           "Species": "Salmonella enterica subsp. enterica serovar Typhi str. CT18",
           "SequenceLength": 75,
           "WellFormed": false,
-          "WebSearchInfo": "X#UWP_000135199.1 AND (organism_id:220341)#G16763210"
+          "WebSearchInfo": "X#UNP_458827#UWP_000135199.1#UWP_000135199.1 AND (organism_id:220341)#G16763210"
         },
         {
           "Name": "gi|24115555|ref|NP_710065.1|",
           "Description": "30S ribosomal subunit protein S18 [Shigella flexneri 2a str. 301]",
-          "PreferredName": "A0AB36P917_SHIFL",
-          "Accession": "A0AB36P917",
-          "Gene": "rpsR SF301_4715",
-          "Species": "Shigella flexneri 2a str. 301",
+          "PreferredName": "RS18_SHIFL",
+          "Accession": "P0A7U2",
+          "Gene": "rpsR SF4355 S4627",
+          "Species": "Shigella flexneri",
           "SequenceLength": 75,
           "WellFormed": false,
-          "WebSearchInfo": "X#UNP_710065 AND (organism_id:198214)#G24115555"
+          "WebSearchInfo": "X#UNP_710065#UNP_710065 AND (organism_id:198214)#G24115555"
         },
         {
           "Name": "gi|26251099|ref|NP_757139.1|",

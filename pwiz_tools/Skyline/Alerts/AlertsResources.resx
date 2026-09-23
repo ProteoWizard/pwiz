@@ -190,6 +190,39 @@
   <data name="MsFraggerDownloadDlg_Download_Downloading_MSFragger__0_" xml:space="preserve">
     <value>Downloading MSFragger {0}</value>
   </data>
+  <data name="DiannDownloadDlg_Downloading_DIA_NN__0_" xml:space="preserve">
+    <value>Downloading DIA-NN {0}</value>
+  </data>
+  <data name="DiannDownloadDlg_Installing_DIA_NN" xml:space="preserve">
+    <value>Extracting DIA-NN installation files</value>
+  </data>
+  <data name="DiannDownloadDlg_Installation_failed" xml:space="preserve">
+    <value>DIA-NN installation failed. The extractor did not produce a diann.exe file.</value>
+  </data>
+  <data name="DiannDownloadDlg_Replace_existing_registration__0__with__1__" xml:space="preserve">
+    <value>A different DIA-NN installation is already registered with Skyline:
+
+{0}
+
+Installing DIA-NN {1} will replace this registration. The other installation's files will not be deleted, but Skyline will use the new install going forward. Continue?</value>
+  </data>
+  <data name="DiannDownloadDlg_academic_license" xml:space="preserve">
+    <value>academic license</value>
+    <comment>Link phrase inside linkLabel2x.Text — gets substituted in as {1} and is the clickable link area. Localize freely; the code looks it up after substitution.</comment>
+  </data>
+  <data name="EnsureDiannInstalled_Use_existing_or_download__0____1__" xml:space="preserve">
+    <value>DIA-NN is already installed at:
+
+{0}
+
+Use this installation, or download DIA-NN {1} from GitHub?</value>
+  </data>
+  <data name="EnsureDiannInstalled_Use_Existing" xml:space="preserve">
+    <value>&amp;Use Existing</value>
+  </data>
+  <data name="EnsureDiannInstalled_Download" xml:space="preserve">
+    <value>&amp;Download</value>
+  </data>
   <data name="PasteFilteredPeptidesDlg_Peptides_Do_you_want_to_filter_them_from_the_pasted_list" xml:space="preserve">
     <value>Do you want to filter them from the pasted list?</value>
   </data>

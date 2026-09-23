@@ -277,7 +277,7 @@ namespace pwiz.SkylineTestUtil
 
         public static string ExtAgilentRaw
         {
-            get { return CanImportAgilentRaw ? DataSourceUtil.EXT_AGILENT_BRUKER_RAW : ExtMzml; }
+            get { return CanImportAgilentRaw ? DataSourceUtil.EXT_AGILENT_BRUKER_D : ExtMzml; }
         }
 
         public static bool CanImportMobilionRaw

@@ -150,6 +150,50 @@ namespace pwiz.SkylineTestFunctional
                     }, false),
             },
 
+            // Nullable trait test cases: verify that the rendering code applies the correct defaults
+            // (Color.Gray, PointSymbol.Circle, PointSize.small) when traits are omitted from a rule.
+
+            new[]
+            {
+                // Rule specifies color only (null symbol, null size) — matched points get the default symbol+size
+                new MatchExprInfo(new MatchExpression(string.Empty, new[] {MatchOption.BelowLeftCutoff}),
+                    new VolcanoPlotPointsInfo(17, Color.Cyan, false, null, null),
+                    new List<string>
+                    {
+                        "VFWIEVALFWR",
+                        "SDFQVPCQYSQQLK",
+                        "WWGQEITELAQGPGR",
+                        "AGDQILAINEINVK",
+                        "AGSWQITMK",
+                        "FAEDHFAHEATK",
+                        "NLAPLVEDVQSK",
+                        "CSSLLWAGAAWLR",
+                        "ETGLMAFTNLK",
+                        "MLSGFIPLKPTVK",
+                        "LQTEGDGIYTLNSEK",
+                        "SVVDIGLIK",
+                        "IAELFSDLEER",
+                        "FSISTDYSLK",
+                        "EVLPELGIK",
+                        "ALYQAEAFVADFK",
+                        "IAELFSELDER"
+                    }, false),
+            },
+
+            new[]
+            {
+                // Rule specifies symbol+size only (no color) — matched points get the default color (Color.Gray)
+                new MatchExprInfo(new MatchExpression("CC|DD", new[] {MatchOption.PeptideSequence}),
+                    new VolcanoPlotPointsInfo(4, null, false, PointSymbol.Diamond, PointSize.x_large),
+                    new List<string>
+                    {
+                        "GTITSIAALDDPK",
+                        "CIVDGDDR",
+                        "AFMDCCNYITK",
+                        "DNCCILDER"
+                    }, false),
+            },
+
             new[]
             {
                 new MatchExprInfo(new MatchExpression("XP_", new[] {MatchOption.ProteinName}),
@@ -194,7 +238,7 @@ namespace pwiz.SkylineTestFunctional
                         "NP_001033064",
                         "NP_872280"
                     }, true),
-            }
+            },
         };
 
         private static PointF[] savedLabelPositions =
@@ -206,7 +250,7 @@ namespace pwiz.SkylineTestFunctional
             new PointF(-1.07151949f, 3.96921921f),
             new PointF(-1.0508579f, 2.45434284f)
         };
- 
+
         #endregion
 
         [TestMethod]
@@ -269,6 +313,22 @@ namespace pwiz.SkylineTestFunctional
                     
                 VerifyMatchExpressions(volcanoPlot, matchExprInfo, 0, i % 2 == 0 ? RemoveMode.Cancel : RemoveMode.Undo); // Alternate remove mode
             }
+
+            // Exercise independent per-trait formatting across multiple overlapping rules -- the headline
+            // behavior of this feature -- which the single-rule cases above do not cover. Needs per-peptide
+            // scope so each named peptide is its own point.
+            if (FindGroupComparison(GROUP_COMPARISON_NAME).PerProtein)
+                SetVolcanoPlotPerProtein(volcanoPlot, false);
+            WaitForVolcanoPlotPointCount(grid, 125);
+            VerifyTraitComposition(volcanoPlot);
+            VerifyLastMatchWins(volcanoPlot);
+            VerifyRuleToolbar(volcanoPlot);
+
+            // Restore per-protein scope, which TestMatchExpressionListDlg below relies on (it expects
+            // protein-level match counts).
+            SetVolcanoPlotPerProtein(volcanoPlot, true);
+            WaitForVolcanoPlotPointCount(grid, 48);
+
             TestMatchExpressionListDlg(volcanoPlot);
         }
 
@@ -320,7 +380,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(initialRowCount + index, rows);
 
                     formattingDlg.AddRow(new MatchRgbHexColor(string.Empty, exprInfo.ExpectedPointsInfo.Labeled,
-                        exprInfo.ExpectedPointsInfo.Color, exprInfo.ExpectedPointsInfo.PointSymbol,
+                        exprInfo.ExpectedPointsInfo.Color ?? Color.Empty, exprInfo.ExpectedPointsInfo.PointSymbol,
                         exprInfo.ExpectedPointsInfo.PointSize));
                     formattingDlg.ClickCreateExpression(rows);
                 });
@@ -372,7 +432,7 @@ namespace pwiz.SkylineTestFunctional
 
         public class VolcanoPlotPointsInfo
         {
-            public VolcanoPlotPointsInfo(int pointCount, Color color, bool labeled, PointSymbol pointSymbol, PointSize pointSize)
+            public VolcanoPlotPointsInfo(int pointCount, Color? color, bool labeled, PointSymbol? pointSymbol, PointSize? pointSize)
             {
                 PointCount = pointCount;
                 Color = color;
@@ -382,10 +442,10 @@ namespace pwiz.SkylineTestFunctional
             }
 
             public int PointCount { get; private set; }
-            public Color Color { get; private set; }
+            public Color? Color { get; private set; }
             public bool Labeled { get; private set; }
-            public PointSymbol PointSymbol { get; private set; }
-            public PointSize PointSize { get; private set; }
+            public PointSymbol? PointSymbol { get; private set; }
+            public PointSize? PointSize { get; private set; }
         }
 
         private void AssertVolcanoPlotCorrect(FoldChangeVolcanoPlot plot, VolcanoPlotPointsInfo[] pointsInfos)
@@ -415,10 +475,15 @@ namespace pwiz.SkylineTestFunctional
                     var lineItem = (LineItem) curveItem;
                     var pointInfo = pointsInfos[i - startIndex];
 
-                    Assert.AreEqual(pointInfo.Color, lineItem.Symbol.Fill.Color);
+                    // Apply the same defaults the rendering code uses for null traits
+                    var expectedColor = pointInfo.Color ?? Color.Gray;
+                    var expectedSymbol = pointInfo.PointSymbol ?? PointSymbol.Circle;
+                    var expectedSize = pointInfo.PointSize ?? PointSize.small;
+
+                    Assert.AreEqual(expectedColor, lineItem.Symbol.Fill.Color);
                     Assert.AreEqual(pointInfo.PointCount, curveItem.Points.Count);
-                    Assert.AreEqual(DotPlotUtil.PointSymbolToSymbolType(pointInfo.PointSymbol), lineItem.Symbol.Type);
-                    Assert.AreEqual(DotPlotUtil.PointSizeToFloat(pointInfo.PointSize), lineItem.Symbol.Size);
+                    Assert.AreEqual(DotPlotUtil.PointSymbolToSymbolType(expectedSymbol), lineItem.Symbol.Type);
+                    Assert.AreEqual(DotPlotUtil.PointSizeToFloat(expectedSize), lineItem.Symbol.Size);
 
                     if (pointInfo.Labeled)
                     {
@@ -432,7 +497,7 @@ namespace pwiz.SkylineTestFunctional
                             Assert.IsInstanceOfType(graphObj, typeof(TextObj));
                             var label = (TextObj) graphObj;
 
-                            Assert.AreEqual(DotPlotUtil.PointSizeToFloat(pointInfo.PointSize), label.FontSpec.Size);
+                            Assert.AreEqual(DotPlotUtil.PointSizeToFloat(expectedSize), label.FontSpec.Size);
                             // With automated label layout label's coordinates do not match the point coordinates.
                             //Assert.AreEqual(label.Location.X, pointPair.X);
                             //Assert.AreEqual(label.Location.Y, pointPair.Y);
@@ -452,6 +517,194 @@ namespace pwiz.SkylineTestFunctional
             });
         }
 
+        /// <summary>
+        /// Verifies that two overlapping rules each contributing a single, different trait compose
+        /// per-point via <see cref="DotPlotUtil.ResolvePointFormat"/>: points matched by both rules
+        /// take rule A's color and rule B's symbol, while points matched by only one rule take that
+        /// rule's single trait plus the render-time defaults for the unset traits.
+        ///
+        /// The rules are applied directly through the formatting dialog's binding list (which runs
+        /// the same per-trait resolution the production code uses) rather than driving
+        /// CreateMatchExpressionDlg, whose background match worker is not safe to poll from a test.
+        /// </summary>
+        private void VerifyTraitComposition(FoldChangeVolcanoPlot volcanoPlot)
+        {
+            // Rule A sets only color (Cyan); Rule B sets only symbol (Diamond). The two peptide-sequence
+            // expressions name explicit peptides (all present in this document) and deliberately share
+            // exactly one (AGSWQITMK) so all three regions -- shared, A-only, B-only -- are non-empty.
+            var ruleA = MakeRule(Color.Cyan, null, null, "VFWIEVALFWR|SDFQVPCQYSQQLK|AGSWQITMK");
+            var ruleB = MakeRule(Color.Empty, PointSymbol.Diamond, null, "AGSWQITMK|FAEDHFAHEATK|NLAPLVEDVQSK");
+
+            var formattingDlg = ShowDialog<VolcanoPlotFormattingDlg>(volcanoPlot.ShowFormattingDialog);
+            // Adding a fully-formed rule to the binding list applies it and re-renders the plot
+            // synchronously (UpdateColorRows -> UpdateGraph), so the curves are ready to assert.
+            RunUI(() =>
+            {
+                formattingDlg.AddRow(ruleA);
+                formattingDlg.AddRow(ruleB);
+            });
+
+            // The composed result must contain exactly three distinct matched curves with exact point
+            // counts; render-time defaults fill the traits no rule set (symbol -> Circle, color -> Gray).
+            // Rule A matches 3 peptides, rule B matches 3, sharing exactly one (AGSWQITMK):
+            //   (Cyan, Diamond), 1 -> the shared peptide: color from A, symbol from B
+            //   (Cyan, Circle),  2 -> A-only peptides: A's color, default symbol
+            //   (Gray, Diamond), 2 -> B-only peptides: default color, B's symbol
+            AssertComposedCurves(volcanoPlot, new[]
+            {
+                (Color.Cyan, PointSymbol.Diamond, 1),
+                (Color.Cyan, PointSymbol.Circle, 2),
+                (Color.Gray, PointSymbol.Diamond, 2)
+            });
+
+            OkDialog(formattingDlg, formattingDlg.CancelDialog);
+        }
+
+        /// <summary>
+        /// Verifies the last-match-wins precedence: when two overlapping rules both set the same trait
+        /// (color), the rule lower in the list overrides the earlier one (CSS-cascade model). Both rules
+        /// match the same peptides, so the resulting curve must take the second rule's color.
+        /// </summary>
+        private void VerifyLastMatchWins(FoldChangeVolcanoPlot volcanoPlot)
+        {
+            // Both rules match the same two peptides and both set only color. The first sets Cyan, the
+            // second Magenta; with last-match-wins the composed curve must be Magenta.
+            var ruleFirst = MakeRule(Color.Cyan, null, null, "VFWIEVALFWR|SDFQVPCQYSQQLK");
+            var ruleSecond = MakeRule(Color.Magenta, null, null, "VFWIEVALFWR|SDFQVPCQYSQQLK");
+
+            var formattingDlg = ShowDialog<VolcanoPlotFormattingDlg>(volcanoPlot.ShowFormattingDialog);
+            RunUI(() =>
+            {
+                formattingDlg.AddRow(ruleFirst);
+                formattingDlg.AddRow(ruleSecond);
+            });
+
+            // A single matched curve in the later rule's color (Magenta), default symbol (Circle), 2 points.
+            AssertComposedCurves(volcanoPlot, new[]
+            {
+                (Color.Magenta, PointSymbol.Circle, 2)
+            });
+
+            OkDialog(formattingDlg, formattingDlg.CancelDialog);
+        }
+
+        /// <summary>
+        /// Drives the delete/reorder toolbar on the rules grid: verifies button enablement at the list
+        /// boundaries, that move up/down reorders the binding list, and that delete removes the selected
+        /// rule. Order/removal are asserted by reference against the rules that were added.
+        /// </summary>
+        private void VerifyRuleToolbar(FoldChangeVolcanoPlot volcanoPlot)
+        {
+            var ruleA = MakeRule(Color.Red, null, null, "AAA");
+            var ruleB = MakeRule(Color.Green, null, null, "BBB");
+            var ruleC = MakeRule(Color.Blue, null, null, "CCC");
+
+            var formattingDlg = ShowDialog<VolcanoPlotFormattingDlg>(volcanoPlot.ShowFormattingDialog);
+            RunUI(() =>
+            {
+                formattingDlg.AddRow(ruleA);
+                formattingDlg.AddRow(ruleB);
+                formattingDlg.AddRow(ruleC);
+            });
+            AssertRuleOrder(formattingDlg, ruleA, ruleB, ruleC);
+
+            // Button enablement at the boundaries: the top row cannot move up, the bottom row cannot move down.
+            RunUI(() =>
+            {
+                formattingDlg.SelectRuleRow(0);
+                Assert.IsFalse(formattingDlg.MoveRuleUpEnabled);
+                Assert.IsTrue(formattingDlg.MoveRuleDownEnabled);
+                Assert.IsTrue(formattingDlg.DeleteRuleEnabled);
+
+                formattingDlg.SelectRuleRow(2);
+                Assert.IsTrue(formattingDlg.MoveRuleUpEnabled);
+                Assert.IsFalse(formattingDlg.MoveRuleDownEnabled);
+            });
+
+            // Move the first rule down: A, B, C -> B, A, C
+            RunUI(() =>
+            {
+                formattingDlg.SelectRuleRow(0);
+                formattingDlg.ClickMoveRuleDown();
+            });
+            AssertRuleOrder(formattingDlg, ruleB, ruleA, ruleC);
+
+            // Move the last rule up: B, A, C -> B, C, A
+            RunUI(() =>
+            {
+                formattingDlg.SelectRuleRow(2);
+                formattingDlg.ClickMoveRuleUp();
+            });
+            AssertRuleOrder(formattingDlg, ruleB, ruleC, ruleA);
+
+            // Delete the middle rule: B, C, A -> B, A
+            RunUI(() =>
+            {
+                formattingDlg.SelectRuleRow(1);
+                formattingDlg.ClickDeleteRule();
+            });
+            AssertRuleOrder(formattingDlg, ruleB, ruleA);
+
+            OkDialog(formattingDlg, formattingDlg.CancelDialog);
+        }
+
+        private void AssertRuleOrder(VolcanoPlotFormattingDlg formattingDlg, params MatchRgbHexColor[] expected)
+        {
+            RunUI(() =>
+            {
+                var actual = formattingDlg.ResultList;
+                Assert.AreEqual(expected.Length, actual.Count, "Unexpected number of rules");
+                for (var i = 0; i < expected.Length; i++)
+                    Assert.AreSame(expected[i], actual[i], string.Format("Rule at index {0} is not the expected rule", i));
+            });
+        }
+
+        private static MatchRgbHexColor MakeRule(Color color, PointSymbol? symbol, PointSize? size, string regex)
+        {
+            // Build the rule with its match expression already set, so adding it to the binding list
+            // applies it without going through the interactive expression-builder dialog.
+            var expression = new MatchExpression(regex, new[] { MatchOption.PeptideSequence }).ToString();
+            return new MatchRgbHexColor(expression, false, color, symbol, size);
+        }
+
+        // Asserts that the matched curves (those between the selected/cutoff curves and the trailing
+        // "other" curve) are exactly the expected set of (color, symbol, point count) combinations.
+        // Unlike AssertVolcanoPlotCorrect this does not assume a one-to-one rule-to-curve mapping,
+        // because composed points form curves that no single rule owns.
+        private void AssertComposedCurves(FoldChangeVolcanoPlot plot, (Color color, PointSymbol symbol, int count)[] expected)
+        {
+            RunUI(() =>
+            {
+                var curveList = plot.CurveList;
+                var startIndex = plot.MatchedPointsStartIndex;
+
+                var matchedCurves = new List<LineItem>();
+                for (var i = startIndex; i < curveList.Count - 1; ++i) // -1 for the trailing "other" curve
+                {
+                    Assert.IsInstanceOfType(curveList[i], typeof(LineItem));
+                    matchedCurves.Add((LineItem) curveList[i]);
+                }
+
+                Assert.AreEqual(expected.Length, matchedCurves.Count, "Unexpected number of matched curves");
+
+                foreach (var exp in expected)
+                {
+                    // Deconstruct into mutable locals so the Color.ToArgb() call is not made on a
+                    // readonly struct member (which would copy on each invocation).
+                    var (expColor, expSymbol, expCount) = exp;
+                    var expColorArgb = expColor.ToArgb();
+                    var expSymbolType = DotPlotUtil.PointSymbolToSymbolType(expSymbol);
+                    var curve = matchedCurves.FirstOrDefault(c =>
+                        c.Symbol.Fill.Color.ToArgb() == expColorArgb &&
+                        c.Symbol.Type == expSymbolType);
+                    Assert.IsNotNull(curve,
+                        string.Format("Missing composed curve: color={0}, symbol={1}", expColor, expSymbol));
+                    Assert.AreEqual(expCount, curve.Points.Count,
+                        string.Format("Wrong point count for composed curve color={0}, symbol={1}", expColor, expSymbol));
+                }
+            });
+        }
+
         private void TestMatchExpressionListDlg(FoldChangeVolcanoPlot volcanoPlot)
         {
             var exprInfo = MATCH_EXPR_INFOS[0][0];
@@ -459,7 +712,7 @@ namespace pwiz.SkylineTestFunctional
             var createExprDlg = ShowDialog<CreateMatchExpressionDlg>(() =>
             {
                 formattingDlg.AddRow(new MatchRgbHexColor(string.Empty, exprInfo.ExpectedPointsInfo.Labeled,
-                    exprInfo.ExpectedPointsInfo.Color, exprInfo.ExpectedPointsInfo.PointSymbol,
+                    exprInfo.ExpectedPointsInfo.Color ?? Color.Empty, exprInfo.ExpectedPointsInfo.PointSymbol,
                     exprInfo.ExpectedPointsInfo.PointSize));
                 formattingDlg.ClickCreateExpression(formattingDlg.ResultList.Count - 1);
             });

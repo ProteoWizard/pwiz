@@ -100,6 +100,9 @@
   <data name="StreamEx_ReadOrThrow_Failed_reading__0__bytes__Source_may_be_corrupted_" xml:space="preserve">
     <value>Failed reading {0} bytes. Source may be corrupted.</value>
   </data>
+  <data name="ProcessRunner_KillAndWaitForExit_Warning__process__0__had_not_exited__1__seconds_after_being_killed__files_it_has_open_may_still_be_locked_" xml:space="preserve">
+    <value>Warning: process {0} had not exited {1} seconds after being killed; files it has open may still be locked.</value>
+  </data>
   <data name="ProcessRunner_Run_Run_command_" xml:space="preserve">
     <value>Run command:</value>
   </data>

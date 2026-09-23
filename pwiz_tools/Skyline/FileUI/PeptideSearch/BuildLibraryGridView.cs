@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
@@ -143,14 +144,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                 if (valueSet.Any() && !IsFileOnly)
                 {
-                    var bw = new BackgroundWorker();
-                    bw.DoWork += (sender, e) =>
+                    // Cancel and join any detection already running before starting a new one, so at most one
+                    // runs at a time and none is left orphaned. The detection runs on a tracked thread (rather
+                    // than a fire-and-forget BackgroundWorker) so the grid's teardown can stop and join it --
+                    // see CancelScoreTypeDetection.
+                    CancelScoreTypeDetection();
+                    _scoreTypesCts = new CancellationTokenSource();
+                    var token = _scoreTypesCts.Token;
+                    _scoreTypesThread = new Thread(() =>
                     {
                         Dictionary<string, ScoreTypesResult> scoreTypes;
                         Exception getScoreTypesException = null;
                         try
                         {
-                            scoreTypes = GetScoreTypes(valueSet);
+                            scoreTypes = GetScoreTypes(valueSet, token);
                         }
                         catch (Exception x)
                         {
@@ -158,9 +165,28 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             getScoreTypesException = x;
                         }
 
-                        Invoke(new MethodInvoker(() => GridUpdateScoreInfo(scoreTypes, getScoreTypesException)));
+                        // Cancelled means the grid is being torn down -- do not touch it. BeginInvoke (not
+                        // Invoke) keeps this off the UI thread's back so a join from there cannot deadlock.
+                        if (token.IsCancellationRequested)
+                            return;
+                        try
+                        {
+                            BeginInvoke(new MethodInvoker(() =>
+                            {
+                                if (!token.IsCancellationRequested)
+                                    GridUpdateScoreInfo(scoreTypes, getScoreTypesException);
+                            }));
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            // The grid's handle was destroyed after the check above -- nothing to update.
+                        }
+                    })
+                    {
+                        IsBackground = true,
+                        Name = @"Build library score-type detection"
                     };
-                    bw.RunWorkerAsync();
+                    _scoreTypesThread.Start();
                 }
             }
         }
@@ -285,11 +311,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return true;
         }
 
-        private Dictionary<string, ScoreTypesResult> GetScoreTypes(ICollection<string> files)
+        private Dictionary<string, ScoreTypesResult> GetScoreTypes(ICollection<string> files, CancellationToken cancellationToken)
         {
             var blibBuild = new BlibBuild(null, files.ToArray());
             IProgressStatus status = new ProgressStatus();
-            var results = blibBuild.GetScoreTypes(new SilentProgressMonitor(), ref status, out _);
+            // A cancelable progress monitor lets teardown kill the BlibBuild subprocess (ProcessRunner honors
+            // IsCanceled), so its stdin temp file is cleaned up (BlibBuild.GetScoreTypes deletes it in a finally).
+            var results = blibBuild.GetScoreTypes(new SilentProgressMonitor(cancellationToken), ref status, out _);
+            if (results == null)
+                return null;   // canceled, or BlibBuild produced no score types
 
             // Match input/output files
             var filesByLength = files.OrderByDescending(s => s.Length).ToArray();
@@ -299,6 +329,40 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             results = resultsTmp;
 
             return results;
+        }
+
+        // The background score-type detection the FilePaths setter starts when files are added. Tracked so the
+        // grid's teardown can stop it -- canceling kills the BlibBuild subprocess (which then cleans up its temp
+        // file) -- and join it, so no background work outlives the grid or the wizard hosting it.
+        private Thread _scoreTypesThread;
+        private CancellationTokenSource _scoreTypesCts;
+
+        /// <summary>
+        /// Cancels the background score-type detection, if any, and waits for its thread to finish. Called when
+        /// the grid is disposed, when the hosting wizard closes (ImportPeptideSearchDlg.OnFormClosing), and
+        /// before starting a new detection. Safe on the UI thread: the detection marshals back with BeginInvoke,
+        /// so it never blocks waiting for the UI thread and this join cannot deadlock.
+        /// </summary>
+        public void CancelScoreTypeDetection()
+        {
+            var cts = _scoreTypesCts;
+            var thread = _scoreTypesThread;
+            _scoreTypesCts = null;
+            _scoreTypesThread = null;
+            if (cts != null)
+            {
+                try { cts.Cancel(); }
+                catch (ObjectDisposedException) { }
+            }
+            thread?.Join();
+            cts?.Dispose();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                CancelScoreTypeDetection();
+            base.Dispose(disposing);
         }
 
         private void GridUpdateScoreInfo(IReadOnlyDictionary<string, ScoreTypesResult> scoreTypes, Exception exception)

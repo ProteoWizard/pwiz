@@ -223,6 +223,14 @@ void test(bool indexed)
     unit_assert(precursor22.activation.hasCVParam(MS_ETD));
     unit_assert(precursor22.activation.hasCVParam(MS_CID));
     unit_assert(precursor22.activation.hasCVParam(MS_collision_energy));
+
+    // an out of bounds index must throw, including the size() sentinel returned by find() for an unknown id
+
+    unit_assert(sl->find("scan=42") == sl->size());
+    unit_assert_throws_what(sl->spectrumIdentity(sl->size()), runtime_error, "[SpectrumList_mzXML::spectrumIdentity()] Index out of bounds.");
+    unit_assert_throws_what(sl->spectrumIdentity(sl->size() + 1), runtime_error, "[SpectrumList_mzXML::spectrumIdentity()] Index out of bounds.");
+    unit_assert_throws_what(sl->spectrum(sl->size(), false), runtime_error, "[SpectrumList_mzXML::spectrum()] Index out of bounds.");
+    unit_assert_throws_what(sl->spectrum(sl->size() + 1, false), runtime_error, "[SpectrumList_mzXML::spectrum()] Index out of bounds.");
 }
 
 

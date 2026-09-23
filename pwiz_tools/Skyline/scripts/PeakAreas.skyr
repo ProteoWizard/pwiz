@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<views>
+  <view name="Precursor Peak Areas Scored" rowsource="pwiz.Skyline.Model.Databinding.Entities.Precursor" sublist="">
+    <column name="Peptide" />
+    <column name="ModifiedSequence" />
+    <column name="" />
+    <column name="Charge" />
+    <column name="Results!*.Value.TotalArea" />
+    <column name="Results!*.Value.&quot;annotation_annotation_QValue&quot;" />
+    <filter column="Results!*.Value.&quot;annotation_annotation_QValue&quot;" opname="isnotnullorblank" />
+  </view>
+</views>

@@ -29,6 +29,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -64,14 +65,21 @@ namespace pwiz.SkylineTestFunctional
             RowFactories.ExportReport(CancellationToken.None, stream, viewInfo, null, new StaticRowSource(items),
                 rowItemExporter, new SilentProgressMonitor(), ref status);
             stream.Position = 0;
-            using var reader = ParquetReader.CreateAsync(stream).ConfigureAwait(false).GetAwaiter().GetResult();
-            Assert.AreEqual(1, reader.Schema.Fields.Count);
-            // Exercise the data-read path so an array/list write or decode regression
-            // would surface here instead of only in downstream consumers.
-            using var groupReader = reader.OpenRowGroupReader(0);
-            var dataField = reader.Schema.GetDataFields().Single();
-            var col = groupReader.ReadColumnAsync(dataField).ConfigureAwait(false).GetAwaiter().GetResult();
-            Assert.IsNotNull(col.Data);
+            // Parquet.Net's reader resumes on the caller's SynchronizationContext, and this
+            // test runs on the thread which every other test in the process shares, so it
+            // reads without one.
+            ActionUtil.CallWithoutSynchronizationContext(() =>
+            {
+                using var reader = ParquetReader.CreateAsync(stream).GetAwaiter().GetResult();
+                Assert.AreEqual(1, reader.Schema.Fields.Count);
+                // Exercise the data-read path so an array/list write or decode regression
+                // would surface here instead of only in downstream consumers.
+                using var groupReader = reader.OpenRowGroupReader(0);
+                var dataField = reader.Schema.GetDataFields().Single();
+                var col = groupReader.ReadColumnAsync(dataField).GetAwaiter().GetResult();
+                Assert.IsNotNull(col.Data);
+                return true;
+            });
         }
 
         class MyObject

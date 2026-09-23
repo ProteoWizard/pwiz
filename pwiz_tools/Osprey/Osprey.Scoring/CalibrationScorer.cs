@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
 
 namespace pwiz.Osprey.Scoring
@@ -35,6 +36,14 @@ namespace pwiz.Osprey.Scoring
     {
         public uint EntryId { get; set; }
         public bool IsDecoy { get; set; }
+        /// <summary>
+        /// True when this target-side entry is an FDRBench entrapment sequence
+        /// (a known-absent shuffle competing as a target). Populated only when
+        /// the run's library carries entrapment markers; used for the --verbose
+        /// anchor-purity (entrapment-FDP) diagnostic, never for scoring or
+        /// selection, so it does not affect calibration output.
+        /// </summary>
+        public bool IsEntrapment { get; set; }
         public string Sequence { get; set; }
         public uint ScanNumber { get; set; }
         public double CorrelationScore { get; set; }
@@ -42,6 +51,12 @@ namespace pwiz.Osprey.Scoring
         public byte Top6MatchedApex { get; set; }
         public double XcorrScore { get; set; }
         public double IsotopeCosine { get; set; }
+        /// <summary>
+        /// Median-polish library cosine over the peak-cropped calibration XICs (the
+        /// dominant full-search Percolator feature). Populated only when the
+        /// OSPREY_CAL_MEDIANPOLISH lever is on; 0.0 otherwise.
+        /// </summary>
+        public double MedianPolishCosine { get; set; }
         public double DiscriminantScore { get; set; }
         public double QValue { get; set; }
         /// <summary>MS2 fragment mass errors at apex spectrum (in config units).</summary>
@@ -77,14 +92,38 @@ namespace pwiz.Osprey.Scoring
         private const int MAX_ITERATIONS = 3;
         private const int MIN_POSITIVE_EXAMPLES = 50;
 
+        // Feature names in ExtractFeatureMatrix column order. Surfaced in the
+        // --verbose calibration training report (the calibration analog of the
+        // Percolator feature-contribution table). The 5th (median_polish_cosine) is
+        // only used when the OSPREY_CAL_MEDIANPOLISH lever adds it as a column.
+        private static readonly string[] s_featureNames =
+            { @"coelution_corr", @"libcosine_apex", @"top6_matched", @"xcorr", @"median_polish_cosine" };
+
         /// <summary>
         /// Train LDA on calibration matches and score them using 3-fold cross-validation.
         /// Returns the number of matches passing 1% FDR threshold.
         /// </summary>
         public static int TrainAndScoreCalibration(CalibrationMatch[] matches, bool useIsotopeFeature)
         {
+            return TrainAndScoreCalibration(matches, useIsotopeFeature, out _);
+        }
+
+        /// <summary>
+        /// Overload that also produces a <see cref="CalibrationTrainingReport"/> capturing the
+        /// seed feature, the per-iteration refinement trace, the trained model's per-feature
+        /// share of the target-decoy separation, and the calibrator yield at 1% / 0.1% q -- the
+        /// calibration analog of the Percolator feature-contribution report, surfaced under
+        /// --verbose. The report is pure data + formatting (no I/O) and cheap to build (4
+        /// features), so it is always populated; the caller decides whether to log it.
+        /// </summary>
+        public static int TrainAndScoreCalibration(
+            CalibrationMatch[] matches, bool useIsotopeFeature, out CalibrationTrainingReport report)
+        {
+            report = null;
             if (matches == null || matches.Length == 0)
                 return 0;
+
+            report = new CalibrationTrainingReport();
 
             // 1. Extract feature matrix
             Matrix features = ExtractFeatureMatrix(matches, useIsotopeFeature);
@@ -106,7 +145,7 @@ namespace pwiz.Osprey.Scoring
 
             // 5. Train iterative non-negative CV LDA
             double[] discriminants = TrainLdaWithNonNegativeCv(
-                features, decoyLabels, entryIds, sequences);
+                features, decoyLabels, entryIds, sequences, report);
 
             // 6. Assign discriminant scores
             for (int i = 0; i < matches.Length; i++)
@@ -135,6 +174,8 @@ namespace pwiz.Osprey.Scoring
 
             for (int i = 0; i < matches.Length; i++)
                 matches[i].QValue = qValues[i];
+
+            PopulateReportSummary(report, features, matches, decoyLabels);
 
             return nPassing;
         }
@@ -225,7 +266,8 @@ namespace pwiz.Osprey.Scoring
         /// Returns the discriminant scores from the best iteration.
         /// </summary>
         private static double[] TrainLdaWithNonNegativeCv(
-            Matrix features, bool[] decoyLabels, uint[] entryIds, string[] sequences)
+            Matrix features, bool[] decoyLabels, uint[] entryIds, string[] sequences,
+            CalibrationTrainingReport report)
         {
             int nSamples = features.Rows;
             int nFeatures = features.Cols;
@@ -276,6 +318,13 @@ namespace pwiz.Osprey.Scoring
                 }
             }
 
+            if (report != null)
+            {
+                report.SeedFeatureIndex = bestFeatIdx;
+                report.SeedFdr = trainFdr;
+                report.SeedPassing = bestFeatPassing;
+            }
+
             // Initialize with best single feature as both current and best-so-far
             double[] baselineScores = new double[nSamples];
             for (int i = 0; i < nSamples; i++)
@@ -283,6 +332,11 @@ namespace pwiz.Osprey.Scoring
 
             double[] bestScores = (double[])baselineScores.Clone();
             int bestPassing = bestFeatPassing;
+            // Weight vector that produced bestScores: the baseline is a unit vector on
+            // the seed feature; a winning refinement iteration replaces it with that
+            // iteration's consensus weights. Fed to the --verbose contribution report.
+            double[] bestWeights = new double[nFeatures];
+            bestWeights[bestFeatIdx] = 1.0;
             // best_iteration: 0 = baseline, 1..MAX_ITERATIONS = refinement iterations
             // (unused beyond the iteration tracking  -  kept for parity with Rust)
             double[] currentScores = baselineScores;
@@ -291,6 +345,13 @@ namespace pwiz.Osprey.Scoring
             for (int iteration = 0; iteration < MAX_ITERATIONS; iteration++)
             {
                 var foldWeights = new List<double[]>();
+
+                // Confident-positive pool the folds draw from this iteration: targets
+                // passing the training FDR under the PRIOR iteration's scores. A small
+                // pool here is the "seed/cutoff starvation" signal the report surfaces.
+                int positivePool = report != null
+                    ? CountPassingTargets(currentScores, decoyLabels, entryIds, trainFdr)
+                    : 0;
 
                 // Phase 1: Use CV to estimate stable weights
                 for (int foldIdx = 0; foldIdx < N_FOLDS; foldIdx++)
@@ -340,6 +401,17 @@ namespace pwiz.Osprey.Scoring
                 if (foldWeights.Count == 0)
                 {
                     // All folds failed; keep baseline and stop iterating
+                    if (report != null)
+                    {
+                        report.Iterations.Add(new CalibrationTrainingReport.IterationRecord
+                        {
+                            Iteration = iteration + 1,
+                            Fdr = trainFdr,
+                            PositivePoolSize = positivePool,
+                            AllFoldsFailed = true
+                        });
+                        report.StopReason = @"all cross-validation folds were singular";
+                    }
                     break;
                 }
 
@@ -376,10 +448,12 @@ namespace pwiz.Osprey.Scoring
                 int nPassingIter = CountPassingTargets(newScores, decoyLabels, entryIds, trainFdr);
 
                 // Track best iteration: keep scores from whichever iteration gave the most passing
-                if (nPassingIter > bestPassing)
+                bool improved = nPassingIter > bestPassing;
+                if (improved)
                 {
                     bestScores = (double[])newScores.Clone();
                     bestPassing = nPassingIter;
+                    bestWeights = (double[])consensusWeights.Clone();
                     consecutiveNoImprove = 0;
                 }
                 else
@@ -387,12 +461,36 @@ namespace pwiz.Osprey.Scoring
                     consecutiveNoImprove++;
                 }
 
+                if (report != null)
+                {
+                    report.Iterations.Add(new CalibrationTrainingReport.IterationRecord
+                    {
+                        Iteration = iteration + 1,
+                        Fdr = trainFdr,
+                        PositivePoolSize = positivePool,
+                        Passing = nPassingIter,
+                        Improved = improved,
+                        Weights = (double[])consensusWeights.Clone()
+                    });
+                }
+
                 // Update current scores for next iteration's target selection
                 currentScores = newScores;
 
                 // Stop early if 2 consecutive iterations didn't improve
                 if (consecutiveNoImprove >= 2)
+                {
+                    if (report != null)
+                        report.StopReason = @"converged (2 consecutive non-improving iterations)";
                     break;
+                }
+            }
+
+            if (report != null)
+            {
+                if (report.StopReason == null)
+                    report.StopReason = string.Format(@"reached iteration cap ({0})", MAX_ITERATIONS);
+                report.FinalWeights = bestWeights;
             }
 
             return bestScores;
@@ -571,6 +669,77 @@ namespace pwiz.Osprey.Scoring
         }
 
         /// <summary>
+        /// Fill the post-training summary of a <see cref="CalibrationTrainingReport"/>: the
+        /// per-feature target/decoy means (for the contribution decomposition), the target /
+        /// decoy counts, and the calibrator yield at 1% and 0.1% q. Means are computed in the
+        /// same normalized feature space the LDA weights live in, so w_j * (meanT_j - meanD_j)
+        /// is a valid share-of-separation decomposition.
+        /// </summary>
+        private static void PopulateReportSummary(
+            CalibrationTrainingReport report, Matrix features,
+            CalibrationMatch[] matches, bool[] decoyLabels)
+        {
+            if (report == null)
+                return;
+
+            int p = features.Cols;
+            int nSamples = features.Rows;
+            var sumTarget = new double[p];
+            var sumDecoy = new double[p];
+            int nTarget = 0, nDecoy = 0;
+            for (int i = 0; i < nSamples; i++)
+            {
+                if (decoyLabels[i])
+                {
+                    nDecoy++;
+                    for (int j = 0; j < p; j++)
+                        sumDecoy[j] += features[i, j];
+                }
+                else
+                {
+                    nTarget++;
+                    for (int j = 0; j < p; j++)
+                        sumTarget[j] += features[i, j];
+                }
+            }
+            var meanTarget = new double[p];
+            var meanDecoy = new double[p];
+            for (int j = 0; j < p; j++)
+            {
+                meanTarget[j] = nTarget > 0 ? sumTarget[j] / nTarget : 0.0;
+                meanDecoy[j] = nDecoy > 0 ? sumDecoy[j] / nDecoy : 0.0;
+            }
+
+            // Calibrator yield: TARGET wins at 1% and 0.1% q (the near-zero-FDR anchor
+            // count the calibration ultimately draws its RT points from).
+            int at1 = 0, atTenth = 0;
+            foreach (var m in matches)
+            {
+                if (m.IsDecoy)
+                    continue;
+                if (m.QValue <= 0.01)
+                    at1++;
+                if (m.QValue <= 0.001)
+                    atTenth++;
+            }
+
+            // Names index-aligned to ExtractFeatureMatrix columns; generic fallback if a
+            // future feature count outruns the static names.
+            var names = new string[p];
+            for (int j = 0; j < p; j++)
+                names[j] = j < s_featureNames.Length ? s_featureNames[j] : string.Format(@"feature_{0}", j);
+
+            report.FeatureNames = names;
+            report.FeatureMeanTarget = meanTarget;
+            report.FeatureMeanDecoy = meanDecoy;
+            report.NTargets = nTarget;
+            report.NDecoys = nDecoy;
+            report.NTotal = nSamples;
+            report.NTargetsAt1Pct = at1;
+            report.NTargetsAtTenthPct = atTenth;
+        }
+
+        /// <summary>
         /// Extract feature matrix from calibration matches. Features are normalized
         /// to similar ranges for fair weighting:
         ///   correlation: 0-1 (typical range 0-6, divided by 6)
@@ -580,7 +749,10 @@ namespace pwiz.Osprey.Scoring
         /// </summary>
         private static Matrix ExtractFeatureMatrix(CalibrationMatch[] matches, bool useIsotopeFeature)
         {
-            const int nFeatures = 4;
+            // median_polish_cosine is an optional 5th feature (OSPREY_CAL_MEDIANPOLISH).
+            // Default off keeps the matrix at the 4 legacy features -> output byte-identical.
+            bool useMedianPolish = OspreyEnvironment.CalMedianPolishFeature;
+            int nFeatures = useMedianPolish ? 5 : 4;
             double[] data = new double[matches.Length * nFeatures];
 
             for (int i = 0; i < matches.Length; i++)
@@ -591,9 +763,177 @@ namespace pwiz.Osprey.Scoring
                 data[offset + 1] = Math.Max(0.0, Math.Min(1.0, m.LibcosineApex));
                 data[offset + 2] = Math.Max(0.0, Math.Min(1.0, m.Top6MatchedApex / 6.0));
                 data[offset + 3] = Math.Max(0.0, Math.Min(1.0, m.XcorrScore / 3.0));
+                if (useMedianPolish)
+                    data[offset + 4] = Math.Max(0.0, Math.Min(1.0, m.MedianPolishCosine)); // already 0..1
             }
 
             return new Matrix(data, matches.Length, nFeatures);
+        }
+    }
+
+    /// <summary>
+    /// Diagnostic capture of one calibration-LDA training run: the seed feature, the
+    /// per-iteration refinement trace (confident-positive pool size, targets passing the
+    /// training FDR, whether the iteration improved), the stop reason, the trained model's
+    /// per-feature share of the target-decoy separation (the calibration analog of the
+    /// Percolator <c>FeatureContributions</c> table), and the calibrator yield at 1% / 0.1% q.
+    ///
+    /// Populated by
+    /// <see cref="CalibrationScorer.TrainAndScoreCalibration(CalibrationMatch[], bool, out CalibrationTrainingReport)"/>
+    /// and formatted by <see cref="ToReportLines"/>; the Calibrator logs the lines under
+    /// --verbose. Pure data + formatting (no I/O), so it is always built and cheap.
+    /// </summary>
+    public sealed class CalibrationTrainingReport
+    {
+        /// <summary>One refinement iteration's trace.</summary>
+        public sealed class IterationRecord
+        {
+            /// <summary>1-based iteration index.</summary>
+            public int Iteration { get; set; }
+            /// <summary>Training FDR cutoff in effect (0.01, or 0.05 when relaxed).</summary>
+            public double Fdr { get; set; }
+            /// <summary>Targets passing <see cref="Fdr"/> under the PRIOR iteration's scores (full data).</summary>
+            public int PositivePoolSize { get; set; }
+            /// <summary>Targets passing <see cref="Fdr"/> after THIS iteration's scoring (full data).</summary>
+            public int Passing { get; set; }
+            /// <summary>Whether this iteration beat the best-so-far passing count.</summary>
+            public bool Improved { get; set; }
+            /// <summary>Every fold's LDA was singular; baseline kept and iteration stopped.</summary>
+            public bool AllFoldsFailed { get; set; }
+            /// <summary>Consensus weights (clipped, renormalized), or null when <see cref="AllFoldsFailed"/>.</summary>
+            public double[] Weights { get; set; }
+        }
+
+        /// <summary>Feature names in column order.</summary>
+        public string[] FeatureNames { get; set; }
+        /// <summary>Column index of the single best feature used as the LDA seed.</summary>
+        public int SeedFeatureIndex { get; set; }
+        /// <summary>FDR the seed was chosen at (0.01, or 0.05 when relaxed).</summary>
+        public double SeedFdr { get; set; }
+        /// <summary>Targets the seed feature passed at <see cref="SeedFdr"/>.</summary>
+        public int SeedPassing { get; set; }
+        /// <summary>Per-iteration refinement trace (empty when the baseline was kept without iterating).</summary>
+        public List<IterationRecord> Iterations { get; } = new List<IterationRecord>();
+        /// <summary>Why the refinement loop stopped.</summary>
+        public string StopReason { get; set; }
+        /// <summary>Weight vector that produced the final (best) discriminant.</summary>
+        public double[] FinalWeights { get; set; }
+        /// <summary>Per-feature target mean in normalized feature space.</summary>
+        public double[] FeatureMeanTarget { get; set; }
+        /// <summary>Per-feature decoy mean in normalized feature space.</summary>
+        public double[] FeatureMeanDecoy { get; set; }
+        /// <summary>Target matches fed to training.</summary>
+        public int NTargets { get; set; }
+        /// <summary>Decoy matches fed to training.</summary>
+        public int NDecoys { get; set; }
+        /// <summary>Total matches fed to training.</summary>
+        public int NTotal { get; set; }
+        /// <summary>Target wins at q &lt;= 1%.</summary>
+        public int NTargetsAt1Pct { get; set; }
+        /// <summary>Target wins at q &lt;= 0.1%.</summary>
+        public int NTargetsAtTenthPct { get; set; }
+
+        /// <summary>
+        /// The human-readable report as a sequence of lines: a header with the match /
+        /// target / decoy counts, the seed feature, the per-iteration refinement trace, the
+        /// stop reason, the calibrator yield, and the per-feature contribution table (sorted
+        /// most-influential-first, same shape as the Percolator report). Pure formatting -- no
+        /// I/O; the caller logs each line so it keeps its own timestamp.
+        /// </summary>
+        public IEnumerable<string> ToReportLines(string label)
+        {
+            yield return string.Format(
+                @"  Calibration LDA model [{0}]: {1} matches ({2} target / {3} decoy)",
+                label, NTotal, NTargets, NDecoys);
+            yield return string.Format(
+                @"    seed feature: {0} @ {1:F1}% FDR ({2} targets passing)",
+                FeatureName(SeedFeatureIndex), SeedFdr * 100.0, SeedPassing);
+
+            if (Iterations.Count == 0)
+            {
+                yield return @"    refinement: none (baseline single feature kept)";
+            }
+            else
+            {
+                yield return @"    refinement iterations:";
+                foreach (var it in Iterations)
+                {
+                    if (it.AllFoldsFailed)
+                    {
+                        yield return string.Format(
+                            @"      iter {0}: cutoff {1:F1}%, positive pool {2} -> all folds singular",
+                            it.Iteration, it.Fdr * 100.0, it.PositivePoolSize);
+                    }
+                    else
+                    {
+                        yield return string.Format(
+                            @"      iter {0}: cutoff {1:F1}%, positive pool {2}, passing {3}{4}",
+                            it.Iteration, it.Fdr * 100.0, it.PositivePoolSize, it.Passing,
+                            it.Improved ? @"  (new best)" : string.Empty);
+                    }
+                }
+            }
+            yield return string.Format(
+                @"    stopped: {0} ({1} iteration(s) run)",
+                StopReason ?? @"(unknown)", Iterations.Count);
+            yield return string.Format(
+                @"    calibrator yield: {0} targets @ q<=1%, {1} @ q<=0.1%",
+                NTargetsAt1Pct, NTargetsAtTenthPct);
+
+            foreach (string line in ContributionLines())
+                yield return line;
+        }
+
+        /// <summary>
+        /// The per-feature share of the target-decoy separation for the final model:
+        /// weighted_j = w_j * (meanTarget_j - meanDecoy_j), share = 100 * weighted_j / sum.
+        /// Sorted most-influential-first. Mirrors the Percolator feature-contribution table.
+        /// </summary>
+        private IEnumerable<string> ContributionLines()
+        {
+            if (FinalWeights == null || FeatureMeanTarget == null || FeatureMeanDecoy == null)
+                yield break;
+
+            int p = FinalWeights.Length;
+            var weighted = new double[p];
+            double composite = 0.0;
+            for (int j = 0; j < p; j++)
+            {
+                double deltaMu = FeatureMeanTarget[j] - FeatureMeanDecoy[j];
+                weighted[j] = FinalWeights[j] * deltaMu;
+                composite += weighted[j];
+            }
+            bool degenerate = Math.Abs(composite) <= 1e-12;
+
+            yield return @"    Model sanity check -- feature share of target-decoy separation (calibration LDA, coefficients in normalized feature space):";
+            yield return string.Format(@"      {0,-24} {1,12} {2,9}", @"feature", @"coefficient", @"share (%)");
+
+            var order = new int[p];
+            for (int j = 0; j < p; j++)
+                order[j] = j;
+            // Array.Sort OK: verbose diagnostic ordering only (not parity-sensitive); the
+            // secondary key is the unique feature index, so the comparator never ties.
+            Array.Sort(order, (a, b) => // Array.Sort OK: (see above) secondary key is unique feature index
+            {
+                double wa = degenerate ? 0.0 : Math.Abs(weighted[a]);
+                double wb = degenerate ? 0.0 : Math.Abs(weighted[b]);
+                int cmp = wb.CompareTo(wa);
+                return cmp != 0 ? cmp : a.CompareTo(b);
+            });
+
+            foreach (int j in order)
+            {
+                double pct = degenerate ? double.NaN : 100.0 * weighted[j] / composite;
+                yield return string.Format(@"      {0,-24} {1,12:F4} {2,8:F1}%",
+                    FeatureName(j), FinalWeights[j], pct);
+            }
+        }
+
+        private string FeatureName(int index)
+        {
+            if (FeatureNames != null && index >= 0 && index < FeatureNames.Length)
+                return FeatureNames[index];
+            return string.Format(@"feature_{0}", index);
         }
     }
 }

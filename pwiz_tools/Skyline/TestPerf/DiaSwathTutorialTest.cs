@@ -380,7 +380,7 @@ namespace TestPerf
                 {
                     InstrumentTypeName = "PASEF",
                     ZipFileName = "DIA-PASEF-full",
-                    DiaFilesExtension = DataSourceUtil.EXT_AGILENT_BRUKER_RAW,
+                    DiaFilesExtension = DataSourceUtil.EXT_AGILENT_BRUKER_D,
                     DiaFiles = new[]
                     {
                         "A210331_bcc_1180_lfqbA_17min_dia_200ng.d",
@@ -418,7 +418,7 @@ namespace TestPerf
                 {
                     InstrumentTypeName = "PASEF",
                     ZipFileName = "DIA-PASEF-small",
-                    DiaFilesExtension = DataSourceUtil.EXT_AGILENT_BRUKER_RAW,
+                    DiaFilesExtension = DataSourceUtil.EXT_AGILENT_BRUKER_D,
                     DiaFiles = new[]
                     {
                         "A210331_bcc_1180_lfqbA_17min_dia_200ng.d",

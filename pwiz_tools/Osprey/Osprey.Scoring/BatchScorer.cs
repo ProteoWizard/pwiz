@@ -455,7 +455,7 @@ namespace pwiz.Osprey.Scoring
         /// in the given spectrum.
         /// </summary>
         public static byte CountTop6MatchedAtApex(
-            List<LibraryFragment> libraryFragments,
+            IReadOnlyList<LibraryFragment> libraryFragments,
             double[] spectrumMzs,
             FragmentToleranceConfig tolerance)
         {

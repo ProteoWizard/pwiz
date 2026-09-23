@@ -51,7 +51,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act, Func<SrmDocumentPair, AuditLogEntry> logFunc);
     }
 
-    public sealed partial class ImportPeptideSearchDlg : FormEx, IAuditLogModifier<ImportPeptideSearchDlg.ImportPeptideSearchSettings>, IMultipleViewProvider, IModifyDocumentContainer
+    public sealed partial class ImportPeptideSearchDlg : FormEx, IAuditLogModifier<ImportPeptideSearchDlg.ImportPeptideSearchSettings>, IMultipleViewProvider, IModifyDocumentContainer, ILongWaitForm
     {
         public enum Pages
         {
@@ -259,6 +259,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void InitSettingsPresetControls()
         {
+            // DIA-NN presets are owned by Settings.Default.DiannSearchSettingsPresets and
+            // surface only in DiannSearchDlg's dropdown; this list is DDA/DIA engines only.
             _settingsPresetDriver = new SettingsListComboDriver<SearchSettingsPreset>(
                 cbSettingsPreset,
                 Settings.Default.SearchSettingsPresets,
@@ -781,6 +783,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private SkylineWindow SkylineWindow { get; set; }
         private ImportPeptideSearch ImportPeptideSearch { get; set; }
+
+        /// <summary>
+        /// Seed the chromatograms page's spectrum-source map with files we already know
+        /// the paths of (e.g. DiannSearchDlg passes the same DIA files that were just
+        /// searched). The key and display Name both use the filename without extension,
+        /// matching the BlibBuild library's stored fileName so the doc-library scan in
+        /// <see cref="ImportPeptideSearch.InitializeSpectrumSourceFiles"/> finds these
+        /// entries (via ContainsKey) and leaves them in place rather than emitting a
+        /// second, unpopulated entry that would trigger a rename / prefix-suffix dialog.
+        /// </summary>
+        public void PrefillFoundResultsFiles(IEnumerable<ImportPeptideSearch.FoundResultsFile> files)
+        {
+            foreach (var f in files)
+            {
+                string name = Path.GetFileNameWithoutExtension(f.Path);
+                ImportPeptideSearch.SpectrumSourceFiles[name] =
+                    new ImportPeptideSearch.FoundResultsFilePossibilities(name, f.Path);
+            }
+        }
+
         public TransitionSettings TransitionSettings { get { return Document.Settings.TransitionSettings; } }
         public TransitionFullScan FullScan { get { return TransitionSettings.FullScan; } }
 
@@ -1330,6 +1352,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        // True while a DDA/DIA/feature-detection search is running on its background thread and streaming
+        // progress into the SearchControl's log text box (which has its own Cancel button, not a LongWaitDlg).
+        // Set when the search is launched (InitiateSearch) and cleared when it finishes (SearchControlSearchFinished).
+        private bool _searchRunning;
+
+        // ILongWaitForm: the wizard is "busy" (and the connector's no-progress watchdog must not trip) while it
+        // is driving a long-running background operation in its own progress display rather than a LongWaitDlg.
+        // The one such operation the wizard runs itself is the search on the DDA search page; every other long
+        // operation it performs (FASTA import, feature detection, etc.) is shown in a LongWaitDlg, which the
+        // watchdog already rides through.
+        public bool IsBusy => _searchRunning;
+
         private void InitiateSearch()
         {
             ImportFastaControl.UpdateDigestSettings();
@@ -1382,6 +1416,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 _expandedDdaSearchLog = true;
             }
 
+            _searchRunning = true;
             SearchControl.RunSearch();
         }
 
@@ -1436,6 +1471,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void SearchControlSearchFinished(bool success)
         {
+            _searchRunning = false;
             btnCancel.Enabled = true;
             btnBack.Enabled = true;
             btnNext.Enabled = success;
@@ -1942,6 +1978,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // Cancel and dispose DDA SearchEngine
             SearchControl?.Cancel();
             ImportPeptideSearch.SearchEngine?.Dispose();
+
+            // Stop (and join) any background score-type detection the build-library grid started when files
+            // were added, so no background work -- or the temp file it feeds to BlibBuild -- outlives this wizard.
+            BuildPepSearchLibControl?.Grid?.CancelScoreTypeDetection();
 
             base.OnFormClosing(e);
         }

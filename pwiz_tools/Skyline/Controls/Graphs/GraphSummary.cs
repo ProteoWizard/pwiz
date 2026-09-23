@@ -319,7 +319,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             UpdateGraph(selectionChanged);
             // Set title with awareness of UI mode (may translate "peptide" to "molecule" etc)
-            Text = Helpers.PeptideToMoleculeTextMapper.Translate(Controller.Text + @" - " + Type.CustomToString(), _documentContainer.Document.DocumentType);
+            Text = Helpers.PeptideToMoleculeTextMapper.Translate(Controller.Text + @" - " + Type.CustomToString(Controller), _documentContainer.Document.DocumentType);
         }
 
         private bool SplitterDistanceValid(double distance)

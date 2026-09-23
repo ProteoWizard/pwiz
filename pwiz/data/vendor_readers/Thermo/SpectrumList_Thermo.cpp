@@ -99,7 +99,7 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::size() const
 
 PWIZ_API_DECL const SpectrumIdentity& SpectrumList_Thermo::spectrumIdentity(size_t index) const
 {
-    if (index>size_)
+    if (index>=size_)
         throw runtime_error(("[SpectrumList_Thermo::spectrumIdentity()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
     return index_[index];

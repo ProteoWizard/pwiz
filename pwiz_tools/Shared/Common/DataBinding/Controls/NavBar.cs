@@ -44,6 +44,20 @@ namespace pwiz.Common.DataBinding.Controls
 
             _waitingMsg = Resources.NavBar_NavBar_Waiting_for_data___;
         }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                // The Views button's DropDown is replaced at runtime with a ContextMenuStrip we build (see
+                // NavBarButtonViewsOnDropDownOpening); a ToolStripDropDownItem only disposes an auto-generated
+                // DropDown, not an assigned one, so dispose it here to release its static SystemEvents
+                // subscription -- otherwise it, and the document behind it, stays rooted.
+                navBarButtonViews?.DropDown?.Dispose();
+                components?.Dispose();
+            }
+            base.Dispose(disposing);
+        }
         [TypeConverter(typeof(ReferenceConverter))]
         public BindingListSource BindingListSource
         {
@@ -243,7 +257,15 @@ namespace pwiz.Common.DataBinding.Controls
                 }
                 contextMenu.Items.Add(new ToolStripMenuItem(Resources.NavBar_NavBarButtonViewsOnDropDownOpening_Manage_Views___, null, OnManageViews));
             }
+            // A fresh ContextMenuStrip is built every time this button opens; dispose the one it replaces.
+            // A ContextMenuStrip subscribes to the process-wide static SystemEvents, so an orphaned (never
+            // disposed) one stays rooted there and, through its items' handlers, holds this NavBar -- and the
+            // BindingListSource and document behind it -- alive. (The current DropDown is disposed with the
+            // button when the form closes; only the replaced ones would otherwise leak.)
+            var previousDropDown = navBarButtonViews.DropDown;
             navBarButtonViews.DropDown = contextMenu;
+            if (previousDropDown != null && previousDropDown != contextMenu)
+                previousDropDown.Dispose();
         }
 
         private ViewName GetViewName()

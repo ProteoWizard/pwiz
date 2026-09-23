@@ -397,6 +397,118 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to DIA-NN search did not produce a spectral library output..
+        /// </summary>
+        public static string DiannSearchControl_Search_DIA_NN_search_did_not_produce_a_spectral_library_output_ {
+            get {
+                return ResourceManager.GetString("DiannSearchControl_Search_DIA_NN_search_did_not_produce_a_spectral_library_output_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to A FASTA file is required for a DIA-NN search..
+        /// </summary>
+        public static string DiannSearchDlg_NextPage_A_FASTA_file_is_required_for_a_DIA_NN_search_ {
+            get {
+                return ResourceManager.GetString("DiannSearchDlg_NextPage_A_FASTA_file_is_required_for_a_DIA_NN_search_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Preset "{0}" specifies non-ppm mass tolerances. DIA-NN only accepts ppm tolerances; the preset was not applied..
+        /// </summary>
+        public static string DiannSearchDlg_ApplyPreset_DiaNN_requires_ppm_tolerances_ {
+            get {
+                return ResourceManager.GetString("DiannSearchDlg_ApplyPreset_DiaNN_requires_ppm_tolerances_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Append.
+        /// </summary>
+        public static string DiannSearchDlg_ImportDiannLibrary_Append {
+            get {
+                return ResourceManager.GetString("DiannSearchDlg_ImportDiannLibrary_Append", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to DIA-NN output spectral library not found..
+        /// </summary>
+        public static string DiannSearchDlg_ImportDiannLibrary_DIA_NN_output_spectral_library_not_found_ {
+            get {
+                return ResourceManager.GetString("DiannSearchDlg_ImportDiannLibrary_DIA_NN_output_spectral_library_not_found_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to DIA-NN found no precursors at q-value {0}...
+        /// </summary>
+        public static string DiannSearchDlg_ImportDiannLibrary_DiaNN_zero_precursors_ {
+            get {
+                return ResourceManager.GetString("DiannSearchDlg_ImportDiannLibrary_DiaNN_zero_precursors_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The DIA-NN spectral library file could not be read:...
+        /// </summary>
+        public static string DiannSearchDlg_ImportDiannLibrary_DiaNN_lib_unreadable_ {
+            get {
+                return ResourceManager.GetString("DiannSearchDlg_ImportDiannLibrary_DiaNN_lib_unreadable_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to A spectral library already exists at:
+        ///
+        ///{0}
+        ///
+        ///Overwrite it, or append the new DIA-NN results to it?.
+        /// </summary>
+        public static string DiannSearchDlg_ImportDiannLibrary_Existing_blib_prompt__0_ {
+            get {
+                return ResourceManager.GetString("DiannSearchDlg_ImportDiannLibrary_Existing_blib_prompt__0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Overwrite.
+        /// </summary>
+        public static string DiannSearchDlg_ImportDiannLibrary_Overwrite {
+            get {
+                return ResourceManager.GetString("DiannSearchDlg_ImportDiannLibrary_Overwrite", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Please add at least one DIA data file..
+        /// </summary>
+        public static string DiannSearchDlg_NextPage_Please_add_at_least_one_DIA_data_file_ {
+            get {
+                return ResourceManager.GetString("DiannSearchDlg_NextPage_Please_add_at_least_one_DIA_data_file_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Settings preset:.
+        /// </summary>
+        public static string DiannSearchDlg_SettingsPreset_Label {
+            get {
+                return ResourceManager.GetString("DiannSearchDlg_SettingsPreset_Label", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Save....
+        /// </summary>
+        public static string DiannSearchDlg_SettingsPreset_Save {
+            get {
+                return ResourceManager.GetString("DiannSearchDlg_SettingsPreset_Save", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Reusing Koina predictions from: {0}.
         /// </summary>
         public static string EncyclopeDiaSearchControl_Search_Reusing_Koina_predictions_from___0_ {

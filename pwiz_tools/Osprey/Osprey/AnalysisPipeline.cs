@@ -61,28 +61,21 @@ namespace pwiz.Osprey
                 // OSPREY_DUMP_* / OSPREY_DIAG_* env var is set.
                 OspreyDiagnostics.Initialize(config.Diagnostics);
 
-                // Worker-mode entry normalization: in --input-scores modes
-                // without explicit -i, synthesize InputFiles from the parquet
-                // stems ONCE here, at pipeline entry, so the driver's
-                // Outputs/IsTaskAlreadyDone skip checks and every per-task
-                // accessor see a populated InputFiles regardless of which task
-                // the run starts at. (Mutation-contract: InputFiles is a
-                // pipeline-populated field that does NOT feed any identity
-                // hash, so it may be written once at entry -- see
-                // PipelineContext.Config. Previously this lived inside
-                // PerFileScoringTask's join-only load, which the driver never
-                // reached when PerFileScoring was the StartAt task, e.g.
-                // `--task PerFileScoring --input-scores`.)
-                if (config.InputScores != null && config.InputScores.Count > 0
-                    && (config.InputFiles == null || config.InputFiles.Count == 0))
-                {
-                    var synthetic = new List<string>(config.InputScores.Count);
-                    foreach (var p in config.InputScores)
-                        synthetic.Add(RescoreHydration.SyntheticInputFromParquet(p));
-                    config.InputFiles = synthetic;
-                }
+                // No worker-mode entry normalization any more, and its absence is the
+                // point. A --input-scores run arrived here with parquet paths and no
+                // InputFiles, so the pipeline's FIRST act was to convert them back into
+                // data-file names - a round trip through a synthetic <stem>.mzML that does
+                // not exist, purely so the sidecar helpers could derive from a stem. Every
+                // task now receives the stems it needs on -i, which is the direction the
+                // derivation was always going.
 
-                var pipelineTasks = CanonicalPipeline();
+                // --task SpectraCache stages data rather than analyzing it: it runs
+                // its own one-task pipeline instead of the canonical four. Selecting
+                // it by list, not by an IsIncluded gate on every other task, keeps the
+                // canonical pipeline's membership rules about the analysis itself.
+                var pipelineTasks = config.SelectedTask == HpcTask.SpectraCache
+                    ? SpectraCachePipeline()
+                    : CanonicalPipeline();
                 var ctx = new PipelineContext(config, pipelineTasks,
                     LogInfo, LogWarning, LogError, OspreyDiagnostics.Active);
 
@@ -128,7 +121,7 @@ namespace pwiz.Osprey
 
         /// <summary>
         /// The canonical four-task pipeline in execution order:
-        /// PerFileScoring -> FirstJoin -> PerFileRescore -> MergeNode.
+        /// PerFileScoring -> FirstPassFDR -> PerFileRescore -> SecondPassFDR.
         /// Single source of truth for the task list. Tasks read upstream
         /// state through ctx.Demand&lt;T&gt;().GetX() rather than constructor
         /// args; the driver runs each task that is
@@ -141,9 +134,22 @@ namespace pwiz.Osprey
             return new OspreyTask[]
             {
                 new PerFileScoringTask(),
-                new FirstJoinTask(),
+                new FirstPassFdrTask(),
                 new PerFileRescoreTask(),
-                new MergeNodeTask(),
+                new SecondPassFdrTask(),
+            };
+        }
+
+        /// <summary>
+        /// The one-task pipeline behind <c>--task SpectraCache</c>: build every
+        /// input's <c>.spectra.bin</c> and stop, without a library or any of the
+        /// analysis stages.
+        /// </summary>
+        internal static OspreyTask[] SpectraCachePipeline()
+        {
+            return new OspreyTask[]
+            {
+                new SpectraCacheTask(),
             };
         }
 
@@ -170,7 +176,7 @@ namespace pwiz.Osprey
             // relies on for its within-task per-file skip; deletion has
             // to happen on per-file granularity for tasks that produce
             // per-file outputs. Tasks that produce a single coarse output
-            // (e.g. MergeNodeTask's output.blib) delete their own
+            // (e.g. SecondPassFdrTask's output.blib) delete their own
             // sidecars at the start of Run.
 
             var sw = Stopwatch.StartNew();
@@ -184,10 +190,16 @@ namespace pwiz.Osprey
             sw.Stop();
             ctx.LogInfo(string.Format(@"[TASK] {0}:done ({1:F1}s)",
                 task.Name, sw.Elapsed.TotalSeconds));
+            // DIAGNOSTIC (OSPREY_DROP_BETWEEN_TASKS=1): make the in-process pipeline behave like
+            // the HPC split - this task drops everything but the library, and the next reloads
+            // what it needs from artifacts. Off by default; the whole experiment reverts
+            // together. See PipelineContext.DropAllButLibrary.
+            if (OspreyEnvironment.DropBetweenTasks)
+                ctx.DropAllButLibrary();
 
             // [STAGE-WALL] one line per task->stage with parseable format
             // for Measure-Pipeline.ps1 / Osprey-workflow.html perf tables.
-            // MergeNodeTask emits its own stage7 + blib lines internally
+            // SecondPassFdrTask emits its own stage7 + blib lines internally
             // (one task -> two pipeline stages).
             string stageName = task.Name switch
             {
@@ -205,7 +217,7 @@ namespace pwiz.Osprey
             // Write sidecars whenever the task ran without setting a
             // non-zero exit code. Several tasks intentionally return
             // false on success to stop the pipeline at a configured
-            // boundary (PerFileScoringTask under --task PerFileScoring, FirstJoinTask
+            // boundary (PerFileScoringTask under --task PerFileScoring, FirstPassFdrTask
             // under --task FirstPassFDR with StopAfterStage5); gating on
             // keepGoing alone would skip sidecar writes for those
             // successful early-exit modes and break resume.

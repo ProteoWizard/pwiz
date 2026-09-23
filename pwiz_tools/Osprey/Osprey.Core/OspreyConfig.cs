@@ -59,17 +59,26 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public bool FdrBenchPerRun { get; set; }
 
+        /// <summary>Bit for the pre-compaction first-pass pool in <see cref="FdrBenchPass"/>.</summary>
+        public const int FDRBENCH_PASS_1 = 1;
+        /// <summary>Bit for the post-compaction reported set in <see cref="FdrBenchPass"/>.</summary>
+        public const int FDRBENCH_PASS_2 = 2;
+
         /// <summary>
-        /// With <see cref="OutputFdrBench"/>: which FDR pass the emitted rows and q-values
-        /// come from. <c>2</c> (default) is the post-compaction, second-pass survivors written
-        /// to the blib output -- the FDR of what Osprey actually reports. <c>1</c> is the
-        /// full pre-compaction first-pass pool (every scored target, regardless of q-value)
-        /// with its first-pass q-values, mirroring Rust osprey's
-        /// <c>write_fdrbench_peptide_input</c> -- the assumption the second-pass output rests
-        /// on. Pass 1 is emitted from the first-join stage before compaction; pass 2 from the
-        /// merge node after rescoring.
+        /// With <see cref="OutputFdrBench"/>: which FDR pass(es) the emitted rows and q-values
+        /// come from, as a bitmask of <see cref="FDRBENCH_PASS_1"/> and
+        /// <see cref="FDRBENCH_PASS_2"/>. <c>2</c> (default) is the post-compaction, second-pass
+        /// survivors written to the blib output -- the FDR of what Osprey actually reports.
+        /// <c>1</c> is the full pre-compaction first-pass pool (every scored target, regardless
+        /// of q-value) with its first-pass q-values, mirroring Rust osprey's
+        /// <c>write_fdrbench_peptide_input</c> -- the assumption the second-pass output rests on.
+        /// <c>3</c> (both) emits both in one run; because a single <see cref="OutputFdrBench"/>
+        /// path is given, each pass is written with a <c>.pass1</c> / <c>.pass2</c> stem suffix so
+        /// they do not overwrite each other (see <c>FdrBenchInputWriter.PathForPass</c>). Pass 1
+        /// is emitted from the FirstPassFDR stage before compaction; pass 2 from SecondPassFDR
+        /// after rescoring.
         /// </summary>
-        public int FdrBenchPass { get; set; } = 2;
+        public int FdrBenchPass { get; set; } = FDRBENCH_PASS_2;
 
         /// <summary>
         /// Optional base directory for all per-file <em>derived</em> artifacts
@@ -112,6 +121,18 @@ namespace pwiz.Osprey.Core
 
         /// <summary>Experiment-level FDR threshold.</summary>
         public double ExperimentFdr { get; set; } = 0.01;
+
+        /// <summary>
+        /// Peptide q-value threshold for first-pass compaction. Peptides whose
+        /// first-pass peptide q-value is at or below this threshold survive
+        /// compaction and remain available for reconciliation and second-pass FDR.
+        /// Default 0.01 matches <see cref="RunFdr"/>; loosening it (e.g. to 0.05)
+        /// broadens the reconciliation pool but risks second-pass FDR inflation
+        /// (Percolator re-trains on an enriched set). Mirrors Rust
+        /// config.reconciliation_compaction_fdr. Peptides whose protein group passes
+        /// first-pass protein FDR are additionally rescued regardless of this threshold.
+        /// </summary>
+        public double ReconciliationCompactionFdr { get; set; } = 0.01;
 
         /// <summary>Decoy generation method.</summary>
         public DecoyMethod DecoyMethod { get; set; } = DecoyMethod.Reverse;
@@ -165,6 +186,30 @@ namespace pwiz.Osprey.Core
 
         /// <summary>FDR method: native Percolator (default), external mokapot, or simple target-decoy.</summary>
         public FdrMethod FdrMethod { get; set; } = FdrMethod.Percolator;
+
+        /// <summary>
+        /// Write the protein-group report (<c>&lt;output&gt;.protein_groups.tsv</c>) at the
+        /// end of the run: one row per target protein group with its member accessions
+        /// (how the proteins were grouped), the unique (representative) and shared
+        /// peptides supporting it, the group q-value, and whether it passes protein FDR.
+        /// ON by default -- it is the user-facing answer to "which proteins did you
+        /// detect, and on what evidence"; the former <c>cs_stage7_protein_fdr.tsv</c> is a
+        /// counts-only cross-impl diagnostic, not this. Disable with
+        /// <c>--no-protein-report</c>. Additive (a new file), so byte-parity gates that
+        /// compare the blib + Stage-7 dump are unaffected.
+        /// </summary>
+        public bool WriteProteinReport { get; set; } = true;
+
+        /// <summary>
+        /// Write the summary report (<c>&lt;output&gt;.stats.tsv</c>): one row per replicate
+        /// with its precursors, peptides, and protein groups passing FDR, plus a final
+        /// experiment-level row. Modeled on DIA-NN's per-run <c>stats.tsv</c>, with the
+        /// per-replicate protein count computed by an INDEPENDENT run-level protein FDR
+        /// (its own parsimony + picked-protein FDR on that replicate) so it is a true
+        /// per-run number, not a slice of the experiment set. ON by default; disable with
+        /// <c>--no-summary-report</c>. Additive, so byte-parity gates are unaffected.
+        /// </summary>
+        public bool WriteSummaryReport { get; set; } = true;
 
         /// <summary>Write PIN files for external tools.</summary>
         public bool WritePin { get; set; }
@@ -226,8 +271,28 @@ namespace pwiz.Osprey.Core
         /// <summary>Enable the coelution signal pre-filter.</summary>
         public bool PrefilterEnabled { get; set; } = true;
 
-        /// <summary>Protein-level FDR threshold (enables protein parsimony and picked-protein FDR).</summary>
+        /// <summary>
+        /// Protein-level FDR threshold. Optional on the command line
+        /// (<c>--protein-fdr</c>); when unset, <see cref="EffectiveProteinFdr"/>
+        /// falls back to <see cref="DefaultProteinFdr"/>. To match Rust osprey
+        /// (where <c>config.protein_fdr</c> is a plain f64, default 0.01, and the
+        /// protein-FDR machinery runs unconditionally), the presence of this value
+        /// no longer gates whether protein parsimony / picked-protein FDR / the
+        /// second Percolator pass run -- those always run. It only sets the
+        /// threshold used for the passing-group count and <c>--fdr-level protein</c>
+        /// output filtering.
+        /// </summary>
         public double? ProteinFdr { get; set; }
+
+        /// <summary>Default protein-FDR threshold applied when <c>--protein-fdr</c>
+        /// is not supplied, matching Rust <c>config.protein_fdr</c> (default 0.01).</summary>
+        public const double DefaultProteinFdr = 0.01;
+
+        /// <summary>Protein-FDR threshold actually applied: <see cref="ProteinFdr"/>
+        /// when supplied, else <see cref="DefaultProteinFdr"/>. Always defined so the
+        /// protein-FDR machinery can run without a null check, matching Rust's
+        /// always-present <c>config.protein_fdr</c>.</summary>
+        public double EffectiveProteinFdr => ProteinFdr ?? DefaultProteinFdr;
 
         /// <summary>How to handle shared peptides for protein inference.</summary>
         public SharedPeptideMode SharedPeptides { get; set; } = SharedPeptideMode.All;
@@ -261,23 +326,16 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// Pipeline-membership flag (read by each task's <c>IsIncluded</c>):
-        /// include only the per-file fan-out, not the join. Set by both
+        /// include only the per-file fan-out, not the joining tasks. Set by both
         /// <c>--task PerFileScoring</c> and <c>--task PerFileRescoring</c>; the
-        /// concrete behavior depends on the input type. With <c>-i</c> mzML it
-        /// is the Stage 1-4 worker — each input produces a
-        /// <c>{stem}.scores.parquet</c> next to it, no FDR, no blib. With
-        /// <see cref="InputScores"/> it is the Stage 6 rescore worker. The two
-        /// are told apart by input type (see <see cref="SelectedTask"/>).
+        /// concrete behavior depends on which of the two selected it.
+        /// <c>PerFileScoring</c> is the Stage 1-4 worker - each input produces a
+        /// <c>{stem}.scores.parquet</c> next to it, no FDR, no blib;
+        /// <c>PerFileRescoring</c> is the Stage 6 rescore worker. The two are told apart
+        /// by <see cref="SelectedTask"/>, which is the only thing that ever decided it -
+        /// they used to be told apart by input KIND as well, and that second seam is gone.
         /// </summary>
         public bool NoJoin { get; set; }
-
-        /// <summary>
-        /// HPC scoring split: when set (non-null, non-empty), skip Stages 1-4
-        /// entirely and load these per-file scoring caches as the starting
-        /// point for Stage 5+. Set by <c>--input-scores</c>. When set,
-        /// <see cref="InputFiles"/> is ignored.
-        /// </summary>
-        public List<string> InputScores { get; set; }
 
         /// <summary>
         /// HPC: when true, exit after Stage 5 + reconciliation planning,
@@ -306,12 +364,22 @@ namespace pwiz.Osprey.Core
         /// membership flags above (<see cref="NoJoin"/>,
         /// <see cref="StopAfterStage5"/>, <see cref="ExpectReconciledInput"/>)
         /// are derived from this and drive each task's <c>IsIncluded</c>; this
-        /// property additionally lets argument validation enforce the
-        /// task&#8596;input-type contract (e.g. PerFileScoring takes mzML,
-        /// PerFileRescore takes <see cref="InputScores"/>) and name the task the
-        /// user actually typed in error messages.
+        /// property additionally lets argument validation name the task the user actually
+        /// typed in error messages. It no longer has an input-KIND contract to enforce:
+        /// every task takes the same data files, and the second seam that said "you handed
+        /// me parquets, so Stage 1-4 is done" has retired into these flags.
         /// </summary>
         public HpcTask? SelectedTask { get; set; }
+
+        /// <summary>
+        /// True under <c>--task ModelDiagnostics</c>: recompute the pass-2 view and write ONLY
+        /// the report, suppressing the .blib, the protein/summary reports and the 2nd-pass FDR
+        /// sidecars. The point is to be able to re-judge a diagnostics change on a completed
+        /// large cohort without disturbing - or waiting for - the results it already produced.
+        /// Every suppressed artifact is one this run would otherwise REWRITE with the same
+        /// content it already holds, so skipping them costs nothing but the write.
+        /// </summary>
+        public bool DiagnosticsOnly => SelectedTask == HpcTask.ModelDiagnostics;
 
         /// <summary>
         /// Shallow clone for per-file ProcessFile() calls. The pipeline
@@ -341,15 +409,37 @@ namespace pwiz.Osprey.Core
 
     /// <summary>
     /// A single HPC pipeline task selectable via <c>--task &lt;Name&gt;</c>
-    /// (one HPC node = one task). The names are the stable CLI contract and
-    /// match each task's <c>OspreyTask.Name</c>.
+    /// (one HPC node = one task). Each member is its task's
+    /// <c>OspreyTask.Name</c> in PascalCase, so the member, the class, and the
+    /// CLI selector are one word per task rather than three to map between.
+    /// <para>The stamp is not the member: what a task writes into its
+    /// <c>.osprey.task</c> sidecars and logs as <c>[TASK] &lt;Name&gt;</c> is
+    /// <c>OspreyTask.Name</c> verbatim, which keeps the all-caps FDR acronym
+    /// (<see cref="FirstPassFdr"/> stamps <c>FirstPassFDR</c>). Anything matching
+    /// those artifacts must use the Name, never the member or the class name.
+    /// <see cref="PerFileRescore"/> differs by more than casing - its Name is
+    /// <c>PerFileRescoring</c>.</para>
     /// </summary>
     public enum HpcTask
     {
         PerFileScoring,
-        FirstJoin,
+        FirstPassFdr,
         PerFileRescore,
-        MergeNode
+        SecondPassFdr,
+        // Stage 1 alone: build each input's .spectra.bin cache and stop. Not an
+        // HPC fan-out node like the four above but the data-staging step ahead of
+        // them, which is why it needs no library and publishes no byproducts.
+        // Appended rather than ordered first so the existing members keep their
+        // ordinal values.
+        SpectraCache,
+        // Regenerate ONLY the --model-diagnostics HTML for a COMPLETED analysis, from that
+        // run's own outputs. Like SpectraCache this is not one of the four HPC fan-out nodes:
+        // it runs the canonical pipeline so Stages 1-5 rehydrate from their valid stamps, then
+        // lets SecondPassFDR compute the pass-2 view while suppressing every artifact write
+        // except the report. Exists because judging a diagnostics change on a large cohort
+        // otherwise means re-running the whole search - 7 hours on the 82-file SEA-AD set -
+        // or accepting a stale page written by an older build.
+        ModelDiagnostics
     }
 
     /// <summary>
@@ -382,7 +472,38 @@ namespace pwiz.Osprey.Core
     {
         Percolator,
         Mokapot,
-        Simple
+        Simple,
+        /// <summary>Gradient-boosted decision trees (non-linear alternative to the linear
+        /// Percolator SVM); implemented by Osprey.ML GradientBoostedTrees. Selected by
+        /// <c>--fdr-method gbdt</c> (the legacy alias <c>fasttree</c> still parses).</summary>
+        Gbdt
+    }
+
+    public static class FdrMethodExtensions
+    {
+        /// <summary>
+        /// True for the methods driven by the shared semi-supervised target-decoy
+        /// framework: <see cref="FdrMethod.Percolator"/> (linear SVM) and
+        /// <see cref="FdrMethod.Gbdt"/> (gradient-boosted trees). The two differ ONLY
+        /// in the classifier -- identical best-per-precursor dedup, peptide-grouped CV
+        /// folds, positive-set iteration, target-decoy competition, q-values, PEP, and the
+        /// identical projection / streaming plumbing around all of it.
+        ///
+        /// Use this ANYWHERE the question is "is this the Percolator pipeline?" rather
+        /// than a raw <c>== FdrMethod.Percolator</c>. Those gates are scattered across the
+        /// Tasks layer -- FirstPassFDR's projection gate, the 2nd-pass projection gate,
+        /// <c>NeedsResidentPool</c>, the Stage 5 log header -- and each one that compares
+        /// against Percolator alone silently routes Gbdt down the resident
+        /// <c>FdrEntry</c> path instead of the streaming projection. That fails quietly:
+        /// same q-values, but the whole-run pool goes resident, which is exactly what
+        /// OOM'd the 82-file join.
+        ///
+        /// Mokapot / Simple are NOT part of this framework and must stay excluded.
+        /// </summary>
+        public static bool UsesPercolatorFramework(this FdrMethod method)
+        {
+            return method == FdrMethod.Percolator || method == FdrMethod.Gbdt;
+        }
     }
 
     /// <summary>
