@@ -29,17 +29,23 @@ namespace pwiz.Common.SystemUtil
     /// The reading thread pulls fixed-size blocks from the inner stream into a bounded
     /// queue, so that a slow device (such as a network drive) keeps transferring while
     /// the caller is busy processing the bytes it has already received.
-    /// Disposing this stream stops the reading thread and disposes the inner stream.
+    /// Disposing this stream stops the reading thread. Unless keepOpen was specified, it also
+    /// waits for that thread to finish its current read and then disposes the inner stream.
+    /// With keepOpen the caller owns the inner stream, and Dispose returns without waiting for
+    /// a read that might be stuck on a slow device; the reading thread exits when that read ends.
     /// </summary>
-    public class SequentialStream : Stream
+    public class SequentialReadStream : Stream
     {
         public const int DEFAULT_BLOCK_SIZE = 0x10000;
         public const int DEFAULT_MAX_QUEUED_BLOCKS = 64;
 
         private readonly Stream _inner;
+        private readonly bool _keepOpen;
         private readonly int _blockSize;
         private readonly BlockingCollection<ArraySegment<byte>> _blocks;
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        // The reading thread only ever sees the token, never the source that Dispose owns
+        private readonly CancellationToken _cancellationToken;
         private readonly Thread _readThread;
         private Exception _readException;
         // Block most recently taken from the queue, and how much of it has been returned to the caller
@@ -47,14 +53,16 @@ namespace pwiz.Common.SystemUtil
         private int _currentPosition;
         private long _position;
 
-        public SequentialStream(Stream inner, int blockSize = DEFAULT_BLOCK_SIZE, int maxQueuedBlocks = DEFAULT_MAX_QUEUED_BLOCKS)
+        public SequentialReadStream(Stream inner, bool keepOpen, int blockSize = DEFAULT_BLOCK_SIZE, int maxQueuedBlocks = DEFAULT_MAX_QUEUED_BLOCKS)
         {
             _inner = inner;
+            _keepOpen = keepOpen;
+            _cancellationToken = _cancellationTokenSource.Token;
             _blockSize = blockSize;
             _blocks = new BlockingCollection<ArraySegment<byte>>(maxQueuedBlocks);
             _readThread = new Thread(ReadBlocks)
             {
-                Name = @"SequentialStream",
+                Name = @"SequentialReadStream",
                 IsBackground = true
             };
             _readThread.Start();
@@ -139,13 +147,20 @@ namespace pwiz.Common.SystemUtil
 
             if (disposing)
             {
-                // Unblocks the reading thread if it is waiting for room in the queue, then
-                // waits for it to exit so that no thread outlives this stream
+                // Unblocks the reading thread if it is waiting for room in the queue. The token stays
+                // cancelled after the source is disposed, so the thread can keep checking it
                 _cancellationTokenSource.Cancel();
-                _readThread.Join();
-                _inner.Dispose();
-                _blocks.Dispose();
                 _cancellationTokenSource.Dispose();
+                if (!_keepOpen)
+                {
+                    // The reading thread may be inside a read on the inner stream, so wait for
+                    // it to exit before disposing the stream, or the queue, out from under it
+                    _readThread.Join();
+                    _inner.Dispose();
+                    _blocks.Dispose();
+                }
+                // Otherwise the reading thread finishes its current read and exits on its own.
+                // The queue holds no handles, so it is left to the garbage collector
             }
         }
 
@@ -156,7 +171,7 @@ namespace pwiz.Common.SystemUtil
         {
             try
             {
-                while (!_cancellationTokenSource.IsCancellationRequested)
+                while (!_cancellationToken.IsCancellationRequested)
                 {
                     // A new buffer for every block, because the caller may still be reading the previous one
                     var buffer = new byte[_blockSize];
@@ -165,7 +180,7 @@ namespace pwiz.Common.SystemUtil
                     {
                         break;
                     }
-                    _blocks.Add(new ArraySegment<byte>(buffer, 0, count), _cancellationTokenSource.Token);
+                    _blocks.Add(new ArraySegment<byte>(buffer, 0, count), _cancellationToken);
                 }
             }
             catch (OperationCanceledException)

@@ -19,7 +19,6 @@
 using System;
 using System.IO;
 using System.Security.Cryptography;
-using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.AuditLog
 {
@@ -131,10 +130,8 @@ namespace pwiz.Skyline.Model.AuditLog
 
         public static Stream CreateReadStream(string path)
         {
-            var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096,
-                FileOptions.SequentialScan);
-            // Reads ahead on its own thread so the file keeps transferring while the XML is parsed
-            return new HashingStream(new SequentialStream(fileStream), false);
+            return new HashingStream(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096,
+                FileOptions.SequentialScan), false);
         }
 
         public override int Read(byte[] buffer, int offset, int count)
