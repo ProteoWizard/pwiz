@@ -137,6 +137,8 @@ namespace pwiz.Common.DataBinding
                 }
 
                 ProgressMonitor?.UpdateProgress(Status);
+                // Without this restart the interval elapses once and every later row updates progress
+                ProgressUpdateStopwatch?.Restart();
             }
         }
     }

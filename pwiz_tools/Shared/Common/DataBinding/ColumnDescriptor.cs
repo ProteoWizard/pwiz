@@ -302,9 +302,12 @@ namespace pwiz.Common.DataBinding
         private class Reflected : ColumnDescriptor
         {
             private readonly PropertyDescriptor _propertyDescriptor;
+            // Non-null only for the framework's plain reflected descriptor, where it is much faster than GetValue
+            private readonly Func<object, object> _getter;
             public Reflected(ColumnDescriptor parent, PropertyDescriptor propertyDescriptor) : base(parent, parent.PropertyPath.Property(propertyDescriptor.Name))
             {
                 _propertyDescriptor = propertyDescriptor;
+                _getter = ReflectedPropertyGetter.TryGetGetter(propertyDescriptor);
             }
 
             public override Type PropertyType
@@ -321,6 +324,10 @@ namespace pwiz.Common.DataBinding
                 }
                 try
                 {
+                    if (_getter != null)
+                    {
+                        return _getter(parentValue);
+                    }
                     return _propertyDescriptor.GetValue(parentValue);
                 }
                 catch

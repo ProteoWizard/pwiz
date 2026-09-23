@@ -354,6 +354,7 @@
     <Compile Include="DataBinding\ReportResults.cs" />
     <Compile Include="DataBinding\RowItem.cs" />
     <Compile Include="DataBinding\LinkValue.cs" />
+    <Compile Include="DataBinding\ReflectedPropertyGetter.cs" />
     <Compile Include="DataBinding\RowItemValues.cs" />
     <Compile Include="DataBinding\RowSourceInfo.cs" />
     <Compile Include="DataBinding\RowSources\IListChanged.cs" />
