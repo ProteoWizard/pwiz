@@ -86,7 +86,15 @@ namespace pwiz.Skyline.Model.Databinding
             private readonly ColumnValueTree _columnValueTree;
             private readonly RowItemEnumerator _rowItemEnumerator;
             private readonly BlockingCollection<List<RowItem>> _chunks = new BlockingCollection<List<RowItem>>(1);
-            private readonly BlockingCollection<DataColumn[]> _rowGroups = new BlockingCollection<DataColumn[]>(1);
+            private readonly BlockingCollection<RowGroup> _rowGroups = new BlockingCollection<RowGroup>(1);
+            /// <summary>
+            /// Column buffers which the writer has finished with, ready to hold another chunk.
+            /// One set is being populated, one is waiting to be written and one is being written,
+            /// so the arrays which hold a chunk get allocated three times per export instead of once per chunk.
+            /// </summary>
+            private readonly BlockingCollection<ColumnBuffer[]> _freeBuffers = new BlockingCollection<ColumnBuffer[]>();
+            private const int MAX_BUFFER_SETS = 3;
+            private int _bufferSetCount;
             private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
             private readonly CancellationToken _cancellationToken;
             private Exception _exception;
@@ -111,7 +119,8 @@ namespace pwiz.Skyline.Model.Databinding
                 {
                     foreach (var chunk in _chunks.GetConsumingEnumerable(_cancellationToken))
                     {
-                        var rowGroup = PopulateChunk(chunk);
+                        var buffers = TakeBuffers(chunk.Count);
+                        var rowGroup = new RowGroup(PopulateChunk(chunk, buffers), buffers);
                         if (_rowItemEnumerator.IsCanceled)
                         {
                             // Stops the reader and the writer without waiting for what they are doing
@@ -135,6 +144,48 @@ namespace pwiz.Skyline.Model.Databinding
                 _cancellationTokenSource.Dispose();
                 _chunks.Dispose();
                 _rowGroups.Dispose();
+                _freeBuffers.Dispose();
+            }
+
+            /// <summary>
+            /// Returns a set of column buffers with room for a chunk of the given size, waiting for the
+            /// writer to finish with one if all <see cref="MAX_BUFFER_SETS"/> are in use. Every chunk but the
+            /// last has <see cref="RowsPerGroup"/> rows, so a set made for one chunk fits all of the later ones.
+            /// </summary>
+            private ColumnBuffer[] TakeBuffers(int rowCount)
+            {
+                if (!_freeBuffers.TryTake(out var buffers))
+                {
+                    if (_bufferSetCount < MAX_BUFFER_SETS)
+                    {
+                        _bufferSetCount++;
+                        buffers = _columns.Select(column => column.CreateBuffer(rowCount)).ToArray();
+                    }
+                    else
+                    {
+                        buffers = _freeBuffers.Take(_cancellationToken);
+                    }
+                }
+                foreach (var buffer in buffers)
+                {
+                    buffer.Reset(rowCount);
+                }
+                return buffers;
+            }
+
+            /// <summary>
+            /// A chunk's columns ready to be written, along with the buffers they were built from.
+            /// </summary>
+            private class RowGroup
+            {
+                public RowGroup(DataColumn[] columns, ColumnBuffer[] buffers)
+                {
+                    Columns = columns;
+                    Buffers = buffers;
+                }
+
+                public DataColumn[] Columns { get; }
+                public ColumnBuffer[] Buffers { get; }
             }
 
             private Thread StartThread(string name, Action stage)
@@ -200,11 +251,15 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 foreach (var rowGroup in _rowGroups.GetConsumingEnumerable(_cancellationToken))
                 {
-                    using var groupWriter = _writer.CreateRowGroup();
-                    foreach (var dataColumn in rowGroup)
+                    using (var groupWriter = _writer.CreateRowGroup())
                     {
-                        groupWriter.WriteColumnAsync(dataColumn).GetAwaiter().GetResult();
+                        // Encodes and compresses the columns concurrently and appends them in schema order,
+                        // which writes the same bytes as writing them one at a time
+                        groupWriter.WriteColumnsAsync(rowGroup.Columns, null, ParallelEx.GetThreadCount(), _cancellationToken)
+                            .GetAwaiter().GetResult();
                     }
+                    // Nothing refers to the buffers any more, so the next chunk can be stored in them
+                    _freeBuffers.Add(rowGroup.Buffers);
                 }
             }
 
@@ -212,9 +267,8 @@ namespace pwiz.Skyline.Model.Databinding
             /// Calculates every column's value for every row in the chunk and returns the columns
             /// ready to be written as one row group.
             /// </summary>
-            private DataColumn[] PopulateChunk(IList<RowItem> rowItems)
+            private DataColumn[] PopulateChunk(IList<RowItem> rowItems, ColumnBuffer[] buffers)
             {
-                var chunkArrays = _columns.Select(col => col.CreateArray(rowItems.Count)).ToArray();
                 // Values with no Parquet storage type get stored as strings by calling ToString(),
                 // which formats using the thread's culture, so the values have to be converted under
                 // the culture this report is being exported with. All of the columns come from the
@@ -256,7 +310,7 @@ namespace pwiz.Skyline.Model.Databinding
                             {
                                 for (int rowIndex = startRow; rowIndex < endRow; rowIndex++)
                                 {
-                                    chunkArrays[colIndex].SetValue(value, rowIndex);
+                                    buffers[colIndex].Store(rowIndex, value);
                                 }
                             }
                         }
@@ -276,7 +330,7 @@ namespace pwiz.Skyline.Model.Databinding
                                     : column.GetStorageValue(rowItem);
                                 if (value != null)
                                 {
-                                    chunkArrays[colIndex].SetValue(value, rowIndex);
+                                    buffers[colIndex].Store(rowIndex, value);
                                 }
                             }
                         }
@@ -286,14 +340,14 @@ namespace pwiz.Skyline.Model.Databinding
                         rowItems[rowIndex] = null;
                     }
                 }, threadName: nameof(PopulateChunk));
-                // Constructing a DataColumn packs the nulls out of a nullable array, and a list column
-                // has to be flattened first, so the columns are built in parallel rather than one after
-                // another on this thread while the workers wait for the next chunk
+                // A column with nulls has to be packed, and a list column flattened, so the columns are
+                // built in parallel rather than one after another on this thread while the workers wait
+                // for the next chunk
                 var dataColumns = new DataColumn[_columns.Count];
                 ParallelEx.For(0, _columns.Count, colIndex =>
                 {
-                    dataColumns[colIndex] = _columns[colIndex].CreateDataColumn(chunkArrays[colIndex]);
-                }, threadName: nameof(ColumnData.CreateDataColumn));
+                    dataColumns[colIndex] = buffers[colIndex].ToDataColumn();
+                }, threadName: nameof(ColumnBuffer.ToDataColumn));
                 return dataColumns;
             }
         }
@@ -481,19 +535,33 @@ namespace pwiz.Skyline.Model.Databinding
             public Field SchemaField { get; }
             public DataField DataField { get; }
 
+            /// <summary>
+            /// Creates a buffer which holds this column for a chunk of up to <paramref name="capacity"/> rows.
+            /// </summary>
+            public ColumnBuffer CreateBuffer(int capacity)
+            {
+                if (ListElementType != null)
+                {
+                    return new ListColumnBuffer(this);
+                }
+                var elementType = StorageType.NullableUnderlyingType ?? StorageType.Type;
+                return (ColumnBuffer) Activator.CreateInstance(typeof(ColumnBuffer<>).MakeGenericType(elementType),
+                    DataField, capacity);
+            }
+
+            /// <summary>
+            /// For a list column, creates the array which holds one list per row of a chunk.
+            /// </summary>
             public Array CreateArray(int rowCount)
             {
                 return Array.CreateInstance(StorageType.Type, rowCount);
             }
 
+            /// <summary>
+            /// For a list column, flattens the lists of a chunk into a DataColumn with repetition levels.
+            /// </summary>
             public DataColumn CreateDataColumn(Array chunkArray)
             {
-                if (ListElementType == null)
-                {
-                    // Simple column - no flattening needed
-                    return new DataColumn(DataField, chunkArray);
-                }
-
                 // List column - need to flatten data and create repetition levels
                 var allElements = new List<object>();
                 var repetitionLevels = new List<int>();
@@ -587,6 +655,121 @@ namespace pwiz.Skyline.Model.Databinding
         /// If the type is a ListColumnValue, returns the storage type of the list elements.
         /// Otherwise returns null.
         /// </summary>
+        /// <summary>
+        /// Holds one column of a chunk while the values are calculated, and turns it into a DataColumn.
+        /// A buffer is reused for chunk after chunk so that the large arrays which hold a chunk are not
+        /// allocated, and collected, once per chunk.
+        /// </summary>
+        private abstract class ColumnBuffer
+        {
+            /// <summary>
+            /// Makes the buffer ready for a chunk with the given number of rows, all of them null.
+            /// </summary>
+            public abstract void Reset(int rowCount);
+            /// <summary>
+            /// Stores a value which is not null and has already been converted to the column's storage type.
+            /// Different rows may be stored from different threads.
+            /// </summary>
+            public abstract void Store(int rowIndex, object value);
+            public abstract DataColumn ToDataColumn();
+        }
+
+        private class ColumnBuffer<T> : ColumnBuffer
+        {
+            private readonly DataField _field;
+            private readonly T[] _values;
+            /// <summary>
+            /// The Parquet definition level of each row: 1 where the row has a value, 0 where it is null.
+            /// </summary>
+            private readonly int[] _definitionLevels;
+            private int _rowCount;
+
+            public ColumnBuffer(DataField field, int capacity)
+            {
+                _field = field;
+                _values = new T[capacity];
+                _definitionLevels = new int[capacity];
+            }
+
+            public override void Reset(int rowCount)
+            {
+                if (rowCount > _values.Length)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(rowCount));
+                }
+                _rowCount = rowCount;
+                Array.Clear(_definitionLevels, 0, rowCount);
+            }
+
+            public override void Store(int rowIndex, object value)
+            {
+                _values[rowIndex] = (T) value;
+                _definitionLevels[rowIndex] = 1;
+            }
+
+            public override DataColumn ToDataColumn()
+            {
+                int definedCount = 0;
+                for (int i = 0; i < _rowCount; i++)
+                {
+                    definedCount += _definitionLevels[i];
+                }
+                if (definedCount == _values.Length)
+                {
+                    // No nulls, and the chunk fills the buffer, so the arrays can be used as they are.
+                    // The writer is finished with them before this buffer is reset for the next chunk
+                    return new DataColumn(_field, _values, _definitionLevels, null);
+                }
+                // Parquet wants the values which are not null packed together, and exactly that many of them
+                var definedValues = new T[definedCount];
+                int definedIndex = 0;
+                for (int i = 0; i < _rowCount; i++)
+                {
+                    if (_definitionLevels[i] != 0)
+                    {
+                        definedValues[definedIndex++] = _values[i];
+                    }
+                }
+                var definitionLevels = _definitionLevels;
+                if (_rowCount != definitionLevels.Length)
+                {
+                    definitionLevels = new int[_rowCount];
+                    Array.Copy(_definitionLevels, definitionLevels, _rowCount);
+                }
+                return new DataColumn(_field, definedValues, definitionLevels, null);
+            }
+        }
+
+        /// <summary>
+        /// A list column keeps one array per chunk holding the list of each row, which
+        /// <see cref="ColumnData.CreateDataColumn"/> flattens into a DataColumn with repetition levels.
+        /// </summary>
+        private class ListColumnBuffer : ColumnBuffer
+        {
+            private readonly ColumnData _column;
+            private Array _lists;
+
+            public ListColumnBuffer(ColumnData column)
+            {
+                _column = column;
+            }
+
+            public override void Reset(int rowCount)
+            {
+                _lists = _column.CreateArray(rowCount);
+            }
+
+            public override void Store(int rowIndex, object value)
+            {
+                _lists.SetValue(value, rowIndex);
+            }
+
+            public override DataColumn ToDataColumn()
+            {
+                return _column.CreateDataColumn(_lists);
+            }
+        }
+
         private static StorageType GetListColumnValueStorageType(Type type)
         {
             var elementType = ListColumnValue.GetElementType(type);
