@@ -71,6 +71,16 @@ namespace pwiz.Osprey
                 // bundle on; otherwise the sink self-enables only if an
                 // OSPREY_DUMP_* / OSPREY_DIAG_* env var is set.
                 OspreyDiagnostics.Initialize(config.Diagnostics);
+                // An ambient/forgotten OSPREY_KEEP_FAILED_WRITES silently stops EVERY
+                // FileSaver in the process from cleaning up an abandoned temp, in every
+                // run that inherits it, not just the diagnostic session someone meant to
+                // inspect - the same class of hazard OSPREY_ALLOW_UNFIXED_RESIDENT being
+                // left set once masked a real regression for ten days. Unlike that flag
+                // this one has no per-run cost to warn about even when it does nothing
+                // (most runs leave no abandoned write), so log it unconditionally rather
+                // than only when it turns out to matter.
+                if (OspreyEnvironment.KeepFailedWrites)
+                    LogWarning(@"OSPREY_KEEP_FAILED_WRITES is set: an abandoned FileSaver write leaves its temp file on disk instead of being cleaned up.");
 
                 // No worker-mode entry normalization any more, and its absence is the
                 // point. A --input-scores run arrived here with parquet paths and no
