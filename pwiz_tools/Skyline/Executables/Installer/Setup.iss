@@ -12,9 +12,9 @@
 ;     to %ProgramFiles%\<Skyline|Skyline-daily>, as the WiX .msi did.
 ;   - Skyline and Skyline-daily are distinct products (their own AppIds) that
 ;     install side by side; within a product a newer version replaces the
-;     previous one in place. InstallerOverrides.iss can name the build something else,
-;     making it a third product with its own folder, shortcut and installer
-;     name; it registers its channel's file types.
+;     previous one in place. The ProductName setting in Skyline's app.config can
+;     name the build something else, making it a third product with its own
+;     folder, shortcut and installer name; it registers its channel's file types.
 ;   - Start Menu shortcut under "MacCoss Lab, UW", optional Desktop shortcut,
 ;     .sky / .skyd / .skyp associations, Programs and Features entry, and a
 ;     registry record of the install location for SkylineRunner, SkylineBatch
@@ -24,6 +24,7 @@
 ;
 ; build.ps1 stages the Skyline build output and invokes ISCC with:
 ;   /DSkylineAppName=Skyline|Skyline-daily   (the channel; from the staged exe)
+;   /DProductName=...                        (from the staged config; see above)
 ;   /DMyAppVersion=YY.N.B.DDD                (FileVersion of the staged exe)
 ;   /DMyAppInformationalVersion=...          (ProductVersion, with the git hash)
 ;   /DStagingDir=..., /DOutputDir=..., /DOutputBaseFilename=...
@@ -36,13 +37,12 @@
 #if SkylineAppName != "Skyline" && SkylineAppName != "Skyline-daily"
   #error SkylineAppName must be Skyline or Skyline-daily
 #endif
-; What the build is called and where it is published: the channel, in the official
-; folder. A branch redefines either in InstallerOverrides.iss, included after the
-; defaults so that its #define replaces the value. build.ps1 reads the same two files
-; for the same values.
-#define ProductName SkylineAppName
-#define InstallUrl "https://proteome.gs.washington.edu/~nicksh/InstallTest/"
-#include "InstallerOverrides.iss"
+; What the build is called: the ProductName application setting in Skyline's
+; app.config, which build.ps1 reads from the staged config and passes here. The
+; channel when that setting is empty, or when compiling by hand.
+#ifndef ProductName
+  #define ProductName SkylineAppName
+#endif
 #ifndef MyAppVersion
   #define MyAppVersion "0.0.0.0"
 #endif

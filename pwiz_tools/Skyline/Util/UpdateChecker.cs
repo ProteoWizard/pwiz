@@ -46,12 +46,17 @@ namespace pwiz.Skyline.Util
         {
             Version.TryParse(Install.BareVersion, out var currentVersion);
             CurrentVersion = currentVersion;
+            // The channel is the assembly's name, Skyline or Skyline-daily, which is also how the
+            // installer tells them apart; Program.Name is a display name that drops the -daily
+            // for a developer build.
+            var assembly = typeof(Program).Assembly;
+            string channel = assembly.GetName().Name;
             // Only a Skyline that the installer put where it runs from is offered the published
             // one; a build output or a copied folder has no installation to upgrade.
-            string exeFolder = Path.GetDirectoryName(typeof(Program).Assembly.Location);
-            Enabled = currentVersion != null && new RegisteredInstallations(Program.Name).IsInstallationFolder(exeFolder);
+            string exeFolder = Path.GetDirectoryName(assembly.Location);
+            Enabled = currentVersion != null && new RegisteredInstallations(channel).IsInstallationFolder(exeFolder);
             InstallUrl = Settings.Default.InstallUrl;
-            ProductName = string.IsNullOrEmpty(Settings.Default.ProductName) ? Program.Name : Settings.Default.ProductName;
+            ProductName = string.IsNullOrEmpty(Settings.Default.ProductName) ? channel : Settings.Default.ProductName;
         }
 
         /// <summary>

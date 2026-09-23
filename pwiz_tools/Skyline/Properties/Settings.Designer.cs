@@ -3695,7 +3695,7 @@ namespace pwiz.Skyline.Properties {
 
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("https://proteome.gs.washington.edu/~nicksh/InstallTest/")]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://proteome.gs.washington.edu/~nicksh/SpecialSkylines/SkylineNet10Preview/")]
         public string InstallUrl {
             get {
                 return ((string)(this["InstallUrl"]));
@@ -3704,7 +3704,7 @@ namespace pwiz.Skyline.Properties {
 
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("SkylineNet10Preview")]
         public string ProductName {
             get {
                 return ((string)(this["ProductName"]));

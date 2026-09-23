@@ -930,10 +930,10 @@
       <Value Profile="(Default)">https://msfragger-upgrader.nesvilab.org/upgrader/download.php</Value>
     </Setting>
     <Setting Name="InstallUrl" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">https://proteome.gs.washington.edu/~nicksh/InstallTest/</Value>
+      <Value Profile="(Default)">https://proteome.gs.washington.edu/~nicksh/SpecialSkylines/SkylineNet10Preview/</Value>
     </Setting>
     <Setting Name="ProductName" Type="System.String" Scope="Application">
-      <Value Profile="(Default)" />
+      <Value Profile="(Default)">SkylineNet10Preview</Value>
     </Setting>
     <Setting Name="FilesViewShowFileNames" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
