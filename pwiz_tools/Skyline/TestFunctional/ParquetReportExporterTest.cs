@@ -18,9 +18,11 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Parquet;
 using pwiz.Common.DataBinding;
@@ -80,6 +82,43 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsNotNull(col.Data);
                 return true;
             });
+            VerifyWriterExceptionPropagates(viewInfo, items);
+        }
+
+        /// <summary>
+        /// An exception on the writer thread, such as a full disk, has to come back to the caller
+        /// as the original exception instead of hanging the export waiting for the writer.
+        /// </summary>
+        private void VerifyWriterExceptionPropagates(ViewInfo viewInfo, IList<MyObject> items)
+        {
+            IProgressStatus status = new ProgressStatus();
+            AssertEx.ThrowsException<IOException>(() => RowFactories.ExportReport(CancellationToken.None,
+                new FailAfterMagicStream(), viewInfo, null, new StaticRowSource(items), new ParquetReportExporter(),
+                new SilentProgressMonitor(), ref status));
+        }
+
+        /// <summary>
+        /// Accepts the "PAR1" magic which creating the ParquetWriter writes, and fails the first
+        /// write after that, which is the first row group.
+        /// </summary>
+        private class FailAfterMagicStream : MemoryStream
+        {
+            private const int MAGIC_LENGTH = 4;
+
+            public override void Write(byte[] buffer, int offset, int count)
+            {
+                if (Length + count > MAGIC_LENGTH)
+                {
+                    throw new IOException(@"Simulated disk full");
+                }
+                base.Write(buffer, offset, count);
+            }
+
+            public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            {
+                Write(buffer, offset, count);
+                return Task.CompletedTask;
+            }
         }
 
         class MyObject

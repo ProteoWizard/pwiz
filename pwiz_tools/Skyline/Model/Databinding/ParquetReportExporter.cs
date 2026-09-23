@@ -23,11 +23,14 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace pwiz.Skyline.Model.Databinding
 {
@@ -39,63 +42,18 @@ namespace pwiz.Skyline.Model.Databinding
             var columns = BuildColumns(rowItemEnumerator.ItemProperties);
             var schema = new ParquetSchema(columns.Select(col => col.SchemaField).ToArray());
 
-            using var writer = ParquetWriter.CreateAsync(schema, stream).GetAwaiter().GetResult();
+            var writer = ParquetWriter.CreateAsync(schema, stream).GetAwaiter().GetResult();
             writer.CompressionMethod = CompressionMethod.Zstd;
-            using var writeWorker = new QueueWorker<DataColumn[]>(
-                consume: (dataColumns, threadIndex) =>
-                {
-                    using var groupWriter = writer.CreateRowGroup();
-                    foreach (var dataColumn in dataColumns)
-                    {
-                        groupWriter.WriteColumnAsync(dataColumn).GetAwaiter().GetResult();
-                    }
-                });
-            // Single writer thread, queue at most 1 chunk ahead
-            writeWorker.RunAsync(1, @"Parquet Writer", maxQueueSize: 1);
-            int rowsPerGroup = DecideRowCountPerGroup(rowItemEnumerator.ItemProperties);
-            // Process in chunks
-            while (true)
+            using (var pipeline = new ExportPipeline(writer, columns, rowItemEnumerator))
             {
-                if (rowItemEnumerator.IsCanceled || writeWorker.Exception != null)
-                {
-                    break;
-                }
-
-                var chunk = new List<RowItem>();
-                while (chunk.Count < rowsPerGroup && rowItemEnumerator.MoveNext())
-                {
-                    chunk.Add(rowItemEnumerator.Current);
-                }
-
-                if (chunk.Count == 0)
-                {
-                    break;
-                }
-
-                // Create arrays for this chunk
-                var chunkArrays = columns.Select(col => col.CreateArray(chunk.Count)).ToArray();
-
-                // Populate chunk data
-                PopulateChunk(rowItemEnumerator.ProgressMonitor, chunk, columns, chunkArrays);
-                if (rowItemEnumerator.IsCanceled)
-                {
-                    break;
-                }
-
-                // Create DataColumns and queue for writing
-                var dataColumns = new DataColumn[columns.Count];
-                for (int i = 0; i < columns.Count; i++)
-                {
-                    dataColumns[i] = columns[i].CreateDataColumn(chunkArrays[i]);
-                }
-                writeWorker.Add(dataColumns);
+                pipeline.RowsPerGroup = DecideRowCountPerGroup(rowItemEnumerator.ItemProperties);
+                pipeline.Run();
             }
-
-            writeWorker.DoneAdding(wait: true);
-            if (writeWorker.Exception != null)
-            {
-                throw writeWorker.Exception;
-            }
+            // Disposing the writer writes the footer. On a stream the export has already failed on
+            // that throws again, and from a "using" that exception would replace the one which says
+            // why the export failed. The writer holds nothing but the caller's stream, so a failed
+            // export leaves it undisposed.
+            writer.Dispose();
         }
 
         private List<ColumnData> BuildColumns(ItemProperties itemProperties)
@@ -112,65 +70,213 @@ namespace pwiz.Skyline.Model.Databinding
             return columns;
         }
 
-        private void PopulateChunk(IProgressMonitor progressMonitor,
-            IList<RowItem> rowItems, List<ColumnData> columns, Array[] chunkArrays)
+        /// <summary>
+        /// Runs one export as three stages on separate threads: a reader which pulls rows from the
+        /// <see cref="RowItemEnumerator"/> into chunks, the calling thread which calculates the column
+        /// values of each chunk on the ParallelEx workers, and a writer which encodes and compresses each
+        /// chunk into a row group. Each stage hands its output to the next through a queue holding one
+        /// chunk, so a stage never gets more than one chunk ahead of the one after it.
+        /// The first exception from any stage cancels the others and is rethrown by <see cref="Run"/>.
+        /// </summary>
+        private class ExportPipeline : IDisposable
         {
-            // Values with no Parquet storage type get stored as strings by calling ToString(),
-            // which formats using the thread's culture, so the values have to be converted under
-            // the culture this report is being exported with. All of the columns come from the
-            // same DataSchema, so the culture only needs to be set once per row.
-            var dataSchemaLocalizer = columns.FirstOrDefault()?.PropertyDescriptor.DataSchemaLocalizer
-                                      ?? DataSchemaLocalizer.INVARIANT;
-            // Consecutive rows which share the same Value object (for instance the rows expanded from one
-            // transition by a "Results" sublist) form a run. Columns which depend only on the Value have
-            // the same value for every row in the run, so they are calculated once per run.
-            var runStarts = new List<int>();
-            for (int rowIndex = 0; rowIndex < rowItems.Count; rowIndex++)
+            private readonly ParquetWriter _writer;
+            private readonly IList<ColumnData> _columns;
+            private readonly RowItemEnumerator _rowItemEnumerator;
+            private readonly BlockingCollection<List<RowItem>> _chunks = new BlockingCollection<List<RowItem>>(1);
+            private readonly BlockingCollection<DataColumn[]> _rowGroups = new BlockingCollection<DataColumn[]>(1);
+            private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+            private readonly CancellationToken _cancellationToken;
+            private Exception _exception;
+
+            public ExportPipeline(ParquetWriter writer, IList<ColumnData> columns, RowItemEnumerator rowItemEnumerator)
             {
-                if (rowIndex == 0 || !ReferenceEquals(rowItems[rowIndex].Value, rowItems[rowIndex - 1].Value))
+                _writer = writer;
+                _columns = columns;
+                _rowItemEnumerator = rowItemEnumerator;
+                _cancellationToken = _cancellationTokenSource.Token;
+            }
+
+            public int RowsPerGroup { get; set; } = 1000;
+
+            public void Run()
+            {
+                var readThread = StartThread(@"Parquet Row Reader", ReadChunks);
+                var writeThread = StartThread(@"Parquet Writer", WriteRowGroups);
+                RunStage(() =>
                 {
-                    runStarts.Add(rowIndex);
+                    foreach (var chunk in _chunks.GetConsumingEnumerable(_cancellationToken))
+                    {
+                        var rowGroup = PopulateChunk(chunk);
+                        if (_rowItemEnumerator.IsCanceled)
+                        {
+                            // Stops the reader and the writer without waiting for what they are doing
+                            _cancellationTokenSource.Cancel();
+                            break;
+                        }
+                        _rowGroups.Add(rowGroup, _cancellationToken);
+                    }
+                });
+                _rowGroups.CompleteAdding();
+                readThread.Join();
+                writeThread.Join();
+                if (_exception != null)
+                {
+                    ExceptionDispatchInfo.Capture(_exception).Throw();
                 }
             }
-            ParallelEx.For(0, runStarts.Count, runIndex =>
+
+            public void Dispose()
             {
-                if (progressMonitor.IsCanceled)
+                _cancellationTokenSource.Dispose();
+                _chunks.Dispose();
+                _rowGroups.Dispose();
+            }
+
+            private Thread StartThread(string name, Action stage)
+            {
+                var thread = new Thread(() =>
                 {
-                    return;
+                    LocalizationHelper.InitThread();
+                    RunStage(stage);
+                })
+                {
+                    Name = name,
+                    IsBackground = true
+                };
+                thread.Start();
+                return thread;
+            }
+
+            private void RunStage(Action stage)
+            {
+                try
+                {
+                    stage();
                 }
-                int startRow = runStarts[runIndex];
-                int endRow = runIndex + 1 < runStarts.Count ? runStarts[runIndex + 1] : rowItems.Count;
-                dataSchemaLocalizer.CallWithCultureInfo(() =>
+                catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested)
                 {
-                    for (int colIndex = 0; colIndex < columns.Count; colIndex++)
+                    // Another stage failed, or the export was canceled
+                }
+                catch (Exception exception)
+                {
+                    // The first exception wins. Cancelling unblocks the other stages, whose
+                    // OperationCanceledExceptions are then ignored above
+                    Interlocked.CompareExchange(ref _exception, exception, null);
+                    _cancellationTokenSource.Cancel();
+                }
+            }
+
+            private void ReadChunks()
+            {
+                try
+                {
+                    while (true)
                     {
-                        var column = columns[colIndex];
-                        var values = chunkArrays[colIndex];
-                        if (column.DependsOnlyOnRowValue)
+                        var chunk = new List<RowItem>();
+                        while (chunk.Count < RowsPerGroup && _rowItemEnumerator.MoveNext())
                         {
-                            var value = column.GetStorageValue(rowItems[startRow]);
-                            if (value != null)
+                            chunk.Add(_rowItemEnumerator.Current);
+                        }
+
+                        if (chunk.Count == 0)
+                        {
+                            return;
+                        }
+                        _chunks.Add(chunk, _cancellationToken);
+                    }
+                }
+                finally
+                {
+                    _chunks.CompleteAdding();
+                }
+            }
+
+            private void WriteRowGroups()
+            {
+                foreach (var rowGroup in _rowGroups.GetConsumingEnumerable(_cancellationToken))
+                {
+                    using var groupWriter = _writer.CreateRowGroup();
+                    foreach (var dataColumn in rowGroup)
+                    {
+                        groupWriter.WriteColumnAsync(dataColumn).GetAwaiter().GetResult();
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Calculates every column's value for every row in the chunk and returns the columns
+            /// ready to be written as one row group.
+            /// </summary>
+            private DataColumn[] PopulateChunk(IList<RowItem> rowItems)
+            {
+                var chunkArrays = _columns.Select(col => col.CreateArray(rowItems.Count)).ToArray();
+                // Values with no Parquet storage type get stored as strings by calling ToString(),
+                // which formats using the thread's culture, so the values have to be converted under
+                // the culture this report is being exported with. All of the columns come from the
+                // same DataSchema, so the culture only needs to be set once per row.
+                var dataSchemaLocalizer = _columns.FirstOrDefault()?.PropertyDescriptor.DataSchemaLocalizer
+                                          ?? DataSchemaLocalizer.INVARIANT;
+                // Consecutive rows which share the same Value object (for instance the rows expanded from one
+                // transition by a "Results" sublist) form a run. Columns which depend only on the Value have
+                // the same value for every row in the run, so they are calculated once per run.
+                var runStarts = new List<int>();
+                for (int rowIndex = 0; rowIndex < rowItems.Count; rowIndex++)
+                {
+                    if (rowIndex == 0 || !ReferenceEquals(rowItems[rowIndex].Value, rowItems[rowIndex - 1].Value))
+                    {
+                        runStarts.Add(rowIndex);
+                    }
+                }
+                ParallelEx.For(0, runStarts.Count, runIndex =>
+                {
+                    if (_rowItemEnumerator.IsCanceled)
+                    {
+                        return;
+                    }
+                    int startRow = runStarts[runIndex];
+                    int endRow = runIndex + 1 < runStarts.Count ? runStarts[runIndex + 1] : rowItems.Count;
+                    dataSchemaLocalizer.CallWithCultureInfo(() =>
+                    {
+                        for (int colIndex = 0; colIndex < _columns.Count; colIndex++)
+                        {
+                            var column = _columns[colIndex];
+                            var values = chunkArrays[colIndex];
+                            if (column.DependsOnlyOnRowValue)
+                            {
+                                var value = column.GetStorageValue(rowItems[startRow]);
+                                if (value != null)
+                                {
+                                    for (int rowIndex = startRow; rowIndex < endRow; rowIndex++)
+                                    {
+                                        values.SetValue(value, rowIndex);
+                                    }
+                                }
+                            }
+                            else
                             {
                                 for (int rowIndex = startRow; rowIndex < endRow; rowIndex++)
                                 {
-                                    values.SetValue(value, rowIndex);
+                                    column.StoreValue(rowItems[rowIndex], rowIndex, values);
                                 }
                             }
                         }
-                        else
-                        {
-                            for (int rowIndex = startRow; rowIndex < endRow; rowIndex++)
-                            {
-                                column.StoreValue(rowItems[rowIndex], rowIndex, values);
-                            }
-                        }
+                    });
+                    for (int rowIndex = startRow; rowIndex < endRow; rowIndex++)
+                    {
+                        rowItems[rowIndex] = null;
                     }
-                });
-                for (int rowIndex = startRow; rowIndex < endRow; rowIndex++)
+                }, threadName: nameof(PopulateChunk));
+                // Constructing a DataColumn packs the nulls out of a nullable array, and a list column
+                // has to be flattened first, so the columns are built in parallel rather than one after
+                // another on this thread while the workers wait for the next chunk
+                var dataColumns = new DataColumn[_columns.Count];
+                ParallelEx.For(0, _columns.Count, colIndex =>
                 {
-                    rowItems[rowIndex] = null;
-                }
-            }, threadName:nameof(PopulateChunk));
+                    dataColumns[colIndex] = _columns[colIndex].CreateDataColumn(chunkArrays[colIndex]);
+                }, threadName: nameof(ColumnData.CreateDataColumn));
+                return dataColumns;
+            }
         }
 
         public static IEnumerable<string> MakeValidColumnNames(IEnumerable<string> columnNames)
