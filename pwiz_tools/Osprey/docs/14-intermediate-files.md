@@ -82,11 +82,45 @@ durable artifact writer in the tree, as of this document's last verification:
 | `ModelDiagnosticsReport` (2 sites) | `<output>.model-diagnostics.{html,data.json}` |
 | `FdrBenchInputWriter` (2 sites) | `--fdrbench` input + pairing manifest |
 | `OspreyReportWriter` (1 site, `WriteTsv`, both reports) | `<output>.protein_groups.tsv`, `<output>.stats.tsv` |
+| `PerFileScoringTask.WriteFeatureDump` | `--write-pin`'s `<stem>.cs_features.tsv` |
+
+Most `-d` diagnostic dumps commit the same way as a durable artifact, though nothing in
+the pipeline reads any of them back - see P8 in
+[00-pipeline-architecture](00-pipeline-architecture.md) for why that does not exempt them.
+The exceptions are the log-shaped dumps marked below, which write directly to their final
+path instead:
+
+| Writer | Artifact(s) |
+|---|---|
+| `OspreyFileDiagnostics` (24 one-shot methods) | `cs_cal_sample.txt`, `cs_cal_scalars.txt`, `cs_cal_grid.txt`, `cs_cal_windows.txt`, `cs_cal_match.txt`, `cs_ms2_cal_errors.txt`, `cs_lda_scores.txt`, `cs_loess_input.txt`, `cs_cal_summary.txt`, `cs_xic_entry_<id>.txt`, `cs_search_xic_entry_<id>.txt`, `cs_mp_diag.txt`, `cs_stage5_percolator.tsv`, `cs_stage6_rescored.tsv`, `cs_stage6_consensus.tsv`, `cs_stage6_multicharge.tsv`, `cs_stage6_refit.tsv`, `cs_stage6_reconciliation.tsv`, `cs_stage6_inv_predict.tsv`, `cs_stage6_protein_fdr.tsv`, `cs_stage7_protein_fdr.tsv`, `cs_stage6_loess_fit.tsv`, `cs_stage7_detected_peptides.txt`, and the held-open streams below |
+| `OspreyFileDiagnostics` held-open streams (4, **log-shaped**: written directly at their final path, no `FileSaver`; `CloseXDump` flushes the writer's buffered tail, not a commit; `CloseAll` runs every one of them on process exit for the same reason) | `cs_stage6_mp_inputs.tsv`, `cs_stage6_predict_rt.tsv` (unreachable today, no live caller), `cs_stage6_cwt_path.tsv`, `cs_stage6_calibration.tsv` |
+| `FdrDiagnostics.CoAssignRowDump` (rows: **log-shaped**, written directly via `FileMode.CreateNew`, no `FileSaver`; cutoffs: ordinary artifact) | `cs_coassign_pass<N>_rows[.<seq>].tsv`, `cs_coassign_pass<N>_cutoffs[.<seq>].tsv` |
+| `FdrDiagnostics` (2 more) | `cs_stage7_winners.tsv`, `cs_best_peptide_scores.tsv` |
+| `PercolatorDiagnosticsDump` (4 sites) | `cs_stage5_standardizer.tsv`, `cs_stage5_perc_input.tsv`, `cs_stage5_subsample.tsv`, `cs_stage5_svm_weights.tsv` |
+| `PickCandidateDump.Flush` | `OSPREY_PICK_DUMP_CANDIDATES`'s caller-named path |
+| `PeakDataExtractor` (search-XIC append, read-existing + rewrite through a fresh `FileSaver` per call - a concurrent-writer hazard, not a partial-progress one, so this one stays an artifact; see P8) | `cs_search_xic_entry_<id>.txt` |
+
+`cs_search_xic_entry_<id>.txt` and `cs_xic_entry_<id>.txt` have two independent writers each
+(`OspreyFileDiagnostics.WriteSearchXicDump`/`WriteCalXicEntryDumpAndExit` write the file once;
+`PeakDataExtractor`'s search-XIC dump appends to the first one later in the same candidate's
+scoring), and under `--parallel-files` the same library entry can be scored on more than one
+file-thread. `DiagnosticFileLock.For(path)` (`Osprey.Core`) is the shared, per-path lock every
+writer of these two files takes, so independent `FileSaver` commits to one path never race -
+process-local only; it does not protect a real multi-node HPC fan-out sharing one output
+directory, which is not a concern for dumps that are opt-in for a single interactive session.
 
 **A new durable artifact that does not commit through `FileSaver` is a defect**, because
-every reader in the pipeline treats presence as proof of completeness. **Exempt**: `-d`
-diagnostic dumps, the streaming CLI log, and test fixtures - transient or append-streaming
-files that no later stage reads back.
+every reader - a pipeline task or a developer doing bisection - treats presence as proof
+of completeness. **Exempt**: the streaming CLI log (`--log-file`, written for the life of
+the run so it can be tailed while still running - see P8), the five log-shaped dumps
+marked above (`CoAssignRowDump`'s rows and the four `OspreyFileDiagnostics` held-open
+streams - a partial file is the useful outcome for these, not a hazard to guard against),
+and test fixtures. Forensic inspection of an abandoned ARTIFACT-shaped write (any writer
+above not marked log-shaped, on an exception) is `OspreyEnvironment.KeepFailedWrites`
+(`OSPREY_KEEP_FAILED_WRITES`), not a bypass of `FileSaver` - it leaves the temp in place
+instead of deleting it, under its own name, so presence at the real path still proves
+completeness for every ordinary reader. It has no effect on the log-shaped dumps, which
+never wrap the write in `FileSaver` to begin with.
 
 ---
 

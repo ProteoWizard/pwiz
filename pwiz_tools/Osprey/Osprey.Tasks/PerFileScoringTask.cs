@@ -3145,30 +3145,35 @@ namespace pwiz.Osprey.Tasks
                 .ThenBy(e => e.ScanNumber)
                 .ToList();
 
-            using (var writer = new StreamWriter(dumpPath))
+            using (var saver = new FileSaver(dumpPath))
             {
-                // LF newlines so the dump is byte-stable across Windows and
-                // Linux for cross-impl diffing against Rust's PIN output;
-                // matches the convention used by OspreyDiagnosticsLog.
-                writer.NewLine = "\n";
-                writer.WriteLine(string.Join("\t", header));
-                foreach (var e in sorted)
+                using (var writer = new StreamWriter(saver.SafeName))
                 {
-                    string psmId = string.Format("{0}_{1}_{2}_{3}",
-                        fileName, e.ModifiedSequence, e.Charge, e.ScanNumber);
-                    int label = e.IsDecoy ? -1 : 1;
-                    var cols = new List<string>(26)
+                    // LF newlines so the dump is byte-stable across Windows and
+                    // Linux for cross-impl diffing against Rust's PIN output;
+                    // matches the convention used by OspreyDiagnosticsLog.
+                    var inv = CultureInfo.InvariantCulture;
+                    writer.NewLine = "\n";
+                    writer.WriteLine(string.Join("\t", header));
+                    foreach (var e in sorted)
                     {
-                        psmId,
-                        label.ToString(),
-                        e.ScanNumber.ToString(),
-                        e.Charge.ToString()
-                    };
-                    for (int i = 0; i < ScoringTaskShared.NUM_PIN_FEATURES; i++)
-                        cols.Add(e.Features[i].ToString("G17"));
-                    cols.Add(e.ModifiedSequence ?? "");
-                    writer.WriteLine(string.Join("\t", cols));
+                        string psmId = string.Format(inv, "{0}_{1}_{2}_{3}",
+                            fileName, e.ModifiedSequence, e.Charge, e.ScanNumber);
+                        int label = e.IsDecoy ? -1 : 1;
+                        var cols = new List<string>(26)
+                        {
+                            psmId,
+                            label.ToString(inv),
+                            e.ScanNumber.ToString(inv),
+                            e.Charge.ToString(inv)
+                        };
+                        for (int i = 0; i < ScoringTaskShared.NUM_PIN_FEATURES; i++)
+                            cols.Add(e.Features[i].ToString("G17", inv));
+                        cols.Add(e.ModifiedSequence ?? "");
+                        writer.WriteLine(string.Join("\t", cols));
+                    }
                 }
+                saver.Commit();
             }
 
             ctx.LogInfo(string.Format("[COUNT] Wrote feature dump: {0} ({1} entries)",
