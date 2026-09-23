@@ -35,6 +35,7 @@ using pwiz.CLI.msdata;
 using pwiz.Common.Collections;
 using pwiz.CommonMsData;
 using pwiz.CommonMsData.RemoteApi;
+using pwiz.CommonMsData.RemoteApi.WatersConnect;
 
 namespace MSConvertGUI
 {
@@ -273,6 +274,8 @@ namespace MSConvertGUI
                 return DataSourceUtil.TYPE_WATERS_RAW; // remote sources are Waters data
             if (dataSource is MsDataFilePath msDataFilePath)
                 return ReaderList.FullReaderList.identify(msDataFilePath.FilePath);
+            if (dataSource.ToString().StartsWith(WatersConnectUrl.UrlPrefix, StringComparison.InvariantCultureIgnoreCase))
+                return DataSourceUtil.TYPE_WATERS_RAW; // a typed waters_connect path, resolved at conversion time
             return ReaderList.FullReaderList.identify(dataSource.ToString());
         }
 
@@ -280,7 +283,8 @@ namespace MSConvertGUI
         {
             return dataSource is RemoteUrl ||
                    dataSource.ToString().StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) ||
-                   dataSource.ToString().StartsWith("https://", StringComparison.InvariantCultureIgnoreCase);
+                   dataSource.ToString().StartsWith("https://", StringComparison.InvariantCultureIgnoreCase) ||
+                   dataSource.ToString().StartsWith(WatersConnectUrl.UrlPrefix, StringComparison.InvariantCultureIgnoreCase);
         }
 
         public bool IsValidSource(object dataSource)
