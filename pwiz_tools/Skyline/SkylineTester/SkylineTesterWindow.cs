@@ -590,6 +590,14 @@ namespace SkylineTester
                     return stagedPath;
                 searched.Add(stagedDir);
             }
+            // Last, look beside this program. In a distributed zip there is no source tree to
+            // build from and nothing staged yet, and the tests ship in "SkylineTester Files"
+            // next to SkylineTester.exe - the same one-bin arrangement the net472 path above
+            // handles with "?? ExeDir". Without this the shipped zip lists no tests at all.
+            var exeDirPath = Path.Combine(ExeDir, testDll);
+            if (File.Exists(exeDirPath))
+                return exeDirPath;
+            searched.Add(ExeDir);
             lock (_testAssemblySearchPaths)
                 _testAssemblySearchPaths.AddRange(searched);
             return null;
