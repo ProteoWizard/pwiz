@@ -74,17 +74,39 @@ namespace pwiz.Osprey.Tasks
         // path those calls are no-ops.
         private const int PROCESS_FILE_SEGMENTS = 4;
 
-        public override string Name => @"PerFileScoring";
+        /// <summary>
+        /// This task's name, as a constant so the CLI selector, the validity stamp another
+        /// task looks for, and the tests all spell it from here rather than duplicating it.
+        /// </summary>
+        public const string TASK_NAME = @"PerFileScoring";
+
+        public override string Name => TASK_NAME;
 
         /// <summary>
-        /// Computes per-file scores from spectra for every task except the three that
-        /// start after Stage 4. For those it is excluded and a downstream task
-        /// lazy-rehydrates each run's scores through
-        /// <c>ctx.Demand&lt;PerFileScoringTask&gt;()</c>.
+        /// The Stage 1-4 fan-out worker: each input produces a <c>{stem}.scores.parquet</c>
+        /// next to it, no FDR, no blib.
         /// </summary>
-        public override bool IsIncluded(PipelineContext ctx)
+        public override bool IsPerFileWorker => true;
+
+        /// <summary>
+        /// mzML in, per-file <c>.scores.parquet</c> out: a library, but no <c>--output</c>,
+        /// which is accepted and not used.
+        /// </summary>
+        public override string ValidateSelection(OspreyConfig config)
         {
-            return !ScoringTaskShared.StartsAfterPerFileScoring(ctx.Config);
+            if (!config.HasInputFiles)
+                return RequiresError(@"--input <mzML...>");
+            if (config.LibrarySource == null)
+                return RequiresError(@"--library");
+            return null;
+        }
+
+        /// <summary>
+        /// The real output rather than the ignored <c>--output</c> blib path.
+        /// </summary>
+        public override string DescribeOutput(OspreyConfig config)
+        {
+            return @"per-file .scores.parquet (next to each input file)";
         }
 
         // Stage 1-4 byproducts this task publishes for downstream consumers to
@@ -393,7 +415,7 @@ namespace pwiz.Osprey.Tasks
             //
             // NOT reachable today, and the claim that it was is wrong: Program.cs rejects
             // --task SecondPassFDR combined with --input and requires --input-scores, so
-            // ExpectReconciledInput means this task is excluded and IsIncluded returns false -
+            // under --task SecondPassFDR this task is excluded by the membership rule -
             // Run is never entered on that config. This is aligned with its two siblings so the
             // one decision has one predicate, not so that a live defect is closed.
             bool needsResidentPool = !CanUseLeanProjection(ctx.Config, hasReconSidecars: false,
@@ -900,8 +922,8 @@ namespace pwiz.Osprey.Tasks
         /// surface the per-file outputs for downstream tasks (before any
         /// early-exit, so a partial-success caller still sees the populated
         /// collections), then apply the two success-but-stop boundaries --
-        /// an empty score set (cannot run FDR) and <c>--task PerFileScoring</c> (Stage
-        /// 1-4 only). Returns <c>true</c> to continue the pipeline, or
+        /// an empty score set (cannot run FDR) and a per-file worker selection (Stage
+        /// 1-4 only, no join in this process). Returns <c>true</c> to continue the pipeline, or
         /// <c>false</c> with <see cref="PipelineContext.ExitCode"/> = 0 at
         /// either boundary.
         /// </summary>
@@ -966,16 +988,30 @@ namespace pwiz.Osprey.Tasks
                 return false;
             }
 
-            // --task PerFileScoring: stop here. Per-file `.scores.parquet` files are
-            // now on disk; a separate `--task FirstPassFDR` invocation (typically
-            // on a SecondPassFDR node) will pick them up and run Stage 5+.
-            if (ctx.Config.NoJoin)
+            // A per-file worker stops here: nothing after Stage 1-4 joins in this process.
+            // For --task PerFileScoring the per-file `.scores.parquet` files are now on disk
+            // and a separate `--task FirstPassFDR` invocation (typically on a SecondPassFDR
+            // node) will pick them up and run Stage 5+. The rescore worker reaches this tail
+            // through its disk-load rehydrate, having loaded Stage 1-4 state rather than
+            // scored it, and stops the same way; the message says which happened. The
+            // messages speak in task names, the vocabulary the CLI and its help use; the
+            // stage numbers are the developer docs' and never reach an operator.
+            if (ctx.Config.SelectedTask?.IsPerFileWorker == true)
             {
-                ctx.LogInfo(string.Format(
-                    @"--task PerFileScoring: Stage 1-4 complete. {0} entries scored across {1} file(s). " +
-                    @"Per-file `.scores.parquet` written next to each input mzML. " +
-                    @"Skipping FDR and blib output.",
-                    totalScored, nFiles));
+                if (ReferenceEquals(ctx.Config.SelectedTask, this))
+                {
+                    ctx.LogInfo(string.Format(
+                        @"--task {0} complete: {1:N0} precursor candidates scored across {2:N0} file(s). " +
+                        @"Per-file `.scores.parquet` written next to each input. " +
+                        @"{3} and later run in their own invocations; no FDR or blib output here.",
+                        Name, totalScored, nFiles, FirstPassFdrTask.TASK_NAME));
+                }
+                else
+                {
+                    ctx.LogInfo(string.Format(
+                        @"--task {0}: {1} scores loaded for {2} file(s); a per-file worker runs no join.",
+                        ctx.Config.SelectedTask.Name, Name, nFiles));
+                }
                 ctx.ExitCode = 0;
                 return false;
             }
@@ -1077,7 +1113,7 @@ namespace pwiz.Osprey.Tasks
             {
                 ctx.LogInfo(string.Format(
                     @"[LIB-LOAD] {0} entries in {1:F2}s (task={2}, omitFragments={3}, retainSet={4})",
-                    library.Count, swLibrary.Elapsed.TotalSeconds, config.SelectedTask,
+                    library.Count, swLibrary.Elapsed.TotalSeconds, config.SelectedTask?.Name,
                     loadOptions.OmitFragments,
                     loadOptions.RetainFragmentsFor == null
                         ? @"none"
@@ -1538,7 +1574,7 @@ namespace pwiz.Osprey.Tasks
         /// 2. Nothing in the run reads the PRE-compaction pool
         ///    (<see cref="PreCompactionPoolReason"/> finds no consumer).
         ///
-        /// Term 2 asks <see cref="FirstPassFdrTask.IsIncludedFor"/> directly: FirstPassFDR must
+        /// Term 2 asks the one membership rule (<see cref="ScoringTaskShared.Includes{T}"/>): FirstPassFDR must
         /// be EXCLUDED from this pipeline and reachable only through its bundle-adopt
         /// Rehydrate, because a FirstPassFDR that Ran would train first-pass Percolator on
         /// whatever <c>ScoredEntries</c> holds - which must be the full pre-compaction pool.
@@ -1621,8 +1657,8 @@ namespace pwiz.Osprey.Tasks
             // hasReconSidecars: every reason above is a resident-pool consumer and returns
             // first, so reaching here means none of them applies.
             //
-            // Ask the task's own membership predicate rather than the former `!NoJoin` proxy
-            // (#4486). The two agree on every task but --task SecondPassFDR, which leaves
+            // Ask the membership rule itself rather than the former `!NoJoin` proxy
+            // (#4486). The two agreed on every task but --task SecondPassFDR, which left
             // NoJoin false while setting ExpectReconciledInput: FirstPassFdrTask is excluded
             // there, so nothing trains, and the proxy was forcing an O(files) resident pool
             // for a consumer that does not exist. Re-deriving membership here is what let
@@ -1634,7 +1670,7 @@ namespace pwiz.Osprey.Tasks
             // report one run at a time and trains nothing, so it needs no pool; the arm proving it
             // runs inside FirstPassFdrTask.Run, AFTER this decision, so it cannot be what corrects
             // it. Ask the same question here instead.
-            if (FirstPassFdrTask.IsIncludedFor(config) && !FirstPassFdrTask.WillOnlyFoldDiagnostics(ctx))
+            if (ScoringTaskShared.Includes<FirstPassFdrTask>(config) && !FirstPassFdrTask.WillOnlyFoldDiagnostics(ctx))
                 return @"First-pass Percolator training in this process";
             // No bundle at all. The reconciliation envelope is what carries the compaction
             // predicate, so without it there is nothing to compact against at load time and
@@ -3109,30 +3145,35 @@ namespace pwiz.Osprey.Tasks
                 .ThenBy(e => e.ScanNumber)
                 .ToList();
 
-            using (var writer = new StreamWriter(dumpPath))
+            using (var saver = new FileSaver(dumpPath))
             {
-                // LF newlines so the dump is byte-stable across Windows and
-                // Linux for cross-impl diffing against Rust's PIN output;
-                // matches the convention used by OspreyDiagnosticsLog.
-                writer.NewLine = "\n";
-                writer.WriteLine(string.Join("\t", header));
-                foreach (var e in sorted)
+                using (var writer = new StreamWriter(saver.SafeName))
                 {
-                    string psmId = string.Format("{0}_{1}_{2}_{3}",
-                        fileName, e.ModifiedSequence, e.Charge, e.ScanNumber);
-                    int label = e.IsDecoy ? -1 : 1;
-                    var cols = new List<string>(26)
+                    // LF newlines so the dump is byte-stable across Windows and
+                    // Linux for cross-impl diffing against Rust's PIN output;
+                    // matches the convention used by OspreyDiagnosticsLog.
+                    var inv = CultureInfo.InvariantCulture;
+                    writer.NewLine = "\n";
+                    writer.WriteLine(string.Join("\t", header));
+                    foreach (var e in sorted)
                     {
-                        psmId,
-                        label.ToString(),
-                        e.ScanNumber.ToString(),
-                        e.Charge.ToString()
-                    };
-                    for (int i = 0; i < ScoringTaskShared.NUM_PIN_FEATURES; i++)
-                        cols.Add(e.Features[i].ToString("G17"));
-                    cols.Add(e.ModifiedSequence ?? "");
-                    writer.WriteLine(string.Join("\t", cols));
+                        string psmId = string.Format(inv, "{0}_{1}_{2}_{3}",
+                            fileName, e.ModifiedSequence, e.Charge, e.ScanNumber);
+                        int label = e.IsDecoy ? -1 : 1;
+                        var cols = new List<string>(26)
+                        {
+                            psmId,
+                            label.ToString(inv),
+                            e.ScanNumber.ToString(inv),
+                            e.Charge.ToString(inv)
+                        };
+                        for (int i = 0; i < ScoringTaskShared.NUM_PIN_FEATURES; i++)
+                            cols.Add(e.Features[i].ToString("G17", inv));
+                        cols.Add(e.ModifiedSequence ?? "");
+                        writer.WriteLine(string.Join("\t", cols));
+                    }
                 }
+                saver.Commit();
             }
 
             ctx.LogInfo(string.Format("[COUNT] Wrote feature dump: {0} ({1} entries)",

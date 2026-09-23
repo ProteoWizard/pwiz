@@ -206,7 +206,7 @@ Because the C# port runs as HPC stages, the Stage 5 plan is serialized per-file 
 
 | Flag / field | Default | Effect on this stage |
 |--------------|---------|----------------------|
-| `ReconciliationConfig.Enabled` (`Osprey.Core/ReconciliationConfig.cs:33`) | `true` | Master switch. `FirstPassFdrTask.cs:387` and `PerFileRescoreTask.cs:158, 963` gate reconciliation on it. **There is no CLI flag to toggle it** — no `--no-reconciliation`; only a config/YAML `Reconciliation.Enabled = false` disables it. `--task FirstPassFDR` requires it enabled (`Program.cs:395-396`). |
+| `ReconciliationConfig.Enabled` (`Osprey.Core/ReconciliationConfig.cs:33`) | `true` | Master switch. `FirstPassFdrTask.cs:387` and `PerFileRescoreTask.cs:158, 963` gate reconciliation on it. **There is no CLI flag to toggle it** — no `--no-reconciliation`; only a config/YAML `Reconciliation.Enabled = false` disables it. `--task FirstPassFDR` requires it enabled (`FirstPassFdrTask.ValidateSelection`). |
 | `ReconciliationConfig.ConsensusFdr` (`ReconciliationConfig.cs:39`) | `0.01` | The consensus qualification threshold (Step 1 hard precursor gate + peptide/protein rescue), the refit experiment-q gate, the planner `experimentFdr` (`Stage6Planner.cs:285`), and the gap-fill passing threshold (`FirstPassFdrTask.cs:947`). |
 | `ReconciliationConfig.TopNPeaks` (`ReconciliationConfig.cs:36`) | `5` | Number of CWT candidate peaks stored per precursor for later UseCwtPeak selection. |
 | `--reconciliation-compaction-fdr <threshold>` (`OspreyCommandArgs.cs:116-117`) | `0.01` | Peptide-q gate for first-pass compaction, which sets the pool reconciliation operates on. Loosen (e.g. 0.05) to broaden the reconciliation pool. Not the consensus gate itself. |
