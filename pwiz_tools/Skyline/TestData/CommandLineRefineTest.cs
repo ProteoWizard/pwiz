@@ -534,6 +534,40 @@ namespace pwiz.SkylineTestData
             // Verify that all arguments have been tested (except InternalUse ones and the ones in the testedArguments initializer)
             allArgumentsSet.ExceptWith(testedArguments);
             Assert.AreEqual(0, allArgumentsSet.Count, string.Join(", ", allArgumentsSet.Select(a => a.Name)));
+
+            ValidateValueSources();
+        }
+
+        /// <summary>
+        /// Verifies that documented values and supplemental accepted values are both enforced, in every
+        /// combination, by the argument text builder and by parsing. An argument that lists neither
+        /// accepts any value, and one that lists only accepted values still reports them when rejecting.
+        /// </summary>
+        private void ValidateValueSources()
+        {
+            const string good = @"alpha";
+            const string bad = @"omega";
+            var documented = new Argument(@"test-documented", new[] { good }, (c, p) => true);
+            var accepted = new Argument(@"test-accepted", () => good, (c, p) => true)
+                { AcceptedValues = () => new[] { good } };
+            var both = new Argument(@"test-both", new[] { @"beta" }, (c, p) => true)
+                { AcceptedValues = () => new[] { good } };
+            var neither = new Argument(@"test-neither", () => good, (c, p) => true);
+
+            foreach (var arg in new[] { documented, accepted, both })
+            {
+                AssertEx.AreEqual(arg.ArgumentText + '=' + good, arg.GetArgumentTextWithValue(good));
+                AssertEx.IsTrue(ArgumentBase.Parse(arg.ArgumentText + '=' + good).IsMatch(arg), arg.Name);
+                string expected = string.Format(
+                    CommandArgUsage.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                    bad, arg.ArgumentText, string.Join(@", ", arg.ValuesForError));
+                AssertEx.ThrowsException<ValueInvalidException>(() => arg.GetArgumentTextWithValue(bad), expected);
+                AssertEx.ThrowsException<ValueInvalidException>(
+                    () => ArgumentBase.Parse(arg.ArgumentText + '=' + bad).IsMatch(arg), expected);
+            }
+
+            AssertEx.AreEqual(neither.ArgumentText + '=' + bad, neither.GetArgumentTextWithValue(bad));
+            AssertEx.IsTrue(ArgumentBase.Parse(neither.ArgumentText + '=' + bad).IsMatch(neither), neither.Name);
         }
 
         private void ValidateInvalidValue(Argument arg, HashSet<Argument> testedArguments)

@@ -160,8 +160,8 @@ namespace pwiz.Common.CommandLine
                 else
                 {
                     var val = Value;
-                    if (arg.Values != null && !arg.HasValueChecking && !arg.IsValidValue(val))
-                        throw new ValueInvalidException(arg, Value, arg.Values);
+                    if (!arg.HasValueChecking && !arg.IsValidValue(val))
+                        throw new ValueInvalidException(arg, Value, arg.ValuesForError);
                 }
             }
 

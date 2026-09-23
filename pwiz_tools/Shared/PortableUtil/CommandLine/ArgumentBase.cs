@@ -79,8 +79,8 @@ namespace pwiz.Common.CommandLine
         {
             if (ValueExample == null)
                 throw new ValueUnexpectedException(this);
-            else if (Values != null && !IsValidValue(value))
-                throw new ValueInvalidException(this, value, Values);
+            else if (!IsValidValue(value))
+                throw new ValueInvalidException(this, value, ValuesForError);
 
             return ArgumentText + '=' + value;
         }
@@ -96,6 +96,15 @@ namespace pwiz.Common.CommandLine
             if (Values != null && Values.Any(v => string.Equals(v, value, StringComparison.CurrentCultureIgnoreCase)))
                 return true;
             return AcceptedValues != null && AcceptedValues().Any(v => string.Equals(v, value, StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        /// The values to name in an invalid value message: those listed for documentation, or the
+        /// accepted values for an argument that lists none.
+        /// </summary>
+        public string[] ValuesForError
+        {
+            get { return Values ?? AcceptedValues?.Invoke() ?? Array.Empty<string>(); }
         }
 
         public static string operator +(ArgumentBase arg, string value)
