@@ -76,6 +76,14 @@ namespace pwiz.Common.DataBinding
         public abstract object GetPropertyValue(RowItem rowItem, PivotKey pivotKey);
 
         /// <summary>
+        /// Returns this column's value given the value of <see cref="Parent"/> for the same row.
+        /// <see cref="GetPropertyValue"/> is the same as calling this with the parent's GetPropertyValue,
+        /// but a caller evaluating many columns of one row can use this to calculate each ancestor
+        /// shared by several columns once instead of once per column.
+        /// </summary>
+        public abstract object GetValueFromParent(object parentValue, RowItem rowItem, PivotKey pivotKey);
+
+        /// <summary>
         /// True if <see cref="GetPropertyValue"/> with a null pivot key looks only at <see cref="RowItem.Value"/>,
         /// never at <see cref="RowItem.RowKey"/>. When several consecutive rows share the same Value object,
         /// such as the rows expanded from one item by a sublist, the value of such a column is the same
@@ -279,6 +287,11 @@ namespace pwiz.Common.DataBinding
                 return rowItem.Value;
             }
 
+            public override object GetValueFromParent(object parentValue, RowItem rowItem, PivotKey pivotKey)
+            {
+                return GetPropertyValue(rowItem, pivotKey);
+            }
+
             public override string UiMode
             {
                 get { return _uiMode; }
@@ -328,7 +341,11 @@ namespace pwiz.Common.DataBinding
 
             public override object GetPropertyValue(RowItem rowItem, PivotKey pivotKey)
             {
-                object parentValue = Parent.GetPropertyValue(rowItem, pivotKey);
+                return GetValueFromParent(Parent.GetPropertyValue(rowItem, pivotKey), rowItem, pivotKey);
+            }
+
+            public override object GetValueFromParent(object parentValue, RowItem rowItem, PivotKey pivotKey)
+            {
                 if (null == parentValue)
                 {
                     return null;
@@ -415,7 +432,11 @@ namespace pwiz.Common.DataBinding
 
             public override object GetPropertyValue(RowItem rowItem, PivotKey pivotKey)
             {
-                var collection = Parent.GetPropertyValue(rowItem, pivotKey);
+                return GetValueFromParent(Parent.GetPropertyValue(rowItem, pivotKey), rowItem, pivotKey);
+            }
+
+            public override object GetValueFromParent(object collection, RowItem rowItem, PivotKey pivotKey)
+            {
                 if (null == collection)
                 {
                     return null;
@@ -487,6 +508,11 @@ namespace pwiz.Common.DataBinding
             public override object GetPropertyValue(RowItem rowItem, PivotKey pivotKey)
             {
                 return (rowItem?.Value as IList<object>)?.ElementAtOrDefault(_valueIndex);
+            }
+
+            public override object GetValueFromParent(object parentValue, RowItem rowItem, PivotKey pivotKey)
+            {
+                return GetPropertyValue(rowItem, pivotKey);
             }
 
             public override bool DependsOnlyOnRowValue

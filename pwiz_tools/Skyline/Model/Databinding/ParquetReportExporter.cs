@@ -36,7 +36,8 @@ namespace pwiz.Skyline.Model.Databinding
         public void Export(Stream stream, RowItemEnumerator rowItemEnumerator)
         {
             // Build columns and schema from item properties
-            var columns = BuildColumns(rowItemEnumerator.ItemProperties);
+            var columnValueTree = new ColumnValueTree();
+            var columns = BuildColumns(rowItemEnumerator.ItemProperties, columnValueTree);
             var schema = new ParquetSchema(columns.Select(col => col.SchemaField).ToArray());
 
             using var writer = ParquetWriter.CreateAsync(schema, stream).GetAwaiter().GetResult();
@@ -76,7 +77,7 @@ namespace pwiz.Skyline.Model.Databinding
                 var chunkArrays = columns.Select(col => col.CreateArray(chunk.Count)).ToArray();
 
                 // Populate chunk data
-                PopulateChunk(rowItemEnumerator.ProgressMonitor, chunk, columns, chunkArrays);
+                PopulateChunk(rowItemEnumerator.ProgressMonitor, chunk, columns, columnValueTree, chunkArrays);
                 if (rowItemEnumerator.IsCanceled)
                 {
                     break;
@@ -98,7 +99,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
         }
 
-        private List<ColumnData> BuildColumns(ItemProperties itemProperties)
+        private List<ColumnData> BuildColumns(ItemProperties itemProperties, ColumnValueTree columnValueTree)
         {
             var columns = new List<ColumnData>();
             var usedColumnNames = new HashSet<string>();
@@ -106,14 +107,14 @@ namespace pwiz.Skyline.Model.Databinding
             foreach (DataPropertyDescriptor property in itemProperties)
             {
                 var name = GetUniqueColumnName(property, usedColumnNames);
-                columns.Add(new ColumnData(name, property));
+                columns.Add(new ColumnData(name, property, columnValueTree));
             }
 
             return columns;
         }
 
         private void PopulateChunk(IProgressMonitor progressMonitor,
-            IList<RowItem> rowItems, List<ColumnData> columns, Array[] chunkArrays)
+            IList<RowItem> rowItems, List<ColumnData> columns, ColumnValueTree columnValueTree, Array[] chunkArrays)
         {
             // Values with no Parquet storage type get stored as strings by calling ToString(),
             // which formats using the thread's culture, so the values have to be converted under
@@ -142,26 +143,41 @@ namespace pwiz.Skyline.Model.Databinding
                 int endRow = runIndex + 1 < runStarts.Count ? runStarts[runIndex + 1] : rowItems.Count;
                 dataSchemaLocalizer.CallWithCultureInfo(() =>
                 {
+                    var nodeValues = new object[columnValueTree.NodeCount];
+                    columnValueTree.Evaluate(rowItems[startRow], nodeValues, true);
                     for (int colIndex = 0; colIndex < columns.Count; colIndex++)
                     {
                         var column = columns[colIndex];
-                        var values = chunkArrays[colIndex];
-                        if (column.DependsOnlyOnRowValue)
+                        if (!column.DependsOnlyOnRowValue)
                         {
-                            var value = column.GetStorageValue(rowItems[startRow]);
-                            if (value != null)
-                            {
-                                for (int rowIndex = startRow; rowIndex < endRow; rowIndex++)
-                                {
-                                    values.SetValue(value, rowIndex);
-                                }
-                            }
+                            continue;
                         }
-                        else
+                        var value = column.ConvertToStorageValue(nodeValues[column.NodeIndex]);
+                        if (value != null)
                         {
                             for (int rowIndex = startRow; rowIndex < endRow; rowIndex++)
                             {
-                                column.StoreValue(rowItems[rowIndex], rowIndex, values);
+                                chunkArrays[colIndex].SetValue(value, rowIndex);
+                            }
+                        }
+                    }
+                    for (int rowIndex = startRow; rowIndex < endRow; rowIndex++)
+                    {
+                        var rowItem = rowItems[rowIndex];
+                        columnValueTree.Evaluate(rowItem, nodeValues, false);
+                        for (int colIndex = 0; colIndex < columns.Count; colIndex++)
+                        {
+                            var column = columns[colIndex];
+                            if (column.DependsOnlyOnRowValue)
+                            {
+                                continue;
+                            }
+                            var value = column.NodeIndex >= 0
+                                ? column.ConvertToStorageValue(nodeValues[column.NodeIndex])
+                                : column.GetStorageValue(rowItem);
+                            if (value != null)
+                            {
+                                chunkArrays[colIndex].SetValue(value, rowIndex);
                             }
                         }
                     }
@@ -171,6 +187,63 @@ namespace pwiz.Skyline.Model.Databinding
                     rowItems[rowIndex] = null;
                 }
             }, threadName:nameof(PopulateChunk));
+        }
+
+        /// <summary>
+        /// The distinct ColumnDescriptors which the report's columns and their ancestors consist of, ordered so
+        /// that every parent precedes its children. Evaluating the nodes in that order calculates an ancestor
+        /// shared by several columns (such as "Results!*.Value" for every result column) once per row instead
+        /// of once per column.
+        /// </summary>
+        private class ColumnValueTree
+        {
+            private readonly List<ColumnDescriptor> _nodes = new List<ColumnDescriptor>();
+            private readonly List<int> _parentIndexes = new List<int>();
+            private readonly List<bool> _dependsOnlyOnRowValue = new List<bool>();
+            private readonly Dictionary<ColumnDescriptor, int> _nodeIndexes = new Dictionary<ColumnDescriptor, int>();
+
+            public int NodeCount
+            {
+                get { return _nodes.Count; }
+            }
+
+            /// <summary>
+            /// Adds the column and any of its ancestors which are not already present,
+            /// and returns the index of the column's node.
+            /// </summary>
+            public int AddNode(ColumnDescriptor columnDescriptor)
+            {
+                if (_nodeIndexes.TryGetValue(columnDescriptor, out int nodeIndex))
+                {
+                    return nodeIndex;
+                }
+                int parentIndex = columnDescriptor.Parent == null ? -1 : AddNode(columnDescriptor.Parent);
+                nodeIndex = _nodes.Count;
+                _nodes.Add(columnDescriptor);
+                _parentIndexes.Add(parentIndex);
+                _dependsOnlyOnRowValue.Add(columnDescriptor.DependsOnlyOnRowValue);
+                _nodeIndexes.Add(columnDescriptor, nodeIndex);
+                return nodeIndex;
+            }
+
+            /// <summary>
+            /// Calculates the values of the nodes which depend only on the row's Value, or of the other nodes,
+            /// into <paramref name="nodeValues"/>. The values of the nodes which depend only on the Value have
+            /// to be there already when the other nodes are calculated.
+            /// </summary>
+            public void Evaluate(RowItem rowItem, object[] nodeValues, bool dependsOnlyOnRowValue)
+            {
+                for (int nodeIndex = 0; nodeIndex < _nodes.Count; nodeIndex++)
+                {
+                    if (_dependsOnlyOnRowValue[nodeIndex] != dependsOnlyOnRowValue)
+                    {
+                        continue;
+                    }
+                    int parentIndex = _parentIndexes[nodeIndex];
+                    var parentValue = parentIndex < 0 ? null : nodeValues[parentIndex];
+                    nodeValues[nodeIndex] = _nodes[nodeIndex].GetValueFromParent(parentValue, rowItem, null);
+                }
+            }
         }
 
         public static IEnumerable<string> MakeValidColumnNames(IEnumerable<string> columnNames)
@@ -241,11 +314,18 @@ namespace pwiz.Skyline.Model.Databinding
 
         private class ColumnData
         {
-            public ColumnData(string name, DataPropertyDescriptor propertyDescriptor)
+            public ColumnData(string name, DataPropertyDescriptor propertyDescriptor, ColumnValueTree columnValueTree)
             {
                 Name = name;
                 PropertyDescriptor = propertyDescriptor;
-                DependsOnlyOnRowValue = (propertyDescriptor as ColumnPropertyDescriptor)?.DependsOnlyOnRowValue ?? false;
+                NodeIndex = -1;
+                if (propertyDescriptor is ColumnPropertyDescriptor columnPropertyDescriptor &&
+                    columnPropertyDescriptor.PivotKey == null &&
+                    columnPropertyDescriptor.DisplayColumn.ColumnDescriptor != null)
+                {
+                    NodeIndex = columnValueTree.AddNode(columnPropertyDescriptor.DisplayColumn.ColumnDescriptor);
+                    DependsOnlyOnRowValue = columnPropertyDescriptor.DependsOnlyOnRowValue;
+                }
                 var valueType = PropertyDescriptor.DataSchema.GetWrappedValueType(PropertyDescriptor.PropertyType);
 
                 // Check if this is a ListColumnValue<T>
@@ -271,8 +351,13 @@ namespace pwiz.Skyline.Model.Databinding
             public string Name { get; }
             public DataPropertyDescriptor PropertyDescriptor { get; }
             /// <summary>
+            /// Index of this column's node in the ColumnValueTree, or -1 if the column is not a plain
+            /// ColumnPropertyDescriptor and has to be evaluated on its own with <see cref="GetStorageValue"/>.
+            /// </summary>
+            public int NodeIndex { get; }
+            /// <summary>
             /// True if rows which share the same <see cref="RowItem.Value"/> have the same value in this column.
-            /// Only known for ColumnPropertyDescriptor; any other descriptor is assumed to vary per row.
+            /// Only known for columns in the ColumnValueTree; any other column is assumed to vary per row.
             /// </summary>
             public bool DependsOnlyOnRowValue { get; }
             /// <summary>
@@ -286,12 +371,6 @@ namespace pwiz.Skyline.Model.Databinding
             public StorageType ListElementType { get; }
             public Field SchemaField { get; }
             public DataField DataField { get; }
-
-            public object GetValue(RowItem rowItem)
-            {
-                var dataSchema = PropertyDescriptor.DataSchema;
-                return dataSchema.UnwrapValue(PropertyDescriptor.GetValue(rowItem));
-            }
 
             public Array CreateArray(int rowCount)
             {
@@ -339,22 +418,22 @@ namespace pwiz.Skyline.Model.Databinding
                 return new DataColumn(DataField, flattenedArray, repetitionLevels.ToArray());
             }
 
-            public void StoreValue(RowItem rowItem, int rowIndex, Array values)
-            {
-                var value = GetStorageValue(rowItem);
-                if (value != null)
-                {
-                    values.SetValue(value, rowIndex);
-                }
-            }
-
             /// <summary>
             /// Returns the column's value for the row, converted to something that can be stored
             /// in the array from <see cref="CreateArray"/>, or null.
             /// </summary>
             public object GetStorageValue(RowItem rowItem)
             {
-                var value = GetValue(rowItem);
+                return ConvertToStorageValue(PropertyDescriptor.GetValue(rowItem));
+            }
+
+            /// <summary>
+            /// Converts a value which the column's property descriptor returned to something
+            /// that can be stored in the array from <see cref="CreateArray"/>, or null.
+            /// </summary>
+            public object ConvertToStorageValue(object value)
+            {
+                value = PropertyDescriptor.DataSchema.UnwrapValue(value);
                 if (value == null)
                 {
                     return null;

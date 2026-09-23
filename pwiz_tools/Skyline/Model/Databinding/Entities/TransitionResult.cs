@@ -42,6 +42,19 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Browsable(false)]
         public TransitionChromInfo ChromInfo { get { return _cachedValues.GetValue(this); } }
 
+        /// <summary>
+        /// The ChromInfo, or null if it is the empty placeholder. Reading it once here means each
+        /// property below goes through the cache once instead of twice.
+        /// </summary>
+        private TransitionChromInfo NonEmptyChromInfo
+        {
+            get
+            {
+                var chromInfo = ChromInfo;
+                return chromInfo.IsEmpty ? null : chromInfo;
+            }
+        }
+
         public void ChangeChromInfo(EditDescription editDescription, Func<TransitionChromInfo, TransitionChromInfo> newChromInfo)
         {
             Transition.ChangeDocNode(editDescription, docNode=>docNode.ChangeResults(GetResultFile().ChangeChromInfo(docNode.Results, newChromInfo)));
@@ -49,18 +62,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [HideWhen(AncestorOfType = typeof(Transition))]
         public Transition Transition { get { return (Transition)SkylineDocNode; } }
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
-        public double? RetentionTime { get { return ChromInfo.IsEmpty ? (double?) null : ChromInfo.RetentionTime; } }
+        public double? RetentionTime { get { return NonEmptyChromInfo?.RetentionTime; } }
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
-        public double? Fwhm { get { return ChromInfo.IsEmpty ? (double?) null : ChromInfo.Fwhm; } }
+        public double? Fwhm { get { return NonEmptyChromInfo?.Fwhm; } }
         public bool FwhmDegenerate { get { return ChromInfo.IsFwhmDegenerate; } }
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
-        public double? StartTime { get { return ChromInfo.IsEmpty ? (double?)null : ChromInfo.StartRetentionTime; } }
+        public double? StartTime { get { return NonEmptyChromInfo?.StartRetentionTime; } }
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
-        public double? EndTime { get { return ChromInfo.IsEmpty ? (double?) null : ChromInfo.EndRetentionTime; } }
+        public double? EndTime { get { return NonEmptyChromInfo?.EndRetentionTime; } }
         [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
-        public double? Area { get { return ChromInfo.IsEmpty ? (double?) null : ChromInfo.Area; } }
+        public double? Area { get { return NonEmptyChromInfo?.Area; } }
         [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
-        public double? Background { get { return ChromInfo.IsEmpty ? (double?)null : ChromInfo.BackgroundArea; } }
+        public double? Background { get { return NonEmptyChromInfo?.BackgroundArea; } }
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
         public double? AreaRatio 
         {
@@ -80,14 +93,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get { return Area / GetResultFile().GetTotalArea(Transition.Precursor.IsotopeLabelType); }
         }
         [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
-        public double? Height { get { return ChromInfo.IsEmpty ? (double?) null : ChromInfo.Height; } }
+        public double? Height { get { return NonEmptyChromInfo?.Height; } }
         [Format(Formats.MASS_ERROR, NullValue = TextUtil.EXCEL_NA)]
         public double? MassErrorPPM { get { return ChromInfo.MassError; } }
         public bool? Truncated { get { return ChromInfo.IsTruncated; } }
         [Format(NullValue = TextUtil.EXCEL_NA)]
-        public int? PeakRank { get { return ChromInfo.IsEmpty ? (int?)null : ChromInfo.Rank; } }
+        public int? PeakRank { get { return NonEmptyChromInfo?.Rank; } }
         [Format(NullValue = TextUtil.EXCEL_NA)]
-        public int? PeakRankByLevel { get { return ChromInfo.IsEmpty ? (int?)null : ChromInfo.RankByLevel; } }
+        public int? PeakRankByLevel { get { return NonEmptyChromInfo?.RankByLevel; } }
         public UserSet UserSetPeak { get { return ChromInfo.UserSet; } }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int OptStep { get { return ChromInfo.OptimizationStep; } }
@@ -98,25 +111,25 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(Formats.Skewness)]
         public double? Skewness
         {
-            get { return ChromInfo.IsEmpty ? null : ChromInfo.PeakShapeValues?.Skewness; }
+            get { return NonEmptyChromInfo?.PeakShapeValues?.Skewness; }
         }
 
         [Format(Formats.Skewness)]
         public double? Kurtosis
         {
-            get { return ChromInfo.IsEmpty ? null : ChromInfo.PeakShapeValues?.Kurtosis; }
+            get { return NonEmptyChromInfo?.PeakShapeValues?.Kurtosis; }
         }
 
         [Format(Formats.RETENTION_TIME)]
         public double? PeakStandardDeviation
         {
-            get { return ChromInfo.IsEmpty ? null : ChromInfo.PeakShapeValues?.StdDev; }
+            get { return NonEmptyChromInfo?.PeakShapeValues?.StdDev; }
         }
 
         [Format(Formats.Skewness)]
         public double? ShapeCorrelation
         {
-            get { return ChromInfo.IsEmpty ? null : ChromInfo.PeakShapeValues?.ShapeCorrelation; }
+            get { return NonEmptyChromInfo?.PeakShapeValues?.ShapeCorrelation; }
         }
 
 
