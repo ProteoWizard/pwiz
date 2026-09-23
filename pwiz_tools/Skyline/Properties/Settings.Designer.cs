@@ -3695,7 +3695,7 @@ namespace pwiz.Skyline.Properties {
 
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("https://proteome.gs.washington.edu/~nicksh/InstallTest/{0}-Setup.exe")]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://proteome.gs.washington.edu/~nicksh/InstallTest/{0}-Setup")]
         public string InstallUrl {
             get {
                 return ((string)(this["InstallUrl"]));

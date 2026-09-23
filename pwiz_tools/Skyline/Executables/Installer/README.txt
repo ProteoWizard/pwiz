@@ -31,15 +31,16 @@ Build:
      Pass -SignToolCommand '<signtool command with $f>' for a signed build.
   3. Installers land in pwiz_tools\Skyline\bin\installer\, with the update
      manifest <channel>-Setup.json beside them. Skyline's startup check reads
-     the manifest to learn the published version: the InstallUrl application
-     setting (app.config, {0} standing for the channel) is where the installer
-     is downloaded from, and the manifest is that URL with the extension
-     changed to .json. To publish, upload the manifest and the bundled
-     installer to those two URLs; the build prints them.
+     the manifest to learn the published version. The InstallUrl application
+     setting (app.config, {0} standing for the channel) has no extension:
+     InstallUrl.json is the manifest and InstallUrl-<version>.exe is that
+     version's installer, which is the name the build gives it. To publish,
+     upload the manifest and the bundled installer as they are to the folder
+     the URL names; the build prints both URLs.
      A private build that should update from somewhere else is built with
-     -InstallUrl <url of its installer>; the value is written into the staged
-     <channel>.dll.config, so the installed Skyline checks there, and the
-     manifest is named from it.
+     -InstallUrl <its URL without -<version>.exe>; the value is written into
+     the staged <channel>.dll.config, so the installed Skyline checks there,
+     and the manifest and installer are named from it.
   4. pwsh -File pwiz_tools\Skyline\Executables\Installer\Test-Installer.ps1
      installs the newest one silently, checks the deployment, runs
      SkylineCmd --version, uninstalls, and checks the cleanup (-AllUsers from

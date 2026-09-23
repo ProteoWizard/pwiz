@@ -12,9 +12,10 @@ Release x64 from Visual Studio):
      RID-named publish folder.
   3. Settle where this build installs from: the InstallUrl application setting in
      the staged <channel>.dll.config, overwritten by -InstallUrl for a private
-     build. Write the update manifest there too, the small JSON file Skyline's
-     startup check reads to learn the published version; it is published beside
-     the installer, under the installer's name with a .json extension.
+     build. The URL has no extension; InstallUrl.json is the update manifest, the
+     small JSON file Skyline's startup check reads to learn the published version,
+     and InstallUrl-<version>.exe is that version's installer. Write the manifest
+     and name the bundled installer accordingly.
   4. Make sure the .NET 10 desktop runtime installer EXE is cached (shared with
      the pwiz-sharp installer under pwiz-sharp\installer\cache\).
   5. Compile Setup.iss twice: the default variant bundling the runtime and the
@@ -35,9 +36,9 @@ The Skyline build output directory to package. Default: the newest of
 Where the installers land. Default ..\..\bin\installer (gitignored).
 
 .PARAMETER InstallUrl
-Where the installed Skyline was installed from and checks for a newer version: the URL of
-the bundled installer as published, e.g.
-  https://proteome.gs.washington.edu/~nicksh/SpecialSkylines/Skyline-daily-Setup.exe
+Where the installed Skyline was installed from and checks for a newer version: the
+published installer's URL without the -<version>.exe, e.g.
+  https://proteome.gs.washington.edu/~nicksh/SpecialSkylines/Skyline-daily-Setup
 A {0} in it stands for the channel (Skyline or Skyline-daily). Written into the staged
 <channel>.dll.config, so the installed copy carries it. Default: the value app.config
 compiled into the build, which is the official location.
@@ -53,7 +54,7 @@ Unsigned when omitted.
 .USAGE
     pwsh -File pwiz_tools/Skyline/Executables/Installer/build.ps1
     pwsh -File pwiz_tools/Skyline/Executables/Installer/build.ps1 -SkylineBinDir C:\other\bin\x64\Release\net10.0-windows
-    pwsh -File pwiz_tools/Skyline/Executables/Installer/build.ps1 -InstallUrl https://example.org/skylines/Skyline-daily-Setup.exe
+    pwsh -File pwiz_tools/Skyline/Executables/Installer/build.ps1 -InstallUrl https://example.org/skylines/Skyline-daily-Setup
 #>
 #requires -Version 7.0
 [CmdletBinding()]
@@ -157,11 +158,12 @@ if (Test-Path (Join-Path $stagingDir 'coreclr.dll')) {
 }
 
 # 3. Install URL and update manifest. Skyline reads InstallUrl from the config beside
-#    its exe (the channel name replaces the {0}), downloads a newer installer from it,
-#    and reads the manifest from that URL with the extension changed to .json. A
-#    private build gets its own URL written into the staged config here, and the
-#    manifest is named from whatever the staged config ends up saying, so the
-#    installed Skyline and the published files agree by construction.
+#    its exe (the channel name replaces the {0}). The URL has no extension: with .json
+#    appended it is the manifest, and with -<version>.exe appended it is that version's
+#    installer. A private build gets its own URL written into the staged config here,
+#    and both the manifest and the bundled installer are named from whatever the
+#    staged config ends up saying, so the installed Skyline and the published files
+#    agree by construction and nothing is renamed on upload.
 Write-Host "`n==> install URL" -ForegroundColor Cyan
 $configPath = Join-Path $stagingDir "$appName.dll.config"
 [xml] $config = Get-Content $configPath
@@ -174,7 +176,11 @@ if ($InstallUrl) {
     $config.Save($configPath)
 }
 $installUrl = $urlNode.InnerText -f $appName
-$manifestUrl = [System.IO.Path]::ChangeExtension(([uri] $installUrl).GetLeftPart([System.UriPartial]::Path), '.json')
+if ($installUrl -match '\.(exe|json)$') {
+    throw "InstallUrl '$installUrl' must not end in an extension; Skyline appends .json for the manifest and -<version>.exe for the installer."
+}
+$manifestUrl = "$installUrl.json"
+$installerUrl = "$installUrl-$appVersion.exe"
 $manifestPath = Join-Path $OutputDir ([System.IO.Path]::GetFileName($manifestUrl))
 if (-not (Test-Path $OutputDir)) { New-Item -ItemType Directory $OutputDir -Force | Out-Null }
 Set-Content -Path $manifestPath -Value (@{ version = $appVersion } | ConvertTo-Json)
@@ -225,7 +231,8 @@ function Invoke-Iscc {
     if ($LASTEXITCODE -ne 0) { throw "ISCC compile failed for $OutputBaseFilename (exit $LASTEXITCODE)" }
 }
 
-$bundledName = "$appName-Setup-$appVersion"
+# The bundled installer is named as the install URL will serve it.
+$bundledName = [System.IO.Path]::GetFileNameWithoutExtension($installerUrl)
 $lightName   = "$appName-NoNetRuntime-Setup-$appVersion"
 Invoke-Iscc -OutputBaseFilename $bundledName
 Invoke-Iscc -OutputBaseFilename $lightName -ExtraDefines @('/DNoNetRuntime')
@@ -251,4 +258,4 @@ Write-Host "To publish this version, upload:"
 Write-Host "    $manifestPath"
 Write-Host "        as $manifestUrl"
 Write-Host "    $(Join-Path $OutputDir "$bundledName.exe")"
-Write-Host "        as $installUrl"
+Write-Host "        as $installerUrl"

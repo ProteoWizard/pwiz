@@ -123,7 +123,7 @@ namespace pwiz.Skyline
             if (newerVersion != null)
             {
                 if (ShowUpgradeForm(newerVersion, true))
-                    Checker.OpenDownload(ParentWindow);
+                    Checker.OpenDownload(ParentWindow, newerVersion);
             }
             else if (!_startup)
             {

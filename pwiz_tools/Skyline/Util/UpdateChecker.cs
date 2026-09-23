@@ -30,14 +30,15 @@ namespace pwiz.Skyline.Util
     /// <summary>
     /// Finds out whether a newer Skyline than this one has been published. The InstallUrl
     /// application setting, with the product name (Skyline or Skyline-daily) substituted for
-    /// its {0}, is where this Skyline was installed from and where a newer one is downloaded
-    /// from. Published beside the installer, under the same name with a .json extension, is
-    /// the manifest the installer build writes:
-    /// <code>{ "version": "26.1.1.260" }</code>
+    /// its {0}, is where this Skyline was installed from and where a newer one comes from. It
+    /// has no extension: with .json appended it is the manifest the installer build writes,
+    /// <code>{ "version": "26.1.1.260" }</code>, and with -version.exe appended it is that
+    /// version's installer, so the installer is published under the name the build gave it.
     /// </summary>
     public class UpdateChecker
     {
         public const string MANIFEST_EXTENSION = ".json";
+        public const string INSTALLER_EXTENSION = ".exe";
         public const string VERSION_PROPERTY = "version";
 
         public UpdateChecker()
@@ -62,21 +63,12 @@ namespace pwiz.Skyline.Util
 
         public Uri ManifestUri
         {
-            get { return GetManifestUri(InstallUrl); }
+            get { return new Uri(InstallUrl + MANIFEST_EXTENSION); }
         }
 
-        /// <summary>
-        /// The manifest is the install URL with its extension changed to .json, so that one
-        /// setting names both and they are published together.
-        /// </summary>
-        public static Uri GetManifestUri(string installUrl)
+        public Uri GetInstallerUri(Version version)
         {
-            string url = new Uri(installUrl).GetLeftPart(UriPartial.Path);
-            int lastSlash = url.LastIndexOf('/');
-            int lastDot = url.LastIndexOf('.');
-            if (lastDot > lastSlash)
-                url = url.Substring(0, lastDot);
-            return new Uri(url + MANIFEST_EXTENSION);
+            return new Uri(InstallUrl + @"-" + version + INSTALLER_EXTENSION);
         }
 
         /// <summary>
@@ -111,11 +103,11 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Opens the installer download in the browser.
+        /// Opens the download of the given version's installer in the browser.
         /// </summary>
-        public virtual void OpenDownload(IWin32Window parent)
+        public virtual void OpenDownload(IWin32Window parent, Version version)
         {
-            WebHelpers.OpenLink(parent, InstallUrl);
+            WebHelpers.OpenLink(parent, GetInstallerUri(version).ToString());
         }
     }
 }

@@ -70,7 +70,12 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(upgradeDlg, upgradeDlg.AcceptButton.PerformClick);
             // The download opens on the UI thread as soon as the dialog closes, so a round
             // trip through that thread is enough to know it has happened.
-            RunUI(() => AssertEx.AreEqual(1, _checker.DownloadsOpened));
+            RunUI(() =>
+            {
+                AssertEx.AreEqual(1, _checker.DownloadsOpened);
+                AssertEx.AreEqual(TestUpdateChecker.INSTALL_URL + "-" + TestUpdateChecker.NEWER_VERSION + ".exe",
+                    _checker.DownloadUrl);
+            });
 
             // The published version is this one: a manual check finds nothing.
             using (_checker.Publish(TestUpdateChecker.CURRENT_VERSION))
@@ -204,7 +209,7 @@ namespace pwiz.SkylineTestFunctional
     /// </summary>
     internal class TestUpdateChecker : UpdateChecker, IDisposable
     {
-        public const string INSTALL_URL = "https://skyline.example.org/software/Skyline-Setup.exe";
+        public const string INSTALL_URL = "https://skyline.example.org/software/Skyline-Setup";
         public const string NEWER_RELEASE_TEXT = "3.7";
         public static readonly Version CURRENT_VERSION = new Version(3, 6, 1, 10171);
         public static readonly Version NEWER_VERSION = new Version(3, 6, 1, 10172);
@@ -220,9 +225,15 @@ namespace pwiz.SkylineTestFunctional
 
         public int DownloadsOpened { get; private set; }
 
-        public override void OpenDownload(IWin32Window parent)
+        /// <summary>
+        /// The URL the last accepted offer would have opened.
+        /// </summary>
+        public string DownloadUrl { get; private set; }
+
+        public override void OpenDownload(IWin32Window parent, Version version)
         {
             DownloadsOpened++;
+            DownloadUrl = GetInstallerUri(version).ToString();
         }
 
         public HttpClientTestHelper Publish(Version version)
