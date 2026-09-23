@@ -36,12 +36,15 @@
 #if SkylineAppName != "Skyline" && SkylineAppName != "Skyline-daily"
   #error SkylineAppName must be Skyline or Skyline-daily
 #endif
-; The product name and install URL this branch publishes under; an empty product
-; name means the channel.
+; What the build is called and where it is published. A branch overrides either in
+; InstallerOverrides.iss; otherwise the product is the channel and the folder is the
+; official one. build.ps1 reads the same two files for the same values.
 #include "InstallerOverrides.iss"
-#if ProductName == ""
-  #undef ProductName
+#ifndef ProductName
   #define ProductName SkylineAppName
+#endif
+#ifndef InstallUrl
+  #define InstallUrl "https://proteome.gs.washington.edu/~nicksh/InstallTest/"
 #endif
 #ifndef MyAppVersion
   #define MyAppVersion "0.0.0.0"
