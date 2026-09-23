@@ -90,18 +90,7 @@ namespace pwiz.Osprey.FDR
             // bit-equal. Mirrors Rust pipeline.rs::run_percolator_fdr.
             foreach (var kvp in perFileEntries)
             {
-                // Array.Sort OK: the terminal key is ParquetIndex, which is unique per row,
-                // so the comparator never returns 0 and the unstable-sort tie path is unreachable.
-                kvp.Value.Sort((a, b) => // Array.Sort OK: (see above) terminal key ParquetIndex is unique per row, comparator never ties
-                {
-                    int c = a.EntryId.CompareTo(b.EntryId);
-                    if (c != 0) return c;
-                    c = a.Charge.CompareTo(b.Charge);
-                    if (c != 0) return c;
-                    c = a.ScanNumber.CompareTo(b.ScanNumber);
-                    if (c != 0) return c;
-                    return a.ParquetIndex.CompareTo(b.ParquetIndex);
-                });
+                kvp.Value.Sort(FdrEntry.CANONICAL_ORDER); // Array.Sort OK: CANONICAL_ORDER's terminal key ParquetIndex is unique per row here (reconciled-write numbering), so the comparison never ties
             }
 
             // Build the flat PercolatorEntry list (one per observation), preferring
@@ -232,6 +221,7 @@ namespace pwiz.Osprey.FDR
             PercolatorDiagnosticsConfig diagnostics = null,
             string passLabel = FIRST_PASS_LABEL,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures = null,
+            Func<string, double[]> loadFileApexRts = null,
             Action<FeatureContributions> captureContributions = null,
             Action<PercolatorResults> captureModel = null)
         {
@@ -260,7 +250,7 @@ namespace pwiz.Osprey.FDR
                     if (c != 0) return c;
                     c = a.Charge.CompareTo(b.Charge);
                     if (c != 0) return c;
-                    return a.ParquetIndex.CompareTo(b.ParquetIndex);
+                    return FdrEntry.CompareParquetIndex(a.ParquetIndex, b.ParquetIndex);
                 });
             }
 
@@ -276,7 +266,7 @@ namespace pwiz.Osprey.FDR
                     @"is a bug -- the resident build is the flag-off FdrEntry path.");
 
             var percConfig = BuildProjectionPercolatorConfig(config, featureInfos, diagnostics);
-            int n = projections.TotalRows;
+            long n = projections.TotalRows;
 
             // Streaming-only (cross-impl parity with the Rust streaming-only change):
             // ALWAYS run the projection-native streaming score + compete pass, regardless
@@ -292,7 +282,7 @@ namespace pwiz.Osprey.FDR
                 passLabel, n));
             bool streamingAbort = RunStreamingIntoProjection(
                 projections.PerFile, peptideById, percConfig, logInfo, passLabel,
-                loadFileFeatures, sink, captureContributions, captureModel);
+                loadFileFeatures, loadFileApexRts, sink, captureContributions, captureModel);
             if (streamingAbort)
                 return true;
 
@@ -311,7 +301,7 @@ namespace pwiz.Osprey.FDR
         /// <summary>
         /// Projection-free 1st-pass Percolator (issue #4355 struct-shrink S3, Stage B): the
         /// FLAT-memory entry point that holds NO resident row buffer. The counterpart of the
-        /// <see cref="RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Action{FeatureContributions},System.Action{PercolatorResults})"/>
+        /// <see cref="RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Func{string,double[]},System.Action{FeatureContributions},System.Action{PercolatorResults})"/>
         /// projection overload for the lean 1st-pass case, it builds the same parity-locked
         /// <see cref="PercolatorConfig"/> and delegates to
         /// <see cref="PercolatorScorer.RunStreamingFirstPass"/>, which streams every row's identity +
@@ -323,7 +313,7 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         public static bool RunFirstPassStreaming(
             IReadOnlyList<string> fileNames,
-            Action<string, Action<uint, byte, bool, double, string>> streamFileRows,
+            Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> streamFileRows,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
             OspreyConfig config,
             OspreyFeatureInfo[] featureInfos,
@@ -332,7 +322,10 @@ namespace pwiz.Osprey.FDR
             PercolatorDiagnosticsConfig diagnostics = null,
             string passLabel = FIRST_PASS_LABEL,
             Action<FeatureContributions> captureContributions = null,
-            Action<PercolatorResults> captureModel = null)
+            Action<PercolatorResults> captureModel = null,
+            Func<string, Action<uint, double>, bool> tryStreamCompletedScores = null,
+            PercolatorResults pretrainedModel = null,
+            FileRunScopeSink flushFileRunScope = null)
         {
             if (sink == null)
                 throw new ArgumentNullException(nameof(sink));
@@ -343,7 +336,8 @@ namespace pwiz.Osprey.FDR
             var percConfig = BuildProjectionPercolatorConfig(config, featureInfos, diagnostics);
             return PercolatorScorer.RunStreamingFirstPass(
                 fileNames, streamFileRows, loadFileFeatures, percConfig, logInfo, passLabel, sink,
-                captureContributions, captureModel);
+                captureContributions, captureModel, tryStreamCompletedScores, pretrainedModel,
+                flushFileRunScope);
         }
 
         /// <summary>
@@ -796,6 +790,7 @@ namespace pwiz.Osprey.FDR
             Action<string> logInfo,
             string passLabel,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
+            Func<string, double[]> loadFileApexRts,
             IFdrOutputSink sink,
             Action<FeatureContributions> captureContributions = null,
             Action<PercolatorResults> captureModel = null)
@@ -861,9 +856,13 @@ namespace pwiz.Osprey.FDR
             // silent span on an 82-file join; announce it so the console is not blank.
             logInfo(string.Format(@"Selecting training subset from {0} scored entries...", n));
             int[] bestIdx;
+            // fileStart is how this path supplies run identity: it hands an EMPTY entries list to
+            // avoid the full-N PercolatorEntry buffer, so there are no FileName strings to read a
+            // run off. Without it the selection would fall back to treating every row as its own
+            // run and sample candidate PEAKS rather than runs.
             int[] trainSubsetGlobalIdx = PercolatorSampling.BuildTrainingSubset(
                 labels, entryIds, peptides, Array.Empty<PercolatorEntry>(), maxTrain,
-                percConfig.Seed, out bestIdx, bestScores);
+                percConfig.Seed, out bestIdx, bestScores, fileStart);
 
             int dedupTargets = 0, dedupDecoys = 0;
             for (int i = 0; i < bestIdx.Length; i++)
@@ -966,7 +965,7 @@ namespace pwiz.Osprey.FDR
             // primitives re-aggregated there silently.
             PercolatorScorer.ScoreProjectionAndComputeFdrInPlace(
                 perFile, labels, entryIds, peptides, trainResults, percConfig,
-                loadFileFeatures, sink, captureContributions,
+                loadFileFeatures, loadFileApexRts, sink, captureContributions,
                 applyExperimentAgg: passLabel == FIRST_PASS_LABEL);
             return false;
         }
@@ -1013,8 +1012,23 @@ namespace pwiz.Osprey.FDR
             var minRunBothByEntryId = new Dictionary<uint, double>();
             var minRunBothByPeptide = new Dictionary<(string ModifiedSequence, bool IsDecoy), double>();
             foreach (var kvp in perFileEntries)
+                AccumulateExperimentQFloors(kvp.Value, minRunBothByEntryId, minRunBothByPeptide);
+            foreach (var kvp in perFileEntries)
+                ApplyExperimentQFloors(kvp.Value, minRunBothByEntryId, minRunBothByPeptide);
+        }
+
+        /// <summary>
+        /// Fold ONE file's entries into the experiment-q floors - the min run q per entry_id and
+        /// per (peptide, isDecoy). Both maps are O(distinct), so a caller can walk the run one
+        /// file at a time and drop each as it goes; nothing here needs a whole-run view.
+        /// </summary>
+        public static void AccumulateExperimentQFloors(
+            IReadOnlyList<FdrEntry> entries,
+            Dictionary<uint, double> minRunBothByEntryId,
+            Dictionary<(string ModifiedSequence, bool IsDecoy), double> minRunBothByPeptide)
+        {
             {
-                foreach (var e in kvp.Value)
+                foreach (var e in entries)
                 {
                     double runBoth = e.EffectiveRunQvalue(FdrLevel.Both);
                     double curPrec;
@@ -1035,25 +1049,53 @@ namespace pwiz.Osprey.FDR
                         minRunBothByPeptide[pkey] = runBoth;
                 }
             }
+        }
 
-            foreach (var kvp in perFileEntries)
+        /// <summary>
+        /// Raise ONE file's experiment q-values to the floors folded by
+        /// <see cref="AccumulateExperimentQFloors"/>. The apply half of the same operation,
+        /// separated so a streamed consumer can fold over every file first and then apply as it
+        /// revisits them - the floors are whole-run, the application is per row.
+        /// </summary>
+        /// <summary>
+        /// Returns how many q-values this call actually RAISED. Zero is the interesting answer:
+        /// the score pass applies the same floor before it writes (see the clamp in
+        /// <c>PercolatorScorer.ScoreProjectionAndComputeFdrInPlace</c>), so a pool rebuilt from
+        /// those persisted values should already satisfy the invariant and a re-apply should
+        /// change nothing. A caller that folds every run purely to re-derive floors that raise
+        /// no value is doing a whole traversal for a no-op, and the count is what tells it so
+        /// rather than leaving the question to argument.
+        /// </summary>
+        public static int ApplyExperimentQFloors(
+            IReadOnlyList<FdrEntry> entries,
+            IReadOnlyDictionary<uint, double> minRunBothByEntryId,
+            IReadOnlyDictionary<(string ModifiedSequence, bool IsDecoy), double> minRunBothByPeptide)
+        {
+            int raised = 0;
             {
-                foreach (var e in kvp.Value)
+                foreach (var e in entries)
                 {
                     double floorPrec;
                     if (minRunBothByEntryId.TryGetValue(e.EntryId, out floorPrec) &&
                         floorPrec > e.ExperimentPrecursorQvalue)
+                    {
                         e.ExperimentPrecursorQvalue = floorPrec;
+                        raised++;
+                    }
 
                     if (!string.IsNullOrEmpty(e.ModifiedSequence))
                     {
                         double floorPept;
                         if (minRunBothByPeptide.TryGetValue((e.ModifiedSequence, e.IsDecoy), out floorPept) &&
                             floorPept > e.ExperimentPeptideQvalue)
+                        {
                             e.ExperimentPeptideQvalue = floorPept;
+                            raised++;
+                        }
                     }
                 }
             }
+            return raised;
         }
     }
 }

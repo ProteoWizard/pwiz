@@ -227,20 +227,39 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public static Exception ToFileLockingException(Exception x, string dirPath)
         {
-            // If it's a file locking issue, wrap the exception to report the locking process
-            if (!(x is IOException { HResult: ERROR_SHARING_VIOLATION } ioException))
+            // If it's a file locking issue, wrap the exception to report the locking process. A lock
+            // surfaces two ways: a sharing violation when the file is opened, and access-denied when
+            // it is deleted or replaced, which is what an overwriting unzip does. Access-denied has
+            // innocent causes too (a read-only file, an ACL), but those name no locking process and
+            // fall through below with the original exception intact.
+            bool isSharingViolation = x is IOException { HResult: ERROR_SHARING_VIOLATION };
+            if (!isSharingViolation && !(x is UnauthorizedAccessException))
                 return x;
 
-            var match = Regex.Match(ioException.Message, "'([^']+)'");
-            if (!match.Success)
+            var quoted = Regex.Matches(x.Message, "'([^']+)'")
+                .Cast<Match>().Select(m => m.Groups[1].Value).ToArray();
+            if (quoted.Length == 0)
                 return x;
 
             try
             {
-                string lockedName = match.Groups[1].Value;
+                // Prefer the first quoted run that is actually a rooted path. These messages are
+                // localized, and some languages put an apostrophe ahead of the path - the French
+                // access-denied message opens "L'acces au chemin d'acces '<path>'" - so taking the
+                // first quoted run there captures a fragment of the prose and names a file that
+                // never existed. Fall back to the first run for messages that quote a bare name.
+                string lockedName = quoted.FirstOrDefault(IsRootedPath) ?? quoted[0];
                 string lockedFilePath = ResolveLockedPath(lockedName, dirPath);
                 if (lockedFilePath == null)
                 {
+                    // Only a sharing violation is proof that a lock existed. Access-denied says
+                    // nothing of the kind - a read-only file, an ACL, or a path that is a directory
+                    // all arrive here - so reporting one as "locked but since deleted" invents a
+                    // lock that was never held and sends the reader after a process that never
+                    // existed. Nothing resolved and nothing to add, so keep what actually happened.
+                    if (!isSharingViolation)
+                        return x;
+
                     // It was locked at the time of the failure, but is gone now
                     var searchedDir = dirPath ?? Path.GetDirectoryName(lockedName);
                     return new IOException(
@@ -263,6 +282,18 @@ namespace pwiz.Common.SystemUtil
                 // The restart manager is not always available to name the locker, and losing the
                 // original exception to that would be worse than not knowing
                 return x;
+            }
+        }
+
+        private static bool IsRootedPath(string value)
+        {
+            try
+            {
+                return Path.IsPathRooted(value);
+            }
+            catch (ArgumentException)
+            {
+                return false;   // Invalid path characters, so not the path we are looking for
             }
         }
 

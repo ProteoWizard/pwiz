@@ -844,6 +844,81 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
+        /// The two reductions the SECOND-pass protein FDR takes off the survivor pool, folded
+        /// together so one walk serves both: the per-peptide bests
+        /// (<see cref="CollectBestPeptideScores(IList{KeyValuePair{string, List{FdrEntry}}})"/>)
+        /// and the detected-peptide set (targets passing experiment-level q at the configured
+        /// gate level).
+        ///
+        /// <para>Both are O(distinct peptide) and neither retains an entry, so a caller can
+        /// stream one file at a time and drop it - which is the whole reason this exists rather
+        /// than the two whole-pool passes it replaces (#4486). The first pass has its own
+        /// <see cref="FirstPassProteinFdrAccumulator"/>; the gates differ (that one is RUN-level
+        /// at the run FDR, this one EXPERIMENT-level at the experiment FDR), which is why they
+        /// are two types rather than one parameterized one.</para>
+        /// </summary>
+        public sealed class SecondPassProteinFdrAccumulator
+        {
+            private readonly FdrLevel _peptideGateLevel;
+            private readonly double _experimentFdr;
+            private readonly Dictionary<string, PeptideScore> _bestScores =
+                new Dictionary<string, PeptideScore>();
+
+            public SecondPassProteinFdrAccumulator(FdrLevel peptideGateLevel, double experimentFdr)
+            {
+                _peptideGateLevel = peptideGateLevel;
+                _experimentFdr = experimentFdr;
+            }
+
+            /// <summary>
+            /// Targets passing experiment-level q at the gate level - the parsimony input.
+            /// Matches Rust pipeline.rs's second-pass filter on
+            /// <c>effective_experiment_qvalue(peptide_gate_level) &lt;= experiment_fdr</c>.
+            /// </summary>
+            public HashSet<string> DetectedPeptides { get; } = new HashSet<string>(StringComparer.Ordinal);
+
+            /// <summary>Fold one entry into both reductions.</summary>
+            public void Add(FdrEntry entry)
+            {
+                if (!entry.IsDecoy &&
+                    entry.EffectiveExperimentQvalue(_peptideGateLevel) <= _experimentFdr)
+                {
+                    DetectedPeptides.Add(entry.ModifiedSequence);
+                }
+
+                PeptideScore ps;
+                if (_bestScores.TryGetValue(entry.ModifiedSequence, out ps))
+                {
+                    if (entry.Score > ps.Score)
+                        ps.Score = entry.Score;
+                    if (entry.RunPeptideQvalue < ps.BestQvalue)
+                        ps.BestQvalue = entry.RunPeptideQvalue;
+                }
+                else
+                {
+                    _bestScores[entry.ModifiedSequence] = new PeptideScore
+                    {
+                        Score = entry.Score,
+                        IsDecoy = entry.IsDecoy,
+                        BestQvalue = entry.RunPeptideQvalue
+                    };
+                }
+            }
+
+            /// <summary>
+            /// The per-peptide bests, with the cross-impl bisection dump fired at the point the
+            /// whole-pool collector fired it - after the reduction is complete and before the
+            /// caller logs its count.
+            /// </summary>
+            public Dictionary<string, PeptideScore> FinishBestScores()
+            {
+                if (FdrDiagnostics.DumpBestPeptideScores)
+                    FdrDiagnostics.WriteBestPeptideScoresDump(_bestScores);
+                return _bestScores;
+            }
+        }
+
+        /// <summary>
         /// Collect peptide-level scores for protein FDR.
         ///
         /// For each unique modified_sequence, keeps the best (max) SVM score and the

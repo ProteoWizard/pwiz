@@ -32,7 +32,7 @@ namespace pwiz.Skyline.ToolsUI
     /// Unlike the Open dialog, the Save dialog does not have the classic file-name combo (control id 1148); its
     /// file-name field sits inside the DirectUI surface. Both are nonetheless real Win32 child windows -- the file
     /// name is a class "Edit" with control id 1001, and the Save button a class "Button" with the standard IDOK
-    /// control id (1) -- so the file name is set with WM_SETTEXT and the dialog accepted with BM_CLICK.
+    /// control id (1) -- so the file name is typed with the Edit messages and the dialog accepted with BM_CLICK.
     /// </summary>
     public class NativeSaveFileDialog : NativeFileDialog
     {
@@ -40,7 +40,6 @@ namespace pwiz.Skyline.ToolsUI
         // the breadcrumb is a ToolbarWindow32 -- so class + id identifies the Edit unambiguously, and nothing has to
         // walk to the DirectUI host that owns it.
         private const int FILE_NAME_EDIT_ID = 1001;
-        private const int IDOK = 1; // the Save button
 
         public override string DialogTypeName => @"SaveFileDialog";
 
@@ -72,7 +71,6 @@ namespace pwiz.Skyline.ToolsUI
             return OkDialog(saveButton.ClickNow);
         }
 
-        // The Save button, by its control id rather than its (localized) caption.
-        private NativeButton AcceptButton => RequireButton(IDOK, @"Save");
+        protected override string CommitButtonDescription => @"Save";
     }
 }

@@ -713,6 +713,12 @@ Try uninstalling and reinstalling Skyline, or contact your IT department if the 
   <data name="SkylineWindow_DocumentUI_The_DocumentUI_property_may_only_be_accessed_on_the_UI_thread" xml:space="preserve">
     <value>The DocumentUI property may only be accessed on the UI thread.</value>
   </data>
+  <data name="SkylineWindow_ExportLayout_Failure_attempting_to_save_the_window_layout_file__0__" xml:space="preserve">
+    <value>Failure attempting to save the window layout file {0}.</value>
+  </data>
+  <data name="SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files" xml:space="preserve">
+    <value>Window Layout Files</value>
+  </data>
   <data name="SkylineWindow_FindBackgroundProteome_Background_Proteome" xml:space="preserve">
     <value>Background Proteome</value>
   </data>
@@ -1100,6 +1106,9 @@ Try uninstalling and reinstalling Skyline, or contact your IT department if the 
   <data name="SkylineWindow_ShowExportEspFeaturesDialog_The_document_must_contain_targets_for_which_to_export_features_" xml:space="preserve">
     <value>The document must contain targets for which to export features.</value>
   </data>
+  <data name="SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout" xml:space="preserve">
+    <value>Export Window Layout</value>
+  </data>
   <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Export_Spectral_Library" xml:space="preserve">
     <value>Export Spectral Library</value>
   </data>
@@ -1108,6 +1117,9 @@ Try uninstalling and reinstalling Skyline, or contact your IT department if the 
   </data>
   <data name="SkylineWindow_ShowExportSpectralLibraryDialog_Failed_exporting_spectral_library_to__0__" xml:space="preserve">
     <value>Failed exporting spectral library to {0}.</value>
+  </data>
+  <data name="SkylineWindow_ShowImportLayoutDlg_Import_Window_Layout" xml:space="preserve">
+    <value>Import Window Layout</value>
   </data>
   <data name="SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_" xml:space="preserve">
     <value>The document must be fully loaded before importing a peptide search.</value>

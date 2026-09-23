@@ -46,7 +46,16 @@ namespace pwiz.Osprey.IO
         /// v1 had no identity and a different header layout, so it reads as
         /// <see cref="LibraryCacheStatus.Invalid"/> and is rebuilt once.
         /// </summary>
-        private const uint VERSION = 2;
+        /// <remarks>
+        /// v3 (issue #4650) carries a FINISHED library: for a supplied-decoy source the entries
+        /// are marked, paired (a decoy's Id is <c>target | DECOY_ID_BIT</c>) and carry the
+        /// pairing manifest's protein accessions. v2 held the state BEFORE all of that, because
+        /// marking and pairing ran at the caller after the cache was written - so a v2 file is
+        /// not a stale v3, it is a different thing, and reading one as v3 would hand every
+        /// consumer parse-order decoy ids. The header hash widened to match (see
+        /// <c>LibraryLoader.LibraryCompositionHash</c>), so a v2 file fails both checks.
+        /// </remarks>
+        private const uint VERSION = 3;
 
         /// <summary>
         /// Outcome of a <see cref="LoadCache(string,string,out LibraryCacheStatus)"/>
@@ -211,7 +220,8 @@ namespace pwiz.Osprey.IO
         /// the six values every downstream stage reads are byte-identical.
         /// </summary>
         public static List<LibraryEntry> LoadCache(string path, string expectedLibraryHash,
-            bool omitFragments, Action<string> logInfo, out LibraryCacheStatus status)
+            bool omitFragments, Action<string> logInfo, out LibraryCacheStatus status,
+            HashSet<uint> retainFragmentsFor = null)
         {
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
             using (var r = new BinaryReader(stream))
@@ -306,8 +316,31 @@ namespace pwiz.Osprey.IO
                                 "Library entry {0} ({1}) has no fragment peaks; peak-less entries support " +
                                 "BiblioSpec MS1 feature finding and are not valid for DIA search.",
                                 id, modifiedSequence));
+                        // Per ENTRY, not per load. `omitFragments` drops every entry's peaks;
+                        // `retainFragmentsFor` keeps them only for the base_ids a later stage will
+                        // actually score, and skips the rest at the same cost SkipFragment already
+                        // pays to advance the stream.
+                        //
+                        // This exists because the alternative is to build all of them and then
+                        // give them back: LibraryFragmentRelease walks 6,175,389 entries to
+                        // release the 4,924,513 not retained, which measured ~1m54s on the CHS
+                        // cohort and is O(library) - the same two minutes at 3 files or 4,000.
+                        // Dropping during the read never allocates them, removes that pass, and
+                        // lowers the peak, which today includes fragments that are about to be
+                        // discarded (25.50 GB at the release point).
+                        //
+                        // Null means "retain everything", so a FRESH run is untouched - correctly:
+                        // it needs the fragments, and the retained set does not exist until
+                        // FirstPassFDR has written it.
+                        //
+                        // base_id, not Id: a target and its paired decoy share a base_id
+                        // (LibraryEntry, "base_id = Id & 0x7FFFFFFF"), so retaining one retains
+                        // both and the target-decoy invariant survives the filter.
+                        bool skippedByRetainSet = !omitFragments && retainFragmentsFor != null &&
+                                                  !retainFragmentsFor.Contains(id & 0x7FFFFFFFu);
+                        bool keepFragments = !omitFragments && !skippedByRetainSet;
                         LibraryFragment[] fragments;
-                        if (omitFragments)
+                        if (!keepFragments)
                         {
                             fragments = Array.Empty<LibraryFragment>();
                             for (uint fi = 0; fi < nFrags; fi++)
@@ -362,6 +395,22 @@ namespace pwiz.Osprey.IO
                         entry.IsDecoy = isDecoy;
                         entry.Modifications = modifications;
                         entry.Fragments = fragments;
+                        // A spectrum skipped by the retain set is RELEASED, not empty. The two
+                        // are different states and only one of them is safe here: an empty
+                        // spectrum is readable, so every scorer's
+                        // `Fragments == null || Fragments.Count == 0` guard absorbs it as "this
+                        // entry has no spectrum" and scores a degenerate zero, while a released
+                        // one throws on that same expression. This arm exists to be a DIRECT
+                        // SWAP for loading everything and then calling LibraryFragmentRelease,
+                        // so it has to reach the state that would leave - tripwire included.
+                        // Pinned by IOTest.TestLibraryCacheRetainMatchesRelease.
+                        //
+                        // OmitFragments is deliberately NOT included: that arm has no
+                        // load-and-release counterpart to match (LibraryFragmentRelease refuses
+                        // the StopAfterStage5 leg outright), and its Array.Empty is the
+                        // documented readable-empty state - see LibraryEntry.IsSpectrumReleased.
+                        if (skippedByRetainSet)
+                            entry.ReleaseSpectrum();
                         entry.ProteinIds = proteinIds;
                         entry.GeneNames = geneNames;
 
@@ -489,7 +538,7 @@ namespace pwiz.Osprey.IO
         /// Read past one fragment record without materializing it, advancing the
         /// reader exactly as the full fragment read would. Must stay in lockstep
         /// with the fragment write in <see cref="SaveCache"/> / the full read in
-        /// <see cref="LoadCache(string,string,bool,Action{string},out LibraryCacheStatus)"/>.
+        /// <see cref="LoadCache(string,string,bool,Action{string},out LibraryCacheStatus,HashSet{uint})"/>.
         /// </summary>
         private static void SkipFragment(BinaryReader r)
         {

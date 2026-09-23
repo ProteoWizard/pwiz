@@ -72,8 +72,20 @@ namespace pwiz.Skyline.Model.Lib
 
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
-            return !ReferenceEquals(document.Settings.PeptideSettings.Libraries, previous.Settings.PeptideSettings.Libraries) ||
-                   !ReferenceEquals(document.Settings.MeasuredResults, previous.Settings.MeasuredResults);
+            if (!ReferenceEquals(document.Settings.PeptideSettings.Libraries, previous.Settings.PeptideSettings.Libraries))
+                return true;
+            if (ReferenceEquals(document.Settings.MeasuredResults, previous.Settings.MeasuredResults))
+                return false;
+            // MIDAS libraries are built from the results, which makes this the one library manager
+            // that must also watch for results changes. A document with no MIDAS spectra and nothing
+            // left to load has no work a results change could create, and would otherwise pay for
+            // this on every results change - including the annotation-only changes that
+            // MeasuredResults.RequiresCacheUpdate and SrmSettingsDiff.EqualExceptAnnotations both
+            // take care to treat as no-ops. Both documents are checked for MIDAS spectra so that
+            // clearing the last flag still counts as a change, and an unloaded library still gets
+            // its retry, since a load that failed on a transient error is retried from here.
+            return HasMidasSpectra(document) || HasMidasSpectra(previous) ||
+                   document.Settings.PeptideSettings.Libraries.LibrarySpecsUnloaded.Any();
         }
 
         protected override string IsNotLoadedExplained(SrmDocument document)
@@ -84,11 +96,32 @@ namespace pwiz.Skyline.Model.Lib
                 var missingFiles = MidasLibrary.GetMissingFiles(document, new Library[0]);
                 if (missingFiles.Any())
                 {
+                    // Still not loaded either way, but say which of the two things is being waited on.
+                    if (!IsReadyForMidasWork(document))
+                        return @"Waiting for the results to finish loading before building the MIDAS library";
                     return TextUtil.LineSeparate(@"MIDAS library is missing files:",
                         TextUtil.LineSeparate(missingFiles));
                 }
             }
             return !libraries.HasLibraries ? null : libraries.IsNotLoadedExplained;
+        }
+
+        private static bool HasMidasSpectra(SrmDocument document)
+        {
+            var results = document.Settings.MeasuredResults;
+            return results != null && results.MSDataFileInfos.Any(fileInfo => fileInfo.HasMidasSpectra);
+        }
+
+        /// <summary>
+        /// True when MIDAS library work may be started for this document. The spectra themselves are
+        /// read from the raw data files, so waiting costs nothing, but the settings change that
+        /// applies the new library recalculates all results - and that must not happen while results
+        /// loading is still joining per-file caches and deleting them.
+        /// </summary>
+        private static bool IsReadyForMidasWork(SrmDocument document)
+        {
+            var results = document.Settings.MeasuredResults;
+            return results == null || results.IsLoaded;
         }
 
         protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
@@ -139,7 +172,15 @@ namespace pwiz.Skyline.Model.Lib
                     }
                 }
 
-                var missingMidasFiles = MidasLibrary.GetMissingFiles(document, libraries.Libraries);
+                // Leave the MIDAS work until the results are loaded. Starting earlier gains nothing,
+                // because the spectra come from the raw files, and it is repeated and thrown away for
+                // every partial cache the importer joins.
+                // Read from docCurrent, which is what the readiness check and libraries above both
+                // come from. EqualsId compares identity, not instance, so document can be an older
+                // copy of the same document and its MSDataFileInfos correspondingly stale.
+                var missingMidasFiles = IsReadyForMidasWork(docCurrent)
+                    ? MidasLibrary.GetMissingFiles(docCurrent, libraries.Libraries)
+                    : Array.Empty<string>();
                 var midasLibPath = MidasLibSpec.GetLibraryFileName(container.DocumentFilePath);
                 var midasLibSpec = libraries.MidasLibrarySpecs.FirstOrDefault(libSpec => Equals(libSpec.FilePath, midasLibPath));
                 var newMidasLibSpec = missingMidasFiles.Any() && midasLibSpec == null;

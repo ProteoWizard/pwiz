@@ -53,8 +53,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>209</ApplicationRevision>
-    <ApplicationVersion>26.1.1.209</ApplicationVersion>
+    <ApplicationRevision>265</ApplicationRevision>
+    <ApplicationVersion>26.1.1.265</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -1420,6 +1420,7 @@
     <Compile Include="ToolsUI\JsonToolServer.cs" />
     <Compile Include="ToolsUI\JsonTutorialCatalog.cs" />
     <Compile Include="ToolsUI\JsonUiService.cs" />
+    <Compile Include="ToolsUI\GraphElement.cs" />
     <Compile Include="ToolsUI\DialogWatcher.cs" />
     <Compile Include="ToolsUI\UiElement.cs" />
     <Compile Include="ToolsUI\NativeFileDialog.cs" />
@@ -2202,6 +2203,7 @@
     <Compile Include="FileUI\ImportResultsSamplesDlg.Designer.cs">
       <DependentUpon>ImportResultsSamplesDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Graphs\AminoAcidLadderObj.cs" />
     <Compile Include="Controls\Graphs\SpectrumGraphItem.cs" />
     <Compile Include="Controls\SequenceTree.cs">
       <SubType>Component</SubType>

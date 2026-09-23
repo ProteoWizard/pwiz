@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -34,23 +34,27 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
     ///
     /// <para>The panel wants the true per-run detection RT: pre-compaction, before Stage 6 moves
     /// any peak, so it measures scoring and peak assignment rather than reconciliation. That pool
-    /// is never resident. The lean first pass carries no RT at all by design - <c>FdrProjection</c>
-    /// is 32 bytes and every RT/bounds field is reload-obtained for the (small) survivor set after
-    /// compaction (issue #4355) - and the streaming score path reads only entry_id / charge /
-    /// is_decoy / coelution_sum / modseq from parquet. Plumbing apex RT through that path would
-    /// put an extra column on the one code path that touches all ~340M pre-compaction rows.</para>
+    /// is never resident - the lean first pass carries no RT at all by design
+    /// (<c>FdrProjection</c> is 32 bytes and every RT/bounds field is reload-obtained for the
+    /// small survivor set after compaction, issue #4355).</para>
     ///
-    /// <para>So this reconstructs it the way the prototype that measured the effect did
-    /// (<c>ai/scripts/Osprey/Entrapment/pass1_entrap.py</c>): per file, join the
-    /// <c>.1st-pass.fdr_scores.bin</c> sidecar (score + q-values, one record per row in row order)
-    /// against the same file's <c>.scores.parquet</c> (<c>apex_rt</c>, same rows, same order). The
-    /// two are positionally aligned, and that alignment is ASSERTED on entry_id per row rather
-    /// than assumed - a mismatch abandons the panel with a log line instead of reporting numbers
-    /// off a bad join.</para>
+    /// <para>It comes off the <c>.1st-pass.fdr_scores.bin</c> sidecar, which carries
+    /// <c>apex_rt</c> beside the score and the two run q-values from format v7 (issue #4522). So
+    /// this source reads ONE artifact per file and joins nothing.</para>
     ///
-    /// <para>Bounded: one file's entry_id + apex_rt arrays (~12 bytes per row) and one sidecar
-    /// record at a time. Precursor identity and m/z come from the library by entry id, so no
-    /// string column is materialized for the whole pre-compaction pool.</para>
+    /// <para>It used to read two. The sidecar has no RT column before v7, so the panel opened
+    /// each file's <c>.scores.parquet</c> a second time for the <c>apex_rt</c> column and matched
+    /// it to the sidecar BY POSITION, asserting the alignment on entry_id per row because nothing
+    /// in either format recorded the contract it relied on. Measured on the 446-run CHS cohort,
+    /// that column read was 29 MB per file of large-object allocation against 4 MB for everything
+    /// else this panel does, and it took the process from 10 to 26 GB of private bytes over the
+    /// ten minutes the join ran. Moving the column into the sidecar costs 8 bytes per record of
+    /// sequential IO and removes the read, the join and the assertion together - a column a
+    /// consumer has to reconstruct by inference is a column in the wrong file.</para>
+    ///
+    /// <para>Bounded: one sidecar record at a time, nothing per file. Precursor identity and m/z
+    /// come from the library by entry id, so no string column is materialized for the whole
+    /// pre-compaction pool.</para>
     /// </summary>
     public static class PeakCoAssignmentSource
     {
@@ -67,6 +71,12 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// Searched library by FULL entry id, supplying each row's precursor m/z and its
         /// modified sequence + charge (the precursor identity), so no parquet string column is read.
         /// </param>
+        /// <param name="experimentRecords">
+        /// The analysis-wide 1st-pass EXPERIMENT-scope records by entry_id, supplying each row's
+        /// experiment q-values and the aggregate score the acceptance boundary is drawn from.
+        /// Supplied by the caller because the score-pass path holds them in memory before the
+        /// sidecar is written, while the rehydrate path reads one an earlier run left.
+        /// </param>
         /// <param name="logInfo">Run log sink; every degrade path explains itself through it.</param>
         public static ModelDiagnosticsData.CoAssignmentData Build(
             IReadOnlyList<string> fileNames,
@@ -74,6 +84,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             OspreyConfig config,
             IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             Action<string> logInfo)
         {
             // The "never throws" promise above needs an actual guard, and it was only ever
@@ -84,7 +95,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             // that aborts a ten-hour search is a worse outcome than a panel that is missing.
             try
             {
-                return BuildCore(fileNames, perFileParquetPaths, config, classByBaseId, libraryById, logInfo);
+                return BuildCore(fileNames, perFileParquetPaths, config, classByBaseId,
+                    libraryById, experimentRecords, logInfo);
             }
             catch (Exception ex)
             {
@@ -101,6 +113,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             OspreyConfig config,
             IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             Action<string> logInfo)
         {
             if (fileNames == null || perFileParquetPaths == null || libraryById == null)
@@ -109,11 +122,45 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 return null;
             }
 
+            // The analysis-wide EXPERIMENT-scope records (format v5, issue #4486), supplied by
+            // the caller rather than read here, because the two callers hold them in different
+            // places: the score-pass path has them in memory BEFORE the sidecar is written, and
+            // the rehydrate path reads a sidecar an earlier run left. Reading the file here
+            // silently produced an EMPTY map on the score-pass path, for that ordering reason.
+            //
+            // This panel cannot proceed without them, and must not substitute a default for a
+            // missing one: the experiment aggregate is a signed discriminant, so a fabricated
+            // 0.0 is an ordinary mid-distribution score rather than an obvious absence, and the
+            // run cutoff below is a MINIMUM over accepted precursors' aggregates. Zeros drag it
+            // to 0.0 and admit the entire decoy pool - measured on StellarLibDecoy when this
+            // defaulted: decoys 272 -> 483,220 and the cutoff 0.669 -> 0. See the remarks on
+            // StreamingFdr.ExperimentAggregateScore, which chose double? over an in-band
+            // sentinel for exactly this failure.
+            if (experimentRecords == null || experimentRecords.Count == 0)
+            {
+                logInfo(@"[MODEL-DIAGNOSTICS] peak co-assignment skipped: no 1st-pass experiment-scope FDR records were supplied, and their aggregate scores are what the acceptance boundary is drawn from.");
+                return null;
+            }
+
             var sw = Stopwatch.StartNew();
             var runNames = new string[fileNames.Count];
             for (int f = 0; f < fileNames.Count; f++)
                 runNames[f] = fileNames[f];
             var builder = new ModelDiagnosticsData.CoAssignmentPassBuilder(runNames, 1, false);
+            // Size the builder's per-file working set once, for the whole panel. Every record
+            // phase 1 folds is gated on having an experiment-scope record, so the largest base
+            // id in that map bounds every index the builder will see (issue #4657).
+            // Logged because it is not instant and nothing else speaks until the reporter below
+            // opens: this walks every experiment-scope key (6.2 M on the 446-run cohort) and then
+            // NaN-fills ~100 MB. The two loops under it carry reporters for exactly this reason -
+            // a silent stretch here reads as a hung run.
+            logInfo(string.Format(
+                @"[MODEL-DIAGNOSTICS] peak co-assignment: sizing the run scope from {0} experiment-scope record(s)...",
+                experimentRecords.Count));
+            uint maxBaseId = 0;
+            foreach (uint entryId in experimentRecords.Keys)
+                maxBaseId = Math.Max(maxBaseId, entryId & BASE_ID_MASK);
+            builder.ReserveRunScope(maxBaseId);
 
             // Phase 1: the decoy score cutoffs, from the sidecars alone (score + q + entry id -
             // no parquet, no library, no allocation per row). Decoys have no meaningful q of
@@ -150,11 +197,20 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     bool readOk = FdrScoresSidecar.ReadRecords(sidecar, FdrScoresSidecar.Pass.FirstPass, rec =>
                     {
                         bool dec = (rec.EntryId & LibraryEntry.DECOY_ID_BIT) != 0;
+                        // The experiment-scope half comes from the analysis-wide sidecar
+                        // (format v5, issue #4486). An entry with no record there took part in
+                        // no experiment competition, so it keeps the default q of 1.0 and a
+                        // 0.0 aggregate - exactly what the pre-split record carried for it.
+                        // A record with no experiment entry took part in no experiment
+                        // competition, so it has no aggregate to be ranked on. Skip it rather
+                        // than feed 0.0, for the reason given where the map is read.
+                        if (!experimentRecords.TryGetValue(rec.EntryId, out var exp))
+                            return;
                         builder.ObserveCutoff(fileIdx,
                             ModelDiagnosticsData.ClassifyEntry(dec, rec.EntryId, classByBaseId), rec.EntryId, rec.Score,
-                            rec.ExperimentAggregateScore,
-                            EffectiveQvalue(rec, config.FdrLevel, true),
-                            EffectiveQvalue(rec, config.FdrLevel, false), config.RunFdr);
+                            exp.ExperimentAggregateScore,
+                            EffectiveQvalue(rec, exp, config.FdrLevel, true),
+                            EffectiveQvalue(rec, exp, config.FdrLevel, false), config.RunFdr);
                     });
                     if (!readOk)
                     {
@@ -195,12 +251,18 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             }
 
             int totalDetected = 0, totalUnresolved = 0;
-            // Reported because this loop is the panel's whole cost and it used to run SILENT:
-            // it re-reads two columns of every .scores.parquet and joins them per file. On the
-            // 82-file SEA-AD run it went 101 s between the last per-run boundary line and the
+            // Reported because this loop is the panel's whole cost and it used to run SILENT. On
+            // the 82-file SEA-AD run it went 101 s between the last per-run boundary line and the
             // completion summary with nothing in between, which reads as a hung run - the same
             // shape as the unreported spectra-cache write. The per-run boundary lines above are
             // one-per-file and cheap; this pass is where the time actually goes.
+            // Attribution for this pass's allocation, off unless asked for. It is what found the
+            // parquet column read the v7 sidecar removed - two 58-minute cohort runs looking at
+            // memory curves found nothing, and ten seconds of this on three files named the call
+            // site. Kept pointed at what remains, so the next regression here is measured rather
+            // than guessed at.
+            var tally = OspreyEnvironment.LogCoAssignmentAllocation ? new AllocationTally() : null;
+            ProfilerHooks.CaptureRetentionSnapshot(@"coassign-join-start");
             using (var progress = new ProgressReporter(
                 string.Format(@"Peak co-assignment: joining apex RT over {0} file(s)", fileNames.Count),
                 fileNames.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
@@ -211,7 +273,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     string reason;
                     int fileUnresolved;
                     int detected = AddFile(builder, f, fileNames[f], perFileParquetPaths, config,
-                        classByBaseId, libraryById, out reason, out fileUnresolved);
+                        classByBaseId, libraryById, experimentRecords, tally,
+                        out reason, out fileUnresolved);
                     totalUnresolved += fileUnresolved;
                     if (reason != null)
                     {
@@ -222,6 +285,19 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     totalDetected += detected;
                     builder.FlushFile();
                 }
+            }
+            ProfilerHooks.CaptureRetentionSnapshot(@"coassign-join-end");
+            if (tally != null)
+            {
+                // Per file as well as total: a figure that grows with the file index is a
+                // different problem from one that is simply large on every file.
+                logInfo(string.Format(
+                    @"[MODEL-DIAGNOSTICS] peak co-assignment fold allocated {0:N1} GB over {1} file(s): " +
+                    @"sidecar stream {2:N1} GB ({3:N0} MB/file), no parquet column read",
+                    tally.SidecarStreamBytes / 1073741824.0,
+                    fileNames.Count,
+                    tally.SidecarStreamBytes / 1073741824.0,
+                    tally.SidecarStreamBytes / 1048576.0 / Math.Max(1, fileNames.Count)));
             }
 
             var data = builder.Build();
@@ -247,8 +323,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 return null;
             }
             sw.Stop();
-            // Name the cost rather than let it be a silent tax: this is a second read of two
-            // columns of every .scores.parquet, and it happens only under --model-diagnostics.
+            // Name the cost rather than let it be a silent tax: this is a full stream of every
+            // file's 1st-pass sidecar, and it happens only under --model-diagnostics.
             logInfo(string.Format(
                 @"[MODEL-DIAGNOSTICS] peak co-assignment (pass 1): {0} detected rows over {1} file(s) in {2:F1}s",
                 totalDetected, fileNames.Count, sw.Elapsed.TotalSeconds));
@@ -266,9 +342,9 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
 
         /// <summary>
         /// Fold one file's detected rows into <paramref name="builder"/>, returning the number
-        /// added. <paramref name="reason"/> is non-null when the file could not be read or its
-        /// sidecar did not align with its parquet, which abandons the whole panel: a panel built
-        /// from the files that happened to work would silently under-report.
+        /// added. <paramref name="reason"/> is non-null when the file's sidecar could not be
+        /// read, which abandons the whole panel: a panel built from the files that happened to
+        /// work would silently under-report.
         /// </summary>
         private static int AddFile(
             ModelDiagnosticsData.CoAssignmentPassBuilder builder,
@@ -278,17 +354,13 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             OspreyConfig config,
             IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
+            IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
+            AllocationTally tally,
             out string reason,
             out int unresolved)
         {
             reason = null;
             unresolved = 0;
-            if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath) ||
-                string.IsNullOrEmpty(parquetPath) || !File.Exists(parquetPath))
-            {
-                reason = string.Format(@"no .scores.parquet for {0}", fileName);
-                return 0;
-            }
             string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
             if (string.IsNullOrEmpty(sidecarBase))
             {
@@ -296,9 +368,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 return 0;
             }
             // The same path the score-pass sink wrote, so the panel reads exactly what this run
-            // produced. At this point the records are the PARTIAL ones (experiment_protein_qvalue is
-            // still the 1.0 placeholder that first-pass protein FDR patches later) - harmless
-            // here, since the panel reads only the score and the precursor/peptide q-values.
+            // produced - and it is final when written, because the experiment-scope columns that
+            // used to arrive by a later patch now live in their own analysis-wide sidecar.
             string sidecarPath = FdrScoresSidecar.Pass1Path(sidecarBase);
             if (!File.Exists(sidecarPath))
             {
@@ -306,43 +377,16 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 return 0;
             }
 
-            uint[] entryIds;
-            double[] apexRts;
-            try
-            {
-                if (!ParquetScoreCache.TryReadEntryIdsAndApexRts(parquetPath, out entryIds, out apexRts))
-                {
-                    reason = string.Format(@"no apex_rt column in {0}", Path.GetFileName(parquetPath));
-                    return 0;
-                }
-            }
-            catch (Exception ex)
-            {
-                reason = string.Format(@"{0}: {1}", Path.GetFileName(parquetPath), ex.Message);
-                return 0;
-            }
-
-            int row = 0;
             int added = 0;
             int nUnresolved = 0;
-            bool misaligned = false;
+            long allocBefore = tally == null ? 0 : AllocatedBytes();
             bool ok = FdrScoresSidecar.ReadRecords(sidecarPath, FdrScoresSidecar.Pass.FirstPass, rec =>
             {
-                if (misaligned)
-                    return;
-                // Assert the positional join instead of trusting it. The sidecar is written in
-                // parquet row order by the score-pass sink, but nothing in either format records
-                // that contract, so a future change to either side would otherwise silently
-                // attach one row's apex RT to another row's score.
-                if (row >= entryIds.Length || entryIds[row] != rec.EntryId)
-                {
-                    misaligned = true;
-                    return;
-                }
-                int current = row++;
                 // Gate BEFORE any allocation: this callback fires for every pre-compaction row.
-                double runQ = EffectiveQvalue(rec, config.FdrLevel, true);
-                double experimentQ = EffectiveQvalue(rec, config.FdrLevel, false);
+                if (!experimentRecords.TryGetValue(rec.EntryId, out var exp))
+                    return;
+                double runQ = EffectiveQvalue(rec, exp, config.FdrLevel, true);
+                double experimentQ = EffectiveQvalue(rec, exp, config.FdrLevel, false);
                 bool isDecoy = (rec.EntryId & LibraryEntry.DECOY_ID_BIT) != 0;
                 var cls = ModelDiagnosticsData.ClassifyEntry(isDecoy, rec.EntryId, classByBaseId);
                 if (!builder.Includes(fileIdx, cls, rec.EntryId, runQ, experimentQ, config.RunFdr))
@@ -369,11 +413,9 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // fallback and own-entry cases with one rule.
                 bool rowIsDecoy = (rec.EntryId & LibraryEntry.DECOY_ID_BIT) != 0;
                 string modSeq = lib.ModifiedSequence ?? lib.Sequence;
-                string key = rowIsDecoy
-                    ? modSeq + "|" + lib.Charge + "|decoy"
-                    : modSeq + "|" + lib.Charge;
                 builder.AddRow(fileIdx, new ModelDiagnosticsData.CoAssignmentRow(
-                        key, rec.EntryId, modSeq, lib.Charge, lib.PrecursorMz, apexRts[current], rec.Score, cls),
+                        new ModelDiagnosticsData.PrecursorKey(modSeq, lib.Charge, rowIsDecoy),
+                        rec.EntryId, lib.PrecursorMz, rec.ApexRt, rec.Score, cls),
                     runQ, experimentQ, config.RunFdr);
                 added++;
             });
@@ -383,13 +425,44 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 reason = string.Format(@"could not read {0}", Path.GetFileName(sidecarPath));
                 return 0;
             }
-            if (misaligned || row != entryIds.Length)
-            {
-                reason = string.Format(@"{0}: sidecar/parquet row misalignment", fileName);
-                return 0;
-            }
+            if (tally != null)
+                tally.SidecarStreamBytes += AllocatedBytes() - allocBefore;
             unresolved = nUnresolved;
             return added;
+        }
+
+        /// <summary>
+        /// Allocated bytes attributed to this panel's per-file fold. Instantiated only when
+        /// <c>OSPREY_LOG_COASSIGN_ALLOC</c> is set, and passed as null otherwise, so the probes
+        /// cost nothing when it is off.
+        ///
+        /// <para>Counts the CALLING thread. The fold loop is sequential, so that covers the work
+        /// this phase does; allocation a library makes on its own threads is invisible here, and
+        /// a large unattributed remainder against the process total is itself the finding - which
+        /// is how the parquet column read this panel no longer does was located.</para>
+        /// </summary>
+        private sealed class AllocationTally
+        {
+            public long SidecarStreamBytes;
+        }
+
+        /// <summary>
+        /// Bytes allocated so far, for <see cref="AllocationTally"/>. Only differences between
+        /// two readings mean anything, so the two builds need not agree on the absolute figure.
+        ///
+        /// <para><c>GC.GetAllocatedBytesForCurrentThread</c> is .NET Core only. The framework
+        /// build falls back to the AppDomain's process-wide counter, which is coarser - it counts
+        /// every thread - but this diagnostic is read on net8.0 and the framework path has to
+        /// compile and stay honest rather than be precise.</para>
+        /// </summary>
+        private static long AllocatedBytes()
+        {
+#if NETFRAMEWORK
+            AppDomain.MonitoringIsEnabled = true;
+            return AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize;
+#else
+            return GC.GetAllocatedBytesForCurrentThread();
+#endif
         }
 
         /// <summary>Mask clearing the decoy high bit to get the shared target/decoy base id.</summary>
@@ -411,25 +484,27 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
 
         /// <summary>
         /// The q-value for the configured FDR control level at one scope, off a sidecar record.
-        /// Mirrors <see cref="FdrEntry.EffectiveRunQvalue"/> /
-        /// <see cref="FdrEntry.EffectiveExperimentQvalue"/>, which cannot be used here because
+        /// Mirrors <see cref="FdrRowExtensions.EffectiveRunQvalue{T}"/> /
+        /// <see cref="FdrRowExtensions.EffectiveExperimentQvalue{T}"/>, which cannot be used here because
         /// this path never materializes an <see cref="FdrEntry"/>.
         /// </summary>
-        /// <param name="rec">One 60-byte sidecar record's decoded payload.</param>
+        /// <param name="rec">One per-file sidecar record's decoded payload, for the run scope.</param>
+        /// <param name="exp">The entry's experiment-scope record, for the experiment scope.</param>
         /// <param name="level">FDR control level the run reports at.</param>
         /// <param name="runScope">True for the run-level q, false for the experiment-wide q.</param>
-        private static double EffectiveQvalue(in FdrScoreRecord rec, FdrLevel level, bool runScope)
+        private static double EffectiveQvalue(in FdrScoreRecord rec, in FdrExperimentRecord exp,
+            FdrLevel level, bool runScope)
         {
             switch (level)
             {
                 case FdrLevel.Precursor:
-                    return runScope ? rec.RunPrecursorQvalue : rec.ExperimentPrecursorQvalue;
+                    return runScope ? rec.RunPrecursorQvalue : exp.ExperimentPrecursorQvalue;
                 case FdrLevel.Peptide:
-                    return runScope ? rec.RunPeptideQvalue : rec.ExperimentPeptideQvalue;
+                    return runScope ? rec.RunPeptideQvalue : exp.ExperimentPeptideQvalue;
                 case FdrLevel.Both:
                     return runScope
                         ? Math.Max(rec.RunPrecursorQvalue, rec.RunPeptideQvalue)
-                        : Math.Max(rec.ExperimentPrecursorQvalue, rec.ExperimentPeptideQvalue);
+                        : Math.Max(exp.ExperimentPrecursorQvalue, exp.ExperimentPeptideQvalue);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(level));
             }

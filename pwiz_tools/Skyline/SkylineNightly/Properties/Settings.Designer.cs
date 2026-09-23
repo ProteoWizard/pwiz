@@ -70,6 +70,30 @@ namespace SkylineNightly.Properties {
                 this["mode2"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string Run1 {
+            get {
+                return ((string)(this["Run1"]));
+            }
+            set {
+                this["Run1"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string Run2 {
+            get {
+                return ((string)(this["Run2"]));
+            }
+            set {
+                this["Run2"] = value;
+            }
+        }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
