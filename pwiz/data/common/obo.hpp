@@ -51,6 +51,7 @@ struct PWIZ_API_DECL Term
     id_list parentsIsA;
     id_list parentsPartOf;
     relation_map relations; // other than is_a and part_of
+    std::string valueType; // the has_value_type relationship, e.g. "xsd:float"; empty for terms that carry no value
     std::multimap<std::string, std::string> propertyValues;
     std::vector<std::string> exactSynonyms;
     bool isObsolete;

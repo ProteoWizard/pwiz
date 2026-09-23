@@ -136,6 +136,9 @@
   <data name="EditMenu_ChangeSpectrumFilter_Change_spectrum_filter" xml:space="preserve">
     <value>Change spectrum filter</value>
   </data>
+  <data name="EditMenu_EditSpectrumFilter_Looking_for_spectrum_parameters_in_the_data_files" xml:space="preserve">
+    <value>Looking for spectrum parameters in the data files</value>
+  </data>
   <data name="EditMenu_GetEditSpectrumFilterDescription_Adding_spectrum_filter_to__0_" xml:space="preserve">
     <value>Adding spectrum filter to {0}</value>
   </data>

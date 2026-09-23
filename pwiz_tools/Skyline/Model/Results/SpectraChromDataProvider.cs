@@ -97,6 +97,9 @@ namespace pwiz.Skyline.Model.Results
         {
             _document = document;
             _cachePath = cachePath;
+            // Capture the uninterpreted mzML CV/user parameters onto each spectrum only when the
+            // document actually filters on them, so their extraction cost is paid only when needed.
+            dataFile.CaptureOtherParams = DocumentReferencesCvSpectrumFilter(document);
             _globalChromatogramExtractor = new GlobalChromatogramExtractor(dataFile);
             if (_document.Settings.TransitionSettings.FullScan.IsEnabledMs 
                 && !_globalChromatogramExtractor.IsTicChromatogramUsable())
@@ -167,6 +170,22 @@ namespace pwiz.Skyline.Model.Results
 
                 throw;
             }
+        }
+
+        /// <summary>
+        /// True if the document's spectrum filters (the document-wide full-scan filter or any
+        /// transition group's filter) reference a dynamic mzML CV/user-parameter column, so the
+        /// spectrum reader must capture those otherwise-dropped terms for the filter to evaluate them.
+        /// </summary>
+        private static bool DocumentReferencesCvSpectrumFilter(SrmDocument document)
+        {
+            if (document.Settings.TransitionSettings.FullScan.SpectrumClassFilter.ReferencesCvColumns())
+            {
+                return true;
+            }
+
+            return document.MoleculeTransitionGroups.Any(
+                transitionGroup => transitionGroup.SpectrumClassFilter.ReferencesCvColumns());
         }
 
         private bool NeedMaxIonMobilityValue(MsDataFileImpl dataFile)
