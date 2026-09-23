@@ -75,6 +75,17 @@ namespace pwiz.Common.DataBinding
 
         public abstract object GetPropertyValue(RowItem rowItem, PivotKey pivotKey);
 
+        /// <summary>
+        /// True if <see cref="GetPropertyValue"/> with a null pivot key looks only at <see cref="RowItem.Value"/>,
+        /// never at <see cref="RowItem.RowKey"/>. When several consecutive rows share the same Value object,
+        /// such as the rows expanded from one item by a sublist, the value of such a column is the same
+        /// for all of them and only needs to be calculated once.
+        /// </summary>
+        public virtual bool DependsOnlyOnRowValue
+        {
+            get { return Parent == null || Parent.DependsOnlyOnRowValue; }
+        }
+
         public virtual bool IsReadOnly
         {
             get
@@ -421,6 +432,11 @@ namespace pwiz.Common.DataBinding
                 return _collectionInfo.GetItemFromKey(collection, key);
             }
 
+            public override bool DependsOnlyOnRowValue
+            {
+                get { return false; }
+            }
+
             public override ICollectionInfo CollectionInfo
             {
                 get { return _collectionInfo; }
@@ -471,6 +487,11 @@ namespace pwiz.Common.DataBinding
             public override object GetPropertyValue(RowItem rowItem, PivotKey pivotKey)
             {
                 return (rowItem?.Value as IList<object>)?.ElementAtOrDefault(_valueIndex);
+            }
+
+            public override bool DependsOnlyOnRowValue
+            {
+                get { return true; }
             }
         }
     }

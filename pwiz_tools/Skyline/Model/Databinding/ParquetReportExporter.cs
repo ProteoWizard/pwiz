@@ -121,21 +121,55 @@ namespace pwiz.Skyline.Model.Databinding
             // same DataSchema, so the culture only needs to be set once per row.
             var dataSchemaLocalizer = columns.FirstOrDefault()?.PropertyDescriptor.DataSchemaLocalizer
                                       ?? DataSchemaLocalizer.INVARIANT;
-            ParallelEx.For(0, rowItems.Count, rowIndex =>
+            // Consecutive rows which share the same Value object (for instance the rows expanded from one
+            // transition by a "Results" sublist) form a run. Columns which depend only on the Value have
+            // the same value for every row in the run, so they are calculated once per run.
+            var runStarts = new List<int>();
+            for (int rowIndex = 0; rowIndex < rowItems.Count; rowIndex++)
+            {
+                if (rowIndex == 0 || !ReferenceEquals(rowItems[rowIndex].Value, rowItems[rowIndex - 1].Value))
+                {
+                    runStarts.Add(rowIndex);
+                }
+            }
+            ParallelEx.For(0, runStarts.Count, runIndex =>
             {
                 if (progressMonitor.IsCanceled)
                 {
                     return;
                 }
-                var rowItem = rowItems[rowIndex];
-                rowItems[rowIndex] = null;
+                int startRow = runStarts[runIndex];
+                int endRow = runIndex + 1 < runStarts.Count ? runStarts[runIndex + 1] : rowItems.Count;
                 dataSchemaLocalizer.CallWithCultureInfo(() =>
                 {
                     for (int colIndex = 0; colIndex < columns.Count; colIndex++)
                     {
-                        columns[colIndex].StoreValue(rowItem, rowIndex, chunkArrays[colIndex]);
+                        var column = columns[colIndex];
+                        var values = chunkArrays[colIndex];
+                        if (column.DependsOnlyOnRowValue)
+                        {
+                            var value = column.GetStorageValue(rowItems[startRow]);
+                            if (value != null)
+                            {
+                                for (int rowIndex = startRow; rowIndex < endRow; rowIndex++)
+                                {
+                                    values.SetValue(value, rowIndex);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            for (int rowIndex = startRow; rowIndex < endRow; rowIndex++)
+                            {
+                                column.StoreValue(rowItems[rowIndex], rowIndex, values);
+                            }
+                        }
                     }
                 });
+                for (int rowIndex = startRow; rowIndex < endRow; rowIndex++)
+                {
+                    rowItems[rowIndex] = null;
+                }
             }, threadName:nameof(PopulateChunk));
         }
 
@@ -211,6 +245,7 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 Name = name;
                 PropertyDescriptor = propertyDescriptor;
+                DependsOnlyOnRowValue = (propertyDescriptor as ColumnPropertyDescriptor)?.DependsOnlyOnRowValue ?? false;
                 var valueType = PropertyDescriptor.DataSchema.GetWrappedValueType(PropertyDescriptor.PropertyType);
 
                 // Check if this is a ListColumnValue<T>
@@ -235,6 +270,11 @@ namespace pwiz.Skyline.Model.Databinding
 
             public string Name { get; }
             public DataPropertyDescriptor PropertyDescriptor { get; }
+            /// <summary>
+            /// True if rows which share the same <see cref="RowItem.Value"/> have the same value in this column.
+            /// Only known for ColumnPropertyDescriptor; any other descriptor is assumed to vary per row.
+            /// </summary>
+            public bool DependsOnlyOnRowValue { get; }
             /// <summary>
             /// The type of the values in the array that holds a chunk of this column.
             /// For list columns this is an IEnumerable of <see cref="ListElementType"/>.
@@ -301,22 +341,31 @@ namespace pwiz.Skyline.Model.Databinding
 
             public void StoreValue(RowItem rowItem, int rowIndex, Array values)
             {
+                var value = GetStorageValue(rowItem);
+                if (value != null)
+                {
+                    values.SetValue(value, rowIndex);
+                }
+            }
+
+            /// <summary>
+            /// Returns the column's value for the row, converted to something that can be stored
+            /// in the array from <see cref="CreateArray"/>, or null.
+            /// </summary>
+            public object GetStorageValue(RowItem rowItem)
+            {
                 var value = GetValue(rowItem);
                 if (value == null)
                 {
-                    return;
+                    return null;
                 }
 
                 if (ListElementType != null)
                 {
                     // Extract the list from ListColumnValue<T>
-                    value = ConvertListColumnValue(value);
+                    return ConvertListColumnValue(value);
                 }
-                else
-                {
-                    value = StorageType.ConvertValue(value);
-                }
-                values.SetValue(value, rowIndex);
+                return StorageType.ConvertValue(value);
             }
 
             private Array ConvertListColumnValue(object listColumnValue)
