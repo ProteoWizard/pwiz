@@ -99,8 +99,15 @@ artifact**, so the multi-GB spectra caches there are harmless):
    construction: with `OSPREY_RELEASE_LIBRARY_FRAGMENTS=0` the other legs stay green
    and only mode 6 goes red.
 
-   Asserts presence and non-zero counts, **never exact counts** - those move with any
-   scoring change. One run-wide check asserts the log pattern matched *somewhere*, so
+   Asserts presence and non-zero counts, **never absolute counts** - those move with any
+   scoring change. It does assert counts against *each other* (issue #4650): on every leg
+   that runs Stage 7's release, its retained count must equal the count the summary's
+   producer logged, Stage 5's retained count must equal it too, and where Stage 5 released
+   in the same process Stage 7 must release 0. All three move together with any scoring
+   change, so none of them cries wolf, and together they say Stage 7 READ the analysis-wide
+   summary rather than folding every run's final pool to rebuild it.
+
+   One run-wide check asserts the log pattern matched *somewhere*, so
    a reworded C# line fails the gate instead of quietly satisfying the
    "must not release" leg. Always on; there is no skip switch.
 
