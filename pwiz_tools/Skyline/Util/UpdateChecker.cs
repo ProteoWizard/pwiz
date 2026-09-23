@@ -125,7 +125,8 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public virtual void OpenDownload(IWin32Window parent, Version version)
         {
-            WebHelpers.OpenLink(parent, GetInstallerUri(version).ToString());
+            // The escaped form, since a product name may contain spaces and the link goes to the shell.
+            WebHelpers.OpenLink(parent, GetInstallerUri(version).AbsoluteUri);
         }
     }
 }

@@ -43,7 +43,8 @@ Build:
      ProductName means the channel; another name is what Programs and
      Features, the Start Menu, the install folder, the installer and the
      manifest are called, so a private build such as SkylineNet10Preview
-     installs beside the channels as a product of its own.
+     installs beside the channels as a product of its own. Anything that can
+     be in a file name can be in the product name, spaces included.
   4. pwsh -File pwiz_tools\Skyline\Executables\Installer\Test-Installer.ps1
      installs the newest one silently, checks the deployment, runs
      SkylineCmd --version, uninstalls, and checks the cleanup (-AllUsers from

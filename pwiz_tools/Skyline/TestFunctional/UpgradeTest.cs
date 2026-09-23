@@ -74,7 +74,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 AssertEx.AreEqual(1, _checker.DownloadsOpened);
                 AssertEx.AreEqual(
-                    TestUpdateChecker.INSTALL_URL + TestUpdateChecker.PRODUCT_NAME + "-Setup-" + TestUpdateChecker.NEWER_VERSION + ".exe",
+                    TestUpdateChecker.INSTALL_URL + TestUpdateChecker.PRODUCT_NAME_ESCAPED + "-Setup-" + TestUpdateChecker.NEWER_VERSION + ".exe",
                     _checker.DownloadUrl);
             });
 
@@ -211,7 +211,9 @@ namespace pwiz.SkylineTestFunctional
     internal class TestUpdateChecker : UpdateChecker, IDisposable
     {
         public const string INSTALL_URL = "https://skyline.example.org/software/";
-        public const string PRODUCT_NAME = "Skyline";
+        // With a space, which the published file names carry and the download link must escape
+        public const string PRODUCT_NAME = "Skyline Test";
+        public const string PRODUCT_NAME_ESCAPED = "Skyline%20Test";
         public const string NEWER_RELEASE_TEXT = "3.7";
         public static readonly Version CURRENT_VERSION = new Version(3, 6, 1, 10171);
         public static readonly Version NEWER_VERSION = new Version(3, 6, 1, 10172);
@@ -236,7 +238,7 @@ namespace pwiz.SkylineTestFunctional
         public override void OpenDownload(IWin32Window parent, Version version)
         {
             DownloadsOpened++;
-            DownloadUrl = GetInstallerUri(version).ToString();
+            DownloadUrl = GetInstallerUri(version).AbsoluteUri;
         }
 
         public HttpClientTestHelper Publish(Version version)

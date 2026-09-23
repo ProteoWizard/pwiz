@@ -167,9 +167,6 @@ if (-not $urlNode -or -not $productNode) {
 }
 $productName = $productNode.InnerText
 $installUrl = $urlNode.InnerText
-if ($productName -and $productName -notmatch '^[A-Za-z0-9][A-Za-z0-9.-]*$') {
-    throw "ProductName '$productName' must be letters, digits, periods and hyphens: it names a folder and a registry key."
-}
 if ($installUrl -notmatch '^https?://.+/$') {
     throw "InstallUrl '$installUrl' must be an http(s) folder URL ending in /."
 }
