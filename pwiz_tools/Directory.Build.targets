@@ -6,6 +6,9 @@
        checked to see it. -->
   <Import Project="$(MSBuildThisFileDirectory)Shared\Lib\PwizTargetPlatform.targets" />
 
+  <!-- Swaps the patched ParquetNet.dll in over the NuGet Parquet.dll after every build. -->
+  <Import Project="$(MSBuildThisFileDirectory)Shared\Lib\Parquet\ParquetNet.targets" />
+
   <!-- CA1416 (platform-compatibility) flags Windows-only API calls. It is pure noise on
        Windows-only projects - the GUI/WinForms assemblies target net10.0-windows, so every
        Win32/WinForms call is flagged "reachable on all platforms" - but it is valuable

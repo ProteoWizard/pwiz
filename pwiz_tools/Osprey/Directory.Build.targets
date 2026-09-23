@@ -1,58 +1,10 @@
 <Project>
 
-  <!--
-    Override the NuGet-resolved Parquet.Net assembly (Parquet.dll) with the
-    patched build that lives in pwiz_tools/Shared/Lib/Parquet/ParquetNet.dll.
-
-    SOURCE OF TRUTH for this binary: the `maccoss-developers` repo, path
-    skylinedev/Parquet.Net - a SIBLING checkout under the same project root as
-    pwiz, not a folder inside this repo. Full rationale lives in that folder's
-    PATCH-NOTES.md. The binary checked in here is byte-identical to that repo's
-    BinariesForProteoWizard/ParquetNet.dll (sha256 2611b7d25c6050fa...), built
-    from fork commit 9d34f80.
-
-    The fork now carries THREE deltas from stock 4.25.0, not just the original one:
-      1. ThriftCompactProtocolReader struct-skip fix - lets us read parquet
-         written by parquet-rs >= 58 (the Rust crate maccoss/osprey uses). This
-         was the original and, for a long time, the only reason for the fork.
-      2. ParquetRowGroupWriter.WriteColumnsAsync - NEW PUBLIC API for parallel
-         column compression. Because it ADDS API, the runtime-only swap this
-         target performs is no longer enough to compile against; see
-         Osprey.IO.csproj, which also takes a direct <Reference> alongside
-         ExcludeAssets="compile" on the PackageReference.
-      3. ParquetPlainEncoder bool fix - CHANGES WRITTEN BYTES. Bool column pages
-         whose row count is a multiple of 8 lose a trailing uninitialised byte.
-         Decoded values are unaffected; anything asserting on parquet BYTES is not.
-
-    A fourth delta, Compressor ThreadLocal<Iron>, was REVERTED on 2026-09-10: it
-    never fixed the byte drift it was introduced for and it rewrote the
-    DECOMPRESSION path Skyline uses. Do not reintroduce it.
-
-    Delta 3 reaches Skyline, not just Osprey, because Skyline references the
-    same binary (see below). Keep this list current - a stale comment here is what
-    makes a reviewer conclude the fork is undocumented or its source lost.
-
-    Skyline already references Lib/Parquet/ParquetNet.dll directly via <Reference>
-    (see pwiz_tools/Skyline/Skyline.csproj). Osprey uses the upstream NuGet
-    PackageReference for transitive dependency resolution (deps.json), and this
-    target swaps in the patched binary on top.
-    The patched dll has the same AssemblyVersion=4.0.0 as the stock 4.25.0
-    NuGet release, so binding redirects and reflection-based lookups continue
-    to work unchanged.
-
-    Conditioned on Exists() so the target is a no-op for projects that don't
-    transitively reference Parquet.Net.
-  -->
-  <Target Name="OverridePatchedParquetNet" AfterTargets="Build">
-    <PropertyGroup>
-      <_PatchedParquetSource>$(MSBuildThisFileDirectory)..\Shared\Lib\Parquet\ParquetNet.dll</_PatchedParquetSource>
-      <_ResolvedParquetTarget>$(OutDir)Parquet.dll</_ResolvedParquetTarget>
-    </PropertyGroup>
-    <Copy SourceFiles="$(_PatchedParquetSource)"
-          DestinationFiles="$(_ResolvedParquetTarget)"
-          SkipUnchangedFiles="true"
-          Condition="Exists('$(_ResolvedParquetTarget)') and Exists('$(_PatchedParquetSource)')" />
-  </Target>
+  <!-- The patched Parquet.Net reference and the swap of ParquetNet.dll over the NuGet
+       Parquet.dll that used to live here. Imported here as well as from
+       pwiz_tools/Directory.Build.targets because this file, being the nearest
+       Directory.Build.targets, is the only one MSBuild imports for the Osprey tree. -->
+  <Import Project="$(MSBuildThisFileDirectory)..\Shared\Lib\Parquet\ParquetNet.targets" />
 
   <!-- Stamp the Osprey version + git short hash on EVERY build path, not just
        build.ps1 / package.ps1. A plain `dotnet build`, a Debug build in VS, and

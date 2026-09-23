@@ -31,7 +31,6 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Parquet;
-using Parquet.Data;
 using Parquet.Schema;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -2401,11 +2400,15 @@ namespace pwiz.Osprey.Test
                 var entryIdField = new DataField<uint>("entry_id");
                 var schema = new ParquetSchema(entryIdField);
                 using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
-                using (var writer = ParquetWriter.CreateAsync(schema, stream).GetAwaiter().GetResult())
-                using (var group = writer.CreateRowGroup())
                 {
-                    group.WriteColumnAsync(new DataColumn(entryIdField, new[] { 1u, 2u, 3u }))
-                        .GetAwaiter().GetResult();
+                    var writer = ParquetWriter.CreateAsync(schema, stream).GetAwaiter().GetResult();
+                    using (var group = writer.CreateRowGroup())
+                    {
+                        group.WriteAsync(entryIdField, new ReadOnlyMemory<uint>(new[] { 1u, 2u, 3u }))
+                            .GetAwaiter().GetResult();
+                    }
+                    // Writes the footer
+                    writer.DisposeAsync().GetAwaiter().GetResult();
                 }
 
                 Assert.IsFalse(ParquetScoreCache.HasPinFeatureColumns(saver.SafeName),
@@ -3414,8 +3417,9 @@ namespace pwiz.Osprey.Test
         /// <para>A single-shot round-trip cannot see a defect this rare - it surfaced as a ~2%
         /// failure across four unrelated tests. Iterating in-process is what turns hours of
         /// full-suite soaking into seconds. Cheap by default (25 iterations) so it costs the
-        /// gate nothing; set <c>OSPREY_PARQUET_STRESS_ITERS</c> to sweep harder, and pair it
-        /// with <c>OSPREY_PARQUET_WRITE_THREADS=1</c> to A/B the concurrent writer.</para>
+        /// gate nothing; set <c>OSPREY_PARQUET_STRESS_ITERS</c> to sweep harder. Parquet.Net 6
+        /// writes the columns one after another, so the race it guarded against is gone, but
+        /// the round-trip is still worth its seconds.</para>
         /// </summary>
         [TestMethod]
         public void TestParquetRoundTripScalarStress()
@@ -3552,8 +3556,7 @@ namespace pwiz.Osprey.Test
         private static int CountRowGroups(string path)
         {
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var reader = ParquetReader.CreateAsync(stream).GetAwaiter().GetResult())
-                return reader.RowGroupCount;
+                return ParquetReader.CreateAsync(stream).GetAwaiter().GetResult().RowGroupCount;
         }
 
         private static FdrEntry MakeFdrEntry(uint id, double score, double q, double pep,

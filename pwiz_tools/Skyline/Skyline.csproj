@@ -35,6 +35,8 @@
          downgrades that net8's runtime supersedes safely. -->
     <NoWarn>$(NoWarn);NU1605;NU1701;NU1903;SYSLIB0011</NoWarn>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Parquet.Net, as pwiz's patched build: see ..\Shared\Lib\Parquet\ParquetNet.targets -->
+    <ReferenceParquetNet>true</ReferenceParquetNet>
     <!-- Skyline ships as Skyline-daily.exe in the daily channel; honor the env
          override the build batch uses (PreBuildEvents.bat). -->
     <MSBuildAssemblyName Condition="'$(MSBuildAssemblyName)' == ''">Skyline-daily</MSBuildAssemblyName>
@@ -448,12 +450,6 @@
     <PackageReference Include="Sprache" Version="2.3.1" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
     <PackageReference Include="Dapper" Version="2.1.35" />
-    <PackageReference Include="Parquet.Net" Version="4.25.0" />
-    <!-- Snappier arrives transitively (Parquet.Net -> IronCompress -> Snappier).
-         Pinned to 1.3.1 because the range resolves to 1.1.6, which carries
-         GHSA-pggp-6c3x-2xmx; 1.3.1 is the first clean release. Remove once
-         Parquet.Net is on 6.x, which depends on [1.3.1,) itself. -->
-    <PackageReference Include="Snappier" Version="1.3.1" />
     <PackageReference Include="IdentityModel" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
     <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />

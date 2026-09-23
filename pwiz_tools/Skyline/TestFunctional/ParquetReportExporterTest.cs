@@ -72,14 +72,16 @@ namespace pwiz.SkylineTestFunctional
             // reads without one.
             ActionUtil.CallWithoutSynchronizationContext(() =>
             {
-                using var reader = ParquetReader.CreateAsync(stream).GetAwaiter().GetResult();
+                var reader = ParquetReader.CreateAsync(stream).GetAwaiter().GetResult();
                 Assert.AreEqual(1, reader.Schema.Fields.Count);
                 // Exercise the data-read path so an array/list write or decode regression
                 // would surface here instead of only in downstream consumers.
                 using var groupReader = reader.OpenRowGroupReader(0);
                 var dataField = reader.Schema.GetDataFields().Single();
-                var col = groupReader.ReadColumnAsync(dataField).GetAwaiter().GetResult();
-                Assert.IsNotNull(col.Data);
+                using var col = groupReader.ReadRawColumnDataBaseAsync(dataField).GetAwaiter().GetResult();
+                // One level per row: the empty list, the one element list and the null list
+                CollectionAssert.AreEqual(new[] { 0, 0, 0 }, col.RepetitionLevels.ToArray());
+                CollectionAssert.AreEqual(new[] { 1, 3, 0 }, col.DefinitionLevels.ToArray());
                 return true;
             });
             VerifyWriterExceptionPropagates(viewInfo, items);

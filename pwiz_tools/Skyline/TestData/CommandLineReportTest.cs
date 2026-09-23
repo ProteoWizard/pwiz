@@ -269,9 +269,11 @@ namespace pwiz.SkylineTestData
                     .FirstOrDefault(field => Equals(columnName, field.Name));
                 Assert.IsNotNull(dataField, "No column named {0} in {1}", columnName, Path.GetFileName(path));
                 using var groupReader = reader.OpenRowGroupReader(0);
-                var data = groupReader.ReadColumnAsync(dataField).GetAwaiter().GetResult().Data;
-                Assert.AreNotEqual(0, data.Length, "No rows in {0}", Path.GetFileName(path));
-                return data.GetValue(0) as string;
+                Assert.AreNotEqual(0, groupReader.RowCount, "No rows in {0}", Path.GetFileName(path));
+                Assert.AreEqual(typeof(ReadOnlyMemory<char>), dataField.ClrType, "Column {0} in {1} is not a string column", columnName, Path.GetFileName(path));
+                var values = new string[groupReader.RowCount];
+                groupReader.ReadAsync(dataField, values.AsMemory()).GetAwaiter().GetResult();
+                return values[0];
             });
         }
 
@@ -289,8 +291,8 @@ namespace pwiz.SkylineTestData
         {
             return ActionUtil.CallWithoutSynchronizationContext(() =>
             {
-                using var reader = ParquetReader.CreateAsync(path).GetAwaiter().GetResult();
-                return readFunc(reader);
+                using var stream = File.OpenRead(path);
+                return readFunc(ParquetReader.CreateAsync(stream).GetAwaiter().GetResult());
             });
         }
     }

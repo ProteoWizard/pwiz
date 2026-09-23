@@ -501,7 +501,7 @@ public sealed class DiaNNSpecLibReader : BuildParser
     private static async IAsyncEnumerable<DiannReportRow> ReadDiannReportParquetAsync(string reportPath)
     {
         using var stream = File.OpenRead(reportPath);
-        using var reader = await Parquet.ParquetReader.CreateAsync(stream).ConfigureAwait(false);
+        await using var reader = await Parquet.ParquetReader.CreateAsync(stream).ConfigureAwait(false);
 
         var schema = reader.Schema;
         // cpp parity: DIANN v2 parquet uses Run (not File.Name).
@@ -565,22 +565,74 @@ public sealed class DiaNNSpecLibReader : BuildParser
 
     private static async Task<string[]> ReadStringColumn(Parquet.ParquetRowGroupReader rgReader, Parquet.Schema.DataField field)
     {
-        var col = await rgReader.ReadColumnAsync(field).ConfigureAwait(false);
-        var arr = col.Data;
-        var result = new string[arr.Length];
+        if (field.ClrType == typeof(ReadOnlyMemory<char>))
+        {
+            var strings = new string?[rgReader.RowCount];
+            await rgReader.ReadAsync(field, strings.AsMemory()).ConfigureAwait(false);
+            var result = new string[strings.Length];
+            for (int i = 0; i < strings.Length; i++)
+                result[i] = strings[i] ?? string.Empty;
+            return result;
+        }
+        var arr = await ReadBoxedColumn(rgReader, field).ConfigureAwait(false);
+        var converted = new string[arr.Length];
         for (int i = 0; i < arr.Length; i++)
-            result[i] = arr.GetValue(i)?.ToString() ?? string.Empty;
-        return result;
+            converted[i] = arr[i]?.ToString() ?? string.Empty;
+        return converted;
+    }
+
+    /// <summary>
+    /// Reads a numeric column as boxed values, null where the cell is null: the shape Parquet.Net 4
+    /// handed back as DataColumn.Data. Parquet.Net 6 reads into memory typed by the column, so the
+    /// column's type is dispatched here and the callers keep converting per value as they did.
+    /// </summary>
+    private static Task<object?[]> ReadBoxedColumn(Parquet.ParquetRowGroupReader rgReader, Parquet.Schema.DataField field)
+    {
+        var t = field.ClrType;
+        if (t == typeof(float)) return ReadBoxed<float>(rgReader, field);
+        if (t == typeof(double)) return ReadBoxed<double>(rgReader, field);
+        if (t == typeof(int)) return ReadBoxed<int>(rgReader, field);
+        if (t == typeof(long)) return ReadBoxed<long>(rgReader, field);
+        if (t == typeof(short)) return ReadBoxed<short>(rgReader, field);
+        if (t == typeof(byte)) return ReadBoxed<byte>(rgReader, field);
+        if (t == typeof(uint)) return ReadBoxed<uint>(rgReader, field);
+        if (t == typeof(ulong)) return ReadBoxed<ulong>(rgReader, field);
+        if (t == typeof(ushort)) return ReadBoxed<ushort>(rgReader, field);
+        if (t == typeof(sbyte)) return ReadBoxed<sbyte>(rgReader, field);
+        if (t == typeof(bool)) return ReadBoxed<bool>(rgReader, field);
+        if (t == typeof(decimal)) return ReadBoxed<decimal>(rgReader, field);
+        throw new BlibException(false, $"Parquet column '{field.Name}' has unsupported type {t.Name}.");
+    }
+
+    private static async Task<object?[]> ReadBoxed<T>(Parquet.ParquetRowGroupReader rgReader, Parquet.Schema.DataField field)
+        where T : struct
+    {
+        int rowCount = checked((int)rgReader.RowCount);
+        var boxed = new object?[rowCount];
+        if (field.IsNullable)
+        {
+            var values = new T?[rowCount];
+            await rgReader.ReadAsync(field, values.AsMemory()).ConfigureAwait(false);
+            for (int i = 0; i < rowCount; i++)
+                boxed[i] = values[i];
+        }
+        else
+        {
+            var values = new T[rowCount];
+            await rgReader.ReadAsync(field, values.AsMemory()).ConfigureAwait(false);
+            for (int i = 0; i < rowCount; i++)
+                boxed[i] = values[i];
+        }
+        return boxed;
     }
 
     private static async Task<float[]> ReadFloatColumn(Parquet.ParquetRowGroupReader rgReader, Parquet.Schema.DataField field)
     {
-        var col = await rgReader.ReadColumnAsync(field).ConfigureAwait(false);
-        var arr = col.Data;
+        var arr = await ReadBoxedColumn(rgReader, field).ConfigureAwait(false);
         var result = new float[arr.Length];
         for (int i = 0; i < arr.Length; i++)
         {
-            var v = arr.GetValue(i);
+            var v = arr[i];
             result[i] = v switch
             {
                 float f => f,
@@ -629,7 +681,7 @@ public sealed class DiaNNSpecLibReader : BuildParser
     private async Task LoadSpecLibFromParquetAsync(string filepath)
     {
         using var stream = File.OpenRead(filepath);
-        using var reader = await Parquet.ParquetReader.CreateAsync(stream).ConfigureAwait(false);
+        await using var reader = await Parquet.ParquetReader.CreateAsync(stream).ConfigureAwait(false);
         var schema = reader.Schema;
 
         var precursorIdField  = MustFindParquetField(schema, "Precursor.Id", filepath);
@@ -745,12 +797,11 @@ public sealed class DiaNNSpecLibReader : BuildParser
 
     private static async Task<long[]> ReadLongColumn(Parquet.ParquetRowGroupReader rgReader, Parquet.Schema.DataField field)
     {
-        var col = await rgReader.ReadColumnAsync(field).ConfigureAwait(false);
-        var arr = col.Data;
+        var arr = await ReadBoxedColumn(rgReader, field).ConfigureAwait(false);
         var result = new long[arr.Length];
         for (int i = 0; i < arr.Length; i++)
         {
-            var v = arr.GetValue(i);
+            var v = arr[i];
             result[i] = v switch
             {
                 long l => l,
@@ -908,7 +959,7 @@ public sealed class DiaNNSpecLibReader : BuildParser
         try
         {
             using var stream = File.OpenRead(filepath);
-            using var reader = Parquet.ParquetReader.CreateAsync(stream).GetAwaiter().GetResult();
+            _ = Parquet.ParquetReader.CreateAsync(stream).GetAwaiter().GetResult();
             return true;
         }
         catch (Exception)
@@ -924,7 +975,7 @@ public sealed class DiaNNSpecLibReader : BuildParser
             if (IsParquet(reportFilepath))
             {
                 using var stream = File.OpenRead(reportFilepath);
-                using var reader = Parquet.ParquetReader.CreateAsync(stream).GetAwaiter().GetResult();
+                var reader = Parquet.ParquetReader.CreateAsync(stream).GetAwaiter().GetResult();
                 return FindDataField(reader.Schema, "Precursor.Id") is not null
                     && FindDataField(reader.Schema, "Global.Q.Value") is not null
                     && FindDataField(reader.Schema, "RT") is not null;

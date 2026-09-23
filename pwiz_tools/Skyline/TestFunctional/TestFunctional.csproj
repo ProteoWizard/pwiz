@@ -19,6 +19,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>$(NoWarn);NU1605;NU1701;NU1903;SYSLIB0011</NoWarn>
     <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
+    <!-- Parquet.Net, as pwiz's patched build: see ..\..\Shared\Lib\Parquet\ParquetNet.targets -->
+    <ReferenceParquetNet>true</ReferenceParquetNet>
   </PropertyGroup>
 
   <!-- Fixtures + app config land next to the assembly for AbstractUnitTest.GetTestPath. -->

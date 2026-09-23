@@ -1,0 +1,50 @@
+<Project>
+
+  <!--
+    Override the NuGet-resolved Parquet.Net assembly (Parquet.dll) with the patched
+    build that lives next to this file as ParquetNet.dll.
+
+    SOURCE OF TRUTH for this binary: the `maccoss-developers` repo, path
+    skylinedev/Parquet.Net6 - a SIBLING checkout under the same project root as pwiz,
+    not a folder inside this repo. BUILD.md there says how it is built and
+    PATCH-NOTES.md what it changes: upstream 6.1.0 plus the ThriftCompactProtocolReader
+    struct-skip fix (a defensive read fix; unlike the 4.25.0 fork it adds no public API
+    and does not change written bytes).
+
+    Why a copy rather than a Reference alone: on .NET the host resolves an assembly from
+    the file whose name matches the assembly name, and this assembly is "Parquet". The
+    file cannot be checked in under that name because a native parquet.dll owns it in
+    Skyline's output folder, so every consumer references the NuGet package for its
+    dependency graph (ExcludeAssets="compile"), compiles against ParquetNet.dll, and
+    this target copies the patched bits over the package's Parquet.dll after the build.
+    The patched dll has the same AssemblyVersion=6.0.0 as the stock 6.1.0 NuGet release.
+
+    Imported by pwiz_tools/Directory.Build.targets and pwiz-sharp/Directory.Build.targets.
+    Conditioned on Exists() so the target is a no-op for projects that don't
+    transitively reference Parquet.Net.
+
+    A project that compiles against Parquet.Net sets ReferenceParquetNet=true and gets the
+    pair below: the package for its dependency graph and runtime assets, and the patched
+    build to compile against. The compile assets do not flow to a referencing project, so
+    every project with Parquet code in it opts in for itself.
+  -->
+  <ItemGroup Condition="'$(ReferenceParquetNet)' == 'true'">
+    <PackageReference Include="Parquet.Net" Version="6.1.0" ExcludeAssets="compile" />
+    <Reference Include="Parquet">
+      <HintPath>$(MSBuildThisFileDirectory)ParquetNet.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="OverridePatchedParquetNet" AfterTargets="Build">
+    <PropertyGroup>
+      <_PatchedParquetSource>$(MSBuildThisFileDirectory)ParquetNet.dll</_PatchedParquetSource>
+      <_ResolvedParquetTarget>$(OutDir)Parquet.dll</_ResolvedParquetTarget>
+    </PropertyGroup>
+    <Copy SourceFiles="$(_PatchedParquetSource)"
+          DestinationFiles="$(_ResolvedParquetTarget)"
+          SkipUnchangedFiles="true"
+          Condition="Exists('$(_ResolvedParquetTarget)') and Exists('$(_PatchedParquetSource)')" />
+  </Target>
+
+</Project>

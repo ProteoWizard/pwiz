@@ -26,6 +26,8 @@
          They must ship to the output dir so AbstractUnitTest.GetTestPath can
          locate them without walking back into the source tree. -->
     <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
+    <!-- Parquet.Net, as pwiz's patched build: see ..\..\Shared\Lib\Parquet\ParquetNet.targets -->
+    <ReferenceParquetNet>true</ReferenceParquetNet>
   </PropertyGroup>
 
   <!-- Fixture data next to the test .cs - copy to output. Exclude bin/obj: with
