@@ -72,7 +72,7 @@ namespace pwiz.Skyline
     {
         public static string GetViewFile(string fileName)
         {
-            return fileName + @".view";
+            return fileName + EXT_VIEW;
         }
 
         private void fileMenu_DropDownOpening(object sender, EventArgs e)
@@ -1276,7 +1276,7 @@ namespace pwiz.Skyline
 
             try
             {
-                SaveLayout(fileName);
+                SaveLayout(GetViewFile(fileName));
 
                 if (includingCacheFile)
                 {
@@ -1460,16 +1460,131 @@ namespace pwiz.Skyline
             }, (int) SrmDocument.Level.TransitionGroups);
         }
 
-        private void SaveLayout(string fileName)
+        private void SaveLayout(string viewFilePath)
         {
-            using (var saverUser = new FileSaver(GetViewFile(fileName)))
+            using (var saverUser = new FileSaver(viewFilePath))
             {
-                if (saverUser.CanSave())
+                // Pass the parent: without it CanSave swallows read-only and access-denied and
+                // returns false, so Export Window Layout would write nothing and say nothing.
+                if (saverUser.CanSave(this))
                 {
                     dockPanel.SaveAsXml(saverUser.SafeName, new UTF8Encoding(false)); // UTF-8 without BOM
                     saverUser.Commit();
                 }
             }
+        }
+
+        public const string EXT_VIEW = ".view";
+        public static string FILTER_VIEW
+        {
+            get { return TextUtil.FileDialogFilter(SkylineResources.SkylineWindow_FILTER_SKY_VIEW_Window_Layout_Files, EXT_VIEW); }
+        }
+
+        /// <summary>
+        /// Where the layout dialogs start: beside the document, since that is where its ".sky.view"
+        /// belongs and what the Export dialog names the file after. Only falls back to
+        /// <see cref="Settings.ActiveDirectory"/> for an unsaved document - that setting is the last
+        /// folder ANY file operation used, including unrelated ones like picking an iRT database, so
+        /// on its own it can put a file named after this document somewhere else entirely.
+        /// Share Document starts from the document folder for the same reason.
+        /// </summary>
+        private string GetLayoutDirectory()
+        {
+            return !string.IsNullOrEmpty(DocumentFilePath)
+                ? Path.GetDirectoryName(DocumentFilePath)
+                : Settings.Default.ActiveDirectory;
+        }
+
+        private void exportLayoutMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowExportLayoutDlg();
+        }
+
+        public void ShowExportLayoutDlg()
+        {
+            using (var dlg = new SaveFileDialog())
+            {
+                dlg.Title = SkylineResources.SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout;
+                dlg.Filter = FILTER_VIEW;
+                dlg.InitialDirectory = GetLayoutDirectory();
+                dlg.DefaultExt = EXT_VIEW;
+                if (!string.IsNullOrEmpty(DocumentFilePath))
+                    dlg.FileName = Path.GetFileName(GetViewFile(DocumentFilePath));
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+                ExportLayout(dlg.FileName);
+            }
+        }
+
+
+        public void ExportLayout(string viewFilePath)
+        {
+            try
+            {
+                SaveLayout(viewFilePath);
+            }
+            catch (Exception x)
+            {
+                MessageDlg.ShowWithException(this,
+                    string.Format(SkylineResources.SkylineWindow_ExportLayout_Failure_attempting_to_save_the_window_layout_file__0__, viewFilePath), x);
+            }
+        }
+
+        private void importLayoutMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowImportLayoutDlg();
+        }
+
+        public void ShowImportLayoutDlg()
+        {
+            using (var dlg = new OpenFileDialog())
+            {
+                dlg.Title = SkylineResources.SkylineWindow_ShowImportLayoutDlg_Import_Window_Layout;
+                dlg.Filter = FILTER_VIEW;
+                dlg.InitialDirectory = GetLayoutDirectory();
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+                ImportLayout(dlg.FileName);
+            }
+        }
+
+        public void ImportLayout(string viewFilePath)
+        {
+            MemoryStream previousLayout = null;
+            try
+            {
+                using var stream = File.OpenRead(viewFilePath);
+                try
+                {
+                    MemoryStream memoryStream = new MemoryStream();
+                    // Remember the current layout in case something goes wrong.
+                    dockPanel.SaveAsXml(memoryStream, new UTF8Encoding(false), true); // UTF-8 without BOM
+                    memoryStream.Position = 0;
+                    previousLayout = memoryStream;
+                }
+                catch
+                {
+                    // Failed to save the current layout (maybe too big). Continue without a backup.
+                }
+                LoadLayout(stream);
+            }
+            catch (Exception x)
+            {
+                if (previousLayout != null)
+                {
+                    try
+                    {
+                        LoadLayout(previousLayout);
+                    }
+                    catch (Exception restoreException)
+                    {
+                        x = new AggregateException(x, restoreException);
+                    }
+                }
+                MessageDlg.ShowWithException(this,
+                    string.Format(SkylineResources.SkylineWindow_UpdateGraphUI_Failure_attempting_to_load_the_window_layout_file__0__, viewFilePath), x);
+            }
+            EnsureApplicableForms();
         }
 
         private void SetActiveFile(string path)
@@ -1584,8 +1699,8 @@ namespace pwiz.Skyline
                     {
                         var tempDocumentPath = Path.Combine(sharing.EnsureTempDir().DirPath,
                             sharing.GetDocumentFileName());
-                        SaveLayout(tempDocumentPath);
                         sharing.ViewFilePath = GetViewFile(tempDocumentPath);
+                        SaveLayout(sharing.ViewFilePath);
                     }
                     else if (DocumentFilePath != null)
                     {

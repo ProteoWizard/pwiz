@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.7) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -124,10 +124,14 @@ namespace pwiz.Osprey.Tasks
         /// <see cref="SearchIdentity.ReconciliationParameterHash"/> must
         /// remain stable for the life of the run, so a worker can
         /// reproduce the same hash a straight-through invocation would
-        /// stamp into its parquet footers. Pipeline-populated fields
-        /// that do NOT feed those hashes (e.g. the worker-mode
-        /// synthesis of <c>InputFiles</c> from <c>InputScores</c>) may be
-        /// written once at pipeline entry. Run-time state that is not parsed
+        /// stamp into its parquet footers. NOTHING is written to the config at
+        /// pipeline entry any more: it is complete when parsing ends
+        /// (<c>OspreyCommandArgs.ToConfig</c>, which is also where
+        /// <c>--input-list</c> is expanded into <c>InputFiles</c>). The carve-out
+        /// that stood here - pipeline-populated fields that do not feed the hashes
+        /// may be written once at entry - existed for the worker-mode synthesis of
+        /// <c>InputFiles</c> from <c>--input-scores</c> parquet stems, and it went
+        /// with that flag. Run-time state that is not parsed
         /// config (e.g. file parallelism) lives on <see cref="RunPlan"/>
         /// instead. For per-file scratch that
         /// mutates hash-affecting fields (e.g. the MS2-calibrated
@@ -153,14 +157,12 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public int ExitCode { get; set; }
 
-        /// <summary>
-        /// The tasks participating in this pipeline, in execution order.
-        /// The driver walks this list (running each that is
-        /// <see cref="OspreyTask.IsIncluded"/> and not already valid on disk);
-        /// tasks that need state from an upstream sibling reach it through
-        /// <see cref="Demand{T}"/>.
-        /// </summary>
-        public IReadOnlyList<OspreyTask> Tasks { get; }
+        // No public list of the pipeline's tasks. The driver walks its own list, and a task
+        // that needs state from a sibling asks Get/Demand for the state, never the task.
+        // The one reader this property ever had was a predicate asking whether ITS OWN
+        // consumer was going to run, so it could decide whether to do whole-run work - the
+        // second copy of IsIncluded's truth table that issue #4597 deleted. Leaving the hook
+        // in place is an invitation to write that predicate again.
 
         /// <summary>
         /// The cross-implementation bisection diagnostics sink for this run, or
@@ -217,7 +219,6 @@ namespace pwiz.Osprey.Tasks
                     _producerByByproduct.Add(byproductType, task.GetType());
                 }
             }
-            Tasks = list;
         }
 
         public void LogInfo(string message) { _logInfo(message); }
@@ -309,7 +310,67 @@ namespace pwiz.Osprey.Tasks
 #if DEBUG
             AssertMilestoneConsumedBeforeRepublish(info);
 #endif
-            _byproducts.Add(typeof(TInfo), info);
+            // Add, not upsert: publishing twice into one slot is a real defect and
+            // ByproductContextTest pins the throw. The ONLY case that legitimately republishes
+            // is the DropAllButLibrary diagnostic, where a producer re-materializes from disk
+            // and its Rehydrate republishes every slot it owns - so the guard is relaxed there
+            // and nowhere else. Relaxing it globally turned that test red, which is the test
+            // working: an invariant weakened for one experiment must not be weakened for the
+            // default path.
+            if (OspreyEnvironment.DropBetweenTasks)
+                _byproducts[typeof(TInfo)] = info;
+            else
+                _byproducts.Add(typeof(TInfo), info);
+        }
+
+        /// <summary>
+        /// DIAGNOSTIC. Drop every byproduct except the library, and forget which producers have
+        /// materialized, so the next task must reload whatever it needs from disk.
+        ///
+        /// <para>This exists to answer one question: can the in-process pipeline behave the way
+        /// the HPC split does - each task dropping what it held and the next picking up from
+        /// artifacts? <c>regression.ps1</c> gets that behaviour for free by running 8 separate
+        /// processes, each with a fresh context; the single-process path cannot, because the
+        /// context is built on materialize-once-hold-forever. That asymmetry is why
+        /// straight-through holds structures the HPC path never does.</para>
+        ///
+        /// <para>The library is kept because it is the one thing an HPC node also pays for, and
+        /// it is the term that would otherwise dominate any comparison: 8 processes each load it
+        /// (4.19 GB / ~2 min on the CHS library), so a naive process-count comparison measures
+        /// library loads rather than the handoff. Holding it isolates the variable under test.</para>
+        /// </summary>
+        public void DropAllButLibrary()
+        {
+            var keep = new HashSet<Type> { typeof(FullLibrary), typeof(LibraryById), typeof(SequencePool) };
+            var dropped = new List<Type>();
+            foreach (var type in _byproducts.Keys)
+            {
+                if (!keep.Contains(type))
+                    dropped.Add(type);
+            }
+            foreach (var type in dropped)
+                _byproducts.Remove(type);
+            // Forget materialization entirely so a later Get re-drives the producer's Rehydrate.
+            //
+            // FINDING: the first version of this kept the producers of the KEPT slots marked, so
+            // nothing would rebuild the library - and FirstPassFDR then died immediately on
+            // "ScoredEntries has no registered producer". FullLibrary and ScoredEntries are
+            // published by the SAME task (PerFileScoringTask:840-841 and :849), so "keep the
+            // library, drop the rest" is not expressible: marking that task materialized to
+            // protect the library also blocks re-materialization of everything else it owns.
+            //
+            // The library is not a separate concern in the byproduct graph; it is owned by a
+            // scoring task. An HPC node sidesteps this by loading the library itself, in its own
+            // process, with no shared producer to negotiate with.
+            _materialized.Clear();
+#if DEBUG
+            // The republish guard tracks milestones consumed before republish; after a drop
+            // every slot is legitimately republished, so its history no longer applies.
+            _consumedByproducts.Clear();
+#endif
+            LogInfo(string.Format(
+                @"[DROP] Released {0} byproduct(s) at the task boundary; the library stays resident.",
+                dropped.Count));
         }
 
         /// <summary>
@@ -452,7 +513,11 @@ namespace pwiz.Osprey.Tasks
         {
             if (!(info is PerFileEntries milestone))
                 return;
-            object buffer = milestone.Value;
+            // BufferIdentity, not Value: this guard needs list identity only, and reading
+            // Value would MATERIALIZE a deferred milestone (RescoredEntries), making the
+            // DEBUG build pay at publish time the very work deferral exists to move to the
+            // consumer's pull - and pay it before the rescore that fills it has run.
+            object buffer = milestone.BufferIdentity;
             if (buffer == null)
                 return;
             if (_milestoneByBuffer.TryGetValue(buffer, out var priorMilestone))

@@ -52,7 +52,7 @@ Stage 6: cross-run reconciliation re-scores moved / gap-filled peaks (10-cross-r
 Stage 7 (second pass, authoritative):
   7. Re-run the identical Percolator core over the reconciled entries, write
      .2nd-pass.fdr_scores.bin sidecars, reload stubs with the fresh q-values.
-  8. Re-apply the best-of-runs clamp (Stage 6 reset the run q-values of moved peaks).
+  8. (No re-clamp: the second pass floors its experiment q before writing it - 3j.)
   9. Second-pass protein FDR (authoritative) + blib output.
 ```
 
@@ -144,8 +144,9 @@ default and the parity-gated path.
 Percolator of Käll et al. (2007). Both targets and their paired decoys enter — no
 upstream competition. The C# port is **streaming-only**: the former sub-threshold
 "direct" branch that trained on all entries was removed to match Rust's streaming-only
-change, so C# and Rust fit the standardizer on the identical best-per-precursor subset
-at every scale (`PercolatorEngine.DispatchSvm`, `PercolatorEngine.cs:336`;
+change, so C# and Rust fit the standardizer on subsets built by the same selection code at
+every scale — though **no longer on the same subset by default**, since the training
+selection below is C#-only (`PercolatorEngine.DispatchSvm`, `PercolatorEngine.cs:336`;
 `RunPercolatorStreaming`, `PercolatorEngine.cs:473`).
 
 ### 3a. Standardize features
@@ -160,11 +161,32 @@ variance (`PercolatorFdr.cs:292`). On the streaming path the standardizer is fit
 streaming callers) does two things, keeping target/decoy pairs and all charge states of
 a peptide together:
 
-1. **Best-per-precursor**: `SelectBestPerPrecursor` picks the single best-scoring
-   observation per `(base_id, isDecoy)` across all files, ranked by `CoelutionSum`
-   (byte-identical to `Features[0]` on the first pass). With N files this avoids the SVM
-   seeing the same precursor's pair N times. This dedup applies on *all* multi-file
-   inputs — the comment at `PercolatorFdr.cs:320` notes Rust was patched to match.
+1. **One observation per precursor**: `SelectBestPerPrecursor` reduces each
+   `(base_id, isDecoy)` to a single row. With N files this avoids the SVM seeing the same
+   precursor's pair N times. This dedup applies on *all* multi-file inputs.
+
+   **Which** row is `OSPREY_TRAIN_PICK_RUN`'s decision, and the default changed in 26.1:
+
+   - **Default (on)**: draw one RUN uniformly from the runs the precursor appears in — a
+     size-1 reservoir, the k-th run taking the slot with probability 1/k — and contribute
+     that run's best-scoring candidate peak. The cross-run maximum made every training row
+     an extreme value over however many files were batched, so the training population
+     drifted from the per-run population being scored, and drifted further as the batch
+     grew (mean `coelution_sum` 1.19 at one file vs 5.75 at 82, against 1.18 in the scored
+     population). Worth +24.7% discoveries at matched true FDP on 82 SEA-AD files.
+
+     Both halves matter. Pass 1 is **pre-compaction**, so a precursor carries several
+     candidate-peak rows per run; drawing per ROW rather than per RUN weights a run by how
+     many candidates it produced and leaves a random candidate as the training row, which
+     measured **-17.4%** identifications on 3-file Stellar.
+
+   - **`OSPREY_TRAIN_PICK_RUN=0`**: the pre-26.1 rule — the single best-scoring observation
+     across all files, ranked by `CoelutionSum` (byte-identical to `Features[0]` on the
+     first pass). Retained for A/B work.
+
+   **Cross-implementation note**: this default is C#-only. Rust still takes the cross-run
+   maximum (`crates/osprey/src/pipeline.rs`), so the two agree only under
+   `OSPREY_TRAIN_PICK_RUN=0`.
 2. **Subsample**: if the dedup set still exceeds `MaxTrainSize` (default **300000**,
    `PercolatorConfig` ctor `PercolatorFdr.cs:123`), `SubsampleByPeptideGroup` samples
    whole peptide groups using the same XOR-shift PRNG seed (default **42**) and
@@ -277,6 +299,53 @@ runs in-pass over the score arrays (`PercolatorFdr.cs:1040`); the resident overl
 `PercolatorEngine.ClampExperimentQToBestRun` (`PercolatorEngine.cs:864`) is re-applied
 after Stage 6 reconciliation in `SecondPassFdrTask`, because reconciliation resets the run
 q-values of moved and gap-filled peaks (issue #4390).
+
+**The second pass applies the floor BEFORE it writes.** It did not, and that was the defect
+issue #4522 set out to validate. `Pass2FdrSidecar.FinishRecord` produces each experiment record
+from a q-value nothing had floored, and the correction happened afterwards, on the entries that
+feed the .blib - so `<blib-stem>.2nd-pass.fdr_experiment.bin` persisted a number the pipeline
+itself considered wrong, and the corrected one existed only inside the .blib. Measured on the
+446-run CHS cohort: 1,125,526 values, 0.19% of rows, uniformly across every run.
+
+**Both strata reached that state, by different routes**, which is why it looked like two bugs:
+
+| stratum | what `FinishRecord` gives it | why it can fall below its own best run |
+|---|---|---|
+| on-stratum | a fresh second-pass competition q | nothing clamps it |
+| off-stratum | its first-pass q, carried | that q WAS clamped - against FIRST-pass run q - while pass 2 refreshed run q underneath it, a run that did not compete taking 1.0 |
+
+The fix is one rule applied to every record regardless of which branch produced it, at the point
+where both the value and its floor are in hand:
+
+* the per-entry floor is folded out of the per-file `.2nd-pass.fdr_scores.bin` records the
+  experiment sweep is **already reading** - each carries `run_precursor_qvalue` and
+  `run_peptide_qvalue`, so the min-over-runs costs one comparison per record and no IO of its own
+* the peptide floor is derived from those entry floors, grouped through identities taken from the
+  survivor walk that sweep already performs. Exact rather than approximate, because `min` is
+  associative. **Not** from `LibraryById`: a `--task SecondPassFDR` node loads a library with no
+  GENERATED decoys, so a decoy entry_id resolves on the straight route and not on the distributed
+  one - 166,680 of 333,404 records differed that way on Stellar, every one a decoy
+* `FdrExperimentAccumulator.ApplyRunQFloors` raises both q-values before the records are written
+
+**Nothing re-clamps afterwards.** What stood between protein FDR and the .blib was a fold over
+every run to re-derive those floors plus a per-run apply - 8 minutes and a multi-GB working set at
+446 runs, paid by every analysis whether or not anything asked for diagnostics. Every pool
+downstream takes its experiment q from these records through the pass-2 overlay, so it arrives
+floored. The golden .blib comparison is what holds this: the golden was produced WITH the old
+re-clamp, so flooring at the source must reproduce it byte for byte.
+
+**The floor is not stored beside the raw value, deliberately.** This file holds DERIVED numbers -
+the model q-values cannot be reconstructed from it in any case - so keeping the un-floored
+competition result would preserve only WHICH ~0.1% of entries the floor moved, at the price of a
+wider record and a format version. Flooring at the source makes "experiment q is never more
+confident than its own best run" true by construction rather than checkable after the fact. The
+format is unchanged, so no task's validity key mentions it and no bed is invalidated.
+
+**The first pass needs none of this.** It floors in the same emit pass that computes the value
+(`PercolatorScorer`), over the same arrays, and nothing refreshes run q afterwards within the
+pass - so re-applying is `max(floored, floor)`, a no-op. That is the general rule: a floor can be
+omitted exactly when the value and the run q it floors against were produced together and neither
+moved afterwards.
 
 ---
 
@@ -500,7 +569,6 @@ That makes the second-pass q-value mode
 | `OSPREY_PASS2_QVALUE` | Behavior after a mean(best-N) first pass |
 |---|---|
 | `transfer` | **The compatible mode.** Carries the first-pass q through unchanged, so the reported experiment q stays mean(best-N). |
-| `transfer-compete` | **Refused** (`Pass2FdrSidecar` throws). It rewrites every survivor's experiment q from a MAX-aggregated competition, making a reproducibility-weighted run indistinguishable from a default run in its own output. |
 | `protein-compact` (default) | **Refused** (but see the caveat below). Worse than uniform: on-stratum survivors would get the MAX-aggregated value while off-stratum survivors keep their first-pass mean(best-N) q, giving one reported column with two statistics and no way for a consumer to tell which row used which. |
 
 **Because `protein-compact` is the DEFAULT, a mean(best-N) arm must set
@@ -508,13 +576,6 @@ That makes the second-pass q-value mode
 deliberate: the alternative - silently using `transfer` whenever the first pass was mean(best-N) -
 would make the effective default depend on another variable, which is harder to reason about than
 a loud failure whose message names the fix.
-
-> **Caveat: `protein-compact` + `OSPREY_PROTEIN_COMPACT_RETRAIN=1` is NOT refused.** The refusal
-> lives in the frozen-model recompute, and that A/B lever deliberately bypasses it to retrain
-> instead - so the combination retrains and silently reports a MAX-aggregated experiment q. This is
-> left as-is rather than guarded because the combination is a three-way diagnostic opt-in, and
-> these environment variables are development instrumentation rather than a supported interface
-> (see `ai/docs/osprey-development-guide.md`). Do not read the "Refused" row above as covering it.
 
 The refusal gates on the arm the **first pass recorded** - persisted as
 `ExperimentAgg` in the per-file `<stem>.1st-pass.model.json` sidecar

@@ -107,6 +107,19 @@ print(f"Changed files ({len(changed_files)}):\n", changed_files_str)
 
 # substitute "release" for specific skyline_##.# versions
 base_branch = re.sub("(Skyline/)?skyline_.*", "release", base_branch)
+
+# A stacked PR is based on a work branch rather than master, but it is ultimately headed for
+# master and should get master's validations. Without this, base_branch matches none of
+# possible_base_branches, so the promotion loop below never flattens any target group - every
+# group in this config is nested under "master" (and sometimes "release") - and the trigger
+# loop then skips them all as isBaseBranchDict. The result is a PR whose only check is this
+# script reporting that it triggered nothing.
+#
+# Only target promotion is affected. The change list is still computed as base...FETCH_HEAD
+# against the REAL base ref, so a stacked PR still sees only its own commits' files.
+if base_branch.startswith("Skyline/work/"):
+    base_branch = "master"
+
 print("Base branch: '%s'" % base_branch)
 
 possible_base_branches = ["master", "release"]

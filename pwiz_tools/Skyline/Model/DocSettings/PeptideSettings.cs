@@ -40,6 +40,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
@@ -1934,7 +1935,7 @@ namespace pwiz.Skyline.Model.DocSettings
     public enum PeptidePick { library, filter, both, either }
 
     [XmlRoot("peptide_libraries")]
-    public sealed class PeptideLibraries : Immutable, IValidating, IXmlSerializable
+    public sealed class PeptideLibraries : Immutable, IValidating, IXmlSerializable, IExplainDiff
     {
         public const int MIN_PEPTIDE_COUNT = 1;
         public const int MAX_PEPTIDE_COUNT = 20;
@@ -2753,6 +2754,50 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
 
         #region object overrides
+
+        /// <summary>
+        /// Names the member that makes this unequal to <paramref name="other"/>. Kept beside
+        /// <see cref="Equals(PeptideLibraries)"/> because only that method knows what it compares -
+        /// note _rankIdName has no public accessor, so nothing outside this class can report it.
+        ///
+        /// <para>Library load state is included because it is the difference that actually shows up:
+        /// a document and its round-trip copy can hold the same library with only one of them
+        /// finished loading, which compared unequal in either direction and looked like an
+        /// unreproducible flake.</para>
+        /// </summary>
+        public string ExplainDiff(object other)
+        {
+            if (!(other is PeptideLibraries libraries))
+                return string.Format(@"other is {0}, not PeptideLibraries", other?.GetType().Name ?? @"null");
+            var differences = new List<string>();
+            if (!ArrayUtil.EqualsDeep(_librarySpecs, libraries._librarySpecs))
+            {
+                differences.Add(string.Format(@"LibrarySpecs [{0}] vs [{1}]",
+                    string.Join(@", ", _librarySpecs.Select(s => s == null ? @"(null)" : s.Name)),
+                    string.Join(@", ", libraries._librarySpecs.Select(s => s == null ? @"(null)" : s.Name))));
+            }
+            if (!ArrayUtil.EqualsDeep(_libraries, libraries._libraries))
+            {
+                differences.Add(string.Format(@"Libraries [{0}] vs [{1}] (unloadedSpecs {2} vs {3})",
+                    string.Join(@", ", _libraries.Select(ExplainLibrary)),
+                    string.Join(@", ", libraries._libraries.Select(ExplainLibrary)),
+                    LibrarySpecsUnloaded.Count(), libraries.LibrarySpecsUnloaded.Count()));
+            }
+            if (!Equals(_rankIdName, libraries._rankIdName))
+                differences.Add(string.Format(@"RankIdName {0} vs {1}", _rankIdName, libraries._rankIdName));
+            if (!Equals(Pick, libraries.Pick))
+                differences.Add(string.Format(@"Pick {0} vs {1}", Pick, libraries.Pick));
+            if (!Equals(RankId, libraries.RankId))
+                differences.Add(string.Format(@"RankId {0} vs {1}", RankId, libraries.RankId));
+            if (!Equals(PeptideCount, libraries.PeptideCount))
+                differences.Add(string.Format(@"PeptideCount {0} vs {1}", PeptideCount, libraries.PeptideCount));
+            return differences.Count == 0 ? null : TextUtil.LineSeparate(differences);
+        }
+
+        private static string ExplainLibrary(Library lib)
+        {
+            return lib == null ? @"(null)" : string.Format(@"{0}/loaded={1}", lib.Name, lib.IsLoaded);
+        }
 
         public bool Equals(PeptideLibraries obj)
         {

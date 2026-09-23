@@ -290,6 +290,14 @@ namespace AutoQC
                 return true;
             }
 
+            // FindSkylineForm is modal and there is no one to answer it under a functional test,
+            // so on a machine with no Skyline installation the whole test run hangs here instead
+            // of failing. Carry on without the settings: TestUtils.GetTestSkylineSettings already
+            // returns null when nothing is installed, so a test that needs a real Skyline path
+            // fails with a message rather than never finishing.
+            if (FunctionalTest)
+                return true;
+
             var skylineForm = new FindSkylineForm(AppName, Icon());
             Application.Run(skylineForm);
 

@@ -438,6 +438,8 @@ Version.cpp
 /pwiz_tools/Skyline/ProtocolBuffers/tmp/*.cs
 /pwiz_tools/Skyline/SkylineTester test list.txt
 /pwiz_tools/Skyline/SkylineTester.log
+# Starting a run rolls the previous log aside to SkylineTester-<timestamp>.log beside it.
+/pwiz_tools/Skyline/SkylineTester-*.log
 SkylineTester Results
 /b.bat
 /b64.bat

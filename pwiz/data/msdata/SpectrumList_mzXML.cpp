@@ -685,6 +685,8 @@ SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, IO::BinaryDataFlag bi
 
     References::resolve(*result, msd_);
 
+    ensureMzAscending(result);
+
     return result;
 }
 
