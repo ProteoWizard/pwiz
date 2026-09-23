@@ -12,9 +12,9 @@
 ;     to %ProgramFiles%\<Skyline|Skyline-daily>, as the WiX .msi did.
 ;   - Skyline and Skyline-daily are distinct products (their own AppIds) that
 ;     install side by side; within a product a newer version replaces the
-;     previous one in place. A private build can be given another product
-;     name (/DProductName), making it a third product with its own folder,
-;     shortcut and installer name; it registers its channel's file types.
+;     previous one in place. InstallerOverrides.iss can name the build something else,
+;     making it a third product with its own folder, shortcut and installer
+;     name; it registers its channel's file types.
 ;   - Start Menu shortcut under "MacCoss Lab, UW", optional Desktop shortcut,
 ;     .sky / .skyd / .skyp associations, Programs and Features entry, and a
 ;     registry record of the install location for SkylineRunner, SkylineBatch
@@ -24,7 +24,6 @@
 ;
 ; build.ps1 stages the Skyline build output and invokes ISCC with:
 ;   /DSkylineAppName=Skyline|Skyline-daily   (the channel; from the staged exe)
-;   /DProductName=...                        (what is installed; the channel by default)
 ;   /DMyAppVersion=YY.N.B.DDD                (FileVersion of the staged exe)
 ;   /DMyAppInformationalVersion=...          (ProductVersion, with the git hash)
 ;   /DStagingDir=..., /DOutputDir=..., /DOutputBaseFilename=...
@@ -37,7 +36,11 @@
 #if SkylineAppName != "Skyline" && SkylineAppName != "Skyline-daily"
   #error SkylineAppName must be Skyline or Skyline-daily
 #endif
-#ifndef ProductName
+; The product name and install URL this branch publishes under; an empty product
+; name means the channel.
+#include "InstallerOverrides.iss"
+#if ProductName == ""
+  #undef ProductName
   #define ProductName SkylineAppName
 #endif
 #ifndef MyAppVersion

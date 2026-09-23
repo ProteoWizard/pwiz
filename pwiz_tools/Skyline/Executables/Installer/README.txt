@@ -37,13 +37,14 @@ Build:
      which is the name the build gives it. To publish, upload the manifest and
      the bundled installer as they are into that folder; the build prints both
      URLs.
-     The product is the channel unless the build is given -ProductName; that
-     name is what Programs and Features, the Start Menu, the install folder,
-     the installer and the manifest are called, so a private build such as
-     SkylineNet10Preview installs beside the channels as a product of its own.
-     -InstallUrl gives a private build its own folder to check. Both values are
-     written into the staged <channel>.dll.config, so the installed Skyline
-     knows what to look for and where.
+     InstallerOverrides.iss, beside Setup.iss, is where a branch says what its
+     build is called and where it is published. The product is the channel when its
+     ProductName is empty; another name is what Programs and Features, the
+     Start Menu, the install folder, the installer and the manifest are called,
+     so a private build such as SkylineNet10Preview installs beside the
+     channels as a product of its own. InstallUrl is the folder it checks.
+     The build writes both values into the staged <channel>.dll.config, so the
+     installed Skyline knows what to look for and where.
   4. pwsh -File pwiz_tools\Skyline\Executables\Installer\Test-Installer.ps1
      installs the newest one silently, checks the deployment, runs
      SkylineCmd --version, uninstalls, and checks the cleanup (-AllUsers from
