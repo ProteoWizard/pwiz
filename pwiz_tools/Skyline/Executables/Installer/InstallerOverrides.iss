@@ -1,7 +1,8 @@
-; Overrides for this branch's installer. Setup.iss supplies the default for anything
-; not defined here, so on master this file is comments only and an official build is
-; the channel (Skyline or Skyline-daily) published in the official folder. A branch
-; that publishes its own build defines what it changes, for example:
+; Overrides for this branch's installer. Setup.iss defines the defaults and then
+; includes this file, so a #define here replaces the default. On master this file is
+; comments only and an official build is the channel (Skyline or Skyline-daily)
+; published in the official folder. A branch that publishes its own build defines
+; what it changes, for example:
 ;
 ;   #define ProductName "SkylineNet10Preview"
 ;   #define InstallUrl "https://proteome.gs.washington.edu/~nicksh/SpecialSkylines/SkylineNet10Preview/"

@@ -150,9 +150,9 @@ if (Test-Path (Join-Path $stagingDir 'coreclr.dll')) {
 }
 
 # 3. Product name, install URL and update manifest. InstallerOverrides.iss is where a
-#    branch says what its build is called and where it is published; Setup.iss includes
-#    it and supplies the defaults, the channel and the official folder, for whatever it
-#    leaves out. The same values are written here into the config beside the exe, where
+#    branch says what its build is called and where it is published; Setup.iss defines
+#    the defaults, the channel and the official folder, and then includes it, so an
+#    override replaces the default. The same values are written here into the config beside the exe, where
 #    Skyline reads them: InstallUrl is a folder, and in it <ProductName>.json is the
 #    manifest and <ProductName>-Setup-<version>.exe is that version's installer. The
 #    manifest and the bundled installer are named from the same values, so the

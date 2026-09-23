@@ -36,16 +36,13 @@
 #if SkylineAppName != "Skyline" && SkylineAppName != "Skyline-daily"
   #error SkylineAppName must be Skyline or Skyline-daily
 #endif
-; What the build is called and where it is published. A branch overrides either in
-; InstallerOverrides.iss; otherwise the product is the channel and the folder is the
-; official one. build.ps1 reads the same two files for the same values.
+; What the build is called and where it is published: the channel, in the official
+; folder. A branch redefines either in InstallerOverrides.iss, included after the
+; defaults so that its #define replaces the value. build.ps1 reads the same two files
+; for the same values.
+#define ProductName SkylineAppName
+#define InstallUrl "https://proteome.gs.washington.edu/~nicksh/InstallTest/"
 #include "InstallerOverrides.iss"
-#ifndef ProductName
-  #define ProductName SkylineAppName
-#endif
-#ifndef InstallUrl
-  #define InstallUrl "https://proteome.gs.washington.edu/~nicksh/InstallTest/"
-#endif
 #ifndef MyAppVersion
   #define MyAppVersion "0.0.0.0"
 #endif
