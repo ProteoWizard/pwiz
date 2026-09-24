@@ -1020,9 +1020,9 @@ namespace pwiz.Skyline.ToolsUI
                 var element = FormElement.ElementFor(control);
                 if (element != null)
                     yield return element;
-                // Recurse through a transparent container (no element of its own), and through a TabControl
-                // (kept above) to flatten its tab contents up alongside it.
-                if (element == null || control is TabControl)
+                // Recurse through a transparent container (no element of its own), and through a TabControl or
+                // a SplitContainer (kept above) to flatten its pages' or panels' contents up alongside it.
+                if (element == null || control is TabControl || control is SplitContainer)
                     foreach (var inner in GetDescendants(control))
                         yield return inner;
             }
@@ -1155,6 +1155,7 @@ namespace pwiz.Skyline.ToolsUI
                 case ComboBox comboBox: return new ComboBoxElement(comboBox, token);
                 case TextBoxBase textBox: return new TextBoxElement(textBox, token);
                 case TabControl tabControl: return new TabElement(tabControl, token);
+                case SplitContainer splitContainer: return new SplitterElement(splitContainer, token);
                 // CheckedListBox before ListBox -- it derives from ListBox, so its case must win.
                 case CheckedListBox checkedListBox: return new CheckedListBoxElement(checkedListBox, token);
                 // The Pick Children pop-up's owner-drawn ListBox presents as a CheckedListBox.
@@ -2406,6 +2407,33 @@ namespace pwiz.Skyline.ToolsUI
                     throw new ArgumentException(LlmInstruction.Format(@"No tab matches '{0}'.", tabText));
                 Control.SelectedTab = tab;
             }
+    }
+
+    /// <summary>A SplitContainer's splitter, which a user drags to share the space between its two panels. Its
+    /// value is where the splitter sits: its distance in pixels from the top of the container for panels one
+    /// above the other, from the left for panels side by side. Like a TabControl's pages, the panels are not
+    /// elements; their controls are flattened up to the form.</summary>
+    internal sealed class SplitterElement : ControlElement<SplitContainer>, IValueElement
+    {
+        public SplitterElement(SplitContainer control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
+        public override IEnumerable<UiElement> EnumerateChildren() => Enumerable.Empty<UiElement>();
+        public override object GetValueNow() => Control.SplitterDistance;
+
+        // A drag stops where the panels' minimum sizes leave no more room, so a distance outside that range is
+        // refused with the range rather than letting SplitterDistance throw.
+        public void SetValueNow(object value)
+        {
+            int distance = UiValue.ToInt(value);
+            int length = Control.Orientation == Orientation.Horizontal ? Control.Height : Control.Width;
+            int min = Control.Panel1MinSize;
+            int max = length - Control.SplitterWidth - Control.Panel2MinSize;
+            if (distance < min || distance > max)
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"The splitter can be moved to between {0} and {1} pixels; {2} is outside that range.", min, max, distance));
+            }
+            Control.SplitterDistance = distance;
+        }
     }
 
     // Small value helpers shared by the value elements.
