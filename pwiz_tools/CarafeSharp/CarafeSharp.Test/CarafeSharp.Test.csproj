@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>pwiz.CarafeSharp.Test</RootNamespace>
+    <AssemblyName>CarafeSharp.Test</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <GenerateProgramFile>true</GenerateProgramFile>
+    <UseLibTorch>true</UseLibTorch>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.6.4" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.6.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CarafeSharp.Core\CarafeSharp.Core.csproj" />
+    <ProjectReference Include="..\CarafeSharp.Models\CarafeSharp.Models.csproj" />
+    <ProjectReference Include="..\CarafeSharp.IO\CarafeSharp.IO.csproj" />
+    <ProjectReference Include="..\CarafeSharp\CarafeSharp.csproj" />
+  </ItemGroup>
+
+</Project>

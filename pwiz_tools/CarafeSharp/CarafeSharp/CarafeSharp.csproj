@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>pwiz.CarafeSharp</RootNamespace>
+    <AssemblyName>CarafeSharp</AssemblyName>
+    <UseLibTorch>true</UseLibTorch>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CarafeSharp.Test" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj" />
+    <ProjectReference Include="..\CarafeSharp.Core\CarafeSharp.Core.csproj" />
+    <ProjectReference Include="..\CarafeSharp.Models\CarafeSharp.Models.csproj" />
+    <ProjectReference Include="..\CarafeSharp.IO\CarafeSharp.IO.csproj" />
+  </ItemGroup>
+
+</Project>

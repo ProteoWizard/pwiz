@@ -1,0 +1,47 @@
+<Project>
+
+  <PropertyGroup>
+    <!-- CarafeSharp builds and fine-tunes AlphaPeptDeep spectral libraries for Osprey. It
+         reads no spectra itself (Osprey is the only raw-data reader), so it needs no
+         pwiz-sharp reference and runs anywhere net10.0 and libtorch do. Plain net10.0, not
+         net10.0-windows, for the same Linux/WSL reason as Osprey. This file also keeps
+         pwiz_tools/Directory.Build.props (LangVersion 8.0 for the Skyline tree) from
+         applying here, because MSBuild imports only the nearest Directory.Build.props. -->
+    <TargetFramework>net10.0</TargetFramework>
+    <!-- CarafeSharp.sln uses x64 configurations; advertise both so they map cleanly while
+         an AnyCPU build still works on other hosts. -->
+    <Platforms>AnyCPU;x64</Platforms>
+    <!-- Carry Configuration/Platform across ProjectReferences to projects outside
+         CarafeSharp.sln (CommonUtil), exactly as Osprey does. -->
+    <ShouldUnsetParentConfigurationAndPlatform>false</ShouldUnsetParentConfigurationAndPlatform>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Company>University of Washington</Company>
+    <Copyright>Copyright (c) University of Washington 2026</Copyright>
+    <!-- Skyline version scheme YEAR.ORDINAL.BRANCH.DOY, DOY 0 = not stamped by a dated build. -->
+    <Version>26.1.1.0</Version>
+    <!-- .NET 9+ defaults this to "all" (transitive), which fails restore on advisories in
+         TorchSharp's transitive graph that CarafeSharp does not call. Audit direct references. -->
+    <NuGetAuditMode>direct</NuGetAuditMode>
+    <!-- NU1510: .NET 10 package pruning noise for PackageReferences the framework provides. -->
+    <NoWarn>$(NoWarn);NU1510</NoWarn>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+  </PropertyGroup>
+
+  <!-- libtorch backend selection. The CPU and CUDA libtorch packages ship identically named
+       native files, so one project cannot reference both. CPU is the default; build with
+       /p:CarafeSharpTorch=cuda for the CUDA 12.8 runtime (about 4 GB installed). The
+       native package is chosen for the build host unless a RuntimeIdentifier says otherwise. -->
+  <PropertyGroup>
+    <CarafeSharpTorch Condition="'$(CarafeSharpTorch)' == ''">cpu</CarafeSharpTorch>
+    <TorchSharpVersion>0.106.0</TorchSharpVersion>
+    <LibTorchVersion>2.10.0</LibTorchVersion>
+    <CarafeSharpTargetIsWindows Condition="'$(RuntimeIdentifier)' != '' AND $(RuntimeIdentifier.StartsWith('win'))">true</CarafeSharpTargetIsWindows>
+    <CarafeSharpTargetIsWindows Condition="'$(CarafeSharpTargetIsWindows)' == '' AND '$(RuntimeIdentifier)' != ''">false</CarafeSharpTargetIsWindows>
+    <CarafeSharpTargetIsWindows Condition="'$(CarafeSharpTargetIsWindows)' == '' AND '$(OS)' == 'Windows_NT'">true</CarafeSharpTargetIsWindows>
+    <CarafeSharpTargetIsWindows Condition="'$(CarafeSharpTargetIsWindows)' == ''">false</CarafeSharpTargetIsWindows>
+  </PropertyGroup>
+
+</Project>
