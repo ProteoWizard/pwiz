@@ -233,7 +233,10 @@ namespace pwiz.Osprey.Core
         public const string ROUTE_MODEL_DIAGNOSTICS = @"model-diagnostics";
         /// <summary>Protein-level FDR ran in this process.</summary>
         public const string ROUTE_PROTEIN_FDR = @"protein-fdr";
-        /// <summary>The scored-entry pool was loaded from the per-file score parquets.</summary>
+        /// <summary>
+        /// Scored entries were loaded from the per-file score parquets: <c>resident</c> (every
+        /// file's stubs held at once) or <c>lean</c> (calibration and footer counts only).
+        /// </summary>
         public const string ROUTE_SCORED_ENTRIES = @"scored-entries";
         /// <summary>The resident pre-compaction first-pass pool was held (O(files)).</summary>
         public const string ROUTE_PRE_COMPACTION_POOL = @"pre-compaction-pool";

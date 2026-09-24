@@ -3855,8 +3855,13 @@ foreach ($name in $selected) {
             $m11NoFirstPass = @(
                 '[PATH] pre-compaction-pool: resident',
                 '[PATH] rescore-file: ')
+            # The RESIDENT scored-entry load only. Its old prose probe ('Loading scored entries')
+            # was a deferred progress heading that never printed at 3 files, so it never read
+            # anything here; the route line exposed that cells A and D take the LEAN arm, which
+            # reads calibration and parquet footers and holds no pool. That is the bounded route
+            # the fold needs, not the analysis this set forbids.
             $m11NoSecondPass = @(
-                '[PATH] scored-entries: load',
+                '[PATH] scored-entries: resident',
                 '[STAGE-WALL] second-pass-fdr',
                 '[PATH] protein-fdr: ')
             # O(files x entries), and the reason this set is not just about analysis: after the

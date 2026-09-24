@@ -436,7 +436,7 @@ namespace pwiz.Osprey.Tasks
                 // Per-file progress: loading every file's fat FdrEntry stubs from parquet
                 // ran ~15 min silent (~53 GB) at the 82-file join. Console-only, never
                 // touches the stubs, so the loaded pool is byte-identical.
-                ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_SCORED_ENTRIES, @"load files={0}",
+                ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_SCORED_ENTRIES, @"resident files={0}",
                     scoredFileNames.Count));
                 using (var loadProgress = new ProgressReporter(
                     string.Format(@"Loading scored entries from {0} file(s)", scoredFileNames.Count),
@@ -745,8 +745,11 @@ namespace pwiz.Osprey.Tasks
 
                 // Per-file progress so this all-files load is not a silent multi-minute
                 // stall on a large resume (the phase that looked hung on the 82-file run).
-                ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_SCORED_ENTRIES, @"load files={0}",
-                    config.InputFiles.Count));
+                // Named by arm: the resident arm holds every file's stubs at once (O(files)); the
+                // lean arm reads calibration and parquet footers only. A gate that forbids the
+                // pool must be able to tell them apart.
+                ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_SCORED_ENTRIES, @"{0} files={1}",
+                    useLeanProjection ? @"lean" : @"resident", config.InputFiles.Count));
                 using (var loadProgress = new ProgressReporter(@"Loading scored entries", config.InputFiles.Count))
                 {
                     int fileIdx = 0;
