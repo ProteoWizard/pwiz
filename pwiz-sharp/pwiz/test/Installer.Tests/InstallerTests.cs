@@ -12,17 +12,19 @@ namespace Pwiz.Installer.Tests;
 
 /// <summary>
 /// End-to-end tests for the Inno Setup-built <c>ProteoWizard-Setup.exe</c>.
-/// Each test runs a silent install, verifies file deployment + registry state, converts
-/// one real fixture per vendor through the installed <c>msconvert.exe</c>, then silently
-/// uninstalls and verifies cleanup.
+/// Each test runs silent installs of both install types, verifies file deployment +
+/// registry state, converts one real fixture per vendor through the installed
+/// <c>msconvert.exe</c>, then silently uninstalls and verifies cleanup.
 ///
 /// Test policy:
 /// <list type="bullet">
-///   <item>Skip with Inconclusive when the installer hasn't been built — these
+///   <item>Skip with Inconclusive when the installer hasn't been built - these
 ///   tests are opt-in for contributors who've already run <c>build.ps1</c>.</item>
-///   <item>Skip when a real pwiz-sharp install already exists on the machine.
-///   Running tests would clobber it; we'd rather the user uninstall first
-///   manually than have CI silently replace + uninstall their working copy.</item>
+///   <item>The version-specific install (<c>/INSTALLTYPE=versioned</c>) has an AppId
+///   of its own, so it is always safe to run beside a developer's real install; the
+///   standard install would upgrade a real standard install in place, so that leg
+///   skips when one exists. We'd rather the user uninstall first manually than
+///   have CI silently replace + uninstall their working copy.</item>
 ///   <item>Skip the per-machine test when not elevated. Setup.iss has
 ///   <c>PrivilegesRequired=lowest</c> + overrides allowed via command line, so
 ///   <c>/ALLUSERS</c> triggers UAC from a non-elevated process. We don't want
@@ -33,15 +35,27 @@ namespace Pwiz.Installer.Tests;
 [TestClass]
 public class InstallerTests
 {
-    // AppId from Setup.iss is version-bound: `{guid}_{version}` so multiple
-    // versions install side-by-side. Inno appends `_is1` to form the uninstall
-    // subkey name. The version comes from Setup.iss at test runtime (parsed
-    // from the same source so the test and the installer can't drift).
+    // The stable AppId from Setup.iss. A standard install is keyed on exactly this, a
+    // version-specific one on `{guid}_{version}` (common\InstallType.iss). Inno appends
+    // `_is1` to form the uninstall subkey name.
     private const string AppIdBase = "{E4F1A2B3-5C6D-7E8F-9A0B-1C2D3E4F5A6B}";
+    private const string AppName = "ProteoWizard";
     private const string UninstallRoot = @"Software\Microsoft\Windows\CurrentVersion\Uninstall";
 
-    private static string AppId(string version) => $"{AppIdBase}_{version}_is1";
-    private static string UninstallKeyPath(string version) => $@"{UninstallRoot}\{AppId(version)}";
+    /// <summary>
+    /// One installed instance: which hive it registers in and, for a version-specific
+    /// install, the version that is baked into its AppId and directory name.
+    /// </summary>
+    private readonly record struct InstallKey(bool PerMachine, string? Version)
+    {
+        public bool IsVersioned => Version is not null;
+        public string AppId => IsVersioned ? $"{AppIdBase}_{Version}_is1" : $"{AppIdBase}_is1";
+        public string UninstallKeyPath => $@"{UninstallRoot}\{AppId}";
+        public string InstallType => IsVersioned ? "versioned" : "standard";
+        public string ExpectedDirName => IsVersioned ? $"{AppName} {Version}" : AppName;
+        public string ExpectedDisplayName => ExpectedDirName;
+        public string Scope => PerMachine ? "per-machine" : "per-user";
+    }
 
     // Files that MUST land in the install dir for the install to be considered successful.
     // Keep small + load-bearing: the three EXEs that ship plus the vendor SDK loader assembly.
@@ -56,35 +70,7 @@ public class InstallerTests
     [TestMethod]
     public void Install_PerUser_DeploysAndConvertsVendorFile()
     {
-        if (!TryFindSetup(out string setupPath, out string skipReason))
-        {
-            Assert.Inconclusive(skipReason);
-            return;
-        }
-        string version = ReadInstallerVersion(setupPath);
-        if (SameVersionAlreadyInstalled(version, out string existingScope))
-        {
-            Assert.Inconclusive(
-                $"Version {version} of pwiz-sharp is already installed ({existingScope}); " +
-                "uninstall it (or bump the installer version) before running this test. " +
-                "Different versions can coexist.");
-            return;
-        }
-
-        RunInstaller(setupPath, allUsers: false);
-        try
-        {
-            string installDir = ReadInstallDir(version, perMachine: false);
-            AssertRequiredFiles(installDir);
-            AssertMsconvertSmokes(installDir);
-        }
-        finally
-        {
-            RunUninstaller(version, perMachine: false);
-        }
-
-        Assert.IsFalse(IsInstalled(version, perMachine: false),
-            "Uninstall finished but the per-user uninstall registry key is still present.");
+        InstallBothTypes(perMachine: false);
     }
 
     [TestMethod]
@@ -97,35 +83,70 @@ public class InstallerTests
                 "to exercise this test (it would otherwise trigger a UAC prompt).");
             return;
         }
+        InstallBothTypes(perMachine: true);
+    }
+
+    /// <summary>
+    /// The version-specific leg first: it can never collide with a real install of another
+    /// version, and it carries the (slow, network-touching) msconvert smoke. The standard leg
+    /// then checks only what differs - AppId, directory and display name without a version -
+    /// and is skipped when a real standard install is present. Each leg looks in BOTH hives:
+    /// the same-scope case would be upgraded in place, and Inno marks the other-scope case by
+    /// suffixing the new install's DisplayName with "(All users)" / "(Current user)", which
+    /// the exact-name assertion would then report as a failure rather than a skip.
+    /// </summary>
+    private static void InstallBothTypes(bool perMachine)
+    {
         if (!TryFindSetup(out string setupPath, out string skipReason))
         {
             Assert.Inconclusive(skipReason);
             return;
         }
         string version = ReadInstallerVersion(setupPath);
-        if (SameVersionAlreadyInstalled(version, out string existingScope))
+
+        var versioned = new InstallKey(perMachine, version);
+        if (IsInstalledInEitherScope(versioned, out string versionedScope))
         {
             Assert.Inconclusive(
-                $"Version {version} of pwiz-sharp is already installed ({existingScope}); " +
-                "uninstall it (or bump the installer version) before running this test. " +
-                "Different versions can coexist.");
+                $"Version {version} of pwiz-sharp is already installed {versionedScope} as a " +
+                "version-specific install; uninstall it (or bump the installer version) before running this test.");
             return;
         }
+        InstallVerifyUninstall(setupPath, versioned, smoke: true);
 
-        RunInstaller(setupPath, allUsers: true);
+        var standard = new InstallKey(perMachine, null);
+        if (IsInstalledInEitherScope(standard, out string standardScope))
+        {
+            Assert.Inconclusive(
+                $"A standard {standardScope} install of pwiz-sharp already exists; the standard-install " +
+                "leg would upgrade it in place or be marked as a second copy of it. " +
+                "Uninstall it before running this test (the version-specific leg passed).");
+            return;
+        }
+        InstallVerifyUninstall(setupPath, standard, smoke: false);
+    }
+
+    private static void InstallVerifyUninstall(string setupPath, InstallKey key, bool smoke)
+    {
+        RunInstaller(setupPath, key);
         try
         {
-            string installDir = ReadInstallDir(version, perMachine: true);
+            string installDir = ReadInstallDir(key);
+            Assert.AreEqual(key.ExpectedDirName, Path.GetFileName(installDir.TrimEnd('\\')),
+                $"Unexpected install directory name for a {key.InstallType} install.");
+            Assert.AreEqual(key.ExpectedDisplayName, ReadDisplayName(key),
+                $"Unexpected Programs and Features name for a {key.InstallType} install.");
             AssertRequiredFiles(installDir);
-            AssertMsconvertSmokes(installDir);
+            if (smoke)
+                AssertMsconvertSmokes(installDir);
         }
         finally
         {
-            RunUninstaller(version, perMachine: true);
+            RunUninstaller(key);
         }
 
-        Assert.IsFalse(IsInstalled(version, perMachine: true),
-            "Uninstall finished but the per-machine uninstall registry key is still present.");
+        Assert.IsFalse(IsInstalled(key),
+            $"Uninstall finished but the {key.Scope} {key.InstallType} uninstall registry key is still present.");
     }
 
     // ----------------- Helpers -----------------
@@ -182,54 +203,56 @@ public class InstallerTests
         return false;
     }
 
-    /// <summary>
-    /// Return true if pwiz-sharp <paramref name="version"/> is already
-    /// installed in either HKCU or HKLM. Different versions can coexist (each
-    /// has its own AppId slot), so we only care about the specific version
-    /// we're about to install. Identical-version reinstalls upgrade in place
-    /// in Inno, which would confuse the test's install/uninstall accounting.
-    /// </summary>
-    private static bool SameVersionAlreadyInstalled(string version, out string scope)
+    private static bool IsInstalled(InstallKey key)
     {
-        if (IsInstalled(version, perMachine: false))
+        using RegistryKey? regKey = OpenUninstallKey(key);
+        return regKey is not null;
+    }
+
+    private static bool IsInstalledInEitherScope(InstallKey key, out string scope)
+    {
+        foreach (bool perMachine in new[] { key.PerMachine, !key.PerMachine })
         {
-            scope = "per-user";
-            return true;
-        }
-        if (IsInstalled(version, perMachine: true))
-        {
-            scope = "per-machine";
-            return true;
+            var candidate = key with { PerMachine = perMachine };
+            if (IsInstalled(candidate))
+            {
+                scope = candidate.Scope;
+                return true;
+            }
         }
         scope = string.Empty;
         return false;
     }
 
-    private static bool IsInstalled(string version, bool perMachine)
+    private static string ReadInstallDir(InstallKey key)
     {
-        using RegistryKey? key = OpenUninstallKey(version, perMachine, writable: false);
-        return key is not null;
+        return ReadUninstallValue(key, "InstallLocation");
     }
 
-    private static string ReadInstallDir(string version, bool perMachine)
+    private static string ReadDisplayName(InstallKey key)
     {
-        using RegistryKey? key = OpenUninstallKey(version, perMachine, writable: false);
-        Assert.IsNotNull(key, "Uninstall key missing right after installer reported success.");
-        string? dir = key.GetValue("InstallLocation") as string;
-        Assert.IsFalse(string.IsNullOrWhiteSpace(dir),
-            "Uninstall key exists but InstallLocation is empty.");
-        return dir!;
+        return ReadUninstallValue(key, "DisplayName");
     }
 
-    private static RegistryKey? OpenUninstallKey(string version, bool perMachine, bool writable)
+    private static string ReadUninstallValue(InstallKey key, string valueName)
+    {
+        using RegistryKey? regKey = OpenUninstallKey(key);
+        Assert.IsNotNull(regKey, $"Uninstall key {key.AppId} missing right after installer reported success.");
+        string? value = regKey.GetValue(valueName) as string;
+        Assert.IsFalse(string.IsNullOrWhiteSpace(value),
+            $"Uninstall key {key.AppId} exists but {valueName} is empty.");
+        return value!;
+    }
+
+    private static RegistryKey? OpenUninstallKey(InstallKey key)
     {
         // Setup.iss has ArchitecturesInstallIn64BitMode=x64compatible, so Inno
         // writes its uninstall entries into the 64-bit registry view. Open the
-        // matching view explicitly — running tests from a 32-bit host would
+        // matching view explicitly - running tests from a 32-bit host would
         // otherwise see the WOW6432Node copy and miss our key.
-        RegistryHive hive = perMachine ? RegistryHive.LocalMachine : RegistryHive.CurrentUser;
+        RegistryHive hive = key.PerMachine ? RegistryHive.LocalMachine : RegistryHive.CurrentUser;
         using RegistryKey root = RegistryKey.OpenBaseKey(hive, RegistryView.Registry64);
-        return root.OpenSubKey(UninstallKeyPath(version), writable: writable);
+        return root.OpenSubKey(key.UninstallKeyPath, writable: false);
     }
 
     /// <summary>
@@ -283,7 +306,8 @@ public class InstallerTests
 
     /// <summary>
     /// Run Setup.exe silently. <c>/CURRENTUSER</c> picks per-user (no UAC),
-    /// <c>/ALLUSERS</c> picks per-machine (assumes already-elevated host).
+    /// <c>/ALLUSERS</c> picks per-machine (assumes already-elevated host), and
+    /// <c>/INSTALLTYPE</c> the standard or version-specific install.
     /// <c>/TASKS=""</c> disables every optional task — crucially the
     /// context-menu and Start-Menu / Desktop shortcut tasks. The context-menu
     /// verbs are SHARED across versions by design (last-installed-wins, no
@@ -294,12 +318,12 @@ public class InstallerTests
     /// covers everything else (file deployment, msconvert conversion smoke,
     /// uninstall accounting).
     /// </summary>
-    private static void RunInstaller(string setupPath, bool allUsers)
+    private static void RunInstaller(string setupPath, InstallKey key)
     {
-        string scope = allUsers ? "/ALLUSERS" : "/CURRENTUSER";
+        string scope = key.PerMachine ? "/ALLUSERS" : "/CURRENTUSER";
         var psi = new ProcessStartInfo(setupPath)
         {
-            Arguments = $"{scope} /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /TASKS=\"\"",
+            Arguments = $"{scope} /INSTALLTYPE={key.InstallType} /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /TASKS=\"\"",
             UseShellExecute = false,
             CreateNoWindow = true,
         };
@@ -321,13 +345,13 @@ public class InstallerTests
     /// almost immediately — polling for the directory's disappearance is the
     /// reliable completion signal.
     /// </summary>
-    private static void RunUninstaller(string version, bool perMachine)
+    private static void RunUninstaller(InstallKey key)
     {
-        using RegistryKey? key = OpenUninstallKey(version, perMachine, writable: false);
-        if (key is null) return; // already uninstalled
-        string? uninstallString = key.GetValue("UninstallString") as string;
+        using RegistryKey? regKey = OpenUninstallKey(key);
+        if (regKey is null) return; // already uninstalled
+        string? uninstallString = regKey.GetValue("UninstallString") as string;
         if (string.IsNullOrWhiteSpace(uninstallString)) return;
-        string? installDir = key.GetValue("InstallLocation") as string;
+        string? installDir = regKey.GetValue("InstallLocation") as string;
 
         // UninstallString is quoted: `"C:\path\to\unins000.exe"`
         string trimmed = uninstallString.Trim('"');
@@ -347,7 +371,7 @@ public class InstallerTests
         var deadline = DateTime.UtcNow.AddMinutes(3);
         while (DateTime.UtcNow < deadline)
         {
-            if (!IsInstalled(version, perMachine)) return;
+            if (!IsInstalled(key)) return;
             Thread.Sleep(500);
         }
         Assert.Fail($"Uninstaller did not complete within 3 minutes; install dir still at {installDir}.");
