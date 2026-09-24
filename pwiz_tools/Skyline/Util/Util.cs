@@ -347,7 +347,6 @@ namespace pwiz.Skyline.Util
         /// </summary>
         /// <typeparam name="TItem">Type of items in the array</typeparam>
         /// <param name="values">Array instance</param>
-        /// <param name="forward">True if the enumerator should be forward, False if reversed</param>
         /// <returns>The enumeration of the Array</returns>
         public static IEnumerable<TItem> GetEnumerator<TItem>(this IList<TItem> values)
         {
