@@ -438,7 +438,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public static readonly UiAction ShowTooltip = SimpleAction<ITooltipElement>(
                 @"ShowTooltip", e => { e.ShowTooltipNow(); return null; })
-            .Describe(new LlmInstruction(@"Show the tooltip of the selected item, as resting the mouse on it does: a tree's selected node, a list's selected item, a grid's current cell (select it first). An item that has a tooltip brings it up about half a second later as a window of its own in the open forms, where its image can be captured whole; it stays until the selection changes or the mouse next moves over the control."));
+            .Describe(new LlmInstruction(@"Show the tooltip of the selected item, as resting the mouse on it does: a tree's selected node, a list's selected item, a grid's current cell (select it first). Skyline comes to the front and the control takes the focus, which its tooltip needs. An item that has a tooltip brings it up about half a second later as a window of its own in the open forms, where its image can be captured whole; it stays until the selection changes, the mouse moves, or the focus goes elsewhere."));
 
         // Every action, in get_actions / get_children listing order (the universal ones first).
         public static readonly UiAction[] AllActions =

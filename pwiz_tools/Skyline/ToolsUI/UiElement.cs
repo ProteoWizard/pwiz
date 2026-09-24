@@ -723,49 +723,36 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>Brings up the tooltip of the item at <paramref name="itemBounds"/> (client coordinates) the way a
         /// user does: the mouse comes to rest on the item, and the tip follows after the usual delay. Several of
-        /// Skyline's tips show only for a focused control, and Skyline is rarely the active window while it is
-        /// being driven (giving the control the focus does not help then), so such a control is told to ignore the
-        /// focus until the tip comes down: see <see cref="HideTooltip"/>, which an element also calls when its
-        /// selection changes.</summary>
+        /// Skyline's tips show only for the control that has the focus, so its window is brought to the front and
+        /// the control focused first -- giving it the focus alone does nothing while Skyline is not the active
+        /// application. The tip then comes down as it does for a user (the mouse moves, the focus goes
+        /// elsewhere), and an element also takes it down when its selection changes: see
+        /// <see cref="HideTooltip"/>.</summary>
         protected void ShowTooltipAt(System.Drawing.Rectangle itemBounds)
         {
             HideTooltip();
-            if (FocusTipDisplayer != null)
-                FocusTipDisplayer.IgnoreFocus = true;
+            ScreenCapture.ActivateForm(Control);
+            Control.Focus();
+            if (!Control.Focused)
+            {
+                throw new InvalidOperationException(LlmInstruction.Format(
+                    @"The control '{0}' could not be given the focus, which its tooltip needs: Windows did not let Skyline come to the front. Ask the user to click on the Skyline window, then try again.",
+                    Label ?? NullIfEmpty(Name) ?? ElementType.Name));
+            }
             MoveMouseTo((itemBounds.Left + itemBounds.Right) / 2, (itemBounds.Top + itemBounds.Bottom) / 2);
-            // Subscribed after the move above, which raises MouseMove itself.
-            Control.MouseMove += RealMouseMoved;
         }
 
         /// <summary>Takes the tooltip down by moving the mouse off the control, which also lets the next move
         /// count as one however this one ended.</summary>
         protected void HideTooltip()
         {
-            StopIgnoringFocus();
             MoveMouseTo(-1, -1);
-        }
-
-        // The real mouse has moved over the control, so it decides about tips again.
-        private void RealMouseMoved(object sender, MouseEventArgs e)
-        {
-            StopIgnoringFocus();
-        }
-
-        private void StopIgnoringFocus()
-        {
-            Control.MouseMove -= RealMouseMoved;
-            if (FocusTipDisplayer != null)
-                FocusTipDisplayer.IgnoreFocus = false;
         }
 
         private void MoveMouseTo(int x, int y)
         {
             RaiseProtectedHandler(Control, @"OnMouseMove", new MouseEventArgs(MouseButtons.None, 0, x, y, 0));
         }
-
-        // The control itself (the Targets tree) or the form it is on (the Files tree, the pick list).
-        private IFocusTipDisplayer FocusTipDisplayer =>
-            Control as IFocusTipDisplayer ?? Control.FindForm() as IFocusTipDisplayer;
 
         protected static Exception NothingSelected()
         {

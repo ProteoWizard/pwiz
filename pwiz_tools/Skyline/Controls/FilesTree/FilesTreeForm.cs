@@ -42,7 +42,7 @@ using Process = System.Diagnostics.Process;
 // ReSharper disable WrongIndentSize
 namespace pwiz.Skyline.Controls.FilesTree
 {
-    public partial class FilesTreeForm : DockableFormEx, IFocusTipDisplayer
+    public partial class FilesTreeForm : DockableFormEx, ITipDisplayer
     {
         private NodeTip _nodeTip;
         private Panel _dropTargetRemove;

@@ -30,7 +30,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls
 {
-    public partial class PopupPickList : FormEx, IFocusTipDisplayer
+    public partial class PopupPickList : FormEx, ITipDisplayer
     {
         /// <summary>
         /// Current size used for all popup pick-lists.
@@ -646,11 +646,9 @@ namespace pwiz.Skyline.Controls
             get { return Screen.GetBounds(pickListMulti); }
         }
 
-        public bool IgnoreFocus { get; set; }
-
         public bool AllowDisplayTip
         {
-            get { return IgnoreFocus || pickListMulti.Focused; }
+            get { return pickListMulti.Focused; }
         }
 
         public Rectangle RectToScreen(Rectangle r)

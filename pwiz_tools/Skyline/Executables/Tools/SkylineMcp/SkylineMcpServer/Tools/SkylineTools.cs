@@ -585,7 +585,7 @@ public static class SkylineTools
         "of a paste-capable element's content, e.g. before paste to replace it); 'rename_node' (the Targets " +
         "tree, value the new name for the selected node); 'show_tooltip' (a tree, list or grid: shows " +
         "the tooltip of the selected node / selected item / current cell, as resting the mouse on it does -- " +
-        "select it first; it comes up about half a second later as a window of its own in " +
+        "select it first; Skyline comes to the front, and the tip comes up about half a second later as a window of its own in " +
         "skyline_get_open_forms, where skyline_get_form_image captures it whole). " +
         "For a control's right-click menu, pass path as the JSON {\"parent\": <the control's " +
         "UiElementPath>, \"type\": \"ContextMenu\"}, then get_children to list its items or " +
