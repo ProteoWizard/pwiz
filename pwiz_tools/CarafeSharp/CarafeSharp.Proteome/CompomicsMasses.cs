@@ -42,7 +42,11 @@ namespace pwiz.CarafeSharp.Proteome
 
         private static readonly double[] RESIDUE_MASSES = BuildResidueMasses();
 
-        /// <summary>The monoisotopic mass of one of the 20 standard residues, NaN otherwise.</summary>
+        /// <summary>
+        /// The monoisotopic mass of a residue letter compomics knows (the 20 standard residues,
+        /// U and O, and the ambiguity codes B, J and Z at their mean), NaN otherwise. X has a
+        /// placeholder mass in compomics and is left NaN: Carafe drops peptides containing it.
+        /// </summary>
         public static double GetResidueMass(char aa)
         {
             return aa >= 'A' && aa <= 'Z' ? RESIDUE_MASSES[aa - 'A'] : double.NaN;
@@ -91,6 +95,11 @@ namespace pwiz.CarafeSharp.Proteome
             masses['V' - 'A'] = 99.06841391299;
             masses['W' - 'A'] = 186.07931294986;
             masses['Y' - 'A'] = 163.06332853255;
+            masses['B' - 'A'] = 114.534935232485;
+            masses['J' - 'A'] = 113.08406397713;
+            masses['O' - 'A'] = 237.14772686285;
+            masses['U' - 'A'] = 150.95363508471002;
+            masses['Z' - 'A'] = 128.550585296625;
             return masses;
         }
 

@@ -51,6 +51,11 @@ namespace pwiz.CarafeSharp.Proteome
         /// </summary>
         public bool ClipNTermMethionine { get; set; } = true;
 
+        /// <summary>
+        /// Read every I as L before digesting (Carafe's <c>-I2L</c>, library generation only).
+        /// </summary>
+        public bool ConvertIToL { get; set; }
+
         public Enzyme Enzyme
         {
             get { return EnzymeTable.GetByIndex(EnzymeIndex); }

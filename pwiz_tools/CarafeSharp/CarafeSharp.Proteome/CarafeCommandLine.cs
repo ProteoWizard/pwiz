@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 
 namespace pwiz.CarafeSharp.Proteome
@@ -34,11 +35,13 @@ namespace pwiz.CarafeSharp.Proteome
         help,
         build_entrapment_fasta,
         reconcile_manifest,
+        predict_library,
     }
 
     /// <summary>
-    /// Parses a Carafe command line for its stage-1 modes, so CarafeSharp accepts exactly what
-    /// Carafe's GUI passes. Options are Carafe's single-dash names, taking a value as the next
+    /// Parses a Carafe command line for the modes CarafeSharp ports (the stage-1 FASTA modes and
+    /// library prediction from <c>-db</c>), so CarafeSharp accepts exactly what Carafe's GUI
+    /// passes. Options are Carafe's single-dash names, taking a value as the next
     /// token (or after '='), unless that token is itself an option; a repeated option keeps its
     /// first value; an unknown option is an error. Every Carafe option is recognized, and the
     /// ones these modes do not read are ignored, as Carafe ignores them.
@@ -46,7 +49,8 @@ namespace pwiz.CarafeSharp.Proteome
     /// Defaults are Carafe's effective ones, which are not all its help text's: without the
     /// options, missed cleavages are 2 (help: 1), the precursor m/z window is 300-2000 (help:
     /// 400-1000), charges are 2-3 (help: 2-4), and methionine clipping is off. The
-    /// non-specific enzyme forces 100 missed cleavages.
+    /// non-specific enzyme forces 100 missed cleavages. Library prediction has its own charge
+    /// default, 2-4 (see <see cref="LibrarySettings"/>).
     /// </para>
     /// </summary>
     public sealed class CarafeCommandLine
@@ -118,6 +122,9 @@ namespace pwiz.CarafeSharp.Proteome
         /// <summary>Where to write the reconciled manifest (<c>-reconcile_manifest</c>).</summary>
         public string ReconcileManifestOut { get; private set; }
 
+        /// <summary>The library to predict, in <see cref="CarafeCommandMode.predict_library"/> mode.</summary>
+        public LibrarySettings LibrarySettings { get; private set; }
+
         /// <summary>Warnings Carafe prints for audit switches.</summary>
         public IList<string> Warnings { get; } = new List<string>();
 
@@ -129,11 +136,17 @@ namespace pwiz.CarafeSharp.Proteome
                 return string.Join(Environment.NewLine,
                     @"Usage: CarafeSharp -build_entrapment_fasta <peptides.fasta> -db <proteins.fasta> [options]",
                     @"       CarafeSharp -reconcile_manifest <out.tsv> -manifest <in.tsv> -predicted_library <library.tsv|.blib>",
+                    @"       CarafeSharp -db <peptides.fasta|proteins.fasta> -o <folder> [options]   (library prediction)",
                     @"Build options (Carafe's): -manifest <tsv> -entrapment -no_decoys -decoy_prefix <p> -mz_filter",
                     @"  -min_pep_mz <mz> -max_pep_mz <mz> -min_pep_charge <z> -max_pep_charge <z> -entrapment_seed <n>",
                     @"  -entrapment_db <fasta> -entrapment_ratio <r> -no_similarity_gate -ignore_pairing_errors",
                     @"  -enzyme <index|NoCut> -miss_c <n> -minLength <n> -maxLength <n> -clip_n_m",
-                    @"  -fixMod <ids> -varMod <ids> -maxVar <n>");
+                    @"  -fixMod <ids> -varMod <ids> -maxVar <n>",
+                    @"Library options (Carafe's): -lf_type DIA-NN|EncyclopeDIA|Skyline|blib -fast -decoy_prefix <p>",
+                    @"  -min_pep_mz <mz> -max_pep_mz <mz> -min_pep_charge <z> -max_pep_charge <z> -I2L",
+                    @"  -lf_frag_mz_min <mz> -lf_frag_mz_max <mz> -lf_top_n_frag <n> -lf_min_n_frag <n> -lf_frag_n_min <n>",
+                    @"  -nce <nce> -ms_instrument <name> -rt_max <min> -model_dir <folder> -tf all|ms2|rt",
+                    @"  -device cpu|gpu -pairing_manifest <tsv>; CarafeSharp only: -pretrained <pretrained_models.zip>");
             }
         }
 
@@ -191,7 +204,97 @@ namespace pwiz.CarafeSharp.Proteome
                 ReconcileLibrary = library;
                 return;
             }
-            throw new ArgumentException(@"CarafeSharp supports only -build_entrapment_fasta and -reconcile_manifest");
+            if (Has(@"build_koina_library"))
+                throw new NotSupportedException(@"-build_koina_library is not supported by CarafeSharp");
+            if (Has(@"ms") && !Has(@"model_dir"))
+                throw new NotSupportedException(@"Model training (-ms) is not supported by CarafeSharp yet");
+            if (Has(@"db"))
+            {
+                Mode = CarafeCommandMode.predict_library;
+                LibrarySettings = InterpretLibrary(digest, modifications, minMz, maxMz);
+                return;
+            }
+            throw new ArgumentException(@"CarafeSharp supports -build_entrapment_fasta, -reconcile_manifest and library prediction from -db");
+        }
+
+        private LibrarySettings InterpretLibrary(DigestSettings digest, ModificationSettings modifications, double minMz, double maxMz)
+        {
+            string database = _values[@"db"];
+            if (database.Length == 0)
+                throw new ArgumentException(@"Library prediction requires a FASTA via -db");
+            string extension = Path.GetExtension(database).ToLowerInvariant();
+            if (extension != @".fa" && extension != @".fasta")
+                throw new NotSupportedException(@"CarafeSharp predicts libraries from a FASTA (.fa or .fasta) only: " + database);
+            if (Has(@"ccs"))
+                throw new NotSupportedException(@"-ccs is not supported by CarafeSharp");
+            if (Has(@"user_var_mods") || Has(@"mod2mass"))
+                throw new NotSupportedException(@"-user_var_mods and -mod2mass are not supported by CarafeSharp");
+            if (TryGet(@"mode", out string mode) && mode != @"-" && !string.Equals(mode, @"general", StringComparison.OrdinalIgnoreCase))
+                throw new NotSupportedException(@"-mode " + mode + @" is not supported by CarafeSharp; only general");
+            if (TryGet(@"lf_format", out string fileFormat) && string.Equals(fileFormat, @"parquet", StringComparison.OrdinalIgnoreCase))
+                throw new NotSupportedException(@"-lf_format parquet is not supported by CarafeSharp");
+            if (TryGet(@"ai_version", out string aiVersion) && !string.Equals(aiVersion, @"v2", StringComparison.OrdinalIgnoreCase))
+                throw new NotSupportedException(@"-ai_version " + aiVersion + @" is not supported by CarafeSharp; only v2");
+
+            digest.ConvertIToL = Has(@"I2L");
+            var settings = new LibrarySettings
+            {
+                Database = database,
+                Digest = digest,
+                Modifications = modifications,
+                MinPrecursorMz = minMz,
+                MaxPrecursorMz = maxMz,
+                Fast = Has(@"fast"),
+            };
+            if (TryGet(@"o", out string output))
+                settings.OutputDirectory = output;
+            int minCharge = TryGet(@"min_pep_charge", out string minZ) ? ParseInt(@"min_pep_charge", minZ) : LibrarySettings.DEFAULT_MIN_CHARGE;
+            int maxCharge = TryGet(@"max_pep_charge", out string maxZ) ? ParseInt(@"max_pep_charge", maxZ) : LibrarySettings.DEFAULT_MAX_CHARGE;
+            if (maxCharge < minCharge)
+                throw new ArgumentException(string.Format(@"-max_pep_charge {0} is below -min_pep_charge {1}", maxCharge, minCharge));
+            settings.Charges = Enumerable.Range(minCharge, maxCharge - minCharge + 1).ToArray();
+            if (TryGet(@"lf_frag_mz_min", out string fragMin))
+                settings.MinFragmentMz = ParseDouble(@"lf_frag_mz_min", fragMin);
+            if (TryGet(@"lf_frag_mz_max", out string fragMax))
+                settings.MaxFragmentMz = ParseDouble(@"lf_frag_mz_max", fragMax);
+            if (TryGet(@"lf_top_n_frag", out string topN))
+                settings.TopFragments = ParseInt(@"lf_top_n_frag", topN);
+            if (TryGet(@"lf_min_n_frag", out string minFragments))
+                settings.MinFragments = ParseInt(@"lf_min_n_frag", minFragments);
+            if (TryGet(@"lf_frag_n_min", out string minNumber))
+                settings.MinFragmentNumber = ParseInt(@"lf_frag_n_min", minNumber);
+            if (TryGet(@"lf_type", out string libraryFormat))
+                settings.LibraryFormat = libraryFormat;
+            if (TryGet(@"decoy_prefix", out string decoyPrefix))
+                settings.DecoyPrefix = decoyPrefix;
+            if (TryGet(@"nce", out string nce))
+                settings.Nce = ParseDouble(@"nce", nce);
+            if (TryGet(@"ms_instrument", out string instrument))
+            {
+                settings.Instrument = instrument;
+                settings.UserInstrument = true;
+            }
+            if (TryGet(@"rt_max", out string rtMax))
+                settings.RtMax = ParseDouble(@"rt_max", rtMax);
+            if (TryGet(@"model_dir", out string modelDir))
+            {
+                settings.ModelDirectory = modelDir;
+                settings.ApplyModelDirectoryMeta = true;
+                // Carafe reads -tf only in its -model_dir branch.
+                if (TryGet(@"tf", out string trainingType))
+                    settings.TrainingType = trainingType;
+                if (string.Equals(settings.TrainingType, @"test", StringComparison.OrdinalIgnoreCase))
+                    throw new NotSupportedException(@"-tf test is not supported by CarafeSharp");
+            }
+            if (TryGet(@"device", out string device))
+                settings.Device = device;
+            if (TryGet(@"pairing_manifest", out string manifest))
+                settings.PairingManifest = manifest;
+            if (TryGet(@"pretrained", out string pretrained))
+                settings.PretrainedModels = pretrained;
+            // Fails here for -lf_type mzSpecLib, before any prediction.
+            LibraryOutputs.FromFormat(settings.LibraryFormat, settings.Fast);
+            return settings;
         }
 
         private EntrapmentFastaSettings InterpretBuild(DigestSettings digest, ModificationSettings modifications,
@@ -325,7 +428,8 @@ namespace pwiz.CarafeSharp.Proteome
 
         private static Dictionary<string, bool> BuildOptionTable()
         {
-            // Carafe 2.2.0 (origin/main) AIGear options; true when the option takes a value.
+            // Carafe 2.2.0 (origin/main) AIGear options, plus CarafeSharp's -pretrained; true when
+            // the option takes a value.
             const string withValue = @"i ms fixMod varMod maxVar db o pairing_manifest itol itolu sg nf na fdr cor " +
                                      @"ptm_site_prob ptm_site_qvalue min_mz min_n enzyme decoy_prefix miss_c minLength " +
                                      @"maxLength min_pep_mz max_pep_mz min_pep_charge max_pep_charge lf_type lf_format " +
@@ -334,7 +438,7 @@ namespace pwiz.CarafeSharp.Proteome
                                      @"entrapment_ratio entrapment_seed decoy_seed reconcile_manifest predicted_library " +
                                      @"build_koina_library koina_url koina_ms2_model koina_rt_model nce_ms n_ion_min " +
                                      @"c_ion_min nce ms_instrument device se mode tf seed python mod2mass user_var_mods " +
-                                     @"model_dir ms2_model verbose ai_version";
+                                     @"model_dir ms2_model verbose ai_version pretrained";
             const string flagsOnly = @"printPTM nm cs ez skyline valid use_all_peaks I2L clip_n_m rf xic export_mgf " +
                                      @"no_masking no_similarity_gate ignore_pairing_errors entrapment no_decoys mz_filter " +
                                      @"y1 fast ccs torch_compile h";

@@ -26,10 +26,10 @@ using pwiz.CarafeSharp.Proteome;
 namespace pwiz.CarafeSharp
 {
     /// <summary>
-    /// CarafeSharp command-line entry point. M1 takes Carafe's own stage-1 command lines
-    /// (<c>-build_entrapment_fasta</c> and <c>-reconcile_manifest</c>, see
-    /// <see cref="CarafeCommandLine"/>); the predict and train verbs arrive with milestones M3
-    /// and M5.
+    /// CarafeSharp command-line entry point. It takes Carafe's own command lines (see
+    /// <see cref="CarafeCommandLine"/>): the stage-1 modes <c>-build_entrapment_fasta</c> and
+    /// <c>-reconcile_manifest</c>, and library prediction from <c>-db</c>
+    /// (<see cref="LibraryGenerator"/>). Training (<c>-ms</c>) arrives with milestone M5.
     /// </summary>
     internal static class Program
     {
@@ -63,6 +63,10 @@ namespace pwiz.CarafeSharp
                             commandLine.ReconcileManifestOut, Console.Out);
                         Console.Out.WriteLine(@"Manifest reconciliation finished in " + Seconds(stopwatch) + @" s.");
                         return 0;
+                    case CarafeCommandMode.predict_library:
+                        new LibraryGenerator(commandLine.LibrarySettings, Console.Out).Run();
+                        Console.Out.WriteLine(@"Time used for spectral library generation: " + Seconds(stopwatch) + @" s.");
+                        return 0;
                     default:
                         Console.Out.WriteLine(CarafeCommandLine.Usage);
                         return 0;
@@ -71,6 +75,9 @@ namespace pwiz.CarafeSharp
             catch (Exception e)
             {
                 Console.Error.WriteLine(@"ERROR: " + e.Message);
+                var cause = e.GetBaseException();
+                if (!ReferenceEquals(cause, e))
+                    Console.Error.WriteLine(@"Caused by: " + cause.Message);
                 return 1;
             }
         }

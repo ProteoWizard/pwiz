@@ -34,7 +34,6 @@ namespace pwiz.CarafeSharp.Models
         public const string GPU = @"gpu";
 
         private static readonly Device CPU_DEVICE = torch.CPU;
-        private static readonly Device CUDA_DEVICE = torch.CUDA;
 
         /// <summary>
         /// The device for <paramref name="requested"/> (<c>cpu</c>, <c>gpu</c> or <c>cuda</c>).
@@ -50,8 +49,10 @@ namespace pwiz.CarafeSharp.Models
             {
                 throw new ArgumentException(string.Format(@"Unknown device '{0}' (expected cpu or gpu).", requested), nameof(requested));
             }
+            // torch.CUDA initializes the CUDA backend, which throws on a CPU-only build, so it
+            // is only touched once CUDA is known to be there.
             if (IsCudaAvailable())
-                return CUDA_DEVICE;
+                return torch.CUDA;
             fallbackMessage = @"No CUDA device is available to this build; running on the CPU.";
             return CPU_DEVICE;
         }

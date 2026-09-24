@@ -282,7 +282,9 @@ namespace pwiz.CarafeSharp.Test
             AssertCommandLineError(@"-build_entrapment_fasta o -db i -not_an_option");
             AssertCommandLineError(@"-build_entrapment_fasta o -db -entrapment");
             AssertCommandLineError(@"-reconcile_manifest o -manifest m");
-            AssertCommandLineError(@"-db i");
+            // -db on its own is library prediction, which takes a FASTA.
+            Assert.AreEqual(CarafeCommandMode.predict_library, CarafeCommandLine.Parse(new[] { @"-db", @"i.fasta" }).Mode);
+            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"i" }));
         }
 
         private static EntrapmentFastaResult Build(string arguments, string targets, string foreign, string outputFolder)

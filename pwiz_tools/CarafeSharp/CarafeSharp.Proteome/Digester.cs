@@ -39,6 +39,7 @@ namespace pwiz.CarafeSharp.Proteome
         private readonly int _maxLength;
         private readonly bool _clipNTermMethionine;
         private readonly bool _isNoCut;
+        private readonly bool _convertIToL;
 
         public Digester(DigestSettings settings)
         {
@@ -48,6 +49,7 @@ namespace pwiz.CarafeSharp.Proteome
             _maxLength = settings.MaxLength;
             _clipNTermMethionine = settings.ClipNTermMethionine;
             _isNoCut = EnzymeTable.IsNoCut(Enzyme);
+            _convertIToL = settings.ConvertIToL;
         }
 
         public Enzyme Enzyme { get; }
@@ -60,13 +62,16 @@ namespace pwiz.CarafeSharp.Proteome
         public HashSet<string> ProteinNTermPeptides { get; } = new HashSet<string>();
 
         /// <summary>
-        /// The unique peptides of one protein. The sequence is upper-cased and a leading and a
-        /// trailing asterisk removed first; an empty result, or a character that is not a letter
+        /// The unique peptides of one protein. The sequence is upper-cased, a leading and a
+        /// trailing asterisk removed, and with <see cref="DigestSettings.ConvertIToL"/> every I
+        /// read as L first; an empty result, or a character that is not a letter
         /// anywhere but a one-residue sequence, throws as it does in Carafe.
         /// </summary>
         public HashSet<string> Digest(string proteinSequence)
         {
             proteinSequence = JavaText.StripTerminalAsterisks(JavaText.ToUpper(proteinSequence));
+            if (_convertIToL)
+                proteinSequence = proteinSequence.Replace('I', 'L');
             var peptides = Enzyme.Digest(proteinSequence, _maxMissedCleavages, _minLength, _maxLength);
             if (_clipNTermMethionine && !_isNoCut && proteinSequence.StartsWith(@"M", StringComparison.Ordinal))
             {
