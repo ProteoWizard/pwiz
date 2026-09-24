@@ -18,12 +18,12 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
@@ -59,10 +59,13 @@ namespace pwiz.SkylineTestFunctional
 
             // The Import Peptide Search wizard bases its file dialog on the document's folder, so the
             // document must be saved. The two input files only need to exist (the dialog has
-            // CheckPathExists=true) -- they are added to a list, not parsed, at this stage.
+            // CheckPathExists=true) -- they are added to a list, not parsed, at this stage. They sit in a "search"
+            // subfolder, as in the tutorial data, so the dialog has to navigate away from the document's folder.
             var savePath = TestContext.GetTestResultsPath(@"PrmMcpConnector.sky");
-            var file1 = TestContext.GetTestResultsPath(@"search1.perc.xml");
-            var file2 = TestContext.GetTestResultsPath(@"search2.perc.xml");
+            string searchFolder = TestContext.GetTestResultsPath(@"search");
+            Directory.CreateDirectory(searchFolder);
+            var file1 = Path.Combine(searchFolder, @"search1.perc.xml");
+            var file2 = Path.Combine(searchFolder, @"search2.perc.xml");
             File.WriteAllText(file1, string.Empty);
             File.WriteAllText(file2, string.Empty);
             RunUI(() => SkylineWindow.SaveDocument(savePath));
@@ -86,18 +89,19 @@ namespace pwiz.SkylineTestFunctional
             // As a person would: go to the files' folder first, then pick them there by their bare names. (A
             // list of full paths would overflow the MAX_PATH file-name box under a long results folder.)
             // Navigating leaves the dialog open, so it is the Open-button click (Accept), not the dismiss action
-            // that waits for the dialog to close. The arrival is confirmed from the dialog's "Address" control, and
-            // then the file-name box going empty -- the shell clears it a moment after navigating, and names typed
-            // before that clear lands would be wiped.
-            string folder = Path.GetDirectoryName(file1);
-            McpConnector.SetFormValue(addFilesId, FILE_NAME_LABEL, folder);
-            addFilesDlg.Accept();
-            WaitForCondition(() => string.Equals(McpConnector.GetFormValue(addFilesId, @"Address")?.TrimEnd('\\'),
-                folder, StringComparison.OrdinalIgnoreCase));
-            WaitForCondition(() => string.IsNullOrEmpty(McpConnector.GetFormValue(addFilesId, FILE_NAME_LABEL)));
+            // that waits for the dialog to close; Accept finds the button by control id, since Windows localizes
+            // its caption. The arrival is confirmed from the dialog's "Address" control, and then the file-name box
+            // going empty -- the shell clears it a moment after navigating, and names typed before that clear lands
+            // would be wiped.
+            McpConnector.SetFormValue(addFilesId, FILE_NAME_LABEL, searchFolder);
+            AssertComplete(addFilesDlg.Accept());
+            WaitForCondition(() => PathEx.SamePath(McpConnector.GetFormValue(addFilesId, @"Address"), searchFolder),
+                @"The Add Input Files dialog did not navigate to the search folder.");
+            WaitForCondition(() => string.IsNullOrEmpty(McpConnector.GetFormValue(addFilesId, FILE_NAME_LABEL)),
+                @"The Add Input Files dialog did not clear the file-name box after navigating.");
 
-            // A native dialog has no caption-addressable buttons, so it is confirmed with the dismiss action (the
-            // connector's way to press its default button) rather than ClickFormButton.
+            // Committed with the dismiss action (the connector's way to press the default button, then wait for the
+            // dialog to close) rather than ClickFormButton, whose "Open" caption Windows localizes.
             McpConnector.SetFormValue(addFilesId, FILE_NAME_LABEL,
                 QuoteNames(new[] { file1, file2 }.Select(Path.GetFileName)));
             McpConnector.PerformAction(new UiElementPath(null, addFilesId, null, @"Form"), @"dismiss", null);

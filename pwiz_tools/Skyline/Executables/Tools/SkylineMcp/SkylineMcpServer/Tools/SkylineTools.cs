@@ -714,10 +714,12 @@ public static class SkylineTools
 
     [McpServerTool(Name = "skyline_set_form_value"),
      Description("Set the value of a control on an open form. For a native file dialog " +
-        "(Type 'FileDialog') the value is the file name(s) to open and controlId is ignored. To select " +
-        "several files, first set the folder path and click Open to navigate there, then set their bare " +
-        "names, each quoted and separated by spaces, e.g. \"a.raw\" \"b.raw\" (the box holds at most " +
-        "259 characters, so a list of full paths gets cut off). " +
+        "(Type 'Dialog') the value is the file name(s) to open and controlId is ignored. To select " +
+        "several files, first set the folder path and press Open with skyline_click_form_button (which, " +
+        "unlike skyline_dismiss_with_accept_button, does not wait for the dialog to close) to navigate " +
+        "there; wait until the 'Address' control reads that folder and the 'File name' box reads empty; " +
+        "then set their bare names, each quoted and separated by spaces, e.g. \"a.raw\" \"b.raw\" (the " +
+        "box holds at most 259 characters, so a list of full paths gets cut off). " +
         "For a WinForms form it sets the text, the checked state ('true'/'false'), or the selected " +
         "item of the control named by controlId; a matched label sets the field it labels. controlId " +
         "may also be a grid cell locator 'grid[column,row]' (grid name optional) to set that cell.")]
