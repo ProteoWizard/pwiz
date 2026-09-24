@@ -2323,7 +2323,7 @@ namespace pwiz.Osprey.Tasks
             floors.DerivePeptideFloors();
             int raised = experiment.ApplyRunQFloors(entryId => floors.FloorsFor(entryId));
             ctx.LogInfo(string.Format(
-                @"Raised {0:N0} of {1:N0} precursor candidates' experiment-level q-values to their " +
+                @"Raised {0:N0} of {1:N0} experiment-level precursor candidate q-values to their " +
                 @"best run-level value.",
                 raised, experiment.Count));
 
