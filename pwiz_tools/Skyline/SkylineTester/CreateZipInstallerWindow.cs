@@ -75,7 +75,7 @@ namespace SkylineTester
             if (Regex.IsMatch(name, "^T(oo|öö)ls_", RegexOptions.IgnoreCase))
                 return true;
 
-            var extension = (Path.GetExtension(name) ?? string.Empty).ToLowerInvariant();
+            var extension = Path.GetExtension(name).ToLowerInvariant();
 
             // Per-test data archives. Shipping these is exactly what the 2023 change below
             // stopped doing; on net8 they arrive by a different route (staged into the bin
@@ -345,7 +345,7 @@ namespace SkylineTester
                     {
                         if (Include(directory))
                         {
-                            var name = Path.GetFileName(directory) ?? "";
+                            var name = Path.GetFileName(directory);
                             Console.WriteLine(Path.Combine(SkylineTesterWindow.SkylineTesterFiles, name));
                             zipFile.AddDirectory(directory, Path.Combine(SkylineTesterWindow.SkylineTesterFiles, name));
                         }

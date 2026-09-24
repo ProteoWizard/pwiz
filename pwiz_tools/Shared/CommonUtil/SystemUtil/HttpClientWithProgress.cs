@@ -606,7 +606,7 @@ namespace pwiz.Common.SystemUtil
                         if (t.IsFaulted)
                             _ = t.Exception;
                         else if (t.Status == TaskStatus.RanToCompletion)
-                            t.Result?.Dispose();
+                            t.Result.Dispose();
                     }, TaskScheduler.Default);
 
                     // The delay shares the caller's token, so cancelling completes it too and the

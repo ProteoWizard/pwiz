@@ -914,7 +914,7 @@ namespace pwiz.ProteowizardWrapper
         public double? GetChromatogramCollisionEnergy(int chromIndex)
         {
             var chrom = ChromatogramList.GetChromatogram(chromIndex, DetailLevel.FullMetadata);
-            return chrom.Precursor?.Activation?.CvParam(CVID.MS_collision_energy);
+            return chrom.Precursor.Activation.CvParam(CVID.MS_collision_energy);
         }
         
         public void GetChromatogramMetadata(int chromIndex, out string id, out bool? isNegativePolarity, out double precursorMz, out double productMz)
@@ -1040,7 +1040,7 @@ namespace pwiz.ProteowizardWrapper
                 return null;
             }
             var chromatogram = ChromatogramList.GetChromatogram(0, true);            {
-                return chromatogram?.GetIntensityArray()?.Data.ToArray();
+                return chromatogram.GetIntensityArray()?.Data.ToArray();
             }
         }
 
@@ -1313,7 +1313,7 @@ namespace pwiz.ProteowizardWrapper
             if (_cvidIonMobility.HasValue)
             {
                 if (_cvidIonMobility.Value != CVID.CVID_Unknown)
-                    data = s.GetArrayByCvid(_cvidIonMobility.Value)?.Data?.ToArray();
+                    data = s.GetArrayByCvid(_cvidIonMobility.Value)?.Data.ToArray();
             }
             else
             {
@@ -1655,7 +1655,7 @@ namespace pwiz.ProteowizardWrapper
                 {
                     continue;
                 }
-                string value = param.Value ?? string.Empty;
+                string value = param.Value;
                 bool hasUnit = param.Units != CVID.CVID_Unknown;
                 string unit = hasUnit ? param.UnitsName : null;
                 string unitAccession = hasUnit ? CvLookup.CvTermInfo(param.Units).Id : null;
@@ -1676,7 +1676,7 @@ namespace pwiz.ProteowizardWrapper
                 {
                     continue;
                 }
-                string value = param.Value ?? string.Empty;
+                string value = param.Value;
                 var unitInfo = param.Units == CVID.CVID_Unknown ? null : CvLookup.CvTermInfo(param.Units);
                 terms.Add(new SpectrumMetadataTerm(param.Name, param.Name, value, unitInfo?.Name, unitInfo?.Id));
             }

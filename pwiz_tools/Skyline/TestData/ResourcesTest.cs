@@ -68,7 +68,7 @@ namespace pwiz.SkylineTestData
                 catch (ReflectionTypeLoadException reflectionTypeLoadException)
                 {
                     // Write out the "LoaderExceptions" property because it is not included in this exception's ToString()
-                    Console.Out.WriteLine("Exception getting types for assembly {0}:\r\n{1}\r\nLoaderExceptions property:{2}", assembly.FullName, reflectionTypeLoadException, TextUtil.LineSeparate(reflectionTypeLoadException.LoaderExceptions?.Select(e=>e.ToString())) ?? "null");
+                    Console.Out.WriteLine("Exception getting types for assembly {0}:\r\n{1}\r\nLoaderExceptions property:{2}", assembly.FullName, reflectionTypeLoadException, TextUtil.LineSeparate(reflectionTypeLoadException.LoaderExceptions.Select(e=>e.ToString())) ?? "null");
                     throw;
                 }
                 foreach (var type in assemblyTypes)

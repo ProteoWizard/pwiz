@@ -53,7 +53,7 @@ namespace pwiz.Common.DataBinding.Controls
                 // NavBarButtonViewsOnDropDownOpening); a ToolStripDropDownItem only disposes an auto-generated
                 // DropDown, not an assigned one, so dispose it here to release its static SystemEvents
                 // subscription -- otherwise it, and the document behind it, stays rooted.
-                navBarButtonViews?.DropDown?.Dispose();
+                navBarButtonViews?.DropDown.Dispose();
                 components?.Dispose();
             }
             base.Dispose(disposing);

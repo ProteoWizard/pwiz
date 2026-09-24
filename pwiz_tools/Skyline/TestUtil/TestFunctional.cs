@@ -751,7 +751,7 @@ namespace pwiz.SkylineTestUtil
                     {
                         if (i > 0)
                             sb.Append('\t');
-                        sb.Append(row[i] ?? String.Empty);
+                        sb.Append(row[i]);
                     }
                     sb.AppendLine();
                 }
