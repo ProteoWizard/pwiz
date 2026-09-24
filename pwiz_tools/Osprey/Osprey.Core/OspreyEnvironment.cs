@@ -441,6 +441,33 @@ namespace pwiz.Osprey.Core
         /// time. Null when unset -- keeps the 300k default.</summary>
         public static readonly int? MaxTrainSizeOverride = ParseIntOrNull(@"OSPREY_MAX_TRAIN_SIZE");
 
+        /// <summary>
+        /// The default first-pass SVM C-selection tolerance: the grid search keeps the most
+        /// regularized C whose inner-CV passing count is within this fraction of the best
+        /// (see <c>PercolatorConfig.CSelectionTolerance</c>).
+        /// </summary>
+        public const double DEFAULT_SVM_C_SELECTION_TOLERANCE = 0.01;
+
+        /// <summary>OSPREY_SVM_C_TOLERANCE exactly as set, or null when unset: an override for
+        /// <see cref="DEFAULT_SVM_C_SELECTION_TOLERANCE"/>, a number in [0, 1). 0 restores the
+        /// strict maximum that the Rust implementation uses, for cross-implementation
+        /// comparisons.</summary>
+        public static readonly string SvmCSelectionToleranceSetting =
+            Environment.GetEnvironmentVariable(@"OSPREY_SVM_C_TOLERANCE");
+
+        /// <summary>True when OSPREY_SVM_C_TOLERANCE is set to anything but a number in [0, 1)
+        /// (<c>0,01</c>, <c>1%</c>, a quoted <c>"0"</c> from cmd.exe's <c>set</c>). Program
+        /// startup ABORTS on this rather than falling back: the fallback would train under the
+        /// default rule and key its directories as the default, so a parity or A/B arm would
+        /// report the default arm's numbers under its own name.</summary>
+        public static readonly bool SvmCSelectionToleranceUnrecognized =
+            !string.IsNullOrEmpty(SvmCSelectionToleranceSetting) &&
+            !ParseSvmCSelectionTolerance(SvmCSelectionToleranceSetting).HasValue;
+
+        /// <summary>The first-pass SVM C-selection tolerance in effect.</summary>
+        public static readonly double SvmCSelectionTolerance =
+            ParseSvmCSelectionTolerance(SvmCSelectionToleranceSetting) ?? DEFAULT_SVM_C_SELECTION_TOLERANCE;
+
         /// <summary>OSPREY_TRAIN_PICK_RUN: represent each precursor in the first-pass training
         /// subset by ONE uniformly sampled RUN -- contributing that run's best candidate peak --
         /// instead of by its best observation across all runs. ON by default; setting the variable
@@ -942,39 +969,42 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
-        /// Validity-key suffix for the first-pass TRAINING-SAMPLE levers
-        /// (<see cref="TrainPickRun"/>, <see cref="MaxTrainSizeOverride"/>). Both change which
-        /// rows train the model and therefore every score, q and count downstream, so a directory
-        /// written under one setting must not be adopted under another.
+        /// Validity-key suffix for the first-pass TRAINING levers
+        /// (<see cref="TrainPickRun"/>, <see cref="MaxTrainSizeOverride"/>,
+        /// <see cref="SvmCSelectionTolerance"/>). Each changes the model trained and therefore
+        /// every score, q and count downstream, so a directory written under one setting must not
+        /// be adopted under another.
         ///
         /// Without this a re-run under a changed setting reports "FirstPassFDR:skipping (outputs
         /// valid)" in seconds and hands back the PREVIOUS setting's numbers - which reads exactly
         /// like a change that had no effect, the most expensive possible failure for an A/B.
         ///
-        /// The two halves are keyed differently ON PURPOSE, and the difference is the same one
+        /// The levers are keyed differently ON PURPOSE, and the difference is the same one
         /// <see cref="PickValidityKeySuffix()"/> draws. <see cref="TrainPickRun"/> is a FLIPPED
         /// DEFAULT, so it is emitted for every arm including the new default: "emits nothing"
         /// already describes every directory written before the flip, and an empty new default
         /// would make a post-flip key EQUAL a pre-flip one, letting a resume or a
         /// <c>-LinkFrom</c> adopt maximum-trained scores as though the reservoir had produced
         /// them. <see cref="MaxTrainSizeOverride"/> is a plain knob whose default never moved,
-        /// so it stays silent for the default and keys only when set.
+        /// so it stays silent for the default and keys only when set. The C-selection tolerance
+        /// is a flipped default too (the grid search used to keep the strict maximum), so it is
+        /// emitted for every arm.
         ///
-        /// The one-time cost of the unconditional half is real and is the correct outcome: every
-        /// FirstPassFDR-and-later directory written before this shipped is invalidated. Stages
-        /// 1-5 carry no training suffix, so a <c>-LinkFrom</c> still adopts the expensive
-        /// extraction artifacts and only the FDR tail re-runs.
+        /// The one-time cost of the unconditional terms is real and is the correct outcome: every
+        /// FirstPassFDR-and-later directory written before each of them shipped is invalidated.
+        /// PerFileScoring (Stages 1-4) carries no training suffix, so a <c>-LinkFrom</c> still
+        /// adopts the expensive extraction artifacts and only the FDR tail re-runs.
         /// </summary>
         public static string TrainSampleValidityKeySuffix()
         {
-            return TrainSampleValidityKeySuffix(TrainPickRun, MaxTrainSizeOverride);
+            return TrainSampleValidityKeySuffix(TrainPickRun, MaxTrainSizeOverride, SvmCSelectionTolerance);
         }
 
         /// <summary>
         /// <see cref="TrainSampleValidityKeySuffix()"/> for explicitly supplied settings, so the
         /// arms can be compared without mutating process-wide state the environment reads once.
         /// </summary>
-        public static string TrainSampleValidityKeySuffix(bool trainPickRun, int? maxTrainSizeOverride)
+        public static string TrainSampleValidityKeySuffix(bool trainPickRun, int? maxTrainSizeOverride, double cSelectionTolerance)
         {
             string suffix = @";trainpick=" + (trainPickRun ? @"run" : @"max");
             if (maxTrainSizeOverride.HasValue)
@@ -982,6 +1012,7 @@ namespace pwiz.Osprey.Core
                 suffix += @";maxtrain=" +
                           maxTrainSizeOverride.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
             }
+            suffix += @";csel=" + cSelectionTolerance.ToString(@"R", System.Globalization.CultureInfo.InvariantCulture);
             return suffix;
         }
 
@@ -1099,6 +1130,26 @@ namespace pwiz.Osprey.Core
             return double.TryParse(v, System.Globalization.NumberStyles.Float,
                 System.Globalization.CultureInfo.InvariantCulture, out double result)
                 ? result : null;
+        }
+
+        /// <summary>
+        /// An OSPREY_SVM_C_TOLERANCE value as a number in [0, 1) (invariant culture), or null when
+        /// it is unset, unparseable or out of range - the null that
+        /// <see cref="SvmCSelectionToleranceUnrecognized"/> reports for a set variable. Internal so
+        /// a test can pin what is accepted.
+        /// </summary>
+        internal static double? ParseSvmCSelectionTolerance(string raw)
+        {
+            if (string.IsNullOrEmpty(raw) ||
+                !double.TryParse(raw, System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out double tolerance) ||
+                !(tolerance >= 0 && tolerance < 1))
+            {
+                return null;
+            }
+            // -0 passes the range check but formats as "-0" in the validity key on .NET Core, so
+            // it would key apart from the 0 it selects.
+            return tolerance == 0 ? 0 : tolerance;
         }
 
         private static bool IsSet(string name)

@@ -388,6 +388,17 @@ if (-not [string]::IsNullOrWhiteSpace($env:OSPREY_ALLOW_UNFIXED_RESIDENT)) {
     }
 }
 
+# The goldens are captured under the shipped first-pass SVM C selection, so an inherited
+# OSPREY_SVM_C_TOLERANCE (the cross-implementation scripts set it to 0) would train every leg
+# under another rule and fail every dataset - or, under -CreateGolden, bless that rule as the
+# golden. Cleared, announced, and restored in the finally block like the allowance above.
+$script:priorSvmCTolerance = $env:OSPREY_SVM_C_TOLERANCE
+if (-not [string]::IsNullOrWhiteSpace($env:OSPREY_SVM_C_TOLERANCE)) {
+    Write-Host (("Clearing inherited OSPREY_SVM_C_TOLERANCE='{0}' - the goldens use the default " +
+        "first-pass C selection.") -f $env:OSPREY_SVM_C_TOLERANCE) -ForegroundColor Yellow
+    Remove-Item Env:OSPREY_SVM_C_TOLERANCE -ErrorAction SilentlyContinue
+}
+
 # Every Osprey invocation in this run is timestamped and mem-stamped, so each leg's log
 # doubles as a memory-band trace: `[yyyy/MM/dd HH:mm:ss]<TAB>managedMB<TAB>privateMB<TAB>`.
 # That makes a red-or-slow gate diagnosable after the fact - the log shows whether the
@@ -4050,6 +4061,9 @@ finally {
         Remove-Item Env:OSPREY_ALLOW_UNFIXED_RESIDENT -ErrorAction SilentlyContinue
     } else {
         $env:OSPREY_ALLOW_UNFIXED_RESIDENT = $script:priorAllowResident
+    }
+    if (-not [string]::IsNullOrWhiteSpace($script:priorSvmCTolerance)) {
+        $env:OSPREY_SVM_C_TOLERANCE = $script:priorSvmCTolerance
     }
     # Safety net for a dataset that threw before its own cleanup -- drop the whole
     # run root. Raw input data lives outside $runRoot and is untouched.
