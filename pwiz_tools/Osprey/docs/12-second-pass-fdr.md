@@ -126,7 +126,7 @@ disk. Three experiment-wide artifacts carry it:
 
 | Artifact | Carries |
 |---|---|
-| `<stem>.1st-pass.model.json` | the frozen Percolator model (standardizer + per-fold weights and biases) and the first pass's `OSPREY_EXPERIMENT_AGG` provenance |
+| `<stem>.1st-pass.model.json` | the frozen Percolator model (standardizer + per-fold weights and biases, or per-fold tree ensembles under `--fdr-method gbdt`) and the first pass's `OSPREY_EXPERIMENT_AGG` provenance |
 | `<stem>.1st-pass.stratum.json` | the protein stratum, under `protein-compact`. Split out of the model sidecar in #4633, because first-pass protein FDR computes it and training does not |
 | `<blib-stem>.1st-pass.fdr_experiment.bin` | the first pass's experiment-scope q-values |
 

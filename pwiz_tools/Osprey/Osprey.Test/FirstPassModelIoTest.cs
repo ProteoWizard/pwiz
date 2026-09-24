@@ -64,6 +64,36 @@ namespace pwiz.Osprey.Test
             };
         }
 
+        /// <summary>
+        /// A three-fold tree model on a fixed synthetic population: what a
+        /// <c>--fdr-method gbdt</c> first pass publishes, without the Percolator loop around it.
+        /// Internal so the pass-2 transfer test scores with the same model.
+        /// </summary>
+        internal static PercolatorResults MakeTreeModel()
+        {
+            const int nFeatures = 5;
+            var rng = new Random(11);   // fixed seed: a fixed population, not a sampled one
+            var rows = new double[200][];
+            var isDecoy = new bool[rows.Length];
+            for (int i = 0; i < rows.Length; i++)
+            {
+                isDecoy[i] = i % 2 == 1;
+                rows[i] = new double[nFeatures];
+                for (int j = 0; j < nFeatures; j++)
+                    rows[i][j] = rng.NextDouble() + (isDecoy[i] ? 0.0 : 0.25 * j);
+            }
+            var folds = new List<GradientBoostedTrees>();
+            for (ulong seed = 1; seed <= 3; seed++)
+                folds.Add(GradientBoostedTrees.Train(rows, isDecoy, new GbtParams { NTrees = 20, MaxDepth = 3, Seed = seed }));
+            return new PercolatorResults
+            {
+                Standardizer = FeatureStandardizer.FromMeansStds(
+                    new[] { 0.5, 0.6180339887498949, 0.75, 0.8660254037844386, 1.0 },
+                    new[] { 0.2886751345948129, 0.3, 0.3333333333333333, 0.35, 0.4 }),
+                FoldGbtModels = folds,
+            };
+        }
+
         private static void AssertBitEqual(double expected, double actual, string what)
         {
             Assert.AreEqual(
@@ -165,12 +195,88 @@ namespace pwiz.Osprey.Test
             }
         }
 
+        /// <summary>
+        /// A <c>--fdr-method gbdt</c> model must persist, reload as the tree ensemble and score
+        /// BIT-IDENTICALLY, for the reason the SVM must: a distributed SecondPassFDR node, the
+        /// Stage 6 per-file competition and a resume all read the model from this file rather
+        /// than from the process that trained it. Save used to decline a tree model, which went
+        /// unnoticed because the default first pass never trained one.
+        ///
+        /// <para>Also pins the linear side: its file gains no tree property at all, so the
+        /// default path's artifact is byte-for-byte what it was.</para>
+        /// </summary>
         [TestMethod]
-        public void TestFirstPassModelSaveDeclinesGbtAndDegenerate()
+        public void TestFirstPassModelTreeRoundTripScoresBitIdentical()
         {
-            // No linear weights (the GBDT shape, or a degenerate/empty model) -> Save writes
-            // nothing so SecondPassFDR keeps its existing fail-fast rather than loading a
-            // sidecar it cannot score with.
+            var model = MakeTreeModel();
+            var scorerBefore = FrozenModelScorer.TryCreate(model);
+            Assert.IsNotNull(scorerBefore, @"original tree model should produce a scorer");
+            Assert.IsTrue(scorerBefore.IsGradientBoostedTrees);
+
+            string path = Path.Combine(Path.GetTempPath(),
+                @"osprey_model_trees_" + Guid.NewGuid().ToString(@"N") + @".json");
+            string linearPath = Path.Combine(Path.GetTempPath(),
+                @"osprey_model_linear_" + Guid.NewGuid().ToString(@"N") + @".json");
+            try
+            {
+                Assert.IsTrue(FirstPassModelIO.Save(path, model, @"max"), @"tree model should persist");
+                var sidecar = FirstPassModelIO.Load(path);
+                Assert.IsNotNull(sidecar, @"reloaded tree sidecar should not be null");
+                Assert.AreEqual(@"max", sidecar.ExperimentAgg, @"recorded pass-1 aggregation arm");
+                var reloaded = sidecar.Model;
+                Assert.IsNotNull(reloaded.FoldGbtModels, @"a tree model must reload as trees");
+                Assert.AreEqual(model.FoldGbtModels.Count, reloaded.FoldGbtModels.Count, @"fold count");
+                Assert.AreEqual(0, reloaded.FoldWeights.Count, @"a tree model carries no linear weights");
+
+                // The contract that matters: identical scores through the scorer, over rows that
+                // reach many different leaves.
+                var scorerAfter = FrozenModelScorer.TryCreate(reloaded);
+                Assert.IsNotNull(scorerAfter, @"reloaded tree model should produce a scorer");
+                Assert.IsTrue(scorerAfter.IsGradientBoostedTrees);
+                var rng = new Random(5);
+                for (int i = 0; i < 50; i++)
+                {
+                    var row = new double[scorerBefore.NumFeatures];
+                    for (int j = 0; j < row.Length; j++)
+                        row[j] = 2.0 * rng.NextDouble() - 0.5;
+                    AssertBitEqual(scorerBefore.Score(row), scorerAfter.Score(row), @"tree Score");
+                }
+
+                // A tree file that cannot be scored as written loads as null, like any other.
+                var written = JObject.Parse(File.ReadAllText(path));
+                AssertLoadsNull(Edited(written, json =>
+                {
+                    json[@"FoldWeights"] = new JArray(new JArray(0.5, 0.5, 0.5, 0.5, 0.5));
+                    json[@"FoldBiases"] = new JArray(0.0);
+                }), @"trees beside linear weights");
+                AssertLoadsNull(Edited(written, json => FirstTree(json)[@"FeatureCount"] = 4),
+                    @"tree width != feature count");
+                AssertLoadsNull(Edited(written, json =>
+                {
+                    var left = FirstTree(json)[@"Left"] as JArray;
+                    Assert.IsNotNull(left, @"a written tree should carry its Left child array");
+                    left[0] = 0;
+                }), @"tree node graph that would cycle");
+
+                Assert.IsTrue(FirstPassModelIO.Save(linearPath, MakeSvmModel(), @"max"), @"SVM model should persist");
+                Assert.IsNull(JObject.Parse(File.ReadAllText(linearPath))[@"FoldGbtModels"],
+                    @"a linear model's file must not gain a tree property");
+            }
+            finally
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+                if (File.Exists(linearPath))
+                    File.Delete(linearPath);
+            }
+        }
+
+        [TestMethod]
+        public void TestFirstPassModelSaveDeclinesDegenerate()
+        {
+            // Neither linear weights nor trees (a degenerate/empty model) -> Save writes nothing
+            // so SecondPassFDR keeps its existing fail-fast rather than loading a sidecar it
+            // cannot score with.
             string path = Path.Combine(Path.GetTempPath(),
                 @"osprey_model_decline_" + Guid.NewGuid().ToString(@"N") + @".json");
             try
@@ -180,7 +286,7 @@ namespace pwiz.Osprey.Test
                     Standardizer = FeatureStandardizer.FromMeansStds(new[] { 0.0, 1.0 }, new[] { 1.0, 1.0 }),
                 };
                 Assert.IsFalse(FirstPassModelIO.Save(path, noWeights, @"max"),
-                    @"model without linear weights should not persist");
+                    @"model without weights or trees should not persist");
                 Assert.IsFalse(File.Exists(path), @"no sidecar should be written when Save declines");
                 Assert.IsFalse(FirstPassModelIO.Save(path, null, @"max"), @"null model should not persist");
             }
@@ -267,6 +373,25 @@ namespace pwiz.Osprey.Test
                 if (File.Exists(path))
                     File.Delete(path);
             }
+        }
+
+        /// <summary>A copy of <paramref name="json"/> with <paramref name="edit"/> applied,
+        /// serialized - so each refusal case starts from the file Save actually wrote.</summary>
+        private static string Edited(JObject json, Action<JObject> edit)
+        {
+            var copy = (JObject) json.DeepClone();
+            edit(copy);
+            return copy.ToString();
+        }
+
+        /// <summary>The first fold's tree ensemble in a written model file.</summary>
+        private static JObject FirstTree(JObject json)
+        {
+            var trees = json[@"FoldGbtModels"] as JArray;
+            Assert.IsNotNull(trees, @"a tree model's file should carry FoldGbtModels");
+            var first = trees[0] as JObject;
+            Assert.IsNotNull(first, @"FoldGbtModels should hold one object per fold");
+            return first;
         }
 
         private static void AssertLoadsWithArm(string json, string expectedArm, string what)

@@ -43,14 +43,16 @@ namespace pwiz.Osprey.Tasks
     ///
     /// Only the slice <see cref="FrozenModelScorer"/> consumes is stored: the feature
     /// standardizer (<see cref="FeatureStandardizer.Means"/>/<see cref="FeatureStandardizer.Stds"/>)
-    /// plus the per-fold linear weights and biases. Doubles route through
+    /// plus the per-fold linear weights and biases, or for <c>--fdr-method gbdt</c> the per-fold
+    /// tree ensembles in their <see cref="GbtModelData"/> form. Doubles route through
     /// <see cref="RoundtripDoubleConverter"/> so a reloaded model scores BIT-IDENTICALLY to
     /// the in-process original (the <see cref="FrozenModelScorer.TryCreate"/> fold-average is
-    /// applied to the same per-fold values either way).
+    /// applied to the same per-fold values either way, and a tree's node arrays ARE the model).
     ///
-    /// GBDT (<c>--fdr-method gbdt</c>) is NOT persisted here: the tree ensembles carry no
-    /// linear weights, so <see cref="Save"/> declines and a GBDT SecondPassFDR node keeps the prior
-    /// fail-fast behavior (unchanged) until tree serialization is added.
+    /// GBDT was not persisted until the default first pass trained trees at all: the lean path
+    /// trained the SVM under the gbdt flag, so the file this wrote for a gbdt run was a linear
+    /// model. A tree file writes EMPTY weight and bias arrays beside the ensembles, so a reader
+    /// that predates them refuses it on its no-weights check rather than mis-scoring.
     ///
     /// The <see cref="ProteinCompactStratum"/> base ids live in a SECOND file
     /// (<c>.1st-pass.stratum.json</c>) rather than this one, because a different phase
@@ -78,6 +80,13 @@ namespace pwiz.Osprey.Tasks
             public double[] Stds { get; set; }
             public double[][] FoldWeights { get; set; }
             public double[] FoldBiases { get; set; }
+
+            /// <summary>The per-fold tree ensembles of a <c>--fdr-method gbdt</c> model, or null for
+            /// the linear SVM. Omitted from the file when null, so a linear model serializes
+            /// byte-for-byte as it did before this property existed; added without bumping
+            /// <see cref="SchemaVersion"/> for the reason <see cref="ExperimentAgg"/> was.</summary>
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public GbtModelData[] FoldGbtModels { get; set; }
 
             /// <summary>Normalized OSPREY_EXPERIMENT_AGG of the process that TRAINED this model.
             /// Deliberately added WITHOUT bumping <see cref="SchemaVersion"/>: it is an optional
@@ -185,10 +194,10 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Write the frozen-scorer slice of <paramref name="model"/> to <paramref name="path"/>.
-        /// Returns false (writing nothing) when the model has no linear weights or standardizer
-        /// -- the GBDT path, or an empty/degenerate model -- so the caller does not advertise a
-        /// sidecar SecondPassFDR cannot use.
+        /// Write the frozen-scorer slice of <paramref name="model"/> to <paramref name="path"/>:
+        /// its tree ensembles when it has them, otherwise its linear weights. Returns false
+        /// (writing nothing) when the model has neither, or no standardizer -- an empty or
+        /// degenerate model -- so the caller does not advertise a sidecar SecondPassFDR cannot use.
         /// </summary>
         /// <param name="path">Sidecar path to write.</param>
         /// <param name="model">The trained 1st-pass model.</param>
@@ -198,9 +207,7 @@ namespace pwiz.Osprey.Tasks
         ///   re-read here, so this stays a pure serializer.</param>
         public static bool Save(string path, PercolatorResults model, string experimentAgg)
         {
-            if (model?.Standardizer == null ||
-                model.FoldWeights == null || model.FoldWeights.Count == 0 ||
-                model.FoldBiases == null || model.FoldBiases.Count != model.FoldWeights.Count)
+            if (model?.Standardizer == null)
                 return false;
 
             var dto = new ModelDto
@@ -209,10 +216,25 @@ namespace pwiz.Osprey.Tasks
                 NumFeatures = model.Standardizer.NumFeatures,
                 Means = model.Standardizer.Means,
                 Stds = model.Standardizer.Stds,
-                FoldWeights = model.FoldWeights.ToArray(),
-                FoldBiases = model.FoldBiases.ToArray(),
                 ExperimentAgg = experimentAgg,
             };
+            if (model.FoldGbtModels != null && model.FoldGbtModels.Count > 0)
+            {
+                // Empty, not null: the shape an in-process tree model has, and what makes a
+                // reader that predates the ensembles refuse the file instead of reading it as
+                // a linear model with no folds.
+                dto.FoldWeights = Array.Empty<double[]>();
+                dto.FoldBiases = Array.Empty<double>();
+                dto.FoldGbtModels = model.FoldGbtModels.ConvertAll(trees => trees.ToModelData()).ToArray();
+            }
+            else
+            {
+                if (model.FoldWeights == null || model.FoldWeights.Count == 0 ||
+                    model.FoldBiases == null || model.FoldBiases.Count != model.FoldWeights.Count)
+                    return false;
+                dto.FoldWeights = model.FoldWeights.ToArray();
+                dto.FoldBiases = model.FoldBiases.ToArray();
+            }
             WriteJson(path, dto);
             return true;
         }
@@ -273,8 +295,8 @@ namespace pwiz.Osprey.Tasks
         /// Load a persisted model, or return null when <paramref name="path"/> is absent or
         /// unreadable (the caller then fails fast exactly as it did before persistence existed).
         /// The returned <see cref="PercolatorResults"/> carries only the scorer slice
-        /// (standardizer + per-fold weights/biases); <see cref="FrozenModelScorer.TryCreate"/>
-        /// needs nothing else.
+        /// (standardizer + per-fold weights/biases, or standardizer + per-fold tree ensembles);
+        /// <see cref="FrozenModelScorer.TryCreate"/> needs nothing else.
         ///
         /// <see cref="Sidecar.ExperimentAgg"/> is null when the sidecar predates that field, so
         /// null there means "unknown", never "max" - a caller that gates on the arm must treat it
@@ -296,29 +318,18 @@ namespace pwiz.Osprey.Tasks
                 var dto = JsonConvert.DeserializeObject<ModelDto>(File.ReadAllText(path), settings);
                 if (dto == null || dto.SchemaVersion != 1 ||
                     dto.Means == null || dto.Stds == null || dto.Means.Length != dto.Stds.Length ||
-                    dto.NumFeatures != dto.Means.Length ||
-                    dto.FoldWeights == null || dto.FoldWeights.Length == 0 ||
-                    dto.FoldBiases == null || dto.FoldBiases.Length != dto.FoldWeights.Length)
+                    dto.NumFeatures != dto.Means.Length)
                     return null;
 
-                // Each fold's linear weights must be present and match the feature width,
-                // or the frozen scorer would dereference null / index past the end while
-                // scoring on SecondPassFDR -- an opaque crash outside this method's
-                // documented null-on-unreadable contract.
-                foreach (var foldWeights in dto.FoldWeights)
-                {
-                    if (foldWeights == null || foldWeights.Length != dto.Means.Length)
-                        return null;
-                }
+                var model = dto.FoldGbtModels != null && dto.FoldGbtModels.Length > 0
+                    ? LoadTreeModel(dto)
+                    : LoadLinearModel(dto);
+                if (model == null)
+                    return null;
 
                 return new Sidecar
                 {
-                    Model = new PercolatorResults
-                    {
-                        Standardizer = FeatureStandardizer.FromMeansStds(dto.Means, dto.Stds),
-                        FoldWeights = new List<double[]>(dto.FoldWeights),
-                        FoldBiases = new List<double>(dto.FoldBiases),
-                    },
+                    Model = model,
                     ExperimentAgg = dto.ExperimentAgg,
                     StratumBaseIds = dto.StratumBaseIds == null || dto.StratumBaseIds.Length == 0
                         ? null
@@ -354,6 +365,58 @@ namespace pwiz.Osprey.Tasks
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// The linear SVM a file carries, or null when its weights are missing or inconsistent.
+        /// Each fold's linear weights must be present and match the feature width, or the frozen
+        /// scorer would dereference null / index past the end while scoring on SecondPassFDR --
+        /// an opaque crash outside <see cref="Load"/>'s documented null-on-unreadable contract.
+        /// </summary>
+        private static PercolatorResults LoadLinearModel(ModelDto dto)
+        {
+            if (dto.FoldWeights == null || dto.FoldWeights.Length == 0 ||
+                dto.FoldBiases == null || dto.FoldBiases.Length != dto.FoldWeights.Length)
+                return null;
+            foreach (var foldWeights in dto.FoldWeights)
+            {
+                if (foldWeights == null || foldWeights.Length != dto.Means.Length)
+                    return null;
+            }
+            return new PercolatorResults
+            {
+                Standardizer = FeatureStandardizer.FromMeansStds(dto.Means, dto.Stds),
+                FoldWeights = new List<double[]>(dto.FoldWeights),
+                FoldBiases = new List<double>(dto.FoldBiases),
+            };
+        }
+
+        /// <summary>
+        /// The tree ensembles a file carries, or null when they are inconsistent. A file holding
+        /// linear weights BESIDE its trees is refused, since the scorer would have to pick one of
+        /// two models silently. Each ensemble must match the feature width and carry the binary
+        /// log-odds objective the competition ranks on; a corrupt node graph throws out of
+        /// <see cref="GradientBoostedTrees.FromModelData"/>, which <see cref="Load"/> turns
+        /// into null like any other unreadable file.
+        /// </summary>
+        private static PercolatorResults LoadTreeModel(ModelDto dto)
+        {
+            if ((dto.FoldWeights != null && dto.FoldWeights.Length > 0) ||
+                (dto.FoldBiases != null && dto.FoldBiases.Length > 0))
+                return null;
+            var trees = new List<GradientBoostedTrees>(dto.FoldGbtModels.Length);
+            foreach (var data in dto.FoldGbtModels)
+            {
+                if (data == null || data.FeatureCount != dto.NumFeatures ||
+                    data.Objective != GbtObjective.LogisticBinary)
+                    return null;
+                trees.Add(GradientBoostedTrees.FromModelData(data));
+            }
+            return new PercolatorResults
+            {
+                Standardizer = FeatureStandardizer.FromMeansStds(dto.Means, dto.Stds),
+                FoldGbtModels = trees,
+            };
         }
 
         /// <summary>

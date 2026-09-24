@@ -131,6 +131,26 @@ pick the most-overfit round, so the best iteration is chosen on a held-out inner
 (gamma / lambda / alpha / max-depth / n-trees / min-child-weight / learning-rate /
 subsample / colsample).
 
+**Every first-pass path trains and scores the trees.** A default run takes the lean
+counts-only first pass (`PercolatorScorer.RunStreamingFirstPass`) for `gbdt` exactly as for
+`percolator`, since `UsesPercolatorFramework()` covers both; the projection buffer and
+`OSPREY_FDR_PROJECTION=0` take the resident paths. All three hand the trainer the same
+`PercolatorConfig.CloneForTrainOnly()` copy and score through the same per-classifier code:
+the averaged weights for the SVM, the fold tree margins averaged per row for GBDT. Trees
+score a whole file at a time in parallel (`--threads`), because a tree score depends only on
+its own row; the SVM keeps its serial, parity-locked loop. The lean path used to build its
+own training config without the classifier choice, so a default `--fdr-method gbdt` run
+trained the linear SVM (at the tree iteration cap, ignoring `OSPREY_GBT_*`) and pass 2 froze
+that SVM. `FdrTest.TestStreamingFirstPassTrainsGbdt` pins the fix against the resident
+projection path, byte for byte.
+
+The trained ensembles persist in `<stem>.1st-pass.model.json` (`FirstPassModelIO`, as
+`GbtModelData`, which round-trips exactly), so a resume, the Stage 6 per-file competition and
+a distributed `--task SecondPassFDR` node score with the same trees the first pass used. A
+linear model's file is unchanged. A resume that finds a persisted model of the OTHER
+classifier stops with an error rather than mix two discriminants in one run: the task
+validity key has no FDR-method term, so nothing earlier can tell the two apart.
+
 **This method has no Rust counterpart** — grepping the Rust crates for
 `gbdt`/`GradientBoost` returns nothing. It is a C# addition *beyond* the reference
 engine, so it carries no cross-impl parity claim; `--fdr-method percolator` remains the
@@ -647,9 +667,10 @@ gap-fill run-count exclusion, issue #4511).
 `Pass2FdrSidecar` / `SecondPassFdrTask` (`--task SecondPassFDR`) reload the reconciled
 `.scores.parquet` entries and re-run the identical Percolator core with `passLabel =
 "Second-pass"` (`Pass2FdrSidecar.cs:521`), writing per-file `.2nd-pass.fdr_scores.bin`
-sidecars so reruns can skip SVM training. Only `FdrMethod.Percolator` is supported in the
-SecondPassFDR second pass — any other method throws
-(`Pass2FdrSidecar.cs:530`). The second-pass q-values are authoritative for blib output;
+sidecars so reruns can skip SVM training. `FdrMethod.Percolator` and `FdrMethod.Gbdt` share
+the SecondPassFDR second pass, which applies whichever classifier the first pass trained
+(`FrozenModelScorer`; see [12-second-pass-fdr.md](12-second-pass-fdr.md)); any other method
+logs a warning and skips it (`Pass2FdrSidecar.cs:2506`). The second-pass q-values are authoritative for blib output;
 the best-of-runs clamp is re-applied afterward.
 
 ---

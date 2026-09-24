@@ -28,7 +28,6 @@ using System.IO;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
-using pwiz.Osprey.ML;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -2936,7 +2935,7 @@ namespace pwiz.Osprey.Tasks
         /// <c>.1st-pass.fdr_scores.bin</c> sidecar and build two per-file lookup tables from its
         /// <c>(Score, RunPrecursorQvalue)</c> / <c>(Score, RunPeptideQvalue)</c> pairs -- the
         /// sidecar Score is the averaged-model score, the SAME scale
-        /// <see cref="ScoreWithFrozenModel"/> produces, so the table is scale-consistent by
+        /// <see cref="FrozenModelScorer.Score"/> produces, so the table is scale-consistent by
         /// construction. Then classify every survivor by its reconciled feature score against
         /// its 1st-pass sidecar record:
         /// <list type="bullet">
@@ -2975,10 +2974,6 @@ namespace pwiz.Osprey.Tasks
                 return false;
             }
 
-            AverageFoldModel(firstPassModel, out double[] avgWeights, out double avgBias);
-            int nFeatures = avgWeights.Length;
-            var standardizer = firstPassModel.Standardizer;
-
             var inputByFileName = new Dictionary<string, string>(StringComparer.Ordinal);
             foreach (var inputFile in config.InputFiles)
                 inputByFileName[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
@@ -3016,7 +3011,6 @@ namespace pwiz.Osprey.Tasks
                 return false;
             }
 
-            var scratch = new double[nFeatures]; // reused per entry to avoid a per-row allocation
             var tally = new TransferTally();
             // Per-file progress: building each file's per-run tables + classifying its survivors ran
             // silently for minutes on an 82-file join (the gap between Stage 6 and the summary below).
@@ -3032,8 +3026,8 @@ namespace pwiz.Osprey.Tasks
                     tally.Skipped += kvp.Value.Count;
                     continue;
                 }
-                TransferOneFile(kvp.Key, inputFile, kvp.Value, standardizer, avgWeights,
-                    avgBias, nFeatures, scratch, globalExperiment, ctx.LogWarning, ref tally);
+                TransferOneFile(kvp.Key, inputFile, kvp.Value, scorer, globalExperiment,
+                    ctx.LogWarning, ref tally);
             }
             transferProgress.Dispose();
 
@@ -3083,14 +3077,20 @@ namespace pwiz.Osprey.Tasks
         /// the mode a fan-out computation that happens to be running in the join. Moving the
         /// CALLER is the point; this seam is what lets that happen without rewriting the
         /// algorithm (#4438 established the per-run form; only its home is still wrong).</para>
+        ///
+        /// <para>Scores through <see cref="FrozenModelScorer"/>, so it applies whichever
+        /// classifier the first pass trained. The transfer used to average the fold weights
+        /// itself and inline the dot product, which threw on a gradient-boosted-tree model (no
+        /// weights to average). The scorer reuses one buffer, so a caller running files in parallel needs
+        /// one scorer per thread.</para>
         /// </summary>
         internal static void TransferOneFile(
             string fileName, string inputFile, List<FdrEntry> survivors,
-            FeatureStandardizer standardizer, double[] avgWeights, double avgBias,
-            int nFeatures, double[] scratch,
+            FrozenModelScorer scorer,
             IReadOnlyDictionary<uint, FdrExperimentRecord> globalExperiment,
             Action<string> logWarning, ref TransferTally tally)
         {
+            int nFeatures = scorer.NumFeatures;
             string pass1Path = FdrScoresSidecar.Pass1Path(inputFile);
 
             // Build this file's per-run tables + record map from its own 1st-pass sidecar.
@@ -3131,8 +3131,7 @@ namespace pwiz.Osprey.Tasks
                     tally.Skipped++;
                     continue;
                 }
-                double newScore = ScoreWithFrozenModel(
-                    entry.Features, standardizer, avgWeights, avgBias, scratch);
+                double newScore = scorer.Score(entry.Features);
 
                 FdrScoreRecord? rec1 = null;
                 if (firstPassByEntryId.TryGetValue(entry.EntryId, out FdrScoreRecord recFound))
@@ -3324,60 +3323,11 @@ namespace pwiz.Osprey.Tasks
             return PerRunClass.GapFill;
         }
 
-        /// <summary>
-        /// Apply the averaged frozen model to a single raw feature vector: standardize a
-        /// copy into the caller-supplied <paramref name="scratch"/> buffer, then
-        /// score = avgBias + sum(avgWeights[j] * std(feat)[j]). Mirrors the per-entry math
-        /// in <c>PercolatorScorer.ScorePopulationAndComputeFdr</c>, which likewise reuses a
-        /// single feature buffer to avoid a per-entry allocation in the scoring loop. Does
-        /// not mutate <paramref name="rawFeatures"/>; overwrites <paramref name="scratch"/>
-        /// (length must be &gt;= rawFeatures.Length).
-        /// </summary>
-        internal static double ScoreWithFrozenModel(
-            double[] rawFeatures,
-            FeatureStandardizer standardizer,
-            double[] avgWeights,
-            double avgBias,
-            double[] scratch)
-        {
-            Array.Copy(rawFeatures, 0, scratch, 0, rawFeatures.Length);
-            standardizer.TransformSlice(scratch);
-            double score = avgBias;
-            for (int j = 0; j < avgWeights.Length; j++)
-                score += avgWeights[j] * scratch[j];
-            return score;
-        }
-
         /// <summary>Number of equal-count score-quantile bins
         /// <see cref="BuildScoreToQTable"/> smooths the per-entry q into. Large enough to
         /// trace the FDR curve finely, small enough that each bin averages out the
         /// per-entry q noise from the raw-vs-calibrated score scale mismatch.</summary>
         private const int SCORE_Q_TABLE_BINS = 1000;
-
-        /// <summary>
-        /// Average the frozen Percolator fold weights + biases into a single (weights, bias)
-        /// pair -- the same averaged-model math <c>PercolatorScorer.ScorePopulationAndComputeFdr</c>
-        /// applies before scoring a population. Caller has already verified the model carries
-        /// at least one fold.
-        /// </summary>
-        private static void AverageFoldModel(
-            PercolatorResults model, out double[] avgWeights, out double avgBias)
-        {
-            int nModels = model.FoldWeights.Count;
-            int nFeatures = model.FoldWeights[0].Length;
-            avgWeights = new double[nFeatures];
-            avgBias = 0.0;
-            for (int f = 0; f < nModels; f++)
-            {
-                double[] foldW = model.FoldWeights[f];
-                for (int j = 0; j < nFeatures; j++)
-                    avgWeights[j] += foldW[j];
-                avgBias += model.FoldBiases[f];
-            }
-            for (int j = 0; j < nFeatures; j++)
-                avgWeights[j] /= nModels;
-            avgBias /= nModels;
-        }
 
         /// <summary>
         /// Build the score-&gt;q lookup table from parallel (score, q) lists (the raw

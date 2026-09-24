@@ -144,9 +144,11 @@ namespace pwiz.Osprey.FDR
         /// train-the-fold-models pass over the subsampled training set. Copies every
         /// knob that selects HOW a model is trained -- including the classifier choice
         /// and its hyper-parameters -- so the training pass cannot silently diverge from
-        /// the scoring pass that consumes its output. (Both streaming paths previously
-        /// hand-copied this field list, which meant a new training knob had to be added
-        /// in two places or one path would quietly train the wrong model.)
+        /// the scoring pass that consumes its output. (The streaming paths each hand-copied
+        /// this field list, which meant a new training knob had to be added in every copy or
+        /// one path would quietly train the wrong model - and the lean first pass did: its
+        /// copy lacked the classifier choice, so it trained the SVM under
+        /// <c>--fdr-method gbdt</c>.)
         ///
         /// <see cref="CollectFeatureHistograms"/> is deliberately NOT carried: the
         /// histograms are accumulated by the score pass over the full population, not

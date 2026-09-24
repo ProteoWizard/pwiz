@@ -3763,8 +3763,8 @@ namespace pwiz.Osprey.Tasks
         ///
         /// <para>Best-effort: a write failure must not fail the run, because nothing downstream
         /// requires the file to exist - SecondPassFDR keeps its pre-existing fail-fast and a
-        /// resume simply retrains. <see cref="FirstPassModelIO.Save"/> is a no-op for the GBDT
-        /// and degenerate models, which carry no linear weights to persist.</para>
+        /// resume simply retrains. <see cref="FirstPassModelIO.Save"/> persists either classifier
+        /// and is a no-op only for a degenerate model, which carries nothing to persist.</para>
         /// </summary>
         private void PersistFirstPassModel(
             PercolatorResults results, IReadOnlyDictionary<string, string> perFileParquetPaths,

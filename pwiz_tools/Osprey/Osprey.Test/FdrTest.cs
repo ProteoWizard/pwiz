@@ -566,7 +566,7 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// A trained ensemble must score a given vector identically no matter which
         /// thread asks: the parallel full-population score pass
-        /// (<c>ScoreProjectionRowsGbt</c>) relies on <c>ScoreSingle</c> being pure, and on
+        /// (<c>ScoreRowsGbt</c>) relies on <c>ScoreSingle</c> being pure, and on
         /// chunk boundaries not perturbing any value. Scoring the same rows chunked-and-
         /// concurrent vs straight-through must agree bit-for-bit.
         /// </summary>
@@ -1298,53 +1298,166 @@ namespace pwiz.Osprey.Test
             // Streaming-from-row-source path (the change under test): identity streamed straight
             // from the fixture (== parquet), features by fileName, no resident projection.
             var fileNames = fixtureStr.ConvertAll(kv => kv.Key);
-            // Supplies apex RT whatever the pass asks for. The scorer's Core/ApexRt choice is
-            // about what the PARQUET reader decodes, not about what a fixture can hand over, and
-            // this test's job is to prove the streamed path matches the resident one on every
-            // value - which it cannot do if the fixture withholds one of them.
-            Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> streamFileRows =
-                (name, columns, onRow) =>
-                {
-                    var list = fixtureStr.Find(kv => kv.Key == name).Value;
-                    foreach (var e in list)
-                        onRow(e.EntryId, e.Charge, e.IsDecoy, e.CoelutionSum, e.ModifiedSequence, e.ApexRt);
-                };
             var sinkStr = new CapturingSink();
             bool abortStr = PercolatorScorer.RunStreamingFirstPass(
-                fileNames, streamFileRows, f => featuresStr[f], percConfig, s => { }, "First-pass",
-                sinkStr);
+                fileNames, StreamRowsFrom(fixtureStr), f => featuresStr[f], percConfig, s => { },
+                "First-pass", sinkStr);
             Assert.IsFalse(abortStr);
 
-            Assert.AreEqual(sinkRes.Count, sinkStr.Count);
             Assert.AreEqual(projSet.PerFile.Count, fixtureStr.Count);
-            int compared = 0;
-            for (int f = 0; f < fixtureStr.Count; f++)
+            Assert.AreEqual(projSet.TotalRows, AssertSinksIdentical(fixtureStr, sinkRes, sinkStr));
+        }
+
+        /// <summary>
+        /// <c>--fdr-method gbdt</c> through the DEFAULT first pass. PerFileScoringTask takes the
+        /// lean counts-only path for gbdt exactly as it does for percolator - both are the
+        /// Percolator framework - so FirstPassFDR runs
+        /// <see cref="PercolatorScorer.RunStreamingFirstPass"/>. That path hand-copied its
+        /// training config without the classifier choice, so it trained the linear SVM under the
+        /// gbdt flag and then scored every row with the averaged SVM weights.
+        ///
+        /// <para>Four checks on one fixture: the model it trains and publishes is the tree
+        /// ensemble; every score, q-value and identity is byte-identical to the resident
+        /// projection path, which already trained and scored trees; a resume handed that tree
+        /// model reproduces the same output without retraining; and a persisted LINEAR model is
+        /// refused under the tree config rather than used to score the run.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestStreamingFirstPassTrainsGbdt()
+        {
+            const int nFeat = 3;
+            var featureInfos = new[]
             {
-                var list = fixtureStr[f].Value;
+                new OspreyFeatureInfo("feat_a", "Feature A", false),
+                new OspreyFeatureInfo("feat_b", "Feature B", false),
+                new OspreyFeatureInfo("feat_c", "Feature C", false)
+            };
+            var fixtureRes = BuildMultiObservationEquivFixture(nFeat, out var featuresRes);
+            var fixtureStr = BuildMultiObservationEquivFixture(nFeat, out var featuresStr);
+            var projSet = FdrProjectionSet.BuildFromEntries(fixtureRes);
+            var treeConfig = new PercolatorConfig
+            {
+                MaxIterations = 3,
+                FeatureInfos = featureInfos,
+                UseGradientBoostedTrees = true,
+                // Several chunks per file, so the parallel tree score pass is what runs.
+                NThreads = 4
+            };
+
+            // The resident projection path already trains and scores trees: the oracle.
+            PercolatorResults residentModel = null;
+            var sinkRes = new CapturingSink();
+            Assert.IsFalse(PercolatorEngine.RunStreamingIntoProjection(
+                projSet.PerFile, projSet.PeptideById, treeConfig, s => { }, "First-pass",
+                f => featuresRes[f], f => ApexRtsByParquetIndex(fixtureRes, f), sinkRes,
+                captureModel: m => residentModel = m));
+            AssertTreeModel(residentModel, treeConfig.NFolds);
+
+            // The default path: streamed from the row source, no resident projection.
+            var fileNames = fixtureStr.ConvertAll(kv => kv.Key);
+            var streamRows = StreamRowsFrom(fixtureStr);
+            PercolatorResults streamedModel = null;
+            var sinkStr = new CapturingSink();
+            Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
+                fileNames, streamRows, f => featuresStr[f], treeConfig, s => { }, "First-pass",
+                sinkStr, captureModel: m => streamedModel = m));
+            AssertTreeModel(streamedModel, treeConfig.NFolds);
+            Assert.AreEqual(projSet.TotalRows, AssertSinksIdentical(fixtureStr, sinkRes, sinkStr));
+
+            // A resume adopts the persisted model instead of training. Scoring with the adopted
+            // trees must reproduce the fresh run exactly, or resumed and re-scored files would
+            // disagree about the same discriminant.
+            var sinkResumed = new CapturingSink();
+            Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
+                fileNames, streamRows, f => featuresStr[f], treeConfig, s => { }, "First-pass",
+                sinkResumed, pretrainedModel: streamedModel));
+            Assert.AreEqual(projSet.TotalRows, AssertSinksIdentical(fixtureStr, sinkStr, sinkResumed));
+
+            // A linear model on disk under a tree config: the resumed files were scored by the
+            // SVM, so neither adopting it (the wrong method) nor training trees beside it (two
+            // discriminants in one run) is an answer.
+            PercolatorResults linearModel = null;
+            var linearConfig = new PercolatorConfig { MaxIterations = 3, FeatureInfos = featureInfos };
+            Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
+                fileNames, streamRows, f => featuresStr[f], linearConfig, s => { }, "First-pass",
+                new CapturingSink(), captureModel: m => linearModel = m));
+            Assert.IsNotNull(linearModel);
+            Assert.AreEqual(0, linearModel.FoldGbtModels?.Count ?? 0);
+            Assert.ThrowsException<InvalidOperationException>(() => PercolatorScorer.RunStreamingFirstPass(
+                fileNames, streamRows, f => featuresStr[f], treeConfig, s => { }, "First-pass",
+                new CapturingSink(), pretrainedModel: linearModel));
+        }
+
+        /// <summary>A first-pass model that is the tree ensemble: one per fold, and no linear
+        /// weights beside it for a scorer to pick instead.</summary>
+        private static void AssertTreeModel(PercolatorResults model, int nFolds)
+        {
+            Assert.IsNotNull(model, "the first pass must publish the model it trained");
+            Assert.IsNotNull(model.FoldGbtModels,
+                "a gbdt first pass must train gradient-boosted trees, not the linear SVM");
+            Assert.AreEqual(nFolds, model.FoldGbtModels.Count, "one tree ensemble per fold");
+            Assert.AreEqual(0, model.FoldWeights.Count, "a tree model carries no linear weights");
+        }
+
+        /// <summary>
+        /// A <see cref="PercolatorScorer.RunStreamingFirstPass"/> row source over a resident
+        /// fixture, in its (file, row) order - the stand-in for the per-file parquet scalar reader.
+        ///
+        /// <para>Supplies apex RT whatever the pass asks for. The scorer's Core/ApexRt choice is
+        /// about what the PARQUET reader decodes, not about what a fixture can hand over, and a
+        /// test proving the streamed path matches the resident one on every value cannot do that
+        /// if the fixture withholds one of them.</para>
+        /// </summary>
+        private static Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> StreamRowsFrom(
+            List<KeyValuePair<string, List<FdrEntry>>> fixture)
+        {
+            return (name, columns, onRow) =>
+            {
+                var list = fixture.Find(kv => kv.Key == name).Value;
+                foreach (var e in list)
+                    onRow(e.EntryId, e.Charge, e.IsDecoy, e.CoelutionSum, e.ModifiedSequence, e.ApexRt);
+            };
+        }
+
+        /// <summary>
+        /// Positional, bit-exact comparison of two sinks fed the same <paramref name="fixture"/>
+        /// rows in the same (file, row) order: score, the five q-values, the experiment aggregate,
+        /// identity and apex RT. Returns the number of rows compared.
+        /// </summary>
+        private static int AssertSinksIdentical(List<KeyValuePair<string, List<FdrEntry>>> fixture,
+            CapturingSink expected, CapturingSink actual)
+        {
+            Assert.AreEqual(expected.Count, actual.Count);
+            int compared = 0;
+            for (int f = 0; f < fixture.Count; f++)
+            {
+                var list = fixture[f].Value;
                 for (int r = 0; r < list.Count; r++)
                 {
-                    Assert.AreEqual(sinkRes.ScoreAt(f, r), sinkStr.ScoreAt(f, r), 0.0);
-                    var qRes = sinkRes.QAt(f, r);
-                    var qStr = sinkStr.QAt(f, r);
-                    Assert.AreEqual(qRes.RunPrecursorQvalue, qStr.RunPrecursorQvalue, 0.0);
-                    Assert.AreEqual(qRes.RunPeptideQvalue, qStr.RunPeptideQvalue, 0.0);
-                    Assert.AreEqual(qRes.ExperimentPrecursorQvalue, qStr.ExperimentPrecursorQvalue, 0.0);
-                    Assert.AreEqual(qRes.ExperimentPeptideQvalue, qStr.ExperimentPeptideQvalue, 0.0);
-                    Assert.AreEqual(qRes.Pep, qStr.Pep, 0.0);
-                    var idRes = sinkRes.IdentAt(f, r);
-                    var idStr = sinkStr.IdentAt(f, r);
-                    Assert.AreEqual(idRes.EntryId, idStr.EntryId);
-                    Assert.AreEqual(idRes.IsDecoy, idStr.IsDecoy);
-                    Assert.AreEqual(idRes.Charge, idStr.Charge);
-                    Assert.AreEqual(idRes.Peptide, idStr.Peptide);
-                    // Sourced differently by the two paths - the resident one by ParquetIndex
-                    // against a column, the streaming one off the row stream - so this is the
+                    Assert.AreEqual(expected.ScoreAt(f, r), actual.ScoreAt(f, r), 0.0);
+                    var qExp = expected.QAt(f, r);
+                    var qAct = actual.QAt(f, r);
+                    Assert.AreEqual(qExp.RunPrecursorQvalue, qAct.RunPrecursorQvalue, 0.0);
+                    Assert.AreEqual(qExp.RunPeptideQvalue, qAct.RunPeptideQvalue, 0.0);
+                    Assert.AreEqual(qExp.ExperimentPrecursorQvalue, qAct.ExperimentPrecursorQvalue, 0.0);
+                    Assert.AreEqual(qExp.ExperimentPeptideQvalue, qAct.ExperimentPeptideQvalue, 0.0);
+                    Assert.AreEqual(qExp.Pep, qAct.Pep, 0.0);
+                    Assert.AreEqual(expected.ExperimentAggregateScoreAt(f, r),
+                        actual.ExperimentAggregateScoreAt(f, r), 0.0);
+                    var idExp = expected.IdentAt(f, r);
+                    var idAct = actual.IdentAt(f, r);
+                    Assert.AreEqual(idExp.EntryId, idAct.EntryId);
+                    Assert.AreEqual(idExp.IsDecoy, idAct.IsDecoy);
+                    Assert.AreEqual(idExp.Charge, idAct.Charge);
+                    Assert.AreEqual(idExp.Peptide, idAct.Peptide);
+                    // Sourced differently by the resident and streaming paths - by ParquetIndex
+                    // against a column on one, off the row stream on the other - so this is the
                     // one output a shared bug could NOT produce identically by accident.
-                    Assert.AreEqual(sinkRes.ApexRtAt(f, r), sinkStr.ApexRtAt(f, r), 0.0);
+                    Assert.AreEqual(expected.ApexRtAt(f, r), actual.ApexRtAt(f, r), 0.0);
                     compared++;
                 }
             }
-            Assert.AreEqual(projSet.TotalRows, compared);
+            return compared;
         }
 
         /// <summary>
