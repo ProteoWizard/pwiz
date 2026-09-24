@@ -28,6 +28,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using pwiz.CarafeSharp.Core;
 
 namespace pwiz.CarafeSharp.Proteome
 {
@@ -45,10 +46,10 @@ namespace pwiz.CarafeSharp.Proteome
     /// </summary>
     public sealed class CarafeModelDirectory
     {
-        public const string MS2_MODEL_FILE = @"ms2_model.pt";
-        public const string RT_MODEL_FILE = @"rt_model.pt";
-        public const string METRICS_FILE = @"model_evaluation_metrics.json";
-        public const string META_FILE = @"meta.json";
+        public const string MS2_MODEL_FILE = ModelFiles.MS2_CHECKPOINT;
+        public const string RT_MODEL_FILE = ModelFiles.RT_CHECKPOINT;
+        public const string METRICS_FILE = ModelFiles.METRICS;
+        public const string META_FILE = ModelFiles.META;
 
         /// <summary>
         /// Opens a model folder. A missing or unreadable metrics file counts as no metrics, as
@@ -71,14 +72,29 @@ namespace pwiz.CarafeSharp.Proteome
 
         public string DirectoryPath { get; }
 
+        /// <summary>The fine-tuned MS2 model: Carafe's checkpoint, else CarafeSharp's safetensors.</summary>
         public string Ms2ModelPath
         {
-            get { return Path.Combine(DirectoryPath, MS2_MODEL_FILE); }
+            get { return ModelPath(MS2_MODEL_FILE, ModelFiles.MS2_SAFETENSORS); }
         }
 
+        /// <summary>The fine-tuned RT model: Carafe's checkpoint, else CarafeSharp's safetensors.</summary>
         public string RtModelPath
         {
-            get { return Path.Combine(DirectoryPath, RT_MODEL_FILE); }
+            get { return ModelPath(RT_MODEL_FILE, ModelFiles.RT_SAFETENSORS); }
+        }
+
+        /// <summary>True for a CarafeSharp safetensors model, false for a Carafe PyTorch checkpoint.</summary>
+        public static bool IsSafetensors(string modelPath)
+        {
+            return string.Equals(Path.GetExtension(modelPath), @".safetensors", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private string ModelPath(string checkpoint, string safetensors)
+        {
+            string path = Path.Combine(DirectoryPath, checkpoint);
+            string alternative = Path.Combine(DirectoryPath, safetensors);
+            return !File.Exists(path) && File.Exists(alternative) ? alternative : path;
         }
 
         /// <summary>The metrics say to predict with the fine-tuned MS2 model, and it exists.</summary>

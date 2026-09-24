@@ -124,6 +124,13 @@ namespace pwiz.CarafeSharp.Proteome
         /// </summary>
         public bool ApplyModelDirectoryMeta { get; set; }
 
+        /// <summary>
+        /// Apply the state a training run leaves for the library predicted right after it
+        /// (<see cref="CarafeModelDirectory.ApplyTrainingRunOverrides"/>); true when the library
+        /// follows training in the same run.
+        /// </summary>
+        public bool ApplyTrainingRunMeta { get; set; }
+
         /// <summary><c>-tf</c>, read only with <c>-model_dir</c>: which of its models to use.</summary>
         public string TrainingType { get; set; } = DEFAULT_TRAINING_TYPE;
 

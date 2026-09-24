@@ -27,6 +27,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.Models;
 using static TorchSharp.torch;
 
@@ -73,13 +74,14 @@ namespace pwiz.CarafeSharp.Training
     /// Carafe's <c>ai.py --tf_type all</c> does: one seed for the run, RT first, each model
     /// scored before and after training on the same held-out rows, and the fine-tuned MS2 model
     /// kept only when it beats the pretrained one on all four similarity medians. Writes
-    /// <c>rt.safetensors</c>, <c>ms2.safetensors</c> and <c>model.json</c>.
+    /// <c>rt.safetensors</c>, <c>ms2.safetensors</c>, Carafe's
+    /// <c>model_evaluation_metrics.json</c> and CarafeSharp's <c>model.json</c>.
     /// </summary>
     public static class FineTuneRun
     {
-        public const string RT_MODEL_FILE = @"rt.safetensors";
-        public const string MS2_MODEL_FILE = @"ms2.safetensors";
-        public const string MODEL_INFO_FILE = @"model.json";
+        public const string RT_MODEL_FILE = ModelFiles.RT_SAFETENSORS;
+        public const string MS2_MODEL_FILE = ModelFiles.MS2_SAFETENSORS;
+        public const string MODEL_INFO_FILE = ModelFiles.INFO;
 
         public static FineTuneResult Run(IReadOnlyList<RtTrainingExample> rtRows, IReadOnlyList<Ms2TrainingExample> ms2Rows,
             PretrainedModels pretrained, FineTuneOptions options, string outputDirectory, Action<string> log)
@@ -95,6 +97,7 @@ namespace pwiz.CarafeSharp.Training
             if (ms2Rows != null && ms2Rows.Count > 0)
                 TrainMs2(ms2Rows, pretrained, options, outputDirectory, shuffle, result, log);
 
+            WriteMetrics(Path.Combine(outputDirectory, ModelFiles.METRICS), result);
             WriteModelInfo(Path.Combine(outputDirectory, MODEL_INFO_FILE), pretrained, options, result);
             return result;
         }
@@ -163,6 +166,34 @@ namespace pwiz.CarafeSharp.Training
             result.Ms2Elapsed = stopwatch.Elapsed;
         }
 
+        /// <summary>
+        /// Carafe's <c>model_evaluation_metrics.json</c>: the held-out scores of each trained
+        /// model before and after, and <c>ms2.use_finetuned_for_prediction</c>, which library
+        /// prediction reads to choose the MS2 model.
+        /// </summary>
+        private static void WriteMetrics(string path, FineTuneResult result)
+        {
+            var metrics = new Dictionary<string, object>();
+            if (result.Ms2FineTuned != null)
+            {
+                metrics[@"ms2"] = new Dictionary<string, object>
+                {
+                    { @"finetuned", Metrics(result.Ms2FineTuned) },
+                    { @"pretrained", Metrics(result.Ms2Pretrained) },
+                    { @"use_finetuned_for_prediction", result.UseFineTunedMs2 },
+                };
+            }
+            if (result.RtFineTuned != null)
+            {
+                metrics[@"rt"] = new Dictionary<string, object>
+                {
+                    { @"finetuned", new { mae_normalized = result.RtFineTuned.MedianAbsoluteError, r2 = result.RtFineTuned.R2 } },
+                    { @"pretrained", new { mae_normalized = result.RtPretrained.MedianAbsoluteError, r2 = result.RtPretrained.R2 } },
+                };
+            }
+            File.WriteAllText(path, JsonSerializer.Serialize(metrics, new JsonSerializerOptions { WriteIndented = true }));
+        }
+
         private static void WriteModelInfo(string path, PretrainedModels pretrained, FineTuneOptions options, FineTuneResult result)
         {
             var info = new Dictionary<string, object>
@@ -202,7 +233,7 @@ namespace pwiz.CarafeSharp.Training
 
         private static object Metrics(Ms2MetricSummary summary)
         {
-            return new { pcc = summary.Pcc, cos = summary.Cos, sa = summary.Sa, spc = summary.Spc };
+            return new { cos = summary.Cos, pcc = summary.Pcc, sa = summary.Sa, spc = summary.Spc };
         }
     }
 }

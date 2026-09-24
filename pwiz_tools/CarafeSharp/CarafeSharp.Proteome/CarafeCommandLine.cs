@@ -36,6 +36,7 @@ namespace pwiz.CarafeSharp.Proteome
         build_entrapment_fasta,
         reconcile_manifest,
         predict_library,
+        train,
     }
 
     /// <summary>
@@ -125,6 +126,9 @@ namespace pwiz.CarafeSharp.Proteome
         /// <summary>The library to predict, in <see cref="CarafeCommandMode.predict_library"/> mode.</summary>
         public LibrarySettings LibrarySettings { get; private set; }
 
+        /// <summary>The fine-tuning run for <see cref="CarafeCommandMode.train"/>.</summary>
+        public TrainingSettings TrainingSettings { get; private set; }
+
         /// <summary>Warnings Carafe prints for audit switches.</summary>
         public IList<string> Warnings { get; } = new List<string>();
 
@@ -137,6 +141,8 @@ namespace pwiz.CarafeSharp.Proteome
                     @"Usage: CarafeSharp -build_entrapment_fasta <peptides.fasta> -db <proteins.fasta> [options]",
                     @"       CarafeSharp -reconcile_manifest <out.tsv> -manifest <in.tsv> -predicted_library <library.tsv|.blib>",
                     @"       CarafeSharp -db <peptides.fasta|proteins.fasta> -o <folder> [options]   (library prediction)",
+                    @"       CarafeSharp -i <osprey.blib|x.training.parquet|folder> [-ms <runs>] -o <folder> [-db <fasta>] [options]",
+                    @"                   (fine-tuning on Osprey's --training-export, then the library from -db)",
                     @"Build options (Carafe's): -manifest <tsv> -entrapment -no_decoys -decoy_prefix <p> -mz_filter",
                     @"  -min_pep_mz <mz> -max_pep_mz <mz> -min_pep_charge <z> -max_pep_charge <z> -entrapment_seed <n>",
                     @"  -entrapment_db <fasta> -entrapment_ratio <r> -no_similarity_gate -ignore_pairing_errors",
@@ -146,7 +152,9 @@ namespace pwiz.CarafeSharp.Proteome
                     @"  -min_pep_mz <mz> -max_pep_mz <mz> -min_pep_charge <z> -max_pep_charge <z> -I2L",
                     @"  -lf_frag_mz_min <mz> -lf_frag_mz_max <mz> -lf_top_n_frag <n> -lf_min_n_frag <n> -lf_frag_n_min <n>",
                     @"  -nce <nce> -ms_instrument <name> -rt_max <min> -model_dir <folder> -tf all|ms2|rt",
-                    @"  -device cpu|gpu -pairing_manifest <tsv>; CarafeSharp only: -pretrained <pretrained_models.zip>");
+                    @"  -device cpu|gpu -pairing_manifest <tsv>; CarafeSharp only: -pretrained <pretrained_models.zip>",
+                    @"Training options (Carafe's): -se Osprey -fdr <q> -cor <r> -n_ion_min <n> -c_ion_min <n> -lf_frag_n_min <n>",
+                    @"  -nf <n> -min_n <n> -valid -no_masking -tf all|ms2|rt -seed <n> -nce <nce> -ms_instrument <name>");
             }
         }
 
@@ -206,15 +214,101 @@ namespace pwiz.CarafeSharp.Proteome
             }
             if (Has(@"build_koina_library"))
                 throw new NotSupportedException(@"-build_koina_library is not supported by CarafeSharp");
-            if (Has(@"ms") && !Has(@"model_dir"))
-                throw new NotSupportedException(@"Model training (-ms) is not supported by CarafeSharp yet");
+            if ((Has(@"ms") || Has(@"i")) && !Has(@"model_dir"))
+            {
+                Mode = CarafeCommandMode.train;
+                TrainingSettings = InterpretTraining(digest, modifications, minMz, maxMz);
+                return;
+            }
             if (Has(@"db"))
             {
                 Mode = CarafeCommandMode.predict_library;
                 LibrarySettings = InterpretLibrary(digest, modifications, minMz, maxMz);
                 return;
             }
-            throw new ArgumentException(@"CarafeSharp supports -build_entrapment_fasta, -reconcile_manifest and library prediction from -db");
+            throw new ArgumentException(@"CarafeSharp supports -build_entrapment_fasta, -reconcile_manifest, library prediction from -db and training from -i");
+        }
+
+        /// <summary>
+        /// Carafe's training mode (<c>-ms</c>), reading Osprey's training exports: CarafeSharp
+        /// reads no spectra, so <c>-ms</c> only names the runs, and the options that shape
+        /// Carafe's own XIC extraction are Osprey's to decide.
+        /// </summary>
+        private TrainingSettings InterpretTraining(DigestSettings digest, ModificationSettings modifications, double minMz, double maxMz)
+        {
+            if (!TryGet(@"i", out string identifications) || identifications.Length == 0)
+                throw new ArgumentException(@"Training requires Osprey's results via -i (its blib, or its .training.parquet exports)");
+            if (TryGet(@"se", out string searchEngine) && !string.Equals(searchEngine, @"Osprey", StringComparison.OrdinalIgnoreCase))
+                throw new NotSupportedException(@"-se " + searchEngine + @" is not supported by CarafeSharp, which trains on Osprey's training export (-se Osprey)");
+            if (TryGet(@"mode", out string mode) && mode != @"-" && !string.Equals(mode, @"general", StringComparison.OrdinalIgnoreCase))
+                throw new NotSupportedException(@"-mode " + mode + @" is not supported by CarafeSharp; only general");
+            foreach (string option in new[] { @"cs", @"y1", @"use_all_peaks", @"ccs" })
+            {
+                if (Has(option))
+                    throw new NotSupportedException(@"-" + option + @" is not supported by CarafeSharp training");
+            }
+            if (TryGet(@"na", out string flanking) && ParseInt(@"na", flanking) != 0)
+                throw new NotSupportedException(@"-na (flanking spectra) is not supported by CarafeSharp training");
+            var fromOsprey = new[] { @"itol", @"itolu", @"rf", @"rf_rt_win", @"rt_win_offset", @"sg", @"min_mz" }.Where(Has).ToArray();
+            if (fromOsprey.Length > 0)
+            {
+                Warnings.Add(@"Ignored " + string.Join(@" ", fromOsprey.Select(o => @"-" + o)) +
+                             @": the fragment matches, XICs and peak boundaries come from Osprey's training export.");
+            }
+            var notWritten = new[] { @"ez", @"xic", @"export_mgf", @"skyline" }.Where(Has).ToArray();
+            if (notWritten.Length > 0)
+                Warnings.Add(@"Ignored " + string.Join(@" ", notWritten.Select(o => @"-" + o)) + @": CarafeSharp does not write those diagnostic files.");
+
+            var settings = new TrainingSettings
+            {
+                Identifications = identifications,
+                MsFiles = TryGet(@"ms", out string msFiles)
+                    ? msFiles.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                    : Array.Empty<string>(),
+                RequireTopIonValid = Has(@"valid"),
+                NoMasking = Has(@"no_masking"),
+            };
+            if (TryGet(@"o", out string output))
+                settings.OutputDirectory = output;
+            if (TryGet(@"fdr", out string fdr))
+                settings.Fdr = ParseDouble(@"fdr", fdr);
+            if (TryGet(@"cor", out string correlation))
+                settings.MinCorrelation = ParseDouble(@"cor", correlation);
+            if (TryGet(@"n_ion_min", out string nIonMin))
+                settings.LowOrdinalB = ParseInt(@"n_ion_min", nIonMin);
+            if (TryGet(@"c_ion_min", out string cIonMin))
+                settings.LowOrdinalY = ParseInt(@"c_ion_min", cIonMin);
+            if (TryGet(@"lf_frag_n_min", out string minOrdinal))
+                settings.MinFragmentOrdinal = ParseInt(@"lf_frag_n_min", minOrdinal);
+            if (TryGet(@"nf", out string minMatched))
+                settings.MinMatchedIons = ParseInt(@"nf", minMatched);
+            if (TryGet(@"min_n", out string minValid))
+                settings.MinValidIons = ParseInt(@"min_n", minValid);
+            if (TryGet(@"tf", out string trainingType))
+            {
+                if (!new[] { @"all", @"ms2", @"rt" }.Contains(trainingType, StringComparer.OrdinalIgnoreCase))
+                    throw new NotSupportedException(@"-tf " + trainingType + @" is not supported by CarafeSharp; all, ms2 or rt");
+                settings.TrainingType = trainingType.ToLowerInvariant();
+            }
+            if (TryGet(@"seed", out string seed))
+                settings.Seed = (uint)ParseLong(@"seed", seed);
+            if (TryGet(@"device", out string device))
+                settings.Device = device;
+            if (TryGet(@"nce", out string nce))
+                settings.Nce = ParseDouble(@"nce", nce);
+            if (TryGet(@"ms_instrument", out string instrument))
+                settings.Instrument = instrument;
+            if (TryGet(@"pretrained", out string pretrained))
+                settings.PretrainedModels = pretrained;
+            if (Has(@"db"))
+            {
+                // The library predicted right after training, with the fine-tuned models in -o.
+                var library = InterpretLibrary(digest, modifications, minMz, maxMz);
+                library.ApplyTrainingRunMeta = true;
+                library.TrainingType = settings.TrainingType;
+                settings.Library = library;
+            }
+            return settings;
         }
 
         private LibrarySettings InterpretLibrary(DigestSettings digest, ModificationSettings modifications, double minMz, double maxMz)

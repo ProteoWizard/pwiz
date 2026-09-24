@@ -29,7 +29,7 @@ namespace pwiz.CarafeSharp
     /// CarafeSharp command-line entry point. It takes Carafe's own command lines (see
     /// <see cref="CarafeCommandLine"/>): the stage-1 modes <c>-build_entrapment_fasta</c> and
     /// <c>-reconcile_manifest</c>, and library prediction from <c>-db</c>
-    /// (<see cref="LibraryGenerator"/>). Training (<c>-ms</c>) arrives with milestone M5.
+    /// (<see cref="LibraryGenerator"/>), and training on Osprey's training exports (<see cref="ModelTrainer"/>).
     /// </summary>
     internal static class Program
     {
@@ -62,6 +62,10 @@ namespace pwiz.CarafeSharp
                         PairingManifestReconciler.Run(commandLine.ReconcileManifestIn, commandLine.ReconcileLibrary,
                             commandLine.ReconcileManifestOut, Console.Out);
                         Console.Out.WriteLine(@"Manifest reconciliation finished in " + Seconds(stopwatch) + @" s.");
+                        return 0;
+                    case CarafeCommandMode.train:
+                        new ModelTrainer(commandLine.TrainingSettings, Console.Out).Run();
+                        Console.Out.WriteLine(@"Time used for training and spectral library generation: " + Seconds(stopwatch) + @" s.");
                         return 0;
                     case CarafeCommandMode.predict_library:
                         new LibraryGenerator(commandLine.LibrarySettings, Console.Out).Run();

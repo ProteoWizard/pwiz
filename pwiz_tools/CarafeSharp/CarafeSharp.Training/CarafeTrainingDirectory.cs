@@ -46,6 +46,8 @@ namespace pwiz.CarafeSharp.Training
         public const string VALID_FILE = @"fragment_intensity_valid.tsv";
         public const string RT_FILE = @"rt_train_data.tsv";
 
+        private const char TAB = '\t';
+
         private static readonly string[] FRAGMENT_COLUMNS = { @"b_z1", @"b_z2", @"y_z1", @"y_z2" };
 
         /// <summary>
@@ -82,6 +84,56 @@ namespace pwiz.CarafeSharp.Training
             return table.Rows.Select(row => new RtTrainingExample(
                 PeptideForm.FromAlphabase(table.Get(row, @"sequence"), table.Get(row, @"mods"), table.Get(row, @"mod_sites")),
                 double.Parse(table.Get(row, @"rt_norm"), NumberStyles.Float, CultureInfo.InvariantCulture))).ToArray();
+        }
+
+        /// <summary>
+        /// Writes training rows as Carafe's training tables, the columns <see cref="ReadMs2"/> and
+        /// <see cref="ReadRt"/> read (plus the ion counts), so CarafeSharp's training data can be
+        /// inspected and compared with Carafe's by the same tools, and re-trained on.
+        /// </summary>
+        public static void Write(string directory, IReadOnlyList<RtTrainingExample> rt, IReadOnlyList<Ms2TrainingExample> ms2)
+        {
+            Directory.CreateDirectory(directory);
+            using (var psms = new StreamWriter(Path.Combine(directory, PSM_FILE)))
+            using (var intensities = new StreamWriter(Path.Combine(directory, INTENSITY_FILE)))
+            using (var valid = new StreamWriter(Path.Combine(directory, VALID_FILE)))
+            {
+                psms.WriteLine(string.Join(TAB, @"psm_id", @"peptide", @"charge", @"mods", @"mod_sites", @"frag_start_idx",
+                    @"frag_stop_idx", @"n_valid_fragment_ions", @"n_total_matched_ions"));
+                string header = string.Join(TAB, FRAGMENT_COLUMNS);
+                intensities.WriteLine(header);
+                valid.WriteLine(header);
+                int row = 0;
+                for (int i = 0; i < ms2.Count; i++)
+                {
+                    var example = ms2[i];
+                    int rows = example.Precursor.Peptide.Length - 1;
+                    int matched = example.Intensities.Count(v => v > 0);
+                    int validMatched = Enumerable.Range(0, example.Intensities.Length)
+                        .Count(s => example.Intensities[s] > 0 && example.Invalid[s] <= 0);
+                    psms.WriteLine(string.Join(TAB, (i + 1).ToString(CultureInfo.InvariantCulture), example.Sequence,
+                        example.Precursor.Charge.ToString(CultureInfo.InvariantCulture), example.Precursor.Peptide.ModsText,
+                        example.Precursor.Peptide.ModSitesText, row.ToString(CultureInfo.InvariantCulture),
+                        (row + rows).ToString(CultureInfo.InvariantCulture), validMatched.ToString(CultureInfo.InvariantCulture),
+                        matched.ToString(CultureInfo.InvariantCulture)));
+                    for (int r = 0; r < rows; r++)
+                    {
+                        var cells = Enumerable.Range(r * FRAGMENT_COLUMNS.Length, FRAGMENT_COLUMNS.Length).ToArray();
+                        intensities.WriteLine(string.Join(TAB, cells.Select(c => example.Intensities[c].ToString(@"R", CultureInfo.InvariantCulture))));
+                        valid.WriteLine(string.Join(TAB, cells.Select(c => example.Invalid[c].ToString(CultureInfo.InvariantCulture))));
+                    }
+                    row += rows;
+                }
+            }
+            using (var rtFile = new StreamWriter(Path.Combine(directory, RT_FILE)))
+            {
+                rtFile.WriteLine(string.Join(TAB, @"peptide", @"sequence", @"mods", @"mod_sites", @"rt_norm"));
+                foreach (var example in rt)
+                {
+                    rtFile.WriteLine(string.Join(TAB, example.Peptide.Sequence, example.Peptide.Sequence, example.Peptide.ModsText,
+                        example.Peptide.ModSitesText, example.RtNorm.ToString(@"R", CultureInfo.InvariantCulture)));
+                }
+            }
         }
 
         private static double[] Flatten(double[][] table, int start, int stop)

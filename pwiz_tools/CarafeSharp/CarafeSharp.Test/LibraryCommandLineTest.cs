@@ -91,7 +91,8 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(@"p.zip", settings.PretrainedModels);
             Assert.AreEqual(@"all", CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-tf", @"rt" }).LibrarySettings.TrainingType);
 
-            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-ms", @"a.mzML" }));
+            // -ms is training, which reads Osprey's results (-i) rather than the raw data.
+            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-ms", @"a.mzML" }));
             Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-lf_type", @"mzSpecLib", @"-fast" }));
             Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.tsv" }));
             Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-mode", @"phosphorylation" }));

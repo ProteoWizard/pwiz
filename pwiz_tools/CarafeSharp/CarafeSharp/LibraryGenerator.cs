@@ -262,6 +262,13 @@ namespace pwiz.CarafeSharp
                     CarafeModelDirectory.META_FILE, _settings.MinPrecursorMz, _settings.MaxPrecursorMz, _settings.MinFragmentMz,
                     _settings.MaxFragmentMz, _settings.Nce, _settings.RtMax));
             }
+            else if (_settings.ApplyTrainingRunMeta)
+            {
+                modelDirectory.ApplyTrainingRunOverrides(_settings);
+                Log(string.Format(CultureInfo.InvariantCulture,
+                    @"From the training run: precursor m/z {0}-{1}, NCE {2}, instrument {3}, rt_max {4}",
+                    _settings.MinPrecursorMz, _settings.MaxPrecursorMz, _settings.Nce, _settings.Instrument, _settings.RtMax));
+            }
             return modelDirectory;
         }
 
@@ -271,7 +278,7 @@ namespace pwiz.CarafeSharp
             if (path != null)
             {
                 Log(@"Using fine-tuned MS2 model " + path);
-                return Ms2Model.FromPthFile(path, device);
+                return CarafeModelDirectory.IsSafetensors(path) ? Ms2Model.FromSafetensors(path, device) : Ms2Model.FromPthFile(path, device);
             }
             Log(@"Using the pretrained MS2 model");
             return Ms2Model.FromPretrained(OpenPretrained(), device);
@@ -283,7 +290,7 @@ namespace pwiz.CarafeSharp
             if (path != null)
             {
                 Log(@"Using fine-tuned RT model " + path);
-                return RtModel.FromPthFile(path, device);
+                return CarafeModelDirectory.IsSafetensors(path) ? RtModel.FromSafetensors(path, device) : RtModel.FromPthFile(path, device);
             }
             Log(@"Using the pretrained RT model");
             return RtModel.FromPretrained(OpenPretrained(), device);
