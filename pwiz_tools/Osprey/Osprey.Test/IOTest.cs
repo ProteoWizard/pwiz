@@ -3872,16 +3872,11 @@ namespace pwiz.Osprey.Test
                 { 3, (0.010, 0.001) },
                 { 4, (double.NaN, double.NaN) },
             };
-            var peptideRaisedIds = new List<uint>();
-            var raised = accumulator.ApplyRunQFloors(id => floors[id], peptideRaisedIds.Add);
+            int raised = accumulator.ApplyRunQFloors(id => floors[id]);
 
-            // 1 raises both, 3 raises one. Nothing else moves. Records and values are counted
-            // separately: a record carries two q-values, so "3 raised" alone has no denominator.
-            Assert.AreEqual(2, raised.Precursors);
-            Assert.AreEqual(2, raised.PrecursorQvalues);
-            Assert.AreEqual(1, raised.PeptideQvalues);
-            CollectionAssert.AreEqual(new uint[] { 1 }, peptideRaisedIds,
-                "only entry 1 had its peptide q-value raised");
+            // 1 raises both, 3 raises one. Nothing else moves. The count is of RECORDS, so entry
+            // 1 counts once although both of its q-values moved.
+            Assert.AreEqual(2, raised);
             AssertBitEqual(0.010, accumulator.Records[1].ExperimentPrecursorQvalue);
             AssertBitEqual(0.020, accumulator.Records[1].ExperimentPeptideQvalue);
             // A floor EQUAL to the value is not a raise, and one below it is not a ceiling.

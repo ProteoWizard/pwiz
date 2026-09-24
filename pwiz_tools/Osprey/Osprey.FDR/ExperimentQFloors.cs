@@ -69,15 +69,6 @@ namespace pwiz.Osprey.FDR
             get { return _minRunQByPeptide.Count; }
         }
 
-        /// <summary>
-        /// The peptide identity an entry_id was observed under, for counting distinct peptides
-        /// rather than the per-precursor records that carry them.
-        /// </summary>
-        public bool TryGetPeptide(uint entryId, out (string ModifiedSequence, bool IsDecoy) peptide)
-        {
-            return _peptideByEntryId.TryGetValue(entryId, out peptide);
-        }
-
         /// <summary>Fold ONE run's entries into the floors, identities included.</summary>
         public void Accumulate(IReadOnlyList<FdrEntry> entries)
         {

@@ -138,10 +138,8 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Raise every record's two experiment q-values to this entry's best-of-runs floors -
         /// the min-over-runs combined run q for the entry_id, and for its peptide identity -
-        /// returning how many records had either value raised, and how many of each value.
-        /// <paramref name="peptideRaised"/>, when given, receives each entry_id whose peptide
-        /// q-value was raised, so a caller can count distinct peptides: the peptide value is
-        /// carried on every precursor record of that peptide, so the record count overstates it.
+        /// returning how many records had either value raised. Records, not values: a record
+        /// carries two q-values, so a count of values has no denominator to state it against.
         ///
         /// <para>Applied HERE, before the records are written, because this is the last moment
         /// the analysis holds both the value and its floor. Experiment-scope FDR competes each
@@ -163,8 +161,7 @@ namespace pwiz.Osprey.IO
         /// every comparison against NaN is false, so an entry the fold never saw keeps its
         /// value rather than being moved by a default that looks like an answer.</para>
         /// </summary>
-        public (int Precursors, int PrecursorQvalues, int PeptideQvalues) ApplyRunQFloors(
-            Func<uint, (double Entry, double Peptide)> floorsFor, Action<uint> peptideRaised = null)
+        public int ApplyRunQFloors(Func<uint, (double Entry, double Peptide)> floorsFor)
         {
             if (floorsFor == null)
                 throw new ArgumentNullException(nameof(floorsFor));
@@ -174,7 +171,7 @@ namespace pwiz.Osprey.IO
             // throw InvalidOperationException on net472.
             var entryIds = new uint[_byEntryId.Count];
             _byEntryId.Keys.CopyTo(entryIds, 0);
-            int precursorsRaised = 0, precursorQvaluesRaised = 0, peptideQvaluesRaised = 0;
+            int precursorsRaised = 0;
             foreach (uint entryId in entryIds)
             {
                 var r = _byEntryId[entryId];
@@ -182,16 +179,9 @@ namespace pwiz.Osprey.IO
                 double precursorQ = r.ExperimentPrecursorQvalue;
                 double peptideQ = r.ExperimentPeptideQvalue;
                 if (floors.Entry > precursorQ)
-                {
                     precursorQ = floors.Entry;
-                    precursorQvaluesRaised++;
-                }
                 if (floors.Peptide > peptideQ)
-                {
                     peptideQ = floors.Peptide;
-                    peptideQvaluesRaised++;
-                    peptideRaised?.Invoke(entryId);
-                }
                 if (precursorQ.Equals(r.ExperimentPrecursorQvalue) &&
                     peptideQ.Equals(r.ExperimentPeptideQvalue))
                 {
@@ -202,7 +192,7 @@ namespace pwiz.Osprey.IO
                     precursorQ, peptideQ,
                     r.ExperimentProteinQvalue, r.ExperimentAggregateScore, r.Pep);
             }
-            return (precursorsRaised, precursorQvaluesRaised, peptideQvaluesRaised);
+            return precursorsRaised;
         }
     }
 }

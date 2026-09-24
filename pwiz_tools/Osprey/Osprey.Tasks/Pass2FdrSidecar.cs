@@ -2321,21 +2321,11 @@ namespace pwiz.Osprey.Tasks
             // takes 1.0). Two different ways to end up below your own best run, both closed here
             // by one rule applied to every record regardless of which branch produced it.
             floors.DerivePeptideFloors();
-            var raisedPeptides = new HashSet<(string ModifiedSequence, bool IsDecoy)>();
-            var raised = experiment.ApplyRunQFloors(entryId => floors.FloorsFor(entryId),
-                entryId =>
-                {
-                    if (floors.TryGetPeptide(entryId, out var peptide))
-                        raisedPeptides.Add(peptide);
-                });
+            int raised = experiment.ApplyRunQFloors(entryId => floors.FloorsFor(entryId));
             ctx.LogInfo(string.Format(
-                @"Raised experiment-level q-values to their best run-level value for {0:N0} of " +
-                @"{1:N0} precursor candidates.",
-                raised.Precursors, experiment.Count));
-            ctx.LogVerbose(string.Format(
-                @"  Raised experiment-level q-values to their best run-level value for {0:N0} of " +
-                @"{1:N0} precursors and {2:N0} of {3:N0} peptides",
-                raised.PrecursorQvalues, experiment.Count, raisedPeptides.Count, floors.PeptideCount));
+                @"Raised {0:N0} of {1:N0} precursor candidates' experiment-level q-values to their " +
+                @"best run-level value.",
+                raised, experiment.Count));
 
             // Handed to the protein-FDR step, which fills the one column it owns and writes the
             // 2nd-pass experiment sidecar. Published rather than returned because the protein
