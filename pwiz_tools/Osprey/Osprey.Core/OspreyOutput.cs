@@ -44,6 +44,12 @@ namespace pwiz.Osprey.Core
     {
         private static TextWriter _out = Console.Error;
 
+        // Leading tags of the machine channel that --perf-stats gates (see IsStatLine).
+        private static readonly string[] STAT_TAGS =
+        {
+            @"[COUNT]", @"[TIMING]", @"[BENCH]", @"[STAGE-WALL]", @"[PATH]", @"[TRAIN]"
+        };
+
         /// <summary>
         /// The process-wide output writer, with one twist for <c>--parallel-files</c>:
         /// while a file runs inside a <see cref="MultiProgressReporter"/> per-file
@@ -112,8 +118,8 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
-        /// When false (default), the machine-parseable [COUNT]/[TIMING]/[BENCH]/[STAGE-WALL]
-        /// lines are suppressed so the human log stays clean (each has a human-readable plain
+        /// When false (default), the machine-parseable [COUNT]/[TIMING]/[BENCH]/[STAGE-WALL]/
+        /// [PATH]/[TRAIN] lines are suppressed so the human log stays clean (each has a human-readable plain
         /// twin that remains). The --perf-stats flag sets this true so the perf tools
         /// (Test-PerfGate.ps1, Measure-Pipeline.ps1, Osprey-workflow.html) get the tagged lines.
         /// </summary>
@@ -139,8 +145,10 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// True if a line is a machine-parseable stat line (leading
-        /// [COUNT]/[TIMING]/[BENCH]/[STAGE-WALL], ignoring leading spaces) gated by
-        /// <see cref="PerfStats"/>.
+        /// [COUNT]/[TIMING]/[BENCH]/[STAGE-WALL]/[PATH]/[TRAIN], ignoring leading spaces)
+        /// gated by <see cref="PerfStats"/>. [PATH] records which code route a run took and
+        /// [TRAIN] which training population a model saw; both are for scripts and tests,
+        /// not the person watching the run.
         /// </summary>
         public static bool IsStatLine(string line)
         {
@@ -149,10 +157,12 @@ namespace pwiz.Osprey.Core
             int i = 0;
             while (i < line.Length && line[i] == ' ')
                 i++;
-            return string.CompareOrdinal(line, i, "[COUNT]", 0, 7) == 0
-                || string.CompareOrdinal(line, i, "[TIMING]", 0, 8) == 0
-                || string.CompareOrdinal(line, i, "[BENCH]", 0, 7) == 0
-                || string.CompareOrdinal(line, i, "[STAGE-WALL]", 0, 12) == 0;
+            foreach (var tag in STAT_TAGS)
+            {
+                if (string.CompareOrdinal(line, i, tag, 0, tag.Length) == 0)
+                    return true;
+            }
+            return false;
         }
     }
 

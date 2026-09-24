@@ -881,7 +881,7 @@ namespace pwiz.Osprey.FDR
                     pretrainedModel.Standardizer.NumFeatures != nFeatures)
                 {
                     logInfo(string.Format(
-                        @"[TRAIN] Ignoring the persisted 1st-pass model: it carries {0} features " +
+                        @"Ignoring the persisted 1st-pass model: it carries {0} features " +
                         @"and this run scores {1}. Training a fresh model.", modelFeatures, nFeatures));
                     pretrainedModel = null;
                 }

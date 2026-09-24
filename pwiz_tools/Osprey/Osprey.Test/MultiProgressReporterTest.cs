@@ -102,6 +102,8 @@ namespace pwiz.Osprey.Test
                 OspreyOutput.Out.WriteLine(@"[COUNT] suppressed count line");
                 OspreyOutput.Out.WriteLine(@"[BENCH] suppressed bench line");
                 OspreyOutput.Out.WriteLine(@"[TIMING] suppressed timing line");
+                OspreyOutput.Out.WriteLine(@"[PATH] suppressed route line");
+                OspreyOutput.Out.WriteLine(@"  [TRAIN] suppressed indented training line");
                 OspreyOutput.Out.WriteLine(@"plain narrative survives");
 
                 // Read the file's OWN buffer (not the full capture, which also holds
@@ -120,12 +122,11 @@ namespace pwiz.Osprey.Test
                 @"inside a scope the reporter must route its percent, not print a '%' line into the block");
             StringAssert.Contains(fileBlock, @"plain narrative survives",
                 @"a non-stat narrative line must remain in the buffered block");
-            Assert.IsFalse(fileBlock.Contains(@"[COUNT]"),
-                @"[COUNT] stat lines must be filtered out of the buffered block (default PerfStats)");
-            Assert.IsFalse(fileBlock.Contains(@"[BENCH]"),
-                @"[BENCH] stat lines must be filtered out of the buffered block (default PerfStats)");
-            Assert.IsFalse(fileBlock.Contains(@"[TIMING]"),
-                @"[TIMING] stat lines must be filtered out of the buffered block (default PerfStats)");
+            foreach (var tag in new[] { @"[COUNT]", @"[BENCH]", @"[TIMING]", @"[PATH]", @"[TRAIN]" })
+            {
+                Assert.IsFalse(fileBlock.Contains(tag),
+                    tag + @" stat lines must be filtered out of the buffered block (default PerfStats)");
+            }
         }
 
         // Two concurrent files: the aggregate line shows both active slots, each
