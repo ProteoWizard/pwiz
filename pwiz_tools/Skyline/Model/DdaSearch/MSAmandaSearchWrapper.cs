@@ -498,6 +498,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             string tempPath = mzmlPath + @".scannum.tmp";
             int scanNumber = 0;
             using (var reader = new StreamReader(mzmlPath))
+            // ReSharper disable once LocalizableElement
             using (var writer = new StreamWriter(tempPath, false, new UTF8Encoding(false)) { NewLine = "\n" })
             {
                 writer.WriteLine(@"<?xml version=""1.0"" encoding=""utf-8""?>");
@@ -674,6 +675,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             if (string.IsNullOrEmpty(s))
                 return s ?? string.Empty;
             return s.Replace(@"&", @"&amp;").Replace(@"<", @"&lt;").Replace(@">", @"&gt;")
+                    // ReSharper disable once LocalizableElement
                     .Replace("\"", @"&quot;").Replace(@"'", @"&apos;");
         }
 

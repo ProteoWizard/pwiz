@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Model.Koina.Config
         // custom PEM is ever needed, wire it via GrpcChannelOptions.HttpHandler.
         public ChannelBase CreateChannel()
         {
-            var scheme = RequireSsl ? "https" : "http";
+            var scheme = RequireSsl ? @"https" : @"http";
             var address = Server.Contains(@"://") ? Server : scheme + @"://" + Server;
             return GrpcChannel.ForAddress(address);
         }

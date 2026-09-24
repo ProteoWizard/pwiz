@@ -178,6 +178,7 @@ namespace AssortResources
 
                 if (moves.Count > 0 && inspectionResults == null)
                 {
+                    // ReSharper disable once LocalizableElement
                     Console.WriteLine($"\nThis can be done with command:\n\"{Process.GetCurrentProcess().MainModule!.FileName}\" --resourcefile \"{ResourceFile.FilePath}\" --projectfile \"{CsProjFile.ProjFilePath}\" ");
                     Environment.ExitCode = moves.Count;
                 }

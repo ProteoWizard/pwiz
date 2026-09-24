@@ -32,9 +32,9 @@ namespace pwiz.BiblioSpec
         private static string ResolveBlibFilterPath()
         {
             string baseDir = System.AppContext.BaseDirectory;
-            string exeName = System.OperatingSystem.IsWindows() ? "BlibFilter.exe" : "BlibFilter";
+            string exeName = System.OperatingSystem.IsWindows() ? @"BlibFilter.exe" : @"BlibFilter";
             string candidate = Path.Combine(baseDir, exeName);
-            return File.Exists(candidate) ? candidate : "BlibFilter";
+            return File.Exists(candidate) ? candidate : @"BlibFilter";
         }
         public bool Filter(string sourceFile, string destinationFile, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {

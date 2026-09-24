@@ -368,9 +368,9 @@ namespace pwiz.BiblioSpec
         private static string ResolveBlibBuildPath()
         {
             string baseDir = AppContext.BaseDirectory;
-            string exeName = OperatingSystem.IsWindows() ? "BlibBuild.exe" : "BlibBuild";
+            string exeName = OperatingSystem.IsWindows() ? @"BlibBuild.exe" : @"BlibBuild";
             string candidate = Path.Combine(baseDir, exeName);
-            return File.Exists(candidate) ? candidate : "BlibBuild";
+            return File.Exists(candidate) ? candidate : @"BlibBuild";
         }
 
         public const string EXT_SQLITE_JOURNAL = "-journal";
