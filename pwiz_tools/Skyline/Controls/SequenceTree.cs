@@ -1145,6 +1145,35 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+        private static readonly Keys[] ARROW_KEYS = { Keys.Up, Keys.Down, Keys.Left, Keys.Right };
+
+        /// <summary>
+        /// Presses a key, with its modifiers, whether or not the tree has the focus, for the AI connector, which
+        /// does not move the focus. The key goes where a user's would: to the label's edit box while a label is
+        /// being edited (Down and Up move through the completion pop-up, Enter accepts, Esc cancels), otherwise to
+        /// the tree. An arrow moves the selection, or collapses and expands, in the tree's own window procedure
+        /// rather than in a KeyDown handler, so it arrives as the key message a press sends and WinForms raises
+        /// KeyDown from it before handing it on. Any other key raises KeyDown with the modifiers given, which a
+        /// key message could not carry.
+        /// </summary>
+        public void PressKey(Keys keyData)
+        {
+            if (_editTextBox != null)
+                ((LabelTextBox) _editTextBox.TextBox).PressKey(keyData);
+            else if (ARROW_KEYS.Contains(keyData))
+                User32.SendMessage(Handle, User32.WinMessageType.WM_KEYDOWN, (IntPtr) keyData, (IntPtr) 1);
+            else
+                OnKeyDown(new KeyEventArgs(keyData));
+        }
+
+        private class LabelTextBox : TextBox
+        {
+            public void PressKey(Keys keyData)
+            {
+                OnKeyDown(new KeyEventArgs(keyData));
+            }
+        }
+
         protected override void OnBeforeLabelEdit(NodeLabelEditEventArgs e)
         {
             // Statement completion UI now handles editing, so cancel the default
@@ -1235,7 +1264,7 @@ namespace pwiz.Skyline.Controls
 
         private void BeginEditNode(TreeNode node, bool commitOnLoseFocus)
         {
-            var textBox = new TextBox
+            var textBox = new LabelTextBox
             {
                 Text = node.Text,
                 Bounds = node is TreeNodeMS ? (node as TreeNodeMS).BoundsMS : node.Bounds,

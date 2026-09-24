@@ -83,6 +83,16 @@ namespace SkylineTool
         public double Bottom { get; set; }
     }
 
+    /// <summary>
+    /// The outer size of a window in screen pixels, including its border and title bar -- the size a user
+    /// sets by dragging the window's edge.
+    /// </summary>
+    public class WindowSize
+    {
+        public int Width { get; set; }
+        public int Height { get; set; }
+    }
+
     // --- Report models ---
 
     /// <summary>

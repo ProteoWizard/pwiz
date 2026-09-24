@@ -345,7 +345,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public static readonly UiAction SendKeyStroke = SimpleAction<IKeyboardElement, string>(
                 @"SendKeyStroke", (e, keyStroke) => { e.SendKeyStrokeNow(keyStroke); return null; })
-            .Describe(new LlmInstruction(@"Press one key on this control, whether or not it has the focus - e.g. to accept a choice in a popup, or to paste with 'Ctrl+V' where the form's own handler does the pasting. Raises the control's KeyDown, so a key handled by the control's DEFAULT behavior rather than by a handler (Backspace editing text, an arrow moving a plain list's selection) will not take effect."),
+            .Describe(new LlmInstruction(@"Press one key on this control, whether or not it has the focus - e.g. to accept a choice in a popup, or to paste with 'Ctrl+V' where the form's own handler does the pasting. Raises the control's KeyDown, so a key handled by the control's DEFAULT behavior rather than by a handler (Backspace editing text, an arrow moving a plain list's selection) will not take effect. The Targets tree is the exception for the arrow keys, which move its selection and collapse and expand as they do for a user."),
                 new LlmInstruction(@"the key with any modifiers, '+'-separated, e.g. ""Down"", ""Enter"" or ""Ctrl+V"""));
 
         public static readonly UiAction CheckItem = SimpleAction<ICheckItemsElement, string>(

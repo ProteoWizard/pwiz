@@ -493,6 +493,19 @@ namespace SkylineTool
         ActionResult DismissWithCancelButton(string formId);
 
         /// <summary>
+        /// Resizes a window, as a user does by dragging its edge: the main Skyline window or a dialog whose
+        /// border can be dragged. The window keeps its position; a maximized or minimized window is first
+        /// restored, as dragging it does. A docked or floating pane is sized by the window layout instead, so
+        /// arrange those with "File > Import > Window Layout".
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="width">The outer width in screen pixels, border included.</param>
+        /// <param name="height">The outer height in screen pixels, border and title bar included.</param>
+        /// <returns>The size the window ended up at, which is smaller or larger than asked when the window
+        /// has a minimum or maximum size.</returns>
+        WindowSize ResizeWindow(string formId, int width, int height);
+
+        /// <summary>
         /// Exports graph data to a TSV file. Returns the file path.
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/> (e.g. "GraphSummary:Title").</param>
@@ -584,7 +597,8 @@ namespace SkylineTool
         /// <para>This raises the control's KeyDown with the named key and modifiers, which is where a WinForms
         /// handler reads a keystroke from. A key handled by the control's DEFAULT behavior rather than by a
         /// handler - Backspace editing a text box, an arrow moving a plain list's selection - will NOT take
-        /// effect through this.</para>
+        /// effect through this. The Targets tree is the exception for the arrow keys: Up and Down move its
+        /// selection and Left and Right collapse and expand, as they do for a user.</para>
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="controlId">The control to press the key on, matched as <see cref="GetControls"/>

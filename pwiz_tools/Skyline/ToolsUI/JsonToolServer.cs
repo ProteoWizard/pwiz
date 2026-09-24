@@ -1080,6 +1080,11 @@ namespace pwiz.Skyline.ToolsUI
             return ResolveForm(formId).DismissWithCancelButton();
         }
 
+        public WindowSize ResizeWindow(string formId, int width, int height)
+        {
+            return ResolveForm(formId).ResizeWindow(width, height);
+        }
+
         // The graph verbs all resolve the formId to its form and act on that form's single graph (its
         // GraphElement), on the form's UI thread. There is no separate graph id - a graph form is assumed to
         // have exactly one graph - so the parameter is the same formId GetOpenForms reports.

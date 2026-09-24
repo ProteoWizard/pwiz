@@ -1292,6 +1292,32 @@ namespace pwiz.Skyline.ToolsUI
             });
         }
 
+        // A user resizes a form by dragging its border, which a docked or floating pane does not have as its
+        // own (its size belongs to the dock layout) and a fixed-border dialog does not have at all. Dragging a
+        // maximized or minimized window restores it first, so this does too.
+        public override WindowSize ResizeWindow(int width, int height)
+        {
+            PerformAction(() =>
+            {
+                VerifyEnabled();
+                if (Form is DockableFormEx)
+                {
+                    throw new InvalidOperationException(LlmInstruction.Format(
+                        @"The window '{0}' is a pane whose size belongs to the window layout. Arrange panes with 'File > Import > Window Layout'.",
+                        FormId));
+                }
+                if (Form.FormBorderStyle != FormBorderStyle.Sizable && Form.FormBorderStyle != FormBorderStyle.SizableToolWindow)
+                {
+                    throw new InvalidOperationException(LlmInstruction.Format(
+                        @"The window '{0}' has a fixed size.", FormId));
+                }
+                if (Form.WindowState != FormWindowState.Normal)
+                    Form.WindowState = FormWindowState.Normal;
+                Form.Size = new System.Drawing.Size(width, height);
+            });
+            return CallFunction(() => new WindowSize { Width = Form.Width, Height = Form.Height });
+        }
+
         // How long to wait (ms), and how often to re-check, for the form to reach the foreground before
         // grabbing the screen. The wait stops as soon as the form is in front; the cap just bounds a refused
         // activation.
@@ -1713,16 +1739,7 @@ namespace pwiz.Skyline.ToolsUI
         public override ContextMenuStrip BuildContextMenu() =>
             OpenContextMenu(Program.MainWindow.ContextMenuTreeNode);
 
-        // While a node label is being edited the keyboard belongs to the edit box, which is where a user's
-        // key would go: Down and Up move through the completion pop-up, Enter accepts and Esc cancels.
-        public override void SendKeyStrokeNow(string keyStroke)
-        {
-            var editTextBox = SequenceTree.StatementCompletionEditBox?.TextBox;
-            if (editTextBox == null)
-                base.SendKeyStrokeNow(keyStroke);
-            else
-                RaiseProtectedHandler(editTextBox, @"OnKeyDown", new KeyEventArgs(ParseKeyStroke(keyStroke)));
-        }
+        public override void SendKeyStrokeNow(string keyStroke) => SequenceTree.PressKey(ParseKeyStroke(keyStroke));
     }
 
     /// <summary>The list on the completion pop-up that typing into the Targets tree brings up (a

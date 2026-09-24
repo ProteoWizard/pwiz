@@ -1,6 +1,7 @@
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
 using System;
 using System.Collections.Generic;
@@ -70,6 +71,15 @@ namespace pwiz.Skyline.ToolsUI
         /// waits until it has closed and reports whether it completed. The dismissing counterpart of
         /// <see cref="DismissWithAcceptButton"/>.</summary>
         public abstract ActionResult DismissWithCancelButton();
+
+        /// <summary>Resizes the window as a user dragging its edge does, and reports the size it ended up at. Only
+        /// a managed form can be resized through the connector; see <see cref="StandaloneForm"/>.</summary>
+        public virtual WindowSize ResizeWindow(int width, int height)
+        {
+            throw new InvalidOperationException(LlmInstruction.Format(
+                @"The window '{0}' cannot be resized through the connector.", FormId));
+        }
+
         /// <summary>Resolves the path against this window and performs the action. Resolving is a READ, so it runs on
         /// the window's thread inside the dialog-watch (a control's gates read window handles); the action then
         /// supplies its own threading -- a gesture posts itself and waits it out, a read runs inside the dialog-watch

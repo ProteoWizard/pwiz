@@ -698,6 +698,25 @@ public static class SkylineTools
         });
     }
 
+    [McpServerTool(Name = "skyline_resize_window"),
+     Description("Resize a window, as a user does by dragging its edge: the main Skyline window " +
+        "('SkylineWindow:Skyline') or a dialog whose border can be dragged. The window keeps its position; a " +
+        "maximized or minimized window is restored first. Use it where a tutorial sizes a window. A docked or " +
+        "floating pane is sized by the window layout instead: arrange those with 'File > Import > Window " +
+        "Layout' (skyline_click_main_menu_item, then the file dialog). Returns the size the window ended up at, " +
+        "which differs from the one asked for when the window has a minimum or maximum size.")]
+    public static string ResizeWindow(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Outer width in screen pixels, border included")] int width,
+        [Description("Outer height in screen pixels, border and title bar included")] int height)
+    {
+        return Invoke(connection =>
+        {
+            var size = connection.ResizeWindow(formId, width, height);
+            return $"Resized {formId} to {size.Width} x {size.Height}.";
+        });
+    }
+
     [McpServerTool(Name = "skyline_dismiss_with_button"),
      Description("Dismiss an open dialog by clicking the button with the given caption, then wait until it has " +
         "closed -- e.g. 'No' on a 'replace it?' message box, when neither the default (accept) nor the cancel " +
@@ -943,7 +962,9 @@ public static class SkylineTools
         "through a popup, or to paste with 'Ctrl+V' where a form's own handler does the pasting. " +
         "NOTE: this raises the control's KeyDown, so a key handled by the control's DEFAULT behavior rather " +
         "than by a handler - Backspace editing a text box, an arrow moving a plain list's selection - will " +
-        "NOT take effect. Discover control names with skyline_get_controls.")]
+        "NOT take effect. The Targets tree is the exception for the arrow keys: Up and Down move its selection " +
+        "and Left and Right collapse and expand, as they do for a user. Discover control names with " +
+        "skyline_get_controls.")]
     public static string SendKeyStroke(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
         [Description("Control to press the key on, as skyline_get_controls reports it")] string controlId,
