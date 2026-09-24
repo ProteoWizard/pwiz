@@ -220,13 +220,47 @@ Each fold runs `TrainFold` up to `MaxIterations = 10` iterations:
    if fewer than `MIN_POSITIVE = 50` (`PercolatorTrainer.cs:49`) pass, relax progressively.
 2. Build the SVM set: selected targets (positive) + all decoys (negative).
 3. Grid-search C over `CValues = {0.001, 0.01, 0.1, 1.0, 10.0, 100.0}`
-   (`PercolatorConfig.cs:133`) via inner CV each iteration.
+   (`PercolatorConfig` ctor) via inner CV each iteration, keeping the most regularized C
+   whose inner-CV passing count is within `CSelectionTolerance` (1%) of the best
+   (`PercolatorTrainer.SelectC`). See "C selection" below.
 4. Train an L2-regularized linear SVM by dual coordinate descent
    (`LinearSvmClassifier.cs`).
 5. Score, count passing targets, track the best model; stop after 2 non-improving
    iterations.
 
-The selected per-fold C is reported on the console (`PercolatorTrainer.cs:622-628`).
+The selection rule and the selected per-fold C are reported on the console
+(`PercolatorTrainer.cs`, after the fold scores).
+
+#### C selection
+
+The inner-CV counts for neighboring C values are usually within noise of each other: in
+one Stellar regression fold C = 0.1, 1 and 10 passed 5,025, 5,037 and 5,002 of about 5,000
+targets, all within 0.7% (the sweep `FdrTest.TestSvmCSelectionTolerance` pins). A strict
+maximum therefore picks C by noise, and the pick matters.
+Weakly regularized fits (C = 1) split weight between correlated spectral features (the
+apex-scan `xcorr` and `median_polish_cosine` against the multi-scan `sg_weighted_cosine`)
+in ways that score the first pass alike but score the second pass, which reuses the frozen
+first-pass model on reconciled peaks, very differently. Two Stellar libraries differing only
+at the 1e-4 rounding level gave 21,176 and 28,309 experiment precursors at the same
+entrapment-measured FDP.
+
+So the grid search keeps the SMALLEST C within `CSelectionTolerance` of the best count
+(default 0.01; `OSPREY_SVM_C_TOLERANCE` overrides it, and 0 restores the strict maximum,
+the first C in grid order winning a tie, which is what the Rust implementation does). A
+value that is not a number in [0, 1) stops the run at startup. The tolerance is part of the
+first-pass training validity key (`;csel=`), emitted for every setting, so a resume never
+adopts a directory trained under another rule. A relay node (`--task PerFileRescoring` or
+`SecondPassFDR`) keys its outputs with its OWN environment's tolerance and does not check the
+one the persisted model was trained under, so export the same value to every node of a chain,
+as for `OSPREY_TRAIN_PICK_RUN`.
+
+On the regression data the rule moved the experiment precursors by +16% (Stellar, 27,321 ->
+31,720), +1% (StellarLibDecoy), +6% (StellarGenDecoyEntrap) and 0% (Astral), and the two
+libraries above to 30,316 and 30,485. StellarGenDecoyEntrap is the leg with an entrapment
+oracle: its second-pass experiment-level FDP went from 0.95% to 1.02% (combined; paired 0.95%
+to 1.03%) at a 1% threshold, within one standard error of that estimate (about 0.08 points,
+from ~160 entrapment hits), while accepting 29,742 -> 31,541 precursors
+(`osprey-regression.data/stellar-gendecoy-entrap/diagnostics.tsv`).
 
 ### 3f. Score all entries
 
@@ -690,9 +724,10 @@ All defaults are from `Osprey.Core/OspreyConfig.cs` and `Osprey/OspreyCommandArg
 | `--model-diagnostics` | off | Also collects per-feature target/decoy histograms + feature-contribution report (`CollectFeatureHistograms`, `PercolatorEngine.cs:310`); forces the resident first-pass pool. Byte-neutral when off. |
 | `--task {PerFileScoring\|FirstPassFDR\|PerFileRescoring\|SecondPassFDR}` | (single-process) | HPC split. Each name is the task class's `TASK_NAME` (`PerFileScoringTask`, `FirstPassFdrTask`, `PerFileRescoreTask`, `SecondPassFdrTask`), looked up in the one task set (`OspreyTasks.Create().All`); note the class is `PerFileRescoreTask` where the CLI takes `PerFileRescoring`. See `15-hpc-scoring-split.md`. |
 
-Internal Percolator constants (not CLI-exposed; `PercolatorConfig` ctor
-`PercolatorConfig.cs:126`): `MaxIterations = 10`, `NFolds = 3`, `Seed = 42`,
-`CValues = {0.001,0.01,0.1,1,10,100}`, `MaxTrainSize = 300000`.
+Internal Percolator constants (not CLI-exposed; `PercolatorConfig` ctor,
+`Osprey.FDR/PercolatorConfig.cs`): `MaxIterations = 10`, `NFolds = 3`, `Seed = 42`,
+`CValues = {0.001,0.01,0.1,1,10,100}`, `CSelectionTolerance = 0.01`
+(`OSPREY_SVM_C_TOLERANCE`), `MaxTrainSize = 300000`.
 
 **Diagnostic env vars** (Stage 5 dumps, carried in via `PercolatorDiagnosticsConfig`,
 never read directly by the engine): `OSPREY_DUMP_STANDARDIZER`, `OSPREY_DUMP_PERC_INPUT`,
@@ -762,9 +797,18 @@ calibration LDA, not Percolator.
   (`PercolatorEngine.cs:413`). This is agreement, recorded for
   completeness. Evidence: `Osprey.FDR/PercolatorEngine.cs:413`. Severity: info.
 
+- **[C#-ONLY DEFAULT] First-pass C selection keeps the most regularized C within 1% of
+  the best** - Rust's `grid_search_c` keeps the strict maximum of the inner-CV passing
+  counts (first C in grid order on a tie). C# keeps the smallest C whose count is within
+  `CSelectionTolerance` (0.01) of the best, because the strict maximum is decided by noise
+  (see "C selection" above). `OSPREY_SVM_C_TOLERANCE=0` restores the Rust rule, and the
+  cross-implementation scripts set it. Evidence: `Osprey.FDR/PercolatorTrainer.cs`
+  (`SelectC`). Severity: changes default output.
+
 Everything else verified matches the Rust documentation step for step: the semi-supervised
 linear-SVM algorithm (standardize → best-per-precursor dedup → peptide-grouped subsample
-at 300K → 3-fold peptide-grouped CV → iterative training with C grid search and
+at 300K → 3-fold peptide-grouped CV → iterative training with C grid search (its selection
+rule aside, above) and
 `MIN_POSITIVE = 50` relaxation → Granholm cross-fold calibration → KDE+isotonic PEP on
 winners → four-level conservative `(decoys+1)/targets` q-values), the base_id `0x7FFFFFFF`
 pairing, the dual precursor+peptide `max` rule, the best-of-runs experiment clamp, the
