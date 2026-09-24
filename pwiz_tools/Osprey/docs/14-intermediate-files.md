@@ -28,12 +28,14 @@ experiment-wide, **exp/rep** = experiment-wide content replicated under each run
 | `<stem>.spectra.bin` | run | Custom binary v4 | `Osprey.IO/SpectraCache.cs` | Decoded MS1/MS2 spectra for fast reload - and the only copy once the source is deleted |
 | `<stem>.scores.parquet` | run | Apache Parquet (ZSTD) | `Osprey.IO/ParquetScoreCache.cs` | Scored entries: 21 PIN features, fragments, CWT candidates + footer metadata |
 | `<stem>.scores-reconciled.parquet` | run | Apache Parquet (ZSTD) | `Osprey.Tasks/ReconciledParquetWriter.cs` | Stage 6 reconciled rewrite (separate file, not in-place) |
-| `<stem>.1st-pass.fdr_scores.bin` | run | Custom binary **v6**, 32-byte header + 28-byte records | `Osprey.IO/FdrScoresSidecar.cs` | entry_id, SVM score, run precursor q, run peptide q. The experiment-scope columns moved OUT at v5 (#4486) - see the experiment sidecar row |
-| `<stem>.2nd-pass.fdr_scores.bin` | run | Custom binary **v6**, same layout | `Osprey.IO/FdrScoresSidecar.cs` | Same record shape after second-pass Percolator |
+| `<stem>.1st-pass.fdr_scores.bin` | run | Custom binary **v7**, 32-byte header + 36-byte records | `Osprey.IO/FdrScoresSidecar.cs` | entry_id, SVM score, run precursor q, run peptide q, detection apex RT. The experiment-scope columns moved OUT at v5 (#4486) - see the experiment sidecar row; apex RT arrived at v7 (#4522), so the diagnostics co-assignment panel stops opening every `.scores.parquet` a second time for it |
+| `<stem>.2nd-pass.fdr_scores.bin` | run | Custom binary **v7**, same layout | `Osprey.IO/FdrScoresSidecar.cs` | Same record shape after second-pass Percolator |
 | `<stem>.2nd-pass.fdr_decoys.bin` | run | Custom binary v1 | `Osprey.IO/Pass2CompetitionDecoys.cs` | Per-run second-pass competition decoys; written before the scores sidecar |
 | `<stem>.reconciliation.json` | run | JSON (Newtonsoft) | `Osprey.IO/ReconciliationFile.cs` | Stage 5 planner output: actions, gap-fill targets, refined RT calibration |
-| `<blib-stem>.{1st,2nd}-pass.fdr_experiment.bin` | exp | Custom binary **v2**, 32-byte header + 44-byte records | `Osprey.IO/FdrExperimentSidecar.cs` | The experiment-scope columns: precursor q, peptide q, PEP, protein q, aggregate score. **Name** from the output blib, **directory** from `ResolveOutputDir` |
-| `<stem>.1st-pass.model.json` | exp/rep | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | Frozen first-pass Percolator model, plus the protein-compact stratum when that mode is active |
+| `<blib-stem>.{1st,2nd}-pass.fdr_experiment.bin` | exp | Custom binary **v2**, 32-byte header + 44-byte records | `Osprey.IO/FdrExperimentSidecar.cs` | The experiment-scope columns: precursor q, peptide q, PEP, protein q, aggregate score. Both q-values are FLOORED to the precursor's best run before they are written (#4522) - see 07-fdr-control.md 3j. **Name** from the output blib, **directory** from `ResolveOutputDir` |
+| `<blib-stem>.1st-pass.retained_base_ids.bin` | exp | Custom binary **v1**, 32-byte header + 4-byte records | `Osprey.IO/RetainedBaseIdSidecar.cs` | The join-wide compaction set: every base_id the Stage 6 rescore retains, ascending. Written once when Stage 6 planning ends, because the second half of it (reconciliation action targets) is not known until the LAST run is planned. Bounded by the library, not by run count - on the 446-run CHS cohort of #4650 it is 2,502,512 bytes for 625,620 ids, against the megabytes each of the 446 `reconciliation.json` envelopes spends restating the first half. (Counts travel with their run: `RetainedBaseIdSidecar` quotes 744,943 ids / 2.98 MB from a different arm of the same cohort.) Seven read sites across four tasks: `FirstPassFdrTask` (x3), `PerFileScoringTask`, `PerFileRescoreTask` (x2, one of them the streamed Stage 7 join) and Stage 7's library-fragment release (#4650). **Absence is fatal at most of them, and deliberately so** - the fallback would be rebuilding the union from every envelope, the O(runs) pre-pass this file exists to delete - but not at all of them: `PerFileRescoreTask.BuildPerRunHydrate` takes the null-returning reader and declines the per-run shape, because the run is by then already failing elsewhere for a named reason |
+| `<stem>.1st-pass.model.json` | exp/rep | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | Frozen first-pass Percolator model (weights, biases, normalization). The protein-compact stratum is NOT in it - see the next row |
+| `<stem>.1st-pass.stratum.json` | exp/rep | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | The protein-compact stratum: base ids of every library precursor whose peptide belongs to a protein with >=2 detected peptides. Absent under every mode but protein-compact. A SECOND file rather than a member of the model sidecar because a different PHASE produces it - the model exists when training ends, the stratum only after first-pass protein FDR resolves which proteins carry two detected peptides. Writing one file meant holding the model in memory for the whole first pass, which made a run killed in the score passes unrecoverable. `LoadFromAny` merges the two on read, and still falls back to a pre-split model sidecar's embedded copy |
 | `<output>.<TaskName>.osprey.task` | its artifact's | JSON (hand-rolled) | `Osprey.Tasks/TaskValiditySidecar.cs` | **C# addition**: per-(output, task) resume validity record |
 | `<lib>.<...>` library cache | exp | Custom binary v2 | `Osprey.IO/LibraryCache.cs` | Parsed spectral library reload cache |
 | `<output>.blib` | exp | SQLite (BiblioSpec) | `Osprey.IO/BlibWriter.cs` | Final output; see 13-blib-output-schema.md |
@@ -71,18 +73,54 @@ durable artifact writer in the tree, as of this document's last verification:
 | `ParquetScoreCache` (2 sites) | `<stem>.scores.parquet`, `<stem>.scores-reconciled.parquet` |
 | `FdrScoresSidecar` | `<stem>.{1st,2nd}-pass.fdr_scores.bin` |
 | `FdrExperimentSidecar` | `<blib-stem>.{1st,2nd}-pass.fdr_experiment.bin` |
+| `RetainedBaseIdSidecar` | `<blib-stem>.1st-pass.retained_base_ids.bin` |
 | `Pass2CompetitionDecoys` | `<stem>.2nd-pass.fdr_decoys.bin` |
 | `ReconciliationFile` | `<stem>.reconciliation.json` |
-| `FirstPassModelIO` | `<stem>.1st-pass.model.json` |
+| `FirstPassModelIO` (2 sites) | `<stem>.1st-pass.model.json`, `<stem>.1st-pass.stratum.json` |
 | `TaskValiditySidecar` | `<output>.<TaskName>.osprey.task` |
 | `BlibOutputWriter` | `<output>.blib` |
 | `ModelDiagnosticsReport` (2 sites) | `<output>.model-diagnostics.{html,data.json}` |
 | `FdrBenchInputWriter` (2 sites) | `--fdrbench` input + pairing manifest |
+| `OspreyReportWriter` (1 site, `WriteTsv`, both reports) | `<output>.protein_groups.tsv`, `<output>.stats.tsv` |
+| `PerFileScoringTask.WriteFeatureDump` | `--write-pin`'s `<stem>.cs_features.tsv` |
+
+Most `-d` diagnostic dumps commit the same way as a durable artifact, though nothing in
+the pipeline reads any of them back - see P8 in
+[00-pipeline-architecture](00-pipeline-architecture.md) for why that does not exempt them.
+The exceptions are the log-shaped dumps marked below, which write directly to their final
+path instead:
+
+| Writer | Artifact(s) |
+|---|---|
+| `OspreyFileDiagnostics` (24 one-shot methods) | `cs_cal_sample.txt`, `cs_cal_scalars.txt`, `cs_cal_grid.txt`, `cs_cal_windows.txt`, `cs_cal_match.txt`, `cs_ms2_cal_errors.txt`, `cs_lda_scores.txt`, `cs_loess_input.txt`, `cs_cal_summary.txt`, `cs_xic_entry_<id>.txt`, `cs_search_xic_entry_<id>.txt`, `cs_mp_diag.txt`, `cs_stage5_percolator.tsv`, `cs_stage6_rescored.tsv`, `cs_stage6_consensus.tsv`, `cs_stage6_multicharge.tsv`, `cs_stage6_refit.tsv`, `cs_stage6_reconciliation.tsv`, `cs_stage6_inv_predict.tsv`, `cs_stage6_protein_fdr.tsv`, `cs_stage7_protein_fdr.tsv`, `cs_stage6_loess_fit.tsv`, `cs_stage7_detected_peptides.txt`, and the held-open streams below |
+| `OspreyFileDiagnostics` held-open streams (4, **log-shaped**: written directly at their final path, no `FileSaver`; `CloseXDump` flushes the writer's buffered tail, not a commit; `CloseAll` runs every one of them on process exit for the same reason) | `cs_stage6_mp_inputs.tsv`, `cs_stage6_predict_rt.tsv` (unreachable today, no live caller), `cs_stage6_cwt_path.tsv`, `cs_stage6_calibration.tsv` |
+| `FdrDiagnostics.CoAssignRowDump` (rows: **log-shaped**, written directly via `FileMode.CreateNew`, no `FileSaver`; cutoffs: ordinary artifact) | `cs_coassign_pass<N>_rows[.<seq>].tsv`, `cs_coassign_pass<N>_cutoffs[.<seq>].tsv` |
+| `FdrDiagnostics` (2 more) | `cs_stage7_winners.tsv`, `cs_best_peptide_scores.tsv` |
+| `PercolatorDiagnosticsDump` (4 sites) | `cs_stage5_standardizer.tsv`, `cs_stage5_perc_input.tsv`, `cs_stage5_subsample.tsv`, `cs_stage5_svm_weights.tsv` |
+| `PickCandidateDump.Flush` | `OSPREY_PICK_DUMP_CANDIDATES`'s caller-named path |
+| `PeakDataExtractor` (search-XIC append, read-existing + rewrite through a fresh `FileSaver` per call - a concurrent-writer hazard, not a partial-progress one, so this one stays an artifact; see P8) | `cs_search_xic_entry_<id>.txt` |
+
+`cs_search_xic_entry_<id>.txt` and `cs_xic_entry_<id>.txt` have two independent writers each
+(`OspreyFileDiagnostics.WriteSearchXicDump`/`WriteCalXicEntryDumpAndExit` write the file once;
+`PeakDataExtractor`'s search-XIC dump appends to the first one later in the same candidate's
+scoring), and under `--parallel-files` the same library entry can be scored on more than one
+file-thread. `DiagnosticFileLock.For(path)` (`Osprey.Core`) is the shared, per-path lock every
+writer of these two files takes, so independent `FileSaver` commits to one path never race -
+process-local only; it does not protect a real multi-node HPC fan-out sharing one output
+directory, which is not a concern for dumps that are opt-in for a single interactive session.
 
 **A new durable artifact that does not commit through `FileSaver` is a defect**, because
-every reader in the pipeline treats presence as proof of completeness. **Exempt**: `-d`
-diagnostic dumps, the streaming CLI log, and test fixtures - transient or append-streaming
-files that no later stage reads back.
+every reader - a pipeline task or a developer doing bisection - treats presence as proof
+of completeness. **Exempt**: the streaming CLI log (`--log-file`, written for the life of
+the run so it can be tailed while still running - see P8), the five log-shaped dumps
+marked above (`CoAssignRowDump`'s rows and the four `OspreyFileDiagnostics` held-open
+streams - a partial file is the useful outcome for these, not a hazard to guard against),
+and test fixtures. Forensic inspection of an abandoned ARTIFACT-shaped write (any writer
+above not marked log-shaped, on an exception) is `OspreyEnvironment.KeepFailedWrites`
+(`OSPREY_KEEP_FAILED_WRITES`), not a bypass of `FileSaver` - it leaves the temp in place
+instead of deleting it, under its own name, so presence at the real path still proves
+completeness for every ordinary reader. It has no effect on the log-shaped dumps, which
+never wrap the write in `FileSaver` to begin with.
 
 ---
 
@@ -266,13 +304,15 @@ The Stage 6 reconciled rewrite (`ReconciledParquetWriter.BuildReconciliationMeta
 `ReconciledParquetWriter.cs:192`) sets `osprey.reconciled = "true"` and adds
 `osprey.reconciliation_hash` = `SearchIdentity.ReconciliationParameterHash[ForStems]()`.
 
-**Hash recipes** (`Osprey.Core/SearchIdentity.cs`, must stay byte-identical to Rust
-`osprey-core/src/config.rs`):
+**Hash recipes** (`Osprey.Core/SearchIdentity.cs`, following Rust
+`osprey-core/src/config.rs` except for the manifest term, noted below):
 
 - `SearchParameterHash()` (`SearchIdentity.cs:60`): resolution mode; fragment + precursor
   tolerance (value + unit); prefilter enabled; decoy method; decoys-in-library; sorted
-  lowercased decoy prefixes; decoy pairing manifest path (Rust `{:?}` `Some/None` escaping,
-  `SearchIdentity.cs:186`); decoy pair min fraction; all RT-calibration parameters (enabled,
+  lowercased decoy prefixes; decoy pairing manifest IDENTITY - `None`, or `Some(<hash>)` over
+  the manifest's file name + size + mtime, the same recipe as `LibraryIdentityHash` and for the
+  same reason, so moving a manifest is free and editing one in place invalidates
+  (`SearchIdentity.DecoyPairingManifestTerm`); decoy pair min fraction; all RT-calibration parameters (enabled,
   fallback tolerance, tolerance factor, min/max tolerance, LOESS bandwidth, min calibration
   points, sample size, retry factor); and `reconciliation.top_n_peaks`. Booleans lowercased,
   invariant culture (`SearchIdentity.cs:69`) for cross-impl parity.
@@ -338,9 +378,9 @@ second-pass FDR. Carries the SVM discriminant plus every q-value needed for down
 and protein-FDR-aware compaction.
 
 > **STALE - do not implement a reader from the layout below.** It documents v4: a 68-byte
-> record carrying the experiment-scope columns. The current format is **v6 with 28-byte
-> records** (`FdrScoresSidecar.FormatVersion`, `RecordLength`), holding only entry_id, SVM
-> score, run precursor q and run peptide q - the experiment columns moved to
+> record carrying the experiment-scope columns. The current format is **v7 with 36-byte
+> records** (`FdrScoresSidecar.FormatVersion`, `RecordLength`), holding entry_id, SVM
+> score, run precursor q, run peptide q and the detection apex RT - the experiment columns moved to
 > `<blib-stem>.{1st,2nd}-pass.fdr_experiment.bin` at v5 (issue #4486). The header is still
 > 32 bytes. Re-verifying and rewriting this subsection against `WriteRecord` is tracked as
 > follow-up work; it was not rewritten in the PR that added this warning because that PR

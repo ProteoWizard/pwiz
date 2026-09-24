@@ -72,11 +72,13 @@ namespace SkylineNightly
 
         private static string LABKEY_URL = GetPostUrl("home/development/Nightly%20x64");
         private static string LABKEY_PERF_URL = GetPostUrl("home/development/Performance%20Tests");
-        private static string LABKEY_STRESS_URL = GetPostUrl("home/development/NightlyStress");
+        private static string LABKEY_LEAK_URL = GetPostUrl("home/development/Nightly%20x64%20Leak%20Detection");
         private static string LABKEY_RELEASE_URL = GetPostUrl("home/development/Release%20Branch");
         private static string LABKEY_RELEASE_PERF_URL = GetPostUrl("home/development/Release%20Branch%20Performance%20Tests");
+        private static string LABKEY_RELEASE_LEAK_URL = GetPostUrl("home/development/Release%20Branch%20Leak%20Detection");
         private static string LABKEY_INTEGRATION_URL = GetPostUrl("home/development/Integration");
         private static string LABKEY_INTEGRATION_PERF_URL = GetPostUrl("home/development/Integration%20With%20Perf%20Tests");
+        private static string LABKEY_INTEGRATION_LEAK_URL = GetPostUrl("home/development/Integration%20Leak%20Detection");
         private static string LABKEY_HOME_URL = GetUrl("home", "project", "begin");
 
         public static string LABKEY_EMAIL_NOTIFICATION_URL = GetUrl("home/development/Nightly%20x64", LABKEY_MODULE, LABKEY_EMAIL_NOTIFICATION_ACTION);
@@ -96,7 +98,8 @@ namespace SkylineNightly
         private readonly Xml _leaks;
         private Xml _pass;
         private readonly string _logDir;
-        private readonly RunMode _runMode;
+        private readonly RunSpec _runSpec; // Null when constructed for a parse or post command
+        private readonly string _logName; // Names the log file: the run's short name, or the command
         private string PwizDir
         {
             get
@@ -121,13 +124,26 @@ namespace SkylineNightly
         /// </summary>
         private bool _reusedCheckout;
 
-        public const int DEFAULT_DURATION_HOURS = 9;
-        public const int PERF_DURATION_HOURS = 12;
-
-        public Nightly(RunMode runMode, string decorateSrcDirName = null, string logDir = null, bool reuseCheckout = false,
-            bool localSkylineTester = false)
+        public Nightly(RunSpec runSpec, string decorateSrcDirName = null, string logDir = null,
+            bool reuseCheckout = false, bool localSkylineTester = false)
+            : this(runSpec, runSpec.ShortName, decorateSrcDirName, logDir, reuseCheckout, localSkylineTester)
         {
-            _runMode = runMode;
+        }
+
+        /// <summary>
+        /// A Nightly for the parse and post commands, which work on an existing log rather than
+        /// running anything, so there is no run to describe - only a name for their own log file.
+        /// </summary>
+        public static Nightly ForCommand(string command, string logDir = null)
+        {
+            return new Nightly(null, command, null, logDir, false, false);
+        }
+
+        private Nightly(RunSpec runSpec, string logName, string decorateSrcDirName, string logDir,
+            bool reuseCheckout, bool localSkylineTester)
+        {
+            _runSpec = runSpec;
+            _logName = logName;
             _reuseCheckout = reuseCheckout;
             _localSkylineTester = localSkylineTester;
             _nightly = new Xml("nightly");
@@ -142,7 +158,7 @@ namespace SkylineNightly
             if (Directory.Exists(logDirScreengrabs))
                 Directory.Delete(logDirScreengrabs, true);
             // First guess at working directory - distinguish between run types for machines that do double duty
-            _skylineTesterDir = Path.Combine(nightlyDir, "SkylineTesterForNightly_"+runMode + (decorateSrcDirName ?? string.Empty));
+            _skylineTesterDir = Path.Combine(nightlyDir, "SkylineTesterForNightly_" + logName + (decorateSrcDirName ?? string.Empty));
         }
 
         public static string NightlyTaskName { get { return NIGHTLY_TASK_NAME; } }
@@ -156,23 +172,7 @@ namespace SkylineNightly
             }
         }
 
-        public bool WithPerfTests => _runMode != RunMode.trunk && _runMode != RunMode.integration && _runMode != RunMode.release;
-
-        public TimeSpan TargetDuration
-        {
-            get
-            {
-                if (_runMode == RunMode.stress)
-                {
-                    return TimeSpan.FromHours(168);  // Let it go as long as a week
-                }
-                else if (WithPerfTests)
-                {
-                    return TimeSpan.FromHours(PERF_DURATION_HOURS); // Let it go a bit longer than standard 9 hours
-                }
-                return TimeSpan.FromHours(DEFAULT_DURATION_HOURS);
-            }
-        }
+        public TimeSpan TargetDuration => _runSpec?.TargetDuration ?? TimeSpan.FromHours(RunSpec.STANDARD_DURATION_HOURS);
 
         public void Finish(string message, string errMessage)
         {
@@ -202,8 +202,6 @@ namespace SkylineNightly
             }
         }
 
-        public enum RunMode { parse, post, trunk, perf, release, stress, integration, release_perf, integration_perf }
-
         public static string SkylineTesterStoppedByUser = "SkylineTester stopped by user";
 
         public string RunAndPost()
@@ -223,8 +221,10 @@ namespace SkylineNightly
                 runResult = QuitWithError(e.Message);
             }
 
-            Parse();
-            var postResult = Post(_runMode);
+            // Post to the folder for the run the log shows, not the run that was asked for: an older
+            // SkylineTester on a branch cannot run a leak run yet, and its results belong with the
+            // standard runs.
+            var postResult = Post(Parse());
             if (!string.IsNullOrEmpty(postResult))
             {
                 if (!string.IsNullOrEmpty(runResult))
@@ -262,7 +262,7 @@ namespace SkylineNightly
             if (!Directory.Exists(_logDir))
                 Directory.CreateDirectory(_logDir);
             // Start the nightly log file
-            StartLog(_runMode);
+            StartLog();
 
             // Clean-up and create a place to run the tests
             Delete(skylineNightlySkytr);
@@ -279,7 +279,7 @@ namespace SkylineNightly
             Process skylineTesterProcess;
             do
             {
-                using var logMonitor = new LogFileMonitor(_logDir, LogFileName, _runMode);
+                using var logMonitor = new LogFileMonitor(_logDir, LogFileName, _runSpec);
 
                 skylineTesterProcess = Process.Start(processInfo);
                 if (skylineTesterProcess == null)
@@ -323,22 +323,11 @@ namespace SkylineNightly
 
         private void KillProcesses()
         {
-            // Kill any other instance of SkylineNightly, unless this is
-            // the StressTest mode, in which case assume that a previous invocation
-            // is still running and just exit to stay out of its way.
+            // Kill any other instance of SkylineNightly
             foreach (var process in Process.GetProcessesByName("skylinenightly"))
             {
                 if (process.Id != Process.GetCurrentProcess().Id)
-                {
-                    if (_runMode == RunMode.stress)
-                    {
-                        Application.Exit(); // Just let the already (long!) running process do its thing
-                    }
-                    else
-                    {
-                        process.Kill();
-                    }
-                }
+                    process.Kill();
             }
 
             // Kill processes started within the proposed working directory - most likely SkylineTester and/or TestRunner.
@@ -361,12 +350,12 @@ namespace SkylineNightly
             }
         }
 
-        public void StartLog(RunMode runMode)
+        public void StartLog()
         {
             _startTime = DateTime.Now;
 
             // Create log file.
-            LogFileName = Path.Combine(_logDir, string.Format("SkylineNightly-{0}-{1}.log", runMode,
+            LogFileName = Path.Combine(_logDir, string.Format("SkylineNightly-{0}-{1}.log", _logName,
                 _startTime.ToString("yyyy-MM-dd-HH-mm", CultureInfo.InvariantCulture)));
             Log(_startTime.ToShortDateString());
         }
@@ -470,10 +459,10 @@ namespace SkylineNightly
                     skylineTester.GetChild("nightlyStartTime").Set(DateTime.Now.ToShortTimeString());
                     skylineTester.GetChild("nightlyRoot").Set(nightlyDir);
                     skylineTester.GetChild("buildRoot").Set(_skylineTesterDir);
-                    skylineTester.GetChild("nightlyRunPerfTests").Set(WithPerfTests ? "true" : "false");
+                    skylineTester.GetChild("nightlyRunType").Set(GetSkylineTesterRunType(_runSpec.RunType));
+                    // A SkylineTester from before the run type existed reads these instead
+                    skylineTester.GetChild("nightlyRunPerfTests").Set(_runSpec.IsPerf ? "true" : "false");
                     skylineTester.GetChild("nightlyDuration").Set(((int)TargetDuration.TotalHours).ToString());
-                    skylineTester.GetChild("nightlyRepeat").Set(_runMode == RunMode.stress ? "100" : "1");
-                    skylineTester.GetChild("nightlyRandomize").Set(_runMode == RunMode.stress ? "true" : "false");
                     // Only sync-in-place when there is actually a tree to sync. TabBuild does nothing
                     // at all when updateBuild is set but the directory is missing, which would leave
                     // the build with no source.
@@ -493,6 +482,25 @@ namespace SkylineNightly
             }
 
             return durationHours;
+        }
+
+        /// <summary>
+        /// The run type as it appears in the nightlyRunType element of a .skytr file, which is
+        /// the text of SkylineTester's Nightly tab combo box (see TabNightly.RUN_TYPE_*).
+        /// </summary>
+        private static string GetSkylineTesterRunType(RunType runType)
+        {
+            switch (runType)
+            {
+                case RunType.leak:
+                    return "Leak checking";
+                case RunType.perf:
+                    return "Perf";
+                case RunType.standard_leak:
+                    return "Standard with leak checking";
+                default:
+                    return "Standard";
+            }
         }
 
         private ProcessStartInfo CreateSkylineTesterProcessInfo(string skylineNightlySkytr)
@@ -710,7 +718,7 @@ namespace SkylineNightly
             {
                 try
                 {
-                    DownloadSkylineTester(skylineTesterZipPath, _runMode, useLastSuccessfulInsteadOfLastFinished, token);
+                    DownloadSkylineTester(skylineTesterZipPath, _runSpec.Branch, useLastSuccessfulInsteadOfLastFinished, token);
                 }
                 catch (Exception ex)
                 {
@@ -762,13 +770,15 @@ namespace SkylineNightly
             throw new IOException(failedReason);
         }
 
-        private void DownloadSkylineTester(string skylineTesterZip, RunMode mode, bool desperate, string token)
+        private void DownloadSkylineTester(string skylineTesterZip, Branch branch, bool desperate, string token)
         {
             using var client = new WebClient();
             TeamCityNightlyAuth.ConfigureClient(client, token);
 
-            var isRelease = ((mode == RunMode.release) || (mode == RunMode.release_perf));
-            var isIntegration = mode == RunMode.integration || mode == RunMode.integration_perf;
+            var isRelease = branch == Branch.release;
+            var isIntegration = branch == Branch.integration;
+            // Always the branch's own build, whatever SKYLINE_NIGHTLY_BRANCH says: that variable chooses the
+            // SkylineNightly a machine runs, and SkylineNightly has to drive every branch's SkylineTester
             var branchType = (isRelease || isIntegration) ? "" : "?branch=master"; // TC has a config just for release branch, and another for integration branch, but main config builds pull requests, other branches etc
             var buildType = isIntegration ? TEAM_CITY_BUILD_TYPE_64_INTEGRATION : isRelease ? TEAM_CITY_BUILD_TYPE_64_RELEASE : TEAM_CITY_BUILD_TYPE_64_MASTER;
 
@@ -881,7 +891,12 @@ namespace SkylineNightly
             return endTime;
         }
 
-        public RunMode Parse(string logFile = null, bool parseOnlyNoXmlOut = false)
+        /// <summary>
+        /// Parses a nightly log into the XML that gets posted, and returns the run it came from: the
+        /// branch from the clone command's working directory, the run type from the key phrases
+        /// TestRunner logs (see "# Perf tests" and "# Leak checking only" in TestRunner's Program.cs).
+        /// </summary>
+        public RunSpec Parse(string logFile = null, bool parseOnlyNoXmlOut = false)
         {
             if (logFile == null)
                 logFile = GetLatestLog();
@@ -922,10 +937,17 @@ namespace SkylineNightly
             // Extract leaks.
             ParseLeaks(log);
 
-            var hasPerftests = log.Contains("# Perf tests");
+            var runType = log.Contains("# Perf tests") ? RunType.perf
+                : log.Contains("# Leak checking only") ? RunType.leak
+                : RunType.standard;
+            if (runType == RunType.leak)
+                CheckLeakSweepComplete(log);
+            // The working directory in the clone command names the branch (see RunSpec.ShortName)
             var matchBranch = new Regex(@"git\.exe.*clone.*-b.*SkylineTesterForNightly_([a-z]+)").Match(log);
-            bool isTrunk = !matchBranch.Success;
-            bool isIntegration = matchBranch.Success && Equals("integration", matchBranch.Groups[1].Value);
+            var branch = !matchBranch.Success ? Branch.master
+                : Equals("integration", matchBranch.Groups[1].Value) ? Branch.integration
+                : Equals("release", matchBranch.Groups[1].Value) ? Branch.release
+                : Branch.master;
 
             var machineName = Environment.MachineName;
             // Get machine name from logfile name, in case it's not from this machine
@@ -982,9 +1004,7 @@ namespace SkylineNightly
                 var xmlFile = Path.ChangeExtension(logFile, ".xml");
                 File.WriteAllText(xmlFile, _nightly.ToString());
             }
-            return isTrunk
-                ? (hasPerftests ? RunMode.perf : RunMode.trunk)
-                : (isIntegration ? (hasPerftests ? RunMode.integration_perf : RunMode.integration) :  (hasPerftests ? RunMode.release_perf : RunMode.release));
+            return new RunSpec(branch, runType);
         }
 
         private class TestLogLineProperties
@@ -1119,6 +1139,27 @@ namespace SkylineNightly
             return testCount;
         }
 
+        /// <summary>
+        /// A leak checking run must get through every test at least once, or the tail of the
+        /// alphabet is never leak-checked on that machine. That is easy to miss on the results
+        /// page, so a run that never logged its first sweep complete is reported as a failure.
+        /// </summary>
+        private void CheckLeakSweepComplete(string log)
+        {
+            if (log.Contains("# Pass 1 sweep 1 complete."))
+                return;
+            var failure = _failures.Append("failure");
+            failure["name"] = "LeakCheckingIncomplete";
+            failure["timestamp"] = _startTime.ToString("HH:mm", CultureInfo.InvariantCulture);
+            failure["pass"] = "1";
+            failure["test"] = "0";
+            failure["language"] = "en";
+            failure.Set(Environment.NewLine +
+                        "Leak checking did not get through every test once before the run was stopped. " +
+                        "This machine is too slow for a leak checking run of this length: schedule it as a standard run instead." +
+                        Environment.NewLine);
+        }
+
         private void ParseFailures(string log)
         {
             var startFailure = new Regex(@"\r\n!!! (\S+) FAILED\r\n", RegexOptions.Compiled);
@@ -1199,7 +1240,7 @@ namespace SkylineNightly
         /// <summary>
         /// Post the latest results to the server.
         /// </summary>
-        public string Post(RunMode mode, string xmlFile = null)
+        public string Post(RunSpec runSpec, string xmlFile = null)
         {
             if (xmlFile == null)
             {
@@ -1234,27 +1275,36 @@ namespace SkylineNightly
                 return @"No tests found in log. No results posted";
             }
 
-            string url;
             // Post to server.
-            if (mode == RunMode.integration)
-                url = LABKEY_INTEGRATION_URL;
-            else if (mode == RunMode.integration_perf)
-                url = LABKEY_INTEGRATION_PERF_URL;
-            else if (mode == RunMode.release_perf)
-                url = LABKEY_RELEASE_PERF_URL;
-            else if (mode == RunMode.release)
-                url = LABKEY_RELEASE_URL;
-            else if (mode == RunMode.perf)
-                url = LABKEY_PERF_URL;
-            else if (mode == RunMode.stress)
-                url = LABKEY_STRESS_URL;
-            else
-                url = LABKEY_URL;
+            var url = GetResultsUrl(runSpec);
             var result = PostToLink(url, xml, xmlFile);
             var resultParts = result.ToLower().Split(':');
             if (resultParts.Length == 2 && resultParts[0].Contains("success") && resultParts[1].Contains("true"))
                 result = string.Empty;
             return result;
+        }
+
+        /// <summary>
+        /// The skyline.ms folder that receives a run's results: one per branch and run type, except
+        /// that the pre-split combined run posts with the standard runs of its branch.
+        /// </summary>
+        private static string GetResultsUrl(RunSpec runSpec)
+        {
+            switch (runSpec.Branch)
+            {
+                case Branch.integration:
+                    return runSpec.IsPerf ? LABKEY_INTEGRATION_PERF_URL
+                        : runSpec.RunType == RunType.leak ? LABKEY_INTEGRATION_LEAK_URL
+                        : LABKEY_INTEGRATION_URL;
+                case Branch.release:
+                    return runSpec.IsPerf ? LABKEY_RELEASE_PERF_URL
+                        : runSpec.RunType == RunType.leak ? LABKEY_RELEASE_LEAK_URL
+                        : LABKEY_RELEASE_URL;
+                default:
+                    return runSpec.IsPerf ? LABKEY_PERF_URL
+                        : runSpec.RunType == RunType.leak ? LABKEY_LEAK_URL
+                        : LABKEY_URL;
+            }
         }
 
         public string GetLatestLog()

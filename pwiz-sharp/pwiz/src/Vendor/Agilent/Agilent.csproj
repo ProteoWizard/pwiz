@@ -8,7 +8,17 @@
 
   <!--
     Vendor archive: pwiz_aux/msrc/utility/vendor_api_Agilent.7z. ExtractAgilentAssemblies
-    unpacks the x64 .NET assemblies on every build (idempotent). Sharp targets x64 only.
+    unpacks the x64 .NET assemblies on every build (idempotent). Sharp targets x64 only,
+    and so does the archive - the x86 half was dropped when it was repacked.
+
+    BaseDataAccess.dll and BaseCommon.dll in that archive are Cecil-patched: the SDK uses
+    Delegate.BeginInvoke/EndInvoke, which .NET 5+ throws PlatformNotSupportedException on,
+    and its decompression path assumes a Stream.Read that fills the buffer. The patch used
+    to be applied to the extracted copy on every build, which left the archive - and so
+    every install that resolves the SDK through VendorSdkLoader's cache rather than
+    app-local - holding assemblies that could not open half the .d fixtures. The archive
+    now ships patched, and pwiz-sharp/build/AgilentPatcher is the tool that produces it;
+    see its header for the procedure and for what each patch does.
     -->
   <PropertyGroup>
     <!-- Forward slashes so these resolve on Linux as well as Windows. $(SevenZaExe) is no
@@ -69,50 +79,6 @@
       <_AgilentExtracted Include="$(AgilentAssembliesDir)\vendor_api\Agilent\x64\*.config" />
     </ItemGroup>
     <Copy SourceFiles="@(_AgilentExtracted)" DestinationFolder="$(AgilentAssembliesDir)" SkipUnchangedFiles="true" />
-  </Target>
-
-  <!-- Cecil-patches BaseDataAccess.dll + BaseCommon.dll to remove uses of
-       Delegate.BeginInvoke/EndInvoke (removed from .NET 5+; the SDK throws
-       PlatformNotSupportedException on first OpenDataFile without this). The patcher backs
-       each input DLL up to <name>.prepatched on first run and reads from that copy on every
-       subsequent run, so applying the patch to an already-patched DLL is idempotent. Patched
-       DLLs live only in vendor-assemblies/Agilent/ — never committed (gitignored).
-
-       Sequencing: AfterTargets="ExtractAgilentAssemblies" guarantees the SDK exists before
-       we touch it; BeforeTargets="ResolveAssemblyReferences" makes the patched files visible
-       to the reference-copy step that follows. We don't bother with Inputs/Outputs because
-       the patcher is fast (~1s) and the .prepatched-backed idempotency makes re-runs safe.
-
-       WorkingDirectory: anchors the child `dotnet run` inside the repo so it resolves the
-       repo-root global.json (SDK 10.0.100, rollForward latestFeature) and relative paths
-       behave. NOTE: this used to exist to make the child pick up a *different*, older SDK
-       from pwiz-sharp/global.json than the outer build was using; that file no longer
-       exists (global.json moved to the repo root), so parent and child now resolve the
-       same SDK and this is belt-and-braces rather than load-bearing. -->
-  <PropertyGroup>
-    <AgilentPatcherProj>$(PwizSharpRoot)build\AgilentPatcher\AgilentPatcher.csproj</AgilentPatcherProj>
-  </PropertyGroup>
-  <Target Name="PatchAgilentBeginInvoke"
-          Condition="'$(NativeVendorsAvailable)' == 'true'"
-          AfterTargets="ExtractAgilentAssemblies"
-          BeforeTargets="ResolveAssemblyReferences;ResolveReferences;AssignTargetPaths">
-    <Message Importance="high" Text="Cecil-patching Agilent SDK (BaseDataAccess.dll, BaseCommon.dll) to remove BeginInvoke/EndInvoke." />
-    <!-- No EnvironmentVariables scrubbing. It used to clear MSBUILD_EXE_PATH, MSBuildSDKsPath,
-         MSBuildToolsPath, MSBuildExtensionsPath and DOTNET_HOST_PATH so the child would do a
-         fresh SDK resolution instead of inheriting the outer build's. Two reasons it is gone:
-         (1) clearing MSBuildSDKsPath or MSBuildExtensionsPath makes the child fail with MSB4236
-             ("The SDK 'Microsoft.NET.Sdk' specified could not be found") under SDK 10, but only
-             when invoked from inside the outer build - which is what made it look intermittent;
-         (2) the other three are pointless. Measured under `dotnet msbuild` (SDK 10.0.400), the
-             Exec child inherits MSBuildSDKsPath, MSBuildExtensionsPath and DOTNET_HOST_PATH,
-             while MSBUILD_EXE_PATH and MSBuildToolsPath are never set at all - so clearing that
-             subset scrubbed nothing and left the SDK inherited regardless.
-         Inheriting is now the correct behaviour: there is one global.json at the repo root, so
-         parent and child want the same SDK, and building this tool with the same SDK as the
-         build that invokes it is what we want. -->
-    <Exec Command="dotnet run --project &quot;$(AgilentPatcherProj)&quot; -c Release -- &quot;$(AgilentAssembliesDir)&quot;"
-          WorkingDirectory="$(PwizSharpRoot)"
-          StandardOutputImportance="low" />
   </Target>
 
   <!-- Managed-assembly references (after extraction). EmbedInteropTypes=false because these are
