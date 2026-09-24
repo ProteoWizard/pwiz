@@ -1076,7 +1076,7 @@ namespace TestPerf
                 // Original tutorial had this, but didn't explain it well, and it seemed to add
                 // unnecessary complexity.
                 // editGroupComparisonDlg.ShowAdvanced(true);
-                // editGroupComparisonDlg.ComboSummaryMethod.SelectedItem = SummarizationMethod.MEDIANPOLISH;
+                // editGroupComparisonDlg.ComboSummaryMethod.SelectedItem = SummarizationMethod.LEGACY_MEDIANPOLISH;
             });
             PauseForScreenShot<EditGroupComparisonDlg>("Edit Group Comparison");
             OkDialog(editGroupComparisonDlg, editGroupComparisonDlg.OkDialog);

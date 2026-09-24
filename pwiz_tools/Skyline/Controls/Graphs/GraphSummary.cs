@@ -604,7 +604,8 @@ namespace pwiz.Skyline.Controls.Graphs
         detections = 1 << 7,
         detections_histogram = 1 << 8,
         abundance = 1 << 9,
-        abundance_comparison = 1 << 10
+        abundance_comparison = 1 << 10,
+        rt_loess = 1 << 11
     }
 
     public static class Extensions
@@ -641,6 +642,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     return GraphsResources.Extensions_CustomToString_Detections_Replicates;
                 case GraphTypeSummary.detections_histogram:
                     return GraphsResources.Extensions_CustomToString_Detections_Histogram;
+                case GraphTypeSummary.rt_loess:
+                    return GraphsResources.Extensions_CustomToString_RT_LOESS_Curves;
                 default:
                     return string.Empty;
             }

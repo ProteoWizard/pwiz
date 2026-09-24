@@ -1058,6 +1058,128 @@ namespace pwiz.Skyline.Model.Results.Scoring
         }
     }
 
+    internal class SumCoelutionScoreCache : ScoreCache
+    {
+    }
+
+    /// <summary>
+    /// Calculates the sum of Pearson correlations between all pairs of transition XICs
+    /// within peak boundaries. Based on the DIA-NN coelution_sum score.
+    /// With N transitions there are N*(N-1)/2 pairs, so the score ranges from
+    /// -N*(N-1)/2 (all anti-correlated) to +N*(N-1)/2 (perfect co-elution).
+    /// </summary>
+    public class SumCoelutionScoreCalc : MQuestWeightedLightCalc<MQuestAnalyteCrossCorrelations>
+    {
+        public SumCoelutionScoreCalc() : base(@"Sum coelution score") { }
+
+        public override string Name
+        {
+            get { return ScoringResources.SumCoelutionScoreCalc_Name_Sum_coelution_score; }
+        }
+
+        public override bool IsReversedScore { get { return false; } }
+
+        protected override float Calculate(PeakScoringContext context, Statistics statValues, Statistics statWeigths)
+        {
+            double result = statValues.Sum();
+            if (double.IsNaN(result))
+                return GetDefaultScore(context);
+            return (float) result;
+        }
+
+        protected override double GetValue(MQuestCrossCorrelation xcorr)
+        {
+            return xcorr.PearsonCorrelation;
+        }
+
+        protected override double GetWeight(MQuestCrossCorrelation xcorr)
+        {
+            return 1.0;
+        }
+
+        protected override float GetDefaultScore(PeakScoringContext context) { return 0; }
+
+        protected override IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
+            IPeptidePeakData<TData> summaryPeakData)
+        {
+            return MQuestHelpers.GetAnalyteGroups(summaryPeakData);
+        }
+
+        protected override float? GetCachedScore(PeakScoringContext context,
+            IList<ITransitionGroupPeakData<IDetailedPeakData>> tranGroups)
+        {
+            SumCoelutionScoreCache cache;
+            if (context.TryGetInfo(out cache))
+                return cache.GetScore(tranGroups);
+            return null;
+        }
+
+        protected override float SetCachedScore(PeakScoringContext context,
+            IList<ITransitionGroupPeakData<IDetailedPeakData>> tranGroups, float score)
+        {
+            SumCoelutionScoreCache cache;
+            if (!context.TryGetInfo(out cache))
+            {
+                cache = new SumCoelutionScoreCache();
+                context.AddInfo(cache);
+            }
+            return cache.SetScore(tranGroups, score);
+        }
+    }
+
+    /// <summary>
+    /// Default variant of the sum coelution score, using whichever precursors are available.
+    /// </summary>
+    public class DefaultSumCoelutionScoreCalc : MQuestWeightedLightCalc<MQuestDefaultCrossCorrelations>
+    {
+        public DefaultSumCoelutionScoreCalc() : base(@"Default sum coelution score") { }
+
+        public override string Name
+        {
+            get { return ScoringResources.DefaultSumCoelutionScoreCalc_Name_Default_sum_coelution_score; }
+        }
+
+        public override bool IsReversedScore { get { return false; } }
+
+        protected override float Calculate(PeakScoringContext context, Statistics statValues, Statistics statWeigths)
+        {
+            double result = statValues.Sum();
+            if (double.IsNaN(result))
+                return GetDefaultScore(context);
+            return (float) result;
+        }
+
+        protected override double GetValue(MQuestCrossCorrelation xcorr)
+        {
+            return xcorr.PearsonCorrelation;
+        }
+
+        protected override double GetWeight(MQuestCrossCorrelation xcorr)
+        {
+            return 1.0;
+        }
+
+        protected override float GetDefaultScore(PeakScoringContext context) { return 0; }
+
+        protected override IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(
+            IPeptidePeakData<TData> summaryPeakData)
+        {
+            return MQuestHelpers.GetBestAvailableGroups(summaryPeakData);
+        }
+
+        protected override float? GetCachedScore(PeakScoringContext context,
+            IList<ITransitionGroupPeakData<IDetailedPeakData>> tranGroups)
+        {
+            return null;
+        }
+
+        protected override float SetCachedScore(PeakScoringContext context,
+            IList<ITransitionGroupPeakData<IDetailedPeakData>> tranGroups, float score)
+        {
+            return score;
+        }
+    }
+
     /// <summary>
     /// Calculates the MQuest cross-correlation matrix used by the co elution and shape scores
     /// </summary>
@@ -1399,6 +1521,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// The maximum cross-correlation score between the points of the two transitions
         /// </summary>
         public double MaxCorr { get { return XcorrDict.Max(p => p.Value); } }
+
+        /// <summary>
+        /// The Pearson correlation between the two transitions (cross-correlation at zero shift).
+        /// </summary>
+        public double PearsonCorrelation { get { return XcorrDict[0]; } }
 
         public double AreaSum
         {

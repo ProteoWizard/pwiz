@@ -430,6 +430,12 @@
   <data name="smoothSGChromContextMenuItem.Text" xml:space="preserve">
     <value>Savitzky-Golay Smoothing</value>
   </data>
+  <data name="cwtContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>202, 22</value>
+  </data>
+  <data name="cwtContextMenuItem.Text" xml:space="preserve">
+    <value>CWT (Mexican Hat)</value>
+  </data>
   <data name="autoZoomNoneContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>202, 22</value>
   </data>
@@ -734,6 +740,12 @@
     <value>smoothSGChromContextMenuItem</value>
   </data>
   <data name="&gt;&gt;smoothSGChromContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cwtContextMenuItem.Name" xml:space="preserve">
+    <value>cwtContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;cwtContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator17.Name" xml:space="preserve">

@@ -51,6 +51,8 @@ namespace pwiz.Skyline.Menus
             if (graphType == GraphTypeSummary.replicate)
             {
                 menuStrip.Items.Insert(iInsert++, graphTypeToolStripMenuItem);
+                UpdateMultiPeptideDisplayMenuItemCheckedState();
+                menuStrip.Items.Insert(iInsert++, multiPeptideDisplayMenuItem);
             }
 
             menuStrip.Items.Insert(iInsert++, new ToolStripSeparator());
@@ -60,6 +62,11 @@ namespace pwiz.Skyline.Menus
             if (isHistogram)
             {
                 SkylineWindow.EditMenu.AddGroupByMenuItems(menuStrip, groupReplicatesByContextMenuItem, SkylineWindow.SetAreaCVGroup, true, AreaGraphController.GroupByGroup, ref iInsert);
+            }
+            else if (graphType == GraphTypeSummary.rt_loess)
+            {
+                UpdateRtLoessShowValueMenuItemCheckedState();
+                menuStrip.Items.Insert(iInsert++, rtLoessShowValueContextMenuItem);
             }
             else if (graphType != GraphTypeSummary.abundance && graphType != GraphTypeSummary.abundance_comparison)
             {
@@ -400,6 +407,7 @@ namespace pwiz.Skyline.Menus
             areaAbundanceComparisonContextMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.abundance_comparison);
             areaCVHistogramContextMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.histogram);
             areaCVHistogram2DContextMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.histogram2d);
+            areaRtLoessContextMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.rt_loess);
         }
 
         private void areaReplicateComparisonMenuItem_Click(object sender, EventArgs e)
@@ -420,11 +428,62 @@ namespace pwiz.Skyline.Menus
         private void areaCVHistogram2DToolStripMenuItem1_Click(object sender, EventArgs e)
             => SkylineWindow.ShowPeakAreaCVHistogram2D();
 
+        private void areaRtLoessMenuItem_Click(object sender, EventArgs e)
+            => SkylineWindow.ShowPeakAreaRtLoessGraph();
+
+        private void rtLoessShowMedianMenuItem_Click(object sender, EventArgs e)
+            => SkylineWindow.SetRtLoessShowValue(RtLoessShowValue.Median);
+
+        private void rtLoessShowNormalizationFactorMenuItem_Click(object sender, EventArgs e)
+            => SkylineWindow.SetRtLoessShowValue(RtLoessShowValue.NormalizationFactor);
+
+        private void rtLoessShowNormalizedMedianMenuItem_Click(object sender, EventArgs e)
+            => SkylineWindow.SetRtLoessShowValue(RtLoessShowValue.NormalizedMedian);
+
+        private void rtLoessShowLegendMenuItem_Click(object sender, EventArgs e)
+            => SkylineWindow.SetRtLoessShowLegend(!AreaGraphController.RtLoessShowLegend);
+
+        private void rtLoessShowPeptidesMenuItem_Click(object sender, EventArgs e)
+            => SkylineWindow.SetRtLoessShowPeptides(!AreaGraphController.RtLoessShowPeptides);
+
+        private void rtLoessShowAdaptiveAlphaMenuItem_Click(object sender, EventArgs e)
+            => SkylineWindow.SetRtLoessAdaptiveAlpha(!AreaGraphController.RtLoessAdaptiveAlpha);
+
+        private void UpdateRtLoessShowValueMenuItemCheckedState()
+        {
+            var current = AreaGraphController.RtLoessShowValue;
+            rtLoessShowMedianMenuItem.Checked = current == RtLoessShowValue.Median;
+            rtLoessShowNormalizationFactorMenuItem.Checked = current == RtLoessShowValue.NormalizationFactor;
+            rtLoessShowNormalizedMedianMenuItem.Checked = current == RtLoessShowValue.NormalizedMedian;
+            rtLoessShowLegendMenuItem.Checked = AreaGraphController.RtLoessShowLegend;
+            rtLoessShowPeptidesMenuItem.Checked = AreaGraphController.RtLoessShowPeptides;
+            // Adaptive Alpha only affects the peptide points, so it is only enabled with them.
+            rtLoessShowAdaptiveAlphaMenuItem.Enabled = AreaGraphController.RtLoessShowPeptides;
+            rtLoessShowAdaptiveAlphaMenuItem.Checked = AreaGraphController.RtLoessAdaptiveAlpha;
+        }
+
         private void barAreaGraphTypeMenuItem_Click(object sender, EventArgs e)
             => SkylineWindow.SetAreaGraphDisplayType(AreaGraphDisplayType.bars);
 
         private void lineAreaGraphTypeMenuItem_Click(object sender, EventArgs e)
             => SkylineWindow.SetAreaGraphDisplayType(AreaGraphDisplayType.lines);
+
+        private void lineMultiPeptideDisplayMenuItem_Click(object sender, EventArgs e)
+            => SkylineWindow.SetAreaGraphMultiPeptideDisplay(MultiPeptideDisplay.Line);
+
+        private void clusterMultiPeptideDisplayMenuItem_Click(object sender, EventArgs e)
+            => SkylineWindow.SetAreaGraphMultiPeptideDisplay(MultiPeptideDisplay.Cluster);
+
+        private void aggregateMultiPeptideDisplayMenuItem_Click(object sender, EventArgs e)
+            => SkylineWindow.SetAreaGraphMultiPeptideDisplay(MultiPeptideDisplay.Aggregate);
+
+        private void UpdateMultiPeptideDisplayMenuItemCheckedState()
+        {
+            var current = AreaGraphController.AreaGraphMultiPeptideDisplay;
+            lineMultiPeptideDisplayMenuItem.Checked = current == MultiPeptideDisplay.Line;
+            clusterMultiPeptideDisplayMenuItem.Checked = current == MultiPeptideDisplay.Cluster;
+            aggregateMultiPeptideDisplayMenuItem.Checked = current == MultiPeptideDisplay.Aggregate;
+        }
 
         private void showLibraryPeakAreaContextMenuItem_Click(object sender, EventArgs e)
         {
