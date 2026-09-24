@@ -751,6 +751,11 @@ public static class VendorReaderTestHarness
         }
         if (lastError is not null)
         {
+            // The IOException says a process holds the path but never which one, and this has
+            // only ever failed on CI agents. Name the holder at the point of failure: whether
+            // it is this process, a sibling test host sharing the fixture, or something
+            // environmental decides which of three different bugs this is.
+            string holders = FileLockReporter.Describe(rawPath);
             // cpp VendorReaderTestHarness.cpp:1014-1016 has the same HACK for Bruker YEP/FID
             // CompassXtract leaks. We tag the cases where Clearcore2 / wiff2 deliberately
             // retain handles on .NET 8 (see IsKnownLeakySdkPath in TestOne) and soft-fail
@@ -760,13 +765,15 @@ public static class VendorReaderTestHarness
             {
                 Console.Error.WriteLine(
                     $"warning: cannot rename {rawPath} {probeDescription} (vendor SDK retains handles " +
-                    $"on .NET 8 - see VendorReaderTestHarness.IsKnownLeakySdkPath): {lastError.Message}");
+                    $"on .NET 8 - see VendorReaderTestHarness.IsKnownLeakySdkPath): {lastError.Message}" +
+                    $"{Environment.NewLine}{holders}");
                 return;
             }
             throw new InvalidOperationException(
                 $"Cannot rename {rawPath} {probeDescription}: there are unreleased file locks. " +
                 $"{lockHint} " +
-                $"Underlying error: {lastError.Message}", lastError);
+                $"Underlying error: {lastError.Message}" +
+                $"{Environment.NewLine}{holders}", lastError);
         }
 
         try
