@@ -89,6 +89,8 @@ namespace pwiz.Common.SystemUtil.PInvoke
             WM_LBUTTONDOWN = 0x0201,
             WM_LBUTTONUP = 0x0202,
             WM_MOUSELEAVE = 0x02A3,
+            EM_SETSEL = 0x00B1,
+            EM_REPLACESEL = 0x00C2,
             BM_CLICK = 0x00F5
             // ReSharper restore InconsistentNaming IdentifierTypo
         }
@@ -293,11 +295,6 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport("user32.dll")]
         public static extern IntPtr GetParent(IntPtr hwnd);
 
-        /// <summary>Sets a window's text (a WM_SETTEXT send), e.g. to type a path into a native dialog's
-        /// file-name field. Blocks until the owning thread pumps it, so it is safe to call from any thread.</summary>
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern bool SetWindowText(IntPtr hwnd, string text);
-
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
 
@@ -410,6 +407,19 @@ namespace pwiz.Common.SystemUtil.PInvoke
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr SendMessage(IntPtr hWnd, WinMessageType msgType, IntPtr wParam, IntPtr lParam);
+
+        // Private: whether a message's lParam is a string, and how it is marshaled, depends on the message, so each
+        // message that takes one gets its own public method here rather than a caller choosing this overload.
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        private static extern IntPtr SendMessage(IntPtr hWnd, WinMessageType msgType, IntPtr wParam, string lParam);
+
+        /// <summary>Replaces the text in an edit box as if the user had typed it: selects everything, then replaces
+        /// the selection. Each send blocks until the box's owning thread pumps it, so this is safe from any thread.</summary>
+        public static void ReplaceEditText(IntPtr hwndEdit, string text)
+        {
+            SendMessage(hwndEdit, WinMessageType.EM_SETSEL, IntPtr.Zero, (IntPtr) (-1)); // select all
+            SendMessage(hwndEdit, WinMessageType.EM_REPLACESEL, True, text); // undoable, as typing is
+        }
 
         [DllImport("user32.dll")]
         public static extern bool SetForegroundWindow(IntPtr hWnd);
