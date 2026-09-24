@@ -129,7 +129,7 @@ namespace pwiz.Osprey.Tasks
             // compacted-away rows are dropped, and the ratio is the whole point of the
             // artifact - a log that still printed original+appended would hide it.
             logInfo(string.Format(
-                "  Wrote reconciled parquet for {0}: {1} rows ({2} replaced + {3} appended; original {4} rows)",
+                "  Wrote reconciled parquet for {0}: {1:N0} rows ({2:N0} replaced + {3:N0} appended; original {4:N0} rows)",
                 fileName, nWritten, nReplaced, nAppended, origRowCount));
             return true;
         }

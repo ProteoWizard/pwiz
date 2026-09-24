@@ -1320,7 +1320,7 @@ namespace pwiz.Osprey.Tasks
             BlibOutputWriter.Write(config, rescored.FileNames, libraryById, bestByPrecursor,
                 bestExpPrecursorQ, sharedBounds, passingEntries, precursorFacts);
 
-            ctx.LogInfo(string.Format("Wrote {0} library spectra to {1} (from {2} passing entries)",
+            ctx.LogInfo(string.Format("Wrote {0:N0} library spectra to {1} (from {2:N0} passing entries)",
                 bestByPrecursor.Count, config.OutputBlib, passingEntries.Count));
         }
 

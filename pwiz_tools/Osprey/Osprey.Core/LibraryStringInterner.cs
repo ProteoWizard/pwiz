@@ -168,7 +168,7 @@ namespace pwiz.Osprey.Core
             long collapsed = _totalRefs - _pool.Count;
             double pct = _totalRefs > 0 ? 100.0 * collapsed / _totalRefs : 0.0;
             logInfo(string.Format(
-                "Interned library strings: {0} distinct / {1} total ({2:F1}% collapsed)",
+                "Interned library strings: {0:N0} distinct / {1:N0} total ({2:F1}% collapsed)",
                 _pool.Count, _totalRefs, pct));
         }
     }

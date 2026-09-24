@@ -303,7 +303,7 @@ namespace pwiz.Osprey
                 LogInfo(string.Format("Input files: {0}", config.InputFiles.Count));
                 LogInfo(string.Format("Library: {0} ({1})",
                     config.LibrarySource?.Path ?? "(none)",
-                    config.LibrarySource?.Format.ToString() ?? "?"));
+                    config.LibrarySource?.Format.GetLocalizedString() ?? "?"));
                 // A --task run executes one HPC stage rather than the full pipeline;
                 // name it so the log says which single task ran (no --task = full
                 // pipeline, no line). The Name is the canonical spelling, whatever
@@ -316,7 +316,7 @@ namespace pwiz.Osprey
                 // rebuilt: every selectable task but SecondPassFDR describes its own output.
                 LogInfo(string.Format("Output: {0}",
                     config.SelectedTask?.DescribeOutput(config) ?? config.OutputBlib));
-                LogInfo(string.Format("Resolution: {0}", config.ResolutionMode));
+                LogInfo(string.Format("Resolution: {0}", config.ResolutionMode.GetLocalizedString()));
                 LogInfo(string.Format("Fragment tolerance: {0} {1}",
                     config.FragmentTolerance.Tolerance,
                     config.FragmentTolerance.Unit == ToleranceUnit.Ppm ? "ppm" : "Th"));

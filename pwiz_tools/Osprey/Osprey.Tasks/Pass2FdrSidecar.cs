@@ -599,8 +599,8 @@ namespace pwiz.Osprey.Tasks
             // the competition's [STAGE-WALL] line and the next probe (#4486); the write loop is
             // the first half.
             using (var reloadProgress = new ProgressReporter(
-                string.Format(@"Reloading 2nd-pass FDR scores ({0}) for {1} file(s)",
-                              phase, perFileEntries.Count),
+                string.Format(@"Checking second-pass intermediate files for {0:N0} files",
+                              perFileEntries.Count),
                 perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 long nReloadReported = 0;
@@ -782,7 +782,7 @@ namespace pwiz.Osprey.Tasks
             var seeder = new Pass1ScalarSeeder(maxEntries,
                 LoadExperimentRecords(ctx.Config, FdrScoresSidecar.Pass.FirstPass));
             using (var progress = new ProgressReporter(
-                       string.Format(@"Seeding pass-1 scalars from {0} file(s)", perFileEntries.Count),
+                       string.Format(@"Restoring first-pass scores for {0:N0} files", perFileEntries.Count),
                        perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 foreach (var kvp in perFileEntries)
@@ -1489,7 +1489,7 @@ namespace pwiz.Osprey.Tasks
             // it is per-file work and reports as such.
             int patchIdx = 0;
             using (var progress = new ProgressReporter(
-                       string.Format(@"Patching pass-2 protein q into {0} sidecar(s)", fileNames.Count),
+                       string.Format(@"Writing protein q-values for {0:N0} files", fileNames.Count),
                        fileNames.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 foreach (string fileName in fileNames)
@@ -1789,7 +1789,7 @@ namespace pwiz.Osprey.Tasks
             // multi-hour search. The two steps after it (sidecar path validation and the protein
             // stratum build) are in the same silence and are NOT yet reported - see the TODO.
             using (var mergeProgress = new ProgressReporter(
-                string.Format(@"Collecting pass-2 survivors from {0} file(s)", fileNames.Count),
+                string.Format(@"Collecting second-pass precursor candidates from {0:N0} files", fileNames.Count),
                 fileNames.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 int mergeIdx = 0;
@@ -1916,12 +1916,16 @@ namespace pwiz.Osprey.Tasks
                 sidecarByKey[fileName] = sidecarPath;
             }
 
+            // What happens to the q-values, not how: the mode is on the [PATH] pass2-qvalue line,
+            // and the frozen model, streaming and survivor-observation count are mechanism.
             ctx.LogInfo(string.Format(
-                "OSPREY_PASS2_QVALUE={0}: recomputing q/PEP by streaming {1} file(s), frozen-model " +
-                "scores swapped in for up to {2} reconciled survivor observations - no retrain, one " +
-                "file resident at a time{3}.",
-                mode, fileKeys.Count, survivorObservations,
-                ", competition CONSTRAINED to the " + stratumBaseIds.Count + "-base_id protein stratum"));
+                "Second-pass FDR over {0:N0} files: recomputing q-values for {1:N0} precursor " +
+                "candidates from proteins with 2 or more detections; other candidates keep their " +
+                "first-pass q-values.",
+                fileKeys.Count, stratumBaseIds.Count));
+            ctx.LogVerbose(string.Format(
+                "{0}: frozen first-pass model scores for up to {1:N0} reconciled observations, one file at a time.",
+                mode, survivorObservations));
 
             // This competition reduces per base_id by MAX, and BOTH modes that reach it then
             // overwrite the reported experiment q from that reduction. Neither is compatible with
@@ -2016,7 +2020,7 @@ namespace pwiz.Osprey.Tasks
             // a callback through the FDR layer. It now covers the frozen-model feature reload too
             // (folded in below), which is the expensive half and used to have its own reporter.
             using (var progress = new ProgressReporter(
-                string.Format("{0}: streaming the competition over {1} file(s)", mode, fileKeys.Count),
+                string.Format("Recomputing second-pass q-values across {0:N0} files", fileKeys.Count),
                 fileKeys.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 long nRead = 0;
@@ -2265,7 +2269,7 @@ namespace pwiz.Osprey.Tasks
             var unpatched = new List<string>(writeFailures);
             var experiment = new FdrExperimentAccumulator();
             using (var patchProgress = new ProgressReporter(
-                string.Format("{0}: writing experiment q to {1} file(s)", mode, sidecarsWritten.Count),
+                string.Format("Writing experiment-level q-values for {0:N0} files", sidecarsWritten.Count),
                 sidecarsWritten.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 int patchIdx = 0;
@@ -2318,11 +2322,12 @@ namespace pwiz.Osprey.Tasks
             // by one rule applied to every record regardless of which branch produced it.
             floors.DerivePeptideFloors();
             int raised = experiment.ApplyRunQFloors(entryId => floors.FloorsFor(entryId));
-            ctx.LogInfo(LogTag.FDR, string.Format(
-                @"experiment-q floors: folded {0} entry_id and {1} peptide floor(s) from " +
-                @"the per-file second-pass records - no pass over the runs - and raised {2} " +
-                @"experiment q-value(s) to them.",
-                floors.EntryIdCount, floors.PeptideCount, raised));
+            ctx.LogInfo(string.Format(
+                @"Raised {0:N0} experiment-level q-values to their best run-level q-value, so none " +
+                @"is more confident across the experiment than in its best run.", raised));
+            ctx.LogVerbose(string.Format(
+                @"  experiment-level q floors from {0:N0} precursors and {1:N0} peptides",
+                floors.EntryIdCount, floors.PeptideCount));
 
             // Handed to the protein-FDR step, which fills the one column it owns and writes the
             // 2nd-pass experiment sidecar. Published rather than returned because the protein
@@ -2343,7 +2348,7 @@ namespace pwiz.Osprey.Tasks
                     mode, unpatched.Count, string.Join(", ", unpatched)));
             }
             ctx.LogInfo(string.Format(
-                "{0}: mapped recomputed q onto {1} reported survivors ({2} frozen-model scores " +
+                "{0}: mapped recomputed q onto {1:N0} reported survivors ({2:N0} frozen-model scores " +
                 "swapped in) in {3:F1}s.",
                 mode, nMapped, nScored, sw.Elapsed.TotalSeconds));
             return true;

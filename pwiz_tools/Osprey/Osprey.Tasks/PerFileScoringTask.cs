@@ -925,7 +925,7 @@ namespace pwiz.Osprey.Tasks
         private static void LogCoelutionComplete(PipelineContext ctx, long totalScored, int nFiles)
         {
             ctx.LogInfo(string.Format(
-                @"Coelution analysis complete. {0} total scored entries across {1} files",
+                @"Coelution analysis complete. {0:N0} total scored entries across {1:N0} files",
                 totalScored, nFiles));
             ctx.LogInfo(LogTag.COUNT, LogKey.Format(LogKey.COUNT_SCORED_CANDIDATES, @"total={0} files={1}",
                 totalScored, nFiles));
@@ -1215,7 +1215,7 @@ namespace pwiz.Osprey.Tasks
             fullLibrary.AddRange(library);
             fullLibrary.AddRange(decoys);
 
-            ctx.LogInfo(string.Format(@"Full library: {0} entries ({1} targets + {2} decoys)",
+            ctx.LogInfo(string.Format(@"Full library: {0:N0} entries ({1:N0} targets + {2:N0} decoys)",
                 fullLibrary.Count, library.Count, decoys.Count));
             ctx.LogInfo(LogTag.COUNT, string.Format(@"Full library: {0} ({1} targets + {2} decoys)",
                 fullLibrary.Count, library.Count, decoys.Count));
@@ -1473,6 +1473,11 @@ namespace pwiz.Osprey.Tasks
                 return null;
             }
 
+            // One heading with a percent in place of a line per file: at cohort scale the
+            // per-file lines were most of the log. The file names stay behind --verbose.
+            var loadProgress = new ProgressReporter(string.Format(
+                    @"Loading FDR values from intermediate files for {0:N0} files", scoresPaths.Count),
+                scoresPaths.Count, intervalSeconds: ProgressReporter.IO_INTERVAL_SECONDS);
             for (int fileIdx = 0; fileIdx < scoresPaths.Count; fileIdx++)
             {
                 string parquetPath = scoresPaths[fileIdx];
@@ -1483,7 +1488,7 @@ namespace pwiz.Osprey.Tasks
                 // bogus key "<stem>.reconciled".
                 string fileName = Path.GetFileNameWithoutExtension(
                     config.InputFiles[fileIdx]) ?? string.Empty;
-                ctx.LogInfo(string.Format(@"Loading file {0}/{1}: {2} (from {3})",
+                ctx.LogVerbose(string.Format(@"Loading file {0}/{1}: {2} (from {3})",
                     fileIdx + 1, scoresPaths.Count, fileName, parquetPath));
                 if (useLeanProjection)
                 {
@@ -1570,7 +1575,9 @@ namespace pwiz.Osprey.Tasks
                 perFileParquetPaths[fileName] = parquetPath;
                 LoadJoinOnlyCalibration(fileName, parquetPath, perFileCalibrations,
                     perFileIsolationMz, ctx);
+                loadProgress.Report(fileIdx + 1);
             }
+            loadProgress.Dispose();
             if (ctx.Diagnostics?.CalibrationOnly ?? false)
                 OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_CALIBRATION_ONLY");
             return useLeanProjection ? FdrProjectionSet.CountsOnly(joinLeanNames, joinLeanCounts) : null;
@@ -1718,12 +1725,12 @@ namespace pwiz.Osprey.Tasks
             PipelineContext ctx)
         {
             // Indented two levels: this runs inside RescoreHydration.HydrateCompactedStreaming's
-            // "Hydrating reconciliation bundle" reporter, whose heading is at column 0 and whose
+            // "Loading cross-run reconciliation files" reporter, whose heading is at column 0 and whose
             // percent lines are at 2. Printed flush left, these per-file lines read as siblings
             // of that heading and its percentages read as theirs - the parent printed as a child
             // of its own child. The counter here is this file within the bundle; the percentage
             // above it is the bundle's own.
-            ctx.LogInfo(string.Format(@"    Loading file {0}/{1}: {2} (from {3})",
+            ctx.LogVerbose(string.Format(@"    Loading file {0}/{1}: {2} (from {3})",
                 fileIdx + 1, config.InputFiles.Count, fileName, parquetPath));
             var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath, null, sequencePool);
             // Keep the fail-fast the feature load used to provide: a foreign or truncated
@@ -1972,12 +1979,12 @@ namespace pwiz.Osprey.Tasks
                     }
                 }
                 ctx.LogInfo(string.Format(
-                    @"Hydrated rescore bundle for {0} file(s) ({1} reconciliation actions, " +
-                    @"{2} refined RT calibration(s), {3} gap-fill target(s))",
+                    @"Loaded cross-run reconciliation files for {0:N0} runs: {1:N0} peak re-picks " +
+                    @"and boundary imputations, {2:N0} missing peaks, {3:N0} refined RT calibrations.",
                     perFileEntries.Count,
                     _rescoreInputs.TotalActions,
-                    _rescoreInputs.RefinedCalibrations.Count,
-                    _rescoreInputs.TotalGapFillTargets));
+                    _rescoreInputs.TotalGapFillTargets,
+                    _rescoreInputs.RefinedCalibrations.Count));
             }
             return true;
         }
@@ -2575,7 +2582,7 @@ namespace pwiz.Osprey.Tasks
             var ms1Spectra = windowIndex.Ms1Spectra.ToList();
             var isolationWindows = windowIndex.IsolationWindows.ToList();
             ctx.LogInfo(string.Format(
-                "Loaded {0} MS1 and {1} MS/MS spectra with {2} unique isolation windows{3}",
+                "Loaded {0:N0} MS1 and {1:N0} MS/MS spectra with {2:N0} unique isolation windows{3}",
                 ms1Spectra.Count, windowIndex.Ms2Count, isolationWindows.Count,
                 unsortedCount > 0
                     ? string.Format(" ({0} had unsorted peaks, re-sorted; use --verbose for detail)", unsortedCount)
@@ -2725,7 +2732,7 @@ namespace pwiz.Osprey.Tasks
                     parquetPath, scoredEntries, parquetFooterMetadata, _libraryById, fileName);
                 swParquet.Stop();
                 ctx.LogInfo(string.Format(
-                    "Wrote {0} scored entries to {1} ({2:F1}s)",
+                    "Wrote {0:N0} scored entries to {1} ({2:F1}s)",
                     scoredEntries.Count, parquetPath, swParquet.Elapsed.TotalSeconds));
 
                 // Phase 1 (issue #4355): the heavy per-entry arrays are now persisted in
@@ -2787,7 +2794,7 @@ namespace pwiz.Osprey.Tasks
 
             int nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
             int nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
-            ctx.LogInfo(string.Format("Scored {0} entries ({1} targets, {2} decoys) for {3}",
+            ctx.LogInfo(string.Format("Scored {0:N0} entries ({1:N0} targets, {2:N0} decoys) for {3}",
                 scoredEntries.Count,
                 nScoredTargets,
                 nScoredDecoys,
@@ -3096,7 +3103,7 @@ namespace pwiz.Osprey.Tasks
                 }
                 ctx.LogInfo(rtToleranceLine);
                 ctx.LogInfo(string.Format(ic,
-                    "  RT fit: MAD={0:F3} min, residual SD={1:F3} min, R^2={2:F4}, n={3} points",
+                    "  RT fit: MAD={0:F3} min, residual SD={1:F3} min, R^2={2:F4}, n={3:N0} points",
                     stats.MAD, stats.ResidualSD, stats.RSquared, stats.NPoints));
             }
 
@@ -3121,7 +3128,7 @@ namespace pwiz.Osprey.Tasks
             }
             double tolerance = cal.AdjustedTolerance ?? (Math.Abs(cal.Mean) + 3.0 * cal.SD);
             ctx.LogInfo(string.Format(ic,
-                "  {0} mass: correction={1:F2} {2}, SD={3:F2} {2}, tolerance=+/-{4:F2} {2} (n={5} {6} matches)",
+                "  {0} mass: correction={1:F2} {2}, SD={3:F2} {2}, tolerance=+/-{4:F2} {2} (n={5:N0} {6} matches)",
                 level, cal.Mean, cal.Unit, cal.SD, tolerance, cal.Count, matchNoun));
         }
 

@@ -224,7 +224,7 @@ namespace pwiz.Osprey.Tasks
             // with, and Report is cheap enough to sit in the outer loop only.
             int compactIdx = 0;
             using (var progress = new ProgressReporter(
-                       string.Format(@"Applying the retained set across {0} file(s)",
+                       string.Format(@"Trimming each file to the precursor candidates kept for cross-run reconciliation ({0:N0} files)",
                                      inputs.PerFileEntries.Count),
                        inputs.PerFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {

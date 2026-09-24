@@ -226,7 +226,7 @@ namespace pwiz.Osprey.Scoring
         {
             // Public API: tolerate a missing logger as a no-op rather than throwing.
             logInfo = logInfo ?? (_ => { });
-            logInfo(string.Format("Generating decoys using {0} method...", config.DecoyMethod));
+            logInfo(string.Format("Generating {0} decoys...", config.DecoyMethod.GetLocalizedString()));
 
             // Build set of all target (stripped) sequences for collision detection, I->L
             // normalized so isobaric collisions are visible (see NormalizeIsoleucine).
@@ -320,7 +320,7 @@ namespace pwiz.Osprey.Scoring
 
             interner.LogSummary(logInfo);
             logInfo(string.Format(
-                "Generated {0} decoys from {1} targets ({2} excluded due to collisions)",
+                "Generated {0:N0} decoys from {1:N0} targets ({2:N0} excluded due to collisions)",
                 decoys.Count, targets.Count, nExcluded));
             return decoys;
         }

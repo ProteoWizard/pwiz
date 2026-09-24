@@ -218,7 +218,7 @@ namespace pwiz.Osprey.Tasks
                 {
                     cacheBytes = 0;
                 }
-                ctx.LogInfo(string.Format("Saved spectra cache ({0} MS2 + {1} MS1, {2:F2} GB) to '{3}'",
+                ctx.LogInfo(string.Format("Saved spectra cache ({0:N0} MS2 + {1:N0} MS1, {2:F2} GB) to '{3}'",
                     mzmlResult.Ms2Spectra.Count, mzmlResult.Ms1Spectra.Count,
                     cacheBytes / 1024.0 / 1024.0 / 1024.0, cachePath));
             }
@@ -966,6 +966,25 @@ namespace pwiz.Osprey.Tasks
                     new FdrQValues(entry.RunPrecursorQvalue, entry.RunPeptideQvalue,
                         entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue, entry.Pep));
             }
+        }
+
+        /// <summary>
+        /// Report the first-pass compaction: what was kept, for the person watching, and the
+        /// admission detail behind <c>--verbose</c>. The base_id count mixes three admission
+        /// rules (run-level peptide q, protein q, and proteins with 2 or more detections), so it
+        /// does not belong in a one-line summary. <paramref name="droppedActions"/> is null where
+        /// the caller has no reconciliation plan to trim.
+        /// </summary>
+        internal static void LogCompaction(PipelineContext ctx, long before, long after,
+            int passingBaseIds, int? droppedActions)
+        {
+            ctx.LogInfo(string.Format(
+                @"Kept {0:N0} of {1:N0} precursor candidates for cross-run reconciliation.",
+                after, before));
+            ctx.LogVerbose(droppedActions.HasValue
+                ? string.Format(@"  {0:N0} passing base_ids; {1:N0} reconciliation action(s) dropped",
+                    passingBaseIds, droppedActions.Value)
+                : string.Format(@"  {0:N0} passing base_ids", passingBaseIds));
         }
     }
 }

@@ -375,7 +375,7 @@ namespace pwiz.Osprey.Tasks
             // HEARTBEAT_SECONDS tick. That bounds the gap only while Report keeps being
             // called - it fires from inside Report - so a single slow file still reopens it.
             using (var hydrateProgress = new ProgressReporter(
-                       @"Hydrating reconciliation bundle", perFileEntries.Count))
+                       @"Loading cross-run reconciliation files", perFileEntries.Count))
             {
                 for (int i = 0; i < perFileEntries.Count; i++)
                 {
@@ -617,7 +617,7 @@ namespace pwiz.Osprey.Tasks
                 ALL_RUNS_BUNDLE_MARKER, nFiles));
             log?.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_ALL_RUNS_BUNDLE, @"built runs={0}", nFiles));
             using (var hydrateProgress = new ProgressReporter(
-                       @"Hydrating reconciliation bundle", nFiles))
+                       @"Loading cross-run reconciliation files", nFiles))
             {
                 for (int i = 0; i < nFiles; i++)
                 {

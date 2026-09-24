@@ -581,7 +581,7 @@ namespace pwiz.Osprey.Tasks
                 joinFileStems,
                 survivorLoader);
             ctx.LogInfo(string.Format(
-                @"Reconciliation rescore: {0} entries re-scored ({1} reconciliation actions executed)",
+                @"Reconciliation rescore: {0:N0} entries re-scored ({1:N0} reconciliation actions executed)",
                 rescoreStats.TotalRescored, rescoreStats.TotalReconciliation));
 
             // No rebuild of the whole-run buffer here. The streamed loop emptied every file's
@@ -841,10 +841,8 @@ namespace pwiz.Osprey.Tasks
                 long entriesBefore = preCompacted
                     ? bundle.TotalPreCompactionStubs
                     : stats.EntriesBefore;
-                ctx.LogInfo(string.Format(
-                    @"--task SecondPassFDR compaction: {0} -> {1} entries ({2} passing base_ids; {3} action(s) dropped)",
-                    entriesBefore, stats.EntriesAfter,
-                    stats.FirstPassBaseIds, stats.DroppedActions));
+                ScoringTaskShared.LogCompaction(ctx, entriesBefore, stats.EntriesAfter,
+                    stats.FirstPassBaseIds, stats.DroppedActions);
             }
             return true;
         }
@@ -1507,7 +1505,7 @@ namespace pwiz.Osprey.Tasks
             }
 
             ctx.LogInfo(string.Format(
-                "  {0} of {1} existing entries re-scored ({2:F1}s)",
+                "  {0:N0} of {1:N0} existing entries re-scored ({2:F1}s)",
                 nOverlay, combinedTargets.Count, swRescore.Elapsed.TotalSeconds));
 
             // PHASE 2 -- gap-fill two-pass.
@@ -1865,7 +1863,7 @@ namespace pwiz.Osprey.Tasks
                 "Re-scoring file {0}/{1}: {2}", fileNum + 1, nTotalFiles, fileName));
             ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_RESCORE_FILE, @"{0}/{1}", fileNum + 1, nTotalFiles));
             ctx.LogInfo(string.Format(
-                "  {0} entries ({1} consensus, {2} reconciliation, {3} gap-fill, {4} unique after dedup)",
+                "  {0:N0} entries ({1:N0} consensus, {2:N0} reconciliation, {3:N0} gap-fill, {4:N0} unique after dedup)",
                 combinedTargets.Count + gapFillTargets.Count * 2,
                 consensusTargets.Count,
                 reconTargets.Count,
@@ -3375,7 +3373,7 @@ namespace pwiz.Osprey.Tasks
                 }
 
                 ctx.LogInfo(string.Format(
-                    "  Gap-fill CWT: {0} hits ({1:F1}s)",
+                    "  Gap-fill CWT: {0:N0} hits ({1:F1}s)",
                     nGapCwt, swCwt.Elapsed.TotalSeconds));
             }
             else
@@ -3515,7 +3513,7 @@ namespace pwiz.Osprey.Tasks
             }
 
             ctx.LogInfo(string.Format(
-                "  Streaming {1} MS1 and {0} MS/MS spectra from cache for {2}",
+                "  Streaming {1:N0} MS1 and {0:N0} MS/MS spectra from cache for {2}",
                 index.Ms2Count, index.Ms1Spectra.Count, fileName));
             return index;
         }

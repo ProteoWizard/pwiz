@@ -72,8 +72,6 @@ namespace pwiz.Osprey.Core
         public static readonly LogTag BISECT = new LogTag(@"BISECT", Always);
         /// <summary>A diagnostic dump reached only through <c>-d</c>.</summary>
         public static readonly LogTag DIAG = new LogTag(@"DIAG", Always);
-        /// <summary>FDR bookkeeping.</summary>
-        public static readonly LogTag FDR = new LogTag(@"FDR", Always);
         /// <summary>Library load timing.</summary>
         public static readonly LogTag LIB_LOAD = new LogTag(@"LIB-LOAD", Always);
         /// <summary>

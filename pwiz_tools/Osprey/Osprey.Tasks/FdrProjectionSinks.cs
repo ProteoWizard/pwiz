@@ -139,7 +139,7 @@ namespace pwiz.Osprey.Tasks
             }
 
             log.LogInfo(string.Format(
-                "{0} Percolator results: {1} targets, {2} decoys pass {3:P1} FDR",
+                "{0} Percolator results: {1:N0} targets, {2:N0} decoys pass {3:P1} FDR",
                 _passLabel, nTargetPassing, nDecoyPassing, _runFdr));
             log.LogInfo(LogTag.COUNT, string.Format(
                 "{0} total across files: {1}",

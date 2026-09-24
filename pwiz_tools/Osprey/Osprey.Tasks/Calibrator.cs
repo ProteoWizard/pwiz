@@ -1163,7 +1163,7 @@ namespace pwiz.Osprey.Tasks
             var (libRts, measuredRts) = CollectCalibrationPoints(
                 matchArray, accumulated, passNumber, fileName, nTargetWins);
             _ctx.LogInfo(string.Format(
-                "Calibration pass {0}: {1} RT calibration points (from {2} peptides at 1% FDR)",
+                "Calibration pass {0}: {1:N0} RT calibration points (from {2:N0} peptides at 1% FDR)",
                 passNumber, libRts.Count, nPassing));
 
             libRtsDetected = libRts;
@@ -1350,7 +1350,7 @@ namespace pwiz.Osprey.Tasks
                 _ctx.LogInfo(LogTag.TIMING, string.Format("Calibration pass {0} LOESS fit: {1:F2}s",
                     passNumber, swLoess.Elapsed.TotalSeconds));
                 _ctx.LogVerbose(string.Format(
-                    "RT calibration pass {0}: {1} points, R2={2:F4}, residual SD={3:F3} min, MAD={4:F3}",
+                    "RT calibration pass {0}: {1:N0} points, R2={2:F4}, residual SD={3:F3} min, MAD={4:F3}",
                     passNumber, stats.NPoints, stats.RSquared, stats.ResidualSD, stats.MAD));
 
                 return new CalibrationPassResult
@@ -1757,10 +1757,10 @@ namespace pwiz.Osprey.Tasks
             ms1Calibration = MzCalibration.CalculateSingleLevel(allMs1Errors.ToArray(), unitStr);
             ms2Calibration = MzCalibration.CalculateSingleLevel(allMs2Errors.ToArray(), unitStr);
             _ctx.LogVerbose(string.Format(
-                "MS1 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} (n={5} precursor matches)",
+                "MS1 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} (n={5:N0} precursor matches)",
                 passNumber, ms1Calibration.Mean, unitStr, ms1Calibration.SD, 3.0 * ms1Calibration.SD, allMs1Errors.Count));
             _ctx.LogVerbose(string.Format(
-                "MS2 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} (n={5} fragment matches)",
+                "MS2 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} (n={5:N0} fragment matches)",
                 passNumber, ms2Calibration.Mean, unitStr, ms2Calibration.SD, 3.0 * ms2Calibration.SD, allMs2Errors.Count));
         }
 

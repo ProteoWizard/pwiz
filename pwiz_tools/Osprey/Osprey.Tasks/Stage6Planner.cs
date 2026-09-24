@@ -261,7 +261,7 @@ namespace pwiz.Osprey.Tasks
             CwtCandidateLoader.ThrowIfAnyInvalid(cwtInvalid, fileNames.Count);
 
             _ctx.LogInfo(string.Format(
-                @"Reconciliation multi-charge consensus: {0} entries need re-scoring across {1} files",
+                @"Reconciliation multi-charge consensus: {0:N0} entries need re-scoring across {1:N0} files",
                 scan.TotalMulticharge, fileNames.Count));
 
             if (_ctx.Diagnostics?.DumpMulticharge ?? false)
@@ -310,7 +310,7 @@ namespace pwiz.Osprey.Tasks
                 else nTargets++;
             }
             _ctx.LogInfo(string.Format(
-                @"Reconciliation consensus: {0} target peptides, {1} decoy peptides",
+                @"Reconciliation consensus: {0:N0} target peptides, {1:N0} decoy peptides",
                 nTargets, nDecoys));
 
             // Fires UNCONDITIONALLY when OSPREY_DUMP_CONSENSUS=1, so an empty consensus
@@ -458,7 +458,8 @@ namespace pwiz.Osprey.Tasks
             if (planning)
             {
                 _ctx.LogInfo(string.Format(
-                    @"Reconciliation: {0} per-(file, entry) actions planned", actions.Count));
+                    @"Cross-run reconciliation: {0:N0} peak re-picks and boundary imputations planned across {1:N0} files.",
+                    actions.Count, fileNames.Count));
             }
             else
             {

@@ -178,7 +178,7 @@ namespace pwiz.Osprey.Tasks
             // under that flag (the same trap the calibration scoring loop records).
             int precompressed = 0;
             using (var progress = new ProgressReporter(
-                       string.Format(@"Compressing {0} library spectra for the blib", blibN),
+                       string.Format(@"Compressing {0:N0} library spectra for the blib", blibN),
                        blibN, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 Parallel.For(0, blibN,
@@ -229,7 +229,7 @@ namespace pwiz.Osprey.Tasks
             // Reported for the same reason as the pre-compress pass above: this emits five row
             // families per spectrum into SQLite and ran silent inside the same 47 s gap.
             using (var progress = new ProgressReporter(
-                       string.Format(@"Writing {0} spectra to the blib", blibEntries.Count),
+                       string.Format(@"Writing {0:N0} spectra to the blib", blibEntries.Count),
                        blibEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 for (int blibIdx = 0; blibIdx < blibEntries.Count; blibIdx++)

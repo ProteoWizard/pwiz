@@ -95,7 +95,7 @@ namespace pwiz.Osprey.FDR
                     nAtRunFdr++;
             }
             log.LogInfo(string.Format(
-                "First-pass protein FDR: {0} target groups at {1:P1} FDR",
+                "First-pass protein FDR: {0:N0} target groups at {1:P1} FDR",
                 nAtRunFdr, config.RunFdr));
         }
 
@@ -136,7 +136,7 @@ namespace pwiz.Osprey.FDR
                     accumulator.Add(entry);
             }
             var bestScores = accumulator.FinishBestScores();
-            log?.LogInfo(string.Format("Collected scores for {0} unique peptides", bestScores.Count));
+            log?.LogInfo(string.Format("Collected scores for {0:N0} unique peptides", bestScores.Count));
 
             // Get detected peptide set: targets passing experiment-level
             // q-value at the configured fdr_level (matches Rust pipeline.rs
@@ -157,7 +157,7 @@ namespace pwiz.Osprey.FDR
             var peptideGateLevel = config.FdrLevel;
             var detectedPeptides = accumulator.DetectedPeptides;
 
-            log?.LogInfo(string.Format("Detected {0} unique peptides at {1:P1} experiment FDR ({2})",
+            log?.LogInfo(string.Format("Detected {0:N0} unique peptides at {1:P1} experiment FDR ({2})",
                 detectedPeptides.Count, config.ExperimentFdr, peptideGateLevel));
             log?.LogInfo(LogTag.COUNT, string.Format(
                 "Detected peptides for protein FDR: {0} unique",
@@ -167,7 +167,7 @@ namespace pwiz.Osprey.FDR
             var parsimony = ProteinFdr.BuildProteinParsimony(
                 fullLibrary, config.SharedPeptides, detectedPeptides);
 
-            log?.LogInfo(string.Format("Protein parsimony: {0} groups", parsimony.Groups.Count));
+            log?.LogInfo(string.Format("Protein parsimony: {0:N0} groups", parsimony.Groups.Count));
             log?.LogInfo(LogTag.COUNT, string.Format(
                 "Protein parsimony groups: {0}", parsimony.Groups.Count));
 
@@ -185,7 +185,7 @@ namespace pwiz.Osprey.FDR
                     passingProteins++;
             }
 
-            log?.LogInfo(string.Format("{0} protein groups pass {1:P1} protein FDR",
+            log?.LogInfo(string.Format("{0:N0} protein groups pass {1:P1} protein FDR",
                 passingProteins, config.EffectiveProteinFdr));
             log?.LogInfo(LogTag.COUNT, string.Format(
                 "Protein groups passing FDR: {0} at {1:P0}",

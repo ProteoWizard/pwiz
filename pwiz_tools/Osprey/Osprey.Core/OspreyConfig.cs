@@ -466,6 +466,23 @@ namespace pwiz.Osprey.Core
     }
 
     /// <summary>
+    /// The user-facing name of a <see cref="DecoyMethod"/>, as it reads in "Generating {0}
+    /// decoys". Skyline's <c>GetLocalizedString</c> pattern.
+    /// </summary>
+    public static class DecoyMethodExtension
+    {
+        private static string[] LOCALIZED_VALUES
+        {
+            get { return new[] { "reverse-sequence", "shuffled-sequence", "library-supplied" }; }
+        }
+
+        public static string GetLocalizedString(this DecoyMethod val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
+    }
+
+    /// <summary>
     /// Level at which FDR is controlled.
     /// Maps to osprey-core/src/types.rs FdrLevel.
     /// </summary>
@@ -527,6 +544,24 @@ namespace pwiz.Osprey.Core
         Auto,
         UnitResolution,
         HRAM
+    }
+
+    /// <summary>
+    /// The user-facing name of a <see cref="ResolutionMode"/>, echoing the <c>--resolution</c>
+    /// values rather than the enum identifier. Skyline's <c>GetLocalizedString</c> pattern, so the
+    /// move to resource strings replaces only the array contents.
+    /// </summary>
+    public static class ResolutionModeExtension
+    {
+        private static string[] LOCALIZED_VALUES
+        {
+            get { return new[] { "auto", "unit", "HRAM" }; }
+        }
+
+        public static string GetLocalizedString(this ResolutionMode val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
     }
 
     /// <summary>

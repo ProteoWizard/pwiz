@@ -170,7 +170,7 @@ namespace pwiz.Osprey.FDR
             }
 
             log.LogInfo(string.Format(
-                "{0} Percolator results: {1} targets, {2} decoys pass {3:P1} FDR",
+                "{0} Percolator results: {1:N0} targets, {2:N0} decoys pass {3:P1} FDR",
                 passLabel, nTargetPassing, nDecoyPassing, config.RunFdr));
             log.LogInfo(LogTag.COUNT, string.Format(
                 "{0} total across files: {1}",
@@ -278,7 +278,7 @@ namespace pwiz.Osprey.FDR
             // subsample). One path, lower memory, and matched to Rust.
             LogProjectionInputCounts(
                 projections, numFeatures, loadFileFeatures, log, passLabel);
-            log.LogInfo(string.Format("Running {0} Percolator on {1} entries...",
+            log.LogInfo(string.Format("Running {0} Percolator on {1:N0} entries...",
                 passLabel, n));
             bool streamingAbort = RunStreamingIntoProjection(
                 projections.PerFile, peptideById, percConfig, log, passLabel,
@@ -421,7 +421,7 @@ namespace pwiz.Osprey.FDR
             // Section header (full input population). The cross-validation fold count and the
             // actual training-subset size are reported by RunPercolator once the subsample is
             // built, just above the per-iteration percent lines.
-            log.LogInfo(string.Format("Running {0} Percolator on {1} entries...",
+            log.LogInfo(string.Format("Running {0} Percolator on {1:N0} entries...",
                 passLabel, percEntries.Count));
 
             // Streaming-only (cross-impl parity with the Rust streaming-only change):

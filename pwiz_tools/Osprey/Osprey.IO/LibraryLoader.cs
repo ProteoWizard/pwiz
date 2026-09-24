@@ -152,7 +152,7 @@ namespace pwiz.Osprey.IO
                     if (cached != null && cached.Count > 0)
                     {
                         log.LogInfo(string.Format(
-                            "Loaded {0} library entries from cache '{1}'",
+                            "Loaded {0:N0} library entries from cache '{1}'",
                             cached.Count, cachePath));
                         // Caches written before the normalizer existed still hold Carafe's
                         // per-peptide accessions, and the cache is keyed on the SOURCE hash, so
@@ -244,7 +244,7 @@ namespace pwiz.Osprey.IO
             // so entries carry shared instances by the time they get here.
             entries = LibraryDeduplicator.DeduplicateLibrary(entries);
 
-            log.LogInfo(string.Format("Loaded {0} library entries", entries.Count));
+            log.LogInfo(string.Format("Loaded {0:N0} library entries", entries.Count));
 
             // Peak-less entries (0 fragments) are a BiblioSpec MS1-feature-finding artifact and are
             // not valid for DIA search; fail fast at load (issue #4355 / PR #4434 review), before the
@@ -277,7 +277,7 @@ namespace pwiz.Osprey.IO
                 // libraryHash is non-null here: the source existed to parse.
                 LibraryCache.SaveCache(cachePath, entries, libraryHash);
                 log.LogInfo(string.Format(
-                    "Saved library cache ({0} entries) to '{1}'",
+                    "Saved library cache ({0:N0} entries) to '{1}'",
                     entries.Count, cachePath));
             }
             catch (Exception ex)

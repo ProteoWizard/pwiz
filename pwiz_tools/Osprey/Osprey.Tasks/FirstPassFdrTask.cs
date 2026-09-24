@@ -1903,11 +1903,11 @@ namespace pwiz.Osprey.Tasks
                         }
                     }
                 }
-                ctx.LogInfo(string.Format(@"  {0}: {1} precursors at {2:P1} run-level FDR",
+                ctx.LogInfo(string.Format(@"  {0}: {1:N0} precursors at {2:P1} run-level FDR",
                     kvp.Key, fileTargets, config.RunFdr));
                 passingTargets += fileTargets;
             }
-            ctx.LogInfo(string.Format(@"Total: {0} precursors pass run-level FDR across all files",
+            ctx.LogInfo(string.Format(@"Total: {0:N0} precursors pass run-level FDR across all files",
                 passingTargets));
         }
 
@@ -2108,10 +2108,8 @@ namespace pwiz.Osprey.Tasks
                     long entriesBefore = bundle.PreCompactionTallies != null
                         ? bundle.TotalPreCompactionStubs
                         : stats.EntriesBefore;
-                    ctx.LogInfo(string.Format(
-                        @"First-pass compaction: {0} -> {1} entries ({2} passing base_ids; {3} action(s) dropped)",
-                        entriesBefore, stats.EntriesAfter,
-                        stats.FirstPassBaseIds, stats.DroppedActions));
+                    ScoringTaskShared.LogCompaction(ctx, entriesBefore, stats.EntriesAfter,
+                        stats.FirstPassBaseIds, stats.DroppedActions);
                 }
                 else
                 {
@@ -2169,9 +2167,8 @@ namespace pwiz.Osprey.Tasks
                             afterCount += kvp.Value.Count;
                         }
                     }
-                    ctx.LogInfo(string.Format(
-                        @"First-pass compaction: {0} -> {1} entries ({2} passing base_ids)",
-                        beforeCount, afterCount, firstPassBaseIds.Count));
+                    ScoringTaskShared.LogCompaction(ctx, beforeCount, afterCount,
+                        firstPassBaseIds.Count, null);
                 }
             }
         }
@@ -2577,8 +2574,11 @@ namespace pwiz.Osprey.Tasks
             try
             {
                 ReconciliationFile.Save(reconPath, reconFile);
+                // Skyline's peak-boundary-imputation vocabulary: use_cwt re-picks a peak, forced
+                // integration imputes its boundaries, and a gap-fill target is a missing peak.
                 ctx.LogInfo(string.Format(
-                    "Wrote reconciliation.json for {0} ({1} use_cwt + {2} forced + {3} gap-fill)",
+                    "Cross-run reconciliation for {0}: {1:N0} peaks to re-pick, {2:N0} peak " +
+                    "boundaries to impute, {3:N0} missing peaks.",
                     fileName,
                     reconFile.UseCwtPeakActions.Count,
                     reconFile.ForcedIntegrationActions.Count,
@@ -3095,9 +3095,9 @@ namespace pwiz.Osprey.Tasks
                     if (present2.Contains(p)) { stratum.Add(e.Id & ~LibraryEntry.DECOY_ID_BIT); break; }
             }
             log(string.Format(
-                "protein-compact: {0} proteins with >=2 detected peptides -> stratum of {1} base_ids " +
-                "(from {2} detected peptides).",
-                present2.Count, stratum.Count, result.DetectedPeptides.Count));
+                "{0:N0} proteins have 2 or more detections ({1:N0} detected peptides); their " +
+                "{2:N0} precursor candidates go to second-pass FDR.",
+                present2.Count, result.DetectedPeptides.Count, stratum.Count));
             return stratum;
         }
 
@@ -3861,9 +3861,7 @@ namespace pwiz.Osprey.Tasks
                 if (rowsPerBaseId.TryGetValue(baseId, out int rows))
                     afterCount += rows;
             }
-            ctx.LogInfo(string.Format(
-                @"First-pass compaction: {0} -> {1} entries ({2} passing base_ids)",
-                beforeCount, afterCount, firstPassBaseIds.Count));
+            ScoringTaskShared.LogCompaction(ctx, beforeCount, afterCount, firstPassBaseIds.Count, null);
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"after Stage-5 CompactFirstPass");
 
             // OSPREY_STAGE6_STREAM_SURVIVORS=0 keeps the materialized buffer: it is the A/B
@@ -3953,11 +3951,11 @@ namespace pwiz.Osprey.Tasks
             for (int f = 0; f < projections.PerFile.Count; f++)
             {
                 int fileTargets = filePassingTargets[f];
-                ctx.LogInfo(string.Format(@"  {0}: {1} precursors at {2:P1} run-level FDR",
+                ctx.LogInfo(string.Format(@"  {0}: {1:N0} precursors at {2:P1} run-level FDR",
                     projections.PerFile[f].Key, fileTargets, config.RunFdr));
                 passingTargets += fileTargets;
             }
-            ctx.LogInfo(string.Format(@"Total: {0} precursors pass run-level FDR across all files",
+            ctx.LogInfo(string.Format(@"Total: {0:N0} precursors pass run-level FDR across all files",
                 passingTargets));
         }
 
