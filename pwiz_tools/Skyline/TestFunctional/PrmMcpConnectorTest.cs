@@ -59,13 +59,10 @@ namespace pwiz.SkylineTestFunctional
 
             // The Import Peptide Search wizard bases its file dialog on the document's folder, so the
             // document must be saved. The two input files only need to exist (the dialog has
-            // CheckPathExists=true) -- they are added to a list, not parsed, at this stage. They sit in a "search"
-            // subfolder, as in the tutorial data, so the dialog has to navigate away from the document's folder.
+            // CheckPathExists=true) -- they are added to a list, not parsed, at this stage.
             var savePath = TestContext.GetTestResultsPath(@"PrmMcpConnector.sky");
-            string searchFolder = TestContext.GetTestResultsPath(@"search");
-            Directory.CreateDirectory(searchFolder);
-            var file1 = Path.Combine(searchFolder, @"search1.perc.xml");
-            var file2 = Path.Combine(searchFolder, @"search2.perc.xml");
+            var file1 = TestContext.GetTestResultsPath(@"search1.perc.xml");
+            var file2 = TestContext.GetTestResultsPath(@"search2.perc.xml");
             File.WriteAllText(file1, string.Empty);
             File.WriteAllText(file2, string.Empty);
             RunUI(() => SkylineWindow.SaveDocument(savePath));
@@ -93,10 +90,11 @@ namespace pwiz.SkylineTestFunctional
             // its caption. The arrival is confirmed from the dialog's "Address" control, and then the file-name box
             // going empty -- the shell clears it a moment after navigating, and names typed before that clear lands
             // would be wiped.
-            McpConnector.SetFormValue(addFilesId, FILE_NAME_LABEL, searchFolder);
+            string folder = Path.GetDirectoryName(file1);
+            McpConnector.SetFormValue(addFilesId, FILE_NAME_LABEL, folder);
             AssertComplete(addFilesDlg.Accept());
-            WaitForCondition(() => PathEx.SamePath(McpConnector.GetFormValue(addFilesId, @"Address"), searchFolder),
-                @"The Add Input Files dialog did not navigate to the search folder.");
+            WaitForCondition(() => PathEx.SamePath(McpConnector.GetFormValue(addFilesId, @"Address"), folder),
+                @"The Add Input Files dialog did not navigate to the files' folder.");
             WaitForCondition(() => string.IsNullOrEmpty(McpConnector.GetFormValue(addFilesId, FILE_NAME_LABEL)),
                 @"The Add Input Files dialog did not clear the file-name box after navigating.");
 
