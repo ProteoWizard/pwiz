@@ -2074,10 +2074,24 @@ PWIZ_API_DECL PepXMLSpecificity pepXMLSpecificity(const Enzyme& ez)
             case MS_2_iodobenzoate:         cut="W"; nocut=""; sense="C"; break;
             case MS_LysargiNase:            cut="KR"; nocut=""; sense="N"; break;
             case MS_AlphaLP:                cut="TASV"; nocut=""; sense="C"; break;
+            case MS_Thermolysin:            cut="AFILMV"; nocut="DE"; sense="N"; break; // (?<=[^DE])(?=[AFILMV][^P]); the not-followed-by-P restriction is not representable in pepXML
             case MS_unspecific_cleavage:    cut="X"; nocut=""; sense="C"; break;
             case MS_no_cleavage:            cut=""; nocut=""; sense="C"; break;
             default:
+            {
+                // Newer PSI-MS cleavage agents may lack a curated case above; derive the
+                // cut/no-cut sets from the agent's CV-defined cleavage regex when possible.
+                string cvRegex;
+                try { cvRegex = proteome::Digestion::getCleavageAgentRegex(cleavageAgent); }
+                catch (exception&) {}
+                if (!cvRegex.empty() && bxp::regex_match(cvRegex, what, cutNoCutRegex))
+                {
+                    Enzyme ezFromRegex(ez);
+                    ezFromRegex.siteRegexp = cvRegex;
+                    return pepXMLSpecificity(ezFromRegex);
+                }
                 throw runtime_error("[pepXMLSpecificity] No case supporting enzyme \"" + cvTermInfo(cleavageAgent).name + "\"");
+            }
         }
     }
     else

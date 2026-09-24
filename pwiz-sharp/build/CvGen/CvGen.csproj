@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Pwiz.Build.CvGen</RootNamespace>
+    <AssemblyName>CvGen</AssemblyName>
+    <!-- Build-time tool, not part of the product: regenerates pwiz/src/Common/CVID.generated.cs
+         from the OBO files. Common.Tests references it to prove the checked-in file is current. -->
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\pwiz\src\Common\Common.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -149,6 +149,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     os << "/// <summary>enumeration of controlled vocabulary (CV) terms, generated from OBO file(s)</summary>\n" 
           "public enum class CVID\n{\n"
           "    CVID_Unknown = -1";
+    set<string> emittedEnumNames; // track emitted enum names to avoid redefinitions (e.g. synonyms that escape to the same name)
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
     {
         multiset<string> enumNames;
@@ -166,14 +167,23 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
             os << ",\n\n"
                << "    /// <summary>" << term.name << ": " << term.def << "</summary>\n"
                << "    " << eName << " = " << enumValue(term, enumMultiplierByPrefix[term.prefix]);
+            emittedEnumNames.insert(eName);
 
             if (term.prefix == "MS") // add synonyms for PSI-MS only
             {
                 BOOST_FOREACH(const string& synonym, term.exactSynonyms)
                 {
+                    string synonym_enum_name = enumName(term.prefix, synonym, term.isObsolete);
+                    // skip synonyms whose escaped enum name collides with an already-emitted name
+                    // (e.g. a term with both "TOF/TOF" and "TOF-TOF" synonyms both escape to MS_TOF_TOF)
+                    if (!emittedEnumNames.insert(synonym_enum_name).second)
+                    {
+                        cerr << "Warning: skipping duplicate synonym enum name for term id " << term.id << ": " << synonym << ": " << synonym_enum_name << endl;
+                        continue;
+                    }
                     os << ",\n\n"
                        << "    /// <summary>" << synonym << ": " << term.def << "</summary>\n"
-                       << "    " << enumName(term.prefix, synonym, term.isObsolete) << " = " << eName;
+                       << "    " << synonym_enum_name << " = " << eName;
                 }
             }
         }
