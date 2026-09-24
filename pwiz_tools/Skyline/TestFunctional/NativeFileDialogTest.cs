@@ -163,7 +163,7 @@ namespace pwiz.SkylineTestFunctional
         /// (<paramref name="fileNames"/> are BARE names within that folder), exactly as an MCP client would through
         /// the connector: navigate to the folder, confirm the arrival by reading the dialog's "Address" control
         /// (get_value) and waiting for the file-name box to clear, then enter the quoted names and click Open.
-        /// (A list of full paths does not work for a multiselect; the names must be bare and in the current folder.)
+        /// (Bare names rather than a list of full paths, which would soon overflow the MAX_PATH file-name box.)
         /// Call on the test thread (inside a <see cref="AbstractFunctionalTest.RunLongNativeDlg{TDlg}"/> exercise).
         /// </summary>
         private static void SelectFilesInOpenDialog(NativeOpenFileDialog dlg, string folder,

@@ -714,8 +714,10 @@ public static class SkylineTools
 
     [McpServerTool(Name = "skyline_set_form_value"),
      Description("Set the value of a control on an open form. For a native file dialog " +
-        "(Type 'FileDialog') the value is the file name(s) to open and controlId is ignored; select " +
-        "several files by quoting each path and separating with spaces, e.g. \"C:\\a.raw\" \"C:\\b.raw\". " +
+        "(Type 'FileDialog') the value is the file name(s) to open and controlId is ignored. To select " +
+        "several files, first set the folder path and click Open to navigate there, then set their bare " +
+        "names, each quoted and separated by spaces, e.g. \"a.raw\" \"b.raw\" (the box holds at most " +
+        "259 characters, so a list of full paths gets cut off). " +
         "For a WinForms form it sets the text, the checked state ('true'/'false'), or the selected " +
         "item of the control named by controlId; a matched label sets the field it labels. controlId " +
         "may also be a grid cell locator 'grid[column,row]' (grid name optional) to set that cell.")]
@@ -723,7 +725,7 @@ public static class SkylineTools
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
         [Description("Control name, a grid cell locator 'grid[column,row]', or ignored for a native file dialog")] string controlId,
         [Description("Value to set: text, 'true'/'false' for a checkbox, item text for a combo box, " +
-            "or space-separated quoted file paths for a native file dialog")] string value)
+            "or a path or space-separated quoted file names for a native file dialog")] string value)
     {
         return Invoke(connection =>
         {

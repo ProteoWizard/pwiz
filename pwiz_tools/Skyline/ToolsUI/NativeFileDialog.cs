@@ -79,7 +79,9 @@ namespace pwiz.Skyline.ToolsUI
         ///
         /// <para>To select several files in a multiselect Open dialog, FIRST navigate to their folder (EnterPath
         /// the folder path, accept), THEN EnterPath their names -- BARE names in that folder, double-quoted and
-        /// space-separated (<c>"a.raw" "b.raw"</c>). A list of FULL paths does not work.</para>
+        /// space-separated (<c>"a.raw" "b.raw"</c>). The dialog also parses a list of quoted FULL paths, but the
+        /// field holds at most MAX_PATH characters and typing into it respects that limit, so a few long paths get
+        /// cut off.</para>
         ///
         /// <para>Must be called OFF the dialog's own thread: the typing is posted to that thread and waited for.</para>
         /// </summary>

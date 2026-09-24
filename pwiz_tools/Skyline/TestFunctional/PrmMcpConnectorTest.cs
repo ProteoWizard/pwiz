@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -43,6 +44,8 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class PrmMcpConnectorTest : McpConnectorTest
     {
+        private const string FILE_NAME_LABEL = @"File name";
+
         [TestMethod]
         public void TestPrmMcpConnector()
         {
@@ -76,13 +79,27 @@ namespace pwiz.SkylineTestFunctional
             // part an AI Connector client actually exercises. Waiting on GetOpenForms instead bought nothing --
             // the only thing it could match on is IsNative, which a message box and a folder browser wear too.
             McpConnector.ClickFormButton(wizardId, GetLocalizedText<BuildPeptideSearchLibraryControl>(@"btnAddFile"));
-            string addFilesId = WaitForNativeDlg<NativeFileDialog>().FormId;
+            var addFilesDlg = WaitForNativeDlg<NativeFileDialog>();
+            string addFilesId = addFilesDlg.FormId;
 
-            // 3) Select the two files and Open -- the tutorial's "hold Ctrl, click the two files,
-            // click Open". A native dialog has no caption-addressable buttons, so it is confirmed with the
-            // dismiss action (the connector's way to press its default button) rather than ClickFormButton.
-            McpConnector.SetFormValue(addFilesId, @"FileName",
-                QuotePaths(new[] { file1, file2 }));
+            // 3) Select the two files and Open -- the tutorial's "hold Ctrl, click the two files, click Open".
+            // As a person would: go to the files' folder first, then pick them there by their bare names. (A
+            // list of full paths would overflow the MAX_PATH file-name box under a long results folder.)
+            // Navigating leaves the dialog open, so it is the Open-button click (Accept), not the dismiss action
+            // that waits for the dialog to close. The arrival is confirmed from the dialog's "Address" control, and
+            // then the file-name box going empty -- the shell clears it a moment after navigating, and names typed
+            // before that clear lands would be wiped.
+            string folder = Path.GetDirectoryName(file1);
+            McpConnector.SetFormValue(addFilesId, FILE_NAME_LABEL, folder);
+            addFilesDlg.Accept();
+            WaitForCondition(() => string.Equals(McpConnector.GetFormValue(addFilesId, @"Address")?.TrimEnd('\\'),
+                folder, StringComparison.OrdinalIgnoreCase));
+            WaitForCondition(() => string.IsNullOrEmpty(McpConnector.GetFormValue(addFilesId, FILE_NAME_LABEL)));
+
+            // A native dialog has no caption-addressable buttons, so it is confirmed with the dismiss action (the
+            // connector's way to press its default button) rather than ClickFormButton.
+            McpConnector.SetFormValue(addFilesId, FILE_NAME_LABEL,
+                QuoteNames(new[] { file1, file2 }.Select(Path.GetFileName)));
             McpConnector.PerformAction(new UiElementPath(null, addFilesId, null, @"Form"), @"dismiss", null);
 
             // The wizard's search-file list now holds both files. Compare case-insensitively: the native Open
@@ -128,11 +145,11 @@ namespace pwiz.SkylineTestFunctional
             return null;
         }
 
-        // Builds the file name box value that selects several files at once: each path double-quoted
-        // and space-separated, the convention the common file dialog parses for a multiselect open.
-        private static string QuotePaths(IEnumerable<string> paths)
+        // Builds the file name box value that selects several files in the dialog's current folder: each bare
+        // name double-quoted and space-separated, the convention the common file dialog parses for a multiselect.
+        private static string QuoteNames(IEnumerable<string> names)
         {
-            return string.Join(@" ", paths.Select(p => @"""" + p + @""""));
+            return string.Join(@" ", names.Select(name => @"""" + name + @""""));
         }
 
     }

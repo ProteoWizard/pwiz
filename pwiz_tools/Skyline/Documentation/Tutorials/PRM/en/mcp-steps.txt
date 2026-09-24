@@ -82,8 +82,8 @@ SetFormValue    "ImportPeptideSearchDlg:Import Peptide Search" "PRM" true
 
 # --- Add both search-result files at once ---
 # Multi-select on the common (classic) Open dialog: navigate INTO the folder first, then set the
-# file name to the QUOTED BARE filenames separated by spaces. (Quoted FULL paths are rejected;
-# bare names in the current folder work.)
+# file name to the QUOTED BARE filenames separated by spaces. (Quoted FULL paths also parse, but
+# the file name box holds only MAX_PATH characters, so long paths get cut off.)
 ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "Add Files"
 WaitForForm     "FileDialog:Add Input Files"
 SetFormValue    "FileDialog:Add Input Files" "FileName" {DATA}\search
