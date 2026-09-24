@@ -67,7 +67,13 @@ namespace pwiz.Osprey.IO
         /// The source file's size or last-write time no longer matches what the cache recorded:
         /// the data changed underneath it and the cache is stale.
         /// </summary>
-        SourceChanged
+        SourceChanged,
+        /// <summary>
+        /// A demultiplexed cache was written with different demux settings or a different demux
+        /// algorithm version, or a plain cache was found where a demultiplexed one was expected
+        /// (or the reverse). The cache must be rebuilt from its <c>.spectra.bin</c>.
+        /// </summary>
+        DemuxSettingsChanged
     }
 
     /// <summary>
@@ -134,6 +140,9 @@ namespace pwiz.Osprey.IO
                 case SpectraCacheRejection.SourceChanged:
                     return @"the source file's size or timestamp has changed since the cache was " +
                            @"written, so the cache is stale";
+                case SpectraCacheRejection.DemuxSettingsChanged:
+                    return @"the cache was demultiplexed with different settings, or its " +
+                           @"demultiplexing state does not match --demux, so it must be rebuilt";
                 default:
                     return @"the cache was refused for an unrecorded reason";
             }

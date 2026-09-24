@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -61,6 +62,15 @@ namespace pwiz.Osprey.IO
     /// and the first-cycle isolation windows from one compact contiguous read (no
     /// record walk), and restores acquisition order for the full LoadSpectraCache
     /// read even though the body is physically window-grouped.
+    ///
+    /// A DEMULTIPLEXED cache (<c>{stem}.demux.spectra.bin</c>) has the same layout with
+    /// two differences: the magic is <c>"OSPRDMX\0"</c>, and the header is followed by
+    /// [descriptor_length: uint32][descriptor: UTF-8] naming the demux algorithm and every
+    /// setting that changes its output. Everything after the header is addressed by the
+    /// absolute offsets in the index and footer, so every reader decodes it unchanged, and
+    /// a descriptor that differs from the current settings rejects the cache. It records
+    /// the SOURCE file's fingerprint, like the cache it was derived from, so a missing
+    /// source is handled identically.
     /// </summary>
     public static class SpectraCache
     {
@@ -68,6 +78,13 @@ namespace pwiz.Osprey.IO
             (byte)'O', (byte)'S', (byte)'P', (byte)'R',
             (byte)'S', (byte)'P', (byte)'C', 0
         };
+        private static readonly byte[] DEMUX_MAGIC = new byte[] {
+            (byte)'O', (byte)'S', (byte)'P', (byte)'R',
+            (byte)'D', (byte)'M', (byte)'X', 0
+        };
+
+        // A descriptor is a short settings string; anything longer is a corrupt header.
+        private const int MAX_DESCRIPTOR_BYTES = 64 * 1024;
         // VERSION 2 (2026-05-09): mzML load now sorts non-monotonic centroids
         // before caching, so caches written by VERSION 1 may contain unsorted
         // peaks that produce undefined-behavior divergence in fragment matching.
@@ -112,10 +129,11 @@ namespace pwiz.Osprey.IO
         // LoadSpectraCache here and SpectraWindowIndex.BuildFromCache/LoadWindow.
 
         /// <summary>
-        /// Save spectra to a binary cache file.
+        /// Save spectra to a binary cache file. A non-null <paramref name="demuxDescriptor"/>
+        /// writes a demultiplexed cache carrying that descriptor.
         /// </summary>
-        public static void SaveSpectraCache(string path, List<Spectrum> ms2Spectra, List<MS1Spectrum> ms1Spectra,
-            string sourcePath = null)
+        public static void SaveSpectraCache(string path, IReadOnlyList<Spectrum> ms2Spectra,
+            List<MS1Spectrum> ms1Spectra, string sourcePath = null, string demuxDescriptor = null)
         {
             if (ms2Spectra == null)
                 ms2Spectra = new List<Spectrum>();
@@ -164,12 +182,18 @@ namespace pwiz.Osprey.IO
                 using (var w = new BinaryWriter(fs))
                 {
                     // Header
-                    w.Write(MAGIC);
+                    w.Write(demuxDescriptor == null ? MAGIC : DEMUX_MAGIC);
                     w.Write(VERSION);
                     w.Write((ulong)sourceSize);
                     w.Write(sourceMtimeMs);
                     w.Write((uint)nMs2);
                     w.Write((uint)ms1Spectra.Count);
+                    if (demuxDescriptor != null)
+                    {
+                        byte[] descriptorBytes = Encoding.UTF8.GetBytes(demuxDescriptor);
+                        w.Write((uint)descriptorBytes.Length);
+                        w.Write(descriptorBytes);
+                    }
 
                     // MS2 records, grouped by window (contiguous per window).
                     //
@@ -226,7 +250,8 @@ namespace pwiz.Osprey.IO
         /// order even though the body is physically window-grouped.
         /// Returns null if the file does not exist or has invalid magic/version.
         /// </summary>
-        public static SpectraCacheResult LoadSpectraCache(string path, string sourcePath = null)
+        public static SpectraCacheResult LoadSpectraCache(string path, string sourcePath = null,
+            string demuxDescriptor = null)
         {
             if (!File.Exists(path))
                 return null;
@@ -237,7 +262,7 @@ namespace pwiz.Osprey.IO
                 // Validate magic / version / source fingerprint and read the record
                 // counts. Shared with SpectraWindowIndex so the two readers
                 // accept/reject a cache identically.
-                if (!TryReadHeader(r, sourcePath, out uint nMs2, out uint nMs1))
+                if (!TryReadHeader(r, sourcePath, out uint nMs2, out uint nMs1, out _, demuxDescriptor))
                     return null;
 
                 // Read the acquisition-order index (record offsets into the
@@ -289,6 +314,16 @@ namespace pwiz.Osprey.IO
             return Path.Combine(ArtifactPaths.ResolveCacheDir(inputFile), fileName);
         }
 
+        /// <summary>
+        /// Get the demultiplexed spectra cache path for a given input file: beside the
+        /// <c>.spectra.bin</c> it is derived from.
+        /// </summary>
+        public static string GetDemuxCachePath(string inputFile)
+        {
+            string fileName = Path.GetFileNameWithoutExtension(inputFile) + ".demux.spectra.bin";
+            return Path.Combine(ArtifactPaths.ResolveCacheDir(inputFile), fileName);
+        }
+
         #region Private helpers
 
         // The isolation-window grouping key: the rounded iso-center that scoring and
@@ -315,8 +350,11 @@ namespace pwiz.Osprey.IO
         // has nothing to do with the distinction; a caller that must FAIL needs to say why,
         // and the six conditions below are not interchangeable - "absent" and "the source
         // file changed underneath it" have opposite remedies.
+        // A null demuxDescriptor expects a plain cache; otherwise a demultiplexed cache
+        // written with exactly that descriptor. Either kind is refused where the other is
+        // expected.
         internal static bool TryReadHeader(BinaryReader r, string sourcePath, out uint nMs2,
-            out uint nMs1, out SpectraCacheRejection reason)
+            out uint nMs1, out SpectraCacheRejection reason, string demuxDescriptor = null)
         {
             nMs2 = 0;
             nMs1 = 0;
@@ -328,13 +366,17 @@ namespace pwiz.Osprey.IO
                 reason = SpectraCacheRejection.TruncatedHeader;
                 return false;
             }
-            for (int i = 0; i < 8; i++)
+            bool isPlain = magic.SequenceEqual(MAGIC);
+            bool isDemux = magic.SequenceEqual(DEMUX_MAGIC);
+            if (!isPlain && !isDemux)
             {
-                if (magic[i] != MAGIC[i])
-                {
-                    reason = SpectraCacheRejection.NotASpectraCache;
-                    return false;
-                }
+                reason = SpectraCacheRejection.NotASpectraCache;
+                return false;
+            }
+            if (isDemux != (demuxDescriptor != null))
+            {
+                reason = SpectraCacheRejection.DemuxSettingsChanged;
+                return false;
             }
 
             uint version = r.ReadUInt32();
@@ -376,6 +418,26 @@ namespace pwiz.Osprey.IO
 
             nMs2 = r.ReadUInt32();
             nMs1 = r.ReadUInt32();
+            if (isDemux)
+            {
+                uint length = r.ReadUInt32();
+                if (length > MAX_DESCRIPTOR_BYTES)
+                {
+                    reason = SpectraCacheRejection.TruncatedHeader;
+                    return false;
+                }
+                byte[] bytes = r.ReadBytes((int)length);
+                if (bytes.Length != length)
+                {
+                    reason = SpectraCacheRejection.TruncatedHeader;
+                    return false;
+                }
+                if (!string.Equals(Encoding.UTF8.GetString(bytes), demuxDescriptor, StringComparison.Ordinal))
+                {
+                    reason = SpectraCacheRejection.DemuxSettingsChanged;
+                    return false;
+                }
+            }
             return true;
         }
 

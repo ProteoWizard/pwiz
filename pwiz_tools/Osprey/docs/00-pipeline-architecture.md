@@ -686,6 +686,7 @@ node running that task needs a copy, whatever batch it was handed.
 |---|---|---|---|---|
 | `<library-leaf>.libcache` | experiment cache | library load, any task | all tasks | rebuild locally |
 | `<stem>.spectra.bin` | per-run cache | `PerFileScoring` (Stage 2), or `--task SpectraCache` | `PerFileScoring`, `PerFileRescoring` | with the run |
+| `<stem>.demux.spectra.bin` | per-run cache, `--demux auto` on an overlapping-window run only | `PerFileScoring` (Stage 2), or `--task SpectraCache`, derived from `.spectra.bin` | `PerFileScoring`, `PerFileRescoring`, which search it in place of `.spectra.bin` | with the run; it alone suffices |
 | `<stem>.calibration.json` | per-run product | `PerFileScoring` (Stage 3) | `PerFileScoring`, `PerFileRescoring`, `FirstPassFDR`, `SecondPassFDR` | with the run, on **every** leg |
 | `<stem>.scores.parquet` | per-run product | `PerFileScoring` (Stage 4) | `FirstPassFDR`, `PerFileRescoring` | with the run |
 | `<stem>.1st-pass.fdr_scores.bin` | per-run product | `FirstPassFDR` (pass 1) | `PerFileRescoring`; `SecondPassFDR` only under `OSPREY_PASS2_VERIFY_WORKER` or where no worker answer exists | with the run |

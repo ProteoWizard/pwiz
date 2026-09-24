@@ -239,7 +239,9 @@ namespace pwiz.Osprey
                     // treats a missing one as "trust the cache". That makes
                     // delete-the-sources-after-caching a supported way to halve the
                     // disk a large cohort needs.
-                    if (File.Exists(SpectraCache.GetCachePath(inputFile)))
+                    // With --demux, the demultiplexed cache alone is enough to search from.
+                    if (File.Exists(SpectraCache.GetCachePath(inputFile)) ||
+                        (config.DemuxMode != DemuxMode.off && File.Exists(SpectraCache.GetDemuxCachePath(inputFile))))
                     {
                         cacheOnlyInputs++;
                         continue;

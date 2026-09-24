@@ -226,6 +226,43 @@ skipped precisely because there is nothing left to compare against. So validate 
 against their sources — magic, version, fingerprint, and that the index offset agrees with
 `n_ms2` — **before** deleting either, and treat the caches as data from then on.
 
+### Demultiplexed cache (`<stem>.demux.spectra.bin`)
+
+**C# source**: `Osprey.Tasks/DemuxCacheBuilder.cs` (build and open), `Osprey.IO/SpectraCache.cs`
+(format). Path: `SpectraCache.GetDemuxCachePath`, beside the `.spectra.bin` it is derived from.
+Written only with `--demux auto`, and only for a run whose isolation windows overlap.
+Osprey-only; Rust has no counterpart.
+
+The same VERSION 4 layout, with two differences:
+
+```
+[magic:        8 bytes  "OSPRDMX\0"]
+[version, source_size, source_mtime, n_ms2, n_ms1  as above]
+[descriptor_length: uint32]
+[descriptor:   UTF-8, e.g. "osprey-demux/1;block=covered_bins;interpolation=makima;..."]
+[MS2 body, MS1 section, index, footer  as above]
+```
+
+Everything after the header is addressed by absolute offsets from the index and footer, so the
+readers decode it unchanged. `TryReadHeader` refuses it with `DemuxSettingsChanged` in three cases:
+- it is read where a plain cache is expected;
+- a plain cache is read where a demultiplexed one is expected;
+- its descriptor differs from the current settings (`DemuxParams.Descriptor`: the algorithm
+  version plus every output-changing setting, but not the thread count).
+
+It records the *source* file's fingerprint, not the `.spectra.bin`'s, so a missing source is
+handled exactly as above.
+
+Each MS2 record is one narrow bin of one acquired spectrum. It keeps its parent's scan number
+and retention time, and its isolation window is the bin. Bins are disjoint, so no precursor
+falls in two windows. `SpectraWindowIndex` lists every distinct window of a demultiplexed
+cache rather than the first cycle's, because a bin covered only by the offset window set first
+appears after other bins have repeated.
+
+**Rebuildable from the `.spectra.bin`, cache to cache**, in seconds rather than the minutes a
+vendor parse takes. The `.spectra.bin` is never altered by demultiplexing, so it stays a pure
+function of the raw file.
+
 ---
 
 ## 3. Scores parquet cache (`<stem>.scores.parquet`)

@@ -48,7 +48,7 @@ namespace pwiz.Osprey.IO
     /// Thread-safety: <see cref="LoadWindow"/> opens its own <see cref="FileStream"/>
     /// per call and shares no mutable state, so windows load concurrently (scoring
     /// runs one Parallel.For body per window). <see cref="AllMs2Rts"/> and the
-    /// offset map are immutable after <see cref="BuildFromCache(string,string)"/>.
+    /// offset map are immutable after <see cref="BuildFromCache(string,string,string)"/>.
     /// </summary>
     public sealed class SpectraWindowIndex
     {
@@ -124,24 +124,32 @@ namespace pwiz.Osprey.IO
         public int Ms2Count { get { return AllMs2Rts.Count; } }
 
         /// <summary>
+        /// The cache file this index reads: the <c>.spectra.bin</c>, or the
+        /// <c>.demux.spectra.bin</c> when the run was demultiplexed.
+        /// </summary>
+        public string CachePath { get { return _cachePath; } }
+
+        /// <summary>
         /// Build the index from a <c>.spectra.bin</c> cache. Returns null when the
         /// file is absent or its header fails validation (bad magic/version, or the
         /// source fingerprint no longer matches) -- the SAME rejection rules as
         /// <see cref="SpectraCache.LoadSpectraCache"/>, so a caller can fall back to
         /// a full resident load when the index cannot be built.
         /// </summary>
-        public static SpectraWindowIndex BuildFromCache(string cachePath, string sourcePath = null)
+        public static SpectraWindowIndex BuildFromCache(string cachePath, string sourcePath = null,
+            string demuxDescriptor = null)
         {
-            return BuildFromCache(cachePath, sourcePath, out _);
+            return BuildFromCache(cachePath, sourcePath, out _, demuxDescriptor);
         }
 
         /// <summary>
         /// Same, reporting WHICH validation rule refused the cache. A caller that recovers by
         /// re-parsing the mzML has no use for the distinction and takes the overload above; a
-        /// caller that FAILS needs it, because the six refusals have different remedies.
+        /// caller that FAILS needs it, because the refusals have different remedies. A non-null
+        /// <paramref name="demuxDescriptor"/> expects a demultiplexed cache with that descriptor.
         /// </summary>
         public static SpectraWindowIndex BuildFromCache(string cachePath, string sourcePath,
-            out SpectraCacheRejection reason)
+            out SpectraCacheRejection reason, string demuxDescriptor = null)
         {
             reason = SpectraCacheRejection.None;
             if (string.IsNullOrEmpty(cachePath) || !File.Exists(cachePath))
@@ -154,7 +162,8 @@ namespace pwiz.Osprey.IO
             using (var r = new BinaryReader(fs))
             {
                 // Validate + read counts identically to LoadSpectraCache.
-                if (!SpectraCache.TryReadHeader(r, sourcePath, out uint nMs2, out uint nMs1, out reason))
+                if (!SpectraCache.TryReadHeader(r, sourcePath, out uint nMs2, out uint nMs1, out reason,
+                        demuxDescriptor))
                     return null;
 
                 // Read the acquisition-order index in one compact contiguous EOF
@@ -204,6 +213,17 @@ namespace pwiz.Osprey.IO
                             firstCycleWindows.Add(new IsolationWindow(isoCenter, isoLower, isoUpper));
                     }
                     offsets.Add(index.RecordOffsets[i]);
+                }
+
+                // A demultiplexed run has no "first cycle" that holds every window: a parent
+                // window's bins appear as soon as it is acquired, and a bin that only the
+                // offset set covers (the edge bins) first appears after other bins repeat.
+                // Every distinct window is a window there, so take them all.
+                if (demuxDescriptor != null)
+                {
+                    firstCycleWindows.Clear();
+                    foreach (int key in windowKeysInFileOrder)
+                        firstCycleWindows.Add(windowKeyToFirstIso[key]);
                 }
 
                 // Reproduce ExtractIsolationWindows' final sort by center.
