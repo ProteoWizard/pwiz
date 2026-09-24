@@ -364,7 +364,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// Minimum width (px) the mobilogram pane needs so its centered X-axis ("Intensity")
         /// title isn't clipped: the measured title text plus the same left margin and Y-axis
         /// reserve the chart is inset by (see <see cref="AlignMobilogramChartToHeatmap"/>).
-        /// Cached — depends on the font and title, not the data.
+        /// Cached - depends on the font and title, not the data.
         /// </summary>
         private float GetMinMobilogramPaneWidth()
         {
@@ -387,7 +387,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         /// <summary>
         /// The heatmap (right) column's share of the width, capped so the mobilogram (left)
-        /// keeps at least <see cref="GetMinMobilogramPaneWidth"/> for its X-axis title — the
+        /// keeps at least <see cref="GetMinMobilogramPaneWidth"/> for its X-axis title - the
         /// "dynamic" floor that keeps the title from being clipped at narrow widths. All
         /// layout paths read this (not <see cref="ColumnFraction"/> directly) so the floored
         /// width and the re-pin check agree, avoiding a repaint loop. Never shrinks the
@@ -3879,9 +3879,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_MobiloPeakHeight,
                         pm.Height.ToString(@"F0"), rt);
                     if (pm.FullWidthHalfMax.HasValue)
+                    {
                         table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_MobiloPeakFwhm,
                             TextUtil.SpaceSeparate(pm.FullWidthHalfMax.Value.ToString(Formats.IonMobility),
                                 IonMobilityValue.GetUnitsString(_msDataFileScanHelper.IonMobilityUnits)), rt);
+                    }
                 }
             }
             return table;
@@ -3983,9 +3985,10 @@ namespace pwiz.Skyline.Controls.Graphs
             if (transitionNode?.Results == null || replicateIdx >= transitionNode.Results.Count)
                 return null;
             var chromInfoList = transitionNode.Results[replicateIdx];
+            int optStep = _msDataFileScanHelper.OptStep ?? 0;
             foreach (var chromInfo in chromInfoList)
             {
-                if (chromInfo != null && ReferenceEquals(chromInfo.FileId, fileId))
+                if (chromInfo != null && ReferenceEquals(chromInfo.FileId, fileId) && chromInfo.OptimizationStep == optStep)
                     return chromInfo;
             }
             return null;

@@ -105,12 +105,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get { return ObservedImValues.Ccs; }
         }
-        [Format(Formats.MASS_ERROR, NullValue = TextUtil.EXCEL_NA)]
+        [Format(Formats.PercentError, NullValue = TextUtil.EXCEL_NA)]
         public double? IonMobilityErrorPercent
         {
             get { return PercentError(ObservedImValues.IonMobility, ObservedImValues.Target?.IonMobility?.Mobility); }
         }
-        [Format(Formats.MASS_ERROR, NullValue = TextUtil.EXCEL_NA)]
+        [Format(Formats.PercentError, NullValue = TextUtil.EXCEL_NA)]
         public double? CcsErrorPercent
         {
             get { return PercentError(ObservedImValues.Ccs, ObservedImValues.Target?.CollisionalCrossSectionSqA); }

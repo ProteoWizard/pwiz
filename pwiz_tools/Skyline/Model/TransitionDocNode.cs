@@ -913,6 +913,8 @@ namespace pwiz.Skyline.Model
                     transitionPeak.IonMobility = transitionChromInfo.IonMobility.IonMobility.Mobility;
                     transitionPeak.IonMobilityWindow = transitionChromInfo.IonMobility.IonMobilityExtractionWindowWidth;
                     transitionPeak.IonMobilityCollisionCrossSection = transitionChromInfo.IonMobility.CollisionalCrossSectionSqA;
+                    transitionPeak.ObservedIonMobility = transitionChromInfo.ObservedIonMobility;
+                    transitionPeak.ObservedCollisionCrossSection = transitionChromInfo.ObservedCcs;
                     transitionPeak.Area = transitionChromInfo.Area;
                     transitionPeak.BackgroundArea = transitionChromInfo.BackgroundArea;
                     transitionPeak.Height = transitionChromInfo.Height;

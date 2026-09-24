@@ -1356,6 +1356,22 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public ChromPeak WithObservedIonMobility(float? observedIonMobility)
+        {
+            var copy = this;
+            if (observedIonMobility.HasValue)
+            {
+                copy._flagValues |= FlagValues.observed_ion_mobility_known;
+                copy._observedIonMobility = observedIonMobility.Value;
+            }
+            else
+            {
+                copy._flagValues &= ~FlagValues.observed_ion_mobility_known;
+                copy._observedIonMobility = 0;
+            }
+            return copy;
+        }
+
         public ChromPeak WithObservedCcs(double? observedCcs)
         {
             var copy = this;
@@ -1424,13 +1440,25 @@ namespace pwiz.Skyline.Model.Results
             return 60;
         }
 
-        public static StructSerializer<ChromPeak> StructSerializer(int chromPeakSize)
+        public static IItemSerializer<ChromPeak> StructSerializer(int chromPeakSize)
         {
-            return new StructSerializer<ChromPeak>
+            var structSerializer = new StructSerializer<ChromPeak>
             {
                 ItemSizeOnDisk = chromPeakSize,
                 DirectSerializer = DirectSerializer.Create(ReadArray, WriteArray)
             };
+            if (chromPeakSize >= GetStructSize(CacheFormatVersion.Twenty))
+            {
+                return structSerializer;
+            }
+
+            // Older formats have room for the observed IM/CCS flag bits but not for the values
+            Func<ChromPeak, ChromPeak> converter = peak =>
+            {
+                peak._flagValues &= ~(FlagValues.observed_ion_mobility_known | FlagValues.observed_ccs_known);
+                return peak;
+            };
+            return ConvertedItemSerializer.Create(structSerializer, converter, converter);
         }
 
         public static ChromPeak IntegrateWithoutBackground(TimeIntensities timeIntensities, float startTime,
@@ -1597,8 +1625,15 @@ namespace pwiz.Skyline.Model.Results
                     (float)peakShapeStatistics.Kurtosis, correlation);
             }
 
+            float? observedIonMobility = null;
+            if (timeIntensities.ObservedIonMobilities != null)
+            {
+                observedIonMobility = ApexObservedIonMobility(timeIntensities.Intensities,
+                    timeIntensities.ObservedIonMobilities, startIndex, endIndex);
+            }
+
             return new ChromPeak((float) apexTime, startTime, endTime, (float) totalArea, 0, (float) apexHeight, fwhm, flags, massError,
-                pointsAcrossPeak, peakShapeValues);
+                pointsAcrossPeak, peakShapeValues).WithObservedIonMobility(observedIonMobility);
         }
 
         #region Fast file I/O

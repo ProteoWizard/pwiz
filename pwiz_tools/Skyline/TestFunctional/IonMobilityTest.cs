@@ -27,12 +27,14 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
@@ -877,6 +879,16 @@ namespace pwiz.SkylineTestFunctional
             // populated here: the IM-to-CCS conversion is a vendor-proprietary
             // black box, and open formats like mz5 (and mzML) don't expose it.
             AssertExtractedObservedIonMobilityAndCcsPopulated(doc);
+            AssertObservedIonMobilitySurvivesReopen(docName, CompactFormatOption.NEVER);
+            AssertObservedIonMobilitySurvivesReopen(docName, CompactFormatOption.ALWAYS);
+
+            // Each rescore rebuilds the cache from the previous one, so the ion mobility units it
+            // records for the file must carry through to the next rescore. Peaks are picked from
+            // the chromatograms of the previous cache, so a loss only shows on the third rescore.
+            RescoreResults();
+            RescoreResults();
+            RescoreResults();
+            AssertExtractedObservedIonMobilityAndCcsPopulated(SkylineWindow.Document);
 
             var progress = new SilentProgressMonitor();
             var exported = testFilesDir.GetTestPath("export.blib");
@@ -948,7 +960,7 @@ namespace pwiz.SkylineTestFunctional
                             // A scale-0 encode (e.g. when the per-time-point IM scale is sourced
                             // from a missing CCS converter rather than the data reader's IM units)
                             // silently decodes to NaN. Assert a finite, physically plausible
-                            // (positive) value, not just HasValue — NaN.HasValue is true and would
+                            // (positive) value, not just HasValue - NaN.HasValue is true and would
                             // otherwise slip through this check.
                             var observedIm = chromInfo.ObservedIonMobility.Value;
                             AssertEx.IsTrue(!double.IsNaN(observedIm) && observedIm > 0,
@@ -993,6 +1005,43 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
             AssertEx.IsTrue(withPrecursorObservedIm > 0, @"Expected at least one precursor with an aggregated observed ion mobility");
+        }
+
+        /// <summary>
+        /// Observed IM/CCS are stored on the transition results in the .sky, so they must survive
+        /// saving and reopening in both the XML and the compact results format.
+        /// </summary>
+        private void AssertObservedIonMobilitySurvivesReopen(string docPath, CompactFormatOption compactFormatOption)
+        {
+            var expected = GetObservedIonMobilityValues(SkylineWindow.Document);
+            RunUI(() =>
+            {
+                using (CompactFormatOption.SetOverride(compactFormatOption))
+                {
+                    SkylineWindow.SaveDocument(docPath);
+                }
+                SkylineWindow.NewDocument();
+                SkylineWindow.OpenFile(docPath);
+            });
+            var reopened = WaitForDocumentLoaded();
+            AssertEx.AreEqualDeep(expected, GetObservedIonMobilityValues(reopened));
+        }
+
+        private void RescoreResults()
+        {
+            var docBefore = SkylineWindow.Document;
+            var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
+            RunDlg<RescoreResultsDlg>(manageResultsDlg.Rescore, dlg => dlg.Rescore(false));
+            WaitForDocumentChangeLoaded(docBefore);
+            WaitForClosedForm<AllChromatogramsGraph>();
+        }
+
+        private static IList<Tuple<float?, float?>> GetObservedIonMobilityValues(SrmDocument doc)
+        {
+            return doc.MoleculeTransitions.Where(transition => transition.Results != null)
+                .SelectMany(transition => transition.Results.SelectMany(chromInfos => chromInfos))
+                .Select(chromInfo => Tuple.Create(chromInfo.ObservedIonMobility, chromInfo.ObservedCcs))
+                .ToList();
         }
     }
 }
