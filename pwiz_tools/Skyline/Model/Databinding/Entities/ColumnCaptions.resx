@@ -507,6 +507,9 @@
   <data name="FirstPosition">
     <value>First Position</value>
   </data>
+  <data name="FittedParameters">
+    <value>Fitted Parameters</value>
+  </data>
   <data name="FoldChange">
     <value>Fold Change</value>
   </data>
@@ -1430,6 +1433,9 @@
   </data>
   <data name="RSquared">
     <value>R Squared</value>
+  </data>
+  <data name="RelativeStandardError">
+    <value>Relative Standard Error</value>
   </data>
   <data name="SampleDilutionFactor">
     <value>Sample Dilution Factor</value>

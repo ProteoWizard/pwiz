@@ -514,6 +514,9 @@ to be the Analyte Concentration from the Replicate times the Concentration Multi
     <value>The position of the first (N-terminal) amino acid of the peptide within its
 containing protein sequence, or #N/A if no protein sequence is available.</value>
   </data>
+  <data name="FittedParameters">
+    <value>The number of parameters fitted to calibration data in the calibration curve.</value>
+  </data>
   <data name="FoldChange">
     <value>The fold change value. The fold change is the ratio of the normalized intensity of the treatment group to the normalized intensity of the control group.</value>
   </data>
@@ -1546,6 +1549,9 @@ retention score calculator, if one is used (e.g. SSRCalc or iRT score)
   </data>
   <data name="RSquared">
     <value>Coefficient of determination</value>
+  </data>
+  <data name="RelativeStandardError">
+    <value>Relative Standard Error</value>
   </data>
   <data name="SampleDilutionFactor">
     <value>The amount by which the sample was diluted before being analyzed. 

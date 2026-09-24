@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public double? GetY(double? x)
         {
-            return x == null ? (double?) null : GetY(x.Value);
+            return x == null ? (double?)null : GetY(x.Value);
         }
         public abstract double GetY(double x);
 
@@ -61,12 +61,53 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 {
                     calibrationCurveRow = calibrationCurveRow.ChangeRSquared(rSquared);
                 }
+                // Assuming the fields are already populated as needed
+                double? relStdError = CalculateRelativeStandardError(points, calibrationCurveRow.FittedParameters);
+                if (relStdError.HasValue)
+                {
+                    calibrationCurveRow = calibrationCurveRow.ChangeRelativeStandardError(relStdError);
+                }
             }
             return calibrationCurveRow;
         }
 
         protected abstract CalibrationCurveMetrics CreateCalibrationCurveMetrics();
         public abstract override string ToString();
+
+        /// <summary>
+        /// Returns Relative Standard Error (formatted typically as a percent like %RSD).
+        /// This method uses degrees of freedom (n - p) which depends on the calibration type
+        /// and which parameters are allowed to be fitted (e.g., intercept forced through 0 or not).
+        /// </summary>
+        public virtual double? CalculateRelativeStandardError(IList<WeightedPoint> points, int? fittedParameters)
+        {
+            if (!fittedParameters.HasValue) 
+            {
+                return null;
+            }
+            List<double> relativeErrors = new List<double>();
+            foreach (var point in points)
+            {
+                double? xFitted = GetX(point.Y);
+                if (xFitted.HasValue && point.X != 0 && !double.IsNaN(xFitted.Value)) 
+                {
+                    relativeErrors.Add((xFitted.Value - point.X) / point.X);
+                }
+                
+            }
+            if (!relativeErrors.Any())
+            {
+                return null;
+            }
+            int degreesOfFreedom = relativeErrors.Count - fittedParameters.Value;
+            if (degreesOfFreedom <= 0) 
+            {
+                return null;
+            }
+            double sumOfSquaresOfResiduals = relativeErrors.Sum(r => r * r);
+            double relStdError = Math.Sqrt(sumOfSquaresOfResiduals / degreesOfFreedom);
+            return relStdError;
+        }
 
         public virtual double? CalculateRSquared(IEnumerable<WeightedPoint> points)
         {
@@ -111,7 +152,11 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
             protected override CalibrationCurveMetrics CreateCalibrationCurveMetrics()
             {
-                return new CalibrationCurveMetrics().ChangeSlope(Slope).ChangeIntercept(Intercept);
+
+                return new CalibrationCurveMetrics()
+                    .ChangeSlope(Slope)
+                    .ChangeIntercept(Intercept)
+                    .ChangeFittedParameters(1 + (Intercept.HasValue ? 1 : 0));
             }
 
             public override string ToString()
@@ -164,8 +209,11 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
             protected override CalibrationCurveMetrics CreateCalibrationCurveMetrics()
             {
-                return new CalibrationCurveMetrics().ChangeIntercept(Intercept).ChangeSlope(Slope)
-                    .ChangeQuadraticCoefficient(QuadraticCoefficient);
+                return new CalibrationCurveMetrics()
+                    .ChangeIntercept(Intercept)
+                    .ChangeSlope(Slope)
+                    .ChangeQuadraticCoefficient(QuadraticCoefficient)
+                    .ChangeFittedParameters(3); // 2 if intercept forced to 0
             }
 
             public override string ToString()
@@ -213,7 +261,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
             protected override CalibrationCurveMetrics CreateCalibrationCurveMetrics()
             {
-                return new CalibrationCurveMetrics().ChangeSlope(Slope).ChangeIntercept(Intercept);
+                return new CalibrationCurveMetrics()
+                    .ChangeSlope(Slope)
+                    .ChangeIntercept(Intercept)
+                    .ChangeFittedParameters(2); // 1 if intercept forced to 0
             }
 
             /// <summary>
@@ -288,8 +339,11 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
             protected override CalibrationCurveMetrics CreateCalibrationCurveMetrics()
             {
-                return new CalibrationCurveMetrics().ChangeSlope(Slope).ChangeIntercept(Intercept)
-                    .ChangeTurningPoint(TurningPoint);
+                return new CalibrationCurveMetrics()
+                    .ChangeSlope(Slope)
+                    .ChangeIntercept(Intercept)
+                    .ChangeTurningPoint(TurningPoint)
+                    .ChangeFittedParameters(3); // Bilinear turning point counts as fitted parameter
             }
 
             public override string ToString()
@@ -323,7 +377,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
             protected override CalibrationCurveMetrics CreateCalibrationCurveMetrics()
             {
-                return new CalibrationCurveMetrics().ChangeSlope(Slope).ChangePointCount(0);
+                return new CalibrationCurveMetrics()
+                    .ChangeSlope(Slope)
+                    .ChangePointCount(0)
+                    .ChangeFittedParameters(1); // slope only
             }
 
             public override string ToString()
