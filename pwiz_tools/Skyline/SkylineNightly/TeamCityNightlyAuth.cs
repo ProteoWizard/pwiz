@@ -97,8 +97,8 @@ namespace SkylineNightly
         }
 
         /// <summary>
-        /// Downloads a TeamCity artifact to filePath, authenticating with the token. Deletes the partial
-        /// file and throws an <see cref="IOException"/> whose message names the underlying cause on failure.
+        /// Downloads a TeamCity artifact to filePath, authenticating with the token. On a network or disk
+        /// failure, deletes the partial file and throws an <see cref="IOException"/> whose message names the cause.
         /// </summary>
         public static void DownloadArtifact(string url, string filePath, string token)
         {
@@ -108,7 +108,7 @@ namespace SkylineNightly
                 using (var client = new HttpClient())
                 {
                     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                    // Headers only, so the default timeout does not cut off a large zip still streaming
+                    // Headers only, so the default timeout does not cut off a large zip still streaming.
                     using (var response = client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult())
                     {
                         response.EnsureSuccessStatusCode();
@@ -129,10 +129,14 @@ namespace SkylineNightly
                 // ReSharper disable once EmptyGeneralCatchClause
                 catch
                 {
-                    // The download failure is what matters
+                    // The download failure is what matters.
                 }
 
-                if (e is HttpRequestException || e is TaskCanceledException)
+                // With no cancellation token, a TaskCanceledException can only be HttpClient.Timeout
+                // expiring, and its own message ("A task was canceled.") would read like a cancellation.
+                if (e is TaskCanceledException)
+                    throw new IOException("The request timed out.", e);
+                if (e is HttpRequestException || e is IOException)
                     throw new IOException(GetFullMessage(e), e);
                 throw;
             }
@@ -154,7 +158,7 @@ namespace SkylineNightly
         }
 
         // HttpClient reports "An error occurred while sending the request." and puts the actual
-        // cause (DNS, TLS, refused connection) in the inner exceptions, which the logs need to show
+        // cause (DNS, TLS, refused connection) in the inner exceptions, which the logs need to show.
         private static string GetFullMessage(Exception e)
         {
             var message = e.Message;

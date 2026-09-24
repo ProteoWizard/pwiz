@@ -1176,8 +1176,9 @@ namespace SkylineNightly
                     {
                         var xmlPart = new ByteArrayContent(Encoding.UTF8.GetBytes(postData));
                         xmlPart.Headers.ContentType = new MediaTypeHeaderValue("text/xml");
-                        // Set by hand because the Add(content, name, fileName) overload also writes a
-                        // filename* parameter, which the server has never been sent
+                        // Built by hand to keep the wire format the server has always received.
+                        // ContentDispositionHeaderValue leaves values unquoted unless they are quoted here, and
+                        // the Add(content, name, fileName) overload also adds a filename* parameter.
                         xmlPart.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
                         {
                             Name = "\"xml_file\"",
@@ -1200,7 +1201,6 @@ namespace SkylineNightly
                 {
                     Thread.Sleep(30000);
                     Log("Retrying post");
-                    errmessage = String.Empty;
                 }
             }
             Log(errmessage = "Failed to post results: " + errmessage); 
@@ -1389,7 +1389,7 @@ namespace SkylineNightly
         }
 
         /// <summary>
-        /// Creates an HttpClient holding a skyline.ms session, with the CSRF header LabKey requires on a POST.
+        /// Creates an <see cref="HttpClient"/> holding a skyline.ms session, with the CSRF header LabKey requires on a POST.
         /// </summary>
         private static HttpClient CreateLabKeyClient(string logFileName, TimeSpan timeout)
         {
@@ -1402,7 +1402,7 @@ namespace SkylineNightly
                 var csrf = handler.CookieContainer.GetCookies(new Uri(LABKEY_HOME_URL))[LABKEY_CSRF];
                 if (csrf != null)
                 {
-                    // The server set a cookie called X-LABKEY-CSRF, send its value back as a header on the POST
+                    // The server set a cookie called X-LABKEY-CSRF. Send its value back as a header on the POST.
                     client.DefaultRequestHeaders.Add(LABKEY_CSRF, csrf.Value);
                 }
                 else

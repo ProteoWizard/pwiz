@@ -34,6 +34,7 @@ using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Alerts
 {
@@ -264,7 +265,7 @@ namespace pwiz.Skyline.Alerts
                 int fileCount = 0;
                 foreach (var fileEntry in files)
                 {
-                    // Missing its closing bracket, but the server has always received this name
+                    // Missing its closing bracket, but the server has always received this name.
                     string paramName = string.Format(@"formFiles[{0:D2}", fileCount);
                     content.Add(CreateFormPart(fileEntry.Value, paramName, fileEntry.Key, contentType));
                     fileCount++;
@@ -276,7 +277,9 @@ namespace pwiz.Skyline.Alerts
                 // ReSharper disable once LocalizableElement
                 Console.WriteLine(@"File uploaded, server response is: {0}", response.Content.ReadAsStringAsync().Result);
             }
-            catch (Exception ex)
+            // Only a server that answered with an error is logged and ignored. A failure to reach
+            // the server at all propagates, so the user is told the report was not sent.
+            catch (NetworkRequestException ex) when (ex.StatusCode.HasValue)
             {
                 // ReSharper disable once LocalizableElement
                 Console.WriteLine(@"Error uploading file: {0}", ex);
@@ -286,21 +289,17 @@ namespace pwiz.Skyline.Alerts
         private static HttpContent CreateFormPart(byte[] data, string name, string fileName = null, string contentType = null)
         {
             var part = new ByteArrayContent(data);
-            // Quoted by hand because the MultipartFormDataContent.Add(content, name, fileName) overload
-            // also writes a filename* parameter, which the server has never been sent
+            // Built by hand to keep the wire format the server has always received.
+            // ContentDispositionHeaderValue leaves values unquoted unless they are quoted here, and the
+            // MultipartFormDataContent.Add(content, name, fileName) overload also adds a filename* parameter.
             part.Headers.ContentDisposition = new ContentDispositionHeaderValue(@"form-data")
             {
-                Name = Quote(name),
-                FileName = fileName != null ? Quote(fileName) : null
+                Name = name.Quote(),
+                FileName = fileName?.Quote()
             };
             if (contentType != null)
                 part.Headers.ContentType = new MediaTypeHeaderValue(contentType);
             return part;
-        }
-
-        private static string Quote(string value)
-        {
-            return @"""" + value + @"""";
         }
 
         private static void SetCSRFToken(HttpClientWithProgress httpClient)
@@ -312,7 +311,7 @@ namespace pwiz.Skyline.Alerts
                 var csrf = httpClient.GetCookie(new Uri(url), LABKEY_CSRF);
                 if (csrf != null)
                 {
-                    // The server set a cookie called X-LABKEY-CSRF, send its value back as a header on the POST
+                    // The server set a cookie called X-LABKEY-CSRF. Send its value back as a header on the POST.
                     httpClient.AddHeader(LABKEY_CSRF, csrf);
                 }
                 else
