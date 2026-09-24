@@ -1,6 +1,7 @@
 /*
  * Original author: Shannon Joyner <sjoyner .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2011 University of Washington - Seattle, WA
  * 
@@ -26,8 +27,11 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -249,94 +253,71 @@ namespace pwiz.Skyline.Alerts
 
         public static void HttpUploadFiles(string url, string contentType, NameValueCollection nvc, IEnumerable<KeyValuePair<string, byte[]>> files)
         {
-            string boundary = @"---------------------------" + DateTime.Now.Ticks.ToString(@"x");
-            // ReSharper disable LocalizableElement
-            byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n");
-            // ReSharper restore LocalizableElement
-
-            var wr = (HttpWebRequest) WebRequest.Create(url);
-            wr.ContentType = @"multipart/form-data; boundary=" + boundary;
-            wr.Method = @"POST";
-            wr.KeepAlive = true;
-            wr.Credentials = CredentialCache.DefaultCredentials;
-
-            SetCSRFToken(wr);
-
-            var rs = wr.GetRequestStream();
-
-            const string formDataTemplate = "Content-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}";
-            foreach (string key in nvc.Keys)
-            {
-                rs.Write(boundarybytes, 0, boundarybytes.Length);
-                string formitem = string.Format(formDataTemplate, key, nvc[key]);
-                byte[] formitembytes = Encoding.UTF8.GetBytes(formitem);
-                rs.Write(formitembytes, 0, formitembytes.Length);
-            }
-            int fileCount = 0;
-            foreach (var fileEntry in files)
-            {
-                rs.Write(boundarybytes, 0, boundarybytes.Length);
-                const string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n";
-                string paramName = string.Format(@"formFiles[{0:D2}", fileCount);
-                string header = string.Format(headerTemplate, paramName, fileEntry.Key, contentType); //formFiles[00]
-                byte[] headerbytes = Encoding.UTF8.GetBytes(header);
-                rs.Write(headerbytes, 0, headerbytes.Length);
-                rs.Write(fileEntry.Value, 0, fileEntry.Value.Length);
-                fileCount ++;
-            }
-            // ReSharper disable LocalizableElement
-            byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
-            // ReSharper restore LocalizableElement
-            rs.Write(trailer, 0, trailer.Length);
-            rs.Close();
-
-
-            WebResponse wresp = null;
             try
             {
-                wresp = wr.GetResponse();
-                var stream2 = wresp.GetResponseStream();
-                if (stream2 != null)
+                using var httpClient = new HttpClientWithProgress(null, null, new CookieContainer());
+                SetCSRFToken(httpClient);
+
+                using var content = new MultipartFormDataContent();
+                foreach (string key in nvc.Keys)
+                    content.Add(CreateFormPart(Encoding.UTF8.GetBytes(nvc[key] ?? string.Empty), key));
+                int fileCount = 0;
+                foreach (var fileEntry in files)
                 {
-                    var reader2 = new StreamReader(stream2);
-                    // ReSharper disable once LocalizableElement
-                    Console.WriteLine(@"File uploaded, server response is: {0}", reader2.ReadToEnd());
+                    // Missing its closing bracket, but the server has always received this name
+                    string paramName = string.Format(@"formFiles[{0:D2}", fileCount);
+                    content.Add(CreateFormPart(fileEntry.Value, paramName, fileEntry.Key, contentType));
+                    fileCount++;
                 }
+
+                using var request = new HttpRequestMessage(HttpMethod.Post, url);
+                request.Content = content;
+                using var response = httpClient.SendRequest(request);
+                // ReSharper disable once LocalizableElement
+                Console.WriteLine(@"File uploaded, server response is: {0}", response.Content.ReadAsStringAsync().Result);
             }
             catch (Exception ex)
             {
                 // ReSharper disable once LocalizableElement
                 Console.WriteLine(@"Error uploading file: {0}", ex);
-                if (wresp != null)
-                {
-                    wresp.Close();
-                }
             }
         }
 
-        private static void SetCSRFToken(HttpWebRequest postReq)
+        private static HttpContent CreateFormPart(byte[] data, string name, string fileName = null, string contentType = null)
+        {
+            var part = new ByteArrayContent(data);
+            // Quoted by hand because the MultipartFormDataContent.Add(content, name, fileName) overload
+            // also writes a filename* parameter, which the server has never been sent
+            part.Headers.ContentDisposition = new ContentDispositionHeaderValue(@"form-data")
+            {
+                Name = Quote(name),
+                FileName = fileName != null ? Quote(fileName) : null
+            };
+            if (contentType != null)
+                part.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+            return part;
+        }
+
+        private static string Quote(string value)
+        {
+            return @"""" + value + @"""";
+        }
+
+        private static void SetCSRFToken(HttpClientWithProgress httpClient)
         {
             var url = WebHelpers.GetSkylineLink(@"/project/home/begin.view?");
-
-            var sessionCookies = new CookieContainer();
             try
             {
-                var request = (HttpWebRequest)WebRequest.Create(url);
-                request.Method = @"GET";
-                request.CookieContainer = sessionCookies;
-                using (var response = (HttpWebResponse)request.GetResponse())
+                httpClient.DownloadString(url);
+                var csrf = httpClient.GetCookie(new Uri(url), LABKEY_CSRF);
+                if (csrf != null)
                 {
-                    postReq.CookieContainer = sessionCookies;
-                    var csrf = response.Cookies[LABKEY_CSRF];
-                    if (csrf != null)
-                    {
-                        // The server set a cookie called X-LABKEY-CSRF, get its value and add a header to the POST request
-                        postReq.Headers.Add(LABKEY_CSRF, csrf.Value);
-                    }
-                    else
-                    {
-                        Console.WriteLine(@"CSRF token not found.");
-                    }
+                    // The server set a cookie called X-LABKEY-CSRF, send its value back as a header on the POST
+                    httpClient.AddHeader(LABKEY_CSRF, csrf);
+                }
+                else
+                {
+                    Console.WriteLine(@"CSRF token not found.");
                 }
             }
             catch (Exception e)
