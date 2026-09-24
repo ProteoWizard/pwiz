@@ -991,7 +991,7 @@ namespace pwiz.Osprey.Tasks
                     return false;  // load failure; ExitCode already set
             }
 
-            ctx.LogInfo(@"Bundle hydration: skipping first-pass Percolator (sidecar provides q-values).");
+            ctx.LogVerbose(@"Bundle hydration: skipping first-pass Percolator (sidecar provides q-values).");
 
             // The bundle's PreCompactionTallies are non-null only when the hydrate that
             // produced it STREAMED (compacting each file as it loaded, so it never held the
@@ -1299,7 +1299,7 @@ namespace pwiz.Osprey.Tasks
                 var sw = Stopwatch.StartNew();
                 RescoreHydration.ReadGapFillAndCalibrations(
                     perFileParquetPaths.Values, perFileGapFill, refinedCalibrations, sequencePool);
-                ctx.LogInfo(string.Format(
+                ctx.LogVerbose(string.Format(
                     @"Read gap-fill and refined calibrations from {0} run envelope(s) in {1:F1}s",
                     perFileGapFill.Count, sw.Elapsed.TotalSeconds));
             };
@@ -2467,7 +2467,7 @@ namespace pwiz.Osprey.Tasks
             try
             {
                 FdrExperimentSidecar.Write(path, experiment.Records, pass);
-                ctx.LogInfo(string.Format(
+                ctx.LogVerbose(string.Format(
                     @"Wrote experiment-scope FDR sidecar: {0} ({1} distinct entry ids)",
                     path, experiment.Count));
                 PerFileResumeDriver.Stamp(path, Name, OspreyVersion.Current, ValidityKey(ctx),
@@ -2662,7 +2662,7 @@ namespace pwiz.Osprey.Tasks
                 ctx.ExitCode = 1;
                 return false;
             }
-            ctx.LogInfo(string.Format(
+            ctx.LogVerbose(string.Format(
                 @"Wrote analysis-wide retained base_id summary: {0} base_id(s) across {1} run(s)",
                 retainedBaseIds.Count, perFileParquetPaths.Count));
             ctx.LogInfo(LogTag.COUNT, LogKey.Format(LogKey.COUNT_RETAINED_SUMMARY_WRITTEN, @"base-ids={0} runs={1}",
@@ -3044,9 +3044,12 @@ namespace pwiz.Osprey.Tasks
             var retained = LibraryFragmentRelease.BuildRetainedBaseIds(
                 _firstPassBaseIds, _perFileGapFillForRescore);
             int released = LibraryFragmentRelease.ReleaseFragments(fullLibrary, retained);
-            ctx.LogInfo(string.Format(
-                @"Released library fragments for {0} of {1} entries ({2} base_ids retained for rescore + gap-fill)",
-                released, fullLibrary.Count, retained.Count));
+            if (OspreyEnvironment.LogMemory)
+            {
+                ctx.LogInfo(string.Format(
+                    @"Released library fragments for {0} of {1} entries ({2} base_ids retained for rescore + gap-fill)",
+                    released, fullLibrary.Count, retained.Count));
+            }
             LibraryFragmentRelease.LogRelease(ctx, released, fullLibrary.Count, retained.Count,
                 LogKey.SCOPE_RESCORE_GAP_FILL);
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"after library-fragment release");
@@ -3145,7 +3148,7 @@ namespace pwiz.Osprey.Tasks
             }
             if (stratumWrites > 0)
             {
-                ctx.LogInfo(string.Format(
+                ctx.LogVerbose(string.Format(
                     @"Persisted the protein-compact stratum ({0} file sidecar(s)).", stratumWrites));
             }
         }
@@ -3600,7 +3603,7 @@ namespace pwiz.Osprey.Tasks
                 // flushFileRunScope never fired would look identical from the outside - the
                 // sink would have written the same sidecars from pass 2, and the output would
                 // be byte-identical - so the log is the only place the distinction is visible.
-                ctx.LogInfo(string.Format(
+                ctx.LogVerbose(string.Format(
                     @"First-pass: {0} of {1} file(s) had their sidecar written during pass 1, so " +
                     @"pass 2 read those scores back instead of reloading features.",
                     scoresOnDisk.Count, projections.PerFile.Count));

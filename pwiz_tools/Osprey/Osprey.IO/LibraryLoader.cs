@@ -174,10 +174,13 @@ namespace pwiz.Osprey.IO
                                 if (entry.IsSpectrumReleased)
                                     skipped++;
                             }
-                            log.LogInfo(string.Format(
-                                @"Skipped library fragments for {0} of {1} entries at load " +
-                                @"({2} base_ids retained for the 1st-pass retained set)",
-                                skipped, cached.Count, options.RetainFragmentsFor.Count));
+                            if (OspreyEnvironment.LogMemory)
+                            {
+                                log.LogInfo(string.Format(
+                                    @"Skipped library fragments for {0} of {1} entries at load " +
+                                    @"({2} base_ids retained for the 1st-pass retained set)",
+                                    skipped, cached.Count, options.RetainFragmentsFor.Count));
+                            }
                             log.LogInfo(LogTag.COUNT, LogKey.Format(LogKey.COUNT_LIBRARY_FRAGMENTS_SKIPPED,
                                 @"skipped={0} entries={1} retained={2}",
                                 skipped, cached.Count, options.RetainFragmentsFor.Count));

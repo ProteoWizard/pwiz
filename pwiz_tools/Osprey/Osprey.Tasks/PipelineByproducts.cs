@@ -121,7 +121,7 @@ namespace pwiz.Osprey.Tasks
             LibraryStringInterner interner;
             lock (_seedLock)
                 interner = _interner;
-            if (interner == null)
+            if (interner == null || !OspreyOutput.Verbose)
                 return;
             logInfo(string.Format(
                 "Sequence pool: {0} distinct seeded from the library, {1} sidecar lookup(s) missed it",

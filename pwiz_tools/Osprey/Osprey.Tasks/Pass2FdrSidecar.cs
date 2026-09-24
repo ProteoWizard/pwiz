@@ -1589,7 +1589,7 @@ namespace pwiz.Osprey.Tasks
             {
                 FdrExperimentSidecar.Write(experimentPath, experiment.Records,
                     FdrScoresSidecar.Pass.SecondPass);
-                ctx.LogInfo(string.Format(
+                ctx.LogVerbose(string.Format(
                     @"Wrote experiment-scope FDR sidecar: {0} ({1} distinct entry ids)",
                     experimentPath, experiment.Count));
             }
@@ -2189,13 +2189,13 @@ namespace pwiz.Osprey.Tasks
                 }
                 else if (answered == fileKeys.Count)
                 {
-                    ctx.LogInfo(string.Format(
+                    ctx.LogVerbose(string.Format(
                         @"Second-pass fold reading the worker's written answer for all {0} " +
                         @"file(s); no 1st-pass sidecar is opened.", fileKeys.Count));
                 }
                 else
                 {
-                    ctx.LogInfo(string.Format(
+                    ctx.LogVerbose(string.Format(
                         @"Second-pass fold has a worker answer for {0} of {1} file(s); the " +
                         @"remaining {2} are RECOMPUTED from their 1st-pass sidecars. A node given " +
                         @"complete worker output would open none.",

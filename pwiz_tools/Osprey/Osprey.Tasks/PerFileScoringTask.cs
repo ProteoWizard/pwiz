@@ -1530,7 +1530,7 @@ namespace pwiz.Osprey.Tasks
                     }
                     for (int j = 0; j < stubs.Count; j++)
                         stubs[j].Features = features[j];
-                    ctx.LogInfo(string.Format(@"  Loaded {0} FDR stubs + features", stubs.Count));
+                    ctx.LogVerbose(string.Format(@"  Loaded {0} FDR stubs + features", stubs.Count));
                     perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
                 }
                 else
@@ -1563,7 +1563,7 @@ namespace pwiz.Osprey.Tasks
                             @"--input-scores: parquet {0} is missing the PIN feature columns -- it is not a valid Osprey scores parquet. Delete it and re-run so it is regenerated.",
                             parquetPath));
                     }
-                    ctx.LogInfo(string.Format(
+                    ctx.LogVerbose(string.Format(
                         @"  Loaded {0} FDR stubs (features not loaded - not read on this path)", stubs.Count));
                     perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
                 }
@@ -1735,7 +1735,7 @@ namespace pwiz.Osprey.Tasks
                     @"--input-scores: parquet {0} is missing the PIN feature columns -- it is not a valid Osprey scores parquet. Delete it and re-run so it is regenerated.",
                     parquetPath));
             }
-            ctx.LogInfo(string.Format(
+            ctx.LogVerbose(string.Format(
                 @"      Loaded {0} FDR stubs (features not loaded - not read on this path)", stubs.Count));
             perFileParquetPaths[fileName] = parquetPath;
             LoadJoinOnlyCalibration(fileName, parquetPath, perFileCalibrations,

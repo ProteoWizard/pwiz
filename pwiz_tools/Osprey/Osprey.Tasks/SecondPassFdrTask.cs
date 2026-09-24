@@ -1049,9 +1049,12 @@ namespace pwiz.Osprey.Tasks
 
             var retained = ScoringTaskShared.ReadRetainedBaseIdsOrFail(ctx.Config);
             int released = LibraryFragmentRelease.ReleaseFragments(fullLibrary, retained);
-            ctx.LogInfo(string.Format(
-                @"Released library fragments for {0} of {1} entries ({2} base_ids retained for the 1st-pass retained set)",
-                released, fullLibrary.Count, retained.Count));
+            if (OspreyEnvironment.LogMemory)
+            {
+                ctx.LogInfo(string.Format(
+                    @"Released library fragments for {0} of {1} entries ({2} base_ids retained for the 1st-pass retained set)",
+                    released, fullLibrary.Count, retained.Count));
+            }
             LibraryFragmentRelease.LogRelease(ctx, released, fullLibrary.Count, retained.Count,
                 LogKey.SCOPE_RETAINED_SUMMARY);
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"after library-fragment release");

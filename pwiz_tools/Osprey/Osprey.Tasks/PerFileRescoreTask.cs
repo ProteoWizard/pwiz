@@ -2062,7 +2062,7 @@ namespace pwiz.Osprey.Tasks
             // which was null on a straight-through run, and it threw a NullReferenceException
             // on the first one after the predicate above stopped requiring that list. The
             // paths are the right source regardless: they are what the loop iterates.
-            ctx.LogInfo(string.Format(
+            ctx.LogVerbose(string.Format(
                 @"Per-run rescore: hydrating each of {0} run(s) from its own artifacts " +
                 @"(no all-runs pre-load; {1} retained base_id(s) read once).",
                 perFileParquetPaths.Count, retainedBaseIds.Count));
@@ -2195,7 +2195,7 @@ namespace pwiz.Osprey.Tasks
             // gives: without it the only evidence is a memory profile, and "the gate is green so
             // the new path must have run" is the inference that lets a resident path pass as a
             // streamed one.
-            ctx.LogInfo(string.Format(
+            ctx.LogVerbose(string.Format(
                 @"Second-pass join: folding over {0} run(s), each rebuilt from its own " +
                 @"reconciled parquet and dropped (no all-runs survivor pool). {1} of {0} run(s) " +
                 @"carry a current reconciled parquet; a run without one is an error, not a " +
@@ -2243,7 +2243,7 @@ namespace pwiz.Osprey.Tasks
             // The second count is the boundary claim, said out loud: an orchestrator that
             // trimmed the first-pass sidecars is entitled to know how many runs would have
             // needed them.
-            ctx.LogInfo(string.Format(
+            ctx.LogVerbose(string.Format(
                 @"Second-pass join: folding over {0} run(s), each rebuilt from its own artifacts " +
                 @"and dropped (no all-runs survivor pool; {1} retained base_id(s) read once). " +
                 @"{2} of {0} run(s) carry a current 2nd-pass sidecar and are rebuilt without " +
@@ -2808,7 +2808,7 @@ namespace pwiz.Osprey.Tasks
             // this is where the decision is taken - a worker that exits before Stage 7 has still
             // made it, and the alternative (report it when the fold starts) is a fact about the
             // consumer rather than about this task.
-            ctx.LogInfo(string.Format(
+            ctx.LogVerbose(string.Format(
                 @"Second-pass join: folding over {0} run(s), each rebuilt from its own artifacts " +
                 @"and dropped (no all-runs survivor pool). Decided at Stage 6, where the " +
                 @"survivors were released.", _perFileEntries.Count));

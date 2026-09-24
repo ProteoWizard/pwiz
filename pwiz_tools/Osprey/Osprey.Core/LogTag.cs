@@ -33,7 +33,8 @@ namespace pwiz.Osprey.Core
     /// <see cref="Mem"/>) carry text that scripts and tests read: it is never translated, and it
     /// is the only part of the log a consumer may key off. All but TASK are gated. CATEGORY tags
     /// (<see cref="WARN"/>, <see cref="ERROR"/>, <see cref="MODEL_DIAGNOSTICS"/>, <see cref="BISECT"/>
-    /// and the rest) are always emitted and label the prose that follows them; the tag stays ASCII
+    /// and the rest) label the prose that follows them and are always emitted, except
+    /// <see cref="DROP"/>, which is memory bookkeeping under <c>OSPREY_LOG_MEMORY</c>; the tag stays ASCII
     /// but the prose is written for a person and may be reworded or localized in any change
     /// (pwiz_tools/Osprey/docs/20-command-line.md, "Log format").</para>
     /// </summary>
@@ -75,8 +76,11 @@ namespace pwiz.Osprey.Core
         public static readonly LogTag FDR = new LogTag(@"FDR", Always);
         /// <summary>Library load timing.</summary>
         public static readonly LogTag LIB_LOAD = new LogTag(@"LIB-LOAD", Always);
-        /// <summary>Byproducts released at a task boundary.</summary>
-        public static readonly LogTag DROP = new LogTag(@"DROP", Always);
+        /// <summary>
+        /// Byproducts released at a task boundary. How memory is managed, so emitted only under
+        /// <c>OSPREY_LOG_MEMORY</c> like <see cref="Mem"/>.
+        /// </summary>
+        public static readonly LogTag DROP = new LogTag(@"DROP", IsLogMemory);
 
         /// <summary>
         /// A memory probe, <c>[MEM label]</c>. Emitted only under <c>OSPREY_LOG_MEMORY</c>, which
@@ -84,7 +88,7 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static LogTag Mem(string label)
         {
-            return new LogTag(@"MEM " + label, () => OspreyEnvironment.LogMemory);
+            return new LogTag(@"MEM " + label, IsLogMemory);
         }
 
         private readonly Func<bool> _isEnabled;
@@ -115,6 +119,11 @@ namespace pwiz.Osprey.Core
         private static bool IsPerfStats()
         {
             return OspreyOutput.PerfStats;
+        }
+
+        private static bool IsLogMemory()
+        {
+            return OspreyEnvironment.LogMemory;
         }
 
         private static bool Always()
