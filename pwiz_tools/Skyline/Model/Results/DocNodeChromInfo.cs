@@ -905,8 +905,7 @@ namespace pwiz.Skyline.Model.Results
             return ReferenceEquals(fileId, FileId) &&
                    step == OptimizationStep &&
                    Equals(peak.MassError, MassError) &&
-                   Equals(peak.ObservedIonMobility, ObservedIonMobility) &&
-                   Equals(peak.ObservedCcs, ObservedCcs) &&
+                   IsObservedIonMobilityEquivalentTolerant(peak.ObservedIonMobility) &&
                    IsEqualTolerant(peak.RetentionTime, RetentionTime, tol) &&
                    IsEqualTolerant(peak.StartTime, StartRetentionTime, tol) &&
                    IsEqualTolerant(peak.EndTime, EndRetentionTime, tol) &&
@@ -924,6 +923,20 @@ namespace pwiz.Skyline.Model.Results
             return Math.Abs(a - b) <= tol;
         }
 
+        /// <summary>
+        /// Observed IM is derived from the peak, so it only distinguishes peaks when both sides have
+        /// it, and then only beyond the rounding applied when it is stored in the cache. Observed CCS
+        /// is derived from observed IM, and is not available on a peak recomputed from the cache.
+        /// </summary>
+        private bool IsObservedIonMobilityEquivalentTolerant(float? peakObservedIonMobility)
+        {
+            if (!peakObservedIonMobility.HasValue || !ObservedIonMobility.HasValue)
+                return true;
+            int scale = RawTimeIntensities.GetObservedIonMobilityScaleOrZero(IonMobility.IonMobilityUnits);
+            double tol = scale == 0 ? 0 : 1.0 / scale;
+            return IsEqualTolerant(peakObservedIonMobility.Value, ObservedIonMobility.Value, tol);
+        }
+
         #region Property change methods
 
         public TransitionChromInfo ChangePeak(ChromPeak peak, UserSet userSet)
@@ -931,7 +944,7 @@ namespace pwiz.Skyline.Model.Results
             var chromInfo = ImClone(this);
             chromInfo.MassError = peak.MassError;
             chromInfo.ObservedIonMobility = peak.ObservedIonMobility;
-            chromInfo.ObservedCcs = peak.ObservedCcs;
+            chromInfo.ObservedCcs = peak.ObservedCcs ?? GetObservedCcsForUnchangedIonMobility(peak.ObservedIonMobility);
             chromInfo.RetentionTime = peak.RetentionTime;
             chromInfo.StartRetentionTime = peak.StartTime;
             chromInfo.EndRetentionTime = peak.EndTime;
@@ -950,6 +963,17 @@ namespace pwiz.Skyline.Model.Results
             chromInfo.IsForcedIntegration = peak.IsForcedIntegration;
             chromInfo.PeakShapeValues = peak.PeakShapeValues;
             return chromInfo;
+        }
+
+        /// <summary>
+        /// Observed CCS can only be computed while the raw data file is open, so a peak re-integrated
+        /// from the cache has none. The stored value still applies while observed IM is unchanged.
+        /// </summary>
+        private float? GetObservedCcsForUnchangedIonMobility(float? peakObservedIonMobility)
+        {
+            if (!peakObservedIonMobility.HasValue || !ObservedIonMobility.HasValue)
+                return null;
+            return IsObservedIonMobilityEquivalentTolerant(peakObservedIonMobility) ? ObservedCcs : null;
         }
 
         /// <summary>
@@ -989,6 +1013,17 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.IsForcedIntegration = isForcedCoelution);
         }
 
+        public TransitionChromInfo ChangeObservedIonMobility(float? observedIonMobility, float? observedCcs)
+        {
+            if (Equals(observedIonMobility, ObservedIonMobility) && Equals(observedCcs, ObservedCcs))
+                return this;
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.ObservedIonMobility = observedIonMobility;
+                im.ObservedCcs = observedCcs;
+            });
+        }
+
         #endregion
 
         #region object overrides
@@ -999,6 +1034,8 @@ namespace pwiz.Skyline.Model.Results
             if (ReferenceEquals(this, other)) return true;
             var result =  base.Equals(other) &&
                    Equals(other.MassError, MassError) &&
+                   Equals(other.ObservedIonMobility, ObservedIonMobility) &&
+                   Equals(other.ObservedCcs, ObservedCcs) &&
                    other.RetentionTime == RetentionTime &&
                    other.StartRetentionTime == StartRetentionTime &&
                    other.EndRetentionTime == EndRetentionTime &&
@@ -1034,6 +1071,8 @@ namespace pwiz.Skyline.Model.Results
             {
                 int result = base.GetHashCode();
                 result = (result*397) ^ (MassError.HasValue ? MassError.Value.GetHashCode() : 0);
+                result = (result*397) ^ ObservedIonMobility.GetHashCode();
+                result = (result*397) ^ ObservedCcs.GetHashCode();
                 result = (result*397) ^ RetentionTime.GetHashCode();
                 result = (result*397) ^ StartRetentionTime.GetHashCode();
                 result = (result*397) ^ EndRetentionTime.GetHashCode();
@@ -1139,7 +1178,7 @@ namespace pwiz.Skyline.Model.Results
                 DataValues.FromUserSet(transitionPeak.UserSet),
                 transitionPeak.ForcedIntegration,
                 peakShapeValues
-            );
+            ).ChangeObservedIonMobility(transitionPeak.ObservedIonMobility, transitionPeak.ObservedCollisionCrossSection);
         }
 
         private bool GetFlag(Flags flag)

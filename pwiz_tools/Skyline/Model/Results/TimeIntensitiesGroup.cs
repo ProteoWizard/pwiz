@@ -234,6 +234,7 @@ namespace pwiz.Skyline.Model.Results
             int numTrans = chromTransitions.Length;
             Assume.IsTrue(numTrans == chromGroupHeaderInfo.NumTransitions);
             int numPoints = chromGroupHeaderInfo.NumPoints;
+            bool hasMassErrorSlotPerTransition = HasMassErrorSlotPerTransition(stream, chromGroupHeaderInfo, chromTransitions);
             var sharedTimes = PrimitiveArrays.Read<float>(stream, numPoints);
             var transitionIntensities = new IList<float>[numTrans];
             for (int i = 0; i < numTrans; i++)
@@ -250,7 +251,11 @@ namespace pwiz.Skyline.Model.Results
                     // mixed group (group flag set, but missing on some transitions - e.g. from a
                     // cache merge) round-trips without desyncing the stream.
                     if (chromTransitions[i].MissingMassErrors)
+                    {
+                        if (hasMassErrorSlotPerTransition)
+                            ReadScaledShortErrors(stream, numPoints);
                         continue;
+                    }
                     transitionMassErrors[i] = ReadScaledShortErrors(stream, numPoints);
                 }
             }
@@ -287,6 +292,52 @@ namespace pwiz.Skyline.Model.Results
                 listOfTimeIntensities.Add(timeIntensities);
             }
             return new InterpolatedTimeIntensities(listOfTimeIntensities, chromTransitions.Select(chromTransition=>chromTransition.Source));
+        }
+
+        /// <summary>
+        /// Skyline 3.6 (cache format 11) wrote a zero-filled mass-error slot for every transition,
+        /// including those flagged MissingMassErrors, while <see cref="WriteToStream"/> writes none
+        /// for them. The flags are the same in both layouts, so the stream length decides.
+        /// </summary>
+        private static bool HasMassErrorSlotPerTransition(Stream stream, ChromGroupHeaderInfo chromGroupHeaderInfo,
+            ChromTransition[] chromTransitions)
+        {
+            if (!chromGroupHeaderInfo.HasMassErrors || !stream.CanSeek)
+                return false;
+            int numMissingMassErrors = chromTransitions.Count(chromTransition => chromTransition.MissingMassErrors);
+            if (numMissingMassErrors == 0)
+                return false;
+            int numPoints = chromGroupHeaderInfo.NumPoints;
+            int numTrans = chromTransitions.Length;
+            long slotPerTransitionLength = (long)sizeof(float) * numPoints * (numTrans + 1)
+                                           + (long)sizeof(short) * numPoints * numTrans;
+            if (chromGroupHeaderInfo.HasObservedIonMobilities)
+            {
+                int numObservedIonMobilities = chromTransitions.Count(chromTransition => !chromTransition.MissingObservedIonMobility);
+                slotPerTransitionLength += (long)sizeof(float) * numPoints * numObservedIonMobilities;
+            }
+            int numScanIdLists = new[]
+            {
+                chromGroupHeaderInfo.HasFragmentScanIds,
+                chromGroupHeaderInfo.HasSimScanIds,
+                chromGroupHeaderInfo.HasMs1ScanIds
+            }.Count(hasScanIds => hasScanIds);
+            slotPerTransitionLength += (long)sizeof(int) * numPoints * numScanIdLists;
+            return stream.Length - stream.Position == slotPerTransitionLength;
+        }
+
+        /// <summary>
+        /// Returns this group without per-time-point observed ion mobilities, for writing to a cache
+        /// format older than <see cref="CacheFormatVersion.Twenty"/>, whose readers cannot detect
+        /// the observed ion mobility section.
+        /// </summary>
+        public InterpolatedTimeIntensities RemoveObservedIonMobilities()
+        {
+            if (!HasObservedIonMobilities)
+                return this;
+            return new InterpolatedTimeIntensities(TransitionTimeIntensities
+                    .Select(timeIntensities => timeIntensities.ChangeObservedIonMobilities(null)),
+                TransitionChromSources);
         }
 
         public override TimeIntensitiesGroup Truncate(float newStartTime, float newEndTime)
