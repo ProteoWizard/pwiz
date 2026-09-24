@@ -331,7 +331,7 @@ namespace pwiz.Osprey.Tasks
             IList<string> parquetPaths,
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             LibraryStringInterner sequencePool = null,
-            Action<string> logInfo = null)
+            IOspreyLog log = null)
         {
             if (perFileEntries == null) throw new ArgumentNullException(nameof(perFileEntries));
             if (parquetPaths == null) throw new ArgumentNullException(nameof(parquetPaths));
@@ -356,9 +356,11 @@ namespace pwiz.Osprey.Tasks
             // later, which is the case a per-caller marker would silently miss. BOTH twins emit
             // it: this overlay, and HydrateCompactedStreaming below, which streams the reading
             // but accumulates the result and is the twin the 446-run incident actually took.
-            logInfo?.Invoke(string.Format(
+            log?.LogInfo(string.Format(
                 @"Hydrating the {0}: {1} run(s) held at once, O(files x entries).",
                 ALL_RUNS_BUNDLE_MARKER, perFileEntries.Count));
+            log?.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_ALL_RUNS_BUNDLE, @"built runs={0}",
+                perFileEntries.Count));
 
             var refinedCalibrations = new Dictionary<string, RTCalibration>();
             var perFileGapFill = new Dictionary<string, List<GapFillTarget>>();
@@ -441,7 +443,7 @@ namespace pwiz.Osprey.Tasks
             Action<int, string, List<FdrEntry>> onStubsHydrated,
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             HashSet<uint> retainedBaseIds,
-            Action<string> logInfo = null)
+            IOspreyLog log = null)
         {
             if (parquetPaths == null)
                 throw new ArgumentNullException(nameof(parquetPaths));
@@ -495,7 +497,7 @@ namespace pwiz.Osprey.Tasks
                     // set with --memstamp carries uncollected garbage, so it can only show shape.
                     // Reading shape as magnitude is what sent the previous fix after the wrong
                     // structure; this probe is what settles it.
-                    ProfilerHooks.LogManagedHeapAfterGcIfEnabled(logInfo, @"mdiag-fold-live",
+                    ProfilerHooks.LogManagedHeapAfterGcIfEnabled(log, @"mdiag-fold-live",
                         string.Format(@"(post-GC, diagnostics fold, run {0} of {1})",
                             i + 1, parquetPaths.Count));
                 }
@@ -559,7 +561,7 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             HashSet<uint> retainedBaseIds,
             LibraryStringInterner sequencePool = null,
-            Action<string> logInfo = null)
+            IOspreyLog log = null)
         {
             if (perFileEntries == null)
                 throw new ArgumentNullException(nameof(perFileEntries));
@@ -610,9 +612,10 @@ namespace pwiz.Osprey.Tasks
             // took. Same marker as the overlay, for the same negative route assertion, and
             // emitted here rather than through the ProgressReporter heading above, which is
             // deferred and never appears on a small cohort.
-            logInfo?.Invoke(string.Format(
+            log?.LogInfo(string.Format(
                 @"Hydrating the {0}: {1} run(s) held at once, O(files x entries).",
                 ALL_RUNS_BUNDLE_MARKER, nFiles));
+            log?.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_ALL_RUNS_BUNDLE, @"built runs={0}", nFiles));
             using (var hydrateProgress = new ProgressReporter(
                        @"Hydrating reconciliation bundle", nFiles))
             {

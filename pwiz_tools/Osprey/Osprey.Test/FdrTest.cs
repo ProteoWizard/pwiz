@@ -988,7 +988,7 @@ namespace pwiz.Osprey.Test
                 _apexRts[(fileIdx, rowIdx)] = apexRt;
             }
 
-            public void Finish(Action<string> logInfo)
+            public void Finish(IOspreyLog log)
             {
             }
 
@@ -1004,7 +1004,7 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// End-to-end projection RunPercolatorFdr equivalence (the survivor-reload
         /// equivalence at the unit level): the projection
-        /// <see cref="PercolatorEngine.RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Func{string,double[]},System.Action{FeatureContributions},System.Action{PercolatorResults})"/>
+        /// <see cref="PercolatorEngine.RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],IOspreyLog,IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Func{string,double[]},System.Action{FeatureContributions},System.Action{PercolatorResults})"/>
         /// overload must produce byte-identical Score + q-values to the FdrEntry-buffer
         /// <see cref="PercolatorEngine"/> RunPercolatorFdr overload (the one that takes the
         /// per-file <see cref="FdrEntry"/> lists) -- the flag-off byte-identity ORACLE -- on the same input, at the
@@ -1047,14 +1047,14 @@ namespace pwiz.Osprey.Test
             // FdrEntry oracle overload: streams via DispatchSvm -> RunPercolatorStreaming
             // (standardizer fit on the best-per-precursor subsample).
             PercolatorEngine.RunPercolatorFdr(
-                fdrStubs, config, featureInfos, s => { }, out _, null, "First-pass",
+                fdrStubs, config, featureInfos, OspreyLog.None, out _, null, "First-pass",
                 f => featuresA[f]);
             // Projection overload under test: streams the same way (RunStreamingIntoProjection)
             // and must match the oracle byte-for-byte. The lean struct takes Score; the
             // q-values are captured off the sink (issue #4355 struct-shrink S0).
             var sink = new CapturingSink();
             PercolatorEngine.RunPercolatorFdr(
-                projSet, config, featureInfos, s => { }, sink, null, "First-pass",
+                projSet, config, featureInfos, OspreyLog.None, sink, null, "First-pass",
                 f => featuresB[f], f => ApexRtsByParquetIndex(fdrStubs2, f));
 
             // Both overloads sort their buffers, so compare keyed -- EntryId repeats
@@ -1128,7 +1128,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 aborted = PercolatorEngine.RunPercolatorFdr(
-                    fdrStubs, config, featureInfos, s => { }, out _, diagnostics, "First-pass",
+                    fdrStubs, config, featureInfos, OspreyLog.None, out _, diagnostics, "First-pass",
                     f => features[f], r => captured = r);
             }
             finally
@@ -1199,7 +1199,7 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(80, nTargets);
             Assert.AreEqual(80, nDecoys);
             PercolatorResults streamingResults = PercolatorEngine.RunPercolatorStreaming(
-                percEntries, percConfig, s => { }, "First-pass", f => featuresA[f]);
+                percEntries, percConfig, OspreyLog.None, "First-pass", f => featuresA[f]);
             PercolatorEngine.ApplyPercolatorResults(fdrStubs, streamingResults);
 
             // Projection-native streaming path (the change under test). Score lands on
@@ -1207,7 +1207,7 @@ namespace pwiz.Osprey.Test
             // struct-shrink S0).
             var sink = new CapturingSink();
             bool abort = PercolatorEngine.RunStreamingIntoProjection(
-                projSet.PerFile, projSet.PeptideById, percConfig, s => { }, "First-pass",
+                projSet.PerFile, projSet.PeptideById, percConfig, OspreyLog.None, "First-pass",
                 f => featuresB[f], f => ApexRtsByParquetIndex(fdrStubs2, f), sink);
             Assert.IsFalse(abort);
 
@@ -1291,7 +1291,7 @@ namespace pwiz.Osprey.Test
             // Resident projection streaming path (the byte-identity oracle).
             var sinkRes = new CapturingSink();
             bool abortRes = PercolatorEngine.RunStreamingIntoProjection(
-                projSet.PerFile, projSet.PeptideById, percConfig, s => { }, "First-pass",
+                projSet.PerFile, projSet.PeptideById, percConfig, OspreyLog.None, "First-pass",
                 f => featuresRes[f], f => ApexRtsByParquetIndex(fixtureRes, f), sinkRes);
             Assert.IsFalse(abortRes);
 
@@ -1311,7 +1311,7 @@ namespace pwiz.Osprey.Test
                 };
             var sinkStr = new CapturingSink();
             bool abortStr = PercolatorScorer.RunStreamingFirstPass(
-                fileNames, streamFileRows, f => featuresStr[f], percConfig, s => { }, "First-pass",
+                fileNames, streamFileRows, f => featuresStr[f], percConfig, OspreyLog.None, "First-pass",
                 sinkStr);
             Assert.IsFalse(abortStr);
 
@@ -2691,7 +2691,7 @@ namespace pwiz.Osprey.Test
             OspreyEnvironment.MeanBestN = meanBestN;
             var stubs = BuildPassGateFixture(nFeat);
             PercolatorEngine.RunPercolatorFdr(
-                stubs, new OspreyConfig(), featureInfos, s => { }, out _, null, passLabel);
+                stubs, new OspreyConfig(), featureInfos, OspreyLog.None, out _, null, passLabel);
             var q = new List<double>();
             foreach (var kvp in stubs)
             {

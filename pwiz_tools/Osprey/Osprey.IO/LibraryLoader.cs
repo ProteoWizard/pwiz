@@ -49,9 +49,9 @@ namespace pwiz.Osprey.IO
         /// when available. Matches Rust's .libcache mechanism for fast reload.
         /// </summary>
         public static List<LibraryEntry> Load(OspreyConfig config,
-            Action<string> logInfo, Action<string> logWarning)
+            IOspreyLog log, Action<string> logWarning)
         {
-            return Load(config, LibraryLoadOptions.Default, logInfo, logWarning);
+            return Load(config, LibraryLoadOptions.Default, log, logWarning);
         }
 
         /// <summary>
@@ -69,9 +69,9 @@ namespace pwiz.Osprey.IO
         /// is set, and the on-disk cache is unaffected.
         /// </summary>
         public static List<LibraryEntry> Load(OspreyConfig config, LibraryLoadOptions options,
-            Action<string> logInfo, Action<string> logWarning)
+            IOspreyLog log, Action<string> logWarning)
         {
-            var loaded = Load(config, options, logInfo, logWarning, out string error);
+            var loaded = Load(config, options, log, logWarning, out string error);
             if (error != null)
                 throw new InvalidDataException(error);
             return loaded;
@@ -96,14 +96,14 @@ namespace pwiz.Osprey.IO
         /// exactly as before. A null return with a null error means the library was empty.</para>
         /// </summary>
         public static List<LibraryEntry> Load(OspreyConfig config, LibraryLoadOptions options,
-            Action<string> logInfo, Action<string> logWarning, out string error)
+            IOspreyLog log, Action<string> logWarning, out string error)
         {
             error = null;
             // A null carrier means "no special handling" (a full load).
             options = options ?? LibraryLoadOptions.Default;
             // Default the injected log callbacks to no-ops so a null delegate
             // cannot NRE this public API (matches PipelineContext's pattern).
-            logInfo = logInfo ?? (_ => { });
+            log = log ?? OspreyLog.None;
             logWarning = logWarning ?? (_ => { });
 
             string path = config.LibrarySource.Path;
@@ -147,11 +147,11 @@ namespace pwiz.Osprey.IO
                     // OmitFragments has it read-and-discard the fragment blocks so
                     // the returned entries stay lean (no ~3.2 GB of peak arrays).
                     var cached = LibraryCache.LoadCache(
-                        cachePath, libraryHash, options.OmitFragments, logInfo, out status,
+                        cachePath, libraryHash, options.OmitFragments, log.LogInfo, out status,
                         options.RetainFragmentsFor);
                     if (cached != null && cached.Count > 0)
                     {
-                        logInfo(string.Format(
+                        log.LogInfo(string.Format(
                             "Loaded {0} library entries from cache '{1}'",
                             cached.Count, cachePath));
                         // Caches written before the normalizer existed still hold Carafe's
@@ -174,9 +174,12 @@ namespace pwiz.Osprey.IO
                                 if (entry.IsSpectrumReleased)
                                     skipped++;
                             }
-                            logInfo(string.Format(
+                            log.LogInfo(string.Format(
                                 @"Skipped library fragments for {0} of {1} entries at load " +
                                 @"({2} base_ids retained for the 1st-pass retained set)",
+                                skipped, cached.Count, options.RetainFragmentsFor.Count));
+                            log.LogInfo(LogTag.COUNT, LogKey.Format(LogKey.COUNT_LIBRARY_FRAGMENTS_SKIPPED,
+                                @"skipped={0} entries={1} retained={2}",
                                 skipped, cached.Count, options.RetainFragmentsFor.Count));
                         }
                         // ALREADY FINISHED. A v3 cache was written after marking and pairing, so
@@ -186,12 +189,12 @@ namespace pwiz.Osprey.IO
                         // from the finished library, so a cached run is not silent about the
                         // pairing fraction (issue #4650).
                         if (LibrarySuppliesDecoys(config))
-                            LogCachedPairingSummary(RecoverPairingStats(cached), logInfo);
+                            LogCachedPairingSummary(RecoverPairingStats(cached), log);
                         return cached;
                     }
                     if (status == LibraryCache.LibraryCacheStatus.IdentityMismatch)
                     {
-                        logInfo(string.Format(
+                        log.LogInfo(string.Format(
                             "Library cache '{0}' was built from a different version of the " +
                             "source library; ignoring the stale cache and rebuilding from source.",
                             cachePath));
@@ -205,7 +208,7 @@ namespace pwiz.Osprey.IO
             }
 
             // Parse from source
-            logInfo(string.Format("Loading spectral library from {0}...", path));
+            log.LogInfo(string.Format("Loading spectral library from {0}...", path));
 
             List<LibraryEntry> entries;
 
@@ -213,12 +216,12 @@ namespace pwiz.Osprey.IO
             {
                 case LibraryFormat.DiannTsv:
                     var tsvLoader = new DiannTsvLoader();
-                    entries = tsvLoader.Load(path, logInfo);
+                    entries = tsvLoader.Load(path, log.LogInfo);
                     break;
 
                 case LibraryFormat.Blib:
                     var blibLoader = new BlibLoader();
-                    entries = blibLoader.Load(path, logInfo);
+                    entries = blibLoader.Load(path, log.LogInfo);
                     break;
 
                 default:
@@ -238,7 +241,7 @@ namespace pwiz.Osprey.IO
             // so entries carry shared instances by the time they get here.
             entries = LibraryDeduplicator.DeduplicateLibrary(entries);
 
-            logInfo(string.Format("Loaded {0} library entries", entries.Count));
+            log.LogInfo(string.Format("Loaded {0} library entries", entries.Count));
 
             // Peak-less entries (0 fragments) are a BiblioSpec MS1-feature-finding artifact and are
             // not valid for DIA search; fail fast at load (issue #4355 / PR #4434 review), before the
@@ -260,7 +263,7 @@ namespace pwiz.Osprey.IO
             // unchanged - both still run first, which is what the cross-impl byte parity rests
             // on.
             if (LibrarySuppliesDecoys(config) &&
-                !TryFinishSuppliedDecoys(entries, config, logInfo, out error))
+                !TryFinishSuppliedDecoys(entries, config, log, out error))
             {
                 return null;
             }
@@ -270,7 +273,7 @@ namespace pwiz.Osprey.IO
             {
                 // libraryHash is non-null here: the source existed to parse.
                 LibraryCache.SaveCache(cachePath, entries, libraryHash);
-                logInfo(string.Format(
+                log.LogInfo(string.Format(
                     "Saved library cache ({0} entries) to '{1}'",
                     entries.Count, cachePath));
             }
@@ -325,18 +328,18 @@ namespace pwiz.Osprey.IO
         /// target-decoy competition are not worth producing.</para>
         /// </summary>
         private static bool TryFinishSuppliedDecoys(
-            List<LibraryEntry> library, OspreyConfig config, Action<string> logInfo,
+            List<LibraryEntry> library, OspreyConfig config, IOspreyLog log,
             out string error)
         {
             error = null;
 
             LibraryDecoyMarker.ApplyLibraryDecoyMarking(
                 library, config.DecoyPrefixes, out var markingStats);
-            logInfo(string.Format(
+            log.LogInfo(string.Format(
                 @"Library-decoy mode: matched prefixes {0}",
                 FormatPrefixList(config.DecoyPrefixes)));
-            logInfo(string.Format(
-                @"[COUNT] Library-decoy mode: {0} flagged ({1} via Decoy column, {2} via protein-accession prefix)",
+            log.LogInfo(LogTag.COUNT, string.Format(
+                @"Library-decoy mode: {0} flagged ({1} via Decoy column, {2} via protein-accession prefix)",
                 markingStats.NMarked, markingStats.NViaColumn, markingStats.NViaPrefix));
 
             int nLibraryTargets = 0;
@@ -375,7 +378,7 @@ namespace pwiz.Osprey.IO
             };
             if (!string.IsNullOrEmpty(config.DecoyPairingManifestPath))
             {
-                logInfo(string.Format(
+                log.LogInfo(string.Format(
                     @"Loading decoy pairing manifest from {0}",
                     config.DecoyPairingManifestPath));
                 DecoyPairingManifest manifest;
@@ -390,11 +393,11 @@ namespace pwiz.Osprey.IO
                         config.DecoyPairingManifestPath, ex.Message);
                     return false;
                 }
-                var manifestStats = manifest.ApplyToLibrary(library, pairingState, logInfo);
+                var manifestStats = manifest.ApplyToLibrary(library, pairingState, log.LogInfo);
                 pairingStats.NPairedViaManifest = manifestStats.NPaired;
                 if (manifestStats.NProteinsReplaced > 0)
                 {
-                    logInfo(string.Format(
+                    log.LogInfo(string.Format(
                         @"Library-decoy mode: manifest replaced protein_ids on {0} library " +
                         @"entries (clean source-protein accessions from the manifest's " +
                         @"`proteins` column)",
@@ -405,7 +408,7 @@ namespace pwiz.Osprey.IO
                     // Manifest classified entries as decoy that were loaded as targets (the
                     // predictor stripped the decoy prefix). Update the decoy count so the
                     // pairing fraction is honest.
-                    logInfo(string.Format(
+                    log.LogInfo(string.Format(
                         @"Library-decoy mode: manifest classified {0} additional library " +
                         @"entries as decoys (their protein accessions lacked a decoy prefix)",
                         manifestStats.NNewlyMarkedDecoy));
@@ -417,7 +420,7 @@ namespace pwiz.Osprey.IO
             }
             else
             {
-                logInfo(
+                log.LogInfo(
                     @"Pairing library decoys to targets by amino-acid composition " +
                     @"(no manifest provided).");
             }
@@ -432,7 +435,7 @@ namespace pwiz.Osprey.IO
                 pairingStats.NDecoys - pairingStats.NPaired);
             pairingStats.NUnpairedTargets = Math.Max(0,
                 pairingStats.NTargets - pairingState.ClaimedTargets.Count);
-            LogPairingSummary(pairingStats, logInfo);
+            LogPairingSummary(pairingStats, log);
             if (pairingStats.PairedFraction < config.DecoyPairMinFraction)
             {
                 error = string.Format(
@@ -456,9 +459,9 @@ namespace pwiz.Osprey.IO
         /// noticed - so the cached path recovers the same numbers from the finished library
         /// rather than going quiet on every run after the first.
         /// </summary>
-        private static void LogPairingSummary(PairingStats stats, Action<string> logInfo)
+        private static void LogPairingSummary(PairingStats stats, IOspreyLog log)
         {
-            logInfo(string.Format(
+            log.LogInfo(string.Format(
                 @"Library-decoy pairing: paired {0}/{1} decoys ({2:F1}%); " +
                 @"manifest={3}, composition={4}; {5} unpaired decoys, {6} unpaired targets",
                 stats.NPaired, stats.NDecoys, stats.PairedFraction * 100.0,
@@ -476,9 +479,9 @@ namespace pwiz.Osprey.IO
         /// different mechanism. An operator diffing two runs would chase that. The total is
         /// recoverable and is what the threshold is about, so the total is what this reports.
         /// </summary>
-        private static void LogCachedPairingSummary(PairingStats stats, Action<string> logInfo)
+        private static void LogCachedPairingSummary(PairingStats stats, IOspreyLog log)
         {
-            logInfo(string.Format(
+            log.LogInfo(string.Format(
                 @"Library-decoy pairing: paired {0}/{1} decoys ({2:F1}%) - from the library " +
                 @"cache, which records the pairing but not which mechanism made it; " +
                 @"{3} unpaired decoys, {4} unpaired targets",

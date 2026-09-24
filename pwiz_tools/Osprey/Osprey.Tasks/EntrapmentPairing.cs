@@ -79,19 +79,19 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>Log the dropped-orphan summary (a warning for anything unexplained).</summary>
-        public void LogSummary(Action<string> logInfo)
+        public void LogSummary(IOspreyLog log)
         {
             if (MetClipDroppedCount > 0)
-                logInfo(string.Format(
-                    @"[ENTRAPMENT] Dropped {0} unmatched entrapment peptides (N-terminal-Met-clip artifacts with no target pair); excluded from the FDRBench manifest, input, and diagnostics",
+                log.LogInfo(LogTag.ENTRAPMENT, string.Format(
+                    @"Dropped {0} unmatched entrapment peptides (N-terminal-Met-clip artifacts with no target pair); excluded from the FDRBench manifest, input, and diagnostics",
                     MetClipDroppedCount));
             if (UnexplainedEntrapment.Count > 0)
             {
                 var examples = new List<string>();
                 for (int i = 0; i < UnexplainedEntrapment.Count && i < 3; i++)
                     examples.Add(UnexplainedEntrapment[i]);
-                logInfo(string.Format(
-                    @"[ENTRAPMENT] WARNING: {0} entrapment peptides have no target pair and no known explanation (e.g. {1}); excluded -- investigate",
+                log.LogInfo(LogTag.ENTRAPMENT, string.Format(
+                    @"WARNING: {0} entrapment peptides have no target pair and no known explanation (e.g. {1}); excluded -- investigate",
                     UnexplainedEntrapment.Count, string.Join(@", ", examples)));
             }
         }

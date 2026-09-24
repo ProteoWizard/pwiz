@@ -111,7 +111,7 @@ namespace pwiz.Osprey
 
                     if (ctx.CanRehydrate(task))
                     {
-                        LogInfo(string.Format(@"[TASK] {0}:skipping (outputs valid)", task.Name));
+                        LogInfo(LogTag.TASK, string.Format(@"{0}:skipping (outputs valid)", task.Name));
                         continue;
                     }
 
@@ -121,7 +121,7 @@ namespace pwiz.Osprey
 
                 stopwatch.Stop();
                 LogInfo("");
-                LogInfo(string.Format("[TIMING] Total pipeline: {0:F1}s",
+                LogInfo(LogTag.TIMING, string.Format("Total pipeline: {0:F1}s",
                     stopwatch.Elapsed.TotalSeconds));
                 LogInfo(string.Format("Analysis complete in {0}", FormatDuration(stopwatch.Elapsed)));
                 return 0;
@@ -167,7 +167,7 @@ namespace pwiz.Osprey
             // sidecars at the start of Run.
 
             var sw = Stopwatch.StartNew();
-            ctx.LogInfo(string.Format(@"[TASK] {0}:starting", task.Name));
+            ctx.LogInfo(LogTag.TASK, string.Format(@"{0}:starting", task.Name));
             bool keepGoing = task.Run(ctx);
             // The driver has now run this task, so its state is in memory: mark it
             // materialized so a later Demand/Get by a downstream task returns the
@@ -175,7 +175,7 @@ namespace pwiz.Osprey
             // _runOrHydrated guard that formerly bridged the Run and Rehydrate paths.
             ctx.MarkMaterialized(task);
             sw.Stop();
-            ctx.LogInfo(string.Format(@"[TASK] {0}:done ({1:F1}s)",
+            ctx.LogInfo(LogTag.TASK, string.Format(@"{0}:done ({1:F1}s)",
                 task.Name, sw.Elapsed.TotalSeconds));
             // DIAGNOSTIC (OSPREY_DROP_BETWEEN_TASKS=1): make the in-process pipeline behave like
             // the HPC split - this task drops everything but the library, and the next reloads
@@ -197,7 +197,7 @@ namespace pwiz.Osprey
             };
             if (stageName != null)
             {
-                ctx.LogInfo(string.Format(@"[STAGE-WALL] {0}: {1:F1}s",
+                ctx.LogInfo(LogTag.STAGE_WALL, string.Format(@"{0}: {1:F1}s",
                     stageName, sw.Elapsed.TotalSeconds));
             }
 
@@ -265,6 +265,11 @@ namespace pwiz.Osprey
         private static void LogInfo(string message)
         {
             Program.LogInfo(message);
+        }
+
+        private static void LogInfo(LogTag tag, string text)
+        {
+            Program.LogInfo(tag, text);
         }
 
         private static void LogWarning(string message)

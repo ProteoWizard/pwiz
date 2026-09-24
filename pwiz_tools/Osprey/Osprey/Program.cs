@@ -61,7 +61,7 @@ namespace pwiz.Osprey
             // Route OspreyDiagnostics dump messages through the same logging
             // channel as the rest of the pipeline so bisection logs appear
             // alongside normal output.
-            OspreyDiagnosticsLog.LogAction = LogInfo;
+            OspreyDiagnosticsLog.Log = OspreyLog.Out;
 
             if (args.Length == 0)
             {
@@ -197,13 +197,13 @@ namespace pwiz.Osprey
                     }
                 }
 
-                // Point the Core output seam at a stat-filtering wrapper over _out: below-exe
-                // layers (FDR, IO) and LogInfo emit through the same CommandStatusWriter (stamps
-                // + --log-file), with machine [COUNT]/[TIMING]/[STAGE-WALL] lines dropped unless
-                // --perf-stats is set (perf tools pass it; default human log stays clean).
+                // Point the Core output seam at _out: below-exe layers (FDR, IO) and LogInfo emit
+                // through the same CommandStatusWriter (stamps + --log-file). Whether a tagged
+                // line is written at all is decided where it is emitted (OspreyLog.Write), which
+                // reads PerfStats here.
                 OspreyOutput.PerfStats = config.PerfStats;
                 OspreyOutput.Verbose = config.Verbose;
-                OspreyOutput.Out = new StatFilteringTextWriter(_out);
+                OspreyOutput.Out = _out;
 
                 // Create the configured directories only after args validate, so
                 // an invalid command line surfaces the validation message instead
@@ -402,6 +402,11 @@ namespace pwiz.Osprey
                 }
                 LogInfo(string.Format("Protein FDR: {0:P1}", config.EffectiveProteinFdr));
                 LogInfo(string.Format("Threads: {0}", config.NThreads));
+                // Machine twins of the banner: the liveness anchor a route assertion needs
+                // before it can trust an absence, and the aggregation arm, which the prose
+                // above states for a person.
+                LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_EXPERIMENT_AGG, @"{0}", OspreyEnvironment.ExperimentAgg));
+                LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_STARTUP, @"threads={0}", config.NThreads));
                 LogInfo("");
 
                 // --task ModelDiagnostics is a RENDER over completed analysis state, not a run.
@@ -480,7 +485,7 @@ namespace pwiz.Osprey
             }
             // Everything this analysis can have is on disk: a pure render, seconds, no pipeline.
             if (ModelDiagnosticsReport.AllProductsCurrent(config))
-                return ModelDiagnosticsReport.TryRenderFromProducts(config, LogInfo) ? 0 : 1;
+                return ModelDiagnosticsReport.TryRenderFromProducts(config, OspreyLog.Out) ? 0 : 1;
 
             // A product is outstanding. Say so before the pipeline banner, because the next
             // thing the log shows is task machinery and an operator needs to know it is a fold
@@ -637,6 +642,11 @@ namespace pwiz.Osprey
             OspreyOutput.Out.WriteLine(message);
         }
 
+        internal static void LogInfo(LogTag tag, string text)
+        {
+            OspreyLog.Out.LogInfo(tag, text);
+        }
+
         internal static void LogWarning(string message)
         {
             // Through OspreyOutput.Out (not _out directly) so a warning emitted
@@ -645,7 +655,7 @@ namespace pwiz.Osprey
             // instead of interleaving with the live "[i] p%" aggregate line. Off
             // the parallel path OspreyOutput.Out is the same CommandStatusWriter
             // (wrapped for stat-filtering), so the output is unchanged.
-            OspreyOutput.Out.WriteLine("[WARN] {0}", message);
+            OspreyLog.Out.LogInfo(LogTag.WARN, message);
         }
 
         internal static void LogError(string message)
@@ -653,7 +663,7 @@ namespace pwiz.Osprey
             // Errors go straight to the process writer (NOT the per-file buffer):
             // surface immediately rather than waiting for the file's block to flush
             // on completion, so a failing run reports the cause right away.
-            _out.WriteLine("[ERROR] {0}", message);
+            OspreyLog.Write(_out.WriteLine, LogTag.ERROR, message);
         }
     }
 }

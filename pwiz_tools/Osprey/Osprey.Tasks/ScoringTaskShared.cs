@@ -74,7 +74,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal static ScoringPipeline Pipeline(PipelineContext ctx)
         {
-            return new ScoringPipeline(ctx.LogInfo, ctx.Diagnostics as IScoringDiagnostics);
+            return new ScoringPipeline(ctx, ctx.Diagnostics as IScoringDiagnostics);
         }
 
         /// <summary>

@@ -665,7 +665,7 @@ namespace pwiz.Osprey.FDR
             Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> streamFileRows,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
             PercolatorConfig percConfig,
-            Action<string> logInfo,
+            IOspreyLog log,
             string passLabel,
             IFdrOutputSink sink,
             Action<FeatureContributions> captureContributions = null,
@@ -705,8 +705,8 @@ namespace pwiz.Osprey.FDR
             bool pickRun = OspreyEnvironment.TrainPickRun;
             if (!pickRun)
             {
-                logInfo(
-                    @"[TRAIN] OSPREY_TRAIN_PICK_RUN=0: each precursor's training row is its BEST " +
+                log.LogInfo(LogTag.TRAIN, 
+                    @"OSPREY_TRAIN_PICK_RUN=0: each precursor's training row is its BEST " +
                     @"observation across runs, not a uniform sample of them (pre-26.1 behaviour)");
             }
             int g = 0;
@@ -795,10 +795,10 @@ namespace pwiz.Osprey.FDR
             }
             ingestProgress.Dispose();
             int n = g;
-            logInfo(string.Format(
-                @"[PATH] {0} streaming ingest (RunStreamingFirstPass): {1} rows", passLabel, n));
-            logInfo(string.Format(
-                "[COUNT] {0} Percolator input: {1} entries ({2} targets, {3} decoys, {4} features)",
+            log.LogInfo(LogTag.PATH, string.Format(
+                @"{0} streaming ingest (RunStreamingFirstPass): {1} rows", passLabel, n));
+            log.LogInfo(LogTag.COUNT, string.Format(
+                "{0} Percolator input: {1} entries ({2} targets, {3} decoys, {4} features)",
                 passLabel, n, nInputTargets, nInputDecoys, nFeatures));
 
             // Dedup rows in ascending global ordinal == SelectBestPerPrecursor's Array.Sort of the
@@ -811,8 +811,8 @@ namespace pwiz.Osprey.FDR
             int dedupTargets = 0;
             foreach (var d in dedup)
                 if (!d.IsDecoy) dedupTargets++;
-            logInfo(string.Format(
-                "[COUNT] {0} Percolator streaming best-per-precursor: {1} entries ({2} targets, {3} decoys) from {4} total",
+            log.LogInfo(LogTag.COUNT, string.Format(
+                "{0} Percolator streaming best-per-precursor: {1} entries ({2} targets, {3} decoys) from {4} total",
                 passLabel, m, dedupTargets, m - dedupTargets, n));
 
             // Peptide-grouped subsample when the dedup count exceeds MaxTrainSize (mirrors
@@ -858,8 +858,8 @@ namespace pwiz.Osprey.FDR
                     Features = null
                 });
             }
-            logInfo(string.Format(
-                "[COUNT] {0} Percolator streaming subsample: {1} entries ({2} targets, {3} decoys)",
+            log.LogInfo(LogTag.COUNT, string.Format(
+                "{0} Percolator streaming subsample: {1} entries ({2} targets, {3} decoys)",
                 passLabel, subsetEntries.Count, subTargets, subsetEntries.Count - subTargets));
 
             // A persisted model is only usable if it was trained on THIS run's feature set, and
@@ -880,7 +880,7 @@ namespace pwiz.Osprey.FDR
                     pretrainedModel.Standardizer == null ||
                     pretrainedModel.Standardizer.NumFeatures != nFeatures)
                 {
-                    logInfo(string.Format(
+                    log.LogInfo(string.Format(
                         @"Ignoring the persisted 1st-pass model: it carries {0} features " +
                         @"and this run scores {1}. Training a fresh model.", modelFeatures, nFeatures));
                     pretrainedModel = null;
@@ -914,7 +914,7 @@ namespace pwiz.Osprey.FDR
             }
             else
             {
-                logInfo(@"Reusing the persisted first-pass model; no training subset is loaded and no SVM is trained.");
+                log.LogInfo(@"Reusing the persisted first-pass model; no training subset is loaded and no SVM is trained.");
             }
 
             var trainConfig = new PercolatorConfig
@@ -987,7 +987,7 @@ namespace pwiz.Osprey.FDR
             var contribAcc = new FeatureContributions.Accumulator(nFeatures, percConfig.CollectFeatureHistograms);
             int nonEmptyFiles = 0;
             int g1 = 0;
-            logInfo(string.Format(@"Running {0} Percolator on {1} entries...", passLabel, n));
+            log.LogInfo(string.Format(@"Running {0} Percolator on {1} entries...", passLabel, n));
             // Fill the previously-silent multi-minute streaming score pass with throttled percent,
             // mirroring the resident ScoreProjectionAndComputeFdrInPlace "Scoring N entries" line.
             // Progress is log-only (OspreyOutput.Out), so the FDR output stays byte-identical.
@@ -1149,7 +1149,7 @@ namespace pwiz.Osprey.FDR
                 }
                 gEmit += count;
             }
-            sink.Finish(logInfo);
+            sink.Finish(log);
             return false;
         }
 

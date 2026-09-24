@@ -934,8 +934,8 @@ namespace pwiz.Osprey.Tasks
             // Clean PERSISTENT floor entering reconciliation (post-GC, before the
             // rescore loop repopulates the heavy per-entry arrays) -- fires early,
             // so it lands even if a long run is later killed. #4376.
-            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"reconciliation start (pre-GC)");
-            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"reconciliation-floor",
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"reconciliation start (pre-GC)");
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx, @"reconciliation-floor",
                 string.Format(@"(post-GC, entering rescore, files={0})", perFileEntries.Count));
 
             int nTotalFiles = perFileEntries.Count;
@@ -1003,8 +1003,8 @@ namespace pwiz.Osprey.Tasks
             // per-file ~1.5 GB spectra + parquet reload); the forced-GC line is the
             // clean PERSISTENT managed heap (all files' rescored FdrEntry buffer +
             // library). Zero-cost when OSPREY_LOG_MEMORY is unset.
-            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"reconciliation end (pre-GC)");
-            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"reconciliation-resident",
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"reconciliation end (pre-GC)");
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx, @"reconciliation-resident",
                 string.Format(@"(files={0}, file_parallelism={1})", nTotalFiles, parallelism));
 
             int totalRescored = 0;
@@ -1404,8 +1404,8 @@ namespace pwiz.Osprey.Tasks
             // line is the live number and, under Profile-Osprey.ps1 -MemoryProfile, captures
             // a "perfile-rescore-loaded" retention snapshot. Zero cost -- collection
             // included -- when OSPREY_LOG_MEMORY is unset.
-            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"perfile-rescore-loaded (pre-GC)");
-            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"perfile-rescore-loaded",
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"perfile-rescore-loaded (pre-GC)");
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx, @"perfile-rescore-loaded",
                 @"(post-GC, streaming index resident)");
 
             // Load the sibling .calibration.json so the search uses the
@@ -1575,7 +1575,7 @@ namespace pwiz.Osprey.Tasks
             // copies here, so this is the reduced "after" peak vs the resident baseline.
             // A forced-GC [MEM] is deliberately NOT taken (it would just show the
             // post-release floor). Zero cost when OSPREY_LOG_MEMORY is unset.
-            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"perfile-rescore-peak (pre-GC)");
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"perfile-rescore-peak (pre-GC)");
 
             // Apex retention snapshot (dotMemory only). Once the resident MS2 is streamed,
             // the remaining per-file accumulation is the scored + reconciled entries still
@@ -1631,7 +1631,7 @@ namespace pwiz.Osprey.Tasks
             // it is the true floor, and it captures a "perfile-rescore-live" retention
             // snapshot to pair with the loaded snapshot. Zero cost -- collection included --
             // when OSPREY_LOG_MEMORY is unset.
-            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"perfile-rescore-live",
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx, @"perfile-rescore-live",
                 @"(post-GC, after release)");
 
             return (totalRescored, totalGapCwt, totalGapForced, true);
@@ -1863,6 +1863,7 @@ namespace pwiz.Osprey.Tasks
 
             ctx.LogInfo(string.Format(
                 "Re-scoring file {0}/{1}: {2}", fileNum + 1, nTotalFiles, fileName));
+            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_RESCORE_FILE, @"{0}/{1}", fileNum + 1, nTotalFiles));
             ctx.LogInfo(string.Format(
                 "  {0} entries ({1} consensus, {2} reconciliation, {3} gap-fill, {4} unique after dedup)",
                 combinedTargets.Count + gapFillTargets.Count * 2,
@@ -2065,6 +2066,8 @@ namespace pwiz.Osprey.Tasks
                 @"Per-run rescore: hydrating each of {0} run(s) from its own artifacts " +
                 @"(no all-runs pre-load; {1} retained base_id(s) read once).",
                 perFileParquetPaths.Count, retainedBaseIds.Count));
+            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_RESCORE_HYDRATE, @"per-run runs={0}",
+                perFileParquetPaths.Count));
             var sequencePool = ctx.Get<SequencePool>().Value;
             return fileName =>
             {
@@ -2125,6 +2128,7 @@ namespace pwiz.Osprey.Tasks
                 @"Second-pass join: a consumer asked for the whole-run survivor pool, so all " +
                 @"{0} run(s) are being materialized at once. This is the O(runs x entries) peak " +
                 @"the per-run fold exists to avoid.", buffer.Count));
+            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_SURVIVOR_POOL, @"materialized runs={0}", buffer.Count));
             using (var progress = new ProgressReporter(string.Format(
                        @"Materializing survivors for {0} run(s)", buffer.Count), buffer.Count))
             {
@@ -2197,6 +2201,7 @@ namespace pwiz.Osprey.Tasks
                 @"carry a current reconciled parquet; a run without one is an error, not a " +
                 @"run that keeps its 1st-pass boundaries.",
                 _perFileEntries.Count, reconciledPaths.Count));
+            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run runs={0}", _perFileEntries.Count));
             return (fileName, survivors) =>
                 MaterializeResumedFile(fileName, survivors, loader, reconciledPaths, gapFill, ctx);
         }
@@ -2244,6 +2249,7 @@ namespace pwiz.Osprey.Tasks
                 @"{2} of {0} run(s) carry a current 2nd-pass sidecar and are rebuilt without " +
                 @"opening any 1st-pass file.",
                 perFileParquetPaths.Count, retainedBaseIds.Count, haveSecondPass.Count));
+            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run runs={0}", perFileParquetPaths.Count));
             // LAZY, and deliberately so. On the default Boundary 3 -> 4 path every run carries a
             // second-pass sidecar, RefillOneRunSurvivors dereferences this map only on the
             // overlayFirstPass branch, and it is never read at all - while being ~400 MB
@@ -2806,6 +2812,7 @@ namespace pwiz.Osprey.Tasks
                 @"Second-pass join: folding over {0} run(s), each rebuilt from its own artifacts " +
                 @"and dropped (no all-runs survivor pool). Decided at Stage 6, where the " +
                 @"survivors were released.", _perFileEntries.Count));
+            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run runs={0}", _perFileEntries.Count));
             return (fileName, entries) =>
             {
                 var plan = PoolPlanForBuild();
@@ -2888,7 +2895,7 @@ namespace pwiz.Osprey.Tasks
                 }
             }
             sw.Stop();
-            ctx.LogInfo(string.Format(@"[STAGE-WALL] survivor-pool {0:F1}s ({1} files)",
+            ctx.LogInfo(LogTag.STAGE_WALL, string.Format(@"survivor-pool {0:F1}s ({1} files)",
                 sw.Elapsed.TotalSeconds, plan.Buffer.Count));
         }
 

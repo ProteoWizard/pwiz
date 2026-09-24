@@ -47,12 +47,12 @@ namespace pwiz.Osprey.Scoring
     /// </summary>
     public class ScoringPipeline
     {
-        private readonly Action<string> _logInfo;
+        private readonly IOspreyLog _log;
         private readonly IScoringDiagnostics _diagnostics;   // nullable by contract; invoked null-conditionally
 
-        public ScoringPipeline(Action<string> logInfo, IScoringDiagnostics diagnostics)
+        public ScoringPipeline(IOspreyLog log, IScoringDiagnostics diagnostics)
         {
-            _logInfo = logInfo ?? (_ => { });
+            _log = log ?? OspreyLog.None;
             _diagnostics = diagnostics;
         }
 
@@ -137,7 +137,7 @@ namespace pwiz.Osprey.Scoring
                     config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance,
                     config.RtCalibration.MinCalibrationPoints);
                 rtSigmaGlobal = Math.Max(robustSd * 5.0, 0.1);
-                if (OspreyOutput.Verbose) _logInfo(string.Format(
+                if (OspreyOutput.Verbose) _log.LogInfo(string.Format(
                     "Coelution search RT tolerance: {0:F2} min (3*MAD*1.4826, MAD={1:F3}{2})",
                     rtToleranceGlobal, mad,
                     context.OriginalRtMad.HasValue ? " from .calibration.json" : " from cal stats"));
@@ -165,7 +165,7 @@ namespace pwiz.Osprey.Scoring
                     Unit = calUnit
                 };
                 string unitStr = calUnit == ToleranceUnit.Ppm ? "ppm" : "Th";
-                if (OspreyOutput.Verbose) _logInfo(string.Format(
+                if (OspreyOutput.Verbose) _log.LogInfo(string.Format(
                     "Coelution search using calibrated fragment tolerance: {0:F4} {1}",
                     calTol, unitStr));
 
@@ -174,7 +174,7 @@ namespace pwiz.Osprey.Scoring
                 // only this fragment-tolerance value is set here.)
                 config.FragmentTolerance = searchFragTol;
 
-                if (OspreyOutput.Verbose) _logInfo(string.Format(
+                if (OspreyOutput.Verbose) _log.LogInfo(string.Format(
                     "Applying MS2 calibration: mean error = {0:F4} {1} -> correcting by {2:+F4;-F4;0} {1}",
                     ms2Calibration.Mean, ms2Calibration.Unit, -ms2Calibration.Mean));
             }
@@ -185,8 +185,8 @@ namespace pwiz.Osprey.Scoring
             var diagSearchIds = _diagnostics?.DiagSearchEntryIds;
             if (diagSearchIds != null)
             {
-                _logInfo(string.Format(
-                    "[BISECT] OSPREY_DIAG_SEARCH_ENTRY_IDS: will dump {0} entries",
+                _log.LogInfo(LogTag.BISECT, string.Format(
+                    "OSPREY_DIAG_SEARCH_ENTRY_IDS: will dump {0} entries",
                     diagSearchIds.Count));
             }
 
@@ -202,8 +202,8 @@ namespace pwiz.Osprey.Scoring
             if (maxWindows > 0 && maxWindows < isolationWindows.Count)
             {
                 windowsToScore = isolationWindows.Take(maxWindows).ToList();
-                _logInfo(string.Format(
-                    "[BENCH] OSPREY_MAX_SCORING_WINDOWS={0} - capping {1} windows to first {0}",
+                _log.LogInfo(LogTag.BENCH, string.Format(
+                    "OSPREY_MAX_SCORING_WINDOWS={0} - capping {1} windows to first {0}",
                     maxWindows, isolationWindows.Count));
             }
 
@@ -482,7 +482,7 @@ namespace pwiz.Osprey.Scoring
             int removedDecoys = removedCount - removedTargets;
             if (removedCount > 0)
             {
-                _logInfo(string.Format(
+                _log.LogInfo(string.Format(
                     "Double-counting deduplication: removed {0} entries " +
                     "({1} targets, {2} decoys; {3} remaining)",
                     removedCount, removedTargets, removedDecoys,
@@ -554,7 +554,7 @@ namespace pwiz.Osprey.Scoring
             int removed = entries.Count - deduped.Count;
             if (removed > 0)
             {
-                _logInfo(string.Format("Deduplicated: {0} -> {1} entries ({2} removed)",
+                _log.LogInfo(string.Format("Deduplicated: {0} -> {1} entries ({2} removed)",
                     entries.Count, deduped.Count, removed));
             }
 
@@ -587,8 +587,8 @@ namespace pwiz.Osprey.Scoring
             double maxS = sorted[n - 1].Seconds;
             double medS = sorted[n / 2].Seconds;
             var slowest = sorted[n - 1];
-            _logInfo(string.Format(
-                "[TIMING] Per-window: min={0:F2}s, median={1:F2}s, max={2:F2}s (slowest m/z={3:F1} had {4} candidates)",
+            _log.LogInfo(LogTag.TIMING, string.Format(
+                "Per-window: min={0:F2}s, median={1:F2}s, max={2:F2}s (slowest m/z={3:F1} had {4} candidates)",
                 minS, medS, maxS, slowest.CenterMz, slowest.CandidateCount));
         }
     }

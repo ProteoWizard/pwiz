@@ -345,7 +345,7 @@ namespace pwiz.Osprey.Tasks
             ModelDiagnosticsData.Accumulator accumulator;
             try
             {
-                accumulator = BuildModelDiagnosticsAccumulator(fileNames, libraryById, config, ctx.LogInfo);
+                accumulator = BuildModelDiagnosticsAccumulator(fileNames, libraryById, config, ctx);
             }
             catch (Exception ex)
             {
@@ -392,7 +392,7 @@ namespace pwiz.Osprey.Tasks
                         ScoringTaskShared.FeedModelDiagnostics(accumulator, fileIdx, stubs),
                     LoadFirstPassExperimentRecords(config, ctx),
                     retainedBaseIds,
-                    ctx.LogInfo);
+                    ctx);
             }
 
             // Reuses the accumulator's classification, which took minutes to compute over 6.2M
@@ -400,13 +400,13 @@ namespace pwiz.Osprey.Tasks
             // harness path too.
             var coAssignment = PeakCoAssignmentSource.Build(
                 fileNames, perFileParquetPaths, config, accumulator.ClassByBaseId, libraryById,
-                LoadFirstPassExperimentRecords(config, ctx), ctx.LogInfo);
+                LoadFirstPassExperimentRecords(config, ctx), ctx);
             // No validity key on the harness path. The stamp is what lets a later render trust a
             // product, and this one describes a single panel over an accumulator that was never
             // fed; stamping it would let a ten-minute measurement stand in for the hour-long
             // answer, silently and permanently.
             ModelDiagnosticsReport.WriteFromAccumulator(accumulator, null,
-                BuildCalibrationData(ctx, fileNames), config, ctx.LogInfo, coAssignment,
+                BuildCalibrationData(ctx, fileNames), config, ctx, coAssignment,
                 coAssignOnly ? null : ValidityKey(ctx));
             if (coAssignOnly)
                 MoveHarnessProductAside(ctx, config);
@@ -604,6 +604,7 @@ namespace pwiz.Osprey.Tasks
             {
                 ctx.LogInfo(@"FirstPassFDR: every output but the model-diagnostics product is " +
                             @"current; folding the report from the completed first pass.");
+                ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_MODEL_DIAGNOSTICS, @"fold-pass1"));
                 // Fold the product FIRST, always, and by the bounded route. Rehydrate cannot be
                 // relied on to do it: with the --model-diagnostics exclusion gone from
                 // CanHydratePerRun, Rehydrate takes RehydrateForPerRunRescore, which publishes
@@ -633,7 +634,7 @@ namespace pwiz.Osprey.Tasks
                     config.FdrMethod));
             }
 
-            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo,
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx,
                 string.Format(@"Stage 5 start: {0} files loaded (stubs), before first-pass FDR", perFileEntries.Count));
 
             // The line above reports GC.GetTotalMemory(false) -- allocated-since-last-GC,
@@ -641,7 +642,7 @@ namespace pwiz.Osprey.Tasks
             // identical work can differ by tens of GB on GC timing alone. This one forces
             // a collection first, so it is the LIVE set entering first-pass FDR: the only
             // number that answers whether the run fits in a given box.
-            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage5-start-live",
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx, @"stage5-start-live",
                 string.Format(@"(post-GC, entering first-pass FDR, files={0})", perFileEntries.Count));
 
             // Phase 4 (issue #4355): first-pass Percolator reloads each entry's PIN
@@ -736,10 +737,10 @@ namespace pwiz.Osprey.Tasks
                         ValidityKey(ctx), ctx);
                 }
                 swFdr.Stop();
-                ctx.LogInfo(string.Format(@"[TIMING] Percolator/Simple FDR: {0:F1}s",
+                ctx.LogInfo(LogTag.TIMING, string.Format(@"Percolator/Simple FDR: {0:F1}s",
                     swFdr.Elapsed.TotalSeconds));
-                ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after first-pass Percolator FDR");
-                ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"first-pass-fdr-live",
+                ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"after first-pass Percolator FDR");
+                ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx, @"first-pass-fdr-live",
                     string.Format(@"(post-GC, resident pool, files={0})", perFileEntries.Count));
 
                 LogFirstPassResultsAndDump(perFileEntries, config, ctx, featureContributions);
@@ -759,7 +760,7 @@ namespace pwiz.Osprey.Tasks
                     var swFirstPassProtein = Stopwatch.StartNew();
                     RunFirstPassProteinFdr(perFileEntries, fullLibrary, perFileParquetPaths, config, ctx);
                     swFirstPassProtein.Stop();
-                    ctx.LogInfo(string.Format(@"[TIMING] First-pass protein FDR: {0:F1}s",
+                    ctx.LogInfo(LogTag.TIMING, string.Format(@"First-pass protein FDR: {0:F1}s",
                         swFirstPassProtein.Elapsed.TotalSeconds));
                 }
 
@@ -817,7 +818,7 @@ namespace pwiz.Osprey.Tasks
                     foreach (var entry in kvp.Value)
                         entry.Features = null;
                 CompactFirstPass(perFileEntries, null, config, ctx);
-                ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after Stage-5 CompactFirstPass");
+                ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"after Stage-5 CompactFirstPass");
             }
 
             // NOTE: no 2nd-pass FDR sidecar overlay here. Stage 7
@@ -869,7 +870,7 @@ namespace pwiz.Osprey.Tasks
                     kvp.Value.Clear();
                     kvp.Value.TrimExcess();
                 }
-                ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage5-handoff-released",
+                ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx, @"stage5-handoff-released",
                     string.Format(@"(post-GC, survivors released after planning, files={0})",
                         perFileEntries.Count));
             }
@@ -948,6 +949,7 @@ namespace pwiz.Osprey.Tasks
                 config, OspreyEnvironment.AllowUnfixedResident);
             if (bundleError != null)
             {
+                ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_ALL_RUNS_BUNDLE, @"refused"));
                 ctx.LogError(bundleError);
                 ctx.ExitCode = 1;
                 return false;
@@ -1100,7 +1102,7 @@ namespace pwiz.Osprey.Tasks
                     kvp.Value.Clear();
                     kvp.Value.TrimExcess();
                 }
-                ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"resume-handoff-released",
+                ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx, @"resume-handoff-released",
                     string.Format(@"(post-GC, survivors released after rehydrate, files={0})",
                         perFileEntries.Count));
             }
@@ -1262,6 +1264,8 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(string.Format(
                 @"Per-run rescore: FirstPassFDR publishes the survivor loader only; no " +
                 @"experiment-wide bundle is built for {0} run(s).", perFileEntries.Count));
+            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_FIRST_PASS_FDR, @"survivor-loader-only runs={0}",
+                perFileEntries.Count));
 
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
             _survivorLoader = new FirstPassSurvivorLoader(
@@ -1416,7 +1420,7 @@ namespace pwiz.Osprey.Tasks
                         RescoreHydration.ALL_RUNS_BUNDLE_MARKER));
                     bundle = RescoreHydration.HydrateReconciliationOverlay(perFileEntries,
                         parquetPaths, LoadFirstPassExperimentRecords(ctx.Config, ctx),
-                        ctx.Get<SequencePool>().Value, ctx.LogInfo);
+                        ctx.Get<SequencePool>().Value, ctx);
                 }
             }
             catch (InvalidDataException ex)
@@ -1499,6 +1503,8 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(string.Format(
                 @"Resume rehydrate: streaming the first-pass bundle from {0} file(s) " +
                 @"(one file's pre-compaction pool resident at a time).", fileNames.Count));
+            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_FIRST_PASS_FDR, @"own-bundle-stream files={0}",
+                fileNames.Count));
 
             // Diagnostics must never take down a real run - the invariant
             // ModelDiagnosticsReport states three times and enforces with catch-all guards
@@ -1515,7 +1521,7 @@ namespace pwiz.Osprey.Tasks
                 try
                 {
                     mdiagAccumulator = BuildModelDiagnosticsAccumulator(
-                        fileNames, ctx.Get<LibraryById>().Value, config, ctx.LogInfo);
+                        fileNames, ctx.Get<LibraryById>().Value, config, ctx);
                 }
                 catch (Exception ex)
                 {
@@ -1553,7 +1559,7 @@ namespace pwiz.Osprey.Tasks
                 },
                 LoadFirstPassExperimentRecords(config, ctx),
                 resumeRetainedBaseIds,
-                ctx.Get<SequencePool>().Value, ctx.LogInfo);
+                ctx.Get<SequencePool>().Value, ctx);
 
             // The hydrate re-derived every key from its parquet stem, while the accumulator
             // above and the published PerFileParquetPaths map are keyed by the ORIGINAL
@@ -1727,15 +1733,15 @@ namespace pwiz.Osprey.Tasks
                         perFileEntries.ConvertAll(kv => kv.Key),
                         ctx.Get<PerFileParquetPaths>().Value, config,
                         mdiagAccumulator.ClassByBaseId, libraryById,
-                        LoadFirstPassExperimentRecords(config, ctx), ctx.LogInfo);
+                        LoadFirstPassExperimentRecords(config, ctx), ctx);
                     ModelDiagnosticsReport.WriteFromAccumulator(
-                        mdiagAccumulator, contributions, cal, config, ctx.LogInfo, coAssignment,
+                        mdiagAccumulator, contributions, cal, config, ctx, coAssignment,
                         ValidityKey(ctx));
                 }
                 else
                 {
                     ModelDiagnosticsReport.Write(perFileEntries, contributions, libraryById, cal,
-                        config, ctx.LogInfo, ValidityKey(ctx));
+                        config, ctx, ValidityKey(ctx));
                 }
             }
         }
@@ -1834,10 +1840,10 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyList<string> fileNames,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             OspreyConfig config,
-            Action<string> logInfo,
+            IOspreyLog log,
             int pass = 1)
         {
-            ModelDiagnosticsReport.BuildClassificationFromLibrary(config, libraryById, logInfo,
+            ModelDiagnosticsReport.BuildClassificationFromLibrary(config, libraryById, log,
                 out var classByBaseId, out var pairByBaseId, out var entrapmentRatio);
             var runNames = new string[fileNames.Count];
             for (int i = 0; i < runNames.Length; i++)
@@ -2045,7 +2051,7 @@ namespace pwiz.Osprey.Tasks
                 benchPath, benchResult.Rows));
             ctx.LogInfo(string.Format(@"Wrote FDRBench pairing manifest (from the searched library) to {0}: {1} peptides",
                 manifestPath, manifestRows));
-            pairing.LogSummary(ctx.LogInfo);
+            pairing.LogSummary(ctx);
             if (benchResult.MissingLibrary > 0)
             {
                 ctx.LogInfo(string.Format(
@@ -2058,7 +2064,7 @@ namespace pwiz.Osprey.Tasks
                     @"{0} FDRBench rows had oversize protein-ID lists; truncated with ';...+N_more'",
                     benchResult.TruncatedProtein));
             }
-            ctx.LogInfo(string.Format(@"[STAGE-WALL] fdrbench-pass1: {0:F1}s",
+            ctx.LogInfo(LogTag.STAGE_WALL, string.Format(@"fdrbench-pass1: {0:F1}s",
                 swFdrBench.Elapsed.TotalSeconds));
             return true;
         }
@@ -2659,6 +2665,8 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(string.Format(
                 @"Wrote analysis-wide retained base_id summary: {0} base_id(s) across {1} run(s)",
                 retainedBaseIds.Count, perFileParquetPaths.Count));
+            ctx.LogInfo(LogTag.COUNT, LogKey.Format(LogKey.COUNT_RETAINED_SUMMARY_WRITTEN, @"base-ids={0} runs={1}",
+                retainedBaseIds.Count, perFileParquetPaths.Count));
             return true;
         }
 
@@ -2803,14 +2811,14 @@ namespace pwiz.Osprey.Tasks
                     return RunPercolatorFdr(perFileEntries, config, ctx, loadFileFeatures: loadFileFeatures);
 
                 case FdrMethod.Simple:
-                    PercolatorEngine.RunSimpleFdr(perFileEntries, config, ctx.LogInfo);
+                    PercolatorEngine.RunSimpleFdr(perFileEntries, config, ctx);
                     return null;
 
                 default:
                     ctx.LogWarning(string.Format(
                         "FDR method {0} not yet supported, falling back to simple",
                         config.FdrMethod));
-                    PercolatorEngine.RunSimpleFdr(perFileEntries, config, ctx.LogInfo);
+                    PercolatorEngine.RunSimpleFdr(perFileEntries, config, ctx);
                     return null;
             }
         }
@@ -2868,7 +2876,7 @@ namespace pwiz.Osprey.Tasks
                 perFileEntries, config,
                 OspreyFeatureCalculators.BuildFeatureInfos(
                     ParquetScoreCache.PIN_FEATURE_NAMES),
-                ctx.LogInfo, out var contributions,
+                ctx, out var contributions,
                 BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel, loadFileFeatures,
                 captureModel, frozenModel);
             if (aborted)
@@ -2877,7 +2885,7 @@ namespace pwiz.Osprey.Tasks
                 // the run a pure no-op and signalled here; the Tasks layer -- not
                 // the engine -- owns the process exit (this is the early-exit the
                 // engine's former inline Environment.Exit(0) used to perform).
-                ctx.LogInfo(@"[BISECT] Percolator diagnostic-only dump complete - aborting run");
+                ctx.LogInfo(LogTag.BISECT, @"Percolator diagnostic-only dump complete - aborting run");
                 Environment.Exit(0);
             }
             // The trained model's feature contributions, for the --model-diagnostics
@@ -2907,13 +2915,13 @@ namespace pwiz.Osprey.Tasks
                 projections, config,
                 OspreyFeatureCalculators.BuildFeatureInfos(
                     ParquetScoreCache.PIN_FEATURE_NAMES),
-                ctx.LogInfo, sink, BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel,
+                ctx, sink, BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel,
                 loadFileFeatures);
             if (aborted)
             {
                 // A diagnostic-only (*Only) Stage 5 dump fired; mirror the FdrEntry
                 // facade -- the Tasks layer owns the process exit.
-                ctx.LogInfo(@"[BISECT] Percolator diagnostic-only dump complete - aborting run");
+                ctx.LogInfo(LogTag.BISECT, @"Percolator diagnostic-only dump complete - aborting run");
                 Environment.Exit(0);
             }
         }
@@ -2972,7 +2980,7 @@ namespace pwiz.Osprey.Tasks
             // Tasks facade because Osprey.FDR cannot reference
             // Osprey.Diagnostics (the Diagnostics project references FDR).
             var result = ProteinFdrEngine.RunFirstPass(
-                perFileEntries, fullLibrary, config, ctx.LogInfo);
+                perFileEntries, fullLibrary, config, ctx);
 
             // Build + publish the protein-compact stratum (legacy path). Gated on the mode:
             // it scans the full library, and it is read only by the compaction gate + pass-2.
@@ -3039,7 +3047,9 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(string.Format(
                 @"Released library fragments for {0} of {1} entries ({2} base_ids retained for rescore + gap-fill)",
                 released, fullLibrary.Count, retained.Count));
-            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after library-fragment release");
+            LibraryFragmentRelease.LogRelease(ctx, released, fullLibrary.Count, retained.Count,
+                LogKey.SCOPE_RESCORE_GAP_FILL);
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"after library-fragment release");
         }
 
         /// <summary>
@@ -3177,7 +3187,7 @@ namespace pwiz.Osprey.Tasks
             // 446 files. afterCount below is deliberately left int - it is the post-compaction
             // survivor count, ~289 M, a different magnitude with room to spare.
             long beforeCount = projections.TotalRows;
-            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, projections.IsCountsOnly
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx, projections.IsCountsOnly
                 ? string.Format(
                     @"projection counts-only: {0} rows across {1} files (no resident rows); FdrEntry stubs released",
                     beforeCount, projections.PerFile.Count)
@@ -3251,7 +3261,7 @@ namespace pwiz.Osprey.Tasks
             // Null off the report path, so byte-neutral there.
             var mdiagAccumulator = config.ModelDiagnostics
                 ? BuildModelDiagnosticsAccumulator(projections.PerFile.ConvertAll(kv => kv.Key),
-                    ctx.Get<LibraryById>().Value, config, ctx.LogInfo)
+                    ctx.Get<LibraryById>().Value, config, ctx)
                 : null;
             FeatureContributions mdiagContributions = null;
             Action<FeatureContributions> captureContributions = null;
@@ -3583,7 +3593,7 @@ namespace pwiz.Osprey.Tasks
                 }
                 aborted = PercolatorEngine.RunFirstPassStreaming(
                     projections.PerFile.ConvertAll(kv => kv.Key), streamFileRows, loadFileFeatures,
-                    config, featureInfos, ctx.LogInfo, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
+                    config, featureInfos, ctx, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
                     @"First-pass", captureContributions, captureModel, tryStreamCompletedScores,
                     pretrainedModel, flushFileRunScope);
                 // Says whether the pass-1 write actually engaged. Without it a run in which
@@ -3599,7 +3609,7 @@ namespace pwiz.Osprey.Tasks
             {
                 aborted = PercolatorEngine.RunPercolatorFdr(
                     projections, config, featureInfos,
-                    ctx.LogInfo, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
+                    ctx, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
                     @"First-pass", loadFileFeatures,
                     fileName => ParquetScoreCache.ReadApexRtsByParquetIndex(perFileParquetPaths[fileName]),
                     captureContributions, captureModel);
@@ -3609,13 +3619,13 @@ namespace pwiz.Osprey.Tasks
             {
                 // A diagnostic-only (*Only) Stage 5 dump fired; mirror the static
                 // RunPercolatorFdr wrapper's process exit.
-                ctx.LogInfo(@"[BISECT] Percolator diagnostic-only dump complete - aborting run");
+                ctx.LogInfo(LogTag.BISECT, @"Percolator diagnostic-only dump complete - aborting run");
                 Environment.Exit(0);
             }
-            ctx.LogInfo(string.Format(@"[TIMING] Percolator/Simple FDR: {0:F1}s",
+            ctx.LogInfo(LogTag.TIMING, string.Format(@"Percolator/Simple FDR: {0:F1}s",
                 swFdr.Elapsed.TotalSeconds));
-            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after first-pass Percolator FDR");
-            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"first-pass-fdr-live",
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"after first-pass Percolator FDR");
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx, @"first-pass-fdr-live",
                 string.Format(@"(post-GC, projection path, rows={0})", projections.TotalRows));
 
             LogFirstPassResultsProjection(projections, sink, config, ctx);
@@ -3641,9 +3651,9 @@ namespace pwiz.Osprey.Tasks
                 var coAssignment = PeakCoAssignmentSource.Build(
                     projections.PerFile.ConvertAll(kv => kv.Key), perFileParquetPaths, config,
                     mdiagAccumulator.ClassByBaseId, ctx.Get<LibraryById>().Value,
-                    experiment.Records, ctx.LogInfo);
+                    experiment.Records, ctx);
                 ModelDiagnosticsReport.WriteFromAccumulator(
-                    mdiagAccumulator, mdiagContributions, cal, config, ctx.LogInfo, coAssignment,
+                    mdiagAccumulator, mdiagContributions, cal, config, ctx, coAssignment,
                     ValidityKey(ctx));
             }
 
@@ -3675,7 +3685,7 @@ namespace pwiz.Osprey.Tasks
                         OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_PROTEIN_FDR_ONLY");
                 }
                 swProt.Stop();
-                ctx.LogInfo(string.Format(@"[TIMING] First-pass protein FDR: {0:F1}s",
+                ctx.LogInfo(LogTag.TIMING, string.Format(@"First-pass protein FDR: {0:F1}s",
                     swProt.Elapsed.TotalSeconds));
 
                 // Build + publish the protein-compact stratum on the PROJECTION (production)
@@ -3851,7 +3861,7 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(string.Format(
                 @"First-pass compaction: {0} -> {1} entries ({2} passing base_ids)",
                 beforeCount, afterCount, firstPassBaseIds.Count));
-            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after Stage-5 CompactFirstPass");
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"after Stage-5 CompactFirstPass");
 
             // OSPREY_STAGE6_STREAM_SURVIVORS=0 keeps the materialized buffer: it is the A/B
             // byte-identity oracle for the streamed default, and it can only be that if it
@@ -3994,7 +4004,7 @@ namespace pwiz.Osprey.Tasks
                 }
             }
             var result = accumulator.Finish(fullLibrary, config);
-            ProteinFdrEngine.LogFirstPassSummary(result, config, ctx.LogInfo);
+            ProteinFdrEngine.LogFirstPassSummary(result, config, ctx);
 
             // Pass 2: resolve each entry's experiment_protein_qvalue from peptide -> q into the
             // experiment-scope map, which is written once beside the blib after this returns.

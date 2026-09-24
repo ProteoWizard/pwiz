@@ -20,6 +20,7 @@
 
 using System;
 using System.Globalization;
+using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey
 {
@@ -34,10 +35,10 @@ namespace pwiz.Osprey
     public static class OspreyDiagnosticsLog
     {
         /// <summary>
-        /// Delegate for logging. The pipeline hooks this to its LogInfo so dump
+        /// Log sink. The pipeline points this at <see cref="OspreyLog.Out"/> so dump
         /// messages flow through the standard logging channel.
         /// </summary>
-        public static Action<string> LogAction { get; set; } = Console.WriteLine;
+        public static IOspreyLog Log { get; set; } = OspreyLog.FromDelegate(Console.WriteLine);
 
         /// <summary>
         /// Format a double with 10 decimal places using round-half-to-even
@@ -59,7 +60,7 @@ namespace pwiz.Osprey
         /// </summary>
         public static void ExitAfterDump(string varName)
         {
-            LogAction(string.Format(@"[BISECT] {0} set - aborting after dump", varName));
+            Log.LogInfo(LogTag.BISECT, string.Format(@"{0} set - aborting after dump", varName));
             Environment.Exit(0);
         }
     }

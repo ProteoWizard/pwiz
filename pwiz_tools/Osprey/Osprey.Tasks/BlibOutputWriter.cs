@@ -174,9 +174,8 @@ namespace pwiz.Osprey.Tasks
             // ending at "Wrote 51597 library spectra". They are not all of it - Commit,
             // WriteMetadata and FinalizeDatabase run after the emission scope closes and are
             // still uninstrumented. The surrounding [COUNT] lines cannot serve here:
-            // OspreyOutput.IsStatLine filters them out of normal output, so they appear only
-            // under --perf-stats (the same trap Calibrator.cs:1564 records, where the API is
-            // misnamed IsMachineParseable).
+            // LogTag.COUNT is gated behind --perf-stats, so they appear only
+            // under that flag (the same trap the calibration scoring loop records).
             int precompressed = 0;
             using (var progress = new ProgressReporter(
                        string.Format(@"Compressing {0} library spectra for the blib", blibN),

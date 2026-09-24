@@ -148,7 +148,7 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 | `--timestamp` | Prefix each output line with `[yyyy/MM/dd HH:mm:ss]`. |
 | `--memstamp` | Prefix each line with managed + private memory in MB (pair with `--timestamp` for perf visualization). |
 | `--log-file <path>` | Write all output to a file instead of stderr. |
-| `--perf-stats` | Emit machine-parseable `[COUNT]`/`[TIMING]`/`[STAGE-WALL]` lines. |
+| `--perf-stats` | Emit the machine-channel lines (`[COUNT]`, `[TIMING]`, `[BENCH]`, `[STAGE-WALL]`, `[PATH]`, `[TRAIN]`); see [Log format](#log-format). |
 | `--verbose` | Show implementer-grade detail (e.g. per-fold Percolator iterations). |
 
 ### Diagnostics & Info
@@ -159,6 +159,40 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 | `--model-diagnostics` | Write a self-contained interactive HTML report of the trained scoring model and FDR calibration. |
 | `-h`, `--help` | Show help. Accepts a format: `[ascii\|unicode\|sections\|html\|<Section>]`. |
 | `-v`, `--version` | Show version. |
+
+### Log format
+
+The log carries two kinds of line.
+
+**Prose** is written for the person watching the run. It may be reworded in any change and
+will be translated, so no script or test may key off it.
+
+**Tagged lines** start with `[TAG]` and are the machine channel. Their text is ASCII, never
+translated, and it is the only part of the log a script or test may read.
+
+| Tag | Written when | Carries |
+|-----|--------------|---------|
+| `[TASK]` | always | a task's start, skip and finish: `[TASK] <Name>:starting` / `:skipping (outputs valid)` / `:done (<s>s)`. The names are the `--task` values. |
+| `[COUNT]` | `--perf-stats` | a count, e.g. `[COUNT] library-fragments-released: released=N entries=M retained=K scope=rescore-gap-fill` |
+| `[PATH]` | `--perf-stats` | which code route the run took, e.g. `[PATH] second-pass-join: per-run runs=3` |
+| `[TIMING]`, `[STAGE-WALL]`, `[BENCH]` | `--perf-stats` | timings the perf tools read |
+| `[TRAIN]` | `--perf-stats` | which population a model trained on |
+| `[MEM <label>]` | `OSPREY_LOG_MEMORY` | a memory probe |
+
+Some prose lines also carry a category tag (`[WARN]`, `[ERROR]`, `[MODEL-DIAGNOSTICS]`,
+`[BISECT]`, ...). The tag labels the line and stays ASCII; the text after it is prose.
+
+Rules for code and for consumers:
+
+- **Read tagged lines only.** A script or test that matches prose is a defect in the consumer,
+  not a reason to freeze the prose.
+- **Keyed lines are `[TAG] key: value` or `[TAG] key: name=value ...`.** Numbers use the
+  invariant culture with no group separators. Adding a key is free; renaming one means updating
+  its consumers (`regression.ps1`, the `ai/scripts/Osprey` tools) in the same change.
+- **Every tag comes from `LogTag`** (`Osprey.Core/LogTag.cs`), and the route and count keys
+  come from `LogKey` in the same file. Code writes `log.LogInfo(LogTag.COUNT, text)` through an
+  `IOspreyLog`; `OspreyLog.Write` is the one place that decides whether the line is emitted.
+  `CodeInspectionTest.TestLogTagsComeFromLogTag` fails on a tag written as a string literal.
 
 ---
 

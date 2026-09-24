@@ -81,8 +81,8 @@ namespace pwiz.Osprey.FDR
             Matrix stdFeatures;
             var standardizer = FeatureStandardizer.FitTransform(features, out stdFeatures);
             swSetup.Stop();
-            OspreyOutput.Out.WriteLine(
-                $"[TIMING]   Percolator setup + standardize: {swSetup.Elapsed.TotalSeconds:F1}s ({n} entries x {nFeatures} features)");
+            OspreyLog.Out.LogInfo(LogTag.TIMING,
+                $"  Percolator setup + standardize: {swSetup.Elapsed.TotalSeconds:F1}s ({n} entries x {nFeatures} features)");
 
             // Stage 5 standardizer dump. Gated by the injected diagnostics config
             // (OSPREY_DUMP_STANDARDIZER); a *Only request returns the abort
@@ -136,8 +136,9 @@ namespace pwiz.Osprey.FDR
                     dedupDecoys++;
                 else dedupTargets++;
             }
-            OspreyOutput.Out.WriteLine("[COUNT]   Percolator best-per-precursor: {0} entries ({1} targets, {2} decoys) from {3} total",
-                bestPerPrecursor.Length, dedupTargets, dedupDecoys, n);
+            OspreyLog.Out.LogInfo(LogTag.COUNT, string.Format(
+                "  Percolator best-per-precursor: {0} entries ({1} targets, {2} decoys) from {3} total",
+                bestPerPrecursor.Length, dedupTargets, dedupDecoys, n));
 
             int subN = trainSubset.Length;
             int subTargets = 0, subDecoys = 0;
@@ -147,8 +148,9 @@ namespace pwiz.Osprey.FDR
                     subDecoys++;
                 else subTargets++;
             }
-            OspreyOutput.Out.WriteLine("[COUNT]   Percolator subsample: {0} entries ({1} targets, {2} decoys) from {3} dedup",
-                subN, subTargets, subDecoys, bestPerPrecursor.Length);
+            OspreyLog.Out.LogInfo(LogTag.COUNT, string.Format(
+                "  Percolator subsample: {0} entries ({1} targets, {2} decoys) from {3} dedup",
+                subN, subTargets, subDecoys, bestPerPrecursor.Length));
 
             // Build subset-local arrays.
             //
@@ -209,9 +211,9 @@ namespace pwiz.Osprey.FDR
                                    bestFeatIdx < config.FeatureInfos.Length)
                 ? config.FeatureInfos[bestFeatIdx].Name
                 : string.Format("feature_{0}", bestFeatIdx);
-            OspreyOutput.Out.WriteLine(
-                "[COUNT] Best initial feature: {0} ({1} targets at {2:F0}% FDR)",
-                bestFeatName, bestFeatPassing, trainFdr * 100.0);
+            OspreyLog.Out.LogInfo(LogTag.COUNT, string.Format(
+                "Best initial feature: {0} ({1} targets at {2:F0}% FDR)",
+                bestFeatName, bestFeatPassing, trainFdr * 100.0));
 
             var initialScores = new double[subN];
             for (int i = 0; i < subN; i++)
@@ -596,11 +598,12 @@ namespace pwiz.Osprey.FDR
 
             for (int fold = 0; fold < config.NFolds; fold++)
             {
-                OspreyOutput.Out.WriteLine("[TIMING]   Percolator fold {0}/{1}: {2:F1}s ({3} iterations)",
-                    fold + 1, config.NFolds, foldElapsed[fold], foldIterations[fold]);
+                OspreyLog.Out.LogInfo(LogTag.TIMING, string.Format(
+                    "  Percolator fold {0}/{1}: {2:F1}s ({3} iterations)",
+                    fold + 1, config.NFolds, foldElapsed[fold], foldIterations[fold]));
             }
-            OspreyOutput.Out.WriteLine("[TIMING]   Percolator train all folds (parallel): {0:F1}s",
-                swTrain.Elapsed.TotalSeconds);
+            OspreyLog.Out.LogInfo(LogTag.TIMING, string.Format(
+                "  Percolator train all folds (parallel): {0:F1}s", swTrain.Elapsed.TotalSeconds));
 
             if (config.UseGradientBoostedTrees)
             {

@@ -45,7 +45,7 @@ namespace pwiz.Osprey.Tasks
     /// <c>AnalysisPipeline.Run</c> and lives for the duration of the
     /// pipeline execution.
     /// </summary>
-    public sealed class PipelineContext
+    public sealed class PipelineContext : IOspreyLog
     {
         private readonly Action<string> _logInfo;
         private readonly Action<string> _logWarning;
@@ -222,6 +222,8 @@ namespace pwiz.Osprey.Tasks
         }
 
         public void LogInfo(string message) { _logInfo(message); }
+        /// <summary>A machine-channel line; <see cref="OspreyLog.Write"/> decides whether it is emitted.</summary>
+        public void LogInfo(LogTag tag, string text) { OspreyLog.Write(_logInfo, tag, text); }
         /// <summary>Implementer-grade detail: emitted only under --verbose (same sink as LogInfo).</summary>
         public void LogVerbose(string message) { if (OspreyOutput.Verbose) _logInfo(message); }
         public void LogWarning(string message) { _logWarning(message); }
@@ -368,8 +370,8 @@ namespace pwiz.Osprey.Tasks
             // every slot is legitimately republished, so its history no longer applies.
             _consumedByproducts.Clear();
 #endif
-            LogInfo(string.Format(
-                @"[DROP] Released {0} byproduct(s) at the task boundary; the library stays resident.",
+            LogInfo(LogTag.DROP, string.Format(
+                @"Released {0} byproduct(s) at the task boundary; the library stays resident.",
                 dropped.Count));
         }
 

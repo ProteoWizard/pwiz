@@ -99,6 +99,7 @@ namespace pwiz.Osprey.Tasks
                     "score->run-q table); experiment q is frozen by the best-peak anchor, no retrain.",
                     OspreyEnvironment.PASS2_QVALUE_TRANSFER));
             }
+            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_PASS2_QVALUE, @"{0}", OspreyEnvironment.Pass2QValue));
 
             EnsureFrozenFirstPassPublished(ctx, perFileParquetPaths);
 
@@ -250,8 +251,11 @@ namespace pwiz.Osprey.Tasks
                         var swRestore = Stopwatch.StartNew();
                         RestorePass1Scalars(ctx, Pool(), pass2Writer);
                         swRestore.Stop();
-                        ctx.LogVerbose(string.Format(
-                            "[STAGE-WALL] pass-1 scalar restore: {0:F1}s", swRestore.Elapsed.TotalSeconds));
+                        if (OspreyOutput.Verbose)
+                        {
+                            ctx.LogInfo(LogTag.STAGE_WALL, string.Format(
+                                "pass-1 scalar restore: {0:F1}s", swRestore.Elapsed.TotalSeconds));
+                        }
                     }
 
                     var swPass2 = Stopwatch.StartNew();
@@ -285,8 +289,8 @@ namespace pwiz.Osprey.Tasks
                         ComputePass2Resident(ctx, Pool(), perFileParquetPaths, config);
                     }
                     swPass2.Stop();
-                    ctx.LogInfo(string.Format(
-                        "[STAGE-WALL] second-pass-fdr: {0:F1}s",
+                    ctx.LogInfo(LogTag.STAGE_WALL, string.Format(
+                        "second-pass-fdr: {0:F1}s",
                         swPass2.Elapsed.TotalSeconds));
                 }
             }
@@ -750,8 +754,8 @@ namespace pwiz.Osprey.Tasks
             // --task SecondPassFDR leg the same step is a 127 s gap. It ran unbracketed: the
             // "N/M file(s) have no precomputed second-pass FDR scores" heading above was
             // LogVerbose (this change promotes it to LogInfo, so it is now visible), and the
-            // swRestore duration goes out as a [STAGE-WALL] line, which OspreyOutput.IsStatLine
-            // filters unless --perf-stats. A heading alone would not cover this anyway - the
+            // swRestore duration goes out as a [STAGE-WALL] line, which LogTag.STAGE_WALL
+            // writes only under --perf-stats. A heading alone would not cover this anyway - the
             // step is O(records) and the silence is INSIDE it.
             int restoreIdx = 0;
             // ONE index and ONE staging buffer for the whole loop, cleared per file rather than
@@ -2197,6 +2201,8 @@ namespace pwiz.Osprey.Tasks
                         @"complete worker output would open none.",
                         answered, fileKeys.Count, fileKeys.Count - answered));
                 }
+                ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_SECOND_PASS_FOLD, @"verify={0} answered={1}/{2}",
+                    OspreyEnvironment.Pass2VerifyWorker ? @"on" : @"off", answered, fileKeys.Count));
 
                 try
                 {
@@ -2312,8 +2318,8 @@ namespace pwiz.Osprey.Tasks
             // by one rule applied to every record regardless of which branch produced it.
             floors.DerivePeptideFloors();
             int raised = experiment.ApplyRunQFloors(entryId => floors.FloorsFor(entryId));
-            ctx.LogInfo(string.Format(
-                @"[FDR] experiment-q floors: folded {0} entry_id and {1} peptide floor(s) from " +
+            ctx.LogInfo(LogTag.FDR, string.Format(
+                @"experiment-q floors: folded {0} entry_id and {1} peptide floor(s) from " +
                 @"the per-file second-pass records - no pass over the runs - and raised {2} " +
                 @"experiment q-value(s) to them.",
                 floors.EntryIdCount, floors.PeptideCount, raised));
@@ -2500,8 +2506,8 @@ namespace pwiz.Osprey.Tasks
             }
             reloadProgress.Dispose();
             swReloadFeats.Stop();
-            ctx.LogInfo(string.Format(
-                "[TIMING] Reloaded PIN features for {0} entries: {1:F1}s",
+            ctx.LogInfo(LogTag.TIMING, string.Format(
+                "Reloaded PIN features for {0} entries: {1:F1}s",
                 nReloaded, swReloadFeats.Elapsed.TotalSeconds));
 
             switch (config.FdrMethod)

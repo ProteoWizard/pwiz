@@ -395,8 +395,8 @@ namespace pwiz.Osprey.Tasks
                         nSampledDecoys++;
                     else nSampledTargets++;
                 }
-                _ctx.LogInfo(string.Format(
-                    "[TIMING] Calibration sampling (attempt {0}/{1}): {2:F2}s ({3} targets + {4} decoys)",
+                _ctx.LogInfo(LogTag.TIMING, string.Format(
+                    "Calibration sampling (attempt {0}/{1}): {2:F2}s ({3} targets + {4} decoys)",
                     attempt, maxAttempts, swSample.Elapsed.TotalSeconds, nSampledTargets, nSampledDecoys));
 
                 if (nSampledTargets == 0)
@@ -1127,11 +1127,11 @@ namespace pwiz.Osprey.Tasks
                     else nTargetWins++;
                 }
             }
-            _ctx.LogInfo(string.Format(
-                "[TIMING] Calibration pass {0} LDA: {1:F2}s ({2} target wins, {3} decoy wins at 1% FDR)",
+            _ctx.LogInfo(LogTag.TIMING, string.Format(
+                "Calibration pass {0} LDA: {1:F2}s ({2} target wins, {3} decoy wins at 1% FDR)",
                 passNumber, swLda.Elapsed.TotalSeconds, nTargetWins, nDecoyWins));
-            _ctx.LogInfo(string.Format(
-                "[COUNT] Calibration pass {0} LDA winners [{1}]: {2} target wins, {3} decoy wins at 1% FDR",
+            _ctx.LogInfo(LogTag.COUNT, string.Format(
+                "Calibration pass {0} LDA winners [{1}]: {2} target wins, {3} decoy wins at 1% FDR",
                 passNumber, fileName, nTargetWins, nDecoyWins));
 
             // --verbose anchor-purity (entrapment-FDP) diagnostic: of the target-side
@@ -1347,7 +1347,7 @@ namespace pwiz.Osprey.Tasks
                 swLoess.Stop();
 
                 var stats = rtCal.Stats();
-                _ctx.LogInfo(string.Format("[TIMING] Calibration pass {0} LOESS fit: {1:F2}s",
+                _ctx.LogInfo(LogTag.TIMING, string.Format("Calibration pass {0} LOESS fit: {1:F2}s",
                     passNumber, swLoess.Elapsed.TotalSeconds));
                 _ctx.LogVerbose(string.Format(
                     "RT calibration pass {0}: {1} points, R2={2:F4}, residual SD={3:F3} min, MAD={4:F3}",
@@ -1562,8 +1562,8 @@ namespace pwiz.Osprey.Tasks
             var matchRts = new ConcurrentDictionary<uint, KeyValuePair<double, double>>();
 
             // Calibration scoring is the one long determinate loop that still ran silent: the
-            // surrounding [TIMING]/[COUNT] lines are filtered out of normal output
-            // (OspreyOutput.IsMachineParseable), so a normal run showed nothing between
+            // surrounding [TIMING]/[COUNT] lines are gated behind --perf-stats
+            // (LogTag), so a normal run showed nothing between
             // "Running RT calibration..." and the pass summary -- ~40 s per file, ~50 min
             // across an 82-file run.
             int windowsDone = 0;
@@ -1608,11 +1608,11 @@ namespace pwiz.Osprey.Tasks
                     localScorer => { });
             }
             swScoring.Stop();
-            _ctx.LogInfo(string.Format(
-                "[TIMING] Calibration pass {0} scoring: {1:F2}s ({2} matches)",
+            _ctx.LogInfo(LogTag.TIMING, string.Format(
+                "Calibration pass {0} scoring: {1:F2}s ({2} matches)",
                 passNumber, swScoring.Elapsed.TotalSeconds, matches.Count));
-            _ctx.LogInfo(string.Format(
-                "[COUNT] Calibration pass {0} matches scored [{1}]: {2}",
+            _ctx.LogInfo(LogTag.COUNT, string.Format(
+                "Calibration pass {0} matches scored [{1}]: {2}",
                 passNumber, fileName, matches.Count));
             return (matches, snrByEntryId, matchRts);
         }
@@ -1708,8 +1708,8 @@ namespace pwiz.Osprey.Tasks
                     passNumber, nTargetWins, libRtsDetected.Count, nSnrFiltered, MIN_SNR_FOR_RT_CAL));
             }
 
-            _ctx.LogInfo(string.Format(
-                "[COUNT] Calibration pass {0} high-quality (S/N>=5) [{1}]: {2}",
+            _ctx.LogInfo(LogTag.COUNT, string.Format(
+                "Calibration pass {0} high-quality (S/N>=5) [{1}]: {2}",
                 passNumber, fileName, libRtsDetected.Count));
 
             return (libRtsDetected, measuredRtsDetected);

@@ -77,7 +77,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// Supplied by the caller because the score-pass path holds them in memory before the
         /// sidecar is written, while the rehydrate path reads one an earlier run left.
         /// </param>
-        /// <param name="logInfo">Run log sink; every degrade path explains itself through it.</param>
+        /// <param name="log">Run log sink; every degrade path explains itself through it.</param>
         public static ModelDiagnosticsData.CoAssignmentData Build(
             IReadOnlyList<string> fileNames,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
@@ -85,7 +85,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
-            Action<string> logInfo)
+            IOspreyLog log)
         {
             // The "never throws" promise above needs an actual guard, and it was only ever
             // enforced around the parquet read inside AddFile. Everything else - the builder's
@@ -96,12 +96,12 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             try
             {
                 return BuildCore(fileNames, perFileParquetPaths, config, classByBaseId,
-                    libraryById, experimentRecords, logInfo);
+                    libraryById, experimentRecords, log);
             }
             catch (Exception ex)
             {
-                logInfo(string.Format(
-                    @"[MODEL-DIAGNOSTICS] peak co-assignment abandoned after an unexpected error: {0}",
+                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
+                    @"peak co-assignment abandoned after an unexpected error: {0}",
                     ex.Message));
                 return null;
             }
@@ -114,11 +114,11 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
-            Action<string> logInfo)
+            IOspreyLog log)
         {
             if (fileNames == null || perFileParquetPaths == null || libraryById == null)
             {
-                logInfo(@"[MODEL-DIAGNOSTICS] peak co-assignment skipped: no per-file parquet or library available.");
+                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, @"peak co-assignment skipped: no per-file parquet or library available.");
                 return null;
             }
 
@@ -138,7 +138,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             // sentinel for exactly this failure.
             if (experimentRecords == null || experimentRecords.Count == 0)
             {
-                logInfo(@"[MODEL-DIAGNOSTICS] peak co-assignment skipped: no 1st-pass experiment-scope FDR records were supplied, and their aggregate scores are what the acceptance boundary is drawn from.");
+                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, @"peak co-assignment skipped: no 1st-pass experiment-scope FDR records were supplied, and their aggregate scores are what the acceptance boundary is drawn from.");
                 return null;
             }
 
@@ -154,8 +154,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             // opens: this walks every experiment-scope key (6.2 M on the 446-run cohort) and then
             // NaN-fills ~100 MB. The two loops under it carry reporters for exactly this reason -
             // a silent stretch here reads as a hung run.
-            logInfo(string.Format(
-                @"[MODEL-DIAGNOSTICS] peak co-assignment: sizing the run scope from {0} experiment-scope record(s)...",
+            log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
+                @"peak co-assignment: sizing the run scope from {0} experiment-scope record(s)...",
                 experimentRecords.Count));
             uint maxBaseId = 0;
             foreach (uint entryId in experimentRecords.Keys)
@@ -214,8 +214,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     });
                     if (!readOk)
                     {
-                        logInfo(string.Format(
-                            @"[MODEL-DIAGNOSTICS] peak co-assignment: 1st-pass sidecar for {0} could not be read in full; the acceptance boundary would be drawn from a partial pool, so the panel is not built",
+                        log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
+                            @"peak co-assignment: 1st-pass sidecar for {0} could not be read in full; the acceptance boundary would be drawn from a partial pool, so the panel is not built",
                             fileNames[f]));
                         return null;
                     }
@@ -229,8 +229,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             // Also reported: SealCutoffs walks the whole experiment population in score order to
             // find where this pass's own count reaches the target FDR, which is the other half of
             // the silence the 138 s gap covered.
-            logInfo(string.Format(
-                @"[MODEL-DIAGNOSTICS] peak co-assignment: reducing the experiment boundary over {0} file(s)...",
+            log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
+                @"peak co-assignment: reducing the experiment boundary over {0} file(s)...",
                 fileNames.Count));
             builder.SealCutoffs();
 
@@ -240,13 +240,13 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             // number instead of an obvious failure. Printing the boundary, the accepted count
             // behind it, and how many precursors clear it makes the panel self-diagnosing.
             builder.CountAboveExperimentCutoff(out int aboveDecoys, out int aboveNonDecoys);
-            logInfo(string.Format(
-                @"[MODEL-DIAGNOSTICS] peak co-assignment boundary (pass 1): experiment {0:F4} from {1} accepted precursor(s); {2} decoy + {3} non-decoy precursor(s) clear it",
+            log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
+                @"peak co-assignment boundary (pass 1): experiment {0:F4} from {1} accepted precursor(s); {2} decoy + {3} non-decoy precursor(s) clear it",
                 builder.ExperimentCutoff, builder.AcceptedForCutoff, aboveDecoys, aboveNonDecoys));
             for (int f = 0; f < fileNames.Count; f++)
             {
-                logInfo(string.Format(
-                    @"[MODEL-DIAGNOSTICS] peak co-assignment boundary (pass 1): run {0} = {1:F4}",
+                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
+                    @"peak co-assignment boundary (pass 1): run {0} = {1:F4}",
                     fileNames[f], builder.RunCutoff(f)));
             }
 
@@ -278,8 +278,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     totalUnresolved += fileUnresolved;
                     if (reason != null)
                     {
-                        logInfo(string.Format(
-                            @"[MODEL-DIAGNOSTICS] peak co-assignment unavailable ({0}); panel omitted.", reason));
+                        log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
+                            @"peak co-assignment unavailable ({0}); panel omitted.", reason));
                         return null;
                     }
                     totalDetected += detected;
@@ -291,8 +291,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             {
                 // Per file as well as total: a figure that grows with the file index is a
                 // different problem from one that is simply large on every file.
-                logInfo(string.Format(
-                    @"[MODEL-DIAGNOSTICS] peak co-assignment fold allocated {0:N1} GB over {1} file(s): " +
+                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
+                    @"peak co-assignment fold allocated {0:N1} GB over {1} file(s): " +
                     @"sidecar stream {2:N1} GB ({3:N0} MB/file), no parquet column read",
                     tally.SidecarStreamBytes / 1073741824.0,
                     fileNames.Count,
@@ -308,33 +308,33 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             // no independent check on its decoy row, so this comparison is the check.
             int admitted = builder.ExperimentDecoyIdCount;
             int tallied = data?.Experiment?.Decoy?.N ?? 0;
-            logInfo(string.Format(
-                @"[MODEL-DIAGNOSTICS] peak co-assignment (pass 1): decoy precursors admitted {0}, tallied {1}",
+            log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
+                @"peak co-assignment (pass 1): decoy precursors admitted {0}, tallied {1}",
                 admitted, tallied));
             if (admitted != tallied)
             {
-                logInfo(string.Format(
-                    @"[MODEL-DIAGNOSTICS] peak co-assignment WARNING: {0} decoy precursor(s) cleared the experiment boundary but {1} reached the panel; the decoy row is under-reported.",
+                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
+                    @"peak co-assignment WARNING: {0} decoy precursor(s) cleared the experiment boundary but {1} reached the panel; the decoy row is under-reported.",
                     admitted, tallied));
             }
             if (data == null)
             {
-                logInfo(@"[MODEL-DIAGNOSTICS] peak co-assignment: no detected rows resolved to a library m/z; panel omitted.");
+                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, @"peak co-assignment: no detected rows resolved to a library m/z; panel omitted.");
                 return null;
             }
             sw.Stop();
             // Name the cost rather than let it be a silent tax: this is a full stream of every
             // file's 1st-pass sidecar, and it happens only under --model-diagnostics.
-            logInfo(string.Format(
-                @"[MODEL-DIAGNOSTICS] peak co-assignment (pass 1): {0} detected rows over {1} file(s) in {2:F1}s",
+            log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
+                @"peak co-assignment (pass 1): {0} detected rows over {1} file(s) in {2:F1}s",
                 totalDetected, fileNames.Count, sw.Elapsed.TotalSeconds));
             if (totalUnresolved > 0)
             {
                 // Never silent: an unresolvable detected row is exactly how the decoy class went
                 // 30x under-reported (19 counted against 598 in the sidecars) with nothing in the
                 // log to say a whole class had been thinned.
-                logInfo(string.Format(
-                    @"[MODEL-DIAGNOSTICS] peak co-assignment: {0} detected row(s) had no library entry and were excluded",
+                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
+                    @"peak co-assignment: {0} detected row(s) had no library entry and were excluded",
                     totalUnresolved));
             }
             return data;

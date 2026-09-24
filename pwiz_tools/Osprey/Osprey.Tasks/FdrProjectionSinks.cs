@@ -119,7 +119,7 @@ namespace pwiz.Osprey.Tasks
                 apexRt, in q);
         }
 
-        public void Finish(Action<string> logInfo)
+        public void Finish(IOspreyLog log)
         {
             // Flush any deferred per-file output first (2nd-pass empty-file sidecars);
             // the [COUNT] lines follow so they land at the same position the retired
@@ -131,21 +131,21 @@ namespace pwiz.Osprey.Tasks
             var perFile = Projections.PerFile;
             for (int f = 0; f < perFile.Count; f++)
             {
-                logInfo(string.Format(
-                    "[COUNT] {0} Percolator pass [{1}]: {2} targets, {3} decoys at {4:P0} FDR",
+                log.LogInfo(LogTag.COUNT, string.Format(
+                    "{0} Percolator pass [{1}]: {2} targets, {3} decoys at {4:P0} FDR",
                     _passLabel, perFile[f].Key, _fileTargets[f], _fileDecoys[f], _runFdr));
                 nTargetPassing += _fileTargets[f];
                 nDecoyPassing += _fileDecoys[f];
             }
 
-            logInfo(string.Format(
+            log.LogInfo(string.Format(
                 "{0} Percolator results: {1} targets, {2} decoys pass {3:P1} FDR",
                 _passLabel, nTargetPassing, nDecoyPassing, _runFdr));
-            logInfo(string.Format(
-                "[COUNT] {0} total across files: {1}",
+            log.LogInfo(LogTag.COUNT, string.Format(
+                "{0} total across files: {1}",
                 _passLabel, nTargetPassing));
-            logInfo(string.Format(
-                "[COUNT] {0} unique precursors (best q across files): {1}",
+            log.LogInfo(LogTag.COUNT, string.Format(
+                "{0} unique precursors (best q across files): {1}",
                 _passLabel, _bestQByPrecursor.Count));
         }
 
