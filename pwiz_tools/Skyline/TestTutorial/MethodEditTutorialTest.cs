@@ -74,9 +74,6 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            Program.StartToolService();
-            Program.MainJsonToolServer.WriteConnectionInfo();
-            Settings.Default.AllowMcpScreenCapture = true;
             // Creating a MS/MS Spectral Library, p. 1
             PeptideSettingsUI peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettingsUI.ShowBuildLibraryDlg);
@@ -463,7 +460,6 @@ namespace pwiz.SkylineTestTutorial
             });
 
             FindNode(string.Format("L [b5] - {0:F04}+", 484.3130)); // Not L10N - may be localized " (rank 3)"
-            PauseTest("Bring up node tips in the Targets tree through the MCP");
             ShowNodeTip("YBL087C", true);
             ShowNodeTip(string.Format("{0:F04}+++", 672.6716), true);
             ShowNodeTip(null);

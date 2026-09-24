@@ -93,10 +93,6 @@ namespace pwiz.Skyline.ToolsUI
         void SelectAllNow();
     }
 
-    /// <summary>A tree whose selected node can be renamed in place (the Targets tree -- e.g. renaming a
-    /// peptide group), as a user does by editing the node label and pressing Enter.</summary>
-    public interface IRenameNodeElement { void RenameNodeNow(string value); }
-
     /// <summary>An element that can show the tooltip of its selected item, as resting the mouse on the item does:
     /// a tree's selected node, a list's selected item, a grid's current cell.</summary>
     public interface ITooltipElement { void ShowTooltipNow(); }
@@ -1698,8 +1694,8 @@ namespace pwiz.Skyline.ToolsUI
     }
 
     /// <summary>The Targets tree (a <see cref="SequenceTree"/>): a TreeView with the document-owned node
-    /// context menu and an in-place node rename a plain TreeView does not have.</summary>
-    internal sealed class SequenceTreeElement : TreeViewElement, IRenameNodeElement, IClipboardElement
+    /// context menu and the in-place label edit a plain TreeView does not have.</summary>
+    internal sealed class SequenceTreeElement : TreeViewElement, IClipboardElement
     {
         public SequenceTreeElement(SequenceTree control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
 
@@ -1716,15 +1712,6 @@ namespace pwiz.Skyline.ToolsUI
         // (select the node first).
         public override ContextMenuStrip BuildContextMenu() =>
             OpenContextMenu(Program.MainWindow.ContextMenuTreeNode);
-
-        // Renames the selected node in place the way a user typing into its label and pressing Enter would:
-        // begin the in-place edit, set the text, commit it. Select the node first.
-        public void RenameNodeNow(string value)
-        {
-            SequenceTree.BeginEdit(false);
-            SequenceTree.StatementCompletionEditBox.TextBox.Text = value;
-            SequenceTree.CommitEditBox(false);
-        }
 
         // While a node label is being edited the keyboard belongs to the edit box, which is where a user's
         // key would go: Down and Up move through the completion pop-up, Enter accepts and Esc cancels.

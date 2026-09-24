@@ -567,7 +567,8 @@ namespace SkylineTool
         /// <para>Typing into the Targets tree edits the selected node's label, as it does for a user, and with
         /// a background proteome brings up the completion pop-up (a form of its own, listed by
         /// <see cref="GetOpenForms"/>). Select an item in its list to accept it, or press "Down"/"Up" then
-        /// "Enter" on the tree; "Enter" alone accepts the text as typed and "Esc" cancels.</para>
+        /// "Enter" on the tree; "Enter" alone accepts the text as typed and "Esc" cancels. The matches are
+        /// looked up in the background, so the pop-up opens a moment after this returns.</para>
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="controlId">The control to type into, matched as <see cref="GetControls"/> reports it

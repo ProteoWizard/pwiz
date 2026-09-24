@@ -430,12 +430,6 @@ namespace pwiz.Skyline.ToolsUI
         public static readonly UiAction SelectAll = SimpleAction<IClipboardElement>(@"SelectAll", e => { e.SelectAllNow(); return null; })
             .Describe(new LlmInstruction(@"Select all the content of this element (a text box, a grid, the Targets tree, or the main Skyline window) -- e.g. before paste, to replace it."));
 
-        // Renames the tree's selected node in place -- e.g. the MethodEdit tutorial's "Type 'Primary
-        // Peptides' and press Enter" on a peptide group. Select the node first.
-        public static readonly UiAction RenameNode = SimpleAction<IRenameNodeElement, string>(
-                @"RenameNode", (e, value) => { e.RenameNodeNow(value); return null; })
-            .Describe(new LlmInstruction(@"Rename the tree's selected node in place (select the node first)."), new LlmInstruction(@"the new name"));
-
         public static readonly UiAction ShowTooltip = SimpleAction<ITooltipElement>(
                 @"ShowTooltip", e => { e.ShowTooltipNow(); return null; })
             .Describe(new LlmInstruction(@"Show the tooltip of the selected item, as resting the mouse on it does: a tree's selected node, a list's selected item, a grid's current cell (select it first). Skyline comes to the front and the control takes the focus, which its tooltip needs. An item that has a tooltip brings it up about half a second later as a window of its own in the open forms, where its image can be captured whole; it stays until the selection changes, the mouse moves, or the focus goes elsewhere."));
@@ -446,7 +440,7 @@ namespace pwiz.Skyline.ToolsUI
             GetActions, GetChildren, Click, GetValue, SetValue, SendText, SendKeyStroke, GetOptions, CheckItem, UncheckItem,
             SelectItem, UnselectItem, SetSelectedIndex, GetGridText, SetGridText, SetCurrentCellAddress,
             GetGraphZoom, ZoomGraphTo, ClickGraph, Expand,
-            Collapse, SelectTab, Dismiss, Paste, SelectAll, RenameNode, ShowTooltip
+            Collapse, SelectTab, Dismiss, Paste, SelectAll, ShowTooltip
         };
 
         // The action with the given wire name, matched case- and underscore-insensitively, or null.
