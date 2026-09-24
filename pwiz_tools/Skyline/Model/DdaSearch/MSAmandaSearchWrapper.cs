@@ -101,6 +101,8 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         // Captured configuration
         private MzTolerance _precursorTol = new MzTolerance(5, MzTolerance.Units.ppm);
+        // The unit is stated rather than defaulted, to read against the ppm line above
+        // ReSharper disable once RedundantArgumentDefaultValue
         private MzTolerance _fragmentTol = new MzTolerance(0.02, MzTolerance.Units.mz);
         private string _fragmentIons = @"b, y";
         private Enzyme _enzyme;

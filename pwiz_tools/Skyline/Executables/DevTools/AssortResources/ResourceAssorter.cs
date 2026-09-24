@@ -30,7 +30,6 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using Microsoft.CSharp;
-#nullable enable
 
 namespace AssortResources
 {
@@ -146,10 +145,10 @@ namespace AssortResources
 
                 if (count == 1)
                 {
-                    if (!uniqueReferences.TryGetValue(foundFolderPath!, out var list))
+                    if (!uniqueReferences.TryGetValue(foundFolderPath, out var list))
                     {
                         list = new List<string>();
-                        uniqueReferences.Add(foundFolderPath!, list);
+                        uniqueReferences.Add(foundFolderPath, list);
                     }
                     list.Add(resourceName);
                 }

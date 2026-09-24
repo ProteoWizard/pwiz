@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System.Threading;
 using System.Windows.Forms;
 
 namespace pwiz.Common.SystemUtil
@@ -36,8 +35,7 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public static void AddThreadName()
         {
-            if (string.IsNullOrEmpty(Thread.CurrentThread.Name))
-                return;
+            // no-op - ConcurrencyVisualizer is VS-tooling-only, so the name has nowhere to go
         }
 
         /// <summary>

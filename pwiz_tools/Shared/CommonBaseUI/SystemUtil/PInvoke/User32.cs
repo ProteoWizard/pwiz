@@ -417,7 +417,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
         /// the selection. Each send blocks until the box's owning thread pumps it, so this is safe from any thread.</summary>
         public static void ReplaceEditText(IntPtr hwndEdit, string text)
         {
-            SendMessage(hwndEdit, WinMessageType.EM_SETSEL, IntPtr.Zero, (IntPtr) (-1)); // select all
+            SendMessage(hwndEdit, WinMessageType.EM_SETSEL, IntPtr.Zero, -1); // select all
             SendMessage(hwndEdit, WinMessageType.EM_REPLACESEL, True, text); // undoable, as typing is
         }
 

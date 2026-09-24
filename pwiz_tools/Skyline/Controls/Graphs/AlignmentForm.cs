@@ -456,7 +456,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         return null;
                     }
                     var regressionLine = AlignedRetentionTimes.Regression.Conversion as RegressionLineElement;
-                    return regressionLine != null ? regressionLine.Slope : null as double?;
+                    return regressionLine != null ? regressionLine.Slope : null;
                 }
             }
             public double? UnrefinedIntercept
@@ -468,7 +468,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         return null;
                     }
                     var regressionLine = AlignedRetentionTimes.Regression.Conversion as RegressionLineElement;
-                    return regressionLine != null ? regressionLine.Intercept: null as double?;
+                    return regressionLine != null ? regressionLine.Intercept : null;
                 }
             }
             public double? UnrefinedCorrelationCoefficient

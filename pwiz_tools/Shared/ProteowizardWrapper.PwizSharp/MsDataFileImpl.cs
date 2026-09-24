@@ -1745,7 +1745,7 @@ namespace pwiz.ProteowizardWrapper
                 return true;
 
             // If the first spectrum is not SRM, the others will not be either
-            var spectrum = _spectrumList.GetSpectrum(0, false);            {
+            var spectrum = _spectrumList.GetSpectrum(0);            {
                 return IsSrmSpectrum(spectrum);
             }
         }
@@ -1756,7 +1756,7 @@ namespace pwiz.ProteowizardWrapper
                 return false;
 
             // Assume that if any spectra have ion mobility info, all do
-            var spectrum = IonMobilitySpectrumList.GetSpectrum(0, false);            {
+            var spectrum = IonMobilitySpectrumList.GetSpectrum(0);            {
                 return GetIonMobility(spectrum).HasValue;
             }
         }
@@ -2205,18 +2205,10 @@ namespace pwiz.ProteowizardWrapper
 
         private static int GetMsLevel(Precursor precursor)
         {
-            UserParam msLevelParam = null;
-            try
-            {
-                msLevelParam = precursor.IsolationWindow.UserParam("ms level");
-                if (msLevelParam.IsEmpty)
-                    msLevelParam = precursor.UserParam("ms level");
-                return msLevelParam.IsEmpty ? 1 : (int)msLevelParam;
-            }
-            finally
-            {
-            }
-
+            var msLevelParam = precursor.IsolationWindow.UserParam("ms level");
+            if (msLevelParam.IsEmpty)
+                msLevelParam = precursor.UserParam("ms level");
+            return msLevelParam.IsEmpty ? 1 : (int)msLevelParam;
         }
 
         private static int? GetChargeStateValue(Precursor precursor)

@@ -544,7 +544,7 @@ namespace pwiz.Common.SystemUtil
                 if (cookies.Count > 0)
                 {
                     var cookieHeader = string.Join(@"; ", 
-                        cookies.Cast<Cookie>().Select(c => $@"{c.Name}={c.Value}"));
+                        cookies.Select(c => $@"{c.Name}={c.Value}"));
                     request.Headers.Add(cookieHeaderName, cookieHeader);
                 }
             }

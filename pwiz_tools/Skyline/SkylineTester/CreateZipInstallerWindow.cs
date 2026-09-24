@@ -211,7 +211,7 @@ namespace SkylineTester
                 // (see http://stackoverflow.com/questions/15337186/dotnetzip-badreadexception-on-extract)
                 zipFile.ParallelDeflateThreshold = -1;
                 zipFile.AlternateEncodingUsage = ZipOption.Always;
-                zipFile.AlternateEncoding = System.Text.Encoding.UTF8;
+                zipFile.AlternateEncoding = Encoding.UTF8;
                 // The original zip format caps entry sizes and archive offsets at 4 GB; past
                 // that DotNetZip throws at Save() ("Compressed or Uncompressed size, or offset
                 // exceeds the maximum value"), after having already done all the compression.
