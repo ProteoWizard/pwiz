@@ -963,6 +963,7 @@ function Invoke-OspreyRun {
         Pop-Location
         if ($DumpProteinFdr) { Remove-Item Env:OSPREY_DUMP_STAGE7_PROTEIN_FDR -ErrorAction SilentlyContinue }
     }
+    Assert-ExitAgreesWithLog -LogPath $logPath -ExitCode $exit
     if ($exit -ne 0 -and -not $AllowNonZeroExit) { throw "Osprey exited $exit (see $logPath)" }
     # ExitCode is returned ALWAYS, not just under the switch: a caller that did not opt in never
     # reaches here on a failure, so the field is unambiguous - it is 0 unless the caller asked to
@@ -1871,6 +1872,7 @@ function Invoke-OspreyTaskRun {
     } finally {
         Pop-Location
     }
+    Assert-ExitAgreesWithLog -LogPath $logPath -ExitCode $exit
     if ($exit -ne 0) { throw "Osprey --task exited $exit (see $logPath)" }
     # Logs excluded: this phase writes its own, and a re-run appends to it.
     $touched = @(Compare-DirFingerprint -Before $before -Dir $WorkDir |
@@ -1881,6 +1883,48 @@ function Invoke-OspreyTaskRun {
                "is reaching back into an earlier stage's output, so that file no longer matches " +
                "the validity sidecar attesting it. See issue #4486. Log: {2}") -f
               $touched.Count, ($touched -join ', '), $logPath
+    }
+}
+
+# The user-facing error prefix in every language Osprey and Skyline ship, as
+# CommandStatusWriter.ERROR_PREFIXES defines it. Escapes keep this file ASCII.
+$errorPrefixes = @('Error:', "`u{30A8}`u{30E9}`u{30FC}`u{FF1A}", "`u{9519}`u{8BEF}`u{FF1A}")
+
+function Test-IsErrorLine {
+    <# An "Error:" line in any shipped language, at the start of the line or after the
+       --timestamp / --memstamp columns. Mirrors CommandStatusWriter.IsErrorLine. #>
+    param([string]$Line)
+    foreach ($p in $errorPrefixes) {
+        $i = $Line.IndexOf($p, [StringComparison]::Ordinal)
+        if ($i -eq 0 -or ($i -gt 0 -and $Line[$i - 1] -eq "`t")) { return $true }
+    }
+    return $false
+}
+
+function Assert-ExitAgreesWithLog {
+    <#
+    Fail loudly when a run's exit code and its "Error:" lines disagree - the contract Skyline's
+    command-line tests enforce (AbstractUnitTestEx.ValidateRunExitStatus). Three shapes: an error
+    line under exit 0, a non-zero exit with no error line, and the [PATH] exit-reconciled line
+    Osprey writes when it had to repair either one itself. The last is the one a correct exit code
+    would otherwise hide: Osprey turns "error under exit 0" into exit 2, which looks like an
+    honest failure unless the gate asks why.
+    #>
+    param([string]$LogPath, [int]$ExitCode)
+    $lines = @(Get-Content -LiteralPath $LogPath)
+    $reconciled = @($lines | Where-Object { $_.Contains('[PATH] exit-reconciled: ') })
+    if ($reconciled.Count -gt 0) {
+        throw ("Osprey had to reconcile its exit code with its error lines ({0}): some code path " +
+               "reported an error without failing, or failed without saying why. Log: {1}") -f
+              $reconciled[0].Trim(), $LogPath
+    }
+    $errors = @($lines | Where-Object { Test-IsErrorLine $_ })
+    if ($ExitCode -eq 0 -and $errors.Count -gt 0) {
+        throw ("Osprey exited 0 but reported {0} error line(s); first: {1}. Log: {2}") -f
+              $errors.Count, $errors[0].Trim(), $LogPath
+    }
+    if ($ExitCode -ne 0 -and $errors.Count -eq 0) {
+        throw ("Osprey exited {0} without an error line saying why. Log: {1}") -f $ExitCode, $LogPath
     }
 }
 

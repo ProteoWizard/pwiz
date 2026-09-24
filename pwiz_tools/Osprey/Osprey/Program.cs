@@ -56,7 +56,72 @@ namespace pwiz.Osprey
         // uniformly. Defaults to stderr; --version / --help stay on stdout.
         private static CommandStatusWriter _out = new CommandStatusWriter(Console.Error);
 
+        // Exit codes, as Skyline's command line defines them.
+        internal const int EXIT_CODE_SUCCESS = 0;
+        internal const int EXIT_CODE_FAILURE_TO_START = 1;
+        internal const int EXIT_CODE_RAN_WITH_ERRORS = 2;
+
+        // Skyline's warning prefix. English until Osprey's user text moves to resources.
+        private const string WARNING_PREFIX = @"Warning:";
+
+        // The stderr writer, kept after a --log-file swap replaces _out, so an error reported
+        // before the swap still counts when the exit code is reconciled.
+        private static readonly CommandStatusWriter _consoleOut = _out;
+
+        // Whether _out was swapped to a --log-file StreamWriter that Main must flush and
+        // dispose (never the shared Console.Error writer).
+        private static bool _loggingToFile;
+
         static int Main(string[] args)
+        {
+            try
+            {
+                return ReconcileExitCode(Run(args));
+            }
+            finally
+            {
+                if (_loggingToFile)
+                {
+                    _out.Flush();
+                    _out.Dispose();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Make the exit code and the log agree, as Skyline's <c>CommandLine.Run</c> does: an
+        /// "Error:" line under a success code becomes <see cref="EXIT_CODE_RAN_WITH_ERRORS"/>,
+        /// and a failure code with no "Error:" line gets one. Either case also writes a
+        /// <c>[PATH] exit-reconciled</c> line, because it means some code path reported an error
+        /// without failing, or failed without saying why - which the regression gate fails on.
+        /// </summary>
+        private static int ReconcileExitCode(int exitCode)
+        {
+            bool errorReported = _consoleOut.IsErrorReported || _out.IsErrorReported;
+            var agreement = GetExitAgreement(exitCode, errorReported);
+            if (agreement.Mismatch != null)
+                LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_EXIT_RECONCILED, @"{0}", agreement.Mismatch));
+            if (agreement.NeedsErrorLine)
+                LogError("Failure occurred. Exiting...");
+            return agreement.ExitCode;
+        }
+
+        /// <summary>
+        /// The decision behind <see cref="ReconcileExitCode"/>, free of process state so it can be
+        /// tested: the exit code to return, whether an "Error:" line must still be written, and the
+        /// mismatch that forced either (null when the code and the log already agree).
+        /// </summary>
+        internal static (int ExitCode, bool NeedsErrorLine, string Mismatch) GetExitAgreement(
+            int exitCode, bool errorReported)
+        {
+            if (exitCode == EXIT_CODE_SUCCESS && errorReported)
+                return (EXIT_CODE_RAN_WITH_ERRORS, false, @"error-with-success");
+            if (exitCode != EXIT_CODE_SUCCESS && !errorReported)
+                return (exitCode, true, @"failure-without-error");
+            return (exitCode, false, null);
+        }
+
+        private static int Run(string[] args)
         {
             // Route OspreyDiagnostics dump messages through the same logging
             // channel as the rest of the pipeline so bisection logs appear
@@ -65,16 +130,13 @@ namespace pwiz.Osprey
 
             if (args.Length == 0)
             {
-                // No args is a usage error (exit 1), so the prompt goes to stderr (_out
-                // wraps Console.Error); an explicit --help instead writes to stdout
-                // (see OspreyCommandArgs.PrintUsage).
+                // No args is a usage error, so the prompt goes to stderr (_out wraps
+                // Console.Error); an explicit --help instead writes to stdout (see
+                // OspreyCommandArgs.PrintUsage).
                 OspreyCommandArgs.PrintUsage(null, _out);
-                return 1;
+                LogError("No arguments were given; see the usage above.");
+                return EXIT_CODE_FAILURE_TO_START;
             }
-
-            // Tracks whether _out was swapped to a --log-file StreamWriter we must
-            // flush and dispose (never dispose the shared Console.Error writer).
-            bool loggingToFile = false;
 
             try
             {
@@ -188,7 +250,7 @@ namespace pwiz.Osprey
                             IsTimeStamped = config.IsTimeStamped,
                             IsMemStamped = config.IsMemStamped
                         };
-                        loggingToFile = true;
+                        _loggingToFile = true;
                     }
                     catch (Exception ex)
                     {
@@ -437,15 +499,6 @@ namespace pwiz.Osprey
                 LogError(string.Format("Fatal error: {0}", ex));
                 return 1;
             }
-            finally
-            {
-                // Flush and close the --log-file writer (never the shared Console.Error).
-                if (loggingToFile)
-                {
-                    _out.Flush();
-                    _out.Dispose();
-                }
-            }
         }
 
         /// <summary>
@@ -653,9 +706,14 @@ namespace pwiz.Osprey
             // while a file runs in a MultiProgressReporter per-file scope
             // (--parallel-files) lands in that file's buffered block, in context,
             // instead of interleaving with the live "[i] p%" aggregate line. Off
-            // the parallel path OspreyOutput.Out is the same CommandStatusWriter
-            // (wrapped for stat-filtering), so the output is unchanged.
-            OspreyLog.Out.LogInfo(LogTag.WARN, message);
+            // the parallel path OspreyOutput.Out is the same CommandStatusWriter,
+            // so the output is unchanged.
+            //
+            // "Warning:" / "Error:" rather than a [TAG]: these lines are written for the
+            // user, not for a tool, and follow Skyline's command-line convention (translated
+            // with the rest of the text; CommandStatusWriter recognizes "Error:" in every
+            // language Skyline ships).
+            OspreyOutput.Out.WriteLine(WARNING_PREFIX + @" " + message);
         }
 
         internal static void LogError(string message)
@@ -663,7 +721,7 @@ namespace pwiz.Osprey
             // Errors go straight to the process writer (NOT the per-file buffer):
             // surface immediately rather than waiting for the file's block to flush
             // on completion, so a failing run reports the cause right away.
-            OspreyLog.Write(_out.WriteLine, LogTag.ERROR, message);
+            _out.WriteLine(CommandStatusWriter.ERROR_MESSAGE_HINT + @" " + message);
         }
     }
 }

@@ -179,8 +179,27 @@ translated, and it is the only part of the log a script or test may read.
 | `[TRAIN]` | `--perf-stats` | which population a model trained on |
 | `[MEM <label>]` | `OSPREY_LOG_MEMORY` | a memory probe |
 
-Some prose lines also carry a category tag (`[WARN]`, `[ERROR]`, `[MODEL-DIAGNOSTICS]`,
-`[BISECT]`, ...). The tag labels the line and stays ASCII; the text after it is prose.
+Prose that the user asked for with an option (`--model-diagnostics`, `-d`, an `OSPREY_*`
+setting) may carry a category tag (`[MODEL-DIAGNOSTICS]`, `[BISECT]`, ...). The tag labels
+the line and stays ASCII; the text after it is prose. In a plain default run `[TASK]` is the
+only tag.
+
+**Warnings and errors are prose, not tags.** They start with `Warning:` and `Error:`, as in
+Skyline's command line, and are translated with the rest of the text. The exit code and the
+error lines always agree, as they do in Skyline:
+
+| Exit code | Meaning |
+|-----------|---------|
+| 0 | success; no `Error:` line was written |
+| 1 | failure; at least one `Error:` line says why |
+| 2 | an `Error:` line was written but the run otherwise completed |
+
+A script deciding whether a run failed reads the exit code. A script scanning a log for
+errors matches `Error:` in every shipped language (`Error:`, `エラー：`, `错误：`) at the
+start of the message, after any `--timestamp`/`--memstamp` columns - the shared
+`CommandStatusWriter.IsErrorLine` does exactly that. If Osprey ever finds the two
+disagreeing it repairs them and writes a `[PATH] exit-reconciled` line, which
+`regression.ps1` treats as a failure.
 
 Rules for code and for consumers:
 

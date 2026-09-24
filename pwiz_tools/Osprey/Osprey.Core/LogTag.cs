@@ -32,11 +32,12 @@ namespace pwiz.Osprey.Core
     /// <see cref="STAGE_WALL"/>, <see cref="PATH"/>, <see cref="TRAIN"/>, <see cref="TASK"/>,
     /// <see cref="Mem"/>) carry text that scripts and tests read: it is never translated, and it
     /// is the only part of the log a consumer may key off. All but TASK are gated. CATEGORY tags
-    /// (<see cref="WARN"/>, <see cref="ERROR"/>, <see cref="MODEL_DIAGNOSTICS"/>, <see cref="BISECT"/>
-    /// and the rest) label the prose that follows them and are always emitted, except
-    /// <see cref="DROP"/>, which is memory bookkeeping under <c>OSPREY_LOG_MEMORY</c>; the tag stays ASCII
-    /// but the prose is written for a person and may be reworded or localized in any change
-    /// (pwiz_tools/Osprey/docs/20-command-line.md, "Log format").</para>
+    /// (<see cref="MODEL_DIAGNOSTICS"/>, <see cref="BISECT"/> and the rest) label the prose that
+    /// follows them and appear only when the user asked for that output (an option, <c>-d</c> or an
+    /// <c>OSPREY_*</c> setting), so TASK is the only tag in a plain default run. The tag stays
+    /// ASCII but the prose is written for a person and may be reworded or localized in any change
+    /// (pwiz_tools/Osprey/docs/20-command-line.md, "Log format"). Warnings and errors are not
+    /// tags at all: they are "Warning:" / "Error:" prose, as in Skyline.</para>
     /// </summary>
     public sealed class LogTag
     {
@@ -59,11 +60,8 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly LogTag TASK = new LogTag(@"TASK", Always);
 
-        // Category tags: always emitted, followed by prose.
-        /// <summary>A warning.</summary>
-        public static readonly LogTag WARN = new LogTag(@"WARN", Always);
-        /// <summary>An error.</summary>
-        public static readonly LogTag ERROR = new LogTag(@"ERROR", Always);
+        // Category tags, followed by prose. Warnings and errors are NOT tags: they are written
+        // for the user as "Warning:" / "Error:", Skyline's translated command-line prefixes.
         /// <summary>The <c>--model-diagnostics</c> report and its data.</summary>
         public static readonly LogTag MODEL_DIAGNOSTICS = new LogTag(@"MODEL-DIAGNOSTICS", Always);
         /// <summary>Entrapment pairing under <c>--fdrbench</c>.</summary>
@@ -247,6 +245,11 @@ namespace pwiz.Osprey.Core
         public const string ROUTE_SCORED_ENTRIES = @"scored-entries";
         /// <summary>The resident pre-compaction first-pass pool was held (O(files)).</summary>
         public const string ROUTE_PRE_COMPACTION_POOL = @"pre-compaction-pool";
+        /// <summary>
+        /// The exit code and the "Error:" lines disagreed and Program reconciled them
+        /// (<c>error-with-success</c> or <c>failure-without-error</c>). Always a defect.
+        /// </summary>
+        public const string ROUTE_EXIT_RECONCILED = @"exit-reconciled";
 
         // [COUNT] keys.
         /// <summary>Library fragment spectra released after an FDR stage.</summary>
