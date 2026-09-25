@@ -81,6 +81,9 @@
          If a test here has to be excluded again, re-check the reason on a schedule
          rather than trusting it: both of these read as current long after they weren't. -->
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <!-- Raw assembly references don't flow transitively through Skyline's ProjectReference,
+         so reference pwiz's patched Parquet.Net (see Skyline.csproj) here too. -->
+    <Reference Include="Parquet"><HintPath>..\..\Shared\Lib\Parquet\Parquet.dll</HintPath></Reference>
     <PackageReference Include="MSTest.TestAdapter" Version="3.2.0" />
     <PackageReference Include="MSTest.TestFramework" Version="3.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />

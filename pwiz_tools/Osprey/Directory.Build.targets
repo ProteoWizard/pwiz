@@ -1,25 +1,24 @@
 <Project>
 
   <!--
-    Override the NuGet-resolved Parquet.Net assembly (Parquet.dll) with the
-    patched build that lives in pwiz_tools/Shared/Lib/Parquet/ParquetNet.dll.
+    Parquet.Net: Osprey.IO and Osprey.Test reference the patched build checked in at
+    pwiz_tools/Shared/Lib/Parquet/Parquet.dll directly (no Parquet.Net PackageReference; its
+    declared dependencies are referenced as packages in Osprey.IO.csproj). Skyline and
+    pwiz-sharp BiblioSpec reference the same binary the same way.
 
-    SOURCE OF TRUTH for this binary: the `maccoss-developers` repo, path
-    skylinedev/Parquet.Net - a SIBLING checkout under the same project root as
-    pwiz, not a folder inside this repo. Full rationale lives in that folder's
-    PATCH-NOTES.md. The binary checked in here is byte-identical to that repo's
-    BinariesForProteoWizard/ParquetNet.dll (sha256 2611b7d25c6050fa...), built
-    from fork commit 9d34f80.
+    SOURCE OF TRUTH for this binary: the ProteoWizard parquet-dotnet fork (branch pwiz/4.25.0
+    plus the parquet-parallel-compression follow-up); the full rationale lives in that repo's
+    PATCH-NOTES.md and BUILD.md. The dll's AssemblyInformationalVersion (4.25.0-osprey<N>+<sha>)
+    names the fork commit it was built from.
 
-    The fork now carries THREE deltas from stock 4.25.0, not just the original one:
+    The fork carries THREE deltas from stock 4.25.0:
       1. ThriftCompactProtocolReader struct-skip fix - lets us read parquet
-         written by parquet-rs >= 58 (the Rust crate maccoss/osprey uses). This
+         written by parquet-rs >= 58 (the Rust crate maccoss/osprey uses) and by
+         current parquet-cpp-arrow (Spectronaut / DIA-NN exports). This
          was the original and, for a long time, the only reason for the fork.
       2. ParquetRowGroupWriter.WriteColumnsAsync - NEW PUBLIC API for parallel
-         column compression. Because it ADDS API, the runtime-only swap this
-         target performs is no longer enough to compile against; see
-         Osprey.IO.csproj, which also takes a direct <Reference> alongside
-         ExcludeAssets="compile" on the PackageReference.
+         column compression, which is why Osprey.IO compiles against this file
+         rather than the NuGet compile surface.
       3. ParquetPlainEncoder bool fix - CHANGES WRITTEN BYTES. Bool column pages
          whose row count is a multiple of 8 lose a trailing uninitialised byte.
          Decoded values are unaffected; anything asserting on parquet BYTES is not.
@@ -29,30 +28,14 @@
     DECOMPRESSION path Skyline uses. Do not reintroduce it.
 
     Delta 3 reaches Skyline, not just Osprey, because Skyline references the
-    same binary (see below). Keep this list current - a stale comment here is what
+    same binary. Keep this list current - a stale comment here is what
     makes a reviewer conclude the fork is undocumented or its source lost.
 
-    Skyline already references Lib/Parquet/ParquetNet.dll directly via <Reference>
-    (see pwiz_tools/Skyline/Skyline.csproj). Osprey uses the upstream NuGet
-    PackageReference for transitive dependency resolution (deps.json on net10.0,
-    auto-deploy on net472), and this target swaps in the patched binary on top.
-    The patched dll has the same AssemblyVersion=4.0.0 as the stock 4.25.0
-    NuGet release, so binding redirects and reflection-based lookups continue
-    to work unchanged.
-
-    Conditioned on Exists() so the target is a no-op for projects that don't
-    transitively reference Parquet.Net.
+    The dll keeps the stock assembly identity (Parquet, 4.0.0.0). It used to be checked in
+    as ParquetNet.dll, with an app.config codeBase, because the legacy net472 bin dir also
+    held the native Arrow parquet.dll; the net10 build has no such file, so it is now
+    simply Parquet.dll and needs no post-build swap.
   -->
-  <Target Name="OverridePatchedParquetNet" AfterTargets="Build">
-    <PropertyGroup>
-      <_PatchedParquetSource>$(MSBuildThisFileDirectory)..\Shared\Lib\Parquet\ParquetNet.dll</_PatchedParquetSource>
-      <_ResolvedParquetTarget>$(OutDir)Parquet.dll</_ResolvedParquetTarget>
-    </PropertyGroup>
-    <Copy SourceFiles="$(_PatchedParquetSource)"
-          DestinationFiles="$(_ResolvedParquetTarget)"
-          SkipUnchangedFiles="true"
-          Condition="Exists('$(_ResolvedParquetTarget)') and Exists('$(_PatchedParquetSource)')" />
-  </Target>
 
   <!-- Stamp the Osprey version + git short hash on EVERY build path, not just
        build.ps1 / package.ps1. A plain `dotnet build`, a Debug build in VS, and
