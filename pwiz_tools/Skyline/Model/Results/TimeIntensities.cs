@@ -116,10 +116,16 @@ namespace pwiz.Skyline.Model.Results
                 double totalInten = inten;
                 double massError = 0;
                 double observedIonMobility = 0;
+                // Scans without an observed IM (0) carry no IM weight, so they cannot pull the
+                // average toward 0. The result stays 0 when no scan has an observed IM.
+                double totalIonMobilityInten = 0;
                 if (massErrorsMeasured != null)
                     massError = massErrorsMeasured[i];
-                if (observedIonMobilitiesMeasured != null)
+                if (observedIonMobilitiesMeasured != null && IsObservedIonMobility(observedIonMobilitiesMeasured[i]))
+                {
                     observedIonMobility = observedIonMobilitiesMeasured[i];
+                    totalIonMobilityInten = inten;
+                }
 
                 // Continue enumerating points until one is encountered
                 // that has a greater time value than the point being assigned.
@@ -135,8 +141,20 @@ namespace pwiz.Skyline.Model.Results
                         totalInten += inten;
                         if (massErrorsMeasured != null)
                             massError += (massErrorsMeasured[i] - massError) * inten / totalInten;
-                        if (observedIonMobilitiesMeasured != null)
-                            observedIonMobility += (observedIonMobilitiesMeasured[i] - observedIonMobility) * inten / totalInten;
+                        if (observedIonMobilitiesMeasured != null && IsObservedIonMobility(observedIonMobilitiesMeasured[i]))
+                        {
+                            if (observedIonMobility == 0)
+                            {
+                                // First scan with an observed IM
+                                observedIonMobility = observedIonMobilitiesMeasured[i];
+                                totalIonMobilityInten = inten;
+                            }
+                            else if (inten > 0)
+                            {
+                                totalIonMobilityInten += inten;
+                                observedIonMobility += (observedIonMobilitiesMeasured[i] - observedIonMobility) * inten / totalIonMobilityInten;
+                            }
+                        }
                     }
                 }
 
@@ -238,6 +256,14 @@ namespace pwiz.Skyline.Model.Results
             }
             return new TimeIntensities(timesNew, intensNew, massErrorsNewTruncated, scanIndexesNew, observedIonMobilitiesNew);
         }
+        /// <summary>
+        /// Scans without an observed ion mobility store 0 (or NaN) in <see cref="ObservedIonMobilities"/>.
+        /// </summary>
+        private static bool IsObservedIonMobility(float observedIonMobility)
+        {
+            return observedIonMobility > 0;
+        }
+
         private static float AddError(ICollection<float> errors, double error)
         {
             if (errors != null)
@@ -405,9 +431,16 @@ namespace pwiz.Skyline.Model.Results
                 {
                     newMassError = (weight1 * MassErrors[index - 1] + weight2 * MassErrors[index]) / weightTotal;
                 }
-                if (ObservedIonMobilities != null && weightTotal > 0)
+                if (ObservedIonMobilities != null)
                 {
-                    newObservedIonMobility = (weight1 * ObservedIonMobilities[index - 1] + weight2 * ObservedIonMobilities[index]) / weightTotal;
+                    // A neighbor without an observed IM (0) carries no IM weight
+                    double imWeight1 = IsObservedIonMobility(ObservedIonMobilities[index - 1]) ? weight1 : 0;
+                    double imWeight2 = IsObservedIonMobility(ObservedIonMobilities[index]) ? weight2 : 0;
+                    if (imWeight1 + imWeight2 > 0)
+                    {
+                        newObservedIonMobility = (imWeight1 * ObservedIonMobilities[index - 1] +
+                                                  imWeight2 * ObservedIonMobilities[index]) / (imWeight1 + imWeight2);
+                    }
                 }
 
                 if (ScanIds != null)

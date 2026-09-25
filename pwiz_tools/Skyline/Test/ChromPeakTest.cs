@@ -354,6 +354,15 @@ namespace pwiz.SkylineTest
             var finer = ti.Interpolate(new[] { 1f, 1.5f, 2f, 2.5f, 3f }, false);
             Assert.IsNotNull(finer.ObservedIonMobilities);
             Assert.AreEqual(5, finer.ObservedIonMobilities.Count);
+
+            // A scan without an observed IM (stored as 0) must not be averaged in when several
+            // scans collapse onto one interpolated point - that would fabricate an IM between
+            // 0 and the real value.
+            var withGap = new TimeIntensities(times, intensities, null, null, new[] { 1.10f, 0f, 1.30f });
+            var coarser = withGap.Interpolate(new[] { 1f, 3f }, false);
+            Assert.AreEqual(1.30f, coarser.ObservedIonMobilities[1], .0001);
+            var allGaps = new TimeIntensities(times, intensities, null, null, new[] { 0f, 0f, 0f });
+            Assert.AreEqual(0f, allGaps.Interpolate(new[] { 1f, 3f }, false).ObservedIonMobilities[1]);
         }
 
         [TestMethod]
@@ -394,6 +403,11 @@ namespace pwiz.SkylineTest
             // must be in [1.0, 2.0]).
             float mid = withMidpoint.ObservedIonMobilities[1];
             Assert.IsTrue(mid >= 1.0f && mid <= 2.0f, $@"midpoint observed IM {mid} not bracketed");
+
+            // A neighbor without an observed IM (0) contributes nothing, rather than pulling
+            // the new point toward 0.
+            var withGap = new TimeIntensities(times, intensities, null, null, new[] { 0f, 2.0f });
+            Assert.AreEqual(2.0f, withGap.InterpolateTime(1.5f).ObservedIonMobilities[1], .0001);
         }
 
         [TestMethod]
