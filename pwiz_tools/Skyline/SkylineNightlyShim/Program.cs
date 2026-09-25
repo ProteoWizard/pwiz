@@ -1,6 +1,7 @@
 /*
  * Original author: Brian Pratt <bspratt .at. proteinms dot net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2018 University of Washington - Seattle, WA
  * 
@@ -29,7 +30,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Net;
 using Ionic.Zip;
 using SkylineNightly;
 
@@ -138,22 +138,18 @@ namespace SkylineNightlyShim
 
             try
             {
-                using (var client = new WebClient())
+                // Attempt to update SkylineNightly.exe
+                string zipFileLink = TeamCityNightlyAuth.GetArtifactUrl(TEAM_CITY_BUILD_TYPE_64_MASTER, SKYLINENIGHTLY_ZIP, TeamCityNightlyAuth.GetSkylineNightlyBranchQuery(), false);
+                var fileName = Path.Combine(nightlyDirectory ?? throw new InvalidOperationException(), SKYLINENIGHTLY_ZIP);
+                Log("Update " + nightlyDirectory + " with " + zipFileLink);
+                TeamCityNightlyAuth.DownloadArtifact(zipFileLink, fileName, teamCityToken);
+                using (var zipFile = new ZipFile(fileName))
                 {
-                    // Attempt to update SkylineNightly.exe
-                    TeamCityNightlyAuth.ConfigureClient(client, teamCityToken);
-                    string zipFileLink = TeamCityNightlyAuth.GetArtifactUrl(TEAM_CITY_BUILD_TYPE_64_MASTER, SKYLINENIGHTLY_ZIP, TeamCityNightlyAuth.GetSkylineNightlyBranchQuery(), false);
-                    var fileName = Path.Combine(nightlyDirectory ?? throw new InvalidOperationException(), SKYLINENIGHTLY_ZIP);
-                    Log("Update " + nightlyDirectory + " with " + zipFileLink);
-                    client.DownloadFile(zipFileLink, fileName);
-                    using (var zipFile = new ZipFile(fileName))
-                    {
-                        AttemptUpdate("SkylineNightly.exe", zipFile);
-                        AttemptUpdate("SkylineNightly.pdb", zipFile);
-                        AttemptUpdate("DotNetZip.dll", zipFile);
-                        AttemptUpdate("SkylineNightlyShim.exe", zipFile);
-                        AttemptUpdate("Microsoft.Win32.TaskScheduler.dll", zipFile);
-                    }
+                    AttemptUpdate("SkylineNightly.exe", zipFile);
+                    AttemptUpdate("SkylineNightly.pdb", zipFile);
+                    AttemptUpdate("DotNetZip.dll", zipFile);
+                    AttemptUpdate("SkylineNightlyShim.exe", zipFile);
+                    AttemptUpdate("Microsoft.Win32.TaskScheduler.dll", zipFile);
                 }
             }
             catch (Exception e)

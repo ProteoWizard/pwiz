@@ -1,6 +1,7 @@
 /*
  * Original author: Don Marsh <donmarsh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2014 University of Washington - Seattle, WA
  * 
@@ -26,6 +27,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.ServiceModel;
 using System.Text;
@@ -610,9 +613,6 @@ namespace SkylineNightly
 
         private void DownloadSkylineTester(string skylineTesterZip, Branch branch, bool desperate, string token)
         {
-            using var client = new WebClient();
-            TeamCityNightlyAuth.ConfigureClient(client, token);
-
             var isRelease = branch == Branch.release;
             var isIntegration = branch == Branch.integration;
             // Always the branch's own build, whatever SKYLINE_NIGHTLY_BRANCH says: that variable chooses the
@@ -629,7 +629,7 @@ namespace SkylineNightly
             {
                 Log("Download SkylineTester zip file as " + zipFileLink);
             }
-            client.DownloadFile(zipFileLink, skylineTesterZip); // N.B. depending on caller to do try/catch
+            TeamCityNightlyAuth.DownloadArtifact(zipFileLink, skylineTesterZip, token); // N.B. depending on caller to do try/catch
         }
 
         private bool InstallSkylineTester(string skylineTesterZip, string skylineTesterDir)
@@ -1169,58 +1169,38 @@ namespace SkylineNightly
             Log("Posting results to " + link);
             for (var retry = 5; retry > 0; retry--)
             {
-                string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x");
-                byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n");
-
-                var wr = (HttpWebRequest)WebRequest.Create(link);
-                wr.ProtocolVersion = HttpVersion.Version10;
-                wr.ContentType = "multipart/form-data; boundary=" + boundary;
-                wr.Method = "POST";
-                wr.KeepAlive = true;
-                wr.Credentials = CredentialCache.DefaultCredentials;
-
-                if (SetCSRFToken(wr, LogFileName))
+                try
                 {
-                    var rs = wr.GetRequestStream();
-
-                    rs.Write(boundarybytes, 0, boundarybytes.Length);
-                    const string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n";
-                    string header = string.Format(headerTemplate, "xml_file", filePath != null ? Path.GetFileName(filePath) : "xml_file", "text/xml");
-                    byte[] headerbytes = Encoding.UTF8.GetBytes(header);
-                    rs.Write(headerbytes, 0, headerbytes.Length);
-                    var bytes = Encoding.UTF8.GetBytes(postData);
-                    rs.Write(bytes, 0, bytes.Length);
-
-                    byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
-                    rs.Write(trailer, 0, trailer.Length);
-                    rs.Close();
-
-                    WebResponse wresp = null;
-                    try
+                    using (var client = CreateLabKeyClient(LogFileName, TimeSpan.FromSeconds(100)))
+                    using (var content = new MultipartFormDataContent())
                     {
-                        wresp = wr.GetResponse();
-                        var stream2 = wresp.GetResponseStream();
-                        if (stream2 != null)
+                        var xmlPart = new ByteArrayContent(Encoding.UTF8.GetBytes(postData));
+                        xmlPart.Headers.ContentType = new MediaTypeHeaderValue("text/xml");
+                        // Built by hand to keep the wire format the server has always received.
+                        // ContentDispositionHeaderValue leaves values unquoted unless they are quoted here, and
+                        // the Add(content, name, fileName) overload also adds a filename* parameter.
+                        xmlPart.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
                         {
-                            var reader2 = new StreamReader(stream2);
-                            var result = reader2.ReadToEnd();
-                            return result;
+                            Name = "\"xml_file\"",
+                            FileName = "\"" + (filePath != null ? Path.GetFileName(filePath) : "xml_file") + "\""
+                        };
+                        content.Add(xmlPart);
+                        var request = new HttpRequestMessage(HttpMethod.Post, link) { Version = HttpVersion.Version10, Content = content };
+                        using (var response = client.SendAsync(request).GetAwaiter().GetResult())
+                        {
+                            response.EnsureSuccessStatusCode();
+                            return response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                         }
                     }
-                    catch (Exception e)
-                    {
-                        Log(errmessage = e.ToString());
-                        if (wresp != null)
-                        {
-                            wresp.Close();
-                        }
-                    }
+                }
+                catch (Exception e)
+                {
+                    Log(errmessage = e.ToString());
                 }
                 if (retry > 1)
                 {
                     Thread.Sleep(30000);
                     Log("Retrying post");
-                    errmessage = String.Empty;
                 }
             }
             Log(errmessage = "Failed to post results: " + errmessage); 
@@ -1239,39 +1219,22 @@ namespace SkylineNightly
             var postData = Encoding.ASCII.GetBytes(string.Join("&", postParams));
             for (var retry = 5; retry > 0; retry--)
             {
-                var request = (HttpWebRequest) WebRequest.Create(LABKEY_EMAIL_NOTIFICATION_URL);
-                request.ProtocolVersion = HttpVersion.Version11;
-                request.ContentType = "application/x-www-form-urlencoded";
-                request.Method = "POST";
-                request.KeepAlive = false;
-                request.Credentials = CredentialCache.DefaultCredentials;
-                request.Timeout = 30000; // 30 second timeout
-
-                if (SetCSRFToken(request, null))
+                try
                 {
-                    try
+                    using (var client = CreateLabKeyClient(null, TimeSpan.FromSeconds(30)))
+                    using (var content = new ByteArrayContent(postData))
                     {
-                        using (var stream = request.GetRequestStream())
+                        content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
+                        using (var response = client.PostAsync(LABKEY_EMAIL_NOTIFICATION_URL, content).GetAwaiter().GetResult())
                         {
-                            stream.Write(postData, 0, postData.Length);
-                        }
-
-                        using (var response = (HttpWebResponse)request.GetResponse())
-                        using (var responseStream = response.GetResponseStream())
-                        {
-                            if (responseStream != null)
-                            {
-                                using (var responseReader = new StreamReader(responseStream))
-                                {
-                                    return responseReader.ReadToEnd();
-                                }
-                            }
+                            response.EnsureSuccessStatusCode();
+                            return response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
                         }
                     }
-                    catch (Exception)
-                    {
-                        // We will retry
-                    }
+                }
+                catch (Exception)
+                {
+                    // We will retry
                 }
                 if (retry > 1)
                     Thread.Sleep(30000);
@@ -1425,36 +1388,33 @@ namespace SkylineNightly
             }
         }
 
-        private static bool SetCSRFToken(HttpWebRequest postReq, string logFileName)
+        /// <summary>
+        /// Creates an <see cref="HttpClient"/> holding a skyline.ms session, with the CSRF header LabKey requires on a POST.
+        /// </summary>
+        private static HttpClient CreateLabKeyClient(string logFileName, TimeSpan timeout)
         {
-            var url = LABKEY_HOME_URL;
-
-            var sessionCookies = new CookieContainer();
+            var handler = new HttpClientHandler { CookieContainer = new CookieContainer(), UseDefaultCredentials = true };
+            var client = new HttpClient(handler) { Timeout = timeout };
             try
             {
-                var request = (HttpWebRequest)WebRequest.Create(url);
-                request.Method = @"GET";
-                request.CookieContainer = sessionCookies;
-                using (var response = (HttpWebResponse)request.GetResponse())
+                using (var response = client.GetAsync(LABKEY_HOME_URL).GetAwaiter().GetResult())
+                    response.EnsureSuccessStatusCode();
+                var csrf = handler.CookieContainer.GetCookies(new Uri(LABKEY_HOME_URL))[LABKEY_CSRF];
+                if (csrf != null)
                 {
-                    postReq.CookieContainer = sessionCookies;
-                    var csrf = response.Cookies[LABKEY_CSRF];
-                    if (csrf != null)
-                    {
-                        // The server set a cookie called X-LABKEY-CSRF, get its value and add a header to the POST request
-                        postReq.Headers.Add(LABKEY_CSRF, csrf.Value);
-                    }
-                    else
-                    {
-                        Log(logFileName, @"CSRF token not found.");
-                    }
+                    // The server set a cookie called X-LABKEY-CSRF. Send its value back as a header on the POST.
+                    client.DefaultRequestHeaders.Add(LABKEY_CSRF, csrf.Value);
                 }
-                return true;
+                else
+                {
+                    Log(logFileName, @"CSRF token not found.");
+                }
+                return client;
             }
             catch (Exception e)
             {
-                Log(logFileName, $@"Error establishing a session and getting a CSRF token: {e}");
-                return false;
+                client.Dispose();
+                throw new IOException(@"Error establishing a session and getting a CSRF token", e);
             }
         }
 
