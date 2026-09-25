@@ -87,6 +87,10 @@ namespace pwiz.Skyline.Controls.Graphs
         // Cached minimum mobilogram pane width (px) needed to fit its X-axis title;
         // depends only on font/title, not data, so computed once. See GetMinMobilogramPaneWidth.
         private float? _minMobilogramPaneWidth;
+        // Per-transition mobilograms of the current heatmap, shared by the mobilogram pane and
+        // the observed ion mobility tooltip. See GetTransitionMobilograms.
+        private IList<KeyValuePair<int, List<KeyValuePair<float, double>>>> _transitionMobilograms;
+        private object _transitionMobilogramsKey;
         private bool IsStickPlotVisible => _stickSpectrumPane != null;
         private bool IsMobilogramPaneVisible => _mobilogramPane != null;
         private double _maxMz;
@@ -3096,92 +3100,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            // Compute per-transition Y projections for colored curves
-            var transitionCurves = new List<MobilogramCurveSpec>();
+            // Per-transition Y projections for colored curves
             var transitions = _msDataFileScanHelper.ScanProvider.Transitions;
-            if (transitions.Length > 0)
-            {
-                // Build a dictionary of IM -> summed intensity for each transition
-                var perTransition = new Dictionary<int, Dictionary<float, double>>();
-                // Precompute (low, high, transitionIndex) intervals for matching transitions,
-                // sorted by low edge, so we can binary-search instead of scanning every
-                // transition for every heatmap point.
-                var intervals = new List<(double low, double high, int idx)>();
-                for (int t = 0; t < transitions.Length; t++)
-                {
-                    var tr = transitions[t];
-                    if (!TransitionAppliesToScan(tr) || !tr.ExtractionWidth.HasValue)
-                        continue;
-                    double halfWidth = tr.ExtractionWidth.Value / 2;
-                    intervals.Add((tr.ProductMz.Value - halfWidth, tr.ProductMz.Value + halfWidth, t));
-                    perTransition[t] = new Dictionary<float, double>();
-                }
-
-                if (perTransition.Count > 0)
-                {
-                    intervals.Sort((a, b) => a.low.CompareTo(b.low));
-                    var lows = intervals.Select(v => v.low).ToArray();
-                    // Any candidate interval has low in (mz - maxWidth, mz]. Binary search
-                    // for that small window, then filter by `mz < high`. Typically O(1) per
-                    // point after the binary search.
-                    double maxWidth = intervals.Max(v => v.high - v.low);
-
-                    foreach (var pt in _heatMapData.GetAllPoints())
-                    {
-                        double mz = pt.Point.X;
-                        var im = pt.Point.Y;
-                        double intensity = pt.Point.Z;
-                        // First index with low > mz - maxWidth (all earlier intervals can't reach mz)
-                        int start = Array.BinarySearch(lows, mz - maxWidth);
-                        if (start < 0) start = ~start;
-                        // Walk while low <= mz, adding matches
-                        for (int i = start; i < intervals.Count && intervals[i].low <= mz; i++)
-                        {
-                            if (mz < intervals[i].high)
-                            {
-                                var dict = perTransition[intervals[i].idx];
-                                if (dict.ContainsKey(im))
-                                    dict[im] += intensity;
-                                else
-                                    dict[im] = intensity;
-                            }
-                        }
-                    }
-
-                    // Build sorted IM grid from summed curve for gap detection
-                    var imGrid = _heatMapData.PlotY2D.Select(p => p.Key).ToList(); // already sorted
-
-                    foreach (var kvp in perTransition)
-                    {
-                        if (kvp.Value.Count > 0)
-                        {
-                            // Build curve with zero-bookends at gaps
-                            var sorted = kvp.Value.OrderBy(p => p.Key).ToList();
-                            var curve = new List<KeyValuePair<float, double>>();
-                            for (int j = 0; j < sorted.Count; j++)
-                            {
-                                float im = sorted[j].Key;
-                                int gridIdx = imGrid.BinarySearch(im);
-                                if (gridIdx < 0) gridIdx = ~gridIdx;
-
-                                bool isGap = j == 0 || (gridIdx > 0 &&
-                                    !kvp.Value.ContainsKey(imGrid[gridIdx - 1]));
-                                if (isGap && gridIdx > 0)
-                                    curve.Add(new KeyValuePair<float, double>(imGrid[gridIdx - 1], 0));
-
-                                curve.Add(new KeyValuePair<float, double>(im, sorted[j].Value));
-
-                                bool isEndGap = j == sorted.Count - 1 || (gridIdx < imGrid.Count - 1 &&
-                                    !kvp.Value.ContainsKey(imGrid[gridIdx + 1]));
-                                if (isEndGap && gridIdx < imGrid.Count - 1)
-                                    curve.Add(new KeyValuePair<float, double>(imGrid[gridIdx + 1], 0));
-                            }
-                            transitionCurves.Add(new MobilogramCurveSpec(
-                                transitions[kvp.Key].Name, GetTransitionColor(transitions[kvp.Key]), curve));
-                        }
-                    }
-                }
-            }
+            var transitionCurves = GetTransitionMobilograms()
+                .Select(kvp => new MobilogramCurveSpec(transitions[kvp.Key].Name,
+                    GetTransitionColor(transitions[kvp.Key]), kvp.Value))
+                .ToList();
 
             // Per-peak observed IM for the current target, matching what Document
             // Grid shows. Only meaningful for IM data (not SONAR), and only when
@@ -3194,6 +3118,117 @@ namespace pwiz.Skyline.Controls.Graphs
                     observedPeak = observedIm.Value;
             }
             PopulateMobilogramPane(transitionCurves, filterMin, filterMax, filterPeak, observedPeak);
+        }
+
+        /// <summary>
+        /// For each transition that applies to the current scan, the heatmap intensity summed by
+        /// IM over the transition's m/z extraction window, with zero bookends at gaps. Keyed by
+        /// index into ScanProvider.Transitions, sorted by index, and cached for the current heatmap.
+        /// </summary>
+        private IList<KeyValuePair<int, List<KeyValuePair<float, double>>>> GetTransitionMobilograms()
+        {
+            if (_heatMapData == null)
+                return Array.Empty<KeyValuePair<int, List<KeyValuePair<float, double>>>>();
+            var key = Tuple.Create(_heatMapData, _msDataFileScanHelper.ScanProvider?.Transitions, _msDataFileScanHelper.Source);
+            if (_transitionMobilograms == null || !Equals(_transitionMobilogramsKey, key))
+            {
+                _transitionMobilograms = CalcTransitionMobilograms();
+                _transitionMobilogramsKey = key;
+            }
+            return _transitionMobilograms;
+        }
+
+        private List<KeyValuePair<float, double>> GetCurrentTransitionMobilogram()
+        {
+            int transitionIndex = _msDataFileScanHelper.TransitionIndex;
+            return GetTransitionMobilograms().FirstOrDefault(kvp => kvp.Key == transitionIndex).Value;
+        }
+
+        private IList<KeyValuePair<int, List<KeyValuePair<float, double>>>> CalcTransitionMobilograms()
+        {
+            var result = new List<KeyValuePair<int, List<KeyValuePair<float, double>>>>();
+            var transitions = _msDataFileScanHelper.ScanProvider?.Transitions;
+            if (transitions == null || transitions.Length == 0 || _heatMapData.PlotY2D == null)
+                return result;
+
+            // Build a dictionary of IM -> summed intensity for each transition
+            var perTransition = new SortedDictionary<int, Dictionary<float, double>>();
+            // Precompute (low, high, transitionIndex) intervals for matching transitions,
+            // sorted by low edge, so we can binary-search instead of scanning every
+            // transition for every heatmap point.
+            var intervals = new List<(double low, double high, int idx)>();
+            for (int t = 0; t < transitions.Length; t++)
+            {
+                var tr = transitions[t];
+                if (!TransitionAppliesToScan(tr) || !tr.ExtractionWidth.HasValue)
+                    continue;
+                double halfWidth = tr.ExtractionWidth.Value / 2;
+                intervals.Add((tr.ProductMz.Value - halfWidth, tr.ProductMz.Value + halfWidth, t));
+                perTransition[t] = new Dictionary<float, double>();
+            }
+            if (perTransition.Count == 0)
+                return result;
+
+            intervals.Sort((a, b) => a.low.CompareTo(b.low));
+            var lows = intervals.Select(v => v.low).ToArray();
+            // Any candidate interval has low in (mz - maxWidth, mz]. Binary search
+            // for that small window, then filter by `mz < high`. Typically O(1) per
+            // point after the binary search.
+            double maxWidth = intervals.Max(v => v.high - v.low);
+
+            foreach (var pt in _heatMapData.GetAllPoints())
+            {
+                double mz = pt.Point.X;
+                var im = pt.Point.Y;
+                double intensity = pt.Point.Z;
+                // First index with low > mz - maxWidth (all earlier intervals can't reach mz)
+                int start = Array.BinarySearch(lows, mz - maxWidth);
+                if (start < 0) start = ~start;
+                // Walk while low <= mz, adding matches
+                for (int i = start; i < intervals.Count && intervals[i].low <= mz; i++)
+                {
+                    if (mz < intervals[i].high)
+                    {
+                        var dict = perTransition[intervals[i].idx];
+                        if (dict.ContainsKey(im))
+                            dict[im] += intensity;
+                        else
+                            dict[im] = intensity;
+                    }
+                }
+            }
+
+            // Build sorted IM grid from summed curve for gap detection
+            var imGrid = _heatMapData.PlotY2D.Select(p => p.Key).ToList(); // already sorted
+
+            foreach (var kvp in perTransition)
+            {
+                if (kvp.Value.Count == 0)
+                    continue;
+                // Build curve with zero-bookends at gaps
+                var sorted = kvp.Value.OrderBy(p => p.Key).ToList();
+                var curve = new List<KeyValuePair<float, double>>();
+                for (int j = 0; j < sorted.Count; j++)
+                {
+                    float im = sorted[j].Key;
+                    int gridIdx = imGrid.BinarySearch(im);
+                    if (gridIdx < 0) gridIdx = ~gridIdx;
+
+                    bool isGap = j == 0 || (gridIdx > 0 &&
+                        !kvp.Value.ContainsKey(imGrid[gridIdx - 1]));
+                    if (isGap && gridIdx > 0)
+                        curve.Add(new KeyValuePair<float, double>(imGrid[gridIdx - 1], 0));
+
+                    curve.Add(new KeyValuePair<float, double>(im, sorted[j].Value));
+
+                    bool isEndGap = j == sorted.Count - 1 || (gridIdx < imGrid.Count - 1 &&
+                        !kvp.Value.ContainsKey(imGrid[gridIdx + 1]));
+                    if (isEndGap && gridIdx < imGrid.Count - 1)
+                        curve.Add(new KeyValuePair<float, double>(imGrid[gridIdx + 1], 0));
+                }
+                result.Add(new KeyValuePair<int, List<KeyValuePair<float, double>>>(kvp.Key, curve));
+            }
+            return result;
         }
 
         private readonly struct MobilogramCurveSpec
@@ -3846,31 +3881,26 @@ namespace pwiz.Skyline.Controls.Graphs
                 table.AddDetailRow(imAxisLabel,
                     ObservedValueFormatter.FormatWithPercentError(observedIm.Value, targetIm, Formats.IonMobility), rt);
 
-                // CCS row when the active reader supports IM->CCS conversion and we have the
-                // precursor's charge. The % error is observed CCS vs the CCS we were told to
-                // filter on (library/explicit - ground truth, and the same value shown in the
-                // CCS row above and used by the Document Grid's CcsErrorPercent), not a
-                // converter re-derivation of the target IM. A zero target (we were given only
-                // IM, no CCS) renders the value without an error.
-                int? charge = TryGetCurrentPrecursorCharge();
-                var sp = _msDataFileScanHelper.ScanProvider;
-                if (charge.HasValue && sp != null && sp.ProvidesCollisionalCrossSectionConverter)
+                // CCS row from the observed CCS stored with the peak (the same value the properties
+                // pane and Document Grid show), which exists only for precursor ions and only when
+                // the source file provides an IM->CCS conversion. The % error is observed CCS vs
+                // the CCS we were told to filter on (library/explicit - ground truth, and the same
+                // value shown in the CCS row above and used by the Document Grid's CcsErrorPercent).
+                // A zero target (we were given only IM, no CCS) renders the value without an error.
+                var observedCcs = currentChromInfo.ObservedCcs;
+                if (observedCcs.HasValue && observedCcs.Value > 0)
                 {
-                    double mz = _msDataFileScanHelper.CurrentTransition.PrecursorMz.Value;
-                    var observedCcs = sp.CCSFromIonMobility(observedIm.Value, mz, charge.Value);
-                    if (observedCcs.HasValue && observedCcs.Value > 0)
-                    {
-                        double targetCcsForError = imFilter.CollisionalCrossSectionSqA.GetValueOrDefault();
-                        table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Ccs,
-                            ObservedValueFormatter.FormatWithPercentError(observedCcs.Value, targetCcsForError, Formats.CCS), rt);
-                    }
+                    double targetCcsForError = imFilter.CollisionalCrossSectionSqA.GetValueOrDefault();
+                    table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Ccs,
+                        ObservedValueFormatter.FormatWithPercentError(observedCcs.Value, targetCcsForError, Formats.CCS), rt);
                 }
 
-                // Mobility-peak shape metrics from the on-screen mobilogram histogram: area under
-                // the curve, apex height, and FWHM. Single-peak assumption; omitted when the
-                // histogram has too few points to characterize a peak.
-                var peakMetrics = MobilogramPeakMetrics.Compute(
-                    _heatMapData?.PlotY2D?.Select(p => new KeyValuePair<double, double>(p.Key, p.Value)));
+                // Mobility-peak shape metrics from the current transition's mobilogram (the curve
+                // the mobilogram pane draws for it): area under the curve, apex height, and FWHM.
+                // Single-peak assumption; omitted when the curve has too few points to
+                // characterize a peak.
+                var peakMetrics = MobilogramPeakMetrics.Compute(GetCurrentTransitionMobilogram()?
+                    .Select(p => new KeyValuePair<double, double>(p.Key, p.Value)));
                 if (peakMetrics.HasValue)
                 {
                     var pm = peakMetrics.Value;
@@ -3887,15 +3917,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
             return table;
-        }
-
-        private int? TryGetCurrentPrecursorCharge()
-        {
-            var transition = _msDataFileScanHelper?.CurrentTransition;
-            if (transition?.Id == null || _documentContainer?.DocumentUI == null)
-                return null;
-            var nodePath = DocNodePath.GetNodePath(transition.Id, _documentContainer.DocumentUI);
-            return nodePath?.Precursor?.PrecursorCharge;
         }
 
         // Populates the per-peak observed IM/CCS and peak RT on the properties pane.

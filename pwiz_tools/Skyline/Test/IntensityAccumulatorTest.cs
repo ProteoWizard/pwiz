@@ -19,7 +19,11 @@
 
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -39,6 +43,69 @@ namespace pwiz.SkylineTest
             TestNotTracking();
             TestNullIonMobilityIgnored();
             TestObservedIonMobilityAggregate();
+            TestObservedIonMobilityHighEnergyOffset();
+        }
+
+        // Fragments are extracted in the high-energy frame: their stored IM filter is centered on
+        // precursor IM + offset, and the offset itself is not stored with the results. Calculate
+        // must use the offset the extraction used (explicit per-transition, else the precursor's)
+        // to correct fragment observed IM, and must measure error against the precursor's IM.
+        private static void TestObservedIonMobilityHighEnergyOffset()
+        {
+            const double precursorIm = 3.477, groupOffset = -0.151, explicitOffset = -0.2, window = 0.2;
+            var peptide = new Peptide(@"PEPTIDEK");
+            var transitionGroup = new TransitionGroup(peptide, Adduct.DOUBLY_PROTONATED, IsotopeLabelType.light);
+            var nodePrecursor = MakeTransition(new Transition(transitionGroup, IonType.precursor, 7, 0, Adduct.DOUBLY_PROTONATED),
+                ExplicitTransitionValues.EMPTY);
+            var nodeFragment = MakeTransition(new Transition(transitionGroup, IonType.y, 3, 0, Adduct.SINGLY_PROTONATED),
+                ExplicitTransitionValues.EMPTY);
+            var nodeFragmentExplicit = MakeTransition(new Transition(transitionGroup, IonType.y, 4, 0, Adduct.SINGLY_PROTONATED),
+                ExplicitTransitionValues.EMPTY.ChangeIonMobilityHighEnergyOffset(explicitOffset));
+            var fileId = new ChromFileInfoId();
+
+            // MS2-only: each fragment is corrected by its own offset, and the target is the precursor IM
+            var ms2Only = new[]
+            {
+                (nodeFragment, MakeChromInfo(fileId, precursorIm + groupOffset, window, 3.37f, 100)),
+                (nodeFragmentExplicit, MakeChromInfo(fileId, precursorIm + explicitOffset, window, 3.30f, 100))
+            };
+            var result = ObservedIonMobilityCalculator.Calculate(ms2Only, true, groupOffset);
+            Assert.AreEqual((3.37 - groupOffset + 3.30 - explicitOffset) / 2, result.IonMobility.Value, 1e-5);
+            Assert.AreEqual(precursorIm, result.Target.IonMobility.Mobility.Value, 1e-9);
+
+            // With MS1 filtering, the precursor channel sets the target even when a fragment is listed first
+            var withMs1 = new[]
+            {
+                (nodeFragment, MakeChromInfo(fileId, precursorIm + groupOffset, window, 3.37f, 100)),
+                (nodePrecursor, MakeChromInfo(fileId, precursorIm, window, 3.383f, 100))
+            };
+            result = ObservedIonMobilityCalculator.Calculate(withMs1, true, groupOffset);
+            Assert.AreEqual(3.383, result.IonMobility.Value, 1e-5);
+            Assert.AreEqual(precursorIm, result.Target.IonMobility.Mobility.Value, 1e-9);
+
+            // Without MS1 filtering the precursor ion is extracted from MS2 spectra, in the high-energy frame
+            var noMs1Filtering = new[]
+            {
+                (nodePrecursor, MakeChromInfo(fileId, precursorIm + groupOffset, window, 3.33f, 100))
+            };
+            result = ObservedIonMobilityCalculator.Calculate(noMs1Filtering, false, groupOffset);
+            Assert.AreEqual(3.33 - groupOffset, result.IonMobility.Value, 1e-5);
+            Assert.AreEqual(precursorIm, result.Target.IonMobility.Mobility.Value, 1e-9);
+        }
+
+        private static TransitionDocNode MakeTransition(Transition transition, ExplicitTransitionValues explicitValues)
+        {
+            return new TransitionDocNode(transition, null, TypedMass.ZERO_MONO_MASSH,
+                TransitionDocNode.TransitionQuantInfo.DEFAULT, explicitValues);
+        }
+
+        private static TransitionChromInfo MakeChromInfo(ChromFileInfoId fileId, double filterIonMobility, double window,
+            float observedIonMobility, float area)
+        {
+            var peak = new ChromPeak(10f, 9.5f, 10.5f, area, 0f, area / 2, 0.4f, 0, null, 7, null)
+                .WithObservedIonMobility(observedIonMobility);
+            var filter = IonMobilityFilter.GetIonMobilityFilter(filterIonMobility, eIonMobilityUnits.drift_time_msec, window, null);
+            return new TransitionChromInfo(fileId, 0, peak, filter, Annotations.EMPTY, UserSet.FALSE);
         }
 
         // The per-ion value combines the per-transition observed IMs: MS1 isotope channels

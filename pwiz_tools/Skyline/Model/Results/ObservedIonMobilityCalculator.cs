@@ -69,20 +69,26 @@ namespace pwiz.Skyline.Model.Results
         /// replicate/file and reduces them to the per-ion observed IM, observed CCS, and target.
         /// Pairs whose chrom info is null or empty are ignored.
         /// </summary>
-        public static Result Calculate(IEnumerable<(TransitionDocNode Transition, TransitionChromInfo ChromInfo)> transitions)
+        /// <param name="transitions">The precursor's transitions with their chrom infos</param>
+        /// <param name="ms1Extracted">True when MS1 full-scan filtering is on. Otherwise precursor
+        /// transitions are extracted from MS2 spectra, in the high-energy frame, like fragments.</param>
+        /// <param name="precursorHighEnergyOffset">The precursor's high-energy IM offset, used for
+        /// transitions without an explicit one. Extraction folds the offset into each fragment's
+        /// stored IM filter, so it cannot be recovered from the results.</param>
+        public static Result Calculate(IEnumerable<(TransitionDocNode Transition, TransitionChromInfo ChromInfo)> transitions,
+            bool ms1Extracted, double precursorHighEnergyOffset)
         {
             var channels = new List<Channel>();
-            IonMobilityFilter target = null;
+            IonMobilityFilter ms1Target = null, highEnergyTarget = null;
             foreach (var (nodeTran, chromInfo) in transitions)
             {
                 if (chromInfo == null || chromInfo.IsEmpty)
                     continue;
-                // Any transition carries the precursor's IM filter (its base IM/CCS, offset
-                // aside, is the same for all), so the first one is the error target.
-                if (target == null && chromInfo.IonMobility != null && !IonMobilityFilter.IsNullOrEmpty(chromInfo.IonMobility))
-                    target = chromInfo.IonMobility;
-                if (nodeTran.IsMs1)
+                bool hasFilter = chromInfo.IonMobility != null && !IonMobilityFilter.IsNullOrEmpty(chromInfo.IonMobility);
+                if (nodeTran.IsMs1 && ms1Extracted)
                 {
+                    if (ms1Target == null && hasFilter)
+                        ms1Target = chromInfo.IonMobility;
                     // MS1 isotope channels weight by predicted abundance; an MS1 precursor with
                     // no isotope distribution (m/z-only small molecule, low-res precursor
                     // filtering, or a neutral-loss transition) weights by observed area instead
@@ -92,14 +98,29 @@ namespace pwiz.Skyline.Model.Results
                 }
                 else
                 {
-                    double offset = chromInfo.IonMobility?.HighEnergyIonMobilityOffset ?? 0;
+                    double offset = nodeTran.ExplicitValues.IonMobilityHighEnergyOffset ?? precursorHighEnergyOffset;
+                    if (highEnergyTarget == null && hasFilter)
+                        highEnergyTarget = RemoveHighEnergyOffset(chromInfo.IonMobility, offset);
                     channels.Add(new Channel(false, chromInfo.ObservedIonMobility, chromInfo.ObservedCcs, chromInfo.Area, offset));
                 }
             }
             return new Result(
                 Aggregate(channels),
                 WeightedMean(channels.Where(c => c.IsMs1).Select(c => (c.ObservedCcs, c.Weight))),
-                target);
+                ms1Target ?? highEnergyTarget);
+        }
+
+        /// <summary>
+        /// The precursor's IM filter, recovered from a filter extraction shifted into the
+        /// high-energy frame.
+        /// </summary>
+        private static IonMobilityFilter RemoveHighEnergyOffset(IonMobilityFilter highEnergyFilter, double offset)
+        {
+            if (offset == 0 || !highEnergyFilter.IonMobility.HasValue)
+                return highEnergyFilter;
+            return IonMobilityFilter.GetIonMobilityFilter(highEnergyFilter.IonMobility.Mobility.Value - offset,
+                highEnergyFilter.IonMobilityUnits, highEnergyFilter.IonMobilityExtractionWindowWidth,
+                highEnergyFilter.CollisionalCrossSectionSqA);
         }
 
         /// <summary>

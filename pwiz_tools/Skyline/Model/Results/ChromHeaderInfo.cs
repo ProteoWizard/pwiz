@@ -1330,8 +1330,8 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        // Intensity-weighted observed ion mobility across the peak window (raw IM units,
-        // matching IonMobilityFilter.IonMobility.Units). Computed during peak construction.
+        // Observed ion mobility at the peak apex (see ApexObservedIonMobility), in raw IM units
+        // matching IonMobilityFilter.IonMobility.Units. Computed during peak construction.
         public float? ObservedIonMobility
         {
             get
