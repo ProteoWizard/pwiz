@@ -75,6 +75,11 @@ namespace TestPerf
             public string IsolationSchemeFile;
             public char IsolationSchemeFileSeparator;
             public MzTolerance PrecursorTolerance;
+            // Never applied: SetupPage assigns SearchSettingsControl.PrecursorTolerance but has no
+            // matching line for this, so the search runs at the dialog's default fragment tolerance.
+            // Kept because it records the value each instrument is meant to use; wiring it up would
+            // move the search results and needs a deliberate re-baseline.
+            // ReSharper disable once NotAccessedField.Local
             public MzTolerance FragmentTolerance;
             public DiaUmpire.Config.InstrumentPreset InstrumentPreset;
 
@@ -595,7 +600,7 @@ namespace TestPerf
             // on-demand MSAmanda download prompt. On net8 MSAmanda is downloaded on demand (a modal
             // "Download MSAmanda" MultiButtonMsgDlg shown synchronously by ClickNextButton); on net472
             // MSAmanda is bundled and no dialog appears, so TryWaitForOpenForm just times out (no-op).
-            SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));
+            SkylineWindow.BeginInvoke(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
             if (downloaderDlg != null)

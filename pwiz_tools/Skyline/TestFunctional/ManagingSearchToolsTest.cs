@@ -29,7 +29,6 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -261,7 +260,7 @@ namespace pwiz.SkylineTestFunctional
                 // Run the search
                 //Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
-            SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.ClickNextButton()));
+            SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
 
             TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.DDASearchPage));   // Stop to show this form during form testing
             RunUI(() =>

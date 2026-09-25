@@ -77,6 +77,10 @@ def merge(dict1, *dicts):
                 r[k] = d[k]
     return r
 
+# Default for config files that do not define it (the nightly one does not); the exec below
+# overrides it when the config file has its own.
+extraStatuses = {}
+
 # exec the targets_and_paths_file to define the targets and matchPaths variables
 with open(targets_and_paths_file, "rb") as source_file:
     code = compile(source_file.read(), targets_and_paths_file, "exec")
@@ -204,6 +208,13 @@ for target in notBuildingDueToChangedFiles:
     print("Not building %s (%s) due to unchanged files, but reporting success to GitHub." % (notBuildingDueToChangedFiles[target], target))
     data = '{"state": "success", "context": "teamcity - %s", "description": "Build not necessary with these changed files"}' %  notBuildingDueToChangedFiles[target]
     rsp = post(githubUrl, data, headers)
+    # A config can report more than one status (Skyline Windows .NET also reports code
+    # inspection); those have to be reported too, or they go missing for this commit.
+    # These are whole contexts, posted verbatim - see the comment on extraStatuses.
+    for extraStatus in extraStatuses.get(target, []):
+        print("Also reporting success for %s's paired status '%s'." % (target, extraStatus))
+        data = '{"state": "success", "context": "%s", "description": "Build not necessary with these changed files"}' % extraStatus
+        rsp = post(githubUrl, data, headers)
 
 for target in notBuildingDueToBranch:
     print("Not building %s (%s) or reporting to GitHub due to PR's target branch." % (notBuildingDueToBranch[target], target))

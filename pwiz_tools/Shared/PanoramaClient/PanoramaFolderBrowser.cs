@@ -498,7 +498,7 @@ public class LKContainerBrowser : PanoramaFolderBrowser
             {
                 // Network errors are expected when servers are unreachable
                 // NetworkRequestException extends IOException
-                listErrorServers.Add(new Tuple<PanoramaServer, string>(server, ex.Message ?? string.Empty));
+                listErrorServers.Add(new Tuple<PanoramaServer, string>(server, ex.Message));
             }
             // Let all other exceptions propagate (ArgumentException, NullReferenceException, etc. are programming defects)
         }
@@ -907,7 +907,7 @@ public class WebDavBrowser : PanoramaFolderBrowser
             catch (Exception ex)
             {
                 var error = ex.Message;
-                listErrors.Add(new Tuple<string, string, string>(error ?? string.Empty, folderInfo.FolderPath, query?.ToString() ?? string.Empty));
+                listErrors.Add(new Tuple<string, string, string>(error, folderInfo.FolderPath, query?.ToString() ?? string.Empty));
             }
         }
         

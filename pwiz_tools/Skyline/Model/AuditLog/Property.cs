@@ -259,7 +259,7 @@ namespace pwiz.Skyline.Model.AuditLog
     {
         private RootProperty(string name, Type type, bool trackChildren)
             : base(new PropertyInfoWrapper(name, type, null, obj => null),
-                trackChildren ? (TrackAttributeBase) new TrackChildrenAttribute() : new TrackAttribute())
+                trackChildren ? new TrackChildrenAttribute() : new TrackAttribute())
         {
         }
 

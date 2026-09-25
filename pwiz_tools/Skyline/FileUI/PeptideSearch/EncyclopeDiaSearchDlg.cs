@@ -160,13 +160,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public double? MinMz
         {
-            get => minMzCombo.Text.IsNullOrEmpty() ? null : (double?) Convert.ToDouble(minMzCombo.Text);
+            get => minMzCombo.Text.IsNullOrEmpty() ? null : Convert.ToDouble(minMzCombo.Text);
             set => minMzCombo.Text = value?.ToString(LocalizationHelper.CurrentCulture) ?? string.Empty;
         }
 
         public double? MaxMz
         {
-            get => maxMzCombo.Text.IsNullOrEmpty() ? null : (double?) Convert.ToDouble(maxMzCombo.Text);
+            get => maxMzCombo.Text.IsNullOrEmpty() ? null : Convert.ToDouble(maxMzCombo.Text);
             set => maxMzCombo.Text = value?.ToString(LocalizationHelper.CurrentCulture) ?? string.Empty;
         }
 
@@ -742,7 +742,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!filesNotAlreadyDownloaded.Any())
                 return true;
 
-            Invoke(new Action(() =>
+            Invoke(() =>
             {
                 try
                 {
@@ -754,7 +754,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 {
                     MessageDlg.ShowWithException(Parent, x.Message, x);
                 }
-            }));
+            });
 
             return !SimpleFileDownloader.FilesNotAlreadyDownloaded(filesNotAlreadyDownloaded).Any();
         }

@@ -104,7 +104,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
         /// <summary>
         /// Combined wParam for WM_CHANGEUISTATE to hide both focus rectangles and mnemonic underscores.
         /// </summary>
-        public static readonly IntPtr UISF_HIDEALL = (IntPtr)(UIS_SET | ((UISF_HIDEFOCUS | UISF_HIDEACCEL) << 16));
+        public static readonly IntPtr UISF_HIDEALL = (UIS_SET | ((UISF_HIDEFOCUS | UISF_HIDEACCEL) << 16));
         // ReSharper restore InconsistentNaming
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -417,7 +417,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
         /// the selection. Each send blocks until the box's owning thread pumps it, so this is safe from any thread.</summary>
         public static void ReplaceEditText(IntPtr hwndEdit, string text)
         {
-            SendMessage(hwndEdit, WinMessageType.EM_SETSEL, IntPtr.Zero, (IntPtr) (-1)); // select all
+            SendMessage(hwndEdit, WinMessageType.EM_SETSEL, IntPtr.Zero, -1); // select all
             SendMessage(hwndEdit, WinMessageType.EM_REPLACESEL, True, text); // undoable, as typing is
         }
 

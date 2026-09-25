@@ -144,7 +144,7 @@ namespace pwiz.Skyline.Controls
 
         void TextBox_LostFocus(Object sender, EventArgs e)
         {
-            TextBox.BeginInvoke(new Action(HideStatementCompletionFormIfLostFocus));
+            TextBox.BeginInvoke(HideStatementCompletionFormIfLostFocus);
         }
 
         public StatementCompletionForm StatementCompletionForm { get; private set; }

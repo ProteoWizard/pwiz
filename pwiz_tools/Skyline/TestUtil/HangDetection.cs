@@ -235,7 +235,8 @@ namespace pwiz.SkylineTestUtil
                 {
                     return textBox.Text;
                 }
-                return dialog.Text ?? @"<no text>";
+                // Form.Text reads back as empty, never null, so a ?? here would report nothing at all
+                return string.IsNullOrEmpty(dialog.Text) ? @"<no text>" : dialog.Text;
             }
             catch
             {
@@ -434,6 +435,9 @@ namespace pwiz.SkylineTestUtil
 
                     foreach (var frame in thread.EnumerateStackTrace())
                     {
+                        // ClrMD annotates Type non-null, but this walks a process that is already
+                        // wedged; losing the dump to an NRE here costs the diagnostic it exists for
+                        // ReSharper disable once ConstantConditionalAccessQualifier
                         yield return $"  {frame.Method?.Type?.Name}.{frame.Method?.Name ?? "[Unknown]"}";
                     }
 

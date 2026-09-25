@@ -259,7 +259,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 return;
             }
-            BeginInvoke(new Action(CommitFilterOpCombo));
+            BeginInvoke(CommitFilterOpCombo);
         }
 
         void CommitFilterOpCombo()

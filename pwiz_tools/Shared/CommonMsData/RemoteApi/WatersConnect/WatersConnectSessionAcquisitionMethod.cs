@@ -102,7 +102,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             try
             {
                 var response = _httpClient.SendRequest(request);
-                return response.Content?.ReadAsStringAsync().Result;
+                return response.Content.ReadAsStringAsync().Result;
             }
             catch (NetworkRequestException e)
             {

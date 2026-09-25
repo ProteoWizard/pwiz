@@ -48,13 +48,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(Formats.Mz, NullValue = TextUtil.EXCEL_NA)]
         public double? ChromatogramPrecursorMz
         {
-            get { return _chromatogramInfo.Value == null ? (double?) null : _chromatogramInfo.Value.PrecursorMz; }
+            get { return _chromatogramInfo.Value == null ? null : _chromatogramInfo.Value.PrecursorMz; }
         }
 
         [Format(Formats.Mz, NullValue = TextUtil.EXCEL_NA)]
         public double? ChromatogramProductMz 
         {
-            get { return _chromatogramInfo.Value == null ? (double?) null : _chromatogramInfo.Value.ProductMz; } 
+            get { return _chromatogramInfo.Value == null ? null : _chromatogramInfo.Value.ProductMz; } 
         }
 
         [Format(Formats.Mz, NullValue = TextUtil.EXCEL_NA)]
@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
         [Format(NullValue = TextUtil.EXCEL_NA)]
-        public ChromSource? ChromatogramSource { get { return _chromatogramInfo.Value == null ? (ChromSource?)null : _chromatogramInfo.Value.Source; } }
+        public ChromSource? ChromatogramSource { get { return _chromatogramInfo.Value == null ? null : _chromatogramInfo.Value.Source; } }
 
         [Expensive]
         [ChildDisplayName("Raw{0}")]

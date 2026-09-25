@@ -164,7 +164,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(4.704984, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionEnergy);
             Assert.AreEqual(null, doc.MoleculeTransitions.ElementAt(0).ExplicitValues.CollisionEnergy); // Value is found at precursor level
             double expectedIonMobility = 2.34;
-            double? expectedCV = imTypeIsDriftTime ? (double?) null : expectedIonMobility;
+            double? expectedCV = imTypeIsDriftTime ? null : expectedIonMobility;
             Assert.AreEqual(expectedCV, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CompensationVoltage);
             Assert.AreEqual(4.9, doc.MoleculeTransitions.ElementAt(0).ExplicitValues.DeclusteringPotential);
             Assert.AreEqual(3.45, doc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTime);
@@ -524,7 +524,7 @@ namespace pwiz.SkylineTest
                 {
                     MethodType = methodType,
                     Strategy = strategy,
-                    RunLength = (methodType == ExportMethodType.Standard) ? DEFAULT_RUN_LENGTH : (double?)null
+                    RunLength = (methodType == ExportMethodType.Standard) ? DEFAULT_RUN_LENGTH : null
                 };
         }
 
@@ -535,7 +535,7 @@ namespace pwiz.SkylineTest
                 {
                     MethodType = methodType,
                     Strategy = strategy,
-                    RunLength = (methodType == ExportMethodType.Standard) ? DEFAULT_RUN_LENGTH : (double?)null
+                    RunLength = (methodType == ExportMethodType.Standard) ? DEFAULT_RUN_LENGTH : null
                 };
         }
 
@@ -547,7 +547,7 @@ namespace pwiz.SkylineTest
                 {
                     MethodType = methodType,
                     Strategy = strategy,
-                    DwellTime = (methodType == ExportMethodType.Standard) ? DEFAULT_DWELL_TIME : (double?)null
+                    DwellTime = (methodType == ExportMethodType.Standard) ? DEFAULT_DWELL_TIME : null
                 };
         }
 

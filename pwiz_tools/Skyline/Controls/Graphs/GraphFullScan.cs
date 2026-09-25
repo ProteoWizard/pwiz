@@ -678,13 +678,13 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (!IsHandleCreated)
                 return;
-            BeginInvoke(new Action(() =>
+            BeginInvoke(() =>
             {
                 if (!IsMobilogramPaneVisible)
                     return;
                 AlignMobilogramChartToHeatmap();
                 graphControl.Invalidate();
-            }));
+            });
         }
 
         /// <summary>

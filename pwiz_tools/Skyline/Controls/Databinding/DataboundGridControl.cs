@@ -729,7 +729,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 {
                     try
                     {
-                        BeginInvoke(new Action(() => DisplayError(e)));
+                        BeginInvoke(() => DisplayError(e));
                         _errorMessagePending = true;
                     }
                     catch (Exception)

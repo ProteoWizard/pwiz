@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 {
                     if (IsHandleCreated)
                     {
-                        BeginInvoke(new Action(() => OnModelChanged(GroupComparisonModel)));
+                        BeginInvoke(() => OnModelChanged(GroupComparisonModel));
                     }
                 });
                 // Trigger initial update

@@ -604,7 +604,7 @@ namespace pwiz.Skyline.Model.Koina.Models
                             Peptide, _tokenSource.Token);
                         double? retentionTime = iRT.TryGetValue(Peptide, out var iRTValue)
                             ? iRTValue
-                            : (double?)null;
+                            : null;
                         Spectrum = new SpectrumDisplayInfo(
                             new SpectrumInfoKoina(massSpectrum, Precursor, labelType, NCE),
                             // ReSharper disable once AssignNullToNotNullAttribute

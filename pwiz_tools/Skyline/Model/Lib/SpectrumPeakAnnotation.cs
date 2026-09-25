@@ -63,7 +63,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public static SpectrumPeakAnnotation Create(SmallMoleculeLibraryAttributes mol, Adduct adduct, string comment, double? mzTheoretical)
         {
-            double? massTheoretical = mzTheoretical.HasValue ? adduct.MassFromMz(mzTheoretical.Value, MassType.Monoisotopic).Value : (double?)null;
+            double? massTheoretical = mzTheoretical.HasValue ? adduct.MassFromMz(mzTheoretical.Value, MassType.Monoisotopic).Value : null;
             var ion = new CustomIon(mol, adduct, massTheoretical);
             if ((mzTheoretical ?? 0.0) > 0)
             {

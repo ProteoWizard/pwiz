@@ -37,7 +37,7 @@ namespace pwiz.Skyline.SettingsUI
             get
             {
                 double min;
-                return double.TryParse(textMin.Text, out min) ? (double?)min : null;
+                return double.TryParse(textMin.Text, out min) ? min : null;
             }
             set { textMin.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
         }
@@ -47,7 +47,7 @@ namespace pwiz.Skyline.SettingsUI
             get
             {
                 double max;
-                return double.TryParse(textMax.Text, out max) ? (double?)max : null;
+                return double.TryParse(textMax.Text, out max) ? max : null;
             }
             set { textMax.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
         }
@@ -57,7 +57,7 @@ namespace pwiz.Skyline.SettingsUI
             get
             {
                 int steps;
-                return int.TryParse(textStepsRough.Text, out steps) ? (int?)steps : null;
+                return int.TryParse(textStepsRough.Text, out steps) ? steps : null;
             }
             set { textStepsRough.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
         }
@@ -67,7 +67,7 @@ namespace pwiz.Skyline.SettingsUI
             get
             {
                 int steps;
-                return int.TryParse(textStepsMedium.Text, out steps) ? (int?)steps : null;
+                return int.TryParse(textStepsMedium.Text, out steps) ? steps : null;
             }
             set { textStepsMedium.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
         }
@@ -77,7 +77,7 @@ namespace pwiz.Skyline.SettingsUI
             get
             {
                 int steps;
-                return int.TryParse(textStepsFine.Text, out steps) ? (int?)steps : null;
+                return int.TryParse(textStepsFine.Text, out steps) ? steps : null;
             }
             set { textStepsFine.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
         }

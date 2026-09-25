@@ -866,7 +866,7 @@ namespace pwiz.Skyline.Model
             {
                 adductInferred = Adduct.NonProteomicProtonatedFromCharge(charge.Value);
             }
-            mzCalc = adductInferred.AdductCharge != 0 ? adductInferred.MzFromNeutralMass(mass) : (double?) null;
+            mzCalc = adductInferred.AdductCharge != 0 ? adductInferred.MzFromNeutralMass(mass) : null;
             if (mzCalc.HasValue && tolerance >= (Math.Abs(mzCalc.Value - mz)))
             {
                 adduct = adductInferred;
@@ -958,7 +958,7 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            charge = adductInferred.IsEmpty ? (int?) null : adductInferred.AdductCharge;
+            charge = adductInferred.IsEmpty ? null : adductInferred.AdductCharge;
             if (charge.HasValue)
             {
                 adduct = adductInferred;

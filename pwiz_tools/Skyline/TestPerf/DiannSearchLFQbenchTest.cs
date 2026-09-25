@@ -121,7 +121,7 @@ namespace TestPerf
             try
             {
                 DiannHelpers.RegisteredDiannPathOverride = () => realDiannPath;
-                SkylineWindow.BeginInvoke(new Action(SkylineWindow.ShowDiannSearchDlg));
+                SkylineWindow.BeginInvoke(SkylineWindow.ShowDiannSearchDlg);
                 var useExisting = TryWaitForOpenForm<MultiButtonMsgDlg>(5000);
                 if (useExisting != null)
                     OkDialog(useExisting, () => useExisting.DialogResult = DialogResult.Yes);

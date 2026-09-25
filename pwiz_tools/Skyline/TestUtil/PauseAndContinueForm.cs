@@ -260,7 +260,7 @@ namespace pwiz.SkylineTestUtil
         {
             const int spacing = 15;
             Form targetWindow = _ownerForm;
-            var screen = (Screen)targetWindow.Invoke(new Func<Screen>(() => Screen.FromControl(targetWindow)));
+            var screen = targetWindow.Invoke(() => Screen.FromControl(targetWindow));
             Left = targetWindow.Left;
             if (targetWindow.Top > screen.WorkingArea.Top + Height + spacing)
                 Top = targetWindow.Top - Height - spacing;

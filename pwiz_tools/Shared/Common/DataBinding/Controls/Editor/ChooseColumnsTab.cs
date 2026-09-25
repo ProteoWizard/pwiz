@@ -172,7 +172,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         {
             if (IsHandleCreated)
             {
-                BeginInvoke(new Action(AfterResizeListViewColumns));
+                BeginInvoke(AfterResizeListViewColumns);
             }
         }
         /// <summary>

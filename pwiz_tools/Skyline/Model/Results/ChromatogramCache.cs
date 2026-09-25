@@ -1017,10 +1017,10 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 DateTime modifiedTime = DateTime.FromBinary(cachedFileStruct.modified);
-                DateTime? runstartTime = cachedFileStruct.runstart != 0 ? DateTime.FromBinary(cachedFileStruct.runstart) : (DateTime?)null;
+                DateTime? runstartTime = cachedFileStruct.runstart != 0 ? DateTime.FromBinary(cachedFileStruct.runstart) : null;
                 DateTime? importTime = cachedFileStruct.importTime != 0
                     ? DateTime.FromBinary(cachedFileStruct.importTime)
-                    : (DateTime?)null;
+                    : null;
                 var instrumentInfoList = InstrumentInfoUtil.GetInstrumentInfo(instrumentInfoStr);
                 yield return new ChromCachedFile(filePath,
                     cachedFileStruct.flags,
@@ -1031,7 +1031,7 @@ namespace pwiz.Skyline.Model.Results
                     cachedFileStruct.maxIntensity,
                     cachedFileStruct.sizeScanIds,
                     cachedFileStruct.locationScanIds,
-                    cachedFileStruct.ticArea == 0 ? (float?)null : cachedFileStruct.ticArea,
+                    cachedFileStruct.ticArea == 0 ? null : cachedFileStruct.ticArea,
                     ChromCachedFile.IonMobilityUnitsFromFlags(cachedFileStruct.flags),
                     sampleId,
                     serialNumber,

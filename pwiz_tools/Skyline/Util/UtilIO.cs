@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Util
         void Finish(TextWriter writer);
 
         /// <summary>
-        /// Proxy for <see cref="File.GetAttributes"/>.
+        /// Proxy for <see cref="File.GetAttributes(string)"/>.
         /// </summary>
         /// <param name="path">Path to get file attributes for</param>
         /// <returns>The file attributes if the file system is on disk, or ?? if not</returns>

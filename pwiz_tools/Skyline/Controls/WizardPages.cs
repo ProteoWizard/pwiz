@@ -16,7 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Windows.Forms;
 
 namespace pwiz.Skyline.Controls
@@ -31,7 +30,7 @@ namespace pwiz.Skyline.Controls
         protected override void WndProc(ref Message m)
         {
             // Hide tabs by trapping the TCM_ADJUSTRECT message
-            if (m.Msg == 0x1328 && !DesignMode) m.Result = (IntPtr)1;
+            if (m.Msg == 0x1328 && !DesignMode) m.Result = 1;
             else base.WndProc(ref m);
         }
 

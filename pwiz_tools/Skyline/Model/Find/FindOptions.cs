@@ -103,7 +103,7 @@ namespace pwiz.Skyline.Model.Find
             return new FindOptions(this)
             {
                 CustomFinders = finders == null
-                    ? (IList<IFinder>)new IFinder[0]
+                    ? new IFinder[0]
                     : Array.AsReadOnly(finders.ToArray())
             };
         }

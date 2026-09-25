@@ -241,7 +241,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             get
             {
                 double numDecoys;
-                return !string.IsNullOrEmpty(DecoyGenerationMethod) && double.TryParse(txtNumDecoys.Text, out numDecoys) ? (double?) numDecoys : null;
+                return !string.IsNullOrEmpty(DecoyGenerationMethod) && double.TryParse(txtNumDecoys.Text, out numDecoys) ? numDecoys : null;
             }
             set { txtNumDecoys.Text = value.ToString(); }
         }

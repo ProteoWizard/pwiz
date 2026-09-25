@@ -679,7 +679,7 @@ namespace pwiz.SkylineTestFunctional
                     line1 = line1.Replace(caffeineFormula+"\t", caffeineFormulaUnicode + "\t"); // Test with unicode subscript numbers
                 }
                 var expectedIM = imTypeIsDrift ? precursorDT : compensationVoltage;
-                double? expectedCV = imTypeIsDrift ? (double?)null : compensationVoltage;
+                double? expectedCV = imTypeIsDrift ? null : compensationVoltage;
                 var expectedTypeIM = imTypeIsDrift ? eIonMobilityUnits.drift_time_msec : eIonMobilityUnits.compensation_V;
                 TestError(line1 + line2start.Replace("CH3O", "CH29") + "\t\t1\t\t\t\t\t\t\t\tM+H", String.Empty,
                     fullColumnOrder, true);
@@ -1235,30 +1235,30 @@ namespace pwiz.SkylineTestFunctional
 
             var docOrig = SkylineWindow.Document;
             var textClean = textCSV;
-            SkylineWindow.Invoke(new Action(() =>
+            SkylineWindow.Invoke(() =>
             {
                 SkylineWindow.InsertSmallMoleculeTransitionList(textClean, Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
-            }));
+            });
 
             var pastedDoc = WaitForDocumentChange(docOrig);
             Assert.AreEqual(2, pastedDoc.MoleculeGroupCount);
             Assert.AreEqual(4, pastedDoc.MoleculeCount);
 
             // Inserting the header row by itself should produce an error message
-            AssertEx.ThrowsException<InvalidDataException>(() => SkylineWindow.Invoke(new Action(() =>
+            AssertEx.ThrowsException<InvalidDataException>(() => SkylineWindow.Invoke(() =>
                 {
                     SkylineWindow.InsertSmallMoleculeTransitionList(header,
                         Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
-                })),
+                }),
                 Resources.MassListImporter_Import_Empty_transition_list);
 
             // Now feed it some nonsense headers, verify helpful error message
             var textCSV2 = textCSV.Replace(SmallMoleculeTransitionListColumnHeaders.labelType, "labbel").Replace(SmallMoleculeTransitionListColumnHeaders.moleculeGroup,"grommet");
-            AssertEx.ThrowsException<LineColNumberedIoException>(() => SkylineWindow.Invoke(new Action(() =>
+            AssertEx.ThrowsException<LineColNumberedIoException>(() => SkylineWindow.Invoke(() =>
             {
                 SkylineWindow.InsertSmallMoleculeTransitionList(textCSV2,
                     Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
-            })),
+            }),
                 string.Format(Resources.SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_,
                     TextUtil.LineSeparate(new[] { "grommet", "labbel", string.Empty }),
                     TextUtil.LineSeparate(SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Keys)));
@@ -1273,10 +1273,10 @@ namespace pwiz.SkylineTestFunctional
             var textCSV3 = textCSV.Replace(',', TextUtil.GetCsvSeparator(LocalizationHelper.CurrentCulture)).Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
             NewDocument();
             docOrig =  WaitForDocumentChange(pastedDoc);
-            SkylineWindow.Invoke(new Action(() =>
+            SkylineWindow.Invoke(() =>
             {
                 SkylineWindow.InsertSmallMoleculeTransitionList(textCSV3, Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
-            }));
+            });
 
             pastedDoc = WaitForDocumentChange(docOrig);
             Assert.AreEqual(2, pastedDoc.MoleculeGroupCount);
@@ -1285,11 +1285,11 @@ namespace pwiz.SkylineTestFunctional
             // Check our ability to help users with nearly correct headers
             var nearly = "precsr";
             var textCSV4 = textCSV3.Replace(SmallMoleculeTransitionListColumnHeaders.namePrecursor, nearly);
-            AssertEx.ThrowsException<LineColNumberedIoException>(() => SkylineWindow.Invoke(new Action(() =>
+            AssertEx.ThrowsException<LineColNumberedIoException>(() => SkylineWindow.Invoke(() =>
                 {
                     SkylineWindow.InsertSmallMoleculeTransitionList(textCSV4,
                         Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
-                })),
+                }),
                 string.Format(Resources.SmallMoleculeTransitionListReader_SmallMoleculeTransitionListReader_,
                     TextUtil.LineSeparate(new[] { nearly, string.Empty }),
                     TextUtil.LineSeparate(SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Keys)));
@@ -1300,11 +1300,11 @@ namespace pwiz.SkylineTestFunctional
             NewDocument();
             docOrig = WaitForDocumentChange(pastedDoc);
             var textCSV5 = textCSV3.Replace(SmallMoleculeTransitionListColumnHeaders.namePrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Name);
-            SkylineWindow.Invoke(new Action(() =>
+            SkylineWindow.Invoke(() =>
             {
                 SkylineWindow.InsertSmallMoleculeTransitionList(textCSV5,
                     Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
-            }));
+            });
             pastedDoc = WaitForDocumentChange(docOrig);
             Assert.AreEqual(2, pastedDoc.MoleculeGroupCount);
             Assert.AreEqual(4, pastedDoc.MoleculeCount);

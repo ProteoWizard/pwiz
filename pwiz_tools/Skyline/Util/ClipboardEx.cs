@@ -75,21 +75,29 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        public static object GetData(string format)
+        /// <summary>
+        /// Typed because the untyped Clipboard.GetData and DataObject.GetData are obsolete
+        /// (WFDEV005): they deserialize whatever is on the clipboard, which is the hole
+        /// TryGetData closes. Every format Skyline puts on the clipboard carries a string -
+        /// SKYLINE_FORMAT, HTML and Text - so callers pass string and get the old behavior,
+        /// including the null the cast used to produce when the format is absent.
+        /// </summary>
+        public static T GetData<T>(string format)
         {
             if (_useSystemClipboard)
             {
-                return Clipboard.GetData(format);
+                Clipboard.TryGetData(format, out T systemData);
+                return systemData;
             }
             var dataObject = _dataObject;
             lock (dataObject)
             {
-                object data = dataObject.GetData(format);
+                dataObject.TryGetData(format, out T data);
                 if (CHECK_VALUES)
                 {
-                    object expected = Clipboard.GetData(format);
-                    if (((data == null || expected == null) && data != expected) ||
-                        (data != null && data.ToString() != Clipboard.GetData(format).ToString()))
+                    Clipboard.TryGetData(format, out T expected);
+                    if (((data == null || expected == null) && !Equals(data, expected)) ||
+                        (data != null && data.ToString() != expected.ToString()))
                     {
                         throw new ApplicationException(UtilResources.ClipboardEx_GetData_ClipboardEx_implementation_problem);
                     }
@@ -174,9 +182,9 @@ namespace pwiz.Skyline.Util
             }
 
             var dataObject = _dataObject;
-            lock (dataObject) 
+            lock (dataObject)
             {
-                string text = (string)dataObject.GetData(DataFormats.Text);
+                dataObject.TryGetData(DataFormats.Text, out string text);
                 if (CHECK_VALUES && text != Clipboard.GetText())
                 {
                     throw new ApplicationException(UtilResources.ClipboardEx_GetData_ClipboardEx_implementation_problem);
@@ -198,7 +206,7 @@ namespace pwiz.Skyline.Util
                 string text = string.Empty;
                 if (format == TextDataFormat.Text)
                 {
-                    text = (string)dataObject.GetData(DataFormats.Text);
+                    dataObject.TryGetData(DataFormats.Text, out text);
                 }
                 if (CHECK_VALUES && text != Clipboard.GetText(format))
                 {

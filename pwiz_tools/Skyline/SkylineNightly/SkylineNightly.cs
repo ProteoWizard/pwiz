@@ -118,7 +118,7 @@ namespace SkylineNightly
                     td.Principal.LogonType = TaskLogonType.InteractiveToken;
 
                     // Add a trigger that will fire the task every day
-                    var dt = (DailyTrigger) td.Triggers.Add(new DailyTrigger { DaysInterval = 1 });
+                    var dt = td.Triggers.Add(new DailyTrigger { DaysInterval = 1 });
                     var scheduledTime = startTime.Value;
                     var now = DateTime.Now;
                     if (scheduledTime < now + TimeSpan.FromMinutes(1) && scheduledTime + TimeSpan.FromMinutes(3) > now)

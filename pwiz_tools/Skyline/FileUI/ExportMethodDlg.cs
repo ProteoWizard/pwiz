@@ -1649,7 +1649,7 @@ namespace pwiz.Skyline.FileUI
             if (textIntensityThreshold.Visible)
             {
                 var surequant = cbSureQuant.Checked;
-                if (!helper.ValidateDecimalTextBox(textIntensityThreshold, 0, surequant ? (double?) 100 : null, out var intensityThreshold))
+                if (!helper.ValidateDecimalTextBox(textIntensityThreshold, 0, surequant ? 100 : null, out var intensityThreshold))
                     return false;
 
                 if (surequant)

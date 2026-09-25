@@ -820,7 +820,7 @@ namespace pwiz.Skyline
         {
             if (MainWindow != null && !MainWindow.IsDisposed)
             {
-                MainWindow.Invoke(new Action(MainWindow.Close));
+                MainWindow.Invoke(MainWindow.Close);
             }
         }
 

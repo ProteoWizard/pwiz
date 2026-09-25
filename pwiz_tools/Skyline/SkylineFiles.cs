@@ -1683,7 +1683,7 @@ namespace pwiz.Skyline
 
         private DocumentFormat? GetFileFormatOnDisk()
         {
-            return !Dirty && null != DocumentFilePath ? SavedDocumentFormat : (DocumentFormat?) null;
+            return !Dirty && null != DocumentFilePath ? SavedDocumentFormat : null;
         }
 
         public bool ShareDocument(string fileDest, ShareType shareType, bool useFileSaver = true, int zipFileMaxSegmentSize = 0)
