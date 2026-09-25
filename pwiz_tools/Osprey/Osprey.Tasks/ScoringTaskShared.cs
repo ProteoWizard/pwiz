@@ -980,13 +980,25 @@ namespace pwiz.Osprey.Tasks
         internal static void LogCompaction(PipelineContext ctx, long before, long after,
             int passingBaseIds, int? droppedActions)
         {
-            ctx.LogInfo(string.Format(
-                @"Kept {0:N0} of {1:N0} precursor candidates for cross-run reconciliation.",
+            ctx.LogInfo(string.Format(IsSingleFileSearch(ctx.Config)
+                    ? "Kept {0:N0} of {1:N0} precursor candidates for re-scoring and second-pass FDR."
+                    : "Kept {0:N0} of {1:N0} precursor candidates for cross-run reconciliation.",
                 after, before));
             ctx.LogVerbose(droppedActions.HasValue
-                ? string.Format(@"  {0:N0} passing base_ids; {1:N0} reconciliation action(s) dropped",
+                ? string.Format("  {0:N0} passing target-decoy pairs; {1:N0} planned peak re-picks and boundary imputations dropped",
                     passingBaseIds, droppedActions.Value)
-                : string.Format(@"  {0:N0} passing base_ids", passingBaseIds));
+                : string.Format("  {0:N0} passing target-decoy pairs", passingBaseIds));
+        }
+
+        /// <summary>
+        /// A search of one input file with no <c>--task</c>: the only configuration with no other
+        /// run to reconcile against, so its log never mentions cross-run reconciliation. A
+        /// <c>--task PerFileRescoring</c> worker also holds one input, but it re-scores against
+        /// the cross-run plan a multi-file FirstPassFDR wrote, and says so.
+        /// </summary>
+        internal static bool IsSingleFileSearch(OspreyConfig config)
+        {
+            return config.SelectedTask == null && config.InputFiles != null && config.InputFiles.Count == 1;
         }
     }
 }

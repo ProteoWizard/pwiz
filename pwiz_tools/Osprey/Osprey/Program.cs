@@ -202,6 +202,7 @@ namespace pwiz.Osprey
                 try
                 {
                     config = ParseArgs(args);
+                    CanonicalizeOutputPaths(config);
                 }
                 catch (Exception ex) when (ex is ArgumentException || ex is FileNotFoundException || ex is InvalidDataException)
                 {
@@ -354,18 +355,19 @@ namespace pwiz.Osprey
                 // cache that turns out to be wrong, so the log is the only provenance.
                 if (cacheOnlyInputs > 0)
                 {
-                    LogInfo(string.Format(
-                        "{0:N0} of {1:N0} input files are not present but have a spectra cache; reading those from the cache.",
-                        cacheOnlyInputs, config.InputFiles.Count));
+                    LogInfo(FormatCountOfTotal(cacheOnlyInputs, config.InputFiles.Count,
+                        "The input file is not present but has a spectra cache; reading it from the cache.",
+                        "1 of {1:N0} input files is not present but has a spectra cache; reading it from the cache.",
+                        "{0:N0} of {1:N0} input files are not present but have a spectra cache; reading those from the cache."));
                     LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_INPUT_SOURCE, @"spectra-cache {0}/{1}",
                         cacheOnlyInputs, config.InputFiles.Count));
                 }
                 if (artifactOnlyInputs > 0)
                 {
-                    LogInfo(string.Format(
-                        "{0:N0} of {1:N0} input files are not present; using the intermediate scores " +
-                        "file written for each one.",
-                        artifactOnlyInputs, config.InputFiles.Count));
+                    LogInfo(FormatCountOfTotal(artifactOnlyInputs, config.InputFiles.Count,
+                        "The input file is not present; using the intermediate scores file written for it.",
+                        "1 of {1:N0} input files is not present; using the intermediate scores file written for it.",
+                        "{0:N0} of {1:N0} input files are not present; using the intermediate scores file written for each one."));
                     LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_INPUT_SOURCE, @"scores-parquet {0}/{1}",
                         artifactOnlyInputs, config.InputFiles.Count));
                 }
@@ -733,6 +735,39 @@ namespace pwiz.Osprey
             // surface immediately rather than waiting for the file's block to flush
             // on completion, so a failing run reports the cause right away.
             _out.WriteLine(CommandStatusWriter.ERROR_MESSAGE_HINT + @" " + message);
+        }
+
+        /// <summary>
+        /// Make the paths Osprey builds artifact paths FROM absolute, with the platform
+        /// separator: --output-dir, --cache-dir (both set by --work-dir) and -o. Given as
+        /// D:/runs/x, a work directory was joined with '\' into D:/runs/x\file.spectra.bin in
+        /// every artifact path and every log line that names one. The input and library paths
+        /// stay as typed: they are echoed back to the user, and the input names are written
+        /// into the blib. No hash or resume stamp reads a directory, so this changes no cache
+        /// decision (<see cref="SearchIdentity"/> hashes file names only).
+        /// </summary>
+        private static void CanonicalizeOutputPaths(OspreyConfig config)
+        {
+            config.OutputDir = FullPathOrEmpty(config.OutputDir);
+            config.CacheDir = FullPathOrEmpty(config.CacheDir);
+            config.OutputBlib = FullPathOrEmpty(config.OutputBlib);
+        }
+
+        private static string FullPathOrEmpty(string path)
+        {
+            return string.IsNullOrEmpty(path) ? path : Path.GetFullPath(path);
+        }
+
+        /// <summary>
+        /// "N of M" as three whole sentences - one of one, one of many, and many - so each
+        /// becomes its own resource and translates as a sentence. Formats with {0} = count and
+        /// {1} = total.
+        /// </summary>
+        private static string FormatCountOfTotal(int count, int total,
+            string oneOfOne, string oneOfMany, string manyOfTotal)
+        {
+            string format = count != 1 ? manyOfTotal : total == 1 ? oneOfOne : oneOfMany;
+            return string.Format(format, count, total);
         }
     }
 }

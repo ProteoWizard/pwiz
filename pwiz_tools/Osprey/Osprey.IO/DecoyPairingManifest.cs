@@ -356,8 +356,7 @@ namespace pwiz.Osprey.IO
                         ? 100.0 * (total - interner.DistinctCount) / total
                         : 0.0;
                     logInfo(string.Format(
-                        @"Library-decoy mode: interned manifest protein accessions " +
-                        @"({0:N0} distinct / {1:N0} total, {2:F1}% collapsed)",
+                        "Unique pairing-manifest protein accessions: {0:N0} / {1:N0} total ({2:F1}% reduced)",
                         interner.DistinctCount, total, pct));
                 }
             }

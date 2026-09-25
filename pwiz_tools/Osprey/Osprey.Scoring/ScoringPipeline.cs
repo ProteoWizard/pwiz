@@ -65,6 +65,11 @@ namespace pwiz.Osprey.Scoring
         /// or streaming), already MS2-calibrated; <paramref name="ms2Calibration"/> is
         /// still consulted here for the calibrated fragment tolerance (the provider
         /// owns the per-spectrum m/z calibration).
+        ///
+        /// <para><paramref name="logSearchSettings"/> says whether this call reports the RT and
+        /// fragment tolerances under <c>--verbose</c>. A file re-scored in several passes shares
+        /// one calibration, so only its first pass reports them; otherwise the same three lines
+        /// repeat inside every file's block.</para>
         /// </summary>
         public List<FdrEntry> RunCoelutionScoring(
             List<LibraryEntry> fullLibrary,
@@ -75,8 +80,12 @@ namespace pwiz.Osprey.Scoring
             MzCalibrationResult ms2Calibration,
             MzCalibrationResult ms1Calibration,
             ScoringContext context,
-            string passLabel = null)
+            string passLabel = null,
+            bool logSearchSettings = true)
         {
+            // A labeled pass runs inside a per-file block that is indented under its heading.
+            string settingsIndent = passLabel == null ? string.Empty : @"  ";
+            bool logSettings = OspreyOutput.Verbose && logSearchSettings;
             var config = context.Config;
             var allEntries = new List<FdrEntry>();
             var scorer = context.Resolution.CreateScorer();
@@ -137,10 +146,13 @@ namespace pwiz.Osprey.Scoring
                     config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance,
                     config.RtCalibration.MinCalibrationPoints);
                 rtSigmaGlobal = Math.Max(robustSd * 5.0, 0.1);
-                if (OspreyOutput.Verbose) _log.LogInfo(string.Format(
-                    "Coelution search RT tolerance: {0:F2} min (3*MAD*1.4826, MAD={1:F3}{2})",
-                    rtToleranceGlobal, mad,
-                    context.OriginalRtMad.HasValue ? " from .calibration.json" : " from cal stats"));
+                if (logSettings)
+                {
+                    _log.LogInfo(settingsIndent + string.Format(
+                        "Coelution search RT tolerance: {0:F2} min (3*MAD*1.4826, MAD={1:F3}{2})",
+                        rtToleranceGlobal, mad,
+                        context.OriginalRtMad.HasValue ? " from .calibration.json" : " from cal stats"));
+                }
             }
             else
             {
@@ -165,18 +177,24 @@ namespace pwiz.Osprey.Scoring
                     Unit = calUnit
                 };
                 string unitStr = calUnit == ToleranceUnit.Ppm ? "ppm" : "Th";
-                if (OspreyOutput.Verbose) _log.LogInfo(string.Format(
-                    "Coelution search using calibrated fragment tolerance: {0:F4} {1}",
-                    calTol, unitStr));
+                if (logSettings)
+                {
+                    _log.LogInfo(settingsIndent + string.Format(
+                        "Coelution search using calibrated fragment tolerance: {0:F4} {1}",
+                        calTol, unitStr));
+                }
 
                 // Use calibrated tolerance for all downstream scoring. (The
                 // provider already applied the per-spectrum m/z calibration, so
                 // only this fragment-tolerance value is set here.)
                 config.FragmentTolerance = searchFragTol;
 
-                if (OspreyOutput.Verbose) _log.LogInfo(string.Format(
-                    "Applying MS2 calibration: mean error = {0:F4} {1} -> correcting by {2:+F4;-F4;0} {1}",
-                    ms2Calibration.Mean, ms2Calibration.Unit, -ms2Calibration.Mean));
+                if (logSettings)
+                {
+                    _log.LogInfo(settingsIndent + string.Format(
+                        "Applying MS2 calibration: mean error = {0:F4} {1} -> correcting by {2:+F4;-F4;0} {1}",
+                        ms2Calibration.Mean, ms2Calibration.Unit, -ms2Calibration.Mean));
+                }
             }
 
             // Per-entry search XIC diagnostic: log the intent once at start.

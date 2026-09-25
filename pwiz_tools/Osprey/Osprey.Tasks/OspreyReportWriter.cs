@@ -148,7 +148,8 @@ namespace pwiz.Osprey.Tasks
             int groupIdx = 0;
             var rows = new List<string[]>(groups.Count);
             using (var progress = new ProgressReporter(
-                       string.Format(@"Building the protein-group report over {0} group(s)", groups.Count),
+                       CountText.Format(groups.Count, "Building the protein-group report for 1 group",
+                           "Building the protein-group report for {0:N0} groups"),
                        groups.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 foreach (var g in groups)
@@ -273,7 +274,9 @@ namespace pwiz.Osprey.Tasks
             // the caller's heading in front of it (#4571).
             int runIdx = 0;
             using (var progress = new ProgressReporter(
-                       string.Format(@"Per-replicate protein FDR over {0} run(s)", nFiles),
+                       nFiles == 1
+                           ? "Per-replicate protein FDR for 1 file"
+                           : string.Format("Per-replicate protein FDR for {0:N0} files", nFiles),
                        nFiles, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 foreach (var kvp in rescored.StreamFiles())

@@ -913,7 +913,9 @@ namespace pwiz.Osprey.FDR
             // ran ~5 min silent before cross-validation. Console-only, never touches the
             // loaded features, so training is byte-identical.
             using (var loadProgress = new ProgressReporter(
-                string.Format(@"Loading training-subset feature vectors from {0} file(s)", subsetByFile.Count),
+                CountText.Format(subsetByFile.Count,
+                    "Loading Percolator training features from 1 file",
+                    "Loading Percolator training features from {0:N0} files"),
                 subsetByFile.Count))
             {
                 int loadDone = 0;

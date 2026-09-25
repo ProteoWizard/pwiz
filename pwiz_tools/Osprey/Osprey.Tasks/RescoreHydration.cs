@@ -457,7 +457,7 @@ namespace pwiz.Osprey.Tasks
                 throw new ArgumentNullException(nameof(retainedBaseIds));
 
             using (var progress = new ProgressReporter(
-                       @"Folding first-pass diagnostics", parquetPaths.Count))
+                       "Reading first-pass results for the model diagnostics report", parquetPaths.Count))
             {
                 for (int i = 0; i < parquetPaths.Count; i++)
                 {

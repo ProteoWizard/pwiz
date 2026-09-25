@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -74,7 +75,8 @@ namespace pwiz.Osprey.Tasks
 
         public override string DescribeOutput(OspreyConfig config)
         {
-            return @"per-file .spectra.bin (no scoring; --output and --library are not used)";
+            return string.Format("{0} (--output and --library are not used)",
+                DescribePerInputOutput(config, SpectraCache.GetCachePath, @".spectra.bin", config.CacheDir));
         }
 
         public override IEnumerable<string> Inputs(PipelineContext ctx)
@@ -154,17 +156,20 @@ namespace pwiz.Osprey.Tasks
                 }
                 built++;
 
+                // The cache writer already said what it saved, in words; this is the per-file
+                // time for a measurement, not a second report of the same numbers.
                 string cachePath = SpectraCache.GetCachePath(inputFile);
                 var cacheInfo = new FileInfo(cachePath);
-                ctx.LogInfo(string.Format(
-                    "  {0}: ms2={1:N0} ms1={2:N0} {3:N2} GB in {4:N1}s",
+                ctx.LogInfo(LogTag.TIMING, string.Format(CultureInfo.InvariantCulture,
+                    @"Spectra cache {0}: ms2={1} ms1={2} {3:F2} GB in {4:F1}s",
                     Path.GetFileName(cachePath), index.Ms2Count, index.Ms1Spectra.Count,
                     cacheInfo.Length / (1024.0 * 1024.0 * 1024.0), swFile.Elapsed.TotalSeconds));
             }
 
             swAll.Stop();
-            ctx.LogInfo(string.Format("Cached {0} of {1} file(s) in {2:N1}s",
-                built, nFiles, swAll.Elapsed.TotalSeconds));
+            ctx.LogInfo(nFiles == 1 && built == 1
+                ? string.Format("Cached 1 file in {0:N1}s", swAll.Elapsed.TotalSeconds)
+                : string.Format("Cached {0:N0} of {1:N0} files in {2:N1}s", built, nFiles, swAll.Elapsed.TotalSeconds));
             return ctx.ExitCode == 0;
         }
 

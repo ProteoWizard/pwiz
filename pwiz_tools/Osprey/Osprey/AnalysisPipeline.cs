@@ -102,8 +102,10 @@ namespace pwiz.Osprey
                 // stages whose outputs already exist (ctx.CanRehydrate) - are
                 // not run here; their state lazy-rehydrates through ctx.Demand
                 // when a running stage reaches for it. A task returning false is
-                // still the signal to stop and propagate ctx.ExitCode (e.g. an
-                // empty score set or a sidecar-write failure).
+                // still the signal to stop: with a failure exit code the run ends
+                // there (e.g. a sidecar-write failure); with exit code 0 the task
+                // stopped on purpose (a per-file worker's boundary, an empty score
+                // set), so the run is complete and says so like any other.
                 foreach (var task in pipeline)
                 {
                     if (!config.Includes(task))
@@ -116,7 +118,11 @@ namespace pwiz.Osprey
                     }
 
                     if (!RunTask(task, ctx))
-                        return ctx.ExitCode;
+                    {
+                        if (ctx.ExitCode != 0)
+                            return ctx.ExitCode;
+                        break;
+                    }
                 }
 
                 stopwatch.Stop();

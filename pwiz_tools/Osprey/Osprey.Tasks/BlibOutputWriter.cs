@@ -369,7 +369,7 @@ namespace pwiz.Osprey.Tasks
             double fdrThreshold)
         {
             using (var progress = new ProgressReporter(
-                       string.Format(@"Writing {0} retention-time rows to the blib",
+                       string.Format("Writing {0:N0} peak retention times to the blib",
                                      passingEntries.Count),
                        passingEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {

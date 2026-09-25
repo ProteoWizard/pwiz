@@ -715,7 +715,8 @@ namespace pwiz.Osprey.FDR
             // determinate O(files) I/O step (43s at 82 files, minutes at 500). Report per-file
             // progress through the standard throttled reporter so a large join never goes silent.
             var ingestProgress = new ProgressReporter(
-                string.Format(@"Streaming first-pass ingest from {0} file(s)", nFiles), nFiles,
+                CountText.Format(nFiles, "Reading precursor candidate peaks for Percolator from 1 file",
+                    "Reading precursor candidate peaks for Percolator from {0:N0} files"), nFiles,
                 intervalSeconds: ProgressReporter.IO_INTERVAL_SECONDS);
             for (int f = 0; f < nFiles; f++)
             {
@@ -898,8 +899,9 @@ namespace pwiz.Osprey.FDR
             if (pretrainedModel == null)
             {
                 int subsetFilesLoaded = 0;
-                using (var loadProgress = new ProgressReporter(string.Format(
-                           @"Loading training-subset feature vectors from {0} file(s)", subsetByFile.Count), subsetByFile.Count))
+                using (var loadProgress = new ProgressReporter(CountText.Format(subsetByFile.Count,
+                           "Loading Percolator training features from 1 file",
+                           "Loading Percolator training features from {0:N0} files"), subsetByFile.Count))
                 foreach (var kvp in subsetByFile)
                 {
                     IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);

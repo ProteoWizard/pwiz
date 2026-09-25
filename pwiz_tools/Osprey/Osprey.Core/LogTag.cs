@@ -257,6 +257,9 @@ namespace pwiz.Osprey.Core
         public const string ROUTE_INPUT_SOURCE = @"input-source";
         /// <summary>A partial rescore resumed: runs adopted and runs re-scored.</summary>
         public const string ROUTE_RESCORE_RESUME = @"rescore-resume";
+        /// <summary>A model-diagnostics peak co-assignment phase starting (scan, reduce, join);
+        /// Measure-CoAssignmentScaling.py windows its memory trace on these.</summary>
+        public const string ROUTE_COASSIGN_PHASE = @"coassign-phase";
 
         // [COUNT] keys.
         /// <summary>Library fragment spectra released after an FDR stage.</summary>
@@ -269,6 +272,17 @@ namespace pwiz.Osprey.Core
         public const string COUNT_SCORED_CANDIDATES = @"scored-candidates";
         /// <summary>Peaks re-scored by cross-run reconciliation across all files, missing peaks included.</summary>
         public const string COUNT_RESCORED_PEAKS = @"rescored-peaks";
+        /// <summary>The model-diagnostics peak co-assignment boundary: the experiment cutoff and
+        /// what clears it, then one line per run. Its self-check, since the decoy row has no other.</summary>
+        public const string COUNT_COASSIGN_BOUNDARY = @"coassign-boundary";
+        /// <summary>Decoy precursors admitted by the co-assignment boundary vs tallied on the panel;
+        /// the two must be equal.</summary>
+        public const string COUNT_COASSIGN_DECOYS = @"coassign-decoys";
+        /// <summary>The co-assignment panel's detected rows, file count and wall seconds, read by
+        /// Measure-CoAssignmentScaling.py.</summary>
+        public const string COUNT_COASSIGN_DETECTED = @"coassign-detected";
+        /// <summary>Second-pass FDR views and model the finalized diagnostics report carries.</summary>
+        public const string COUNT_MDIAG_PASS2 = @"mdiag-pass2";
 
         // Values of the release scope= field.
         /// <summary>The release after first-pass FDR, keeping what rescore and gap-fill need.</summary>

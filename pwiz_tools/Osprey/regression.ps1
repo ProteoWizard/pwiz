@@ -323,7 +323,13 @@ param(
     [int]$KeepRunDirs = 1,
     [switch]$KeepOutput,
     [switch]$CleanOutput,
-    [double]$Tolerance = 1e-9
+    [double]$Tolerance = 1e-9,
+    # Osprey flags added to EVERY leg's command line, named without their dashes and comma
+    # separated: -ExtraOspreyFlags verbose,model-diagnostics. For reading how optional output
+    # tiers mix into the log across every route, not for a gate run. Without dashes because a
+    # `pwsh -File` argument that starts with '-' binds as a parameter NAME, so '--verbose'
+    # cannot be passed through as a value. Only value-less flags are supported.
+    [string]$ExtraOspreyFlags
 )
 
 $ErrorActionPreference = 'Stop'
@@ -503,8 +509,14 @@ if (-not [string]::IsNullOrWhiteSpace($env:OSPREY_ALLOW_UNFIXED_RESIDENT)) {
 # is the ONLY part of the log this script reads. Every route and count assertion below keys
 # off a tagged line, never off prose: the prose is for the person watching the run and may be
 # reworded or translated in any change (pwiz_tools/Osprey/docs/20-command-line.md, "Log
-# format"). The tag keys are defined in Osprey.Core/MachineLog.cs.
+# format"). The tag keys are defined in Osprey.Core/LogTag.cs.
 $memStampArgs = @('--timestamp', '--memstamp', '--perf-stats')
+if ($ExtraOspreyFlags) {
+    foreach ($flag in ($ExtraOspreyFlags -split '[,\s]+' | Where-Object { $_ })) {
+        $memStampArgs += ('--' + $flag.TrimStart('-'))
+    }
+    Write-Host ("==> extra Osprey flags on every leg: {0}" -f (($memStampArgs | Select-Object -Skip 3) -join ' ')) -ForegroundColor Yellow
+}
 
 # The data zip on panorama, chosen by -Source. The URL's second-to-last segment
 # ("perftests") maps to <Downloads>\Perftests, and each zip extracts to its own root,

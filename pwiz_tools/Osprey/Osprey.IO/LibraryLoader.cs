@@ -339,7 +339,7 @@ namespace pwiz.Osprey.IO
             LibraryDecoyMarker.ApplyLibraryDecoyMarking(
                 library, config.DecoyPrefixes, out var markingStats);
             log.LogInfo(string.Format(
-                @"Library-decoy mode: matched prefixes {0}",
+                "Library decoys are recognized by the protein accession prefixes {0}",
                 FormatPrefixList(config.DecoyPrefixes)));
             log.LogInfo(LogTag.COUNT, string.Format(
                 @"Library-decoy mode: {0} flagged ({1} via Decoy column, {2} via protein-accession prefix)",
@@ -401,9 +401,8 @@ namespace pwiz.Osprey.IO
                 if (manifestStats.NProteinsReplaced > 0)
                 {
                     log.LogInfo(string.Format(
-                        @"Library-decoy mode: manifest replaced protein_ids on {0} library " +
-                        @"entries (clean source-protein accessions from the manifest's " +
-                        @"`proteins` column)",
+                        "Replaced the protein accessions of {0:N0} library precursors with the " +
+                        "source-protein accessions in the pairing manifest",
                         manifestStats.NProteinsReplaced));
                 }
                 if (manifestStats.NNewlyMarkedDecoy > 0)
@@ -412,8 +411,8 @@ namespace pwiz.Osprey.IO
                     // predictor stripped the decoy prefix). Update the decoy count so the
                     // pairing fraction is honest.
                     log.LogInfo(string.Format(
-                        @"Library-decoy mode: manifest classified {0} additional library " +
-                        @"entries as decoys (their protein accessions lacked a decoy prefix)",
+                        "The pairing manifest marked {0:N0} more library precursors as decoys " +
+                        "(their protein accessions have no decoy prefix)",
                         manifestStats.NNewlyMarkedDecoy));
                     LibraryDecoyPairing.CountTargetsAndDecoys(library,
                         out nTargetsForStats, out nDecoysForStats);
@@ -442,14 +441,15 @@ namespace pwiz.Osprey.IO
             if (pairingStats.PairedFraction < config.DecoyPairMinFraction)
             {
                 error = string.Format(
-                    @"Library-decoy pairing failed: only {0:F1}% of decoys paired with a target " +
-                    @"(threshold: {1:F0}%). FDR estimates would be unreliable without proper " +
-                    @"target-decoy competition. Either supply a pairing manifest, ensure the " +
-                    @"library uses matching protein accessions with one of `decoy_prefixes` " +
-                    @"({2}), or unset `decoys_in_library` so Osprey generates its own decoys.",
+                    "Only {0:F1}% of the library decoys could be paired with a target (at least " +
+                    "{1:F0}% is needed), so FDR estimates would be unreliable. Supply {2}, give " +
+                    "the library decoys the protein accessions of their targets with one of the " +
+                    "prefixes {3}, or leave out {4} so Osprey generates its own decoys.",
                     pairingStats.PairedFraction * 100.0,
                     config.DecoyPairMinFraction * 100.0,
-                    FormatPrefixList(config.DecoyPrefixes));
+                    @"--decoy-pairing-manifest",
+                    FormatPrefixList(config.DecoyPrefixes),
+                    @"--decoys-in-library");
                 return false;
             }
             return true;
@@ -465,8 +465,9 @@ namespace pwiz.Osprey.IO
         private static void LogPairingSummary(PairingStats stats, IOspreyLog log)
         {
             log.LogInfo(string.Format(
-                @"Library-decoy pairing: paired {0}/{1} decoys ({2:F1}%); " +
-                @"manifest={3}, composition={4}; {5} unpaired decoys, {6} unpaired targets",
+                "Paired {0:N0} of {1:N0} library decoys with their targets ({2:F1}%): {3:N0} from " +
+                "the pairing manifest, {4:N0} by amino acid composition. {5:N0} decoys and {6:N0} " +
+                "targets have no partner.",
                 stats.NPaired, stats.NDecoys, stats.PairedFraction * 100.0,
                 stats.NPairedViaManifest, stats.NPairedViaComposition,
                 stats.NUnpairedDecoys, stats.NUnpairedTargets));
@@ -485,9 +486,8 @@ namespace pwiz.Osprey.IO
         private static void LogCachedPairingSummary(PairingStats stats, IOspreyLog log)
         {
             log.LogInfo(string.Format(
-                @"Library-decoy pairing: paired {0}/{1} decoys ({2:F1}%) - from the library " +
-                @"cache, which records the pairing but not which mechanism made it; " +
-                @"{3} unpaired decoys, {4} unpaired targets",
+                "Paired {0:N0} of {1:N0} library decoys with their targets ({2:F1}%, from the " +
+                "library cache). {3:N0} decoys and {4:N0} targets have no partner.",
                 stats.NPaired, stats.NDecoys, stats.PairedFraction * 100.0,
                 stats.NUnpairedDecoys, stats.NUnpairedTargets));
         }

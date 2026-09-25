@@ -698,7 +698,7 @@ namespace pwiz.Osprey.FDR
                         {
                             double foldPct = r.Targets > 0 ? 100.0 * r.Passing / r.Targets : 0.0;
                             OspreyOutput.Out.WriteLine(
-                                "  Percolator fold {0}/{1}: iteration {2} of {3} ({4} of {5} targets, {6:F1}% at {7:P0} FDR)",
+                                "  Percolator fold {0}/{1}: iteration {2} of {3} ({4:N0} of {5:N0} targets, {6:F1}% at {7:P0} FDR)",
                                 r.Fold + 1, _nFolds, iteration + 1, _maxIterations,
                                 r.Passing, r.Targets, foldPct, _trainFdr);
                         }

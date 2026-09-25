@@ -211,12 +211,12 @@ namespace pwiz.Osprey.Tasks
                     // LogInfo, not LogVerbose: this is the heading for the longest stretch of
                     // work left in Stage 7, and a --verbose-only heading is invisible on the runs
                     // that actually take the time (#4571).
-                    ctx.LogInfo(string.Format(
-                        "Computing second-pass FDR scores for {0:N0} files.", totalFiles));
-                    ctx.LogVerbose(string.Format(
-                        @"{0}/{1} file(s) have no precomputed second-pass FDR scores; the rescore " +
-                        @"worker wrote {2} this run.",
-                        missingPass2, totalFiles, workerWroteFiles?.Count ?? 0));
+                    ctx.LogInfo(CountText.Format(totalFiles, "Computing second-pass FDR scores for 1 file.",
+                        "Computing second-pass FDR scores for {0:N0} files."));
+                    ctx.LogVerbose(CountText.Format(totalFiles,
+                        "{1:N0} of 1 file had no saved second-pass FDR scores; re-scoring wrote {2:N0} this run.",
+                        "{1:N0} of {0:N0} files had no saved second-pass FDR scores; re-scoring wrote {2:N0} this run.",
+                        missingPass2, workerWroteFiles?.Count ?? 0));
                     // Stage 6's post-rescore overlay calls FdrEntry.ResetScores(), which clears
                     // eight fields - one for every scalar the v4 record carries. Three of them
                     // can reach the sidecar at their reset defaults (issue #4553):
@@ -387,7 +387,8 @@ namespace pwiz.Osprey.Tasks
                     // the 38s gap perfviz reports between the competition's [STAGE-WALL] line
                     // and the next probe (#4486). IO-paced, like the other disk loops here.
                     using (var writeProgress = new ProgressReporter(
-                        string.Format(@"Writing 2nd-pass FDR scores for {0} file(s)", rescored.FileCount),
+                        CountText.Format(rescored.FileCount, "Writing second-pass FDR scores for 1 file",
+                            "Writing second-pass FDR scores for {0:N0} files"),
                         rescored.FileCount, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
                     {
                         long nWrittenReported = 0;
@@ -400,17 +401,17 @@ namespace pwiz.Osprey.Tasks
                 }
                 if (pass2Tally.Failures == 0 && pass2Tally.Written > 0)
                 {
-                    ctx.LogVerbose(string.Format(
-                        @"Wrote 2nd-pass FDR scores for {0} file(s)", pass2Tally.Written));
+                    ctx.LogVerbose(CountText.Format(pass2Tally.Written, "Wrote second-pass FDR scores for 1 file",
+                        "Wrote second-pass FDR scores for {0:N0} files"));
                 }
                 // Said out loud rather than inferred from a smaller count: this is the one
                 // path that leaves a file untouched, and an unexplained gap between the file
                 // count and the write count is exactly the ambiguity always-writing removes.
                 if (pass2Tally.Skipped > 0)
                 {
-                    ctx.LogVerbose(string.Format(
-                        @"Left {0} 2nd-pass FDR sidecar(s) untouched (--task ModelDiagnostics writes no artifact but the report)",
-                        pass2Tally.Skipped));
+                    ctx.LogVerbose(CountText.Format(pass2Tally.Skipped,
+                        "Left the second-pass FDR scores file of 1 file untouched (--task ModelDiagnostics writes only the report)",
+                        "Left the second-pass FDR scores files of {0:N0} files untouched (--task ModelDiagnostics writes only the report)"));
                 }
             }
 
@@ -479,8 +480,7 @@ namespace pwiz.Osprey.Tasks
                 { Results = reloaded.Model, ExperimentAgg = reloaded.ExperimentAgg });
             ctx.LogInfo("Reusing the saved first-pass model.");
             ctx.LogVerbose(string.Format(
-                @"Reloaded persisted 1st-pass model sidecar for frozen 2nd-pass (pass-1 " +
-                @"experiment aggregation: {0}).",
+                "Reloaded the saved first-pass model for second-pass FDR (first-pass experiment aggregation: {0}).",
                 reloaded.ExperimentAgg ?? @"not recorded"));
 
             if (OspreyEnvironment.Pass2ProteinCompact && reloaded.StratumBaseIds != null &&
@@ -488,7 +488,7 @@ namespace pwiz.Osprey.Tasks
             {
                 ctx.Publish(new ProteinCompactStratum(reloaded.StratumBaseIds));
                 ctx.LogVerbose(string.Format(
-                    @"Reloaded the persisted protein-compact stratum ({0} base ids).",
+                    "Reloaded the precursor candidates from proteins with 2 or more detections ({0:N0} target-decoy pairs).",
                     reloaded.StratumBaseIds.Count));
             }
         }
@@ -602,8 +602,8 @@ namespace pwiz.Osprey.Tasks
             // the competition's [STAGE-WALL] line and the next probe (#4486); the write loop is
             // the first half.
             using (var reloadProgress = new ProgressReporter(
-                string.Format(@"Checking second-pass intermediate files for {0:N0} files",
-                              perFileEntries.Count),
+                CountText.Format(perFileEntries.Count, "Checking second-pass intermediate files for 1 file",
+                    "Checking second-pass intermediate files for {0:N0} files"),
                 perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 long nReloadReported = 0;
@@ -624,9 +624,10 @@ namespace pwiz.Osprey.Tasks
             }
             if (filesReloaded > 0)
             {
-                ctx.LogVerbose(string.Format(
-                    "Reloaded 2nd-pass FDR scores ({0}) for {1}/{2} file(s) post-compaction",
-                    phase, filesReloaded, filesReloaded + filesMissing));
+                ctx.LogVerbose(CountText.Format(filesReloaded + filesMissing,
+                    "Reloaded second-pass FDR scores ({1}) for 1 file",
+                    "Reloaded second-pass FDR scores ({1}) for {2:N0} of {0:N0} files",
+                    phase, filesReloaded));
             }
         }
 
@@ -785,7 +786,8 @@ namespace pwiz.Osprey.Tasks
             var seeder = new Pass1ScalarSeeder(maxEntries,
                 LoadExperimentRecords(ctx.Config, FdrScoresSidecar.Pass.FirstPass));
             using (var progress = new ProgressReporter(
-                       string.Format(@"Restoring first-pass scores for {0:N0} files", perFileEntries.Count),
+                       CountText.Format(perFileEntries.Count, "Restoring first-pass scores for 1 file",
+                           "Restoring first-pass scores for {0:N0} files"),
                        perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 foreach (var kvp in perFileEntries)
@@ -1202,9 +1204,10 @@ namespace pwiz.Osprey.Tasks
                         ".1st-pass.fdr_scores.bin files for those inputs and re-run.",
                         unreadable.Count, string.Join(", ", unreadable)));
                 }
-                ctx.LogVerbose(string.Format(
-                    @"Restored 1st-pass Score/Pep/ExperimentAggregateScore onto {0} survivor(s) across {1} file(s).",
-                    restored, filesRead));
+                ctx.LogVerbose(CountText.Format(filesRead,
+                    "Restored the first-pass scores of {1:N0} kept precursor candidate peaks in 1 file.",
+                    "Restored the first-pass scores of {1:N0} kept precursor candidate peaks across {0:N0} files.",
+                    restored));
             }
 
             private readonly List<string> _unreadable = new List<string>();
@@ -1505,7 +1508,8 @@ namespace pwiz.Osprey.Tasks
             // it is per-file work and reports as such.
             int patchIdx = 0;
             using (var progress = new ProgressReporter(
-                       string.Format(@"Writing protein q-values for {0:N0} files", fileNames.Count),
+                       CountText.Format(fileNames.Count, "Writing protein q-values for 1 file",
+                           "Writing protein q-values for {0:N0} files"),
                        fileNames.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 foreach (string fileName in fileNames)
@@ -1585,9 +1589,10 @@ namespace pwiz.Osprey.Tasks
                     "second-pass intermediate files for those files carry no valid protein q-value.",
                     failed.Count, string.Join(", ", failed)));
             }
-            ctx.LogVerbose(string.Format(
-                "Resolved the second-pass protein q-value for {0} record(s) across {1} file(s).",
-                nPatched, filesPatched));
+            ctx.LogVerbose(CountText.Format(filesPatched,
+                "Resolved the second-pass protein q-values of {1:N0} precursor candidate peaks in 1 file.",
+                "Resolved the second-pass protein q-values of {1:N0} precursor candidate peaks across {0:N0} files.",
+                nPatched));
 
             // The experiment-scope record set is complete now that protein FDR has filled the
             // one column it owns, so write it once beside the blib.
@@ -1605,7 +1610,7 @@ namespace pwiz.Osprey.Tasks
                 FdrExperimentSidecar.Write(experimentPath, experiment.Records,
                     FdrScoresSidecar.Pass.SecondPass);
                 ctx.LogVerbose(string.Format(
-                    @"Wrote experiment-scope FDR sidecar: {0} ({1} distinct entry ids)",
+                    "Wrote experiment-level FDR results for {1:N0} precursor candidates to {0}",
                     experimentPath, experiment.Count));
             }
             catch (Exception ex)
@@ -1806,7 +1811,8 @@ namespace pwiz.Osprey.Tasks
             // multi-hour search. The two steps after it (sidecar path validation and the protein
             // stratum build) are in the same silence and are NOT yet reported - see the TODO.
             using (var mergeProgress = new ProgressReporter(
-                string.Format(@"Collecting second-pass precursor candidates from {0:N0} files", fileNames.Count),
+                CountText.Format(fileNames.Count, "Collecting second-pass precursor candidates from 1 file",
+                    "Collecting second-pass precursor candidates from {0:N0} files"),
                 fileNames.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 int mergeIdx = 0;
@@ -1938,13 +1944,15 @@ namespace pwiz.Osprey.Tasks
 
             // What happens to the q-values, not how: the mode is on the [PATH] pass2-qvalue line,
             // and the frozen model, streaming and survivor-observation count are mechanism.
-            ctx.LogInfo(string.Format(
+            ctx.LogInfo(CountText.Format(fileKeys.Count,
+                "Second-pass FDR: recomputing q-values for {1:N0} precursor candidates from proteins " +
+                "with 2 or more detections; other candidates keep their first-pass q-values.",
                 "Second-pass FDR over {0:N0} files: recomputing q-values for {1:N0} precursor " +
                 "candidates from proteins with 2 or more detections; other candidates keep their " +
                 "first-pass q-values.",
-                fileKeys.Count, stratumBaseIds.Count));
+                stratumBaseIds.Count));
             ctx.LogVerbose(string.Format(
-                "{0}: frozen first-pass model scores for up to {1:N0} reconciled observations, one file at a time.",
+                "{0}: scoring up to {1:N0} re-scored peaks with the first-pass model, one file at a time.",
                 mode, survivorObservations));
 
             // This competition reduces per base_id by MAX, and BOTH modes that reach it then
@@ -2040,7 +2048,8 @@ namespace pwiz.Osprey.Tasks
             // a callback through the FDR layer. It now covers the frozen-model feature reload too
             // (folded in below), which is the expensive half and used to have its own reporter.
             using (var progress = new ProgressReporter(
-                string.Format("Recomputing second-pass q-values across {0:N0} files", fileKeys.Count),
+                CountText.Format(fileKeys.Count, "Recomputing second-pass q-values for 1 file",
+                    "Recomputing second-pass q-values across {0:N0} files"),
                 fileKeys.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 long nRead = 0;
@@ -2213,17 +2222,18 @@ namespace pwiz.Osprey.Tasks
                 }
                 else if (answered == fileKeys.Count)
                 {
-                    ctx.LogVerbose(string.Format(
-                        @"Second-pass fold reading the worker's written answer for all {0} " +
-                        @"file(s); no 1st-pass sidecar is opened.", fileKeys.Count));
+                    ctx.LogVerbose(CountText.Format(fileKeys.Count,
+                        "Second-pass FDR uses the results written during re-scoring for the file.",
+                        "Second-pass FDR uses the results written during re-scoring for all {0:N0} files."));
                 }
                 else
                 {
-                    ctx.LogVerbose(string.Format(
-                        @"Second-pass fold has a worker answer for {0} of {1} file(s); the " +
-                        @"remaining {2} are RECOMPUTED from their 1st-pass sidecars. A node given " +
-                        @"complete worker output would open none.",
-                        answered, fileKeys.Count, fileKeys.Count - answered));
+                    ctx.LogVerbose(CountText.Format(fileKeys.Count,
+                        "Second-pass FDR has no results from re-scoring for the file, so they are " +
+                        "recomputed from its first-pass intermediate files.",
+                        "Second-pass FDR has results from re-scoring for {1:N0} of {0:N0} files; the other " +
+                        "{2:N0} are recomputed from their first-pass intermediate files.",
+                        answered, fileKeys.Count - answered));
                 }
                 ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_SECOND_PASS_FOLD, @"verify={0} answered={1}/{2}",
                     OspreyEnvironment.Pass2VerifyWorker ? @"on" : @"off", answered, fileKeys.Count));
@@ -2289,7 +2299,8 @@ namespace pwiz.Osprey.Tasks
             var unpatched = new List<string>(writeFailures);
             var experiment = new FdrExperimentAccumulator();
             using (var patchProgress = new ProgressReporter(
-                string.Format("Writing experiment-level q-values for {0:N0} files", sidecarsWritten.Count),
+                CountText.Format(sidecarsWritten.Count, "Writing experiment-level q-values for 1 file",
+                    "Writing experiment-level q-values for {0:N0} files"),
                 sidecarsWritten.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 int patchIdx = 0;
@@ -2366,8 +2377,8 @@ namespace pwiz.Osprey.Tasks
                     unpatched.Count, string.Join(", ", unpatched)));
             }
             ctx.LogVerbose(string.Format(
-                "{0}: mapped recomputed q onto {1:N0} reported survivors ({2:N0} frozen-model scores " +
-                "swapped in) in {3:F1}s.",
+                "{0}: applied the recomputed q-values to {1:N0} precursor candidate peaks ({2:N0} " +
+                "scored with the first-pass model) in {3:F1}s.",
                 mode, nMapped, nScored, sw.Elapsed.TotalSeconds));
             return true;
 
@@ -2471,7 +2482,8 @@ namespace pwiz.Osprey.Tasks
             // Per-file progress: reloading each file's reconciled PIN features from parquet
             // ran ~10 min silent before 2nd-pass Percolator. Console-only.
             var reloadProgress = new ProgressReporter(
-                string.Format(@"Reloading reconciled features from {0} file(s)", perFileEntries.Count),
+                CountText.Format(perFileEntries.Count, "Reloading re-scored peak features from 1 file",
+                    "Reloading re-scored peak features from {0:N0} files"),
                 perFileEntries.Count);
             int reloadIdx = 0;
             foreach (var kvp in perFileEntries)
@@ -3044,7 +3056,8 @@ namespace pwiz.Osprey.Tasks
             // Per-file progress: building each file's per-run tables + classifying its survivors ran
             // silently for minutes on an 82-file join (the gap between Stage 6 and the summary below).
             var transferProgress = new ProgressReporter(
-                string.Format(@"Transferring per-run q-values across {0} file(s)", perFileEntries.Count),
+                CountText.Format(perFileEntries.Count, "Transferring run-level q-values for 1 file",
+                    "Transferring run-level q-values for {0:N0} files"),
                 perFileEntries.Count);
             int transferIdx = 0;
             foreach (var kvp in perFileEntries)

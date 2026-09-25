@@ -762,7 +762,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // file count would invite a completion estimate from unequal-cost units.
             int cardIdx = 0;
             var progress = new ProgressReporter(
-                string.Format(@"Building {0} pass-2 diagnostics card(s)", cards),
+                CountText.Format(cards, "Building 1 second-pass diagnostics panel",
+                    "Building {0:N0} second-pass diagnostics panels"),
                 cards, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
 
             // Indented one level: this reporter nests inside the card reporter, and without it
@@ -1030,7 +1031,9 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // larger dataset. The reporter's throttle means a small run still costs one line.
             int reduceIdx = 0;
             using (var progress = new ProgressReporter(
-                       string.Format(@"Reducing {0} file(s) to best-per-precursor", perFileEntries.Count),
+                       CountText.Format(perFileEntries.Count,
+                           "Finding the best peak of each precursor in 1 file",
+                           "Finding the best peak of each precursor across {0:N0} files"),
                        perFileEntries.Count, indent, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 foreach (var kvp in perFileEntries)
