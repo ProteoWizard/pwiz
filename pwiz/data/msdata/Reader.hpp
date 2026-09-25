@@ -65,7 +65,9 @@ class PWIZ_API_DECL Reader
         /// when true, include precursor isolation range arrays in Bruker DiaPASEF in passEntireDiaPasefFrame mode
         bool includeIsolationArrays;
 
-        /// when true, scans with only calibration data will be ignored (currently Waters lockmass only)
+        /// when true, scans with only calibration data will be ignored: the Waters lockmass function,
+        /// UIMF calibration frames, and spectra labeled "calibration spectrum" (MS:1000928) whose
+        /// fileContent declares them
         bool ignoreCalibrationScans;
 
         /// when true, Waters SONAR data will use bin numbers instead of ion mobility values in combineIonMobilitySpectra mode

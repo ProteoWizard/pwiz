@@ -92,7 +92,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_UIMF::spectrum(size_t index, DetailLevel 
         throw runtime_error(("[SpectrumList_UIMF::spectrum] Bad index: " + lexical_cast<string>(index)).c_str());
 
     const IndexEntry& ie = index_[index];
-    const UIMFReader::IndexEntry& rawIndexEntry = rawfile_->getIndex()[ie.index];
+    const UIMFReader::IndexEntry& rawIndexEntry = rawfile_->getIndex()[ie.rawIndex];
 
     // allocate a new Spectrum
     SpectrumPtr result(new Spectrum);
@@ -207,6 +207,15 @@ PWIZ_API_DECL double SpectrumList_UIMF::ccsToIonMobility(double ccs, double mz, 
 }
 
 
+PWIZ_API_DECL bool SpectrumList_UIMF::calibrationSpectraAreOmitted() const
+{
+    // getFrameTypes() is resolved when the reader opens the file, so this is a plain read and needs
+    // no lock - which matters, since spectrum() calls into the index holding readMutex while this
+    // is called without it.
+    return config_.ignoreCalibrationScans && rawfile_->getFrameTypes().count(FrameType_Calibration) > 0;
+}
+
+
 PWIZ_API_DECL void SpectrumList_UIMF::createIndex() const
 {
     using namespace boost::spirit::karma;
@@ -216,8 +225,20 @@ PWIZ_API_DECL void SpectrumList_UIMF::createIndex() const
 	index_.reserve(size);
     scanTimeToFrameMap_.reserve(frames);
 
+    // Calibration frames are left out of index_ below, so they must not appear in this map either.
+    // spectrum3d() resolves a retention time through it and reads drift scans straight from the
+    // frame it finds, so a calibration frame left here stays reachable through a list that no longer
+    // admits it - and worse, one whose retention time matches a surviving frame's would replace it,
+    // handing back the calibration frame's data for a frame the caller believes is an MS1.
+    set<int> calibrationFrames;
+    if (config_.ignoreCalibrationScans)
+        for (const UIMFReader::IndexEntry& rawIndexEntry : rawfile_->getIndex())
+            if (rawIndexEntry.frameType == FrameType_Calibration)
+                calibrationFrames.insert(rawIndexEntry.frame);
+
     for (int i = 1; i <= frames; ++i)
-        scanTimeToFrameMap_[rawfile_->getRetentionTime(i)] = i;
+        if (calibrationFrames.count(i) == 0)
+            scanTimeToFrameMap_[rawfile_->getRetentionTime(i)] = i;
 
     /*if (config_.combineIonMobilitySpectra)
     {
@@ -239,9 +260,17 @@ PWIZ_API_DECL void SpectrumList_UIMF::createIndex() const
             for (int j=0; j < rawIndex.size(); ++j)
             {
                 const UIMFReader::IndexEntry& rawIndexEntry = rawIndex[j];
+
+                // Calibration frames are not acquired from the injected sample, so leave them out of
+                // the list entirely when asked to - the same thing SpectrumList_Waters does with the
+                // lockmass function. Skipping here is what makes rawIndex worth tracking separately.
+                if (config_.ignoreCalibrationScans && rawIndexEntry.frameType == FrameType_Calibration)
+                    continue;
+
                 index_.push_back(IndexEntry());
                 IndexEntry& ie = index_.back();
-                ie.index = j;
+                ie.index = index_.size() - 1;
+                ie.rawIndex = j;
 
                 std::back_insert_iterator<std::string> sink(ie.id);
                 generate(sink, "frame=" << int_ << " scan=" << int_ << " frameType=" << int_, rawIndexEntry.frame, rawIndexEntry.scan, (int) rawIndexEntry.frameType);

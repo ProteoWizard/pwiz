@@ -57,13 +57,19 @@ using namespace pwiz::msdata::detail;
 
 namespace {
 
-void fillInMetadata(const string& rawpath, UIMFReaderPtr rawfile, MSData& msd)
+void fillInMetadata(const string& rawpath, UIMFReaderPtr rawfile, MSData& msd, const Reader::Config& config)
 {
     msd.cvs = defaultCVList();
 
     const set<FrameType>& frameTypes = rawfile->getFrameTypes();
     if (frameTypes.count(FrameType_MS1) > 0) msd.fileDescription.fileContent.set(MS_MS1_spectrum);
-    if (frameTypes.count(FrameType_Calibration) > 0) msd.fileDescription.fileContent.set(MS_calibration_spectrum);
+
+    // Only declare calibration spectra that the spectrum list will actually present. Declaring them
+    // when ignoreCalibrationScans has dropped them writes an mzML that advertises content it does
+    // not have, and consumers key off that declaration - the mzML reader uses it to decide whether
+    // a file is worth scanning for the term at all.
+    if (frameTypes.count(FrameType_Calibration) > 0 && !config.ignoreCalibrationScans)
+        msd.fileDescription.fileContent.set(MS_calibration_spectrum);
     if (frameTypes.count(FrameType_Prescan) > 0) msd.fileDescription.fileContent.set(MS_MS1_spectrum);
     if (frameTypes.count(FrameType_MS2) > 0) msd.fileDescription.fileContent.set(MS_MSn_spectrum);
 
@@ -136,11 +142,11 @@ void Reader_UIMF::read(const string& filename,
     UIMFReaderPtr dataReader(UIMFReader::create(filename));
 
     shared_ptr<SpectrumList_UIMF> sl(new SpectrumList_UIMF(result, dataReader, config));
-    shared_ptr<ChromatogramList_UIMF> cl(new ChromatogramList_UIMF(dataReader));
+    shared_ptr<ChromatogramList_UIMF> cl(new ChromatogramList_UIMF(dataReader, config));
     result.run.spectrumListPtr = sl;
     result.run.chromatogramListPtr = cl;
 
-    fillInMetadata(filename, dataReader, result);
+    fillInMetadata(filename, dataReader, result, config);
 }
 
 

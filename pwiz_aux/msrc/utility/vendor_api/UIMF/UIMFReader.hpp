@@ -97,7 +97,10 @@ class PWIZ_API_DECL UIMFReader
     virtual double getDriftTime(int frame, int scan) const = 0;
     virtual double getRetentionTime(int frame) const = 0;
 
-    virtual const void getTic(std::vector<double>& timeArray, std::vector<double>& intensityArray) const = 0;
+    /// One point per frame. Pass ignoreCalibrationFrames to leave out the frames that
+    /// Reader::Config::ignoreCalibrationScans keeps out of the spectrum list, so the TIC does not
+    /// carry points that no spectrum in the output accounts for.
+    virtual const void getTic(std::vector<double>& timeArray, std::vector<double>& intensityArray, bool ignoreCalibrationFrames = false) const = 0;
 
     virtual ~UIMFReader() {}
 };

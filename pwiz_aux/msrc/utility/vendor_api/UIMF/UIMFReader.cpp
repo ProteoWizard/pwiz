@@ -73,7 +73,7 @@ class UIMFReaderImpl : public UIMFReader
     virtual double getDriftTime(int frame, int scan) const;
     virtual double getRetentionTime(int frame) const;
 
-    virtual const void getTic(std::vector<double>& timeArray, std::vector<double>& intensityArray) const;
+    virtual const void getTic(std::vector<double>& timeArray, std::vector<double>& intensityArray, bool ignoreCalibrationFrames = false) const;
 
     private:
     msclr::auto_gcroot<UIMFLibrary::DataReader^> reader_;
@@ -308,7 +308,7 @@ double UIMFReaderImpl::getRetentionTime(int frame) const
     } CATCH_AND_FORWARD
 }
 
-const void UIMFReaderImpl::getTic(std::vector<double>& timeArray, std::vector<double>& intensityArray) const
+const void UIMFReaderImpl::getTic(std::vector<double>& timeArray, std::vector<double>& intensityArray, bool ignoreCalibrationFrames) const
 {
     timeArray.reserve(frameCount_);
     intensityArray.reserve(frameCount_);
@@ -316,6 +316,12 @@ const void UIMFReaderImpl::getTic(std::vector<double>& timeArray, std::vector<do
     // GetTICByFrame: if (0, 0, 0, 0) is provided, values for all frames and scans are returned (one per frame)
     for each (auto frameTic in reader_->GetTICByFrame(0, 0, 0, 0))
     {
+        // A calibration frame that was kept out of the spectrum list must not be summed in here
+        // either, or the TIC carries points that no spectrum in the file accounts for
+        if (ignoreCalibrationFrames &&
+            (FrameType) reader_->GetFrameTypeForFrame(frameTic.Key) == FrameType_Calibration)
+            continue;
+
         timeArray.push_back(reader_->GetFrameStartTimeMinutesEstimated(frameTic.Key));
         intensityArray.push_back(frameTic.Value);
     }
