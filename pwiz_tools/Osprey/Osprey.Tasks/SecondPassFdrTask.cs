@@ -1319,8 +1319,10 @@ namespace pwiz.Osprey.Tasks
             BlibOutputWriter.Write(config, rescored.FileNames, libraryById, bestByPrecursor,
                 bestExpPrecursorQ, sharedBounds, passingEntries, precursorFacts);
 
-            ctx.LogInfo(string.Format("Wrote {0:N0} library spectra to {1} (from {2:N0} passing entries)",
-                bestByPrecursor.Count, config.OutputBlib, passingEntries.Count));
+            // One spectrum per passing precursor (its best run); the peaks are every run's
+            // observation of those precursors, written as the per-run retention times.
+            ctx.LogInfo(string.Format("Wrote {0:N0} library spectra with {1:N0} peaks across {2:N0} runs to {3}",
+                bestByPrecursor.Count, passingEntries.Count, rescored.FileNames.Count, config.OutputBlib));
         }
 
         // Stage 1 (peptide gate): the configured FdrLevel determines which
