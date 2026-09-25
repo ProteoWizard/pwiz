@@ -988,7 +988,8 @@ namespace pwiz.Osprey.FDR
             var contribAcc = new FeatureContributions.Accumulator(nFeatures, percConfig.CollectFeatureHistograms);
             int nonEmptyFiles = 0;
             int g1 = 0;
-            log.LogInfo(string.Format(@"Running {0} Percolator on {1:N0} entries...", passLabel, n));
+            // No "Running Percolator on N" heading here: it would print AFTER the training lines
+            // above, reading as a second Percolator pass. The score heading below marks the step.
             // Fill the previously-silent multi-minute streaming score pass with throttled percent,
             // mirroring the resident ScoreProjectionAndComputeFdrInPlace "Scoring N entries" line.
             // Progress is log-only (OspreyOutput.Out), so the FDR output stays byte-identical.
