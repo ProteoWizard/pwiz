@@ -494,7 +494,7 @@ if (-not [string]::IsNullOrWhiteSpace($env:OSPREY_ALLOW_UNFIXED_RESIDENT)) {
 # under another rule and fail every dataset - or, under -CreateGolden, bless that rule as the
 # golden. Cleared, announced, and restored in the finally block like the allowance above.
 $script:priorSvmCTolerance = $env:OSPREY_SVM_C_TOLERANCE
-if (-not [string]::IsNullOrWhiteSpace($env:OSPREY_SVM_C_TOLERANCE)) {
+if (-not [string]::IsNullOrEmpty($env:OSPREY_SVM_C_TOLERANCE)) {
     Write-Host (("Clearing inherited OSPREY_SVM_C_TOLERANCE='{0}' - the goldens use the default " +
         "first-pass C selection.") -f $env:OSPREY_SVM_C_TOLERANCE) -ForegroundColor Yellow
     Remove-Item Env:OSPREY_SVM_C_TOLERANCE -ErrorAction SilentlyContinue
@@ -4196,7 +4196,7 @@ finally {
     } else {
         $env:OSPREY_ALLOW_UNFIXED_RESIDENT = $script:priorAllowResident
     }
-    if (-not [string]::IsNullOrWhiteSpace($script:priorSvmCTolerance)) {
+    if (-not [string]::IsNullOrEmpty($script:priorSvmCTolerance)) {
         $env:OSPREY_SVM_C_TOLERANCE = $script:priorSvmCTolerance
     }
     # The run reached the end of its legs (or threw from inside one): stamp it as a

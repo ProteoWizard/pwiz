@@ -1385,8 +1385,10 @@ namespace pwiz.Osprey.FDR
         {
             if (!(tolerance > 0))
                 return "strict maximum";
+            // General format, not fixed decimals: a small non-zero tolerance must not print
+            // as "0%", which would read as the strict maximum it is not.
             return string.Format(CultureInfo.InvariantCulture,
-                "most regularized within {0:0.###}% of the best", tolerance * 100);
+                "most regularized within {0:G6}% of the best", tolerance * 100);
         }
 
         /// <summary>
