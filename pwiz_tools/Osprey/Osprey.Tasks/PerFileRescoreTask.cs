@@ -416,9 +416,11 @@ namespace pwiz.Osprey.Tasks
             if (pass2Present > 0 && !allPass2Present)
             {
                 ctx.LogInfo(string.Format(
-                    @"Rescore resume: {0} of {1} run(s) already carry a current 2nd-pass sidecar; " +
-                    @"re-scoring the remaining {2}.",
+                    "Resuming: {0:N0} of {1:N0} runs already have second-pass intermediate files; " +
+                    "re-scoring the remaining {2:N0}.",
                     pass2Present, pass2Expected, pass2Expected - pass2Present));
+                ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_RESCORE_RESUME, @"adopted={0} rescore={1}",
+                    pass2Present, pass2Expected - pass2Present));
             }
 
             // A THIRD source of "there is a plan to execute", alongside FirstPassFDR's in-process
@@ -468,15 +470,16 @@ namespace pwiz.Osprey.Tasks
                 // under it either. An operator told that would drop the flag, re-run for hours
                 // and hit the identical refusal. The TASK is a different matter: it is the whole
                 // reason this run will not re-score, so it is named.
+                // Not DiagnosticsOnly: FirstPassFDR did not plan in this process, no worker bundle
+                // was supplied, and the per-run hydrate is unavailable.
                 string reason = ctx.Config.DiagnosticsOnly
-                    ? @"this process is --task ModelDiagnostics, which re-renders the report of a " +
-                      @"COMPLETED analysis and writes nothing else, so it will not re-score them. " +
-                      @"Finish the analysis first; the report can be regenerated afterwards."
-                    : @"this process has no plan to do it - FirstPassFDR did not plan here, no " +
-                      @"worker bundle was supplied, and the per-run hydrate is unavailable. " +
-                      @"Continuing would write an output silently missing those runs.";
+                    ? "--task ModelDiagnostics only builds the report for a completed analysis. " +
+                      "Finish the analysis first; the report can be built afterwards."
+                    : "the cross-run reconciliation files they need are not available to this run " +
+                      "(re-run --task FirstPassFDR). Stopping, because continuing would write output " +
+                      "missing those runs.";
                 ctx.LogError(string.Format(
-                    @"Rescore resume: {0} of {1} run(s) still need re-scoring, but {2}",
+                    "Cannot resume: {0:N0} of {1:N0} runs still need re-scoring, but {2}",
                     pass2Expected - pass2Present, pass2Expected, reason));
                 ctx.ExitCode = 1;
                 return false;
@@ -1072,17 +1075,17 @@ namespace pwiz.Osprey.Tasks
             var sidecar = FirstPassModelIO.LoadFromAny(perFileParquetPaths);
             if (sidecar?.Model == null)
             {
-                ctx.LogWarning(
-                    "Second-pass per-file competition: no readable 1st-pass model sidecar, so the " +
-                    "per-file half stays in SecondPassFDR for this run.");
+                ctx.LogVerbose(
+                    @"Second-pass per-file competition: no readable 1st-pass model sidecar, so the " +
+                    @"per-file half stays in SecondPassFDR for this run.");
                 return null;
             }
             var scorer = FrozenModelScorer.TryCreate(sidecar.Model);
             if (scorer == null)
             {
-                ctx.LogWarning(
-                    "Second-pass per-file competition: the frozen 1st-pass model has no usable " +
-                    "model/standardizer, so the per-file half stays in SecondPassFDR for this run.");
+                ctx.LogVerbose(
+                    @"Second-pass per-file competition: the frozen 1st-pass model has no usable " +
+                    @"model/standardizer, so the per-file half stays in SecondPassFDR for this run.");
                 return null;
             }
             // protein-compact is the only competition mode - the guard above returned already
@@ -2122,7 +2125,7 @@ namespace pwiz.Osprey.Tasks
             List<KeyValuePair<string, List<FdrEntry>>> buffer,
             Action<string, List<FdrEntry>> source, PipelineContext ctx)
         {
-            ctx.LogWarning(string.Format(
+            ctx.LogVerbose(string.Format(
                 @"Second-pass join: a consumer asked for the whole-run survivor pool, so all " +
                 @"{0} run(s) are being materialized at once. This is the O(runs x entries) peak " +
                 @"the per-run fold exists to avoid.", buffer.Count));

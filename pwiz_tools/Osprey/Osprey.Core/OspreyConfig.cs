@@ -510,6 +510,20 @@ namespace pwiz.Osprey.Core
 
     public static class FdrMethodExtensions
     {
+        private static string[] LOCALIZED_VALUES
+        {
+            get { return new[] { "Percolator", "Mokapot", "simple target-decoy", "gradient-boosted tree" }; }
+        }
+
+        /// <summary>
+        /// The user-facing name of an <see cref="FdrMethod"/>, as it reads in "Running {0} FDR
+        /// control". Skyline's <c>GetLocalizedString</c> pattern.
+        /// </summary>
+        public static string GetLocalizedString(this FdrMethod val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
+
         /// <summary>
         /// True for the methods driven by the shared semi-supervised target-decoy
         /// framework: <see cref="FdrMethod.Percolator"/> (linear SVM) and

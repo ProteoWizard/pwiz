@@ -122,7 +122,7 @@ namespace pwiz.Osprey.Tasks
                     if (unsortedCount > 0)
                     {
                         ctx.LogWarning(string.Format(
-                            "{0}: {1} spectra had unsorted centroids (sorted before caching).",
+                            "{0}: {1:N0} spectra had unsorted peaks and were sorted before caching.",
                             Path.GetFileName(inputFile), unsortedCount));
                     }
                 }

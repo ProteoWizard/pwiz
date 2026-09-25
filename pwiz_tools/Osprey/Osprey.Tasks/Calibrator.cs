@@ -584,8 +584,8 @@ namespace pwiz.Osprey.Tasks
                 if (pass1.Calibration.Method == RTCalibrationMethod.Linear)
                 {
                     _ctx.LogInfo(string.Format(
-                        "Refinement pass skipped: pass 1 used a linear fit ({0} points); " +
-                        "narrowing the window from it would be self-confirming.",
+                        "RT calibration refinement skipped: the first pass was a linear fit over {0:N0} " +
+                        "points, so a narrower window would only re-find the same points.",
                         pass1.Stats.NPoints));
                 }
                 else if (pass1Tolerance < initialTolerance * 0.5)
@@ -634,8 +634,9 @@ namespace pwiz.Osprey.Tasks
                         if (!refinedLinearOk)
                         {
                             _ctx.LogInfo(string.Format(
-                                "Refined calibration is a linear fit over {0} points that fails the " +
-                                "span/plausibility guards, keeping original calibration",
+                                "Refined RT calibration rejected: its linear fit over {0:N0} points covers " +
+                                "too little of the gradient or predicts retention times outside the run. " +
+                                "Keeping the first calibration.",
                                 pass2.Stats.NPoints));
                         }
 

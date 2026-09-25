@@ -297,11 +297,10 @@ namespace pwiz.Osprey.Tasks
     public static class RescoreHydration
     {
         /// <summary>
-        /// The one substring every disclosure of the ALL-RUNS reconciliation bundle carries:
-        /// both hydrate twins log it when they start building the bundle, and the guard that
-        /// refuses the bundle names it in the refusal. The regression gate's negative route
-        /// assertion reads this constant's value, so a run that built the bundle, or was refused
-        /// for trying, is visible in its log by construction rather than by wording coincidence.
+        /// The name the <c>--verbose</c> route notes give the ALL-RUNS reconciliation bundle when
+        /// either hydrate twin starts building it. The regression gate does not read it: its
+        /// negative route assertion reads <c>[PATH] all-runs-bundle</c>, which both twins and the
+        /// refusing guard emit, so the prose is free to change.
         /// </summary>
         public const string ALL_RUNS_BUNDLE_MARKER = @"ALL-RUNS reconciliation bundle";
 
@@ -356,9 +355,12 @@ namespace pwiz.Osprey.Tasks
             // later, which is the case a per-caller marker would silently miss. BOTH twins emit
             // it: this overlay, and HydrateCompactedStreaming below, which streams the reading
             // but accumulates the result and is the twin the 446-run incident actually took.
-            log?.LogInfo(string.Format(
-                @"Hydrating the {0}: {1} run(s) held at once, O(files x entries).",
-                ALL_RUNS_BUNDLE_MARKER, perFileEntries.Count));
+            if (OspreyOutput.Verbose)
+            {
+                log?.LogInfo(string.Format(
+                    @"Hydrating the {0}: {1} run(s) held at once, O(files x entries).",
+                    ALL_RUNS_BUNDLE_MARKER, perFileEntries.Count));
+            }
             log?.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_ALL_RUNS_BUNDLE, @"built runs={0}",
                 perFileEntries.Count));
 
@@ -612,9 +614,12 @@ namespace pwiz.Osprey.Tasks
             // took. Same marker as the overlay, for the same negative route assertion, and
             // emitted here rather than through the ProgressReporter heading above, which is
             // deferred and never appears on a small cohort.
-            log?.LogInfo(string.Format(
-                @"Hydrating the {0}: {1} run(s) held at once, O(files x entries).",
-                ALL_RUNS_BUNDLE_MARKER, nFiles));
+            if (OspreyOutput.Verbose)
+            {
+                log?.LogInfo(string.Format(
+                    @"Hydrating the {0}: {1} run(s) held at once, O(files x entries).",
+                    ALL_RUNS_BUNDLE_MARKER, nFiles));
+            }
             log?.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_ALL_RUNS_BUNDLE, @"built runs={0}", nFiles));
             using (var hydrateProgress = new ProgressReporter(
                        @"Loading cross-run reconciliation files", nFiles))

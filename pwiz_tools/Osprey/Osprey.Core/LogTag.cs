@@ -250,6 +250,13 @@ namespace pwiz.Osprey.Core
         /// (<c>error-with-success</c> or <c>failure-without-error</c>). Always a defect.
         /// </summary>
         public const string ROUTE_EXIT_RECONCILED = @"exit-reconciled";
+        /// <summary>
+        /// Inputs that are not present and stand in from a <c>spectra-cache</c> or a
+        /// <c>scores-parquet</c> (value <c>kind n/total</c>).
+        /// </summary>
+        public const string ROUTE_INPUT_SOURCE = @"input-source";
+        /// <summary>A partial rescore resumed: runs adopted and runs re-scored.</summary>
+        public const string ROUTE_RESCORE_RESUME = @"rescore-resume";
 
         // [COUNT] keys.
         /// <summary>Library fragment spectra released after an FDR stage.</summary>

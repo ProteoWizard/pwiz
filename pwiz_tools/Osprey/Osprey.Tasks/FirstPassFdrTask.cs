@@ -382,8 +382,8 @@ namespace pwiz.Osprey.Tasks
             else
             {
                 ctx.LogInfo(string.Format(
-                    @"--task ModelDiagnostics: folding the first pass from {0} run(s), one run resident " +
-                    @"at a time (no rescore bundle, no survivor pool).", parquetPaths.Count));
+                    "Model diagnostics: reading first-pass intermediate files for {0:N0} runs, one run at a time.",
+                    parquetPaths.Count));
                 RescoreHydration.FoldPreCompactionPerRun(
                     parquetPaths,
                     (fileIdx, fileName, parquetPath) => LoadResumeStubs(fileName, parquetPath,
@@ -479,10 +479,8 @@ namespace pwiz.Osprey.Tasks
                 // seconds and hours, and without this line the only symptom is that the run takes
                 // a very long time and still produces the right answer.
                 ctx.LogInfo(string.Format(
-                    @"FirstPassFDR: not folding diagnostics from completed work - {0} is {1}, " +
-                    @"so the first pass is re-run.",
-                    output, File.Exists(output) ? @"present but not current for this analysis"
-                        : @"missing"));
+                    "Model diagnostics: {0} is {1}, so the first pass is re-run to build the report.",
+                    output, File.Exists(output) ? "out of date for this analysis" : "missing"));
                 return false;
             }
             return true;
@@ -602,8 +600,8 @@ namespace pwiz.Osprey.Tasks
             // and it would produce the RIGHT report, so no gate would ever report the cost.
             if (WillOnlyFoldDiagnostics(ctx))
             {
-                ctx.LogInfo(@"FirstPassFDR: every output but the model-diagnostics product is " +
-                            @"current; folding the report from the completed first pass.");
+                ctx.LogInfo("Model diagnostics: the first pass is already complete, so its report is " +
+                            "built from the first-pass intermediate files. Nothing is re-run.");
                 ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_MODEL_DIAGNOSTICS, @"fold-pass1"));
                 // Fold the product FIRST, always, and by the bounded route. Rehydrate cannot be
                 // relied on to do it: with the --model-diagnostics exclusion gone from
@@ -630,8 +628,8 @@ namespace pwiz.Osprey.Tasks
             if (!config.FdrMethod.UsesPercolatorFramework())
             {
                 ctx.LogInfo(string.Empty);
-                ctx.LogInfo(string.Format(@"Running {0} FDR control on coelution results...",
-                    config.FdrMethod));
+                ctx.LogInfo(string.Format("Running {0} FDR control on the scored precursor candidates...",
+                    config.FdrMethod.GetLocalizedString()));
             }
 
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx,
@@ -775,10 +773,7 @@ namespace pwiz.Osprey.Tasks
                     perFileEntries, perFileParquetPaths, config, ctx);
                 if (fdrSidecarFailures > 0 && config.StopAfterStage5)
                 {
-                    ctx.LogError(string.Format(
-                        @"--task FirstPassFDR: {0}/{1} 1st-pass fdr_scores.bin sidecar " +
-                        @"writes failed; boundary file pair is incomplete. See warnings above.",
-                        fdrSidecarFailures, perFileEntries.Count));
+                    LogIntermediateWriteFailures(ctx, fdrSidecarFailures, perFileEntries.Count);
                     ctx.ExitCode = 1;
                     return false;
                 }
@@ -1156,10 +1151,12 @@ namespace pwiz.Osprey.Tasks
                 // shape that produced this issue, and one no guard downstream can see.
                 if (perFileEntries.Count == 0)
                     return true;
+                // RescoreCompaction.Apply must run whenever any file is joined; reaching here
+                // with files means it did not, and the Stage 6 survivor handoff cannot stream.
                 ctx.LogError(string.Format(
-                    @"Resume rehydrate: the first-pass compaction published no retained base_id " +
-                    @"set for {0} joined file(s), so the Stage 6 survivor handoff cannot be " +
-                    @"streamed. RescoreCompaction.Apply must run whenever any file is joined.",
+                    "Cannot resume: the first-pass intermediate files for {0:N0} files are missing " +
+                    "the list of precursor candidates kept for cross-run reconciliation. Delete the " +
+                    ".1st-pass.* files for those inputs and re-run.",
                     perFileEntries.Count));
                 ctx.ExitCode = 1;
                 return false;
@@ -1170,8 +1167,8 @@ namespace pwiz.Osprey.Tasks
                 if (perFileParquetPaths != null && perFileParquetPaths.ContainsKey(kvp.Key))
                     continue;
                 ctx.LogError(string.Format(
-                    @"Resume rehydrate: no scores parquet path published for {0}, so its " +
-                    @"first-pass survivors cannot be rebuilt for the Stage 6 rescore.", kvp.Key));
+                    "Cannot resume: no .scores.parquet file is known for {0}, so its first-pass " +
+                    "precursor candidates cannot be reloaded for re-scoring.", kvp.Key));
                 ctx.ExitCode = 1;
                 return false;
             }
@@ -1261,7 +1258,7 @@ namespace pwiz.Osprey.Tasks
                 ctx.ExitCode = 1;
                 return false;
             }
-            ctx.LogInfo(string.Format(
+            ctx.LogVerbose(string.Format(
                 @"Per-run rescore: FirstPassFDR publishes the survivor loader only; no " +
                 @"experiment-wide bundle is built for {0} run(s).", perFileEntries.Count));
             ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_FIRST_PASS_FDR, @"survivor-loader-only runs={0}",
@@ -1373,7 +1370,7 @@ namespace pwiz.Osprey.Tasks
                 if (!perFileParquetPaths.TryGetValue(kvp.Key, out var path))
                 {
                     ctx.LogError(string.Format(
-                        @"Resume rehydrate: no scores parquet path published for {0}", kvp.Key));
+                        "Cannot resume: no .scores.parquet file is known for {0}.", kvp.Key));
                     ctx.ExitCode = 1;
                     return null;
                 }
@@ -1411,13 +1408,13 @@ namespace pwiz.Osprey.Tasks
                     // retained summary to compact them. Disclosed here, on the arm that takes
                     // the cost, because the lean arm above cannot - it streams from disk, needs
                     // the summary, and fails with its own named remedy when that is missing.
-                    ctx.LogWarning(string.Format(
-                        @"This configuration holds every run's first-pass stubs resident, so " +
-                        @"the resume adopts them through the {0}, which retains every run's " +
-                        @"survivors at once and grows O(files x entries) - measured at " +
-                        @"0.10 GB/file on a 446-run cohort. The bounded per-run survivor " +
-                        @"loader cannot serve a consumer that reads the resident pool.",
-                        RescoreHydration.ALL_RUNS_BUNDLE_MARKER));
+                    // The ALL-RUNS reconciliation bundle: O(files x entries), 0.10 GB/file
+                    // measured on a 446-run cohort. The bounded per-run survivor loader cannot
+                    // serve a consumer that reads the resident pool.
+                    ctx.LogWarning(
+                        "This configuration resumes with the first-pass precursor candidates of " +
+                        "every run in memory at once, which grows with the number of runs (about " +
+                        "0.1 GB per run) and may exhaust memory on large cohorts.");
                     bundle = RescoreHydration.HydrateReconciliationOverlay(perFileEntries,
                         parquetPaths, LoadFirstPassExperimentRecords(ctx.Config, ctx),
                         ctx.Get<SequencePool>().Value, ctx);
@@ -1426,7 +1423,7 @@ namespace pwiz.Osprey.Tasks
             catch (InvalidDataException ex)
             {
                 ctx.LogError(string.Format(
-                    @"Resume rehydrate: failed to hydrate reconciliation bundle from own sidecars: {0}",
+                    "Cannot resume: the first-pass intermediate files could not be read. {0}",
                     ex.Message));
                 ctx.ExitCode = 1;
                 return null;
@@ -1496,13 +1493,12 @@ namespace pwiz.Osprey.Tasks
             // report rows are keyed by the same index the hook reports, and the streaming
             // hydrate rederives its own names from the parquet stems (checked below).
             var fileNames = perFileEntries.ConvertAll(kv => kv.Key);
-            // This log line is what regression.ps1 mode 5 asserts on. It has to come from
+            // The [PATH] line is what regression.ps1 mode 5 asserts on. It has to come from
             // THIS arm: Rehydrate's own "Bundle hydration" line is emitted before the bundle
             // source is even known, so a worker-supplied bundle logs it too and it cannot
             // witness the own-sidecar streaming path.
             ctx.LogInfo(string.Format(
-                @"Resume rehydrate: streaming the first-pass bundle from {0} file(s) " +
-                @"(one file's pre-compaction pool resident at a time).", fileNames.Count));
+                "Resuming: reloading first-pass intermediate files for {0:N0} files.", fileNames.Count));
             ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_FIRST_PASS_FDR, @"own-bundle-stream files={0}",
                 fileNames.Count));
 
@@ -2305,17 +2301,14 @@ namespace pwiz.Osprey.Tasks
             {
                 if (reconWriteFailures > 0)
                 {
-                    ctx.LogError(string.Format(
-                        @"--task FirstPassFDR: {0}/{1} reconciliation.json " +
-                        @"writes failed; boundary file pair is incomplete. See warnings above.",
-                        reconWriteFailures, perFileEntries.Count));
+                    LogIntermediateWriteFailures(ctx, reconWriteFailures, perFileEntries.Count);
                     ctx.ExitCode = 1;
                     return false;
                 }
                 ctx.LogInfo(string.Format(
-                    @"--task FirstPassFDR: Stage 5 + reconciliation planning " +
-                    @"complete; wrote {0} reconciliation.json + matching fdr_scores.bin " +
-                    @"sidecar pair(s). Exiting before Stage 6 rescore.",
+                    "--task FirstPassFDR complete: first-pass FDR and reconciliation planning done " +
+                    "for {0:N0} files; the next task (PerFileRescoring) reads the .reconciliation.json " +
+                    "and .1st-pass.fdr_scores.bin files written for each input.",
                     perFileEntries.Count));
                 // Success: return true (not false). The stop after Stage 5 is now
                 // a membership fact -- PerFileRescore and SecondPassFDR are excluded
@@ -2620,6 +2613,20 @@ namespace pwiz.Osprey.Tasks
                     continue;
                 retained.Add(filePlan.Entries[vecIdx].EntryId & ScoringTaskShared.BASE_ID_MASK);
             }
+        }
+
+        /// <summary>
+        /// The <c>--task FirstPassFDR</c> error for intermediate files that could not be written:
+        /// the per-file <c>.1st-pass.fdr_scores.bin</c> or <c>.reconciliation.json</c> the next
+        /// task reads. Each failed write has already logged its own warning naming the file, so
+        /// this line gives the count and the consequence.
+        /// </summary>
+        private static void LogIntermediateWriteFailures(PipelineContext ctx, int failures, int fileCount)
+        {
+            ctx.LogError(string.Format(
+                "--task FirstPassFDR: {0:N0} of {1:N0} first-pass intermediate files could not be " +
+                "written, so the next task cannot run. See the warnings above for each file.",
+                failures, fileCount));
         }
 
         /// <summary>
@@ -3345,14 +3352,14 @@ namespace pwiz.Osprey.Tasks
                 // taken from disk, because a wrong-cohort adoption would look identical to a
                 // right one in a bare count.
                 ctx.LogInfo(string.Format(
-                    @"Resume: {0} of {1} file(s) already carry a current 1st-pass sidecar and will " +
-                    @"not be re-scored ({2} to score).",
+                    "Resuming: {0:N0} of {1:N0} files already have up-to-date first-pass intermediate " +
+                    "files; scoring the remaining {2:N0}.",
                     resumableFiles.Count, projections.PerFile.Count,
                     projections.PerFile.Count - resumableFiles.Count));
                 foreach (var kv in projections.PerFile)
                 {
                     if (resumableFiles.Contains(kv.Key))
-                        ctx.LogInfo(string.Format(@"  resume-skip: {0}", kv.Key));
+                        ctx.LogInfo(string.Format("  up to date: {0}", kv.Key));
                 }
             }
 
@@ -3421,8 +3428,8 @@ namespace pwiz.Osprey.Tasks
             if (canEnterAtGate)
             {
                 ctx.LogInfo(string.Format(
-                    @"Resume: all {0} sidecars and the experiment sidecar are current - skipping the " +
-                    @"score passes, protein FDR and model diagnostics, and entering at the compaction gate.",
+                    "Resuming: first-pass intermediate files for all {0:N0} files are up to date; " +
+                    "skipping first-pass scoring and protein FDR.",
                     projections.PerFile.Count));
                 ctx.Publish(new FirstPassPercolatorModel
                 {
@@ -3715,10 +3722,7 @@ namespace pwiz.Osprey.Tasks
                 sink.PartialWriteFailures + pass1WriteFailures + patchFailures + experimentFailures;
             if (sidecarFailures > 0 && config.StopAfterStage5)
             {
-                ctx.LogError(string.Format(
-                    @"--task FirstPassFDR: {0}/{1} 1st-pass fdr_scores.bin sidecar " +
-                    @"writes failed; boundary file pair is incomplete. See warnings above.",
-                    sidecarFailures, projections.PerFile.Count));
+                LogIntermediateWriteFailures(ctx, sidecarFailures, projections.PerFile.Count);
                 ctx.ExitCode = 1;
                 return null;
             }
@@ -3808,9 +3812,8 @@ namespace pwiz.Osprey.Tasks
             }
             if (modelWrites > 0)
             {
-                ctx.LogInfo(string.Format(
-                    @"Persisted the trained 1st-pass model ({0} file sidecar(s)); a run interrupted " +
-                    @"after this point resumes without retraining.", modelWrites));
+                ctx.LogInfo(
+                    "Saved the trained first-pass model; an interrupted run resumes from here without retraining.");
             }
         }
 

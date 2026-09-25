@@ -483,8 +483,8 @@ namespace pwiz.Osprey.Scoring
             if (removedCount > 0)
             {
                 _log.LogInfo(string.Format(
-                    "Double-counting deduplication: removed {0:N0} entries " +
-                    "({1:N0} targets, {2:N0} decoys; {3:N0} remaining)",
+                    "Removed {0:N0} precursor candidates ({1:N0} targets, {2:N0} decoys) that matched " +
+                    "the same peak as a stronger candidate in the same isolation window; {3:N0} remain.",
                     removedCount, removedTargets, removedDecoys,
                     originalCount - removedCount));
             }

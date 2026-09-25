@@ -334,8 +334,8 @@ namespace pwiz.Osprey
                         continue;
                     }
                     LogError(string.Format(
-                        "Input file not found, and it has neither a spectra cache nor a scores " +
-                        "parquet to stand in for it: {0}", inputFile));
+                        "Input file not found, and no spectra cache or intermediate file exists to " +
+                        "stand in for it: {0}", inputFile));
                     return 1;
                 }
                 // Announced, not silent: a run whose sources are gone cannot rebuild a
@@ -343,14 +343,18 @@ namespace pwiz.Osprey
                 if (cacheOnlyInputs > 0)
                 {
                     LogInfo(string.Format(
-                        "{0} of {1} input(s) are absent but have a spectra cache; reading those from the cache.",
+                        "{0:N0} of {1:N0} input files are not present but have a spectra cache; reading those from the cache.",
+                        cacheOnlyInputs, config.InputFiles.Count));
+                    LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_INPUT_SOURCE, @"spectra-cache {0}/{1}",
                         cacheOnlyInputs, config.InputFiles.Count));
                 }
                 if (artifactOnlyInputs > 0)
                 {
                     LogInfo(string.Format(
-                        "{0} of {1} input(s) are absent and have no spectra cache; reading those from " +
-                        "their scores parquet, which is what a task after Stage 4 needs.",
+                        "{0:N0} of {1:N0} input files are not present; using the intermediate scores " +
+                        "file written for each one.",
+                        artifactOnlyInputs, config.InputFiles.Count));
+                    LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_INPUT_SOURCE, @"scores-parquet {0}/{1}",
                         artifactOnlyInputs, config.InputFiles.Count));
                 }
                 if (config.LibrarySource != null && !File.Exists(config.LibrarySource.Path))
@@ -405,17 +409,14 @@ namespace pwiz.Osprey
                 // instead of a full Stage 1-5.
                 if (OspreyEnvironment.Pass2QValueUnrecognized)
                 {
+                    // Why 'percolator' and 'transfer-compete' were removed, with the entrapment
+                    // numbers, is in docs/12-second-pass-fdr.md and on OspreyEnvironment.Pass2QValue.
                     LogError(string.Format(
-                        "OSPREY_PASS2_QVALUE is not a recognized mode. Recognized: '{0}', '{1}'. " +
-                        "Unset it for the default ('{1}'). 'percolator' was REMOVED: it retrained " +
-                        "the 2nd-pass SVM on a compaction-depleted decoy pool, which reports " +
-                        "anti-conservative q-values. 'transfer-compete' was REMOVED for a related " +
-                        "reason: it selected survivors by TARGET per-run q and admitted decoys only " +
-                        "by pairing, stripping decoys that won the 1st-pass competition, so its q " +
-                        "improved with no added evidence - 1.96% true FDP at a nominal 1% on 82-file " +
-                        "SEA-AD, against 1.53% for the default, and with FEWER ids.",
+                        "OSPREY_PASS2_QVALUE='{2}' is not recognized. Use '{0}' or '{1}', or unset it " +
+                        "for the default ('{1}'). The 'percolator' and 'transfer-compete' modes were removed.",
                         OspreyEnvironment.PASS2_QVALUE_TRANSFER,
-                        OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT));
+                        OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT,
+                        Environment.GetEnvironmentVariable(@"OSPREY_PASS2_QVALUE")));
                     return 1;
                 }
                 // OSPREY_STAGE7_STREAM was REMOVED (2026-09-10): the streamed Stage-7 join is the
@@ -424,17 +425,15 @@ namespace pwiz.Osprey
                 // under the resident one - the misattribution case these variables have to be
                 // strict about, and the reason this is an error rather than a warning. Checked at
                 // startup so a stale script dies in seconds instead of after Stage 1-5.
+                // It kept the RESIDENT Stage-7 join as an A/B byte-identity oracle for the
+                // streamed default; that A/B was banked (the resident arm matched the committed
+                // golden at 1e-9 with a byte-identical diagnostics report). The configurations
+                // that still take the resident arm do so by their own declaration (ResidentPaths).
                 if (OspreyEnvironment.Stage7StreamRetiredSet)
                 {
                     LogError(
-                        "OSPREY_STAGE7_STREAM was REMOVED and setting it does nothing. Unset it. " +
-                        "It kept the RESIDENT Stage-7 join as an A/B byte-identity oracle for the " +
-                        "streamed default; that A/B was banked (the resident arm matched the " +
-                        "committed golden at 1e-9 and produced a byte-identical diagnostics " +
-                        "report), and the switch went with it. Stage 7 streams by default and this " +
-                        "variable can no longer select the resident arm; the configurations that " +
-                        "still take it do so by their own declaration (see ResidentPaths), not " +
-                        "through this setting.");
+                        "OSPREY_STAGE7_STREAM was removed and has no effect. Unset it. Second-pass " +
+                        "FDR now always processes one run at a time where the analysis allows it.");
                     return 1;
                 }
                 // A token that names nothing admits nothing, so the run proceeds - but say so
@@ -454,11 +453,13 @@ namespace pwiz.Osprey
                     // whole value would push the operator to rewrite or unset a variable whose
                     // valid half the run still needs, and the run then aborts on a guard the
                     // warning said was not engaged.
+                    // 'hpc-merge' and 'fdrbench-pass1' were retired: the --task SecondPassFDR
+                    // reconciled-input load and the pass-1 FDRBench emitter both stream and need
+                    // no allowance.
                     LogWarning(string.Format(
-                        "OSPREY_ALLOW_UNFIXED_RESIDENT contains unrecognized token(s) that grant " +
-                        "nothing: {0}. Recognized: {1}. ('hpc-merge' and 'fdrbench-pass1' were retired - the " +
-                        "--task SecondPassFDR reconciled-input load and the pass-1 FDRBench emitter both stream and need no allowance.) " +
-                        "Any recognized token in the same value is still honored.",
+                        "OSPREY_ALLOW_UNFIXED_RESIDENT contains tokens that are not recognized and " +
+                        "have no effect: {0}. Recognized: {1}. Any recognized token in the same value " +
+                        "is still honored.",
                         OspreyEnvironment.UnrecognizedResidentTokens,
                         string.Join(", ", ResidentPaths.KNOWN_UNFIXED)));
                 }
@@ -543,10 +544,8 @@ namespace pwiz.Osprey
             // A product is outstanding. Say so before the pipeline banner, because the next
             // thing the log shows is task machinery and an operator needs to know it is a fold
             // rather than the re-analysis this task used to refuse to start.
-            LogInfo("--task ModelDiagnostics: a diagnostics product is missing for this " +
-                    "analysis; folding it from the completed artifacts. No analysis is re-run - " +
-                    "each pass produces its own report from its own sidecars, and every other " +
-                    "output is left as it stands.");
+            LogInfo("--task ModelDiagnostics: building the report from the completed analysis. " +
+                    "Nothing is re-run and no other output changes.");
             return -1;
         }
 

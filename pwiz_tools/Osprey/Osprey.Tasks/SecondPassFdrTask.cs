@@ -358,8 +358,8 @@ namespace pwiz.Osprey.Tasks
                         @"--model-diagnostics - then re-run this task.",
                         pass1Path));
                 }
-                ctx.LogInfo(@"SecondPassFDR: every output but the model-diagnostics product is " +
-                            @"current; folding the pass-2 report from the completed second pass.");
+                ctx.LogInfo("Model diagnostics: the second pass is already complete, so its report is " +
+                            "built from the second-pass intermediate files. Nothing is re-run.");
                 ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_MODEL_DIAGNOSTICS, @"fold-pass2"));
                 return FoldPass2DiagnosticsOnly(ctx);
             }
@@ -685,10 +685,8 @@ namespace pwiz.Osprey.Tasks
                 // between minutes and over an hour, and without this line the only symptom is
                 // that the run takes a very long time and still produces the right answer.
                 ctx.LogInfo(string.Format(
-                    @"SecondPassFDR: not folding diagnostics from completed work - {0} is {1}, " +
-                    @"so the second pass is re-run.",
-                    output, File.Exists(output) ? @"present but not current for this analysis"
-                        : @"missing"));
+                    "Model diagnostics: {0} is {1}, so the second pass is re-run to build the report.",
+                    output, File.Exists(output) ? "out of date for this analysis" : "missing"));
                 return false;
             }
             return true;
@@ -720,11 +718,11 @@ namespace pwiz.Osprey.Tasks
             if (rescored.Streams)
                 return;
             int nFiles = ctx.Config.InputFiles?.Count ?? 0;
+            // The RESIDENT Stage 7 join: every run's survivors are rebuilt at once and held for
+            // the whole stage, O(files) (issue #4486). Measured ~4.4 GB plus ~0.197 GB per file.
             ctx.LogWarning(string.Format(
-                @"Stage 7 is taking the RESIDENT join: every run's survivors are rebuilt at " +
-                @"once and held for the whole stage, which is O(files) (issue #4486). " +
-                @"Measured cost is ~4.4 GB plus ~0.197 GB per file, so {0} file(s) needs " +
-                @"~{1:F0} GB.", nFiles, 4.4 + 0.197 * nFiles));
+                "Second-pass FDR will hold the precursor candidates of all {0:N0} runs in memory at " +
+                "once (about {1:N0} GB).", nFiles, 4.4 + 0.197 * nFiles));
         }
 
         /// <summary>
@@ -826,8 +824,8 @@ namespace pwiz.Osprey.Tasks
             ProfilerHooks.CaptureRetentionSnapshot(@"pass2-join-end");
 
             ctx.LogInfo(string.Format(
-                @"SecondPassFDR: folding the second pass from {0} run(s), one run resident at a " +
-                @"time (no second-pass FDR, no protein FDR, no blib).", rescored.FileCount));
+                "Model diagnostics: reading second-pass intermediate files for {0:N0} runs, one run at a time.",
+                rescored.FileCount));
 
             // One report, two survivor shapes, and the choice is the stage's existing one -
             // taken here rather than re-decided, so the fold and the join cannot render from
@@ -1272,7 +1270,8 @@ namespace pwiz.Osprey.Tasks
             if (nFallback > 0)
             {
                 ctx.LogInfo(string.Format(
-                    "{0} peptides had no charge state passing precursor-level FDR; best charge state kept as fallback",
+                    "{0:N0} peptides passed peptide-level FDR with no single charge state passing " +
+                    "precursor-level FDR; their best charge state is reported.",
                     nFallback));
             }
 

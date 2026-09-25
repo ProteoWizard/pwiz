@@ -914,7 +914,8 @@ namespace pwiz.Osprey.FDR
             }
             else
             {
-                log.LogInfo(@"Reusing the persisted first-pass model; no training subset is loaded and no SVM is trained.");
+                // No training subset is loaded and no SVM is trained.
+                log.LogInfo("Reusing the saved first-pass model.");
             }
 
             var trainConfig = new PercolatorConfig

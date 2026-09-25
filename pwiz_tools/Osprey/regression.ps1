@@ -3064,7 +3064,7 @@ foreach ($name in $selected) {
         # leg is ever pointed back at the real sources, which would drop the coverage with
         # nothing going red. Same reason mode 5 asserts its rehydrate marker.
         $m2absent = Test-LogMarker -LogPath $rResume.Log `
-            -Marker 'are absent but have a spectra cache' `
+            -Marker '[PATH] input-source: spectra-cache' `
             -Description 'Osprey resolving inputs from the spectra cache with no source present'
         foreach ($issue in $m2absent.Issues) { $m2cache.Issues.Add($issue) }
         # Repair Pass after mutating Issues - Test-TaskCacheHits computed it at return time.
@@ -4127,7 +4127,7 @@ foreach ($name in $selected) {
         # VISIBILITY. How much was reused has to be STATED, not inferred from what the run does
         # next; a resume nobody can audit is one nobody can trust after an interruption.
         $m8Marker = Test-LogMarker -LogPath $rPartial.Log `
-            -Marker 'Rescore resume:' `
+            -Marker '[PATH] rescore-resume:' `
             -Description 'the rescore reporting how many runs it adopted and how many it re-scored'
         foreach ($issue in $m8Marker.Issues) { $m8Issues.Add($issue) }
 

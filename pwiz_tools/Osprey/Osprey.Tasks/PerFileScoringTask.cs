@@ -925,7 +925,8 @@ namespace pwiz.Osprey.Tasks
         private static void LogCoelutionComplete(PipelineContext ctx, long totalScored, int nFiles)
         {
             ctx.LogInfo(string.Format(
-                @"Coelution analysis complete. {0:N0} total scored entries across {1:N0} files",
+                "Coelution scoring complete: {0:N0} precursor candidates (targets + decoys) scored " +
+                "across {1:N0} files.",
                 totalScored, nFiles));
             ctx.LogInfo(LogTag.COUNT, LogKey.Format(LogKey.COUNT_SCORED_CANDIDATES, @"total={0} files={1}",
                 totalScored, nFiles));
@@ -997,7 +998,7 @@ namespace pwiz.Osprey.Tasks
 
             if (perFileEntries.Count == 0 || totalScored == 0)
             {
-                ctx.LogWarning(@"No scored entries found. Cannot perform FDR control.");
+                ctx.LogWarning("No precursor candidates were scored, so FDR control cannot run.");
                 ctx.ExitCode = 0;
                 return false;
             }
@@ -1015,16 +1016,16 @@ namespace pwiz.Osprey.Tasks
                 if (ReferenceEquals(ctx.Config.SelectedTask, this))
                 {
                     ctx.LogInfo(string.Format(
-                        @"--task {0} complete: {1:N0} precursor candidates scored across {2:N0} file(s). " +
-                        @"Per-file `.scores.parquet` written next to each input. " +
-                        @"{3} and later run in their own invocations; no FDR or blib output here.",
+                        "--task {0} complete: {1:N0} precursor candidates scored across {2:N0} files; " +
+                        "a .scores.parquet file is written for each input. FDR and .blib output are " +
+                        "left to the next task ({3}).",
                         Name, totalScored, nFiles, FirstPassFdrTask.TASK_NAME));
                 }
                 else
                 {
                     ctx.LogInfo(string.Format(
-                        @"--task {0}: {1} scores loaded for {2} file(s); a per-file worker runs no join.",
-                        ctx.Config.SelectedTask.Name, Name, nFiles));
+                        "--task {0}: loaded the scores of {1:N0} files.",
+                        ctx.Config.SelectedTask.Name, nFiles));
                 }
                 ctx.ExitCode = 0;
                 return false;
@@ -1639,13 +1640,13 @@ namespace pwiz.Osprey.Tasks
         private static void WarnPreCompactionPool(
             OspreyConfig config, bool hasReconSidecars, PipelineContext ctx)
         {
+            // The RESIDENT pre-compaction first-pass pool: every file's full stub list at once,
+            // O(files). The bounded per-file streaming hydrate cannot serve that consumer.
             string reason = PreCompactionPoolReason(config, hasReconSidecars, ctx)
-                            ?? @"This configuration";
+                            ?? "This configuration";
             ctx.LogWarning(string.Format(
-                @"{0} requires the RESIDENT pre-compaction first-pass pool: every " +
-                @"--input-scores file's full stub list is held in memory at once, so memory " +
-                @"here grows O(files) and can exhaust RAM at large file counts. The bounded " +
-                @"per-file streaming hydrate cannot serve that consumer.", reason));
+                "{0} needs the first-pass precursor candidates of every file in memory at once; " +
+                "memory grows with the number of files and may exhaust RAM on large cohorts.", reason));
             ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_PRE_COMPACTION_POOL, @"resident"));
         }
 
@@ -1670,7 +1671,7 @@ namespace pwiz.Osprey.Tasks
             // that file's own 1st-pass (score -> run q) sidecar, one file at a time, so it
             // needs no pre-compaction pool. See NeedsResidentPool.
             if (!config.FdrMethod.UsesPercolatorFramework())
-                return @"A non-Percolator FDR method";
+                return "An FDR method other than Percolator";
             if (!OspreyEnvironment.UseFdrProjection)
                 return @"OSPREY_FDR_PROJECTION=0";
             // FirstPassFDR is IN this pipeline, so it will Run and train first-pass Percolator
@@ -1693,13 +1694,13 @@ namespace pwiz.Osprey.Tasks
             // runs inside FirstPassFdrTask.Run, AFTER this decision, so it cannot be what corrects
             // it. Ask the same question here instead.
             if (ScoringTaskShared.Includes<FirstPassFdrTask>(config) && !FirstPassFdrTask.WillOnlyFoldDiagnostics(ctx))
-                return @"First-pass Percolator training in this process";
+                return "Training the first-pass Percolator model";
             // No bundle at all. The reconciliation envelope is what carries the compaction
             // predicate, so without it there is nothing to compact against at load time and
             // streaming cannot run. Last because every reason above names a real consumer,
             // and this one is a missing input rather than a consumer.
             if (!hasReconSidecars)
-                return @"No reconciled bundle on the --input-scores inputs";
+                return "Resuming without cross-run reconciliation files";
             return null;
         }
 
@@ -1739,7 +1740,8 @@ namespace pwiz.Osprey.Tasks
             if (!ParquetScoreCache.HasPinFeatureColumns(parquetPath))
             {
                 throw new InvalidDataException(string.Format(
-                    @"--input-scores: parquet {0} is missing the PIN feature columns -- it is not a valid Osprey scores parquet. Delete it and re-run so it is regenerated.",
+                    "{0} is missing the feature columns of an Osprey .scores.parquet file. Delete it " +
+                    "and re-run so it is regenerated.",
                     parquetPath));
             }
             ctx.LogVerbose(string.Format(
@@ -1783,7 +1785,7 @@ namespace pwiz.Osprey.Tasks
             PipelineContext ctx)
         {
             var scoresPaths = ScoringTaskShared.ScoresPathsForInputs(config);
-            ctx.LogInfo(string.Format(
+            ctx.LogVerbose(string.Format(
                 @"{0} run(s) will be hydrated one at a time by {1}; " +
                 @"no all-runs pre-load.", scoresPaths.Count, consumer));
             for (int i = 0; i < scoresPaths.Count; i++)
@@ -2585,7 +2587,7 @@ namespace pwiz.Osprey.Tasks
                 "Loaded {0:N0} MS1 and {1:N0} MS/MS spectra with {2:N0} unique isolation windows{3}",
                 ms1Spectra.Count, windowIndex.Ms2Count, isolationWindows.Count,
                 unsortedCount > 0
-                    ? string.Format(" ({0} had unsorted peaks, re-sorted; use --verbose for detail)", unsortedCount)
+                    ? string.Format(" ({0:N0} spectra had unsorted peaks and were sorted; use --verbose for detail)", unsortedCount)
                     : string.Empty));
             ctx.LogInfo(LogTag.COUNT, string.Format("mzML spectra loaded [{0}]: {1} MS2 + {2} MS1",
                 fileName, windowIndex.Ms2Count, ms1Spectra.Count));
