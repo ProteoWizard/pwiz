@@ -41,10 +41,42 @@ PWIZ_API_DECL SpectrumListPtr SpectrumList_IgnoreCalibrationScans::create(const 
     if (!msd.fileDescription.fileContent.hasCVParam(MS_calibration_spectrum))
         return inner;
 
-    boost::shared_ptr<SpectrumList_IgnoreCalibrationScans> result(new SpectrumList_IgnoreCalibrationScans(inner));
+    // Ask for the cheapest detail level that actually populates the term rather than assuming the
+    // worst. For mzML that is the difference between reading every spectrum's encoded arrays off
+    // disk and not touching them at all.
+    //
+    // The predicate needs three answers, not two. Returning a plain bool would make the first
+    // non-calibration spectrum escalate all the way to FullData and stay there, since false is how
+    // min_level_accepted is told to try a higher level. So: indeterminate once this spectrum's
+    // types are populated and it simply is not calibration data (ask another spectrum, keep the
+    // level), and false only while nothing is populated yet (read this one in more detail). Same
+    // shape as VendorReaderTestHarness.cpp's msLevel probe.
+    DetailLevel detailLevel;
+    try
+    {
+        detailLevel = inner->min_level_accepted([](const Spectrum& s) -> boost::tribool
+        {
+            if (s.hasCVParam(MS_calibration_spectrum))
+                return true;
+            if (s.hasCVParamChild(MS_spectrum_type))
+                return boost::indeterminate;
+            return false;
+        });
+    }
+    catch (std::exception&)
+    {
+        // Either no spectrum carries the term at any detail level - the fileContent declaration was
+        // false, see ProteoWizard #4499 - or a spectrum could not be read at all. Both end the same
+        // way: hand back the list we were given, so calibrationSpectraAreOmitted() cannot claim to
+        // have removed something, and behavior falls back to what it was before this wrapper.
+        return inner;
+    }
 
-    // The declaration promised calibration spectra and the file has none - hand back the list we
-    // were given rather than a wrapper that would report having removed them
+    boost::shared_ptr<SpectrumList_IgnoreCalibrationScans> result(new SpectrumList_IgnoreCalibrationScans(inner, detailLevel));
+
+    // min_level_accepted found a spectrum carrying the term at this level, so the scan below saw it
+    // too and the sizes must differ. Kept as an explicit invariant rather than an inferred one,
+    // because calibrationSpectraAreOmitted() reports on it.
     if (result->size() == inner->size())
         return inner;
 
@@ -52,7 +84,7 @@ PWIZ_API_DECL SpectrumListPtr SpectrumList_IgnoreCalibrationScans::create(const 
 }
 
 
-SpectrumList_IgnoreCalibrationScans::SpectrumList_IgnoreCalibrationScans(const SpectrumListPtr& inner)
+SpectrumList_IgnoreCalibrationScans::SpectrumList_IgnoreCalibrationScans(const SpectrumListPtr& inner, DetailLevel detailLevel)
 :   SpectrumListWrapper(inner)
 {
     size_t innerSize = inner_->size();
@@ -64,11 +96,10 @@ SpectrumList_IgnoreCalibrationScans::SpectrumList_IgnoreCalibrationScans(const S
         bool isCalibration = false;
         try
         {
-            // FullMetadata rather than FullData so the arrays are not decoded. Note this is not as
-            // cheap as it sounds for mzML: the parser still reads each encoded array off disk before
-            // discarding it, so this pass costs a sequential read of the file. The fileContent gate
-            // in create() is what keeps that off files with nothing to remove.
-            SpectrumPtr s = inner_->spectrum(i, DetailLevel_FullMetadata);
+            // create() resolved the cheapest level that populates the term, so this is as little
+            // reading as the question can be answered with. The fileContent gate keeps the pass off
+            // files with nothing to remove in the first place.
+            SpectrumPtr s = inner_->spectrum(i, detailLevel);
             isCalibration = s.get() && s->hasCVParam(MS_calibration_spectrum);
         }
         catch (std::exception&)

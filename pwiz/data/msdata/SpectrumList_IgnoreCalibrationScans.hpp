@@ -81,7 +81,9 @@ class PWIZ_API_DECL SpectrumList_IgnoreCalibrationScans : public SpectrumListWra
 
     private:
 
-    SpectrumList_IgnoreCalibrationScans(const SpectrumListPtr& inner);
+    /// detailLevel is the cheapest level that populates "calibration spectrum", resolved by create()
+    /// through min_level_accepted so the scan reads no more of each spectrum than it has to.
+    SpectrumList_IgnoreCalibrationScans(const SpectrumListPtr& inner, DetailLevel detailLevel);
 
     /// inner index -> our index, or size() if inner hides it or does not know it
     size_t fromInnerIndex(size_t innerIndex) const;

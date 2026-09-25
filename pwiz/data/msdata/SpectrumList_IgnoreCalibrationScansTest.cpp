@@ -125,6 +125,94 @@ void testLeavesUndeclaredFilesAlone()
     unit_assert(!sl->calibrationSpectraAreOmitted());
 }
 
+// Reveals "calibration spectrum" only at or above a chosen detail level, and records every level it
+// is asked for. SpectrumListSimple ignores detail level altogether, so without a list like this the
+// tests above pass whatever level create() picks - including the FullMetadata it used to hardcode.
+class DetailLevelRecordingSpectrumList : public SpectrumListSimple
+{
+    public:
+
+    DetailLevelRecordingSpectrumList(DetailLevel revealAt) : revealAt_(revealAt) {}
+
+    mutable vector<DetailLevel> requested;
+
+    SpectrumPtr spectrum(size_t index, DetailLevel detailLevel) const override
+    {
+        requested.push_back(detailLevel);
+
+        SpectrumPtr s(new Spectrum(*spectra[index]));
+        if ((int) detailLevel < (int) revealAt_)
+        {
+            // Below the revealing level nothing about the spectrum's type is populated yet, which is
+            // what the predicate reads as "ask me again in more detail" rather than "not calibration"
+            vector<CVParam>& cvParams = s->cvParams;
+            cvParams.erase(std::remove_if(cvParams.begin(), cvParams.end(),
+                                          [](const CVParam& cvParam)
+                                          {
+                                              return cvIsA(cvParam.cvid, MS_spectrum_type);
+                                          }),
+                           cvParams.end());
+        }
+        return s;
+    }
+
+    /// Deliberately not recorded: the wrapper asks by DetailLevel, and this overload is reached only
+    /// by callers that are not choosing a level at all.
+    SpectrumPtr spectrum(size_t index, bool getBinaryData) const override
+    {
+        return SpectrumPtr(new Spectrum(*spectra[index]));
+    }
+
+    /// SpectrumListSimple implements this as *spectrum(index, false), which would both charge this
+    /// test for a read the wrapper did not ask for and return a reference to a temporary, since the
+    /// spectrum() above hands back a copy rather than the stored element. Read the element directly.
+    const SpectrumIdentity& spectrumIdentity(size_t index) const override
+    {
+        return *spectra[index];
+    }
+
+    private:
+
+    DetailLevel revealAt_;
+};
+
+// The scan must cost no more of each spectrum than the question needs. Pins the resolved level
+// rather than the wording of the call: reverting to a hardcoded DetailLevel_FullMetadata fails here
+// while leaving every other assertion in this file green.
+void testAsksForTheCheapestDetailLevelThatWorks()
+{
+    boost::shared_ptr<DetailLevelRecordingSpectrumList> sl(
+        new DetailLevelRecordingSpectrumList(DetailLevel_FastMetadata));
+
+    const char* ids[] = {"scan=1", "scan=2", "scan=3", "scan=4"};
+    for (size_t i = 0; i < 4; ++i)
+    {
+        SpectrumPtr s(new Spectrum);
+        s->index = i;
+        s->id = ids[i];
+        s->set(MS_ms_level, 1);
+        s->set(i == 1 ? MS_calibration_spectrum : MS_MS1_spectrum);
+        sl->spectra.push_back(s);
+    }
+
+    MSData msd;
+    msd.run.spectrumListPtr = sl;
+    msd.fileDescription.fileContent.set(MS_MS1_spectrum);
+    msd.fileDescription.fileContent.set(MS_calibration_spectrum);
+
+    SpectrumListPtr filtered = SpectrumList_IgnoreCalibrationScans::create(msd.run.spectrumListPtr, msd);
+
+    // It still works: the tagged spectrum is gone
+    unit_assert_operator_equal(3, filtered->size());
+    unit_assert(filtered->calibrationSpectraAreOmitted());
+
+    // ...and it got there without ever reading more than FastMetadata. InstantMetadata appears too,
+    // since that is where min_level_accepted starts before escalating.
+    unit_assert(!sl->requested.empty());
+    for (DetailLevel detailLevel : sl->requested)
+        unit_assert((int) detailLevel <= (int) DetailLevel_FastMetadata);
+}
+
 } // namespace
 
 
@@ -137,6 +225,7 @@ int main(int argc, char* argv[])
         testRemovesCalibrationSpectra();
         testLeavesUndeclaredFilesAlone();
         testLeavesDeclaredButUntaggedFilesAlone();
+        testAsksForTheCheapestDetailLevelThatWorks();
     }
     catch (exception& e)
     {
