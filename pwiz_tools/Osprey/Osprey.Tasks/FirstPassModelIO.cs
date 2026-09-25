@@ -43,7 +43,7 @@ namespace pwiz.Osprey.Tasks
     ///
     /// Only the slice <see cref="FrozenModelScorer"/> consumes is stored: the feature
     /// standardizer (<see cref="FeatureStandardizer.Means"/>/<see cref="FeatureStandardizer.Stds"/>)
-    /// plus the per-fold linear weights and biases, or for <c>--fdr-method gbdt</c> the per-fold
+    /// plus the per-fold linear weights and biases, or for <c>OSPREY_FDR_MODEL=gbdt</c> the per-fold
     /// tree ensembles in their <see cref="GbtModelData"/> form. Doubles route through
     /// <see cref="RoundtripDoubleConverter"/> so a reloaded model scores BIT-IDENTICALLY to
     /// the in-process original (the <see cref="FrozenModelScorer.TryCreate"/> fold-average is
@@ -81,7 +81,7 @@ namespace pwiz.Osprey.Tasks
             public double[][] FoldWeights { get; set; }
             public double[] FoldBiases { get; set; }
 
-            /// <summary>The per-fold tree ensembles of a <c>--fdr-method gbdt</c> model, or null for
+            /// <summary>The per-fold tree ensembles of a <c>OSPREY_FDR_MODEL=gbdt</c> model, or null for
             /// the linear SVM. Omitted from the file when null, so a linear model serializes
             /// byte-for-byte as it did before this property existed; added without bumping
             /// <see cref="SchemaVersion"/> for the reason <see cref="ExperimentAgg"/> was.</summary>

@@ -28,7 +28,7 @@ That is why the `percolator` mode was **removed** rather than demoted. It was
 measured at 1.57% true FDP against a nominal 1% on Stellar libdecoy entrapment
 (the first-pass q gives 0.92% on the same data), and around 9% on an 82-file
 SEA-AD set - the error grows with run count. **The model the first pass trained (the
-linear SVM, or the tree ensemble under `--fdr-method gbdt`) is now the model for the
+linear SVM, or the tree ensemble under `OSPREY_FDR_MODEL=gbdt`) is now the model for the
 second pass in every mode**, and second-pass
 retraining has been removed outright - see "Frozen vs. retrain" below.
 
@@ -106,7 +106,7 @@ Bourgon 2010).
   features with **no new training**. It routes through `FrozenModelScorer`
   (`TryCreate` averages fold weights or takes the tree ensemble; `Score` goes
   through `PercolatorScorer.ScoreStandardizedRow`, so it is classifier-agnostic and
-  works for `--fdr-method gbdt` too). The model is captured on the streaming
+  works for `OSPREY_FDR_MODEL=gbdt` too). The model is captured on the streaming
   first pass via the `captureModel` hook.
 - **Retrain** trained a fresh SVM/GBDT on the post-reconciliation pool. **It is gone.**
   `percolator` was removed for the depleted-null reason above, and the
@@ -115,7 +115,7 @@ Bourgon 2010).
   git history holds the dropped approach.
 
 **There is therefore no second-pass model.** The model the first pass trained - the linear
-SVM, or the tree ensemble under `--fdr-method gbdt` - IS the model for pass 2, unchanged. Only the score DISTRIBUTIONS differ, because pass 2
+SVM, or the tree ensemble under `OSPREY_FDR_MODEL=gbdt` - IS the model for pass 2, unchanged. Only the score DISTRIBUTIONS differ, because pass 2
 runs on a subset - which is why a pass-2 feature-contribution view needs the frozen
 coefficients plus per-feature target/decoy means, and nothing that has to be retrained.
 
@@ -127,7 +127,7 @@ disk. Three experiment-wide artifacts carry it:
 
 | Artifact | Carries |
 |---|---|
-| `<stem>.1st-pass.model.json` | the frozen Percolator model (standardizer + per-fold weights and biases, or per-fold tree ensembles under `--fdr-method gbdt`) and the first pass's `OSPREY_EXPERIMENT_AGG` provenance |
+| `<stem>.1st-pass.model.json` | the frozen Percolator model (standardizer + per-fold weights and biases, or per-fold tree ensembles under `OSPREY_FDR_MODEL=gbdt`) and the first pass's `OSPREY_EXPERIMENT_AGG` provenance |
 | `<stem>.1st-pass.stratum.json` | the protein stratum, under `protein-compact`. Split out of the model sidecar in #4633, because first-pass protein FDR computes it and training does not |
 | `<blib-stem>.1st-pass.fdr_experiment.bin` | the first pass's experiment-scope q-values |
 
@@ -162,7 +162,7 @@ They are **two files, not one**, because two different phases produce them:
 model, and `<stem>.1st-pass.stratum.json` when first-pass protein FDR ends. On a
 446-file cohort those two moments are hours apart, and bundling them meant the
 model - a few hundred KB for the linear SVM, about 3.4 MB for a tree model under
-`--fdr-method gbdt`, fully computed at minute ~21 - existed only in RAM
+`OSPREY_FDR_MODEL=gbdt`, fully computed at minute ~21 - existed only in RAM
 until the end of the task, so any interruption threw it away. `LoadFromAny`
 merges the two on read, so a consumer still sees one sidecar. **Both must ride
 the HPC relay**: an orchestrator that copies the model between phase directories
@@ -181,6 +181,7 @@ would be harder to reason about than an explicit variable.
 | Flag / env var | Default | Effect |
 |---|---|---|
 | `OSPREY_PASS2_QVALUE` | `protein-compact` | Selects the second-pass q-value mode: `transfer` \| `protein-compact`. Unrecognized → startup error. |
+| `OSPREY_FDR_MODEL` | unset (linear SVM) | **Experimental** when `gbdt`. Selects the classifier the first pass trains, which is also the frozen model pass 2 scores with; `svm` names the default. Unrecognized -> startup error. See [07](07-fdr-control.md). |
 | `OSPREY_FDR_PROJECTION` | on | Streams the FDR peak via the thin `FdrProjection` slice; the frozen modes stream one file at a time so routing them does not hold all features resident. |
 
 ## Divergences from the Rust documentation

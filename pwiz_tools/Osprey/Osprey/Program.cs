@@ -336,6 +336,19 @@ namespace pwiz.Osprey
                         OspreyEnvironment.EXPERIMENT_AGG_MEAN_BEST_PREFIX,
                         OspreyEnvironment.MEAN_BEST_N_MAX));
                 }
+                // OSPREY_FDR_MODEL: abort on an unrecognized value, do not fall back. A run that
+                // asked for trees and trained the linear SVM is the #4491 defect, and its output
+                // reads exactly like a tree result. The classifier is named only when it is not
+                // the default, so the linear SVM's log is unchanged; here rather than at Stage 5
+                // for the same reason as the aggregation line above.
+                if (OspreyEnvironment.FdrModelError != null)
+                {
+                    LogError(OspreyEnvironment.FdrModelError);
+                    return 1;
+                }
+                string fdrModelLine = OspreyEnvironment.DescribeFdrModel(config.FdrMethod);
+                if (fdrModelLine != null)
+                    LogInfo(fdrModelLine);
                 // Abort, do not fall back. A run that asked for a mode it did not get would
                 // report q-values the caller never requested, under whatever output name the
                 // caller chose - and 'percolator' was removed, so existing sweep scripts still
@@ -395,7 +408,8 @@ namespace pwiz.Osprey
                     LogWarning(string.Format(
                         "OSPREY_ALLOW_UNFIXED_RESIDENT contains unrecognized token(s) that grant " +
                         "nothing: {0}. Recognized: {1}. ('hpc-merge' and 'fdrbench-pass1' were retired - the " +
-                        "--task SecondPassFDR reconciled-input load and the pass-1 FDRBench emitter both stream and need no allowance.) " +
+                        "--task SecondPassFDR reconciled-input load and the pass-1 FDRBench emitter both stream and need no allowance. " +
+                        "'non-percolator-fdr' was retired with the simple FDR method it named.) " +
                         "Any recognized token in the same value is still honored.",
                         OspreyEnvironment.UnrecognizedResidentTokens,
                         string.Join(", ", ResidentPaths.KNOWN_UNFIXED)));

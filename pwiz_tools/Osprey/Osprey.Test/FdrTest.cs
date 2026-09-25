@@ -399,7 +399,7 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// --fdr-method gbdt trains tree ensembles instead of the linear SVM and
+        /// OSPREY_FDR_MODEL=gbdt trains tree ensembles instead of the linear SVM and
         /// scores through the same population/competition path: targets separate from
         /// decoys, one model per fold, and no linear weights (the tree path leaves
         /// FoldWeights empty and populates FoldGbtModels instead).
@@ -442,7 +442,7 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The reason --fdr-method gbdt exists: model capacity. On a population
+        /// The reason OSPREY_FDR_MODEL=gbdt exists: model capacity. On a population
         /// whose discriminating feature is NON-MONOTONE (targets near zero, decoys in
         /// both tails -- the shape that made several Rust CoelutionFeatureSet scores
         /// unusable with a linear SVM), a linear model can only exploit the weak
@@ -1360,7 +1360,7 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// <c>--fdr-method gbdt</c> through the DEFAULT first pass. <see cref="PerFileScoringTask"/>
+        /// <c>OSPREY_FDR_MODEL=gbdt</c> through the DEFAULT first pass. <see cref="PerFileScoringTask"/>
         /// takes the lean counts-only path for gbdt exactly as it does for percolator - both are
         /// the Percolator framework - so FirstPassFDR runs
         /// <see cref="PercolatorScorer.RunStreamingFirstPass"/>. That path hand-copied its

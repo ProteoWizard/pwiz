@@ -61,9 +61,9 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// <c>--fdr-method gbdt</c> must key the three tasks whose output the first-pass model
+        /// <c>OSPREY_FDR_MODEL=gbdt</c> must key the three tasks whose output the first-pass model
         /// determines - FirstPassFDR trains it, PerFileRescoring and SecondPassFDR score with it -
-        /// and nothing else, and must leave every percolator key exactly as it was.
+        /// and nothing else, and must leave every linear-SVM key exactly as it was.
         ///
         /// <para>Written after the omission let one arm adopt the other: a percolator directory
         /// re-run as gbdt, or a gbdt directory written while the lean first pass still trained
@@ -78,11 +78,24 @@ namespace pwiz.Osprey.Test
             var treeCtx = new PipelineContext(new OspreyConfig { FdrMethod = FdrMethod.Gbdt }, tasks, null, null, null);
             string treeTerm = PercolatorEngine.GbdtValidityKeySuffix(treeCtx.Config);
             Assert.AreNotEqual(string.Empty, treeTerm, @"gbdt must emit a term");
-            foreach (var method in new[] { FdrMethod.Percolator, FdrMethod.Mokapot, FdrMethod.Simple })
-            {
-                Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(new OspreyConfig { FdrMethod = method }),
-                    method + @" must emit nothing, or every existing output directory is invalidated");
-            }
+            // The linear SVM emits NOTHING, through both overloads and whatever the tree settings
+            // say, so moving the choice from --fdr-method to OSPREY_FDR_MODEL invalidates no
+            // existing SVM output directory.
+            Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(new OspreyConfig()),
+                @"the linear SVM must emit nothing, or every existing output directory is invalidated");
+            Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(FdrMethod.Percolator,
+                    new GbtParams { NTrees = 7 }, OspreyEnvironment.GBT_MAX_ITERATIONS_DEFAULT + 1, 1),
+                @"tree settings must not reach a linear-SVM key");
+
+            // The spelling of the default tree term, pinned whole: it is what every gbdt output
+            // directory records, and it is named for the variable that selects it. It read
+            // ;fdrmethod=gbdt while --fdr-method did, which no release carried.
+            Assert.AreEqual(
+                @";fdrmodel=gbdt;gbtobjective=LogisticBinary;gbttrees=200;gbtdepth=6;gbtlr=0.1" +
+                @";gbtminchild=1;gbtsubsample=0.8;gbtcolsample=0.8;gbtgamma=0;gbtlambda=1;gbtalpha=0" +
+                @";gbtbins=64;gbtseed=42;gbtiterations=30;gbtinnerfolds=5",
+                PercolatorEngine.GbdtValidityKeySuffix(FdrMethod.Gbdt, new GbtParams(),
+                    OspreyEnvironment.GBT_MAX_ITERATIONS_DEFAULT, 5));
 
             // The term is the ONLY difference: a percolator key is the gbdt key without it.
             foreach (var task in tasks)

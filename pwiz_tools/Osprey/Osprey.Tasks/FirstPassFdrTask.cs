@@ -625,17 +625,8 @@ namespace pwiz.Osprey.Tasks
 
             // Stage 5: First-pass FDR. The Percolator framework (SVM or Gbdt) prints
             // its own "Running First-pass Percolator on N entries..." line from the FDR
-            // engine, so the generic header would just be a redundant second
-            // header right after the [TASK] FirstPassFDR banner. Emit it only for
-            // the other methods (Simple / fallback), which otherwise go straight
-            // to per-file result lines with no header of their own.
-            if (!config.FdrMethod.UsesPercolatorFramework())
-            {
-                ctx.LogInfo(string.Empty);
-                ctx.LogInfo(string.Format(@"Running {0} FDR control on coelution results...",
-                    config.FdrMethod));
-            }
-
+            // engine, so there is no generic header here: it would be a redundant second
+            // header right after the [TASK] FirstPassFDR banner.
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo,
                 string.Format(@"Stage 5 start: {0} files loaded (stubs), before first-pass FDR", perFileEntries.Count));
 
@@ -674,7 +665,7 @@ namespace pwiz.Osprey.Tasks
             // sidecar), which then flows into PlanStage6 / Publish exactly as the
             // legacy compacted buffer does -- the blast radius is confined to this
             // pre-compaction span. Falls back to the legacy FdrEntry-buffer path
-            // (the byte-identity oracle) when the flag is off or FdrMethod != Percolator.
+            // (the byte-identity oracle) when the flag is off.
             // FDRBench pass-1 (#4377) is NOT here any more (#4507): it used to read the full
             // pre-compaction pool resident and so forced this whole run onto the legacy path,
             // which is why `--fdrbench-pass both` silently wrote only pass 2 for as long as the
@@ -725,13 +716,13 @@ namespace pwiz.Osprey.Tasks
             else
             {
                 var swFdr = Stopwatch.StartNew();
-                var featureContributions = RunFdr(perFileEntries, config, ctx, loadFileFeatures);
+                var featureContributions = RunPercolatorFdr(perFileEntries, config, ctx,
+                    loadFileFeatures: loadFileFeatures);
                 // Persist the model on the RESIDENT path too. The projection path does it in
                 // its captureModel hook, but this path's hook only publishes - and the block
                 // in PlanStage6 that used to persist for BOTH was removed with this change.
-                // Left as it was, OSPREY_FDR_PROJECTION=0 (or a non-Percolator FdrMethod) would produce a
-                // directory carrying a stratum and no model, which LoadFromAny reads as no
-                // frozen state at all.
+                // Left as it was, OSPREY_FDR_PROJECTION=0 would produce a directory carrying a
+                // stratum and no model, which LoadFromAny reads as no frozen state at all.
                 if (ctx.TryGet<FirstPassPercolatorModel>(out var residentModel) &&
                     residentModel.Results != null)
                 {
@@ -792,8 +783,8 @@ namespace pwiz.Osprey.Tasks
                 // pipeline.rs write_fdrbench_peptide_input (#4377). Pass 2 (the
                 // post-compaction reported set) is emitted from SecondPassFdrTask; `both`
                 // writes each to its own .pass1 / .pass2 file. Reached only on the resident
-                // (legacy) first-pass path - OSPREY_FDR_PROJECTION=0 or a non-Percolator
-                // FdrMethod; the projection path streams the same file
+                // (legacy) first-pass path - OSPREY_FDR_PROJECTION=0; the projection path
+                // streams the same file
                 // (WriteFdrBenchPass1FromSidecarsIfRequested).
                 WriteFdrBenchPass1IfRequested(perFileEntries, config, ctx);
 
@@ -1225,8 +1216,8 @@ namespace pwiz.Osprey.Tasks
             // This arm's precondition, checked rather than assumed: the lists it republishes as
             // CompactedEntries are EMPTY, because the lean load left them so and each run is
             // compacted against the retained set as it is hydrated. A RESIDENT load (a
-            // NeedsResidentPool token - OSPREY_FDR_PROJECTION=0 or a non-Percolator FDR
-            // method) leaves every run's PRE-compaction stubs in them, and
+            // NeedsResidentPool token - OSPREY_FDR_PROJECTION=0) leaves every run's
+            // PRE-compaction stubs in them, and
             // CanHydratePerRun has no term for that: it would admit this arm, the full lists
             // would be published uncompacted under a name that promises compaction, nothing
             // downstream compacts them (MaterializeFileSurvivors is a no-op on a non-empty
@@ -1244,9 +1235,8 @@ namespace pwiz.Osprey.Tasks
                 ctx.LogError(string.Format(
                     @"The per-run rescore arm was reached with {0:N0} first-pass stub(s) still " +
                     @"resident across {1} run(s). This configuration holds the resident " +
-                    @"first-pass pool (a NeedsResidentPool consumer: OSPREY_FDR_PROJECTION=0 " +
-                    @"or a non-Percolator FDR method), which the per-run " +
-                    @"survivor loader cannot serve: publishing these lists as compacted would " +
+                    @"first-pass pool (a NeedsResidentPool consumer: OSPREY_FDR_PROJECTION=0), " +
+                    @"which the per-run survivor loader cannot serve: publishing these lists as compacted would " +
                     @"fold the second pass over every pre-compaction row. Run this " +
                     @"configuration straight through with the flag up front, or drop the " +
                     @"resident consumer.",
@@ -1917,9 +1907,8 @@ namespace pwiz.Osprey.Tasks
         /// reported set rests on. No-op for the default pass-2 (emitted
         /// post-compaction by <see cref="SecondPassFdrTask"/>) and when no FDRBench
         /// output was requested. Reached on the resident path only, which is
-        /// <c>OSPREY_FDR_PROJECTION=0</c> (the byte-identity oracle) and a non-Percolator
-        /// <c>FdrMethod</c> (Simple / Mokapot, which does not use the projection framework
-        /// at all); the projection path emits the identical file through
+        /// <c>OSPREY_FDR_PROJECTION=0</c> (the byte-identity oracle); the projection path
+        /// emits the identical file through
         /// <see cref="WriteFdrBenchPass1FromSidecarsIfRequested"/>, and this one is what
         /// that is checked against.
         /// </summary>
@@ -2786,40 +2775,10 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Run FDR control using the configured method.
-        /// </summary>
-        private FeatureContributions RunFdr(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            OspreyConfig config,
-            PipelineContext ctx,
-            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null)
-        {
-            switch (config.FdrMethod)
-            {
-                // Both run the same semi-supervised target-decoy framework; FdrMethod
-                // rides along in the config and selects the classifier (linear SVM vs
-                // gradient-boosted trees) at the two seams that touch it inside the
-                // engine. Nothing else about the run differs, so there is no separate
-                // Gbdt pipeline to dispatch to.
-                case FdrMethod.Percolator:
-                case FdrMethod.Gbdt:
-                    return RunPercolatorFdr(perFileEntries, config, ctx, loadFileFeatures: loadFileFeatures);
-
-                case FdrMethod.Simple:
-                    PercolatorEngine.RunSimpleFdr(perFileEntries, config, ctx.LogInfo);
-                    return null;
-
-                default:
-                    ctx.LogWarning(string.Format(
-                        "FDR method {0} not yet supported, falling back to simple",
-                        config.FdrMethod));
-                    PercolatorEngine.RunSimpleFdr(perFileEntries, config, ctx.LogInfo);
-                    return null;
-            }
-        }
-
-        /// <summary>
-        /// Run Percolator-based FDR control (Stage 5). Thin facade over
+        /// Run Percolator-based FDR control (Stage 5). Every <see cref="FdrMethod"/> runs this
+        /// one semi-supervised target-decoy framework; the method rides along in the config and
+        /// selects the classifier (linear SVM vs gradient-boosted trees) at the seams inside the
+        /// engine that touch it, so there is no dispatch on it here. Thin facade over
         /// <c>PercolatorEngine.RunPercolatorFdr</c>: supplies the PIN
         /// feature names and routes logging through <c>ctx.LogInfo</c>. Static +
         /// internal so <see cref="SecondPassFdrTask"/> can call it for the 2nd-pass
@@ -2884,7 +2843,7 @@ namespace pwiz.Osprey.Tasks
                 Environment.Exit(0);
             }
             // The trained model's feature contributions, for the --model-diagnostics
-            // report. Null on the Simple/second-pass paths that don't produce one.
+            // report. Null on the second-pass paths that don't produce one.
             return contributions;
         }
 
@@ -3787,7 +3746,7 @@ namespace pwiz.Osprey.Tasks
         /// are resumable, and retrains otherwise. Stage 6 and a distributed SecondPassFDR read
         /// whichever model file is beside the inputs (<see cref="FirstPassModelIO.LoadFromAny"/>),
         /// so skipping the write left them scoring with the stale model - of the other classifier,
-        /// after a switch of <c>--fdr-method</c> - while the first-pass scores came from the new
+        /// after a switch of <c>OSPREY_FDR_MODEL</c> - while the first-pass scores came from the new
         /// one. Only the adopted model is not written: it IS that file, already stamped, and
         /// rewriting it would replace an artifact a marker attests with a copy the marker no
         /// longer describes.</para>

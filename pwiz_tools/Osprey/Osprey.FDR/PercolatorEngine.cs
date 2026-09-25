@@ -343,7 +343,7 @@ namespace pwiz.Osprey.FDR
 
         /// <summary>
         /// The validity-key term for the classifier that trains and applies the first-pass
-        /// model: EMPTY unless <c>--fdr-method gbdt</c>, and under gbdt the method plus every tree
+        /// model: EMPTY unless <c>OSPREY_FDR_MODEL=gbdt</c>, and under gbdt the model plus every tree
         /// setting that changes the trained model - the <see cref="GbtParams"/> this process
         /// trains with, <see cref="OspreyEnvironment.GbtMaxIterations"/> and
         /// <see cref="OspreyEnvironment.GbtInnerFolds"/>. FirstPassFDR, PerFileRescoring and
@@ -359,7 +359,9 @@ namespace pwiz.Osprey.FDR
         /// back the other arm's numbers.</para>
         ///
         /// <para>Kept out of the base task key and out of <c>SearchParameterHash</c>, which must
-        /// match the Rust implementation; gbdt has no Rust counterpart.</para>
+        /// match the Rust implementation; gbdt has no Rust counterpart. The term is spelled
+        /// <c>fdrmodel=</c> after the variable that selects it; it read <c>fdrmethod=</c> while
+        /// <c>--fdr-method</c> did, and no release carried that spelling.</para>
         /// </summary>
         public static string GbdtValidityKeySuffix(OspreyConfig config)
         {
@@ -380,7 +382,7 @@ namespace pwiz.Osprey.FDR
             if (fdrMethod != FdrMethod.Gbdt)
                 return string.Empty;
             return string.Format(CultureInfo.InvariantCulture,
-                @";fdrmethod=gbdt;gbtobjective={0};gbttrees={1};gbtdepth={2};gbtlr={3:R}" +
+                @";fdrmodel=gbdt;gbtobjective={0};gbttrees={1};gbtdepth={2};gbtlr={3:R}" +
                 @";gbtminchild={4:R};gbtsubsample={5:R};gbtcolsample={6:R};gbtgamma={7:R}" +
                 @";gbtlambda={8:R};gbtalpha={9:R};gbtbins={10};gbtseed={11}" +
                 @";gbtiterations={12};gbtinnerfolds={13}",
@@ -421,7 +423,7 @@ namespace pwiz.Osprey.FDR
                     : 10,
                 NFolds = 3,
                 FeatureInfos = featureInfos,
-                // --fdr-method gbdt: swap the linear SVM for gradient-boosted trees.
+                // OSPREY_FDR_MODEL=gbdt: swap the linear SVM for gradient-boosted trees.
                 // This is the ONLY knob that differs between the two methods -- the
                 // dedup, fold assignment, semi-supervised iteration, competition, and
                 // q-value/PEP math are the same shared code either way, which is what
@@ -503,73 +505,6 @@ namespace pwiz.Osprey.FDR
             // identically at every scale (mirrors Rust run_percolator_fdr, now stream-only).
             return RunPercolatorStreaming(
                 percEntries, percConfig, logInfo, passLabel, loadFileFeatures, frozenModel);
-        }
-
-        /// <summary>
-        /// Run simple target-decoy competition FDR (no machine learning).
-        /// Uses coelution_sum as the scoring function.
-        /// </summary>
-        public static void RunSimpleFdr(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            OspreyConfig config,
-            Action<string> logInfo)
-        {
-            var fdrController = new FdrController(config.RunFdr);
-
-            foreach (var kvp in perFileEntries)
-            {
-                var result = fdrController.CompeteAndFilter(
-                    kvp.Value,
-                    e => e.CoelutionSum,
-                    e => e.IsDecoy,
-                    e => e.EntryId);
-
-                logInfo(string.Format(
-                    "  {0}: {1} targets pass (FDR={2:F4}, {3} target wins, {4} decoy wins)",
-                    kvp.Key, result.PassingTargets.Count, result.FdrAtThreshold,
-                    result.NTargetWins, result.NDecoyWins));
-
-                // Assign q-values based on simple competition
-                // Passing targets get fdr_at_threshold, non-passing get 1.0
-                var passingIds = new HashSet<uint>();
-                foreach (var target in result.PassingTargets)
-                    passingIds.Add(target.EntryId);
-
-                foreach (var entry in kvp.Value)
-                {
-                    // The score this mode's competition ranks on, recorded for EVERY entry -
-                    // decoys and non-passing targets included. A consumer drawing a score-space
-                    // acceptance boundary (the co-assignment panel) needs it on both sides of the
-                    // comparison, and a decoy has no q to fall back on. Left at ResetScores' 0.0
-                    // it would not merely be missing: 0.0 sits mid distribution for a signed
-                    // score, so it would read as a real value and collapse the boundary.
-                    // NOT setting entry.Score here, deliberately. It stays at ResetScores' 0.0
-                    // for every entry in this mode, which means the co-assignment panel renders a
-                    // uniform "no co-assignment anywhere" page under --fdr-method simple (the
-                    // per-file cutoff is 0.0 and `partner.Score > row.Score` is never true).
-                    // Assigning CoelutionSum fixes the panel but is NOT free: ProteinFdr's
-                    // CollectBestPeptideScores and ComputeProteinFdr both rank on Score, so it
-                    // silently moves protein q-values and passing-protein counts for this mode -
-                    // and --fdr-method simple appears nowhere in regression.ps1 or the goldens,
-                    // so nothing would catch a regression. The mode is slated for removal
-                    // (only Percolator is well tested), so a diagnostics-only gain is not worth
-                    // an unpinned scoring change in it.
-                    //
-                    // CoelutionSum is per-ROW, so unlike the Percolator paths this does not
-                    // satisfy "every row of an entry carries the same aggregate". The panel's
-                    // reduction takes the max over real values, which turns it into the entry's
-                    // best coelution - a sensible entry-level aggregate for this mode - but a
-                    // consumer that assumes the read is a non-reduction must not rely on it here.
-                    entry.ExperimentAggregateScore = entry.CoelutionSum;
-                    if (!entry.IsDecoy && passingIds.Contains(entry.EntryId))
-                    {
-                        entry.RunPrecursorQvalue = result.FdrAtThreshold;
-                        entry.RunPeptideQvalue = result.FdrAtThreshold;
-                        entry.ExperimentPrecursorQvalue = result.FdrAtThreshold;
-                        entry.ExperimentPeptideQvalue = result.FdrAtThreshold;
-                    }
-                }
-            }
         }
 
         /// <summary>

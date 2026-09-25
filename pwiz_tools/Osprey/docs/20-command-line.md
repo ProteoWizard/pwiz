@@ -113,7 +113,6 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 | `--experiment-fdr` | `<threshold>` | `0.01` | Experiment-level FDR threshold. |
 | `--reconciliation-compaction-fdr` | `<threshold>` | `0.01` | Peptide q-value gate for first-pass compaction; loosen (e.g. `0.05`) to broaden the reconciliation pool. See [10-cross-run-reconciliation.md](10-cross-run-reconciliation.md). |
 | `--protein-fdr` | `<threshold>` | off → 0.01 gate | Enable protein-level FDR at this threshold (parsimony always runs regardless). See [08-protein-parsimony.md](08-protein-parsimony.md). |
-| `--fdr-method` | `percolator \| gbdt \| simple` | `percolator` | FDR engine. `gbdt` is a **C#-only** gradient-boosted-tree classifier; `simple` is bare TDC. See [07-fdr-control.md](07-fdr-control.md). |
 | `--fdr-level` | `precursor \| peptide \| both` | `precursor` | Which q-value gates the reported output. (`protein` is not a valid value.) |
 | `--shared-peptides` | `all \| razor \| unique` | `all` | Shared-peptide handling for protein inference. See [08-protein-parsimony.md](08-protein-parsimony.md). |
 | `--fdrbench` | `<input.tsv>` | off | Write an FDRBench-compatible input TSV (every reported target with the raw SVM score) for entrapment true-FDR. Level follows `--fdr-level`. See [fractional-entrapment.md](fractional-entrapment.md). |
@@ -220,7 +219,8 @@ CLI; they are read once at process start. The ones most likely to matter:
 | `OSPREY_TRAIN_PICK_RUN` | First-pass training selection, **on by default**: each precursor is represented by one uniformly drawn run's best candidate peak. `OSPREY_TRAIN_PICK_RUN=0` restores the pre-26.1 cross-run maximum. C#-only — Rust still takes the maximum | [07](07-fdr-control.md) |
 | `OSPREY_MAX_TRAIN_SIZE` | Cap on training rows (default 300000). Unchanged by the 26.1 selection flip: at matched FDP, 300K and 1M are indistinguishable | [07](07-fdr-control.md) |
 | `OSPREY_PASS2_QVALUE` | Second-pass q-value mode: `protein-compact` (**default**) / `transfer`. An unrecognized value is a startup ERROR - `percolator` and `transfer-compete` were removed | [12](12-second-pass-fdr.md) |
-| `OSPREY_GBT_*` | GBDT hyperparameters (with `--fdr-method gbdt`) | [07](07-fdr-control.md) |
+| `OSPREY_FDR_MODEL` | First-pass classifier: unset / `svm` = linear SVM (**default**), `gbdt` = **experimental** gradient-boosted trees (C#-only). An unrecognized value is a startup ERROR. Replaced the removed `--fdr-method` | [07](07-fdr-control.md) |
+| `OSPREY_GBT_*` | GBDT hyperparameters; apply only under `OSPREY_FDR_MODEL=gbdt` | [07](07-fdr-control.md) |
 | `OSPREY_EXPERIMENT_AGG` | Experimental first-pass experiment-wide aggregation (`max` / `mean-best-<N>`) | [07](07-fdr-control.md) |
 | `OSPREY_MEANBEST2_FLOOR_MEAN` / `OSPREY_MEANBEST2_FLOOR_PCT` | Missing-run floor arm for `mean-best-<N>` (decoy mean / decoy percentile instead of the default median) | [07](07-fdr-control.md) |
 | `OSPREY_DUMP_*` / `OSPREY_DIAG_*` | Cross-impl bisection dumps (also via `-d`) | [18](18-peptide-trace.md) |
@@ -237,9 +237,8 @@ listing on the CLI by design (these are not user-facing knobs).
 - **`--help` formats.** `osprey --help html` writes the same reference as HTML;
   `osprey --help <Section>` prints one group (e.g. `osprey --help "FDR & Protein Inference"`).
 - **Value validation.** Osprey's tokenizer does **not** reject values outside the listed
-  set — an unrecognized `--fdr-method` / `--fdr-level` value warns and falls back to the
-  default rather than erroring (this is why the deprecated `--fdr-method fasttree` alias
-  still resolves to `gbdt`).
+  set - an unrecognized `--fdr-level` value warns and falls back to the default rather than
+  erroring. An unknown ARGUMENT is an error, and that includes the removed `--fdr-method`.
 
 ## Divergences from the Rust CLI
 
@@ -249,7 +248,12 @@ recurring differences (all in [DIVERGENCES.md](DIVERGENCES.md)):
 - **HPC flags.** The Rust `--no-join` / `--join-at-pass` / `--join-only` family is
   replaced by the single `--task {PerFileScoring|FirstPassFDR|PerFileRescoring|SecondPassFDR}`
   selector. See [15-hpc-scoring-split.md](15-hpc-scoring-split.md).
-- **`--fdr-method`.** Adds the C#-only `gbdt`; Mokapot is not wired to the CLI (`percolator`
-  and `simple` only, plus `gbdt`). See [07-fdr-control.md](07-fdr-control.md).
+- **No `--fdr-method`.** Rust's `--fdr-method {percolator|mokapot|simple}` has no C#
+  counterpart and is rejected as an unknown argument (removed with no alias, #4543). The
+  only choice left is the classifier inside the Percolator framework, and it moved to the
+  `OSPREY_FDR_MODEL` environment variable (unset / `svm` = linear SVM, `gbdt` = the
+  experimental C#-only trees). `simple` was deleted and Mokapot was never wired. A Rust
+  command line that passes `--fdr-method percolator` must drop it. See
+  [07-fdr-control.md](07-fdr-control.md).
 - **`--fdr-level`.** No `protein` value (the enum is `precursor | peptide | both`);
   protein q-values are computed and reported but cannot gate the blib from the CLI.

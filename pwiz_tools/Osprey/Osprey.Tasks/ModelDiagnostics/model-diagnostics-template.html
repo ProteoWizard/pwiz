@@ -714,7 +714,7 @@ const PASS2_NA_COMPETITION="Pass-2 decoy-win competition n/a &mdash; confidence 
 // The Model card's description: the linear decomposition as written in the page, or, for a
 // gradient-boosted-tree first pass (D.modelIsTreeEnsemble), what the card shows instead.
 const LINEAR_MODEL_DESC=document.getElementById("modelDesc").innerHTML;
-const TREE_MODEL_DESC="The first-pass model is gradient-boosted trees (<code>--fdr-method gbdt</code>), the fold "+
+const TREE_MODEL_DESC="The first-pass model is gradient-boosted trees (<code>OSPREY_FDR_MODEL=gbdt</code>, experimental), the fold "+
   "ensembles' margins averaged per row. A tree ensemble has no coefficients, so there is no contribution "+
   "decomposition; each feature's standardized target&ndash;decoy mean gap is listed instead, and its "+
   "target/decoy distribution is one click away.";

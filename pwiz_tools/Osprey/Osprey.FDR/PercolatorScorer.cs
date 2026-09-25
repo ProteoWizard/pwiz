@@ -940,7 +940,7 @@ namespace pwiz.Osprey.FDR
 
             // The same train-only copy the two resident streaming paths hand the trainer. This
             // path used to build its own field list, which left out the classifier choice: under
-            // --fdr-method gbdt it trained the linear SVM, at the tree iteration cap, and the
+            // gbdt it trained the linear SVM, at the tree iteration cap, and the
             // default gbdt run never trained a tree.
             var trainConfig = percConfig.CloneForTrainOnly();
             PercolatorResults trainResults =

@@ -153,8 +153,9 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0.02, Parse(OspreyCommandArgs.ARG_EXPERIMENT_FDR + 0.02).ExperimentFdr);
             Assert.AreEqual(0.01, Parse(OspreyCommandArgs.ARG_PROTEIN_FDR + 0.01).ProteinFdr);
             Assert.AreEqual(8, Parse(OspreyCommandArgs.ARG_THREADS + 8).NThreads);
-            Assert.AreEqual(FdrMethod.Simple, Parse(OspreyCommandArgs.ARG_FDR_METHOD + @"simple").FdrMethod);
-            Assert.AreEqual(FdrMethod.Percolator, Parse(OspreyCommandArgs.ARG_FDR_METHOD, @"bogus").FdrMethod); // warn -> default
+            // The classifier is no argument's value: the parse copies it from OSPREY_FDR_MODEL,
+            // read once at process start (the parse itself is pinned in CoreTypesTest).
+            Assert.AreEqual(OspreyEnvironment.FdrModel, Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML").FdrMethod);
             Assert.AreEqual(FdrLevel.Peptide, Parse(OspreyCommandArgs.ARG_FDR_LEVEL + @"peptide").FdrLevel);
             Assert.AreEqual(FdrLevel.Precursor, Parse(OspreyCommandArgs.ARG_FDR_LEVEL, @"bogus").FdrLevel);     // warn -> default unchanged
             Assert.AreEqual(SharedPeptideMode.Razor, Parse(OspreyCommandArgs.ARG_SHARED_PEPTIDES + @"razor").SharedPeptides);
@@ -216,10 +217,30 @@ namespace pwiz.Osprey.Test
         /// through the parser. The assertions below are the contract Program.Main's
         /// `when (ex is ArgumentException || ex is FileNotFoundException || ex is InvalidDataException)`
         /// filter reads; adding a numeric option without ParseInt / ParseDouble breaks it.
+        ///
+        /// <para>A REMOVED argument lands there too, as any unknown one does. --fdr-method went
+        /// with no alias (#4543): accepting it silently would leave a script that passes
+        /// <c>--fdr-method gbdt</c> training the linear SVM with no sign it asked for anything
+        /// else, the #4491 failure by another route.</para>
         /// </summary>
         [TestMethod]
         public void TestBadOptionValuesAreUsageErrors()
         {
+            // --fdr-method is rejected exactly the way an argument that never existed is: same
+            // exception type, same message but for the name, whatever value follows.
+            const string removedArg = @"--fdr-method";
+            const string neverArg = @"--no-such-argument";
+            string neverMessage = Assert.ThrowsException<ArgumentException>(
+                () => OspreyCommandArgs.ParseArgs(new[] { neverArg })).Message;
+            foreach (var removedValue in new[] { @"gbdt", @"percolator", @"simple" })
+            {
+                var removed = Assert.ThrowsException<ArgumentException>(
+                    () => OspreyCommandArgs.ParseArgs(new[] { removedArg, removedValue }), removedValue);
+                Assert.AreEqual(neverMessage.Replace(neverArg, removedArg), removed.Message);
+            }
+            Assert.IsFalse(OspreyCommandArgs.AllArguments.Any(a => a.ArgumentText == removedArg),
+                @"--fdr-method must not be declared, or it reappears in --help");
+
             var argThreads = OspreyCommandArgs.ARG_THREADS;
             foreach (var badValue in new[] { @"bad", @"1.5", @"99999999999999999999", string.Empty })
             {
@@ -302,7 +323,7 @@ namespace pwiz.Osprey.Test
             }
 
             Assert.ThrowsException<ValueUnexpectedException>(() => OspreyCommandArgs.ARG_TIMESTAMP + 1);
-            Assert.ThrowsException<ValueInvalidException>(() => OspreyCommandArgs.ARG_FDR_METHOD + @"bogus");
+            Assert.ThrowsException<ValueInvalidException>(() => OspreyCommandArgs.ARG_FDR_LEVEL + @"bogus");
             Assert.ThrowsException<ArgumentException>(() => argThreads + OspreyCommandArgs.ARG_INPUT);
             Assert.ThrowsException<ArgumentNullException>(() => OspreyCommandArgs.ARG_LIBRARY + null);
         }

@@ -298,7 +298,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// Assemble the pass-1 <see cref="ModelDiagnosticsData"/> from the accumulated
             /// reductions, running the SAME downstream builders the batch <see cref="Build"/> uses
             /// (only the reduction source differs). <paramref name="contributions"/> is the trained
-            /// first-pass model (null on a non-Percolator / rehydrated run -> no Model tab).
+            /// first-pass model (null on a tree-model / rehydrated run -> no Model tab).
             /// </summary>
             public ModelDiagnosticsData Build(FeatureContributions contributions)
             {

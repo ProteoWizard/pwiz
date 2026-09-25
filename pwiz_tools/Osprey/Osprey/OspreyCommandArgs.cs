@@ -140,28 +140,10 @@ namespace pwiz.Osprey
             () => @"<threshold>", (c, p) => c._config.ReconciliationCompactionFdr = ParseDouble(p));
         public static readonly OspreyArgument ARG_PROTEIN_FDR = new OspreyArgument(@"protein-fdr",
             () => @"<threshold>", (c, p) => c._config.ProteinFdr = ParseDouble(p));
-        public static readonly OspreyArgument ARG_FDR_METHOD = new OspreyArgument(@"fdr-method",
-            new[] { @"percolator", @"gbdt", @"simple" }, (c, p) =>
-            {
-                switch (p.Value.ToLowerInvariant())
-                {
-                    case @"percolator":
-                        c._config.FdrMethod = FdrMethod.Percolator;
-                        break;
-                    case @"gbdt":
-                    case @"fasttree": // deprecated alias for gbdt (gradient-boosted decision trees)
-                        c._config.FdrMethod = FdrMethod.Gbdt;
-                        break;
-                    case @"simple":
-                        c._config.FdrMethod = FdrMethod.Simple;
-                        break;
-                    default:
-                        Program.LogWarning(string.Format(
-                            @"Unknown FDR method '{0}', defaulting to percolator", p.Value));
-                        c._config.FdrMethod = FdrMethod.Percolator;
-                        break;
-                }
-            });
+        // --fdr-method is GONE (#4543), with no alias: it is rejected as an unknown argument.
+        // Its percolator and gbdt values chose the classifier inside the one Percolator
+        // framework, a developer lever that belongs in an environment variable, so the choice
+        // moved to OSPREY_FDR_MODEL (see ToConfig). Its third value, simple, was deleted.
         public static readonly OspreyArgument ARG_FDR_LEVEL = new OspreyArgument(@"fdr-level",
             new[] { @"precursor", @"peptide", @"both" }, (c, p) =>
             {
@@ -212,7 +194,7 @@ namespace pwiz.Osprey
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_FDR =
             new ArgumentGroup<OspreyCommandArgs>(() => @"FDR & Protein Inference", true,
-                ARG_RUN_FDR, ARG_EXPERIMENT_FDR, ARG_RECONCILIATION_COMPACTION_FDR, ARG_PROTEIN_FDR, ARG_FDR_METHOD, ARG_FDR_LEVEL, ARG_SHARED_PEPTIDES,
+                ARG_RUN_FDR, ARG_EXPERIMENT_FDR, ARG_RECONCILIATION_COMPACTION_FDR, ARG_PROTEIN_FDR, ARG_FDR_LEVEL, ARG_SHARED_PEPTIDES,
                 ARG_FDRBENCH, ARG_FDRBENCH_PER_RUN, ARG_FDRBENCH_PASS);
 
         // --- Decoys -----------------------------------------------------------------------
@@ -496,6 +478,13 @@ namespace pwiz.Osprey
 
             if (!string.IsNullOrEmpty(_outputPath))
                 _config.OutputBlib = _outputPath;
+
+            // The classifier comes from OSPREY_FDR_MODEL, read once at process start, and is set
+            // here, where --fdr-method used to set it, so the rest of the pipeline reads the
+            // config and never the environment. An unrecognized value parses to the default only
+            // so the config is well-formed; Program aborts on OspreyEnvironment.FdrModelError
+            // before anything runs.
+            _config.FdrMethod = OspreyEnvironment.FdrModel;
 
             switch (_resolution)
             {
@@ -896,7 +885,6 @@ namespace pwiz.Osprey
                 { @"experiment-fdr", @"Experiment-level FDR threshold (default: 0.01)" },
                 { @"reconciliation-compaction-fdr", @"Peptide q-value gate for first-pass compaction (default: 0.01 = run-fdr; loosen e.g. to 0.05 to broaden the reconciliation pool)" },
                 { @"protein-fdr", @"Protein-level FDR threshold (optional)" },
-                { @"fdr-method", @"FDR method (default: percolator)" },
                 { @"fdr-level", @"FDR level (default: precursor)" },
                 { @"shared-peptides", @"Shared peptide handling (default: all)" },
                 { @"fdrbench", @"Write an FDRBench-compatible input TSV to this path. The level is taken from --fdr-level (peptide; precursor and both emit precursor-level). Includes every reported (compaction-surviving) target, i.e. the peptides actually written to the output, regardless of q-value, with the raw SVM discriminant as 'score', so FDRBench can compute true-FDR via entrapment counting without truncation at Osprey's threshold." },

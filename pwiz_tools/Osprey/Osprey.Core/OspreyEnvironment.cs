@@ -219,10 +219,9 @@ namespace pwiz.Osprey.Core
         /// OSPREY_FDR_PROJECTION=0 ONLY to force the legacy <see cref="FdrEntry"/>-buffer
         /// path as a transitional A/B / byte-identity oracle. Model-diagnostics (#4505)
         /// and FDRBench pass 1 (#4507) both stream from the persisted per-file scores
-        /// now, so no Percolator-framework run needs the legacy path; it still serves the
-        /// non-Percolator FdrMethods (Simple / Mokapot), which is what stands between it
-        /// and removal. A settable property (not a readonly field) so unit tests can A/B
-        /// both paths.
+        /// now, and the non-Percolator simple FDR method that also took the legacy path is
+        /// gone (#4543), so this oracle is the legacy path's only remaining user. A settable
+        /// property (not a readonly field) so unit tests can A/B both paths.
         /// </summary>
         public static bool UseFdrProjection { get; set; } = IsNotZero(@"OSPREY_FDR_PROJECTION");
 
@@ -373,8 +372,97 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly bool PickLda = IsNotZero(@"OSPREY_PICK_LDA");
 
+        /// <summary>The <see cref="FdrModel"/> spelling of the default linear SVM. Accepted so a
+        /// sweep script can name both arms explicitly rather than unsetting the variable for
+        /// one of them, as <see cref="EXPERIMENT_AGG_MAX"/> and
+        /// <see cref="PASS2_QVALUE_PROTEIN_COMPACT"/> spell their defaults.</summary>
+        public const string FDR_MODEL_SVM = @"svm";
+
+        /// <summary>The <see cref="FdrModel"/> value that selects gradient-boosted trees.</summary>
+        public const string FDR_MODEL_GBDT = @"gbdt";
+
         /// <summary>
-        /// Semi-supervised training iterations for <c>--fdr-method gbdt</c>
+        /// OSPREY_FDR_MODEL: the classifier first-pass Percolator trains. Unset, empty or
+        /// <see cref="FDR_MODEL_SVM"/> selects the linear SVM (the default);
+        /// <see cref="FDR_MODEL_GBDT"/> selects gradient-boosted trees. Case-insensitive and
+        /// trimmed, like the other OSPREY_* selectors. An unrecognized value is a startup ERROR
+        /// (<see cref="FdrModelError"/>), never a fallback: a run that asked for trees and
+        /// silently trained the SVM is the #4491 failure over again.
+        ///
+        /// <para>GBDT is EXPERIMENTAL and is not expected to improve results with the current
+        /// features, which were chosen for the linear SVM. It exists so that features which do
+        /// not work well with a linear SVM - some were removed for that reason - can be
+        /// evaluated when they are added. It has to keep working.</para>
+        ///
+        /// <para>An environment variable rather than a command-line argument because it is a
+        /// developer lever, not a product setting: it replaced <c>--fdr-method</c>, which was
+        /// removed with no alias (#4543). Read once at process start and carried in-process as
+        /// <see cref="OspreyConfig.FdrMethod"/>, which the command-line parse sets from it. The
+        /// trees and every <c>OSPREY_GBT_*</c> setting key the FirstPassFDR, PerFileRescoring
+        /// and SecondPassFDR validity keys (<c>PercolatorEngine.GbdtValidityKeySuffix</c>); the
+        /// SVM adds nothing to them.</para>
+        /// </summary>
+        public static readonly FdrMethod FdrModel =
+            ParseFdrModel(Environment.GetEnvironmentVariable(@"OSPREY_FDR_MODEL")) ?? FdrMethod.Percolator;
+
+        /// <summary>The startup error for an unrecognized OSPREY_FDR_MODEL, or null when the
+        /// value is usable. Program startup ABORTS on it, like
+        /// <see cref="Pass2QValueUnrecognized"/>, and at startup rather than at Stage 5 so a
+        /// typo costs seconds instead of Stages 1-4.</summary>
+        public static readonly string FdrModelError =
+            DescribeUnrecognizedFdrModel(Environment.GetEnvironmentVariable(@"OSPREY_FDR_MODEL"));
+
+        /// <summary>
+        /// The classifier an OSPREY_FDR_MODEL value selects, or null when the value is not
+        /// recognized. Unset, empty and whitespace select the linear SVM, as they select the
+        /// default for every other OSPREY_* selector. Public so the parse can be tested; the
+        /// environment itself is read once, into <see cref="FdrModel"/>.
+        /// </summary>
+        public static FdrMethod? ParseFdrModel(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+                return FdrMethod.Percolator;
+            string v = raw.Trim().ToLowerInvariant();
+            if (v == FDR_MODEL_SVM)
+                return FdrMethod.Percolator;
+            if (v == FDR_MODEL_GBDT)
+                return FdrMethod.Gbdt;
+            return null;
+        }
+
+        /// <summary>
+        /// The operator-actionable error for an OSPREY_FDR_MODEL value
+        /// <see cref="ParseFdrModel"/> does not recognize, or null when it does. Names the
+        /// value as given, so a shell-quoted or misspelled value is not mistaken for an unset one.
+        /// </summary>
+        public static string DescribeUnrecognizedFdrModel(string raw)
+        {
+            if (ParseFdrModel(raw).HasValue)
+                return null;
+            return string.Format(
+                @"OSPREY_FDR_MODEL='{0}' is not a recognized classifier. Recognized: '{1}' (the " +
+                @"linear SVM, also the default when the variable is unset) and '{2}' " +
+                @"(gradient-boosted trees, experimental). Unset it for the default.",
+                raw, FDR_MODEL_SVM, FDR_MODEL_GBDT);
+        }
+
+        /// <summary>
+        /// The run-log line naming the classifier when it is NOT the default, or null for the
+        /// linear SVM, whose log is unchanged. Logged at startup rather than at Stage 5 because
+        /// FirstPassFDR does not run on a resume or on <c>--task SecondPassFDR</c>, and those
+        /// runs score with the model too.
+        /// </summary>
+        public static string DescribeFdrModel(FdrMethod fdrMethod)
+        {
+            if (fdrMethod != FdrMethod.Gbdt)
+                return null;
+            return string.Format(
+                @"FDR model: {0} (EXPERIMENTAL, OSPREY_FDR_MODEL) - gradient-boosted trees " +
+                @"replace the linear SVM in first-pass Percolator", FDR_MODEL_GBDT);
+        }
+
+        /// <summary>
+        /// Semi-supervised training iterations for <c>OSPREY_FDR_MODEL=gbdt</c>
         /// (OSPREY_GBT_MAX_ITERATIONS); 0/unset uses <see cref="GBT_MAX_ITERATIONS_DEFAULT"/>.
         /// Tree-only: the linear SVM keeps its own fixed 10 and is untouched by this.
         ///
@@ -400,7 +488,7 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>Optional overrides for the gradient-boosted-trees hyper-parameters
-        /// (<c>--fdr-method gbdt</c>), so a regularization / capacity sweep runs from
+        /// (<c>OSPREY_FDR_MODEL=gbdt</c>), so a regularization / capacity sweep runs from
         /// env vars without a recompile per setting. Each is null when its var is unset,
         /// leaving the validated <c>GbtParams</c> default in place; applied in
         /// <c>BuildProjectionPercolatorConfig</c>. Tree-only -- the linear SVM ignores them.

@@ -556,7 +556,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// Build the full model-diagnostics data model from first-pass results.
         /// </summary>
         /// <param name="perFileEntries">Per-file first-pass FdrEntry lists, scored and q-valued, pre-compaction.</param>
-        /// <param name="contributions">The trained model's feature contributions (may be null for non-Percolator FDR).</param>
+        /// <param name="contributions">The trained model's feature contributions (may be null: a tree model has none).</param>
         /// <param name="classByBaseId">
         /// library base-id (<c>EntryId &amp; 0x7FFFFFFF</c>) -> target-side
         /// entrapment class (Target / PTarget), resolved from the library

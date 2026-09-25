@@ -38,7 +38,7 @@ owns operations (CLI flags, how a task names its runs and in what order, orchest
 | 04 | [calibration](04-calibration.md) | Per-file RT + MS1 + MS2 calibration: quick unit-resolution XCorr pass, LDA scoring, LOESS fit, mass-error stats, calibration-JSON caching. |
 | 05 | [rt-alignment](05-rt-alignment.md) | LOESS calibration + inverse prediction, weighted-median consensus library RT, peak imputation — the RT machinery shared by calibration and reconciliation. |
 | 06 | [peak-detection](06-peak-detection.md) | CWT consensus peak detection (Mexican Hat wavelet, pointwise median, ±2σ boundaries with valley guard), the product-form pick, and the opt-in learned linear pick model. |
-| 07 | [fdr-control](07-fdr-control.md) | First-pass two-level FDR (run + experiment): native Percolator SVM, the C#-only GBDT method, simple TDC, dual precursor+peptide q-values, PEP, and the opt-in mean(best-N) experiment-wide aggregation (`OSPREY_EXPERIMENT_AGG`). |
+| 07 | [fdr-control](07-fdr-control.md) | First-pass two-level FDR (run + experiment): native Percolator SVM, the experimental C#-only GBDT classifier (`OSPREY_FDR_MODEL`), dual precursor+peptide q-values, PEP, and the opt-in mean(best-N) experiment-wide aggregation (`OSPREY_EXPERIMENT_AGG`). |
 | 08 | [protein-parsimony](08-protein-parsimony.md) | Protein parsimony (bipartite graph, identical-set merging, subset elimination, razor) and picked-protein FDR; the first pass builds the **protein-compact stratum** used by second-pass FDR. |
 | 09 | [multi-charge-consensus](09-multi-charge-consensus.md) | Post-FDR sharing of peak boundaries across charge states; the best passing charge leads (lowest-charge tie-break), disagreeing charges re-scored at consensus boundaries. |
 | 10 | [cross-run-reconciliation](10-cross-run-reconciliation.md) | Consensus RT, per-file LOESS refit, and the per-entry reconciliation plan (Keep / UseCwtPeak / ForcedIntegration). |
@@ -74,7 +74,7 @@ Stage 7 protein FDR matches at 1e-9, and the `.blib` matches at the SQL row +
 column level.
 
 A handful of features are **C#-only additions beyond the reference** (the
-`--fdr-method gbdt` classifier; the opt-in learned pick model, which also exists in
+experimental `OSPREY_FDR_MODEL=gbdt` classifier; the opt-in learned pick model, which also exists in
 Rust; the pass-2 frozen q-value modes, which the C# originated and Rust is porting
 back). Those are called out in the relevant docs and in
 [DIVERGENCES.md](DIVERGENCES.md); none changes the default, parity-gated path.

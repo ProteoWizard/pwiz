@@ -262,7 +262,7 @@ namespace pwiz.Osprey.Test
         /// first pass trained (<see cref="Pass2FdrSidecar.TransferOneFile"/>). It averaged the
         /// fold weights itself, which threw on a gradient-boosted-tree model - there are no
         /// weights - before a single file was transferred; nothing reached it with one while the
-        /// default first pass trained the SVM under <c>--fdr-method gbdt</c>.
+        /// default first pass trained the SVM when gbdt was selected.
         ///
         /// <para>The UNCHANGED classification is the key check: it needs the re-score to
         /// reproduce the first pass's score bit for bit, which only the tree model itself can.

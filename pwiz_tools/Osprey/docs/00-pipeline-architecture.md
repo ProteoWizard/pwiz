@@ -341,7 +341,7 @@ has to parse to rebuild a union it could have been handed. Replication is only b
 the payload is fixed in size, as the frozen model is; when it scales with the experiment
 it belongs in one experiment-wide artifact, and the fan-out reads that instead. This is the
 P6 startup rule seen from the writer's side. Fixed is not the same as small: the linear
-model is a few hundred KB, but a tree model under `--fdr-method gbdt` is about 3.4 MB per
+model is a few hundred KB, but a tree model under `OSPREY_FDR_MODEL=gbdt` is about 3.4 MB per
 copy, 1.5 GB across 446 runs, so the writer serializes it once and writes that text beside
 every run, and `LoadFromAny` parses one copy rather than each in turn.
 

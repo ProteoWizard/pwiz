@@ -1719,7 +1719,7 @@ namespace pwiz.Osprey.Tasks
             string mode = OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT;
             // Works for whichever classifier the 1st pass trained (linear SVM or
             // gradient-boosted trees) -- the scorer hides that choice, so this stays the
-            // honest-FDR path under --fdr-method gbdt too.
+            // honest-FDR path under OSPREY_FDR_MODEL=gbdt too.
             var scorer = FrozenModelScorer.TryCreate(frozenModel);
             if (scorer == null)
             {
@@ -2503,75 +2503,58 @@ namespace pwiz.Osprey.Tasks
                 "[TIMING] Reloaded PIN features for {0} entries: {1:F1}s",
                 nReloaded, swReloadFeats.Elapsed.TotalSeconds));
 
-            switch (config.FdrMethod)
+            // Every FdrMethod shares this path: the 2nd pass is the same sequence regardless
+            // of which classifier the 1st pass trained. The frozen model carried in ctx is
+            // whichever one that was, and the score passes select on it, so the frozen
+            // competition works unchanged for trees.
+            //
+            // protein-compact is handled by the frozen competition before the resident
+            // feature reload, so its score pass streams one file at a time. Only
+            // OSPREY_PASS2_QVALUE=transfer reaches here, which is why this no longer
+            // tests Pass2TransferQ: NormalizePass2QValue returns transfer or
+            // protein-compact and nothing else, so on this path the test was always
+            // true and reading it as a choice invited the conclusion that some other
+            // mode lands here.
+            // OSPREY_PASS2_QVALUE=transfer: instead of retraining a 2nd-pass SVM on
+            // the decoy-depleted reconciled+compacted set (which re-derives an
+            // anti-conservative experiment-scope q), carry the pass-1 q through and
+            // recompute ONLY the per-run q of the peaks reconciliation actually moved.
+            // Each moved/gap-filled peak is re-scored with the FROZEN 1st-pass model
+            // (its RECONCILED features are on entry.Features above) and mapped through
+            // THAT file's own (1st-pass score -> run q) table; experiment q is left as
+            // the pass-1 carry. See TODO-osprey_pass2_per_run_only_qvalue.
+            if (ctx.TryGet<FirstPassPercolatorModel>(out var frozenModel) &&
+                frozenModel?.Results != null &&
+                TransferPerRunQ(perFileEntries, config, ctx, frozenModel.Results))
             {
-                // Gbdt shares this path with Percolator: the 2nd pass is the same
-                // sequence (transfer-compete's frozen-model recompute, or a retrain)
-                // regardless of which classifier the 1st pass trained. The frozen model
-                // carried in ctx is whichever one that was, and the score passes select
-                // on it, so the frozen competition works unchanged for trees.
-                case FdrMethod.Percolator:
-                case FdrMethod.Gbdt:
-                    // protein-compact is handled by the frozen competition before the resident
-                    // feature reload, so its score pass streams one file at a time. Only
-                    // OSPREY_PASS2_QVALUE=transfer reaches here, which is why this no longer
-                    // tests Pass2TransferQ: NormalizePass2QValue returns transfer or
-                    // protein-compact and nothing else, so on this path the test was always
-                    // true and reading it as a choice invited the conclusion that some other
-                    // mode lands here.
-                    // OSPREY_PASS2_QVALUE=transfer: instead of retraining a 2nd-pass SVM on
-                    // the decoy-depleted reconciled+compacted set (which re-derives an
-                    // anti-conservative experiment-scope q), carry the pass-1 q through and
-                    // recompute ONLY the per-run q of the peaks reconciliation actually moved.
-                    // Each moved/gap-filled peak is re-scored with the FROZEN 1st-pass model
-                    // (its RECONCILED features are on entry.Features above) and mapped through
-                    // THAT file's own (1st-pass score -> run q) table; experiment q is left as
-                    // the pass-1 carry. See TODO-osprey_pass2_per_run_only_qvalue.
-                    if (ctx.TryGet<FirstPassPercolatorModel>(out var frozenModel) &&
-                        frozenModel?.Results != null &&
-                        TransferPerRunQ(perFileEntries, config, ctx, frozenModel.Results))
-                    {
-                        // Transferred. There is no retrained 2nd-pass model in any surviving
-                        // mode, so --model-diagnostics gets no pass-2 SVM model view (the
-                        // pass-2 FDR calibration curve still renders from the transferred
-                        // q-values; the pass-1 model view still renders too).
-                        return;
-                    }
-                    // The transfer could not be made, and the 2nd-pass Percolator retrain that
-                    // used to catch this case is GONE - not disabled, removed. It was cut for a
-                    // correctness reason: compaction leaves the reconciled pool decoy-depleted,
-                    // so a retrain on it mis-estimates the null and re-derives an
-                    // anti-conservative experiment-scope q (issue #4484, closed "do not
-                    // re-open the retrain"). Falling back to it produced output by the method
-                    // the project rejected, on a warning, which is warn-and-proceed where the
-                    // standing rule is hard-fail: the run would finish and its q-values would
-                    // be wrong in a direction no downstream gate looks for.
-                    //
-                    // Every reason the transfer declines has already been logged by the code
-                    // that declined it - an absent or unusable frozen model, no input-file
-                    // list, an unreadable 1st-pass experiment sidecar - so this states the
-                    // consequence and the remedy rather than re-deriving the cause.
-                    throw new InvalidOperationException(
-                        @"Second-pass FDR could not transfer the first-pass confidence, and " +
-                        @"there is no second-pass retrain to fall back on (removed for issue " +
-                        @"#4484: the compacted pool is decoy-depleted, so retraining on it " +
-                        @"mis-estimates the null). The preceding log line names which input " +
-                        @"was missing; the first pass must have completed and left its model " +
-                        @"and experiment-scope sidecars beside the analysis output. Re-run " +
-                        @"FirstPassFDR for this cohort, then SecondPassFDR again.");
-                // Simple / Mokapot 2nd-pass paths intentionally
-                // not implemented yet -- the in-process pipeline's
-                // FirstPassFdrTask.RunFdr already covers Simple, and
-                // Mokapot is not used in Osprey's current
-                // scope. If those become relevant for an HPC chain,
-                // mirror the Rust dispatch in pipeline.rs:4424-4448.
-                default:
-                    ctx.LogWarning(string.Format(
-                        "Second-pass FDR: {0} is not supported in SecondPassFdrTask; " +
-                        "skipping (protein FDR will run on first-pass scores)",
-                        config.FdrMethod));
-                    return;
+                // Transferred. There is no retrained 2nd-pass model in any surviving
+                // mode, so --model-diagnostics gets no pass-2 SVM model view (the
+                // pass-2 FDR calibration curve still renders from the transferred
+                // q-values; the pass-1 model view still renders too).
+                return;
             }
+            // The transfer could not be made, and the 2nd-pass Percolator retrain that
+            // used to catch this case is GONE - not disabled, removed. It was cut for a
+            // correctness reason: compaction leaves the reconciled pool decoy-depleted,
+            // so a retrain on it mis-estimates the null and re-derives an
+            // anti-conservative experiment-scope q (issue #4484, closed "do not
+            // re-open the retrain"). Falling back to it produced output by the method
+            // the project rejected, on a warning, which is warn-and-proceed where the
+            // standing rule is hard-fail: the run would finish and its q-values would
+            // be wrong in a direction no downstream gate looks for.
+            //
+            // Every reason the transfer declines has already been logged by the code
+            // that declined it - an absent or unusable frozen model, no input-file
+            // list, an unreadable 1st-pass experiment sidecar - so this states the
+            // consequence and the remedy rather than re-deriving the cause.
+            throw new InvalidOperationException(
+                @"Second-pass FDR could not transfer the first-pass confidence, and " +
+                @"there is no second-pass retrain to fall back on (removed for issue " +
+                @"#4484: the compacted pool is decoy-depleted, so retraining on it " +
+                @"mis-estimates the null). The preceding log line names which input " +
+                @"was missing; the first pass must have completed and left its model " +
+                @"and experiment-scope sidecars beside the analysis output. Re-run " +
+                @"FirstPassFDR for this cohort, then SecondPassFDR again.");
         }
 
         /// <summary>

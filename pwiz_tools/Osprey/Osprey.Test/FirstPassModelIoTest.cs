@@ -100,7 +100,7 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// A three-fold tree model on a fixed synthetic population: what a
-        /// <c>--fdr-method gbdt</c> first pass publishes, without the Percolator loop around it.
+        /// <c>OSPREY_FDR_MODEL=gbdt</c> first pass publishes, without the Percolator loop around it.
         /// Internal so the pass-2 transfer test scores with the same model.
         /// </summary>
         internal static PercolatorResults MakeTreeModel()
@@ -243,7 +243,7 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// A <c>--fdr-method gbdt</c> model must persist, reload as the tree ensemble and score
+        /// A <c>OSPREY_FDR_MODEL=gbdt</c> model must persist, reload as the tree ensemble and score
         /// BIT-IDENTICALLY, for the reason the SVM must: a distributed SecondPassFDR node, the
         /// Stage 6 per-file competition and a resume all read the model from this file rather
         /// than from the process that trained it. Save used to decline a tree model, which went

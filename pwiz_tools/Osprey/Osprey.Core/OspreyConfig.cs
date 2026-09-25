@@ -188,7 +188,9 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public string DecoyPairingManifestPath { get; set; }
 
-        /// <summary>FDR method: native Percolator (default), external mokapot, or simple target-decoy.</summary>
+        /// <summary>The classifier first-pass Percolator trains: the linear SVM (default) or
+        /// gradient-boosted trees. Set from <see cref="OspreyEnvironment.FdrModel"/> when the
+        /// command line is parsed; nothing else reads OSPREY_FDR_MODEL.</summary>
         public FdrMethod FdrMethod { get; set; } = FdrMethod.Percolator;
 
         /// <summary>
@@ -477,45 +479,25 @@ namespace pwiz.Osprey.Core
     }
 
     /// <summary>
-    /// Statistical method for FDR estimation.
-    /// Maps to osprey-core/src/types.rs FdrMethod.
+    /// The classifier the semi-supervised Percolator framework trains for FDR estimation.
+    /// Both values run the same framework - best-per-precursor dedup, peptide-grouped CV
+    /// folds, positive-set iteration, target-decoy competition, q-values, PEP, and the
+    /// projection / streaming plumbing around all of it - and differ ONLY in the model
+    /// trained per fold. Selected by the OSPREY_FDR_MODEL environment variable
+    /// (<see cref="OspreyEnvironment.FdrModel"/>), not by a command-line argument.
+    ///
+    /// <para>Rust's FdrMethod (osprey-core/src/config.rs) is Percolator, Mokapot and Simple,
+    /// and has no trees. Osprey dropped the other two: Mokapot was never reachable here, and
+    /// the simple target-decoy competition was removed (#4543).</para>
     /// </summary>
     public enum FdrMethod
     {
+        /// <summary>The linear SVM, the default.</summary>
         Percolator,
-        Mokapot,
-        Simple,
-        /// <summary>Gradient-boosted decision trees (non-linear alternative to the linear
-        /// Percolator SVM); implemented by Osprey.ML GradientBoostedTrees. Selected by
-        /// <c>--fdr-method gbdt</c> (the legacy alias <c>fasttree</c> still parses).</summary>
+        /// <summary>Gradient-boosted decision trees in place of the linear SVM; implemented by
+        /// Osprey.ML GradientBoostedTrees. EXPERIMENTAL, selected by
+        /// <c>OSPREY_FDR_MODEL=gbdt</c>.</summary>
         Gbdt
-    }
-
-    public static class FdrMethodExtensions
-    {
-        /// <summary>
-        /// True for the methods driven by the shared semi-supervised target-decoy
-        /// framework: <see cref="FdrMethod.Percolator"/> (linear SVM) and
-        /// <see cref="FdrMethod.Gbdt"/> (gradient-boosted trees). The two differ ONLY
-        /// in the classifier -- identical best-per-precursor dedup, peptide-grouped CV
-        /// folds, positive-set iteration, target-decoy competition, q-values, PEP, and the
-        /// identical projection / streaming plumbing around all of it.
-        ///
-        /// Use this ANYWHERE the question is "is this the Percolator pipeline?" rather
-        /// than a raw <c>== FdrMethod.Percolator</c>. Those gates are scattered across the
-        /// Tasks layer -- FirstPassFDR's projection gate, the 2nd-pass projection gate,
-        /// <c>NeedsResidentPool</c>, the Stage 5 log header -- and each one that compares
-        /// against Percolator alone silently routes Gbdt down the resident
-        /// <c>FdrEntry</c> path instead of the streaming projection. That fails quietly:
-        /// same q-values, but the whole-run pool goes resident, which is exactly what
-        /// OOM'd the 82-file join.
-        ///
-        /// Mokapot / Simple are NOT part of this framework and must stay excluded.
-        /// </summary>
-        public static bool UsesPercolatorFramework(this FdrMethod method)
-        {
-            return method == FdrMethod.Percolator || method == FdrMethod.Gbdt;
-        }
     }
 
     /// <summary>

@@ -225,7 +225,7 @@ namespace pwiz.Osprey.FDR
 
             var foldModels = new LinearSvmClassifier[config.NFolds];
             // Populated instead of foldModels when config.UseGradientBoostedTrees
-            // (--fdr-method gbdt). Exactly one of the two is non-null.
+            // (OSPREY_FDR_MODEL=gbdt). Exactly one of the two is non-null.
             var foldGbtModels = config.UseGradientBoostedTrees
                 ? new GradientBoostedTrees[config.NFolds]
                 : null;
@@ -378,8 +378,8 @@ namespace pwiz.Osprey.FDR
             // into per-feature weight x mean-difference terms, which only exists for a
             // linear model. A tree ensemble's analogue is split-gain importance -- a
             // different quantity that would need its own report rather than a
-            // reinterpretation of this one. Callers already tolerate null (the Simple
-            // and transfer 2nd-pass paths return it), so the --model-diagnostics Model
+            // reinterpretation of this one. Callers already tolerate null (the transfer
+            // 2nd-pass path returns it), so the --model-diagnostics Model
             // panel renders "n/a" exactly as it does for transfer-compete.
             FeatureContributions contributions = null;
             if (!config.UseGradientBoostedTrees)
@@ -886,7 +886,7 @@ namespace pwiz.Osprey.FDR
 
         /// <summary>
         /// Gradient-boosted-trees counterpart of <see cref="TrainFold"/>
-        /// (<c>--fdr-method gbdt</c>): the SAME semi-supervised loop -- select the
+        /// (<c>OSPREY_FDR_MODEL=gbdt</c>): the SAME semi-supervised loop - select the
         /// targets that reach <paramref name="trainFdr"/> under the current score, train
         /// on those positives against all decoys, re-score, keep the iteration that
         /// passes the most targets, stop after two without improvement -- with the linear

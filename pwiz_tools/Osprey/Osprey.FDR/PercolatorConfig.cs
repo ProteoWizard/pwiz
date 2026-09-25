@@ -97,7 +97,7 @@ namespace pwiz.Osprey.FDR
         public PercolatorDiagnosticsConfig Diagnostics { get; set; }
 
         /// <summary>
-        /// Train gradient-boosted decision trees (<c>--fdr-method gbdt</c>) instead
+        /// Train gradient-boosted decision trees (<c>OSPREY_FDR_MODEL=gbdt</c>) instead
         /// of the linear SVM. Everything else about the run is unchanged: the same
         /// best-per-precursor dedup, the same peptide-grouped CV folds, the same
         /// semi-supervised positive-set iteration, and the same target-decoy
@@ -147,8 +147,8 @@ namespace pwiz.Osprey.FDR
         /// the scoring pass that consumes its output. (The streaming paths each hand-copied
         /// this field list, which meant a new training knob had to be added in every copy or
         /// one path would quietly train the wrong model - and the lean first pass did: its
-        /// copy lacked the classifier choice, so it trained the SVM under
-        /// <c>--fdr-method gbdt</c>.)
+        /// copy lacked the classifier choice, so it trained the SVM when
+        /// gbdt was selected.)
         ///
         /// <see cref="CollectFeatureHistograms"/> is deliberately NOT carried: the
         /// histograms are accumulated by the score pass over the full population, not
