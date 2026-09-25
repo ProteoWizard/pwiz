@@ -1539,7 +1539,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The difference between the expected and measured ion mobility values expressed as a percent of the expected value (intensity-weighted across the peak).
+        ///   Looks up a localized string similar to The difference between the expected and measured ion mobility values expressed as a percent of the expected value (measured at the peak apex).
         /// </summary>
         public static string IonMobilityErrorPercent {
             get {
@@ -2775,7 +2775,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Intensity-weighted ion mobility centroid across the peak, in the same units as the IM extraction filter..
+        ///   Looks up a localized string similar to Intensity-weighted ion mobility centroid at the peak apex, in the same units as the IM extraction filter..
         /// </summary>
         public static string ObservedIonMobility {
             get {

@@ -1424,10 +1424,13 @@ namespace pwiz.Skyline.Model.Results
         // mzML and mz5 don't expose this conversion, in which case ProvidesCollisionalCrossSectionConverter
         // is false and we leave ObservedCcs null. Done here while the file is still
         // open; the converted value is persisted on the peak so reports can show CCS
-        // without the file later.
+        // without the file later. CCS is a property of the precursor ion, so chromatograms
+        // extracted from MS2 spectra (in the high-energy IM frame) get none.
         private void ApplyObservedCcs(ChromDataSet chromDataSet, ChromData chromData)
         {
             if (_ionMobilityConverter == null || !_ionMobilityConverter.ProvidesCollisionalCrossSectionConverter)
+                return;
+            if (chromData.Key.Source == ChromSource.fragment)
                 return;
             var nodeGroup = chromDataSet.NodeGroup;
             if (nodeGroup == null)

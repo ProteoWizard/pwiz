@@ -611,7 +611,7 @@ between the peak integration boundaries.</value>
     <value>An atomic chemical formula for the fully charged (and possibly isotope labeled) ion to be measured in a mass spectrometer.</value>
   </data>
   <data name="IonMobilityErrorPercent">
-    <value>The difference between the expected and measured ion mobility values expressed as a percent of the expected value (intensity-weighted across the peak)</value>
+    <value>The difference between the expected and measured ion mobility values expressed as a percent of the expected value (measured at the peak apex)</value>
   </data>
   <data name="IonMobilityFragment">
     <value>Center of the ion mobility filter window used in chromatogram extraction for a fragment ion. This may differ from the value for precursor ions , as fragment ions may move faster due to more energetic collisions,</value>
@@ -1059,7 +1059,7 @@ Unavailable when missing data impacts comparisons between replicates.</value>
     <value>Collision cross section in square Angstroms, computed from the observed ion mobility using the source instrument's vendor-supplied conversion. Available only for vendor formats that expose this conversion; open formats such as mzML and mz5 will leave this blank.</value>
   </data>
   <data name="ObservedIonMobility">
-    <value>Intensity-weighted ion mobility centroid across the peak, in the same units as the IM extraction filter.</value>
+    <value>Intensity-weighted ion mobility centroid at the peak apex, in the same units as the IM extraction filter.</value>
   </data>
   <data name="OptCollisionEnergy">
     <value>The collision energy value corresponding to the OptStep if
