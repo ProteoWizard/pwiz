@@ -732,7 +732,7 @@ namespace pwiz.Osprey.IO
                 using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
                 using (var writer = RunSync(ParquetWriter.CreateAsync(schema, stream)))
                 using (var progress = new ProgressReporter(
-                    string.Format("Writing {0:N0} entries", totalRows), totalRows, string.Empty,
+                    string.Format("Writing {0:N0} precursor candidate peaks", totalRows), totalRows, string.Empty,
                     ProgressReporter.IO_INTERVAL_SECONDS))
                 {
                     writer.CompressionMethod = CompressionMethod.Zstd;
@@ -1586,7 +1586,7 @@ namespace pwiz.Osprey.IO
                 using (var writeStream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
                 using (var writer = RunSync(ParquetWriter.CreateAsync(schema, writeStream)))
                 using (var progress = progressIndent == null ? null : new ProgressReporter(
-                    string.Format("Writing {0:N0} entries", totalRows), totalRows, progressIndent,
+                    string.Format("Writing {0:N0} precursor candidate peaks", totalRows), totalRows, progressIndent,
                     ProgressReporter.IO_INTERVAL_SECONDS))
                 {
                     writer.CompressionMethod = CompressionMethod.Zstd;

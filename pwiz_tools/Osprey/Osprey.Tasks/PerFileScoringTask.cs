@@ -925,8 +925,7 @@ namespace pwiz.Osprey.Tasks
         private static void LogCoelutionComplete(PipelineContext ctx, long totalScored, int nFiles)
         {
             ctx.LogInfo(string.Format(
-                "Coelution scoring complete: {0:N0} precursor candidates (targets + decoys) scored " +
-                "across {1:N0} files.",
+                "First-pass scoring complete: {0:N0} precursor candidate peaks scored across {1:N0} files.",
                 totalScored, nFiles));
             ctx.LogInfo(LogTag.COUNT, LogKey.Format(LogKey.COUNT_SCORED_CANDIDATES, @"total={0} files={1}",
                 totalScored, nFiles));
@@ -2734,7 +2733,7 @@ namespace pwiz.Osprey.Tasks
                     parquetPath, scoredEntries, parquetFooterMetadata, _libraryById, fileName);
                 swParquet.Stop();
                 ctx.LogInfo(string.Format(
-                    "Wrote {0:N0} scored entries to {1} ({2:F1}s)",
+                    "Wrote {0:N0} precursor candidate peaks to {1} ({2:F1}s)",
                     scoredEntries.Count, parquetPath, swParquet.Elapsed.TotalSeconds));
 
                 // Phase 1 (issue #4355): the heavy per-entry arrays are now persisted in
@@ -2796,8 +2795,10 @@ namespace pwiz.Osprey.Tasks
 
             int nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
             int nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
-            ctx.LogInfo(string.Format("Scored {0:N0} entries ({1:N0} targets, {2:N0} decoys) for {3}",
+            ctx.LogInfo(string.Format(
+                "Scored peaks for {0:N0} of {1:N0} precursor candidates ({2:N0} targets, {3:N0} decoys) in {4}",
                 scoredEntries.Count,
+                fullLibrary.Count,
                 nScoredTargets,
                 nScoredDecoys,
                 fileName));
