@@ -346,6 +346,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 {
                     data.ModelComposite = contributions.Composite;
                     data.ModelDegenerate = contributions.IsDegenerate;
+                    data.ModelIsTreeEnsemble = contributions.IsTreeEnsemble;
                     data.FeatureHistEdges = contributions.HistogramEdges;
                     data.Model = BuildFeatureRows(contributions);
                 }

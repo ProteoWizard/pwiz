@@ -27,8 +27,9 @@ biased decoy population and reports **anti-conservative** (optimistic) q-values.
 That is why the `percolator` mode was **removed** rather than demoted. It was
 measured at 1.57% true FDP against a nominal 1% on Stellar libdecoy entrapment
 (the first-pass q gives 0.92% on the same data), and around 9% on an 82-file
-SEA-AD set — the error grows with run count. **The linear model trained by the
-first-pass SVM is now the model for the second pass in every mode**, and second-pass
+SEA-AD set - the error grows with run count. **The model the first pass trained (the
+linear SVM, or the tree ensemble under `--fdr-method gbdt`) is now the model for the
+second pass in every mode**, and second-pass
 retraining has been removed outright - see "Frozen vs. retrain" below.
 
 ## `OSPREY_PASS2_QVALUE` modes
@@ -113,8 +114,8 @@ Bourgon 2010).
   removed too - the question it measured is settled and recorded here. Do not re-add it;
   git history holds the dropped approach.
 
-**There is therefore no second-pass model.** The linear model the first-pass SVM trained
-IS the model for pass 2, unchanged. Only the score DISTRIBUTIONS differ, because pass 2
+**There is therefore no second-pass model.** The model the first pass trained - the linear
+SVM, or the tree ensemble under `--fdr-method gbdt` - IS the model for pass 2, unchanged. Only the score DISTRIBUTIONS differ, because pass 2
 runs on a subset - which is why a pass-2 feature-contribution view needs the frozen
 coefficients plus per-feature target/decoy means, and nothing that has to be retrained.
 
@@ -160,7 +161,8 @@ They are **two files, not one**, because two different phases produce them:
 `<stem>.1st-pass.model.json` is written the moment first-pass training returns a
 model, and `<stem>.1st-pass.stratum.json` when first-pass protein FDR ends. On a
 446-file cohort those two moments are hours apart, and bundling them meant the
-model — a few hundred KB, fully computed at minute ~21 — existed only in RAM
+model - a few hundred KB for the linear SVM, about 3.4 MB for a tree model under
+`--fdr-method gbdt`, fully computed at minute ~21 - existed only in RAM
 until the end of the task, so any interruption threw it away. `LoadFromAny`
 merges the two on read, so a consumer still sees one sidecar. **Both must ride
 the HPC relay**: an orchestrator that copies the model between phase directories

@@ -22,8 +22,12 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR;
+using pwiz.Osprey.ML;
 using pwiz.Osprey.Tasks;
 using pwiz.Osprey.Tasks.ModelDiagnostics;
 
@@ -53,6 +57,91 @@ namespace pwiz.Osprey.Test
             AssertEveryTaskCarriesTheSuffixesItNeeds();
             AssertLibraryFragmentArmIsPinnedToThePipeline();
             AssertDiagnosticsReportIsADeclaredOutputOnlyWhenAsked();
+            AssertTreeClassifierKeysTheModelTasks();
+        }
+
+        /// <summary>
+        /// <c>--fdr-method gbdt</c> must key the three tasks whose output the first-pass model
+        /// determines - FirstPassFDR trains it, PerFileRescoring and SecondPassFDR score with it -
+        /// and nothing else, and must leave every percolator key exactly as it was.
+        ///
+        /// <para>Written after the omission let one arm adopt the other: a percolator directory
+        /// re-run as gbdt, or a gbdt directory written while the lean first pass still trained
+        /// the SVM under the gbdt flag, reported "skipping (outputs valid)" and handed back the
+        /// linear model's results as the trees'. An OSPREY_GBT_* sweep had the same hole one
+        /// setting at a time, so every tree setting that changes the model must key too.</para>
+        /// </summary>
+        private static void AssertTreeClassifierKeysTheModelTasks()
+        {
+            var tasks = OspreyTasks.Create().Pipeline;
+            var linearCtx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
+            var treeCtx = new PipelineContext(new OspreyConfig { FdrMethod = FdrMethod.Gbdt }, tasks, null, null, null);
+            string treeTerm = PercolatorEngine.GbdtValidityKeySuffix(treeCtx.Config);
+            Assert.AreNotEqual(string.Empty, treeTerm, @"gbdt must emit a term");
+            foreach (var method in new[] { FdrMethod.Percolator, FdrMethod.Mokapot, FdrMethod.Simple })
+            {
+                Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(new OspreyConfig { FdrMethod = method }),
+                    method + @" must emit nothing, or every existing output directory is invalidated");
+            }
+
+            // The term is the ONLY difference: a percolator key is the gbdt key without it.
+            foreach (var task in tasks)
+            {
+                bool expectTerm = task.Name == FirstPassFdrTask.TASK_NAME ||
+                                  task.Name == PerFileRescoreTask.TASK_NAME ||
+                                  task.Name == SecondPassFdrTask.TASK_NAME;
+                string linearKey = task.ValidityKey(linearCtx);
+                Assert.AreEqual(expectTerm ? linearKey + treeTerm : linearKey, task.ValidityKey(treeCtx),
+                    string.Format(@"{0} must {1}key on the classifier", task.Name, expectTerm ? string.Empty : @"NOT "));
+            }
+
+            AssertEveryTreeSettingKeysDifferently();
+        }
+
+        /// <summary>
+        /// Every field of <see cref="GbtParams"/> but the thread count changes the trained model,
+        /// so each must key, and key distinctly. Walked by reflection so a field added later is
+        /// covered without this list having to know about it.
+        /// </summary>
+        private static void AssertEveryTreeSettingKeysDifferently()
+        {
+            const int iterations = OspreyEnvironment.GBT_MAX_ITERATIONS_DEFAULT;
+            const int innerFolds = 5;
+            string defaultKey = PercolatorEngine.GbdtValidityKeySuffix(FdrMethod.Gbdt, new GbtParams(), iterations, innerFolds);
+            Assert.AreEqual(defaultKey, PercolatorEngine.GbdtValidityKeySuffix(FdrMethod.Gbdt, new GbtParams(), iterations, innerFolds),
+                @"the term must be a pure function of its settings");
+            var keys = new HashSet<string> { defaultKey };
+            foreach (var field in typeof(GbtParams).GetFields(BindingFlags.Public | BindingFlags.Instance))
+            {
+                var changed = new GbtParams();
+                field.SetValue(changed, OtherValue(field.GetValue(changed)));
+                string key = PercolatorEngine.GbdtValidityKeySuffix(FdrMethod.Gbdt, changed, iterations, innerFolds);
+                if (field.Name == nameof(GbtParams.MaxDegreeOfParallelism))
+                {
+                    Assert.AreEqual(defaultKey, key, @"training is bit-identical at any thread count, so it must not key");
+                    continue;
+                }
+                Assert.IsTrue(keys.Add(key), field.Name + @" must key, and distinctly from every other setting");
+            }
+            Assert.IsTrue(keys.Add(PercolatorEngine.GbdtValidityKeySuffix(FdrMethod.Gbdt, new GbtParams(), iterations + 1, innerFolds)),
+                @"the tree iteration cap (OSPREY_GBT_MAX_ITERATIONS) must key");
+            Assert.IsTrue(keys.Add(PercolatorEngine.GbdtValidityKeySuffix(FdrMethod.Gbdt, new GbtParams(), iterations, 1)),
+                @"the inner-fold count (OSPREY_GBT_INNER_FOLDS) must key");
+        }
+
+        /// <summary>A value different from <paramref name="value"/>, of its type.</summary>
+        private static object OtherValue(object value)
+        {
+            if (value is int i)
+                return i + 1;
+            if (value is double d)
+                return d + 0.5;
+            if (value is ulong u)
+                return u + 1;
+            if (value is GbtObjective objective)
+                return objective == GbtObjective.LogisticBinary ? GbtObjective.SquaredError : GbtObjective.LogisticBinary;
+            Assert.Fail(@"no alternative value for a GbtParams field of type " + value.GetType().Name);
+            return null;
         }
 
         /// <summary>

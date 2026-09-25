@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -56,6 +57,7 @@ namespace pwiz.Osprey.Test
             TestBuildPass2();
             TestSidecarRoundTrip();
             TestFeatureHistograms();
+            TestTreeEnsembleModelTab();
             TestModelPass2();
             TestDensityRatioFlatness();
             TestIdYieldPerScope();
@@ -1577,6 +1579,66 @@ namespace pwiz.Osprey.Test
             var c2 = acc2.Build(new List<double[]> { new[] { 1.0, 1.0 } }, infos);
             Assert.IsNull(c2.HistogramEdges);
             Assert.IsNull(c2.TargetHistograms);
+        }
+
+        // A gradient-boosted-tree first pass has no weights, so its Model tab is the weight-free
+        // half: each feature's target-decoy mean gap and class histograms, NaN where a coefficient
+        // would be, no direction flag even on a reversed score, and feature order rather than a
+        // contribution ranking. The data says it is a tree model - a linear model's data never
+        // carries the flag, so its serialized form is unchanged - and the report says the
+        // contribution table does not apply instead of claiming the model was not retrained.
+        private static void TestTreeEnsembleModelTab()
+        {
+            var infos = new[]
+            {
+                new OspreyFeatureInfo("f0", "Feature Zero", false),
+                new OspreyFeatureInfo("f1", "Feature One", true),
+            };
+            var acc = new FeatureContributions.Accumulator(2, true);
+            for (int i = 0; i < 10; i++)
+                acc.Add(new[] { 2.0, 0.5 }, false);
+            for (int i = 0; i < 10; i++)
+                acc.Add(new[] { -1.0, 0.0 }, true);
+            var trees = acc.BuildForTreeEnsemble(infos);
+            Assert.IsTrue(trees.IsTreeEnsemble);
+            Assert.IsFalse(trees.IsDegenerate, "not applicable is not degenerate");
+            Assert.IsTrue(double.IsNaN(trees.Composite));
+            foreach (var f in trees.Features)
+            {
+                Assert.IsTrue(double.IsNaN(f.Coefficient));
+                Assert.IsTrue(double.IsNaN(f.Weighted));
+                Assert.IsTrue(double.IsNaN(f.Percent));
+                Assert.IsFalse(f.IsUnexpectedDirection, "a tree has no coefficient sign to disagree with");
+            }
+            Assert.IsTrue(trees.Features[1].IsReversedScore);
+            Assert.AreEqual(3.0, trees.Features[0].TargetDecoyMeanGap, 1e-12);
+            Assert.AreEqual(0.5, trees.Features[1].TargetDecoyMeanGap, 1e-12);
+            Assert.AreEqual(10, trees.TargetHistograms[0].Sum());
+            Assert.AreEqual(10, trees.DecoyHistograms[0].Sum());
+
+            var entries = new List<FdrEntry> { Entry(1, false, 5, 0.001, "TA", 2), Entry(1 | DECOY_BIT, true, 1, 0.5, "DA", 2) };
+            var data = ModelDiagnosticsData.Build(Wrap(entries), trees, null, null, 1.0, 0.01, FdrLevel.Peptide);
+            Assert.IsTrue(data.ModelIsTreeEnsemble);
+            Assert.IsFalse(data.ModelDegenerate);
+            Assert.AreEqual(2, data.FeatureCount);
+            CollectionAssert.AreEqual(new[] { 0, 1 }, data.Model.Select(m => m.Index).ToArray(), "feature order");
+            Assert.IsTrue(data.Model.All(m => m.TargetHist != null && double.IsNaN(m.Coefficient) && !m.Unexpected));
+            Assert.AreEqual(3.0, data.Model[0].DeltaMu, 1e-12);
+            Assert.AreEqual(ModelDiagnosticsReport.TREE_MODEL_NOTE, ModelDiagnosticsReport.ModelTabNote(trees));
+
+            var linear = acc.Build(new List<double[]> { new[] { 1.0, 1.0 } }, infos);
+            Assert.IsFalse(linear.IsTreeEnsemble);
+            Assert.IsNull(ModelDiagnosticsReport.ModelTabNote(linear), "a linear Model tab is complete");
+            Assert.AreEqual(ModelDiagnosticsReport.MODEL_NOT_RETRAINED_NOTE, ModelDiagnosticsReport.ModelTabNote(null));
+            var settings = new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                FloatFormatHandling = FloatFormatHandling.Symbol,
+            };
+            var linearData = ModelDiagnosticsData.Build(Wrap(entries), linear, null, null, 1.0, 0.01, FdrLevel.Peptide);
+            StringAssert.DoesNotMatch(JsonConvert.SerializeObject(linearData, settings),
+                new Regex("modelIsTreeEnsemble"));
+            StringAssert.Contains(JsonConvert.SerializeObject(data, settings), "\"modelIsTreeEnsemble\":true");
         }
 
         private static int ArgMax(int[] a)

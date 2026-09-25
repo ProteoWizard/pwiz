@@ -229,7 +229,7 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
       <h2>Trained scoring model &mdash; feature contributions</h2>
       <button class="iconbtn" id="modelToggle" title="Toggle between a best-fit height and the full table">Show all &#9662;</button>
     </div>
-    <p class="desc">The averaged cross-validated linear (Percolator/SVM) model, decomposed Skyline-style
+    <p class="desc" id="modelDesc">The averaged cross-validated linear (Percolator/SVM) model, decomposed Skyline-style
       into each feature's percent contribution to the composite target&ndash;decoy separation.
       Rows in <b style="color:var(--bad)">red</b> have a trained coefficient whose sign is opposite the
       feature's expected direction (behaving against expectation).</p>
@@ -684,7 +684,7 @@ function legend(node,items){if(!node)return;node.innerHTML="";items.forEach(it=>
 const HAS_FEATHIST = !!(D.featureHistEdges && D.featureHistEdges.length>1);
 function passBundle(p){
   if(p===1)return {pass:1,label:"1st pass",desc:"pre-compaction first-pass training set",
-    hasStructural:true,
+    hasStructural:true,treeModel:!!D.modelIsTreeEnsemble,
     features:D.model||[],modelDegenerate:D.modelDegenerate,scores:D.scores,
     densityRatio:D.densityRatio,winFraction:D.winFraction,
     fdpViews:D.fdpViews,idYield:D.idYield,crossRun:D.crossRun,perFile:D.perFile,
@@ -711,6 +711,13 @@ const PASS2_NA_COMPOSITE="Pass-2 composite score distribution n/a &mdash; confid
 const PASS2_NA_DENSITY="Pass-2 score density n/a &mdash; confidence transfer (no retrained model). "+
   "The q-driven FDR-calibration and reproducibility views are available for pass 2.";
 const PASS2_NA_COMPETITION="Pass-2 decoy-win competition n/a &mdash; confidence transfer (no retrained model).";
+// The Model card's description: the linear decomposition as written in the page, or, for a
+// gradient-boosted-tree first pass (D.modelIsTreeEnsemble), what the card shows instead.
+const LINEAR_MODEL_DESC=document.getElementById("modelDesc").innerHTML;
+const TREE_MODEL_DESC="The first-pass model is gradient-boosted trees (<code>--fdr-method gbdt</code>), the fold "+
+  "ensembles' margins averaged per row. A tree ensemble has no coefficients, so there is no contribution "+
+  "decomposition; each feature's standardized target&ndash;decoy mean gap is listed instead, and its "+
+  "target/decoy distribution is one click away.";
 // Replace a chart with a graceful n/a note and clear its legend.
 function naChart(hostId,legId,msgHtml){
   const h=document.getElementById(hostId);
@@ -813,6 +820,21 @@ function buildFeatureTable(host,rows,opts){
   if(!rows.length && opts.emptyNote)H(host,"p",{class:"note"},opts.emptyNote);
 }
 
+// The Model tab's table for a gradient-boosted-tree model (Feature | Target-decoy mean gap):
+// no coefficient or contribution column, since a tree ensemble has neither, and each row still
+// opens that feature's target/decoy distribution.
+function buildTreeFeatureTable(host,rows,onRowClick){
+  const t=H(host,"table",{});const htr=H(H(t,"thead",{}),"tr",{});
+  [["Feature","l"],["Target-decoy mean gap",""]].forEach(h=>H(htr,"th",{class:h[1]},h[0]));
+  const tb=H(t,"tbody",{});
+  rows.forEach(r=>{const handler=onRowClick(r);
+    const tr=H(tb,"tr",{class:handler?"clk":""});
+    H(tr,"td",{class:"l"},r.label);
+    H(tr,"td",{class:"num"},fmt(r.deltaMu,4));
+    if(handler)tr.onclick=()=>handler(tr);
+  });
+}
+
 // (Re)render the Model tab for the active pass: feature table, print grid, and the
 // composite chart below. Under Pass 2 confidence-transfer (no retrained model) the
 // whole structural card degrades to an n/a note.
@@ -829,10 +851,18 @@ function renderModelTab(b){
     return;
   }
   na.style.display="none";wrap.style.display="";
+  document.getElementById("modelDesc").innerHTML=b.treeModel?TREE_MODEL_DESC:LINEAR_MODEL_DESC;
   const rows=b.features||[];const host=document.getElementById("modelTable");host.innerHTML="";
-  buildFeatureTable(host,rows,{onRowClick:r=>(HAS_FEATHIST&&r.targetHist)?(tr=>selectFeature(r,tr)):null});
-  if(b.modelDegenerate)H(host,"p",{class:"note"},"Composite separation is degenerate; percentages unavailable.");
-  if(!rows.length)H(host,"p",{class:"note"},"Model table unavailable — the first-pass model was not retrained on this run (resumed / rehydrated).");
+  const rowClick=r=>(HAS_FEATHIST&&r.targetHist)?(tr=>selectFeature(r,tr)):null;
+  if(b.treeModel){
+    buildTreeFeatureTable(host,rows,rowClick);
+    H(host,"p",{class:"note"},"Contribution table unavailable for gradient-boosted trees: a tree ensemble has no "+
+      "coefficients to decompose. The model was trained on this run; the per-feature distributions are shown.");
+  }else{
+    buildFeatureTable(host,rows,{onRowClick:rowClick});
+    if(b.modelDegenerate)H(host,"p",{class:"note"},"Composite separation is degenerate; percentages unavailable.");
+    if(!rows.length)H(host,"p",{class:"note"},"Model table unavailable \u2014 the first-pass model was not retrained on this run (resumed / rehydrated).");
+  }
 
   // Collapse/expand: best-fit height so the score plot below stays visible; toggle
   // reveals the full table. Preserve the collapsed/expanded choice across passes.
@@ -851,7 +881,8 @@ function renderModelTab(b){
     rows.filter(r=>r.targetHist).forEach(r=>{
       const cell=H(grid,"div",{class:"featcell"});
       H(cell,"h3",{},r.label);
-      H(cell,"div",{class:"fm",html:"coefficient "+fmt(r.coefficient,4)+" &middot; contribution "+pct(r.percent/100,1)+
+      H(cell,"div",{class:"fm",html:b.treeModel?"target-decoy mean gap "+fmt(r.deltaMu,4):
+        "coefficient "+fmt(r.coefficient,4)+" &middot; contribution "+pct(r.percent/100,1)+
         (r.unexpected?" &middot; <b style='color:var(--bad)'>unexpected direction</b>":"")});
       drawFeatureSvg(H(cell,"div",{class:"chartbox"}),r,470,235);
     });
@@ -871,8 +902,10 @@ function selectFeature(r,tr){
   document.getElementById("scoreHdr").childNodes[0].nodeValue="Feature score distribution: "+r.label+" ";
   document.getElementById("scoreDesc").innerHTML=
     "Standardized "+esc(r.label)+" value for target vs decoy precursors (the space the model scores in), "+
-    "the Osprey analog of Skyline's mProphet \"Feature Scores\" view. Coefficient "+fmt(r.coefficient,4)+
-    " · contribution "+pct(r.percent/100,1)+(r.unexpected?" · <b style='color:var(--bad)'>unexpected direction</b>":"")+".";
+    "the Osprey analog of Skyline's mProphet \"Feature Scores\" view. "+(B().treeModel
+      ? "Target-decoy mean gap "+fmt(r.deltaMu,4)+"."
+      : "Coefficient "+fmt(r.coefficient,4)+
+        " &middot; contribution "+pct(r.percent/100,1)+(r.unexpected?" &middot; <b style='color:var(--bad)'>unexpected direction</b>":"")+".");
   document.getElementById("scoreBack").style.display="";
   featureHist("scoreChart","scoreLegend",r);
 }

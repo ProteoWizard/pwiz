@@ -39,6 +39,10 @@ namespace pwiz.Osprey.FDR
     /// scores in (the same space the average weights live in), so the product
     /// w_j*deltaMu_j is space-invariant.
     ///
+    /// A gradient-boosted-tree model has no weights, so for it only the weight-free half is
+    /// filled - each feature's target-decoy mean gap and class histograms - and the rest is
+    /// NaN (<see cref="IsTreeEnsemble"/>).
+    ///
     /// This is the pure calculation: a read of the averaged weights and the
     /// accumulated target/decoy feature sums. It performs no I/O and computes no
     /// presentation order; the presentation layer (PercolatorDiagnosticsDump.EmitFeatureContributions)
@@ -123,7 +127,8 @@ namespace pwiz.Osprey.FDR
         /// and builds the <see cref="FeatureContributions"/>. Owns BOTH the summing
         /// and the fold-averaging so the caller no longer hand-rolls either; the
         /// only public path to a <see cref="FeatureContributions"/> from a trained
-        /// model.
+        /// model (<see cref="Build"/> for the linear SVM, <see cref="BuildForTreeEnsemble"/>
+        /// for gradient-boosted trees, which have no weights to average).
         /// </summary>
         public sealed class Accumulator
         {
@@ -248,6 +253,22 @@ namespace pwiz.Osprey.FDR
                 return new FeatureContributions(avgWeights, _sumTarget, _sumDecoy,
                     _nTarget, _nDecoy, featureInfos, _histTarget, _histDecoy);
             }
+
+            /// <summary>
+            /// The report for a gradient-boosted-tree model, which has no weights to decompose:
+            /// the per-feature target-decoy mean gaps and the class histograms, which describe
+            /// the features rather than the classifier, with every weight-based value
+            /// (<see cref="FeatureContribution.Coefficient"/>, <see cref="FeatureContribution.Weighted"/>,
+            /// <see cref="FeatureContribution.Percent"/>, <see cref="Composite"/>) NaN and
+            /// <see cref="IsTreeEnsemble"/> set, so a reader can tell "not applicable" from
+            /// "degenerate".
+            /// </summary>
+            /// <param name="featureInfos">Per-feature metadata (name / label / direction), or null.</param>
+            public FeatureContributions BuildForTreeEnsemble(OspreyFeatureInfo[] featureInfos)
+            {
+                return new FeatureContributions(null, _sumTarget, _sumDecoy,
+                    _nTarget, _nDecoy, featureInfos, _histTarget, _histDecoy);
+            }
         }
 
         // ---- per-feature standardized-value histogram binning (diagnostics only) ----
@@ -297,6 +318,15 @@ namespace pwiz.Osprey.FDR
         public bool IsDegenerate { get; }
 
         /// <summary>
+        /// Whether this describes a gradient-boosted-tree model
+        /// (<see cref="Accumulator.BuildForTreeEnsemble"/>) rather than a linear one. A tree
+        /// ensemble has no coefficients, so every weight-based value is NaN - not applicable,
+        /// which is distinct from <see cref="IsDegenerate"/> - while the target-decoy mean gaps
+        /// and the histograms are populated as for a linear model.
+        /// </summary>
+        public bool IsTreeEnsemble { get; }
+
+        /// <summary>
         /// Shared bin edges (length <c>HistBinCount+1</c>) for the per-feature
         /// standardized-value histograms, or <c>null</c> when they were not
         /// collected (the model-diagnostics-only path). See <see cref="HistEdges"/>.
@@ -315,9 +345,12 @@ namespace pwiz.Osprey.FDR
         public IReadOnlyList<int[]> DecoyHistograms { get; }
 
         /// <summary>
-        /// Decompose the trained linear model into per-feature contributions.
+        /// Decompose the trained linear model into per-feature contributions, or with no weights
+        /// (a tree ensemble) report only the class separation of each feature.
         /// </summary>
-        /// <param name="avgWeights">Standardized averaged per-feature weights w_j.</param>
+        /// <param name="avgWeights">Standardized averaged per-feature weights w_j, or null for a
+        /// model without them, which makes every weight-based value NaN and sets
+        /// <see cref="IsTreeEnsemble"/>.</param>
         /// <param name="sumTarget">Per-feature sum of standardized target values.</param>
         /// <param name="sumDecoy">Per-feature sum of standardized decoy values.</param>
         /// <param name="nTarget">Number of targets accumulated into <paramref name="sumTarget"/>.</param>
@@ -346,7 +379,11 @@ namespace pwiz.Osprey.FDR
             HistogramEdges = targetHistograms != null ? HistEdges() : null;
             TargetHistograms = targetHistograms;
             DecoyHistograms = decoyHistograms;
-            int p = avgWeights.Length;
+            // No weights: every weight-based value below comes out NaN (NaN times anything),
+            // and the direction flag, which reads the coefficient's sign, is not raised.
+            bool linear = avgWeights != null;
+            IsTreeEnsemble = !linear;
+            int p = avgWeights?.Length ?? sumTarget.Length;
             var weighted = new double[p];
             var deltaMu = new double[p];
             double composite = 0.0;
@@ -355,12 +392,13 @@ namespace pwiz.Osprey.FDR
                 double mt = nTarget > 0 ? sumTarget[j] / nTarget : 0.0;
                 double md = nDecoy > 0 ? sumDecoy[j] / nDecoy : 0.0;
                 deltaMu[j] = mt - md;
-                weighted[j] = avgWeights[j] * deltaMu[j];
+                weighted[j] = WeightAt(avgWeights, j) * deltaMu[j];
                 composite += weighted[j];   // == sum_k w_k*deltaMu_k == deltaMu_composite
             }
             Composite = composite;
             // Targets should score above decoys, so composite > 0. Guard /0 for a
             // degenerate model (percentages become NaN, which the report shows plainly).
+            // A NaN composite (no weights) is not degenerate: it is not applicable.
             bool degenerate = Math.Abs(composite) <= 1e-12;
             IsDegenerate = degenerate;
 
@@ -371,11 +409,11 @@ namespace pwiz.Osprey.FDR
                 bool haveInfo = featureInfos != null && j < featureInfos.Length;
                 var info = haveInfo ? featureInfos[j] : default(OspreyFeatureInfo);
                 bool reversed = haveInfo && info.IsReversedScore;
-                bool wrongSign = haveInfo && (info.IsReversedScore ^ (avgWeights[j] < 0.0));
+                bool wrongSign = linear && haveInfo && (info.IsReversedScore ^ (WeightAt(avgWeights, j) < 0.0));
                 string name = info.Name;
                 string label = info.Label ?? info.Name ?? string.Format("feature_{0}", j);
                 features[j] = new FeatureContribution(j, name, label,
-                    avgWeights[j], deltaMu[j], weighted[j], pct, reversed, wrongSign);
+                    WeightAt(avgWeights, j), deltaMu[j], weighted[j], pct, reversed, wrongSign);
             }
             Features = features;
         }
@@ -418,6 +456,12 @@ namespace pwiz.Osprey.FDR
         public override string ToString()
         {
             return string.Join(Environment.NewLine, ToReportLines());
+        }
+
+        /// <summary>Feature <paramref name="j"/>'s coefficient, or NaN when the model has none.</summary>
+        private static double WeightAt(double[] avgWeights, int j)
+        {
+            return avgWeights != null ? avgWeights[j] : double.NaN;
         }
     }
 }

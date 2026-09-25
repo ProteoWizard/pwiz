@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
 
@@ -341,6 +342,55 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
+        /// The validity-key term for the classifier that trains and applies the first-pass
+        /// model: EMPTY unless <c>--fdr-method gbdt</c>, and under gbdt the method plus every tree
+        /// setting that changes the trained model - the <see cref="GbtParams"/> this process
+        /// trains with, <see cref="OspreyEnvironment.GbtMaxIterations"/> and
+        /// <see cref="OspreyEnvironment.GbtInnerFolds"/>. FirstPassFDR, PerFileRescoring and
+        /// SecondPassFDR append it, because each writes output that model determines.
+        ///
+        /// <para>Empty for the linear SVM on purpose, in the shape of
+        /// <see cref="OspreyEnvironment.ExperimentAggValidityKeySuffix"/>: the SVM's outputs never
+        /// changed, so an unconditional term would invalidate every percolator output directory to
+        /// record nothing. Keyed for gbdt because without it one arm's directory was adopted by
+        /// the other - a percolator directory re-run as gbdt, a gbdt directory written before the
+        /// lean first pass trained trees (so holding SVM-scored results), or one OSPREY_GBT_*
+        /// sweep point re-run as the next - each reporting "skipping (outputs valid)" and handing
+        /// back the other arm's numbers.</para>
+        ///
+        /// <para>Kept out of the base task key and out of <c>SearchParameterHash</c>, which must
+        /// match the Rust implementation; gbdt has no Rust counterpart.</para>
+        /// </summary>
+        public static string GbdtValidityKeySuffix(OspreyConfig config)
+        {
+            return GbdtValidityKeySuffix(config?.FdrMethod ?? FdrMethod.Percolator, BuildGbtParams(),
+                OspreyEnvironment.GbtMaxIterations, OspreyEnvironment.GbtInnerFolds);
+        }
+
+        /// <summary>
+        /// <see cref="GbdtValidityKeySuffix(OspreyConfig)"/> for explicitly supplied settings, so
+        /// the arms can be compared without the process-wide environment, which is read once.
+        /// <see cref="GbtParams.MaxDegreeOfParallelism"/> is the one field left out: the trained
+        /// model is bit-identical at any value, so keying it would invalidate a directory for a
+        /// difference that cannot exist.
+        /// </summary>
+        public static string GbdtValidityKeySuffix(FdrMethod fdrMethod, GbtParams gbtParams,
+            int maxIterations, int innerFolds)
+        {
+            if (fdrMethod != FdrMethod.Gbdt)
+                return string.Empty;
+            return string.Format(CultureInfo.InvariantCulture,
+                @";fdrmethod=gbdt;gbtobjective={0};gbttrees={1};gbtdepth={2};gbtlr={3:R}" +
+                @";gbtminchild={4:R};gbtsubsample={5:R};gbtcolsample={6:R};gbtgamma={7:R}" +
+                @";gbtlambda={8:R};gbtalpha={9:R};gbtbins={10};gbtseed={11}" +
+                @";gbtiterations={12};gbtinnerfolds={13}",
+                gbtParams.Objective, gbtParams.NTrees, gbtParams.MaxDepth, gbtParams.LearningRate,
+                gbtParams.MinChildWeight, gbtParams.Subsample, gbtParams.ColSample, gbtParams.Gamma,
+                gbtParams.RegLambda, gbtParams.RegAlpha, gbtParams.MaxBins, gbtParams.Seed,
+                maxIterations, innerFolds);
+        }
+
+        /// <summary>
         /// Build the first-pass <see cref="PercolatorConfig"/> shared by the legacy
         /// <see cref="FdrEntry"/> path and the projection path. Centralized (issue
         /// #4355 step (b) increment iii) so every SVM knob is IDENTICAL whether the
@@ -354,20 +404,9 @@ namespace pwiz.Osprey.FDR
             OspreyFeatureInfo[] featureInfos,
             PercolatorDiagnosticsConfig diagnostics)
         {
-            // Start from the validated GbtParams defaults and apply any env overrides
-            // (OSPREY_GBT_*), so a regularization / capacity sweep runs without a recompile
-            // per setting. Unset vars leave the default in place. Tree-only: this object is
-            // ignored on the SVM path. The chosen values are echoed to the run log.
-            var gbtParams = new GbtParams();
-            if (OspreyEnvironment.GbtGamma.HasValue) gbtParams.Gamma = OspreyEnvironment.GbtGamma.Value;
-            if (OspreyEnvironment.GbtRegLambda.HasValue) gbtParams.RegLambda = OspreyEnvironment.GbtRegLambda.Value;
-            if (OspreyEnvironment.GbtRegAlpha.HasValue) gbtParams.RegAlpha = OspreyEnvironment.GbtRegAlpha.Value;
-            if (OspreyEnvironment.GbtMaxDepth.HasValue) gbtParams.MaxDepth = OspreyEnvironment.GbtMaxDepth.Value;
-            if (OspreyEnvironment.GbtNTrees.HasValue) gbtParams.NTrees = OspreyEnvironment.GbtNTrees.Value;
-            if (OspreyEnvironment.GbtMinChildWeight.HasValue) gbtParams.MinChildWeight = OspreyEnvironment.GbtMinChildWeight.Value;
-            if (OspreyEnvironment.GbtLearningRate.HasValue) gbtParams.LearningRate = OspreyEnvironment.GbtLearningRate.Value;
-            if (OspreyEnvironment.GbtSubsample.HasValue) gbtParams.Subsample = OspreyEnvironment.GbtSubsample.Value;
-            if (OspreyEnvironment.GbtColSample.HasValue) gbtParams.ColSample = OspreyEnvironment.GbtColSample.Value;
+            // Tree-only: this object is ignored on the SVM path. The chosen values are echoed to
+            // the run log.
+            var gbtParams = BuildGbtParams();
 
             return new PercolatorConfig
             {
@@ -400,6 +439,38 @@ namespace pwiz.Osprey.FDR
                 CollectFeatureHistograms = config.ModelDiagnostics,
                 Diagnostics = diagnostics
             };
+        }
+
+        /// <summary>
+        /// The tree hyper-parameters this process trains with: the validated
+        /// <see cref="GbtParams"/> defaults with any OSPREY_GBT_* override applied, so a
+        /// regularization / capacity sweep runs without a recompile per setting. Unset variables
+        /// leave the default in place. The one source of them, shared by the training config and
+        /// <see cref="GbdtValidityKeySuffix(OspreyConfig)"/>, so the key cannot describe a model
+        /// other than the one trained.
+        /// </summary>
+        private static GbtParams BuildGbtParams()
+        {
+            var gbtParams = new GbtParams();
+            if (OspreyEnvironment.GbtGamma.HasValue)
+                gbtParams.Gamma = OspreyEnvironment.GbtGamma.Value;
+            if (OspreyEnvironment.GbtRegLambda.HasValue)
+                gbtParams.RegLambda = OspreyEnvironment.GbtRegLambda.Value;
+            if (OspreyEnvironment.GbtRegAlpha.HasValue)
+                gbtParams.RegAlpha = OspreyEnvironment.GbtRegAlpha.Value;
+            if (OspreyEnvironment.GbtMaxDepth.HasValue)
+                gbtParams.MaxDepth = OspreyEnvironment.GbtMaxDepth.Value;
+            if (OspreyEnvironment.GbtNTrees.HasValue)
+                gbtParams.NTrees = OspreyEnvironment.GbtNTrees.Value;
+            if (OspreyEnvironment.GbtMinChildWeight.HasValue)
+                gbtParams.MinChildWeight = OspreyEnvironment.GbtMinChildWeight.Value;
+            if (OspreyEnvironment.GbtLearningRate.HasValue)
+                gbtParams.LearningRate = OspreyEnvironment.GbtLearningRate.Value;
+            if (OspreyEnvironment.GbtSubsample.HasValue)
+                gbtParams.Subsample = OspreyEnvironment.GbtSubsample.Value;
+            if (OspreyEnvironment.GbtColSample.HasValue)
+                gbtParams.ColSample = OspreyEnvironment.GbtColSample.Value;
+            return gbtParams;
         }
 
         /// <summary>

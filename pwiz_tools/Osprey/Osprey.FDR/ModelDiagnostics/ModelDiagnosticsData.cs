@@ -92,6 +92,26 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         // ----- tabs -----
         public double ModelComposite { get; set; }
         public bool ModelDegenerate { get; set; }
+
+        /// <summary>
+        /// True when the first-pass model is gradient-boosted trees
+        /// (<see cref="FeatureContributions.IsTreeEnsemble"/>): <see cref="Model"/> then lists
+        /// each feature's target-decoy mean gap and histograms with no coefficient or
+        /// contribution, and the page says the contribution table does not apply rather than
+        /// that the model was not retrained. Written only when true
+        /// (<see cref="ShouldSerializeModelIsTreeEnsemble"/>), so a linear model's data is
+        /// byte-for-byte what it was before trees were reported.
+        /// </summary>
+        public bool ModelIsTreeEnsemble { get; set; }
+
+        /// <summary>Newtonsoft's conditional-serialization convention for
+        /// <see cref="ModelIsTreeEnsemble"/>: this project has no Json.NET reference to put an
+        /// attribute on it.</summary>
+        public bool ShouldSerializeModelIsTreeEnsemble()
+        {
+            return ModelIsTreeEnsemble;
+        }
+
         public List<FeatureRow> Model { get; set; }
         /// <summary>
         /// The complete pass-2 (final reported pool) bundle -- every pass-dependent
@@ -615,6 +635,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             {
                 data.ModelComposite = contributions.Composite;
                 data.ModelDegenerate = contributions.IsDegenerate;
+                data.ModelIsTreeEnsemble = contributions.IsTreeEnsemble;
                 data.FeatureHistEdges = contributions.HistogramEdges;
                 data.Model = BuildFeatureRows(contributions);
             }
@@ -864,8 +885,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             var rows = new List<FeatureRow>();
             var targetHist = contributions.TargetHistograms;
             var decoyHist = contributions.DecoyHistograms;
+            // A tree ensemble has no percents to rank by, so its rows stay in feature order.
+            bool unranked = contributions.IsDegenerate || contributions.IsTreeEnsemble;
             foreach (var f in contributions.Features
-                .OrderByDescending(f => contributions.IsDegenerate ? 0.0 : Math.Abs(f.Percent))
+                .OrderByDescending(f => unranked ? 0.0 : Math.Abs(f.Percent))
                 .ThenBy(f => f.Index))
             {
                 rows.Add(new FeatureRow
