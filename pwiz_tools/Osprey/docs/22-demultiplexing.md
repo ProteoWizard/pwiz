@@ -67,7 +67,7 @@ The log records the scheme found, the solver's work and the timing:
 ```
 Demultiplexing Ecl_..._10.raw: 2-fold overlap, 101 windows into 102 bins of 6.000-6.003 Th
   79,350 MS2 spectra -> 158,700; 69,188,527 channel solves (0.0% zero, 0.0% unconstrained, 100.0% active set, 0 at the iteration cap) over 2 block geometries
-  Demultiplexed in 18.8s on 16 thread(s); parse 191.0s, ratio 0.10; osprey-demux/2;block=covered_bins;...
+  Demultiplexed in 18.8s on 16 thread(s); parse 191.0s, ratio 0.10; osprey-demux/3;block=covered_bins;...
 ```
 
 The last line is the timing gate for the implementation: demultiplexing as a fraction of the raw
@@ -90,13 +90,18 @@ cache's VERSION 4 layout with a different magic and a **descriptor** after the h
 example:
 
 ```
-osprey-demux/2;block=covered_bins;interpolation=makima;output=apportioned;channel_tolerance=10ppm;min_bin_width=0.2;block_bins=7
+osprey-demux/3;block=covered_bins;interpolation=makima;output=apportioned;channel_tolerance=10ppm;min_bin_width=0.2;block_bins=7
 ```
 
 The descriptor names the algorithm version and every setting that changes the output. A cache
 whose descriptor differs from the current one is rejected and rebuilt from `.spectra.bin`, in
 seconds, as it is when its source file changes. The thread count is not part of it, because it
 never changes the output.
+
+The descriptor is also part of every task's validity key (`DemuxCacheBuilder.ValidityKeySuffix`),
+so the scores and FDR results computed from the old spectra are recomputed along with the cache.
+The search hash records only `demux:auto`, because `Osprey.Core` cannot see the descriptor. With
+demux off, neither the key nor the hash changes.
 
 ## The algorithm
 

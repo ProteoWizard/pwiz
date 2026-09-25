@@ -229,6 +229,24 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Channel extraction: two split channels share an edge, and a peak exactly on it counts
+        /// in one of them only (the upper), while the last channel keeps its upper edge.
+        /// </summary>
+        [TestMethod]
+        public void TestDemuxChannelEdges()
+        {
+            var low = new[] { 99.0, 100.0 };
+            var high = new[] { 100.0, 101.0 };
+            var spectrum = MakeSpectrum(0, 1, Window(90, 110),
+                new[] { 98.0, 99.0, 99.5, 100.0, 101.0, 102.0 },
+                new[] { 1f, 2f, 4f, 8f, 16f, 32f });
+            var channels = new double[2];
+            OverlapDemultiplexer.ExtractChannels(spectrum, low, high, 2, channels, 0);
+            Assert.AreEqual(2 + 4, channels[0]);
+            Assert.AreEqual(8 + 16, channels[1]);
+        }
+
+        /// <summary>
         /// End-to-end on re-multiplexed synthetic data with constant elution, where every
         /// interpolant is exact, so any error is the block and the solver (spec G1.1, G1.2,
         /// G1.4). Also checks thread-count independence.
@@ -596,6 +614,15 @@ namespace pwiz.Osprey.Test
             Assert.AreNotEqual(offHash, config.Identity.SearchParameterHash());
             config.DemuxMode = DemuxMode.off;
             Assert.AreEqual(offHash, config.Identity.SearchParameterHash());
+
+            // The task validity key carries the settings descriptor the search hash cannot see,
+            // so a new algorithm version or an override re-scores along with the rebuilt cache.
+            Assert.AreEqual(string.Empty, DemuxCacheBuilder.ValidityKeySuffix(config));
+            config.DemuxMode = DemuxMode.auto;
+            StringAssert.Contains(DemuxCacheBuilder.ValidityKeySuffix(config), new DemuxParams().Descriptor);
+            Assert.AreNotEqual(DemuxCacheBuilder.ValidityKeySuffix(DemuxMode.auto, new DemuxParams().Descriptor),
+                DemuxCacheBuilder.ValidityKeySuffix(DemuxMode.auto,
+                    new DemuxParams { Interpolation = RtInterpolation.natural_three_point }.Descriptor));
         }
 
         private static void AssertRefused(string cachePath, string descriptor)

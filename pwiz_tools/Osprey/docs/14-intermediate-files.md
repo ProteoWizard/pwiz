@@ -240,7 +240,7 @@ The same VERSION 4 layout, with two differences:
 [magic:        8 bytes  "OSPRDMX\0"]
 [version, source_size, source_mtime, n_ms2, n_ms1  as above]
 [descriptor_length: uint32]
-[descriptor:   UTF-8, e.g. "osprey-demux/2;block=covered_bins;interpolation=makima;..."]
+[descriptor:   UTF-8, e.g. "osprey-demux/3;block=covered_bins;interpolation=makima;..."]
 [MS2 body, MS1 section, index, footer  as above]
 ```
 

@@ -62,6 +62,29 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// The task validity-key suffix for demultiplexing: empty when it is off, so every
+        /// existing key is unchanged, and otherwise the settings descriptor. The search hash
+        /// records only the mode, because <c>Osprey.Core</c> cannot see the descriptor. But a
+        /// new algorithm version or a developer override rebuilds the demultiplexed cache with
+        /// different spectra, and every score computed from the old spectra must be rebuilt
+        /// with it.
+        /// </summary>
+        internal static string ValidityKeySuffix(OspreyConfig config)
+        {
+            return config.DemuxMode == DemuxMode.off
+                ? ValidityKeySuffix(config.DemuxMode, null)
+                : ValidityKeySuffix(config.DemuxMode, CreateParams(config).Descriptor);
+        }
+
+        /// <summary>
+        /// <see cref="ValidityKeySuffix(OspreyConfig)"/> for an explicitly supplied descriptor.
+        /// </summary>
+        internal static string ValidityKeySuffix(DemuxMode mode, string descriptor)
+        {
+            return mode == DemuxMode.off ? string.Empty : @";demux=" + descriptor;
+        }
+
+        /// <summary>
         /// A valid demultiplexed cache for the input, or null when there is none to use. Tried
         /// before the <c>.spectra.bin</c>, so a run staged with demux can be searched from its
         /// demultiplexed cache alone.

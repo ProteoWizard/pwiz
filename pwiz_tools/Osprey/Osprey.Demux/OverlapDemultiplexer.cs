@@ -279,27 +279,30 @@ namespace pwiz.Osprey.Demux
         }
 
         /// <summary>
-        /// Sums a spectrum's peaks into the channels whose range contains them.
+        /// Sums a spectrum's peaks into the channels whose range contains them. The ranges are
+        /// half-open, [low, high), because two split channels share an edge: a peak exactly on
+        /// it belongs to the upper one only. The last channel also keeps its upper edge.
         /// </summary>
-        private static void ExtractChannels(Spectrum spectrum, double[] low, double[] high,
+        internal static void ExtractChannels(Spectrum spectrum, double[] low, double[] high,
             int channels, double[] destination, int offset)
         {
             Array.Clear(destination, offset, channels);
             var mzs = spectrum.Mzs;
             var intensities = spectrum.Intensities;
+            int last = channels - 1;
             int start = 0;
             for (int q = 0; q < mzs.Length; q++)
             {
                 double mz = mzs[q];
                 if (mz < low[0])
                     continue;
-                if (mz > high[channels - 1])
+                if (mz > high[last])
                     break;
-                while (start < channels && high[start] < mz)
+                while (start < last && high[start] <= mz)
                     start++;
                 for (int c = start; c < channels && low[c] <= mz; c++)
                 {
-                    if (mz <= high[c])
+                    if (mz < high[c] || (c == last && mz == high[c]))
                         destination[offset + c] += intensities[q];
                 }
             }

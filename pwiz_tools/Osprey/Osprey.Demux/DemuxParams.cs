@@ -72,7 +72,7 @@ namespace pwiz.Osprey.Demux
         /// Version of the demultiplexing algorithm. Bump it whenever a change alters the output
         /// for unchanged settings, so demultiplexed caches written before the change are rebuilt.
         /// </summary>
-        public const int ALGORITHM_VERSION = 2;
+        public const int ALGORITHM_VERSION = 3;
 
         /// <summary>Default fragment-channel tolerance, the pwiz massError default.</summary>
         public const double DEFAULT_CHANNEL_TOLERANCE_PPM = 10;
