@@ -854,7 +854,7 @@ namespace pwiz.Osprey.FDR
             //    full-N PercolatorEntry buffer the FdrEntry streaming path allocates.
             // Phase marker: the dedup + subsample over all N rows is a multi-minute
             // silent span on an 82-file join; announce it so the console is not blank.
-            log.LogInfo(string.Format(@"Selecting training subset from {0} scored entries...", n));
+            log.LogInfo(string.Format("Selecting training peaks from {0:N0} precursor candidate peaks...", n));
             int[] bestIdx;
             // fileStart is how this path supplies run identity: it hands an EMPTY entries list to
             // avoid the full-N PercolatorEntry buffer, so there are no FileName strings to read a

@@ -584,7 +584,9 @@ namespace pwiz.Osprey.Tasks
                 joinFileStems,
                 survivorLoader);
             ctx.LogInfo(string.Format(
-                @"Reconciliation rescore: {0:N0} entries re-scored ({1:N0} reconciliation actions executed)",
+                "Cross-run reconciliation re-scored {0:N0} peaks, including missing peaks.",
+                rescoreStats.TotalRescored));
+            ctx.LogInfo(LogTag.COUNT, LogKey.Format(LogKey.COUNT_RESCORED_PEAKS, @"total={0} actions={1}",
                 rescoreStats.TotalRescored, rescoreStats.TotalReconciliation));
 
             // No rebuild of the whole-run buffer here. The streamed loop emptied every file's
@@ -1503,12 +1505,12 @@ namespace pwiz.Osprey.Tasks
             if (nNoPeak > 0)
             {
                 ctx.LogInfo(string.Format(
-                    "  {0} targets had no peak at override boundary (reset to defaults)",
+                    "  {0:N0} targets had no signal within their new peak boundaries; their scores were reset.",
                     nNoPeak));
             }
 
             ctx.LogInfo(string.Format(
-                "  {0:N0} of {1:N0} existing entries re-scored ({2:F1}s)",
+                "  Re-scored {0:N0} of {1:N0} peaks ({2:F1}s)",
                 nOverlay, combinedTargets.Count, swRescore.Elapsed.TotalSeconds));
 
             // PHASE 2 -- gap-fill two-pass.
@@ -1857,7 +1859,7 @@ namespace pwiz.Osprey.Tasks
             if (!inputs.FileNameToIdx.TryGetValue(fileName, out int inputIdx))
             {
                 ctx.LogWarning(string.Format(
-                    "Reconciliation rescore: no input_files entry for {0} (skipping)", fileName));
+                    "Cross-run reconciliation: {0} is not among the inputs of this run; skipping it.", fileName));
                 return false;
             }
             inputFile = inputs.Config.InputFiles[inputIdx];
@@ -1866,12 +1868,9 @@ namespace pwiz.Osprey.Tasks
                 "Re-scoring file {0}/{1}: {2}", fileNum + 1, nTotalFiles, fileName));
             ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_RESCORE_FILE, @"{0}/{1}", fileNum + 1, nTotalFiles));
             ctx.LogInfo(string.Format(
-                "  {0:N0} entries ({1:N0} consensus, {2:N0} reconciliation, {3:N0} gap-fill, {4:N0} unique after dedup)",
-                combinedTargets.Count + gapFillTargets.Count * 2,
-                consensusTargets.Count,
-                reconTargets.Count,
-                gapFillTargets.Count,
-                combinedTargets.Count));
+                "  {0:N0} peaks to re-score at new boundaries, {1:N0} missing peaks",
+                combinedTargets.Count,
+                gapFillTargets.Count));
             return true;
         }
 
@@ -3376,7 +3375,7 @@ namespace pwiz.Osprey.Tasks
                 }
 
                 ctx.LogInfo(string.Format(
-                    "  Gap-fill CWT: {0:N0} hits ({1:F1}s)",
+                    "  Missing peaks found by peak detection: {0:N0} ({1:F1}s)",
                     nGapCwt, swCwt.Elapsed.TotalSeconds));
             }
             else
@@ -3430,7 +3429,7 @@ namespace pwiz.Osprey.Tasks
                 }
 
                 ctx.LogInfo(string.Format(
-                    "  Gap-fill forced: {0} integrated ({1:F1}s)",
+                    "  Missing peaks integrated at imputed boundaries: {0:N0} ({1:F1}s)",
                     nGapForced, swForced.Elapsed.TotalSeconds));
             }
 

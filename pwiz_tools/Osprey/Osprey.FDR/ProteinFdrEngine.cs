@@ -136,7 +136,6 @@ namespace pwiz.Osprey.FDR
                     accumulator.Add(entry);
             }
             var bestScores = accumulator.FinishBestScores();
-            log?.LogInfo(string.Format("Collected scores for {0:N0} unique peptides", bestScores.Count));
 
             // Get detected peptide set: targets passing experiment-level
             // q-value at the configured fdr_level (matches Rust pipeline.rs
@@ -157,8 +156,10 @@ namespace pwiz.Osprey.FDR
             var peptideGateLevel = config.FdrLevel;
             var detectedPeptides = accumulator.DetectedPeptides;
 
-            log?.LogInfo(string.Format("Detected {0:N0} unique peptides at {1:P1} experiment FDR ({2})",
-                detectedPeptides.Count, config.ExperimentFdr, peptideGateLevel));
+            log?.LogInfo(string.Format(
+                "{0:N0} of {1:N0} scored peptides detected at {2:P1} experiment-level {3} FDR.",
+                detectedPeptides.Count, bestScores.Count, config.ExperimentFdr,
+                peptideGateLevel.GetLocalizedString()));
             log?.LogInfo(LogTag.COUNT, string.Format(
                 "Detected peptides for protein FDR: {0} unique",
                 detectedPeptides.Count));

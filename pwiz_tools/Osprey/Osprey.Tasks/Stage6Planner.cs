@@ -439,7 +439,7 @@ namespace pwiz.Osprey.Tasks
             }
 
             _ctx.LogInfo(string.Format(
-                @"Reconciliation calibration refit: {0}/{1} files produced refined calibrations",
+                "Refined the retention time calibration of {0:N0} of {1:N0} files using the cross-run consensus.",
                 refinedCalibrations.Count, fileNames.Count));
 
             if (_ctx.Diagnostics?.DumpLoessFit ?? false)

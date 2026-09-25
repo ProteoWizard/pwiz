@@ -347,7 +347,7 @@ namespace pwiz.Osprey.FDR
             // covers a slow single file. Console-only -- never touches finalScores /
             // the sink, so byte-identity is unaffected.
             int gi = 0;
-            using (var scoreProgress = new ProgressReporter(string.Format(@"Scoring {0:N0} entries", n), n))
+            using (var scoreProgress = new ProgressReporter(string.Format("Scoring {0:N0} precursor candidate peaks", n), n))
             {
                 foreach (var kvp in perFile)
                 {
@@ -993,7 +993,7 @@ namespace pwiz.Osprey.FDR
             // Fill the previously-silent multi-minute streaming score pass with throttled percent,
             // mirroring the resident ScoreProjectionAndComputeFdrInPlace "Scoring N entries" line.
             // Progress is log-only (OspreyOutput.Out), so the FDR output stays byte-identical.
-            using (var scoreProgress = new ProgressReporter(string.Format(@"Scoring {0:N0} entries", n), n))
+            using (var scoreProgress = new ProgressReporter(string.Format("Scoring {0:N0} precursor candidate peaks", n), n))
             for (int f = 0; f < nFiles; f++)
             {
                 // Identity first (entry_id / charge / decoy / modseq): scalar parquet columns,
@@ -1084,7 +1084,7 @@ namespace pwiz.Osprey.FDR
             // Progress-reported (log-only) like Pass 1 so the second streaming pass over all rows
             // is not silent; byte-identical q-values and sink output.
             int gEmit = 0;
-            using (var emitProgress = new ProgressReporter(string.Format(@"Assigning q-values to {0:N0} entries", n), n))
+            using (var emitProgress = new ProgressReporter(string.Format("Assigning q-values to {0:N0} precursor candidate peaks", n), n))
             for (int f = 0; f < nFiles; f++)
             {
                 buffer.Clear();

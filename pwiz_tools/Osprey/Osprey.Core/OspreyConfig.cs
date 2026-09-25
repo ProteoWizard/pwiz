@@ -494,6 +494,23 @@ namespace pwiz.Osprey.Core
     }
 
     /// <summary>
+    /// The user-facing name of an <see cref="FdrLevel"/>, as it reads in "at 1.0% experiment-level
+    /// {0} FDR". Skyline's <c>GetLocalizedString</c> pattern.
+    /// </summary>
+    public static class FdrLevelExtension
+    {
+        private static string[] LOCALIZED_VALUES
+        {
+            get { return new[] { "precursor", "peptide", "precursor and peptide" }; }
+        }
+
+        public static string GetLocalizedString(this FdrLevel val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
+    }
+
+    /// <summary>
     /// Statistical method for FDR estimation.
     /// Maps to osprey-core/src/types.rs FdrMethod.
     /// </summary>

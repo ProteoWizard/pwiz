@@ -68,6 +68,19 @@ collapsed" named the code's operation. A warning keeps the one sentence the user
 the remedy they can apply; the mechanism, issue numbers and measured costs go in a code
 comment beside the call.
 
+## Files written
+
+A line reporting a saved file names the file ("Saved the trained first-pass model to
+<path>"), and does not explain what the file enables later. When the same file is written
+once per input, name the first and count the rest.
+
+## Peaks, candidates, library
+
+- **Library precursors**: rows of the spectral library as loaded (targets).
+- **Precursor candidates**: targets + decoys searched ("Full library: N precursor candidates").
+- **Precursor candidate peaks**: one candidate's scored peak in one run. Per-run counts,
+  scored rows, training rows and blib retention times are peaks, never "entries".
+
 ## Enums
 
 Use Skyline's pattern: a `GetLocalizedString(this Enum)` extension over a

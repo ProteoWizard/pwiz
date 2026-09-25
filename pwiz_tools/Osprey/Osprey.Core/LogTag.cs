@@ -267,6 +267,8 @@ namespace pwiz.Osprey.Core
         public const string COUNT_RETAINED_SUMMARY_WRITTEN = @"retained-summary-written";
         /// <summary>Precursor candidates scored across all files when first-pass scoring ends.</summary>
         public const string COUNT_SCORED_CANDIDATES = @"scored-candidates";
+        /// <summary>Peaks re-scored by cross-run reconciliation across all files, missing peaks included.</summary>
+        public const string COUNT_RESCORED_PEAKS = @"rescored-peaks";
 
         // Values of the release scope= field.
         /// <summary>The release after first-pass FDR, keeping what rescore and gap-fill need.</summary>

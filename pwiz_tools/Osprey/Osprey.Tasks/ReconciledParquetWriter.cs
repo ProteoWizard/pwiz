@@ -120,7 +120,7 @@ namespace pwiz.Osprey.Tasks
             catch (Exception ex) when (!(ex is InvalidOperationException))
             {
                 logWarning(string.Format(
-                    "Stage 6 write-back: failed to transfer {0} -> {1}: {2}",
+                    "Could not write the re-scored intermediate file {1} from {0}: {2}",
                     originalPath, reconciledPath, ex.Message));
                 return false;
             }
@@ -129,7 +129,7 @@ namespace pwiz.Osprey.Tasks
             // compacted-away rows are dropped, and the ratio is the whole point of the
             // artifact - a log that still printed original+appended would hide it.
             logInfo(string.Format(
-                "  Wrote reconciled parquet for {0}: {1:N0} rows ({2:N0} replaced + {3:N0} appended; original {4:N0} rows)",
+                "  Wrote {1:N0} precursor candidate peaks for {0}: {2:N0} re-scored and {3:N0} missing peaks added, from {4:N0} first-pass peaks",
                 fileName, nWritten, nReplaced, nAppended, origRowCount));
             return true;
         }

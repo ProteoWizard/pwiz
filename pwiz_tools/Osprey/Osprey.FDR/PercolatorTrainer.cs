@@ -559,7 +559,7 @@ namespace pwiz.Osprey.FDR
             // Section sub-header (default human log): the actual (possibly subsampled)
             // training-set size the per-iteration percent lines below are computed against.
             // subN / subTargets are the post-subsample counts computed above.
-            OspreyOutput.Out.WriteLine("  {0}-fold cross-validation on {1:N0} training entries ({2:N0} targets)",
+            OspreyOutput.Out.WriteLine("  {0}-fold cross-validation on {1:N0} training peaks ({2:N0} targets)",
                 config.NFolds, subN, subTargets);
 
             var swTrain = Stopwatch.StartNew();

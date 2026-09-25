@@ -1215,7 +1215,7 @@ namespace pwiz.Osprey.Tasks
             fullLibrary.AddRange(library);
             fullLibrary.AddRange(decoys);
 
-            ctx.LogInfo(string.Format(@"Full library: {0:N0} entries ({1:N0} targets + {2:N0} decoys)",
+            ctx.LogInfo(string.Format("Full library: {0:N0} precursor candidates ({1:N0} targets + {2:N0} decoys)",
                 fullLibrary.Count, library.Count, decoys.Count));
             ctx.LogInfo(LogTag.COUNT, string.Format(@"Full library: {0} ({1} targets + {2} decoys)",
                 fullLibrary.Count, library.Count, decoys.Count));
