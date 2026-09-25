@@ -25,6 +25,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Common.CommandLine;
+using pwiz.Common.SystemUtil;
 using Argument = pwiz.Common.CommandLine.Argument<pwiz.Skyline.CommandArgs>;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
@@ -416,17 +417,82 @@ namespace pwiz.SkylineTestData
             output = Run(CommandArgs.ARG_TRAN_PREDICT_CE.GetArgumentTextWithValue(ceNoneText));
             AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullCollisionEnergy, "Thermo", AuditLogStrings.None);
             IsDocumentUnchanged(output);
-            string dpNoneText = Settings.Default.DeclusterPotentialList.GetDisplayName(DeclusterPotentialList.NONE);
             output = Run(CommandArgs.ARG_TRAN_PREDICT_DP.GetArgumentTextWithValue("SCIEX"));
             AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullDeclusteringPotential, AuditLogStrings.None, "SCIEX");
             IsDocumentUnchanged(output);
-            string covNoneText = Settings.Default.CompensationVoltageList.GetDisplayName(CompensationVoltageList.NONE);
             output = Run(CommandArgs.ARG_TRAN_PREDICT_COV.GetArgumentTextWithValue("SCIEX"));
             AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullCompensationVoltage, AuditLogStrings.None, "SCIEX");
             IsDocumentUnchanged(output);
             // Only None is possible for optimization libraries without setting one up
             string optLibNoneText = Settings.Default.OptimizationLibraryList.GetDisplayName(OptimizationLibrary.NONE);
-            output = Run(CommandArgs.ARG_TRAN_PREDICT_OPTDB.GetArgumentTextWithValue(optLibNoneText));
+            RunPredictNoneUnchanged(CommandArgs.ARG_TRAN_PREDICT_OPTDB, optLibNoneText);
+
+            // Invariant keys and localized display names must both work in a UI language where they differ.
+            LocalizationHelper.CallWithCulture(new CultureInfo("ja"), () =>
+            {
+                ValidatePredictNoneValues();
+                return true;
+            });
+
+            // A default removed from the settings list is not a valid value.
+            var dpList = Settings.Default.DeclusterPotentialList;
+            Assert.IsTrue(dpList.TryGetValue("SCIEX", out var sciex));
+            int sciexIndex = dpList.IndexOf(sciex);
+            dpList.Remove(sciex);
+            try
+            {
+                var arg = CommandArgs.ARG_TRAN_PREDICT_DP;
+                output = Run(arg.ArgumentText + "=SCIEX");
+                AssertEx.Contains(output, string.Format(
+                    CommandArgUsage.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                    "SCIEX", arg.ArgumentText, string.Join(@", ", arg.Values)));
+            }
+            finally
+            {
+                dpList.Insert(sciexIndex, sciex);
+            }
+        }
+
+        private void ValidatePredictNoneValues()
+        {
+            string ceNoneText = Settings.Default.CollisionEnergyList.GetDisplayName(CollisionEnergyList.NONE);
+            AssertEx.AreNotEqual(CollisionEnergyList.NONE.GetKey(), ceNoneText, "Test requires a translated display name");
+            foreach (var ceText in new[] { CollisionEnergyList.NONE.GetKey(), ceNoneText })
+            {
+                string output = Run(CommandArgs.ARG_TRAN_PREDICT_CE.GetArgumentTextWithValue(ceText));
+                AssertEx.Contains(output, "test2", PropertyNames.TransitionPrediction_NonNullCollisionEnergy, "Thermo", AuditLogStrings.None);
+                IsDocumentUnchanged(output);
+            }
+            RunPredictNoneUnchanged(CommandArgs.ARG_TRAN_PREDICT_DP, DeclusterPotentialList.NONE.GetKey());
+            RunPredictNoneUnchanged(CommandArgs.ARG_TRAN_PREDICT_DP,
+                Settings.Default.DeclusterPotentialList.GetDisplayName(DeclusterPotentialList.NONE));
+            RunPredictNoneUnchanged(CommandArgs.ARG_TRAN_PREDICT_COV, CompensationVoltageList.NONE.GetKey());
+            RunPredictNoneUnchanged(CommandArgs.ARG_TRAN_PREDICT_COV,
+                Settings.Default.CompensationVoltageList.GetDisplayName(CompensationVoltageList.NONE));
+            RunPredictNoneUnchanged(CommandArgs.ARG_TRAN_PREDICT_OPTDB, OptimizationLibrary.NONE.GetKey());
+            RunPredictNoneUnchanged(CommandArgs.ARG_TRAN_PREDICT_OPTDB,
+                Settings.Default.OptimizationLibraryList.GetDisplayName(OptimizationLibrary.NONE));
+
+            // Verify the parsed keys, since the settings lookups also fall back to None for unknown names.
+            ValidateNoneKeys(CommandArgs.ARG_TRAN_PREDICT_CE, CollisionEnergyList.NONE.GetKey(),
+                ceNoneText, c => c.PredictCEName);
+            ValidateNoneKeys(CommandArgs.ARG_TRAN_PREDICT_DP, DeclusterPotentialList.NONE.GetKey(),
+                Settings.Default.DeclusterPotentialList.GetDisplayName(DeclusterPotentialList.NONE), c => c.PredictDPName);
+            ValidateNoneKeys(CommandArgs.ARG_TRAN_PREDICT_COV, CompensationVoltageList.NONE.GetKey(),
+                Settings.Default.CompensationVoltageList.GetDisplayName(CompensationVoltageList.NONE), c => c.PredictCoVName);
+            ValidateNoneKeys(CommandArgs.ARG_TRAN_PREDICT_OPTDB, OptimizationLibrary.NONE.GetKey(),
+                Settings.Default.OptimizationLibraryList.GetDisplayName(OptimizationLibrary.NONE), c => c.PredictOpimizationLibraryName);
+        }
+
+        private static void ValidateNoneKeys(Argument arg, string noneKey, string noneDisplayName, Func<CommandArgs, string> getKey)
+        {
+            foreach (var noneText in new[] { noneKey, noneDisplayName })
+                CommandLineTest.ValidateParsedKey(arg, noneText, getKey, noneKey);
+        }
+
+        private void RunPredictNoneUnchanged(Argument arg, string noneText)
+        {
+            string output = Run(arg.GetArgumentTextWithValue(noneText));
             AssertEx.Contains(output, "test2", Resources.CommandLine_LogNewEntries_Document_unchanged);
             IsDocumentUnchanged(output);
         }
@@ -468,6 +534,40 @@ namespace pwiz.SkylineTestData
             // Verify that all arguments have been tested (except InternalUse ones and the ones in the testedArguments initializer)
             allArgumentsSet.ExceptWith(testedArguments);
             Assert.AreEqual(0, allArgumentsSet.Count, string.Join(", ", allArgumentsSet.Select(a => a.Name)));
+
+            ValidateValueSources();
+        }
+
+        /// <summary>
+        /// Verifies that documented values and supplemental accepted values are both enforced, in every
+        /// combination, by the argument text builder and by parsing. An argument that lists neither
+        /// accepts any value, and one that lists only accepted values still reports them when rejecting.
+        /// </summary>
+        private void ValidateValueSources()
+        {
+            const string good = @"alpha";
+            const string bad = @"omega";
+            var documented = new Argument(@"test-documented", new[] { good }, (c, p) => true);
+            var accepted = new Argument(@"test-accepted", () => good, (c, p) => true)
+                { AcceptedValues = () => new[] { good } };
+            var both = new Argument(@"test-both", new[] { @"beta" }, (c, p) => true)
+                { AcceptedValues = () => new[] { good } };
+            var neither = new Argument(@"test-neither", () => good, (c, p) => true);
+
+            foreach (var arg in new[] { documented, accepted, both })
+            {
+                AssertEx.AreEqual(arg.ArgumentText + '=' + good, arg.GetArgumentTextWithValue(good));
+                AssertEx.IsTrue(ArgumentBase.Parse(arg.ArgumentText + '=' + good).IsMatch(arg), arg.Name);
+                string expected = string.Format(
+                    CommandArgUsage.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                    bad, arg.ArgumentText, string.Join(@", ", arg.ValuesForError));
+                AssertEx.ThrowsException<ValueInvalidException>(() => arg.GetArgumentTextWithValue(bad), expected);
+                AssertEx.ThrowsException<ValueInvalidException>(
+                    () => ArgumentBase.Parse(arg.ArgumentText + '=' + bad).IsMatch(arg), expected);
+            }
+
+            AssertEx.AreEqual(neither.ArgumentText + '=' + bad, neither.GetArgumentTextWithValue(bad));
+            AssertEx.IsTrue(ArgumentBase.Parse(neither.ArgumentText + '=' + bad).IsMatch(neither), neither.Name);
         }
 
         private void ValidateInvalidValue(Argument arg, HashSet<Argument> testedArguments)

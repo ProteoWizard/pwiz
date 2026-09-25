@@ -198,6 +198,9 @@
   <data name="_help" xml:space="preserve">
     <value>Shows this text.</value>
   </data>
+  <data name="_culture" xml:space="preserve">
+    <value>Runs the command line in the specified language, regardless of the operating system language setting. Because arguments are processed in the order given, this must come before the arguments it affects.</value>
+  </data>
   <data name="_ignore_transition_errors" xml:space="preserve">
     <value>When present imports all recognized transitions from a transition list or assay library, with error rows reported as warnings.</value>
   </data>
