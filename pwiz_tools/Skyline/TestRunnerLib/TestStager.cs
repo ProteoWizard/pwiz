@@ -231,7 +231,6 @@ namespace TestRunnerLib
                  $"{newestSource.Item2:MM-dd HH:mm:ss} but the newest built assembly is " +
                  $"{newestOutput.Value:MM-dd HH:mm:ss}. Staging it first so freshly built projects " +
                  $"win any shared file - rebuild {project} if that is not intended.");
-            return;
         }
 
         private static Tuple<string, DateTime> NewestSourceFile(string sourceDir, string[] siblings)

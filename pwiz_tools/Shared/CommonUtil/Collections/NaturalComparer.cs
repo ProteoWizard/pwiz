@@ -90,7 +90,7 @@ namespace pwiz.Common.Collections
             }
 
             CompareKey compareKey = null;
-            foreach (Match segment in REGEX.Matches(s).Cast<Match>().Reverse())
+            foreach (Match segment in REGEX.Matches(s).Reverse())
             {
                 var stringPart = segment.Groups[1].Value;
                 var decimalPart = ParseLocalizedDecimal(stringPart);

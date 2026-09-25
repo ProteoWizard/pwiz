@@ -821,7 +821,7 @@ namespace pwiz.SkylineTestUtil
 
             // Extract Authorization header from request
             string authorization = null;
-            if (request.Headers?.Authorization != null)
+            if (request.Headers.Authorization != null)
             {
                 var authScheme = request.Headers.Authorization.Scheme;
                 var authParameter = request.Headers.Authorization.Parameter;
@@ -1061,7 +1061,7 @@ namespace pwiz.SkylineTestUtil
 
             // Extract Authorization header from request for playback lookup
             string authorization = null;
-            if (response.RequestMessage?.Headers?.Authorization != null)
+            if (response.RequestMessage?.Headers.Authorization != null)
             {
                 var authScheme = response.RequestMessage.Headers.Authorization.Scheme;
                 var authParameter = response.RequestMessage.Headers.Authorization.Parameter;
@@ -1076,10 +1076,10 @@ namespace pwiz.SkylineTestUtil
             var interaction = new HttpInteraction
             {
                 Url = urlString,
-                Method = response.RequestMessage?.Method?.Method,
+                Method = response.RequestMessage?.Method.Method,
                 Authorization = authorization,
                 StatusCode = (int)response.StatusCode,
-                ContentType = response.Content?.Headers?.ContentType?.ToString()
+                ContentType = response.Content.Headers.ContentType?.ToString()
             };
             var entry = new RecordingEntry(interaction);
 
@@ -1118,8 +1118,8 @@ namespace pwiz.SkylineTestUtil
                 var interaction = new HttpInteraction
                 {
                     Url = uri?.ToString(),
-                    Method = response?.RequestMessage?.Method?.Method,
-                    ContentType = response?.Content?.Headers?.ContentType?.ToString(),
+                    Method = response?.RequestMessage?.Method.Method,
+                    ContentType = response?.Content.Headers.ContentType?.ToString(),
                     StatusCode = response != null ? (int)response.StatusCode : null
                 };
                 entry = new RecordingEntry(interaction);

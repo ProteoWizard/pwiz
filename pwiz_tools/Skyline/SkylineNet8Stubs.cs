@@ -1,6 +1,8 @@
 // Stubs for Skyline types whose real implementations are excluded on net10.
 // These satisfy compile-time references; runtime should never reach them.
 
+// The namespace IS the point: it stands in for the BCL one so the using directives compile
+// ReSharper disable once CheckNamespace
 namespace System.Deployment.Application
 {
     // ClickOnce ApplicationDeployment isn't available on net8 — provide a stub

@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System.Threading;
 using System.Windows.Forms;
 
 namespace pwiz.Common.SystemUtil
@@ -29,15 +28,12 @@ namespace pwiz.Common.SystemUtil
     /// </summary>
     public static class ConcurrencyVisualizer
     {
-        private static Control _control;
-
         /// <summary>
         /// Add markers to annotate the threads graph with our thread names.
         /// </summary>
         public static void AddThreadName()
         {
-            if (string.IsNullOrEmpty(Thread.CurrentThread.Name))
-                return;
+            // no-op - ConcurrencyVisualizer is VS-tooling-only, so the name has nowhere to go
         }
 
         /// <summary>
@@ -45,7 +41,7 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public static void StartEvents(Control control)
         {
-            _control = control;
+            _ = control; // no-op, as above; holding it in a static would root the form for nothing
         }
 
         /// <summary>

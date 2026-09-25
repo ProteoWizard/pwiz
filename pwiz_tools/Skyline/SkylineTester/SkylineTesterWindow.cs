@@ -590,6 +590,14 @@ namespace SkylineTester
                     return stagedPath;
                 searched.Add(stagedDir);
             }
+            // Last, look beside this program. In a distributed zip there is no source tree to
+            // build from and nothing staged yet, and the tests ship in "SkylineTester Files"
+            // next to SkylineTester.exe - the same one-bin arrangement the net472 path above
+            // handles with "?? ExeDir". Without this the shipped zip lists no tests at all.
+            var exeDirPath = Path.Combine(ExeDir, testDll);
+            if (File.Exists(exeDirPath))
+                return exeDirPath;
+            searched.Add(ExeDir);
             lock (_testAssemblySearchPaths)
                 _testAssemblySearchPaths.AddRange(searched);
             return null;
@@ -1059,31 +1067,6 @@ namespace SkylineTester
 #endif
 
         /// <summary>
-        /// Queues the staging step that brings the staged test directory up to date with the current
-        /// build, returning false only if it cannot be queued at all.
-        /// <para>net8 tests execute from a staged directory assembled by the staging script, not from
-        /// the per-project build output Visual Studio writes. Building in the IDE therefore has NO
-        /// effect on what the tests load until something re-stages, and nothing used to say so: a
-        /// developer would edit code, rebuild, run tests, and silently exercise whatever was staged
-        /// last - in one observed case a build from the previous night.</para>
-        /// <para>This runs as a queued command rather than inline. Staging inline blocked the UI
-        /// thread with no progress, so the window simply looked hung, and reading the script's output
-        /// streams in sequence could deadlock outright once it filled a pipe buffer. Queued, it
-        /// streams to the log like every other step and the window stays alive. Staging is a robocopy
-        /// merge that skips files already identical, so it is cheap enough to run every time, which
-        /// is safer than trusting a staleness heuristic to notice every kind of change.</para>
-        /// </summary>
-        /// <param name="buildDir">The directory tests will run from</param>
-        /// <returns>False if tests run from a staged directory that cannot be staged</returns>
-        /// <summary>
-        /// Where tests should be staged to when nothing is staged yet, or null when this build
-        /// cannot stage at all.
-        /// <para>Requiring an already-staged directory before running the step that creates one is
-        /// a deadlock: after a clean build nothing is staged, so a developer could not run tests
-        /// until some earlier staged copy happened to survive. The stager lives in the build
-        /// output, so if it is there the directory can simply be created.</para>
-        /// </summary>
-        /// <summary>
         /// The build directory a RUN uses: the selected one when it actually holds TestRunner.exe,
         /// otherwise the directory staging will create.
         /// <para>Callers during a run must use this rather than re-reading the UI selection.
@@ -1100,6 +1083,14 @@ namespace SkylineTester
             return GetStagingTargetDir() ?? selected;
         }
 
+        /// <summary>
+        /// Where tests should be staged to when nothing is staged yet, or null when this build
+        /// cannot stage at all.
+        /// <para>Requiring an already-staged directory before running the step that creates one is
+        /// a deadlock: after a clean build nothing is staged, so a developer could not run tests
+        /// until some earlier staged copy happened to survive. The stager lives in the build
+        /// output, so if it is there the directory can simply be created.</para>
+        /// </summary>
         private string GetStagingTargetDir()
         {
 #if NET472
@@ -1116,6 +1107,23 @@ namespace SkylineTester
 #endif
         }
 
+        /// <summary>
+        /// Queues the staging step that brings the staged test directory up to date with the current
+        /// build, returning false only if it cannot be queued at all.
+        /// <para>net8 tests execute from a staged directory assembled by the staging script, not from
+        /// the per-project build output Visual Studio writes. Building in the IDE therefore has NO
+        /// effect on what the tests load until something re-stages, and nothing used to say so: a
+        /// developer would edit code, rebuild, run tests, and silently exercise whatever was staged
+        /// last - in one observed case a build from the previous night.</para>
+        /// <para>This runs as a queued command rather than inline. Staging inline blocked the UI
+        /// thread with no progress, so the window simply looked hung, and reading the script's output
+        /// streams in sequence could deadlock outright once it filled a pipe buffer. Queued, it
+        /// streams to the log like every other step and the window stays alive. Staging is a robocopy
+        /// merge that skips files already identical, so it is cheap enough to run every time, which
+        /// is safer than trusting a staleness heuristic to notice every kind of change.</para>
+        /// </summary>
+        /// <param name="buildDir">The directory tests will run from</param>
+        /// <returns>False if tests run from a staged directory that cannot be staged</returns>
         public bool AddStagingCommand(string buildDir)
         {
             // Only a staged directory can drift from the build. Where tests run straight out of the

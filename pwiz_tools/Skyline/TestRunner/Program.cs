@@ -584,7 +584,7 @@ namespace TestRunner
                 .GetAllNetworkInterfaces()
                 .Where(n => n.OperationalStatus == OperationalStatus.Up)
                 .Where(n => n.NetworkInterfaceType != NetworkInterfaceType.Loopback)
-                .SelectMany(n => n.GetIPProperties()?.GatewayAddresses)
+                .SelectMany(n => n.GetIPProperties().GatewayAddresses)
                 .Select(g => g?.Address)
                 .FirstOrDefault(a => a?.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6);
                 // .Where(a => Array.FindIndex(a.GetAddressBytes(), b => b != 0) >= 0)

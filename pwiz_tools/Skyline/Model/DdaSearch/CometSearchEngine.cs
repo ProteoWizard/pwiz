@@ -289,7 +289,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     _enzyme.RestrictC ?? _enzyme.RestrictN,
                     Environment.NewLine);
 
-                string defaultOutputDirectory = Path.GetDirectoryName(SpectrumFileNames[0].GetFilePath()) ?? Path.Combine(Environment.CurrentDirectory, "comet-output");
+                string defaultOutputDirectory = Path.GetDirectoryName(SpectrumFileNames[0].GetFilePath()) ?? Path.Combine(Environment.CurrentDirectory, @"comet-output");
                 defaultOutputDirectory = PathEx.GetNonUnicodePath(defaultOutputDirectory);  // Convert unicode path to 8.3 if needed
 
                 string paramsFile = KeepIntermediateFiles ? Path.Combine(defaultOutputDirectory, @"comet.params") : Path.GetTempFileName();

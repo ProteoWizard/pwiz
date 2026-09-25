@@ -101,11 +101,12 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         // Captured configuration
         private MzTolerance _precursorTol = new MzTolerance(5, MzTolerance.Units.ppm);
+        // The unit is stated rather than defaulted, to read against the ppm line above
+        // ReSharper disable once RedundantArgumentDefaultValue
         private MzTolerance _fragmentTol = new MzTolerance(0.02, MzTolerance.Units.mz);
         private string _fragmentIons = @"b, y";
         private Enzyme _enzyme;
         private int _maxMissedCleavages = 2;
-        private int _maxVariableMods = 3;
         private readonly List<StaticMod> _fixedMods = new List<StaticMod>();
         private readonly List<StaticMod> _variableMods = new List<StaticMod>();
 
@@ -160,7 +161,9 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             _fixedMods.Clear();
             _variableMods.Clear();
-            _maxVariableMods = maxVariableMods_;
+            // maxVariableMods_ is not stored: the MaxNoDynModifs value MS Amanda actually runs with
+            // is taken from AdditionalSettings when the settings XML is written, so this argument
+            // has no effect on the search. Comet and MSFragger do apply theirs.
             foreach (var mod in modifications)
             {
                 if (mod.IsVariable || mod.LabelAtoms != LabelAtoms.None)
@@ -498,8 +501,10 @@ namespace pwiz.Skyline.Model.DdaSearch
             string tempPath = mzmlPath + @".scannum.tmp";
             int scanNumber = 0;
             using (var reader = new StreamReader(mzmlPath))
-            using (var writer = new StreamWriter(tempPath, false, new UTF8Encoding(false)) { NewLine = "\n" })
+            using (var writer = new StreamWriter(tempPath, false, new UTF8Encoding(false)))
             {
+                // ReSharper disable once LocalizableElement
+                writer.NewLine = "\n";
                 writer.WriteLine(@"<?xml version=""1.0"" encoding=""utf-8""?>");
                 bool started = false;
                 string line;
@@ -674,6 +679,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             if (string.IsNullOrEmpty(s))
                 return s ?? string.Empty;
             return s.Replace(@"&", @"&amp;").Replace(@"<", @"&lt;").Replace(@">", @"&gt;")
+                    // ReSharper disable once LocalizableElement
                     .Replace("\"", @"&quot;").Replace(@"'", @"&apos;");
         }
 
