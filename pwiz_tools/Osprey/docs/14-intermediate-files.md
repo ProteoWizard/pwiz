@@ -255,9 +255,13 @@ handled exactly as above.
 
 Each MS2 record is one narrow bin of one acquired spectrum. It keeps its parent's scan number
 and retention time, and its isolation window is the bin. Bins are disjoint, so no precursor
-falls in two windows. `SpectraWindowIndex` lists every distinct window of a demultiplexed
-cache rather than the first cycle's, because a bin covered only by the offset window set first
-appears after other bins have repeated.
+falls in two windows.
+
+`SpectraWindowIndex` lists every distinct window of any cache, plain or demultiplexed. It
+used to take only the first cycle's windows, up to the first repeated key. That is the same
+set for ordinary DIA, but not for demultiplexed data: a bin covered only by the offset window
+set first appears after other bins have repeated. Searching msconvert-demultiplexed data that
+way silently left the top bin unscored.
 
 **Rebuildable from the `.spectra.bin`, cache to cache**, in seconds rather than the minutes a
 vendor parse takes. The `.spectra.bin` is never altered by demultiplexing, so it stays a pure

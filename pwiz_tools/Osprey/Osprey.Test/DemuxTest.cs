@@ -283,10 +283,20 @@ namespace pwiz.Osprey.Test
                 Assert.IsNotNull(loaded);
                 AssertIdentical(result, new DemuxResult(result.Scheme, loaded.Ms2Spectra, result.Statistics));
 
-                // The raw cache keeps first-cycle detection, and its window list is unchanged.
+                // The undemultiplexed cache lists its acquisition windows.
                 var rawIndex = SpectraWindowIndex.BuildFromCache(rawPath);
                 Assert.IsNotNull(rawIndex);
                 Assert.AreEqual(run.Spectra.Count, rawIndex.Ms2Count);
+                Assert.AreEqual(result.Scheme.Windows.Count, rawIndex.IsolationWindows.Count);
+
+                // A PLAIN cache of already-demultiplexed spectra is what searching an
+                // msconvert-demultiplexed mzML produces. Its top bin also first appears after
+                // other bins repeat, and must still be a window (it once was silently dropped).
+                string plainDemuxPath = Path.Combine(dir, @"msconvert.spectra.bin");
+                SpectraCache.SaveSpectraCache(plainDemuxPath, result.Spectra, ms1);
+                var plainDemuxIndex = SpectraWindowIndex.BuildFromCache(plainDemuxPath);
+                Assert.IsNotNull(plainDemuxIndex);
+                Assert.AreEqual(run.Bins.Count, plainDemuxIndex.IsolationWindows.Count);
 
                 // Refusals: a demultiplexed cache read as plain, a plain one read as
                 // demultiplexed, and a descriptor from other settings.

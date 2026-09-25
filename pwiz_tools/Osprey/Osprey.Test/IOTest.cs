@@ -780,11 +780,9 @@ namespace pwiz.Osprey.Test
                     CollectionAssert.AreEqual(full.Ms1Spectra[i].Intensities, index.Ms1Spectra[i].Intensities);
                 }
 
-                // First-cycle isolation windows: the distinct windows of DIA cycle 1 (records
-                // 1-3; record 4's 500.03 repeats key 5000 and ends the cycle), each carrying
-                // that key's first record's window, sorted by center. Mirrors
-                // ScoringTaskShared.ExtractIsolationWindows so scoring's window fan-out is
-                // unchanged without materializing the MS2 list.
+                // Isolation windows: every distinct rounded-center key, each carrying that
+                // key's first record's window, sorted by center - here the three windows of
+                // cycle 1 (records 1-3), since the later records only repeat their keys.
                 Assert.AreEqual(3, index.IsolationWindows.Count);
                 for (int i = 0; i < 3; i++)
                 {

@@ -81,11 +81,11 @@ namespace pwiz.Osprey.IO
         public IReadOnlyList<MS1Spectrum> Ms1Spectra { get; }
 
         /// <summary>
-        /// The first DIA cycle's isolation windows, deduplicated on the rounded center key
-        /// and sorted by center -- reconstructed byte-identically to
-        /// <c>ScoringTaskShared.ExtractIsolationWindows</c> (same first-appearance dedup,
-        /// same <c>Center</c> sort) from the index, so scoring's window fan-out is
-        /// unchanged without materializing the full MS2 list.
+        /// Every distinct isolation window in the run, deduplicated on the rounded center key
+        /// (each as the window of its first record in file order) and sorted by center,
+        /// rebuilt from the index without materializing the full MS2 list. For ordinary DIA
+        /// this is the first cycle's windows; for a demultiplexed or randomized run it also
+        /// includes windows that first appear after a key has repeated.
         /// </summary>
         public IReadOnlyList<IsolationWindow> IsolationWindows { get; }
 
@@ -178,14 +178,6 @@ namespace pwiz.Osprey.IO
                 var windowKeysInFileOrder = new List<int>();
                 var allMs2Rts = new double[nMs2];
 
-                // First DIA cycle's isolation windows, reproducing
-                // ScoringTaskShared.ExtractIsolationWindows: add each distinct rounded-center
-                // key's window in first-appearance order until a key repeats (the cycle
-                // wraps), then sort by center below.
-                var firstCycleWindows = new List<IsolationWindow>();
-                var firstCycleSeen = new HashSet<int>();
-                bool firstCycleDone = false;
-
                 for (uint i = 0; i < nMs2; i++)
                 {
                     double isoCenter = index.IsoCenters[i];
@@ -204,30 +196,22 @@ namespace pwiz.Osprey.IO
                         windowKeyToFirstIso[key] = new IsolationWindow(isoCenter, isoLower, isoUpper);
                         windowKeysInFileOrder.Add(key);
                     }
-                    // First-cycle windows: add on first sight of a key, stop once one repeats.
-                    if (!firstCycleDone)
-                    {
-                        if (!firstCycleSeen.Add(key))
-                            firstCycleDone = true;
-                        else
-                            firstCycleWindows.Add(new IsolationWindow(isoCenter, isoLower, isoUpper));
-                    }
                     offsets.Add(index.RecordOffsets[i]);
                 }
 
-                // A demultiplexed run has no "first cycle" that holds every window: a parent
-                // window's bins appear as soon as it is acquired, and a bin that only the
-                // offset set covers (the edge bins) first appears after other bins repeat.
-                // Every distinct window is a window there, so take them all.
-                if (demuxDescriptor != null)
-                {
-                    firstCycleWindows.Clear();
-                    foreach (int key in windowKeysInFileOrder)
-                        firstCycleWindows.Add(windowKeyToFirstIso[key]);
-                }
+                // Every distinct window, each as its first record's window. This used to be
+                // the FIRST CYCLE's windows only (keys up to the first repeat), which is the
+                // same set for ordinary DIA but silently drops windows from a demultiplexed
+                // run: a parent window's bins appear as soon as it is acquired, so the bin
+                // only the offset set covers first appears after other bins have repeated.
+                // Searching msconvert-demultiplexed Eclipse data that way left the top bin,
+                // [1000.70, 1006.70), unscored. Randomized MSX order breaks it the same way.
+                var isolationWindows = new List<IsolationWindow>(windowKeysInFileOrder.Count);
+                foreach (int key in windowKeysInFileOrder)
+                    isolationWindows.Add(windowKeyToFirstIso[key]);
 
-                // Reproduce ExtractIsolationWindows' final sort by center.
-                firstCycleWindows.Sort((a, b) => a.Center.CompareTo(b.Center)); // Array.Sort OK: dedup on the rounded center key leaves distinct centers, so the comparator never ties (mirror of ExtractIsolationWindows)
+                // Sorted by center, as ExtractIsolationWindows sorted the first cycle.
+                isolationWindows.Sort((a, b) => a.Center.CompareTo(b.Center)); // Array.Sort OK: dedup on the rounded center key leaves distinct centers, so the comparator never ties
 
                 // MS1 in full from the recorded section offset (small in DIA and needed
                 // resident for the global precursor RT search) -- so streaming Stages 1-4
@@ -239,7 +223,7 @@ namespace pwiz.Osprey.IO
                     ms1Spectra.Add(SpectraCache.ReadMs1Record(r));
 
                 return new SpectraWindowIndex(cachePath, windowKeyToOffsets, allMs2Rts,
-                    windowKeyToFirstIso, windowKeysInFileOrder, ms1Spectra, firstCycleWindows);
+                    windowKeyToFirstIso, windowKeysInFileOrder, ms1Spectra, isolationWindows);
             }
         }
 
