@@ -158,18 +158,33 @@ namespace pwiz.Osprey.Core
         public long TotalReferences { get { return _totalRefs; } }
 
         /// <summary>
-        /// Log a one-line distinct/total summary of what this pool collapsed.
-        /// No-op when <paramref name="logInfo"/> is null.
+        /// Log a one-line distinct/total summary of a pool that interned library
+        /// (target) entries. No-op when <paramref name="logInfo"/> is null.
         /// </summary>
         public void LogSummary(Action<string> logInfo)
+        {
+            LogSummary(logInfo, "Unique library strings: {0:N0} / {1:N0} total ({2:F1}% reduced)");
+        }
+
+        /// <summary>
+        /// Log the same summary for the decoy generator's own pool. Named apart from the
+        /// library line because the two print one after the other and read as the same
+        /// quantity, and the decoy pool reduces less by construction: a decoy's modified
+        /// sequence carries a "DECOY_" prefix, so it never collapses onto its plain sequence
+        /// the way an unmodified target's does. No-op when <paramref name="logInfo"/> is null.
+        /// </summary>
+        public void LogDecoySummary(Action<string> logInfo)
+        {
+            LogSummary(logInfo, "Unique decoy strings: {0:N0} / {1:N0} total ({2:F1}% reduced)");
+        }
+
+        private void LogSummary(Action<string> logInfo, string format)
         {
             if (logInfo == null)
                 return;
             long collapsed = _totalRefs - _pool.Count;
             double pct = _totalRefs > 0 ? 100.0 * collapsed / _totalRefs : 0.0;
-            logInfo(string.Format(
-                "Unique library strings: {0:N0} / {1:N0} total ({2:F1}% reduced)",
-                _pool.Count, _totalRefs, pct));
+            logInfo(string.Format(format, _pool.Count, _totalRefs, pct));
         }
     }
 }

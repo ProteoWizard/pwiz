@@ -318,7 +318,7 @@ namespace pwiz.Osprey.Scoring
                 }
             }
 
-            interner.LogSummary(logInfo);
+            interner.LogDecoySummary(logInfo);
             logInfo(string.Format(
                 "Generated {0:N0} decoys from {1:N0} targets ({2:N0} excluded due to collisions)",
                 decoys.Count, targets.Count, nExcluded));
