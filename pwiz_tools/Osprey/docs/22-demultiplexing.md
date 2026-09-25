@@ -50,8 +50,14 @@ Demultiplexing happens where the spectra cache is built: in `PerFileScoring` (St
 it looks for, in order:
 
 1. **A valid `<stem>.demux.spectra.bin`.** If present, it is searched and nothing else is read.
-   That is enough on its own, so a cohort staged with demultiplexing can be searched after its
-   `.spectra.bin` and its sources are gone.
+   It is enough on its own, but only while its descriptor (see [Files](#files)) matches the
+   running Osprey:
+   - A cohort staged with demultiplexing can be searched after its sources are gone.
+   - A later Osprey whose demux algorithm version differs refuses the demultiplexed cache, and
+     can rebuild it only from the `.spectra.bin` or the source.
+   - So keep the `.spectra.bin` of any cohort that may be searched again by a later version.
+   - An input whose source and `.spectra.bin` are both gone, and whose demultiplexed cache no
+     longer matches, is refused at start-up with the reason.
 2. **A valid `<stem>.spectra.bin`.** The isolation scheme is detected from its window index. A
    non-overlapping run is searched from it as before. An overlapping run is read back in full,
    demultiplexed, and written to `<stem>.demux.spectra.bin`, which is then searched.

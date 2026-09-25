@@ -60,6 +60,10 @@ namespace pwiz.Osprey.Test
         private const string FIXTURE_GOLDEN = @"eclipse-ev13-osprey-demux.golden.tsv";
         private const string REBLESS_VARIABLE = @"OSPREY_REBLESS_DEMUX_FIXTURE";
 
+        // Where a demultiplexed cache's descriptor length sits: after the magic (8), version (4),
+        // source size and mtime (8 each), and the MS2 and MS1 counts (4 each).
+        private const int DESCRIPTOR_LENGTH_OFFSET = 36;
+
         // Agreement floors against msconvert's demultiplexing of the fixture. Measured on
         // 2026-09-25: default median cosine 0.9987 with 93.6% of spectra at 0.95 or better;
         // msconvert-like settings median 0.9991 (93.4%). The full runs agree similarly (median
@@ -588,6 +592,39 @@ namespace pwiz.Osprey.Test
                 AssertRefused(rawPath, descriptor);
                 AssertRefused(demuxPath, new DemuxParams { Interpolation = RtInterpolation.pchip }.Descriptor);
                 Assert.IsNull(SpectraCache.LoadSpectraCache(demuxPath));
+
+                // The same rules from the header alone, as the start-up input check reads it.
+                string otherDescriptor = new DemuxParams { Interpolation = RtInterpolation.pchip }.Descriptor;
+                Assert.AreEqual(SpectraCacheRejection.None, SpectraCache.CheckHeader(demuxPath, null, descriptor));
+                Assert.AreEqual(SpectraCacheRejection.DemuxSettingsChanged,
+                    SpectraCache.CheckHeader(demuxPath, null, otherDescriptor));
+                Assert.AreEqual(SpectraCacheRejection.DemuxSettingsChanged, SpectraCache.CheckHeader(demuxPath, null, null));
+                Assert.AreEqual(SpectraCacheRejection.Absent,
+                    SpectraCache.CheckHeader(Path.Combine(dir, @"missing.demux.spectra.bin"), null, descriptor));
+
+                // A corrupt descriptor length, or a header that ends inside the descriptor, is a
+                // truncated header: neither a descriptor to compare nor a crash.
+                byte[] bytes = File.ReadAllBytes(demuxPath);
+                string corruptPath = Path.Combine(dir, @"corrupt.demux.spectra.bin");
+                var corrupt = (byte[])bytes.Clone();
+                BitConverter.GetBytes(uint.MaxValue).CopyTo(corrupt, DESCRIPTOR_LENGTH_OFFSET);
+                File.WriteAllBytes(corruptPath, corrupt);
+                Assert.AreEqual(SpectraCacheRejection.TruncatedHeader, SpectraCache.CheckHeader(corruptPath, null, descriptor));
+                Assert.IsNull(SpectraWindowIndex.BuildFromCache(corruptPath, null, out var corruptReason, descriptor));
+                Assert.AreEqual(SpectraCacheRejection.TruncatedHeader, corruptReason);
+                File.WriteAllBytes(corruptPath, bytes.Take(DESCRIPTOR_LENGTH_OFFSET + 4 + 5).ToArray());
+                Assert.AreEqual(SpectraCacheRejection.TruncatedHeader, SpectraCache.CheckHeader(corruptPath, null, descriptor));
+
+                // The start-up check of an input whose source and .spectra.bin are gone: its
+                // demultiplexed cache stands in while it matches the current settings, and is
+                // refused, with the reason, once a demux version or override has changed.
+                var auto = new OspreyConfig { DemuxMode = DemuxMode.auto };
+                string goneSource = Path.Combine(dir, @"run.raw");
+                Assert.AreEqual(demuxPath, SpectraCache.GetDemuxCachePath(goneSource));
+                Assert.AreEqual(SpectraCacheRejection.None, DemuxCacheBuilder.CheckDemuxCache(goneSource, auto));
+                SpectraCache.SaveSpectraCache(demuxPath, result.Spectra, ms1, null, otherDescriptor);
+                Assert.AreEqual(SpectraCacheRejection.DemuxSettingsChanged,
+                    DemuxCacheBuilder.CheckDemuxCache(goneSource, auto));
             }
             finally
             {

@@ -105,15 +105,27 @@ namespace pwiz.Osprey.Tasks
                     ctx.LogInfo(string.Format("Streaming demultiplexed spectra from cache: {0}", demuxPath));
                     return hit;
                 }
-                ctx.LogInfo(string.Format("Demultiplexed spectra cache not usable ({0}); rebuilding it.",
-                    SpectraCacheException.Describe(reason)));
+                // No promise of a rebuild here: Stage 6 cannot rebuild, and stops instead.
+                ctx.LogInfo(string.Format("Demultiplexed spectra cache {0} is not usable: {1}.",
+                    demuxPath, SpectraCacheException.Describe(reason)));
             }
             catch (Exception ex)
             {
                 ctx.LogWarning(string.Format(
-                    "Failed to index demultiplexed spectra cache: {0}. Rebuilding it.", ex.Message));
+                    "Failed to index demultiplexed spectra cache {0}: {1}", demuxPath, ex.Message));
             }
             return null;
+        }
+
+        /// <summary>
+        /// Why the run's demultiplexed cache would be refused under the current settings, or
+        /// <see cref="SpectraCacheRejection.None"/> when it would be searched. Reads the header
+        /// only, for the start-up check of an input whose source is gone.
+        /// </summary>
+        internal static SpectraCacheRejection CheckDemuxCache(string inputFile, OspreyConfig config)
+        {
+            return SpectraCache.CheckHeader(SpectraCache.GetDemuxCachePath(inputFile), inputFile,
+                CreateParams(config).Descriptor);
         }
 
         /// <summary>
@@ -209,13 +221,7 @@ namespace pwiz.Osprey.Tasks
         {
             // Every distinct window the run recorded, not just the first cycle: a staggered
             // run's offset set only appears after the first set has been acquired.
-            var windows = new List<IsolationWindow>(index.WindowKeysInFileOrder.Count);
-            foreach (int key in index.WindowKeysInFileOrder)
-            {
-                if (index.TryGetWindowIsolation(key, out var window))
-                    windows.Add(window);
-            }
-            return DemuxSchemeDetector.Detect(windows);
+            return DemuxSchemeDetector.Detect(index.IsolationWindows);
         }
 
         private static void ThrowIfOverlapping(string inputFile, DemuxScheme scheme)

@@ -315,6 +315,31 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// Why a cache would be refused, from its header alone, without reading its index or
+        /// body: <see cref="SpectraCacheRejection.None"/> when it would be accepted. A null
+        /// <paramref name="demuxDescriptor"/> expects a plain cache. Cheap enough to run on
+        /// every input at start-up.
+        /// </summary>
+        public static SpectraCacheRejection CheckHeader(string path, string sourcePath, string demuxDescriptor)
+        {
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+                return SpectraCacheRejection.Absent;
+            try
+            {
+                using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (var r = new BinaryReader(fs))
+                {
+                    TryReadHeader(r, sourcePath, out _, out _, out var reason, demuxDescriptor);
+                    return reason;
+                }
+            }
+            catch (EndOfStreamException)
+            {
+                return SpectraCacheRejection.TruncatedHeader;
+            }
+        }
+
+        /// <summary>
         /// Get the demultiplexed spectra cache path for a given input file: beside the
         /// <c>.spectra.bin</c> it is derived from.
         /// </summary>
