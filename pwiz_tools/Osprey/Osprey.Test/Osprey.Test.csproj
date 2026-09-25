@@ -12,13 +12,11 @@
     <PackageReference Include="MSTest.TestAdapter" Version="3.6.4" />
     <PackageReference Include="MSTest.TestFramework" Version="3.6.4" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <!-- The same patched Parquet.Net build Osprey.IO compiles against (see its csproj). -->
-    <Reference Include="Parquet">
-      <HintPath>..\..\Shared\Lib\Parquet\Parquet.dll</HintPath>
-    </Reference>
-    <!-- Snappier arrives transitively (IronCompress -> Snappier). Pinned to 1.3.1 because
-         the range resolves to 1.1.6, which carries GHSA-pggp-6c3x-2xmx; 1.3.1 is the
-         first clean release. -->
+    <PackageReference Include="Parquet.Net" Version="4.25.0" />
+    <!-- Snappier arrives transitively (Parquet.Net -> IronCompress -> Snappier).
+         Pinned to 1.3.1 because the range resolves to 1.1.6, which carries
+         GHSA-pggp-6c3x-2xmx; 1.3.1 is the first clean release. Remove once
+         Parquet.Net is on 6.x, which depends on [1.3.1,) itself. -->
     <PackageReference Include="Snappier" Version="1.3.1" />
     <!-- 1.0.119 to match pwiz-sharp, whose Bruker and UIMF readers pull the same
          package (a lower version here is an NU1605 downgrade error). -->

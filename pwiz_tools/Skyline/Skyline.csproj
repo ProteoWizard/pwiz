@@ -443,19 +443,11 @@
     <PackageReference Include="Sprache" Version="2.3.1" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
     <PackageReference Include="Dapper" Version="2.1.35" />
-    <!-- Parquet.Net: the patched 4.25.0 build checked in under ..\Shared\Lib\Parquet
-         (stock 4.25.0 cannot read footers written by current Arrow / parquet-rs writers;
-         see the ProteoWizard parquet-dotnet fork). IronCompress and Microsoft.Data.Analysis
-         are its declared dependencies, which a plain <Reference> does not pull in;
-         Microsoft.IO.RecyclableMemoryStream is referenced below. -->
-    <Reference Include="Parquet">
-      <HintPath>..\Shared\Lib\Parquet\Parquet.dll</HintPath>
-    </Reference>
-    <PackageReference Include="IronCompress" Version="1.5.2" />
-    <PackageReference Include="Microsoft.Data.Analysis" Version="0.21.1" />
-    <!-- Snappier arrives transitively (IronCompress -> Snappier). Pinned to 1.3.1 because
-         the range resolves to 1.1.6, which carries GHSA-pggp-6c3x-2xmx; 1.3.1 is the
-         first clean release. -->
+    <PackageReference Include="Parquet.Net" Version="4.25.0" />
+    <!-- Snappier arrives transitively (Parquet.Net -> IronCompress -> Snappier).
+         Pinned to 1.3.1 because the range resolves to 1.1.6, which carries
+         GHSA-pggp-6c3x-2xmx; 1.3.1 is the first clean release. Remove once
+         Parquet.Net is on 6.x, which depends on [1.3.1,) itself. -->
     <PackageReference Include="Snappier" Version="1.3.1" />
     <PackageReference Include="IdentityModel" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />

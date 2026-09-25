@@ -10,19 +10,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- pwiz's patched Parquet.Net 4.25.0 build (parquet-rs footer fix + the parallel
-         column-compression API the stock package lacks); see Directory.Build.targets for
-         the delta list. The packages below are its declared dependencies, which a plain
-         <Reference> does not pull in. -->
+    <!-- ExcludeAssets="compile" + the local Reference: compile against pwiz's Parquet fork,
+         which exposes API the NuGet compile surface does not (the parallel column-compression
+         path), while still taking the package's runtime assets. -->
+    <PackageReference Include="Parquet.Net" Version="4.25.0" ExcludeAssets="compile" />
     <Reference Include="Parquet">
-      <HintPath>..\..\Shared\Lib\Parquet\Parquet.dll</HintPath>
+      <HintPath>..\..\Shared\Lib\Parquet\ParquetNet.dll</HintPath>
     </Reference>
-    <PackageReference Include="IronCompress" Version="1.5.2" />
-    <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
-    <PackageReference Include="Microsoft.Data.Analysis" Version="0.21.1" />
-    <!-- Snappier arrives transitively (IronCompress -> Snappier). Pinned to 1.3.1 because
-         the range resolves to 1.1.6, which carries GHSA-pggp-6c3x-2xmx; 1.3.1 is the
-         first clean release. -->
+    <!-- Snappier arrives transitively (Parquet.Net -> IronCompress -> Snappier).
+         Pinned to 1.3.1 because the range resolves to 1.1.6, which carries
+         GHSA-pggp-6c3x-2xmx; 1.3.1 is the first clean release. Remove once
+         Parquet.Net is on 6.x, which depends on [1.3.1,) itself. -->
     <PackageReference Include="Snappier" Version="1.3.1" />
     <!-- 1.0.119 to match pwiz-sharp, whose Bruker and UIMF readers pull the same
          package (a lower version here is an NU1605 downgrade error). -->
