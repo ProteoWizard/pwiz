@@ -650,6 +650,12 @@ namespace pwiz.Skyline.Model.Results
                     timeIntensitiesGroup = ((RawTimeIntensities) minimizedChromGroup.MinimizedTimeIntensitiesGroup)
                         .Interpolate(transitionChromSources);
                 }
+                if (timeIntensitiesGroup is InterpolatedTimeIntensities interpolatedGroup &&
+                    _cacheFormat.FormatVersion < CacheFormatVersion.Twenty)
+                {
+                    timeIntensitiesGroup = interpolatedGroup.RemoveObservedIonMobilities();
+                    flags &= ~ChromGroupHeaderInfo.FlagValues.has_observed_ion_mobilities;
+                }
 
                 timeIntensitiesGroup.WriteToStream(pointsStream);
                 if (timeIntensitiesGroup is RawTimeIntensities)
