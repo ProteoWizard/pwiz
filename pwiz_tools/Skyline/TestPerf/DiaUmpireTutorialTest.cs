@@ -75,12 +75,9 @@ namespace TestPerf
             public string IsolationSchemeFile;
             public char IsolationSchemeFileSeparator;
             public MzTolerance PrecursorTolerance;
-            // Never applied: SetupPage assigns SearchSettingsControl.PrecursorTolerance but has no
-            // matching line for this, so the search runs at the dialog's default fragment tolerance.
-            // Kept because it records the value each instrument is meant to use; wiring it up would
-            // move the search results and needs a deliberate re-baseline.
-            // ReSharper disable once NotAccessedField.Local
-            public MzTolerance FragmentTolerance;
+            // No fragment tolerance here: Comet derives its fragment binning from the MS2 analyzer
+            // resolution (see the search settings page below), so there is nothing per-instrument
+            // to set. Both instruments here are high-resolution MS2.
             public DiaUmpire.Config.InstrumentPreset InstrumentPreset;
 
             // This may be necessary in the future if the default settings change but we don't want the tutorial results to change.
@@ -200,7 +197,6 @@ namespace TestPerf
                 IsolationSchemeFile = "64_variable_windows.csv",
                 IsolationSchemeFileSeparator = TextUtil.SEPARATOR_CSV,
                 PrecursorTolerance = new MzTolerance(30, MzTolerance.Units.ppm),
-                FragmentTolerance = new MzTolerance(40, MzTolerance.Units.ppm),
                 InstrumentPreset = DiaUmpire.Config.InstrumentPreset.TripleTOF
             });
 
@@ -264,7 +260,6 @@ namespace TestPerf
                 IsolationSchemeFile = "QE_DIA_18var.tsv",
                 IsolationSchemeFileSeparator = TextUtil.SEPARATOR_TSV,
                 PrecursorTolerance = new MzTolerance(10, MzTolerance.Units.ppm),
-                FragmentTolerance = new MzTolerance(20, MzTolerance.Units.ppm),
                 InstrumentPreset = DiaUmpire.Config.InstrumentPreset.QExactive
             });
 
@@ -555,11 +550,12 @@ namespace TestPerf
 
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
                               ImportPeptideSearchDlg.Pages.dda_search_settings_page);
-                // PROOF-OF-CONCEPT (temporary): search with Comet instead of MSAmanda. Comet's
-                // output is thread/machine-deterministic (deterministic I/L tiebreak + fixed pin
-                // ordering), so the library count is stable across machines, unlike MSAmanda whose
-                // parallel ordering drives a +/-2 per-machine drift. Comet takes no fragment
-                // tolerance (fragment binning comes from the MS2 analyzer resolution setting).
+                // Search with Comet instead of MSAmanda. Comet's output is thread/machine-
+                // deterministic (deterministic I/L tiebreak + fixed pin ordering), so the library
+                // count is stable across machines, unlike MSAmanda whose parallel ordering drives
+                // a +/-2 per-machine drift. Comet takes no fragment tolerance: the MS2 tolerance
+                // box is disabled for Comet and CometSearchEngine.SetFragmentIonMassTolerance is a
+                // no-op, because fragment binning comes from the MS2 analyzer resolution set below.
                 importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = SearchEngine.Comet;
                 importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = _instrumentValues.PrecursorTolerance;
                 importPeptideSearchDlg.SearchSettingsControl.FragmentIons = "b,y";
