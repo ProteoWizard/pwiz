@@ -23,6 +23,7 @@ using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
@@ -707,14 +708,35 @@ namespace pwiz.Skyline.ToolsUI
         /// "Ctrl+Shift+Home". It raises KeyDown with the composed <see cref="Keys"/> value, which is where a
         /// WinForms handler reads a keystroke from. Composing the value is what lets a modifier be expressed:
         /// a delivered key message carries only the virtual key, and WinForms fills the modifiers in from the
-        /// GLOBAL keyboard state, which this does not touch.
+        /// GLOBAL keyboard state, which this does not touch. As for a user's key, a form containing the
+        /// control that sets KeyPreview sees it first (the graph forms take Escape back to the Targets view
+        /// this way), and a form that handles it keeps it from the control.
         ///
         /// <para>KNOWN LIMIT: raising KeyDown does not run the control's default window procedure, so a key
         /// whose effect comes from that rather than from a handler - Backspace editing a text box, an arrow
         /// moving a plain list's selection - has no effect.</para></summary>
         public virtual void SendKeyStrokeNow(string keyStroke)
         {
-            RaiseProtectedHandler(Control, @"OnKeyDown", new KeyEventArgs(ParseKeyStroke(keyStroke)));
+            var e = new KeyEventArgs(ParseKeyStroke(keyStroke));
+            if (!RaiseKeyPreview(Control, e))
+                RaiseProtectedHandler(Control, @"OnKeyDown", e);
+        }
+
+        // Raises KeyDown on each form around the control that sets KeyPreview, innermost first, the way
+        // WinForms previews a key message (Control.ProcessKeyPreview up the parent chain). Returns true when
+        // one of them handled the key, so the control does not see it.
+        private static bool RaiseKeyPreview(Control control, KeyEventArgs e)
+        {
+            for (var parent = control.Parent; parent != null; parent = parent.Parent)
+            {
+                if (parent is Form { KeyPreview: true } form)
+                {
+                    RaiseProtectedHandler<Control>(form, @"OnKeyDown", e);
+                    if (e.Handled)
+                        return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>Brings up the tooltip of the item at <paramref name="itemBounds"/> (client coordinates) the way a
@@ -961,6 +983,7 @@ namespace pwiz.Skyline.ToolsUI
         internal static ContextMenuStrip TryBuildGraphContextMenu(Control control)
         {
             var zedGraph = control as ZedGraph.ZedGraphControl
+                ?? (control as MsGraphExtension)?.Graph
                 ?? (control as DockableFormEx != null ? JsonUiService.TryGetZedGraphControl((DockableFormEx) control) : null);
             if (zedGraph == null)
                 return null;

@@ -64,7 +64,7 @@ in for a tutorial step (dragging the two replicate-comparison graphs to the dock
 | Library Match right-click > Ion Types | The menu the connector builds has only Show Mass Error, Auto-scale Y-axis, rulers and copy items. `PopulateGraphContextMenu` does not set the menu's `SourceControl`, and `SpectrumContextMenu.BuildSpectrumMenu` finds the spectrum control through it, so it takes the "not annotated" branch and leaves out Ion Types, Charges, Ranks and the rest. Addressing `MsGraphExtension` instead gives "msGraphExtension has no context menu" | None |
 | Delete key on the Targets tree | No effect, as in MethodEdit | `click_main_menu_item("Edit > Delete")` |
 | Escape on the regression graph (s-08) | `GraphSummary` handles Escape in the *form's* `KeyDown` (`KeyPreview`); `send_key_stroke` raises `KeyDown` on the `ZedGraphControl` only, so the handler never runs, and the form itself "does not support the action 'send_key_stroke'" | None; s-08 has the right rows, but the selection is grey because the tree does not have the focus |
-| "Click on this list" (the chromatogram's File combo, s-09) | The `ToolStripComboBox` supports only `get_actions`, `get_children`, `click`, `get_value`: its items (worm_0027.RAW, worm_0028.RAW) cannot be listed or chosen | `get_value` shows the selected file only |
+| "Click on this list" (the chromatogram's File combo, s-09) | The `ToolStripComboBox` item itself supports only `get_actions`, `get_children`, `click`, `get_value`. Not a gap: the combo box it hosts is its child, and takes `get_options` / `set_value` (checked afterwards on a two-file replicate): `path={"parent":{"parent":{"parent":{"text":"GraphChromatogram:<replicate>","type":"Form"},"type":"ToolStrip"},"type":"ToolStripComboBox","index":0},"type":"ComboBox"}` | (none needed) |
 | F11 / Shift-F11 | Main-menu shortcut keys sent to the tree have no effect (the zoom stayed 0-100 min) | View > Auto-Zoom > Best Peak / None |
 | Home key (review after automated refinement) | No effect; only the arrows and Ctrl+Home / Ctrl+End are handled | `Ctrl+Home` |
 | Click, then Shift-click a run of files | No Shift-click verb | `select_item` once per file: 15, 24, then 5 calls |
@@ -73,6 +73,11 @@ in for a tutorial step (dragging the two replicate-comparison graphs to the dock
 | Drag a graph onto a dock arrow (s-21) | No verb for docking a floating pane | `p26.view` window layout |
 | Close a graph with its red x | Works: `dismiss_with_cancel_button` on the graph form closes it | (not a gap) |
 | Windows Explorer / Excel views of the output | Outside Skyline | Row counts and first lines read from the files |
+
+Since this run, three of these have been fixed: the Ion Types submenu now follows the current document; the
+connector sets a graph menu's `SourceControl`, so the Library Match right-click menu is complete (and
+`MsGraphExtension` resolves to its graph); and `send_key_stroke` lets a form with `KeyPreview` see the key
+first, so Escape on a graph returns to the Targets view.
 
 ### Differences from the tutorial text (not MCP gaps)
 

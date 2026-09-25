@@ -380,7 +380,20 @@ namespace pwiz.Skyline.ToolsUI
             // populate or a prior real right-click; empty it first (as ZedGraph's own contextMenuStrip1_Opening
             // does) before the builder repopulates it.
             menuStrip.Items.Clear();
+            // A right-click shows the menu on the graph, which makes the graph its SourceControl, and some
+            // builders find their graph through it (the spectrum menu adds its ion-type, charge and rank items
+            // only when it finds the annotated spectrum that way). SourceControl can only be set internally.
+            SetSourceControl(menuStrip, zedGraph);
             builder(zedGraph, menuStrip, centerPoint, default(ZedGraphControl.ContextMenuObjectState));
+        }
+
+        private static void SetSourceControl(ContextMenuStrip menuStrip, Control sourceControl)
+        {
+            var property = typeof(ContextMenuStrip).GetProperty(@"SourceControlInternal",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            if (property == null)
+                throw new InvalidOperationException(@"ContextMenuStrip.SourceControlInternal not found");
+            property.SetValue(menuStrip, sourceControl);
         }
 
         // Verifies the resolved element supports the action (it is the kind the action targets); the

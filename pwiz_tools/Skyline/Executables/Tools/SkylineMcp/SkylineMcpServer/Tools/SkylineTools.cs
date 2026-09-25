@@ -960,7 +960,8 @@ public static class SkylineTools
     [McpServerTool(Name = "skyline_send_key_stroke"),
      Description("Press one key on a control, whether or not it has the focus - e.g. to accept or step " +
         "through a popup, or to paste with 'Ctrl+V' where a form's own handler does the pasting. " +
-        "NOTE: this raises the control's KeyDown, so a key handled by the control's DEFAULT behavior rather " +
+        "A form that previews keys sees the key first, as it does for a user (e.g. Escape on a graph returns " +
+        "to the Targets view). NOTE: this raises the control's KeyDown, so a key handled by the control's DEFAULT behavior rather " +
         "than by a handler - Backspace editing a text box, an arrow moving a plain list's selection - will " +
         "NOT take effect. The Targets tree is the exception for the arrow keys: Up and Down move its selection " +
         "and Left and Right collapse and expand, as they do for a user. Discover control names with " +
