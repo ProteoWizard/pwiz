@@ -119,7 +119,11 @@ per-fold classifier: `GradientBoostedTrees` (`Osprey.ML/GradientBoostedTrees.cs`
 instead of the linear SVM. It is a pure-managed second-order (Newton) boosting
 implementation with the XGBoost regularized objective (logistic loss, per-leaf L2/L1,
 min split gain, row/column subsampling, histogram split finding), made deterministic
-with `XorShift64` and single-threaded float accumulation.
+with `XorShift64` and single-threaded float accumulation. It exists so that candidate
+features which do not suit a linear SVM can be evaluated; the default feature set was
+chosen for the SVM, so the default method stays `percolator`. `GradientBoostedTrees` is also
+vendored by MARS (`maccoss/mars`, `dotnet/third_party/Osprey.ML`), so changes to it are
+changes to MARS's model.
 
 Two structural differences from the SVM path (`PercolatorTrainer.TrainFoldGbt`, `PercolatorTrainer.cs:906`): there is
 **no `GridSearchC`** (trees have no cost parameter), and iteration selection is
@@ -137,9 +141,11 @@ Every production path trains with `TrainOnly` (`PercolatorConfig.CloneForTrainOn
 Granholm calibration (`PercolatorTrainer.cs:264-289`), so 3f's held-out scoring and 3g's
 calibration below do not run in a production pass, for either classifier. The score pass then
 applies the fold average to every row, so a row that was in the training subset is scored by
-models that trained on it. For the high-bias linear SVM that in-sample gap is small. For trees,
-which can fit their own training rows closely, this in-sample scoring of subset rows is a
-known risk to FDR calibration, pending an entrapment comparison.
+models that trained on it. For the high-bias linear SVM that in-sample gap is small; trees can
+fit their own training rows closely. On the default feature set, 3-file Stellar with generated
+decoys and entrapment (2026-09-25) measured a true FDP at a reported 1% experiment q of 0.95%
+for `percolator` and 1.27% for `gbdt` in the second pass (1.24% and 1.65% in the first). That
+is a baseline for feature work, not a verdict on either classifier.
 
 **Every first-pass path trains and scores the trees.** A default run takes the lean
 counts-only first pass (`PercolatorScorer.RunStreamingFirstPass`) for `gbdt` exactly as for
