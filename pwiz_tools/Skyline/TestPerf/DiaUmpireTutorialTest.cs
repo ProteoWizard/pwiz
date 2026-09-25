@@ -75,6 +75,11 @@ namespace TestPerf
             public string IsolationSchemeFile;
             public char IsolationSchemeFileSeparator;
             public MzTolerance PrecursorTolerance;
+            // Never applied: SetupPage assigns SearchSettingsControl.PrecursorTolerance but has no
+            // matching line for this, so the search runs at the dialog's default fragment tolerance.
+            // Kept because it records the value each instrument is meant to use; wiring it up would
+            // move the search results and needs a deliberate re-baseline.
+            // ReSharper disable once NotAccessedField.Local
             public MzTolerance FragmentTolerance;
             public DiaUmpire.Config.InstrumentPreset InstrumentPreset;
 

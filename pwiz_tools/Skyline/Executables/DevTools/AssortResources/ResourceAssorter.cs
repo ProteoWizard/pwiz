@@ -251,7 +251,7 @@ namespace AssortResources
                 moves.Add($"{resourceIdentifiers.Count} non-shared resource(s) should be moved from {ResourceFile.FilePath} into {resourceFilePath}:" );
                 foreach (var resourceIdentifier in resourceIdentifiers)
                 {
-                    moves.Add(resourceIdentifier ?? "?");
+                    moves.Add(resourceIdentifier);
                 }
                 return;
             }

@@ -48,7 +48,7 @@ namespace pwiz.ProteowizardWrapper
     /// after read operations have been completed. This returns a handy CSV-formatted
     /// report on file read performance.
     /// </summary>
-    public partial class MsDataFileImpl : IDisposable
+    public class MsDataFileImpl : IDisposable
     {
         private static readonly ReaderList FULL_READER_LIST = ReaderList.Default;
 

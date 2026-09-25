@@ -28,8 +28,6 @@ namespace pwiz.Common.SystemUtil
     /// </summary>
     public static class ConcurrencyVisualizer
     {
-        private static Control _control;
-
         /// <summary>
         /// Add markers to annotate the threads graph with our thread names.
         /// </summary>
@@ -43,7 +41,7 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public static void StartEvents(Control control)
         {
-            _control = control;
+            _ = control; // no-op, as above; holding it in a static would root the form for nothing
         }
 
         /// <summary>
