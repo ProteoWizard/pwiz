@@ -122,9 +122,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             });
 
             document = WaitForDocumentChangeLoaded(docChangedDriftTimePredictor);
-
-            // PauseTest(); // Uncomment this to inspect observed ion mobility in the Full Scan graph
-
             var transitionsNew = document.MoleculeTransitions.ToArray();
             var nChanges = 0;
             var nNonEmpty = 0;
