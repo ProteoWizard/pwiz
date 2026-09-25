@@ -93,7 +93,6 @@ namespace pwiz.Skyline.Model.DdaSearch
         private const string MAX_LOADED_PROTEINS_AT_ONCE = "MaxLoadedProteinsAtOnce";
         private const string MAX_LOADED_SPECTRA_AT_ONCE = "MaxLoadedSpectraAtOnce";
         private const string CONSIDERED_CHARGES = "ConsideredCharges";
-        private const string MAX_NO_DYN_MODIFS = "MaxNoDynModifs";
         private const string MAX_RANK = "MaxRank";
         private const string KEEP_INTERMEDIATE_FILES = "keep-intermediate-files";
 
@@ -107,6 +106,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         private string _fragmentIons = @"b, y";
         private Enzyme _enzyme;
         private int _maxMissedCleavages = 2;
+        private int _maxVariableMods = 2;
         private readonly List<StaticMod> _fixedMods = new List<StaticMod>();
         private readonly List<StaticMod> _variableMods = new List<StaticMod>();
 
@@ -128,7 +128,6 @@ namespace pwiz.Skyline.Model.DdaSearch
                 {MAX_LOADED_PROTEINS_AT_ONCE, new Setting(MAX_LOADED_PROTEINS_AT_ONCE, 100000, 1000, 1000000000)},
                 {MAX_LOADED_SPECTRA_AT_ONCE, new Setting(MAX_LOADED_SPECTRA_AT_ONCE, 10000, 1000, 1000000000)},
                 {CONSIDERED_CHARGES, new Setting(CONSIDERED_CHARGES, @"2+,3+,4+")},
-                {MAX_NO_DYN_MODIFS, new Setting(MAX_NO_DYN_MODIFS, 4, 0, 10)},
                 {MAX_RANK, new Setting(MAX_RANK, 5, 1, 999)},
                 {KEEP_INTERMEDIATE_FILES, new Setting(KEEP_INTERMEDIATE_FILES, false)}
             };
@@ -161,9 +160,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             _fixedMods.Clear();
             _variableMods.Clear();
-            // maxVariableMods_ is not stored: the MaxNoDynModifs value MS Amanda actually runs with
-            // is taken from AdditionalSettings when the settings XML is written, so this argument
-            // has no effect on the search. Comet and MSFragger do apply theirs.
+            _maxVariableMods = maxVariableMods_;
             foreach (var mod in modifications)
             {
                 if (mod.IsVariable || mod.LabelAtoms != LabelAtoms.None)
@@ -560,7 +557,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 inStream.CopyTo(gz);
         }
 
-        private string BuildSettingsXml()
+        internal string BuildSettingsXml()
         {
             var xml = new StringBuilder();
             xml.AppendLine(@"<?xml version=""1.0"" encoding=""utf-8""?>");
@@ -582,7 +579,9 @@ namespace pwiz.Skyline.Model.DdaSearch
             xml.Append(Invariant($@"    <MaxRank>{AdditionalSettings[MAX_RANK].Value}</MaxRank>{Environment.NewLine}"));
             xml.AppendLine(@"    <GenerateDecoy>true</GenerateDecoy>");
             xml.AppendLine(@"    <PerformDeisotoping>true</PerformDeisotoping>");
-            xml.Append(Invariant($@"    <MaxNoDynModifs>{AdditionalSettings[MAX_NO_DYN_MODIFS].Value}</MaxNoDynModifs>{Environment.NewLine}"));
+            // MaxNoDynModifs is MS Amanda's name for the maximum number of variable modifications
+            // per peptide, which the search settings page sets for every engine.
+            xml.Append(Invariant($@"    <MaxNoDynModifs>{_maxVariableMods}</MaxNoDynModifs>{Environment.NewLine}"));
             xml.AppendLine(@"    <MinimumPepLength>6</MinimumPepLength>");
             xml.AppendLine(@"    <MaximumPepLength>30</MaximumPepLength>");
             xml.AppendLine(@"  </SearchSettings>");
