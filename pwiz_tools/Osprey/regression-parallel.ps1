@@ -3,30 +3,34 @@
     Run the Osprey regression suite as two concurrent lanes instead of serially.
 
 .DESCRIPTION
-    The suite is dominated by one dataset. Measured 2026-09-05 on a -Dataset All run
-    with every mode enabled (2h04m30s total):
+    The suite is dominated by one dataset. Measured 2026-09-12 on a -Dataset All run
+    with every mode enabled, per-leg seconds from the phase-cost tables:
 
-        Astral                 64.5 min   51.8%
-        StellarLibDecoy        22.4 min   18.0%
-        StellarGenDecoyEntrap  20.8 min   16.7%
-        Stellar                16.6 min   13.3%
+        Astral                 3,614 s   (Astral lane)
+        StellarLibDecoy        1,662 s
+        Stellar                1,181 s
+        StellarGenDecoyEntrap  1,040 s   (the three together: 3,883 s, the other lane)
 
-    Astral alone is almost exactly the other three combined, so splitting it off gives
-    two naturally balanced lanes and the wall time collapses to roughly the longer of
-    them. Nothing is skipped: every dataset runs every mode it ran before, so this
-    costs no coverage at all - which is why it is worth doing before any decision to
-    drop legs.
+    Astral alone was almost exactly the other three combined, so the first split
+    (2026-09-05) put it in its own lane and cut the serial 2h04m to ~65 min without
+    dropping a leg. The sparse matrix that followed (regression.ps1's SkipModes, mapped
+    in regression.html) cut Astral to 2,245 s and StellarGenDecoyEntrap to 402 s, so
+    the balanced pairing is now Astral+StellarGenDecoyEntrap (2,646 s) against
+    Stellar+StellarLibDecoy (2,593 s): wall ~44 min on this machine.
 
-    The lanes are data-disjoint by construction. Astral reads the `astral` folder and
-    its own library; the three Stellar variants share the `stellar` folder, the
-    stellar-libdecoy extract and the TestResults\_derived area, and stay together in
-    one lane so those remain sequential.
+    The lanes share READ-ONLY data and nothing else. StellarGenDecoyEntrap reads the
+    `stellar` folder and the stellar-libdecoy extract that the other lane reads too;
+    the one derived artifact under TestResults\_derived (its decoy-free library) is
+    written by that dataset alone. The first-time download, extraction and derivation
+    are therefore staged ONCE below, before the lanes launch, the same way the build
+    is - two lanes finding a shared library absent at the same moment would otherwise
+    race the same extraction.
 
-    Two shared-path collisions had to be fixed before this was possible (both in
+    Two shared-path collisions had to be fixed before any of this was possible (both in
     2026-09-05 commits): SQLite.Interop.dll was overwritten unconditionally while
     being held open by the other lane, and the run root was keyed on a whole-second
     timestamp so lanes started in the same second shared - and deleted - one
-    directory. Do not assume new shared state is safe; add it per-lane.
+    directory. Do not assume new shared state is safe; add it per-lane or stage it once.
 
 .PARAMETER Threads
     Threads per LANE, not for the machine. Defaults to logical processors divided
@@ -48,7 +52,13 @@ param(
     [int]$Threads = 0,   # 0 = auto: logical processors / lane count
     [switch]$NoBuild,
     [switch]$TeamCity,
-    [string]$LogDir
+    [string]$LogDir,
+    # Retention, forwarded to every regression.ps1 invocation (see $retainOutput there).
+    # One invocation per dataset means one run dir per dataset, so the keep count is
+    # per DATASET here: the default keeps the previous full run, whatever its size.
+    [int]$KeepRunDirs = -1,
+    [switch]$KeepOutput,
+    [switch]$CleanOutput
 )
 
 $ErrorActionPreference = 'Stop'
@@ -56,22 +66,33 @@ $ErrorActionPreference = 'Stop'
 
 $scriptRoot = Split-Path -Parent $PSCommandPath
 $regression = Join-Path $scriptRoot 'regression.ps1'
-$ospreyExe  = Join-Path $scriptRoot 'Osprey\bin\x64\Release\net8.0\Osprey.exe'
+$ospreyExe  = Join-Path $scriptRoot 'Osprey\bin\x64\Release\net10.0\Osprey.exe'
 if (-not $LogDir) { $LogDir = Join-Path $scriptRoot 'TestResults' }
 if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Path $LogDir -Force | Out-Null }
 
 $all = @('Stellar', 'StellarLibDecoy', 'StellarGenDecoyEntrap', 'Astral')
 $selected = if ($Dataset -contains 'All') { $all } else { @($Dataset) }
+# Not retaining (TeamCity / -CleanOutput without -KeepOutput) keeps no predecessors
+# either, mirroring regression.ps1's own default for an unbound -KeepRunDirs.
+if ($KeepRunDirs -lt 0) {
+    $KeepRunDirs = if (($TeamCity -or $CleanOutput) -and -not $KeepOutput) { 0 } else { $selected.Count }
+}
+# The same three retention switches on every regression.ps1 call this script makes,
+# staging included (the -StageOnly call runs the startup prune too).
+$retention = @{ KeepRunDirs = $KeepRunDirs }
+if ($KeepOutput)  { $retention['KeepOutput']  = $true }
+if ($CleanOutput) { $retention['CleanOutput'] = $true }
+$retentionArgs = " -KeepRunDirs $KeepRunDirs" + $(if ($KeepOutput) { ' -KeepOutput' } else { '' }) + $(if ($CleanOutput) { ' -CleanOutput' } else { '' })
 
-# Astral is its own lane because it is ~52% of the suite; everything else shares the
-# other. Derived from $selected rather than hardcoded so a subset still splits sanely.
-$laneA = @($selected | Where-Object { $_ -eq 'Astral' })
-$laneB = @($selected | Where-Object { $_ -ne 'Astral' })
+# Astral leads one lane and takes StellarGenDecoyEntrap, the cheapest dataset under the
+# sparse matrix, as its partner; Stellar and StellarLibDecoy make the other. Derived from
+# $selected rather than hardcoded so a subset still splits sanely.
+$laneA = @($selected | Where-Object { $_ -in @('Astral', 'StellarGenDecoyEntrap') })
+$laneB = @($selected | Where-Object { $_ -notin @('Astral', 'StellarGenDecoyEntrap') })
 # Add to a List, do NOT build with @($laneA, $laneB). PowerShell FLATTENS nested array
 # literals, so an empty $laneA collapses the pair and $laneB's three names become three
-# separate lanes - which would run the Stellar variants concurrently against the
-# `stellar` folder, the shared library extract and TestResults\_derived, the exact
-# arrangement they are grouped to avoid. Caught by the lane-split test, 2026-09-05.
+# separate lanes, which would run three or four datasets concurrently on a box sized
+# for two. Caught by the lane-split test, 2026-09-05.
 $lanes = [System.Collections.Generic.List[object]]::new()
 if ($laneA.Count -gt 0) { $lanes.Add($laneA) }
 if ($laneB.Count -gt 0) { $lanes.Add($laneB) }
@@ -87,8 +108,8 @@ Write-Host ("==> {0} lane(s), {1} thread(s) each, {2} logical processor(s)" -f
 
 # --- Build ONCE, here, so the lanes cannot race each other's build output ---------
 if (-not $NoBuild) {
-    Write-Host '==> Building Osprey (Release, net8.0) once for both lanes' -ForegroundColor Cyan
-    & (Join-Path $scriptRoot 'build.ps1') -Configuration Release -Framework net8.0 -NoTests
+    Write-Host '==> Building Osprey (Release, net10.0) once for both lanes' -ForegroundColor Cyan
+    & (Join-Path $scriptRoot 'build.ps1') -Configuration Release -NoTests
     if ($LASTEXITCODE -ne 0) { Write-Host "ERROR: Osprey build failed (exit $LASTEXITCODE)" -ForegroundColor Red; exit $LASTEXITCODE }
 }
 if (-not (Test-Path $ospreyExe)) {
@@ -96,11 +117,22 @@ if (-not (Test-Path $ospreyExe)) {
     exit 2
 }
 
+# --- Stage the data ONCE, for the build's reason: the lanes share a library folder -----
+# Download, extraction and the derived decoy-free library are all skip-if-present, so the
+# lanes find everything staged and touch none of it; only a first-time machine pays here.
+if ($lanes.Count -ge 2) {
+    Write-Host '==> Staging regression data once for both lanes' -ForegroundColor Cyan
+    foreach ($ds in $selected) {
+        & $regression -Dataset $ds -NoBuild -StageOnly @retention
+        if ($LASTEXITCODE -ne 0) { Write-Host "ERROR: staging $ds failed (exit $LASTEXITCODE)" -ForegroundColor Red; exit $LASTEXITCODE }
+    }
+}
+
 if ($lanes.Count -lt 2) {
     Write-Host "==> One lane only ($($selected -join ', ')); running serially" -ForegroundColor Cyan
     # Splat a hashtable rather than appending a conditional array, which would arrive
     # as a POSITIONAL argument rather than as -TeamCity.
-    $serial = @{ Dataset = $selected; Threads = $Threads; NoBuild = $true }
+    $serial = @{ Dataset = $selected; Threads = $Threads; NoBuild = $true } + $retention
     if ($TeamCity) { $serial['TeamCity'] = $true }
     & $regression @serial
     exit $LASTEXITCODE
@@ -128,7 +160,7 @@ foreach ($lane in $lanes) {
     $tcArg = if ($TeamCity) { " -TeamCity" } else { "" }
     $body = @("`$worst = 0")
     foreach ($ds in $lane) {
-        $body += "& `"$regression`" -Dataset $ds -Threads $Threads -NoBuild$tcArg"
+        $body += "& `"$regression`" -Dataset $ds -Threads $Threads -NoBuild$tcArg$retentionArgs"
         $body += "if (`$LASTEXITCODE -ne 0) { `$worst = `$LASTEXITCODE }"
     }
     $body += "exit `$worst"

@@ -100,5 +100,50 @@ namespace pwiz.Osprey.Test
                 Directory.Delete(dir, true);
             }
         }
+
+        /// <summary>
+        /// <see cref="OspreyEnvironment.KeepFailedWrites"/> is the forensic opt-in every
+        /// writer in the tree shares: on, an abandoned temp survives disposal instead of
+        /// being deleted, without ever touching the real destination. Off (the default)
+        /// stays covered by <see cref="TestFileSaverAtomicContract"/>.
+        /// </summary>
+        [TestMethod]
+        public void TestFileSaverKeepFailedWrites()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "osprey_fs_kfw_" + Path.GetRandomFileName());
+            Directory.CreateDirectory(dir);
+            bool saved = OspreyEnvironment.KeepFailedWrites;
+            try
+            {
+                string dest = Path.Combine(dir, "artifact.bin");
+                OspreyEnvironment.KeepFailedWrites = true;
+
+                string abandonedTemp;
+                using (var saver = new FileSaver(dest))
+                {
+                    abandonedTemp = saver.SafeName;
+                    File.WriteAllText(saver.SafeName, "left for forensics");
+                }
+                // Left in place, under its own temp name - never renamed onto the
+                // destination, so a normal reader of `dest` sees nothing new.
+                Assert.IsTrue(File.Exists(abandonedTemp));
+                Assert.AreEqual("left for forensics", File.ReadAllText(abandonedTemp));
+                Assert.IsFalse(File.Exists(dest));
+
+                // A later successful write still commits and replaces normally --
+                // the flag only changes what happens to an ABANDONED temp.
+                using (var saver = new FileSaver(dest))
+                {
+                    File.WriteAllText(saver.SafeName, "v1");
+                    saver.Commit();
+                }
+                Assert.AreEqual("v1", File.ReadAllText(dest));
+            }
+            finally
+            {
+                OspreyEnvironment.KeepFailedWrites = saved;
+                Directory.Delete(dir, true);
+            }
+        }
     }
 }

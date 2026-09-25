@@ -40,11 +40,13 @@ REM # semantics. TC should pass --automated for the standard CI run, and
 REM # --parallel to spread the tests across Docker workers (needs Docker).
 REM #
 REM # Scope note:
-REM #   TestPerf and TestTutorial are intentionally EXCLUDED from the standard
-REM #   build (see build.bat header comment). If TC needs perf/tutorial runs
-REM #   they should be separate build configurations invoking those csprojs
-REM #   directly, not layered on top of this script. Distro zips ARE
-REM #   part of the standard build, matching what the Jamfile did.
+REM #   TestPerf and TestTutorial are EXCLUDED from this build (see build.bat
+REM #   header comment), so TC keeps them in their own configuration invoking
+REM #   those csprojs directly rather than layering them on this script. The
+REM #   one caller that does need them staged is SkylineNightly, which selects
+REM #   its tests at run time and so passes build.bat --with-tutorial-perf;
+REM #   do not add that flag here - it would grow the distro zips, which ARE
+REM #   part of this build, matching what the Jamfile did.
 REM # ------------------------------------------------------------------------
 
 set SCRIPT_DIR=%~dp0

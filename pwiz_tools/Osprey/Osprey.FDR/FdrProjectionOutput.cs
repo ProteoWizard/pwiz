@@ -135,10 +135,17 @@ namespace pwiz.Osprey.FDR
         /// than <see cref="FdrQValues"/> because it is a score, not a q-value, and rather than
         /// <see cref="FdrProjection"/> because that struct is deliberately lean (issue #4355
         /// S0/S1) and guarded against regrowth.</para>
+        ///
+        /// <para><paramref name="apexRt"/> is the row's detection apex retention time, carried
+        /// for the same reason and by the same route: it is persisted output (sidecar format
+        /// v7, issue #4522), not a scoring input, and the lean projection does not hold it. It
+        /// arrives already measured - from the parquet row the score was computed from - so a
+        /// sink never has to reconstruct it, which is exactly what the model-diagnostics
+        /// co-assignment panel used to do by re-reading every file's parquet.</para>
         /// </summary>
         void Accept(int fileIdx, int rowIdx, uint entryId, bool isDecoy,
             byte charge, string peptide, double score, double experimentAggregateScore,
-            in FdrQValues q);
+            double apexRt, in FdrQValues q);
 
         /// <summary>
         /// Finalize the pass: emit the tail <c>[COUNT]</c> lines (per-file pass counts,
@@ -150,10 +157,12 @@ namespace pwiz.Osprey.FDR
 
     /// <summary>
     /// Hand one file's COMPLETE run-scope first-pass output to the caller, at the moment
-    /// pass 1 finishes that file. The four values are exactly what the per-file
-    /// <c>.1st-pass.fdr_scores.bin</c> stores, and pass 1 computes all four - the score from
-    /// the averaged fold model, the two run q-values from
-    /// <see cref="PercolatorQValues.ComputePerFileRunQvalues"/> over this file's own rows.
+    /// pass 1 finishes that file. The five values are exactly what the per-file
+    /// <c>.1st-pass.fdr_scores.bin</c> stores, and pass 1 has all five - the score from the
+    /// averaged fold model, the two run q-values from
+    /// <see cref="PercolatorQValues.ComputePerFileRunQvalues"/> over this file's own rows, and
+    /// <paramref name="apexRts"/> straight off the parquet row the score was computed from
+    /// (format v7, issue #4522 - it is not computed here, it is carried).
     ///
     /// <para><b>Why the write moved here.</b> The sidecar used to be assembled by the output
     /// sink during pass 2, one whole phase after the values existed. On a 446-file cohort pass
@@ -174,5 +183,6 @@ namespace pwiz.Osprey.FDR
     /// which is the projection's file order.</para>
     /// </summary>
     public delegate void FileRunScopeSink(string fileName, int fileIndex, int rowCount,
-        uint[] entryIds, double[] scores, double[] runPrecursorQvalues, double[] runPeptideQvalues);
+        uint[] entryIds, double[] scores, double[] runPrecursorQvalues, double[] runPeptideQvalues,
+        double[] apexRts);
 }

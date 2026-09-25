@@ -33,6 +33,15 @@
     </None>
   </ItemGroup>
 
+  <!-- ReaderSciexWiff2ConcurrencyTests drives AbstractWiffFile directly, and Sciex.csproj
+       removes that type from the SDK-less build (NativeVendorsAvailable is false on Linux even
+       with the licences agreed), so the file has to go with it - the same pattern as
+       Agilent.Tests.csproj. The Reader_Sciex-based tests survive because they catch
+       VendorSupportNotEnabledException at run time instead. -->
+  <ItemGroup Condition="'$(NativeVendorsAvailable)' != 'true'">
+    <Compile Remove="ReaderSciexWiff2ConcurrencyTests.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\Vendor\Sciex\Sciex.csproj" />
     <ProjectReference Include="..\..\src\TestHarness\TestHarness.csproj" />

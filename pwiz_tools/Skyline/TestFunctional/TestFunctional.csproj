@@ -62,7 +62,7 @@
     <!-- Raw assembly references don't flow transitively through Skyline's ProjectReference,
          so reference DigitalRune (docking types used directly in these tests) and pwiz's
          patched Parquet.Net (see Skyline.csproj) here too. -->
-    <Reference Include="DigitalRune.Windows.Docking"><HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath></Reference>
+    <Reference Include="DigitalRune.Windows.Docking"><HintPath>..\..\Shared\Lib\DigitalRune\net10\DigitalRune.Windows.Docking.dll</HintPath></Reference>
     <Reference Include="Parquet"><HintPath>..\..\Shared\Lib\Parquet\Parquet.dll</HintPath></Reference>
   </ItemGroup>
 

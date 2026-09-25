@@ -76,14 +76,14 @@ stable key order before the values are used downstream:
 - **Target-decoy pair dedup**: after HashMap-based pairing, entries are sorted by
   `EntryId` (`Osprey.Scoring/ScoringPipeline.cs:579`; the comment at `:567`
   notes this makes order "deterministic regardless of Dictionary" enumeration).
-- **Competition winners** (`PercolatorFdr.CompeteAll`): winners are sorted by
+- **Competition winners** (`TargetDecoyCompetition.CompeteAll`): winners are sorted by
   **score descending, then `base_id` ascending**
-  (`Osprey.FDR/PercolatorFdr.cs:1599-1602`). `base_id` = `entry_id & 0x7FFFFFFF`
-  (`:258`) is unique per winner, so the secondary key makes the comparator total
-  — the note at `:1602` records that the unique `base_id` tie-break is what
+  (`Osprey.FDR/TargetDecoyCompetition.cs:173-178`, in the shared `CompeteFromDicts` finish). `base_id` = `entry_id & 0x7FFFFFFF`
+  (`PercolatorEntry.cs:42`) is unique per winner, so the secondary key makes the comparator total
+  — the note at `:170-172` records that the unique `base_id` tie-break is what
   licenses `Array.Sort` (an unstable sort) here.
 - **Best-per-precursor selection** result is sorted by entry index
-  (`Osprey.FDR/PercolatorFdr.cs:2604`).
+  (`SelectBestPerPrecursor`, `Osprey.FDR/PercolatorSampling.cs:338`).
 - **Protein picked-FDR winners** are sorted by score descending, tie-broken by a
   canonical sorted-accessions `SortKey` string, not by the HashMap-order
   `GroupId` (`Osprey.FDR/ProteinFdr.cs:628-636`).
@@ -99,10 +99,10 @@ the Percolator SVM and the calibration LDA build peptide groups keyed by the
 target sequence (via `base_id`), sort the distinct group keys with
 `StringComparer.Ordinal`, and round-robin `i % nFolds` over the sorted keys:
 
-- **Percolator SVM**: `PercolatorFdr.CreateStratifiedFoldsByPeptide`
-  (`Osprey.FDR/PercolatorFdr.cs:2453`) — groups by target peptide (`:2456-2490`),
-  `sortedKeys.Sort(StringComparer.Ordinal)` (`:2494`), `fold = i % nFolds`
-  (`:2499`).
+- **Percolator SVM**: `PercolatorSampling.CreateStratifiedFoldsByPeptide`
+  (`Osprey.FDR/PercolatorSampling.cs:84`) — groups by target peptide (`:87-121`),
+  `sortedKeys.Sort(StringComparer.Ordinal)` (`:125`), `fold = i % nFolds`
+  (`:130`).
 - **Calibration LDA**: `CalibrationScorer.CreateStratifiedFoldsByPeptide`
   (`Osprey.Scoring/CalibrationScorer.cs:409`) — target and decoy groups sorted
   by `string.CompareOrdinal` (`:435,:437`), each round-robined independently
@@ -141,9 +141,9 @@ is seeded and deterministic. There are **two**, structurally different:
 
 `XorShift64` (`Osprey.ML/LinearSvmClassifier.cs:266`)
 matches the Rust generator exactly (`x ^= x << 13; x ^= x >> 7; x ^= x << 17`).
-`PercolatorConfig.Seed` defaults to `42` (`Osprey.FDR/PercolatorFdr.cs:64,:121`),
-and is threaded through both the direct and streaming Percolator paths
-(`PercolatorEngine.cs:566,:797`). The SVM's per-iteration index permutation is a
+`PercolatorConfig.Seed` defaults to `42` (`Osprey.FDR/PercolatorConfig.cs:48,:132`),
+and is threaded through the resident and streaming Percolator paths
+(`PercolatorTrainer.cs:128`; `PercolatorEngine.cs:642,:863`). The SVM's per-iteration index permutation is a
 Fisher-Yates shuffle over the same PRNG (`LinearSvmClassifier.FisherYatesShuffle`,
 `:668`), whose header note states it "Matches the Rust implementation exactly."
 
@@ -151,15 +151,15 @@ Fisher-Yates shuffle over the same PRNG (`LinearSvmClassifier.FisherYatesShuffle
 
 When the deduped training set exceeds `MaxTrainSize`, the peptide-grouped
 subsample is also deterministic: `SubsampleByPeptideGroup`
-(`Osprey.FDR/PercolatorFdr.cs:2611`) builds peptide groups, sorts the group keys
-with `StringComparison.Ordinal` (`:2654`), then applies a Fisher-Yates shuffle
-seeded from the same `seed` (`:2656-2666`) before greedily taking whole groups up
-to the budget and re-sorting the selected indices (`:2677`). Subsampling operates
+(`Osprey.FDR/PercolatorSampling.cs:363`) builds peptide groups, sorts the group keys
+with `StringComparison.Ordinal` (`:406`), then applies a Fisher-Yates shuffle
+seeded from the same `seed` (`:408-418`) before greedily taking whole groups up
+to the budget and re-sorting the selected indices (`:429`). Subsampling operates
 on whole `base_id` groups (targets + decoys + all charges together), not
 individual entries, preserving the cross-validation grouping invariant. The
-prior `SelectBestPerPrecursor` dedup (`:2569`) itself sorts its output
-(`:2604`), so the subsample input order is stable. `BuildTrainingSubset`
-(`:2522`) is the single owner both the direct and streaming Percolator paths call
+prior `SelectBestPerPrecursor` dedup (`:214`) itself sorts its output
+(`:338`), so the subsample input order is stable. `BuildTrainingSubset`
+(`:161`) is the single owner the resident and streaming Percolator paths call
 so they select **identical** subsets for identical input — where "identical input" now
 includes the file ORDER, since the run draw is positional (see Step 5).
 
@@ -185,6 +185,34 @@ port also avoids nondeterministic parallel float reduction: the SVM training and
 scoring reductions are per-row and per-lane deterministic, not a thread-order
 `Parallel` sum.
 
+### The one parallel float accumulation, and why it is still deterministic
+
+`GradientBoostedTrees.AccumulateHistograms`
+(`Osprey.ML/GradientBoostedTrees.cs`) is the single place in the port that sums
+floats across threads, gated behind `GbtParams.MaxDegreeOfParallelism`. It is
+deterministic only because of one non-obvious invariant, which has to survive
+any future edit:
+
+> **Work is partitioned ACROSS FEATURES, never across rows.** One thread owns
+> one feature's histogram for the whole node and walks that node's rows in
+> ascending order, so every `hg[histStart + b] += g[i]` for a given bin happens
+> in the same sequence no matter how many threads run. No two threads ever touch
+> the same histogram slot, and there is no cross-thread reduction step.
+
+Partitioning over ROWS instead - the obvious "optimization" if the invariant is
+not understood - would make each bin's summation order depend on where the range
+boundaries fell, and would silently move every `--fdr-method gbdt` q-value.
+Nothing in `regression.ps1` would catch that: the gate runs the default SVM
+path, which never constructs a tree, so the golden test below is the only guard.
+Sibling-subtraction histogram construction (deriving a child's histogram as
+parent minus its sibling) is off limits for the same reason: it changes the
+arithmetic, not merely its order.
+
+`MaxDegreeOfParallelism` defaults to **1**, so the FDR path stays sequential
+unless a caller opts in. `MLTest.TestGbtSquaredErrorObjective` asserts the ten
+golden logistic scores at both 1 and 4 threads, which is what keeps the claim
+above enforced rather than aspirational.
+
 ## Step 8 — Canonical entry order across Parquet and process boundaries
 
 The deterministic entry order established during scoring must be reproduced after
@@ -203,9 +231,11 @@ that order already, from `FirstPassSurvivorLoader`'s own canonical sort. Parquet
 bit-identical to the in-memory original (see 14-intermediate-files.md).
 
 The PEP estimator is fed a `base_id`-ascending-sorted union so its
-non-associative KDE sum is order-stable (`Osprey.FDR/PercolatorFdr.cs:934,:959-977`),
-and experiment-level q-values are propagated through a `base_id`-keyed map
-(`:2342-2352`) rather than dictionary iteration.
+non-associative KDE sum is order-stable (`PercolatorQValues.ComputePepWinnerMap`, `Osprey.FDR/PercolatorQValues.cs:65-68,:87-101`),
+and experiment-level q-values are propagated through a map keyed by the winner's **full
+`entry_id`** (decoy bit intact — never the shared `base_id`, which let a target inherit
+its paired decoy's q; #4558) rather than dictionary iteration
+(`ComputeExperimentPrecursorQMap`, `:756-788`; the per-row lookup at `:806-810`).
 
 ## Step 9 — Razor shared-peptide assignment
 
@@ -274,7 +304,7 @@ changes the output, only scheduling or which order-sensitive algorithm runs.
 | `--threads <count>` | all cores | Inner per-file/per-window/per-fold thread budget. Results are place-by-index (Step 2) and sort-after-collect (Step 3), so thread count never changes the output. |
 | `--parallel-files [N]` | absent = Sequential | Outer across-files concurrency (`FileParallelism.cs:35-45`). Each file is scored independently; join stages sort by stable keys. Does not change output. |
 | `OSPREY_MAX_PARALLEL_FILES` | unset | Legacy back-compat cap on the outer file count when `--parallel-files` is absent (`FileParallelism.cs:153-165`). Scheduling only. |
-| Percolator `Seed` | `42` | Fixed PRNG seed for SVM shuffle + peptide-group subsample (`PercolatorFdr.cs:64,:121`). Not exposed as a CLI flag; the constant matches Rust's `seed=42`. |
+| Percolator `Seed` | `42` | Fixed PRNG seed for SVM shuffle + peptide-group subsample (`PercolatorConfig.cs:48,:132`). Not exposed as a CLI flag; the constant matches Rust's `seed=42`. |
 | `--shared-peptides {all\|razor\|unique}` | `all` | Selects the shared-peptide reassignment. `all` and `unique` are order-independent; `razor` runs the order-sensitive greedy in Step 9 (see divergence). |
 | `--fdr-method {percolator\|simple}` | `percolator` | `percolator` uses the seeded SVM (Steps 4-6); `simple` skips SVM training (no PRNG involved). |
 | `OSPREY_VERSION_OVERRIDE` | unset | Pins the `osprey_version` blib metadata cell so the golden compare stays byte-stable; set to `26.1.1.0` by the regression gate (`regression.ps1:133`). |
@@ -290,7 +320,7 @@ changes the output, only scheduling or which order-sensitive algorithm runs.
   keys**, with no hashing — and its own doc-comment says this is a direct port of
   Rust `create_stratified_folds_by_peptide`, i.e. the Rust CODE also sorts and
   round-robins. The doc's `hash % n_folds` phrasing is stale relative to both
-  implementations. Evidence: `Osprey.FDR/PercolatorFdr.cs:2492-2504`,
+  implementations. Evidence: `Osprey.FDR/PercolatorSampling.cs:124-133`,
   `Osprey.Scoring/CalibrationScorer.cs:402-452`. Severity: minor.
 
 - **[INTENTIONAL-CSHARP-DESIGN] `TotalOrder` bit-transform replaces `f64::total_cmp`**
@@ -338,10 +368,10 @@ changes the output, only scheduling or which order-sensitive algorithm runs.
 Verified matching (no divergence): total-order float comparison
 (`TotalOrder.cs`), place-by-index parallel scoring
 (`ScoringPipeline.cs:249-305`), sort-after-dictionary-collection at every
-competition/dedup site (`PercolatorFdr.cs:1599-1602`, `ScoringPipeline.cs:579`,
+competition/dedup site (`TargetDecoyCompetition.cs:173-178`, `ScoringPipeline.cs:579`,
 `ProteinFdr.cs:628-636`), fixed-seed `XorShift64`+Fisher-Yates matching Rust
 (`LinearSvmClassifier.cs:266,:668`), deterministic peptide-grouped subsample
-(`PercolatorFdr.cs:2611-2678`), and canonical entry order preserved across
+(`PercolatorSampling.cs:363-431`), and canonical entry order preserved across
 Parquet round-trip and the `--task` boundary
 (`PerFileRescoreTask.cs:1301-1315`), all enforced end-to-end by the `1e-9`
 `regression.ps1` oracle.

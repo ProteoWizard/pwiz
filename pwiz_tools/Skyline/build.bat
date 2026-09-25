@@ -18,6 +18,7 @@ REM #
 REM # Usage:
 REM #   build.bat [Debug|Release] [--i-agree-to-the-vendor-licenses]
 REM #             [--require-vendor-support] [--automated] [--parallel] [--no-tests]
+REM #             [--build-only] [--with-tutorial-perf]
 REM #
 REM # Flags:
 REM #   --i-agree-to-the-vendor-licenses
@@ -31,20 +32,28 @@ REM #       a stripped, no-vendor artifact).
 REM #   --automated
 REM #       Tag InformationalVersion "(automated build)" (-p:AutomatedBuild=true).
 REM #   --no-tests
-REM #       Build only; skip staging and the whole test step. This is what the
-REM #       top-level bs.bat gives a developer: the same projects and properties
-REM #       TeamCity builds, without the hour of tests that follows.
+REM #       Build and stage, and produce any requested distro zips, but do not RUN
+REM #       the test suite. For callers that drive their own testing afterwards:
+REM #       SkylineTester's build step does this, because it then runs the tests
+REM #       itself under its own duration budget and per-test requeue logic. It
+REM #       needs the staged directory to exist, so staging is NOT skipped here.
 REM #   --parallel
 REM #       Run the tests in parallel across Docker workers (TestRunner
 REM #       parallelmode=server) instead of the default host-only sequential run.
 REM #       Needs Docker Desktop in Windows-container mode + the always_up_runner
 REM #       image. Much faster for the full functional suite. Also settable via
 REM #       SKYLINE_TEST_PARALLEL=1.
-REM #   --no-tests
-REM #       Build and stage (and produce any requested distro zips) but do not run
-REM #       the test suite. For callers that drive their own testing afterwards --
-REM #       SkylineTester's build step does this, because it then runs the tests
-REM #       itself under its own duration budget and per-test requeue logic.
+REM #   --build-only
+REM #       Compile only: skip staging, the distro zips and the whole test step.
+REM #       This is what the top-level bs.bat gives a developer - the same projects
+REM #       and properties TeamCity builds, without the staging copy or the hour of
+REM #       tests that follows. Implies --no-tests.
+REM #   --with-tutorial-perf
+REM #       Also build TestTutorial and TestPerf, which the default set leaves out to
+REM #       mirror the TeamCity split between bt209 and the Perf/Tutorial configuration.
+REM #       SkylineNightly passes this: a nightly runs the tutorial tests as part of an
+REM #       ordinary run and gates only perf behind its own option, so both have to be
+REM #       staged for the run to select from.
 REM #
 REM # Distro zips:
 REM #   Pass the artifact name as a bare argument -- SkylineTester.zip,
@@ -70,8 +79,9 @@ REM # Scope:
 REM #   Builds + tests Skyline.csproj and the net8-ported test projects CommonTest,
 REM #   Test, TestData, TestFunctional, TestConnected (plus the TestRunner harness).
 REM #   TestConnected's network-service tests self-skip when their credentials
-REM #   aren't configured. TestPerf and TestTutorial are intentionally EXCLUDED
-REM #   from the standard build -- run those separately when needed.
+REM #   aren't configured. TestPerf and TestTutorial are EXCLUDED from the default
+REM #   set, mirroring the TeamCity split between bt209 and the Perf/Tutorial
+REM #   configuration; pass --with-tutorial-perf to build them too.
 REM #
 REM # NOTE: dotCover coverage (--coverage) is temporarily removed while the
 REM #   TestRunner path beds in; re-add it as a separate step once proven in CI.
@@ -88,7 +98,8 @@ set REQUIRE_VENDOR=0
 set AUTOMATED=0
 set NOTESTS=0
 set SEQUENTIAL=1
-set NOTESTS=0
+set BUILDONLY=0
+set WITHTUTORIALPERF=0
 set ERROR_TEXT=
 set ZIPS=
 
@@ -116,7 +127,8 @@ if /i "%~1"=="--require-vendor-support" (set REQUIRE_VENDOR=1) else ^
 if /i "%~1"=="--automated" (set AUTOMATED=1) else ^
 if /i "%~1"=="--no-tests" (set NOTESTS=1) else ^
 if /i "%~1"=="--parallel" (set SEQUENTIAL=0) else ^
-if /i "%~1"=="--no-tests" (set NOTESTS=1) else ^
+if /i "%~1"=="--build-only" (set BUILDONLY=1) else ^
+if /i "%~1"=="--with-tutorial-perf" (set WITHTUTORIALPERF=1) else ^
 if /i "%~1"=="--coverage" (echo ##teamcity[message text='--coverage is temporarily disabled in build.bat; ignoring' status='WARNING']) else ^
 if /i "%~x1"==".zip" (set ZIPS=!ZIPS!%%3B%~1) else ^
 if /i "%~1"=="Debug" (set CONFIG=Debug) else ^
@@ -129,6 +141,21 @@ if /i "%~1"=="Release" (set CONFIG=Release) else (
 shift
 goto parseargs
 :endparse
+
+REM # --build-only is the stronger of the two: it stops before staging, so it can
+REM # never reach the test step. Stating the implication keeps that true even if the
+REM # exits below are ever reordered.
+if %BUILDONLY%==1 set NOTESTS=1
+
+REM # A zip is produced after staging, which --build-only skips, so the two together are
+REM # contradictory. Say so rather than exiting 0 having quietly built no zip - that silent
+REM # drop is the defect this flag was split out to fix, and the top-level b.bat injects
+REM # --build-only, so "bs.bat SkylineTester.zip" lands here. Use --no-tests for a zip.
+if %BUILDONLY%==1 if defined ZIPS (
+    set EXIT=2
+    set "ERROR_TEXT=--build-only skips the zip step, so %ZIPS:~3% cannot be produced. Use --no-tests instead, which stages and zips without running the tests."
+    goto error
+)
 
 if %REQUIRE_VENDOR%==1 if %IAGREE%==0 (
     set EXIT=2
@@ -152,10 +179,56 @@ REM # vendor + BiblioSpec tool projects, ...). The test projects add the suites,
 REM # and TestRunner is the harness that stages + runs them.
 set BUILD_TARGET=Skyline.csproj CommonTest\CommonTest.csproj Test\Test.csproj TestData\TestData.csproj TestFunctional\TestFunctional.csproj TestConnected\TestConnected.csproj TestRunner\TestRunner.csproj
 
+REM # TestTutorial and TestPerf are left out of the default set to mirror the TeamCity
+REM # split - bt209 ("Skyline master and PRs") and ProteoWizard_SkylinePrPerfAndTutorial-
+REM # TestsWindowsX8664 ("Skyline PR Perf and Tutorial tests") are separate configurations.
+REM # A nightly is the case that split does not serve: SkylineNightly runs the tutorial
+REM # tests as part of an ordinary nightly and gates only perf behind its own option, so it
+REM # needs both staged and selects at run time. Without this flag TestRunner's stager just
+REM # logs "Skipping TestTutorial - no output ... (build it first)", the build still reports
+REM # 0 Error(s), and 26 tutorial tests plus the whole perf suite silently never run.
+if %WITHTUTORIALPERF%==1 set BUILD_TARGET=%BUILD_TARGET% TestTutorial\TestTutorial.csproj TestPerf\TestPerf.csproj
+
 echo ##teamcity[progressMessage 'dotnet --version']
 dotnet --version
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set ERROR_TEXT=dotnet not on PATH & goto error)
+
+REM # ------------------------------------------------------------------------
+REM # ProteoWizard version banner. SkylineNightly scrapes the run log for
+REM # "ProteoWizard 3.0.<revision>.<hash> ..." to fill the revision and git_hash it posts
+REM # to skyline.ms. The bjam build printed it; this build does not run bjam, so emit it
+REM # here or LabKey rejects every posted run (it parses revision as an integer, and the
+REM # GetRevision() fallback in Nightly.cs yields "unknownDate.<hash>").
+REM #
+REM # The scrape needs the line at column 0, and MSBuild indents Message output, so the
+REM # target writes the line to a file and we emit it with `type`. obj\ is gitignored, so
+REM # an interrupted build leaves nothing behind in `git status`.
+REM #
+REM # Delete the file FIRST and check the exit code. A build killed between the write and
+REM # the del leaves the file behind; without both guards a later run whose msbuild failed
+REM # would `type` the PREVIOUS commit's banner, and SkylineNightly would post that stale
+REM # revision and hash as this run's - silently wrong data, which is the failure class this
+REM # whole block exists to remove.
+REM #
+REM # Skipped for --build-only: nothing scrapes a developer compile, and the step costs an
+REM # SDK MSBuild start plus three git subprocesses.
+REM # ------------------------------------------------------------------------
+set PWIZ_BANNER_FILE=%SCRIPT_DIR%\obj\pwiz-version-banner.txt
+if %BUILDONLY%==0 (
+    if not exist obj mkdir obj
+    if exist "%PWIZ_BANNER_FILE%" del "%PWIZ_BANNER_FILE%"
+    dotnet msbuild SkylineVersion.targets -t:PrintPwizVersionBanner -nologo -v:q -p:PwizVersionBannerFile="%PWIZ_BANNER_FILE%"
+    if !ERRORLEVEL! NEQ 0 (
+        echo ##teamcity[message text='Version banner generation failed; SkylineNightly cannot scrape a revision from this log' status='WARNING']
+    )
+    if exist "%PWIZ_BANNER_FILE%" (
+        type "%PWIZ_BANNER_FILE%"
+        del "%PWIZ_BANNER_FILE%"
+    ) else (
+        echo ##teamcity[message text='No version banner was produced; SkylineNightly cannot scrape a revision from this log' status='WARNING']
+    )
+)
 
 REM # ------------------------------------------------------------------------
 REM # Native Hardklor.exe (C++). `dotnet build` (the .NET SDK MSBuild) cannot
@@ -174,10 +247,16 @@ if %EXIT% NEQ 0 goto error
 for %%P in (%BUILD_TARGET%) do call :build_one "%%~P"
 if %EXIT% NEQ 0 goto error
 
-REM # --no-tests stops here. Note we have NOT pushd'd STAGE_DIR yet, so this needs
-REM # its own exit path rather than :tests_done, which pops it.
-if %NOTESTS%==1 (
-    echo Build succeeded; skipping tests ^(--no-tests^).
+REM # --build-only stops here, before staging and before the distro zips. Only this
+REM # flag may exit at this point: --no-tests still has to stage, because the caller
+REM # that passes it (SkylineTester) runs the staged tests itself afterwards. This
+REM # exit used to test NOTESTS, which shadowed the --no-tests exit further down and
+REM # left the nightly with no staged directory to run - and no zip when one was
+REM # asked for, since the zips are produced after staging too.
+REM # Note we have NOT pushd'd STAGE_DIR yet, so this needs its own exit path rather
+REM # than :tests_done, which pops it.
+if %BUILDONLY%==1 (
+    echo Build succeeded; skipping staging and tests ^(--build-only^).
     goto build_only_done
 )
 
@@ -231,10 +310,13 @@ if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=zip target(s) %ZIPS:~3% failed" & 
 
 :skipzips
 
-REM # --no-tests: build + stage (+ zips) only. Jumps before the STAGE_DIR pushd below so
+REM # --no-tests: build + stage (+ zips), no test run. Jumps before the STAGE_DIR pushd below so
 REM # the single popd at :tests_done still balances the pushd at the top of the script.
 REM # Also leaves any existing TestResults alone, since we are not producing new ones.
-if %NOTESTS%==1 goto tests_done
+if %NOTESTS%==1 (
+    echo Build and staging succeeded; skipping the test run ^(--no-tests^).
+    goto tests_done
+)
 
 set TC_TEST_RESULTS=%SCRIPT_DIR%\TestResults
 if exist "%TC_TEST_RESULTS%" rmdir /s /q "%TC_TEST_RESULTS%"

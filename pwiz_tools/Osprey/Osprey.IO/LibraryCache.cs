@@ -46,7 +46,16 @@ namespace pwiz.Osprey.IO
         /// v1 had no identity and a different header layout, so it reads as
         /// <see cref="LibraryCacheStatus.Invalid"/> and is rebuilt once.
         /// </summary>
-        private const uint VERSION = 2;
+        /// <remarks>
+        /// v3 (issue #4650) carries a FINISHED library: for a supplied-decoy source the entries
+        /// are marked, paired (a decoy's Id is <c>target | DECOY_ID_BIT</c>) and carry the
+        /// pairing manifest's protein accessions. v2 held the state BEFORE all of that, because
+        /// marking and pairing ran at the caller after the cache was written - so a v2 file is
+        /// not a stale v3, it is a different thing, and reading one as v3 would hand every
+        /// consumer parse-order decoy ids. The header hash widened to match (see
+        /// <c>LibraryLoader.LibraryCompositionHash</c>), so a v2 file fails both checks.
+        /// </remarks>
+        private const uint VERSION = 3;
 
         /// <summary>
         /// Outcome of a <see cref="LoadCache(string,string,out LibraryCacheStatus)"/>
@@ -327,8 +336,9 @@ namespace pwiz.Osprey.IO
                         // base_id, not Id: a target and its paired decoy share a base_id
                         // (LibraryEntry, "base_id = Id & 0x7FFFFFFF"), so retaining one retains
                         // both and the target-decoy invariant survives the filter.
-                        bool keepFragments = !omitFragments &&
-                            (retainFragmentsFor == null || retainFragmentsFor.Contains(id & 0x7FFFFFFFu));
+                        bool skippedByRetainSet = !omitFragments && retainFragmentsFor != null &&
+                                                  !retainFragmentsFor.Contains(id & 0x7FFFFFFFu);
+                        bool keepFragments = !omitFragments && !skippedByRetainSet;
                         LibraryFragment[] fragments;
                         if (!keepFragments)
                         {
@@ -385,6 +395,22 @@ namespace pwiz.Osprey.IO
                         entry.IsDecoy = isDecoy;
                         entry.Modifications = modifications;
                         entry.Fragments = fragments;
+                        // A spectrum skipped by the retain set is RELEASED, not empty. The two
+                        // are different states and only one of them is safe here: an empty
+                        // spectrum is readable, so every scorer's
+                        // `Fragments == null || Fragments.Count == 0` guard absorbs it as "this
+                        // entry has no spectrum" and scores a degenerate zero, while a released
+                        // one throws on that same expression. This arm exists to be a DIRECT
+                        // SWAP for loading everything and then calling LibraryFragmentRelease,
+                        // so it has to reach the state that would leave - tripwire included.
+                        // Pinned by IOTest.TestLibraryCacheRetainMatchesRelease.
+                        //
+                        // OmitFragments is deliberately NOT included: that arm has no
+                        // load-and-release counterpart to match (LibraryFragmentRelease refuses
+                        // the StopAfterStage5 leg outright), and its Array.Empty is the
+                        // documented readable-empty state - see LibraryEntry.IsSpectrumReleased.
+                        if (skippedByRetainSet)
+                            entry.ReleaseSpectrum();
                         entry.ProteinIds = proteinIds;
                         entry.GeneNames = geneNames;
 

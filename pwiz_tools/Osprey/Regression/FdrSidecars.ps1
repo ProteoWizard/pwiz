@@ -24,9 +24,11 @@ a value both routes copy identically from pass 1. See issue #4559.
 
 Two artifacts since the v5 scope split (issue #4486), and this decodes both.
 
-Per-file run-scope (Osprey.IO\FdrScoresSidecar.cs), v6: 32-byte header, 28-byte records,
-  entry_id u32 @0, score f64 @4, run_precursor_q @12, run_peptide_q @20.
+Per-file run-scope (Osprey.IO\FdrScoresSidecar.cs), v7: 32-byte header, 36-byte records,
+  entry_id u32 @0, score f64 @4, run_precursor_q @12, run_peptide_q @20, apex_rt @28.
   NO pep: it is experiment-scope and moved to the experiment sidecar (issue #4486).
+  apex_rt arrived at v7 (issue #4522) so the model-diagnostics co-assignment panel stops
+  re-reading a whole column out of every .scores.parquet to recover it.
   Magic OSPRYFDR. One record per OBSERVATION, one file per input.
 
 Analysis-wide experiment-scope (Osprey.IO\FdrExperimentSidecar.cs), v1: 32-byte header,
@@ -178,8 +180,8 @@ public class Pass2ProteinQLiveness
 public static class OspreyFdrSidecarComparer
 {
     private const int HeaderLen = 32;
-    private const int RecordLen = 28;
-    private const byte ExpectedVersion = 6;
+    private const int RecordLen = 36;
+    private const byte ExpectedVersion = 7;
     private static readonly byte[] Magic = { 0x4F, 0x53, 0x50, 0x52, 0x59, 0x46, 0x44, 0x52 }; // OSPRYFDR
 
     // The analysis-wide experiment-scope sidecar (format v5, issue #4486): its own magic, its
@@ -200,6 +202,12 @@ public static class OspreyFdrSidecarComparer
         new FdrSidecarField { Name = "score",                Offset = 4  },
         new FdrSidecarField { Name = "run_precursor_qvalue", Offset = 12 },
         new FdrSidecarField { Name = "run_peptide_qvalue",   Offset = 20 },
+        // v7 (issue #4522). Compared like every other column, and it earns the comparison more
+        // than most: the straight route and the HPC per-file route obtain it from different
+        // places - the streaming row source on one, FdrEntry.ApexRt on the resident reported
+        // pool on the other - so a divergence here would not be a shared defect the way an
+        // arithmetic slip in a q-value can be.
+        new FdrSidecarField { Name = "apex_rt",              Offset = 28 },
     };
 
     /// The experiment-scope record's fields, in its own file. Kept as a separate table for the

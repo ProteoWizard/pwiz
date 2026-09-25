@@ -3,6 +3,7 @@ using Pwiz.Data.Common.Diff;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData;
 using Pwiz.Data.MsData.Diff;
+using Pwiz.Data.MsData.Encoding;
 using Pwiz.Data.MsData.Instruments;
 using Pwiz.Data.MsData.Mzml;
 using Pwiz.Data.MsData.Processing;
@@ -176,6 +177,28 @@ public sealed class FixtureRunContext
 /// </remarks>
 public static class VendorReaderTestHarness
 {
+    /// <summary>
+    /// When true, each fixture WRITES its reference mzML instead of comparing against one, and
+    /// the run reports success without having verified anything. Port of cpp's
+    /// <c>--generate-mzML</c>, which pwiz-sharp had no equivalent of - references could only be
+    /// produced by the cpp harness, so pwiz-sharp could never be the source of truth for them.
+    /// </summary>
+    /// <remarks>
+    /// <para>cpp parses <c>--generate-mzML</c> from argv because its harness IS the test
+    /// executable (<c>parseArgs</c> in VendorReaderTestHarness.cpp). pwiz-sharp's tests are
+    /// vstest-hosted class libraries with no argv of their own, so the switch is this flag,
+    /// set by the per-vendor <c>Regenerate_*_References</c> methods in the vendor test
+    /// projects - whose <c>[TestMethod]</c> attribute is commented out so they are not
+    /// discovered until someone deliberately enables one.</para>
+    ///
+    /// <para>Deliberately not something a normal run can reach: a generating run rewrites
+    /// committed test data and every assertion it would otherwise make passes vacuously.
+    /// Regenerate, then run the suite again WITHOUT it - a generated reference that does not
+    /// then compare equal means the generate path and the compare path disagree, which is the
+    /// one failure this mode can hide.</para>
+    /// </remarks>
+    public static bool GenerateReferences { get; set; }
+
     /// <summary>
     /// Iterates immediate children of <paramref name="rootPath"/> and, for any matching
     /// <paramref name="predicate"/>, reads through <paramref name="reader"/> and compares to
@@ -484,10 +507,30 @@ public static class VendorReaderTestHarness
             }
             orphanedSpectrumList = sl;
             msd.Run.SpectrumList = simple;
+            RecordIndexFilter(msd, start, end);
         }
 
         // 2. Mangle paths + checksums + pwiz software to match how the reference mzML was written.
         CalculateSourceFileChecksums(msd.FileDescription.SourceFiles);
+
+        // GENERATE MODE writes the reference instead of comparing against it — see
+        // GenerateReferences.
+        //
+        // Position matters and is not obvious. cpp's generate() writes after
+        // calculateSourceFileChecksums and wrap() and before anything else, so a reference holds
+        // the REAL sourceFile location and the REAL reader software id. The two Mangle calls
+        // below exist only to let the in-memory comparison tolerate that a reference was written
+        // on another machine by another pwiz build; they are diff scaffolding, not file content.
+        // Writing after them bakes the scaffolding in — the first attempt here produced
+        // `<software id="current_x0020_pwiz">` in place of `pwiz_Reader_Mobilion`, and a
+        // `file:///` location, in every regenerated reference.
+        if (GenerateReferences)
+        {
+            WriteReference(msd, ReferencePath(config, msd, rootPath, out string generatedName),
+                           generatedName, config.DoublePrecision);
+            return;
+        }
+
         MangleSourceFileLocations(sourceName, msd.FileDescription.SourceFiles);
         ManglePwizSoftware(msd);
 
@@ -499,13 +542,12 @@ public static class VendorReaderTestHarness
         // cpp vendor TC config — pwiz-sharp/test/<Vendor>.Tests/Reference/ is opt-in
         // per test project (csproj copies Reference/*.mzML into bin). See
         // pwiz-sharp/test/UNIFI.Tests/Reference/README.md for the rationale.
-        string referenceFilename = config.ResultFilename(msd.Run.Id + ".mzML");
-        string overridePath = Path.Combine(AppContext.BaseDirectory, "Reference", referenceFilename);
-        string cppPath = Path.Combine(rootPath, referenceFilename);
-        string referencePath = File.Exists(overridePath) ? overridePath : cppPath;
+        string referencePath = ReferencePath(config, msd, rootPath, out string referenceFilename);
         if (!File.Exists(referencePath))
             throw new FileNotFoundException(
-                $"reference mzML not found at {cppPath} or override {overridePath}");
+                $"reference mzML not found at {referencePath} (uncomment the [TestMethod] on this " +
+                "vendor's Regenerate_*_References test and run it to write one)");
+
         MSData referenceMsd;
         using (var fs = File.OpenRead(referencePath))
             // RepairPeakOrder off: a golden file is compared as stored. A reference can hold peaks
@@ -703,12 +745,16 @@ public static class VendorReaderTestHarness
     }
 
     /// <summary>
-    /// Mirrors pwiz cpp <c>VendorReaderTestHarness.cpp</c> lines 1004–1019: after the reader
-    /// has been disposed, rename the vendor source to <c>&lt;path&gt;.renamed</c> and back.
-    /// If a vendor handle is still open the OS will reject the rename with a sharing-violation
-    /// IOException; that's the regression we want to catch (vendor SpectrumList missed a
-    /// Dispose, MSData/Run didn't propagate, Converter didn't `using`, etc.).
+    /// After the reader has been disposed, assert that THIS process holds no handle on the
+    /// vendor source. That is the regression we want to catch: a vendor SpectrumList that
+    /// missed a Dispose, an MSData/Run that didn't propagate one, a Converter without a
+    /// `using`.
     /// </summary>
+    /// <remarks>
+    /// cpp <c>VendorReaderTestHarness.cpp</c> lines 1004–1019 renames the source and back, and
+    /// this port did too until a shared-fixture race showed the rename answers a wider question
+    /// than the one being asked — see the comment on the check below.
+    /// </remarks>
     private static void AssertFilesUnlocked(string rawPath, bool knownLeakySdk = false,
         string probeDescription = "after Dispose",
         string lockHint = "Likely a missing Dispose somewhere in the SpectrumList -> backing-data chain.")
@@ -723,69 +769,55 @@ public static class VendorReaderTestHarness
         GC.WaitForPendingFinalizers();
         GC.Collect();
 
-        string renamed = rawPath.TrimEnd('/', '\\') + ".renamed";
-        IOException? lastError = null;
-        // 5×50ms wasn't enough for cleanup that happens to fall on a finalizer
-        // schedule (the SDK queues handle release rather than synchronizing).
-        // 5×100ms is plenty for the well-behaved cases; known-leaky cases short-
-        // circuit to soft-fail below.
-        int maxAttempts = 5;
+        // Ask whether WE still hold a handle, instead of renaming the fixture to see if the OS
+        // objects. The rename was a proxy for that question and answered a wider one: it fails
+        // for a handle held by ANY process, so a sibling suite reading the same shared fixture
+        // failed this probe with nothing wrong in our code (CI build #500: msconvert, spawned
+        // by Installer.Tests, holding FT-HCD-MSX.raw). It also mutated shared state on every
+        // run, and on Linux it could never fail at all, because POSIX allows renaming an open
+        // file and a directory containing one.
+        //
+        // Retry as the rename did: an SDK that queues handle release through a finalizer can
+        // still need a moment after the GC pair above.
+        const int maxAttempts = 5;
+        var verdict = FileLockReporter.HandleCheck.Unsupported;
         for (int attempt = 0; attempt < maxAttempts; attempt++)
         {
-            try
-            {
-                Directory.Move(rawPath, renamed);
-                lastError = null;
-                break;
-            }
-            catch (IOException ex)
-            {
-                lastError = ex;
-                Thread.Sleep(100);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                lastError = new IOException(ex.Message, ex);
-                Thread.Sleep(100);
-            }
-        }
-        if (lastError is not null)
-        {
-            // The IOException says a process holds the path but never which one, and this has
-            // only ever failed on CI agents. Name the holder at the point of failure: whether
-            // it is this process, a sibling test host sharing the fixture, or something
-            // environmental decides which of three different bugs this is.
-            string holders = FileLockReporter.Describe(rawPath);
-            // cpp VendorReaderTestHarness.cpp:1014-1016 has the same HACK for Bruker YEP/FID
-            // CompassXtract leaks. We tag the cases where Clearcore2 / wiff2 deliberately
-            // retain handles on .NET 8 (see IsKnownLeakySdkPath in TestOne) and soft-fail
-            // those — the read+diff already passed, so the rename probe's only role here
-            // would be to flag a regression in our own Dispose plumbing, not in SDK lifetime.
-            if (knownLeakySdk)
-            {
-                Console.Error.WriteLine(
-                    $"warning: cannot rename {rawPath} {probeDescription} (vendor SDK retains handles " +
-                    $"on .NET 8 - see VendorReaderTestHarness.IsKnownLeakySdkPath): {lastError.Message}" +
-                    $"{Environment.NewLine}{holders}");
-                return;
-            }
-            throw new InvalidOperationException(
-                $"Cannot rename {rawPath} {probeDescription}: there are unreleased file locks. " +
-                $"{lockHint} " +
-                $"Underlying error: {lastError.Message}" +
-                $"{Environment.NewLine}{holders}", lastError);
+            verdict = FileLockReporter.SelfHoldsPath(rawPath);
+            if (verdict != FileLockReporter.HandleCheck.SelfHolds) break;
+            Thread.Sleep(100);
         }
 
-        try
+        if (verdict == FileLockReporter.HandleCheck.Unsupported)
         {
-            Directory.Move(renamed, rawPath);
+            // Not a pass. Say so, rather than let an unimplemented platform read as green.
+            Console.Error.WriteLine(
+                $"warning: cannot check handles on {rawPath} {probeDescription}: no " +
+                $"implementation for this platform, so the probe was skipped.");
+            return;
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        if (verdict == FileLockReporter.HandleCheck.SelfDoesNotHold)
+            return;
+
+        string holders = FileLockReporter.Describe(rawPath);
+        // cpp VendorReaderTestHarness.cpp:1014-1016 has the same HACK for Bruker YEP/FID
+        // CompassXtract leaks. We tag the cases where Clearcore2 / wiff2 deliberately
+        // retain handles on .NET 8 (see IsKnownLeakySdkPath in TestOne) and soft-fail
+        // those — the read+diff already passed, so the probe's only role here would be to
+        // flag a regression in our own Dispose plumbing, not in SDK lifetime.
+        if (knownLeakySdk)
         {
-            throw new InvalidOperationException(
-                $"Renamed {rawPath} -> {renamed} succeeded but couldn't move it back; " +
-                $"underlying error: {ex.Message}", ex);
+            Console.Error.WriteLine(
+                $"warning: this process still holds a handle on {rawPath} {probeDescription} " +
+                $"(vendor SDK retains handles on .NET 8 - see " +
+                $"VendorReaderTestHarness.IsKnownLeakySdkPath)" +
+                $"{Environment.NewLine}{holders}");
+            return;
         }
+        throw new InvalidOperationException(
+            $"This process still holds a handle on {rawPath} {probeDescription}. " +
+            $"{lockHint}" +
+            $"{Environment.NewLine}{holders}");
     }
 
     // Run the undisposed-open finalizer probe only once per fixture path (finalizer behavior is
@@ -795,8 +827,8 @@ public static class VendorReaderTestHarness
 
     /// <summary>
     /// Regression guard for the vendor readers' finalizers: open <paramref name="rawPath"/> through
-    /// the reader WITHOUT disposing it, drop the reference, force GC + finalizers, then assert the
-    /// raw source can be renamed. A reader that owns a native handle / SQLite connection must release
+    /// the reader WITHOUT disposing it, drop the reference, force GC + finalizers, then assert this
+    /// process holds no handle on it. A reader that owns a native handle / SQLite connection must release
     /// it from a finalizer so a caller who forgets Dispose (or whose Dispose is GC-deferred) doesn't
     /// leave the file locked -- exactly the leak that broke Skyline's Bruker <c>.d</c> cleanup on CI
     /// while the disposed-path <see cref="AssertFilesUnlocked"/> probe passed. Runs once per fixture
@@ -814,7 +846,7 @@ public static class VendorReaderTestHarness
         if (!OpenWithoutDispose(reader, rawPath, config))
             return; // vendor SDK not built into this configuration; no handle was opened to probe
 
-        // AssertFilesUnlocked forces GC.Collect() + GC.WaitForPendingFinalizers() before the rename,
+        // AssertFilesUnlocked forces GC.Collect() + GC.WaitForPendingFinalizers() before the check,
         // which is the pass that has to run the reader's finalizer to release the handle.
         AssertFilesUnlocked(rawPath, IsKnownLeakySdkPath(rawPath, config),
             "after finalizer (source opened without Dispose)",
@@ -896,6 +928,130 @@ public static class VendorReaderTestHarness
     }
 
     // ---------- helpers ported from VendorReaderTestHarness.cpp ----------
+
+    /// <summary>
+    /// Records the index subset in the document's dataProcessing, so a reference says on its
+    /// face which spectra it holds.
+    /// </summary>
+    /// <remarks>
+    /// Without this a subsetted reference is indistinguishable from a complete one: cpp's
+    /// SpectrumList_Filter contributes no processingMethod, and ReaderTestConfig.resultFilename
+    /// has a suffix for every other variant (-centroid, -combineIMS, -ignoreZeros, ...) but none
+    /// for indexRange. A reference holding 101 of 19570 spectra is therefore written under the
+    /// plain filename with nothing to indicate it, which is how the container's vendor sweep
+    /// came to compare full conversions against partial references and report them as matching.
+    ///
+    /// MS:1001486 "data filtering" is the nearest standard term — there is no CV accession for
+    /// an index subset specifically — so the range itself rides along as a userParam, mirroring
+    /// how SpectrumList_PeakPicker pairs MS_peak_picking with a userParam naming its mode.
+    /// </remarks>
+    public static void RecordIndexFilter(MSData msd, int start, int end)
+    {
+        ArgumentNullException.ThrowIfNull(msd);
+        var dp = msd.Run.SpectrumList?.DataProcessing;
+        if (dp is null) return;
+
+        var method = new ProcessingMethod
+        {
+            Order = dp.ProcessingMethods.Count,
+            Software = dp.ProcessingMethods.FirstOrDefault()?.Software,
+        };
+        method.Set(CVID.MS_data_filtering);
+        method.UserParams.Add(new UserParam("index filter", $"{start}-{end}"));
+        dp.ProcessingMethods.Add(method);
+    }
+
+    /// <summary>
+    /// Resolves which reference file this fixture+config pairs with, preferring a pwiz-sharp
+    /// override at <c>&lt;test-assembly-dir&gt;/Reference/&lt;filename&gt;</c> over the cpp tree
+    /// at <paramref name="rootPath"/>.
+    /// </summary>
+    /// <remarks>
+    /// Shared by the compare path and the generate path on purpose: if they resolved
+    /// independently, generating could write one file while the next ordinary run read another,
+    /// and the symptom would be a regenerated reference that "did not take".
+    ///
+    /// The override lets pwiz-sharp ship its own references (fixtures cpp does not carry, or
+    /// intermediate ones during alignment work) without retriggering every cpp vendor TC config
+    /// — it is opt-in per test project, whose csproj copies Reference/*.mzML into bin. See
+    /// pwiz-sharp/test/UNIFI.Tests/Reference/README.md.
+    /// </remarks>
+    public static string ReferencePath(ReaderTestConfig config, MSData msd, string rootPath,
+                                       out string referenceFilename)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+        ArgumentNullException.ThrowIfNull(msd);
+        referenceFilename = config.ResultFilename(msd.Run.Id + ".mzML");
+        string overridePath = Path.Combine(AppContext.BaseDirectory, "Reference", referenceFilename);
+        return File.Exists(overridePath) ? overridePath : Path.Combine(rootPath, referenceFilename);
+    }
+
+    /// <summary>
+    /// Writes <paramref name="msd"/> out as the reference mzML at <paramref name="path"/>.
+    /// </summary>
+    /// <remarks>
+    /// Written unindexed, matching how the committed references were produced — an index would
+    /// add byte offsets that shift whenever anything upstream of them changes, making every
+    /// reference diff on content that carries no information.
+    ///
+    /// Writes via a temp file and then moves: a generating run walks dozens of fixtures, and a
+    /// crash partway through the largest ones (Mobilion's is ~19570 spectra) would otherwise
+    /// leave a truncated but plausible-looking mzML in the tree, which the next ordinary run
+    /// would compare against and report as a reader regression.
+    /// </remarks>
+    /// <param name="msd">The document to write.</param>
+    /// <param name="path">Destination reference path.</param>
+    /// <param name="referenceFilename">Bare filename, for the log line.</param>
+    /// <param name="doublePrecision">
+    /// <see cref="ReaderTestConfig.DoublePrecision"/>: 64-bit arrays for the vendors whose data
+    /// needs it (Bruker TDF), 32-bit otherwise — one precision for every array, as cpp does.
+    /// </param>
+    public static void WriteReference(MSData msd, string path, string referenceFilename,
+                                      bool doublePrecision)
+    {
+        ArgumentNullException.ThrowIfNull(msd);
+        string directory = Path.GetDirectoryName(path)
+                           ?? throw new ArgumentException($"no directory in reference path: {path}", nameof(path));
+        Directory.CreateDirectory(directory);
+
+        string temp = path + ".generating";
+        try
+        {
+            // Encoding has to match how the references were written, and that is neither
+            // MzmlWriter's default (uncompressed, 64-bit) nor msconvert's (zlib, 64-bit m/z with
+            // 32-bit intensities). cpp's generate() uses ONE precision for every array:
+            //
+            //   writeConfig.binaryDataEncoderConfig.precision =
+            //       config.doublePrecision ? Precision_64 : Precision_32;
+            //   writeConfig.binaryDataEncoderConfig.compression = Compression_Zlib;
+            //
+            // Getting this wrong is invisible to the tests - the values decode identically
+            // either way, so everything still passes - and shows up only as every reference
+            // swapping MS:1000521 (32-bit float) for MS:1000523 (64-bit) and roughly doubling
+            // in size.
+            var encoder = new BinaryEncoderConfig
+            {
+                Compression = BinaryCompression.Zlib,
+                Precision = doublePrecision ? BinaryPrecision.Bits64 : BinaryPrecision.Bits32,
+            };
+            using (var fs = File.Create(temp))
+                // Indexed defaults to true; the committed references are not indexed, and the
+                // envelope is 100+ lines of byte offsets plus a fileChecksum that change
+                // whenever anything above them shifts.
+                new MzmlWriter(encoder) { Indexed = false }.Write(msd, fs);
+            File.Move(temp, path, overwrite: true);
+        }
+        catch
+        {
+            if (File.Exists(temp)) { try { File.Delete(temp); } catch { /* best effort */ } }
+            throw;
+        }
+
+        int spectra = msd.Run.SpectrumList?.Count ?? 0;
+        int chromatograms = msd.Run.ChromatogramList?.Count ?? 0;
+        Console.WriteLine(
+            $"[generate] wrote {referenceFilename}: {spectra} spectra, {chromatograms} chromatograms -> {path}");
+    }
 
     /// <summary>
     /// Rewrites absolute <c>file://...</c> locations in <paramref name="sourceFiles"/> to be
