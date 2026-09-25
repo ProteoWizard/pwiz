@@ -567,6 +567,7 @@ namespace pwiz.Osprey.IO
             sb.AppendFormat("decoy_method:{0}\n", config.DecoyMethod);
             sb.AppendFormat("decoy_prefixes:{0}\n", FormatPrefixList(config.DecoyPrefixes));
             AppendFileIdentity(sb, @"pairing_manifest", config.DecoyPairingManifestPath);
+            sb.Append(LibraryReaderTerms(config));
             using (var sha256 = SHA256.Create())
             {
                 byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
@@ -575,6 +576,28 @@ namespace pwiz.Osprey.IO
                     result.Append(hashBytes[i].ToString(@"x2", CultureInfo.InvariantCulture));
                 return result.ToString();
             }
+        }
+
+        /// <summary>
+        /// The composition terms that name a reader version: empty for every library the
+        /// current reader parses as the one before it did, so only a library whose parse
+        /// changed is re-read after an upgrade.
+        /// </summary>
+        internal static string LibraryReaderTerms(OspreyConfig config)
+        {
+            var source = config.LibrarySource;
+            if (source == null || source.Format != LibraryFormat.Blib)
+                return string.Empty;
+            var sb = new StringBuilder();
+            // Version 2 of the blib reader types fragments from RefSpectraPeakAnnotations; a
+            // blib with no rows there reads exactly as before.
+            if (BlibLoader.HasPeakAnnotations(source.Path))
+                sb.Append("blib_reader:2\n");
+            // Version 2 of the modification reader is residue- and precision-aware; a blib
+            // whose modification text it cannot read differently reads exactly as before.
+            if (BlibLoader.HasPrecisionSensitiveModifications(source.Path))
+                sb.Append("blib_mods:2\n");
+            return sb.ToString();
         }
 
         /// <summary>Name, size and mtime of one file, or just its name when it is absent.</summary>

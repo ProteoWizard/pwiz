@@ -237,7 +237,8 @@ namespace pwiz.Osprey.Scoring
                 _diagnostics?.WriteMpInputsRow(
                     candidate.Id, apexSpectrum.ScanNumber, peakXics, peakRts);
 
-                var polish = TukeyMedianPolish.Compute(peakXics, peakRts, 10, 0.01);
+                var polish = TukeyMedianPolish.Compute(peakXics, peakRts,
+                    TukeyMedianPolish.SCORING_MAX_ITERATIONS, TukeyMedianPolish.SCORING_TOLERANCE);
                 // Only publish when the fit converged. Every consumer (the four
                 // calculators and the WriteMpDump guard) treats a missing byproduct
                 // and a byproduct with null Polish identically (family default / no

@@ -463,6 +463,14 @@ namespace pwiz.Osprey.Test
         {
             // Straight-through (-i, no --task): FirstPassFDR runs.
             Assert.IsTrue(ScoringTaskShared.Includes<FirstPassFdrTask>(TaskConfigs.StraightThrough()));
+            // A bare config that never selected knows no pipeline, and still answers by the one
+            // rule: an optional stage whose option is off is not in the run.
+            Assert.IsTrue(ScoringTaskShared.Includes<FirstPassFdrTask>(new OspreyConfig()));
+            Assert.IsFalse(ScoringTaskShared.Includes<TrainingExportTask>(new OspreyConfig()),
+                "the training export is not in a run without --training-export");
+            var exporting = new OspreyConfig();
+            exporting.TrainingExport.Enabled = true;
+            Assert.IsTrue(ScoringTaskShared.Includes<TrainingExportTask>(exporting));
 
             // The two per-file workers: excluded, they stop before the join.
             Assert.IsFalse(ScoringTaskShared.Includes<FirstPassFdrTask>(TaskConfigs.ForTask(PerFileScoringTask.TASK_NAME)));

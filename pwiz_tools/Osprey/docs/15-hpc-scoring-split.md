@@ -21,6 +21,7 @@ There is one task set, `OspreyTasks.Create()` (`Osprey.Tasks/OspreyTasks.cs`), h
 | Stage 5 first-pass FDR | `FirstPassFDR` | `FirstPassFdrTask` | yes |
 | Stage 6 per-file rescore | `PerFileRescoring` | `PerFileRescoreTask` | yes |
 | Stages 7-8 second-pass FDR | `SecondPassFDR` | `SecondPassFdrTask` | yes |
+| After Stage 8, optional (`--training-export`) | `TrainingExport` | `TrainingExportTask` | yes - excluded unless the option is on |
 | Render over a completed analysis | `ModelDiagnostics` | `ModelDiagnosticsTask` | no - runs the canonical stages |
 
 - `SpectraCache` and `ModelDiagnostics` are **not pipeline stages**: both are reachable only by naming them in `--task`, and neither belongs in an HPC relay plan. What each runs when selected is declared in the set (`OspreyTasks.PipelineFor`): `SpectraCache` a one-task pipeline of its own, `ModelDiagnostics` the canonical stages (which rehydrate from their stamps and fold the report with every other write suppressed). `ModelDiagnosticsTask` is therefore never in a pipeline list and its `Run` / `Rehydrate` are unreachable; what it owns is the name, what it consumes, and the two flags the selection implies. See 00-pipeline-architecture.md, "Two selectable tasks that are not pipeline tasks".
@@ -35,6 +36,7 @@ Instead of Rust's `--no-join` / `--join-at-pass=N` / `--join-only` flags, the C#
 FirstPassFdrTask     -> config.StopAfterStage5 = true          (the flag's only setter)
 SecondPassFdrTask    -> config.ExpectReconciledInput = true
 ModelDiagnosticsTask -> config.ModelDiagnostics = config.DiagnosticsOnly = true
+TrainingExportTask   -> config.TrainingExport.Enabled = true   (what --training-export sets)
 (the other three set nothing)
 ```
 
@@ -57,6 +59,7 @@ Cross-task state flows through a typed byproduct registry (`PipelineContext.Get<
 | `FirstPassFDR` | - | - | yes | - | - |
 | `PerFileRescoring` | yes | yes | yes | - | - |
 | `SecondPassFDR` | - | - | yes | yes | yes |
+| `TrainingExport` | yes | - | yes | yes | - |
 | `ModelDiagnostics` | - | yes | - | - | yes |
 | *(no `--task`)* | | | - | - | yes |
 
@@ -64,16 +67,18 @@ Cross-task state flows through a typed byproduct registry (`PipelineContext.Get<
 
 The exact per-stage membership per mode is pinned by `PipelineMembershipTest.TestIncludesMembershipTable`, with each row's config built by `TaskConfigs.ForTask` - i.e. through the same `SelectTask` the CLI goes through, carrying the pipeline the selection was resolved against:
 
-| Mode | `PerFileScoring` | `FirstPassFDR` | `PerFileRescoring` | `SecondPassFDR` |
-|---|---|---|---|---|
-| straight-through (no `--task`, `-i mzML`) | run | run | run | run |
-| `--task PerFileScoring` | run | – | – | – |
-| `--task FirstPassFDR` | rehydrate | run | – | – |
-| `--task PerFileRescoring` | rehydrate | rehydrate | run | – |
-| `--task SecondPassFDR` | rehydrate | (skipped) | rehydrate | run |
-| `--task ModelDiagnostics` (not a stage of the pipeline it runs) | run | run | run | run |
+| Mode | `PerFileScoring` | `FirstPassFDR` | `PerFileRescoring` | `SecondPassFDR` | `TrainingExport` |
+|---|---|---|---|---|---|
+| straight-through (no `--task`, `-i mzML`) | run | run | run | run | - |
+| straight-through with `--training-export` | run | run | run | run | run |
+| `--task PerFileScoring` | run | - | - | - | - |
+| `--task FirstPassFDR` | rehydrate | run | - | - | - |
+| `--task PerFileRescoring` | rehydrate | rehydrate | run | - | - |
+| `--task SecondPassFDR` | rehydrate | (skipped) | rehydrate | run | - |
+| `--task TrainingExport` | - | - | - | - | run |
+| `--task ModelDiagnostics` (not a stage of the pipeline it runs) | run | run | run | run | - |
 
-("rehydrate" = excluded from the driver loop but lazily materialized on demand from disk; "–" = never touched.) `--task ModelDiagnostics` sets neither stop boundary and is a member of every stage, like the straight-through run, suppressing artifact WRITES rather than membership. It is listed here because a truth-table row claiming otherwise stood in this file and in a unit test. `--task SpectraCache` has no row: it walks a one-task pipeline of its own, in which it is the selection and so included.
+("rehydrate" = excluded from the driver loop but lazily materialized on demand from disk; "-" = never touched.) `--task ModelDiagnostics` sets neither stop boundary and is a member of every stage, like the straight-through run, suppressing artifact WRITES rather than membership. It is listed here because a truth-table row claiming otherwise stood in this file and in a unit test. `--task SpectraCache` has no row: it walks a one-task pipeline of its own, in which it is the selection and so included.
 ## Stage 1-4 — Per-file scoring (`--task PerFileScoring`)
 
 `PerFileScoringTask` (`Osprey.Tasks/PerFileScoringTask.cs`). Load the library + generate/pair decoys (`LoadLibraryAndDecoys`, `:695`), then score every input mzML (`Run`, `:173-421`). Each file's parse → RT/mass calibration → coelution scoring writes:
@@ -126,9 +131,22 @@ Under `--task SecondPassFDR` (`config.ExpectReconciledInput`), `Rehydrate` (`:31
 
 `SecondPassFdrTask.Rehydrate` returns `true` as a no-op (`:113`): nothing consumes SecondPassFDR's state in-memory, so it is never demanded.
 
+## After Stage 8 - Training export (`--task TrainingExport`, optional)
+
+`TrainingExportTask` (`Osprey.Tasks/TrainingExportTask.cs`). The optional fifth stage: with
+`--training-export` it writes `<stem>.training.parquet` per run, and with the option off
+`OspreyConfig.Includes` leaves it out of every mode (`ISelectableTask.IsEnabled`), which is the
+`TrainingExport` column above. A fan-out worker like `PerFileRescoring`: one node can take any
+batch of runs, its key names no cohort, and it reads only artifacts - each run's reconciled
+parquet, `.2nd-pass.fdr_scores.bin`, `.calibration.json`, `.spectra.bin` and `.run-info.json`,
+plus the analysis-wide `<blib-stem>.2nd-pass.fdr_experiment.bin` and the library. It
+rehydrates no other task. Selecting it implies `--training-export`; `ValidateSelection` (the
+base default) requires `--input` plus `--library` + `--output` (the output blib names the
+experiment file). Schema, key and relay list: [22-training-export.md](22-training-export.md).
+
 ## Full pipeline (default)
 
-With no `--task`, all four tasks run in one process (`straight-through` row of the truth table): output is identical to running the four workers in sequence over the same files. A run whose per-file artifacts are already on disk resumes to whichever stage is outstanding - the per-task validity sidecars decide that, not the input kind.
+With no `--task`, all four analysis tasks run in one process, and the training export as a fifth with `--training-export` (the `straight-through` rows of the truth table): output is identical to running the same workers in sequence over the same files. A run whose per-file artifacts are already on disk resumes to whichever stage is outstanding - the per-task validity sidecars decide that, not the input kind.
 
 The row that used to sit beside it, `--input-scores` with no `--task` (a single-node full run started from parquets), retired with the flag. It was the same run: the pipeline resumes from whatever is current in the output directory either way.
 

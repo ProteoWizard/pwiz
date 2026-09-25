@@ -22,8 +22,12 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 using pwiz.Osprey.Tasks.ModelDiagnostics;
 
@@ -44,6 +48,9 @@ namespace pwiz.Osprey.Test
     [TestClass]
     public class TaskValidityKeyTest
     {
+        /// <summary>The base key term an annotated blib library adds (<c>OspreyTask.ValidityKey</c>).</summary>
+        private const string LIBEXT_TERM = @";libext=ann";
+
         [TestMethod]
         public void TestFlippedDefaultsParticipateInTheValidityKey()
         {
@@ -53,6 +60,191 @@ namespace pwiz.Osprey.Test
             AssertEveryTaskCarriesTheSuffixesItNeeds();
             AssertLibraryFragmentArmIsPinnedToThePipeline();
             AssertDiagnosticsReportIsADeclaredOutputOnlyWhenAsked();
+            AssertTrainingExportKey();
+            AssertTrainingExportKeyFollowsEachRunsInputs();
+            AssertOnlyAnnotatedBlibsCarryTheReaderTerm();
+        }
+
+        /// <summary>
+        /// A blib whose <c>RefSpectraPeakAnnotations</c> table has rows is read differently since
+        /// the reader started typing fragments from it, so every task keys on that: a directory
+        /// scored before the upgrade against an annotated blib must not be adopted after it. A
+        /// TSV library and a blib with no annotation rows are read exactly as before, so their
+        /// keys - and the <c>.libcache</c> composition terms - must not move at all.
+        /// </summary>
+        private static void AssertOnlyAnnotatedBlibsCarryTheReaderTerm()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), @"osprey_libext_" + Path.GetRandomFileName());
+            Directory.CreateDirectory(dir);
+            try
+            {
+                double[] peaks = { 300.0, 400.0, 500.0 };
+                string tsv = Path.Combine(dir, @"library.tsv");
+                File.WriteAllText(tsv, @"not read");
+                string plain = BlibLibraryInputTest.CreateBlib(Path.Combine(dir, @"plain.blib"),
+                    @"PEPC[+57.021464]TIDEK", peaks, new (int, string, int)[0]);
+                string annotated = BlibLibraryInputTest.CreateBlib(Path.Combine(dir, @"annotated.blib"),
+                    @"PEPC[+57.021464]TIDEK", peaks, new[] { (0, @"y3", 1) });
+
+                // BiblioSpec's one-decimal text: the residue- and precision-aware modification
+                // reader gives it exact masses now, so its .libcache is re-read once - but an
+                // unannotated blib's modification masses reach no score, so its task keys stay.
+                string oneDecimal = BlibLibraryInputTest.CreateBlib(Path.Combine(dir, @"bibliospec.blib"),
+                    @"PEPC[+57.0]TIDEK", peaks, new (int, string, int)[0]);
+
+                foreach (var (unchanged, readerTerms) in new[]
+                         {
+                             (tsv, string.Empty), (plain, string.Empty), (oneDecimal, "blib_mods:2\n"),
+                         })
+                {
+                    var config = new OspreyConfig { LibrarySource = LibrarySource.FromPath(unchanged) };
+                    var tasks = OspreyTasks.Create().Pipeline;
+                    var ctx = new PipelineContext(config, tasks, null, null, null);
+                    Assert.AreEqual(PreUpgradeBaseKey(config), tasks.OfType<PerFileScoringTask>().Single().ValidityKey(ctx),
+                        Path.GetFileName(unchanged) + @" must key exactly as before the reader change");
+                    foreach (var task in tasks)
+                        Assert.IsFalse(task.ValidityKey(ctx).Contains(LIBEXT_TERM), task.Name);
+                    Assert.AreEqual(readerTerms, LibraryLoader.LibraryReaderTerms(config),
+                        Path.GetFileName(unchanged) + @" .libcache reader terms");
+                }
+
+                var annotatedConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(annotated) };
+                var annotatedTasks = OspreyTasks.Create().Pipeline;
+                var annotatedCtx = new PipelineContext(annotatedConfig, annotatedTasks, null, null, null);
+                Assert.AreEqual(LIBEXT_TERM, OspreyTask.LIBRARY_READER_TERM);
+                Assert.AreEqual(PreUpgradeBaseKey(annotatedConfig) + LIBEXT_TERM,
+                    annotatedTasks.OfType<PerFileScoringTask>().Single().ValidityKey(annotatedCtx));
+                foreach (var task in annotatedTasks)
+                {
+                    StringAssert.Contains(task.ValidityKey(annotatedCtx), LIBEXT_TERM,
+                        task.Name + @" must key on the annotated blib's reader");
+                }
+                Assert.AreEqual("blib_reader:2\n", LibraryLoader.LibraryReaderTerms(annotatedConfig));
+            }
+            finally
+            {
+                foreach (string file in Directory.GetFiles(dir))
+                    BlibLibraryInputTest.TryDeleteFile(file);
+                Directory.Delete(dir, true);
+            }
+        }
+
+        /// <summary>The base task key as every build before the blib reader change wrote it.</summary>
+        private static string PreUpgradeBaseKey(OspreyConfig config)
+        {
+            return string.Format(@"search={0};library={1}{2}", config.Identity.SearchParameterHash(),
+                config.Identity.LibraryIdentityHash(), OspreyEnvironment.PickValidityKeySuffix());
+        }
+
+        /// <summary>
+        /// Each run's export reads that run's reconciled parquet, second-pass sidecar and run
+        /// info, so each one's identity keys that run's output - absent and present differ, and
+        /// so do two versions of one file - while another run's output does not move.
+        /// </summary>
+        private static void AssertTrainingExportKeyFollowsEachRunsInputs()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), @"osprey_trainrun_" + Path.GetRandomFileName());
+            Directory.CreateDirectory(dir);
+            string savedOutput = ArtifactPaths.OutputDir;
+            string savedCache = ArtifactPaths.CacheDir;
+            try
+            {
+                ArtifactPaths.OutputDir = dir;
+                ArtifactPaths.CacheDir = dir;
+                string runA = Path.Combine(dir, @"a.mzML");
+                string runB = Path.Combine(dir, @"b.mzML");
+                var config = TaskConfigs.StraightThrough();
+                config.InputFiles = new List<string> { runA, runB };
+                config.LibrarySource = LibrarySource.FromPath(@"ref.tsv");
+                config.OutputBlib = Path.Combine(dir, @"out.blib");
+                config.TrainingExport.Enabled = true;
+                var ctx = TaskConfigs.ContextFor(config);
+                var task = config.Pipeline.OfType<TrainingExportTask>().Single();
+                string key = task.ValidityKey(ctx);
+                string RunKey(string input) => task.OutputValidityKey(ctx, key, TrainingExportParquet.PathFor(input));
+
+                string otherRun = RunKey(runB);
+                string current = RunKey(runA);
+                foreach (string artifact in new[]
+                         {
+                             ParquetScoreCache.GetReconciledScoresPath(runA),
+                             FdrScoresSidecar.Pass2Path(runA),
+                             RunInfoFile.PathFor(runA),
+                         })
+                {
+                    File.WriteAllText(artifact, @"first");
+                    string written = RunKey(runA);
+                    Assert.AreNotEqual(current, written, Path.GetFileName(artifact) + @" appearing must invalidate the run's export");
+                    File.WriteAllText(artifact, @"rewritten, and longer");
+                    current = RunKey(runA);
+                    Assert.AreNotEqual(written, current, Path.GetFileName(artifact) + @" rewritten must invalidate the run's export");
+                    Assert.AreEqual(otherRun, RunKey(runB), @"another run's export does not depend on this run's files");
+                }
+                Assert.AreEqual(key, task.ValidityKey(ctx), @"the per-run identities belong to the run's output, not the task key (P4)");
+            }
+            finally
+            {
+                ArtifactPaths.OutputDir = savedOutput;
+                ArtifactPaths.CacheDir = savedCache;
+                Directory.Delete(dir, true);
+            }
+        }
+
+        /// <summary>
+        /// The training export's key follows everything its parquet depends on and nothing it
+        /// does not. Each export setting keys differently; a rewritten second-pass experiment
+        /// sidecar (Stage 7 re-ran) invalidates the export; and neither the cohort (P4) nor the
+        /// leg does - a straight-through run and a <c>--task TrainingExport</c> node compute the
+        /// same key, or a pay-later export run on one would be redone on the other.
+        /// </summary>
+        private static void AssertTrainingExportKey()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), @"osprey_trainkey_" + Path.GetRandomFileName());
+            Directory.CreateDirectory(dir);
+            string savedOutput = ArtifactPaths.OutputDir;
+            try
+            {
+                ArtifactPaths.OutputDir = dir;
+                string experiment = Path.Combine(dir, @"out.2nd-pass.fdr_experiment.bin");
+                File.WriteAllText(experiment, @"first");
+                string straight = ExportKey(TaskConfigs.StraightThrough(), c => { });
+                Assert.AreEqual(straight, ExportKey(TaskConfigs.ForTask(TrainingExportTask.TASK_NAME), c => { }),
+                    @"the --task TrainingExport leg must compute the straight-through key");
+                Assert.AreEqual(straight, ExportKey(TaskConfigs.StraightThrough(),
+                        c => c.InputFiles = new List<string> { @"a.mzML", @"b.mzML", @"c.mzML" }),
+                    @"the key must not name the cohort (P4)");
+                Assert.AreEqual(straight, ExportKey(TaskConfigs.StraightThrough(), c => c.TrainingExport.MaxQ = c.RunFdr),
+                    @"an explicit max-q equal to the default is the same export");
+                foreach (var change in new Action<OspreyConfig>[]
+                         {
+                             c => c.TrainingExport.MaxQ = 0.05,
+                             c => c.TrainingExport.ClaimantQ = 0.05,
+                             c => c.TrainingExport.WriteXics = true,
+                             c => c.RunFdr = 0.05,
+                         })
+                {
+                    Assert.AreNotEqual(straight, ExportKey(TaskConfigs.StraightThrough(), change),
+                        @"an export setting must change the key");
+                }
+                File.WriteAllText(experiment, @"a rewritten second pass");
+                Assert.AreNotEqual(straight, ExportKey(TaskConfigs.StraightThrough(), c => { }),
+                    @"a rewritten experiment sidecar must invalidate the export");
+            }
+            finally
+            {
+                ArtifactPaths.OutputDir = savedOutput;
+                Directory.Delete(dir, true);
+            }
+        }
+
+        private static string ExportKey(OspreyConfig config, Action<OspreyConfig> mutate)
+        {
+            config.InputFiles = new List<string> { @"a.mzML" };
+            config.LibrarySource = LibrarySource.FromPath(@"ref.blib");
+            config.OutputBlib = @"out.blib";
+            mutate(config);
+            var ctx = TaskConfigs.ContextFor(config);
+            return config.Pipeline.OfType<TrainingExportTask>().Single().ValidityKey(ctx);
         }
 
         /// <summary>
@@ -225,7 +417,8 @@ namespace pwiz.Osprey.Test
                     task.Name, expectPass2 ? @"" : @"NOT "));
                 bool expectTrain = task.Name == FirstPassFdrTask.TASK_NAME ||
                                    task.Name == PerFileRescoreTask.TASK_NAME ||
-                                   task.Name == SecondPassFdrTask.TASK_NAME;
+                                   task.Name == SecondPassFdrTask.TASK_NAME ||
+                                   task.Name == TrainingExportTask.TASK_NAME;
                 Assert.AreEqual(expectTrain, key.Contains(train), string.Format(
                     @"{0} must {1} key on the first-pass training selection",
                     task.Name, expectTrain ? @"" : @"NOT "));

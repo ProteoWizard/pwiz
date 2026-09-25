@@ -495,7 +495,7 @@ namespace pwiz.Osprey.Tasks
             foreach (var output in outputs)
             {
                 if (!File.Exists(output)) return false;
-                if (!TaskValiditySidecar.IsValid(output, task.Name, key)) return false;
+                if (!TaskValiditySidecar.IsValid(output, task.Name, task.OutputValidityKey(this, key, output))) return false;
             }
             return true;
         }

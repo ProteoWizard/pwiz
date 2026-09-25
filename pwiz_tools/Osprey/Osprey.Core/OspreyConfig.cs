@@ -273,6 +273,12 @@ namespace pwiz.Osprey.Core
         /// <summary>Inter-replicate peak reconciliation settings.</summary>
         public ReconciliationConfig Reconciliation { get; set; } = new ReconciliationConfig();
 
+        /// <summary>
+        /// The optional training export (<c>--training-export</c>). Off by default, and in no
+        /// identity hash: off, its task is not in the run at all.
+        /// </summary>
+        public TrainingExportConfig TrainingExport { get; set; } = new TrainingExportConfig();
+
         /// <summary>Enable the coelution signal pre-filter.</summary>
         public bool PrefilterEnabled { get; set; } = true;
 
@@ -408,10 +414,15 @@ namespace pwiz.Osprey.Core
         /// all of it - the diagnostics render - and every stage is included. Replaces the
         /// three membership flags (<c>NoJoin</c>, and the two above read as membership) that
         /// each stage's own predicate used to combine, which encoded one fan-out and one
-        /// join over a pipeline that has two of each.
+        /// join over a pipeline that has two of each. An optional stage whose option is off
+        /// (<see cref="ISelectableTask.IsEnabled"/> false) is excluded before any of that.
         /// </summary>
         public bool Includes(ISelectableTask stage)
         {
+            // An OPTIONAL stage whose option is off is not part of the run under any
+            // selection: not run, not stamped, not logged.
+            if (!stage.IsEnabled(this))
+                return false;
             if (SelectedTask == null || ReferenceEquals(SelectedTask, stage))
                 return true;
             return !Pipeline.Contains(SelectedTask);

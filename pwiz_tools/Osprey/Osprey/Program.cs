@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -322,6 +323,11 @@ namespace pwiz.Osprey
                     config.FragmentTolerance.Unit == ToleranceUnit.Ppm ? "ppm" : "Th"));
                 LogInfo(string.Format("Run FDR: {0:P1}", config.RunFdr));
                 LogInfo(string.Format("Experiment FDR: {0:P1}", config.ExperimentFdr));
+                // Named only when on: with the option off the run, its log included, is the
+                // run it was before the option existed.
+                string trainingExport = DescribeTrainingExport(config);
+                if (trainingExport != null)
+                    LogInfo(trainingExport);
                 // Always print which experiment-wide aggregation is in force, active or not.
                 // Reported HERE and not from Stage 5 because FirstPassFdrTask.Run is skipped on
                 // --task SecondPassFDR, on a Rehydrate, and on any warm resume - exactly the runs
@@ -569,6 +575,10 @@ namespace pwiz.Osprey
                     return dupErr;
             }
 
+            string exportErr = TrainingExportError(config.TrainingExport);
+            if (exportErr != null)
+                return exportErr;
+
             // A --task run: the task states what it needs, naming itself in the message.
             if (config.SelectedTask != null)
                 return config.SelectedTask.ValidateSelection(config);
@@ -582,6 +592,56 @@ namespace pwiz.Osprey
                 return "No spectral library specified. Use -l <library.tsv>";
             if (string.IsNullOrEmpty(config.OutputBlib))
                 return "No output path specified. Use -o <output.blib>";
+            return null;
+        }
+
+        /// <summary>
+        /// The startup line under a selection that leaves the training export out: the flag
+        /// is accepted - HPC wrappers hand every node the same options - and the line says
+        /// where the export is written instead of announcing one this run will not write.
+        /// </summary>
+        internal const string TRAINING_EXPORT_NOT_RUN_FORMAT =
+            "Training export: not written by this run; {0} writes it under {1} {2} or a run without {1}.";
+
+        /// <summary>
+        /// The startup line naming the training export, or null when <c>--training-export</c>
+        /// is off. The export is described only where its stage runs - a straight-through run
+        /// or <c>--task TrainingExport</c> - by the same membership rule the driver applies.
+        /// </summary>
+        internal static string DescribeTrainingExport(OspreyConfig config)
+        {
+            if (!config.TrainingExport.Enabled)
+                return null;
+            if (!ScoringTaskShared.Includes<TrainingExportTask>(config))
+            {
+                return string.Format(TRAINING_EXPORT_NOT_RUN_FORMAT, OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText,
+                    OspreyCommandArgs.ARG_TASK.ArgumentText, TrainingExportTask.TASK_NAME);
+            }
+            return string.Format(CultureInfo.InvariantCulture,
+                "Training export: <stem>.training.parquet per run (run q <= {0}, claimant q <= {1}, XICs {2})",
+                config.TrainingExport.EffectiveMaxQ(config.RunFdr), config.TrainingExport.EffectiveClaimantQ,
+                config.TrainingExport.WriteXics ? "on" : "off");
+        }
+
+        /// <summary>
+        /// The training-export settings are refused rather than ignored when they cannot apply:
+        /// given without <c>--training-export</c> (or <c>--task TrainingExport</c>) they would
+        /// change nothing, and a q threshold outside (0, 1] selects nothing or everything.
+        /// </summary>
+        private static string TrainingExportError(TrainingExportConfig export)
+        {
+            if (export.HasSettingsWithoutExport)
+            {
+                return string.Format("{0}, {1} and {2} apply only with {3}.",
+                    OspreyCommandArgs.ARG_TRAINING_EXPORT_MAX_Q.ArgumentText,
+                    OspreyCommandArgs.ARG_TRAINING_EXPORT_CLAIMANT_Q.ArgumentText,
+                    OspreyCommandArgs.ARG_TRAINING_EXPORT_XICS.ArgumentText,
+                    OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText);
+            }
+            if (export.MaxQ.HasValue && !(export.MaxQ.Value > 0 && export.MaxQ.Value <= 1))
+                return string.Format("{0} must be in (0, 1].", OspreyCommandArgs.ARG_TRAINING_EXPORT_MAX_Q.ArgumentText);
+            if (export.ClaimantQ.HasValue && !(export.ClaimantQ.Value > 0 && export.ClaimantQ.Value <= 1))
+                return string.Format("{0} must be in (0, 1].", OspreyCommandArgs.ARG_TRAINING_EXPORT_CLAIMANT_Q.ArgumentText);
             return null;
         }
 

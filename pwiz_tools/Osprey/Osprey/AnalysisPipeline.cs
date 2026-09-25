@@ -226,7 +226,8 @@ namespace pwiz.Osprey
                 if (!File.Exists(output)) continue;
                 try
                 {
-                    TaskValiditySidecar.Write(output, task.Name, OspreyVersion.Current, key, inputs);
+                    TaskValiditySidecar.Write(output, task.Name, OspreyVersion.Current,
+                        task.OutputValidityKey(ctx, key, output), inputs);
                 }
                 catch (Exception ex)
                 {

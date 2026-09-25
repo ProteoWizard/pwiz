@@ -306,55 +306,8 @@ namespace pwiz.Osprey.Scoring
             if (originalCount == 0 || isolationWindows == null || isolationWindows.Count == 0)
                 return entries;
 
-            // Effective fragment tolerance: 3-sigma from MS2 calibration when
-            // calibrated, falling back to the configured value. Floors at
-            // 0.05 Da / 1 ppm so a tightly fit calibration cannot collapse
-            // the matcher to a sub-isotope window.
-            double fragTolValue;
-            ToleranceUnit fragTolUnit;
-            if (ms2Cal != null && ms2Cal.Calibrated)
-            {
-                double tol3sd = 3.0 * ms2Cal.SD;
-                fragTolUnit = string.Equals(ms2Cal.Unit, "Th", StringComparison.OrdinalIgnoreCase)
-                    ? ToleranceUnit.Mz : ToleranceUnit.Ppm;
-                double minTol = fragTolUnit == ToleranceUnit.Mz ? 0.05 : 1.0;
-                fragTolValue = Math.Max(tol3sd, minTol);
-            }
-            else
-            {
-                fragTolValue = config.FragmentTolerance.Tolerance;
-                fragTolUnit  = config.FragmentTolerance.Unit;
-            }
-
-            // RT neighborhood = 5 x median spectrum spacing.
-            double rtNeighborhood;
-            {
-                var sortedRts = new List<double>(ms2Rts.Count);
-                foreach (var rt in ms2Rts) sortedRts.Add(rt);
-                sortedRts.Sort(); // Array.Sort OK: single primitive (double) list, sorted only to dedup and take the median spacing; tie order is irrelevant
-                // Dedup adjacent identicals
-                int writeIdx = 0;
-                for (int i = 0; i < sortedRts.Count; i++)
-                {
-                    if (i == 0 || sortedRts[i] != sortedRts[i - 1])
-                    {
-                        sortedRts[writeIdx++] = sortedRts[i];
-                    }
-                }
-                if (writeIdx < sortedRts.Count) sortedRts.RemoveRange(writeIdx, sortedRts.Count - writeIdx);
-                if (sortedRts.Count < 2)
-                {
-                    rtNeighborhood = 0.25; // 5 * 0.05 fallback
-                }
-                else
-                {
-                    var intervals = new List<double>(sortedRts.Count - 1);
-                    for (int i = 1; i < sortedRts.Count; i++)
-                        intervals.Add(sortedRts[i] - sortedRts[i - 1]);
-                    intervals.Sort(); // Array.Sort OK: single primitive (double) list, sorted only to take the median interval; tie order is irrelevant
-                    rtNeighborhood = 5.0 * intervals[intervals.Count / 2];
-                }
-            }
+            DoubleCountingTolerance(ms2Cal, config, out double fragTolValue, out ToleranceUnit fragTolUnit);
+            double rtNeighborhood = DoubleCountingRtNeighborhood(ms2Rts);
 
             // Library lookup by EntryId (Id may not be array-index aligned).
             var libIdMap = new Dictionary<uint, int>(library.Count);
@@ -421,15 +374,8 @@ namespace pwiz.Osprey.Scoring
                 // Stable sort: apex_rt then base_id then entry_id (matches
                 // Rust's deterministic tiebreaker for the dedup pass).
                 Array.Sort(rtSorted, (a, b) => // Array.Sort OK: comparator's terminal key is the unique EntryId, so no ties
-                {
-                    int c = entries[a].ApexRt.CompareTo(entries[b].ApexRt);
-                    if (c != 0) return c;
-                    uint baseA = entries[a].EntryId & 0x7FFFFFFFu;
-                    uint baseB = entries[b].EntryId & 0x7FFFFFFFu;
-                    c = baseA.CompareTo(baseB);
-                    if (c != 0) return c;
-                    return entries[a].EntryId.CompareTo(entries[b].EntryId);
-                });
+                    CompareDoubleCountingOrder(entries[a].ApexRt, entries[a].EntryId,
+                        entries[b].ApexRt, entries[b].EntryId));
 
                 for (int iPos = 0; iPos < rtSorted.Length; iPos++)
                 {
@@ -449,14 +395,9 @@ namespace pwiz.Osprey.Scoring
                         if (!libIdMap.TryGetValue(entries[idxA].EntryId, out libIdxA)) continue;
                         if (!libIdMap.TryGetValue(entries[idxB].EntryId, out libIdxB)) continue;
 
-                        var fragsA = library[libIdxA].Fragments;
-                        var fragsB = library[libIdxB].Fragments;
-                        int overlap = FragmentOverlap.CountTopNFragmentOverlap(fragsA, fragsB, 6,
-                            fragTolValue, fragTolUnit);
-                        int minA = Math.Min(fragsA.Count, 6);
-                        int minB = Math.Min(fragsB.Count, 6);
-                        int threshold = (int)Math.Ceiling(Math.Min(minA, minB) * 0.5);
-                        if (overlap < threshold) continue;
+                        if (!SharesDoubleCountingFragments(library[libIdxA].Fragments,
+                                library[libIdxB].Fragments, fragTolValue, fragTolUnit))
+                            continue;
 
                         if (entries[idxA].CoelutionSum >= entries[idxB].CoelutionSum)
                         {
@@ -495,6 +436,90 @@ namespace pwiz.Osprey.Scoring
             return kept;
         }
 
+
+        /// <summary>
+        /// The fragment tolerance the double-counting dedup matches library fragments with:
+        /// the search's calibrated tolerance (<see cref="MzCalibration.CalibratedTolerance"/>,
+        /// 3-sigma floored at 0.05 Th / 1 ppm when calibrated) and the configured tolerance
+        /// otherwise, including for a null calibration.
+        ///
+        /// <para>This used to be its own copy of that rule, differing only in matching the
+        /// unit "Th" case-insensitively. Calibration only ever records "ppm" or "Th"
+        /// (<c>MzCalibration</c> writes exactly those, and <c>.calibration.json</c> carries
+        /// what it wrote), and for those two the rules are the same arithmetic, so delegating
+        /// leaves the dedup's tolerance, and its output, unchanged.</para>
+        /// </summary>
+        public static void DoubleCountingTolerance(MzCalibrationResult ms2Cal, OspreyConfig config,
+            out double value, out ToleranceUnit unit)
+        {
+            MzCalibration.CalibratedTolerance(ms2Cal ?? MzCalibrationResult.Uncalibrated(),
+                config.FragmentTolerance.Tolerance, config.FragmentTolerance.Unit, out value, out unit);
+        }
+
+        /// <summary>
+        /// The apex-RT neighborhood within which the double-counting dedup compares two
+        /// entries: 5 x the median spacing between distinct MS2 retention times, or 0.25 min
+        /// when there are fewer than two.
+        /// </summary>
+        public static double DoubleCountingRtNeighborhood(IReadOnlyList<double> ms2Rts)
+        {
+            var sortedRts = new List<double>(ms2Rts.Count);
+            foreach (var rt in ms2Rts) sortedRts.Add(rt);
+            sortedRts.Sort(); // Array.Sort OK: single primitive (double) list, sorted only to dedup and take the median spacing; tie order is irrelevant
+            // Dedup adjacent identicals
+            int writeIdx = 0;
+            for (int i = 0; i < sortedRts.Count; i++)
+            {
+                if (i == 0 || sortedRts[i] != sortedRts[i - 1])
+                {
+                    sortedRts[writeIdx++] = sortedRts[i];
+                }
+            }
+            if (writeIdx < sortedRts.Count) sortedRts.RemoveRange(writeIdx, sortedRts.Count - writeIdx);
+            if (sortedRts.Count < 2)
+                return 0.25; // 5 * 0.05 fallback
+            var intervals = new List<double>(sortedRts.Count - 1);
+            for (int i = 1; i < sortedRts.Count; i++)
+                intervals.Add(sortedRts[i] - sortedRts[i - 1]);
+            intervals.Sort(); // Array.Sort OK: single primitive (double) list, sorted only to take the median interval; tie order is irrelevant
+            return 5.0 * intervals[intervals.Count / 2];
+        }
+
+        /// <summary>
+        /// The double-counting dedup's order: apex RT, then base_id, then entry_id. The dedup
+        /// tests each pair with the entry that comes first in it as the first argument of
+        /// <see cref="SharesDoubleCountingFragments"/>, which is not symmetric, so anything that
+        /// counts the dedup's collisions has to ask in this order too.
+        /// </summary>
+        public static int CompareDoubleCountingOrder(double apexRtA, uint entryIdA, double apexRtB, uint entryIdB)
+        {
+            int c = apexRtA.CompareTo(apexRtB);
+            if (c != 0)
+                return c;
+            uint baseA = entryIdA & 0x7FFFFFFFu;
+            uint baseB = entryIdB & 0x7FFFFFFFu;
+            c = baseA.CompareTo(baseB);
+            if (c != 0)
+                return c;
+            return entryIdA.CompareTo(entryIdB);
+        }
+
+        /// <summary>
+        /// The double-counting collision test on two library spectra: at least half (rounded
+        /// up) of the FIRST list's top 6 fragments match the second's top 6 within the given
+        /// tolerance - a count of the first list's peaks, so the test is not symmetric - where
+        /// half is of the smaller top-6 list, rounded up.
+        /// </summary>
+        public static bool SharesDoubleCountingFragments(IReadOnlyList<LibraryFragment> fragsA,
+            IReadOnlyList<LibraryFragment> fragsB, double tolerance, ToleranceUnit unit)
+        {
+            int overlap = FragmentOverlap.CountTopNFragmentOverlap(fragsA, fragsB, 6,
+                tolerance, unit);
+            int minA = Math.Min(fragsA.Count, 6);
+            int minB = Math.Min(fragsB.Count, 6);
+            int threshold = (int)Math.Ceiling(Math.Min(minA, minB) * 0.5);
+            return overlap >= threshold;
+        }
 
         public List<FdrEntry> DeduplicatePairs(List<FdrEntry> entries)
         {

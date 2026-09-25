@@ -1393,7 +1393,11 @@ namespace pwiz.Osprey.Tasks
             // demand during the re-score. Stage 6 REQUIRES that cache; there is no mzML
             // fallback -- a rescore without the cache is a deployment error, not a reason
             // to re-read the 6 GB mzML (LoadSpectraForRescore throws).
-            SpectraWindowIndex spectraIndex = LoadSpectraForRescore(inputFile, fileName, ctx);
+            SpectraWindowIndex spectraIndex = ScoringTaskShared.LoadSpectraForRescore(inputFile, fileName,
+                @"Stage-6 rescore", true);
+            ctx.LogInfo(string.Format(
+                "  Streaming {1} MS1 and {0} MS/MS spectra from cache for {2}",
+                spectraIndex.Ms2Count, spectraIndex.Ms1Spectra.Count, fileName));
             var ms1Spectra = spectraIndex.Ms1Spectra.ToList();
 
             // Load-boundary memory probe. With streaming this measures the small index +
@@ -1412,7 +1416,7 @@ namespace pwiz.Osprey.Tasks
             // same MS2/MS1 mass calibrations the original Stage 1-4 run
             // used. The file is written by the original ProcessFile call
             // and read here -- same disk-roundtrip path the worker uses.
-            LoadMassCalibrations(inputFile,
+            ScoringTaskShared.LoadMassCalibrations(inputFile, @"Stage 6",
                 out MzCalibrationResult ms2Cal,
                 out MzCalibrationResult ms1Cal,
                 out double? rtMadFromCalJson);
@@ -3452,162 +3456,6 @@ namespace pwiz.Osprey.Tasks
             fdrEntries.AddRange(gapFillAppended);
 
             return (nGapCwt, nGapForced);
-        }
-
-        /// <summary>
-        /// Build a streaming <see cref="SpectraWindowIndex"/> over the <c>.spectra.bin</c>
-        /// cache the original Stage 1-4 run wrote, so Stage-6 rescore loads each isolation
-        /// window's MS2 on demand instead of materializing the whole ~6 GB resident
-        /// <c>List&lt;Spectrum&gt;</c>. MS1 + the first-cycle isolation windows come from the
-        /// same index. There is NO mzML fallback: Stage 6 always runs against a file the
-        /// upstream stages already cached, so an absent/invalid cache is a deployment error
-        /// (the mzML may not even be shipped to the rescore worker), and re-reading the 6 GB
-        /// mzML would defeat the streaming this method exists to enable. Throws
-        /// <see cref="InvalidDataException"/> when the cache cannot be indexed.
-        /// </summary>
-        private SpectraWindowIndex LoadSpectraForRescore(string inputFile, string fileName,
-            PipelineContext ctx)
-        {
-            string cachePath = SpectraCache.GetCachePath(inputFile);
-            SpectraWindowIndex index;
-            var reason = SpectraCacheRejection.None;
-            try
-            {
-                // Ask for the REASON, not just null. The six rejection rules have different
-                // remedies, and a message that lists them all sends the reader to the wrong one:
-                // "re-run PerFileScoring" is right for a stale cache and wrong for an absent
-                // one, where the cache usually exists and is valid but sits beside the raw data
-                // rather than in this worker's directory.
-                index = SpectraWindowIndex.BuildFromCache(cachePath, inputFile, out reason);
-            }
-            catch (Exception ex)
-            {
-                throw new SpectraCacheException(string.Format(
-                    "Stage-6 rescore requires the '{0}' spectra cache written by the per-file " +
-                    "scoring stage, but indexing it failed: {1}", cachePath, ex.Message),
-                    SpectraCacheRejection.None, cachePath, ex);
-            }
-            if (index == null)
-            {
-                // Absence is the one refusal that is usually a LOCATION problem rather than a
-                // damaged cache, so it names the flag that fixes it. The others are about the
-                // file that is there, and re-running the scoring stage is what rebuilds it.
-                string remedy = reason == SpectraCacheRejection.Absent
-                    ? string.Format(
-                        @"The cache is written beside its source data, so a --task worker whose " +
-                        @"--output-dir differs from the data directory has to be pointed at it " +
-                        @"with --cache-dir. Pass --cache-dir <dir holding {0}.spectra.bin>, or " +
-                        @"re-run PerFileScoring for '{0}' if no cache was ever written.", fileName)
-                    : string.Format(
-                        @"Re-run PerFileScoring for '{0}' to rebuild it.", fileName);
-                throw new SpectraCacheException(string.Format(
-                    @"Stage-6 rescore requires the '{0}' spectra cache written by the per-file " +
-                    @"scoring stage, but {1}. {2}",
-                    cachePath, SpectraCacheException.Describe(reason), remedy),
-                    reason, cachePath);
-            }
-
-            ctx.LogInfo(string.Format(
-                "  Streaming {1} MS1 and {0} MS/MS spectra from cache for {2}",
-                index.Ms2Count, index.Ms1Spectra.Count, fileName));
-            return index;
-        }
-
-        /// <summary>
-        /// Load MS2 + MS1 mass calibrations and the original Stage-4 RT
-        /// calibration MAD from the sibling .calibration.json that
-        /// Stage 2 wrote. Throws <see cref="InvalidDataException"/> if the
-        /// calibration sidecar is missing or unreadable -- Stage 6
-        /// requires the Stage 1-4 calibration to rescore, and silently
-        /// falling back to uncalibrated would mask a real configuration
-        /// error (the worker's output would diverge from the
-        /// straight-through pipeline's output). Mirrors the hard-error
-        /// behavior in Rust <c>run_rescore</c> at
-        /// <c>osprey/crates/osprey/src/rescore.rs</c>. Individual calibration
-        /// sections (Ms1Calibration / Ms2Calibration / RtMad) may still
-        /// be absent within the file; those leave the corresponding
-        /// out-param at its uncalibrated / null default.
-        /// </summary>
-        private void LoadMassCalibrations(string inputFile,
-            out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal,
-            out double? rtMadFromCalJson)
-        {
-            ms2Cal = MzCalibrationResult.Uncalibrated();
-            ms1Cal = MzCalibrationResult.Uncalibrated();
-            rtMadFromCalJson = null;
-
-            // Stage 1-4 wrote the calibration sidecar to the configured output
-            // directory (ArtifactPaths), which for a straight-through --output-dir
-            // run is NOT the (possibly read-only) input mzML's directory. Resolve
-            // it the same way the writer did; fall back to the input's own dir
-            // (via GetFullPath so a bare-filename input still yields an absolute
-            // dir) when no output dir is configured.
-            string parent = !string.IsNullOrEmpty(ArtifactPaths.OutputDir)
-                ? ArtifactPaths.OutputDir
-                : Path.GetDirectoryName(Path.GetFullPath(inputFile));
-            if (string.IsNullOrEmpty(parent))
-            {
-                throw new InvalidDataException(string.Format(
-                    "LoadMassCalibrations: cannot derive sidecar directory from input path `{0}`. " +
-                    "Stage 6 needs to read the Stage 1-4 calibration sidecar; without it the " +
-                    "worker would silently produce uncalibrated rescore output.", inputFile));
-            }
-            string calPath = CalibrationIO.CalibrationPathForInput(inputFile, parent);
-            if (!File.Exists(calPath))
-            {
-                throw new InvalidDataException(string.Format(
-                    "LoadMassCalibrations: required calibration JSON not found at `{0}` " +
-                    "(input file: `{1}`). Stage 6 needs the Stage 1-4 calibration sidecar to " +
-                    "rescore. Run Stages 1-4 first or fix the path.", calPath, inputFile));
-            }
-
-            CalibrationParams calParams;
-            try
-            {
-                calParams = CalibrationIO.LoadCalibration(calPath);
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidDataException(string.Format(
-                    "LoadMassCalibrations: failed to read calibration JSON `{0}`: {1}. The file " +
-                    "exists but could not be parsed -- check that it was written by a matching " +
-                    "Osprey version.", calPath, ex.Message), ex);
-            }
-
-            if (calParams.Ms2Calibration != null && calParams.Ms2Calibration.Calibrated)
-            {
-                ms2Cal = new MzCalibrationResult
-                {
-                    Mean = calParams.Ms2Calibration.Mean,
-                    Median = calParams.Ms2Calibration.Median,
-                    SD = calParams.Ms2Calibration.SD,
-                    Count = calParams.Ms2Calibration.Count,
-                    Unit = calParams.Ms2Calibration.Unit,
-                    AdjustedTolerance = calParams.Ms2Calibration.AdjustedTolerance,
-                    Calibrated = true
-                };
-            }
-            if (calParams.Ms1Calibration != null && calParams.Ms1Calibration.Calibrated)
-            {
-                ms1Cal = new MzCalibrationResult
-                {
-                    Mean = calParams.Ms1Calibration.Mean,
-                    Median = calParams.Ms1Calibration.Median,
-                    SD = calParams.Ms1Calibration.SD,
-                    Count = calParams.Ms1Calibration.Count,
-                    Unit = calParams.Ms1Calibration.Unit,
-                    AdjustedTolerance = calParams.Ms1Calibration.AdjustedTolerance,
-                    Calibrated = true
-                };
-            }
-            // The MAD is what Rust's run_search uses for rt_tolerance
-            // derivation; emit it from here (not from the refined cal's
-            // abs_residuals) so the C# rescore matches Rust's window
-            // size byte-for-byte.
-            if (calParams.RtCalibration != null && calParams.RtCalibration.MAD.HasValue)
-            {
-                rtMadFromCalJson = calParams.RtCalibration.MAD.Value;
-            }
         }
     }
 }
