@@ -315,7 +315,14 @@ namespace pwiz.SkylineTestUtil
             // since it is essentially an extension of the test directory.
             if (!TestContext.Properties.Contains(RunTests.PARALLEL_TEST_PROPERTY)) // It is a shared directory in parallel tests, though, so leave it alone in parallel mode
             {
-                if (!PathEx.IsDownloadsPathShared())
+                // A shared downloads folder holds other users' cached data too, so normally
+                // leave their extractions alone. Cleanup level "all" is the exception:
+                // TestRunner sets it only on a single-run CI VM, or when a developer asks for
+                // it with teamcity-cleanup=on - cases where there is no other user and
+                // reclaiming the space is the entire point. Without this the CI agents delete
+                // every downloaded zip but keep every extraction, which is the worst of both:
+                // the perf run re-downloads data it already fetched AND fills the disk anyway.
+                if (!PathEx.IsDownloadsPathShared() || desiredCleanupLevel == DesiredCleanupLevel.all)
                 {
                     CheckForFileLocks(PersistentFilesDir, desiredCleanupLevel != DesiredCleanupLevel.none);
                 }

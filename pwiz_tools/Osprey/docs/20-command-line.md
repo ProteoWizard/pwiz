@@ -139,7 +139,7 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 
 | Option | Value | Effect |
 |--------|-------|--------|
-| `--task` | `PerFileScoring \| FirstPassFDR \| PerFileRescoring \| SecondPassFDR` | Run exactly one pipeline task (one node = one task). Omit for the whole pipeline. EVERY task takes `-i`/`--input-list` naming the data files; the parquets and sidecars are derived from their stems. See [15-hpc-scoring-split.md](15-hpc-scoring-split.md). |
+| `--task` | `SpectraCache \| PerFileScoring \| FirstPassFDR \| PerFileRescoring \| SecondPassFDR \| ModelDiagnostics` | Run exactly one pipeline task (one node = one task). Omit for the whole pipeline. `SpectraCache` stages the `.spectra.bin` caches and needs no library; `ModelDiagnostics` regenerates only the `--model-diagnostics` report for a completed run. EVERY task takes `-i`/`--input-list` naming the data files; the parquets and sidecars are derived from their stems. See [15-hpc-scoring-split.md](15-hpc-scoring-split.md). |
 
 ### Logging
 

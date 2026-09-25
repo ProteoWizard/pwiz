@@ -86,7 +86,7 @@ namespace pwiz.Osprey.Tasks
 
         public void Accept(int fileIdx, int rowIdx, uint entryId, bool isDecoy,
             byte charge, string peptide, double score, double experimentAggregateScore,
-            in FdrQValues q)
+            double apexRt, in FdrQValues q)
         {
             // Tail [COUNT] tally, identical to the retired inline block: passing =
             // EffectiveRunQvalue <= RunFdr, split target/decoy; best-q-per-precursor
@@ -115,7 +115,8 @@ namespace pwiz.Osprey.Tasks
             if (_mdiagAccumulator != null)
                 _mdiagAccumulator.Add(fileIdx, peptide, charge, entryId, isDecoy, score, in q);
 
-            AcceptOutput(fileIdx, rowIdx, entryId, isDecoy, score, experimentAggregateScore, in q);
+            AcceptOutput(fileIdx, rowIdx, entryId, isDecoy, score, experimentAggregateScore,
+                apexRt, in q);
         }
 
         public void Finish(Action<string> logInfo)
@@ -148,9 +149,10 @@ namespace pwiz.Osprey.Tasks
                 _passLabel, _bestQByPrecursor.Count));
         }
 
-        /// <summary>Handle one row's q-value output (park it, or stream it to the sidecar).</summary>
+        /// <summary>Handle one row's persisted output (park it, or stream it to the sidecar).</summary>
         protected abstract void AcceptOutput(int fileIdx, int rowIdx, uint entryId,
-            bool isDecoy, double score, double experimentAggregateScore, in FdrQValues q);
+            bool isDecoy, double score, double experimentAggregateScore, double apexRt,
+            in FdrQValues q);
 
         /// <summary>Flush any deferred per-file output before the [COUNT] tally is logged.</summary>
         protected virtual void OnFinish()
@@ -227,7 +229,8 @@ namespace pwiz.Osprey.Tasks
         public int PartialWriteFailures => _partialWriteFailures;
 
         protected override void AcceptOutput(int fileIdx, int rowIdx, uint entryId,
-            bool isDecoy, double score, double experimentAggregateScore, in FdrQValues q)
+            bool isDecoy, double score, double experimentAggregateScore, double apexRt,
+            in FdrQValues q)
         {
             // Buffer this row's RUN-scope record in projection order and flush the per-file
             // .1st-pass.fdr_scores.bin at the file's last row. Every column of it is final
@@ -239,7 +242,7 @@ namespace pwiz.Osprey.Tasks
             {
                 _buffer.Add(new FdrScoreRecord(
                     entryId, score,
-                    q.RunPrecursorQvalue, q.RunPeptideQvalue));
+                    q.RunPrecursorQvalue, q.RunPeptideQvalue, apexRt));
             }
 
             // The EXPERIMENT-scope values collapse to one record per distinct entry_id. The
@@ -339,7 +342,8 @@ namespace pwiz.Osprey.Tasks
         }
 
         protected override void AcceptOutput(int fileIdx, int rowIdx, uint entryId,
-            bool isDecoy, double score, double experimentAggregateScore, in FdrQValues q)
+            bool isDecoy, double score, double experimentAggregateScore, double apexRt,
+            in FdrQValues q)
         {
             // Resolve this file's entry_id -> ExperimentProteinQvalue map once, at its first
             // row (rows are contiguous per file in Accept order). This is the value
@@ -356,7 +360,7 @@ namespace pwiz.Osprey.Tasks
 
             _buffer.Add(new FdrScoreRecord(
                 entryId, score,
-                q.RunPrecursorQvalue, q.RunPeptideQvalue));
+                q.RunPrecursorQvalue, q.RunPeptideQvalue, apexRt));
             _experiment.Add(entryId,
                 q.ExperimentPrecursorQvalue, q.ExperimentPeptideQvalue,
                 experimentProteinQvalue, experimentAggregateScore, q.Pep);

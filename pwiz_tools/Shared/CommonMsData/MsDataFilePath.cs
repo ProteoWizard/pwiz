@@ -92,6 +92,18 @@ namespace pwiz.CommonMsData
             return MsDataFilePath.ParseUri(url);
         }
 
+        /// <summary>
+        /// True if the string is a remote data source URL (unifi:, ardia: or waters_connect:), i.e.
+        /// <see cref="Parse"/> would return a <see cref="RemoteApi.RemoteUrl"/> rather than a local path.
+        /// </summary>
+        public static bool IsRemoteUrl(string url)
+        {
+            return url != null &&
+                   (url.StartsWith(UnifiUrl.UrlPrefix) ||
+                    url.StartsWith(ArdiaUrl.UrlPrefix) ||
+                    url.StartsWith(WatersConnectUrl.UrlPrefix));
+        }
+
         public abstract MsDataFileImpl OpenMsDataFile(OpenMsDataFileParams openMsDataFileParams);
 
         public int CompareTo(object obj)

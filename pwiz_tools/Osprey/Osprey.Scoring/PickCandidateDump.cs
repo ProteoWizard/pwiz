@@ -27,6 +27,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Scoring
 {
@@ -110,26 +111,30 @@ namespace pwiz.Osprey.Scoring
             // One small StringBuilder reused per row (cleared each iteration), so the largest
             // live allocation is a single line -- never the whole file.
             var line = new StringBuilder(96);
-            using (var writer = new StreamWriter(path, false))
+            using (var saver = new FileSaver(path))
             {
-                writer.NewLine = "\n";
-                writer.WriteLine(HeaderLine);
-                foreach (var r in rows)
+                using (var writer = new StreamWriter(saver.SafeName, false))
                 {
-                    line.Clear();
-                    line.Append(r.BaseId.ToString(inv)).Append('\t')
-                        .Append(r.IsDecoy ? '1' : '0').Append('\t')
-                        .Append(r.CandIndex.ToString(inv)).Append('\t')
-                        .Append(r.Coelution.ToString("R", inv)).Append('\t')
-                        .Append(r.LnIntensity.ToString("R", inv)).Append('\t')
-                        .Append(r.RtPenalty.ToString("R", inv)).Append('\t')
-                        .Append(r.MedianPolish.ToString("R", inv)).Append('\t')
-                        .Append(r.ApexRt.ToString("R", inv)).Append('\t')
-                        .Append(r.StartRt.ToString("R", inv)).Append('\t')
-                        .Append(r.EndRt.ToString("R", inv)).Append('\t')
-                        .Append(r.IsPicked ? '1' : '0');
-                    writer.WriteLine(line.ToString());
+                    writer.NewLine = "\n";
+                    writer.WriteLine(HeaderLine);
+                    foreach (var r in rows)
+                    {
+                        line.Clear();
+                        line.Append(r.BaseId.ToString(inv)).Append('\t')
+                            .Append(r.IsDecoy ? '1' : '0').Append('\t')
+                            .Append(r.CandIndex.ToString(inv)).Append('\t')
+                            .Append(r.Coelution.ToString("R", inv)).Append('\t')
+                            .Append(r.LnIntensity.ToString("R", inv)).Append('\t')
+                            .Append(r.RtPenalty.ToString("R", inv)).Append('\t')
+                            .Append(r.MedianPolish.ToString("R", inv)).Append('\t')
+                            .Append(r.ApexRt.ToString("R", inv)).Append('\t')
+                            .Append(r.StartRt.ToString("R", inv)).Append('\t')
+                            .Append(r.EndRt.ToString("R", inv)).Append('\t')
+                            .Append(r.IsPicked ? '1' : '0');
+                        writer.WriteLine(line.ToString());
+                    }
                 }
+                saver.Commit();
             }
 
             // Drain the bag so a subsequent (override rescore) pass on the same context starts

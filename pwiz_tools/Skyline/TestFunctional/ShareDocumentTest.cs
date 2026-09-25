@@ -46,8 +46,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class ShareDocumentTest : AbstractFunctionalTest
     {
-        [TestMethod,
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+        [TestMethod]
         public void TestDocumentSharing()
         {
             TestDirectoryName = "ShareDocumentTest";

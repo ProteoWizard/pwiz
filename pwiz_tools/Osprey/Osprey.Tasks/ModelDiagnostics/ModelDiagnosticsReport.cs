@@ -471,10 +471,10 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         }
 
         /// <summary>Task name stamped on both first-pass products; see <see cref="FirstPassFdrTask"/>.</summary>
-        private const string FirstPassTaskName = @"FirstPassFDR";
+        private const string FirstPassTaskName = FirstPassFdrTask.TASK_NAME;
 
         /// <summary>Task name stamped on the pass-2 product; see <see cref="SecondPassFdrTask"/>.</summary>
-        private const string SecondPassTaskName = @"SecondPassFDR";
+        private const string SecondPassTaskName = SecondPassFdrTask.TASK_NAME;
 
         private static string FirstPassExperimentSidecarPath(OspreyConfig config)
         {
@@ -595,7 +595,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             // directory, where nothing read it - present, complete, wrong, and invisible.
             // Relaying it is what turned a harmless stray file into a corrupt report, so the
             // guard earned its place here rather than in the relay.
-            if (config.NoJoin)
+            if (config.SelectedTask?.IsPerFileWorker == true)
             {
                 logWarning(@"[MODEL-DIAGNOSTICS] fan-out worker: not writing the experiment-wide " +
                            @"pass-1 diagnostics product (this node holds one run; FirstPassFDR owns it).");

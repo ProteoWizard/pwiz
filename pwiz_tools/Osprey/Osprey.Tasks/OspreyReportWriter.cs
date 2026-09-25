@@ -55,14 +55,16 @@ namespace pwiz.Osprey.Tasks
         /// A no-op (with a warning) when no output path is known. Called once, from the
         /// Stage-7 protein-FDR step, with the experiment-level parsimony + FDR result and the
         /// survivor milestone the per-replicate rows re-derive from - one file at a time, which
-        /// is all this writer ever needed (#4486).
+        /// is all this writer ever needed (#4486). A report that cannot be written is reported
+        /// through <paramref name="logWarning"/> and skipped; it never fails the run.
         /// </summary>
         internal static void WriteReports(
             SecondPassProteinFdrResult experimentResult,
             RescoredEntries rescored,
             IList<LibraryEntry> fullLibrary,
             OspreyConfig config,
-            Action<string> logInfo)
+            Action<string> logInfo,
+            Action<string> logWarning)
         {
             string stem = ReportStem(config);
             if (stem == null)
@@ -75,17 +77,35 @@ namespace pwiz.Osprey.Tasks
             if (config.WriteProteinReport)
             {
                 string path = stem + @".protein_groups.tsv";
-                WriteProteinGroups(path, experimentResult, fullLibrary, config);
-                logInfo?.Invoke(string.Format(
-                    "[COUNT] Wrote protein-group report: {0}", path));
+                TryWriteReport("protein-group", path, logInfo, logWarning,
+                    () => WriteProteinGroups(path, experimentResult, fullLibrary, config));
             }
 
             if (config.WriteSummaryReport)
             {
                 string path = stem + @".stats.tsv";
-                WriteSummary(path, experimentResult, rescored, fullLibrary, config, logInfo);
-                logInfo?.Invoke(string.Format(
-                    "[COUNT] Wrote summary report: {0}", path));
+                TryWriteReport("summary", path, logInfo, logWarning,
+                    () => WriteSummary(path, experimentResult, rescored, fullLibrary, config));
+            }
+        }
+
+        // The reports are additive: nothing downstream reads them, and the blib has not been
+        // written yet when they run. So a write failure is a warning naming the path, not a
+        // pipeline abort. The common case is the previous run's report still open in Excel,
+        // which makes FileSaver.Commit throw IOException on the replace; Commit deliberately
+        // lets that propagate so the caller can log it. FileSaver's disposal drops the temp.
+        private static void TryWriteReport(string label, string path,
+            Action<string> logInfo, Action<string> logWarning, Action write)
+        {
+            try
+            {
+                write();
+                logInfo?.Invoke(string.Format("[COUNT] Wrote {0} report: {1}", label, path));
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                logWarning?.Invoke(string.Format(
+                    "Failed to write the {0} report {1}: {2}", label, path, ex.Message));
             }
         }
 
@@ -123,8 +143,8 @@ namespace pwiz.Osprey.Tasks
             // Reported for the same reason as the per-replicate FDR below (#4571). This half of
             // the report writer ran silent: it scans the whole library above and then walks every
             // group here, and its only bracketing line is a [COUNT] that OspreyOutput.IsStatLine
-            // drops unless --perf-stats. A run configured with --protein-report but no summary
-            // report therefore produced no visible output for the entire report step.
+            // drops unless --perf-stats. A run with the protein report on but the summary
+            // report off therefore produced no visible output for the entire report step.
             int groupIdx = 0;
             var rows = new List<string[]>(groups.Count);
             using (var progress = new ProgressReporter(
@@ -182,17 +202,11 @@ namespace pwiz.Osprey.Tasks
                 .ThenBy(r => double.Parse(r[4], CultureInfo.InvariantCulture))
                 .ThenBy(r => r[0], StringComparer.Ordinal);
 
-            using (var w = new StreamWriter(path, false))
+            WriteTsv(path, new[]
             {
-                w.NewLine = "\n";
-                w.WriteLine(string.Join("\t", new[]
-                {
-                    "Protein.Group", "Protein.Names", "N.Peptides", "N.Proteotypic",
-                    "PG.Q.Value", "Passes.PG.FDR", "Grouping.Peptides", "Library.Unique.Peptides"
-                }));
-                foreach (var r in ordered)
-                    w.WriteLine(string.Join("\t", r));
-            }
+                "Protein.Group", "Protein.Names", "N.Peptides", "N.Proteotypic",
+                "PG.Q.Value", "Passes.PG.FDR", "Grouping.Peptides", "Library.Unique.Peptides"
+            }, ordered);
         }
 
         // Scan the library ONCE, capturing every protein accession each DETECTED peptide
@@ -238,8 +252,7 @@ namespace pwiz.Osprey.Tasks
             SecondPassProteinFdrResult experimentResult,
             RescoredEntries rescored,
             IList<LibraryEntry> fullLibrary,
-            OspreyConfig config,
-            Action<string> logInfo)
+            OspreyConfig config)
         {
             var level = config.FdrLevel;
             var rows = new List<string[]>();
@@ -298,13 +311,7 @@ namespace pwiz.Osprey.Tasks
                 expProteins.ToString(CultureInfo.InvariantCulture),
             });
 
-            using (var w = new StreamWriter(path, false))
-            {
-                w.NewLine = "\n";
-                w.WriteLine(string.Join("\t", new[] { "Run", "Precursors", "Peptides", "Proteins" }));
-                foreach (var r in rows)
-                    w.WriteLine(string.Join("\t", r));
-            }
+            WriteTsv(path, new[] { "Run", "Precursors", "Peptides", "Proteins" }, rows);
         }
 
         // Distinct precursors (modseq + charge) and distinct peptides (modseq) among
@@ -349,6 +356,28 @@ namespace pwiz.Osprey.Tasks
             if (string.IsNullOrEmpty(fileKey))
                 return fileKey;
             return Path.GetFileNameWithoutExtension(fileKey);
+        }
+
+        // ------------------------------------------------------------------ shared writer
+
+        // Both reports are the same file shape: a tab-joined header, tab-joined rows, "\n"
+        // newlines and UTF-8 without BOM (the StreamWriter default). The file is staged and
+        // committed through FileSaver so a kill mid-write leaves the previous report or none,
+        // never a truncated one (P8). Rows stream through; the report is never built as one
+        // string.
+        private static void WriteTsv(string path, string[] header, IEnumerable<string[]> rows)
+        {
+            using (var saver = new FileSaver(path))
+            {
+                using (var w = new StreamWriter(saver.SafeName, false))
+                {
+                    w.NewLine = "\n";
+                    w.WriteLine(string.Join("\t", header));
+                    foreach (var r in rows)
+                        w.WriteLine(string.Join("\t", r));
+                }
+                saver.Commit();
+            }
         }
     }
 }

@@ -42,8 +42,8 @@ namespace pwiz.Osprey.Tasks
     /// <see cref="OspreyTask.Run"/> never ran.
     ///
     /// The context is constructed once at the top of
-    /// <c>AnalysisPipeline.Run</c> (or <c>RescoreWorker.Run</c>) and
-    /// lives for the duration of the pipeline execution.
+    /// <c>AnalysisPipeline.Run</c> and lives for the duration of the
+    /// pipeline execution.
     /// </summary>
     public sealed class PipelineContext
     {
@@ -161,7 +161,7 @@ namespace pwiz.Osprey.Tasks
         // that needs state from a sibling asks Get/Demand for the state, never the task.
         // The one reader this property ever had was a predicate asking whether ITS OWN
         // consumer was going to run, so it could decide whether to do whole-run work - the
-        // second copy of IsIncluded's truth table that issue #4597 deleted. Leaving the hook
+        // second copy of the membership truth table that issue #4597 deleted. Leaving the hook
         // in place is an invitation to write that predicate again.
 
         /// <summary>

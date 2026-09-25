@@ -112,6 +112,12 @@ namespace pwiz.Skyline.Model.Koina.Config
             finally
             {
                 channel.ShutdownAsync().Wait();
+                // GrpcChannel owns an HttpClient and its connection pool and is IDisposable, where
+                // the legacy Grpc.Core ChannelBase it replaced was not - so ShutdownAsync alone
+                // leaked about 16.5 KB of managed memory per call. Measured over 30 iterations:
+                // 17.64 KB/run at R2 = 0.998 before, 0.93 KB/run at R2 = 0.43 after. The cast
+                // keeps this a no-op for any channel type that is not disposable.
+                (channel as IDisposable)?.Dispose();
             }
         }
     }

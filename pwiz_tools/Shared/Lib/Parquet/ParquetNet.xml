@@ -789,6 +789,28 @@
             <returns>DataColumn object filled in with data</returns>
             <exception cref="T:System.NotSupportedException">Unsupported page type</exception>
         </member>
+        <member name="T:Parquet.File.DataColumnWriter.PreparedColumn">
+            <summary>
+            A column chunk fully encoded and compressed into memory, ready to be appended
+            to the output stream by <see cref="M:Parquet.File.DataColumnWriter.EmitAsync(Parquet.File.DataColumnWriter.PreparedColumn,System.Threading.CancellationToken)"/>.
+            </summary>
+        </member>
+        <member name="M:Parquet.File.DataColumnWriter.PrepareAsync(Parquet.Schema.FieldPath,Parquet.Data.DataColumn,System.Threading.CancellationToken)">
+            <summary>
+            Encode and compress one column chunk into its own memory buffer. Touches no
+            shared output-stream state, so many columns can be prepared CONCURRENTLY -
+            which is the point: compression is the dominant cost of writing a parquet
+            and it is a pure transform. The returned chunk carries placeholder offsets;
+            <see cref="M:Parquet.File.DataColumnWriter.EmitAsync(Parquet.File.DataColumnWriter.PreparedColumn,System.Threading.CancellationToken)"/> rewrites them once the real stream position is known.
+            </summary>
+        </member>
+        <member name="M:Parquet.File.DataColumnWriter.EmitAsync(Parquet.File.DataColumnWriter.PreparedColumn,System.Threading.CancellationToken)">
+            <summary>
+            Append a prepared column chunk to the output stream. MUST run sequentially and
+            in schema order: parquet records each chunk's absolute byte offset, so the
+            position is only knowable at append time.
+            </summary>
+        </member>
         <member name="T:Parquet.File.PackedColumn">
             <summary>
             Represents column data packed into Parquet logical parts. This is an intermediate data structure that
@@ -2096,6 +2118,22 @@
             <param name="column"></param>
             <param name="customMetadata">If specified, adds custom column chunk metadata</param>
             <param name="cancellationToken"></param>
+        </member>
+        <member name="M:Parquet.ParquetRowGroupWriter.WriteColumnsAsync(System.Collections.Generic.IReadOnlyList{Parquet.Data.DataColumn},System.Collections.Generic.Dictionary{System.String,System.String},System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Writes several columns at once, compressing them CONCURRENTLY and appending them
+            in the order given. Byte-for-byte equivalent to calling
+            <see cref="M:Parquet.ParquetRowGroupWriter.WriteColumnAsync(Parquet.Data.DataColumn,System.Collections.Generic.Dictionary{System.String,System.String},System.Threading.CancellationToken)"/>
+            once per column in the same order - compression is a pure transform, and only the
+            append has to be ordered - but compression, which dominates the cost of writing a
+            parquet, runs across columns instead of one at a time.
+            </summary>
+            <param name="columns">Columns in schema order.</param>
+            <param name="customMetadata">Optional key/value metadata, applied to every column.</param>
+            <param name="maxDegreeOfParallelism">Concurrent compressions; 0 or less means
+            <see cref="P:System.Environment.ProcessorCount"/>. Memory scales with this: each in-flight
+            column holds its compressed chunk until it is appended.</param>
+            <param name="cancellationToken">Cancellation token.</param>
         </member>
         <member name="M:Parquet.ParquetRowGroupWriter.Dispose">
             <summary>

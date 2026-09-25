@@ -30,87 +30,178 @@ using pwiz.Osprey.Tasks;
 namespace pwiz.Osprey.Test
 {
     /// <summary>
-    /// Pins the per-task <see cref="OspreyTask.IsIncluded"/> membership
-    /// predicate -- the driver-owned dataflow's source of truth for which
-    /// tasks run in each HPC mode -- against an explicit expected truth table.
+    /// Pins the one membership rule, <see cref="OspreyConfig.Includes"/> - the driver-owned
+    /// dataflow's source of truth for which stages run in each HPC mode - against an explicit
+    /// expected truth table, and the task set it is asked over: the two lists, what each
+    /// selection runs, and the two facts a task still states about itself.
     ///
-    /// The table is the run-set the legacy
-    /// <c>DeriveStartAtTask</c>/<c>DeriveStopAfterTask</c> range produced and
-    /// that this test proved IsIncluded reproduced before the range gating was
-    /// flipped (B4 oracle) and then removed (B6). It is kept as a permanent
-    /// regression guard so a future edit to an IsIncluded override that breaks
-    /// the membership of any mode fails here rather than silently mis-routing
-    /// the pipeline.
+    /// The table is the run-set the legacy <c>DeriveStartAtTask</c>/<c>DeriveStopAfterTask</c>
+    /// range produced, then the per-task <c>IsIncluded</c> overrides reproduced over three
+    /// membership flags, and now the rule reproduces over the selection and its pipeline. It
+    /// is kept as a permanent regression guard so an edit that breaks the membership of any
+    /// mode fails here rather than silently mis-routing the pipeline.
     /// </summary>
     [TestClass]
     public class PipelineMembershipTest
     {
-        /// <summary>
-        /// One task's config, built the way <c>Program.Main</c> builds it: the task, and the
-        /// three membership flags DERIVED from it. Nothing else - which is the change these
-        /// rows record. Each row used to carry an input KIND too (a parquet list standing for
-        /// <c>--input-scores</c>), and every predicate read both; the kind is gone and the
-        /// expected memberships below are unchanged, which is the claim worth pinning.
-        /// </summary>
-        private static OspreyConfig ForTask(HpcTask task)
-        {
-            return new OspreyConfig
-            {
-                SelectedTask = task,
-                NoJoin = task == HpcTask.PerFileScoring || task == HpcTask.PerFileRescore,
-                // EXACTLY Program.cs's assignment, which is the only one in the tree:
-                // `config.StopAfterStage5 = selectedTask == HpcTask.FirstPassFdr;`. This
-                // helper also named ModelDiagnostics, building a config the CLI cannot
-                // produce - so the row below asserted a membership no real run has, while
-                // ProgramTests pinned the real flags and stated the opposite design. Two
-                // tests in one assembly asserting incompatible things is worse than either
-                // being wrong alone, because whichever you read first looks corroborated.
-                StopAfterStage5 = task == HpcTask.FirstPassFdr,
-                ExpectReconciledInput = task == HpcTask.SecondPassFdr,
-            };
-        }
-
         [TestMethod]
-        public void TestIsIncludedMembershipTable()
+        public void TestIncludesMembershipTable()
         {
-            // Expected membership per mode, in CanonicalPipeline order
-            // [PerFileScoring, FirstPassFDR, PerFileRescore, SecondPassFDR].
-            var cases = new (string Name, OspreyConfig Config, bool[] Expected)[]
+            // Expected membership per mode, in canonical pipeline order
+            // [PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR]. Each config
+            // comes from TaskConfigs.ForTask, the way a run builds it: the selection and the
+            // pipeline it runs, from one task set. The rows used to carry an input KIND too
+            // (a parquet list standing for --input-scores), and every predicate read both;
+            // the kind is gone and the expected memberships are unchanged, which is the claim
+            // worth pinning.
+            var cases = new (string Name, bool[] Expected)[]
             {
-                (@"straight-through",  new OspreyConfig(),
-                    new[] { true,  true,  true,  true  }),
-                (@"PerFileScoring",    ForTask(HpcTask.PerFileScoring),
-                    new[] { true,  false, false, false }),
-                (@"FirstPassFDR",      ForTask(HpcTask.FirstPassFdr),
-                    new[] { false, true,  false, false }),
-                (@"PerFileRescoring",  ForTask(HpcTask.PerFileRescore),
-                    new[] { false, false, true,  false }),
-                (@"SecondPassFDR",     ForTask(HpcTask.SecondPassFdr),
-                    new[] { false, false, false, true  }),
-                // --task ModelDiagnostics is a RENDER over retained products, and it reaches
-                // AnalysisPipeline with all three membership flags FALSE - it sets none of
-                // them (see ForTask, and Program.cs's single StopAfterStage5 assignment). So
-                // it is in every task, exactly like the straight-through run, and suppresses
-                // artifact writes rather than membership. The row here used to read
-                // {true,true,false,false}, which was the shape of a config the CLI cannot
-                // build; ProgramTests.cs pins the real flags and now agrees with this.
-                (@"ModelDiagnostics",  ForTask(HpcTask.ModelDiagnostics),
-                    new[] { true,  true,  true,  true  }),
+                (null,                           new[] { true,  true,  true,  true  }),
+                (PerFileScoringTask.TASK_NAME,   new[] { true,  false, false, false }),
+                (FirstPassFdrTask.TASK_NAME,     new[] { false, true,  false, false }),
+                (PerFileRescoreTask.TASK_NAME,   new[] { false, false, true,  false }),
+                (SecondPassFdrTask.TASK_NAME,    new[] { false, false, false, true  }),
+                // --task ModelDiagnostics is a RENDER over retained products: a selector that
+                // is not a stage of the pipeline it runs, so the rule includes every stage,
+                // exactly like the straight-through run, and artifact WRITES are what it
+                // suppresses. The row here used to read {true,true,false,false}, which was
+                // the shape of a config the CLI cannot build.
+                (ModelDiagnosticsTask.TASK_NAME, new[] { true,  true,  true,  true  }),
             };
+            // Every selection that walks the canonical pipeline has a row, so a task added
+            // later cannot leave its membership unpinned; the standalone task has none to pin.
+            var set = OspreyTasks.Create();
+            foreach (var task in set.All.Where(t => ReferenceEquals(set.PipelineFor(t), set.Pipeline)))
+                Assert.IsTrue(cases.Any(c => c.Name == task.Name), task.Name + @" has no membership row");
 
             foreach (var c in cases)
             {
-                var tasks = AnalysisPipeline.CanonicalPipeline();
-                var ctx = new PipelineContext(c.Config, tasks, null, null, null);
-                Assert.AreEqual(tasks.Length, c.Expected.Length,
-                    string.Format(@"{0}: expected-row length must match task count", c.Name));
+                string caseName = c.Name ?? @"straight-through";
+                var config = c.Name == null ? TaskConfigs.StraightThrough() : TaskConfigs.ForTask(c.Name);
+                Assert.AreEqual(config.Pipeline.Count, c.Expected.Length,
+                    string.Format(@"{0}: expected-row length must match stage count", caseName));
 
-                for (int i = 0; i < tasks.Length; i++)
+                for (int i = 0; i < config.Pipeline.Count; i++)
                 {
-                    Assert.AreEqual(c.Expected[i], tasks[i].IsIncluded(ctx), string.Format(
-                        @"{0}/{1}: IsIncluded must be {2}", c.Name, tasks[i].Name, c.Expected[i]));
+                    Assert.AreEqual(c.Expected[i], config.Includes(config.Pipeline[i]), string.Format(
+                        @"{0}/{1}: Includes must be {2}", caseName, config.Pipeline[i].Name, c.Expected[i]));
                 }
             }
+            // A bare config that never went through SelectTask reads as the full pipeline.
+            var bare = new OspreyConfig();
+            foreach (var stage in set.Pipeline)
+                Assert.IsTrue(bare.Includes(stage), stage.Name);
+        }
+
+        /// <summary>
+        /// The task set: every selectable task listed once, the canonical pipeline an
+        /// explicit ordered sub-list of it, the pipeline each selection runs declared by the
+        /// set (SpectraCache alone; ModelDiagnostics the canonical stages; a stage its own
+        /// pipeline), instances shared throughout, and a selection from another set refused.
+        /// </summary>
+        [TestMethod]
+        public void TestTaskSetAndPipelineForSelection()
+        {
+            var set = OspreyTasks.Create();
+            CollectionAssert.AreEqual(
+                new[]
+                {
+                    SpectraCacheTask.TASK_NAME, PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME,
+                    PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME, ModelDiagnosticsTask.TASK_NAME
+                },
+                set.All.Select(t => t.Name).ToArray(), @"the --task values, in --help order");
+            CollectionAssert.AreEqual(
+                new[]
+                {
+                    PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME,
+                    PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME
+                },
+                set.Pipeline.Select(t => t.Name).ToArray(), @"the canonical stages, in execution order");
+            foreach (var stage in set.Pipeline)
+                Assert.IsTrue(set.All.Contains(stage), stage.Name + @": a stage is one of the listed instances");
+
+            Assert.AreSame(set.Pipeline, set.PipelineFor(null), @"no selection walks the canonical pipeline");
+            foreach (var stage in set.Pipeline)
+                Assert.AreSame(set.Pipeline, set.PipelineFor(stage), stage.Name + @": a stage runs its pipeline");
+            var spectraCache = set.FindByName(SpectraCacheTask.TASK_NAME);
+            CollectionAssert.AreEqual(new[] { spectraCache }, set.PipelineFor(spectraCache).ToArray(),
+                @"SpectraCache runs alone");
+            Assert.AreSame(set.Pipeline, set.PipelineFor(set.FindByName(ModelDiagnosticsTask.TASK_NAME)),
+                @"ModelDiagnostics runs the canonical stages");
+
+            // Case-insensitive lookup resolves to the canonical spelling.
+            Assert.AreSame(set.FindByName(FirstPassFdrTask.TASK_NAME), set.FindByName(@"firstpassfdr"));
+            Assert.IsNull(set.FindByName(@"Bogus"));
+
+            // A selection from a DIFFERENT set is refused rather than silently building a
+            // pipeline whose reference checks all fail - at the set, and at the driver, which
+            // must be handed the very list the config's task was selected with: with any
+            // other list the membership rule excludes every stage and the run "completes"
+            // having done nothing.
+            var stranger = OspreyTasks.Create().FindByName(SpectraCacheTask.TASK_NAME);
+            Assert.ThrowsException<ArgumentException>(() => set.PipelineFor(stranger));
+            var config = TaskConfigs.ForTask(set, FirstPassFdrTask.TASK_NAME);
+            Assert.ThrowsException<ArgumentException>(
+                () => new AnalysisPipeline().Run(config, OspreyTasks.Create().Pipeline));
+
+            // The list is complete: every concrete OspreyTask in the task library is in it,
+            // so a class committed without its place in the list cannot pass as "unknown task".
+            var concreteTaskTypes = typeof(OspreyTask).Assembly.GetTypes()
+                .Where(t => !t.IsAbstract && typeof(OspreyTask).IsAssignableFrom(t))
+                .OrderBy(t => t.FullName)
+                .ToArray();
+            CollectionAssert.AreEqual(concreteTaskTypes,
+                set.All.Select(t => t.GetType()).OrderBy(t => t.FullName).ToArray(),
+                @"every OspreyTask subclass in Osprey.Tasks must be listed in OspreyTasks.Create() exactly once");
+        }
+
+        /// <summary>
+        /// The two facts a task still states about itself, as one truth table, plus the
+        /// position and membership questions the pipeline answers about a selection: what
+        /// used to be four per-task facts and an enum switch each.
+        /// </summary>
+        [TestMethod]
+        public void TestSelectedTaskFacts()
+        {
+            // Columns: IsPerFileWorker, HydratesPerRun; then, of the selection: starts after
+            // per-file scoring, reads the reconciled parquets, runs the Stage 7 join.
+            var expected = new (string Name, bool PerFileWorker, bool HydratesPerRun,
+                bool StartsAfterScoring, bool ReadsReconciled, bool RunsStage7Join)[]
+            {
+                (SpectraCacheTask.TASK_NAME,     true,  false, false, false, false),
+                (PerFileScoringTask.TASK_NAME,   true,  false, false, false, false),
+                (FirstPassFdrTask.TASK_NAME,     false, false, true,  false, false),
+                (PerFileRescoreTask.TASK_NAME,   true,  true,  true,  false, false),
+                (SecondPassFdrTask.TASK_NAME,    false, false, true,  true,  true),
+                (ModelDiagnosticsTask.TASK_NAME, false, true,  false, false, true),
+            };
+            var set = OspreyTasks.Create();
+            Assert.AreEqual(expected.Length, set.All.Count, @"every task has a row");
+            foreach (var e in expected)
+            {
+                var task = set.FindByName(e.Name);
+                Assert.IsNotNull(task, e.Name);
+                Assert.AreEqual(e.PerFileWorker, task.IsPerFileWorker, e.Name + @": IsPerFileWorker");
+                Assert.AreEqual(e.HydratesPerRun, task.HydratesPerRun, e.Name + @": HydratesPerRun");
+                var config = TaskConfigs.ForTask(set, e.Name);
+                Assert.AreEqual(e.StartsAfterScoring, ScoringTaskShared.StartsAfterPerFileScoring(config), e.Name + @": StartsAfterPerFileScoring");
+                Assert.AreEqual(e.ReadsReconciled, ScoringTaskShared.ReadsReconciledScores(config), e.Name + @": ReadsReconciledScores");
+                Assert.AreEqual(e.RunsStage7Join, ScoringTaskShared.RunsStage7Join(config), e.Name + @": RunsStage7Join");
+                // A per-file worker never runs the join.
+                Assert.IsFalse(task.IsPerFileWorker && ScoringTaskShared.RunsStage7Join(config), e.Name + @": a per-file worker runs no join");
+            }
+            // The straight-through run (no selection) answers as the full pipeline: from the
+            // spectra, running the join - and so does a bare config that never selected.
+            foreach (var full in new[] { TaskConfigs.StraightThrough(), new OspreyConfig() })
+            {
+                Assert.IsFalse(ScoringTaskShared.StartsAfterPerFileScoring(full));
+                Assert.IsFalse(ScoringTaskShared.ReadsReconciledScores(full));
+                Assert.IsTrue(ScoringTaskShared.RunsStage7Join(full));
+            }
+            // The defaults fail closed: a task that overrides nothing is a join that hydrates
+            // nothing per run.
+            var unknown = new UnlistedTask();
+            Assert.IsFalse(unknown.IsPerFileWorker || unknown.HydratesPerRun);
         }
 
         /// <summary>
@@ -131,23 +222,35 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestOnlyStage7JoinTasksAdmitTheStreamedJoin()
         {
-            var admitted = new[] { HpcTask.SecondPassFdr, HpcTask.ModelDiagnostics };
-            foreach (HpcTask task in Enum.GetValues(typeof(HpcTask)))
+            var admitted = new[] { SecondPassFdrTask.TASK_NAME, ModelDiagnosticsTask.TASK_NAME };
+            foreach (var task in OspreyTasks.Create().All)
             {
-                bool expected = admitted.Contains(task);
-                Assert.AreEqual(expected, ScoringTaskShared.RunsStage7Join(ForTask(task)),
-                    string.Format(@"--task {0}: RunsStage7Join must be {1}", task, expected));
+                bool expected = admitted.Contains(task.Name);
+                var config = TaskConfigs.ForTask(task.Name);
+                Assert.AreEqual(expected, ScoringTaskShared.RunsStage7Join(config),
+                    string.Format(@"--task {0}: RunsStage7Join must be {1}", task.Name, expected));
                 // A task that does not run the join must be refused BEFORE any disk term,
                 // which is what makes the refusal free and unconditional.
                 if (!expected)
                 {
                     Assert.IsFalse(
-                        ScoringTaskShared.Stage7StreamAdmittedBeforeRescore(ForTask(task), true),
-                        string.Format(@"--task {0} must not be admitted to the streamed join", task));
+                        ScoringTaskShared.Stage7StreamAdmittedBeforeRescore(config),
+                        string.Format(@"--task {0} must not be admitted to the streamed join", task.Name));
                 }
             }
             // The straight-through pipeline runs every stage, so it is admitted.
-            Assert.IsTrue(ScoringTaskShared.RunsStage7Join(new OspreyConfig()));
+            Assert.IsTrue(ScoringTaskShared.RunsStage7Join(TaskConfigs.StraightThrough()));
+        }
+
+        /// <summary>
+        /// A task that overrides none of the selection facts, standing in for one added
+        /// later whose author has not yet decided what is true of it.
+        /// </summary>
+        private sealed class UnlistedTask : OspreyTask
+        {
+            public override string Name => @"Unlisted";
+            public override bool Run(PipelineContext ctx) => true;
+            public override bool Rehydrate(PipelineContext ctx) => true;
         }
     }
 }

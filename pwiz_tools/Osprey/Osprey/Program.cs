@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -80,10 +80,10 @@ namespace pwiz.Osprey
             {
                 // Scan args for the HPC task selector up front so error
                 // messages name the task before any other argument is parsed. A single
-                // `--task <Name>` runs exactly one pipeline task (HPC: one
-                // node = one task) by setting the (NoJoin, StopAfterStage5,
-                // ExpectReconciledInput) config flags the four tasks'
-                // IsIncluded methods read. Default (no --task) runs the full
+                // `--task <Name>` runs exactly one pipeline stage (HPC: one
+                // node = one task) - the selected stage is the only one the driver
+                // includes (OspreyConfig.Includes) - and the task sets whatever behavior
+                // flag its selection implies. Default (no --task) runs the full
                 // straight-through pipeline. Any unrecognized flag (including
                 // the retired --no-join / --join-only / --join-at-pass) fails
                 // fast in ParseArgs.
@@ -95,8 +95,9 @@ namespace pwiz.Osprey
                     {
                         if (i + 1 >= args.Length || args[i + 1].StartsWith("-", StringComparison.Ordinal))
                         {
-                            LogError("--task requires a task name (SpectraCache, PerFileScoring, FirstPassFDR, " +
-                                     "PerFileRescoring, SecondPassFDR, or ModelDiagnostics).");
+                            LogError(string.Format("{0} requires a task name ({1}).",
+                                OspreyCommandArgs.ARG_TASK.ArgumentText,
+                                string.Join(", ", OspreyCommandArgs.ARG_TASK.Values)));
                             return 1;
                         }
                         taskName = args[i + 1];
@@ -108,33 +109,55 @@ namespace pwiz.Osprey
                     }
                 }
 
-                HpcTask? selectedTask = null;
+                // The one task set for this run. The selection is looked up in it and the
+                // pipeline comes from it, so the two hold the same instances and a stage
+                // can ask whether it IS the selection by reference.
+                var tasks = OspreyTasks.Create();
+                OspreyTask selectedTask = null;
                 if (taskName != null)
                 {
-                    string taskErr = ResolveTask(taskName, out HpcTask resolved);
+                    string taskErr = ResolveTask(taskName, tasks, out selectedTask);
                     if (taskErr != null)
                     {
                         LogError(taskErr);
                         return 1;
                     }
-                    selectedTask = resolved;
                 }
 
-                OspreyConfig config = ParseArgs(args);
-                // --task selects one pipeline task; derive the membership flags
-                // the tasks' IsIncluded methods read. ExpectReconciledInput also
-                // arms the strict-reconciled-input gate (every run's reconciled
-                // parquet must carry osprey.reconciled = "true"). All three are
-                // derived from --task and from nothing else, which is what let the
-                // input KIND retire: it was the OTHER seam saying the same thing.
-                config.SelectedTask = selectedTask;
-                // --task ModelDiagnostics IS the request for the report; without the flag the
-                // run would recompute the pass-2 view and write nothing, a silent no-op.
-                if (selectedTask == HpcTask.ModelDiagnostics)
-                    config.ModelDiagnostics = true;
-                config.NoJoin = selectedTask == HpcTask.PerFileScoring || selectedTask == HpcTask.PerFileRescore;
-                config.StopAfterStage5 = selectedTask == HpcTask.FirstPassFdr;
-                config.ExpectReconciledInput = selectedTask == HpcTask.SecondPassFdr;
+                OspreyConfig config;
+                try
+                {
+                    config = ParseArgs(args);
+                }
+                catch (Exception ex) when (ex is ArgumentException || ex is FileNotFoundException || ex is InvalidDataException)
+                {
+                    // A usage error, not a failure: the parser threw it to name the argument,
+                    // so the message IS the diagnosis, and a type name plus a stack through
+                    // the parser would only bury it. Reported the way the ValidateArgs errors
+                    // below are. Anything else the parser throws is a defect and falls through
+                    // to the sink at the bottom of Main with its frames intact.
+                    //
+                    // These three are what the parser raises ON PURPOSE, and the list is
+                    // deliberately narrower than it reads: FileNotFoundException, not
+                    // IOException, because --input-list throws the former for the missing-file
+                    // case a user can fix, while File.ReadAllLines can throw a sharing or
+                    // device IOException that is NOT a usage error and needs its type, inner
+                    // exception and stack. Numeric values reach ParseInt / ParseDouble, which
+                    // convert FormatException into an ArgumentException naming the flag, so
+                    // no parse failure needs an entry of its own here.
+                    LogError(ex.Message);
+                    return 1;
+                }
+                // --task selects one task and, with it, the pipeline it runs - the canonical
+                // stages, or a selector's own list (OspreyTasks.PipelineFor). Membership is
+                // one rule over the two (OspreyConfig.Includes); the task sets whatever
+                // behavior flag its selection implies (OspreyTask.ApplySelection) - a stop
+                // boundary, the reconciled-footer gate, the report flag the diagnostics
+                // selector stands for. All of it derives from --task and from nothing else,
+                // which is what let the input KIND retire: it was the OTHER seam saying the
+                // same thing.
+                var pipeline = tasks.PipelineFor(selectedTask);
+                config.SelectTask(selectedTask, pipeline);
 
                 // Apply the output / cache directory overrides process-wide so
                 // every per-file artifact path helper (scores parquet, spectra
@@ -283,29 +306,16 @@ namespace pwiz.Osprey
                     config.LibrarySource?.Format.ToString() ?? "?"));
                 // A --task run executes one HPC stage rather than the full pipeline;
                 // name it so the log says which single task ran (no --task = full
-                // pipeline, no line).
-                if (config.SelectedTask.HasValue)
-                    LogInfo(string.Format("Task: {0} (single-task run)",
-                        TaskCliName(config.SelectedTask.Value)));
-                // --task PerFileScoring writes per-file .scores.parquet next to each
-                // input file, mzML or vendor raw, not a blib - report the real output
-                // rather than the ignored --output blib path. (PerFileRescoring still
-                // writes --output.)
-                if (config.SelectedTask == HpcTask.SpectraCache)
-                    LogInfo("Output: per-file .spectra.bin (no scoring; --output and --library are not used)");
-                else if (config.NoJoin && config.SelectedTask == HpcTask.PerFileScoring)
-                    LogInfo("Output: per-file .scores.parquet (next to each input file)");
-                else if (config.DiagnosticsOnly)
-                {
-                    // --task ModelDiagnostics regenerates the report for a COMPLETED run and
-                    // declares no other output; naming the blib here reads as "the blib is being
-                    // rebuilt", and an operator who then sees its timestamp unchanged concludes
-                    // the run failed. Same reason SpectraCache has its own branch above.
-                    LogInfo(string.Format("Output: {0} (report only; no other artifact is written)",
-                        ModelDiagnosticsReport.ReportPath(config)));
-                }
-                else
-                    LogInfo(string.Format("Output: {0}", config.OutputBlib));
+                // pipeline, no line). The Name is the canonical spelling, whatever
+                // case the operator typed.
+                if (config.SelectedTask != null)
+                    LogInfo(string.Format("Task: {0} (single-task run)", config.SelectedTask.Name));
+                // A task that writes something other than the blib - per-file parquets,
+                // per-file spectra caches, the diagnostics report alone - names its real
+                // output, so the log does not read as if the --output blib were being
+                // rebuilt: every selectable task but SecondPassFDR describes its own output.
+                LogInfo(string.Format("Output: {0}",
+                    config.SelectedTask?.DescribeOutput(config) ?? config.OutputBlib));
                 LogInfo(string.Format("Resolution: {0}", config.ResolutionMode));
                 LogInfo(string.Format("Fragment tolerance: {0} {1}",
                     config.FragmentTolerance.Tolerance,
@@ -346,6 +356,25 @@ namespace pwiz.Osprey
                         OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT));
                     return 1;
                 }
+                // OSPREY_STAGE7_STREAM was REMOVED (2026-09-10): the streamed Stage-7 join is the
+                // only arm there is. Setting it to 0 used to select the RESIDENT join, so a sweep
+                // script still passing it would measure the streamed arm and file the numbers
+                // under the resident one - the misattribution case these variables have to be
+                // strict about, and the reason this is an error rather than a warning. Checked at
+                // startup so a stale script dies in seconds instead of after Stage 1-5.
+                if (OspreyEnvironment.Stage7StreamRetiredSet)
+                {
+                    LogError(
+                        "OSPREY_STAGE7_STREAM was REMOVED and setting it does nothing. Unset it. " +
+                        "It kept the RESIDENT Stage-7 join as an A/B byte-identity oracle for the " +
+                        "streamed default; that A/B was banked (the resident arm matched the " +
+                        "committed golden at 1e-9 and produced a byte-identical diagnostics " +
+                        "report), and the switch went with it. Stage 7 streams by default and this " +
+                        "variable can no longer select the resident arm; the configurations that " +
+                        "still take it do so by their own declaration (see ResidentPaths), not " +
+                        "through this setting.");
+                    return 1;
+                }
                 // A token that names nothing admits nothing, so the run proceeds - but say so
                 // (#4486). 'hpc-merge' was retired when --task SecondPassFDR started streaming
                 // its reconciled-input load, making it the first previously-VALID token to
@@ -365,8 +394,8 @@ namespace pwiz.Osprey
                     // warning said was not engaged.
                     LogWarning(string.Format(
                         "OSPREY_ALLOW_UNFIXED_RESIDENT contains unrecognized token(s) that grant " +
-                        "nothing: {0}. Recognized: {1}. ('hpc-merge' was retired - the " +
-                        "--task SecondPassFDR reconciled-input load streams and needs no allowance.) " +
+                        "nothing: {0}. Recognized: {1}. ('hpc-merge' and 'fdrbench-pass1' were retired - the " +
+                        "--task SecondPassFDR reconciled-input load and the pass-1 FDRBench emitter both stream and need no allowance.) " +
                         "Any recognized token in the same value is still honored.",
                         OspreyEnvironment.UnrecognizedResidentTokens,
                         string.Join(", ", ResidentPaths.KNOWN_UNFIXED)));
@@ -386,16 +415,21 @@ namespace pwiz.Osprey
                 }
 
                 // Single entry point. The rescore worker (--task
-                // PerFileRescoring) includes only
-                // PerFileRescoreTask (OspreyTask.IsIncluded); PerFileScoring's
-                // lazy-rehydrate (via ctx.Demand) populates the upstream state
-                // from the boundary files on disk.
-                var pipeline = new AnalysisPipeline();
-                return pipeline.Run(config);
+                // PerFileRescoring) includes only PerFileRescoreTask
+                // (OspreyConfig.Includes); PerFileScoring's lazy-rehydrate (via
+                // ctx.Demand) populates the upstream state from the boundary files
+                // on disk.
+                return new AnalysisPipeline().Run(config, pipeline);
             }
             catch (Exception ex)
             {
-                LogError(string.Format("Fatal error: {0}", ex.Message));
+                // As in AnalysisPipeline.Run: the whole exception, so an empty message or a
+                // wrapper's InnerException cannot hide the cause. This sink had no stack
+                // trace at all, so a failure before the pipeline started - creating the
+                // output directories, the input checks, the model-diagnostics render -
+                // reported one line and no frames. Usage errors do not reach here; the
+                // parser's catch above reports them as the one-line messages they are.
+                LogError(string.Format("Fatal error: {0}", ex));
                 return 1;
             }
             finally
@@ -469,81 +503,22 @@ namespace pwiz.Osprey
         }
 
         /// <summary>
-        /// Resolve a <c>--task &lt;Name&gt;</c> selector (case-insensitive,
-        /// matched against each task's stable <c>Name</c>) to its
-        /// <see cref="HpcTask"/>. One node = one task on HPC. The caller derives
-        /// the pipeline-membership flags (<c>NoJoin</c>, <c>StopAfterStage5</c>,
-        /// <c>ExpectReconciledInput</c>) from the result and keeps the
-        /// <see cref="HpcTask"/> on the config so <see cref="ValidateArgs"/> can
-        /// enforce the task&#8596;input-type contract.
+        /// Resolve a <c>--task &lt;Name&gt;</c> selector (case-insensitive, matched
+        /// against each task's stable <c>Name</c>) to the task instance in
+        /// <paramref name="tasks"/> that bears it. One node = one task on HPC. The caller
+        /// hands the instance and the pipeline it runs to <see cref="OspreyConfig.SelectTask"/>,
+        /// and the same instance then appears in that pipeline.
         ///
-        /// Returns null on success, or an error message string for an unknown
-        /// task name. Internal so Osprey.Test can exercise it.
+        /// Returns null on success, or an error message string listing every valid name
+        /// for an unknown one. Internal so Osprey.Test can exercise it.
         /// </summary>
-        internal static string ResolveTask(string taskName, out HpcTask task)
+        internal static string ResolveTask(string taskName, OspreyTasks tasks, out OspreyTask task)
         {
-            if (string.Equals(taskName, "PerFileScoring", StringComparison.OrdinalIgnoreCase))
-            {
-                task = HpcTask.PerFileScoring;
+            task = tasks.FindByName(taskName);
+            if (task != null)
                 return null;
-            }
-            if (string.Equals(taskName, "FirstPassFDR", StringComparison.OrdinalIgnoreCase))
-            {
-                task = HpcTask.FirstPassFdr;
-                return null;
-            }
-            if (string.Equals(taskName, "PerFileRescoring", StringComparison.OrdinalIgnoreCase))
-            {
-                task = HpcTask.PerFileRescore;
-                return null;
-            }
-            if (string.Equals(taskName, "SecondPassFDR", StringComparison.OrdinalIgnoreCase))
-            {
-                task = HpcTask.SecondPassFdr;
-                return null;
-            }
-            if (string.Equals(taskName, "SpectraCache", StringComparison.OrdinalIgnoreCase))
-            {
-                task = HpcTask.SpectraCache;
-                return null;
-            }
-            if (string.Equals(taskName, "ModelDiagnostics", StringComparison.OrdinalIgnoreCase))
-            {
-                // The selector IS the request for the report, so it implies the flag rather than
-                // requiring both. Without --model-diagnostics the task would run the pass-2
-                // compute and write nothing at all, which reads as a silent no-op.
-                task = HpcTask.ModelDiagnostics;
-                return null;
-            }
-            task = default;
-            return string.Format(
-                "--task: unknown task '{0}'. Valid tasks: SpectraCache, PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR, ModelDiagnostics.",
-                taskName);
-        }
-
-        /// <summary>
-        /// The canonical CLI <c>--task</c> token for an <see cref="HpcTask"/> - the
-        /// inverse of <see cref="ResolveTask"/>, used to echo the selected task in the
-        /// startup settings block. Not necessarily the spelling the operator typed:
-        /// <see cref="ResolveTask"/> matches case-insensitively, and only the resolved
-        /// enum value reaches this method, so <c>--task firstpassfdr</c> echoes as
-        /// <c>FirstPassFDR</c>. The members now spell their own CLI token, so the only
-        /// differences left are the FDR casing (<c>FirstPassFdr</c> vs the all-caps
-        /// acronym the CLI takes) and PerFileRescore vs PerFileRescoring - which is why
-        /// <c>task.ToString()</c> is still not a substitute for this switch.
-        /// </summary>
-        private static string TaskCliName(HpcTask task)
-        {
-            switch (task)
-            {
-                case HpcTask.PerFileScoring: return "PerFileScoring";
-                case HpcTask.FirstPassFdr: return "FirstPassFDR";
-                case HpcTask.PerFileRescore: return "PerFileRescoring";
-                case HpcTask.SecondPassFdr: return "SecondPassFDR";
-                case HpcTask.SpectraCache: return "SpectraCache";
-                case HpcTask.ModelDiagnostics: return "ModelDiagnostics";
-                default: return task.ToString();
-            }
+            return string.Format("{0}: unknown task '{1}'. Valid tasks: {2}.",
+                OspreyCommandArgs.ARG_TASK.ArgumentText, taskName, string.Join(", ", tasks.All.Select(t => t.Name)));
         }
 
         /// <summary>
@@ -554,10 +529,62 @@ namespace pwiz.Osprey
         /// presence and count, not kind. The cross this used to reject
         /// (<c>--task PerFileScoring --input-scores</c>) cannot be expressed any more,
         /// which is the point of retiring the second seam rather than teaching a third
-        /// predicate about it. Returns null on success or an error message string on
-        /// failure. Does not log warnings (those stay in <see cref="Main"/>). Internal so
-        /// Osprey.Test can exercise it.
+        /// predicate about it. What each task requires is the task's own answer
+        /// (<see cref="ISelectableTask.ValidateSelection"/>), so there is no per-task
+        /// switch here to keep in step with the task list. Returns null on success or an
+        /// error message string on failure. Does not log warnings (those stay in
+        /// <see cref="Main"/>). Internal so Osprey.Test can exercise it.
         /// </summary>
+        internal static string ValidateArgs(OspreyConfig config)
+        {
+            bool hasInputFiles = config.HasInputFiles;
+
+            // OSPREY_EXPERIMENT_AGG family, before any I/O. Checked here rather than at the
+            // Stage-5 consuming site so a bad combination costs a second instead of the hours a
+            // large run spends reaching FirstPassFDR, and so a warm resume - which skips
+            // FirstPassFdrTask.Run entirely - is still checked.
+            string aggErr = OspreyEnvironment.ValidateExperimentAggSettings(
+                ExperimentAggFileCount(config, hasInputFiles));
+            if (aggErr != null)
+                return aggErr;
+
+            // Every run is keyed on its input STEM - the per-file artifacts are
+            // <stem>.<suffix>, and every per-run map in the pipeline is keyed the same way -
+            // so two inputs sharing a stem are two runs the pipeline cannot tell apart. It is
+            // not exotic: --input-list makes it routine at cohort scale, where the same
+            // acquisition name recurs under different directories.
+            //
+            // Refused here rather than surviving to be discovered downstream, where it takes
+            // two shapes and neither says what happened. Without --output-dir the join appends
+            // two rows under one key while the parquet map keeps only the second, and
+            // CurrentReconciledPaths dies with "An item with the same key has already been
+            // added" mid-Stage-6/7. WITH --output-dir it is worse and silent: both stems
+            // resolve into the same directory, so the two runs share one .scores.parquet and
+            // one .scores-reconciled.parquet, each overwriting the other, with no error at all.
+            // The retired --input-scores form made stems unique by construction.
+            if (hasInputFiles)
+            {
+                string dupErr = DuplicateInputStemError(config.InputFiles);
+                if (dupErr != null)
+                    return dupErr;
+            }
+
+            // A --task run: the task states what it needs, naming itself in the message.
+            if (config.SelectedTask != null)
+                return config.SelectedTask.ValidateSelection(config);
+
+            // No --task: the full pipeline. A cold run scores from Stage 1; a resume over a
+            // directory that already holds each run's artifacts skips to whichever stage is
+            // outstanding, which the per-task validity sidecars decide - not the input kind.
+            if (!hasInputFiles)
+                return "No input files specified. Use -i <file1.mzML> [file2.mzML ...]";
+            if (config.LibrarySource == null)
+                return "No spectral library specified. Use -l <library.tsv>";
+            if (string.IsNullOrEmpty(config.OutputBlib))
+                return "No output path specified. Use -o <output.blib>";
+            return null;
+        }
+
         /// <summary>
         /// An error naming every input stem that appears more than once, with the paths that
         /// collide, or null when all stems are distinct. Ordinal comparison, matching the
@@ -590,130 +617,18 @@ namespace pwiz.Osprey
             return sb.ToString();
         }
 
-        internal static string ValidateArgs(OspreyConfig config)
-        {
-            bool hasInputFiles = config.InputFiles != null && config.InputFiles.Count > 0;
-
-            // OSPREY_EXPERIMENT_AGG family, before any I/O. Checked here rather than at the
-            // Stage-5 consuming site so a bad combination costs a second instead of the hours a
-            // large run spends reaching FirstPassFDR, and so a warm resume - which skips
-            // FirstPassFdrTask.Run entirely - is still checked.
-            string aggErr = OspreyEnvironment.ValidateExperimentAggSettings(
-                ExperimentAggFileCount(config, hasInputFiles));
-            if (aggErr != null)
-                return aggErr;
-
-            // Every run is keyed on its input STEM - the per-file artifacts are
-            // <stem>.<suffix>, and every per-run map in the pipeline is keyed the same way -
-            // so two inputs sharing a stem are two runs the pipeline cannot tell apart. It is
-            // not exotic: --input-list makes it routine at cohort scale, where the same
-            // acquisition name recurs under different directories.
-            //
-            // Refused here rather than surviving to be discovered downstream, where it takes
-            // two shapes and neither says what happened. Without --output-dir the join appends
-            // two rows under one key while the parquet map keeps only the second, and
-            // CurrentReconciledPaths dies with "An item with the same key has already been
-            // added" mid-Stage-6/7. WITH --output-dir it is worse and silent: both stems
-            // resolve into the same directory, so the two runs share one .scores.parquet and
-            // one .scores-reconciled.parquet, each overwriting the other, with no error at all.
-            // The retired --input-scores form made stems unique by construction.
-            if (hasInputFiles)
-            {
-                string dupErr = DuplicateInputStemError(config.InputFiles);
-                if (dupErr != null)
-                    return dupErr;
-            }
-
-            if (config.SelectedTask.HasValue)
-            {
-                switch (config.SelectedTask.Value)
-                {
-                    case HpcTask.SpectraCache:
-                        // Stage 1 alone: inputs in, .spectra.bin out. Deliberately
-                        // does NOT require --library: caching depends only on the
-                        // input file, and demanding one would make staging a dataset
-                        // wait on a library that is often chosen later.
-                        if (!hasInputFiles)
-                            return "--task SpectraCache requires --input <file...>.";
-                        return null;
-
-                    case HpcTask.PerFileScoring:
-                        // Stage 1-4 worker: mzML in, per-file .scores.parquet out.
-                        if (!hasInputFiles)
-                            return "--task PerFileScoring requires --input <mzML...>.";
-                        if (config.LibrarySource == null)
-                            return "--task PerFileScoring requires --library.";
-                        return null;
-
-                    case HpcTask.PerFileRescore:
-                        // Stage 6 worker: one run's scores in, its reconciled parquet out.
-                        // Named by its DATA file like every other task; the parquet and
-                        // sidecars are derived from the stem, and the data file itself need
-                        // not exist (Main's input check accepts a run whose scores are on
-                        // disk).
-                        if (!hasInputFiles)
-                            return "--task PerFileRescoring requires --input <file...>.";
-                        if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
-                            return "--task PerFileRescoring requires --library and --output.";
-                        return null;
-
-                    case HpcTask.FirstPassFdr:
-                        if (!hasInputFiles)
-                            return "--task FirstPassFDR requires --input <file...>.";
-                        if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
-                            return "--task FirstPassFDR requires --library and --output.";
-                        // FirstPassFDR writes the Stage 5 → Stage 6 boundary file
-                        // pair, only meaningful with 2+ siblings to reconcile
-                        // against and reconciliation enabled. Reject early.
-                        if (config.InputFiles.Count < 2)
-                            return string.Format(
-                                "--task FirstPassFDR requires --input with 2+ files " +
-                                "(got {0}). The Stage 5 -> Stage 6 boundary file pair is only meaningful for " +
-                                "multi-file fan-back-in.",
-                                config.InputFiles.Count);
-                        if (!config.Reconciliation.Enabled)
-                            return "--task FirstPassFDR requires Reconciliation.Enabled = true " +
-                                   "(got false from config). The Stage 5 → Stage 6 boundary file pair is " +
-                                   "only meaningful when reconciliation runs.";
-                        return null;
-
-                    case HpcTask.SecondPassFdr:
-                        if (!hasInputFiles)
-                            return "--task SecondPassFDR requires --input <file...>.";
-                        if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
-                            return "--task SecondPassFDR requires --library and --output.";
-                        return null;
-                }
-            }
-
-            // No --task: the full pipeline. A cold run scores from Stage 1; a resume over a
-            // directory that already holds each run's artifacts skips to whichever stage is
-            // outstanding, which the per-task validity sidecars decide - not the input kind.
-            if (!hasInputFiles)
-                return "No input files specified. Use -i <file1.mzML> [file2.mzML ...]";
-            if (config.LibrarySource == null)
-                return "No spectral library specified. Use -l <library.tsv>";
-            if (string.IsNullOrEmpty(config.OutputBlib))
-                return "No output path specified. Use -o <output.blib>";
-            return null;
-        }
-
         /// <summary>
         /// How many runs this invocation will aggregate across for the experiment-wide
         /// competition, or 0 when that is not a property of this invocation. The per-file HPC
         /// workers (SpectraCache / PerFileScoring / PerFileRescoring) each see ONE input and
         /// never compute an experiment-wide score, so reporting their input count would refuse
-        /// every worker of a legitimate distributed mean(best-N) run.
+        /// every worker of a legitimate distributed mean(best-N) run. Which tasks those are
+        /// is the task's own fact (<see cref="ISelectableTask.IsPerFileWorker"/>).
         /// </summary>
         private static int ExperimentAggFileCount(OspreyConfig config, bool hasInputFiles)
         {
-            switch (config.SelectedTask)
-            {
-                case HpcTask.SpectraCache:
-                case HpcTask.PerFileScoring:
-                case HpcTask.PerFileRescore:
-                    return 0;
-            }
+            if (config.SelectedTask?.IsPerFileWorker == true)
+                return 0;
             return hasInputFiles ? config.InputFiles.Count : 0;
         }
 

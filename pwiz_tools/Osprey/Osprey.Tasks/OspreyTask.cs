@@ -55,14 +55,47 @@ namespace pwiz.Osprey.Tasks
     /// parquets is enforced separately by the parquet
     /// <c>osprey.search_hash</c> footer metadata check.)
     /// </summary>
-    public abstract class OspreyTask
+    public abstract class OspreyTask : ISelectableTask
     {
         /// <summary>
-        /// Short identifier used in pipeline log lines. Conventionally
-        /// PascalCase and matches the class name minus the <c>Task</c>
-        /// suffix (e.g. "PerFileScoring").
+        /// Short identifier used in pipeline log lines, the <c>--task</c> selector and the
+        /// validity sidecar. Each task returns its own <c>TASK_NAME</c> constant, the one
+        /// spelling the CLI value list and the tests reference too.
         /// </summary>
         public abstract string Name { get; }
+
+        // ---- The selection contract (ISelectableTask) ------------------------------------
+        // What a task IS, answered by the task; the two facts default to FAIL CLOSED, so a
+        // task added later is a join that hydrates nothing per run until its author says
+        // otherwise. Where a task sits, and which stages run alongside it, are not here: the
+        // pipeline is an ordered list the task set composes (OspreyTasks), and membership is
+        // OspreyConfig.Includes over that list and the selection. The doc for each member is
+        // on the interface.
+
+        public virtual bool IsPerFileWorker => false;
+
+        public virtual bool HydratesPerRun => false;
+
+        public virtual void ApplySelection(OspreyConfig config)
+        {
+        }
+
+        /// <summary>
+        /// The requirement most tasks share - the run's inputs, its library and its output -
+        /// with messages naming this task. A task that needs less (or more) overrides.
+        /// </summary>
+        public virtual string ValidateSelection(OspreyConfig config)
+        {
+            if (!config.HasInputFiles)
+                return RequiresError(@"--input <file...>");
+            if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
+                return RequiresError(@"--library and --output");
+            return null;
+        }
+
+        public virtual string DescribeOutput(OspreyConfig config) => null;
+
+        // ---- The pipeline contract ------------------------------------------------------
 
         /// <summary>
         /// Execute this task against the shared pipeline context. May
@@ -95,20 +128,6 @@ namespace pwiz.Osprey.Tasks
         /// consumes implements this as a no-op returning <c>true</c>.
         /// </summary>
         public abstract bool Rehydrate(PipelineContext ctx);
-
-        /// <summary>
-        /// Whether this task participates in the pipeline for the current
-        /// configuration. Driver-owned membership predicate: the orchestrator
-        /// iterates only the included tasks and runs those whose outputs are
-        /// not already on disk, while excluded tasks lazy-rehydrate their state
-        /// through <see cref="PipelineContext.Demand{T}"/> when an included task
-        /// reaches for it. Replaces the <c>DeriveStartAtTask</c> /
-        /// <c>DeriveStopAfterTask</c> range gating (the membership becomes a
-        /// per-task fact rather than a contiguous [start..stop] window).
-        /// Default <c>true</c>; tasks that run only in some HPC modes override
-        /// to gate on the relevant <see cref="OspreyConfig"/> flags.
-        /// </summary>
-        public virtual bool IsIncluded(PipelineContext ctx) => true;
 
         /// <summary>
         /// The byproduct purpose types this task publishes for downstream tasks
@@ -181,5 +200,14 @@ namespace pwiz.Osprey.Tasks
             ctx.Config.Identity.SearchParameterHash(),
             ctx.Config.Identity.LibraryIdentityHash(),
             OspreyEnvironment.PickValidityKeySuffix());
+
+        /// <summary>
+        /// A <see cref="ValidateSelection"/> error naming this task and what it is missing,
+        /// in the one form every task's message takes.
+        /// </summary>
+        protected string RequiresError(string requirement)
+        {
+            return string.Format(@"--task {0} requires {1}.", Name, requirement);
+        }
     }
 }

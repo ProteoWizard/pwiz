@@ -298,7 +298,10 @@ namespace pwiz.Osprey.Tasks
             // with no sidecar yet - a first run with no rescore work - simply has nothing to
             // load, and the write gives it the standing values, which are its answer.
             if (!recomputed && !rescored.Streams)
-                ReloadPass2Sidecars(ctx, pass2Writer, Pool(), @"pre-write");
+            {
+                ReloadPass2Sidecars(ctx, pass2Writer, Pool(), @"pre-write",
+                    LazyPass2ExperimentRecords(ctx));
+            }
 
             // Persist post-Stage-6 per-file 2nd-pass FDR scores
             // BEFORE RunProteinFdr. The sidecar holds Score +
@@ -433,7 +436,8 @@ namespace pwiz.Osprey.Tasks
             if (recomputed && !rescored.Streams &&
                 perFileParquetPaths.Count > 0 && config.InputFiles != null)
             {
-                ReloadPass2Sidecars(ctx, pass2Writer, Pool(), @"post-write");
+                ReloadPass2Sidecars(ctx, pass2Writer, Pool(), @"post-write",
+                    LazyPass2ExperimentRecords(ctx));
             }
         }
 
@@ -526,6 +530,30 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// A DEFERRED resolution of <see cref="ResolvePass2ExperimentRecords"/>, to be handed to
+        /// every consumer that should share ONE answer.
+        ///
+        /// <para>Deferred because WHEN it resolves is a correctness question: Stage 7 crosses the
+        /// no-scope / scope boundary partway through - protein FDR publishes and writes - so a
+        /// consumer installed before that point must not capture the earlier answer. Shared
+        /// because resolving it twice on a path that has no scope deserializes the whole
+        /// analysis-wide sidecar twice and holds two copies of it; on the 446-run CHS cohort
+        /// that is 1,239,178 records, about 100 MB, per copy.</para>
+        ///
+        /// <para>One instance per group of consumers that must agree, created by the caller, so
+        /// how many times an analysis deserializes this file is a visible property of the call
+        /// site rather than a hidden one. The pre-write and post-write reloads inside
+        /// <see cref="ComputeAndPersist"/> each take their own, deliberately: they sit on
+        /// opposite sides of that boundary and must NOT share.</para>
+        /// </summary>
+        internal static Lazy<IReadOnlyDictionary<uint, FdrExperimentRecord>>
+            LazyPass2ExperimentRecords(PipelineContext ctx)
+        {
+            return new Lazy<IReadOnlyDictionary<uint, FdrExperimentRecord>>(
+                () => ResolvePass2ExperimentRecords(ctx));
+        }
+
+        /// <summary>
         /// The RESIDENT sibling of <see cref="InstallStreamedPass2Overlay"/>: overlay every
         /// file's second-pass sidecar onto a resident survivor pool. A no-op on the streamed
         /// arm, where the installed per-run overlay already does it.
@@ -541,25 +569,27 @@ namespace pwiz.Osprey.Tasks
         /// why P16 makes that comparison half of the requirement.</para>
         /// </summary>
         internal static void OverlayPass2OntoResidentPool(
-            PipelineContext ctx, RescoredEntries rescored, string taskName, string taskValidityKey)
+            PipelineContext ctx, RescoredEntries rescored, string taskName, string taskValidityKey,
+            Lazy<IReadOnlyDictionary<uint, FdrExperimentRecord>> experimentRecords)
         {
             if (rescored.Streams)
                 return;
             var writer = new Pass2SidecarWriter(ctx, ctx.Config, taskName, taskValidityKey);
-            ReloadPass2Sidecars(ctx, writer, rescored.Value, @"diagnostics-fold");
+            ReloadPass2Sidecars(ctx, writer, rescored.Value, @"diagnostics-fold", experimentRecords);
         }
 
         private static void ReloadPass2Sidecars(
             PipelineContext ctx,
             Pass2SidecarWriter writer,
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            string phase)
+            string phase,
+            Lazy<IReadOnlyDictionary<uint, FdrExperimentRecord>> lazyExperimentRecords)
         {
             int filesReloaded = 0;
             int filesMissing = 0;
             // Resolved once for the whole reload; the overlay applies them per file, to the
             // records that file's own sidecar carries (format v5, issue #4486).
-            var experimentRecords = ResolvePass2ExperimentRecords(ctx);
+            var experimentRecords = lazyExperimentRecords.Value;
             // Per-file progress: reads back every file's sidecar and rebuilds an entry_id map
             // over that file's survivors. Silent, and the second half of the 38s gap between
             // the competition's [STAGE-WALL] line and the next probe (#4486); the write loop is
@@ -570,11 +600,12 @@ namespace pwiz.Osprey.Tasks
                 perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 long nReloadReported = 0;
+                var byEntryId = new Dictionary<uint, FdrEntry>();
                 foreach (var kvp in perFileEntries)
                 {
                     reloadProgress.Report(++nReloadReported);
                     if (OverlayPass2SidecarOntoFile(
-                            writer, kvp.Key, kvp.Value, experimentRecords, ctx.LogWarning))
+                            writer, kvp.Key, kvp.Value, experimentRecords, ctx.LogWarning, byEntryId))
                     {
                         filesReloaded++;
                     }
@@ -610,10 +641,22 @@ namespace pwiz.Osprey.Tasks
         /// what the loop's own contract says such a run keeps; on the streamed path it is the
         /// same state, freshly rebuilt. The two agree because neither invents a value.</para>
         /// </summary>
+        /// <summary>
+        /// Overlay one file's 2nd-pass FDR sidecar onto its entries, returning false when the file
+        /// has no current sidecar (the caller reports it and the run keeps 1st-pass q-values).
+        ///
+        /// <para>The join index is the CALLER's, reused across files and cleared here. It used to be allocated
+        /// per call and sized to the file (<c>new Dictionary&lt;uint, FdrEntry&gt;(entries.Count)</c>),
+        /// which at cohort scale is a ~4.2 M-entry bucket and entry array on the large-object heap
+        /// per file - and this overlay is a post-materialize hook, so it runs once per file per
+        /// STREAMED PASS: three times over a 446-run cohort in SecondPassFDR alone. Clearing keeps
+        /// the capacity of the largest file seen and allocates nothing after it, which is the
+        /// answer <see cref="Pass1ScalarSeeder"/> already gives for its own per-file buffers.</para>
+        /// </summary>
         private static bool OverlayPass2SidecarOntoFile(
             Pass2SidecarWriter writer, string fileName, List<FdrEntry> entries,
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
-            Action<string> logWarning)
+            Action<string> logWarning, Dictionary<uint, FdrEntry> byEntryId)
         {
             string inputFile = writer.InputFor(fileName);
             if (inputFile == null)
@@ -621,7 +664,7 @@ namespace pwiz.Osprey.Tasks
             string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
             if (!FdrScoresSidecar.IsCurrentFormat(pass2Path, FdrScoresSidecar.Pass.SecondPass))
                 return false;
-            var byEntryId = new Dictionary<uint, FdrEntry>(entries.Count);
+            byEntryId.Clear();
             foreach (var e in entries)
                 byEntryId[e.EntryId] = e;
             if (FdrScoresSidecar.TryReadOverlay(
@@ -645,38 +688,26 @@ namespace pwiz.Osprey.Tasks
         /// each run as it is rebuilt. Same operation, same rows, same result - once per run per
         /// pass instead of once per run, which is the price of not holding the pool.</para>
         ///
-        /// <para>The experiment records are resolved PER CALL rather than captured once,
-        /// deliberately: <see cref="ResolvePass2ExperimentRecords"/> answers from the in-memory
-        /// accumulator once a pass-2 path has published one and from the on-disk sidecar
-        /// otherwise, and Stage 7 crosses that boundary partway through - protein FDR writes the
-        /// sidecar. Capturing the earlier answer would freeze the pre-competition values into
-        /// every later fold.</para>
+        /// <para>The experiment records arrive as a DEFERRED resolution the caller owns - see
+        /// <see cref="LazyPass2ExperimentRecords"/> for why resolving it once, late, and shared
+        /// with the fold arm's other consumers is what this needs. Resolving it at install time
+        /// on the join path would capture the records before the second-pass competition
+        /// publishes its scope, freezing pre-competition values into every later fold.</para>
         /// </summary>
         internal static void InstallStreamedPass2Overlay(
-            PipelineContext ctx, RescoredEntries rescored, string taskName, string taskValidityKey)
+            PipelineContext ctx, RescoredEntries rescored, string taskName, string taskValidityKey,
+            Lazy<IReadOnlyDictionary<uint, FdrExperimentRecord>> experimentRecords)
         {
             if (!rescored.Streams)
                 return;
             var writer = new Pass2SidecarWriter(ctx, ctx.Config, taskName, taskValidityKey);
-            // Resolved ONCE for the life of the overlay, and lazily.
-            //
-            // Once, because this ran per materialization: every run, every stream pass. Where
-            // the scope byproduct is published that is a cheap re-read of a field, but where it
-            // is not - a resume, and now the pass-2 diagnostics-only fold, which runs no
-            // competition to publish one - it deserializes the whole analysis-wide 2nd-pass
-            // experiment sidecar again for each run of each pass. That is O(runs x sidecar) on
-            // exactly the path a fold is supposed to make cheap.
-            //
-            // Lazily, because WHEN it resolves is a correctness question, not a performance
-            // one. Resolving at install time on the join path would capture the records before
-            // the second-pass competition publishes its scope; deferring to the first
-            // materialization puts the read after it. On the fold path there is no competition
-            // and the sidecar on disk is final, so either moment gives the same answer.
-            var experimentRecords = new Lazy<IReadOnlyDictionary<uint, FdrExperimentRecord>>(
-                () => ResolvePass2ExperimentRecords(ctx));
+            // ONE join index for every file of every pass this overlay serves. StreamFiles and
+            // MaterializeAllFromSource both walk files sequentially, so a single instance is safe,
+            // and the cohort stops paying a large-object dictionary per file per pass.
+            var byEntryId = new Dictionary<uint, FdrEntry>();
             rescored.AddPostMaterialize((fileName, entries) =>
                 OverlayPass2SidecarOntoFile(
-                    writer, fileName, entries, experimentRecords.Value, ctx.LogWarning));
+                    writer, fileName, entries, experimentRecords.Value, ctx.LogWarning, byEntryId));
         }
 
         /// <summary>
@@ -1494,13 +1525,14 @@ namespace pwiz.Osprey.Tasks
                         string parquetPath = ParquetScoreCache.ReconciledPathFromScoresPath(
                             perFileParquetPaths[fileName]);
                         ParquetScoreCache.ReadFdrStubScalars(parquetPath,
-                            (entryId, charge, isDecoy, coelutionSum, modseq) =>
+                            (entryId, charge, isDecoy, coelutionSum, modseq, apexRt) =>
                             {
                                 double q;
                                 if (!peptideQvalues.TryGetValue(modseq ?? string.Empty, out q))
                                     q = 1.0;
                                 byEntryId[entryId] = q;
-                            });
+                            },
+                            StubColumns.Core);
                     }
                     catch (Exception ex)
                     {
@@ -1731,6 +1763,14 @@ namespace pwiz.Osprey.Tasks
             //    abort without making the class of input any safer.
             var fileNames = rescored.FileNames;
             var survivorEntryIds = new HashSet<uint>();
+            // The best-of-runs floors. Declared HERE because the two halves are gathered in two
+            // different walks: the peptide IDENTITIES come from the survivor walk just below -
+            // the only walk that sees entries - and the FLOORS themselves from the per-file
+            // second-pass records read much further down, which carry run q but no sequence.
+            // Both are free: each rides a walk that is already happening, which is what replaces
+            // the whole-run re-materialisation this used to need (8 minutes and a multi-GB
+            // working set at 446 runs) to recover values that were in hand all along.
+            var floors = new ExperimentQFloors();
             long survivorObservations = 0;
             // The resident survivor lists by file. It holds one REFERENCE per file, not a
             // copy, so it costs nothing beyond the whole-run buffer Stage 7 has already
@@ -1762,6 +1802,15 @@ namespace pwiz.Osprey.Tasks
                     survivorObservations += kvp.Value.Count;
                     foreach (var e in kvp.Value)
                         survivorEntryIds.Add(e.EntryId);
+                    // Each entry_id's peptide identity, for the best-of-runs PEPTIDE floor below.
+                    // Recorded HERE because this is the one walk that sees entries - the floors
+                    // themselves come from the per-file 2nd-pass records, which carry run q but no
+                    // sequence - and because the entries are the only route-independent source of
+                    // it. LibraryById is NOT: a --task SecondPassFDR node loads a library with no
+                    // generated decoys, so resolving a decoy entry_id there answers on the
+                    // straight route and returns nothing on the distributed one (measured on
+                    // Stellar: 166,680 of 333,404 records differing, every one a decoy).
+                    floors.ObserveIdentities(kvp.Value);
                 }
             }
 
@@ -2231,7 +2280,12 @@ namespace pwiz.Osprey.Tasks
                     // analysis-wide record half-built from a file that then failed.
                     var staged = new List<FdrExperimentRecord>();
                     if (!FdrScoresSidecar.ReadRecords(pass2Path, FdrScoresSidecar.Pass.SecondPass,
-                            rec => staged.Add(FinishRecord(rec))))
+                            rec =>
+                            {
+                                floors.Observe(rec.EntryId,
+                                    rec.RunPrecursorQvalue, rec.RunPeptideQvalue);
+                                staged.Add(FinishRecord(rec));
+                            }))
                     {
                         unpatched.Add(fileKey);
                         continue;
@@ -2245,6 +2299,25 @@ namespace pwiz.Osprey.Tasks
                     nMapped += staged.Count;
                 }
             }
+            // The peptide floors, derived from the entry floors just folded - no per-run data,
+            // and no second pass over anything. Both halves are then stamped onto the records
+            // before anyone sees them, which is what makes this file's q-values FINAL rather
+            // than a value the pipeline overrides afterwards (issue #4522 validation).
+            //
+            // This is also the point the two strata stop differing. FinishRecord above floors
+            // neither: an on-stratum entry takes a fresh competition q that was never clamped,
+            // and an off-stratum entry carries its pass-1 q - which WAS clamped, against pass-1
+            // run q, while pass 2 refreshed run q underneath it (a run that did not compete
+            // takes 1.0). Two different ways to end up below your own best run, both closed here
+            // by one rule applied to every record regardless of which branch produced it.
+            floors.DerivePeptideFloors();
+            int raised = experiment.ApplyRunQFloors(entryId => floors.FloorsFor(entryId));
+            ctx.LogInfo(string.Format(
+                @"[FDR] experiment-q floors: folded {0} entry_id and {1} peptide floor(s) from " +
+                @"the per-file second-pass records - no pass over the runs - and raised {2} " +
+                @"experiment q-value(s) to them.",
+                floors.EntryIdCount, floors.PeptideCount, raised));
+
             // Handed to the protein-FDR step, which fills the one column it owns and writes the
             // 2nd-pass experiment sidecar. Published rather than returned because the protein
             // FDR runs in the owning task after this method returns.
@@ -3103,6 +3176,13 @@ namespace pwiz.Osprey.Tasks
         private static FdrExperimentAccumulator BuildExperimentScope(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
         {
+            // The best-of-runs floors, folded over the same entries this walk already holds. Both
+            // halves fold directly here - unlike the competition arm, which reads per-file RECORDS
+            // and has to take the peptide identities from a separate survivor walk, these entries
+            // carry ModifiedSequence outright, so Accumulate records both at once.
+            var floors = new ExperimentQFloors();
+            foreach (var kvp in perFileEntries)
+                floors.Accumulate(kvp.Value);
             // PEP IS A WINNER FACT, not a per-observation value. PepEstimator computes it over
             // the single winning observation of an entry_id; every other observation carries 1.0,
             // which is a SENTINEL meaning "not the row the estimate was computed on" and was
@@ -3143,6 +3223,8 @@ namespace pwiz.Osprey.Tasks
                         1.0, e.ExperimentAggregateScore, pepByEntryId[e.EntryId]);
                 }
             }
+            floors.DerivePeptideFloors();
+            experiment.ApplyRunQFloors(entryId => floors.FloorsFor(entryId));
             return experiment;
         }
 

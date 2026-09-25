@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -299,6 +300,85 @@ namespace pwiz.Osprey.Test
             TestCoAssignmentExactTieGoesToTheDecoy();
             TestCoAssignmentReportsInheritedQDivergence();
             TestCoAssignmentDecoysUseTheirOwnStratumBoundary();
+            TestCoAssignmentRunScopeGrowsGeometrically();
+            TestCoAssignmentRunScopeForgetsThePreviousFile();
+        }
+
+        // Two properties the flat-array run scope rests on, neither of which any other test can
+        // see (issue #4657). Both are about the SEAL, which is where the per-file state ends:
+        //
+        //   1. The seal must forget the file it sealed. File 1 here accepts a target scoring 9.0
+        //      and file 2 accepts one scoring 2.0; if file 1's best survived, file 2's boundary
+        //      would stay at 9.0 and its decoy at 3.0 would stop being admitted. The old container
+        //      was replaced wholesale at each seal, so this could not fail; the arrays are reset in
+        //      place, and a reset that is skipped or scoped wrongly is invisible in the output -
+        //      the panel is complete and plausible, just drawn against another file's boundary.
+        //
+        //   2. "Not seen this file" must be NaN, not 0.0. Scores here are NEGATIVE, which is the
+        //      operating regime the class documents for pass 2 (boundaries near -2.33, 93.2% of
+        //      aggregates negative). Under a zero-filled scope every untouched slot reads 0.0,
+        //      which is above a negative boundary and has no target to lose to, so EVERY id in the
+        //      capacity is admitted as a decoy - the unbounded per-file set this rewrite exists to
+        //      remove. With NaN the two decoys that really cleared the bar are the only ones.
+        private static void TestCoAssignmentRunScopeForgetsThePreviousFile()
+        {
+            var builder = new ModelDiagnosticsData.CoAssignmentPassBuilder(
+                new[] { @"file1", @"file2" }, 1, false);
+            builder.ReserveRunScope(64);
+
+            // File 1: one accepted target at -1.0 sets the boundary; the decoy at -0.5 clears it.
+            builder.ObserveCutoff(0, EntrapmentClass.Target, 1, -1.0, -1.0, 0.001, 0.001, 0.01);
+            builder.ObserveCutoff(0, EntrapmentClass.Decoy, 1 | DECOY_BIT, -0.5, -0.5, 1.0, 1.0, 0.01);
+            builder.SealRunCutoff(0);
+
+            // File 2: a WORSE accepted target, so its boundary is lower and admits a decoy that
+            // file 1's boundary would have excluded. Entry 1 is not observed at all here - if the
+            // seal above left its -1.0 behind, this file's minimum is -1.0 and decoy 3 is out.
+            builder.ObserveCutoff(1, EntrapmentClass.Target, 2, -3.0, -3.0, 0.001, 0.001, 0.01);
+            builder.ObserveCutoff(1, EntrapmentClass.Decoy, 3 | DECOY_BIT, -2.0, -2.0, 1.0, 1.0, 0.01);
+            builder.SealRunCutoff(1);
+
+            Assert.AreEqual(-1.0, builder.RunCutoff(0), 1e-12, @"file 1 boundary");
+            Assert.AreEqual(-3.0, builder.RunCutoff(1), 1e-12, @"file 2 boundary: file 1's bests must not survive the seal");
+            Assert.AreEqual(1, builder.AdmittedRunDecoyCount(0), @"file 1 admits its own decoy and nothing else");
+            Assert.AreEqual(1, builder.AdmittedRunDecoyCount(1),
+                @"file 2 admits only the decoy that cleared ITS boundary - a zero-filled scope admits the whole capacity");
+        }
+
+        // The builder's per-file working set is three flat arrays indexed by base id (issue
+        // #4657). Rows arrive in parquet row order - ascending entry id - so a builder nobody
+        // reserved sees a new maximum on almost every row. Growing to exactly that id copied
+        // the arrays once per distinct base id: O(n^2) per file, measured as a 30x slower pass-2
+        // fold (StellarLibDecoy pay-later 15.7 s -> 492 s). Pin the policy, not the timing: a
+        // reserve allocates once and lands exactly, and an unreserved ascending stream grows
+        // O(log n) times to a capacity under twice its final size.
+        private static void TestCoAssignmentRunScopeGrowsGeometrically()
+        {
+            const int n = 100_000;
+            var runNames = new[] { @"run1" };
+
+            var reserved = new ModelDiagnosticsData.CoAssignmentPassBuilder(runNames, 2, true);
+            reserved.ReserveRunScope(n - 1);
+            for (uint id = 0; id < n; id++)
+                reserved.ObserveCutoff(0, EntrapmentClass.Target, id, 1.0, 1.0, 0.001, 0.001, 0.01);
+            reserved.SealRunCutoff(0);
+            Assert.AreEqual(1, reserved.RunScopeGrowths, @"a reserved builder allocates its run scope once");
+            Assert.AreEqual(n, reserved.RunScopeCapacity, @"a reserve from empty lands exactly on maxBaseId + 1");
+
+            var unreserved = new ModelDiagnosticsData.CoAssignmentPassBuilder(runNames, 2, true);
+            for (uint id = 0; id < n; id++)
+                unreserved.ObserveCutoff(0, EntrapmentClass.Target, id, 1.0, 1.0, 0.001, 0.001, 0.01);
+            unreserved.SealRunCutoff(0);
+            // A generous ceiling on purpose. What this has to separate is O(log n) from O(n):
+            // the per-id growth it pins against took 100,000 steps, and any geometric factor down
+            // to 1.1 stays under 128. A tight bound would pin the factor at exactly 2, which is an
+            // implementation detail. The capacity assertion cannot stand in for this one - exact
+            // -fit growth also ends at capacity == n.
+            Assert.IsTrue(unreserved.RunScopeGrowths <= 128,
+                string.Format(@"ascending ids grew the run scope {0} times; geometric growth needs O(log n)",
+                    unreserved.RunScopeGrowths));
+            Assert.IsTrue(unreserved.RunScopeCapacity >= n,
+                string.Format(@"capacity {0} after {1} ascending ids", unreserved.RunScopeCapacity, n));
         }
 
         // A row still carrying the ResetScores 0.0 default must NOT outrank the entry's real
@@ -826,7 +906,7 @@ namespace pwiz.Osprey.Test
             var perFileEntries = WrapFiles(f1, f2);
             const double r = 1.0, runFdr = 0.01;
             const FdrLevel level = FdrLevel.Precursor;
-            System.Func<uint, double> mzLookup = id => mz.TryGetValue(id, out double v) ? v : double.NaN;
+            Func<uint, double> mzLookup = id => mz.TryGetValue(id, out double v) ? v : double.NaN;
 
             var infos = new[]
             {
@@ -972,10 +1052,10 @@ namespace pwiz.Osprey.Test
             var runNames = new[] { @"f1" };
             var pass1 = new ModelDiagnosticsData.Accumulator(runNames, null, null, 1.0, 0.01,
                 FdrLevel.Precursor);
-            Assert.ThrowsException<System.InvalidOperationException>(() => pass1.BuildPass2(null, null));
+            Assert.ThrowsException<InvalidOperationException>(() => pass1.BuildPass2(null, null));
             var pass2 = new ModelDiagnosticsData.Accumulator(runNames, null, null, 1.0, 0.01,
                 FdrLevel.Precursor, 2);
-            Assert.ThrowsException<System.InvalidOperationException>(() => pass2.Build(null));
+            Assert.ThrowsException<InvalidOperationException>(() => pass2.Build(null));
         }
 
         // The co-assignment phases index the acceptance boundary BY RUN POSITION, so a second
@@ -989,7 +1069,7 @@ namespace pwiz.Osprey.Test
             var f2 = new List<FdrEntry> { CoEntry(2, false, 8.0, 0.001, "B", 2, 20.000) };
             var inOrder = WrapFiles(f1, f2);
             var runNames = inOrder.Select(kv => kv.Key).ToArray();
-            System.Func<uint, double> mzLookup = id => mz.TryGetValue(id, out double v) ? v : double.NaN;
+            Func<uint, double> mzLookup = id => mz.TryGetValue(id, out double v) ? v : double.NaN;
 
             var builder = new ModelDiagnosticsData.CoAssignmentPassBuilder(runNames, 2, true);
             for (int fi = 0; fi < inOrder.Count; fi++)
@@ -1000,7 +1080,7 @@ namespace pwiz.Osprey.Test
 
             // Same runs, swapped order on the detection pass.
             var swapped = new List<KeyValuePair<string, List<FdrEntry>>> { inOrder[1], inOrder[0] };
-            Assert.ThrowsException<System.InvalidOperationException>(() =>
+            Assert.ThrowsException<InvalidOperationException>(() =>
                 ModelDiagnosticsData.BuildCoAssignmentDetection(builder, runNames, swapped, null,
                     mzLookup, 0.01, FdrLevel.Precursor));
 
@@ -1012,7 +1092,7 @@ namespace pwiz.Osprey.Test
                 ModelDiagnosticsData.ObserveCoAssignmentRun(builder2, fi, inOrder[fi].Value,
                     null, 0.01, FdrLevel.Precursor);
             }
-            Assert.ThrowsException<System.InvalidOperationException>(() =>
+            Assert.ThrowsException<InvalidOperationException>(() =>
                 ModelDiagnosticsData.BuildCoAssignmentDetection(builder2, runNames, truncated, null,
                     mzLookup, 0.01, FdrLevel.Precursor));
         }
@@ -1332,7 +1412,7 @@ namespace pwiz.Osprey.Test
             var decoyM = Bump(nb, 20, 5, 2000);
             var targetM = new int[nb];
             for (int i = 0; i < nb; i++)
-                targetM[i] = (int)System.Math.Round(0.30 * decoyM[i]) + trueHit[i];
+                targetM[i] = (int)Math.Round(0.30 * decoyM[i]) + trueHit[i];
             var hM = Hist(edges, targetM, decoyM, new int[nb], new int[nb]);
             var drM = ModelDiagnosticsData.BuildDensityRatio(hM, false);
 
@@ -1344,7 +1424,7 @@ namespace pwiz.Osprey.Test
             // Empty far-left bin -> NaN in the series (never +/-Infinity).
             Assert.IsTrue(double.IsNaN(drM.TargetDecoy[0]));
             // Matched: the left plateau is essentially flat.
-            Assert.IsTrue(System.Math.Abs(drM.FlatnessSlope) < 0.15,
+            Assert.IsTrue(Math.Abs(drM.FlatnessSlope) < 0.15,
                 "matched flatness slope should be ~0, was " + drM.FlatnessSlope);
             // Plateau height is the null fraction pi0 (< 1: target carries true hits).
             Assert.IsTrue(drM.PlateauRatio > 0.05 && drM.PlateauRatio < 1.0,
@@ -1356,7 +1436,7 @@ namespace pwiz.Osprey.Test
             var falseS = Bump(nb, 24, 5, 2000);                    // false-target null, shifted right of decoys
             var targetS = new int[nb];
             for (int i = 0; i < nb; i++)
-                targetS[i] = (int)System.Math.Round(0.30 * falseS[i]) + trueHit[i];
+                targetS[i] = (int)Math.Round(0.30 * falseS[i]) + trueHit[i];
             var hS = Hist(edges, targetS, decoyS, new int[nb], new int[nb]);
             var drS = ModelDiagnosticsData.BuildDensityRatio(hS, false);
 
@@ -1364,10 +1444,10 @@ namespace pwiz.Osprey.Test
             Assert.IsFalse(double.IsNaN(drS.FlatnessSlope));
             Assert.IsTrue(drS.NullRegionBins >= 4);
             // The miscalibrated decoy makes the left side clearly slope...
-            Assert.IsTrue(System.Math.Abs(drS.FlatnessSlope) > 0.6,
+            Assert.IsTrue(Math.Abs(drS.FlatnessSlope) > 0.6,
                 "shifted flatness slope should be large, was " + drS.FlatnessSlope);
             // ...and much larger than the matched case (the oracle the report leans on).
-            Assert.IsTrue(System.Math.Abs(drS.FlatnessSlope) > 4.0 * System.Math.Abs(drM.FlatnessSlope),
+            Assert.IsTrue(Math.Abs(drS.FlatnessSlope) > 4.0 * Math.Abs(drM.FlatnessSlope),
                 "shifted slope " + drS.FlatnessSlope + " should dwarf matched " + drM.FlatnessSlope);
 
             // --- Reference line: p_target == p_decoy (identical pure-null arrays) ->
@@ -1400,8 +1480,8 @@ namespace pwiz.Osprey.Test
         {
             var a = new int[nb];
             for (int i = 0; i < nb; i++)
-                a[i] = (int)System.Math.Round(peak *
-                    System.Math.Exp(-((i - center) * (i - center)) / (2 * sigma * sigma)));
+                a[i] = (int)Math.Round(peak *
+                    Math.Exp(-((i - center) * (i - center)) / (2 * sigma * sigma)));
             return a;
         }
 
@@ -1860,7 +1940,7 @@ namespace pwiz.Osprey.Test
             bool sawCoin = false;
             for (int b = 0; b < wf.EntFraction.Length; b++)
             {
-                if (wf.EntN[b] > 0 && System.Math.Abs(wf.EntFraction[b] - 0.5) < 0.06)
+                if (wf.EntN[b] > 0 && Math.Abs(wf.EntFraction[b] - 0.5) < 0.06)
                     sawCoin = true;
             }
             Assert.IsTrue(sawCoin);
@@ -1868,7 +1948,7 @@ namespace pwiz.Osprey.Test
             // In THIS fixture the real pairs are native signal (winner ~5.0, above
             // the low-score null band), so only the entrapment coin populates the
             // band -- a fair ~0.5 (the Competition KPI shows the real coin as "-").
-            Assert.IsTrue(System.Math.Abs(wf.NullBandEnt - 0.5) < 0.1);
+            Assert.IsTrue(Math.Abs(wf.NullBandEnt - 0.5) < 0.1);
 
             // Boost signature: real target-decoy pairs sitting IN the low-score null
             // band where the target nonetheless wins ~70% of competitions (real
@@ -1891,7 +1971,7 @@ namespace pwiz.Osprey.Test
             }
             var bwf = ModelDiagnosticsData.Build(Wrap(be), null, bc, null, 1.0, 0.01, FdrLevel.Peptide).WinFraction;
             Assert.IsTrue(bwf.NullBandReal < 0.4, "real coin should be collapsed: " + bwf.NullBandReal);
-            Assert.IsTrue(System.Math.Abs(bwf.NullBandEnt - 0.5) < 0.1, "entrapment coin ~0.5: " + bwf.NullBandEnt);
+            Assert.IsTrue(Math.Abs(bwf.NullBandEnt - 0.5) < 0.1, "entrapment coin ~0.5: " + bwf.NullBandEnt);
             Assert.IsTrue(bwf.NullBandEnt - bwf.NullBandReal > 0.1,
                 "coin collapse gap positive: " + (bwf.NullBandEnt - bwf.NullBandReal));
         }
@@ -2014,7 +2094,7 @@ namespace pwiz.Osprey.Test
                 EntryId = id,
                 IsDecoy = decoy,
                 Score = score,
-                RunPeptideQvalue = System.Math.Min(qRun, qExp),
+                RunPeptideQvalue = Math.Min(qRun, qExp),
                 RunPrecursorQvalue = qRun,
                 ExperimentPrecursorQvalue = qExp,
                 ModifiedSequence = seq,
@@ -2144,6 +2224,56 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0.01, fp.MinExpQ, 1e-9);   // min effective exp-q across all rows
             Assert.AreEqual(1, fp.RunQBins[ModelDiagnosticsData.FrontierBin(0.005)]);  // file 0 at its best run-q
             Assert.AreEqual(1, fp.RunQBins[ModelDiagnosticsData.FrontierBin(0.008)]);  // file 1
+        }
+
+        /// <summary>
+        /// The panel's precursor key used to be a concatenated string, and the ORDINAL order of
+        /// that string decided which of two rows tied on m/z the co-assignment scan paired first -
+        /// so it is baked into every committed diagnostics golden. PrecursorKey replaced the
+        /// string to stop allocating one per detected row (13.9 M of them on a 446-run cohort),
+        /// which is only a performance change if it orders identically.
+        ///
+        /// <para>The sequences include prefixes of one another, which is the case that separates
+        /// the two orders: there the shorter key's string continued with the separator while the
+        /// longer's continued with a residue. Charges stay single-digit, which is all the panel
+        /// sees - numeric and decimal-text order agree there and diverge only at 10 and above.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestPrecursorKeyOrderMatchesCompositeString()
+        {
+            var keys = new List<ModelDiagnosticsData.PrecursorKey>();
+            var composites = new List<string>();
+            foreach (string seq in new[]
+                     { "PEP", "PEPT", "PEPTIDE", "PEPTIDEK", "PEPTIDER", "AC[+57]DE", "AC[+57]DEF", "K" })
+            {
+                foreach (byte charge in new byte[] { 1, 2, 3, 9 })
+                {
+                    foreach (bool isDecoy in new[] { false, true })
+                    {
+                        keys.Add(new ModelDiagnosticsData.PrecursorKey(seq, charge, isDecoy));
+                        composites.Add(seq + "|" + charge + (isDecoy ? "|decoy" : string.Empty));
+                    }
+                }
+            }
+
+            for (int i = 0; i < keys.Count; i++)
+            {
+                for (int j = 0; j < keys.Count; j++)
+                {
+                    Assert.AreEqual(
+                        Math.Sign(string.CompareOrdinal(composites[i], composites[j])),
+                        Math.Sign(keys[i].CompareTo(keys[j])),
+                        "order of '{0}' against '{1}'", composites[i], composites[j]);
+                    bool sameKey = string.Equals(composites[i], composites[j], StringComparison.Ordinal);
+                    Assert.AreEqual(sameKey, keys[i].Equals(keys[j]),
+                        "equality of '{0}' against '{1}'", composites[i], composites[j]);
+                    if (sameKey)
+                    {
+                        Assert.AreEqual(keys[i].GetHashCode(), keys[j].GetHashCode(),
+                            "hash of '{0}' against '{1}'", composites[i], composites[j]);
+                    }
+                }
+            }
         }
     }
 }

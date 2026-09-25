@@ -47,17 +47,34 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     internal sealed class SpectraCacheTask : OspreyTask
     {
-        public override string Name => @"SpectraCache";
+        /// <summary>
+        /// This task's name, as a constant so the CLI selector, the validity stamp another
+        /// task looks for, and the tests all spell it from here rather than duplicating it.
+        /// </summary>
+        public const string TASK_NAME = @"SpectraCache";
+
+        public override string Name => TASK_NAME;
 
         /// <summary>
-        /// Selected explicitly and never part of the canonical pipeline: a full run
-        /// reaches the identical caching code through
-        /// <see cref="PerFileScoringTask"/>, so including this task there would
-        /// double-index every input for nothing.
+        /// Sees one input at a time and never computes an experiment-wide score.
         /// </summary>
-        public override bool IsIncluded(PipelineContext ctx)
+        public override bool IsPerFileWorker => true;
+
+        /// <summary>
+        /// Inputs in, <c>.spectra.bin</c> out. Deliberately does NOT require
+        /// <c>--library</c>: caching depends only on the input file, and demanding one
+        /// would make staging a dataset wait on a library that is often chosen later.
+        /// </summary>
+        public override string ValidateSelection(OspreyConfig config)
         {
-            return ctx.Config.SelectedTask == HpcTask.SpectraCache;
+            if (!config.HasInputFiles)
+                return RequiresError(@"--input <file...>");
+            return null;
+        }
+
+        public override string DescribeOutput(OspreyConfig config)
+        {
+            return @"per-file .spectra.bin (no scoring; --output and --library are not used)";
         }
 
         public override IEnumerable<string> Inputs(PipelineContext ctx)

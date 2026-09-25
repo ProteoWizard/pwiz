@@ -51,8 +51,7 @@ namespace pwiz.SkylineTestTutorial
         private const string YEAST_ATLAS = "Yeast (Atlas)"; // Not L10N
         private const string YEAST_GPM = "Yeast (GPM)"; // Not L10N
 
-        [TestMethod,
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+        [TestMethod]
         public void TestMethodEditTutorial()
         {
             // Set true to look at tutorial screenshots.

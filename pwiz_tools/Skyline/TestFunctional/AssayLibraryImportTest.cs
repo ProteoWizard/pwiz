@@ -46,15 +46,13 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class AssayLibraryImportTest : AbstractFunctionalTestEx
     {
-        [TestMethod,
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+        [TestMethod]
         public void TestAssayLibraryImport()
         {
             Preamble();
         }
 
-        [TestMethod,
-         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once]
+        [TestMethod]
         public void TestAssayLibraryImportAsSmallMolecules()
         {
             if (SkipSmallMoleculeTestVersions())

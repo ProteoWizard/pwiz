@@ -26,12 +26,12 @@ crate carried its own `#[cfg(test)]` tests compiled into that crate.
   `Osprey.Test.csproj:12-13`) on `Microsoft.NET.Test.Sdk` 17.12.0
   (`Osprey.Test.csproj:11`). Tests are annotated with `[TestClass]` /
   `[TestMethod]`, the Skyline-standard MSTest attributes.
-- **Multi-target**: the test project builds for both `net472` and `net8.0`. The
-  `net472` leg needs extra native/managed wiring the SDK gives `net8.0` for
-  free: an explicit `IronCompress` native `nironcompress.dll` copy for Parquet
-  Zstd (`Osprey.Test.csproj:17-36`) and an explicit `System.Memory` reference
-  (`Osprey.Test.csproj:38-41`). The production regression build runs the
-  `net8.0` binary (`regression.ps1:123`).
+- **Single target**: the test project builds for `net8.0` only, the same
+  binary the production regression build runs (`regression.ps1:123`). The
+  `net472` leg was dropped with the ProteoWizard .NET 8 port (issue #4497),
+  and with it the extra native/managed wiring that leg needed (an explicit
+  `nironcompress.dll` copy for Parquet Zstd, an explicit `System.Memory`
+  reference).
 - **Scale**: 41 `[TestClass]` types and **492 `[TestMethod]` tests** across the
   `Osprey.Test/*.cs` files (measured). Rust 11-testing.md tabulates "~302
   tests." The larger C# count reflects extra tests written specifically to lock
@@ -165,6 +165,13 @@ under a per-run timestamped `TestResults/regression-<stamp>` via `--work-dir`
 (`regression.ps1:142-145,229-231`). It then asserts a no-copy invariant that the
 read-only data dir is byte-for-byte untouched (`regression.ps1:277-293,477-481`).
 
+The two acquisitions are searched four ways (`Stellar`, `StellarLibDecoy`,
+`StellarGenDecoyEntrap`, `Astral`; see the dataset table in `Regression/README.md`), and a change to decoy
+construction can be **inert on Stellar and visible only on Astral**: the Stellar library
+has no selenocysteine peptides, so a decoy rule that touches only `U`-containing sequences
+produces a byte-identical Stellar golden and a red Astral one. Run `-Dataset All` before
+merging any decoy-generation change, whatever the Stellar leg says.
+
 It runs three complementary correctness legs, all at a **1e-9 tolerance**
 (`regression.ps1:114`, `-Tolerance` default):
 
@@ -209,9 +216,26 @@ Any mismatch emits a TeamCity `buildProblem` and a non-zero exit
 `Regression/RegressionData.ps1` — self-contained, with **no dependency on the
 sibling `ai/` checkout** (`regression.ps1:38-41`, `Regression/README.md:4-7`).
 
-Switches: `-Dataset {Stellar|Astral|All}` (`regression.ps1:103`), `-CreateGolden`,
+Switches: `-Dataset {Stellar|StellarLibDecoy|StellarGenDecoyEntrap|Astral|All}`
+(`regression.ps1:259-260`), `-CreateGolden`,
 `-SkipResume` (mode-2 off), `-SkipHpcChain` (mode-3 off), `-NoBuild`, `-Threads`
-(default 16), `-TeamCity`, `-KeepOutput`, `-Tolerance` (default 1e-9).
+(default 16), `-TeamCity`, `-KeepOutput`, `-CleanOutput`, `-KeepRunDirs` (default 1),
+`-Tolerance` (default 1e-9).
+
+Run output is cleaned **before** a run, never after. A local run retains its final
+products under `TestResults/regression-<stamp>` (`<dataset>/straight`, the phase 3/4
+outputs, `chain/logs` — a passing run's files have readers: a later A/B, a memory profile,
+the streamed diagnostics HTML), but the staged input **copies** (the phase-1 mzML copies,
+the per-worker `spectra.bin` / library / `.libcache` copies) are always deleted as they are
+consumed. The next run's startup prune, before it creates its own root, keeps the most
+recent `-KeepRunDirs` completed sets (default 1), so the disk holds KeepRunDirs+1 sets
+between runs — two by default; `-KeepRunDirs 0` keeps only the current run's output. The
+prune skips a live run dir, and a dir without a completion stamp does not count toward the
+keep. Only `-TeamCity` (the shared agent is disk-bound; it implies `-CleanOutput` and, unless
+`-KeepRunDirs` is given, keep-none) or an explicit `-CleanOutput` deletes as it goes;
+`-KeepOutput` overrides both and retains everything, the input copies included.
+`regression-parallel.ps1` makes one `regression.ps1` invocation per dataset and forwards
+`-KeepRunDirs` (default = the number of datasets), `-KeepOutput` and `-CleanOutput`.
 
 ## 6. Standing gate 2 — `Test-PerfGate.ps1` (interleaved A/B wall-time)
 
@@ -258,14 +282,16 @@ exercised *by* the gates but documented in their own stage docs.
 
 | Switch | Default | Effect |
 |---|---|---|
-| `-Dataset` | `All` | `Stellar` (unit, fast), `Astral` (hram, large), or `All` |
+| `-Dataset` | `All` | `Stellar` (unit, fast), `StellarLibDecoy` (library decoys + entrapment), `StellarGenDecoyEntrap` (generated decoys vs entrapment), `Astral` (hram, large), or `All` (`regression.ps1:259-260`) |
 | `-CreateGolden` | off | Capture/refresh `osprey-regression.data/` instead of comparing (reviewed changes only) |
 | `-SkipResume` | off | Skip mode-2 resume self-consistency leg |
 | `-SkipHpcChain` | off | Skip mode-3 HPC 4-task worker-chain leg |
 | `-NoBuild` | off | Reuse existing Release binary |
 | `-Threads` | 16 | `--threads` per run |
 | `-TeamCity` | off | Emit TeamCity `progressMessage`/`buildProblem` |
-| `-KeepOutput` | off | Retain the run's scratch (default deletes as it goes) |
+| `-KeepOutput` | off | Retain everything, staged input copies included (a local run already keeps its final products; this forces retention under `-TeamCity` / `-CleanOutput`) |
+| `-CleanOutput` | off (implied by `-TeamCity`) | Delete the run's scratch as it goes; `-KeepOutput` wins |
+| `-KeepRunDirs` | 1 | Completed run dirs the **next** run's startup prune keeps, so the disk holds KeepRunDirs+1 sets between runs; 0 keeps only the current run |
 | `-Tolerance` | `1e-9` | Numeric tolerance for all three legs |
 
 `Test-PerfGate.ps1` parameters:

@@ -4,9 +4,9 @@
 # Mirrors the Windows pipeline and its two-variant split:
 #
 #   Windows                                         Linux
-#   ProteoWizard-Sharp-Setup-<ver>.exe              ProteoWizard-Sharp-linux-x64-<ver>.tar.gz
+#   ProteoWizard-Setup-<ver>.exe              ProteoWizard-linux-x64-<ver>.tar.gz
 #     bundles the .NET desktop runtime                self-contained: the runtime is IN the payload
-#   ProteoWizard-Sharp-NoNetRuntime-Setup-<ver>.exe ProteoWizard-Sharp-NoNetRuntime-linux-x64-<ver>.tar.gz
+#   ProteoWizard-NoNetRuntime-Setup-<ver>.exe ProteoWizard-NoNetRuntime-linux-x64-<ver>.tar.gz
 #     needs .NET 8 already installed                  framework-dependent: same requirement
 #
 # "Setup" is dropped for the runtime identifier because a tarball is not an installer; the
@@ -16,9 +16,16 @@
 #
 # Only msconvert ships: MSConvertGUI and SeeMS are net10.0-windows + WinForms.
 #
-# MUST run on Linux. The vendor csprojs condition their native staging on $(OS), which is the
-# BUILD HOST rather than the target RID, so a linux-x64 publish from Windows would stage Windows
-# DLLs.
+# Runs on Linux, but no longer because of the payload: the vendor csprojs used to condition their
+# native staging on $(OS) - the BUILD HOST - so a linux-x64 publish from Windows staged Windows
+# DLLs. They now gate on $(PwizTargetIsWindows) (pwiz_tools/Shared/Lib/PwizTargetPlatform.props),
+# which follows the target, and a post-build check refuses a payload that does not match it. What
+# still needs a POSIX host is this script itself: tar, chmod, sha256sum, find -printf.
+#
+# One trap if you do drive a cross-target publish by hand: `dotnet publish -r linux-x64` does NOT
+# pass RuntimeIdentifier down to ProjectReferences, so the vendor projects would still resolve the
+# target from the host and stage the wrong half. Pass -p:PwizTargetIsWindows=false alongside it -
+# that IS a global property and reaches the whole graph. The check catches it either way.
 #
 # Usage: bash installer/build-linux.sh
 set -uo pipefail
@@ -139,8 +146,8 @@ package() {
 }
 
 RC=0
-package self-contained      true  "ProteoWizard-Sharp-$RID-$APP_VERSION"              || RC=1
-package framework-dependent false "ProteoWizard-Sharp-NoNetRuntime-$RID-$APP_VERSION" || RC=1
+package self-contained      true  "ProteoWizard-$RID-$APP_VERSION"              || RC=1
+package framework-dependent false "ProteoWizard-NoNetRuntime-$RID-$APP_VERSION" || RC=1
 
 # Same side-car build.ps1 writes, so packaging tests can pin the version without re-deriving it
 # from a filename.

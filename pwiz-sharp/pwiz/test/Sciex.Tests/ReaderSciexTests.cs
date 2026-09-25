@@ -218,4 +218,45 @@ public class ReaderSciexTests
         }
         return new FixtureRunContext(new Reader_Sciex(), root, new IsNamedRawFile(fixtureFileName), fixtureFileName);
     }
+
+    /// <summary>
+    /// Rewrites every Sciex reference mzML in this class from the current reader output.
+    ///
+    /// <para>The <c>[TestMethod]</c> attribute below is COMMENTED OUT deliberately. An
+    /// undiscovered test cannot run in "Run All Tests", and MSTest has no attribute that
+    /// excludes a test from a run-all while leaving it runnable on demand: <c>[Ignore]</c> is
+    /// skipped even when selected explicitly, and a runsettings <c>TestCaseFilter</c> removes it
+    /// from discovery altogether, so it never appears to click on. Commenting the attribute is
+    /// the only mechanism that gives both.</para>
+    ///
+    /// <para>To regenerate: uncomment the attribute, run this one test, then comment it back.
+    /// It ends in <c>Assert.Fail</c>, so a run that completes is never green and the message is
+    /// the reminder. That is NOT a CI guard: if this vendor's data is absent, <c>SetUp</c> throws
+    /// <c>Assert.Inconclusive</c>, which aborts before the <c>Assert.Fail</c> and reports Skipped -
+    /// and <c>dotnet test</c> exits 0 on skips. Afterwards run the suite again WITHOUT it - a
+    /// regenerated reference that
+    /// does not then compare equal means the generate and compare paths disagree, which is the
+    /// one failure this mode can hide.</para>
+    /// </summary>
+    //[TestMethod]
+    public void Regenerate_Sciex_References()
+    {
+        VendorReaderTestHarness.GenerateReferences = true;
+        try
+        {
+            Reader_Sciex_PressureTrace1();
+            Reader_Sciex_Enolase_repeats_AQv1_4_2();
+            Reader_Sciex_50uMpyrone_8uL_01_simAsSpectra();
+            Reader_Sciex_201208_378803_peakPicking();
+            Reader_Sciex_Enolase_repeats_AQv1_4_2_srmAsSpectra();
+            Reader_Sciex_7600ZenoTOFMSMS_EAD_TestData();
+            Reader_Sciex_swath_api();
+        }
+        finally
+        {
+            VendorReaderTestHarness.GenerateReferences = false;
+        }
+
+        Assert.Fail("Reference mzMLs regenerated. Comment out this [TestMethod] and run the normal tests.");
+    }
 }

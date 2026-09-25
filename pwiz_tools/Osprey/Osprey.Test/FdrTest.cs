@@ -956,10 +956,17 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// Minimal <see cref="IFdrOutputSink"/> for the projection parity tests: records
-        /// each row's Score + experiment aggregate score + <see cref="FdrQValues"/> by
-        /// (fileIdx, rowIdx) so the test can compare the streamed outputs against the
+        /// each row's Score + experiment aggregate score + apex RT + <see cref="FdrQValues"/>
+        /// by (fileIdx, rowIdx) so the test can compare the streamed outputs against the
         /// FdrEntry oracle now that the lean struct no longer stores them (issue #4355
         /// struct-shrink S0).
+        ///
+        /// <para>The apex RT is captured for the same reason the rest is: it reaches the
+        /// per-file FDR sidecar through this interface (format v7, issue #4522), and the
+        /// resident and streaming paths source it from different places - the projection row's
+        /// ParquetIndex against a column on one, the row stream itself on the other. A parity
+        /// test that compares everything BUT the value whose two sources differ is exactly the
+        /// test that would pass while they disagreed.</para>
         /// </summary>
         private sealed class CapturingSink : IFdrOutputSink
         {
@@ -968,15 +975,17 @@ namespace pwiz.Osprey.Test
             private readonly Dictionary<(int, int), FdrQValues> _q = new Dictionary<(int, int), FdrQValues>();
             private readonly Dictionary<(int, int), (uint EntryId, bool IsDecoy, byte Charge, string Peptide)> _ident =
                 new Dictionary<(int, int), (uint, bool, byte, string)>();
+            private readonly Dictionary<(int, int), double> _apexRts = new Dictionary<(int, int), double>();
 
             public void Accept(int fileIdx, int rowIdx, uint entryId, bool isDecoy,
                 byte charge, string peptide, double score, double experimentAggregateScore,
-                in FdrQValues q)
+                double apexRt, in FdrQValues q)
             {
                 _scores[(fileIdx, rowIdx)] = score;
                 _expAgg[(fileIdx, rowIdx)] = experimentAggregateScore;
                 _q[(fileIdx, rowIdx)] = q;
                 _ident[(fileIdx, rowIdx)] = (entryId, isDecoy, charge, peptide);
+                _apexRts[(fileIdx, rowIdx)] = apexRt;
             }
 
             public void Finish(Action<string> logInfo)
@@ -986,6 +995,7 @@ namespace pwiz.Osprey.Test
             public double ScoreAt(int fileIdx, int rowIdx) => _scores[(fileIdx, rowIdx)];
             public double ExperimentAggregateScoreAt(int fileIdx, int rowIdx) => _expAgg[(fileIdx, rowIdx)];
             public FdrQValues QAt(int fileIdx, int rowIdx) => _q[(fileIdx, rowIdx)];
+            public double ApexRtAt(int fileIdx, int rowIdx) => _apexRts[(fileIdx, rowIdx)];
             public (uint EntryId, bool IsDecoy, byte Charge, string Peptide) IdentAt(int fileIdx, int rowIdx)
                 => _ident[(fileIdx, rowIdx)];
             public int Count => _scores.Count;
@@ -994,7 +1004,7 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// End-to-end projection RunPercolatorFdr equivalence (the survivor-reload
         /// equivalence at the unit level): the projection
-        /// <see cref="PercolatorEngine.RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Action{FeatureContributions},System.Action{PercolatorResults})"/>
+        /// <see cref="PercolatorEngine.RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Func{string,double[]},System.Action{FeatureContributions},System.Action{PercolatorResults})"/>
         /// overload must produce byte-identical Score + q-values to the FdrEntry-buffer
         /// <see cref="PercolatorEngine"/> RunPercolatorFdr overload (the one that takes the
         /// per-file <see cref="FdrEntry"/> lists) -- the flag-off byte-identity ORACLE -- on the same input, at the
@@ -1045,7 +1055,7 @@ namespace pwiz.Osprey.Test
             var sink = new CapturingSink();
             PercolatorEngine.RunPercolatorFdr(
                 projSet, config, featureInfos, s => { }, sink, null, "First-pass",
-                f => featuresB[f]);
+                f => featuresB[f], f => ApexRtsByParquetIndex(fdrStubs2, f));
 
             // Both overloads sort their buffers, so compare keyed -- EntryId repeats
             // across a precursor's observations, so key by (fileIdx, ParquetIndex),
@@ -1198,7 +1208,7 @@ namespace pwiz.Osprey.Test
             var sink = new CapturingSink();
             bool abort = PercolatorEngine.RunStreamingIntoProjection(
                 projSet.PerFile, projSet.PeptideById, percConfig, s => { }, "First-pass",
-                f => featuresB[f], sink);
+                f => featuresB[f], f => ApexRtsByParquetIndex(fdrStubs2, f), sink);
             Assert.IsFalse(abort);
 
             Assert.AreEqual(fdrStubs.Count, projSet.PerFile.Count);
@@ -1217,6 +1227,11 @@ namespace pwiz.Osprey.Test
                     Assert.AreEqual(stubList[i].ExperimentPrecursorQvalue, q.ExperimentPrecursorQvalue, 0.0);
                     Assert.AreEqual(stubList[i].ExperimentPeptideQvalue, q.ExperimentPeptideQvalue, 0.0);
                     Assert.AreEqual(stubList[i].Pep, q.Pep, 0.0);
+                    // The apex RT the sink carries to the v7 sidecar. The projection row has no
+                    // RT, so this came back through the per-file ParquetIndex lookup - compare it
+                    // against the stub it was read from, which is the only thing that proves the
+                    // lookup is keyed on the right ordinal.
+                    Assert.AreEqual(stubList[i].ApexRt, sink.ApexRtAt(f, i), 0.0);
                 }
             }
         }
@@ -1277,18 +1292,22 @@ namespace pwiz.Osprey.Test
             var sinkRes = new CapturingSink();
             bool abortRes = PercolatorEngine.RunStreamingIntoProjection(
                 projSet.PerFile, projSet.PeptideById, percConfig, s => { }, "First-pass",
-                f => featuresRes[f], sinkRes);
+                f => featuresRes[f], f => ApexRtsByParquetIndex(fixtureRes, f), sinkRes);
             Assert.IsFalse(abortRes);
 
             // Streaming-from-row-source path (the change under test): identity streamed straight
             // from the fixture (== parquet), features by fileName, no resident projection.
             var fileNames = fixtureStr.ConvertAll(kv => kv.Key);
-            Action<string, Action<uint, byte, bool, double, string>> streamFileRows =
-                (name, onRow) =>
+            // Supplies apex RT whatever the pass asks for. The scorer's Core/ApexRt choice is
+            // about what the PARQUET reader decodes, not about what a fixture can hand over, and
+            // this test's job is to prove the streamed path matches the resident one on every
+            // value - which it cannot do if the fixture withholds one of them.
+            Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> streamFileRows =
+                (name, columns, onRow) =>
                 {
                     var list = fixtureStr.Find(kv => kv.Key == name).Value;
                     foreach (var e in list)
-                        onRow(e.EntryId, e.Charge, e.IsDecoy, e.CoelutionSum, e.ModifiedSequence);
+                        onRow(e.EntryId, e.Charge, e.IsDecoy, e.CoelutionSum, e.ModifiedSequence, e.ApexRt);
                 };
             var sinkStr = new CapturingSink();
             bool abortStr = PercolatorScorer.RunStreamingFirstPass(
@@ -1318,6 +1337,10 @@ namespace pwiz.Osprey.Test
                     Assert.AreEqual(idRes.IsDecoy, idStr.IsDecoy);
                     Assert.AreEqual(idRes.Charge, idStr.Charge);
                     Assert.AreEqual(idRes.Peptide, idStr.Peptide);
+                    // Sourced differently by the two paths - the resident one by ParquetIndex
+                    // against a column, the streaming one off the row stream - so this is the
+                    // one output a shared bug could NOT produce identically by accident.
+                    Assert.AreEqual(sinkRes.ApexRtAt(f, r), sinkStr.ApexRtAt(f, r), 0.0);
                     compared++;
                 }
             }
@@ -1443,7 +1466,13 @@ namespace pwiz.Osprey.Test
                             Charge = 2,
                             ScanNumber = ++scan,
                             IsDecoy = false,
-                            CoelutionSum = targetFeatures[0]
+                            CoelutionSum = targetFeatures[0],
+                            // Distinct per ROW, and deliberately not monotone in the score: the
+                            // resident path looks this up by ParquetIndex while the streaming
+                            // path takes it off the row stream, so a value shared between rows -
+                            // or correlated with the sort key - would let a mis-keyed lookup
+                            // compare equal anyway.
+                            ApexRt = ApexRtForRow(file, featureRows.Count)
                         });
                         featureRows.Add(targetFeatures);
 
@@ -1455,7 +1484,8 @@ namespace pwiz.Osprey.Test
                             Charge = 2,
                             ScanNumber = ++scan,
                             IsDecoy = true,
-                            CoelutionSum = decoyFeatures[0]
+                            CoelutionSum = decoyFeatures[0],
+                            ApexRt = ApexRtForRow(file, featureRows.Count)
                         });
                         featureRows.Add(decoyFeatures);
                     }
@@ -1464,6 +1494,39 @@ namespace pwiz.Osprey.Test
                 featuresByFile[fileName] = featureRows;
             }
             return perFile;
+        }
+
+        /// <summary>
+        /// The fixture's apex RT for one (file, parquet row): unique across the whole fixture,
+        /// and scrambled against the row ordinal so neither an off-by-one nor a cross-file mix-up
+        /// can land on a value that happens to match.
+        /// </summary>
+        private static double ApexRtForRow(int fileIdx, int parquetIndex)
+        {
+            return 10.0 + fileIdx * 1000.0 + ((parquetIndex * 37) % 97) + parquetIndex * 0.001;
+        }
+
+        /// <summary>
+        /// One file's apex RTs indexed by <c>ParquetIndex</c>, off a resident
+        /// <see cref="FdrEntry"/> fixture - the unit-test stand-in for
+        /// <c>ParquetScoreCache.ReadApexRtsByParquetIndex</c>, which reads the same thing out of
+        /// the file's <c>.scores.parquet</c>. Supplied to the RESIDENT score path, whose
+        /// projection rows carry no retention time (issue #4355) while the per-file FDR sidecar
+        /// they feed has a column for one (format v7, issue #4522).
+        /// </summary>
+        private static double[] ApexRtsByParquetIndex(
+            List<KeyValuePair<string, List<FdrEntry>>> perFile, string fileName)
+        {
+            var entries = perFile.Find(kv => kv.Key == fileName).Value;
+            var apexRts = new double[entries.Count];
+            foreach (var e in entries)
+            {
+                // The fixture sets ParquetIndex on every row, which is what makes it a stand-in
+                // for a parquet read; a null here would be a broken fixture, not a live case.
+                Assert.IsTrue(e.ParquetIndex.HasValue);
+                apexRts[e.ParquetIndex.Value] = e.ApexRt;
+            }
+            return apexRts;
         }
 
         /// <summary>
@@ -4103,9 +4166,9 @@ namespace pwiz.Osprey.Test
             // non-survivor decoy is absent - that is the property this test exists for.
             var records = new List<FdrScoreRecord>
             {
-                new FdrScoreRecord(t1a, 0.90, competed.RunQ.TryGetValue(t1a, out var q1) ? q1 : 1.0, 1.0),
-                new FdrScoreRecord(t1b, 0.90, competed.RunQ.TryGetValue(t1b, out var q2) ? q2 : 1.0, 1.0),
-                new FdrScoreRecord(t2, 0.50, competed.RunQ.TryGetValue(t2, out var q3) ? q3 : 1.0, 1.0),
+                new FdrScoreRecord(t1a, 0.90, competed.RunQ.TryGetValue(t1a, out var q1) ? q1 : 1.0, 1.0, 0.0),
+                new FdrScoreRecord(t1b, 0.90, competed.RunQ.TryGetValue(t1b, out var q2) ? q2 : 1.0, 1.0, 0.0),
+                new FdrScoreRecord(t2, 0.50, competed.RunQ.TryGetValue(t2, out var q3) ? q3 : 1.0, 1.0, 0.0),
             };
 
             // ... and the decoy side, through the real file rather than the in-memory map, so a
@@ -4148,7 +4211,7 @@ namespace pwiz.Osprey.Test
                 // divergence rather than the representational one above.
                 var bogus = new List<FdrScoreRecord>(records)
                 {
-                    new FdrScoreRecord(DecoyOf(1u), 0.10, 0.5, 1.0)
+                    new FdrScoreRecord(DecoyOf(1u), 0.10, 0.5, 1.0, 0.0)
                 };
                 Assert.ThrowsException<InvalidOperationException>(
                     () => StreamingFdr.AssertContributionsMatch(
@@ -4180,14 +4243,14 @@ namespace pwiz.Osprey.Test
             // Canonical pool order: ascending, with 7 and 9 the "gap-fills" interleaved.
             var poolOrder = new uint[] { 3, 5, 7, 8, 9, 11 };
             var inOrder = poolOrder
-                .Select(id => new FdrScoreRecord(id, 0.5, 1.0, 1.0)).ToList();
+                .Select(id => new FdrScoreRecord(id, 0.5, 1.0, 1.0, 0.0)).ToList();
             Pass2FdrSidecar.AssertRecordsMatchPoolSequence(@"f", @"p.parquet", inOrder, poolOrder);
 
             // The real defect: same rows, same count, gap-fills moved to a trailing block.
             var gapFills = new uint[] { 7, 9 };
             var trailing = poolOrder.Where(id => !gapFills.Contains(id))
                 .Concat(gapFills)
-                .Select(id => new FdrScoreRecord(id, 0.5, 1.0, 1.0)).ToList();
+                .Select(id => new FdrScoreRecord(id, 0.5, 1.0, 1.0, 0.0)).ToList();
             Assert.AreEqual(inOrder.Count, trailing.Count, "the permutation must not change length");
             var ex = Assert.ThrowsException<InvalidOperationException>(
                 () => Pass2FdrSidecar.AssertRecordsMatchPoolSequence(
@@ -4228,8 +4291,8 @@ namespace pwiz.Osprey.Test
             // not a competition observation, so it must not displace the worker's answer.
             var records = new List<FdrScoreRecord>
             {
-                new FdrScoreRecord(t2, 0.50, 1.0, 1.0),
-                new FdrScoreRecord(d2, 0.95, 1.0, 1.0),
+                new FdrScoreRecord(t2, 0.50, 1.0, 1.0, 0.0),
+                new FdrScoreRecord(d2, 0.95, 1.0, 1.0, 0.0),
             };
             var rebuilt = Pass2FdrSidecar.FileCompetitionFromRecords(records, stratum, fromWorker);
             Assert.AreEqual(0.20, rebuilt.BestDecoy[2u].score);

@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.7) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -74,17 +74,39 @@ namespace pwiz.Osprey.Tasks
         // path those calls are no-ops.
         private const int PROCESS_FILE_SEGMENTS = 4;
 
-        public override string Name => @"PerFileScoring";
+        /// <summary>
+        /// This task's name, as a constant so the CLI selector, the validity stamp another
+        /// task looks for, and the tests all spell it from here rather than duplicating it.
+        /// </summary>
+        public const string TASK_NAME = @"PerFileScoring";
+
+        public override string Name => TASK_NAME;
 
         /// <summary>
-        /// Computes per-file scores from spectra for every task except the three that
-        /// start after Stage 4. For those it is excluded and a downstream task
-        /// lazy-rehydrates each run's scores through
-        /// <c>ctx.Demand&lt;PerFileScoringTask&gt;()</c>.
+        /// The Stage 1-4 fan-out worker: each input produces a <c>{stem}.scores.parquet</c>
+        /// next to it, no FDR, no blib.
         /// </summary>
-        public override bool IsIncluded(PipelineContext ctx)
+        public override bool IsPerFileWorker => true;
+
+        /// <summary>
+        /// mzML in, per-file <c>.scores.parquet</c> out: a library, but no <c>--output</c>,
+        /// which is accepted and not used.
+        /// </summary>
+        public override string ValidateSelection(OspreyConfig config)
         {
-            return !ScoringTaskShared.StartsAfterPerFileScoring(ctx.Config);
+            if (!config.HasInputFiles)
+                return RequiresError(@"--input <mzML...>");
+            if (config.LibrarySource == null)
+                return RequiresError(@"--library");
+            return null;
+        }
+
+        /// <summary>
+        /// The real output rather than the ignored <c>--output</c> blib path.
+        /// </summary>
+        public override string DescribeOutput(OspreyConfig config)
+        {
+            return @"per-file .scores.parquet (next to each input file)";
         }
 
         // Stage 1-4 byproducts this task publishes for downstream consumers to
@@ -378,10 +400,10 @@ namespace pwiz.Osprey.Tasks
             // the live objects harvested during scoring.
             // The lean path is valid only where FirstPassFdrTask actually consumes a
             // projection. It must mirror that task's dispatch exactly (FirstPassFdrTask.cs:
-            // UseFdrProjection && Percolator && !needsResidentFirstPassPool): any other
-            // combination -- a non-Percolator FdrMethod, OSPREY_FDR_PROJECTION=0, or the
-            // resident-pool consumer FDRBench pass 1, which walks the full pre-compaction
-            // FdrEntry pool -- still needs the fat stubs here. --model-diagnostics is NOT
+            // !PerFileScoringTask.NeedsResidentPool): any other
+            // combination - a non-Percolator FdrMethod or OSPREY_FDR_PROJECTION=0 - still
+            // needs the fat stubs here. FDRBench pass 1 is NOT one of them any more (#4507):
+            // it streams off the per-file sidecars. --model-diagnostics is NOT
             // one of them any more (#4505): it streams its report on every path.
             // The fat/lean decision, and the guard that checks it, key off CanUseLeanProjection -
             // the same predicate the two sibling sites use. Bare NeedsResidentPool no longer
@@ -393,7 +415,7 @@ namespace pwiz.Osprey.Tasks
             //
             // NOT reachable today, and the claim that it was is wrong: Program.cs rejects
             // --task SecondPassFDR combined with --input and requires --input-scores, so
-            // ExpectReconciledInput means this task is excluded and IsIncluded returns false -
+            // under --task SecondPassFDR this task is excluded by the membership rule -
             // Run is never entered on that config. This is aligned with its two siblings so the
             // one decision has one predicate, not so that a live defect is closed.
             bool needsResidentPool = !CanUseLeanProjection(ctx.Config, hasReconSidecars: false,
@@ -502,8 +524,19 @@ namespace pwiz.Osprey.Tasks
             // worker-mode join-only disk-load below applies only to the tasks that
             // start after Stage 4. That used to be asked as "were parquets supplied";
             // one seam now answers it, and it is the task.
-            if (!ScoringTaskShared.StartsAfterPerFileScoring(ctx.Config))
+            // The fold-only leg joins the in-pipeline one here. It owes no analysis, so it needs
+            // neither the pre-compaction pool nor the reconciliation bundle the disk-load path
+            // below adopts for SecondPassFDR - which does not run on it. All its report streams
+            // from is the per-file keys and parquet paths, and this lean load is what produces
+            // them; it is also the route the whole pipeline takes when it reaches this task with
+            // every output current, so the two entry points fold the same way. Without this,
+            // `--task FirstPassFDR --model-diagnostics` built the ALL-RUNS bundle, O(files x
+            // entries), to render a page that reads none of it.
+            if (!ScoringTaskShared.StartsAfterPerFileScoring(ctx.Config) ||
+                FirstPassFdrTask.WillOnlyFoldDiagnostics(ctx))
+            {
                 return RehydrateFromOwnOutputs(ctx);
+            }
 
             // Disk-load path for a node that starts after Stage 4: the
             // per-file Stage 2-4 scores already exist on disk, so load the
@@ -889,8 +922,8 @@ namespace pwiz.Osprey.Tasks
         /// surface the per-file outputs for downstream tasks (before any
         /// early-exit, so a partial-success caller still sees the populated
         /// collections), then apply the two success-but-stop boundaries --
-        /// an empty score set (cannot run FDR) and <c>--task PerFileScoring</c> (Stage
-        /// 1-4 only). Returns <c>true</c> to continue the pipeline, or
+        /// an empty score set (cannot run FDR) and a per-file worker selection (Stage
+        /// 1-4 only, no join in this process). Returns <c>true</c> to continue the pipeline, or
         /// <c>false</c> with <see cref="PipelineContext.ExitCode"/> = 0 at
         /// either boundary.
         /// </summary>
@@ -936,8 +969,8 @@ namespace pwiz.Osprey.Tasks
             ctx.Publish(new PerFileIsolationMz(_perFileIsolationMz));
             ctx.Publish(new PerFileParquetPaths(_perFileParquetPaths));
             ctx.Publish(new ScoredEntries(_perFileEntries));
-            // Lean first-pass rows (issue #4397). Null on the resident paths and on FDRBench
-            // pass 1, which publish fat stubs above; FirstPassFdrTask falls back to ScoredEntries
+            // Lean first-pass rows (issue #4397). Null on the resident paths, which publish fat
+            // stubs above; FirstPassFdrTask falls back to ScoredEntries
             // whenever this is null. A --model-diagnostics resume publishes a NON-null
             // projection since #4505 - it no longer needs resident entries, because
             // FirstPassFDR's rehydrate streams the report off its own per-file load.
@@ -955,16 +988,30 @@ namespace pwiz.Osprey.Tasks
                 return false;
             }
 
-            // --task PerFileScoring: stop here. Per-file `.scores.parquet` files are
-            // now on disk; a separate `--task FirstPassFDR` invocation (typically
-            // on a SecondPassFDR node) will pick them up and run Stage 5+.
-            if (ctx.Config.NoJoin)
+            // A per-file worker stops here: nothing after Stage 1-4 joins in this process.
+            // For --task PerFileScoring the per-file `.scores.parquet` files are now on disk
+            // and a separate `--task FirstPassFDR` invocation (typically on a SecondPassFDR
+            // node) will pick them up and run Stage 5+. The rescore worker reaches this tail
+            // through its disk-load rehydrate, having loaded Stage 1-4 state rather than
+            // scored it, and stops the same way; the message says which happened. The
+            // messages speak in task names, the vocabulary the CLI and its help use; the
+            // stage numbers are the developer docs' and never reach an operator.
+            if (ctx.Config.SelectedTask?.IsPerFileWorker == true)
             {
-                ctx.LogInfo(string.Format(
-                    @"--task PerFileScoring: Stage 1-4 complete. {0} entries scored across {1} file(s). " +
-                    @"Per-file `.scores.parquet` written next to each input mzML. " +
-                    @"Skipping FDR and blib output.",
-                    totalScored, nFiles));
+                if (ReferenceEquals(ctx.Config.SelectedTask, this))
+                {
+                    ctx.LogInfo(string.Format(
+                        @"--task {0} complete: {1:N0} precursor candidates scored across {2:N0} file(s). " +
+                        @"Per-file `.scores.parquet` written next to each input. " +
+                        @"{3} and later run in their own invocations; no FDR or blib output here.",
+                        Name, totalScored, nFiles, FirstPassFdrTask.TASK_NAME));
+                }
+                else
+                {
+                    ctx.LogInfo(string.Format(
+                        @"--task {0}: {1} scores loaded for {2} file(s); a per-file worker runs no join.",
+                        ctx.Config.SelectedTask.Name, Name, nFiles));
+                }
                 ctx.ExitCode = 0;
                 return false;
             }
@@ -1019,8 +1066,40 @@ namespace pwiz.Osprey.Tasks
             bool omitFragments = config.StopAfterStage5;
             var loadOptions = new LibraryLoadOptions { OmitFragments = omitFragments };
 
+            // --task SecondPassFDR knows its retained set BEFORE the library is read, so it can
+            // skip the spectra it would otherwise load and release moments later (issue #4650).
+            // This is only addressable because the cache now holds a FINISHED library: while
+            // pairing ran after the load, a cached decoy's Id was a parse-order id and a set of
+            // final base_ids could not name it. Now the ids in the cache are the ids everything
+            // downstream uses, and a target's paired decoy shares its base_id, so retaining one
+            // retains both.
+            //
+            // ONLY this leg. It is the one where the set is already on disk AND nothing between
+            // here and the blib write reads a fragment: DecoyGenerator is skipped outright
+            // below, and the supplied-decoy arm is finished inside the load. --task
+            // PerFileRescoring also has the set but DOES generate decoys, and DecoyGenerator's
+            // fragment-count gate excludes a target whose spectrum is gone.
+            //
+            // Null when the summary cannot be read, which leaves a full load and Stage 7's
+            // release to drop the same set afterwards. The run is correct either way, so this
+            // stays a startup optimisation rather than a second thing that can fail the leg.
+            if (config.ExpectReconciledInput)
+                loadOptions.RetainFragmentsFor = ScoringTaskShared.ReadRetainedBaseIds(config, out _);
+
             var swLibrary = Stopwatch.StartNew();
-            var library = LibraryLoader.Load(config, loadOptions, ctx.LogInfo, ctx.LogWarning);
+            // Load AND finish: marking and pairing a supplied-decoy library moved inside the
+            // loader (issue #4650) so the .libcache holds the finished library rather than a
+            // half-built one the caller completes. The two pairing faults still stop the run
+            // here, with the same messages and the same exit code - they arrive as `loadError`
+            // instead of being raised in this method.
+            var library = LibraryLoader.Load(config, loadOptions, ctx.LogInfo, ctx.LogWarning,
+                out string loadError);
+            if (loadError != null)
+            {
+                ctx.LogError(loadError);
+                ctx.ExitCode = 1;
+                return false;
+            }
             if (library == null || library.Count == 0)
             {
                 ctx.LogError(@"Library is empty after loading");
@@ -1028,18 +1107,31 @@ namespace pwiz.Osprey.Tasks
                 return false;
             }
 
-            // Decoys: either supplied by the library (DIA-NN / EncyclopeDIA
-            // output with rev_ / DECOY_ prefixes) or generated by Osprey
-            // from the targets. DecoyMethod.FromLibrary is treated as a
-            // synonym for DecoysInLibrary -- historically it silently fell
-            // through to Reverse generation, which was the bug behind
-            // v26.5.3's library-decoy mode being effectively unusable.
-            // Mark BEFORE counting targets so the count reflects post-
-            // marking state and matches Rust pipeline.rs.
+            // Measurement harness (OSPREY_LIBRARY_LOAD_ONLY), before decoys so the number is the
+            // LOAD and nothing else. See OspreyEnvironment.LibraryLoadOnly.
+            if (OspreyEnvironment.LibraryLoadOnly)
+            {
+                ctx.LogInfo(string.Format(
+                    @"[LIB-LOAD] {0} entries in {1:F2}s (task={2}, omitFragments={3}, retainSet={4})",
+                    library.Count, swLibrary.Elapsed.TotalSeconds, config.SelectedTask?.Name,
+                    loadOptions.OmitFragments,
+                    loadOptions.RetainFragmentsFor == null
+                        ? @"none"
+                        : loadOptions.RetainFragmentsFor.Count.ToString(CultureInfo.InvariantCulture)));
+                OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_LIBRARY_LOAD_ONLY");
+            }
+
+            // Decoys: either supplied by the library (DIA-NN / EncyclopeDIA output with rev_ /
+            // DECOY_ prefixes) or generated by Osprey from the targets. DecoyMethod.FromLibrary
+            // is treated as a synonym for DecoysInLibrary -- historically it silently fell
+            // through to Reverse generation, which was the bug behind v26.5.3's library-decoy
+            // mode being effectively unusable.
+            //
+            // The supplied-decoy half is DONE by now: marking and pairing are inside the load
+            // (issue #4650), so the count below already reflects post-marking state, as it did
+            // when marking ran here.
             bool librarySuppliesDecoys = config.DecoysInLibrary ||
                 config.DecoyMethod == DecoyMethod.FromLibrary;
-            if (librarySuppliesDecoys)
-                MarkSuppliedDecoys(library, config, ctx);
 
             int nLibraryTargets = 0;
             foreach (var entry in library)
@@ -1064,9 +1156,10 @@ namespace pwiz.Osprey.Tasks
             // restores cross-impl parity rather than changing behavior away from it.
             if (librarySuppliesDecoys)
             {
+                // Nothing to do: the loader marked and paired these, and applied the manifest's
+                // accessions, before it wrote the cache. Kept as an explicit arm so the three
+                // decoy shapes still read as three arms rather than two and a fall-through.
                 decoys = new List<LibraryEntry>();
-                if (!TryPairSuppliedDecoys(library, config, nLibraryTargets, ctx))
-                    return false;
             }
             else if (config.ExpectReconciledInput)
             {
@@ -1114,10 +1207,16 @@ namespace pwiz.Osprey.Tasks
                 fullLibrary.Count, library.Count, decoys.Count));
 
             // Count entries with few fragments (diagnostic for entry count
-            // parity). Skipped when fragments were omitted: the entries carry no
-            // fragment arrays by design, so every count would read 0 and the line
-            // would misreport the whole library as sub-3-fragment.
-            if (!omitFragments)
+            // parity). Skipped whenever the load was LEAN, in either of the two ways it can be.
+            // Under OmitFragments no entry carries an array, so every count reads 0 and the line
+            // would misreport the whole library as sub-3-fragment. Under a retain set most
+            // entries hold a RELEASED spectrum, so the count is both meaningless AND fatal -
+            // reading it is what the released state exists to refuse (issue #4650).
+            //
+            // The guard said `!omitFragments` while that was the only lean mode, which is the
+            // same all-or-nothing assumption DecoyGenerator's fragment-count gate makes. Any
+            // future site that walks Fragments over the WHOLE library owes the same widening.
+            if (!omitFragments && loadOptions.RetainFragmentsFor == null)
             {
                 int nZeroFrag = 0, nOneFrag = 0, nTwoFrag = 0;
                 foreach (var entry in fullLibrary)
@@ -1149,8 +1248,9 @@ namespace pwiz.Osprey.Tasks
             // load garbage, so the settled managed heap is the clean resident number.
             // Collect/WaitForPendingFinalizers/Collect settles finalizable objects,
             // then GetTotalMemory(false) reads the result WITHOUT forcing a further
-            // collection. Zero-cost when OSPREY_LOG_MEMORY is unset.
-            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"OSPREY_LOG_MEMORY")))
+            // collection. Zero-cost when OSPREY_LOG_MEMORY is off - which includes the value "0",
+            // the form the dataset runners write; see OspreyEnvironment.LogMemory.
+            if (OspreyEnvironment.LogMemory)
             {
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
@@ -1164,159 +1264,7 @@ namespace pwiz.Osprey.Tasks
             return true;
         }
 
-        /// <summary>
-        /// When the library supplies its own decoys (DIA-NN / EncyclopeDIA
-        /// output with rev_ / DECOY_ prefixes), mark them in place by Decoy
-        /// column / protein-accession prefix. DecoyMethod.FromLibrary is treated
-        /// as a synonym for DecoysInLibrary -- historically it silently fell
-        /// through to Reverse generation, the bug behind v26.5.3's library-decoy
-        /// mode being effectively unusable. Marking runs BEFORE the target count
-        /// is taken so the count reflects post-marking state and matches Rust
-        /// pipeline.rs.
-        /// </summary>
-        private void MarkSuppliedDecoys(List<LibraryEntry> library, OspreyConfig config, PipelineContext ctx)
-        {
-            LibraryDecoyMarker.ApplyLibraryDecoyMarking(
-                library, config.DecoyPrefixes, out var markingStats);
-            ctx.LogInfo(string.Format(
-                @"Library-decoy mode: matched prefixes {0}",
-                FormatPrefixList(config.DecoyPrefixes)));
-            ctx.LogInfo(string.Format(
-                @"[COUNT] Library-decoy mode: {0} flagged ({1} via Decoy column, {2} via protein-accession prefix)",
-                markingStats.NMarked, markingStats.NViaColumn, markingStats.NViaPrefix));
-        }
 
-        /// <summary>
-        /// Library-supplied-decoy path: confirm the library actually contains
-        /// decoys, then pair each decoy with its target so their base_ids match
-        /// -- required for SVM target-decoy competition, LDA calibration, and CV
-        /// fold grouping. Hybrid: manifest first when provided (exact pairs from
-        /// FDRBench), amino-acid composition fallback for the remainder. Returns
-        /// false (with <see cref="PipelineContext.ExitCode"/> set) when there
-        /// are no decoys at all, the pairing manifest is unreadable, or the
-        /// paired fraction is below <c>config.DecoyPairMinFraction</c>.
-        /// </summary>
-        private bool TryPairSuppliedDecoys(
-            List<LibraryEntry> library, OspreyConfig config, int nLibraryTargets, PipelineContext ctx)
-        {
-            // Match Rust pipeline.rs at v26.6.0 (bcd7249): the
-            // "no decoys at all" check runs BEFORE manifest
-            // application. The manifest CAN flip predictor-stripped
-            // entries to IsDecoy=true (the Carafe failure mode commit
-            // d23d496 was built for), so this ordering means a
-            // manifest cannot rescue a load that the prefix scan
-            // misses entirely. TODO(brendanmaclean,maccoss): discuss
-            // with Mike whether this should be relaxed to defer the
-            // check until after manifest application; current C#
-            // ordering matches Rust v26.6.0 for byte parity on the
-            // cross-impl Test-Regression gate.
-            int nLibraryDecoys = library.Count - nLibraryTargets;
-            if (nLibraryDecoys == 0)
-            {
-                ctx.LogError(string.Format(
-                    @"decoys_in_library mode requested but no library entries match prefixes {0}. " +
-                    @"Check that the library actually contains decoys with one of these prefixes on " +
-                    @"a protein accession, or unset decoys_in_library so Osprey generates decoys.",
-                    FormatPrefixList(config.DecoyPrefixes)));
-                ctx.ExitCode = 1;
-                return false;
-            }
-
-            // Hybrid pairing. Net result on real Carafe-generated entrapment
-            // libraries: ~30% via manifest, ~70% via composition, >99% total.
-            var pairingState = new PairingState();
-            LibraryDecoyPairing.CountTargetsAndDecoys(library,
-                out int nTargetsForStats, out int nDecoysForStats);
-            var pairingStats = new PairingStats
-            {
-                NTargets = nTargetsForStats,
-                NDecoys = nDecoysForStats,
-            };
-            if (!string.IsNullOrEmpty(config.DecoyPairingManifestPath))
-            {
-                ctx.LogInfo(string.Format(
-                    @"Loading decoy pairing manifest from {0}",
-                    config.DecoyPairingManifestPath));
-                DecoyPairingManifest manifest;
-                try
-                {
-                    manifest = DecoyPairingManifest.FromTsv(
-                        config.DecoyPairingManifestPath);
-                }
-                catch (Exception ex)
-                {
-                    ctx.LogError(string.Format(
-                        @"Failed to read decoy pairing manifest {0}: {1}",
-                        config.DecoyPairingManifestPath, ex.Message));
-                    ctx.ExitCode = 1;
-                    return false;
-                }
-                var manifestStats = manifest.ApplyToLibrary(library, pairingState, ctx.LogInfo);
-                pairingStats.NPairedViaManifest = manifestStats.NPaired;
-                if (manifestStats.NProteinsReplaced > 0)
-                {
-                    ctx.LogInfo(string.Format(
-                        @"Library-decoy mode: manifest replaced protein_ids on {0} library " +
-                        @"entries (clean source-protein accessions from the manifest's " +
-                        @"`proteins` column)",
-                        manifestStats.NProteinsReplaced));
-                }
-                if (manifestStats.NNewlyMarkedDecoy > 0)
-                {
-                    // Manifest classified entries as decoy that were
-                    // loaded as targets (the predictor stripped the
-                    // decoy prefix). Update the decoy count so the
-                    // pairing fraction is honest.
-                    ctx.LogInfo(string.Format(
-                        @"Library-decoy mode: manifest classified {0} additional library " +
-                        @"entries as decoys (their protein accessions lacked a decoy prefix)",
-                        manifestStats.NNewlyMarkedDecoy));
-                    LibraryDecoyPairing.CountTargetsAndDecoys(library,
-                        out nTargetsForStats, out nDecoysForStats);
-                    pairingStats.NTargets = nTargetsForStats;
-                    pairingStats.NDecoys = nDecoysForStats;
-                }
-            }
-            else
-            {
-                ctx.LogInfo(
-                    @"Pairing library decoys to targets by amino-acid composition " +
-                    @"(no manifest provided).");
-            }
-            pairingStats.NPairedViaComposition =
-                LibraryDecoyPairing.PairLibraryDecoysByComposition(
-                    library, config.DecoyPrefixes, pairingState);
-            pairingStats.NPaired = pairingStats.NPairedViaManifest +
-                pairingStats.NPairedViaComposition;
-            // Defense-in-depth saturating subtract (matches Rust's
-            // saturating_sub intent; not load-bearing).
-            pairingStats.NUnpairedDecoys = Math.Max(0,
-                pairingStats.NDecoys - pairingStats.NPaired);
-            pairingStats.NUnpairedTargets = Math.Max(0,
-                pairingStats.NTargets - pairingState.ClaimedTargets.Count);
-            ctx.LogInfo(string.Format(
-                @"Library-decoy pairing: paired {0}/{1} decoys ({2:F1}%); " +
-                @"manifest={3}, composition={4}; {5} unpaired decoys, {6} unpaired targets",
-                pairingStats.NPaired, pairingStats.NDecoys,
-                pairingStats.PairedFraction * 100.0,
-                pairingStats.NPairedViaManifest, pairingStats.NPairedViaComposition,
-                pairingStats.NUnpairedDecoys, pairingStats.NUnpairedTargets));
-            if (pairingStats.PairedFraction < config.DecoyPairMinFraction)
-            {
-                ctx.LogError(string.Format(
-                    @"Library-decoy pairing failed: only {0:F1}% of decoys paired with a target " +
-                    @"(threshold: {1:F0}%). FDR estimates would be unreliable without proper " +
-                    @"target-decoy competition. Either supply a pairing manifest, ensure the " +
-                    @"library uses matching protein accessions with one of `decoy_prefixes` " +
-                    @"({2}), or unset `decoys_in_library` so Osprey generates its own decoys.",
-                    pairingStats.PairedFraction * 100.0,
-                    config.DecoyPairMinFraction * 100.0,
-                    FormatPrefixList(config.DecoyPrefixes)));
-                ctx.ExitCode = 1;
-                return false;
-            }
-            return true;
-        }
 
         /// <summary>
         /// --task FirstPassFDR: load per-file FdrEntry stubs + PIN features directly
@@ -1390,8 +1338,8 @@ namespace pwiz.Osprey.Tasks
             // This one KEEPS NeedsResidentPool deliberately, where the fat/lean choice above
             // moved to the builder. They answer different questions and the predicates diverged
             // when ExpectReconciledInput left NeedsResidentPool (#4486): "does a consumer read
-            // Features off THESE stubs" (fdrbench-pass1, a non-Percolator FdrMethod,
-            // OSPREY_FDR_PROJECTION=0) is still exactly NeedsResidentPool, while "may this load
+            // Features off THESE stubs" (a non-Percolator FdrMethod, OSPREY_FDR_PROJECTION=0)
+            // is still exactly NeedsResidentPool, while "may this load
             // go lean" additionally excludes the reconciled-input merge. Do not "fix" this by
             // copying the builder decision: the merge does not read Features off these stubs -
             // both pass-2 shapes reload them per file from the reconciled parquet
@@ -1499,7 +1447,7 @@ namespace pwiz.Osprey.Tasks
                                 ScoringTaskShared.ArtifactSiblingPath(config), FdrScoresSidecar.Pass.FirstPass),
                             FdrScoresSidecar.Pass.FirstPass),
                         retainedBaseIds,
-                        _sequencePool.Value), ctx);
+                        _sequencePool.Value, ctx.LogInfo), ctx);
                 if (_rescoreInputs == null)
                 {
                     hydrationFailed = true;
@@ -1626,7 +1574,7 @@ namespace pwiz.Osprey.Tasks
         /// 2. Nothing in the run reads the PRE-compaction pool
         ///    (<see cref="PreCompactionPoolReason"/> finds no consumer).
         ///
-        /// Term 2 asks <see cref="FirstPassFdrTask.IsIncludedFor"/> directly: FirstPassFDR must
+        /// Term 2 asks the one membership rule (<see cref="ScoringTaskShared.Includes{T}"/>): FirstPassFDR must
         /// be EXCLUDED from this pipeline and reachable only through its bundle-adopt
         /// Rehydrate, because a FirstPassFDR that Ran would train first-pass Percolator on
         /// whatever <c>ScoredEntries</c> holds - which must be the full pre-compaction pool.
@@ -1638,8 +1586,9 @@ namespace pwiz.Osprey.Tasks
         /// What the resident-pool terms still filter that <c>NoJoin</c> does not: the
         /// OSPREY_DUMP_PERCOLATOR bisection dump (emitted by FirstPassFDR's rehydrate before it
         /// compacts, so it genuinely needs the all-files pre-compaction pool rather than a
-        /// silently post-compaction one), OSPREY_FDR_PROJECTION=0, a non-Percolator
-        /// FdrMethod, and --fdrbench-pass 1. OSPREY_PASS2_QVALUE=transfer is NOT among them:
+        /// silently post-compaction one), OSPREY_FDR_PROJECTION=0 and a non-Percolator
+        /// FdrMethod. --fdrbench-pass 1 left the list with #4507: the pass-1 emitter streams
+        /// off the per-file sidecars now. OSPREY_PASS2_QVALUE=transfer is NOT among them:
         /// the per-run-only redesign (#4438) resolves each adjusted peak against that file's
         /// own on-disk sidecar. <c>--task SecondPassFDR</c> is not among them either, and
         /// since #4486 that is the point rather than an aside: it is the one task that
@@ -1692,8 +1641,8 @@ namespace pwiz.Osprey.Tasks
         {
             if (ctx.Diagnostics?.DumpPercolator ?? false)
                 return @"OSPREY_DUMP_PERCOLATOR";
-            if (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1)
-                return @"--fdrbench-pass 1";
+            // --fdrbench-pass 1 was a reason here until #4507; the pass-1 emitter now streams
+            // off the per-file sidecars, so no FDRBench selection needs the pool.
             // OSPREY_PASS2_QVALUE=transfer is deliberately NOT a reason here, and must not
             // become one again: the per-run-only redesign maps each adjusted peak through
             // that file's own 1st-pass (score -> run q) sidecar, one file at a time, so it
@@ -1708,13 +1657,20 @@ namespace pwiz.Osprey.Tasks
             // hasReconSidecars: every reason above is a resident-pool consumer and returns
             // first, so reaching here means none of them applies.
             //
-            // Ask the task's own membership predicate rather than the former `!NoJoin` proxy
-            // (#4486). The two agree on every task but --task SecondPassFDR, which leaves
+            // Ask the membership rule itself rather than the former `!NoJoin` proxy
+            // (#4486). The two agreed on every task but --task SecondPassFDR, which left
             // NoJoin false while setting ExpectReconciledInput: FirstPassFdrTask is excluded
             // there, so nothing trains, and the proxy was forcing an O(files) resident pool
             // for a consumer that does not exist. Re-deriving membership here is what let
             // them drift, so this defers to the one definition.
-            if (FirstPassFdrTask.IsIncludedFor(config))
+            //
+            // Membership is necessary but not sufficient, and treating it as sufficient is what
+            // made `--task FirstPassFDR --model-diagnostics` over a COMPLETED first pass load the
+            // whole pre-compaction pool to train a model nothing would consume. That leg folds the
+            // report one run at a time and trains nothing, so it needs no pool; the arm proving it
+            // runs inside FirstPassFdrTask.Run, AFTER this decision, so it cannot be what corrects
+            // it. Ask the same question here instead.
+            if (ScoringTaskShared.Includes<FirstPassFdrTask>(config) && !FirstPassFdrTask.WillOnlyFoldDiagnostics(ctx))
                 return @"First-pass Percolator training in this process";
             // No bundle at all. The reconciliation envelope is what carries the compaction
             // predicate, so without it there is nothing to compact against at load time and
@@ -1970,7 +1926,7 @@ namespace pwiz.Osprey.Tasks
                                 FdrExperimentSidecar.PathFor(config.OutputBlib,
                                 ScoringTaskShared.ArtifactSiblingPath(config), FdrScoresSidecar.Pass.FirstPass),
                                 FdrScoresSidecar.Pass.FirstPass),
-                            _sequencePool.Value), ctx);
+                            _sequencePool.Value, ctx.LogInfo), ctx);
                 }
                 if (_rescoreInputs == null)
                     return false;
@@ -2123,10 +2079,10 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Whether Stage 5 needs the resident fat-stub first-pass pool rather than the
-        /// lean streamed <see cref="FdrProjection"/> set (#4400). True when an opt-in
-        /// output reads every entry's in-memory features/scores (FDRBench pass 1),
-        /// or when the projection path is off (OSPREY_FDR_PROJECTION=0 / non-Percolator
-        /// FDR). The reconciled-input worker join is NO LONGER one of them (#4486): it
+        /// lean streamed <see cref="FdrProjection"/> set (#4400). True when the projection
+        /// path is off (OSPREY_FDR_PROJECTION=0 / non-Percolator FDR) - and nothing else since
+        /// #4507 streamed FDRBench pass 1, the last opt-in output that read every entry
+        /// in memory. The reconciled-input worker join is NO LONGER one of them (#4486): it
         /// takes the streaming compacted hydrate, one file's pool resident at a time.
         /// OSPREY_PASS2_QVALUE=transfer no longer
         /// forces the resident pool -- the per-run-only redesign maps each adjusted peak
@@ -2173,9 +2129,13 @@ namespace pwiz.Osprey.Tasks
             // reconciled parquet. It forced the fat load whose features
             // HydrateRescoreBundleIfPresent then nulls unread, so the node paid ~800 MB per
             // file to throw it away, on top of holding every file's pre-compaction stubs.
+            // --fdrbench-pass 1 was the third term until #4507. It read the full pre-compaction
+            // pool resident, and because this predicate tested the bitmask with ==, `both`
+            // never matched: memory-safe by a type confusion, and silently pass-2-only. The
+            // pass-1 emitter now streams off the per-file sidecars, so the term is gone and
+            // the ratchet token with it.
             return !useFdrProjection ||
-                   !config.FdrMethod.UsesPercolatorFramework() ||
-                   (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1);
+                   !config.FdrMethod.UsesPercolatorFramework();
         }
 
         /// <summary>
@@ -2210,10 +2170,11 @@ namespace pwiz.Osprey.Tasks
         /// path (the fat <see cref="FdrEntry"/> stub buffer, and the <c>FirstPassFdrTask.Rehydrate</c>
         /// pre-compaction load it feeds) that does not scale to large file counts. Unless the
         /// operator named THIS path via <c>OSPREY_ALLOW_UNFIXED_RESIDENT</c>, throw with the token
-        /// named so the failure is actionable rather than an opaque OOM at scale. Triggers: the
-        /// HPC reconciled-input merge (#4486), <c>--fdrbench-pass 1</c> (#4507), a non-Percolator
-        /// FdrMethod, and <c>OSPREY_FDR_PROJECTION=0</c>, which requests the legacy resident
-        /// implementation outright and so must be named like any other.
+        /// named so the failure is actionable rather than an opaque OOM at scale. Triggers: a
+        /// non-Percolator FdrMethod, and <c>OSPREY_FDR_PROJECTION=0</c>, which requests the
+        /// legacy resident implementation outright and so must be named like any other. The
+        /// HPC reconciled-input merge (#4486) and <c>--fdrbench-pass 1</c> (#4507) were
+        /// triggers and are streamed now.
         /// </summary>
         private static void GuardResidentPool(OspreyConfig config, bool needsResidentPool)
         {
@@ -2359,8 +2320,8 @@ namespace pwiz.Osprey.Tasks
             // all. See NeedsResidentPool for why nothing on that node reads the pool.
             if (!config.FdrMethod.UsesPercolatorFramework())
                 return ResidentPaths.NON_PERCOLATOR_FDR;
-            if (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1)
-                return ResidentPaths.FDRBENCH_PASS1;
+            // FDRBENCH_PASS1 was here and is GONE with the token (#4507): the pass-1 emitter
+            // streams off the per-file sidecars, so no FDRBench selection reaches this method.
             return null;
         }
 
@@ -2730,7 +2691,7 @@ namespace pwiz.Osprey.Tasks
             // Same path convention as Rust (`scores_path_for_input`).
             // Snappy-compressed; cross-impl ZSTD/Snappy compatibility tracked
             // as a Phase 4 follow-up. The metadata dictionary is precomputed
-            // in Run() against the original (un-mutated) outer config — see
+            // in Run() against the original (un-mutated) outer config - see
             // Run() for why. Skipped only in --task FirstPassFDR mode (no Stages 1-4
             // ran here, so there is nothing fresh to persist).
             // Segment 4/4 (write): the parquet build/write reporters in
@@ -3184,54 +3145,40 @@ namespace pwiz.Osprey.Tasks
                 .ThenBy(e => e.ScanNumber)
                 .ToList();
 
-            using (var writer = new StreamWriter(dumpPath))
+            using (var saver = new FileSaver(dumpPath))
             {
-                // LF newlines so the dump is byte-stable across Windows and
-                // Linux for cross-impl diffing against Rust's PIN output;
-                // matches the convention used by OspreyDiagnosticsLog.
-                writer.NewLine = "\n";
-                writer.WriteLine(string.Join("\t", header));
-                foreach (var e in sorted)
+                using (var writer = new StreamWriter(saver.SafeName))
                 {
-                    string psmId = string.Format("{0}_{1}_{2}_{3}",
-                        fileName, e.ModifiedSequence, e.Charge, e.ScanNumber);
-                    int label = e.IsDecoy ? -1 : 1;
-                    var cols = new List<string>(26)
+                    // LF newlines so the dump is byte-stable across Windows and
+                    // Linux for cross-impl diffing against Rust's PIN output;
+                    // matches the convention used by OspreyDiagnosticsLog.
+                    var inv = CultureInfo.InvariantCulture;
+                    writer.NewLine = "\n";
+                    writer.WriteLine(string.Join("\t", header));
+                    foreach (var e in sorted)
                     {
-                        psmId,
-                        label.ToString(),
-                        e.ScanNumber.ToString(),
-                        e.Charge.ToString()
-                    };
-                    for (int i = 0; i < ScoringTaskShared.NUM_PIN_FEATURES; i++)
-                        cols.Add(e.Features[i].ToString("G17"));
-                    cols.Add(e.ModifiedSequence ?? "");
-                    writer.WriteLine(string.Join("\t", cols));
+                        string psmId = string.Format(inv, "{0}_{1}_{2}_{3}",
+                            fileName, e.ModifiedSequence, e.Charge, e.ScanNumber);
+                        int label = e.IsDecoy ? -1 : 1;
+                        var cols = new List<string>(26)
+                        {
+                            psmId,
+                            label.ToString(inv),
+                            e.ScanNumber.ToString(inv),
+                            e.Charge.ToString(inv)
+                        };
+                        for (int i = 0; i < ScoringTaskShared.NUM_PIN_FEATURES; i++)
+                            cols.Add(e.Features[i].ToString("G17", inv));
+                        cols.Add(e.ModifiedSequence ?? "");
+                        writer.WriteLine(string.Join("\t", cols));
+                    }
                 }
+                saver.Commit();
             }
 
             ctx.LogInfo(string.Format("[COUNT] Wrote feature dump: {0} ({1} entries)",
                 dumpPath, sorted.Count));
         }
 
-        /// <summary>
-        /// Render a prefix list in Rust's <c>{:?}</c> debug format
-        /// (<c>["DECOY_", "rev_", "decoy_"]</c>) for log messages and
-        /// error reports, so cross-impl messages compare consistently.
-        /// </summary>
-        private static string FormatPrefixList(IList<string> prefixes)
-        {
-            var sb = new System.Text.StringBuilder("[");
-            if (prefixes != null)
-            {
-                for (int i = 0; i < prefixes.Count; i++)
-                {
-                    if (i > 0) sb.Append(", ");
-                    sb.Append('"').Append(prefixes[i] ?? string.Empty).Append('"');
-                }
-            }
-            sb.Append(']');
-            return sb.ToString();
-        }
     }
 }

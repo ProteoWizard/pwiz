@@ -1,4 +1,11 @@
 <Project>
+
+  <!-- Post-build assertion that the staged native payload matches the platform the output will
+       run on. Imported for the whole tree rather than per-project: the mismatch it catches is a
+       DISAGREEMENT between a project and something it references, so both ends have to be
+       checked to see it. -->
+  <Import Project="$(MSBuildThisFileDirectory)Shared\Lib\PwizTargetPlatform.targets" />
+
   <!-- CA1416 (platform-compatibility) flags Windows-only API calls. It is pure noise on
        Windows-only projects - the GUI/WinForms assemblies target net10.0-windows, so every
        Win32/WinForms call is flagged "reachable on all platforms" - but it is valuable

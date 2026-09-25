@@ -186,6 +186,14 @@ namespace pwiz.Osprey
 
         void ClosePredictRtDump();
 
+        void CloseStage6CalibrationDump();
+
+        /// <summary>
+        /// Close every held-open dump writer this sink owns. Registered against process
+        /// exit so an early <c>Environment.Exit</c> still commits their accumulated content.
+        /// </summary>
+        void CloseAll();
+
         // ----- Stages 5-7: join, rescore, reconciliation, protein FDR dumps -----
 
         void WriteStage5PercolatorDump(List<KeyValuePair<string, List<FdrEntry>>> perFileEntries);
