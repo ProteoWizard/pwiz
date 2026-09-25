@@ -733,7 +733,7 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             var viewEditor = base.CreateViewEditor(viewGroup, viewSpec);
             viewEditor.Alphabetical = Settings.Default.AlphabeticalReportEditor;
-            viewEditor.Closed += ViewEditorClosed;
+            viewEditor.FormClosed += ViewEditorClosed;
             return viewEditor;
         }
 

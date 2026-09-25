@@ -86,11 +86,11 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             UpdateAll();
         }
-        protected override void OnClosing(CancelEventArgs e)
+        protected override void OnFormClosing(FormClosingEventArgs e)
         {
             _cancellationTokenSource.Cancel();
 
-            base.OnClosing(e);
+            base.OnFormClosing(e);
         }
 
         protected override void OnHandleDestroyed(EventArgs e)

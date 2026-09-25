@@ -159,11 +159,11 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
             Settings.Default.ImportResultsSimultaneousFiles = comboSimultaneousFiles.SelectedIndex;
             Settings.Default.ImportResultsDoAutoRetry = cbAutoRetry.Checked;
-            base.OnClosed(e);
+            base.OnFormClosed(e);
         }
 
         public void OkDialog()
