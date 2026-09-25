@@ -58,12 +58,15 @@ No possessive on an inanimate noun; use the noun attributively or rephrase. "pre
 candidate q-values", "the best charge state of the same peptide", "the inputs of this run",
 not "the peptide's best charge state" or "this run's inputs".
 
-## Say what happened, not how
+## Outcomes, not mechanisms
 
-A noun swap does not fix a data-structure word. The line states the effect on the results
-in one clause: which candidates get new q-values, what was kept, what will be imputed. A
-warning keeps the one sentence the user needs and the remedy they can apply; the mechanism,
-issue numbers and measured costs go in a code comment beside the call.
+A noun swap does not fix a data-structure word. Say the outcome in the reader's terms:
+which candidates get new q-values, what was kept, what will be imputed. A line does not
+have to report an action; a plain outcome ("Unique library strings: 1,433,253 / 5,241,881
+total (72.7% reduced)") is often the clearer form, where "Interned library strings ...
+collapsed" named the code's operation. A warning keeps the one sentence the user needs and
+the remedy they can apply; the mechanism, issue numbers and measured costs go in a code
+comment beside the call.
 
 ## Enums
 
