@@ -401,7 +401,7 @@ namespace pwiz.Osprey.FDR
         /// same population. <c>MaxTrainSize</c> (the streaming training-subsample size)
         /// is left at the <see cref="PercolatorConfig"/> default (300000).
         /// </summary>
-        private static PercolatorConfig BuildProjectionPercolatorConfig(
+        internal static PercolatorConfig BuildProjectionPercolatorConfig(
             OspreyConfig config,
             OspreyFeatureInfo[] featureInfos,
             PercolatorDiagnosticsConfig diagnostics)

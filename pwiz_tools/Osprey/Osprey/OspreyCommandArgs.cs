@@ -343,9 +343,20 @@ namespace pwiz.Osprey
         /// </summary>
         internal static OspreyConfig ParseArgs(string[] args)
         {
+            return ParseArgs(args, OspreyEnvironment.FdrModel);
+        }
+
+        /// <summary>
+        /// <see cref="ParseArgs(string[])"/> with the classifier supplied rather than read from
+        /// OSPREY_FDR_MODEL, which is read once at process start and so cannot be varied by a
+        /// test. Exists so a test can prove that gbdt reaches the config: #4491 was the
+        /// classifier silently not reaching training.
+        /// </summary>
+        internal static OspreyConfig ParseArgs(string[] args, FdrMethod fdrModel)
+        {
             var parser = new OspreyCommandArgs();
             parser.TokenizeAndDispatch(args);
-            return parser.ToConfig();
+            return parser.ToConfig(fdrModel);
         }
 
         private void TokenizeAndDispatch(string[] args)
@@ -455,7 +466,7 @@ namespace pwiz.Osprey
             }
         }
 
-        private OspreyConfig ToConfig()
+        private OspreyConfig ToConfig(FdrMethod fdrModel)
         {
             // Expand --input-list BEFORE normalization, so a listed path is indistinguishable
             // from one given with -i from here on. Appended in the order the lists were given,
@@ -483,8 +494,8 @@ namespace pwiz.Osprey
             // here, where --fdr-method used to set it, so the rest of the pipeline reads the
             // config and never the environment. An unrecognized value parses to the default only
             // so the config is well-formed; Program aborts on OspreyEnvironment.FdrModelError
-            // before anything runs.
-            _config.FdrMethod = OspreyEnvironment.FdrModel;
+            // before the pipeline runs.
+            _config.FdrMethod = fdrModel;
 
             switch (_resolution)
             {

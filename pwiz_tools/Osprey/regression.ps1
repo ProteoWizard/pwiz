@@ -716,6 +716,23 @@ if ($dupGolden.Count -gt 0) {
     exit 1
 }
 
+# OSPREY_FDR_MODEL selects the first-pass classifier from the environment (#4543), so a shell
+# exported for gbdt work would train trees in every leg. The goldens are the linear SVM's:
+# capturing them under trees would bless tree output as the SVM baseline, and SearchParameterHash
+# does not tell the two apart. A compare run is left to proceed (an A/B is a legitimate use),
+# but says why mode 1 will diverge.
+$fdrModel = if ($env:OSPREY_FDR_MODEL) { $env:OSPREY_FDR_MODEL.Trim().ToLowerInvariant() } else { '' }
+if ($fdrModel -ne '' -and $fdrModel -ne 'svm') {
+    if ($CreateGolden) {
+        # Extra parens: -f binds TIGHTER than +.
+        Write-Problem-Tc (("OSPREY_FDR_MODEL='{0}' is set; the goldens are the linear SVM's. " +
+            "Unset it before -CreateGolden.") -f $env:OSPREY_FDR_MODEL)
+        exit 1
+    }
+    Write-Host (("OSPREY_FDR_MODEL='{0}' is set: every leg trains that classifier, so mode 1 " +
+        "will diverge from the linear-SVM goldens.") -f $env:OSPREY_FDR_MODEL) -ForegroundColor Yellow
+}
+
 # --- Reclaim disk: prune earlier TestResults run dirs --------------------------
 # This is where the disk is bounded (see $retainOutput). A local run retains its output,
 # so the run dirs of earlier runs are here at startup; this prune keeps the most recent

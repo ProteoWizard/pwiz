@@ -28,6 +28,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.CommandLine;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR;
 using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
@@ -154,8 +155,12 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0.01, Parse(OspreyCommandArgs.ARG_PROTEIN_FDR + 0.01).ProteinFdr);
             Assert.AreEqual(8, Parse(OspreyCommandArgs.ARG_THREADS + 8).NThreads);
             // The classifier is no argument's value: the parse copies it from OSPREY_FDR_MODEL,
-            // read once at process start (the parse itself is pinned in CoreTypesTest).
-            Assert.AreEqual(OspreyEnvironment.FdrModel, Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML").FdrMethod);
+            // read once at process start (the parse itself is pinned in CoreTypesTest). The
+            // environment cannot be varied here, so the value is passed in, and followed into the
+            // training config: #4491 was gbdt silently training the SVM, and a check that the
+            // config merely echoes the environment passes with the assignment deleted.
+            AssertClassifierReachesTraining(FdrMethod.Gbdt, true, OspreyEnvironment.GbtMaxIterations);
+            AssertClassifierReachesTraining(FdrMethod.Percolator, false, 10);
             Assert.AreEqual(FdrLevel.Peptide, Parse(OspreyCommandArgs.ARG_FDR_LEVEL + @"peptide").FdrLevel);
             Assert.AreEqual(FdrLevel.Precursor, Parse(OspreyCommandArgs.ARG_FDR_LEVEL, @"bogus").FdrLevel);     // warn -> default unchanged
             Assert.AreEqual(SharedPeptideMode.Razor, Parse(OspreyCommandArgs.ARG_SHARED_PEPTIDES + @"razor").SharedPeptides);
@@ -206,6 +211,17 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(Parse(OspreyCommandArgs.ARG_TIMESTAMP).IsTimeStamped);
             Assert.IsTrue(Parse(OspreyCommandArgs.ARG_MEMSTAMP).IsMemStamped);
             Assert.AreEqual(@"run.log", Parse(OspreyCommandArgs.ARG_LOG_FILE + @"run.log").LogFilePath);
+        }
+
+        private static void AssertClassifierReachesTraining(FdrMethod fdrModel, bool expectTrees,
+            int expectMaxIterations)
+        {
+            var config = OspreyCommandArgs.ParseArgs(ArgTokens.Split(new[] { OspreyCommandArgs.ARG_INPUT + @"a.mzML" }),
+                fdrModel);
+            Assert.AreEqual(fdrModel, config.FdrMethod);
+            var percConfig = PercolatorEngine.BuildProjectionPercolatorConfig(config, null, null);
+            Assert.AreEqual(expectTrees, percConfig.UseGradientBoostedTrees);
+            Assert.AreEqual(expectMaxIterations, percConfig.MaxIterations);
         }
 
         /// <summary>
