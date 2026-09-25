@@ -3790,6 +3790,7 @@ namespace pwiz.Osprey.Tasks
             if (results == null || perFileParquetPaths == null)
                 return;
             int modelWrites = 0;
+            string firstPath = null;
             foreach (var kvp in perFileParquetPaths)
             {
                 string path = FirstPassModelIO.PathFor(kvp.Value, kvp.Key);
@@ -3802,18 +3803,27 @@ namespace pwiz.Osprey.Tasks
                     if (!FirstPassModelIO.Save(path, results, OspreyEnvironment.ExperimentAgg))
                         continue;
                     modelWrites++;
+                    firstPath = firstPath ?? path;
                     PerFileResumeDriver.Stamp(path, Name, OspreyVersion.Current, validityKey,
                         new[] { kvp.Value }, ctx.LogWarning);
                 }
                 catch (Exception ex)
                 {
-                    ctx.LogWarning(@"Could not persist 1st-pass model sidecar for '" + kvp.Key + @"': " + ex.Message);
+                    ctx.LogWarning(string.Format("Could not save the first-pass model for '{0}': {1}",
+                        kvp.Key, ex.Message));
                 }
             }
-            if (modelWrites > 0)
+            // One path, not one per file: the copies are identical, and a 446-file run would
+            // otherwise print 446 lines here. A resume reuses the model instead of retraining.
+            if (modelWrites == 1)
             {
-                ctx.LogInfo(
-                    "Saved the trained first-pass model; an interrupted run resumes from here without retraining.");
+                ctx.LogInfo(string.Format("Saved the trained first-pass model to {0}", firstPath));
+            }
+            else if (modelWrites > 1)
+            {
+                ctx.LogInfo(string.Format(
+                    "Saved the trained first-pass model to {0} and for each of the other {1:N0} inputs",
+                    firstPath, modelWrites - 1));
             }
         }
 
