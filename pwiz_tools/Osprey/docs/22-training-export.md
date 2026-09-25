@@ -376,13 +376,15 @@ It deliberately omits the cohort (P4): no reconciliation hash, no stem list, so 
 handed any subset of runs computes the key a straight-through run does.
 
 Each run's parquet is stamped with that key plus the identities (name, size, mtime; `absent`
-for a missing file) of the three per-run artifacts it reads that the key does not already
+for a missing file) of the five per-run artifacts it reads that the key does not already
 follow (`TrainingExportTask.OutputValidityKey`):
 
 | Term | File |
 |---|---|
 | `recon=<identity>` | `<stem>.scores-reconciled.parquet` |
 | `pass2run=<identity>` | `<stem>.2nd-pass.fdr_scores.bin` |
+| `calib=<identity>` | `<stem>.calibration.json` |
+| `spectra=<identity>` | `<stem>.spectra.bin` |
 | `runinfo=<identity>` | `<stem>.run-info.json` - so rebuilding a spectra cache, which writes it, redoes an export made without it |
 
 A rewritten input redoes that run's export and no other. Resume is per run: a run whose parquet

@@ -213,7 +213,11 @@ namespace pwiz.Osprey.IO
             int caret = text.IndexOf('^');
             if (caret > 0)
             {
-                int.TryParse(text.Substring(caret + 1), NumberStyles.None, CultureInfo.InvariantCulture, out charge);
+                // A suffix that does not parse is not a charge: leave the text whole, so the
+                // grammar rejects it rather than typing the ion at the wrong charge.
+                if (!int.TryParse(text.Substring(caret + 1), NumberStyles.None, CultureInfo.InvariantCulture, out int caretCharge))
+                    return text;
+                charge = caretCharge;
                 return text.Substring(0, caret);
             }
             int plusCount = 0;

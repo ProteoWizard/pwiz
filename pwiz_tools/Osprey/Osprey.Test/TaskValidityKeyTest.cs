@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
@@ -87,14 +88,15 @@ namespace pwiz.Osprey.Test
                     @"PEPC[+57.021464]TIDEK", peaks, new[] { (0, @"y3", 1) });
 
                 // BiblioSpec's one-decimal text: the residue- and precision-aware modification
-                // reader gives it exact masses now, so its .libcache is re-read once - but an
-                // unannotated blib's modification masses reach no score, so its task keys stay.
+                // reader gives it exact masses now. They reach no score for an unannotated blib,
+                // but they reach the output blib's Modifications table, so its .libcache is
+                // re-read once and its task keys gain LIBRARY_MODS_TERM.
                 string oneDecimal = BlibLibraryInputTest.CreateBlib(Path.Combine(dir, @"bibliospec.blib"),
                     @"PEPC[+57.0]TIDEK", peaks, new (int, string, int)[0]);
 
                 foreach (var (unchanged, readerTerms) in new[]
                          {
-                             (tsv, string.Empty), (plain, string.Empty), (oneDecimal, "blib_mods:2\n"),
+                             (tsv, string.Empty), (plain, string.Empty),
                          })
                 {
                     var config = new OspreyConfig { LibrarySource = LibrarySource.FromPath(unchanged) };
@@ -107,6 +109,19 @@ namespace pwiz.Osprey.Test
                     Assert.AreEqual(readerTerms, LibraryLoader.LibraryReaderTerms(config),
                         Path.GetFileName(unchanged) + @" .libcache reader terms");
                 }
+
+                var oneDecimalConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(oneDecimal) };
+                var oneDecimalTasks = OspreyTasks.Create().Pipeline;
+                var oneDecimalCtx = new PipelineContext(oneDecimalConfig, oneDecimalTasks, null, null, null);
+                Assert.AreEqual(PreUpgradeBaseKey(oneDecimalConfig) + OspreyTask.LIBRARY_MODS_TERM,
+                    oneDecimalTasks.OfType<PerFileScoringTask>().Single().ValidityKey(oneDecimalCtx),
+                    @"a blib whose modification text reads differently must not adopt a directory written before");
+                foreach (var task in oneDecimalTasks)
+                {
+                    StringAssert.Contains(task.ValidityKey(oneDecimalCtx), OspreyTask.LIBRARY_MODS_TERM, task.Name);
+                    Assert.IsFalse(task.ValidityKey(oneDecimalCtx).Contains(LIBEXT_TERM), task.Name);
+                }
+                Assert.AreEqual("blib_mods:2\n", LibraryLoader.LibraryReaderTerms(oneDecimalConfig));
 
                 var annotatedConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(annotated) };
                 var annotatedTasks = OspreyTasks.Create().Pipeline;
@@ -169,6 +184,8 @@ namespace pwiz.Osprey.Test
                          {
                              ParquetScoreCache.GetReconciledScoresPath(runA),
                              FdrScoresSidecar.Pass2Path(runA),
+                             CalibrationIO.CalibrationPathForInput(runA, ArtifactPaths.ResolveOutputDir(runA)),
+                             SpectraCache.GetCachePath(runA),
                              RunInfoFile.PathFor(runA),
                          })
                 {

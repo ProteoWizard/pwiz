@@ -64,7 +64,7 @@ namespace pwiz.Osprey.Test
             AssertParsed(@"b3 some comment", 1, IonType.B, 3, 1, NeutralLossCode.None);
             // "NaN" and "Infinity" parse as numbers, but no fragment loses either.
             foreach (string name in new[] { null, string.Empty, @"p", @"?", @"precursor", @"a2", @"z3", @"y", @"y0", @"y7-", @"y7-junk", @"b3x",
-                         @"y7-NaN", @"y7-nan", @"y7-Infinity", @"b3--Infinity" })
+                         @"y7-NaN", @"y7-nan", @"y7-Infinity", @"b3--Infinity", @"y7^bad", @"y7^2foo", @"y7^" })
             {
                 Assert.IsFalse(BlibPeakAnnotations.TryParseName(name, 1, out _), name ?? @"null");
             }

@@ -71,6 +71,16 @@ namespace pwiz.Osprey.Tasks
         public const string LIBRARY_READER_TERM = @";libext=ann";
 
         /// <summary>
+        /// The base-key term of a blib library whose modification text the residue- and
+        /// precision-aware reader parses differently: one-decimal BiblioSpec masses, or a
+        /// 100-200 value on a residue other than C. Its modification masses reach no score
+        /// unless its fragments are typed, but they are written to the output blib's
+        /// Modifications table, so a directory written before the change must not be adopted
+        /// after it. Every other library keys exactly as before.
+        /// </summary>
+        public const string LIBRARY_MODS_TERM = @";libmods=2";
+
+        /// <summary>
         /// Short identifier used in pipeline log lines, the <c>--task</c> selector and the
         /// validity sidecar. Each task returns its own <c>TASK_NAME</c> constant, the one
         /// spelling the CLI value list and the tests reference too.
@@ -239,15 +249,19 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// <see cref="LIBRARY_READER_TERM"/> for a blib library with annotation rows, else
-        /// empty. The probe is one <c>SELECT EXISTS</c>, cached per file version.
+        /// <see cref="LIBRARY_READER_TERM"/> for a blib library with annotation rows and
+        /// <see cref="LIBRARY_MODS_TERM"/> for one with precision-sensitive modification text,
+        /// else empty. Both probes are cached per file version.
         /// </summary>
         private static string LibraryReaderValidityKeySuffix(OspreyConfig config)
         {
             var source = config.LibrarySource;
-            return source != null && source.Format == LibraryFormat.Blib && BlibLoader.HasPeakAnnotations(source.Path)
-                ? LIBRARY_READER_TERM
-                : string.Empty;
+            if (source == null || source.Format != LibraryFormat.Blib)
+                return string.Empty;
+            string suffix = BlibLoader.HasPeakAnnotations(source.Path) ? LIBRARY_READER_TERM : string.Empty;
+            if (BlibLoader.HasPrecisionSensitiveModifications(source.Path))
+                suffix += LIBRARY_MODS_TERM;
+            return suffix;
         }
     }
 }

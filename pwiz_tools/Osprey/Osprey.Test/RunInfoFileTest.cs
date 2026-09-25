@@ -141,6 +141,13 @@ namespace pwiz.Osprey.Test
             string future = Path.Combine(dir, @"future.run-info.json");
             File.WriteAllText(future, @"{ ""format_version"": 99 }");
             Assert.IsNull(RunInfoFile.TryLoad(future), @"a format this build does not know is not read");
+            string truncatedRange = Path.Combine(dir, @"truncated.run-info.json");
+            File.WriteAllText(truncatedRange, @"{ ""format_version"": 2, ""ms2_scan_window"": [ 200.0 ] }");
+            Assert.IsNull(RunInfoFile.TryLoad(truncatedRange), @"a one-element range reads as absent, not as a range");
+            string truncatedWindow = Path.Combine(dir, @"truncated-window.run-info.json");
+            File.WriteAllText(truncatedWindow,
+                @"{ ""format_version"": 2, ""ms2_scan_windows"": [ { ""isolation_center"": 450.0, ""scan_window"": [ 200.0 ] } ] }");
+            Assert.IsNull(RunInfoFile.TryLoad(truncatedWindow), @"a damaged per-window range reads as absent");
         }
 
         /// <summary>

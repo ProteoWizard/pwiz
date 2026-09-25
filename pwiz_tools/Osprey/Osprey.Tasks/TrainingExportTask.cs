@@ -615,6 +615,8 @@ namespace pwiz.Osprey.Tasks
         {
             return @";recon=" + IdentityOrAbsent(ParquetScoreCache.GetReconciledScoresPath(input))
                 + @";pass2run=" + IdentityOrAbsent(FdrScoresSidecar.Pass2Path(input))
+                + @";calib=" + IdentityOrAbsent(CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input)))
+                + @";spectra=" + IdentityOrAbsent(SpectraCache.GetCachePath(input))
                 + @";runinfo=" + IdentityOrAbsent(RunInfoFile.PathFor(input));
         }
 

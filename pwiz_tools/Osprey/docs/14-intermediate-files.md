@@ -26,7 +26,7 @@ experiment-wide, **exp/rep** = experiment-wide content replicated under each run
 |---|---|---|---|---|
 | `<stem>.calibration.json` | run | JSON (Newtonsoft) | `Osprey.Chromatography/CalibrationIO.cs` | RT + MS1/MS2 mass calibration parameters |
 | `<stem>.spectra.bin` | run | Custom binary v4 | `Osprey.IO/SpectraCache.cs` | Decoded MS1/MS2 spectra for fast reload - and the only copy once the source is deleted |
-| `<stem>.run-info.json` | run | JSON (Newtonsoft) v1 | `Osprey.IO/RunInfoFile.cs` | What the acquisition says about itself: instrument, dissociation and collision-energy histograms, scan windows. Written beside `.spectra.bin` when that cache is built (section 9) |
+| `<stem>.run-info.json` | run | JSON (Newtonsoft) v2 | `Osprey.IO/RunInfoFile.cs` | What the acquisition says about itself: instrument, dissociation and collision-energy histograms, scan windows. Written beside `.spectra.bin` when that cache is built (section 9) |
 | `<stem>.scores.parquet` | run | Apache Parquet (ZSTD) | `Osprey.IO/ParquetScoreCache.cs` | Scored entries: 21 PIN features, fragments, CWT candidates + footer metadata |
 | `<stem>.scores-reconciled.parquet` | run | Apache Parquet (ZSTD) | `Osprey.Tasks/ReconciledParquetWriter.cs` | Stage 6 reconciled rewrite (separate file, not in-place) |
 | `<stem>.1st-pass.fdr_scores.bin` | run | Custom binary **v7**, 32-byte header + 36-byte records | `Osprey.IO/FdrScoresSidecar.cs` | entry_id, SVM score, run precursor q, run peptide q, detection apex RT. The experiment-scope columns moved OUT at v5 (#4486) - see the experiment sidecar row; apex RT arrived at v7 (#4522), so the diagnostics co-assignment panel stops opening every `.scores.parquet` a second time for it |
@@ -578,7 +578,8 @@ It records the producing task, the Osprey version, a `validity_key`, and the inp
 
 The base `validity_key` is
 `search=<SearchParameterHash>;library=<LibraryIdentityHash>` plus the peak-pick arm and, for a
-blib library with fragment annotations, `;libext=ann` (`OspreyTask.ValidityKey`); tasks with
+blib library with fragment annotations, `;libext=ann`, and for one with precision-sensitive
+modification text, `;libmods=2` (`OspreyTask.ValidityKey`); tasks with
 extra state append to it - `FirstPassFdrTask` adds six
 further components; the full composition, with the defect each entry prevents, is under
 "What a validity key is made of" below. 00 owns the *rule* those entries serve (P15: an
@@ -633,8 +634,12 @@ also means a task added later carries it without having to know.
 The base also carries `;libext=ann` (`OspreyTask.LIBRARY_READER_TERM`) for a blib library
 whose `RefSpectraPeakAnnotations` table has rows, for the same reason: the blib reader types
 fragments from that table, which changes the library every task reads, so a directory scored
-before that reader against an annotated blib must not be adopted after it. A TSV library and a
-blib without annotation rows get no term, so their keys are unchanged. The probe is one
+before that reader against an annotated blib must not be adopted after it. `;libmods=2`
+(`OspreyTask.LIBRARY_MODS_TERM`) marks a blib whose modification text the residue- and
+precision-aware reader parses differently (one-decimal BiblioSpec masses, or a 100-200 value on
+a residue other than C): its masses reach no score unless its fragments are typed, but they are
+written to the output blib's Modifications table. A TSV library and any other blib get no
+term, so their keys are unchanged. The probe is one
 `SELECT EXISTS`, cached per file version (`BlibLoader.HasPeakAnnotations`). The `.libcache`
 composition hash follows the same rule with its own reader terms
 (`LibraryLoader.LibraryReaderTerms`): `blib_reader:2` for an annotated blib, and `blib_mods:2`

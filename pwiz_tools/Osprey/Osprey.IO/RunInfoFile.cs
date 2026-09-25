@@ -279,7 +279,7 @@ namespace pwiz.Osprey.IO
             {
                 var info = JsonConvert.DeserializeObject<RunInfo>(File.ReadAllText(path));
                 if (info == null || info.FormatVersion < RunInfo.OLDEST_READABLE_FORMAT_VERSION ||
-                    info.FormatVersion > RunInfo.CURRENT_FORMAT_VERSION)
+                    info.FormatVersion > RunInfo.CURRENT_FORMAT_VERSION || !HasReadableShape(info))
                 {
                     return null;
                 }
@@ -289,6 +289,36 @@ namespace pwiz.Osprey.IO
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Whether every range the consumers index as [lower, upper] has exactly two values.
+        /// A truncated or hand-edited file can parse and still carry a one-element range,
+        /// which a consumer would index past; such a file reads as absent, like any other
+        /// damaged one.
+        /// </summary>
+        private static bool HasReadableShape(RunInfo info)
+        {
+            if (!IsRangeOrNull(info.Ms1RtRange) || !IsRangeOrNull(info.Ms2RtRange) ||
+                !IsRangeOrNull(info.Ms1ScanWindow) || !IsRangeOrNull(info.Ms2ScanWindow) ||
+                !IsRangeOrNull(info.Ms2IsolationRange))
+            {
+                return false;
+            }
+            if (info.Ms2ScanWindows != null)
+            {
+                foreach (var window in info.Ms2ScanWindows)
+                {
+                    if (window == null || !IsRangeOrNull(window.ScanWindow))
+                        return false;
+                }
+            }
+            return true;
+        }
+
+        private static bool IsRangeOrNull(double[] range)
+        {
+            return range == null || range.Length == 2;
         }
     }
 }
