@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -28,9 +28,17 @@ namespace pwiz.Osprey.Core
     /// Central access point for OSPREY_* environment variables that control
     /// production behavior (throttling, fast-iteration early exits, algorithm
     /// variants). A separate OspreyDiagnostics class covers the diagnostic-dump
-    /// env vars. Values are read once at process start and cached as readonly
-    /// static fields so callers never reach for
-    /// <see cref="Environment.GetEnvironmentVariable(string)"/> inline.
+    /// env vars. Callers never reach for
+    /// <see cref="Environment.GetEnvironmentVariable(string)"/> inline; every read goes
+    /// through <see cref="GetVariable"/>.
+    ///
+    /// <para>Some values are read once at process start into readonly static fields; a value
+    /// a command-line test must vary is a property that re-reads the variable on every
+    /// access, so <see cref="OverrideVariables"/> can change it for one in-process
+    /// <c>Program.RunCommand</c> - the same fix Skyline uses for a resource string captured
+    /// in a static. Which is which is this class's business, and either may change. So a
+    /// caller must not assume a read is free: read the value once, outside any loop, and pass
+    /// the result down as a plain argument rather than reaching back here per row.</para>
     ///
     /// Lives in Osprey.Core so every project below the main pipeline
     /// (FDR, Chromatography, Scoring, ML, IO) can read it without
@@ -40,6 +48,9 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public static class OspreyEnvironment
     {
+        // Variables a test has overridden (OverrideVariables); null in production.
+        private static IReadOnlyDictionary<string, string> _overrides;
+
         /// <summary>
         /// OSPREY_MAX_PARALLEL_FILES: legacy back-compat cap on concurrent file
         /// processing, superseded by the <c>--parallel-files</c> CLI argument
@@ -182,7 +193,7 @@ namespace pwiz.Osprey.Core
         /// feature-parity bisection (isolates downstream feature divergence
         /// from calibration drift).
         /// </summary>
-        public static readonly string LoadCalibrationPath = Environment.GetEnvironmentVariable(@"OSPREY_LOAD_CALIBRATION");
+        public static readonly string LoadCalibrationPath = GetVariable(@"OSPREY_LOAD_CALIBRATION");
 
         /// <summary>
         /// OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT: when a unit test is run under
@@ -193,7 +204,7 @@ namespace pwiz.Osprey.Core
         /// production. The harness verifies cross-impl byte parity once both
         /// sides have written their copy.
         /// </summary>
-        public static readonly string CrossImplFdrSidecarOut = Environment.GetEnvironmentVariable(@"OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT");
+        public static readonly string CrossImplFdrSidecarOut = GetVariable(@"OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT");
 
         /// <summary>
         /// OSPREY_CROSS_IMPL_RECONCILIATION_OUT: same idea as
@@ -201,7 +212,7 @@ namespace pwiz.Osprey.Core
         /// .reconciliation.json boundary file. Test-only hook; never set
         /// in production.
         /// </summary>
-        public static readonly string CrossImplReconciliationOut = Environment.GetEnvironmentVariable(@"OSPREY_CROSS_IMPL_RECONCILIATION_OUT");
+        public static readonly string CrossImplReconciliationOut = GetVariable(@"OSPREY_CROSS_IMPL_RECONCILIATION_OUT");
 
         /// <summary>
         /// OSPREY_FDR_PROJECTION (issue #4355 step (b) increment ii): route the
@@ -267,7 +278,7 @@ namespace pwiz.Osprey.Core
         // another's" case the env-var doctrine makes strict. IsSet, not a null test: an EMPTY
         // value (a cleared `export`, a blanked CI parameter) reads as unset everywhere else in
         // this class, and refusing it here would be the one predicate that disagrees.
-        public static readonly bool Stage7StreamRetiredSet = IsSet(@"OSPREY_STAGE7_STREAM");
+        public static bool Stage7StreamRetiredSet => IsSet(@"OSPREY_STAGE7_STREAM");
 
         /// <summary>
         /// At the Stage 5 -> 6 boundary, drop <c>LibraryEntry.Fragments</c> for every library
@@ -350,7 +361,7 @@ namespace pwiz.Osprey.Core
         ///   { "features": ["coelution","ln_intensity","rt_penalty","median_polish"],
         ///     "weights": [w0,w1,w2,w3], "means": [m0,m1,m2,m3], "scales": [s0,s1,s2,s3] }
         /// </summary>
-        public static readonly string PickLdaModelPath = Environment.GetEnvironmentVariable(@"OSPREY_PICK_LDA_MODEL");
+        public static readonly string PickLdaModelPath = GetVariable(@"OSPREY_PICK_LDA_MODEL");
 
         /// <summary>
         /// OSPREY_PICK_LDA: use the learned resolution-keyed linear peak-pick model (Stellar
@@ -547,7 +558,8 @@ namespace pwiz.Osprey.Core
         ///     pool. Re-adding it to any resident-pool gate is the #4446 regression; see
         ///     <c>ResidentPaths</c>.
         /// Unset normalizes to the default; an unrecognized value is a startup ERROR (see
-        /// <see cref="Pass2QValueUnrecognized"/>). Read once at process start.
+        /// <see cref="Pass2QValueUnrecognized"/>). Re-read on each access, so a command-line
+        /// test can set it (<see cref="OverrideVariables"/>).
         ///
         /// SECOND-PASS RETRAINING IS GONE, and these two modes are what remain. The former
         /// default <c>percolator</c> - retrain the 2nd-pass Percolator SVM and recompute a
@@ -577,8 +589,11 @@ namespace pwiz.Osprey.Core
         /// per mode" limitation, which became far more than an experimental-mode caveat once
         /// this variable acquired a non-percolator default.
         /// </summary>
-        public static readonly string Pass2QValue = NormalizePass2QValue(
-            Environment.GetEnvironmentVariable(@"OSPREY_PASS2_QVALUE"));
+        public static string Pass2QValue => NormalizePass2QValue(Pass2QValueSetting);
+
+        /// <summary>OSPREY_PASS2_QVALUE exactly as set, for a message that must quote what the
+        /// user typed. Null when unset.</summary>
+        public static string Pass2QValueSetting => GetVariable(@"OSPREY_PASS2_QVALUE");
 
         /// <summary>True when OSPREY_PASS2_QVALUE was set to a value that is not one of the
         /// recognized modes. Program startup ABORTS on this rather than falling back: silently
@@ -586,17 +601,16 @@ namespace pwiz.Osprey.Core
         /// removed <c>percolator</c> token in particular is one that existing sweep scripts
         /// still pass. Checked at startup, not at SecondPassFDR, so the run fails in seconds
         /// instead of after Stage 1-5.</summary>
-        public static readonly bool Pass2QValueUnrecognized = IsUnrecognizedPass2QValue(
-            Environment.GetEnvironmentVariable(@"OSPREY_PASS2_QVALUE"));
+        public static bool Pass2QValueUnrecognized => IsUnrecognizedPass2QValue(Pass2QValueSetting);
 
         /// <summary>True when <see cref="Pass2QValue"/> selects the frozen-model
         /// confidence-transfer path (OSPREY_PASS2_QVALUE=transfer).</summary>
-        public static readonly bool Pass2TransferQ =
+        public static bool Pass2TransferQ =>
             string.Equals(Pass2QValue, PASS2_QVALUE_TRANSFER, StringComparison.Ordinal);
 
         /// <summary>True when <see cref="Pass2QValue"/> selects the protein-anchored
         /// constrained competition (OSPREY_PASS2_QVALUE=protein-compact).</summary>
-        public static readonly bool Pass2ProteinCompact =
+        public static bool Pass2ProteinCompact =>
             string.Equals(Pass2QValue, PASS2_QVALUE_PROTEIN_COMPACT, StringComparison.Ordinal);
 
         /// <summary>
@@ -650,15 +664,15 @@ namespace pwiz.Osprey.Core
         /// individually, so nothing rides along unnamed the way the blanket boolean allowed -
         /// while a single value only ever prevented honest work.</para>
         ///
-        /// Read once at process start. Intended for local testing. The standing
+        /// Re-read on each access, like <see cref="Pass2QValue"/>. Intended for local testing. The standing
         /// <c>regression.ps1</c> gate names NO token on any leg - #4536 removed the last one -
         /// and an INHERITED value is cleared at startup unless a deliberate A/B switch needs it.
         /// A resident path appearing anywhere in the gate fails CI rather than riding along on
         /// an ambient allowance, and any token the gate is ever made to require has to carry an
         /// open issue to remove it again.
         /// </summary>
-        public static readonly string AllowUnfixedResident =
-            (Environment.GetEnvironmentVariable(@"OSPREY_ALLOW_UNFIXED_RESIDENT") ?? string.Empty).Trim();
+        public static string AllowUnfixedResident =>
+            (GetVariable(@"OSPREY_ALLOW_UNFIXED_RESIDENT") ?? string.Empty).Trim();
 
         /// <summary>
         /// True when <see cref="AllowUnfixedResident"/> names anything that is not a legal token,
@@ -668,10 +682,7 @@ namespace pwiz.Osprey.Core
         /// byte-for-byte indistinguishable from not setting it, and the operator is told to do
         /// what they believe they just did. Mirrors <see cref="Pass2QValueUnrecognized"/>.
         /// </summary>
-        public static readonly bool AllowUnfixedResidentUnrecognized =
-            SplitResidentTokens(AllowUnfixedResident).Any(
-                v => !ResidentPaths.KNOWN_UNFIXED.Any(
-                    t => string.Equals(t, v, StringComparison.OrdinalIgnoreCase)));
+        public static bool AllowUnfixedResidentUnrecognized => UnrecognizedResidentTokens.Length > 0;
 
         /// <summary>
         /// Just the unrecognized tokens of <see cref="AllowUnfixedResident"/>, comma separated.
@@ -679,7 +690,7 @@ namespace pwiz.Osprey.Core
         /// <c>NamesResidentPath</c> tests each token independently, so a value pairing a retired
         /// token with a live one still grants the live one. Empty when every token is known.
         /// </summary>
-        public static readonly string UnrecognizedResidentTokens =
+        public static string UnrecognizedResidentTokens =>
             string.Join(@", ", SplitResidentTokens(AllowUnfixedResident).Where(
                 v => !ResidentPaths.KNOWN_UNFIXED.Any(
                     t => string.Equals(t, v, StringComparison.OrdinalIgnoreCase))));
@@ -723,7 +734,7 @@ namespace pwiz.Osprey.Core
         /// three disagreeing (the failure mode that made <c>MeanBestFloorOverspecified</c> a
         /// computed property too). Nothing in the pipeline writes it.</summary>
         public static int MeanBestN { get; set; } = ParseMeanBestN(
-            Environment.GetEnvironmentVariable(@"OSPREY_EXPERIMENT_AGG"));
+            GetVariable(@"OSPREY_EXPERIMENT_AGG"));
 
         /// <summary>OSPREY_EXPERIMENT_AGG: how the 1st-pass EXPERIMENT-wide precursor/peptide
         /// score aggregates a unit's per-run observations before the target/decoy competition.
@@ -750,7 +761,7 @@ namespace pwiz.Osprey.Core
         /// silently ran the DEFAULT would be recorded by the operator as a mean(best-N) result and
         /// would corrupt the comparison rather than fail it.</summary>
         public static readonly bool ExperimentAggUnrecognized = IsUnrecognizedExperimentAgg(
-            Environment.GetEnvironmentVariable(@"OSPREY_EXPERIMENT_AGG"));
+            GetVariable(@"OSPREY_EXPERIMENT_AGG"));
 
         /// <summary>OSPREY_MEANBEST2_FLOOR_MEAN: A/B toggle to use the decoy MEAN instead of the
         /// default decoy MEDIAN as the missing-run floor. Off by default. Applies at every N
@@ -1073,9 +1084,47 @@ namespace pwiz.Osprey.Core
             return v != PASS2_QVALUE_TRANSFER && v != PASS2_QVALUE_PROTEIN_COMPACT;
         }
 
+        /// <summary>
+        /// Replace the named variables with <paramref name="values"/> until the returned object
+        /// is disposed; a null value reads as unset. Every other variable still reads the
+        /// process environment. Only the values that re-read on each access see the override -
+        /// a readonly field was fixed when the class loaded.
+        /// </summary>
+        internal static IDisposable OverrideVariables(IReadOnlyDictionary<string, string> values)
+        {
+            var restorer = new OverridesRestorer(_overrides);
+            _overrides = values;
+            return restorer;
+        }
+
+        /// <summary>
+        /// Every read of an environment variable in this class, so a test can override it.
+        /// </summary>
+        private static string GetVariable(string name)
+        {
+            if (_overrides != null && _overrides.TryGetValue(name, out string value))
+                return value;
+            return Environment.GetEnvironmentVariable(name);
+        }
+
+        private sealed class OverridesRestorer : IDisposable
+        {
+            private readonly IReadOnlyDictionary<string, string> _saved;
+
+            public OverridesRestorer(IReadOnlyDictionary<string, string> saved)
+            {
+                _saved = saved;
+            }
+
+            public void Dispose()
+            {
+                _overrides = _saved;
+            }
+        }
+
         private static int ParseIntOrZero(string name)
         {
-            string v = Environment.GetEnvironmentVariable(name);
+            string v = GetVariable(name);
             if (string.IsNullOrEmpty(v))
                 return 0;
             int.TryParse(v, out int result);
@@ -1086,7 +1135,7 @@ namespace pwiz.Osprey.Core
         /// its own default rather than collapsing an unset var to 0 (as ParseIntOrZero does).</summary>
         private static int? ParseIntOrNull(string name)
         {
-            string v = Environment.GetEnvironmentVariable(name);
+            string v = GetVariable(name);
             if (string.IsNullOrEmpty(v))
                 return null;
             return int.TryParse(v, out int result) ? result : null;
@@ -1096,7 +1145,7 @@ namespace pwiz.Osprey.Core
         /// locale), or null when unset/unparseable.</summary>
         private static double? ParseDoubleOrNull(string name)
         {
-            string v = Environment.GetEnvironmentVariable(name);
+            string v = GetVariable(name);
             if (string.IsNullOrEmpty(v))
                 return null;
             return double.TryParse(v, System.Globalization.NumberStyles.Float,
@@ -1106,12 +1155,12 @@ namespace pwiz.Osprey.Core
 
         private static bool IsSet(string name)
         {
-            return !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(name));
+            return !string.IsNullOrEmpty(GetVariable(name));
         }
 
         private static bool IsNotZero(string name)
         {
-            return Environment.GetEnvironmentVariable(name) != @"0";
+            return GetVariable(name) != @"0";
         }
 
         /// <summary>
@@ -1121,7 +1170,7 @@ namespace pwiz.Osprey.Core
         /// </summary>
         internal static bool IsSetAndNotZero(string name)
         {
-            string v = Environment.GetEnvironmentVariable(name);
+            string v = GetVariable(name);
             return !string.IsNullOrEmpty(v) && v != @"0";
         }
     }

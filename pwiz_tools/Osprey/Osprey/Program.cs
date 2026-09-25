@@ -64,16 +64,28 @@ namespace pwiz.Osprey
         // Skyline's warning prefix. English until Osprey's user text moves to resources.
         private const string WARNING_PREFIX = @"Warning:";
 
-        // The stderr writer, kept after a --log-file swap replaces _out, so an error reported
-        // before the swap still counts when the exit code is reconciled.
-        private static readonly CommandStatusWriter _consoleOut = _out;
+        // The caller's writer (stderr from Main), kept after a --log-file swap replaces _out,
+        // so an error reported before the swap still counts when the exit code is reconciled.
+        private static CommandStatusWriter _consoleOut = _out;
 
-        // Whether _out was swapped to a --log-file StreamWriter that Main must flush and
-        // dispose (never the shared Console.Error writer).
+        // Whether _out was swapped to a --log-file StreamWriter that RunCommand must flush and
+        // dispose (never the caller's writer).
         private static bool _loggingToFile;
 
         static int Main(string[] args)
         {
+            return RunCommand(args, new CommandStatusWriter(Console.Error));
+        }
+
+        /// <summary>
+        /// Run one command line in this process, writing to <paramref name="consoleOut"/>, and
+        /// return the exit code - Skyline's <c>CommandLineRunner.RunCommand</c>. Tests call it so
+        /// a failing command line can be debugged in place instead of in a child process.
+        /// </summary>
+        internal static int RunCommand(string[] args, CommandStatusWriter consoleOut)
+        {
+            _out = _consoleOut = consoleOut;
+            _loggingToFile = false;
             try
             {
                 return ReconcileExitCode(Run(args));
@@ -416,7 +428,7 @@ namespace pwiz.Osprey
                         "for the default ('{1}'). The 'percolator' and 'transfer-compete' modes were removed.",
                         OspreyEnvironment.PASS2_QVALUE_TRANSFER,
                         OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT,
-                        Environment.GetEnvironmentVariable(@"OSPREY_PASS2_QVALUE")));
+                        OspreyEnvironment.Pass2QValueSetting));
                     return 1;
                 }
                 // OSPREY_STAGE7_STREAM was REMOVED (2026-09-10): the streamed Stage-7 join is the
