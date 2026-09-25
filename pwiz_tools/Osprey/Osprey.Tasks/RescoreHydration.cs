@@ -345,10 +345,9 @@ namespace pwiz.Osprey.Tasks
             // shape has at gate scale: every value and every artifact is identical to the
             // bounded twin's, and 3 files make the memory difference free. The regression gate's
             // negative route assertion reads this line, so it must not be a ProgressReporter
-            // heading - that is deferred by LOG_WAIT_SECONDS and never appears on a 3-file
-            // hydrate, and the bounded HydrateCompactedStreaming prints the identical heading
-            // when it IS slow enough. A marker that both routes emit, and neither emits quickly,
-            // cannot tell them apart; this one is emitted here and nowhere else.
+            // heading - the bounded HydrateCompactedStreaming prints the identical heading, so a
+            // marker that both routes emit cannot tell them apart; this one is emitted here and
+            // nowhere else.
             //
             // On the builder rather than at a caller so it covers every door into the all-runs
             // bundle at once - the resume rehydrate, the --input-scores load, and any added
@@ -612,8 +611,8 @@ namespace pwiz.Osprey.Tasks
             // perFileEntries and held together, so this is the all-runs builder as much as the
             // overlay twin is - it is the route the 446-run --task ModelDiagnostics incident
             // took. Same marker as the overlay, for the same negative route assertion, and
-            // emitted here rather than through the ProgressReporter heading above, which is
-            // deferred and never appears on a small cohort.
+            // emitted here rather than through the ProgressReporter heading above, which the
+            // bounded route prints too.
             if (OspreyOutput.Verbose)
             {
                 log?.LogInfo(string.Format(

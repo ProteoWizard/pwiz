@@ -761,7 +761,10 @@ namespace pwiz.Osprey.Tasks
                 // pool must be able to tell them apart.
                 ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_SCORED_ENTRIES, @"{0} files={1}",
                     useLeanProjection ? @"lean" : @"resident", config.InputFiles.Count));
-                using (var loadProgress = new ProgressReporter(@"Loading scored entries", config.InputFiles.Count))
+                using (var loadProgress = new ProgressReporter(
+                           CountText.Format(config.InputFiles.Count, "Reading first-pass results for 1 file",
+                               "Reading first-pass results for {0:N0} files"),
+                           config.InputFiles.Count))
                 {
                     int fileIdx = 0;
                     // Sequential in InputFiles order to match Run's "collect in original
