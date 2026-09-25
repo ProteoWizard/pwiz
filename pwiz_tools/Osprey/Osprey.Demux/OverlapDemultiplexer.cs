@@ -46,6 +46,12 @@ namespace pwiz.Osprey.Demux
     /// </remarks>
     internal sealed class OverlapDemultiplexer
     {
+        // A bin's share of a channel below this fraction of the channel's total over the
+        // spectrum's bins is round-off from the solve (a bin that should be exactly zero comes
+        // back at 1e-13 or so), below the float32 resolution of the output, and is dropped
+        // rather than written as a peak.
+        private const double SHARE_FLOOR = 1e-6;
+
         private readonly DemuxScheme _scheme;
         private readonly IReadOnlyList<Spectrum> _spectra;
         private readonly DemuxParams _params;
@@ -179,21 +185,21 @@ namespace pwiz.Osprey.Demux
                 state.Statistics.Count(solver.Solve(b, x, state.Workspace));
 
                 double observed = target.Intensities[c];
+                if (apportion && observed <= 0)
+                    continue;
                 double sum = 0;
-                if (apportion)
-                {
-                    if (observed <= 0)
-                        continue;
-                    foreach (int column in targetColumns)
-                        sum += x[column];
-                    if (sum <= 0)
-                        continue;
-                }
+                foreach (int column in targetColumns)
+                    sum += x[column];
+                if (sum <= 0)
+                    continue;
+                // A bin whose share is round-off from the solve, not signal, gets no peak.
+                double floor = sum * SHARE_FLOOR;
                 for (int j = 0; j < targetColumns.Length; j++)
                 {
-                    double value = apportion ? observed * x[targetColumns[j]] / sum : x[targetColumns[j]];
-                    if (value <= 0)
+                    double share = x[targetColumns[j]];
+                    if (share <= floor)
                         continue;
+                    double value = apportion ? observed * share / sum : share;
                     state.OutMzs[j].Add(target.Mzs[c]);
                     state.OutIntensities[j].Add((float)value);
                 }

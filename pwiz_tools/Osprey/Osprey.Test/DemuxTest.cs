@@ -20,12 +20,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.Demux;
 using pwiz.Osprey.IO;
+using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
 {
@@ -50,6 +52,22 @@ namespace pwiz.Osprey.Test
         private const double SHARED_FRAGMENT_MZ = 650.321;
         private static readonly int[] SHARED_FRAGMENT_BINS = { 4, 5, 6, 7 };
         private static readonly float[] SHARED_FRAGMENT_INTENSITIES = { 1000f, 2000f, 2000f, 300f };
+
+        // The real-data fixture and its golden (Data/Demux/README.md).
+        private const string FIXTURE_FOLDER = @"pwiz_tools/Osprey/Osprey.Test/Data/Demux";
+        private const string FIXTURE_STAGGERED = @"eclipse-ev13-staggered-slice.mzML";
+        private const string FIXTURE_MSCONVERT = @"eclipse-ev13-msconvert-demux-slice.mzML";
+        private const string FIXTURE_GOLDEN = @"eclipse-ev13-osprey-demux.golden.tsv";
+        private const string REBLESS_VARIABLE = @"OSPREY_REBLESS_DEMUX_FIXTURE";
+
+        // Agreement floors against msconvert's demultiplexing of the fixture. Measured on
+        // 2026-09-25: default median cosine 0.9987 with 93.6% of spectra at 0.95 or better;
+        // msconvert-like settings median 0.9991 (93.4%). The full runs agree similarly (median
+        // 0.997 / 0.999). A drop below these means Osprey moved away from msconvert, which is
+        // either a regression or a deliberate change that should say so.
+        private const double FIXTURE_MIN_MEDIAN_COSINE = 0.995;
+        private const double FIXTURE_MIN_FRACTION_95 = 0.90;
+        private const double FIXTURE_MIN_MEDIAN_COSINE_MSCONVERT_LIKE = 0.997;
 
         /// <summary>
         /// NNLS: exact and constrained cases, then agreement with an independent brute-force
@@ -248,6 +266,254 @@ namespace pwiz.Osprey.Test
             var single = Demultiplexer.Demultiplex(run.Spectra, new DemuxParams { Threads = 1 });
             var multi = Demultiplexer.Demultiplex(run.Spectra, new DemuxParams { Threads = 4 });
             AssertIdentical(single, multi);
+        }
+
+        /// <summary>
+        /// The conditions the constant-elution round trip cannot see: centroid m/z jitter (so
+        /// channels must be matched within the ppm tolerance, not by equality), k=3 and variable
+        /// window widths end to end, and elution that changes between acquisitions (so every
+        /// neighboring window's value must be interpolated from the right samples of the right
+        /// window). A stencil that read the wrong cycle, or the wrong side of the target time,
+        /// passes constant elution and fails here.
+        /// </summary>
+        [TestMethod]
+        public void TestDemuxRealisticSynthetic()
+        {
+            const double jitterPpm = 3;
+
+            // Jittered m/z, constant elution: still exact, in both output modes.
+            var k2 = BuildRun(new RunOptions
+            {
+                Cycle = StaggeredCycle(RANGE_LOW, RANGE_HIGH, WINDOW_WIDTH, 2),
+                JitterPpm = jitterPpm,
+            });
+            AssertExact(@"k=2 jittered", k2, 2);
+
+            // k=3: 12 Th windows stepped by 4 Th, each spectrum splitting into three bins.
+            var k3 = BuildRun(new RunOptions
+            {
+                Cycle = StaggeredCycle(RANGE_LOW, RANGE_HIGH, 12.0, 3),
+                JitterPpm = jitterPpm,
+            });
+            Assert.AreEqual(3, Demultiplexer.DetectScheme(k3.Spectra).OverlapFactor);
+            AssertExact(@"k=3 jittered", k3, 3);
+
+            // Variable widths: each window offset by half its own width, so bins range from 1 to
+            // 6 Th and windows cover two or three of them.
+            var variable = new List<IsolationWindow>();
+            var edges = new[] { 500.0, 506.0, 514.0, 524.0, 536.0, 550.0 };
+            for (int i = 0; i + 1 < edges.Length; i++)
+                variable.Add(Window(edges[i], edges[i + 1]));
+            for (int i = 0; i + 1 < edges.Length; i++)
+            {
+                double half = (edges[i + 1] - edges[i]) / 2;
+                variable.Add(Window(edges[i] + half, edges[i + 1] + half));
+            }
+            var variableRun = BuildRun(new RunOptions
+            {
+                Cycle = variable,
+                SharedFragment = false,
+                JitterPpm = jitterPpm,
+            });
+            AssertExact(@"variable width jittered", variableRun, 0);
+
+            // Elution that moves: sigma of 2.5 cycles is about 6 samples per FWHM per window, the
+            // regime DIA methods are designed for. In solution mode a unique fragment's value is
+            // the fit of the target's own measurement and its partner window's interpolated one,
+            // so any stencil error shows directly.
+            var eluting = BuildRun(new RunOptions
+            {
+                Cycle = StaggeredCycle(RANGE_LOW, RANGE_HIGH, WINDOW_WIDTH, 2),
+                Cycles = 30,
+                ElutionSigmaCycles = 2.5,
+                JitterPpm = jitterPpm,
+            });
+            // Measured: makima max 0.77% / median 0.008% / leak 0.033%; PCHIP 1.48% / 0.006% /
+            // 0.072%. The pwiz 3-point natural spline and linear interpolation each lose a few
+            // peaks on elution tails (the spline undershoots to zero, or the chord cuts the
+            // apex), so their bound is on the median and the leak only. The leak, intensity put
+            // in a bin that has no such fragment, must rank makima < PCHIP < natural < linear:
+            // that ordering is why makima is the default.
+            var bounds = new[]
+            {
+                (RtInterpolation.makima, 0.02, 0.0005, 0.001),
+                (RtInterpolation.pchip, 0.03, 0.0005, 0.002),
+                (RtInterpolation.natural_three_point, double.NaN, 0.001, 0.003),
+                (RtInterpolation.linear, double.NaN, 0.003, 0.01),
+            };
+            double previousLeak = 0;
+            foreach (var (interpolation, maxError, medianError, maxLeak) in bounds)
+            {
+                var errors = MeasureErrors(Demultiplexer.Demultiplex(eluting.Spectra, new DemuxParams
+                {
+                    Interpolation = interpolation,
+                    OutputMode = DemuxOutputMode.solution,
+                }), eluting);
+                if (!double.IsNaN(maxError))
+                {
+                    Assert.IsTrue(errors.Max < maxError,
+                        string.Format(@"{0}: max error {1:P2} of apex", interpolation, errors.Max));
+                    Assert.AreEqual(0, errors.Missing, interpolation + @": missing");
+                }
+                Assert.IsTrue(errors.Median < medianError,
+                    string.Format(@"{0}: median error {1:P3} of apex", interpolation, errors.Median));
+                Assert.IsTrue(errors.SpuriousFraction < maxLeak,
+                    string.Format(@"{0}: leak {1:P3} of intensity", interpolation, errors.SpuriousFraction));
+                Assert.IsTrue(errors.SpuriousFraction > previousLeak,
+                    string.Format(@"{0}: leak {1:P3} does not rank after {2:P3}", interpolation,
+                        errors.SpuriousFraction, previousLeak));
+                previousLeak = errors.SpuriousFraction;
+            }
+
+            // The default configuration end to end, apportioned output: no peak lost.
+            var defaults = MeasureErrors(Demultiplexer.Demultiplex(eluting.Spectra, new DemuxParams()), eluting);
+            Assert.AreEqual(0, defaults.Missing, @"default apportioned: missing");
+            Assert.IsTrue(defaults.Max < 0.02, string.Format(@"default apportioned: max error {0:P2}", defaults.Max));
+        }
+
+        /// <summary>
+        /// Osprey's demultiplexing of a real staggered acquisition: a slice of an Orbitrap
+        /// Eclipse run (see Data/Demux/README.md). Pins the output against a committed golden
+        /// summary, checks it against msconvert's demultiplexing of the same slice, and checks
+        /// that the msconvert-like settings reproduce msconvert more closely still.
+        /// </summary>
+        [TestMethod]
+        public void TestDemuxEclipseFixture()
+        {
+            string folder = Path.Combine(IOTest.FindPwizRoot(), FIXTURE_FOLDER);
+            var staggered = SpectrumFileReader.LoadAllSpectra(Path.Combine(folder, FIXTURE_STAGGERED)).Ms2Spectra;
+            var msconvert = SpectrumFileReader.LoadAllSpectra(Path.Combine(folder, FIXTURE_MSCONVERT)).Ms2Spectra;
+            Assert.AreEqual(204, staggered.Count);
+            Assert.AreEqual(408, msconvert.Count);
+
+            // The real geometry: 12 Th windows staggered by 6, reported edges a few mTh apart.
+            var scheme = Demultiplexer.DetectScheme(staggered);
+            Assert.AreEqual(DemuxSchemeKind.overlapping, scheme.Kind);
+            Assert.AreEqual(2, scheme.OverlapFactor);
+            Assert.AreEqual(8, scheme.Windows.Count);
+            Assert.AreEqual(9, scheme.Bins.Count);
+            foreach (var bin in scheme.Bins)
+                Assert.AreEqual(6.0, bin.Width, 0.01);
+
+            var result = Demultiplexer.Demultiplex(staggered, new DemuxParams { Threads = 4 });
+            Assert.AreEqual(408, result.Spectra.Count);
+            Assert.AreEqual(0, result.Statistics.IterationCapSolves);
+            AssertIdentical(result, Demultiplexer.Demultiplex(staggered, new DemuxParams { Threads = 1 }));
+            CheckGolden(Path.Combine(folder, FIXTURE_GOLDEN), result);
+
+            // Against msconvert: close, by design not identical (block layout and interpolant).
+            var agreement = MeasureAgreement(msconvert, result.Spectra);
+            Assert.AreEqual(408, agreement.Paired);
+            Assert.IsTrue(agreement.MedianCosine >= FIXTURE_MIN_MEDIAN_COSINE,
+                string.Format(@"median cosine vs msconvert {0:F4}", agreement.MedianCosine));
+            Assert.IsTrue(agreement.FractionAbove95 >= FIXTURE_MIN_FRACTION_95,
+                string.Format(@"fraction >= 0.95 vs msconvert {0:F3}", agreement.FractionAbove95));
+            Assert.AreEqual(1.0, agreement.IntensityRatio, 0.01);
+
+            // msconvert's own settings bring Osprey's typical spectrum closer to it.
+            var msconvertLike = Demultiplexer.Demultiplex(staggered, new DemuxParams
+            {
+                BlockMode = DemuxBlockMode.truncated_slice,
+                Interpolation = RtInterpolation.natural_three_point,
+                Threads = 4,
+            });
+            var likeAgreement = MeasureAgreement(msconvert, msconvertLike.Spectra);
+            Assert.IsTrue(likeAgreement.MedianCosine >= FIXTURE_MIN_MEDIAN_COSINE_MSCONVERT_LIKE,
+                string.Format(@"msconvert-like median cosine {0:F4}", likeAgreement.MedianCosine));
+            Assert.IsTrue(likeAgreement.MedianCosine >= agreement.MedianCosine,
+                string.Format(@"msconvert-like median {0:F4} vs default {1:F4}",
+                    likeAgreement.MedianCosine, agreement.MedianCosine));
+        }
+
+        /// <summary>
+        /// The pipeline wiring around the demultiplexer, through the same entry point Stages 1-4
+        /// and --task SpectraCache use: the demux-off guard, building and then reusing the
+        /// demultiplexed cache, searching from it alone, rebuilding it when its settings change,
+        /// leaving a non-overlapping run alone, and the Stage-6 rule for a missing demux cache.
+        /// </summary>
+        [TestMethod]
+        public void TestDemuxPipelineWiring()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), @"OspreyDemuxWiring" + Guid.NewGuid().ToString(@"N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                // Stand-in sources: a cache hit precedes the reader, so the bytes are never read,
+                // and saving with the source path makes the fingerprint check real.
+                string staggeredSource = Path.Combine(dir, @"staggered.raw");
+                File.WriteAllBytes(staggeredSource, new byte[] { 1, 2, 3, 4 });
+                var run = BuildStaggeredRun(6);
+                string rawCache = SpectraCache.GetCachePath(staggeredSource);
+                string demuxCache = SpectraCache.GetDemuxCachePath(staggeredSource);
+                SpectraCache.SaveSpectraCache(rawCache, run.Spectra, new List<MS1Spectrum>(), staggeredSource);
+
+                // Demux off: an overlapping run is refused rather than searched as acquired.
+                var off = WiringContext(DemuxMode.off);
+                Assert.ThrowsException<InvalidOperationException>(() =>
+                    ScoringTaskShared.EnsureSpectraCache(staggeredSource, false, out _, off));
+                Assert.IsFalse(File.Exists(demuxCache));
+
+                // Demux auto: the demultiplexed cache is built and is what gets searched.
+                var auto = WiringContext(DemuxMode.auto);
+                var index = ScoringTaskShared.EnsureSpectraCache(staggeredSource, false, out _, auto);
+                Assert.AreEqual(demuxCache, index.CachePath);
+                Assert.AreEqual(2 * run.Spectra.Count, index.Ms2Count);
+                Assert.AreEqual(run.Bins.Count, index.IsolationWindows.Count);
+                Assert.IsTrue(File.Exists(demuxCache));
+                DateTime built = File.GetLastWriteTimeUtc(demuxCache);
+
+                // A second run reuses it rather than demultiplexing again.
+                index = ScoringTaskShared.EnsureSpectraCache(staggeredSource, false, out _, auto);
+                Assert.AreEqual(demuxCache, index.CachePath);
+                Assert.AreEqual(built, File.GetLastWriteTimeUtc(demuxCache));
+
+                // The demultiplexed cache alone is enough, as for a cohort staged with demux.
+                File.Delete(rawCache);
+                index = ScoringTaskShared.EnsureSpectraCache(staggeredSource, false, out _, auto);
+                Assert.AreEqual(demuxCache, index.CachePath);
+
+                // A demultiplexed cache written with other settings is rebuilt from .spectra.bin.
+                SpectraCache.SaveSpectraCache(rawCache, run.Spectra, new List<MS1Spectrum>(), staggeredSource);
+                SpectraCache.SaveSpectraCache(demuxCache, run.Spectra, new List<MS1Spectrum>(), staggeredSource,
+                    @"osprey-demux/0;stale");
+                index = ScoringTaskShared.EnsureSpectraCache(staggeredSource, false, out _, auto);
+                Assert.AreEqual(2 * run.Spectra.Count, index.Ms2Count);
+                Assert.IsNotNull(SpectraWindowIndex.BuildFromCache(demuxCache, staggeredSource,
+                    DemuxCacheBuilder.CreateParams(auto.Config).Descriptor));
+
+                // Stage 6: with only the .spectra.bin of an overlapping run, demux on is an error
+                // (the earlier stages searched the demultiplexed cache) and demux off is the guard.
+                var rawIndex = SpectraWindowIndex.BuildFromCache(rawCache, staggeredSource);
+                Assert.IsNotNull(rawIndex);
+                Assert.ThrowsException<SpectraCacheException>(() =>
+                    DemuxCacheBuilder.ThrowIfDemuxCacheMissing(staggeredSource, rawIndex, auto));
+                Assert.ThrowsException<InvalidOperationException>(() =>
+                    DemuxCacheBuilder.ThrowIfDemuxCacheMissing(staggeredSource, rawIndex, off));
+
+                // A run whose windows do not overlap is searched as acquired, even with demux on.
+                string plainSource = Path.Combine(dir, @"plain.raw");
+                File.WriteAllBytes(plainSource, new byte[] { 5, 6, 7, 8 });
+                var plain = new List<Spectrum>();
+                for (int c = 0; c < 6; c++)
+                {
+                    for (double lo = RANGE_LOW; lo < RANGE_HIGH; lo += WINDOW_WIDTH)
+                    {
+                        plain.Add(MakeSpectrum((uint)plain.Count, plain.Count * SCAN_MINUTES,
+                            Window(lo, lo + WINDOW_WIDTH), new[] { 300.0 + lo }, new[] { 10.0f }));
+                    }
+                }
+                SpectraCache.SaveSpectraCache(SpectraCache.GetCachePath(plainSource), plain,
+                    new List<MS1Spectrum>(), plainSource);
+                index = ScoringTaskShared.EnsureSpectraCache(plainSource, false, out _, auto);
+                Assert.AreEqual(SpectraCache.GetCachePath(plainSource), index.CachePath);
+                Assert.IsFalse(File.Exists(SpectraCache.GetDemuxCachePath(plainSource)));
+                DemuxCacheBuilder.ThrowIfDemuxCacheMissing(plainSource, index, auto);
+                ScoringTaskShared.EnsureSpectraCache(plainSource, false, out _, off);
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
         }
 
         /// <summary>
@@ -529,13 +795,27 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// A staggered run in which each narrow bin holds one precursor with three unique
-        /// fragments, plus one fragment shared between two bins. Elution is constant, so the
-        /// acquired spectra are exact sums of their bins' truth.
+        /// The k=2, 8 Th staggered run the exactness tests use: constant elution, exact m/z, and
+        /// the fragment shared by four consecutive bins.
         /// </summary>
         private static SyntheticRun BuildStaggeredRun(int cycles)
         {
-            var cycle = StaggeredCycle(RANGE_LOW, RANGE_HIGH, WINDOW_WIDTH, 2);
+            return BuildRun(new RunOptions
+            {
+                Cycle = StaggeredCycle(RANGE_LOW, RANGE_HIGH, WINDOW_WIDTH, 2),
+                Cycles = cycles,
+            });
+        }
+
+        /// <summary>
+        /// A synthetic run re-multiplexed from narrow-bin truth. Each bin holds one precursor with
+        /// three unique fragments, optionally plus the fragment shared by four consecutive bins.
+        /// With a non-zero elution width every bin elutes as a Gaussian, with apexes offset from
+        /// bin to bin; with jitter every acquired peak's m/z is perturbed, as real centroids are.
+        /// </summary>
+        private static SyntheticRun BuildRun(RunOptions options)
+        {
+            var cycle = options.Cycle;
             var bins = DemuxSchemeDetector.Detect(cycle).Bins;
             var truth = new Dictionary<double, float>[bins.Count];
             for (int j = 0; j < bins.Count; j++)
@@ -544,70 +824,236 @@ namespace pwiz.Osprey.Test
                 foreach (double offset in new[] { 0.0, 5.13, 11.71 })
                     truth[j][Math.Round(300 + 37.1 * j + offset, 4)] = 1000f * (j + 1) + (float)(offset * 10);
             }
-            for (int i = 0; i < SHARED_FRAGMENT_BINS.Length; i++)
-                truth[SHARED_FRAGMENT_BINS[i]][SHARED_FRAGMENT_MZ] = SHARED_FRAGMENT_INTENSITIES[i];
+            if (options.SharedFragment)
+            {
+                for (int i = 0; i < SHARED_FRAGMENT_BINS.Length; i++)
+                    truth[SHARED_FRAGMENT_BINS[i]][SHARED_FRAGMENT_MZ] = SHARED_FRAGMENT_INTENSITIES[i];
+            }
 
+            double cycleMinutes = cycle.Count * SCAN_MINUTES;
+            double middle = options.Cycles * cycleMinutes / 2;
+            double sigma = options.ElutionSigmaCycles * cycleMinutes;
+            Func<int, double, double> profile = (j, t) =>
+            {
+                if (sigma <= 0)
+                    return 1.0;
+                double apex = middle + ((j % 3) - 1) * 1.5 * cycleMinutes;
+                double value = Math.Exp(-0.5 * Math.Pow((t - apex) / sigma, 2));
+                return value < 1e-4 ? 0 : value;
+            };
+
+            var random = new Random(options.Seed);
             var spectra = new List<Spectrum>();
             uint scan = 0;
-            for (int c = 0; c < cycles; c++)
+            for (int c = 0; c < options.Cycles; c++)
             {
                 foreach (var window in cycle)
                 {
-                    var peaks = new SortedDictionary<double, float>();
+                    double t = scan * SCAN_MINUTES;
+                    var peaks = new SortedDictionary<double, double>();
                     for (int j = 0; j < bins.Count; j++)
                     {
                         if (bins[j].Center <= window.LowerBound || bins[j].Center >= window.UpperBound)
                             continue;
+                        double level = profile(j, t);
                         foreach (var peak in truth[j])
                         {
-                            peaks.TryGetValue(peak.Key, out float existing);
-                            peaks[peak.Key] = existing + peak.Value;
+                            peaks.TryGetValue(peak.Key, out double existing);
+                            peaks[peak.Key] = existing + peak.Value * level;
                         }
                     }
-                    spectra.Add(MakeSpectrum(scan, scan * SCAN_MINUTES, window,
-                        peaks.Keys.ToArray(), peaks.Values.ToArray()));
+                    var mzs = new List<double>();
+                    var intensities = new List<float>();
+                    foreach (var peak in peaks)
+                    {
+                        if (peak.Value <= 0)
+                            continue;
+                        double jitter = (2 * random.NextDouble() - 1) * options.JitterPpm * 1e-6;
+                        mzs.Add(peak.Key * (1 + jitter));
+                        intensities.Add((float)peak.Value);
+                    }
+                    spectra.Add(MakeSpectrum(scan, t, window, mzs.ToArray(), intensities.ToArray()));
                     scan++;
                 }
             }
-            return new SyntheticRun(spectra, bins, truth);
+            return new SyntheticRun(spectra, bins, truth, profile);
         }
 
-        /// <summary>
-        /// Largest relative error of any output peak against its bin's truth. Also counts truth
-        /// peaks missing from an output spectrum whose parent measured them, and output peaks
-        /// with no truth at all.
-        /// </summary>
         private static double MaxRelativeError(DemuxResult result, SyntheticRun run,
             out int missing, out int spurious)
         {
-            double maxError = 0;
-            missing = 0;
-            spurious = 0;
+            var errors = MeasureErrors(result, run);
+            missing = errors.Missing;
+            spurious = errors.Spurious;
+            return errors.Max;
+        }
+
+        /// <summary>
+        /// Error of every output peak against its bin's truth at the parent's time, as a fraction
+        /// of that fragment's apex intensity. Output peaks are matched to truth fragments within
+        /// 10 ppm, since they carry the parent's (possibly jittered) m/z. Also counts truth peaks
+        /// above 0.1% of apex that an output spectrum lacks, and output peaks with no truth.
+        /// </summary>
+        private static RunErrors MeasureErrors(DemuxResult result, SyntheticRun run)
+        {
+            var errors = new List<double>();
+            int missing = 0, spurious = 0;
+            double spuriousIntensity = 0, totalIntensity = 0;
             foreach (var spectrum in result.Spectra)
             {
                 int bin = BinOf(run.Bins, spectrum.IsolationWindow.Center);
+                double level = run.Profile(bin, spectrum.RetentionTime);
                 var expected = run.Truth[bin];
                 var seen = new HashSet<double>();
                 for (int p = 0; p < spectrum.Mzs.Length; p++)
                 {
-                    if (!expected.TryGetValue(spectrum.Mzs[p], out float truth))
+                    totalIntensity += spectrum.Intensities[p];
+                    double nominal = expected.Keys.FirstOrDefault(mz =>
+                        Math.Abs(mz - spectrum.Mzs[p]) <= mz * 10e-6);
+                    if (nominal == 0)
                     {
                         spurious++;
+                        spuriousIntensity += spectrum.Intensities[p];
                         continue;
                     }
-                    seen.Add(spectrum.Mzs[p]);
-                    maxError = Math.Max(maxError, Math.Abs(spectrum.Intensities[p] - truth) / truth);
+                    seen.Add(nominal);
+                    double apex = expected[nominal];
+                    errors.Add(Math.Abs(spectrum.Intensities[p] - apex * level) / apex);
                 }
                 foreach (var peak in expected)
                 {
-                    if (!seen.Contains(peak.Key))
+                    if (!seen.Contains(peak.Key) && level >= 1e-3)
                     {
                         missing++;
-                        maxError = Math.Max(maxError, 1.0);
+                        errors.Add(1.0);
                     }
                 }
             }
-            return maxError;
+            errors.Sort();
+            return new RunErrors
+            {
+                Max = errors.Count > 0 ? errors[errors.Count - 1] : 0,
+                Median = errors.Count > 0 ? errors[errors.Count / 2] : 0,
+                Missing = missing,
+                Spurious = spurious,
+                SpuriousFraction = totalIntensity > 0 ? spuriousIntensity / totalIntensity : 0,
+            };
+        }
+
+        /// <summary>
+        /// Constant elution: both output modes recover the truth exactly, with no peak missing or
+        /// invented, and each parent yields <paramref name="binsPerSpectrum"/> spectra (0 skips
+        /// that count, for layouts where it varies by window).
+        /// </summary>
+        private static void AssertExact(string name, SyntheticRun run, int binsPerSpectrum)
+        {
+            foreach (var outputMode in new[] { DemuxOutputMode.apportioned, DemuxOutputMode.solution })
+            {
+                string label = string.Format(@"{0}, {1}", name, outputMode);
+                var result = Demultiplexer.Demultiplex(run.Spectra, new DemuxParams { OutputMode = outputMode });
+                if (binsPerSpectrum > 0)
+                    Assert.AreEqual(binsPerSpectrum * run.Spectra.Count, result.Spectra.Count, label);
+                var errors = MeasureErrors(result, run);
+                Assert.IsTrue(errors.Max < 1e-5, string.Format(@"{0}: max relative error {1}", label, errors.Max));
+                Assert.AreEqual(0, errors.Missing, label + @": missing");
+                Assert.AreEqual(0, errors.Spurious, label + @": spurious");
+            }
+        }
+
+        private static PipelineContext WiringContext(DemuxMode mode)
+        {
+            var config = new OspreyConfig { DemuxMode = mode, NThreads = 2 };
+            return new PipelineContext(config, new OspreyTask[0], null, null, null);
+        }
+
+        /// <summary>
+        /// Per-bin summary of a demultiplexing (spectra, peaks, summed intensity) against the
+        /// committed golden. With the rebless variable set, rewrites the golden and fails, so a
+        /// changed output is never accepted silently.
+        /// </summary>
+        private static void CheckGolden(string path, DemuxResult result)
+        {
+            var ic = CultureInfo.InvariantCulture;
+            const string tab = "\t";
+            var lines = new List<string> { string.Join(tab, @"bin_lower", @"bin_upper", @"spectra", @"peaks", @"intensity") };
+            foreach (var group in result.Spectra.GroupBy(s => s.IsolationWindow.LowerBound).OrderBy(g => g.Key))
+            {
+                var first = group.First().IsolationWindow;
+                lines.Add(string.Join(tab,
+                    first.LowerBound.ToString(@"F4", ic), first.UpperBound.ToString(@"F4", ic),
+                    group.Count().ToString(ic), group.Sum(s => s.Mzs.Length).ToString(ic),
+                    group.Sum(s => s.Intensities.Sum(v => (double)v)).ToString(@"R", ic)));
+            }
+            if (Environment.GetEnvironmentVariable(REBLESS_VARIABLE) == @"1")
+            {
+                File.WriteAllLines(path, lines);
+                Assert.Fail(@"Reblessed {0} ({1} was set); review the diff and commit it.",
+                    path, REBLESS_VARIABLE);
+            }
+            Assert.IsTrue(File.Exists(path), path);
+            var expected = File.ReadAllLines(path).Where(l => l.Length > 0).ToArray();
+            Assert.AreEqual(expected.Length, lines.Count, @"bin count");
+            for (int i = 1; i < lines.Count; i++)
+            {
+                var want = expected[i].Split('\t');
+                var have = lines[i].Split('\t');
+                for (int f = 0; f < 4; f++)
+                    Assert.AreEqual(want[f], have[f], string.Format(@"bin {0} field {1}", i, f));
+                double wantIntensity = double.Parse(want[4], ic);
+                double haveIntensity = double.Parse(have[4], ic);
+                Assert.AreEqual(wantIntensity, haveIntensity, Math.Abs(wantIntensity) * 1e-9,
+                    string.Format(@"bin {0} intensity", i));
+            }
+        }
+
+        /// <summary>
+        /// Pairs two demultiplexings by parent retention time and nearest bin center, and compares
+        /// each pair's peaks (matched within 1 ppm) by cosine similarity over their union.
+        /// </summary>
+        private static Agreement MeasureAgreement(IReadOnlyList<Spectrum> reference, IReadOnlyList<Spectrum> test)
+        {
+            var byTime = test.GroupBy(s => Math.Round(s.RetentionTime, 6)).ToDictionary(g => g.Key, g => g.ToList());
+            var cosines = new List<double>();
+            double referenceTotal = 0, testTotal = 0;
+            foreach (var spectrum in reference)
+            {
+                if (!byTime.TryGetValue(Math.Round(spectrum.RetentionTime, 6), out var candidates))
+                    continue;
+                var partner = candidates.OrderBy(s => Math.Abs(s.IsolationWindow.Center - spectrum.IsolationWindow.Center)).First();
+                if (Math.Abs(partner.IsolationWindow.Center - spectrum.IsolationWindow.Center) > 0.5)
+                    continue;
+                cosines.Add(Cosine(spectrum, partner));
+                referenceTotal += spectrum.Intensities.Sum(v => (double)v);
+                testTotal += partner.Intensities.Sum(v => (double)v);
+            }
+            cosines.Sort();
+            return new Agreement
+            {
+                Paired = cosines.Count,
+                MedianCosine = cosines.Count > 0 ? cosines[cosines.Count / 2] : 0,
+                FractionAbove95 = cosines.Count > 0 ? cosines.Count(c => c >= 0.95) / (double)cosines.Count : 0,
+                IntensityRatio = referenceTotal > 0 ? testTotal / referenceTotal : 0,
+            };
+        }
+
+        private static double Cosine(Spectrum a, Spectrum b)
+        {
+            double dot = 0, aa = 0, bb = 0;
+            int j = 0;
+            for (int i = 0; i < a.Mzs.Length; i++)
+            {
+                double x = a.Intensities[i];
+                aa += x * x;
+                while (j < b.Mzs.Length && b.Mzs[j] < a.Mzs[i] * (1 - 1e-6))
+                    j++;
+                if (j < b.Mzs.Length && Math.Abs(b.Mzs[j] - a.Mzs[i]) <= a.Mzs[i] * 1e-6)
+                    dot += x * b.Intensities[j];
+            }
+            foreach (float y in b.Intensities)
+                bb += (double)y * y;
+            if (aa == 0 && bb == 0)
+                return 1;
+            return aa > 0 && bb > 0 ? dot / Math.Sqrt(aa * bb) : 0;
         }
 
         private static void AssertStructure(DemuxResult result, SyntheticRun run)
@@ -655,19 +1101,59 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(expected[i], actual[i], tolerance);
         }
 
+        private sealed class RunOptions
+        {
+            public List<IsolationWindow> Cycle { get; set; }
+            public int Cycles { get; set; } = 20;
+            public bool SharedFragment { get; set; } = true;
+
+            /// <summary>Gaussian elution width in cycles; 0 means constant elution.</summary>
+            public double ElutionSigmaCycles { get; set; }
+
+            /// <summary>Uniform per-peak m/z jitter, +/- this many ppm.</summary>
+            public double JitterPpm { get; set; }
+
+            public int Seed { get; set; } = 7;
+        }
+
+        private sealed class Agreement
+        {
+            public int Paired { get; set; }
+            public double MedianCosine { get; set; }
+            public double FractionAbove95 { get; set; }
+            public double IntensityRatio { get; set; }
+        }
+
+        private sealed class RunErrors
+        {
+            public double Max { get; set; }
+            public double Median { get; set; }
+            public int Missing { get; set; }
+            public int Spurious { get; set; }
+
+            /// <summary>Intensity in peaks placed in a bin that has no such fragment, of all output.</summary>
+            public double SpuriousFraction { get; set; }
+        }
+
         private sealed class SyntheticRun
         {
             public SyntheticRun(List<Spectrum> spectra, IReadOnlyList<DemuxBin> bins,
-                Dictionary<double, float>[] truth)
+                Dictionary<double, float>[] truth, Func<int, double, double> profile)
             {
                 Spectra = spectra;
                 Bins = bins;
                 Truth = truth;
+                Profile = profile;
             }
 
             public List<Spectrum> Spectra { get; }
             public IReadOnlyList<DemuxBin> Bins { get; }
+
+            /// <summary>Per bin: fragment m/z -> intensity at the elution apex.</summary>
             public Dictionary<double, float>[] Truth { get; }
+
+            /// <summary>Elution level of a bin at a time, 1 at its apex.</summary>
+            public Func<int, double, double> Profile { get; }
         }
     }
 }

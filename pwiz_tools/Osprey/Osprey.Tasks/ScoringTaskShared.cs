@@ -147,6 +147,7 @@ namespace pwiz.Osprey.Tasks
             // Shared GetCachePath so the write and the rescore read (PerFileRescoreTask)
             // derive an identical filename + directory (ArtifactPaths redirects the dir).
             string cachePath = SpectraCache.GetCachePath(inputFile);
+            SpectraWindowIndex hit = null;
             if (File.Exists(cachePath))
             {
                 try
@@ -154,13 +155,9 @@ namespace pwiz.Osprey.Tasks
                     // Cache hit: index the file directly (header pass only) -- never build the
                     // full MS2 list. Returns null when stale/invalid (bad magic/version or the
                     // source fingerprint changed), which falls through to a re-parse below.
-                    var hit = SpectraWindowIndex.BuildFromCache(cachePath, inputFile);
-                    if (hit != null)
-                    {
-                        ctx.LogInfo(string.Format("Streaming spectra from cache: {0}", cachePath));
-                        return DemuxCacheBuilder.Resolve(inputFile, hit, null, double.NaN, ctx);
-                    }
-                    ctx.LogInfo("Spectra cache stale or invalid; re-parsing the input.");
+                    hit = SpectraWindowIndex.BuildFromCache(cachePath, inputFile);
+                    if (hit == null)
+                        ctx.LogInfo("Spectra cache stale or invalid; re-parsing the input.");
                 }
                 catch (Exception ex)
                 {
@@ -172,6 +169,14 @@ namespace pwiz.Osprey.Tasks
                     ctx.LogWarning(string.Format(
                         "Failed to index spectra cache: {0}. Re-parsing the input.", ex.Message));
                 }
+            }
+            if (hit != null)
+            {
+                // Outside the try above on purpose: that catch treats every exception as a
+                // corrupt cache and re-parses, which would swallow the demux-off refusal of an
+                // overlapping run and any real demultiplexing error.
+                ctx.LogInfo(string.Format("Streaming spectra from cache: {0}", cachePath));
+                return DemuxCacheBuilder.Resolve(inputFile, hit, null, double.NaN, ctx);
             }
 
             // Miss/stale/absent: parse the input once (materialized only transiently here),

@@ -2238,7 +2238,7 @@ namespace pwiz.Osprey.Test
         /// both pwiz/ and pwiz_tools/), so the tracked vendor-reader fixtures can be found
         /// without hardcoding a machine path.
         /// </summary>
-        private static string FindPwizRoot()
+        internal static string FindPwizRoot()
         {
             string dir = Path.GetDirectoryName(typeof(IOTest).Assembly.Location);
             while (!string.IsNullOrEmpty(dir))

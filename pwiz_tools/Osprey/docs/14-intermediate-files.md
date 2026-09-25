@@ -231,7 +231,8 @@ against their sources — magic, version, fingerprint, and that the index offset
 **C# source**: `Osprey.Tasks/DemuxCacheBuilder.cs` (build and open), `Osprey.IO/SpectraCache.cs`
 (format). Path: `SpectraCache.GetDemuxCachePath`, beside the `.spectra.bin` it is derived from.
 Written only with `--demux auto`, and only for a run whose isolation windows overlap.
-Osprey-only; Rust has no counterpart.
+Osprey-only; Rust has no counterpart. How and when it is built, and what it contains, is in
+[22-demultiplexing.md](22-demultiplexing.md); this section is its bytes.
 
 The same VERSION 4 layout, with two differences:
 
@@ -239,7 +240,7 @@ The same VERSION 4 layout, with two differences:
 [magic:        8 bytes  "OSPRDMX\0"]
 [version, source_size, source_mtime, n_ms2, n_ms1  as above]
 [descriptor_length: uint32]
-[descriptor:   UTF-8, e.g. "osprey-demux/1;block=covered_bins;interpolation=makima;..."]
+[descriptor:   UTF-8, e.g. "osprey-demux/2;block=covered_bins;interpolation=makima;..."]
 [MS2 body, MS1 section, index, footer  as above]
 ```
 
