@@ -519,20 +519,37 @@ void testMSLevelSet(SpectrumListPtr sl)
 }
 
 
-// "calibration spectrum" is not under "mass spectrum", and two shapes reach this code carrying it:
-// the UIMF reader writes it as a frame's sole type, while mzML in the wild marks a Waters lockspray
-// scan as both an MS1 spectrum and a calibration spectrum. Both declare an ms level, so both are
-// filtered on the level they declare rather than being taken for level 0. Dropping calibration data
-// altogether is Reader::Config::ignoreCalibrationScans' job, not this filter's.
+// A declared ms level decides which spectra this predicate keeps, whatever the spectrum type says.
+// Calibration spectra are the interesting case, because "calibration spectrum" (MS:1000928) is not
+// under "mass spectrum" and it reaches this code in two shapes that both have to keep working:
 //
-// Because a declared level is read before the type is consulted at all, these assertions hold
-// however the CV happens to attach "calibration spectrum" to "spectrum type" - is_a here, has-a in
-// a later release, which cvIsA would not follow.
+//   - sole declaration (scan=2): "calibration spectrum" and no mass-spectrum term at all. What the
+//     UIMF reader writes today, and what any mzML written while MS:1000928 is still a child of
+//     "spectrum type" can carry, since a writer forced to pick one term picks the marker.
+//   - paired (scan=4): "MS1 spectrum" and "calibration spectrum" together, as mzML in the wild
+//     already marks a Waters lockspray scan - and as every writer must once psi-ms-CV #541 reparents
+//     the term under "spectrum attribute", an attribute being no substitute for a type.
+//
+// Which shape a file has therefore depends on when it was written, and both are permanent: the files
+// carrying the sole declaration already exist and are not going to be rewritten. So a reader will be
+// handed both indefinitely, and this predicate cannot key off the type to tell them apart.
+//
+// That is what makes reading the declared level first the stable rule rather than a convenience. A
+// type-first predicate answers the sole-declaration shape correctly only while the CV still files
+// MS:1000928 under "spectrum type"; after the reparent such a spectrum has no child of "spectrum
+// type" at all, so the predicate would answer indeterminate and SpectrumList_Filter would drop a
+// frame that had told it exactly which level it was. The CV is fixed at build time, so that future
+// cannot be exercised here directly - scan=5, a declared level with no spectrum type at all, is the
+// same shape and is what covers it.
+//
+// Such a spectrum is still in the list when a filter runs because
+// Reader::Config::ignoreCalibrationScans defaults to false. Removing calibration data is that flag's
+// job, so until someone asks for it this predicate is what decides how one is classified.
 //
 // Uses its own list, since the shared one is pinned by exact sizes and ids throughout this file.
-void testMSLevelSetCalibrationSpectrum()
+void testMSLevelWithCalibrations()
 {
-    if (os_) *os_ << "testMSLevelSetCalibrationSpectrum:\n";
+    if (os_) *os_ << "testMSLevelWithCalibrations:\n";
 
     SpectrumListSimplePtr sl(new SpectrumListSimple);
 
@@ -929,7 +946,7 @@ void test()
     testScanEventSet(sl);
     testScanTimeRange(sl);
     testMSLevelSet(sl);
-    testMSLevelSetCalibrationSpectrum();
+    testMSLevelWithCalibrations();
     testMS2Activation(sl);
     testMassAnalyzerFilter(sl);
     testMZPresentFilter(sl);
