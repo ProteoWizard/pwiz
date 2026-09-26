@@ -79,10 +79,10 @@ namespace pwiz.Osprey.Test
         /// closes with 100%, which the constructor's clamp to the report interval guarantees.
         /// </summary>
         [TestMethod]
-        public void TestProgressReporterSuppressesFastScopes()
+        public void TestProgressReporterHeadingAlwaysPrints()
         {
             // Inside MinPercentTime, no percent shown: the heading and nothing else. Reported at
-            // 50% so this proves the thresholds suppressed the percent, not an absent Report call.
+            // 50% so this proves the thresholds held back the percent, not an absent Report call.
             var fast = CaptureLines(total: 100, intervalSeconds: 60.0, heartbeatSeconds: 60.0,
                 act: p => p.Report(50), minPercentSeconds: 60.0);
             Assert.AreEqual(1, fast.Count, @"a fast step prints only its heading");

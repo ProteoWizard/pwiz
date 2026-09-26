@@ -75,8 +75,14 @@ namespace pwiz.Osprey.Tasks
 
         public override string DescribeOutput(OspreyConfig config)
         {
-            return string.Format("{0} (--output and --library are not used)",
-                DescribePerInputOutput(config, SpectraCache.GetCachePath, @".spectra.bin", config.CacheDir));
+            // With --output-dir and no --cache-dir, ArtifactPaths.ResolveCacheDir writes beside each
+            // input only where that folder is writable, and into the output directory otherwise.
+            string perInput = config.InputFiles != null && config.InputFiles.Count > 1 &&
+                              string.IsNullOrEmpty(config.CacheDir) && !string.IsNullOrEmpty(config.OutputDir)
+                ? string.Format("a .spectra.bin file next to each input, or in {0} where the input folder is read-only",
+                    config.OutputDir)
+                : DescribePerInputOutput(config, SpectraCache.GetCachePath, @".spectra.bin", config.CacheDir);
+            return string.Format("{0} (--output and --library are not used)", perInput);
         }
 
         public override IEnumerable<string> Inputs(PipelineContext ctx)

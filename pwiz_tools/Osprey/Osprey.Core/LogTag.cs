@@ -73,10 +73,10 @@ namespace pwiz.Osprey.Core
         /// <summary>Library load timing.</summary>
         public static readonly LogTag LIB_LOAD = new LogTag(@"LIB-LOAD", Always);
         /// <summary>
-        /// Byproducts released at a task boundary. How memory is managed, so emitted only under
-        /// <c>OSPREY_LOG_MEMORY</c> like <see cref="Mem"/>.
+        /// Byproducts released at a task boundary, reached only when <c>OSPREY_DROP_BETWEEN_TASKS</c>
+        /// asked for the drop, so the line confirms the setting took effect.
         /// </summary>
-        public static readonly LogTag DROP = new LogTag(@"DROP", IsLogMemory);
+        public static readonly LogTag DROP = new LogTag(@"DROP", Always);
 
         /// <summary>
         /// A memory probe, <c>[MEM label]</c>. Emitted only under <c>OSPREY_LOG_MEMORY</c>, which
@@ -101,15 +101,19 @@ namespace pwiz.Osprey.Core
         /// <summary>True when a line with this tag is written in the current run.</summary>
         public bool IsEnabled => _isEnabled();
 
-        /// <summary>The line as written: <c>[Name] text</c>.</summary>
-        public string Format(string text)
+        /// <summary>
+        /// The line as written: <c>[Name] text</c>. Internal, and <see cref="ToString"/> gives the
+        /// bare name, so outside this assembly the bracketed form exists only on the way through
+        /// <see cref="OspreyLog.Write"/>, which applies the gate.
+        /// </summary>
+        internal string Format(string text)
         {
             return @"[" + Name + @"] " + text;
         }
 
         public override string ToString()
         {
-            return @"[" + Name + @"]";
+            return Name;
         }
 
         private static bool IsPerfStats()

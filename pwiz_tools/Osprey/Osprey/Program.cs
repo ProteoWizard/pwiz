@@ -68,10 +68,6 @@ namespace pwiz.Osprey
         // so an error reported before the swap still counts when the exit code is reconciled.
         private static CommandStatusWriter _consoleOut = _out;
 
-        // Whether _out was swapped to a --log-file StreamWriter that RunCommand must flush and
-        // dispose (never the caller's writer).
-        private static bool _loggingToFile;
-
         static int Main(string[] args)
         {
             return RunCommand(args, new CommandStatusWriter(Console.Error));
@@ -85,14 +81,17 @@ namespace pwiz.Osprey
         internal static int RunCommand(string[] args, CommandStatusWriter consoleOut)
         {
             _out = _consoleOut = consoleOut;
-            _loggingToFile = false;
+            // Before parsing, so a warning OspreyCommandArgs raises while parsing reaches the
+            // caller's writer too; the --log-file swap later re-points it.
+            OspreyOutput.Out = _out;
             try
             {
                 return ReconcileExitCode(Run(args));
             }
             finally
             {
-                if (_loggingToFile)
+                // A --log-file swap replaced _out; flush and close that writer, never the caller's.
+                if (!ReferenceEquals(_out, _consoleOut))
                 {
                     _out.Flush();
                     _out.Dispose();
@@ -172,7 +171,7 @@ namespace pwiz.Osprey
                             LogError(string.Format("{0} requires a task name ({1}).",
                                 OspreyCommandArgs.ARG_TASK.ArgumentText,
                                 string.Join(", ", OspreyCommandArgs.ARG_TASK.Values)));
-                            return 1;
+                            return EXIT_CODE_FAILURE_TO_START;
                         }
                         taskName = args[i + 1];
                         i++; // consume value
@@ -194,7 +193,7 @@ namespace pwiz.Osprey
                     if (taskErr != null)
                     {
                         LogError(taskErr);
-                        return 1;
+                        return EXIT_CODE_FAILURE_TO_START;
                     }
                 }
 
@@ -221,7 +220,7 @@ namespace pwiz.Osprey
                     // convert FormatException into an ArgumentException naming the flag, so
                     // no parse failure needs an entry of its own here.
                     LogError(ex.Message);
-                    return 1;
+                    return EXIT_CODE_FAILURE_TO_START;
                 }
                 // --task selects one task and, with it, the pipeline it runs - the canonical
                 // stages, or a selector's own list (OspreyTasks.PipelineFor). Membership is
@@ -246,7 +245,7 @@ namespace pwiz.Osprey
                 if (err != null)
                 {
                     LogError(err);
-                    return 1;
+                    return EXIT_CODE_FAILURE_TO_START;
                 }
 
                 // Apply per-line output decoration and optional log-file redirection now
@@ -263,12 +262,11 @@ namespace pwiz.Osprey
                             IsTimeStamped = config.IsTimeStamped,
                             IsMemStamped = config.IsMemStamped
                         };
-                        _loggingToFile = true;
                     }
                     catch (Exception ex)
                     {
                         LogError(string.Format("Failed to open log file {0}: {1}", config.LogFilePath, ex.Message));
-                        return 1;
+                        return EXIT_CODE_FAILURE_TO_START;
                     }
                 }
 
@@ -349,32 +347,34 @@ namespace pwiz.Osprey
                     LogError(string.Format(
                         "Input file not found, and no spectra cache or intermediate file exists to " +
                         "stand in for it: {0}", inputFile));
-                    return 1;
+                    return EXIT_CODE_FAILURE_TO_START;
                 }
                 // Announced, not silent: a run whose sources are gone cannot rebuild a
                 // cache that turns out to be wrong, so the log is the only provenance.
                 if (cacheOnlyInputs > 0)
                 {
-                    LogInfo(FormatCountOfTotal(cacheOnlyInputs, config.InputFiles.Count,
-                        "The input file is not present but has a spectra cache; reading it from the cache.",
-                        "1 of {1:N0} input files is not present but has a spectra cache; reading it from the cache.",
-                        "{0:N0} of {1:N0} input files are not present but have a spectra cache; reading those from the cache."));
+                    LogInfo(CountText.Format(cacheOnlyInputs, config.InputFiles.Count == 1
+                            ? "The input file is not present but has a spectra cache; reading it from the cache."
+                            : "1 of {1:N0} input files is not present but has a spectra cache; reading it from the cache.",
+                        "{0:N0} of {1:N0} input files are not present but have a spectra cache; reading those from the cache.",
+                        config.InputFiles.Count));
                     LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_INPUT_SOURCE, @"spectra-cache {0}/{1}",
                         cacheOnlyInputs, config.InputFiles.Count));
                 }
                 if (artifactOnlyInputs > 0)
                 {
-                    LogInfo(FormatCountOfTotal(artifactOnlyInputs, config.InputFiles.Count,
-                        "The input file is not present; using the intermediate scores file written for it.",
-                        "1 of {1:N0} input files is not present; using the intermediate scores file written for it.",
-                        "{0:N0} of {1:N0} input files are not present; using the intermediate scores file written for each one."));
+                    LogInfo(CountText.Format(artifactOnlyInputs, config.InputFiles.Count == 1
+                            ? "The input file is not present; using the intermediate scores file written for it."
+                            : "1 of {1:N0} input files is not present; using the intermediate scores file written for it.",
+                        "{0:N0} of {1:N0} input files are not present; using the intermediate scores file written for each one.",
+                        config.InputFiles.Count));
                     LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_INPUT_SOURCE, @"scores-parquet {0}/{1}",
                         artifactOnlyInputs, config.InputFiles.Count));
                 }
                 if (config.LibrarySource != null && !File.Exists(config.LibrarySource.Path))
                 {
                     LogError(string.Format("Library file not found: {0}", config.LibrarySource.Path));
-                    return 1;
+                    return EXIT_CODE_FAILURE_TO_START;
                 }
 
                 // Log startup info
@@ -431,7 +431,7 @@ namespace pwiz.Osprey
                         OspreyEnvironment.PASS2_QVALUE_TRANSFER,
                         OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT,
                         OspreyEnvironment.Pass2QValueSetting));
-                    return 1;
+                    return EXIT_CODE_FAILURE_TO_START;
                 }
                 // OSPREY_STAGE7_STREAM was REMOVED (2026-09-10): the streamed Stage-7 join is the
                 // only arm there is. Setting it to 0 used to select the RESIDENT join, so a sweep
@@ -448,7 +448,7 @@ namespace pwiz.Osprey
                     LogError(
                         "OSPREY_STAGE7_STREAM was removed and has no effect. Unset it. Second-pass " +
                         "FDR now always processes one run at a time where the analysis allows it.");
-                    return 1;
+                    return EXIT_CODE_FAILURE_TO_START;
                 }
                 // A token that names nothing admits nothing, so the run proceeds - but say so
                 // (#4486). 'hpc-merge' was retired when --task SecondPassFDR started streaming
@@ -512,7 +512,7 @@ namespace pwiz.Osprey
                 // reported one line and no frames. Usage errors do not reach here; the
                 // parser's catch above reports them as the one-line messages they are.
                 LogError(string.Format("Fatal error: {0}", ex));
-                return 1;
+                return EXIT_CODE_FAILURE_TO_START;
             }
         }
 
@@ -549,11 +549,17 @@ namespace pwiz.Osprey
                 LogError("--task ModelDiagnostics: no completed first-pass FDR state to " +
                          "describe (no analysis-wide 1st-pass experiment sidecar beside the " +
                          "output). Run the analysis at least as far as FirstPassFDR first.");
-                return 1;
+                return EXIT_CODE_FAILURE_TO_START;
             }
             // Everything this analysis can have is on disk: a pure render, seconds, no pipeline.
             if (ModelDiagnosticsReport.AllProductsCurrent(config))
-                return ModelDiagnosticsReport.TryRenderFromProducts(config, OspreyLog.Out) ? 0 : 1;
+            {
+                if (ModelDiagnosticsReport.TryRenderFromProducts(config, OspreyLog.Out))
+                    return EXIT_CODE_SUCCESS;
+                LogError("--task ModelDiagnostics: the saved model diagnostics data for this " +
+                         "analysis could not be read, so the report was not built.");
+                return EXIT_CODE_FAILURE_TO_START;
+            }
 
             // A product is outstanding. Say so before the pipeline banner, because the next
             // thing the log shows is task machinery and an operator needs to know it is a fold
@@ -756,18 +762,6 @@ namespace pwiz.Osprey
         private static string FullPathOrEmpty(string path)
         {
             return string.IsNullOrEmpty(path) ? path : Path.GetFullPath(path);
-        }
-
-        /// <summary>
-        /// "N of M" as three whole sentences - one of one, one of many, and many - so each
-        /// becomes its own resource and translates as a sentence. Formats with {0} = count and
-        /// {1} = total.
-        /// </summary>
-        private static string FormatCountOfTotal(int count, int total,
-            string oneOfOne, string oneOfMany, string manyOfTotal)
-        {
-            string format = count != 1 ? manyOfTotal : total == 1 ? oneOfOne : oneOfMany;
-            return string.Format(format, count, total);
         }
     }
 }

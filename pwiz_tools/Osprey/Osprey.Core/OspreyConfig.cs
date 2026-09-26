@@ -257,9 +257,10 @@ namespace pwiz.Osprey.Core
         public string LogFilePath { get; set; }
 
         /// <summary>
-        /// --perf-stats: emit the machine-parseable [COUNT]/[TIMING]/[STAGE-WALL] lines for
-        /// the perf tools (Test-PerfGate.ps1, Measure-Pipeline.ps1). Off by default so the
-        /// human log stays clean. Runtime-only.
+        /// --perf-stats: emit the gated machine-channel lines (every LogTag gated by
+        /// IsPerfStats: [COUNT], [TIMING], [BENCH], [STAGE-WALL], [PATH], [TRAIN]) that the perf
+        /// tools and regression.ps1 read. Off by default so the human log stays clean.
+        /// Runtime-only.
         /// </summary>
         public bool PerfStats { get; set; }
 

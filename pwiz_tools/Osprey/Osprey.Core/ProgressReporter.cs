@@ -36,8 +36,9 @@ namespace pwiz.Osprey.Core
     ///
     /// Prints a "&lt;activity&gt;..." heading on construction, then a throttled "&lt;pct&gt;%"
     /// line only when the percent advances AND at least the report interval has elapsed, and
-    /// always forces a final "100%" on Dispose. So a sub-second op shows just the heading +
-    /// "100%", while a multi-second op shows a handful of intermediate percents. The timer
+    /// closes with "100%" on Dispose unless the step finished inside
+    /// <see cref="MIN_PERCENT_SECONDS"/> without showing a percent. So a fast step shows just
+    /// its heading, while a multi-second op shows a handful of intermediate percents. The timer
     /// throttle is the whole point: progress just needs to say "still working" without an
     /// arbitrary per-N-units cadence cluttering the important output -- so it behaves the same
     /// regardless of --verbose (implementer detail belongs in the surrounding log lines, not
@@ -45,7 +46,7 @@ namespace pwiz.Osprey.Core
     ///
     /// Writes to the process-wide <see cref="OspreyOutput.Out"/> seam. Thread-safe: callers in
     /// parallel loops may call <see cref="Report"/> concurrently. Use with <c>using</c> so the
-    /// final 100% is emitted on scope exit:
+    /// step is closed on scope exit:
     /// <code>
     /// using (var p = new ProgressReporter("Scoring isolation windows", windows.Count))
     ///     Parallel.For(0, windows.Count, i => { /* ... */ p.Report(Interlocked.Increment(ref done)); });

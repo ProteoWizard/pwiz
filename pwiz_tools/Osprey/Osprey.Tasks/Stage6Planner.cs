@@ -477,9 +477,15 @@ namespace pwiz.Osprey.Tasks
                     @"Cross-run reconciliation: {0:N0} peak re-picks and boundary imputations planned across {1:N0} files.",
                     actions.Count, fileNames.Count));
             }
-            else if (!ScoringTaskShared.IsSingleFileSearch(config))
+            else if (fileNames.Count == 1)
             {
                 // A one-file search says nothing here: it has no cross-run reconciliation to skip.
+                // A --task run over one file does: that task is named for the reconciliation.
+                if (!ScoringTaskShared.IsSingleFileSearch(config))
+                    _ctx.LogInfo("Cross-run reconciliation: skipped, because there is only one file.");
+            }
+            else
+            {
                 _ctx.LogInfo("Cross-run reconciliation: skipped, because no peptide was detected in " +
                              "enough files to compute a cross-run consensus retention time.");
             }

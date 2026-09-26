@@ -975,8 +975,16 @@ function Invoke-OspreyRun {
         Pop-Location
         if ($DumpProteinFdr) { Remove-Item Env:OSPREY_DUMP_STAGE7_PROTEIN_FDR -ErrorAction SilentlyContinue }
     }
-    Assert-ExitAgreesWithLog -LogPath $logPath -ExitCode $exit
-    if ($exit -ne 0 -and -not $AllowNonZeroExit) { throw "Osprey exited $exit (see $logPath)" }
+    if ($AllowNonZeroExit -and $exit -ne 0) {
+        # The leg reads ExitCode and records its own failure; a crash with no error line
+        # (access violation, OOM kill) must fail that leg, not abort every remaining one.
+        # An exit of 0 still gets the full check below.
+        try { Assert-ExitAgreesWithLog -LogPath $logPath -ExitCode $exit }
+        catch { Write-Host ("WARNING: {0}" -f $_.Exception.Message) -ForegroundColor Yellow }
+    } else {
+        Assert-ExitAgreesWithLog -LogPath $logPath -ExitCode $exit
+        if ($exit -ne 0) { throw "Osprey exited $exit (see $logPath)" }
+    }
     # ExitCode is returned ALWAYS, not just under the switch: a caller that did not opt in never
     # reaches here on a failure, so the field is unambiguous - it is 0 unless the caller asked to
     # handle non-zero itself.
@@ -1271,6 +1279,13 @@ $taskRunMarker  = ':starting'
 # 'score-file'), and String.Contains is ordinal, so case cannot blur them either.
 $coldScoreMarker   = '[PATH] score-file: '
 $coldRescoreMarker = '[PATH] rescore-file: '
+# Route and stage keys asserted in more than one place. Each is written ONCE: most uses are
+# negative assertions, and a copy left behind by a key rename would match nothing and pass.
+$secondPassFdrWallMarker = '[STAGE-WALL] second-pass-fdr'
+$proteinFdrMarker        = '[PATH] protein-fdr: '
+$mdiagFoldPass1Marker    = '[PATH] model-diagnostics: fold-pass1'
+$mdiagFoldPass2Marker    = '[PATH] model-diagnostics: fold-pass2'
+$secondPassFoldMarker    = '[PATH] second-pass-fold: '
 
 # The library-fragment release (issue #4532). Two scopes, named by the scope= field:
 # FirstPassFdrTask retains for rescore + gap-fill, SecondPassFdrTask the 1st-pass retained
@@ -1517,11 +1532,8 @@ function Test-NoAllRunsBundle {
     # building the bundle and by the guard that refuses it - so this reds whether the bundle
     # was built or merely attempted, and the guard is asserted rather than depended on.
     #
-    # The progress heading 'Hydrating reconciliation bundle' was the other marker and was
-    # WORSE THAN USELESS: ProgressReporter defers its heading past LOG_WAIT_SECONDS, so a
-    # 3-file hydrate never prints it, and both twins print exactly the same heading whenever
-    # they do run long enough - it could not fire at gate scale and could not tell the twins
-    # apart at cohort scale.
+    # A progress heading is no marker: both twins print the same heading, so it cannot tell
+    # them apart, and it is prose that will be translated.
     if (@($lines | Where-Object { $_.Contains($allRunsBundleMarker) }).Count -gt 0) {
         $issues.Add((("{0}: '{1}' - this run built (or was refused for building) the " +
             "ALL-RUNS bundle, which is O(files x entries); the per-run survivor loader is " +
@@ -1542,12 +1554,10 @@ function Get-ReleaseLogFacts {
     foreach ($line in (Get-Content -LiteralPath $LogPath)) {
         if ($line -match $releaseLinePattern) {
             $facts.Add(@{
-                # Separators tolerated on the way in. The log-readability sprint owes these
-                # exact lines {0:N0}, and a gate that reds on its own project's formatting rule
-                # -- with a message blaming C# wording drift -- is worse than no gate.
-                Released = [int]($Matches[1] -replace ',', '')
-                Entries  = [int]($Matches[2] -replace ',', '')
-                Retained = [int]($Matches[3] -replace ',', '')
+                # [COUNT] values are invariant, no group separators (LogKey contract).
+                Released = [int]$Matches[1]
+                Entries  = [int]$Matches[2]
+                Retained = [int]$Matches[3]
                 Scope    = $Matches[4]
             })
         }
@@ -1755,7 +1765,7 @@ function Test-LibraryFragmentRelease {
         # require ONE of them: freed 0 AND skipped 0 is still the fabricated-saving shape.
         $skipped = @(Select-String -LiteralPath $LogPath -Pattern $skippedAtLoadPattern)
         $skippedCount = if ($skipped.Count -gt 0) {
-            [int]($skipped[0].Matches[0].Groups[1].Value -replace ',', '')
+            [int]$skipped[0].Matches[0].Groups[1].Value
         } else { 0 }
         if ($matching[0].Released -le 0 -and $skippedCount -le 0) {
             $issues.Add((("{0}: release line for scope '{1}' freed 0 of {2} entries and no " +
@@ -1805,7 +1815,7 @@ function Test-LibraryFragmentRelease {
             # ends pairs one pass's write with another's release, which on a log holding
             # successive invocations reds two internally consistent passes and hides a pass
             # that read a stale summary.
-            $summaryCount = [int]($written[0].Matches[0].Groups[1].Value -replace ',', '')
+            $summaryCount = [int]$written[0].Matches[0].Groups[1].Value
             $oracleRan = 1
             if ($scoped[0].Retained -ne $summaryCount) {
                 $issues.Add((("{0}: scope '{1}' retained {2} base_ids but the summary written " +
@@ -2644,9 +2654,9 @@ foreach ($name in $selected) {
         # be green while covering only one of them. Osprey states which fold it ran on every run,
         # so the assertion is a grep, not a new leg.
         $straightFold = Select-String -Path (Join-Path $straightDir 'straight.log') `
-            -Pattern '[PATH] second-pass-fold: verify=on ' -SimpleMatch -Quiet
+            -Pattern ($secondPassFoldMarker + 'verify=on ') -SimpleMatch -Quiet
         $chainFold = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
-            -Pattern '[PATH] second-pass-fold: verify=on ' -SimpleMatch -Quiet
+            -Pattern ($secondPassFoldMarker + 'verify=on ') -SimpleMatch -Quiet
         # And the chain must have folded a worker answer for EVERY file. "Verification off" is
         # not the same as "the shipped path ran": a node given no 2nd-pass artifacts also has the
         # verifier off, and silently recomputes every file from 1st-pass sidecars. That is exactly
@@ -2660,7 +2670,7 @@ foreach ($name in $selected) {
             -Filter '*.2nd-pass.fdr_scores.bin.PerFileRescoring.osprey.task' `
             -ErrorAction SilentlyContinue).Count -gt 0
         $chainAllAnswered = Select-String -Path (Join-Path (Join-Path $chainRoot 'logs') 'phase4.log') `
-            -Pattern '\[PATH\] second-pass-fold: verify=\w+ answered=(\d+)/\1\b' -Quiet
+            -Pattern ([regex]::Escape($secondPassFoldMarker) + 'verify=\w+ answered=(\d+)/\1\b') -Quiet
         if (-not $chainHasWorkerOutput) {
             $summaryLines.Add("$name mode3 (shipped fold): SKIP (mode has no per-file half)")
         } elseif (-not $chainAllAnswered) {
@@ -2715,7 +2725,7 @@ foreach ($name in $selected) {
         # NEITHER fold line and there is no split to assert. Detected from the straight leg having
         # emitted a fold line at all, rather than from the mode flag.
         $straightUsedFrozenPath = Select-String -Path (Join-Path $straightDir 'straight.log') `
-            -Pattern '[PATH] second-pass-fold: ' -SimpleMatch -Quiet
+            -Pattern $secondPassFoldMarker -SimpleMatch -Quiet
         if (-not $straightUsedFrozenPath) {
             $summaryLines.Add("$name mode3 (verifier split): SKIP (mode has no per-file half)")
         } elseif (-not $straightFold -or $chainFold) {
@@ -3707,8 +3717,8 @@ foreach ($name in $selected) {
             # can change without breaking the gate; what they pin is that the fold arm was
             # entered rather than the join.
             $m11Markers = @(
-                @{ What = 'pass-1 fold'; Pattern = '[PATH] model-diagnostics: fold-pass1' }
-                @{ What = 'pass-2 fold'; Pattern = '[PATH] model-diagnostics: fold-pass2' })
+                @{ What = 'pass-1 fold'; Pattern = $mdiagFoldPass1Marker }
+                @{ What = 'pass-2 fold'; Pattern = $mdiagFoldPass2Marker })
             foreach ($mk in $m11Markers) {
                 $hit = @(Select-String -Path $r11.Log -Pattern $mk.Pattern -SimpleMatch `
                     -ErrorAction SilentlyContinue)
@@ -3728,9 +3738,9 @@ foreach ($name in $selected) {
             # second-pass records inside the second-pass FDR compute, which the first entry
             # already forbids.
             $m11Forbidden = @(
-                @{ What = 'a second-pass FDR compute'; Pattern = '[STAGE-WALL] second-pass-fdr' }
-                @{ What = 'protein-level FDR';         Pattern = '[PATH] protein-fdr: ' }
-                @{ What = 'a per-file rescore';        Pattern = '[PATH] rescore-file: ' })
+                @{ What = 'a second-pass FDR compute'; Pattern = $secondPassFdrWallMarker }
+                @{ What = 'protein-level FDR';         Pattern = $proteinFdrMarker }
+                @{ What = 'a per-file rescore';        Pattern = $coldRescoreMarker })
             foreach ($fb in $m11Forbidden) {
                 $hit = @(Select-String -Path $r11.Log -Pattern $fb.Pattern -SimpleMatch `
                     -ErrorAction SilentlyContinue)
@@ -3910,7 +3920,7 @@ foreach ($name in $selected) {
             # the warning that announces it.
             $m11NoFirstPass = @(
                 '[PATH] pre-compaction-pool: resident',
-                '[PATH] rescore-file: ')
+                $coldRescoreMarker)
             # The RESIDENT scored-entry load only. Its old prose probe ('Loading scored entries')
             # was a deferred progress heading that never printed at 3 files, so it never read
             # anything here; the route line exposed that cells A and D take the LEAN arm, which
@@ -3918,16 +3928,16 @@ foreach ($name in $selected) {
             # the fold needs, not the analysis this set forbids.
             $m11NoSecondPass = @(
                 '[PATH] scored-entries: resident',
-                '[STAGE-WALL] second-pass-fdr',
-                '[PATH] protein-fdr: ')
+                $secondPassFdrWallMarker,
+                $proteinFdrMarker)
             # O(files x entries), and the reason this set is not just about analysis: after the
             # resident pre-compaction pool was removed from the fold-only leg, cell A still built
             # THIS - a whole-cohort structure to render a page that reads none of it. Mode 11's
             # own leg asserts it through Test-NoAllRunsBundle; the cells assert it here.
             $m11NoBundle = @($allRunsBundleMarker)
             $m11NoAnalysis = $m11NoFirstPass + $m11NoSecondPass + $m11NoBundle
-            $m11Fold1 = '[PATH] model-diagnostics: fold-pass1'
-            $m11Fold2 = '[PATH] model-diagnostics: fold-pass2'
+            $m11Fold1 = $mdiagFoldPass1Marker
+            $m11Fold2 = $mdiagFoldPass2Marker
 
             # One shape for all four cells. LIVENESS FIRST, for Test-NoAllRunsBundle's reason:
             # a negative assertion passes on a log that says nothing at all, so the absence of

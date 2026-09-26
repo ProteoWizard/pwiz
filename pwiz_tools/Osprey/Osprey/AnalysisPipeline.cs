@@ -113,7 +113,7 @@ namespace pwiz.Osprey
 
                     if (ctx.CanRehydrate(task))
                     {
-                        LogInfo(LogTag.TASK, string.Format(@"{0}:skipping (outputs valid)", task.Name));
+                        ctx.LogInfo(LogTag.TASK, string.Format(@"{0}:skipping (outputs valid)", task.Name));
                         continue;
                     }
 
@@ -127,7 +127,7 @@ namespace pwiz.Osprey
 
                 stopwatch.Stop();
                 LogInfo("");
-                LogInfo(LogTag.TIMING, string.Format("Total pipeline: {0:F1}s",
+                ctx.LogInfo(LogTag.TIMING, string.Format("Total pipeline: {0:F1}s",
                     stopwatch.Elapsed.TotalSeconds));
                 LogInfo(string.Format("Analysis complete in {0}", FormatDuration(stopwatch.Elapsed)));
                 return 0;
@@ -271,11 +271,6 @@ namespace pwiz.Osprey
         private static void LogInfo(string message)
         {
             Program.LogInfo(message);
-        }
-
-        private static void LogInfo(LogTag tag, string text)
-        {
-            Program.LogInfo(tag, text);
         }
 
         private static void LogWarning(string message)

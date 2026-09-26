@@ -475,8 +475,9 @@ namespace pwiz.Osprey.Tasks
                 string reason = ctx.Config.DiagnosticsOnly
                     ? "--task ModelDiagnostics only builds the report for a completed analysis. " +
                       "Finish the analysis first; the report can be built afterwards."
-                    : "the cross-run reconciliation files they need are not available to this run " +
-                      "(re-run --task FirstPassFDR). Stopping, because continuing would write output " +
+                    : "the cross-run reconciliation data they need is not available to this run. " +
+                      "To rebuild it, delete this analysis's *.FirstPassFDR.osprey.task files and " +
+                      "run the first pass again. Stopping, because continuing would write output " +
                       "missing those runs.";
                 ctx.LogError(string.Format(
                     "Cannot resume: {0:N0} of {1:N0} runs still need re-scoring, but {2}",
@@ -1754,7 +1755,7 @@ namespace pwiz.Osprey.Tasks
                 && pass2Done)
             {
                 ctx.LogInfo(string.Format(
-                    "Re-scoring file {0:N0}/{1:N0}: {2} was already re-scored; keeping it.",
+                    "File {0:N0}/{1:N0}: {2} was already re-scored; keeping it.",
                     fileNum + 1, nTotalFiles, fileName));
 
                 // CLEAR, do not overlay. This arm used to rebuild the file's in-memory entries

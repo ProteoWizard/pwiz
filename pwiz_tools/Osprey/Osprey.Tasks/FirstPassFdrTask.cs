@@ -2313,11 +2313,13 @@ namespace pwiz.Osprey.Tasks
                     ctx.ExitCode = 1;
                     return false;
                 }
-                ctx.LogInfo(string.Format(
+                ctx.LogInfo(CountText.Format(perFileEntries.Count,
                     "--task FirstPassFDR complete: first-pass FDR and reconciliation planning done " +
-                    "for {0:N0} files; the next task (PerFileRescoring) reads the .reconciliation.json " +
-                    "and .1st-pass.fdr_scores.bin files written for each input.",
-                    perFileEntries.Count));
+                    "for 1 file. The next task, PerFileRescoring, reads this output directory: the " +
+                    "files written for the input and the analysis-wide first-pass files.",
+                    "--task FirstPassFDR complete: first-pass FDR and reconciliation planning done " +
+                    "for {0:N0} files. The next task, PerFileRescoring, reads this output directory: " +
+                    "the files written for each input and the analysis-wide first-pass files."));
                 // Success: return true (not false). The stop after Stage 5 is now
                 // a membership fact -- PerFileRescore and SecondPassFDR are excluded
                 // by the membership rule under --task FirstPassFDR (OspreyConfig.Includes), so the driver loop iterates no
@@ -3066,12 +3068,9 @@ namespace pwiz.Osprey.Tasks
             var retained = LibraryFragmentRelease.BuildRetainedBaseIds(
                 _firstPassBaseIds, _perFileGapFillForRescore);
             int released = LibraryFragmentRelease.ReleaseFragments(fullLibrary, retained);
-            if (OspreyEnvironment.LogMemory)
-            {
-                ctx.LogInfo(string.Format(
-                    @"Released library fragments for {0} of {1} entries ({2} base_ids retained for rescore + gap-fill)",
-                    released, fullLibrary.Count, retained.Count));
-            }
+            ctx.LogInfo(LogTag.Mem(@"library-fragments"), string.Format(
+                @"Released library fragments for {0} of {1} entries ({2} base_ids retained for rescore + gap-fill)",
+                released, fullLibrary.Count, retained.Count));
             LibraryFragmentRelease.LogRelease(ctx, released, fullLibrary.Count, retained.Count,
                 LogKey.SCOPE_RESCORE_GAP_FILL);
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"after library-fragment release");
@@ -3422,8 +3421,9 @@ namespace pwiz.Osprey.Tasks
                 if (refusals.Count > 0)
                 {
                     ctx.LogInfo(string.Format(
-                        @"Resume: every sidecar is current but the compaction-gate entry was refused ({0}); " +
-                        @"the score passes will run.", string.Join(@"; ", refusals)));
+                        "Resuming: the first-pass intermediate files are up to date, but first-pass " +
+                        "scoring runs again because a saved result is missing ({0}).",
+                        string.Join(@"; ", refusals)));
                 }
             }
             bool canEnterAtGate =
@@ -3443,9 +3443,11 @@ namespace pwiz.Osprey.Tasks
                 (!OspreyEnvironment.Pass2ProteinCompact || resumeSidecar.StratumBaseIds != null);
             if (canEnterAtGate)
             {
-                ctx.LogInfo(string.Format(
-                    "Resuming: first-pass intermediate files for all {0:N0} files are up to date; " +
-                    "skipping first-pass scoring and protein FDR.",
+                ctx.LogInfo(string.Format(config.ModelDiagnostics
+                        ? "Resuming: first-pass intermediate files for all {0:N0} files are up to date; " +
+                          "skipping first-pass scoring, protein FDR and the first-pass model diagnostics."
+                        : "Resuming: first-pass intermediate files for all {0:N0} files are up to date; " +
+                          "skipping first-pass scoring and protein FDR.",
                     projections.PerFile.Count));
                 ctx.Publish(new FirstPassPercolatorModel
                 {
@@ -3461,8 +3463,8 @@ namespace pwiz.Osprey.Tasks
                 {
                     _proteinCompactStratum = resumeSidecar.StratumBaseIds;
                     ctx.Publish(new ProteinCompactStratum(_proteinCompactStratum));
-                    ctx.LogInfo(string.Format(
-                        @"Resume: reloaded the persisted protein-compact stratum ({0} base ids).",
+                    ctx.LogVerbose(string.Format(
+                        "Reloaded the saved list of {0:N0} precursor candidates from proteins with 2 or more detections.",
                         _proteinCompactStratum.Count));
                 }
                 // A run that re-enters here - killed after every sidecar landed but before this
@@ -3606,16 +3608,16 @@ namespace pwiz.Osprey.Tasks
                 PercolatorResults pretrainedModel = resumableFiles.Count > 0 ? reloadedModel?.Model : null;
                 if (pretrainedModel != null)
                 {
-                    ctx.LogInfo(string.Format(
-                        @"Resume: reusing the persisted 1st-pass model instead of retraining " +
-                        @"({0} of {1} file(s) already scored).",
-                        resumableFiles.Count, projections.PerFile.Count));
+                    ctx.LogInfo(CountText.Format(resumableFiles.Count,
+                        "Resuming: reusing the saved first-pass model instead of training again (1 of {1:N0} files already scored).",
+                        "Resuming: reusing the saved first-pass model instead of training again ({0:N0} of {1:N0} files already scored).",
+                        projections.PerFile.Count));
                 }
                 else if (reloadedModel?.Model != null)
                 {
                     ctx.LogInfo(
-                        @"Resume: a current 1st-pass model is on disk but no file's scores are, " +
-                        @"so the model is retrained rather than adopted for a full re-score.");
+                        "Resuming: a saved first-pass model exists but no file has saved scores, " +
+                        "so the model is trained again.");
                 }
                 aborted = PercolatorEngine.RunFirstPassStreaming(
                     projections.PerFile.ConvertAll(kv => kv.Key), streamFileRows, loadFileFeatures,

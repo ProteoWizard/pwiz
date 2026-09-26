@@ -44,6 +44,12 @@ namespace pwiz.Osprey.Test
     [TestClass]
     public class CommandLineErrorTest
     {
+        // The startup-checked variables the cases below set.
+        private static readonly string[] STARTUP_VARIABLES =
+        {
+            @"OSPREY_PASS2_QVALUE", @"OSPREY_STAGE7_STREAM", @"OSPREY_ALLOW_UNFIXED_RESIDENT"
+        };
+
         private string _testDir;
 
         [TestInitialize]
@@ -146,7 +152,12 @@ namespace pwiz.Osprey.Test
             var buffer = new StringBuilder();
             var writer = new CommandStatusWriter(new StringWriter(buffer));
             int exitCode;
-            using (OspreyEnvironment.OverrideVariables(variables))
+            // Every variable this test sets is blanked in the other cases, so a value exported in
+            // the developer's shell cannot turn one case's expected error into another's.
+            var isolated = STARTUP_VARIABLES.ToDictionary(name => name, name => string.Empty);
+            foreach (var pair in variables)
+                isolated[pair.Key] = pair.Value;
+            using (OspreyEnvironment.OverrideVariables(isolated))
             {
                 exitCode = RunCommandInProcess(args, writer);
             }

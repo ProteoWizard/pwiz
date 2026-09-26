@@ -192,7 +192,7 @@ namespace pwiz.Osprey.Scoring
                 if (logSettings)
                 {
                     _log.LogInfo(settingsIndent + string.Format(
-                        "Applying MS2 calibration: mean error = {0:F4} {1} -> correcting by {2:+F4;-F4;0} {1}",
+                        "Applying MS2 calibration: mean error = {0:F4} {1} -> correcting by {2:+0.0000;-0.0000;0} {1}",
                         ms2Calibration.Mean, ms2Calibration.Unit, -ms2Calibration.Mean));
                 }
             }

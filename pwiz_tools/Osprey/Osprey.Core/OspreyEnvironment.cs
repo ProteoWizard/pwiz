@@ -272,7 +272,7 @@ namespace pwiz.Osprey.Core
         // ScoringTaskShared.CanStreamStage7Join, rather than being deleted along with the
         // switch that no longer makes it.
         //
-        // The NAME is still read, once, for the only thing a removed spelling owes: a caller who
+        // The NAME is still read, at startup, for the only thing a removed spelling owes: a caller who
         // still sets it is refused at startup (Program.cs) rather than handed the streamed arm's
         // numbers under the resident arm's name. That is the "reporting one arm's numbers as
         // another's" case the env-var doctrine makes strict. IsSet, not a null test: an EMPTY

@@ -934,8 +934,10 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// The first-pass scoring summary, as prose for the person watching and as the count
-        /// <c>Get-MemoryReport.ps1</c> reads. <paramref name="scoredHere"/> says whether this
-        /// process scored the peaks or loaded them from an earlier run's intermediate files.
+        /// <c>Get-MemoryReport.ps1</c> reads. <paramref name="scoredHere"/> is true on the scoring
+        /// path, where some files may still be kept from an earlier run (each says so on its own
+        /// line), so the scoring sentence does not claim every peak was scored now; false when
+        /// this process only loaded an earlier run's intermediate files.
         /// </summary>
         private static void LogScoringSummary(PipelineContext ctx, long totalScored, int nFiles, bool scoredHere)
         {
@@ -943,8 +945,8 @@ namespace pwiz.Osprey.Tasks
             if (scoredHere)
             {
                 format = nFiles == 1
-                    ? "First-pass scoring complete: {0:N0} precursor candidate peaks scored in 1 file."
-                    : "First-pass scoring complete: {0:N0} precursor candidate peaks scored across {1:N0} files.";
+                    ? "First-pass scoring complete: {0:N0} precursor candidate peaks in 1 file."
+                    : "First-pass scoring complete: {0:N0} precursor candidate peaks across {1:N0} files.";
             }
             else
             {
@@ -2119,7 +2121,7 @@ namespace pwiz.Osprey.Tasks
                 if (loaded != null)
                 {
                     ctx.LogInfo(string.Format(
-                        "Scoring file {0:N0}/{1:N0}: {2} was already scored; keeping it.",
+                        "File {0:N0}/{1:N0}: {2} was already scored; keeping it.",
                         fileIdx + 1, totalFiles, fileName));
                     return loaded;
                 }

@@ -911,7 +911,7 @@ namespace pwiz.Osprey
                 { @"timestamp", @"Prefix each output line with [yyyy/MM/dd HH:mm:ss]" },
                 { @"memstamp", @"Prefix each output line with managed and private memory in MB (pair with --timestamp for perfviz)" },
                 { @"log-file", @"Write all output to this file instead of stderr" },
-                { @"perf-stats", @"Emit machine-parseable [COUNT]/[TIMING]/[STAGE-WALL] lines for perf tools (off by default)" },
+                { @"perf-stats", @"Emit the machine-parseable [COUNT], [TIMING], [BENCH], [STAGE-WALL], [PATH] and [TRAIN] lines that scripts and perf tools read (off by default)" },
                 { @"verbose", @"Show implementer-grade detail (e.g. per-fold Percolator iterations) hidden by default" },
                 { @"diagnostics", @"Write cross-impl bisection dumps (OSPREY_DUMP_* bundle)" },
                 { @"model-diagnostics", @"Write a self-contained interactive HTML report of the trained scoring model, FDR calibration, and single-peak multiple-ID co-assignment" },

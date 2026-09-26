@@ -767,9 +767,8 @@ namespace pwiz.Osprey.Tasks
             // diagnostics fold and the co-assignment panel both END where they START. The
             // figures that matter are gc_heap_last_gc (LIVE) against gc_committed_last_gc: a
             // committed-but-free 9 GB is an allocation-rate story and a live 9 GB is a
-            // retention story, and they have opposite fixes. Unconditional, matching the
-            // Stage-5 boundary probes, because three lines in a twenty-minute task is not a
-            // cost and the alternative is re-running to get them.
+            // retention story, and they have opposite fixes. Gated on OSPREY_LOG_MEMORY like
+            // every [MEM] line (LogTag.Mem): how memory is managed is not user output.
             ProfilerHooks.LogMemoryStats(ctx, @"pass2-fold: before the second-pass join");
             var rescored = ctx.Get<RescoredEntries>();
             ProfilerHooks.LogMemoryStats(ctx, @"pass2-fold: after RescoredEntries (join done)");
@@ -1052,12 +1051,9 @@ namespace pwiz.Osprey.Tasks
 
             var retained = ScoringTaskShared.ReadRetainedBaseIdsOrFail(ctx.Config);
             int released = LibraryFragmentRelease.ReleaseFragments(fullLibrary, retained);
-            if (OspreyEnvironment.LogMemory)
-            {
-                ctx.LogInfo(string.Format(
-                    @"Released library fragments for {0} of {1} entries ({2} base_ids retained for the 1st-pass retained set)",
-                    released, fullLibrary.Count, retained.Count));
-            }
+            ctx.LogInfo(LogTag.Mem(@"library-fragments"), string.Format(
+                @"Released library fragments for {0} of {1} entries ({2} base_ids retained for the 1st-pass retained set)",
+                released, fullLibrary.Count, retained.Count));
             LibraryFragmentRelease.LogRelease(ctx, released, fullLibrary.Count, retained.Count,
                 LogKey.SCOPE_RETAINED_SUMMARY);
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"after library-fragment release");

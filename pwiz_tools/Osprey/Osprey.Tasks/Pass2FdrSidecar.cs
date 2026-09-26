@@ -214,8 +214,8 @@ namespace pwiz.Osprey.Tasks
                     ctx.LogInfo(CountText.Format(totalFiles, "Computing second-pass FDR scores for 1 file.",
                         "Computing second-pass FDR scores for {0:N0} files."));
                     ctx.LogVerbose(CountText.Format(totalFiles,
-                        "{1:N0} of 1 file had no saved second-pass FDR scores; re-scoring wrote {2:N0} this run.",
-                        "{1:N0} of {0:N0} files had no saved second-pass FDR scores; re-scoring wrote {2:N0} this run.",
+                        "{1:N0} of 1 file had no saved second-pass FDR scores; {2:N0} have scores written by per-file re-scoring.",
+                        "{1:N0} of {0:N0} files had no saved second-pass FDR scores; {2:N0} have scores written by per-file re-scoring.",
                         missingPass2, workerWroteFiles?.Count ?? 0));
                     // Stage 6's post-rescore overlay calls FdrEntry.ResetScores(), which clears
                     // eight fields - one for every scalar the v4 record carries. Three of them
@@ -1198,11 +1198,12 @@ namespace pwiz.Osprey.Tasks
             {
                 if (unreadable.Count > 0)
                 {
-                    ctx.LogWarning(string.Format(
-                        "First-pass scores could not be read for {0:N0} files: [{1}]. Treat the " +
-                        "protein-level results of this run as unreliable; delete the " +
-                        ".1st-pass.fdr_scores.bin files for those inputs and re-run.",
-                        unreadable.Count, string.Join(", ", unreadable)));
+                    ctx.LogWarning(CountText.Format(unreadable.Count,
+                        "The first-pass intermediate file (.1st-pass.fdr_scores.bin) is missing or " +
+                        "unreadable for 1 file: {1}. Treat the protein-level results of this run as unreliable.",
+                        "The first-pass intermediate files (.1st-pass.fdr_scores.bin) are missing or " +
+                        "unreadable for {0:N0} files: {1}. Treat the protein-level results of this run as unreliable.",
+                        string.Join(", ", unreadable)));
                 }
                 ctx.LogVerbose(CountText.Format(filesRead,
                     "Restored the first-pass scores of {1:N0} kept precursor candidate peaks in 1 file.",
@@ -1686,8 +1687,7 @@ namespace pwiz.Osprey.Tasks
                 "Second-pass FDR cannot run: the saved first-pass model, a first-pass intermediate " +
                 "file, or the list of precursor candidates from proteins with 2 or more detections " +
                 "is missing or unreadable (a warning above names the file when one is at fault). " +
-                "Run the analysis straight through without --task, or delete the .scores.parquet " +
-                "files so the first pass is trained again in this run.");
+                "Run the analysis straight through without --task.");
         }
 
         /// <summary>
@@ -2530,11 +2530,11 @@ namespace pwiz.Osprey.Tasks
                 if (nMapped < kvp.Value.Count)
                 {
                     ctx.LogWarning(string.Format(
-                        "Second-pass FDR: the re-scored intermediate file for '{0}' does not match its " +
-                        "first-pass intermediate file ({1:N0} rows, {2:N0} expected); {3:N0} precursor " +
-                        "candidates will be scored without features. Delete '{4}' and re-run the rescore.",
-                        kvp.Key, featByScoreIndex.Count, kvp.Value.Count, kvp.Value.Count - nMapped,
-                        effectiveParquetPath));
+                        "Second-pass FDR: the re-scored intermediate file '{3}' does not match the " +
+                        "first-pass intermediate file for '{0}' ({1:N0} rows, {2:N0} expected); " +
+                        "{4:N0} precursor candidates will be scored without features.",
+                        kvp.Key, featByScoreIndex.Count, kvp.Value.Count, effectiveParquetPath,
+                        kvp.Value.Count - nMapped));
                 }
                 nReloaded += nMapped;
             }

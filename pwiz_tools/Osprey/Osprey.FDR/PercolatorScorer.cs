@@ -702,12 +702,13 @@ namespace pwiz.Osprey.FDR
             var runPick = OspreyEnvironment.TrainPickRun ? new Dictionary<uint, PercolatorSampling.RunPickState>() : null;
             // Which observation represents a precursor. Logged when it is NOT the default,
             // because nothing else in the output would say which population trained the model.
+            // Plain prose in the default log, not a gated tag: the user set the variable, and it
+            // changes the results.
             bool pickRun = OspreyEnvironment.TrainPickRun;
             if (!pickRun)
             {
-                log.LogInfo(LogTag.TRAIN, 
-                    @"OSPREY_TRAIN_PICK_RUN=0: each precursor's training row is its BEST " +
-                    @"observation across runs, not a uniform sample of them (pre-26.1 behaviour)");
+                log.LogInfo("OSPREY_TRAIN_PICK_RUN=0 is set: each precursor is trained on its best " +
+                            "observation across runs, not a uniform sample of them (the behavior before 26.1).");
             }
             int g = 0;
             int nInputTargets = 0, nInputDecoys = 0;

@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.FDR
@@ -156,9 +157,12 @@ namespace pwiz.Osprey.FDR
             var peptideGateLevel = config.FdrLevel;
             var detectedPeptides = accumulator.DetectedPeptides;
 
+            // Targets over targets: bestScores holds decoy peptides too, and only targets can be
+            // detected, so the whole pool as the denominator would understate the fraction.
+            int scoredTargetPeptides = bestScores.Values.Count(ps => !ps.IsDecoy);
             log?.LogInfo(string.Format(
-                "{0:N0} of {1:N0} scored peptides detected at {2:P1} experiment-level {3} FDR.",
-                detectedPeptides.Count, bestScores.Count, config.ExperimentFdr,
+                "{0:N0} of {1:N0} scored target peptides detected at {2:P1} experiment-level {3} FDR.",
+                detectedPeptides.Count, scoredTargetPeptides, config.ExperimentFdr,
                 peptideGateLevel.GetLocalizedString()));
             log?.LogInfo(LogTag.COUNT, string.Format(
                 "Detected peptides for protein FDR: {0} unique",

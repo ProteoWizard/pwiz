@@ -178,6 +178,15 @@ namespace pwiz.Osprey.Core
             LogSummary(logInfo, "Unique decoy strings: {0:N0} / {1:N0} total ({2:F1}% reduced)");
         }
 
+        /// <summary>
+        /// Log the same summary for the protein accessions a decoy pairing manifest assigns.
+        /// No-op when <paramref name="logInfo"/> is null.
+        /// </summary>
+        public void LogPairingManifestSummary(Action<string> logInfo)
+        {
+            LogSummary(logInfo, "Unique pairing-manifest protein accessions: {0:N0} / {1:N0} total ({2:F1}% reduced)");
+        }
+
         private void LogSummary(Action<string> logInfo, string format)
         {
             if (logInfo == null)
