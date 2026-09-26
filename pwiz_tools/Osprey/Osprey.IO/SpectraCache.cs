@@ -300,6 +300,48 @@ namespace pwiz.Osprey.IO
             return (int)Math.Round(isoCenter * 10.0);
         }
 
+        /// <summary>
+        /// The source fingerprint (size, mtime in Unix ms) a cache recorded when it was
+        /// written, read from its header alone. False for a missing or foreign file, a cache
+        /// of another format version, and a cache that recorded nothing comparable (no source
+        /// was given, or the source could not be measured).
+        /// </summary>
+        public static bool TryReadSourceFingerprint(string cachePath, out long size, out long mtimeMs)
+        {
+            size = 0;
+            mtimeMs = 0;
+            if (string.IsNullOrEmpty(cachePath) || !File.Exists(cachePath))
+                return false;
+            try
+            {
+                using (var fs = new FileStream(cachePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (var r = new BinaryReader(fs))
+                {
+                    byte[] magic = r.ReadBytes(MAGIC.Length);
+                    if (magic.Length != MAGIC.Length)
+                        return false;
+                    for (int i = 0; i < MAGIC.Length; i++)
+                    {
+                        if (magic[i] != MAGIC[i])
+                            return false;
+                    }
+                    if (r.ReadUInt32() != VERSION)
+                        return false;
+                    ulong storedSize = r.ReadUInt64();
+                    long storedMtimeMs = r.ReadInt64();
+                    if (storedSize == 0 || storedSize == FINGERPRINT_UNMEASURABLE)
+                        return false;
+                    size = (long)storedSize;
+                    mtimeMs = storedMtimeMs;
+                    return true;
+                }
+            }
+            catch (Exception ex) when (!(ex is OutOfMemoryException))
+            {
+                return false;
+            }
+        }
+
         // Read and validate the cache header (magic, version, source
         // fingerprint) and return the record counts. On success the reader is
         // left positioned at the first MS2 record; on any mismatch returns
@@ -500,7 +542,7 @@ namespace pwiz.Osprey.IO
         /// returns true with (0, 0): there is nothing to compare, which is the
         /// documented resume case.
         /// </summary>
-        private static bool TryComputeSourceFingerprint(string sourcePath, out long size, out long mtimeMs)
+        internal static bool TryComputeSourceFingerprint(string sourcePath, out long size, out long mtimeMs)
         {
             size = 0;
             mtimeMs = 0;

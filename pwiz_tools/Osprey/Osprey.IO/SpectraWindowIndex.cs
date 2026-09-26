@@ -143,6 +143,18 @@ namespace pwiz.Osprey.IO
         public static SpectraWindowIndex BuildFromCache(string cachePath, string sourcePath,
             out SpectraCacheRejection reason)
         {
+            return BuildFromCache(cachePath, sourcePath, true, out reason);
+        }
+
+        /// <summary>
+        /// Same, optionally WITHOUT the MS1 section: a consumer that reads only MS2 windows
+        /// passes <paramref name="loadMs1"/> false and gets an empty <see cref="Ms1Spectra"/>,
+        /// skipping the one part of the index build that decodes peaks. Every other member is
+        /// built identically.
+        /// </summary>
+        public static SpectraWindowIndex BuildFromCache(string cachePath, string sourcePath,
+            bool loadMs1, out SpectraCacheRejection reason)
+        {
             reason = SpectraCacheRejection.None;
             if (string.IsNullOrEmpty(cachePath) || !File.Exists(cachePath))
             {
@@ -213,10 +225,13 @@ namespace pwiz.Osprey.IO
                 // resident for the global precursor RT search) -- so streaming Stages 1-4
                 // get MS1 without ever building the full MS2 list. Same decode as
                 // LoadSpectraCache (shared ReadMs1Record).
-                fs.Seek(index.Ms1SectionOffset, SeekOrigin.Begin);
-                var ms1Spectra = new List<MS1Spectrum>((int)nMs1);
-                for (uint i = 0; i < nMs1; i++)
-                    ms1Spectra.Add(SpectraCache.ReadMs1Record(r));
+                var ms1Spectra = new List<MS1Spectrum>(loadMs1 ? (int)nMs1 : 0);
+                if (loadMs1)
+                {
+                    fs.Seek(index.Ms1SectionOffset, SeekOrigin.Begin);
+                    for (uint i = 0; i < nMs1; i++)
+                        ms1Spectra.Add(SpectraCache.ReadMs1Record(r));
+                }
 
                 return new SpectraWindowIndex(cachePath, windowKeyToOffsets, allMs2Rts,
                     windowKeyToFirstIso, windowKeysInFileOrder, ms1Spectra, firstCycleWindows);

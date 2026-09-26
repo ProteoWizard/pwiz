@@ -655,7 +655,8 @@ namespace pwiz.Osprey.Scoring
                 peakXics.Add(new KeyValuePair<int, double[]>(xics[xi].FragmentIndex, slice));
             }
 
-            var polish = TukeyMedianPolish.Compute(peakXics, peakRts, 10, 0.01);
+            var polish = TukeyMedianPolish.Compute(peakXics, peakRts,
+                TukeyMedianPolish.SCORING_MAX_ITERATIONS, TukeyMedianPolish.SCORING_TOLERANCE);
             if (polish == null)
                 return 1.0;
             double lc = TukeyMedianPolish.LibCosine(polish, candidate.Fragments);

@@ -1048,7 +1048,7 @@ namespace pwiz.Osprey.Test
             int? unimodId;
             string name;
 
-            BlibLoader.IdentifyModification(57.021, false, out massDelta, out unimodId, out name);
+            BlibLoader.IdentifyModification(57.021, false, 'C', true, 3, out massDelta, out unimodId, out name);
             Assert.AreEqual(57.021464, massDelta, 0.01);
             Assert.AreEqual(4, unimodId);
             Assert.AreEqual("Carbamidomethyl", name);
@@ -1795,6 +1795,31 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(1, mods.Count);
             Assert.AreEqual(4, mods[0].Position);
             Assert.AreEqual(35, mods[0].UnimodId);
+
+            // BiblioSpec prints one decimal; a mass within half its last digit of a known
+            // modification is that modification, so the fragments get its exact mass.
+            AssertBlibModification("PEPTC[+57.0]IDE", 57.021464, 4);
+            AssertBlibModification("[+42.0]PEPTIDE", 42.010565, 1);
+            AssertBlibModification("PEPS[+80.0]TIDE", 79.966331, 21);
+            // High-precision text keeps the 0.01 Da snap, and a mass outside it stays as written.
+            AssertBlibModification("PEPTC[+57.02146]IDE", 57.021464, 4);
+            AssertBlibModification("PEPTM[+15.99491]IDE", 15.994915, 35);
+            AssertBlibModification("[+42.03000]PEPTIDE", 42.03, null);
+            // A delta between 100 and 200 Da is not an absolute cysteine mass on any other
+            // residue (GlyGly on lysine), nor on cysteine when it is signed (N-ethylmaleimide).
+            AssertBlibModification("PEPTK[+114.042927]IDE", 114.042927, null);
+            AssertBlibModification("PEPTC[+125.047679]IDE", 125.047679, null);
+            // An unsigned value on cysteine is still its absolute mass.
+            AssertBlibModification("PEPTC[160.030649]IDE", 57.021464, 4);
+            AssertBlibModification("PEPTC[160.0]IDE", 57.021464, 4);
+        }
+
+        private static void AssertBlibModification(string modSeq, double massDelta, int? unimodId)
+        {
+            var mods = BlibLoader.ParseBlibModifications(modSeq);
+            Assert.AreEqual(1, mods.Count, modSeq);
+            Assert.AreEqual(massDelta, mods[0].MassDelta, 1e-12, modSeq);
+            Assert.AreEqual(unimodId, mods[0].UnimodId, modSeq);
         }
 
         #endregion
@@ -3051,11 +3076,46 @@ namespace pwiz.Osprey.Test
                             label + " candidate " + k);
                     }
                 }
+
+                AssertTrainingExportProjection(path, reloaded);
             }
             finally
             {
                 ParquetScoreCache.RowGroupRowCapForTest = null;
                 try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// The training export's projection of the same two-group file: the target rows only,
+        /// each field it reads exactly as the full load reads it - the running ParquetIndex
+        /// across groups with the decoys skipped included - and no CWT candidates or fragment
+        /// arrays.
+        /// </summary>
+        private static void AssertTrainingExportProjection(string path, List<FdrEntry> full)
+        {
+            var targets = full.Where(e => !e.IsDecoy).ToList();
+            var projected = ParquetScoreCache.LoadTrainingExportRows(path);
+            Assert.AreEqual(targets.Count, projected.Count, "targets only");
+            for (int i = 0; i < targets.Count; i++)
+            {
+                var e = targets[i];
+                var a = projected[i];
+                Assert.AreEqual(e.EntryId, a.EntryId);
+                Assert.AreEqual(e.ParquetIndex, a.ParquetIndex);
+                Assert.AreEqual(e.Charge, a.Charge);
+                Assert.AreEqual(e.ModifiedSequence, a.ModifiedSequence);
+                Assert.AreEqual(e.ScanNumber, a.ScanNumber);
+                Assert.AreEqual(e.ApexRt, a.ApexRt);
+                Assert.AreEqual(e.StartRt, a.StartRt);
+                Assert.AreEqual(e.EndRt, a.EndRt);
+                Assert.AreEqual(e.BoundsArea, a.BoundsArea);
+                CollectionAssert.AreEqual(e.Features, a.Features);
+                CollectionAssert.AreEqual(e.ReferenceXicRts, a.ReferenceXicRts);
+                CollectionAssert.AreEqual(e.ReferenceXicIntensities, a.ReferenceXicIntensities);
+                Assert.IsNull(a.CwtCandidates, "the CWT candidates are not decoded");
+                Assert.AreEqual(0, a.FragmentMzs.Length, "the fragment m/z are not decoded");
+                Assert.AreEqual(0, a.FragmentIntensities.Length, "the fragment intensities are not decoded");
             }
         }
 

@@ -182,10 +182,11 @@ without violating any rule stated in terms of fan-out versus join alone.
 
 ## The task graph
 
-### Four tasks over seven stages
+### Five tasks over seven stages
 
-The pipeline is a fixed, four-element list, always in this order
-(`OspreyTasks.Pipeline`). It alternates fan-out and join:
+The pipeline is a fixed, five-element list, always in this order
+(`OspreyTasks.Pipeline`): four analysis tasks that alternate fan-out and join, then the
+optional training export, which is in a run only when asked for:
 
 | Task | Stages | Shape | Nodes | May hold resident |
 |---|---|---|---|---|
@@ -193,6 +194,7 @@ The pipeline is a fixed, four-element list, always in this order
 | `FirstPassFDR` | 5 | **join** (barrier 1) | 1 | O(distinct entries) |
 | `PerFileRescoring` | 6 | fan-out (split 2) | 1..N | baseline + one run |
 | `SecondPassFDR` | 7 | **join** (barrier 2) | 1 | O(distinct entries) |
+| `TrainingExport` | after 7, **optional** | fan-out | 1..N | library + experiment sidecar + one run |
 
 Stages 1-4 are library preparation, mzML processing, calibration, and the main
 first-pass search that computes the 21 PIN features. Stage 5 is first-pass FDR plus the
@@ -206,11 +208,35 @@ in one process are the same computation, and the pipeline does not know which it
 doing. That freedom is the point of the whole design, and every principle in the next
 section exists to preserve it.
 
+### An optional fifth stage
+
+`TrainingExport` (`--training-export`, [22-training-export](22-training-export.md)) is the fifth
+entry of `OspreyTasks.Pipeline` and the only OPTIONAL one: it writes `<stem>.training.parquet`,
+the per-run evidence a model trains on (CarafeSharp), and nothing else. With the option off it
+is not part of the run under any selection - `OspreyConfig.Includes` asks the stage
+(`ISelectableTask.IsEnabled`) before anything else - so it is not run, not stamped and not
+logged, and every other artifact is byte-identical to a run without the feature. A diagnostics
+render (`--task ModelDiagnostics`) never includes it.
+
+It is a fan-out after the final join because it needs the final answer (Stage 6 boundaries,
+Stage 7 q-values) and per-run spectra, which a join must not hold (P3). Because it only reads
+artifacts, adding the flag to a finished run runs this task alone - the other four report
+`skipping (outputs valid)`, since no option of it enters their keys. Under any other `--task`
+the flag is accepted, because an HPC wrapper hands every node the same options, and inert: the
+startup line says the export is written under `--task TrainingExport` or a run without
+`--task`.
+
+Its key follows each run's own inputs too: a run's parquet is stamped with the task key plus
+the identities (name, size, mtime) of that run's reconciled parquet, 2nd-pass sidecar and run
+info (`OspreyTask.OutputValidityKey`), so rewriting one redoes that run's export and no other.
+Like the library's identity, those follow mtimes: **relay them with mtimes preserved**
+(`cp -p`, robocopy `/COPY:DAT`), or every export they reach is redone.
+
 ### Two selectable tasks that are not pipeline tasks
 
-The task set (`OspreyTasks.Create()`) lists six selectable tasks, but only the four above are
+The task set (`OspreyTasks.Create()`) lists seven selectable tasks, but only the five above are
 pipeline stages. The canonical pipeline (`OspreyTasks.Pipeline`, an explicit ordered list
-the set declares beside `All`) contains those four and nothing else; the other two
+the set declares beside `All`) contains those five and nothing else; the other two
 are reachable only by naming them in `--task`, and neither participates in a run that
 does not:
 
@@ -239,7 +265,7 @@ does not:
   pool - asking a 446-run analysis to describe itself cost what running it did, and met the
   same memory wall.
 
-Both are appended after the four pipeline members so the existing ordinal values are
+Both are appended after the pipeline members so the existing ordinal values are
 undisturbed. Neither is a fan-out node, and neither belongs in an HPC relay plan.
 
 ### Scatter and barrier: what a join may hold
@@ -699,6 +725,8 @@ node running that task needs a copy, whatever batch it was handed.
 | `<blib-stem>.1st-pass.model-diagnostics.json` | experiment product (`--model-diagnostics`) | `FirstPassFDR` (pass 1) | `SecondPassFDR`, `--task ModelDiagnostics` | **every node** running `SecondPassFDR` |
 | `<blib-stem>.2nd-pass.model-diagnostics.json` | experiment product (`--model-diagnostics`) | `SecondPassFDR` (pass 2) | `--task ModelDiagnostics` | n/a |
 | `<blib-stem>.model-diagnostics.html` | experiment **cache** (`--model-diagnostics`) | the render step, at the end of whichever phase or task last wrote a diagnostics JSON | terminal | n/a |
+| `<stem>.run-info.json` | per-run cache | `PerFileScoring` (Stage 2) or `--task SpectraCache`, only when it builds `.spectra.bin` | `TrainingExport` | with the run, to a `TrainingExport` node |
+| `<stem>.training.parquet` | per-run product (`--training-export`) | `TrainingExport` | terminal (the consumer that trains on it) | n/a |
 | `<output>.<TaskName>.osprey.task` | scope of its artifact | every task, via `PerFileResumeDriver` | the driver | with its artifact |
 
 In that last row `<output>` is the **full artifact path including its extension** - `foo.scores.parquet.PerFileScoring.osprey.task` - not the blib stem it means in the rows above it. A staging glob written from the uniform reading misses every per-run stamp.
@@ -954,9 +982,11 @@ a cache from another build may carry different scoring.
 
 ### Resume is a forward scan
 
-The driver walks the four tasks in order and, for each one that is included, skips it when
+The driver walks the five tasks in order and, for each one that is included, skips it when
 every declared output exists *and* carries a validity sidecar matching that task's current
-key (`PipelineContext.CanRehydrate`). Otherwise it runs the task and stamps sidecars over
+key for that output (`PipelineContext.CanRehydrate`, `OspreyTask.OutputValidityKey` - the task
+key itself for every task but the training export, whose per-run outputs also key on their
+own run's inputs). Otherwise it runs the task and stamps sidecars over
 its outputs afterward.
 
 Two details are easy to get wrong:
@@ -1038,7 +1068,8 @@ Four things hold at every boundary and are not repeated in each list:
   + mtime, so a copy tool that stamps a fresh timestamp gives the library a new identity
   and invalidates every artifact on the receiving node - a multi-hour recompute reported
   as a stale cache. Use `robocopy /COPY:DAT`, `rsync -t`, or whatever preserves mtime on
-  the cluster.
+  the cluster. The same holds for the per-run inputs of a `TrainingExport` node (boundary
+  4 -> 5), whose keys follow their mtimes too.
 
 ### Boundary 1 -> 2: `PerFileScoring` to `FirstPassFDR`
 
@@ -1145,6 +1176,32 @@ The `.osprey.task` sidecars are not optional bookkeeping here. Without the stamp
 `SecondPassFDR` cannot tell that a worker wrote the pass-2 files and will recompute them
 from survivors only - which is not the same answer (P10).
 
+
+### Boundary 4 -> 5: `SecondPassFDR` to `TrainingExport` (optional)
+
+A `--task TrainingExport` node reads the final answer and spectra, and no first-pass artifact:
+
+Per run, for each run in the node's batch:
+- `<stem>.scores-reconciled.parquet` - the final boundaries and scored features
+- `<stem>.2nd-pass.fdr_scores.bin` - the run q-values
+- `<stem>.calibration.json` - the MS2 calibration the spectra and tolerance are corrected by
+- `<stem>.spectra.bin`, with no data file beside it (and `--cache-dir` if it is not in the
+  output directory)
+- `<stem>.run-info.json` - optional; without it the export's instrument and collision-energy
+  footer keys are empty and the node warns
+
+Experiment-wide, to **every** node:
+- `<blib-stem>.2nd-pass.fdr_experiment.bin` - the experiment q-values and PEP, and the file
+  whose identity the export's validity key follows
+- `<blib-stem>.1st-pass.retained_base_ids.bin` - the node loads library fragments only for
+  these base_ids; without it the whole library's spectra are loaded
+- the library, mtime preserved
+
+The export's key names no cohort and no leg, so a node's parquet and the straight-through
+run's are interchangeable (P4). Each run's parquet is also keyed on the identities of that
+run's reconciled parquet, 2nd-pass sidecar and run info, so **relay those with mtimes
+preserved** as well (`cp -p`, robocopy `/COPY:DAT`): a copy with a fresh mtime is a new input,
+and the node redoes that run's export.
 
 ---
 

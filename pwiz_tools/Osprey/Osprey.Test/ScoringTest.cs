@@ -760,6 +760,41 @@ namespace pwiz.Osprey.Test
             double correctedMz = observedMz - meanError; // 500.065
             Assert.AreEqual(500.065, correctedMz, 1e-10,
                 "m/z offset correction should shift by -meanError");
+
+            AssertDoubleCountingToleranceIsTheSearchTolerance();
+        }
+
+        /// <summary>
+        /// The double-counting dedup's tolerance delegates to the search's calibrated
+        /// tolerance. Pinned to the values its former copy of the rule computed for both units
+        /// calibration records ("ppm", "Th"), floors included, so the dedup is unchanged.
+        /// </summary>
+        private static void AssertDoubleCountingToleranceIsTheSearchTolerance()
+        {
+            var config = new OspreyConfig
+            {
+                FragmentTolerance = new FragmentToleranceConfig { Tolerance = 20, Unit = ToleranceUnit.Ppm },
+            };
+            foreach (var (unit, sd, expected, expectedUnit) in new[]
+                     {
+                         ("Th", 0.13, 0.39, ToleranceUnit.Mz),
+                         ("Th", 0.01, 0.05, ToleranceUnit.Mz),
+                         ("ppm", 2.0, 6.0, ToleranceUnit.Ppm),
+                         ("ppm", 0.2, 1.0, ToleranceUnit.Ppm),
+                     })
+            {
+                var cal = new MzCalibrationResult { Calibrated = true, SD = sd, Unit = unit };
+                ScoringPipeline.DoubleCountingTolerance(cal, config, out double value, out ToleranceUnit valueUnit);
+                Assert.AreEqual(Math.Max(3.0 * sd, expectedUnit == ToleranceUnit.Mz ? 0.05 : 1.0), value, 0.0, unit);
+                Assert.AreEqual(expected, value, 1e-12, unit);
+                Assert.AreEqual(expectedUnit, valueUnit, unit);
+            }
+            foreach (var uncalibrated in new[] { null, MzCalibrationResult.Uncalibrated() })
+            {
+                ScoringPipeline.DoubleCountingTolerance(uncalibrated, config, out double value, out ToleranceUnit valueUnit);
+                Assert.AreEqual(20.0, value);
+                Assert.AreEqual(ToleranceUnit.Ppm, valueUnit);
+            }
         }
 
         /// <summary>

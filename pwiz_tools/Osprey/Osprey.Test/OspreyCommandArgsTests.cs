@@ -177,6 +177,21 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(@"m.tsv", Parse(OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY, OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST + @"m.tsv").DecoyPairingManifestPath);
             Assert.IsTrue(Parse(OspreyCommandArgs.ARG_WRITE_PIN).WritePin);
 
+            // Training export: off by default, and each setting lands where the task reads it.
+            var noExport = Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML").TrainingExport;
+            Assert.IsFalse(noExport.Enabled);
+            Assert.IsNull(noExport.MaxQ);
+            Assert.IsNull(noExport.ClaimantQ);
+            Assert.IsFalse(noExport.WriteXics);
+            Assert.AreEqual(0.01, noExport.EffectiveMaxQ(0.01));
+            Assert.AreEqual(TrainingExportConfig.DEFAULT_CLAIMANT_Q, noExport.EffectiveClaimantQ);
+            var export = Parse(OspreyCommandArgs.ARG_TRAINING_EXPORT, OspreyCommandArgs.ARG_TRAINING_EXPORT_MAX_Q + 0.05,
+                OspreyCommandArgs.ARG_TRAINING_EXPORT_CLAIMANT_Q + 0.02, OspreyCommandArgs.ARG_TRAINING_EXPORT_XICS).TrainingExport;
+            Assert.IsTrue(export.Enabled);
+            Assert.AreEqual(0.05, export.EffectiveMaxQ(0.01));
+            Assert.AreEqual(0.02, export.EffectiveClaimantQ);
+            Assert.IsTrue(export.WriteXics);
+
             // Performance: --parallel-files has an OPTIONAL value. Absent =
             // sequential default; no value = auto; <N> = explicit. The optional
             // value must not swallow the following flag.

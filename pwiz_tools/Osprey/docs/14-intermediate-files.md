@@ -26,6 +26,7 @@ experiment-wide, **exp/rep** = experiment-wide content replicated under each run
 |---|---|---|---|---|
 | `<stem>.calibration.json` | run | JSON (Newtonsoft) | `Osprey.Chromatography/CalibrationIO.cs` | RT + MS1/MS2 mass calibration parameters |
 | `<stem>.spectra.bin` | run | Custom binary v4 | `Osprey.IO/SpectraCache.cs` | Decoded MS1/MS2 spectra for fast reload - and the only copy once the source is deleted |
+| `<stem>.run-info.json` | run | JSON (Newtonsoft) v2 | `Osprey.IO/RunInfoFile.cs` | What the acquisition says about itself: instrument, dissociation and collision-energy histograms, scan windows. Written beside `.spectra.bin` when that cache is built (section 9) |
 | `<stem>.scores.parquet` | run | Apache Parquet (ZSTD) | `Osprey.IO/ParquetScoreCache.cs` | Scored entries: 21 PIN features, fragments, CWT candidates + footer metadata |
 | `<stem>.scores-reconciled.parquet` | run | Apache Parquet (ZSTD) | `Osprey.Tasks/ReconciledParquetWriter.cs` | Stage 6 reconciled rewrite (separate file, not in-place) |
 | `<stem>.1st-pass.fdr_scores.bin` | run | Custom binary **v7**, 32-byte header + 36-byte records | `Osprey.IO/FdrScoresSidecar.cs` | entry_id, SVM score, run precursor q, run peptide q, detection apex RT. The experiment-scope columns moved OUT at v5 (#4486) - see the experiment sidecar row; apex RT arrived at v7 (#4522), so the diagnostics co-assignment panel stops opening every `.scores.parquet` a second time for it |
@@ -33,12 +34,13 @@ experiment-wide, **exp/rep** = experiment-wide content replicated under each run
 | `<stem>.2nd-pass.fdr_decoys.bin` | run | Custom binary v1 | `Osprey.IO/Pass2CompetitionDecoys.cs` | Per-run second-pass competition decoys; written before the scores sidecar |
 | `<stem>.reconciliation.json` | run | JSON (Newtonsoft) | `Osprey.IO/ReconciliationFile.cs` | Stage 5 planner output: actions, gap-fill targets, refined RT calibration |
 | `<blib-stem>.{1st,2nd}-pass.fdr_experiment.bin` | exp | Custom binary **v2**, 32-byte header + 44-byte records | `Osprey.IO/FdrExperimentSidecar.cs` | The experiment-scope columns: precursor q, peptide q, PEP, protein q, aggregate score. Both q-values are FLOORED to the precursor's best run before they are written (#4522) - see 07-fdr-control.md 3j. **Name** from the output blib, **directory** from `ResolveOutputDir` |
-| `<blib-stem>.1st-pass.retained_base_ids.bin` | exp | Custom binary **v1**, 32-byte header + 4-byte records | `Osprey.IO/RetainedBaseIdSidecar.cs` | The join-wide compaction set: every base_id the Stage 6 rescore retains, ascending. Written once when Stage 6 planning ends, because the second half of it (reconciliation action targets) is not known until the LAST run is planned. Bounded by the library, not by run count - on the 446-run CHS cohort of #4650 it is 2,502,512 bytes for 625,620 ids, against the megabytes each of the 446 `reconciliation.json` envelopes spends restating the first half. (Counts travel with their run: `RetainedBaseIdSidecar` quotes 744,943 ids / 2.98 MB from a different arm of the same cohort.) Seven read sites across four tasks: `FirstPassFdrTask` (x3), `PerFileScoringTask`, `PerFileRescoreTask` (x2, one of them the streamed Stage 7 join) and Stage 7's library-fragment release (#4650). **Absence is fatal at most of them, and deliberately so** - the fallback would be rebuilding the union from every envelope, the O(runs) pre-pass this file exists to delete - but not at all of them: `PerFileRescoreTask.BuildPerRunHydrate` takes the null-returning reader and declines the per-run shape, because the run is by then already failing elsewhere for a named reason |
+| `<blib-stem>.1st-pass.retained_base_ids.bin` | exp | Custom binary **v1**, 32-byte header + 4-byte records | `Osprey.IO/RetainedBaseIdSidecar.cs` | The join-wide compaction set: every base_id the Stage 6 rescore retains, ascending. Written once when Stage 6 planning ends, because the second half of it (reconciliation action targets) is not known until the LAST run is planned. Bounded by the library, not by run count - on the 446-run CHS cohort of #4650 it is 2,502,512 bytes for 625,620 ids, against the megabytes each of the 446 `reconciliation.json` envelopes spends restating the first half. (Counts travel with their run: `RetainedBaseIdSidecar` quotes 744,943 ids / 2.98 MB from a different arm of the same cohort.) Eight read sites across five tasks: `FirstPassFdrTask` (x3), `PerFileScoringTask`, `PerFileRescoreTask` (x2, one of them the streamed Stage 7 join), Stage 7's library-fragment release (#4650) and `TrainingExportTask`, whose library load retains fragments for these ids alone and loads everything without the file. **Absence is fatal at most of them, and deliberately so** - the fallback would be rebuilding the union from every envelope, the O(runs) pre-pass this file exists to delete - but not at all of them: `PerFileRescoreTask.BuildPerRunHydrate` takes the null-returning reader and declines the per-run shape, because the run is by then already failing elsewhere for a named reason |
 | `<stem>.1st-pass.model.json` | exp/rep | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | Frozen first-pass Percolator model (weights, biases, normalization). The protein-compact stratum is NOT in it - see the next row |
 | `<stem>.1st-pass.stratum.json` | exp/rep | JSON | `Osprey.Tasks/FirstPassModelIO.cs` | The protein-compact stratum: base ids of every library precursor whose peptide belongs to a protein with >=2 detected peptides. Absent under every mode but protein-compact. A SECOND file rather than a member of the model sidecar because a different PHASE produces it - the model exists when training ends, the stratum only after first-pass protein FDR resolves which proteins carry two detected peptides. Writing one file meant holding the model in memory for the whole first pass, which made a run killed in the score passes unrecoverable. `LoadFromAny` merges the two on read, and still falls back to a pre-split model sidecar's embedded copy |
 | `<output>.<TaskName>.osprey.task` | its artifact's | JSON (hand-rolled) | `Osprey.Tasks/TaskValiditySidecar.cs` | **C# addition**: per-(output, task) resume validity record |
 | `<lib>.<...>` library cache | exp | Custom binary v2 | `Osprey.IO/LibraryCache.cs` | Parsed spectral library reload cache |
 | `<output>.blib` | exp | SQLite (BiblioSpec) | `Osprey.IO/BlibWriter.cs` | Final output; see 13-blib-output-schema.md |
+| `<stem>.training.parquet` | run | Apache Parquet (ZSTD) v1 | `Osprey.IO/TrainingExportParquet.cs` | `--training-export` only: the per-ion training evidence, schema in [22-training-export](22-training-export.md) (section 10) |
 
 All artifact paths resolve their directory through `ArtifactPaths`
 (`Osprey.IO/ArtifactPaths.cs`), so `--output-dir` / `--cache-dir` / `--work-dir`
@@ -69,6 +71,7 @@ durable artifact writer in the tree, as of this document's last verification:
 |---|---|
 | `CalibrationIO` | `<stem>.calibration.json` |
 | `SpectraCache` | `<stem>.spectra.bin` |
+| `RunInfoFile` | `<stem>.run-info.json` |
 | `LibraryCache` | `<library-leaf>.libcache` |
 | `ParquetScoreCache` (2 sites) | `<stem>.scores.parquet`, `<stem>.scores-reconciled.parquet` |
 | `FdrScoresSidecar` | `<stem>.{1st,2nd}-pass.fdr_scores.bin` |
@@ -79,6 +82,7 @@ durable artifact writer in the tree, as of this document's last verification:
 | `FirstPassModelIO` (2 sites) | `<stem>.1st-pass.model.json`, `<stem>.1st-pass.stratum.json` |
 | `TaskValiditySidecar` | `<output>.<TaskName>.osprey.task` |
 | `BlibOutputWriter` | `<output>.blib` |
+| `TrainingExportParquet` | `<stem>.training.parquet` |
 | `ModelDiagnosticsReport` (2 sites) | `<output>.model-diagnostics.{html,data.json}` |
 | `FdrBenchInputWriter` (2 sites) | `--fdrbench` input + pairing manifest |
 | `OspreyReportWriter` (1 site, `WriteTsv`, both reports) | `<output>.protein_groups.tsv`, `<output>.stats.tsv` |
@@ -573,8 +577,10 @@ It records the producing task, the Osprey version, a `validity_key`, and the inp
 ```
 
 The base `validity_key` is
-`search=<SearchParameterHash>;library=<LibraryIdentityHash>` plus the peak-pick arm
-(`OspreyTask.ValidityKey`); tasks with extra state append to it - `FirstPassFdrTask` adds six
+`search=<SearchParameterHash>;library=<LibraryIdentityHash>` plus the peak-pick arm and, for a
+blib library with fragment annotations, `;libext=ann`, and for one with precision-sensitive
+modification text, `;libmods=2` (`OspreyTask.ValidityKey`); tasks with
+extra state append to it - `FirstPassFdrTask` adds six
 further components; the full composition, with the defect each entry prevents, is under
 "What a validity key is made of" below. 00 owns the *rule* those entries serve (P15: an
 under-inclusive key is the dangerous direction); this document owns what they are.
@@ -610,10 +616,36 @@ wrong answer:
 sidecar format version, the experiment-aggregation, pass-2 q and training-sample arms, and
 the survivor-streaming switch, whose two paths must not adopt each other's output.
 
+`TrainingExport` appends the sidecar format version, the q-changing arms `SecondPassFDR` keys
+on, the file identity (name + size + mtime, `SearchIdentity.FileIdentityTerm`) of
+`<blib-stem>.2nd-pass.fdr_experiment.bin` - which stands in for the whole finished second pass,
+since Stage 7 rewrites it whenever it re-runs - and its own format version and settings. It
+carries NO reconciliation hash, so the key names no cohort (P4). Each run's output is stamped
+with that key plus the identities of the run's own reconciled parquet, 2nd-pass sidecar and run
+info (`OspreyTask.OutputValidityKey`, which the driver uses for every declared output and which
+every other task leaves equal to its task key); see
+[22-training-export](22-training-export.md).
+
 The peak-pick arm sits in the *base* rather than in the overrides because it is the one
 lever that reaches every task: the pick decides which peak a precursor's row describes,
 back in Stage 4, and everything downstream inherits that choice. Putting it in the base
 also means a task added later carries it without having to know.
+
+The base also carries `;libext=ann` (`OspreyTask.LIBRARY_READER_TERM`) for a blib library
+whose `RefSpectraPeakAnnotations` table has rows, for the same reason: the blib reader types
+fragments from that table, which changes the library every task reads, so a directory scored
+before that reader against an annotated blib must not be adopted after it. `;libmods=2`
+(`OspreyTask.LIBRARY_MODS_TERM`) marks a blib whose modification text the residue- and
+precision-aware reader parses differently (one-decimal BiblioSpec masses, or a 100-200 value on
+a residue other than C): its masses reach no score unless its fragments are typed, but they are
+written to the output blib's Modifications table. A TSV library and any other blib get no
+term, so their keys are unchanged. The probe is one
+`SELECT EXISTS`, cached per file version (`BlibLoader.HasPeakAnnotations`). The `.libcache`
+composition hash follows the same rule with its own reader terms
+(`LibraryLoader.LibraryReaderTerms`): `blib_reader:2` for an annotated blib, and `blib_mods:2`
+for a blib whose modification text the residue- and precision-aware mass reader can read
+differently (a value printed with fewer than two decimals, as BiblioSpec writes, or one between
+100 and 200 Da). Any other blib keeps its cache.
 
 Read that table as a worked example of P15's asymmetry. Every row was added after an
 under-inclusive key reused something it should not have, and none of them cost more than
@@ -641,6 +673,65 @@ HPC relay lists - see 00.
 
 ---
 
+## 9. Run info (`<stem>.run-info.json`)
+
+**C# source**: `Osprey.IO/RunInfoFile.cs` (`RunInfo`, `RunInfoFile`); collected by
+`RunInfoCollector` in `Osprey.IO/SpectrumFileReader.cs`; written by
+`ScoringTaskShared.EnsureSpectraCache`. Path: `RunInfoFile.PathFor` = `<stem>.run-info.json`
+in `ArtifactPaths.ResolveCacheDir(inputFile)` - the `.spectra.bin` directory.
+
+Indented JSON with `\n` newlines, `format_version` 2, keys in declaration order and every
+histogram's keys ordinal-sorted, so one source always yields the same bytes on every machine:
+
+| Key | Content |
+|---|---|
+| `format_version` | 2 (version 1, which lacks `ms2_scan_windows`, is still read) |
+| `source_file`, `source_size`, `source_mtime_ms` | Source file NAME (never a path) and the same size + Unix-ms mtime fingerprint `.spectra.bin` records |
+| `run_id`, `run_start_time` | The file's run id and acquisition start (ISO 8601; in UTC when the file gives a zone, as the file wrote it when it does not), or null |
+| `instrument_vendor`, `instrument_model`, `instrument_serial_number` | From the first MS2 spectrum's instrument configuration and the file's declared configurations |
+| `instrument_configurations` | Every declared configuration: `model`, `ionization`, `analyzer`, `detector` |
+| `n_ms1`, `n_ms2` | Spectra the read kept |
+| `ms1_rt_range`, `ms2_rt_range` | `[first, last]` retention time, minutes |
+| `ms1_scan_window`, `ms2_scan_window` | `[lowest lower limit, highest upper limit]` over the scan windows, or null |
+| `ms2_isolation_range` | `[lowest, highest]` isolation-window bound over the MS2 spectra |
+| `ms2_analyzers`, `dissociation_methods`, `collision_energies` | MS2 spectrum counts per analyzer, per dissociation method and per collision energy as the file reports it (round-trip invariant number, or `none`) |
+| `ms2_scan_windows` | Per isolation window, in center order: `isolation_center`, `isolation_lower`, `isolation_upper`, and the `scan_window` its spectra covered - narrower than `ms2_scan_window` on a method whose MS2 scan range follows the isolation window. Null in version 1 |
+
+**Written only when the cache is built, before it** (P14: the cache is the file whose presence
+ends the parse, so it lands last). A cache hit never writes it: a resumed or relocated run whose
+cache predates the file has none, and adding one lazily would put a new file in a directory a
+resume is asserted to leave untouched (regression mode 11's fingerprint). A failed write is a
+warning, never a failed run - nothing Osprey scores reads it.
+
+**Output-neutral by construction.** It is in no hash and in no validity key but the training
+export's per-run one, `.spectra.bin` is unchanged, and it is collected from values the read
+already produced, so writing it unconditionally changes no byte any golden or resume check
+compares; that is why it is not behind a flag.
+
+**Safe to delete** only while the source exists, and even then it comes back only when the
+spectra cache is rebuilt. Its sole reader, the training export, degrades without it (empty
+instrument footer keys and a warning), and ignores one - with a warning - whose source
+fingerprint disagrees with the one `.spectra.bin` records, since one parse writes both.
+
+---
+
+## 10. Training export parquet (`<stem>.training.parquet`)
+
+**C# source**: `Osprey.IO/TrainingExportParquet.cs`; written by `TrainingExportTask`. Path:
+`TrainingExportParquet.PathFor` = `<stem>.training.parquet` in
+`ArtifactPaths.ResolveOutputDir(inputFile)`. Written only under `--training-export`.
+
+ZSTD parquet, row groups of 20,000 rows, per-ion arrays as little-endian typed `byte[]` blobs
+with no length prefix and a NULL cell for an empty array - the same convention as the scores
+parquet's blobs, and the same encoders (`ParquetBlobCodec`, moved out of `ParquetScoreCache`
+unchanged). A run with nothing to export gets a zero-row file with its footer. The schema, the
+slot order and every footer key are [22-training-export](22-training-export.md), which is the
+contract; `TrainingExportParquetTest` fails when the writer emits a column that document does not
+name (it checks names only - not types, and not a documented column the writer lacks). Footer
+`osprey.training_export.format_version` is 1.
+
+---
+
 ## Cleanup
 
 Every intermediate file except the spectra cache is safe to delete and is recreated on the next
@@ -657,6 +748,8 @@ run:
 - `<stem>.calibration.json` — small; worth keeping across runs with the same LC-MS setup, but in
   C# recalibration is triggered by the task sidecar, not by this file's presence.
 - `<output>.<TaskName>.osprey.task` — deleting forces the task to re-run.
+- `<stem>.run-info.json` - see section 9: it is rebuilt only with the spectra cache.
+- `<stem>.training.parquet` - recreated by `--training-export` (or `--task TrainingExport`) alone.
 
 ---
 

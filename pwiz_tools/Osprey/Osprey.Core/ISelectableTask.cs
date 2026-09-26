@@ -61,6 +61,15 @@ namespace pwiz.Osprey.Core
         bool HydratesPerRun { get; }
 
         /// <summary>
+        /// Whether this stage is part of the run at all. True for every stage the pipeline
+        /// always runs; an OPTIONAL stage answers from the option that asks for it, so with
+        /// the option off it is excluded under every selection - not run, not stamped and not
+        /// logged, which is what keeps every other artifact byte-identical. Selecting an
+        /// optional stage by name implies its option (<see cref="ApplySelection"/>).
+        /// </summary>
+        bool IsEnabled(OspreyConfig config);
+
+        /// <summary>
         /// Set the config flags this task implies once it has been selected - a stop
         /// boundary, an input gate, an output-mode flag the selector stands for. Called once,
         /// by <see cref="OspreyConfig.SelectTask"/>, after the command line has parsed.

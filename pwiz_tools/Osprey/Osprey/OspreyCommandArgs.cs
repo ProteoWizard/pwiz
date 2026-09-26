@@ -227,6 +227,23 @@ namespace pwiz.Osprey
             new ArgumentGroup<OspreyCommandArgs>(() => @"Decoys", true,
                 ARG_DECOYS_IN_LIBRARY, ARG_DECOY_PAIRING_MANIFEST, ARG_WRITE_PIN);
 
+        // --- Training Export ---------------------------------------------------------------
+        // The optional fifth task (docs/22-training-export.md). Off, nothing about the run
+        // changes; on, it adds one <stem>.training.parquet per run and reruns nothing else, so
+        // adding it to a finished directory runs the export alone.
+        public static readonly OspreyArgument ARG_TRAINING_EXPORT = new OspreyArgument(@"training-export",
+            (c, p) => c._config.TrainingExport.Enabled = true);
+        public static readonly OspreyArgument ARG_TRAINING_EXPORT_MAX_Q = new OspreyArgument(@"training-export-max-q",
+            () => @"<q>", (c, p) => c._config.TrainingExport.MaxQ = ParseDouble(p));
+        public static readonly OspreyArgument ARG_TRAINING_EXPORT_CLAIMANT_Q = new OspreyArgument(@"training-export-claimant-q",
+            () => @"<q>", (c, p) => c._config.TrainingExport.ClaimantQ = ParseDouble(p));
+        public static readonly OspreyArgument ARG_TRAINING_EXPORT_XICS = new OspreyArgument(@"training-export-xics",
+            (c, p) => c._config.TrainingExport.WriteXics = true);
+
+        private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_TRAINING_EXPORT =
+            new ArgumentGroup<OspreyCommandArgs>(() => @"Training Export", true,
+                ARG_TRAINING_EXPORT, ARG_TRAINING_EXPORT_MAX_Q, ARG_TRAINING_EXPORT_CLAIMANT_Q, ARG_TRAINING_EXPORT_XICS);
+
         // --- Distributed / HPC ------------------------------------------------------------
         // --task is resolved + validated in Program.Main's pre-scan; the tokenizer here only
         // consumes its value (and rejects a missing one). Declared so it appears in help.
@@ -334,6 +351,7 @@ namespace pwiz.Osprey
                     GROUP_SCORING,
                     GROUP_FDR,
                     GROUP_DECOYS,
+                    GROUP_TRAINING_EXPORT,
                     GROUP_PERFORMANCE,
                     GROUP_HPC,
                     GROUP_LOGGING,
@@ -854,6 +872,10 @@ namespace pwiz.Osprey
             sb.AppendLine();
             sb.AppendLine(@"# join 2 - one process over ALL runs, reading their reconciled parquets (writes out.blib)");
             sb.AppendLine(@"Osprey --task SecondPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
+            sb.AppendLine();
+            sb.AppendLine(@"# optional split 3 - one process per file, only for --training-export (writes &lt;stem&gt;.training.parquet;");
+            sb.AppendLine(@"#   reads the run's reconciled parquet, 2nd-pass sidecar, calibration and spectra cache, and out.2nd-pass.fdr_experiment.bin)");
+            sb.AppendLine(@"Osprey --task TrainingExport -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
             sb.AppendLine(@"</pre>");
             sb.AppendLine(@"<p>EVERY task takes <code>-i</code>, naming the DATA files - the same names " +
                 @"the first split was given. A join task derives each run's parquet and sidecars from " +
@@ -905,7 +927,11 @@ namespace pwiz.Osprey
                 { @"decoys-in-library", @"Trust decoys already in the spectral library instead of generating reverse decoys. Hard error if none are recognised." },
                 { @"decoy-pairing-manifest", @"FDRBench 5-column pairing manifest (TSV), used with --decoys-in-library" },
                 { @"write-pin", @"Write PIN files for external tools" },
-                { @"task", @"HPC: run exactly one pipeline task (one node = one task). Omit for the full pipeline. SpectraCache stages the .spectra.bin caches; ModelDiagnostics regenerates only the --model-diagnostics report for a COMPLETED run, writing no other artifact." },
+                { @"training-export", @"Write <stem>.training.parquet per run: every target precursor at run q <= --training-export-max-q with the observed intensities of its full b/y ladder and per-ion interference evidence (for training CarafeSharp). Adding it to a finished run runs only the export." },
+                { @"training-export-max-q", @"With --training-export: the second-pass run precursor q-value a target must reach to be exported (default: --run-fdr)" },
+                { @"training-export-claimant-q", @"With --training-export: the run q-value at which another target counts as a claimant of a shared fragment peak (default: 0.01)" },
+                { @"training-export-xics", @"With --training-export: also write each precursor's per-ion XIC matrix over its final peak boundaries" },
+                { @"task", @"HPC: run exactly one pipeline task (one node = one task). Omit for the full pipeline. SpectraCache stages the .spectra.bin caches; TrainingExport writes only the --training-export parquets of a COMPLETED run; ModelDiagnostics regenerates only the --model-diagnostics report for a COMPLETED run, writing no other artifact." },
                 { @"parallel-files", @"Input files scored concurrently (OUTER). Absent: one at a time (default). No value: auto from free RAM and cores. <N>: exactly N regardless of RAM/cores. Distinct from --threads." },
                 { @"threads", @"Per-file main-search threads (INNER; default: all cores), divided across files run concurrently by --parallel-files" },
                 { @"timestamp", @"Prefix each output line with [yyyy/MM/dd HH:mm:ss]" },

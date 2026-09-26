@@ -65,7 +65,8 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// The canonical pipeline: the stages a full run walks, in execution order
         /// (PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR), alternating
-        /// fan-out and join.
+        /// fan-out and join, then the optional TrainingExport fan-out, included only when
+        /// <c>--training-export</c> asks for it.
         /// </summary>
         public IReadOnlyList<OspreyTask> Pipeline { get; }
 
@@ -105,8 +106,8 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// A fresh set of instances: the six tasks, the canonical pipeline over four of them,
-        /// and what the other two run when selected.
+        /// A fresh set of instances: the seven tasks, the canonical pipeline over five of them
+        /// (the fifth optional), and what the other two run when selected.
         /// </summary>
         public static OspreyTasks Create()
         {
@@ -115,11 +116,15 @@ namespace pwiz.Osprey.Tasks
             var firstPassFdr = new FirstPassFdrTask();
             var perFileRescore = new PerFileRescoreTask();
             var secondPassFdr = new SecondPassFdrTask();
+            var trainingExport = new TrainingExportTask();
             var modelDiagnostics = new ModelDiagnosticsTask();
 
-            var pipeline = new OspreyTask[] { perFileScoring, firstPassFdr, perFileRescore, secondPassFdr };
+            // The training export is the fifth stage and an OPTIONAL one: it walks after the
+            // final join like any stage, and OspreyConfig.Includes leaves it out of every run
+            // whose --training-export is off (TrainingExportTask.IsEnabled).
+            var pipeline = new OspreyTask[] { perFileScoring, firstPassFdr, perFileRescore, secondPassFdr, trainingExport };
             return new OspreyTasks(
-                new OspreyTask[] { spectraCache, perFileScoring, firstPassFdr, perFileRescore, secondPassFdr, modelDiagnostics },
+                new OspreyTask[] { spectraCache, perFileScoring, firstPassFdr, perFileRescore, secondPassFdr, trainingExport, modelDiagnostics },
                 pipeline,
                 new Dictionary<OspreyTask, IReadOnlyList<OspreyTask>>
                 {

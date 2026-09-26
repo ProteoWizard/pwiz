@@ -180,6 +180,17 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
+        /// The identity of an arbitrary file - an upstream artifact a validity key has to
+        /// follow - by the same name + size + mtime recipe as the library
+        /// (<see cref="FileIdentityHash"/>), so moving the file is free and rewriting it is
+        /// not.
+        /// </summary>
+        public static string FileIdentityTerm(string path)
+        {
+            return FileIdentityHash(path);
+        }
+
+        /// <summary>
         /// A fast identity hash for one file: file name + size + mtime, filesystem metadata
         /// only, no content hashing. The DIRECTORY portion is deliberately excluded so the
         /// same file identifies identically across Rust / .NET / OS variations (drive letter
