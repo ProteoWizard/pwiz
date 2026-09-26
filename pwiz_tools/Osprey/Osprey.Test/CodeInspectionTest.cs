@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace pwiz.Osprey.Test
@@ -246,6 +247,58 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Developer words that must not reach a user through a resource: the first table of
+        /// docs/21-user-facing-text.md. The English .resx VALUES are scanned (translations follow
+        /// the English), so a banned word cannot come back through a reworded message. Keys may
+        /// say anything - they are code. A value that genuinely needs one of these words (none
+        /// does today) would be the place to add an exemption, not a reason to weaken a pattern.
+        /// </summary>
+        private static readonly string[] BANNED_RESOURCE_WORDS =
+        {
+            @"\bsidecars?\b", @"\bentry\b", @"\bentries\b", @"\bbundles?\b", @"\bstrat(um|a)\b",
+            @"\bbase_ids?\b", @"\bhydrat", @"\bcompaction\b", @"\bsurvivors?\b", @"\bstubs?\b",
+            @"\bscalars?\b", @"\bfrozen\b", @"\bprojections?\b", @"\bbyproducts?\b", @"\binterned\b",
+            @"\bresident\b", @"\bStage[ -]?[1-7]\b", @"OSPREY_[A-Z_]+", @"\b\w+\.cs\b", @"\b\w+Task\b",
+            @"\bRun\w+\(", @"\(s\)"
+        };
+
+        [TestMethod]
+        public void TestResourcesUseUserVocabulary()
+        {
+            string sourceRoot = FindOspreySourceRoot();
+            var patterns = new List<Regex>();
+            foreach (var pattern in BANNED_RESOURCE_WORDS)
+                patterns.Add(new Regex(pattern, RegexOptions.CultureInvariant));
+            var violations = new List<string>();
+            int resourceCount = 0;
+            foreach (var file in EnumerateEnglishResxFiles(sourceRoot))
+            {
+                var resxRoot = XDocument.Load(file).Root;
+                Assert.IsNotNull(resxRoot, file);
+                foreach (var data in resxRoot.Elements("data"))
+                {
+                    string value = (string) data.Element("value") ?? string.Empty;
+                    resourceCount++;
+                    foreach (var pattern in patterns)
+                    {
+                        var match = pattern.Match(value);
+                        if (match.Success)
+                        {
+                            violations.Add(string.Format("{0} {1}: '{2}' in \"{3}\"",
+                                Path.GetFileName(file), (string) data.Attribute("name"), match.Value, value));
+                        }
+                    }
+                }
+            }
+
+            Assert.IsTrue(resourceCount > 0, "no Osprey resources found under " + sourceRoot);
+            Assert.AreEqual(0, violations.Count,
+                "A resource uses developer vocabulary. Reword it in the user's terms " +
+                "(docs/21-user-facing-text.md, \"Words that never appear in user text\"):\n" +
+                string.Join("\n", violations));
+        }
+
+        /// <summary>
         /// Find the Osprey source root by walking up from the test
         /// assembly location until we see an Osprey.sln-bearing dir.
         /// </summary>
@@ -336,6 +389,18 @@ namespace pwiz.Osprey.Test
                 if (c == '/' && i + 1 < line.Length && line[i + 1] == '/') return i;
             }
             return -1;
+        }
+
+        private static IEnumerable<string> EnumerateEnglishResxFiles(string root)
+        {
+            var translated = new Regex(@"\.[a-z]{2}(-[A-Za-z]+)?\.resx$", RegexOptions.IgnoreCase);
+            foreach (var file in Directory.EnumerateFiles(root, "*.resx", SearchOption.AllDirectories))
+            {
+                string rel = RelativePath(root, file).Replace('\\', '/');
+                if (rel.Contains("/bin/") || rel.Contains("/obj/") || translated.IsMatch(file))
+                    continue;
+                yield return file;
+            }
         }
     }
 }

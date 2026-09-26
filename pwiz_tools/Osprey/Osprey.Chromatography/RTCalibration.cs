@@ -113,14 +113,14 @@ namespace pwiz.Osprey.Chromatography
         public RTCalibration Fit(double[] libraryRts, double[] measuredRts)
         {
             if (libraryRts == null || measuredRts == null)
-                throw new ArgumentNullException(libraryRts == null ? "libraryRts" : "measuredRts");
+                throw new ArgumentNullException(libraryRts == null ? @"libraryRts" : @"measuredRts");
             if (libraryRts.Length != measuredRts.Length)
                 throw new ArgumentException(string.Format(
-                    "RT arrays must have same length: {0} vs {1}",
+                    @"RT arrays must have same length: {0} vs {1}",
                     libraryRts.Length, measuredRts.Length));
             if (libraryRts.Length < _config.MinPoints)
                 throw new ArgumentException(string.Format(
-                    "Need at least {0} calibration points, got {1}",
+                    @"Need at least {0} calibration points, got {1}",
                     _config.MinPoints, libraryRts.Length));
 
             // Sort by library RT (stable). Rust's slice::sort_by is stable; C#
@@ -538,11 +538,11 @@ namespace pwiz.Osprey.Chromatography
             double[] absResiduals, double residualSD)
         {
             if (libraryRts == null || fittedRts == null)
-                throw new ArgumentNullException(libraryRts == null ? "libraryRts" : "fittedRts");
+                throw new ArgumentNullException(libraryRts == null ? @"libraryRts" : @"fittedRts");
             if (libraryRts.Length != fittedRts.Length)
-                throw new ArgumentException("libraryRts and fittedRts must have same length");
+                throw new ArgumentException(@"libraryRts and fittedRts must have same length");
             if (libraryRts.Length == 0)
-                throw new ArgumentException("Model params have no calibration points");
+                throw new ArgumentException(@"Model params have no calibration points");
 
             // Handle backwards compatibility: if absResiduals not present, use uniform residualSD
             double[] residuals = absResiduals != null && absResiduals.Length == libraryRts.Length

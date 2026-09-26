@@ -152,7 +152,7 @@
     <value>The library file is empty: it has no header row.</value>
   </data>
   <data name="LibraryCacheStatus_LoadCache_Library_entry__0____1___has_no_fragment_peaks__peak_less_entries_support_BiblioSpec_MS1_" xml:space="preserve">
-    <value>Library entry {0} ({1}) has no fragment peaks; peak-less entries support BiblioSpec MS1 feature finding and are not valid for DIA search.</value>
+    <value>Library precursor {0} ({1}) has no fragment peaks. Precursors without fragments are for BiblioSpec MS1 feature finding and cannot be used in a DIA search.</value>
   </data>
   <data name="LibraryCacheStatus_LoadCache_Loading_library_cache___0__precursors_" xml:space="preserve">
     <value>Loading library cache ({0:N0} precursors)</value>
@@ -176,7 +176,7 @@
     <value>Library cache '{0}' was built from a different version of the source library; ignoring the stale cache and rebuilding from source.</value>
   </data>
   <data name="LibraryLoader_Load_Library_entry__0____1___has_no_fragment_peaks__peak_less_entries_support_BiblioSpec_MS1_" xml:space="preserve">
-    <value>Library entry {0} ({1}) has no fragment peaks; peak-less entries support BiblioSpec MS1 feature finding and are not valid for DIA search.</value>
+    <value>Library precursor {0} ({1}) has no fragment peaks. Precursors without fragments are for BiblioSpec MS1 feature finding and cannot be used in a DIA search.</value>
   </data>
   <data name="LibraryLoader_Load_Loaded__0__library_precursors" xml:space="preserve">
     <value>Loaded {0:N0} library precursors</value>

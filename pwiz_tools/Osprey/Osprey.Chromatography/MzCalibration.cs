@@ -105,7 +105,7 @@ namespace pwiz.Osprey.Chromatography
                 Median = 0.0,
                 SD = 0.0,
                 Count = 0,
-                Unit = "ppm",
+                Unit = @"ppm",
                 AdjustedTolerance = null,
                 Calibrated = false
             };
@@ -149,7 +149,7 @@ namespace pwiz.Osprey.Chromatography
             if (!calibration.Calibrated)
                 return observedMz;
 
-            if (calibration.Unit == "Th")
+            if (calibration.Unit == @"Th")
                 return observedMz - calibration.Mean;
 
             // PPM correction
@@ -197,7 +197,7 @@ namespace pwiz.Osprey.Chromatography
             if (calibration.Calibrated)
             {
                 double tolerance3SD = 3.0 * calibration.SD;
-                ToleranceUnit unit = calibration.Unit == "Th" ? ToleranceUnit.Mz : ToleranceUnit.Ppm;
+                ToleranceUnit unit = calibration.Unit == @"Th" ? ToleranceUnit.Mz : ToleranceUnit.Ppm;
                 double minTolerance = unit == ToleranceUnit.Mz ? 0.05 : 1.0;
 
                 toleranceValue = Math.Max(tolerance3SD, minTolerance);
@@ -232,14 +232,14 @@ namespace pwiz.Osprey.Chromatography
         /// </summary>
         public static MzCalibrationResult CalculateSingleLevel(double[] errors, string unitStr)
         {
-            ToleranceUnit unit = unitStr == "Th" ? ToleranceUnit.Mz : ToleranceUnit.Ppm;
+            ToleranceUnit unit = unitStr == @"Th" ? ToleranceUnit.Mz : ToleranceUnit.Ppm;
             return CalculateSingleCalibration(errors, unit);
         }
 
         private static MzCalibrationResult CalculateSingleCalibration(double[] errors,
             ToleranceUnit unit)
         {
-            string unitStr = unit == ToleranceUnit.Ppm ? "ppm" : "Th";
+            string unitStr = unit == ToleranceUnit.Ppm ? @"ppm" : @"Th";
 
             if (errors == null || errors.Length == 0)
             {

@@ -227,7 +227,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Library entry {0} ({1}) has no fragment peaks; peak-less entries support BiblioSpec MS1 feature finding and are not valid for DIA search..
+        ///   Looks up a localized string similar to Library precursor {0} ({1}) has no fragment peaks. Precursors without fragments are for BiblioSpec MS1 feature finding and cannot be used in a DIA search..
         /// </summary>
         public static string LibraryCacheStatus_LoadCache_Library_entry__0____1___has_no_fragment_peaks__peak_less_entries_support_BiblioSpec_MS1_ {
             get {
@@ -303,7 +303,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Library entry {0} ({1}) has no fragment peaks; peak-less entries support BiblioSpec MS1 feature finding and are not valid for DIA search..
+        ///   Looks up a localized string similar to Library precursor {0} ({1}) has no fragment peaks. Precursors without fragments are for BiblioSpec MS1 feature finding and cannot be used in a DIA search..
         /// </summary>
         public static string LibraryLoader_Load_Library_entry__0____1___has_no_fragment_peaks__peak_less_entries_support_BiblioSpec_MS1_ {
             get {

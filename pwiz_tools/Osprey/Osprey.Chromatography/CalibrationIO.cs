@@ -64,7 +64,7 @@ namespace pwiz.Osprey.Chromatography
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentException(@"path must not be null or empty", nameof(path));
             if (!File.Exists(path))
-                throw new FileNotFoundException("Calibration file not found: " + path, path);
+                throw new FileNotFoundException(@"Calibration file not found: " + path, path);
 
             string json = File.ReadAllText(path);
             return JsonConvert.DeserializeObject<CalibrationParams>(json);
@@ -76,7 +76,7 @@ namespace pwiz.Osprey.Chromatography
         /// </summary>
         public static string CalibrationFilename(string baseName)
         {
-            return baseName + ".calibration.json";
+            return baseName + @".calibration.json";
         }
 
         /// <summary>
@@ -87,8 +87,8 @@ namespace pwiz.Osprey.Chromatography
         {
             string stem = Path.GetFileNameWithoutExtension(inputPath);
             if (string.IsNullOrEmpty(stem))
-                stem = "unknown";
-            return stem + ".calibration.json";
+                stem = @"unknown";
+            return stem + @".calibration.json";
         }
 
         /// <summary>

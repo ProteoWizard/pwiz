@@ -1667,11 +1667,14 @@ namespace pwiz.Osprey.Test
             // coefficient-then-percent shape so the unrelated "{F1}% at {P0} FDR"
             // training-progress lines (which have "(" / " at " around the percent)
             // are not picked up.
+            // The table is prose in the current culture, so its decimal separator is that
+            // culture's (12,3 under fr-FR).
+            string dec = Regex.Escape(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
             var percents = new List<double>();
             foreach (Match m in Regex.Matches(report,
-                         @"^    \S.*\s-?\d+\.\d{4}\s+(-?\d+\.\d)%",
+                         @"^    \S.*\s-?\d+" + dec + @"\d{4}\s+(-?\d+" + dec + @"\d)%",
                          RegexOptions.Multiline))
-                percents.Add(double.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture));
+                percents.Add(double.Parse(m.Groups[1].Value, CultureInfo.CurrentCulture));
             Assert.AreEqual(3, percents.Count,
                 "expected exactly three percent rows in the contribution table");
             double total = percents.Sum();
