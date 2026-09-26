@@ -1658,9 +1658,8 @@ namespace pwiz.Osprey.Test
 
             // The model sanity-check block appears only under --verbose, reframed away
             // from importance/weight wording (issue #4364).
-            StringAssert.Contains(report,
-                "Model sanity check -- feature share of target-decoy separation");
-            Assert.IsFalse(defaultReport.Contains("Model sanity check"),
+            StringAssert.Contains(report, OspreyFDRResources.FeatureContributions_ToReportLines_Model_sanity_check___feature_share_of_target_decoy_separation__trained_linear_model__coefficients_standardized__);
+            Assert.IsFalse(defaultReport.Contains(OspreyFDRResources.FeatureContributions_ToReportLines_Model_sanity_check___feature_share_of_target_decoy_separation__trained_linear_model__coefficients_standardized__),
                 "the feature share table must be gated behind --verbose");
 
             // Parse the percent column from the three feature rows. The table rows
@@ -1689,7 +1688,7 @@ namespace pwiz.Osprey.Test
                     string.Format("Feature {0} object flag mismatch (weight={1})",
                         (char)('A' + j), features[j].Coefficient));
                 bool rowFlagged = Regex.IsMatch(report,
-                    @"Feature " + (char)('A' + j) + @"\b.*\(unexpected direction\)");
+                    @"Feature " + (char)('A' + j) + @"\b.*" + Regex.Escape(OspreyFDRResources.FeatureContributions_ToReportLines__unexpected_direction_));
                 Assert.AreEqual(expectedFlag, rowFlagged,
                     string.Format("Feature {0} printed-flag mismatch (weight={1})",
                         (char)('A' + j), features[j].Coefficient));
@@ -1699,7 +1698,7 @@ namespace pwiz.Osprey.Test
             // flagged one: its trained weight is positive.
             Assert.IsTrue(features[1].Coefficient > 0.0,
                 "fixture should drive a positive weight on the declared-reversed feature B");
-            StringAssert.Contains(report, "(unexpected direction)");
+            StringAssert.Contains(report, OspreyFDRResources.FeatureContributions_ToReportLines__unexpected_direction_);
 
             // Reporting did not disturb scoring: targets still outscore decoys.
             double avgTarget = 0.0, avgDecoy = 0.0;

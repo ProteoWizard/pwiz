@@ -65,7 +65,9 @@ namespace pwiz.Osprey.FDR
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
+                    // ReSharper disable LocalizableElement
                     sw.NewLine = "\n";
+                    // ReSharper restore LocalizableElement
                     sw.WriteLine(@"feature_idx	feature_name	mean	std");
                     for (int i = 0; i < means.Length; i++)
                     {
@@ -101,7 +103,9 @@ namespace pwiz.Osprey.FDR
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
+                    // ReSharper disable LocalizableElement
                     sw.NewLine = "\n";
+                    // ReSharper restore LocalizableElement
                     sw.Write(@"native_position	entry_id	is_decoy");
                     for (int i = 0; i < nFeatures; i++)
                     {
@@ -194,7 +198,9 @@ namespace pwiz.Osprey.FDR
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
+                    // ReSharper disable LocalizableElement
                     sw.NewLine = "\n";
+                    // ReSharper restore LocalizableElement
                     sw.WriteLine(@"entry_id	native_position	charge	modified_sequence	is_decoy	base_id	in_subsample	fold_id");
                     foreach (int i in order)
                     {
@@ -238,7 +244,9 @@ namespace pwiz.Osprey.FDR
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
+                    // ReSharper disable LocalizableElement
                     sw.NewLine = "\n";
+                    // ReSharper restore LocalizableElement
                     sw.WriteLine(@"fold	weight_idx	feature_name	value	fold_iterations");
                     for (int fold = 0; fold < foldModels.Length; fold++)
                     {

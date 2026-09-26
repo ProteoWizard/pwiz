@@ -163,8 +163,10 @@ namespace pwiz.Osprey.FDR
                 // Fails loudly if two instances still race this line.
                 _rows = new StreamWriter(new FileStream(rowsPath, FileMode.CreateNew, FileAccess.Write, FileShare.None));
                 _rows.WriteLine(
+                    // ReSharper disable LocalizableElement
                     "file_idx\tfile\tentry_id\tbase_id\tis_decoy\tclass\tscore\texp_agg_score\t" +
                     "run_q\texp_q\tapex_rt\tcharge\tincluded\tmodified_sequence");
+                    // ReSharper restore LocalizableElement
             }
 
             /// <summary>
@@ -179,15 +181,17 @@ namespace pwiz.Osprey.FDR
             {
                 var inv = CultureInfo.InvariantCulture;
                 _rows.WriteLine(string.Format(inv,
+                    // ReSharper disable LocalizableElement
                     "{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}\t{9}\t{10}\t{11}\t{12}\t{13}",
+                    // ReSharper restore LocalizableElement
                     fileIdx, fileName, entryId, baseId,
-                    isDecoy ? "true" : "false", entrapmentClass,
+                    isDecoy ? @"true" : @"false", entrapmentClass,
                     Diagnostics.FormatF64Roundtrip(score),
                     Diagnostics.FormatF64Roundtrip(experimentAggregateScore),
                     Diagnostics.FormatF64Roundtrip(runQvalue),
                     Diagnostics.FormatF64Roundtrip(experimentQvalue),
                     Diagnostics.FormatF64Roundtrip(apexRt),
-                    charge, included ? "true" : "false", modifiedSequence));
+                    charge, included ? @"true" : @"false", modifiedSequence));
             }
 
             /// <summary>
@@ -204,6 +208,7 @@ namespace pwiz.Osprey.FDR
                 {
                     using (var sw = new StreamWriter(saver.SafeName))
                     {
+                        // ReSharper disable LocalizableElement
                         sw.WriteLine("scope\tfile_idx\tfile\tvalue");
                         for (int f = 0; f < runNames.Length; f++)
                         {
@@ -218,6 +223,7 @@ namespace pwiz.Osprey.FDR
                             Diagnostics.FormatF64Roundtrip(experimentCutoffOffStratum)));
                         sw.WriteLine(string.Format(inv, "acceptedInStratum\t-1\t-\t{0}", acceptedInStratum));
                         sw.WriteLine(string.Format(inv, "acceptedOffStratum\t-1\t-\t{0}", acceptedOffStratum));
+                        // ReSharper restore LocalizableElement
                     }
                     saver.Commit();
                 }
@@ -260,13 +266,15 @@ namespace pwiz.Osprey.FDR
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
+                    // ReSharper disable LocalizableElement
                     sw.WriteLine("rank\tscore\tis_decoy\traw_qvalue\tmonotonic_qvalue");
                     for (int i = 0; i < winners.Count; i++)
                     {
                         sw.WriteLine(string.Format(inv, "{0}\t{1}\t{2}\t{3}\t{4}",
+                    // ReSharper restore LocalizableElement
                             i,
                             Diagnostics.FormatF64Roundtrip(winners[i].Score),
-                            winners[i].IsDecoy ? "true" : "false",
+                            winners[i].IsDecoy ? @"true" : @"false",
                             Diagnostics.FormatF64Roundtrip(rawQvalues[i]),
                             Diagnostics.FormatF64Roundtrip(monotonicQvalues[i])));
                     }
@@ -289,14 +297,16 @@ namespace pwiz.Osprey.FDR
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
+                    // ReSharper disable LocalizableElement
                     sw.WriteLine("modified_sequence\tscore\tis_decoy\tbest_qvalue");
                     foreach (var seq in keys)
                     {
                         var ps = best[seq];
                         sw.WriteLine(string.Format(inv, "{0}\t{1}\t{2}\t{3}",
+                    // ReSharper restore LocalizableElement
                             seq,
                             Diagnostics.FormatF64Roundtrip(ps.Score),
-                            ps.IsDecoy ? "true" : "false",
+                            ps.IsDecoy ? @"true" : @"false",
                             Diagnostics.FormatF64Roundtrip(ps.BestQvalue)));
                     }
                 }
