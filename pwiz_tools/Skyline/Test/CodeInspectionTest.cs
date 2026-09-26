@@ -146,16 +146,23 @@ namespace pwiz.SkylineTest
                 true, // Pattern is a regular expression
                 @"WebClient is obsolete on modern .NET (SYSLIB0014), so it has to go before the port. pwiz.Common.SystemUtil.HttpClientWithProgress is the project standard for HTTP: it reports progress, supports cancellation, and is testable through its TestBehavior seam. There is no inline opt-out for this rule - if you believe you have a legitimate exception, add it to this inspection in CodeInspectionTest.cs so it gets reviewed.",
                 null, // No inline opt-out - see the note above this inspection
-                // Known remaining uses, tolerated as warnings so no NEW ones can be added. Lower this
-                // number as each is migrated - it is the only thing tracking them.
+                // Known remaining use, tolerated as a warning so no NEW ones can be added. Lower this
+                // number when it is migrated - it is the only thing tracking it.
                 //   Executables\Installer\SetupDeployProject.cs - the installer strategy is expected to
                 //     change wholesale with the .NET port, so migrating it now would likely be wasted work.
-                //   SkylineNightly\Nightly.cs, SkylineNightlyShim\Program.cs - these may not have
-                //     HttpClientWithProgress available. The Shim especially is a deliberately tiny
-                //     program that runs on developer machines during nightly testing, only to check
-                //     that SkylineNightly itself is current; plain HttpClient with much simpler
-                //     handling is likely the right answer there rather than the full wrapper.
-                3);
+                1);
+
+            // Looking for WebRequest/HttpWebRequest use, obsolete on modern .NET for the same reason as
+            // WebClient above. The last uses under the scan roots were migrated to HttpClient, so none are
+            // tolerated, and for the same reason as above there is no inline opt-out.
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                null, // Nothing exempted
+                string.Empty, // No file content required for inspection
+                @"WebRequest\.Create(Http|Default)?\s*\(", // Forbidden pattern
+                true, // Pattern is a regular expression
+                @"WebRequest and HttpWebRequest are obsolete on modern .NET (SYSLIB0014). Use pwiz.Common.SystemUtil.HttpClientWithProgress, or plain HttpClient in a project that cannot reference it. There is no inline opt-out for this rule - if you believe you have a legitimate exception, add it to this inspection in CodeInspectionTest.cs so it gets reviewed."); // No inline opt-out - see the note above this inspection
 
             // Looking for forgotten "RunPerfTests=true" statements that will force running possibly unintended tests
             AddTextInspection(@"*.cs", // Examine files with this mask
