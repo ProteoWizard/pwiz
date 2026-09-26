@@ -297,8 +297,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// <summary>
             /// Assemble the pass-1 <see cref="ModelDiagnosticsData"/> from the accumulated
             /// reductions, running the SAME downstream builders the batch <see cref="Build"/> uses
-            /// (only the reduction source differs). <paramref name="contributions"/> is the trained
-            /// first-pass model (null on a tree-model / rehydrated run -> no Model tab).
+            /// (only the reduction source differs). <paramref name="contributions"/> describes the
+            /// trained first-pass model: null on a resumed / rehydrated run (no Model tab), and for a
+            /// tree model the per-feature distributions with no weight-based contribution table
+            /// (<see cref="FeatureContributions.IsTreeEnsemble"/>).
             /// </summary>
             public ModelDiagnosticsData Build(FeatureContributions contributions)
             {
