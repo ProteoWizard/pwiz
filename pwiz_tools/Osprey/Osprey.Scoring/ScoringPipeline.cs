@@ -149,9 +149,11 @@ namespace pwiz.Osprey.Scoring
                 if (logSettings)
                 {
                     _log.LogInfo(settingsIndent + string.Format(
-                        "Coelution search RT tolerance: {0:F2} min (3*MAD*1.4826, MAD={1:F3}{2})",
+                        OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Coelution_search_RT_tolerance___0__min__3_MAD_1_4826__MAD__1___2__,
                         rtToleranceGlobal, mad,
-                        context.OriginalRtMad.HasValue ? " from .calibration.json" : " from cal stats"));
+                        context.OriginalRtMad.HasValue
+                            ? string.Format(OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_from_the__0__file, @".calibration.json")
+                            : OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_from_the_calibration_statistics));
                 }
             }
             else
@@ -176,11 +178,11 @@ namespace pwiz.Osprey.Scoring
                     Tolerance = calTol,
                     Unit = calUnit
                 };
-                string unitStr = calUnit == ToleranceUnit.Ppm ? "ppm" : "Th";
+                string unitStr = calUnit == ToleranceUnit.Ppm ? @"ppm" : @"Th";
                 if (logSettings)
                 {
                     _log.LogInfo(settingsIndent + string.Format(
-                        "Coelution search using calibrated fragment tolerance: {0:F4} {1}",
+                        OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Coelution_search_using_calibrated_fragment_tolerance___0___1_,
                         calTol, unitStr));
                 }
 
@@ -192,7 +194,7 @@ namespace pwiz.Osprey.Scoring
                 if (logSettings)
                 {
                     _log.LogInfo(settingsIndent + string.Format(
-                        "Applying MS2 calibration: mean error = {0:F4} {1} -> correcting by {2:+0.0000;-0.0000;0} {1}",
+                        OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Applying_MS2_calibration__mean_error____0___1_____correcting_by__2___1_,
                         ms2Calibration.Mean, ms2Calibration.Unit, -ms2Calibration.Mean));
                 }
             }
@@ -204,7 +206,7 @@ namespace pwiz.Osprey.Scoring
             if (diagSearchIds != null)
             {
                 _log.LogInfo(LogTag.BISECT, string.Format(
-                    "OSPREY_DIAG_SEARCH_ENTRY_IDS: will dump {0} entries",
+                    @"OSPREY_DIAG_SEARCH_ENTRY_IDS: will dump {0} entries",
                     diagSearchIds.Count));
             }
 
@@ -241,8 +243,10 @@ namespace pwiz.Osprey.Scoring
             var coelutionScorer = new CoelutionScorer(_diagnostics);
 
             using (var progress = new ProgressReporter(
-                string.Format("{0} isolation windows", passLabel ?? "Scoring"),
-                windowsToScore.Count, passLabel == null ? string.Empty : "  ", 2.0))
+                passLabel == null
+                    ? OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Scoring_isolation_windows
+                    : string.Format(OspreyScoringResources.ScoringPipeline_RunCoelutionScoring__0__isolation_windows, passLabel),
+                windowsToScore.Count, passLabel == null ? string.Empty : @"  ", 2.0))
             {
                 Parallel.For(0, windowsToScore.Count, new ParallelOptions
                 {
@@ -332,7 +336,7 @@ namespace pwiz.Osprey.Scoring
             if (ms2Cal != null && ms2Cal.Calibrated)
             {
                 double tol3sd = 3.0 * ms2Cal.SD;
-                fragTolUnit = string.Equals(ms2Cal.Unit, "Th", StringComparison.OrdinalIgnoreCase)
+                fragTolUnit = string.Equals(ms2Cal.Unit, @"Th", StringComparison.OrdinalIgnoreCase)
                     ? ToleranceUnit.Mz : ToleranceUnit.Ppm;
                 double minTol = fragTolUnit == ToleranceUnit.Mz ? 0.05 : 1.0;
                 fragTolValue = Math.Max(tol3sd, minTol);
@@ -500,8 +504,7 @@ namespace pwiz.Osprey.Scoring
             if (removedCount > 0)
             {
                 _log.LogInfo(string.Format(
-                    "Removed {0:N0} precursor candidate peaks ({1:N0} targets, {2:N0} decoys) already " +
-                    "claimed by a stronger candidate in the same isolation window; {3:N0} remain.",
+                    OspreyScoringResources.ScoringPipeline_DeduplicateDoubleCounting_Removed__0__precursor_candidate_peaks___1__targets___2__decoys__already_claimed_by_a_,
                     removedCount, removedTargets, removedDecoys,
                     originalCount - removedCount));
             }
@@ -571,7 +574,7 @@ namespace pwiz.Osprey.Scoring
             int removed = entries.Count - deduped.Count;
             if (removed > 0)
             {
-                _log.LogInfo(string.Format("Deduplicated: {0} -> {1} entries ({2} removed)",
+                _log.LogInfo(string.Format(OspreyScoringResources.ScoringPipeline_DeduplicatePairs_Deduplicated_precursor_candidates___0______1____2__removed_,
                     entries.Count, deduped.Count, removed));
             }
 

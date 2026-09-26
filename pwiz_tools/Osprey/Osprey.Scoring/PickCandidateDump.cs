@@ -48,9 +48,11 @@ namespace pwiz.Osprey.Scoring
     {
         // TSV column order. Kept as a single source of truth so the header and the row
         // formatting below cannot drift apart.
+        // ReSharper disable LocalizableElement
         private const string HeaderLine =
             "base_id\tis_decoy\tcand_index\tcoelution\tln_intensity\trt_penalty\t" +
             "median_polish\tapex_rt\tstart_rt\tend_rt\tis_picked";
+        // ReSharper restore LocalizableElement
 
         private readonly ConcurrentBag<Row> _rows = new ConcurrentBag<Row>();
 
@@ -115,7 +117,9 @@ namespace pwiz.Osprey.Scoring
             {
                 using (var writer = new StreamWriter(saver.SafeName, false))
                 {
+                    // ReSharper disable LocalizableElement
                     writer.NewLine = "\n";
+                    // ReSharper restore LocalizableElement
                     writer.WriteLine(HeaderLine);
                     foreach (var r in rows)
                     {
@@ -123,13 +127,13 @@ namespace pwiz.Osprey.Scoring
                         line.Append(r.BaseId.ToString(inv)).Append('\t')
                             .Append(r.IsDecoy ? '1' : '0').Append('\t')
                             .Append(r.CandIndex.ToString(inv)).Append('\t')
-                            .Append(r.Coelution.ToString("R", inv)).Append('\t')
-                            .Append(r.LnIntensity.ToString("R", inv)).Append('\t')
-                            .Append(r.RtPenalty.ToString("R", inv)).Append('\t')
-                            .Append(r.MedianPolish.ToString("R", inv)).Append('\t')
-                            .Append(r.ApexRt.ToString("R", inv)).Append('\t')
-                            .Append(r.StartRt.ToString("R", inv)).Append('\t')
-                            .Append(r.EndRt.ToString("R", inv)).Append('\t')
+                            .Append(r.Coelution.ToString(@"R", inv)).Append('\t')
+                            .Append(r.LnIntensity.ToString(@"R", inv)).Append('\t')
+                            .Append(r.RtPenalty.ToString(@"R", inv)).Append('\t')
+                            .Append(r.MedianPolish.ToString(@"R", inv)).Append('\t')
+                            .Append(r.ApexRt.ToString(@"R", inv)).Append('\t')
+                            .Append(r.StartRt.ToString(@"R", inv)).Append('\t')
+                            .Append(r.EndRt.ToString(@"R", inv)).Append('\t')
                             .Append(r.IsPicked ? '1' : '0');
                         writer.WriteLine(line.ToString());
                     }
