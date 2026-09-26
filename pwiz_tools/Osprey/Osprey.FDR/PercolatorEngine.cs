@@ -169,7 +169,7 @@ namespace pwiz.Osprey.FDR
                             fileTargets++;
                     }
                 }
-                log.LogInfo(LogTag.COUNT, @"{0} Percolator pass [{1}]: {2} targets, {3} decoys at {4:P0} FDR",
+                log.LogInfo(LogTag.COUNT, @"{0} Percolator pass [{1}]: {2} targets, {3} decoys at {4:0%} FDR",
                     passLabel, kvp.Key, fileTargets, fileDecoys, config.RunFdr);
                 nTargetPassing += fileTargets;
                 nDecoyPassing += fileDecoys;

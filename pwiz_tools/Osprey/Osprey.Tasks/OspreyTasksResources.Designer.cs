@@ -119,7 +119,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   {0}: {1} anchors = {2} target + {3} entrapment | entrapment-frac {4:P2} | FDP lower {5:P2} combined {6:P2}.
+        ///   Looks up a localized string similar to {0}: {1} anchors = {2} target + {3} entrapment | entrapment-frac {4:P2} | FDP lower {5:P2} combined {6:P2}.
         /// </summary>
         public static string Calibrator_AnchorPurityLine____0____1__anchors____2__target____3__entrapment___entrapment_frac__4____FDP_lower__5__ {
             get {
@@ -139,7 +139,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   scored pool: {0} target-side = {1} target + {2} entrapment (peaks entered LDA).
+        ///   Looks up a localized string similar to scored pool: {0} target-side = {1} target + {2} entrapment (peaks entered LDA).
         /// </summary>
         public static string Calibrator_BuildAnchorPurityReport___scored_pool___0__target_side____1__target____2__entrapment__peaks_entered_LDA_ {
             get {
@@ -188,7 +188,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   RT quality filter (pass {0}): {1:N0} -&gt; {2:N0} peptides (removed {3:N0} with S/N &lt; {4:F1}).
+        ///   Looks up a localized string similar to RT quality filter (pass {0}): {1:N0} -&gt; {2:N0} peptides (removed {3:N0} with S/N &lt; {4:F1}).
         /// </summary>
         public static string Calibrator_private___RT_quality_filter__pass__0_____1______2__peptides__removed__3__with_S_N____4__ {
             get {
@@ -817,7 +817,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   {0}: {1:N0} precursors at {2:P1} run-level FDR.
+        ///   Looks up a localized string similar to {0}: {1:N0} precursors at {2:P1} run-level FDR.
         /// </summary>
         public static string FirstPassFdrTask_LogFirstPassResults____0____1__precursors_at__2__run_level_FDR {
             get {
@@ -826,7 +826,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   {0}: {1:N0} precursors at {2:P1} run-level FDR.
+        ///   Looks up a localized string similar to {0}: {1:N0} precursors at {2:P1} run-level FDR.
         /// </summary>
         public static string FirstPassFdrTask_LogFirstPassResultsProjection____0____1__precursors_at__2__run_level_FDR {
             get {
@@ -1003,6 +1003,16 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to This analysis cannot resume from its completed first pass with {0}. Delete this analysis&apos;s *.FirstPassFDR.osprey.task files and run again to repeat the first pass..
+        /// </summary>
+        public static string FirstPassFdrTask_RehydrateForPerRunRescore_This_analysis_cannot_resume_from_its_completed_first_pass_with__0_ {
+            get {
+                return ResourceManager.GetString("FirstPassFdrTask_RehydrateForPerRunRescore_This_analysis_cannot_resume_from_its_c" +
+                        "ompleted_first_pass_with__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Reloading the kept precursor candidates from {0:N0} files.
         /// </summary>
         public static string FirstPassFdrTask_ReloadFirstPassSurvivors_Reloading_the_kept_precursor_candidates_from__0__files {
@@ -1052,7 +1062,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   up to date: {0}.
+        ///   Looks up a localized string similar to up to date: {0}.
         /// </summary>
         public static string FirstPassFdrTask_RunFirstPassProjection___up_to_date___0_ {
             get {
@@ -1107,6 +1117,16 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("FirstPassFdrTask_RunFirstPassProjection_First_pass__the_scores_of_the_file_were_s" +
                         "aved_while_training_and_read_back__so_its_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to no list of precursors from proteins with 2 or more first-pass peptides ({0}) was found beside the inputs&apos; .scores.parquet files.
+        /// </summary>
+        public static string FirstPassFdrTask_RunFirstPassProjection_no_list_of_precursors_from_proteins_with_2_or_more_first_pass_peptides___0___was_found {
+            get {
+                return ResourceManager.GetString("FirstPassFdrTask_RunFirstPassProjection_no_list_of_precursors_from_proteins_with_" +
+                        "2_or_more_first_pass_peptides___0___was_found", resourceCulture);
             }
         }
         
@@ -1708,11 +1728,11 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to write the {0} report {1}: {2}.
+        ///   Looks up a localized string similar to Failed to write the {0} {1}: {2}.
         /// </summary>
-        public static string OspreyReportWriter_TryWriteReport_Failed_to_write_the__0__report__1____2_ {
+        public static string OspreyReportWriter_TryWriteReport_Failed_to_write_the__0___1____2_ {
             get {
-                return ResourceManager.GetString("OspreyReportWriter_TryWriteReport_Failed_to_write_the__0__report__1____2_", resourceCulture);
+                return ResourceManager.GetString("OspreyReportWriter_TryWriteReport_Failed_to_write_the__0___1____2_", resourceCulture);
             }
         }
         
@@ -1737,12 +1757,30 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to protein-group report.
+        /// </summary>
+        public static string OspreyReportWriter_WriteReports_protein_group_report {
+            get {
+                return ResourceManager.GetString("OspreyReportWriter_WriteReports_protein_group_report", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Skipping reports: no output path (-o) to derive report file names from..
         /// </summary>
         public static string OspreyReportWriter_WriteReports_Skipping_reports__no_output_path___o__to_derive_report_file_names_from_ {
             get {
                 return ResourceManager.GetString("OspreyReportWriter_WriteReports_Skipping_reports__no_output_path___o__to_derive_r" +
                         "eport_file_names_from_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to summary report.
+        /// </summary>
+        public static string OspreyReportWriter_WriteReports_summary_report {
+            get {
+                return ResourceManager.GetString("OspreyReportWriter_WriteReports_summary_report", resourceCulture);
             }
         }
         
@@ -2026,22 +2064,12 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0}: applied the recomputed q-values to {1:N0} precursor candidate peaks ({2:N0} scored with the first-pass model) in {3:F1}s..
+        ///   Looks up a localized string similar to Applied the recomputed q-values to {0:N0} precursor candidate peaks ({1:N0} scored with the first-pass model) in {2:F1}s..
         /// </summary>
-        public static string Pass2FdrSidecar_ComputePass2TransferCompeteFull__0___applied_the_recomputed_q_values_to__1__precursor_candidate_peaks___2__scored_with_ {
+        public static string Pass2FdrSidecar_ComputePass2TransferCompeteFull_Applied_the_recomputed_q_values_to__0__precursor_candidate_peaks___1__scored_with_the_first_pass_model_ {
             get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ComputePass2TransferCompeteFull__0___applied_the_recomputed_q_val" +
-                        "ues_to__1__precursor_candidate_peaks___2__scored_with_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0}: scoring up to {1:N0} re-scored peaks with the first-pass model, one file at a time..
-        /// </summary>
-        public static string Pass2FdrSidecar_ComputePass2TransferCompeteFull__0___scoring_up_to__1__re_scored_peaks_with_the_first_pass_model__one_file_at_a_time_ {
-            get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ComputePass2TransferCompeteFull__0___scoring_up_to__1__re_scored_" +
-                        "peaks_with_the_first_pass_model__one_file_at_a_time_", resourceCulture);
+                return ResourceManager.GetString("Pass2FdrSidecar_ComputePass2TransferCompeteFull_Applied_the_recomputed_q_values_t" +
+                        "o__0__precursor_candidate_peaks___1__scored_with_the_first_pass_model_", resourceCulture);
             }
         }
         
@@ -2092,6 +2120,16 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("Pass2FdrSidecar_ComputePass2TransferCompeteFull_Recomputing_second_pass_q_values_" +
                         "for_1_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scoring up to {0:N0} re-scored peaks with the first-pass model, one file at a time..
+        /// </summary>
+        public static string Pass2FdrSidecar_ComputePass2TransferCompeteFull_Scoring_up_to__0__re_scored_peaks_with_the_first_pass_model__one_file_at_a_time_ {
+            get {
+                return ResourceManager.GetString("Pass2FdrSidecar_ComputePass2TransferCompeteFull_Scoring_up_to__0__re_scored_peaks" +
+                        "_with_the_first_pass_model__one_file_at_a_time_", resourceCulture);
             }
         }
         
@@ -2296,12 +2334,12 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0}: failed to reload peak features from {1}: {2}.
+        ///   Looks up a localized string similar to Failed to reload peak features from {0}: {1}.
         /// </summary>
-        public static string Pass2FdrSidecar_ReadOneFilePass2Inputs__0___failed_to_reload_peak_features_from__1____2_ {
+        public static string Pass2FdrSidecar_ReadOneFilePass2Inputs_Failed_to_reload_peak_features_from__0____1_ {
             get {
-                return ResourceManager.GetString("Pass2FdrSidecar_ReadOneFilePass2Inputs__0___failed_to_reload_peak_features_from__" +
-                        "1____2_", resourceCulture);
+                return ResourceManager.GetString("Pass2FdrSidecar_ReadOneFilePass2Inputs_Failed_to_reload_peak_features_from__0____" +
+                        "1_", resourceCulture);
             }
         }
         
@@ -2788,7 +2826,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   Streaming {1:N0} MS1 and {0:N0} MS/MS spectra from cache for {2}.
+        ///   Looks up a localized string similar to Streaming {1:N0} MS1 and {0:N0} MS/MS spectra from cache for {2}.
         /// </summary>
         public static string PerFileRescoreTask_LoadSpectraForRescore___Streaming__1__MS1_and__0__MS_MS_spectra_from_cache_for__2_ {
             get {
@@ -2908,7 +2946,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   {0:N0} targets had no signal within their new peak boundaries; their scores were reset..
+        ///   Looks up a localized string similar to {0:N0} targets had no signal within their new peak boundaries; their scores were reset..
         /// </summary>
         public static string PerFileRescoreTask_private____0__targets_had_no_signal_within_their_new_peak_boundaries__their_scores_were_reset_ {
             get {
@@ -2918,7 +2956,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   Missing peaks found by peak detection: {0:N0} ({1:F1}s).
+        ///   Looks up a localized string similar to Missing peaks found by peak detection: {0:N0} ({1:F1}s).
         /// </summary>
         public static string PerFileRescoreTask_private___Missing_peaks_found_by_peak_detection___0____1_s_ {
             get {
@@ -2927,7 +2965,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   Missing peaks integrated at imputed boundaries: {0:N0} ({1:F1}s).
+        ///   Looks up a localized string similar to Missing peaks integrated at imputed boundaries: {0:N0} ({1:F1}s).
         /// </summary>
         public static string PerFileRescoreTask_private___Missing_peaks_integrated_at_imputed_boundaries___0____1_s_ {
             get {
@@ -2937,7 +2975,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   Re-scored {0:N0} of {1:N0} peaks ({2:F1}s).
+        ///   Looks up a localized string similar to Re-scored {0:N0} of {1:N0} peaks ({2:F1}s).
         /// </summary>
         public static string PerFileRescoreTask_private___Re_scored__0__of__1__peaks___2_s_ {
             get {
@@ -3043,7 +3081,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   {0:N0} peaks to re-score at new boundaries, {1:N0} missing peaks.
+        ///   Looks up a localized string similar to {0:N0} peaks to re-score at new boundaries, {1:N0} missing peaks.
         /// </summary>
         public static string PerFileRescoreTask_TryAssembleRescoreTargets____0__peaks_to_re_score_at_new_boundaries___1__missing_peaks {
             get {
@@ -3102,7 +3140,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   Failed to remove the incomplete re-scored results file {0} after a failed write: {1}.
+        ///   Looks up a localized string similar to Failed to remove the incomplete re-scored results file {0} after a failed write: {1}.
         /// </summary>
         public static string PerFileRescoreTask_WriteReconciledAndStamp___Failed_to_remove_the_incomplete_re_scored_results_file__0__after_a_failed_write___1_ {
             get {
@@ -3112,7 +3150,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   Failed to record that --task {0} completed {1}: {2}. A resume will redo this step..
+        ///   Looks up a localized string similar to Failed to record that --task {0} completed {1}: {2}. A resume will redo this step..
         /// </summary>
         public static string PerFileResumeDriver_Stamp___Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_ {
             get {
@@ -3122,7 +3160,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   RT: calibration failed - using fallback RT tolerance.
+        ///   Looks up a localized string similar to RT: calibration failed - using fallback RT tolerance.
         /// </summary>
         public static string PerFileScoringTask_EmitCalibrationSummary___RT__calibration_failed___using_fallback_RT_tolerance {
             get {
@@ -3132,7 +3170,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   RT fit: MAD={0:F3} min, residual SD={1:F3} min, R^2={2:F4}, n={3:N0} points.
+        ///   Looks up a localized string similar to RT fit: MAD={0:F3} min, residual SD={1:F3} min, R^2={2:F4}, n={3:N0} points.
         /// </summary>
         public static string PerFileScoringTask_EmitCalibrationSummary___RT_fit__MAD__0__min__residual_SD__1__min__R_2__2___n__3__points {
             get {
@@ -3142,7 +3180,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   RT tolerance: +/-{0} min before -&gt; +/-{1} min after calibration.
+        ///   Looks up a localized string similar to RT tolerance: +/-{0} min before -&gt; +/-{1} min after calibration.
         /// </summary>
         public static string PerFileScoringTask_EmitCalibrationSummary___RT_tolerance______0__min_before________1__min_after_calibration {
             get {
@@ -3152,7 +3190,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   RT tolerance: +/-{0} min before -&gt; +/-{1} min computed (3*MAD*1.4826), capped at +/-{2} min, after calibration.
+        ///   Looks up a localized string similar to RT tolerance: +/-{0} min before -&gt; +/-{1} min computed (3*MAD*1.4826), capped at +/-{2} min, after calibration.
         /// </summary>
         public static string PerFileScoringTask_EmitCalibrationSummary___RT_tolerance______0__min_before________1__min_computed__3_MAD_1_4826___capped_at_____2__ {
             get {
@@ -3162,7 +3200,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   RT tolerance: +/-{0} min before -&gt; +/-{1} min computed (3*MAD*1.4826), using +/-{2} min floor, after calibration.
+        ///   Looks up a localized string similar to RT tolerance: +/-{0} min before -&gt; +/-{1} min computed (3*MAD*1.4826), using +/-{2} min floor, after calibration.
         /// </summary>
         public static string PerFileScoringTask_EmitCalibrationSummary___RT_tolerance______0__min_before________1__min_computed__3_MAD_1_4826___using_____2__min_ {
             get {
@@ -3172,7 +3210,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   RT tolerance: +/-{0} min before -&gt; undetermined after calibration (no usable RT spread).
+        ///   Looks up a localized string similar to RT tolerance: +/-{0} min before -&gt; undetermined after calibration (no usable RT spread).
         /// </summary>
         public static string PerFileScoringTask_EmitCalibrationSummary___RT_tolerance______0__min_before____undetermined_after_calibration__no_usable_RT_spread_ {
             get {
@@ -3209,7 +3247,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   {0} mass: correction={1:F2} {2}, SD={3:F2} {2}, tolerance=+/-{4:F2} {2} (n={5:N0} {6} matches).
+        ///   Looks up a localized string similar to {0} mass: correction={1:F2} {2}, SD={3:F2} {2}, tolerance=+/-{4:F2} {2} (n={5:N0} {6} matches).
         /// </summary>
         public static string PerFileScoringTask_EmitMassCalibrationLine____0__mass__correction__1___2___SD__3___2___tolerance_____4___2___n__5___6__matches_ {
             get {
@@ -3219,7 +3257,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   {0} mass: not calibrated.
+        ///   Looks up a localized string similar to {0} mass: not calibrated.
         /// </summary>
         public static string PerFileScoringTask_EmitMassCalibrationLine____0__mass__not_calibrated {
             get {
@@ -3268,7 +3306,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   Failed to load calibration for {0}: {1}.
+        ///   Looks up a localized string similar to Failed to load calibration for {0}: {1}.
         /// </summary>
         public static string PerFileScoringTask_LoadCalibrationAndIsolation___Failed_to_load_calibration_for__0____1_ {
             get {
@@ -3278,7 +3316,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   Failed to load calibration for {0}: {1}.
+        ///   Looks up a localized string similar to Failed to load calibration for {0}: {1}.
         /// </summary>
         public static string PerFileScoringTask_LoadJoinOnlyCalibration___Failed_to_load_calibration_for__0____1_ {
             get {
@@ -3327,7 +3365,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   Loaded {0:N0} first-pass precursor candidate peaks (features not needed here).
+        ///   Looks up a localized string similar to Loaded {0:N0} first-pass precursor candidate peaks (features not needed here).
         /// </summary>
         public static string PerFileScoringTask_LoadJoinOnlyScores___Loaded__0__first_pass_precursor_candidate_peaks__features_not_needed_here_ {
             get {
@@ -3337,7 +3375,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   Loaded {0:N0} first-pass precursor candidate peaks with their features.
+        ///   Looks up a localized string similar to Loaded {0:N0} first-pass precursor candidate peaks with their features.
         /// </summary>
         public static string PerFileScoringTask_LoadJoinOnlyScores___Loaded__0__first_pass_precursor_candidate_peaks_with_their_features {
             get {
@@ -3412,7 +3450,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to       Loaded {0:N0} first-pass precursor candidate peaks (features not needed here).
+        ///   Looks up a localized string similar to Loaded {0:N0} first-pass precursor candidate peaks (features not needed here).
         /// </summary>
         public static string PerFileScoringTask_LoadJoinOnlyScoresForFile_______Loaded__0__first_pass_precursor_candidate_peaks__features_not_needed_here_ {
             get {
@@ -3422,7 +3460,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to     Loading file {0}/{1}: {2} (from {3}).
+        ///   Looks up a localized string similar to Loading file {0}/{1}: {2} (from {3}).
         /// </summary>
         public static string PerFileScoringTask_LoadJoinOnlyScoresForFile_____Loading_file__0___1____2___from__3__ {
             get {
@@ -3541,7 +3579,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to  ({0:N0} spectra had unsorted peaks and were sorted; use --verbose for detail).
+        ///   Looks up a localized string similar to ({0:N0} spectra had unsorted peaks and were sorted; use --verbose for detail).
         /// </summary>
         public static string PerFileScoringTask_ProcessFile____0__spectra_had_unsorted_peaks_and_were_sorted__use___verbose_for_detail_ {
             get {
@@ -3579,7 +3617,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   Resuming: {0} has no feature columns, so it is not a valid Osprey scores file. Delete it and run again so it is written again..
+        ///   Looks up a localized string similar to Resuming: {0} has no feature columns, so it is not a valid Osprey scores file. Delete it and run again so it is written again..
         /// </summary>
         public static string PerFileScoringTask_RehydrateFromOwnOutputs___Resuming___0__has_no_feature_columns__so_it_is_not_a_valid_Osprey_scores_file__Delete_ {
             get {
@@ -3712,7 +3750,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   Resuming: {0} has {1:N0} precursor candidate peaks but {2:N0} feature rows; scoring it again..
+        ///   Looks up a localized string similar to Resuming: {0} has {1:N0} precursor candidate peaks but {2:N0} feature rows; scoring it again..
         /// </summary>
         public static string PerFileScoringTask_TryLoadStubsAndCalibration___Resuming___0__has__1__precursor_candidate_peaks_but__2__feature_rows__scoring_it_again_ {
             get {
@@ -3722,7 +3760,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   Resuming: {0} has {1:N0} precursor candidate peaks but {2:N0} feature rows, so its saved scores cannot be loaded..
+        ///   Looks up a localized string similar to Resuming: {0} has {1:N0} precursor candidate peaks but {2:N0} feature rows, so its saved scores cannot be loaded..
         /// </summary>
         public static string PerFileScoringTask_TryLoadStubsAndCalibration___Resuming___0__has__1__precursor_candidate_peaks_but__2__feature_rows__so_its_saved_ {
             get {
@@ -3732,7 +3770,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   Resuming: failed to load {0}: {1}; scoring it again..
+        ///   Looks up a localized string similar to Resuming: failed to load {0}: {1}; scoring it again..
         /// </summary>
         public static string PerFileScoringTask_TryLoadStubsAndCalibration___Resuming__failed_to_load__0____1___scoring_it_again_ {
             get {
@@ -3742,7 +3780,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   Resuming: failed to load the saved scores from {0}: {1}.
+        ///   Looks up a localized string similar to Resuming: failed to load the saved scores from {0}: {1}.
         /// </summary>
         public static string PerFileScoringTask_TryLoadStubsAndCalibration___Resuming__failed_to_load_the_saved_scores_from__0____1_ {
             get {
@@ -3771,7 +3809,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   Wrote {1:N0} precursor candidate peaks for {0}: {2:N0} re-scored and {3:N0} missing peaks added, from {4:N0} first-pass peaks.
+        ///   Looks up a localized string similar to Wrote {1:N0} precursor candidate peaks for {0}: {2:N0} re-scored and {3:N0} missing peaks added, from {4:N0} first-pass peaks.
         /// </summary>
         public static string ReconciledParquetWriter_Write___Wrote__1__precursor_candidate_peaks_for__0____2__re_scored_and__3__missing_peaks_added__ {
             get {
@@ -3899,6 +3937,25 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to read {0}: {1}.
+        /// </summary>
+        public static string RescoreHydration_LoadEnvelope_Failed_to_read__0____1_ {
+            get {
+                return ResourceManager.GetString("RescoreHydration_LoadEnvelope_Failed_to_read__0____1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to read the first-pass intermediate file for {0} (expected at {1})..
+        /// </summary>
+        public static string RescoreHydration_OverlayFirstPassSidecar_Failed_to_read_the_first_pass_intermediate_file_for__0___expected_at__1___ {
+            get {
+                return ResourceManager.GetString("RescoreHydration_OverlayFirstPassSidecar_Failed_to_read_the_first_pass_intermedia" +
+                        "te_file_for__0___expected_at__1___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Stopped before holding the first-pass precursor candidates of every run in memory at once, which grows with the number of runs (about 0.1 GB per run). This analysis can be processed one run at a time, so reaching this point is an Osprey defect; please report it.{0}.
         /// </summary>
         public static string ScoringTaskShared_AllRunsBundleGuardError_Stopped_before_holding_the_first_pass_precursor_candidates_of_every_run_in_memory_at_once_ {
@@ -3977,7 +4034,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   {0:N0} passing target-decoy pairs.
+        ///   Looks up a localized string similar to {0:N0} passing target-decoy pairs.
         /// </summary>
         public static string ScoringTaskShared_LogCompaction____0__passing_target_decoy_pairs {
             get {
@@ -3986,7 +4043,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   {0:N0} passing target-decoy pairs; {1:N0} planned peak re-picks and boundary imputations dropped.
+        ///   Looks up a localized string similar to {0:N0} passing target-decoy pairs; {1:N0} planned peak re-picks and boundary imputations dropped.
         /// </summary>
         public static string ScoringTaskShared_LogCompaction____0__passing_target_decoy_pairs___1__planned_peak_re_picks_and_boundary_imputations_ {
             get {

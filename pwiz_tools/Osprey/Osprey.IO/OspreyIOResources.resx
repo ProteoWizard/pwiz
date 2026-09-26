@@ -161,7 +161,7 @@
     <value>Writing library cache</value>
   </data>
   <data name="LibraryCacheStatus_static_The_library_cache_is_damaged__unknown_neutral_loss_tag__0____Delete_it_to_rebuild_it_from_" xml:space="preserve">
-    <value>The library cache is damaged (unknown neutral loss tag {0}). Delete it to rebuild it from the library.</value>
+    <value>The library cache is damaged (unknown neutral loss tag {0}).</value>
   </data>
   <data name="LibraryDeduplicator_DeduplicateLibrary_Merging_duplicate_library_precursors" xml:space="preserve">
     <value>Merging duplicate library precursors</value>
@@ -236,7 +236,7 @@
     <value>{0} does not record which spectral library it was scored against, so it cannot be reused. Score the file again (--task PerFileScoring).</value>
   </data>
   <data name="ParquetScoreCache_CheckParquetMetadata__0__was_scored_against_a_different_spectral_library_than___library_names__Score_the_file_" xml:space="preserve">
-    <value>{0} was scored against a different spectral library than --library names. Score the file again with this library (--task PerFileScoring), or pass the library it was scored against.</value>
+    <value>{0} was scored against a different spectral library than --library names (library hash {1}; this run {2}). Score the file again with this library (--task PerFileScoring), or pass the library it was scored against.</value>
   </data>
   <data name="ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_Osprey__1___which_is_not_compatible_with_this_build___2____Score_the_" xml:space="preserve">
     <value>{0} was scored by Osprey {1}, which is not compatible with this build ({2}). Score the file again with this build (--task PerFileScoring).</value>
@@ -245,7 +245,7 @@
     <value>{0} was scored by a different daily build of Osprey ({1}; this is {2}). Score the file again with this build (--task PerFileScoring), or run this task with the build that scored it.</value>
   </data>
   <data name="ParquetScoreCache_CheckParquetMetadata__0__was_scored_with_different_search_settings_than_this_run_uses__Score_the_file_again_" xml:space="preserve">
-    <value>{0} was scored with different search settings than this run uses. Score the file again with these settings (--task PerFileScoring), or use the settings it was scored with.</value>
+    <value>{0} was scored with different search settings than this run uses (settings hash {1}; this run {2}). Score the file again with these settings (--task PerFileScoring), or use the settings it was scored with.</value>
   </data>
   <data name="ParquetScoreCache_CheckParquetMetadata__0__was_written_by_an_Osprey_build_this_one_does_not_recognize___1___this_is__2____so_it_" xml:space="preserve">
     <value>{0} was written by an Osprey build this one does not recognize ({1}; this is {2}), so it cannot be reused. Score the file again with this build (--task PerFileScoring).</value>
@@ -269,7 +269,7 @@
     <value>Writing precursor candidate peaks</value>
   </data>
   <data name="Pass_ReadScalars_The_file_is_not_an_Osprey_intermediate_file__" xml:space="preserve">
-    <value>The file is not an Osprey intermediate file: </value>
+    <value>The file is not an Osprey intermediate file: {0}</value>
   </data>
   <data name="Pass_ReadScalars_The_intermediate_file_belongs_to_the_other_FDR_pass__pass__0___expected__1_____2_" xml:space="preserve">
     <value>The intermediate file belongs to the other FDR pass (pass {0}, expected {1}): {2}</value>
@@ -281,7 +281,7 @@
     <value>The intermediate file is damaged (cut short at record {0:N0}): {1}</value>
   </data>
   <data name="Pass_ReadScalars_The_intermediate_file_is_damaged__its_header_is_cut_short___" xml:space="preserve">
-    <value>The intermediate file is damaged (its header is cut short): </value>
+    <value>The intermediate file is damaged (its header is cut short): {0}</value>
   </data>
   <data name="Pass_ReadScalars_The_intermediate_file_is_damaged__only__0__bytes____1_" xml:space="preserve">
     <value>The intermediate file is damaged (only {0:N0} bytes): {1}</value>
@@ -302,10 +302,10 @@
     <value>Reconciliation file {0} has unsupported format_version {1} (expected {2}). Delete this analysis's *.FirstPassFDR.osprey.task files and run the first pass again.</value>
   </data>
   <data name="ReconciliationFile_Load_Reconciliation_file_not_found__" xml:space="preserve">
-    <value>Reconciliation file not found: </value>
+    <value>Reconciliation file not found: {0}</value>
   </data>
   <data name="ReconciliationFile_Load_Reconciliation_file_parsed_as_null__" xml:space="preserve">
-    <value>Reconciliation file parsed as null: </value>
+    <value>The reconciliation file is empty or not valid: {0}</value>
   </data>
   <data name="SpectraCacheException_Describe_no_file_exists_at_that_path" xml:space="preserve">
     <value>no file exists at that path</value>
@@ -332,22 +332,22 @@
     <value>the source file's size or timestamp has changed since the cache was written, so the cache is stale</value>
   </data>
   <data name="SpectraCache_LoadSpectraCache_The_spectra_cache_is_damaged__a_record_is_not_where_its_index_says__expected_byte__0___" xml:space="preserve">
-    <value>The spectra cache is damaged: a record is not where its index says (expected byte {0}, found {1}). Delete the .spectra.bin file to rebuild it.</value>
+    <value>The spectra cache is damaged: a record is not where its index says (expected byte {0}, found {1}).</value>
   </data>
   <data name="SpectraCache_ReadDoubleArray_The_spectra_cache_is_damaged__it_ends_in_the_middle_of_a_record__Delete_the__spectra_bin_" xml:space="preserve">
-    <value>The spectra cache is damaged: it ends in the middle of a record. Delete the .spectra.bin file to rebuild it.</value>
+    <value>The spectra cache is damaged: it ends in the middle of a record.</value>
   </data>
   <data name="SpectraCache_ReadFloatArray_The_spectra_cache_is_damaged__it_ends_in_the_middle_of_a_record__Delete_the__spectra_bin_" xml:space="preserve">
-    <value>The spectra cache is damaged: it ends in the middle of a record. Delete the .spectra.bin file to rebuild it.</value>
+    <value>The spectra cache is damaged: it ends in the middle of a record.</value>
   </data>
   <data name="SpectraCache_ReadIndex_The_spectra_cache_is_damaged__it_is_too_small_to_hold_its_footer__Delete_the__spectra_bin_" xml:space="preserve">
-    <value>The spectra cache is damaged: it is too small to hold its footer. Delete the .spectra.bin file to rebuild it.</value>
+    <value>The spectra cache is damaged: it is too small to hold its footer.</value>
   </data>
   <data name="SpectraCache_SaveSpectraCache_Writing_spectra_cache" xml:space="preserve">
     <value>Writing spectra cache</value>
   </data>
   <data name="SpectraWindowIndex_LoadWindow_The_spectra_cache_is_damaged__a_record_is_not_where_its_index_says__expected_byte__0___" xml:space="preserve">
-    <value>The spectra cache is damaged: a record is not where its index says (expected byte {0}, found {1}). Delete the .spectra.bin file to rebuild it.</value>
+    <value>The spectra cache is damaged: a record is not where its index says (expected byte {0}, found {1}).</value>
   </data>
   <data name="SpectrumBuilder_CreateMs2Spectrum_Spectrum_index__0__has_no_valid_isolation_window_lower_offset__cvParam_MS_1000828_is_" xml:space="preserve">
     <value>Spectrum index {0} has no valid isolation window lower offset (cvParam MS:1000828 is missing or not positive). Osprey needs true isolation windows to process DIA data.</value>

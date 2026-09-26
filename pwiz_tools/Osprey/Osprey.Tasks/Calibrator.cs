@@ -1192,7 +1192,7 @@ namespace pwiz.Osprey.Tasks
                 string.Format(
                     OspreyTasksResources.Calibrator_BuildAnchorPurityReport_____Calibration_anchor_purity___0__pass__1____FDRBench_r__2______,
                     fileName, passNumber, rLib),
-                string.Format(
+                @"  " + string.Format(
                     OspreyTasksResources.Calibrator_BuildAnchorPurityReport___scored_pool___0__target_side____1__target____2__entrapment__peaks_entered_LDA_,
                     poolT + poolE, poolT, poolE),
             };
@@ -1262,7 +1262,7 @@ namespace pwiz.Osprey.Tasks
             CalibrationMatch[] matchArray, double qThreshold, double rLib, string label)
         {
             var s = ComputeAnchorPurity(matchArray, qThreshold, rLib);
-            return string.Format(
+            return @"  " + string.Format(
                 OspreyTasksResources.Calibrator_AnchorPurityLine____0____1__anchors____2__target____3__entrapment___entrapment_frac__4____FDP_lower__5__,
                 label, s.Total, s.NTarget, s.NEntrapment, s.RawFraction, s.FdpLower, s.FdpCombined);
         }
@@ -1694,7 +1694,7 @@ namespace pwiz.Osprey.Tasks
 
             if (nSnrFiltered > 0)
             {
-                _ctx.LogVerbose(string.Format(
+                _ctx.LogVerbose(@"  " + string.Format(
                     OspreyTasksResources.Calibrator_private___RT_quality_filter__pass__0_____1______2__peptides__removed__3__with_S_N____4__,
                     passNumber, nTargetWins, libRtsDetected.Count, nSnrFiltered, MIN_SNR_FOR_RT_CAL));
             }

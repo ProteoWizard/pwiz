@@ -1133,7 +1133,6 @@ namespace pwiz.Osprey.Tasks
             }
             return new Pass2PerFileWorker(
                 scorer,
-                OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT,
                 sidecar.StratumBaseIds,
                 Pass2FdrSidecar.LoadPass1ExperimentRecords(config),
                 WriteAnswer,
@@ -1499,12 +1498,12 @@ namespace pwiz.Osprey.Tasks
             totalRescored += nOverlay;
             if (nNoPeak > 0)
             {
-                ctx.LogInfo(string.Format(
+                ctx.LogInfo(@"  " + string.Format(
                     OspreyTasksResources.PerFileRescoreTask_private____0__targets_had_no_signal_within_their_new_peak_boundaries__their_scores_were_reset_,
                     nNoPeak));
             }
 
-            ctx.LogInfo(string.Format(
+            ctx.LogInfo(@"  " + string.Format(
                 OspreyTasksResources.PerFileRescoreTask_private___Re_scored__0__of__1__peaks___2_s_,
                 nOverlay, combinedTargets.Count, swRescore.Elapsed.TotalSeconds));
 
@@ -1862,7 +1861,7 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(string.Format(
                 OspreyTasksResources.PerFileRescoreTask_TryAssembleRescoreTargets_Re_scoring_file__0___1____2_, fileNum + 1, nTotalFiles, fileName));
             ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_RESCORE_FILE, @"{0}/{1}", fileNum + 1, nTotalFiles));
-            ctx.LogInfo(string.Format(
+            ctx.LogInfo(@"  " + string.Format(
                 OspreyTasksResources.PerFileRescoreTask_TryAssembleRescoreTargets____0__peaks_to_re_score_at_new_boundaries___1__missing_peaks,
                 combinedTargets.Count,
                 gapFillTargets.Count));
@@ -1926,7 +1925,7 @@ namespace pwiz.Osprey.Tasks
             }
             catch (Exception ex)
             {
-                ctx.LogWarning(string.Format(
+                ctx.LogWarning(@"  " + string.Format(
                     OspreyTasksResources.PerFileRescoreTask_WriteReconciledAndStamp___Failed_to_remove_the_incomplete_re_scored_results_file__0__after_a_failed_write___1_,
                     reconciledOutPath, ex.Message));
             }
@@ -3362,7 +3361,7 @@ namespace pwiz.Osprey.Tasks
                     gapFillAppended.Add(entry);
                 }
 
-                ctx.LogInfo(string.Format(
+                ctx.LogInfo(@"  " + string.Format(
                     OspreyTasksResources.PerFileRescoreTask_private___Missing_peaks_found_by_peak_detection___0____1_s_,
                     nGapCwt, swCwt.Elapsed.TotalSeconds));
             }
@@ -3417,7 +3416,7 @@ namespace pwiz.Osprey.Tasks
                     gapFillAppended.Add(entry);
                 }
 
-                ctx.LogInfo(string.Format(
+                ctx.LogInfo(@"  " + string.Format(
                     OspreyTasksResources.PerFileRescoreTask_private___Missing_peaks_integrated_at_imputed_boundaries___0____1_s_,
                     nGapForced, swForced.Elapsed.TotalSeconds));
             }
@@ -3499,7 +3498,7 @@ namespace pwiz.Osprey.Tasks
                     reason, cachePath);
             }
 
-            ctx.LogInfo(string.Format(
+            ctx.LogInfo(@"  " + string.Format(
                 OspreyTasksResources.PerFileRescoreTask_LoadSpectraForRescore___Streaming__1__MS1_and__0__MS_MS_spectra_from_cache_for__2_,
                 index.Ms2Count, index.Ms1Spectra.Count, fileName));
             return index;

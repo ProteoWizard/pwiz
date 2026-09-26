@@ -163,13 +163,16 @@ namespace pwiz.Osprey.Test
 
             var callerCulture = CultureInfo.CurrentCulture;
             var callerUiCulture = CultureInfo.CurrentUICulture;
-            string otherCulture = callerCulture.Name == @"fr-FR" ? @"ja-JP" : @"fr-FR";
+            string otherCulture = callerCulture.TwoLetterISOLanguageName == @"ja" ? @"fr-FR" : @"ja-JP";
             output = RunCommandAndValidateError(OspreyCommandArgs.ARG_INTERNAL_CULTURE.ArgumentText, otherCulture);
             Assert.AreSame(callerCulture, CultureInfo.CurrentCulture);
             Assert.AreSame(callerUiCulture, CultureInfo.CurrentUICulture);
-            // The run wrote in the other culture, so its expected text is formatted there too.
+            // The run wrote in the other culture, so its expected text is formatted there too. Its
+            // Error: prefix is translated, so matching it proves --culture was applied at all.
+            string callerPrefix = Program.ErrorPrefix;
             using (new CultureScope(CultureInfo.GetCultureInfo(otherCulture)))
             {
+                Assert.AreNotEqual(callerPrefix, Program.ErrorPrefix, otherCulture);
                 AssertErrorMessage(output, string.Format(OspreyResources.Program_ValidateArgs_No_input_files_specified__Use__0_,
                     Program.USAGE_INPUT));
             }

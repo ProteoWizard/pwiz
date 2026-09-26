@@ -189,7 +189,7 @@ namespace pwiz.Osprey.FDR
 
             log?.LogInfo(string.Format(OspreyFDRResources.ProteinFdrEngine_RunSecondPass__0__protein_groups_pass__1__protein_FDR,
                 passingProteins, config.EffectiveProteinFdr));
-            log?.LogInfo(LogTag.COUNT, @"Protein groups passing FDR: {0} at {1:P0}",
+            log?.LogInfo(LogTag.COUNT, @"Protein groups passing FDR: {0} at {1:0%}",
                 passingProteins, config.EffectiveProteinFdr);
 
             // No propagation onto the stubs. The protein q-value's only consumer past this

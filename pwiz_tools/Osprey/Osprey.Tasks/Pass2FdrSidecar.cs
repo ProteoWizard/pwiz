@@ -1731,7 +1731,6 @@ namespace pwiz.Osprey.Tasks
                 throw new ArgumentNullException(nameof(stratumBaseIds),
                     @"protein-compact is the only competition mode; its stratum is required.");
             }
-            string mode = OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT;
             // Works for whichever classifier the 1st pass trained (linear SVM or
             // gradient-boosted trees) -- the scorer hides that choice, so this stays the
             // honest-FDR path under --fdr-method gbdt too.
@@ -1935,8 +1934,8 @@ namespace pwiz.Osprey.Tasks
                 OspreyTasksResources.Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR_over__0__files__recomputing_q_values_for__1__precursor_candidates_from_,
                 stratumBaseIds.Count));
             ctx.LogVerbose(string.Format(
-                OspreyTasksResources.Pass2FdrSidecar_ComputePass2TransferCompeteFull__0___scoring_up_to__1__re_scored_peaks_with_the_first_pass_model__one_file_at_a_time_,
-                mode, survivorObservations));
+                OspreyTasksResources.Pass2FdrSidecar_ComputePass2TransferCompeteFull_Scoring_up_to__0__re_scored_peaks_with_the_first_pass_model__one_file_at_a_time_,
+                survivorObservations));
 
             // This competition reduces per base_id by MAX, and BOTH modes that reach it then
             // overwrite the reported experiment q from that reduction. Neither is compatible with
@@ -2110,7 +2109,7 @@ namespace pwiz.Osprey.Tasks
                     // above puts the refusal.
                     ReadOneFilePass2Inputs(
                         sidecarByKey[fileKey], effectiveParquetPath, currentEntries,
-                        scorer, nFeatures, seeder, ctx.LogWarning, mode,
+                        scorer, nFeatures, seeder, ctx.LogWarning,
                         survivorIds, pass1Records,
                         out uint[] eids, out double[] scs, out var fileScores);
                     nScored += fileScores.Count;
@@ -2355,8 +2354,8 @@ namespace pwiz.Osprey.Tasks
                     unpatched.Count, string.Join(@", ", unpatched)));
             }
             ctx.LogVerbose(string.Format(
-                OspreyTasksResources.Pass2FdrSidecar_ComputePass2TransferCompeteFull__0___applied_the_recomputed_q_values_to__1__precursor_candidate_peaks___2__scored_with_,
-                mode, nMapped, nScored, sw.Elapsed.TotalSeconds));
+                OspreyTasksResources.Pass2FdrSidecar_ComputePass2TransferCompeteFull_Applied_the_recomputed_q_values_to__0__precursor_candidate_peaks___1__scored_with_the_first_pass_model_,
+                nMapped, nScored, sw.Elapsed.TotalSeconds));
             return true;
 
             // The experiment-scope record for one observation plus its PEP, from the bounded
@@ -2741,7 +2740,7 @@ namespace pwiz.Osprey.Tasks
         internal static void ReadOneFilePass2Inputs(
             string pass1SidecarPath, string effectiveParquetPath, List<FdrEntry> survivors,
             FrozenModelScorer scorer, int nFeatures, Pass1ScalarSeeder seeder,
-            Action<string> logWarning, string mode,
+            Action<string> logWarning,
             HashSet<uint> survivorIds, List<FdrScoreRecord> pass1Records,
             out uint[] entryIds, out double[] scores, out Dictionary<uint, double> survivorScores)
         {
@@ -2763,8 +2762,8 @@ namespace pwiz.Osprey.Tasks
             catch (Exception ex)
             {
                 logWarning(string.Format(
-                    OspreyTasksResources.Pass2FdrSidecar_ReadOneFilePass2Inputs__0___failed_to_reload_peak_features_from__1____2_,
-                    mode, effectiveParquetPath, ex.Message));
+                    OspreyTasksResources.Pass2FdrSidecar_ReadOneFilePass2Inputs_Failed_to_reload_peak_features_from__0____1_,
+                    effectiveParquetPath, ex.Message));
                 featByScoreIndex = null;
             }
 

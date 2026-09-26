@@ -92,18 +92,29 @@ namespace pwiz.Osprey.IO
                 File.Delete(path);
 
             _conn = new SQLiteConnection(@"Data Source=" + path + @";Version=3;");
-            _conn.Open();
+            try
+            {
+                _conn.Open();
 
-            // WAL mode for better write performance
-            ExecuteNonQuery(@"PRAGMA journal_mode=WAL");
-            ExecuteNonQuery(@"PRAGMA synchronous=NORMAL");
+                // WAL mode for better write performance
+                ExecuteNonQuery(@"PRAGMA journal_mode=WAL");
+                ExecuteNonQuery(@"PRAGMA synchronous=NORMAL");
 
-            _inTransaction = false;
-            _nextSpecId = 0;
-            _proteinCache = new Dictionary<string, long>();
+                _inTransaction = false;
+                _nextSpecId = 0;
+                _proteinCache = new Dictionary<string, long>();
 
-            CreateSchema();
-            PrepareStatements();
+                CreateSchema();
+                PrepareStatements();
+            }
+            catch
+            {
+                // The caller never receives this instance, so nothing else can close the
+                // connection - and an open connection keeps the file locked, blocking both
+                // its deletion and the next attempt to create it.
+                Dispose();
+                throw;
+            }
         }
 
         /// <summary>

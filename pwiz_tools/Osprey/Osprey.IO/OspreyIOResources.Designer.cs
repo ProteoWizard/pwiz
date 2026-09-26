@@ -255,7 +255,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The library cache is damaged (unknown neutral loss tag {0}). Delete it to rebuild it from the library..
+        ///   Looks up a localized string similar to The library cache is damaged (unknown neutral loss tag {0})..
         /// </summary>
         public static string LibraryCacheStatus_static_The_library_cache_is_damaged__unknown_neutral_loss_tag__0____Delete_it_to_rebuild_it_from_ {
             get {
@@ -497,7 +497,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} was scored against a different spectral library than --library names. Score the file again with this library (--task PerFileScoring), or pass the library it was scored against..
+        ///   Looks up a localized string similar to {0} was scored against a different spectral library than --library names (library hash {1}; this run {2}). Score the file again with this library (--task PerFileScoring), or pass the library it was scored against..
         /// </summary>
         public static string ParquetScoreCache_CheckParquetMetadata__0__was_scored_against_a_different_spectral_library_than___library_names__Score_the_file_ {
             get {
@@ -527,7 +527,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} was scored with different search settings than this run uses. Score the file again with these settings (--task PerFileScoring), or use the settings it was scored with..
+        ///   Looks up a localized string similar to {0} was scored with different search settings than this run uses (settings hash {1}; this run {2}). Score the file again with these settings (--task PerFileScoring), or use the settings it was scored with..
         /// </summary>
         public static string ParquetScoreCache_CheckParquetMetadata__0__was_scored_with_different_search_settings_than_this_run_uses__Score_the_file_again_ {
             get {
@@ -605,7 +605,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The file is not an Osprey intermediate file: .
+        ///   Looks up a localized string similar to The file is not an Osprey intermediate file: {0}.
         /// </summary>
         public static string Pass_ReadScalars_The_file_is_not_an_Osprey_intermediate_file__ {
             get {
@@ -643,7 +643,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The intermediate file is damaged (its header is cut short): .
+        ///   Looks up a localized string similar to The intermediate file is damaged (its header is cut short): {0}.
         /// </summary>
         public static string Pass_ReadScalars_The_intermediate_file_is_damaged__its_header_is_cut_short___ {
             get {
@@ -711,7 +711,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Reconciliation file not found: .
+        ///   Looks up a localized string similar to Reconciliation file not found: {0}.
         /// </summary>
         public static string ReconciliationFile_Load_Reconciliation_file_not_found__ {
             get {
@@ -720,7 +720,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Reconciliation file parsed as null: .
+        ///   Looks up a localized string similar to The reconciliation file is empty or not valid: {0}.
         /// </summary>
         public static string ReconciliationFile_Load_Reconciliation_file_parsed_as_null__ {
             get {
@@ -729,7 +729,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The spectra cache is damaged: a record is not where its index says (expected byte {0}, found {1}). Delete the .spectra.bin file to rebuild it..
+        ///   Looks up a localized string similar to The spectra cache is damaged: a record is not where its index says (expected byte {0}, found {1})..
         /// </summary>
         public static string SpectraCache_LoadSpectraCache_The_spectra_cache_is_damaged__a_record_is_not_where_its_index_says__expected_byte__0___ {
             get {
@@ -739,7 +739,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The spectra cache is damaged: it ends in the middle of a record. Delete the .spectra.bin file to rebuild it..
+        ///   Looks up a localized string similar to The spectra cache is damaged: it ends in the middle of a record..
         /// </summary>
         public static string SpectraCache_ReadDoubleArray_The_spectra_cache_is_damaged__it_ends_in_the_middle_of_a_record__Delete_the__spectra_bin_ {
             get {
@@ -749,7 +749,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The spectra cache is damaged: it ends in the middle of a record. Delete the .spectra.bin file to rebuild it..
+        ///   Looks up a localized string similar to The spectra cache is damaged: it ends in the middle of a record..
         /// </summary>
         public static string SpectraCache_ReadFloatArray_The_spectra_cache_is_damaged__it_ends_in_the_middle_of_a_record__Delete_the__spectra_bin_ {
             get {
@@ -759,7 +759,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The spectra cache is damaged: it is too small to hold its footer. Delete the .spectra.bin file to rebuild it..
+        ///   Looks up a localized string similar to The spectra cache is damaged: it is too small to hold its footer..
         /// </summary>
         public static string SpectraCache_ReadIndex_The_spectra_cache_is_damaged__it_is_too_small_to_hold_its_footer__Delete_the__spectra_bin_ {
             get {
@@ -856,7 +856,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The spectra cache is damaged: a record is not where its index says (expected byte {0}, found {1}). Delete the .spectra.bin file to rebuild it..
+        ///   Looks up a localized string similar to The spectra cache is damaged: a record is not where its index says (expected byte {0}, found {1})..
         /// </summary>
         public static string SpectraWindowIndex_LoadWindow_The_spectra_cache_is_damaged__a_record_is_not_where_its_index_says__expected_byte__0___ {
             get {

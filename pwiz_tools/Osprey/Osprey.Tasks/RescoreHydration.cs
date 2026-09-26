@@ -379,11 +379,10 @@ namespace pwiz.Osprey.Tasks
                     string fileName = perFileEntries[i].Key;
                     var stubs = perFileEntries[i].Value;
 
-                    OverlayFirstPassSidecar(syntheticInput, fileName, stubs,
-                        nameof(HydrateReconciliationOverlay), experimentRecords);
+                    OverlayFirstPassSidecar(syntheticInput, fileName, stubs, experimentRecords);
 
                     string reconPath = ReconciliationFile.PathForInput(syntheticInput);
-                    var envelope = LoadEnvelope(reconPath, nameof(HydrateReconciliationOverlay));
+                    var envelope = LoadEnvelope(reconPath);
                     consistency.Check(envelope, reconPath, nameof(HydrateReconciliationOverlay));
 
                     // Build entry_id -> vec_idx map from the loaded stubs so the
@@ -474,8 +473,7 @@ namespace pwiz.Osprey.Tasks
                     // sidecar was written over the whole pre-compaction row set, so a record
                     // whose base_id did not survive legitimately has no entry to land on while
                     // any OTHER miss is real parquet drift.
-                    OverlayFirstPassSidecar(syntheticInput, fileName, stubs,
-                        nameof(FoldPreCompactionPerRun), experimentRecords,
+                    OverlayFirstPassSidecar(syntheticInput, fileName, stubs, experimentRecords,
                         id => !retainedBaseIds.Contains(id & ScoringTaskShared.BASE_ID_MASK));
 
                     onStubsHydrated(i, fileName, stubs);
@@ -629,7 +627,7 @@ namespace pwiz.Osprey.Tasks
                             parquetPaths[i]));
                     }
                     string reconPath = ReconciliationFile.PathForInput(syntheticInput);
-                    var envelope = LoadEnvelope(reconPath, nameof(HydrateCompactedStreaming));
+                    var envelope = LoadEnvelope(reconPath);
                     consistency.Check(envelope, reconPath, nameof(HydrateCompactedStreaming));
 
                     var planned = PlanActions(envelope);
@@ -664,8 +662,7 @@ namespace pwiz.Osprey.Tasks
                     // record, every survivor would keep Score = 0.0, and the un-q-gated decoy
                     // zeros would compete in the picked-protein null. Same shape as
                     // FirstPassSurvivorLoader's predicate, which asks the survivor test.
-                    OverlayFirstPassSidecar(syntheticInput, fileName, stubs,
-                        nameof(HydrateCompactedStreaming), experimentRecords,
+                    OverlayFirstPassSidecar(syntheticInput, fileName, stubs, experimentRecords,
                         id => !retainedBaseIds.Contains(id & ScoringTaskShared.BASE_ID_MASK));
 
                     // The caller's one look at this file's full pre-compaction pool: it fills
@@ -741,7 +738,7 @@ namespace pwiz.Osprey.Tasks
                 string reconPath = ReconciliationFile.PathForInput(syntheticInput);
                 if (!File.Exists(reconPath))
                     continue;
-                var envelope = LoadEnvelope(reconPath, nameof(ReadGapFillAndCalibrations));
+                var envelope = LoadEnvelope(reconPath);
                 CaptureCalibrationAndGapFill(envelope, fileName, refinedCalibrations, perFileGapFill,
                     sequencePool);
             }
@@ -800,7 +797,7 @@ namespace pwiz.Osprey.Tasks
             }
 
             string reconPath = ReconciliationFile.PathForInput(syntheticInput);
-            var envelope = LoadEnvelope(reconPath, nameof(HydrateOneRun));
+            var envelope = LoadEnvelope(reconPath);
             var planned = PlanActions(envelope);
 
             var refinedCalibrations = new Dictionary<string, RTCalibration>();
@@ -820,8 +817,7 @@ namespace pwiz.Osprey.Tasks
             // the sidecar was written over the whole pre-compaction row set, and a reconciled
             // parquet holds only survivors, so most records legitimately have no entry to land
             // on while any OTHER miss is real parquet drift.
-            OverlayFirstPassSidecar(syntheticInput, fileName, stubs, nameof(HydrateOneRun),
-                experimentRecords,
+            OverlayFirstPassSidecar(syntheticInput, fileName, stubs, experimentRecords,
                 id => !retainedBaseIds.Contains(id & ScoringTaskShared.BASE_ID_MASK));
 
             var tally = new PreCompactionTally { Stubs = stubs.Count };
@@ -910,8 +906,7 @@ namespace pwiz.Osprey.Tasks
                 // the sidecar covers the whole PRE-compaction row set, so the filter has to
                 // name the records that legitimately have no entry to land on and leave every
                 // other miss reportable as the parquet drift it is.
-                OverlayFirstPassSidecar(syntheticInput, fileName, stubs,
-                    nameof(RefillOneRunSurvivors), experimentRecords,
+                OverlayFirstPassSidecar(syntheticInput, fileName, stubs, experimentRecords,
                     id => !retainedBaseIds.Contains(id & ScoringTaskShared.BASE_ID_MASK));
             }
             // Kept even where the reconciled parquet is already the survivor subset and this
@@ -953,7 +948,7 @@ namespace pwiz.Osprey.Tasks
         /// tolerance was first applied to both paths at once.</para>
         /// </summary>
         private static void OverlayFirstPassSidecar(
-            string syntheticInput, string fileName, List<FdrEntry> stubs, string context,
+            string syntheticInput, string fileName, List<FdrEntry> stubs,
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             Func<uint, bool> expectedAbsent = null)
         {
@@ -965,8 +960,8 @@ namespace pwiz.Osprey.Tasks
                     expectedAbsent, experimentRecords))
             {
                 throw new InvalidDataException(string.Format(
-                    @"{0}: failed to overlay .1st-pass.fdr_scores.bin for {1} (expected at {2})",
-                    context, fileName, sidecarPath));
+                    OspreyTasksResources.RescoreHydration_OverlayFirstPassSidecar_Failed_to_read_the_first_pass_intermediate_file_for__0___expected_at__1___,
+                    fileName, sidecarPath));
             }
         }
 
@@ -974,7 +969,7 @@ namespace pwiz.Osprey.Tasks
         /// Read one <c>reconciliation.json</c> envelope, wrapping any reader failure in
         /// <see cref="InvalidDataException"/> with the offending path named.
         /// </summary>
-        private static ReconciliationFile LoadEnvelope(string reconPath, string context)
+        private static ReconciliationFile LoadEnvelope(string reconPath)
         {
             try
             {
@@ -983,7 +978,7 @@ namespace pwiz.Osprey.Tasks
             catch (Exception ex)
             {
                 throw new InvalidDataException(string.Format(
-                    @"{0}: failed to read {1}: {2}", context, reconPath, ex.Message), ex);
+                    OspreyTasksResources.RescoreHydration_LoadEnvelope_Failed_to_read__0____1_, reconPath, ex.Message), ex);
             }
         }
         /// <summary>

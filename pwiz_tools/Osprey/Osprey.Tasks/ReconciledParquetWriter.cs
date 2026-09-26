@@ -128,7 +128,7 @@ namespace pwiz.Osprey.Tasks
             // Reports what was WRITTEN against what was read. The two differ now that the
             // compacted-away rows are dropped, and the ratio is the whole point of the
             // artifact - a log that still printed original+appended would hide it.
-            logInfo(string.Format(
+            logInfo(@"  " + string.Format(
                 OspreyTasksResources.ReconciledParquetWriter_Write___Wrote__1__precursor_candidate_peaks_for__0____2__re_scored_and__3__missing_peaks_added__,
                 fileName, nWritten, nReplaced, nAppended, origRowCount));
             return true;

@@ -116,13 +116,13 @@
     <value>MS2 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} (n={5:N0} fragment matches)</value>
   </data>
   <data name="Calibrator_AnchorPurityLine____0____1__anchors____2__target____3__entrapment___entrapment_frac__4____FDP_lower__5__" xml:space="preserve">
-    <value>  {0}: {1} anchors = {2} target + {3} entrapment | entrapment-frac {4:P2} | FDP lower {5:P2} combined {6:P2}</value>
+    <value>{0}: {1} anchors = {2} target + {3} entrapment | entrapment-frac {4:P2} | FDP lower {5:P2} combined {6:P2}</value>
   </data>
   <data name="Calibrator_BuildAnchorPurityReport_____Calibration_anchor_purity___0__pass__1____FDRBench_r__2______" xml:space="preserve">
     <value>=== Calibration anchor purity [{0} pass {1}] (FDRBench r={2:F3}) ===</value>
   </data>
   <data name="Calibrator_BuildAnchorPurityReport___scored_pool___0__target_side____1__target____2__entrapment__peaks_entered_LDA_" xml:space="preserve">
-    <value>  scored pool: {0} target-side = {1} target + {2} entrapment (peaks entered LDA)</value>
+    <value>scored pool: {0} target-side = {1} target + {2} entrapment (peaks entered LDA)</value>
   </data>
   <data name="Calibrator_FitCalibrationPass_Calibration_pass__0____1__points_is_below__2___fitting_a_global_linear_calibration_" xml:space="preserve">
     <value>Calibration pass {0}: {1} points is below {2}; fitting a global linear calibration.</value>
@@ -224,7 +224,7 @@
     <value>Scoring calibration windows</value>
   </data>
   <data name="Calibrator_private___RT_quality_filter__pass__0_____1______2__peptides__removed__3__with_S_N____4__" xml:space="preserve">
-    <value>  RT quality filter (pass {0}): {1:N0} -&gt; {2:N0} peptides (removed {3:N0} with S/N &lt; {4:F1})</value>
+    <value>RT quality filter (pass {0}): {1:N0} -&gt; {2:N0} peptides (removed {3:N0} with S/N &lt; {4:F1})</value>
   </data>
   <data name="CwtCandidateLoader_LoadOneFile_Reconciliation_planning_stopped__the_CWT_candidates_in__0__could_not_be_read___1___The__" xml:space="preserve">
     <value>Reconciliation planning stopped: the CWT candidates in {0} could not be read: {1}. The .scores.parquet file is damaged. Delete it and run again so it is written again.</value>
@@ -329,10 +329,10 @@
     <value>Failed to load the scores for {0} from {1}: {2}</value>
   </data>
   <data name="FirstPassFdrTask_LogFirstPassResultsProjection____0____1__precursors_at__2__run_level_FDR" xml:space="preserve">
-    <value>  {0}: {1:N0} precursors at {2:P1} run-level FDR</value>
+    <value>{0}: {1:N0} precursors at {2:P1} run-level FDR</value>
   </data>
   <data name="FirstPassFdrTask_LogFirstPassResults____0____1__precursors_at__2__run_level_FDR" xml:space="preserve">
-    <value>  {0}: {1:N0} precursors at {2:P1} run-level FDR</value>
+    <value>{0}: {1:N0} precursors at {2:P1} run-level FDR</value>
   </data>
   <data name="FirstPassFdrTask_LogIntermediateWriteFailures___task_FirstPassFDR___0__of__1__first_pass_intermediate_files_could_not_be_written__so_" xml:space="preserve">
     <value>--task FirstPassFDR: {0:N0} of {1:N0} first-pass intermediate files could not be written, so the next task cannot run. See the warnings above for each file.</value>
@@ -381,6 +381,9 @@
   </data>
   <data name="FirstPassFdrTask_RehydrateForPerRunRescore_Read_missing_peak_targets_and_refined_calibrations_from__0__cross_run_reconciliation_" xml:space="preserve">
     <value>Read missing-peak targets and refined calibrations from {0:N0} cross-run reconciliation files in {1:F1}s</value>
+  </data>
+  <data name="FirstPassFdrTask_RehydrateForPerRunRescore_This_analysis_cannot_resume_from_its_completed_first_pass_with__0_" xml:space="preserve">
+    <value>This analysis cannot resume from its completed first pass with {0}. Delete this analysis's *.FirstPassFDR.osprey.task files and run again to repeat the first pass.</value>
   </data>
   <data name="FirstPassFdrTask_Rehydrate_Using_the_first_pass_q_values_saved_in_the_intermediate_files__first_pass_Percolator_is_" xml:space="preserve">
     <value>Using the first-pass q-values saved in the intermediate files; first-pass Percolator is not run again.</value>
@@ -434,7 +437,10 @@
     <value>Resuming: the first-pass intermediate files are up to date, but first-pass scoring runs again because a saved result is missing ({0}).</value>
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection___up_to_date___0_" xml:space="preserve">
-    <value>  up to date: {0}</value>
+    <value>up to date: {0}</value>
+  </data>
+  <data name="FirstPassFdrTask_RunFirstPassProjection_no_list_of_precursors_from_proteins_with_2_or_more_first_pass_peptides___0___was_found" xml:space="preserve">
+    <value>no list of precursors from proteins with 2 or more first-pass peptides ({0}) was found beside the inputs' .scores.parquet files</value>
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_no_readable_first_pass_model_file___1st_pass_model_json__was_found_beside_the_inputs___" xml:space="preserve">
     <value>no readable first-pass model file (.1st-pass.model.json) was found beside the inputs' .scores.parquet files</value>
@@ -598,8 +604,8 @@
   <data name="ModelDiagnosticsTask_DescribeOutput__0___report_only__no_other_file_is_written_" xml:space="preserve">
     <value>{0} (report only; no other file is written)</value>
   </data>
-  <data name="OspreyReportWriter_TryWriteReport_Failed_to_write_the__0__report__1____2_" xml:space="preserve">
-    <value>Failed to write the {0} report {1}: {2}</value>
+  <data name="OspreyReportWriter_TryWriteReport_Failed_to_write_the__0___1____2_" xml:space="preserve">
+    <value>Failed to write the {0} {1}: {2}</value>
   </data>
   <data name="OspreyReportWriter_WriteProteinGroups_Building_the_protein_group_report_for_1_group" xml:space="preserve">
     <value>Building the protein-group report for 1 group</value>
@@ -609,6 +615,12 @@
   </data>
   <data name="OspreyReportWriter_WriteReports_Skipping_reports__no_output_path___o__to_derive_report_file_names_from_" xml:space="preserve">
     <value>Skipping reports: no output path (-o) to derive report file names from.</value>
+  </data>
+  <data name="OspreyReportWriter_WriteReports_protein_group_report" xml:space="preserve">
+    <value>protein-group report</value>
+  </data>
+  <data name="OspreyReportWriter_WriteReports_summary_report" xml:space="preserve">
+    <value>summary report</value>
   </data>
   <data name="OspreyReportWriter_WriteSummary_Per_replicate_protein_FDR_for_1_file" xml:space="preserve">
     <value>Per-replicate protein FDR for 1 file</value>
@@ -697,6 +709,9 @@
   <data name="Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR_is_not_available_for_the__0__FDR_method__protein_FDR_will_use_first_pass_" xml:space="preserve">
     <value>Second-pass FDR is not available for the {0} FDR method; protein FDR will use first-pass scores.</value>
   </data>
+  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Applied_the_recomputed_q_values_to__0__precursor_candidate_peaks___1__scored_with_the_first_pass_model_" xml:space="preserve">
+    <value>Applied the recomputed q-values to {0:N0} precursor candidate peaks ({1:N0} scored with the first-pass model) in {2:F1}s.</value>
+  </data>
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Collecting_second_pass_precursor_candidates_from_1_file" xml:space="preserve">
     <value>Collecting second-pass precursor candidates from 1 file</value>
   </data>
@@ -711,6 +726,9 @@
   </data>
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Recomputing_second_pass_q_values_for_1_file" xml:space="preserve">
     <value>Recomputing second-pass q-values for 1 file</value>
+  </data>
+  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Scoring_up_to__0__re_scored_peaks_with_the_first_pass_model__one_file_at_a_time_" xml:space="preserve">
+    <value>Scoring up to {0:N0} re-scored peaks with the first-pass model, one file at a time.</value>
   </data>
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR___0__is_not_a_first_pass_intermediate_file_this_version_of_Osprey_can_" xml:space="preserve">
     <value>Second-pass FDR: {0} is not a first-pass intermediate file this version of Osprey can read (format {1}).</value>
@@ -754,12 +772,6 @@
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Writing_experiment_level_q_values_for__0__files" xml:space="preserve">
     <value>Writing experiment-level q-values for {0:N0} files</value>
   </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull__0___applied_the_recomputed_q_values_to__1__precursor_candidate_peaks___2__scored_with_" xml:space="preserve">
-    <value>{0}: applied the recomputed q-values to {1:N0} precursor candidate peaks ({2:N0} scored with the first-pass model) in {3:F1}s.</value>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull__0___scoring_up_to__1__re_scored_peaks_with_the_first_pass_model__one_file_at_a_time_" xml:space="preserve">
-    <value>{0}: scoring up to {1:N0} re-scored peaks with the first-pass model, one file at a time.</value>
-  </data>
   <data name="Pass2FdrSidecar_EnsureFrozenFirstPassPublished_Reloaded_the_precursor_candidates_from_proteins_with_2_or_more_detections___0__target_" xml:space="preserve">
     <value>Reloaded the precursor candidates from proteins with 2 or more detections ({0:N0} target-decoy pairs).</value>
   </data>
@@ -778,8 +790,8 @@
   <data name="Pass2FdrSidecar_OverlayPass2SidecarOntoFile_Failed_to_reload_the_second_pass_intermediate_file_for___0_____1____protein_FDR_will_use_" xml:space="preserve">
     <value>Failed to reload the second-pass intermediate file for '{0}' ({1}); protein FDR will use its first-pass q-values.</value>
   </data>
-  <data name="Pass2FdrSidecar_ReadOneFilePass2Inputs__0___failed_to_reload_peak_features_from__1____2_" xml:space="preserve">
-    <value>{0}: failed to reload peak features from {1}: {2}</value>
+  <data name="Pass2FdrSidecar_ReadOneFilePass2Inputs_Failed_to_reload_peak_features_from__0____1_" xml:space="preserve">
+    <value>Failed to reload peak features from {0}: {1}</value>
   </data>
   <data name="Pass2FdrSidecar_ReloadPass2Sidecars_Checking_second_pass_intermediate_files_for_1_file" xml:space="preserve">
     <value>Checking second-pass intermediate files for 1 file</value>
@@ -941,7 +953,7 @@
     <value>The cache is written beside its source data, so a --task worker whose --output-dir differs from the data folder must be pointed at it with --cache-dir. Pass --cache-dir &lt;folder holding {0}.spectra.bin&gt;, or run --task PerFileScoring for '{0}' again if no cache was ever written.</value>
   </data>
   <data name="PerFileRescoreTask_LoadSpectraForRescore___Streaming__1__MS1_and__0__MS_MS_spectra_from_cache_for__2_" xml:space="preserve">
-    <value>  Streaming {1:N0} MS1 and {0:N0} MS/MS spectra from cache for {2}</value>
+    <value>Streaming {1:N0} MS1 and {0:N0} MS/MS spectra from cache for {2}</value>
   </data>
   <data name="PerFileRescoreTask_MaterializeAllFromSource_Loading_the_kept_precursor_candidates_from_1_file" xml:space="preserve">
     <value>Loading the kept precursor candidates from 1 file</value>
@@ -1001,7 +1013,7 @@
     <value>Re-scoring file {0}/{1}: {2}</value>
   </data>
   <data name="PerFileRescoreTask_TryAssembleRescoreTargets____0__peaks_to_re_score_at_new_boundaries___1__missing_peaks" xml:space="preserve">
-    <value>  {0:N0} peaks to re-score at new boundaries, {1:N0} missing peaks</value>
+    <value>{0:N0} peaks to re-score at new boundaries, {1:N0} missing peaks</value>
   </data>
   <data name="PerFileRescoreTask_TryCreatePass2Worker_No_readable_saved_first_pass_model__so_the_per_file_part_of_second_pass_FDR_runs_in_" xml:space="preserve">
     <value>No readable saved first-pass model, so the per-file part of second-pass FDR runs in SecondPassFDR for this run.</value>
@@ -1013,43 +1025,43 @@
     <value>File {0:N0}/{1:N0}: {2} was already re-scored; keeping it.</value>
   </data>
   <data name="PerFileRescoreTask_WriteReconciledAndStamp___Failed_to_remove_the_incomplete_re_scored_results_file__0__after_a_failed_write___1_" xml:space="preserve">
-    <value>  Failed to remove the incomplete re-scored results file {0} after a failed write: {1}</value>
+    <value>Failed to remove the incomplete re-scored results file {0} after a failed write: {1}</value>
   </data>
   <data name="PerFileRescoreTask_private___Missing_peaks_found_by_peak_detection___0____1_s_" xml:space="preserve">
-    <value>  Missing peaks found by peak detection: {0:N0} ({1:F1}s)</value>
+    <value>Missing peaks found by peak detection: {0:N0} ({1:F1}s)</value>
   </data>
   <data name="PerFileRescoreTask_private___Missing_peaks_integrated_at_imputed_boundaries___0____1_s_" xml:space="preserve">
-    <value>  Missing peaks integrated at imputed boundaries: {0:N0} ({1:F1}s)</value>
+    <value>Missing peaks integrated at imputed boundaries: {0:N0} ({1:F1}s)</value>
   </data>
   <data name="PerFileRescoreTask_private___Re_scored__0__of__1__peaks___2_s_" xml:space="preserve">
-    <value>  Re-scored {0:N0} of {1:N0} peaks ({2:F1}s)</value>
+    <value>Re-scored {0:N0} of {1:N0} peaks ({2:F1}s)</value>
   </data>
   <data name="PerFileRescoreTask_private____0__targets_had_no_signal_within_their_new_peak_boundaries__their_scores_were_reset_" xml:space="preserve">
-    <value>  {0:N0} targets had no signal within their new peak boundaries; their scores were reset.</value>
+    <value>{0:N0} targets had no signal within their new peak boundaries; their scores were reset.</value>
   </data>
   <data name="PerFileResumeDriver_Stamp___Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_" xml:space="preserve">
-    <value>  Failed to record that --task {0} completed {1}: {2}. A resume will redo this step.</value>
+    <value>Failed to record that --task {0} completed {1}: {2}. A resume will redo this step.</value>
   </data>
   <data name="PerFileScoringTask_EmitCalibrationSummary_Calibration_summary___0___" xml:space="preserve">
     <value>Calibration summary [{0}]:</value>
   </data>
   <data name="PerFileScoringTask_EmitCalibrationSummary___RT__calibration_failed___using_fallback_RT_tolerance" xml:space="preserve">
-    <value>  RT: calibration failed - using fallback RT tolerance</value>
+    <value>RT: calibration failed - using fallback RT tolerance</value>
   </data>
   <data name="PerFileScoringTask_EmitCalibrationSummary___RT_fit__MAD__0__min__residual_SD__1__min__R_2__2___n__3__points" xml:space="preserve">
-    <value>  RT fit: MAD={0:F3} min, residual SD={1:F3} min, R^2={2:F4}, n={3:N0} points</value>
+    <value>RT fit: MAD={0:F3} min, residual SD={1:F3} min, R^2={2:F4}, n={3:N0} points</value>
   </data>
   <data name="PerFileScoringTask_EmitCalibrationSummary___RT_tolerance______0__min_before________1__min_after_calibration" xml:space="preserve">
-    <value>  RT tolerance: +/-{0} min before -&gt; +/-{1} min after calibration</value>
+    <value>RT tolerance: +/-{0} min before -&gt; +/-{1} min after calibration</value>
   </data>
   <data name="PerFileScoringTask_EmitCalibrationSummary___RT_tolerance______0__min_before________1__min_computed__3_MAD_1_4826___capped_at_____2__" xml:space="preserve">
-    <value>  RT tolerance: +/-{0} min before -&gt; +/-{1} min computed (3*MAD*1.4826), capped at +/-{2} min, after calibration</value>
+    <value>RT tolerance: +/-{0} min before -&gt; +/-{1} min computed (3*MAD*1.4826), capped at +/-{2} min, after calibration</value>
   </data>
   <data name="PerFileScoringTask_EmitCalibrationSummary___RT_tolerance______0__min_before________1__min_computed__3_MAD_1_4826___using_____2__min_" xml:space="preserve">
-    <value>  RT tolerance: +/-{0} min before -&gt; +/-{1} min computed (3*MAD*1.4826), using +/-{2} min floor, after calibration</value>
+    <value>RT tolerance: +/-{0} min before -&gt; +/-{1} min computed (3*MAD*1.4826), using +/-{2} min floor, after calibration</value>
   </data>
   <data name="PerFileScoringTask_EmitCalibrationSummary___RT_tolerance______0__min_before____undetermined_after_calibration__no_usable_RT_spread_" xml:space="preserve">
-    <value>  RT tolerance: +/-{0} min before -&gt; undetermined after calibration (no usable RT spread)</value>
+    <value>RT tolerance: +/-{0} min before -&gt; undetermined after calibration (no usable RT spread)</value>
   </data>
   <data name="PerFileScoringTask_EmitCalibrationSummary_fragment" xml:space="preserve">
     <value>fragment</value>
@@ -1058,10 +1070,10 @@
     <value>precursor</value>
   </data>
   <data name="PerFileScoringTask_EmitMassCalibrationLine____0__mass__correction__1___2___SD__3___2___tolerance_____4___2___n__5___6__matches_" xml:space="preserve">
-    <value>  {0} mass: correction={1:F2} {2}, SD={3:F2} {2}, tolerance=+/-{4:F2} {2} (n={5:N0} {6} matches)</value>
+    <value>{0} mass: correction={1:F2} {2}, SD={3:F2} {2}, tolerance=+/-{4:F2} {2} (n={5:N0} {6} matches)</value>
   </data>
   <data name="PerFileScoringTask_EmitMassCalibrationLine____0__mass__not_calibrated" xml:space="preserve">
-    <value>  {0} mass: not calibrated</value>
+    <value>{0} mass: not calibrated</value>
   </data>
   <data name="PerFileScoringTask_FinalizeAndCheck_No_precursor_candidates_were_scored__so_FDR_control_cannot_run_" xml:space="preserve">
     <value>No precursor candidates were scored, so FDR control cannot run.</value>
@@ -1076,10 +1088,10 @@
     <value>Failed to load the scores files: {0}</value>
   </data>
   <data name="PerFileScoringTask_LoadCalibrationAndIsolation___Failed_to_load_calibration_for__0____1_" xml:space="preserve">
-    <value>  Failed to load calibration for {0}: {1}</value>
+    <value>Failed to load calibration for {0}: {1}</value>
   </data>
   <data name="PerFileScoringTask_LoadJoinOnlyCalibration___Failed_to_load_calibration_for__0____1_" xml:space="preserve">
-    <value>  Failed to load calibration for {0}: {1}</value>
+    <value>Failed to load calibration for {0}: {1}</value>
   </data>
   <data name="PerFileScoringTask_LoadJoinOnlyPerRunNames__1__loads_one_file_at_a_time___0__files__" xml:space="preserve">
     <value>{1} loads one file at a time ({0:N0} files).</value>
@@ -1091,10 +1103,10 @@
     <value>{0} is missing the feature columns of an Osprey .scores.parquet file. Delete it and re-run so it is regenerated.</value>
   </data>
   <data name="PerFileScoringTask_LoadJoinOnlyScoresForFile_____Loading_file__0___1____2___from__3__" xml:space="preserve">
-    <value>    Loading file {0}/{1}: {2} (from {3})</value>
+    <value>Loading file {0}/{1}: {2} (from {3})</value>
   </data>
   <data name="PerFileScoringTask_LoadJoinOnlyScoresForFile_______Loaded__0__first_pass_precursor_candidate_peaks__features_not_needed_here_" xml:space="preserve">
-    <value>      Loaded {0:N0} first-pass precursor candidate peaks (features not needed here)</value>
+    <value>Loaded {0:N0} first-pass precursor candidate peaks (features not needed here)</value>
   </data>
   <data name="PerFileScoringTask_LoadJoinOnlyScores_Loading_FDR_values_from_intermediate_files_for_1_file" xml:space="preserve">
     <value>Loading FDR values from intermediate files for 1 file</value>
@@ -1118,10 +1130,10 @@
     <value>Second-pass FDR</value>
   </data>
   <data name="PerFileScoringTask_LoadJoinOnlyScores___Loaded__0__first_pass_precursor_candidate_peaks__features_not_needed_here_" xml:space="preserve">
-    <value>  Loaded {0:N0} first-pass precursor candidate peaks (features not needed here)</value>
+    <value>Loaded {0:N0} first-pass precursor candidate peaks (features not needed here)</value>
   </data>
   <data name="PerFileScoringTask_LoadJoinOnlyScores___Loaded__0__first_pass_precursor_candidate_peaks_with_their_features" xml:space="preserve">
-    <value>  Loaded {0:N0} first-pass precursor candidate peaks with their features</value>
+    <value>Loaded {0:N0} first-pass precursor candidate peaks with their features</value>
   </data>
   <data name="PerFileScoringTask_LoadJoinOnlyScores___input_scores___0__has__1__precursor_candidate_peaks_but__2__feature_rows_" xml:space="preserve">
     <value>--input-scores: {0} has {1:N0} precursor candidate peaks but {2:N0} feature rows.</value>
@@ -1169,7 +1181,7 @@
     <value>Wrote {0:N0} precursor candidate peaks to {1} ({2:F1}s)</value>
   </data>
   <data name="PerFileScoringTask_ProcessFile____0__spectra_had_unsorted_peaks_and_were_sorted__use___verbose_for_detail_" xml:space="preserve">
-    <value> ({0:N0} spectra had unsorted peaks and were sorted; use --verbose for detail)</value>
+    <value>({0:N0} spectra had unsorted peaks and were sorted; use --verbose for detail)</value>
   </data>
   <data name="PerFileScoringTask_RehydrateFromOwnOutputs_Reading_first_pass_results_for_1_file" xml:space="preserve">
     <value>Reading first-pass results for 1 file</value>
@@ -1178,7 +1190,7 @@
     <value>Reading first-pass results for {0:N0} files</value>
   </data>
   <data name="PerFileScoringTask_RehydrateFromOwnOutputs___Resuming___0__has_no_feature_columns__so_it_is_not_a_valid_Osprey_scores_file__Delete_" xml:space="preserve">
-    <value>  Resuming: {0} has no feature columns, so it is not a valid Osprey scores file. Delete it and run again so it is written again.</value>
+    <value>Resuming: {0} has no feature columns, so it is not a valid Osprey scores file. Delete it and run again so it is written again.</value>
   </data>
   <data name="PerFileScoringTask_ResolveCalibration_Failed_to_save_the_calibration_file___0_" xml:space="preserve">
     <value>Failed to save the calibration file: {0}</value>
@@ -1214,16 +1226,16 @@
     <value>Scoring file {0}/{1}: {2}</value>
   </data>
   <data name="PerFileScoringTask_TryLoadStubsAndCalibration___Resuming___0__has__1__precursor_candidate_peaks_but__2__feature_rows__scoring_it_again_" xml:space="preserve">
-    <value>  Resuming: {0} has {1:N0} precursor candidate peaks but {2:N0} feature rows; scoring it again.</value>
+    <value>Resuming: {0} has {1:N0} precursor candidate peaks but {2:N0} feature rows; scoring it again.</value>
   </data>
   <data name="PerFileScoringTask_TryLoadStubsAndCalibration___Resuming___0__has__1__precursor_candidate_peaks_but__2__feature_rows__so_its_saved_" xml:space="preserve">
-    <value>  Resuming: {0} has {1:N0} precursor candidate peaks but {2:N0} feature rows, so its saved scores cannot be loaded.</value>
+    <value>Resuming: {0} has {1:N0} precursor candidate peaks but {2:N0} feature rows, so its saved scores cannot be loaded.</value>
   </data>
   <data name="PerFileScoringTask_TryLoadStubsAndCalibration___Resuming__failed_to_load__0____1___scoring_it_again_" xml:space="preserve">
-    <value>  Resuming: failed to load {0}: {1}; scoring it again.</value>
+    <value>Resuming: failed to load {0}: {1}; scoring it again.</value>
   </data>
   <data name="PerFileScoringTask_TryLoadStubsAndCalibration___Resuming__failed_to_load_the_saved_scores_from__0____1_" xml:space="preserve">
-    <value>  Resuming: failed to load the saved scores from {0}: {1}</value>
+    <value>Resuming: failed to load the saved scores from {0}: {1}</value>
   </data>
   <data name="PerFileScoringTask_WarnPreCompactionPool_This_configuration" xml:space="preserve">
     <value>This configuration</value>
@@ -1235,7 +1247,7 @@
     <value>Could not write the re-scored intermediate file {1} from {0}: {2}</value>
   </data>
   <data name="ReconciledParquetWriter_Write___Wrote__1__precursor_candidate_peaks_for__0____2__re_scored_and__3__missing_peaks_added__" xml:space="preserve">
-    <value>  Wrote {1:N0} precursor candidate peaks for {0}: {2:N0} re-scored and {3:N0} missing peaks added, from {4:N0} first-pass peaks</value>
+    <value>Wrote {1:N0} precursor candidate peaks for {0}: {2:N0} re-scored and {3:N0} missing peaks added, from {4:N0} first-pass peaks</value>
   </data>
   <data name="RehydrateFailedException_The__0__step_could_not_reload_its_results_from_the_intermediate_files__exit_code__1___" xml:space="preserve">
     <value>The {0} step could not reload its results from the intermediate files (exit code {1}).</value>
@@ -1263,6 +1275,12 @@
   </data>
   <data name="RescoreHydration_HydrateReconciliationOverlay_Loading_the_cross_run_reconciliation_files_for_all__0__runs_into_memory_at_once__memory_" xml:space="preserve">
     <value>Loading the cross-run reconciliation files for all {0:N0} runs into memory at once; memory grows with the number of files.</value>
+  </data>
+  <data name="RescoreHydration_LoadEnvelope_Failed_to_read__0____1_" xml:space="preserve">
+    <value>Failed to read {0}: {1}</value>
+  </data>
+  <data name="RescoreHydration_OverlayFirstPassSidecar_Failed_to_read_the_first_pass_intermediate_file_for__0___expected_at__1___" xml:space="preserve">
+    <value>Failed to read the first-pass intermediate file for {0} (expected at {1}).</value>
   </data>
   <data name="RescoredEntries_StreamFiles__1___1_file_" xml:space="preserve">
     <value>{1} (1 file)</value>
@@ -1301,10 +1319,10 @@
     <value>Kept {0:N0} of {1:N0} precursor candidates for re-scoring and second-pass FDR.</value>
   </data>
   <data name="ScoringTaskShared_LogCompaction____0__passing_target_decoy_pairs" xml:space="preserve">
-    <value>  {0:N0} passing target-decoy pairs</value>
+    <value>{0:N0} passing target-decoy pairs</value>
   </data>
   <data name="ScoringTaskShared_LogCompaction____0__passing_target_decoy_pairs___1__planned_peak_re_picks_and_boundary_imputations_" xml:space="preserve">
-    <value>  {0:N0} passing target-decoy pairs; {1:N0} planned peak re-picks and boundary imputations dropped</value>
+    <value>{0:N0} passing target-decoy pairs; {1:N0} planned peak re-picks and boundary imputations dropped</value>
   </data>
   <data name="ScoringTaskShared_ReadRetainedBaseIdsOrFail_The_list_of_precursor_candidates_kept_for_cross_run_reconciliation_could_not_be_read_" xml:space="preserve">
     <value>The list of precursor candidates kept for cross-run reconciliation could not be read.</value>

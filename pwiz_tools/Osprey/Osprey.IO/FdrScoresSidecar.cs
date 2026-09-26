@@ -352,11 +352,11 @@ namespace pwiz.Osprey.IO
                 scores = new double[n];
                 var header = new byte[HeaderLength];
                 if (!ReadFully(fs, header, HeaderLength))
-                    throw new IOException(OspreyIOResources.Pass_ReadScalars_The_intermediate_file_is_damaged__its_header_is_cut_short___ + path);
+                    throw new IOException(string.Format(OspreyIOResources.Pass_ReadScalars_The_intermediate_file_is_damaged__its_header_is_cut_short___, path));
                 for (int i = 0; i < Magic.Length; i++)
                 {
                     if (header[i] != Magic[i])
-                        throw new IOException(OspreyIOResources.Pass_ReadScalars_The_file_is_not_an_Osprey_intermediate_file__ + path);
+                        throw new IOException(string.Format(OspreyIOResources.Pass_ReadScalars_The_file_is_not_an_Osprey_intermediate_file__, path));
                 }
                 if (header[8] != FormatVersion)
                 {

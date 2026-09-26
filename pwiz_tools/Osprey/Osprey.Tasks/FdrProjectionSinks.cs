@@ -129,7 +129,7 @@ namespace pwiz.Osprey.Tasks
             var perFile = Projections.PerFile;
             for (int f = 0; f < perFile.Count; f++)
             {
-                log.LogInfo(LogTag.COUNT, @"{0} Percolator pass [{1}]: {2} targets, {3} decoys at {4:P0} FDR",
+                log.LogInfo(LogTag.COUNT, @"{0} Percolator pass [{1}]: {2} targets, {3} decoys at {4:0%} FDR",
                     _passLabel, perFile[f].Key, _fileTargets[f], _fileDecoys[f], _runFdr);
                 nTargetPassing += _fileTargets[f];
                 nDecoyPassing += _fileDecoys[f];

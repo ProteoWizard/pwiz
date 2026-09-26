@@ -402,7 +402,7 @@ namespace pwiz.Osprey.Scoring
             // XCorr diagnostic for bisection
             string diagXcorrScan = Environment.GetEnvironmentVariable(@"OSPREY_DIAG_XCORR_SCAN");
             if (!string.IsNullOrEmpty(diagXcorrScan) &&
-                spectrum.ScanNumber.ToString() == diagXcorrScan)
+                spectrum.ScanNumber.ToString(System.Globalization.CultureInfo.InvariantCulture) == diagXcorrScan)
             {
                 using (var dw = new System.IO.StreamWriter(@"cs_xcorr_diag.txt", true))
                 {
@@ -446,7 +446,7 @@ namespace pwiz.Osprey.Scoring
                         dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
                             "frag\t{0}\tmz={1:G17}\tbin={2}\tval={3}\tdup={4}",
                             f, entry.Fragments[f].Mz, fb,
-                            (fb >= 0 && fb < n) ? preprocessed[fb].ToString(@"G17") : @"OOB",
+                            (fb >= 0 && fb < n) ? preprocessed[fb].ToString(@"G17", System.Globalization.CultureInfo.InvariantCulture) : @"OOB",
                             dup));
                         // ReSharper restore LocalizableElement
                     }

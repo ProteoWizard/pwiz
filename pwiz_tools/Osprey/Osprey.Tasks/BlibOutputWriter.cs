@@ -128,6 +128,11 @@ namespace pwiz.Osprey.Tasks
         /// user-correctable condition (the folder is not writable, or the file is locked), so
         /// it becomes a <see cref="BlibOutputException"/> naming the output rather than a raw
         /// <see cref="SQLiteException"/> whose type and stack would bury the cause.
+        ///
+        /// <para>Only SQLite failures that describe file access are translated. The constructor
+        /// also creates the schema and prepares the insert statements, and a defect there is a
+        /// bug in this build, not a locked file - reporting it as one would send the user
+        /// looking for a program that does not exist.</para>
         /// </summary>
         private static BlibWriter OpenBlibWriter(string tempPath, string outputPath)
         {
@@ -135,9 +140,34 @@ namespace pwiz.Osprey.Tasks
             {
                 return new BlibWriter(tempPath);
             }
-            catch (Exception ex) when (ex is SQLiteException || ex is IOException || ex is UnauthorizedAccessException)
+            catch (Exception ex) when (IsFileAccessFailure(ex))
             {
                 throw new BlibOutputException(outputPath, ex);
+            }
+        }
+
+        private static bool IsFileAccessFailure(Exception ex)
+        {
+            if (ex is IOException || ex is UnauthorizedAccessException)
+                return true;
+            if (!(ex is SQLiteException sqliteEx))
+                return false;
+            // Strip any extended code (IoErr_Write, CantOpen_IsDir, ...) to its primary code: SQLite
+            // keeps the primary result code in the low byte.
+            var primary = (SQLiteErrorCode)((int)sqliteEx.ResultCode & 0xFF);
+            switch (primary)
+            {
+                case SQLiteErrorCode.CantOpen:
+                case SQLiteErrorCode.ReadOnly:
+                case SQLiteErrorCode.Busy:
+                case SQLiteErrorCode.Locked:
+                case SQLiteErrorCode.IoErr:
+                case SQLiteErrorCode.Full:
+                case SQLiteErrorCode.Perm:
+                case SQLiteErrorCode.Auth:
+                    return true;
+                default:
+                    return false;
             }
         }
 

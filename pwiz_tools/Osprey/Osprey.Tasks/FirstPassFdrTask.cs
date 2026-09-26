@@ -1235,16 +1235,29 @@ namespace pwiz.Osprey.Tasks
                 residentStubs += kvp.Value.Count;
             if (residentStubs > 0)
             {
-                ctx.LogError(string.Format(
-                    @"The per-run rescore arm was reached with {0:N0} first-pass stub(s) still " +
-                    @"resident across {1} run(s). This configuration holds the resident " +
-                    @"first-pass pool (a NeedsResidentPool consumer: OSPREY_FDR_PROJECTION=0 " +
-                    @"or a non-Percolator FDR method), which the per-run " +
-                    @"survivor loader cannot serve: publishing these lists as compacted would " +
-                    @"fold the second pass over every pre-compaction row. Run this " +
-                    @"configuration straight through with the flag up front, or drop the " +
-                    @"resident consumer.",
-                    residentStubs, perFileEntries.Count));
+                // Reached only on a RESUME (FirstPassFDR's Run skipped because its outputs are
+                // current) whose PerFileScoring rehydrate took the resident load - which its
+                // GuardResidentPool admits only when OSPREY_ALLOW_UNFIXED_RESIDENT names the
+                // token. A fresh first pass (Run, not Rehydrate) never comes here, so deleting
+                // the FirstPassFDR task files is a remedy that works. The non-Percolator
+                // --fdr-method case is the one a user can reach by following the guard's own
+                // instruction; OSPREY_FDR_PROJECTION=0 is the developer A/B oracle.
+                if (ctx.Config.FdrMethod.UsesPercolatorFramework())
+                {
+                    ctx.LogError(string.Format(
+                        @"The per-run rescore arm was reached with {0:N0} first-pass stubs still " +
+                        @"resident across {1} runs (OSPREY_FDR_PROJECTION=0), which the per-run " +
+                        @"survivor loader cannot serve: publishing these lists as compacted would " +
+                        @"fold the second pass over every pre-compaction row. Run this " +
+                        @"configuration straight through, or drop the resident consumer.",
+                        residentStubs, perFileEntries.Count));
+                }
+                else
+                {
+                    ctx.LogError(string.Format(
+                        OspreyTasksResources.FirstPassFdrTask_RehydrateForPerRunRescore_This_analysis_cannot_resume_from_its_completed_first_pass_with__0_,
+                        @"--fdr-method " + ctx.Config.FdrMethod.ToString().ToLowerInvariant()));
+                }
                 ctx.ExitCode = 1;
                 return false;
             }
@@ -1894,7 +1907,7 @@ namespace pwiz.Osprey.Tasks
                         }
                     }
                 }
-                ctx.LogInfo(string.Format(OspreyTasksResources.FirstPassFdrTask_LogFirstPassResults____0____1__precursors_at__2__run_level_FDR,
+                ctx.LogInfo(@"  " + string.Format(OspreyTasksResources.FirstPassFdrTask_LogFirstPassResults____0____1__precursors_at__2__run_level_FDR,
                     kvp.Key, fileTargets, config.RunFdr));
                 passingTargets += fileTargets;
             }
@@ -3352,7 +3365,7 @@ namespace pwiz.Osprey.Tasks
                 foreach (var kv in projections.PerFile)
                 {
                     if (resumableFiles.Contains(kv.Key))
-                        ctx.LogInfo(string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection___up_to_date___0_, kv.Key));
+                        ctx.LogInfo(@"  " + string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection___up_to_date___0_, kv.Key));
                 }
             }
 
@@ -3394,8 +3407,8 @@ namespace pwiz.Osprey.Tasks
                 else if (probe.Model == null)
                     refusals.Add(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_the_first_pass_model_file___1st_pass_model_json__holds_no_model);
                 else if (OspreyEnvironment.Pass2ProteinCompact && probe.StratumBaseIds == null)
-                    refusals.Add(@"no protein-compact stratum (.1st-pass.stratum.json, or the " +
-                                 @"legacy field in .1st-pass.model.json)");
+                    refusals.Add(string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_no_list_of_precursors_from_proteins_with_2_or_more_first_pass_peptides___0___was_found,
+                        @".1st-pass.stratum.json"));
                 if (refusals.Count > 0)
                 {
                     ctx.LogInfo(string.Format(
@@ -3960,7 +3973,7 @@ namespace pwiz.Osprey.Tasks
             for (int f = 0; f < projections.PerFile.Count; f++)
             {
                 int fileTargets = filePassingTargets[f];
-                ctx.LogInfo(string.Format(OspreyTasksResources.FirstPassFdrTask_LogFirstPassResultsProjection____0____1__precursors_at__2__run_level_FDR,
+                ctx.LogInfo(@"  " + string.Format(OspreyTasksResources.FirstPassFdrTask_LogFirstPassResultsProjection____0____1__precursors_at__2__run_level_FDR,
                     projections.PerFile[f].Key, fileTargets, config.RunFdr));
                 passingTargets += fileTargets;
             }

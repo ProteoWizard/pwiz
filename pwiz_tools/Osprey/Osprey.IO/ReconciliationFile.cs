@@ -115,12 +115,12 @@ namespace pwiz.Osprey.IO
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentException(@"path must not be null or empty", nameof(path));
             if (!File.Exists(path))
-                throw new FileNotFoundException(OspreyIOResources.ReconciliationFile_Load_Reconciliation_file_not_found__ + path, path);
+                throw new FileNotFoundException(string.Format(OspreyIOResources.ReconciliationFile_Load_Reconciliation_file_not_found__, path), path);
 
             string json = File.ReadAllText(path);
             var parsed = JsonConvert.DeserializeObject<ReconciliationFile>(json);
             if (parsed == null)
-                throw new InvalidDataException(OspreyIOResources.ReconciliationFile_Load_Reconciliation_file_parsed_as_null__ + path);
+                throw new InvalidDataException(string.Format(OspreyIOResources.ReconciliationFile_Load_Reconciliation_file_parsed_as_null__, path));
             if (parsed.FormatVersion != CurrentFormatVersion)
             {
                 throw new InvalidDataException(string.Format(

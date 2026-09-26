@@ -77,14 +77,16 @@ namespace pwiz.Osprey.Tasks
             if (config.WriteProteinReport)
             {
                 string path = stem + @".protein_groups.tsv";
-                TryWriteReport(@"protein-group", path, log, logWarning,
+                TryWriteReport(@"protein-group",
+                    OspreyTasksResources.OspreyReportWriter_WriteReports_protein_group_report, path, log, logWarning,
                     () => WriteProteinGroups(path, experimentResult, fullLibrary, config));
             }
 
             if (config.WriteSummaryReport)
             {
                 string path = stem + @".stats.tsv";
-                TryWriteReport(@"summary", path, log, logWarning,
+                TryWriteReport(@"summary",
+                    OspreyTasksResources.OspreyReportWriter_WriteReports_summary_report, path, log, logWarning,
                     () => WriteSummary(path, experimentResult, rescored, fullLibrary, config));
             }
         }
@@ -94,7 +96,9 @@ namespace pwiz.Osprey.Tasks
         // pipeline abort. The common case is the previous run's report still open in Excel,
         // which makes FileSaver.Commit throw IOException on the replace; Commit deliberately
         // lets that propagate so the caller can log it. FileSaver's disposal drops the temp.
-        private static void TryWriteReport(string label, string path,
+        // label is the machine token on the [COUNT] line; displayName is the localized name
+        // the warning uses.
+        private static void TryWriteReport(string label, string displayName, string path,
             IOspreyLog log, Action<string> logWarning, Action write)
         {
             try
@@ -105,7 +109,7 @@ namespace pwiz.Osprey.Tasks
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
             {
                 logWarning?.Invoke(string.Format(
-                    OspreyTasksResources.OspreyReportWriter_TryWriteReport_Failed_to_write_the__0__report__1____2_, label, path, ex.Message));
+                    OspreyTasksResources.OspreyReportWriter_TryWriteReport_Failed_to_write_the__0___1____2_, displayName, path, ex.Message));
             }
         }
 
