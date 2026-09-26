@@ -214,13 +214,13 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static string Pass1Path(string inputPath)
         {
-            return ScoresPath(inputPath, "1st-pass");
+            return ScoresPath(inputPath, @"1st-pass");
         }
 
         /// <summary>Path for the second-pass FDR scores sidecar.</summary>
         public static string Pass2Path(string inputPath)
         {
-            return ScoresPath(inputPath, "2nd-pass");
+            return ScoresPath(inputPath, @"2nd-pass");
         }
 
         /// <summary>
@@ -287,13 +287,13 @@ namespace pwiz.Osprey.IO
 
         private static string ScoresPath(string inputPath, string passLabel)
         {
-            string stem = Path.GetFileNameWithoutExtension(inputPath) ?? "unknown";
+            string stem = Path.GetFileNameWithoutExtension(inputPath) ?? @"unknown";
             // Route through ArtifactPaths so the sidecar follows the scores
             // parquet into --output-dir (default = the input's own directory).
             // Every caller -- straight-through writes, resume reads, and the
             // resume-check iterators -- shares this, so they stay consistent.
             string parent = ArtifactPaths.ResolveOutputDir(inputPath);
-            string filename = string.Format("{0}.{1}.fdr_scores.bin", stem, passLabel);
+            string filename = string.Format(@"{0}.{1}.fdr_scores.bin", stem, passLabel);
             return string.IsNullOrEmpty(parent) ? filename : Path.Combine(parent, filename);
         }
 
@@ -335,7 +335,7 @@ namespace pwiz.Osprey.IO
                 long len = fs.Length;
                 if (len < HeaderLength)
                     throw new IOException(string.Format(
-                        "The intermediate file is damaged (only {0:N0} bytes): {1}", len, path));
+                        OspreyIOResources.Pass_ReadScalars_The_intermediate_file_is_damaged__only__0__bytes____1_, len, path));
                 // Reject a payload that is not a whole number of records instead of flooring.
                 // Flooring silently drops a trailing partial record, so a truncated sidecar
                 // returns fewer scalars than it has entries and reads as a short file rather
@@ -344,7 +344,7 @@ namespace pwiz.Osprey.IO
                 if (payload % RecordLength != 0)
                 {
                     throw new IOException(string.Format(
-                        "The intermediate file is damaged ({0:N0} bytes of records is not a whole number of {1}-byte records): {2}",
+                        OspreyIOResources.Pass_ReadScalars_The_intermediate_file_is_damaged___0__bytes_of_records_is_not_a_whole_number_of__1__byte_,
                         payload, RecordLength, path));
                 }
                 int n = (int)(payload / RecordLength);
@@ -352,16 +352,16 @@ namespace pwiz.Osprey.IO
                 scores = new double[n];
                 var header = new byte[HeaderLength];
                 if (!ReadFully(fs, header, HeaderLength))
-                    throw new IOException("The intermediate file is damaged (its header is cut short): " + path);
+                    throw new IOException(OspreyIOResources.Pass_ReadScalars_The_intermediate_file_is_damaged__its_header_is_cut_short___ + path);
                 for (int i = 0; i < Magic.Length; i++)
                 {
                     if (header[i] != Magic[i])
-                        throw new IOException("The file is not an Osprey intermediate file: " + path);
+                        throw new IOException(OspreyIOResources.Pass_ReadScalars_The_file_is_not_an_Osprey_intermediate_file__ + path);
                 }
                 if (header[8] != FormatVersion)
                 {
                     throw new IOException(string.Format(
-                        "The intermediate file was written by a different Osprey version (format {0}, expected {1}): {2}",
+                        OspreyIOResources.Pass_ReadScalars_The_intermediate_file_was_written_by_a_different_Osprey_version__format__0___expected__1__,
                         header[8], FormatVersion, path));
                 }
                 // Every other reader here checks the pass byte; this one did not, so a 2nd-pass
@@ -371,7 +371,7 @@ namespace pwiz.Osprey.IO
                 if (header[9] != (byte)expectedPass)
                 {
                     throw new IOException(string.Format(
-                        "The intermediate file belongs to the other FDR pass (pass {0}, expected {1}): {2}",
+                        OspreyIOResources.Pass_ReadScalars_The_intermediate_file_belongs_to_the_other_FDR_pass__pass__0___expected__1_____2_,
                         header[9], (byte)expectedPass, path));
                 }
                 var rec = new byte[RecordLength];
@@ -379,7 +379,7 @@ namespace pwiz.Osprey.IO
                 {
                     if (!ReadFully(fs, rec, RecordLength))
                         throw new IOException(string.Format(
-                            "The intermediate file is damaged (cut short at record {0:N0}): {1}", i, path));
+                            OspreyIOResources.Pass_ReadScalars_The_intermediate_file_is_damaged__cut_short_at_record__0_____1_, i, path));
                     entryIds[i] = BitConverter.ToUInt32(rec, 0);
                     scores[i] = BitConverter.ToDouble(rec, 4);
                     // Decoded only for the selected subset. The other ~82% of a file's records
@@ -879,8 +879,7 @@ namespace pwiz.Osprey.IO
         private static bool ThrowPartialWalk(string path, long delivered, Exception inner = null)
         {
             string message = string.Format(
-                "Reading the intermediate file '{0}' failed partway, after {1:N0} records were " +
-                "read. The run stops here rather than continue with part of the file's values.",
+                OspreyIOResources.Pass_ThrowPartialWalk_Reading_the_intermediate_file___0___failed_partway__after__1__records_were_read__The_run_,
                 path, delivered);
             if (inner != null)
                 throw new IOException(message, inner);

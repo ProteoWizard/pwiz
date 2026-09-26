@@ -685,12 +685,23 @@ namespace pwiz.Osprey.Test
                 year + yearDelta, ordinal + ordinalDelta, branch + branchDelta, doy + doyDelta);
         }
 
+        private const string MD_FILE = @"test.scores.parquet";
+
         private static string CheckMd(string cachedV, string cachedS, string cachedL)
         {
             return ParquetScoreCache.CheckParquetMetadata(
-                "test.scores.parquet",
+                MD_FILE,
                 cachedV, cachedS, cachedL,
                 VALID_SEARCH, VALID_LIB, CURRENT_VERSION);
+        }
+
+        /// <summary>
+        /// The whole message, from the same resource the code formats, so the assertion holds in
+        /// every UI language. {0} is always the file, and the versions follow as {1} and {2}.
+        /// </summary>
+        private static void AssertMd(string format, string err, string cachedVersion = null)
+        {
+            Assert.AreEqual(string.Format(format, MD_FILE, cachedVersion, CURRENT_VERSION), err);
         }
 
         [TestMethod]
@@ -726,7 +737,7 @@ namespace pwiz.Osprey.Test
             // than silently reuse a stale cache behind an easily-missed warning.
             string err = CheckMd(DAILY_DRIFT_VERSION, VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "different daily build");
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_a_different_daily_build_of_Osprey___1___this_is__2____Score_the_file_, err, DAILY_DRIFT_VERSION);
         }
 
         [TestMethod]
@@ -734,7 +745,7 @@ namespace pwiz.Osprey.Test
         {
             string err = CheckMd(BRANCH_DRIFT_VERSION, VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "incompatible release identity");
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_Osprey__1___which_is_not_compatible_with_this_build___2____Score_the_, err, BRANCH_DRIFT_VERSION);
         }
 
         [TestMethod]
@@ -742,7 +753,7 @@ namespace pwiz.Osprey.Test
         {
             string err = CheckMd(ORDINAL_DRIFT_VERSION, VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "incompatible release identity");
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_Osprey__1___which_is_not_compatible_with_this_build___2____Score_the_, err, ORDINAL_DRIFT_VERSION);
         }
 
         [TestMethod]
@@ -750,7 +761,7 @@ namespace pwiz.Osprey.Test
         {
             string err = CheckMd(YEAR_DRIFT_VERSION, VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "incompatible release identity");
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_Osprey__1___which_is_not_compatible_with_this_build___2____Score_the_, err, YEAR_DRIFT_VERSION);
         }
 
         [TestMethod]
@@ -758,7 +769,7 @@ namespace pwiz.Osprey.Test
         {
             string err = CheckMd(null, VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "osprey.version");
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_Osprey_build_wrote_it__so_it_cannot_be_reused__Score_the_file_, err);
         }
 
         [TestMethod]
@@ -766,7 +777,7 @@ namespace pwiz.Osprey.Test
         {
             string err = CheckMd(CURRENT_VERSION, null, VALID_LIB);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "osprey.search_hash");
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_the_search_settings_it_was_scored_with__so_it_cannot_be_reused__Score_, err);
         }
 
         [TestMethod]
@@ -774,27 +785,23 @@ namespace pwiz.Osprey.Test
         {
             string err = CheckMd(CURRENT_VERSION, VALID_SEARCH, null);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "osprey.library_hash");
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_spectral_library_it_was_scored_against__so_it_cannot_be_reused__, err);
         }
 
         [TestMethod]
-        public void TestMetadataSearchHashMismatchNamesFieldAndFile()
+        public void TestMetadataSearchHashMismatchNamesFile()
         {
             string err = CheckMd(CURRENT_VERSION, "wrong-hash", VALID_LIB);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "search_hash mismatch");
-            StringAssert.Contains(err, "test.scores.parquet");
-            StringAssert.Contains(err, "wrong-hash");
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_with_different_search_settings_than_this_run_uses__Score_the_file_again_, err);
         }
 
         [TestMethod]
-        public void TestMetadataLibraryHashMismatchNamesFieldAndFile()
+        public void TestMetadataLibraryHashMismatchNamesFile()
         {
             string err = CheckMd(CURRENT_VERSION, VALID_SEARCH, "wrong-lib");
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "library_hash mismatch");
-            StringAssert.Contains(err, "test.scores.parquet");
-            StringAssert.Contains(err, "wrong-lib");
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_against_a_different_spectral_library_than___library_names__Score_the_file_, err);
         }
 
         [TestMethod]
@@ -804,7 +811,7 @@ namespace pwiz.Osprey.Test
             // compatibility, so refuse to reuse the cache (hard fail).
             string err = CheckMd("garbage", VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "unrecognized osprey version");
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_written_by_an_Osprey_build_this_one_does_not_recognize___1___this_is__2____so_it_, err, "garbage");
         }
 
         // --- Library-decoy CLI flags ---------------------------------------

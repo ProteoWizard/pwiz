@@ -126,7 +126,7 @@ namespace pwiz.Osprey.IO
         {
             string stem = Path.GetFileNameWithoutExtension(inputPath) ?? @"unknown";
             string parent = ArtifactPaths.ResolveOutputDir(inputPath);
-            string filename = string.Format("{0}.2nd-pass.fdr_decoys.bin", stem);
+            string filename = string.Format(@"{0}.2nd-pass.fdr_decoys.bin", stem);
             return string.IsNullOrEmpty(parent) ? filename : Path.Combine(parent, filename);
         }
 

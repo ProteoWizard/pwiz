@@ -126,8 +126,8 @@ namespace pwiz.Osprey.IO
             string stem = Path.GetFileNameWithoutExtension(outputBlib);
             if (string.IsNullOrEmpty(stem))
                 return null;
-            string filename = string.Format("{0}.{1}.fdr_experiment.bin",
-                stem, pass == FdrScoresSidecar.Pass.FirstPass ? "1st-pass" : "2nd-pass");
+            string filename = string.Format(@"{0}.{1}.fdr_experiment.bin",
+                stem, pass == FdrScoresSidecar.Pass.FirstPass ? @"1st-pass" : @"2nd-pass");
             string parent = ArtifactPaths.ResolveOutputDir(siblingArtifactPath);
             return string.IsNullOrEmpty(parent) ? filename : Path.Combine(parent, filename);
         }

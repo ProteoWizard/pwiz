@@ -116,26 +116,21 @@ namespace pwiz.Osprey.IO
             switch (reason)
             {
                 case SpectraCacheRejection.Absent:
-                    return @"no file exists at that path";
+                    return OspreyIOResources.SpectraCacheException_Describe_no_file_exists_at_that_path;
                 case SpectraCacheRejection.TruncatedHeader:
-                    return @"the file is truncated - it is too short to hold a cache header";
+                    return OspreyIOResources.SpectraCacheException_Describe_the_file_is_truncated___it_is_too_short_to_hold_a_cache_header;
                 case SpectraCacheRejection.NotASpectraCache:
-                    return @"the file is not a spectra cache (wrong magic bytes)";
+                    return OspreyIOResources.SpectraCacheException_Describe_the_file_is_not_a_spectra_cache__wrong_magic_bytes_;
                 case SpectraCacheRejection.WrongFormatVersion:
-                    return @"the file was written in an older spectra-cache FORMAT version and " +
-                           @"must be rebuilt (this is the cache format, not the Osprey build " +
-                           @"stamp - OSPREY_VERSION_OVERRIDE does not apply)";
+                    return OspreyIOResources.SpectraCacheException_Describe_the_file_was_written_in_an_older_spectra_cache_format_and_must_be_rebuilt;
                 case SpectraCacheRejection.FingerprintUnmeasurableAtWrite:
-                    return @"the cache was written without a usable source fingerprint, so it " +
-                           @"can never be validated against its source file";
+                    return OspreyIOResources.SpectraCacheException_Describe_the_cache_was_written_without_a_usable_source_fingerprint__so_it_can_never_be_validated_;
                 case SpectraCacheRejection.SourceUnmeasurable:
-                    return @"the source file cannot be measured, so the cache cannot be checked " +
-                           @"for staleness";
+                    return OspreyIOResources.SpectraCacheException_Describe_the_source_file_cannot_be_measured__so_the_cache_cannot_be_checked_for_staleness;
                 case SpectraCacheRejection.SourceChanged:
-                    return @"the source file's size or timestamp has changed since the cache was " +
-                           @"written, so the cache is stale";
+                    return OspreyIOResources.SpectraCacheException_Describe_the_source_file_s_size_or_timestamp_has_changed_since_the_cache_was_written__so_the_cache_;
                 default:
-                    return @"the cache was refused for an unrecorded reason";
+                    return OspreyIOResources.SpectraCacheException_Describe_the_cache_was_refused_for_an_unrecorded_reason;
             }
         }
     }

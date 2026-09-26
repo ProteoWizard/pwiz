@@ -56,7 +56,7 @@ namespace pwiz.Osprey.IO
             if (double.IsNaN(value) || double.IsInfinity(value))
             {
                 throw new JsonWriterException(string.Format(CultureInfo.InvariantCulture,
-                    "Non-finite f64 in JSON output: {0}", value));
+                    @"Non-finite f64 in JSON output: {0}", value));
             }
             writer.WriteRawValue(Diagnostics.FormatF64Roundtrip(value));
         }
@@ -73,10 +73,10 @@ namespace pwiz.Osprey.IO
             if (reader.TokenType != JsonToken.Integer && reader.TokenType != JsonToken.Float)
             {
                 throw new JsonSerializationException(string.Format(CultureInfo.InvariantCulture,
-                    "Expected number token for double, got {0}", reader.TokenType));
+                    @"Expected number token for double, got {0}", reader.TokenType));
             }
             if (reader.Value == null)
-                throw new JsonSerializationException("Null value for numeric token");
+                throw new JsonSerializationException(@"Null value for numeric token");
             return Convert.ToDouble(reader.Value, CultureInfo.InvariantCulture);
         }
     }

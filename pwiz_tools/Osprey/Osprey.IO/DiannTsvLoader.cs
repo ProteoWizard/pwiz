@@ -74,7 +74,7 @@ namespace pwiz.Osprey.IO
                 // and after the interning summary - a completion line for a phase that ended
                 // minutes earlier. ParseReader disposes it when the stream is exhausted.
                 var readProgress = new ProgressReporter(
-                    string.Format("Parsing {0}", Path.GetFileName(path)), stream.Length,
+                    string.Format(OspreyIOResources.DiannTsvLoader_Load_Parsing__0_, Path.GetFileName(path)), stream.Length,
                     string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
                 using (var progressStream = new ProgressStream(stream, readProgress))
                 // leaveOpen so ownership of progressStream is explicit rather than resting on
@@ -104,7 +104,7 @@ namespace pwiz.Osprey.IO
         {
             string headerLine = reader.ReadLine();
             if (headerLine == null)
-                throw new InvalidDataException("Empty library file: no header row");
+                throw new InvalidDataException(OspreyIOResources.DiannTsvLoader_ParseReader_The_library_file_is_empty__it_has_no_header_row_);
 
             string[] headers = headerLine.Split('\t');
             var cols = ColumnIndices.FromHeaders(headers);
@@ -138,7 +138,7 @@ namespace pwiz.Osprey.IO
             // the console sat at 100% through the whole materialization pass. Constructed rather
             // than `using`d so the loop needs no re-indent and so an exception here does not print
             // a completed-looking 100% while unwinding.
-            var progress = new ProgressReporter("Building library precursors", precursorMap.Count,
+            var progress = new ProgressReporter(OspreyIOResources.DiannTsvLoader_ParseReader_Building_library_precursors, precursorMap.Count,
                     string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             long nBuilt = 0;
 
@@ -197,11 +197,11 @@ namespace pwiz.Osprey.IO
         private void ParseRow(string[] fields, ColumnIndices cols, int rowNum,
             Dictionary<string, PrecursorData> precursorMap)
         {
-            double precursorMz = ParseDouble(GetField(fields, cols.PrecursorMz, "PrecursorMz", rowNum), "PrecursorMz", rowNum);
-            byte charge = ParseByte(GetField(fields, cols.PrecursorCharge, "PrecursorCharge", rowNum), "PrecursorCharge", rowNum);
-            string modifiedSequence = StripFlankingChars(GetField(fields, cols.ModifiedPeptide, "ModifiedPeptide", rowNum));
-            double fragmentMz = ParseDouble(GetField(fields, cols.FragmentMz, "FragmentMz", rowNum), "FragmentMz", rowNum);
-            float relativeIntensity = ParseFloat(GetField(fields, cols.RelativeIntensity, "RelativeIntensity", rowNum), "RelativeIntensity", rowNum);
+            double precursorMz = ParseDouble(GetField(fields, cols.PrecursorMz, @"PrecursorMz", rowNum), @"PrecursorMz", rowNum);
+            byte charge = ParseByte(GetField(fields, cols.PrecursorCharge, @"PrecursorCharge", rowNum), @"PrecursorCharge", rowNum);
+            string modifiedSequence = StripFlankingChars(GetField(fields, cols.ModifiedPeptide, @"ModifiedPeptide", rowNum));
+            double fragmentMz = ParseDouble(GetField(fields, cols.FragmentMz, @"FragmentMz", rowNum), @"FragmentMz", rowNum);
+            float relativeIntensity = ParseFloat(GetField(fields, cols.RelativeIntensity, @"RelativeIntensity", rowNum), @"RelativeIntensity", rowNum);
 
             // Retention time from multiple possible columns
             double retentionTime = 0.0;
@@ -264,7 +264,7 @@ namespace pwiz.Osprey.IO
                 ParseDecoyFlag(GetFieldOrNull(fields, cols.Decoy));
 
             // Group by precursor key
-            string key = modifiedSequence + "_" + charge;
+            string key = modifiedSequence + @"_" + charge;
 
             PrecursorData precursor;
             if (!precursorMap.TryGetValue(key, out precursor))
@@ -453,9 +453,9 @@ namespace pwiz.Osprey.IO
 
             // Try UniMod notation (e.g. "UniMod:4" or "UNIMOD:4")
             string idStr = null;
-            if (s.StartsWith("UniMod:", StringComparison.OrdinalIgnoreCase))
+            if (s.StartsWith(@"UniMod:", StringComparison.OrdinalIgnoreCase))
                 idStr = s.Substring(7);
-            else if (s.StartsWith("UNIMOD:", StringComparison.OrdinalIgnoreCase))
+            else if (s.StartsWith(@"UNIMOD:", StringComparison.OrdinalIgnoreCase))
                 idStr = s.Substring(7);
 
             if (idStr != null)
@@ -472,13 +472,13 @@ namespace pwiz.Osprey.IO
             // Known modifications by name
             switch (s.ToUpperInvariant())
             {
-                case "OXIDATION": return 15.9949;
-                case "CARBAMIDOMETHYL":
-                case "CAM": return 57.0215;
-                case "PHOSPHO": return 79.9663;
-                case "ACETYL": return 42.0106;
-                case "DEAMIDATED":
-                case "DEAMIDATION": return 0.9840;
+                case @"OXIDATION": return 15.9949;
+                case @"CARBAMIDOMETHYL":
+                case @"CAM": return 57.0215;
+                case @"PHOSPHO": return 79.9663;
+                case @"ACETYL": return 42.0106;
+                case @"DEAMIDATED":
+                case @"DEAMIDATION": return 0.9840;
                 default: return null;
             }
         }
@@ -491,7 +491,7 @@ namespace pwiz.Osprey.IO
             if (string.IsNullOrEmpty(s))
                 return null;
 
-            int idx = s.IndexOf("UniMod:", StringComparison.OrdinalIgnoreCase);
+            int idx = s.IndexOf(@"UniMod:", StringComparison.OrdinalIgnoreCase);
             if (idx < 0)
                 return null;
 
@@ -579,7 +579,7 @@ namespace pwiz.Osprey.IO
         private static string GetField(string[] fields, int index, string name, int rowNum)
         {
             if (index < 0 || index >= fields.Length)
-                throw new InvalidDataException(string.Format("Missing {0} at row {1}", name, rowNum));
+                throw new InvalidDataException(string.Format(OspreyIOResources.DiannTsvLoader_GetField_Missing__0__at_row__1_, name, rowNum));
             return fields[index];
         }
 
@@ -606,11 +606,11 @@ namespace pwiz.Osprey.IO
             }
             catch (FormatException)
             {
-                throw new InvalidDataException(string.Format("Invalid {0} '{1}' at row {2}", name, s, rowNum));
+                throw new InvalidDataException(string.Format(OspreyIOResources.DiannTsvLoader_ParseDouble_Invalid__0____1___at_row__2_, name, s, rowNum));
             }
             catch (OverflowException)
             {
-                throw new InvalidDataException(string.Format("Invalid {0} '{1}' at row {2}", name, s, rowNum));
+                throw new InvalidDataException(string.Format(OspreyIOResources.DiannTsvLoader_ParseDouble_Invalid__0____1___at_row__2_, name, s, rowNum));
             }
         }
 
@@ -623,11 +623,11 @@ namespace pwiz.Osprey.IO
             }
             catch (FormatException)
             {
-                throw new InvalidDataException(string.Format("Invalid {0} '{1}' at row {2}", name, s, rowNum));
+                throw new InvalidDataException(string.Format(OspreyIOResources.DiannTsvLoader_ParseFloat_Invalid__0____1___at_row__2_, name, s, rowNum));
             }
             catch (OverflowException)
             {
-                throw new InvalidDataException(string.Format("Invalid {0} '{1}' at row {2}", name, s, rowNum));
+                throw new InvalidDataException(string.Format(OspreyIOResources.DiannTsvLoader_ParseFloat_Invalid__0____1___at_row__2_, name, s, rowNum));
             }
         }
 
@@ -635,7 +635,7 @@ namespace pwiz.Osprey.IO
         {
             byte value;
             if (!byte.TryParse(s, out value))
-                throw new InvalidDataException(string.Format("Invalid {0} '{1}' at row {2}", name, s, rowNum));
+                throw new InvalidDataException(string.Format(OspreyIOResources.DiannTsvLoader_ParseByte_Invalid__0____1___at_row__2_, name, s, rowNum));
             return value;
         }
 
@@ -690,33 +690,33 @@ namespace pwiz.Osprey.IO
             {
                 var indices = new ColumnIndices();
 
-                indices.PrecursorMz = FindColumn(headers, "PrecursorMz", "Precursor.Mz", "Q1");
-                indices.PrecursorCharge = FindColumn(headers, "PrecursorCharge", "Precursor.Charge");
-                indices.ModifiedPeptide = FindColumn(headers, "ModifiedPeptide", "Modified.Peptide", "FullPeptideName");
-                indices.StrippedPeptide = FindColumn(headers, "StrippedPeptide", "Stripped.Peptide", "PeptideSequence");
-                indices.FragmentMz = FindColumn(headers, "FragmentMz", "Fragment.Mz", "ProductMz", "Q3");
-                indices.RelativeIntensity = FindColumn(headers, "RelativeIntensity", "Relative.Intensity", "LibraryIntensity");
-                indices.FragmentType = FindColumn(headers, "FragmentType", "Fragment.Type", "IonType");
-                indices.FragmentSeriesNumber = FindColumn(headers, "FragmentSeriesNumber", "FragmentNumber", "IonNumber");
-                indices.FragmentCharge = FindColumn(headers, "FragmentCharge", "Fragment.Charge", "ProductCharge");
-                indices.FragmentLossType = FindColumn(headers, "FragmentLossType", "LossType", "NeutralLoss");
-                indices.IRT = FindColumn(headers, "iRT", "iRt");
-                indices.NormalizedRT = FindColumn(headers, "NormalizedRetentionTime", "Tr_recalibrated", "RT");
-                indices.ProteinId = FindColumn(headers, "ProteinId", "Protein.Id", "ProteinName", "Protein", "ProteinIds", "Protein.Ids");
-                indices.GeneName = FindColumn(headers, "GeneName", "Gene.Name", "Genes", "Protein.Names");
-                indices.Decoy = FindColumn(headers, "Decoy", "IsDecoy", "Is.Decoy");
+                indices.PrecursorMz = FindColumn(headers, @"PrecursorMz", @"Precursor.Mz", @"Q1");
+                indices.PrecursorCharge = FindColumn(headers, @"PrecursorCharge", @"Precursor.Charge");
+                indices.ModifiedPeptide = FindColumn(headers, @"ModifiedPeptide", @"Modified.Peptide", @"FullPeptideName");
+                indices.StrippedPeptide = FindColumn(headers, @"StrippedPeptide", @"Stripped.Peptide", @"PeptideSequence");
+                indices.FragmentMz = FindColumn(headers, @"FragmentMz", @"Fragment.Mz", @"ProductMz", @"Q3");
+                indices.RelativeIntensity = FindColumn(headers, @"RelativeIntensity", @"Relative.Intensity", @"LibraryIntensity");
+                indices.FragmentType = FindColumn(headers, @"FragmentType", @"Fragment.Type", @"IonType");
+                indices.FragmentSeriesNumber = FindColumn(headers, @"FragmentSeriesNumber", @"FragmentNumber", @"IonNumber");
+                indices.FragmentCharge = FindColumn(headers, @"FragmentCharge", @"Fragment.Charge", @"ProductCharge");
+                indices.FragmentLossType = FindColumn(headers, @"FragmentLossType", @"LossType", @"NeutralLoss");
+                indices.IRT = FindColumn(headers, @"iRT", @"iRt");
+                indices.NormalizedRT = FindColumn(headers, @"NormalizedRetentionTime", @"Tr_recalibrated", @"RT");
+                indices.ProteinId = FindColumn(headers, @"ProteinId", @"Protein.Id", @"ProteinName", @"Protein", @"ProteinIds", @"Protein.Ids");
+                indices.GeneName = FindColumn(headers, @"GeneName", @"Gene.Name", @"Genes", @"Protein.Names");
+                indices.Decoy = FindColumn(headers, @"Decoy", @"IsDecoy", @"Is.Decoy");
 
                 // Validate required columns
                 if (indices.PrecursorMz < 0)
-                    throw new InvalidDataException("Missing required column: PrecursorMz");
+                    throw new InvalidDataException(OspreyIOResources.ColumnIndices_Missing_required_column__PrecursorMz);
                 if (indices.PrecursorCharge < 0)
-                    throw new InvalidDataException("Missing required column: PrecursorCharge");
+                    throw new InvalidDataException(OspreyIOResources.ColumnIndices_Missing_required_column__PrecursorCharge);
                 if (indices.ModifiedPeptide < 0)
-                    throw new InvalidDataException("Missing required column: ModifiedPeptide");
+                    throw new InvalidDataException(OspreyIOResources.ColumnIndices_Missing_required_column__ModifiedPeptide);
                 if (indices.FragmentMz < 0)
-                    throw new InvalidDataException("Missing required column: FragmentMz");
+                    throw new InvalidDataException(OspreyIOResources.ColumnIndices_Missing_required_column__FragmentMz);
                 if (indices.RelativeIntensity < 0)
-                    throw new InvalidDataException("Missing required column: RelativeIntensity");
+                    throw new InvalidDataException(OspreyIOResources.ColumnIndices_Missing_required_column__RelativeIntensity);
 
                 return indices;
             }

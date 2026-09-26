@@ -120,7 +120,7 @@ namespace pwiz.Osprey.IO
             string stem = Path.GetFileNameWithoutExtension(outputBlib);
             if (string.IsNullOrEmpty(stem))
                 return null;
-            string filename = string.Format("{0}.1st-pass.retained_base_ids.bin", stem);
+            string filename = string.Format(@"{0}.1st-pass.retained_base_ids.bin", stem);
             string parent = ArtifactPaths.ResolveOutputDir(siblingArtifactPath);
             return string.IsNullOrEmpty(parent) ? filename : Path.Combine(parent, filename);
         }

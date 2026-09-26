@@ -160,7 +160,7 @@ namespace pwiz.Osprey.IO
             {
                 string header = reader.ReadLine();
                 if (header == null)
-                    throw new InvalidDataException(@"FDRBench manifest is empty");
+                    throw new InvalidDataException(OspreyIOResources.DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_empty_);
                 var cols = header.Split('\t');
                 int iSeq = -1, iType = -1, iPair = -1, iProteins = -1;
                 for (int i = 0; i < cols.Length; i++)
@@ -177,8 +177,7 @@ namespace pwiz.Osprey.IO
                 if (iSeq < 0 || iType < 0 || iPair < 0)
                 {
                     throw new InvalidDataException(string.Format(
-                        @"FDRBench manifest header missing required columns " +
-                        @"(need sequence, peptide_type, peptide_pair_index). Got: {0}",
+                        OspreyIOResources.DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_missing_required_columns__it_needs_sequence__peptide_type_,
                         header));
                 }
                 // `proteins` is optional -- older manifests without it still
