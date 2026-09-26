@@ -2946,39 +2946,40 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Finding missing peaks in.
-        /// </summary>
-        public static string PerFileRescoreTask_private_Finding_missing_peaks_in {
-            get {
-                return ResourceManager.GetString("PerFileRescoreTask_private_Finding_missing_peaks_in", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Integrating missing peaks at imputed boundaries in.
-        /// </summary>
-        public static string PerFileRescoreTask_private_Integrating_missing_peaks_at_imputed_boundaries_in {
-            get {
-                return ResourceManager.GetString("PerFileRescoreTask_private_Integrating_missing_peaks_at_imputed_boundaries_in", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Re-scoring.
-        /// </summary>
-        public static string PerFileRescoreTask_private_Re_scoring {
-            get {
-                return ResourceManager.GetString("PerFileRescoreTask_private_Re_scoring", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Second-pass FDR: run &apos;{0}&apos; has no current re-scored results file (.scores-reconciled.parquet), which PerFileRescoring writes for every run. Its .scores.parquet file cannot be used instead, because it holds only first-pass peaks. Run --task PerFileRescoring for it..
         /// </summary>
         public static string PerFileRescoreTask_ReconciledPathOrFail_Second_pass_FDR__run___0___has_no_current_re_scored_results_file___scores_reconciled_ {
             get {
                 return ResourceManager.GetString("PerFileRescoreTask_ReconciledPathOrFail_Second_pass_FDR__run___0___has_no_current" +
                         "_re_scored_results_file___scores_reconciled_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finding missing peaks in isolation windows.
+        /// </summary>
+        public static string PerFileRescoreTask_Rescore_Finding_missing_peaks_in_isolation_windows {
+            get {
+                return ResourceManager.GetString("PerFileRescoreTask_Rescore_Finding_missing_peaks_in_isolation_windows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Integrating missing peaks at imputed boundaries in isolation windows.
+        /// </summary>
+        public static string PerFileRescoreTask_Rescore_Integrating_missing_peaks_at_imputed_boundaries_in_isolation_windows {
+            get {
+                return ResourceManager.GetString("PerFileRescoreTask_Rescore_Integrating_missing_peaks_at_imputed_boundaries_in_iso" +
+                        "lation_windows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Re-scoring isolation windows.
+        /// </summary>
+        public static string PerFileRescoreTask_Rescore_Re_scoring_isolation_windows {
+            get {
+                return ResourceManager.GetString("PerFileRescoreTask_Rescore_Re_scoring_isolation_windows", resourceCulture);
             }
         }
         

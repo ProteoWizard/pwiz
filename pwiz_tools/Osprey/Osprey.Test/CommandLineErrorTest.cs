@@ -167,8 +167,12 @@ namespace pwiz.Osprey.Test
             output = RunCommandAndValidateError(OspreyCommandArgs.ARG_INTERNAL_CULTURE.ArgumentText, otherCulture);
             Assert.AreSame(callerCulture, CultureInfo.CurrentCulture);
             Assert.AreSame(callerUiCulture, CultureInfo.CurrentUICulture);
-            AssertErrorMessage(output, string.Format(OspreyResources.Program_ValidateArgs_No_input_files_specified__Use__0_,
-                Program.USAGE_INPUT));
+            // The run wrote in the other culture, so its expected text is formatted there too.
+            using (new CultureScope(CultureInfo.GetCultureInfo(otherCulture)))
+            {
+                AssertErrorMessage(output, string.Format(OspreyResources.Program_ValidateArgs_No_input_files_specified__Use__0_,
+                    Program.USAGE_INPUT));
+            }
         }
 
         /// <summary>

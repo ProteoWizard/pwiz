@@ -229,9 +229,6 @@
   <data name="ScoringPipeline_RunCoelutionScoring_Scoring_isolation_windows" xml:space="preserve">
     <value>Scoring isolation windows</value>
   </data>
-  <data name="ScoringPipeline_RunCoelutionScoring__0__isolation_windows" xml:space="preserve">
-    <value>{0} isolation windows</value>
-  </data>
   <data name="ScoringPipeline_RunCoelutionScoring_from_the__0__file" xml:space="preserve">
     <value>from the {0} file</value>
   </data>

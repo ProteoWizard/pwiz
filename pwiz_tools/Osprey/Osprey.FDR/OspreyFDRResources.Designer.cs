@@ -155,6 +155,15 @@ namespace pwiz.Osprey.FDR {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to First-pass.
+        /// </summary>
+        public static string PercolatorEngine_PassDisplayName_First_pass {
+            get {
+                return ResourceManager.GetString("PercolatorEngine_PassDisplayName_First_pass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} Percolator results: {1:N0} targets, {2:N0} decoys pass {3:P1} FDR.
         /// </summary>
         public static string PercolatorEngine_RunPercolatorFdr__0__Percolator_results___1__targets___2__decoys_pass__3__FDR {

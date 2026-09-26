@@ -85,6 +85,16 @@ namespace pwiz.Osprey.Test
                     prefix + " after the stamp columns");
                 Assert.IsTrue(CommandStatusWriter.DefaultIsErrorMessage(prefix + " message"), prefix);
             }
+            // The prefix Osprey WRITES in each shipped language must be one the detector reads,
+            // or a translated run would fail with an exit code its log does not explain.
+            foreach (var language in new[] { @"en", @"ja", @"zh-Hans" })
+            {
+                using (new CultureScope(CultureInfo.GetCultureInfo(language)))
+                {
+                    Assert.IsTrue(CommandStatusWriter.IsErrorLine(Program.ErrorPrefix + " message"), language);
+                    Assert.IsFalse(CommandStatusWriter.IsErrorLine(Program.WarningPrefix + " message"), language);
+                }
+            }
             Assert.IsFalse(CommandStatusWriter.IsErrorLine("Warning: message"));
             Assert.IsFalse(CommandStatusWriter.IsErrorLine("Reported Error: in mid-line prose"));
             Assert.IsFalse(CommandStatusWriter.IsErrorLine(null));

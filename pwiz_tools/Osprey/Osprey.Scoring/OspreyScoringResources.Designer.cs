@@ -435,15 +435,6 @@ namespace pwiz.Osprey.Scoring {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} isolation windows.
-        /// </summary>
-        public static string ScoringPipeline_RunCoelutionScoring__0__isolation_windows {
-            get {
-                return ResourceManager.GetString("ScoringPipeline_RunCoelutionScoring__0__isolation_windows", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Applying MS2 calibration: mean error = {0:F4} {1} -&gt; correcting by {2:+0.0000;-0.0000;0} {1}.
         /// </summary>
         public static string ScoringPipeline_RunCoelutionScoring_Applying_MS2_calibration__mean_error____0___1_____correcting_by__2___1_ {

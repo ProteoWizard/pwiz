@@ -1475,7 +1475,7 @@ namespace pwiz.Osprey.Tasks
                     subsetLibrary, spectraProvider, ms1Spectra,
                     isolationWindows, rtCal,
                     ms2Cal, ms1Cal,
-                    context, passLabel: OspreyTasksResources.PerFileRescoreTask_private_Re_scoring);
+                    context, passLabel: OspreyTasksResources.PerFileRescoreTask_Rescore_Re_scoring_isolation_windows);
             }
             else
             {
@@ -3344,7 +3344,7 @@ namespace pwiz.Osprey.Tasks
                     gapFillLibrary, spectraProvider, ms1Spectra,
                     isolationWindows, rtCal,
                     ms2Cal, ms1Cal,
-                    cwtContext, passLabel: OspreyTasksResources.PerFileRescoreTask_private_Finding_missing_peaks_in, logSearchSettings: false);
+                    cwtContext, passLabel: OspreyTasksResources.PerFileRescoreTask_Rescore_Finding_missing_peaks_in_isolation_windows, logSearchSettings: false);
                 swCwt.Stop();
 
                 cwtHitIds = new HashSet<uint>();
@@ -3405,7 +3405,7 @@ namespace pwiz.Osprey.Tasks
                     forcedLibrary, spectraProvider, ms1Spectra,
                     isolationWindows, rtCal,
                     ms2Cal, ms1Cal,
-                    forcedContext, passLabel: OspreyTasksResources.PerFileRescoreTask_private_Integrating_missing_peaks_at_imputed_boundaries_in,
+                    forcedContext, passLabel: OspreyTasksResources.PerFileRescoreTask_Rescore_Integrating_missing_peaks_at_imputed_boundaries_in_isolation_windows,
                     logSearchSettings: false);
                 swForced.Stop();
                 nGapForced = forcedResults.Count;

@@ -137,7 +137,7 @@ namespace pwiz.Osprey.Tasks
 
             log.LogInfo(string.Format(
                 OspreyTasksResources.FdrProjectionSinkBase_Finish__0__Percolator_results___1__targets___2__decoys_pass__3__FDR,
-                _passLabel, nTargetPassing, nDecoyPassing, _runFdr));
+                PercolatorEngine.PassDisplayName(_passLabel), nTargetPassing, nDecoyPassing, _runFdr));
             log.LogInfo(LogTag.COUNT, @"{0} total across files: {1}",
                 _passLabel, nTargetPassing);
             if (_passingPrecursors != null)

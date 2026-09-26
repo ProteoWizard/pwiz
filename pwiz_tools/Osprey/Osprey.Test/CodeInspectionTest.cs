@@ -299,6 +299,35 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Every production project opts in to ReSharper's LocalizableElement inspection with the
+        /// same two lines as Skyline.csproj.DotSettings, so a plain string literal in user text
+        /// fails the inspection gate. Deleting a project's .DotSettings would silently turn the
+        /// gate off for that project; this is what notices.
+        /// </summary>
+        [TestMethod]
+        public void TestEveryProjectEnforcesLocalization()
+        {
+            string sourceRoot = FindOspreySourceRoot();
+            var missing = new List<string>();
+            foreach (var csproj in Directory.EnumerateFiles(sourceRoot, "*.csproj", SearchOption.AllDirectories))
+            {
+                string name = Path.GetFileNameWithoutExtension(csproj);
+                if (name == "Osprey.Test")
+                    continue;
+                string settings = csproj + ".DotSettings";
+                string text = File.Exists(settings) ? File.ReadAllText(settings) : string.Empty;
+                if (!text.Contains("Localization/Localizable/@EntryValue\">Yes<") ||
+                    !text.Contains("Localization/LocalizableInspector/@EntryValue\">Pessimistic<"))
+                {
+                    missing.Add(name);
+                }
+            }
+            Assert.AreEqual(0, missing.Count,
+                "Project(s) without the LocalizableElement opt-in (copy Osprey.Core.csproj.DotSettings): " +
+                string.Join(", ", missing));
+        }
+
+        /// <summary>
         /// Find the Osprey source root by walking up from the test
         /// assembly location until we see an Osprey.sln-bearing dir.
         /// </summary>

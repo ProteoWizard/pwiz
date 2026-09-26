@@ -967,6 +967,15 @@
   <data name="PerFileRescoreTask_ReconciledPathOrFail_Second_pass_FDR__run___0___has_no_current_re_scored_results_file___scores_reconciled_" xml:space="preserve">
     <value>Second-pass FDR: run '{0}' has no current re-scored results file (.scores-reconciled.parquet), which PerFileRescoring writes for every run. Its .scores.parquet file cannot be used instead, because it holds only first-pass peaks. Run --task PerFileRescoring for it.</value>
   </data>
+  <data name="PerFileRescoreTask_Rescore_Finding_missing_peaks_in_isolation_windows" xml:space="preserve">
+    <value>Finding missing peaks in isolation windows</value>
+  </data>
+  <data name="PerFileRescoreTask_Rescore_Integrating_missing_peaks_at_imputed_boundaries_in_isolation_windows" xml:space="preserve">
+    <value>Integrating missing peaks at imputed boundaries in isolation windows</value>
+  </data>
+  <data name="PerFileRescoreTask_Rescore_Re_scoring_isolation_windows" xml:space="preserve">
+    <value>Re-scoring isolation windows</value>
+  </data>
   <data name="PerFileRescoreTask_Run_Cannot_resume___0__of__1__runs_still_need_re_scoring__but__2_" xml:space="preserve">
     <value>Cannot resume: {0:N0} of {1:N0} runs still need re-scoring, but {2}</value>
   </data>
@@ -1005,15 +1014,6 @@
   </data>
   <data name="PerFileRescoreTask_WriteReconciledAndStamp___Failed_to_remove_the_incomplete_re_scored_results_file__0__after_a_failed_write___1_" xml:space="preserve">
     <value>  Failed to remove the incomplete re-scored results file {0} after a failed write: {1}</value>
-  </data>
-  <data name="PerFileRescoreTask_private_Finding_missing_peaks_in" xml:space="preserve">
-    <value>Finding missing peaks in</value>
-  </data>
-  <data name="PerFileRescoreTask_private_Integrating_missing_peaks_at_imputed_boundaries_in" xml:space="preserve">
-    <value>Integrating missing peaks at imputed boundaries in</value>
-  </data>
-  <data name="PerFileRescoreTask_private_Re_scoring" xml:space="preserve">
-    <value>Re-scoring</value>
   </data>
   <data name="PerFileRescoreTask_private___Missing_peaks_found_by_peak_detection___0____1_s_" xml:space="preserve">
     <value>  Missing peaks found by peak detection: {0:N0} ({1:F1}s)</value>

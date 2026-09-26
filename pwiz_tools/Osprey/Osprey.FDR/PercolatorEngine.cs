@@ -49,6 +49,15 @@ namespace pwiz.Osprey.FDR
         public const string FIRST_PASS_LABEL = @"First-pass";
 
         /// <summary>
+        /// A pass label as a person reads it. <see cref="FIRST_PASS_LABEL"/> is also a token the
+        /// code compares and a tagged line carries, so it stays English there; prose shows this.
+        /// </summary>
+        public static string PassDisplayName(string passLabel)
+        {
+            return passLabel == FIRST_PASS_LABEL ? OspreyFDRResources.PercolatorEngine_PassDisplayName_First_pass : passLabel;
+        }
+
+        /// <summary>
         /// Run Percolator-based FDR control. Builds PercolatorEntry objects from
         /// FdrEntry stubs and runs Percolator, then maps results back onto the
         /// stubs. Static so the second-pass run after Stage 6 reconciliation
@@ -168,7 +177,7 @@ namespace pwiz.Osprey.FDR
 
             log.LogInfo(string.Format(
                 OspreyFDRResources.PercolatorEngine_RunPercolatorFdr__0__Percolator_results___1__targets___2__decoys_pass__3__FDR,
-                passLabel, nTargetPassing, nDecoyPassing, config.RunFdr));
+                PassDisplayName(passLabel), nTargetPassing, nDecoyPassing, config.RunFdr));
             log.LogInfo(LogTag.COUNT, @"{0} total across files: {1}",
                 passLabel, nTargetPassing);
 
@@ -274,7 +283,7 @@ namespace pwiz.Osprey.FDR
             LogProjectionInputCounts(
                 projections, numFeatures, loadFileFeatures, log, passLabel);
             log.LogInfo(string.Format(OspreyFDRResources.PercolatorEngine_RunPercolatorFdr_Running__0__Percolator_on__1__precursor_candidate_peaks___,
-                passLabel, n));
+                PassDisplayName(passLabel), n));
             bool streamingAbort = RunStreamingIntoProjection(
                 projections.PerFile, peptideById, percConfig, log, passLabel,
                 loadFileFeatures, loadFileApexRts, sink, captureContributions, captureModel);
@@ -422,7 +431,7 @@ namespace pwiz.Osprey.FDR
             // actual training-subset size are reported by RunPercolator once the subsample is
             // built, just above the per-iteration percent lines.
             log.LogInfo(string.Format(OspreyFDRResources.PercolatorEngine_DispatchSvm_Running__0__Percolator_on__1__precursor_candidate_peaks___,
-                passLabel, percEntries.Count));
+                PassDisplayName(passLabel), percEntries.Count));
 
             // Streaming-only (cross-impl parity with the Rust streaming-only change):
             // ALWAYS take the streaming SVM path -- best-per-precursor dedup +
@@ -606,7 +615,7 @@ namespace pwiz.Osprey.FDR
             if (frozenModel != null)
             {
                 log.LogInfo(string.Format(
-                    OspreyFDRResources.PercolatorEngine_RunPercolatorStreaming__0___scoring_all__1__precursor_candidate_peaks_with_the_saved_first_pass_model__no_, passLabel, n));
+                    OspreyFDRResources.PercolatorEngine_RunPercolatorStreaming__0___scoring_all__1__precursor_candidate_peaks_with_the_saved_first_pass_model__no_, PassDisplayName(passLabel), n));
                 return PercolatorScorer.ScorePopulationAndComputeFdr(
                     percEntries, frozenModel, percConfig, loadFileFeatures,
                     applyExperimentAgg: passLabel == FIRST_PASS_LABEL);

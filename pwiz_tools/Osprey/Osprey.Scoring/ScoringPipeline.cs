@@ -70,6 +70,9 @@ namespace pwiz.Osprey.Scoring
         /// fragment tolerances under <c>--verbose</c>. A file re-scored in several passes shares
         /// one calibration, so only its first pass reports them; otherwise the same three lines
         /// repeat inside every file's block.</para>
+        ///
+        /// <para><paramref name="passLabel"/> is the whole progress heading of a labeled pass (a
+        /// resource, never an English fragment to be completed here), and indents its block.</para>
         /// </summary>
         public List<FdrEntry> RunCoelutionScoring(
             List<LibraryEntry> fullLibrary,
@@ -243,9 +246,7 @@ namespace pwiz.Osprey.Scoring
             var coelutionScorer = new CoelutionScorer(_diagnostics);
 
             using (var progress = new ProgressReporter(
-                passLabel == null
-                    ? OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Scoring_isolation_windows
-                    : string.Format(OspreyScoringResources.ScoringPipeline_RunCoelutionScoring__0__isolation_windows, passLabel),
+                passLabel ?? OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Scoring_isolation_windows,
                 windowsToScore.Count, passLabel == null ? string.Empty : @"  ", 2.0))
             {
                 Parallel.For(0, windowsToScore.Count, new ParallelOptions

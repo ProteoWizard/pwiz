@@ -127,6 +127,9 @@
   <data name="PercolatorEngine_DispatchSvm_Running__0__Percolator_on__1__precursor_candidate_peaks___" xml:space="preserve">
     <value>Running {0} Percolator on {1:N0} precursor candidate peaks...</value>
   </data>
+  <data name="PercolatorEngine_PassDisplayName_First_pass" xml:space="preserve">
+    <value>First-pass</value>
+  </data>
   <data name="PercolatorEngine_RunPercolatorFdr_Running__0__Percolator_on__1__precursor_candidate_peaks___" xml:space="preserve">
     <value>Running {0} Percolator on {1:N0} precursor candidate peaks...</value>
   </data>
