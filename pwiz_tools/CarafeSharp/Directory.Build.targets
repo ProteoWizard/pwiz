@@ -1,0 +1,44 @@
+<Project>
+
+  <!-- CarafeSharp keeps its own Directory.Build.targets, as Osprey does, so the Skyline-tree
+       pwiz_tools/Directory.Build.targets (vendor native-payload verification, WinForms
+       logger copies) does not apply. What it does need from there is below. -->
+
+  <!-- Test-only: the TeamCity vstest logger, so per-test service messages reach the
+       TeamCity UI when tests run under a plain Command Line step. Gated on IsTestProject,
+       set explicitly in the test csproj so it is in scope at restore time. -->
+  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+    <PackageReference Include="TeamCity.VSTest.TestAdapter" Version="1.0.40" />
+  </ItemGroup>
+
+  <!-- The libtorch native runtime for projects that opt in with UseLibTorch=true: the
+       executable and the test project. The managed TorchSharp reference is in
+       CarafeSharp.Models, which needs no native files to compile. -->
+  <ItemGroup Condition="'$(UseLibTorch)' == 'true' AND '$(CarafeSharpTorch)' == 'cpu' AND '$(CarafeSharpTargetIsWindows)' == 'true'">
+    <PackageReference Include="libtorch-cpu-win-x64" Version="$(LibTorchVersion)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UseLibTorch)' == 'true' AND '$(CarafeSharpTorch)' == 'cpu' AND '$(CarafeSharpTargetIsWindows)' != 'true'">
+    <PackageReference Include="libtorch-cpu-linux-x64" Version="$(LibTorchVersion)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UseLibTorch)' == 'true' AND '$(CarafeSharpTorch)' == 'cuda' AND '$(CarafeSharpTargetIsWindows)' == 'true'">
+    <PackageReference Include="libtorch-cuda-12.8-win-x64" Version="$(LibTorchVersion)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UseLibTorch)' == 'true' AND '$(CarafeSharpTorch)' == 'cuda' AND '$(CarafeSharpTargetIsWindows)' != 'true'">
+    <PackageReference Include="libtorch-cuda-12.8-linux-x64" Version="$(LibTorchVersion)" />
+  </ItemGroup>
+
+  <!-- Deploy pwiz's patched Parquet.Net (pwiz_tools/Shared/Lib/Parquet/ParquetNet.dll) over the
+       NuGet Parquet.dll, exactly as pwiz_tools/Osprey/Directory.Build.targets does; that file
+       documents the fork's deltas. A no-op for projects without Parquet.dll in their output. -->
+  <Target Name="OverridePatchedParquetNet" AfterTargets="Build">
+    <PropertyGroup>
+      <_PatchedParquetSource>$(MSBuildThisFileDirectory)..\Shared\Lib\Parquet\ParquetNet.dll</_PatchedParquetSource>
+      <_ResolvedParquetTarget>$(OutDir)Parquet.dll</_ResolvedParquetTarget>
+    </PropertyGroup>
+    <Copy SourceFiles="$(_PatchedParquetSource)"
+          DestinationFiles="$(_ResolvedParquetTarget)"
+          SkipUnchangedFiles="true"
+          Condition="Exists('$(_ResolvedParquetTarget)') and Exists('$(_PatchedParquetSource)')" />
+  </Target>
+
+</Project>
