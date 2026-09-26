@@ -37,6 +37,10 @@ namespace pwiz.CarafeSharp.IO
         public const string FILE_SUFFIX = @".training.parquet";
         public const string FORMAT_VERSION = @"1";
 
+        /// <summary>Footer keys identifying the Osprey search an export came from.</summary>
+        public const string SEARCH_HASH_KEY = @"osprey.search_hash";
+        public const string LIBRARY_HASH_KEY = @"osprey.library_hash";
+
         private static readonly string[] COLUMNS =
         {
             @"entry_id", @"is_entrapment", @"sequence", @"modified_sequence", @"mod_positions", @"mod_masses",
@@ -161,6 +165,12 @@ namespace pwiz.CarafeSharp.IO
                 records.Add(record);
             }
             return new OspreyTrainingExport(path, records, columns.Metadata);
+        }
+
+        /// <summary>An export's key-value footer, read without its rows.</summary>
+        public static IReadOnlyDictionary<string, string> ReadFooter(string path)
+        {
+            return ParquetColumns.ReadMetadata(path);
         }
 
         private OspreyTrainingExport(string path, IReadOnlyList<OspreyTrainingRecord> records, IReadOnlyDictionary<string, string> metadata)

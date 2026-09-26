@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -280,28 +281,81 @@ namespace pwiz.CarafeSharp.Test
                 Touch(raw, @"run_c.raw");
 
                 // A folder of exports, all of them or the -ms runs among them.
-                CollectionAssert.AreEqual(new[] { a, b }, TrainingExportLocator.Find(results, null).ToArray());
-                CollectionAssert.AreEqual(new[] { a }, TrainingExportLocator.Find(results, new[] { Path.Combine(raw, @"run_a.mzML") }).ToArray());
+                CollectionAssert.AreEqual(new[] { a, b }, FindExports(results, null));
+                CollectionAssert.AreEqual(new[] { a }, FindExports(results, Path.Combine(raw, @"run_a.mzML")));
                 // Osprey's blib: every export beside it, or each -ms run's beside it, then beside the run.
-                CollectionAssert.AreEqual(new[] { a, b }, TrainingExportLocator.Find(blib, null).ToArray());
-                CollectionAssert.AreEqual(new[] { a, c }, TrainingExportLocator.Find(blib, new[] { raw }).ToArray());
+                CollectionAssert.AreEqual(new[] { a, b }, FindExports(blib, null));
+                var selection = Find(blib, raw);
+                CollectionAssert.AreEqual(new[] { a, c }, selection.Exports.ToArray());
                 // Exports named directly.
-                CollectionAssert.AreEqual(new[] { a, b }, TrainingExportLocator.Find(b + @"," + a, null).ToArray());
+                CollectionAssert.AreEqual(new[] { a, b }, FindExports(b + @"," + a, null));
                 Assert.AreEqual(@"run_b", TrainingExportLocator.RunStem(b));
 
-                AssertThrows<FileNotFoundException>(() => TrainingExportLocator.Find(blib, new[] { Path.Combine(raw, @"run_d.mzML") }));
-                AssertThrows<FileNotFoundException>(() => TrainingExportLocator.Find(results, new[] { @"run_d.mzML" }));
-                AssertThrows<FileNotFoundException>(() => TrainingExportLocator.Find(raw + @"\missing.blib", null));
-                // A folder without exports: Osprey was run without --training-export.
+                // A run stored as a folder (Bruker .d, Waters .raw) is one run, named or found in an
+                // -ms folder, as are .wiff files.
+                string runs = Path.Combine(folder, @"runs");
+                Directory.CreateDirectory(Path.Combine(runs, @"run_b.d"));
+                Touch(runs, @"run_a.wiff");
+                CollectionAssert.AreEqual(new[] { b }, FindExports(results, Path.Combine(runs, @"run_b.d")));
+                CollectionAssert.AreEqual(new[] { a, b }, FindExports(results, runs));
+                // An -ms folder with no runs is an error, not every export.
                 string empty = Path.Combine(folder, @"empty");
                 Directory.CreateDirectory(empty);
-                AssertThrows<FileNotFoundException>(() => TrainingExportLocator.Find(empty, null));
+                AssertThrows<FileNotFoundException>(() => Find(results, empty));
+
+                // Every -ms run needs an export, whatever -i names, checked over all of -i.
+                string other = Path.Combine(folder, @"other");
+                Directory.CreateDirectory(other);
+                string d = Touch(other, @"run_d" + OspreyTrainingExport.FILE_SUFFIX);
+                CollectionAssert.AreEqual(new[] { a, d }, FindExports(results + @"," + other, @"run_a.mzML", @"run_d.mzML"));
+                AssertThrows<FileNotFoundException>(() => Find(a, @"run_a.mzML", @"run_d.mzML"));
+                AssertThrows<FileNotFoundException>(() => Find(blib, Path.Combine(raw, @"run_d.mzML")));
+                AssertThrows<FileNotFoundException>(() => Find(results, @"run_d.mzML"));
+                AssertThrows<FileNotFoundException>(() => Find(raw + @"\missing.blib", null));
+                // A folder without exports: Osprey was run without --training-export.
+                AssertThrows<FileNotFoundException>(() => Find(empty, null));
+
+                // The exports of one blib or folder must come from one Osprey search; exports of
+                // different searches named separately are only a warning.
+                string e = Touch(other, @"run_e" + OspreyTrainingExport.FILE_SUFFIX);
+                var footers = new Dictionary<string, IReadOnlyDictionary<string, string>> { { e, Footer(@"another search") } };
+                Func<string, IReadOnlyDictionary<string, string>> readFooter = p => footers.TryGetValue(p, out var f) ? f : Footer(@"search");
+                AssertThrows<InvalidDataException>(() => TrainingExportLocator.Find(other, null, readFooter));
+                selection = TrainingExportLocator.Find(results + @"," + e, null, readFooter);
+                CollectionAssert.AreEqual(new[] { a, b, e }, selection.Exports.ToArray());
+                Assert.AreEqual(1, selection.Warnings.Count);
+
+                // The runs, keyed as Carafe keys meta.json: an -ms entry as typed, or a run found in
+                // an -ms folder by that folder as typed and the run's file name.
+                selection = Find(blib, raw, Path.Combine(runs, @"run_b.d"));
+                Assert.AreEqual(raw + Path.DirectorySeparatorChar + @"run_c.raw", selection.Runs[@"run_c"]);
+                Assert.AreEqual(Path.Combine(runs, @"run_b.d"), selection.Runs[@"run_b"]);
             }
             finally
             {
                 if (Directory.Exists(folder))
                     Directory.Delete(folder, true);
             }
+        }
+
+        /// <summary>The exports for <paramref name="identifications"/> and the <c>-ms</c> runs, every one of the same search.</summary>
+        private static TrainingExportSelection Find(string identifications, params string[] msFiles)
+        {
+            return TrainingExportLocator.Find(identifications, msFiles, path => Footer(@"search"));
+        }
+
+        private static string[] FindExports(string identifications, params string[] msFiles)
+        {
+            return Find(identifications, msFiles).Exports.ToArray();
+        }
+
+        private static IReadOnlyDictionary<string, string> Footer(string searchHash)
+        {
+            return new Dictionary<string, string>
+            {
+                { OspreyTrainingExport.SEARCH_HASH_KEY, searchHash },
+                { OspreyTrainingExport.LIBRARY_HASH_KEY, @"library" },
+            };
         }
 
         private static string Touch(string folder, string name)

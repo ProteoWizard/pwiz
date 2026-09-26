@@ -68,9 +68,11 @@ namespace pwiz.CarafeSharp
             var pretrained = PretrainedModels.Open(_settings.PretrainedModels);
             Directory.CreateDirectory(_settings.OutputDirectory);
 
-            var paths = TrainingExportLocator.Find(_settings.Identifications, _settings.MsFiles);
-            var exports = new List<OspreyTrainingExport>(paths.Count);
-            foreach (string path in paths)
+            var selection = TrainingExportLocator.Find(_settings.Identifications, _settings.MsFiles);
+            foreach (string warning in selection.Warnings)
+                Log(warning);
+            var exports = new List<OspreyTrainingExport>(selection.Exports.Count);
+            foreach (string path in selection.Exports)
             {
                 var export = OspreyTrainingExport.Read(path);
                 Log(string.Format(CultureInfo.InvariantCulture, @"Training export {0}: {1} precursors, rt_max {2}, NCE {3}, instrument {4}",

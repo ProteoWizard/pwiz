@@ -67,6 +67,14 @@ namespace pwiz.CarafeSharp.IO
             return new ParquetColumns(columns, metadata);
         }
 
+        /// <summary>The file's key-value metadata alone, from its footer.</summary>
+        public static IReadOnlyDictionary<string, string> ReadMetadata(string path)
+        {
+            using (var stream = File.OpenRead(path))
+            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
+                return new Dictionary<string, string>(reader.CustomMetadata);
+        }
+
         private readonly Dictionary<string, Array> _columns;
 
         private ParquetColumns(Dictionary<string, Array> columns, IReadOnlyDictionary<string, string> metadata)
