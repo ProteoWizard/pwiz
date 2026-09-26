@@ -4,7 +4,10 @@ This report consolidates every divergence found by the 18 per-document parity re
 
 ## Executive summary
 
-Across all 18 algorithm documents the C# port is a faithful, parity-focused reproduction of the Rust engine: on the Stellar/Astral reference datasets it is bit-identical, enforced by the `regression.ps1` 1e-9 gate (golden + resume + HPC-chain legs) plus `OSPREY_CROSS_IMPL_*` byte-parity hooks. Of **110 catalogued divergences**, the overwhelming majority are either **documentation staleness** (the Rust prose lagging its own evolving Rust code, which the C# port correctly tracks) or **intentional C# infrastructure/CLI redesigns** that preserve output. There is exactly **one genuine PORT-ERROR** — the Razor shared-peptide assignment order in protein parsimony — and it sits off the default, bit-identical-tested path. **Seven items are UNVERIFIED** (an eighth, U6, is resolved) (the reviewer could not confirm one side against source and flagged them for a human to check). Nothing on the default analysis path was found to change output relative to Rust.
+Across all 18 algorithm documents the C# port is a faithful, parity-focused reproduction of the Rust engine: on the Stellar/Astral reference datasets it is bit-identical, enforced by the `regression.ps1` 1e-9 gate (golden + resume + HPC-chain legs) plus `OSPREY_CROSS_IMPL_*` byte-parity hooks. Of **110 catalogued divergences**, the overwhelming majority are either **documentation staleness** (the Rust prose lagging its own evolving Rust code, which the C# port correctly tracks) or **intentional C# infrastructure/CLI redesigns** that preserve output. There is exactly **one genuine PORT-ERROR** — the Razor shared-peptide assignment order in protein parsimony — and it sits off the default, bit-identical-tested path. **Seven items are UNVERIFIED** (an eighth, U6, is resolved) (the reviewer could not confirm one side against source and flagged them for a human to check). At the time of that review, nothing on the default analysis path was found to change output relative to Rust. (Since
+then two first-pass defaults changed in C# ahead of Rust: the one-run-per-precursor training
+selection, `OSPREY_TRAIN_PICK_RUN` (since ported, maccoss/osprey#66), and the 1%-tolerance SVM C
+selection, `OSPREY_SVM_C_TOLERANCE`. See [07](07-fdr-control.md).)
 
 ### Count by classification
 

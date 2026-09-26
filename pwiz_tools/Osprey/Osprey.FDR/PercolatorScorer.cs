@@ -917,19 +917,7 @@ namespace pwiz.Osprey.FDR
                 logInfo(@"Reusing the persisted first-pass model; no training subset is loaded and no SVM is trained.");
             }
 
-            var trainConfig = new PercolatorConfig
-            {
-                TrainFdr = percConfig.TrainFdr,
-                TestFdr = percConfig.TestFdr,
-                MaxIterations = percConfig.MaxIterations,
-                NFolds = percConfig.NFolds,
-                Seed = percConfig.Seed,
-                CValues = percConfig.CValues,
-                MaxTrainSize = percConfig.MaxTrainSize,
-                FeatureInfos = percConfig.FeatureInfos,
-                TrainOnly = true,
-                Diagnostics = percConfig.Diagnostics
-            };
+            var trainConfig = BuildStreamingTrainConfig(percConfig);
             PercolatorResults trainResults =
                 pretrainedModel ?? PercolatorTrainer.RunPercolator(subsetEntries, trainConfig);
             if (trainResults.DiagnosticAbort)
@@ -1151,6 +1139,31 @@ namespace pwiz.Osprey.FDR
             }
             sink.Finish(logInfo);
             return false;
+        }
+
+        /// <summary>
+        /// The train-only configuration <see cref="RunStreamingFirstPass"/> trains its subset
+        /// with. Not <see cref="PercolatorConfig.CloneForTrainOnly"/>: the streaming score passes
+        /// average LINEAR fold weights, so this copy carries none of the tree settings. That
+        /// leaves a known gap: a <c>--fdr-method gbdt</c> run that reaches this path trains the
+        /// linear SVM.
+        /// </summary>
+        internal static PercolatorConfig BuildStreamingTrainConfig(PercolatorConfig percConfig)
+        {
+            return new PercolatorConfig
+            {
+                TrainFdr = percConfig.TrainFdr,
+                TestFdr = percConfig.TestFdr,
+                MaxIterations = percConfig.MaxIterations,
+                NFolds = percConfig.NFolds,
+                Seed = percConfig.Seed,
+                CValues = percConfig.CValues,
+                CSelectionTolerance = percConfig.CSelectionTolerance,
+                MaxTrainSize = percConfig.MaxTrainSize,
+                FeatureInfos = percConfig.FeatureInfos,
+                TrainOnly = true,
+                Diagnostics = percConfig.Diagnostics
+            };
         }
 
         /// <summary>

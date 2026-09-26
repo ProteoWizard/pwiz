@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -355,6 +356,24 @@ namespace pwiz.Osprey
                         OspreyEnvironment.PASS2_QVALUE_TRANSFER,
                         OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT));
                     return 1;
+                }
+                // Abort for the same reason: a tolerance that does not parse would train under
+                // the default rule and key its directories as the default, so a parity arm
+                // (OSPREY_SVM_C_TOLERANCE=0) would report the default arm's numbers under its
+                // own name. Checked here so a mistyped value costs seconds, not Stages 1-4.
+                if (OspreyEnvironment.SvmCSelectionToleranceUnrecognized)
+                {
+                    LogError(string.Format(
+                        "OSPREY_SVM_C_TOLERANCE must be a number in [0, 1) such as '0.01', not '{0}'. " +
+                        "Unset it for the default ({1}); 0 selects the strict maximum the Rust implementation uses.",
+                        OspreyEnvironment.SvmCSelectionToleranceSetting,
+                        OspreyEnvironment.DEFAULT_SVM_C_SELECTION_TOLERANCE.ToString(CultureInfo.InvariantCulture)));
+                    return 1;
+                }
+                if (!string.IsNullOrEmpty(OspreyEnvironment.SvmCSelectionToleranceSetting))
+                {
+                    LogInfo(string.Format("First-pass SVM C selection: OSPREY_SVM_C_TOLERANCE = {0}",
+                        OspreyEnvironment.SvmCSelectionTolerance.ToString(CultureInfo.InvariantCulture)));
                 }
                 // OSPREY_STAGE7_STREAM was REMOVED (2026-09-10): the streamed Stage-7 join is the
                 // only arm there is. Setting it to 0 used to select the RESIDENT join, so a sweep
