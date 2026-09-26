@@ -1,6 +1,6 @@
 //============================================================================
 //ZedGraph Class Library - A Flexible Line Graph/Bar Graph Library in C#
-//Copyright © 2004  John Champion
+//Copyright Â© 2004  John Champion
 //
 //This library is free software; you can redistribute it and/or
 //modify it under the terms of the GNU Lesser General Public
@@ -1919,18 +1919,19 @@ namespace ZedGraph
 			return AddSteps( baseVal, _majorStep, tic );
 		}
 
-		/// <summary>
-		/// Calculate baseVal + step * count in decimal, so that a tic lands on the double
-		/// nearest its decimal value.  In binary floating point 0.05 * 174 is 8.700000000000001,
-		/// and shortest round-trip formatting shows that noise in the tic label.
-		/// </summary>
-		internal static double AddSteps( double baseVal, double step, double count )
+        /// <summary>
+        /// Adds a multiple of stepSize to baseVal. This method should be used in order to avoid
+        /// introducing floating point noise.
+        /// </summary>
+        internal static double AddSteps( double baseVal, double stepSize, double stepCount )
 		{
-			double result = baseVal + step * count;
-			if ( !FitsDecimal( baseVal ) || !FitsDecimal( step ) || !FitsDecimal( count ) || !FitsDecimal( result ) )
-				return result;
-			// Converting a double to decimal rounds it to 15 significant digits
-			return (double) ( (decimal) baseVal + (decimal) step * (decimal) count );
+			double result = baseVal + stepSize * stepCount;
+            if (FitsDecimal(baseVal) && FitsDecimal(stepSize) && FitsDecimal(stepCount) && FitsDecimal(result))
+            {
+                // If every term could fit in a decimal, do the math in decimal to avoid binary floating point noise.
+                return (double)((decimal)baseVal + (decimal)stepSize * (decimal)stepCount);
+            }
+            return result;
 		}
 
 		private static bool FitsDecimal( double value )

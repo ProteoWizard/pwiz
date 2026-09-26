@@ -17,11 +17,14 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
+using ZedGraph;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -51,7 +54,10 @@ namespace pwiz.SkylineTestFunctional
 
             WaitForGraphs();
 
-            GraphSummary[] summaries = { SkylineWindow.GraphPeakArea, SkylineWindow.GraphRetentionTime, SkylineWindow.GraphMassError };
+            // In binary floating point the first tic on this range is 0.05 * 174 = 8.700000000000001
+            RunUI(() => AssertTicValuesRoundTrip(SkylineWindow.GraphRetentionTime.GraphControl.GraphPane, 8.7, 9.05));
+
+            GraphSummary[] summaries ={ SkylineWindow.GraphPeakArea, SkylineWindow.GraphRetentionTime, SkylineWindow.GraphMassError };
             Settings.Default.SynchronizeSummaryZooming = true;
 
             // Test if graphs sync correctly with ShowLibraryPeakArea disabled/enabled
@@ -116,6 +122,44 @@ namespace pwiz.SkylineTestFunctional
                     add += expectedVisible ? -1.0 : 0.0;
                 }
             });
+        }
+
+        /// <summary>
+        /// Zooms the Y axis to the given range and asserts that every tic value is the double nearest
+        /// its 15-digit decimal value. Tic values with binary floating point noise, such as
+        /// 8.850000000000001, get shown in full by .NET Core's shortest round-trip formatting.
+        /// </summary>
+        private static void AssertTicValuesRoundTrip(GraphPane graphPane, double min, double max)
+        {
+            var ticValues = new List<double>();
+            Axis.ScaleFormatHandler recordTicValue = (pane, axis, val, index) =>
+            {
+                ticValues.Add(val);
+                return null;
+            };
+            var scale = graphPane.YAxis.Scale;
+            scale.Min = min;
+            scale.Max = max;
+            graphPane.YAxis.ScaleFormatEvent += recordTicValue;
+            try
+            {
+                graphPane.AxisChange();
+                // Drawing the pane formats every tic label
+                graphPane.GetImage().Dispose();
+            }
+            finally
+            {
+                graphPane.YAxis.ScaleFormatEvent -= recordTicValue;
+                scale.MinAuto = scale.MaxAuto = true;
+                graphPane.AxisChange();
+            }
+            Assert.AreNotEqual(0, ticValues.Count);
+            foreach (var ticValue in ticValues)
+            {
+                var text = ticValue.ToString(@"G15", CultureInfo.InvariantCulture);
+                Assert.AreEqual(double.Parse(text, CultureInfo.InvariantCulture), ticValue,
+                    string.Format(@"Tic value {0} has floating point noise", ticValue.ToString(@"R", CultureInfo.InvariantCulture)));
+            }
         }
 
         private bool GetExpectedVisible(GraphSummary g)
