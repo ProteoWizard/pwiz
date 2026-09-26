@@ -131,6 +131,14 @@ namespace pwiz.CarafeSharp.Proteome
         /// </summary>
         public bool ApplyTrainingRunMeta { get; set; }
 
+        /// <summary>
+        /// Predict with the model folder's safetensors models when a Carafe checkpoint is beside
+        /// them: set for the library a training run predicts, so it uses the models that run
+        /// wrote, not checkpoints an earlier Carafe run left in the same folder. Without it a
+        /// folder's Carafe checkpoints come first, as <c>-model_dir</c> reads them.
+        /// </summary>
+        public bool PreferSafetensors { get; set; }
+
         /// <summary><c>-tf</c>, read only with <c>-model_dir</c>: which of its models to use.</summary>
         public string TrainingType { get; set; } = DEFAULT_TRAINING_TYPE;
 

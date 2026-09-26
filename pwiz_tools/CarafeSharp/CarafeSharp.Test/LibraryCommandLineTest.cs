@@ -180,6 +180,33 @@ namespace pwiz.CarafeSharp.Test
                 Assert.AreEqual(LibrarySettings.DEFAULT_INSTRUMENT, settings.Instrument);
                 Assert.AreEqual(399.932800292969, settings.MinPrecursorMz);
                 Assert.AreEqual(901.158386230469, settings.MaxPrecursorMz);
+
+                // Both Carafe's checkpoint and CarafeSharp's safetensors: Carafe's for -model_dir,
+                // the safetensors a training run just wrote for the library that follows it.
+                string checkpoint = Path.Combine(folder, CarafeModelDirectory.MS2_MODEL_FILE);
+                string safetensors = Path.Combine(folder, ModelFiles.MS2_SAFETENSORS);
+                File.WriteAllText(safetensors, string.Empty);
+                directory = CarafeModelDirectory.Open(folder);
+                Assert.AreEqual(checkpoint, directory.Ms2ModelPath);
+                Assert.AreEqual(string.Format(CarafeModelDirectory.BOTH_MODELS_WARNING_FORMAT, checkpoint, safetensors), directory.Warnings.Single());
+                directory = CarafeModelDirectory.Open(folder, true);
+                Assert.AreEqual(safetensors, directory.Ms2ModelPath);
+                Assert.AreEqual(string.Format(CarafeModelDirectory.BOTH_MODELS_WARNING_FORMAT, safetensors, checkpoint), directory.Warnings.Single());
+
+                // A field meta.json lacks takes Carafe's JMeta default.
+                File.WriteAllText(Path.Combine(folder, CarafeModelDirectory.META_FILE), "{\"run.mzML\":{\"nce\":30.0}}");
+                var run = CarafeModelDirectory.Open(folder).Runs.Single();
+                Assert.AreEqual(30.0, run.Nce);
+                Assert.AreEqual(@"-", run.MsFile);
+                Assert.AreEqual(@"-", run.MsInstrument);
+                Assert.AreEqual(200.0, run.LfFragMzMin);
+                Assert.AreEqual(1800.0, run.LfFragMzMax);
+                Assert.AreEqual(20, run.LfTopNFragmentIons);
+                Assert.AreEqual(200.0, run.MinFragmentIonMz);
+                Assert.AreEqual(2000.0, run.MaxFragmentIonMz);
+                Assert.AreEqual(300.0, run.PrecursorMzMin);
+                Assert.AreEqual(1800.0, run.PrecursorMzMax);
+                Assert.AreEqual(0.0, run.RtMax);
             }
             finally
             {
@@ -200,6 +227,10 @@ namespace pwiz.CarafeSharp.Test
             try
             {
                 WriteRandomModels(models);
+                // Checkpoints an earlier Carafe run left: the library after training uses the models it wrote.
+                string checkpoint = Path.Combine(models, ModelFiles.MS2_CHECKPOINT);
+                File.WriteAllText(checkpoint, @"not a checkpoint");
+                File.WriteAllText(Path.Combine(models, ModelFiles.RT_CHECKPOINT), @"not a checkpoint");
                 string fasta = Path.Combine(folder, @"proteins.fasta");
                 File.WriteAllText(fasta, ">sp|P1|A\nMPEPTIDEKSAMPLERLVNELTEFAK\n");
                 var settings = new LibrarySettings
@@ -207,6 +238,7 @@ namespace pwiz.CarafeSharp.Test
                     Database = fasta,
                     OutputDirectory = Path.Combine(folder, @"out"),
                     ModelDirectory = models,
+                    PreferSafetensors = true,
                     LibraryFormat = LibraryOutputs.BLIB_FORMAT,
                     Device = TorchDevice.CPU,
                     RtMax = 30,
@@ -219,6 +251,8 @@ namespace pwiz.CarafeSharp.Test
                 generator.Run();
                 Assert.IsTrue(generator.SpectrumCount > 0, log.ToString());
                 CollectionAssert.AreEqual(new[] { generator.BlibPath }, Directory.GetFiles(settings.OutputDirectory));
+                StringAssert.Contains(log.ToString(), string.Format(CarafeModelDirectory.BOTH_MODELS_WARNING_FORMAT,
+                    Path.Combine(models, ModelFiles.MS2_SAFETENSORS), checkpoint));
 
                 // The models are opened, and the pretrained weights checked, before the FASTA is digested.
                 string zip = Path.Combine(folder, @"pretrained_models.zip");

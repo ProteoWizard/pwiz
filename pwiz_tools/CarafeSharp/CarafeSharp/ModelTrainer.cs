@@ -26,8 +26,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
-using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Proteome;
@@ -111,49 +109,49 @@ namespace pwiz.CarafeSharp
             var fineTune = new FineTuneOptions { Seed = _settings.Seed, Device = device };
             Result = FineTuneRun.Run(_settings.TrainRt ? trainingSet.Rt : null, _settings.TrainMs2 ? trainingSet.Ms2 : null,
                 pretrained, fineTune, _settings.OutputDirectory, Log);
-            WriteMeta(exports, options);
+            CarafeModelDirectory.WriteMeta(_settings.OutputDirectory, BuildRunMeta(exports, selection.Runs, options));
 
             if (_settings.Library != null)
             {
+                // The models this run wrote, not checkpoints an earlier Carafe run left in -o.
                 _settings.Library.OutputDirectory = _settings.OutputDirectory;
+                _settings.Library.PreferSafetensors = true;
                 new LibraryGenerator(_settings.Library, _log, pretrained).Run();
             }
         }
 
         /// <summary>
-        /// Carafe's <c>meta.json</c>, one entry per training run, which library prediction
+        /// Carafe's <c>meta.json</c> entries, one per training run, which library prediction
         /// (right after training, or later through <c>-model_dir</c>) reads for the collision
-        /// energy, instrument, rt_max and precursor window.
+        /// energy, instrument, rt_max and precursor window. Each holds what Carafe's training run
+        /// records (AIGear, the training data loop): the run's path as <paramref name="runPaths"/>
+        /// keys it (its stem without <c>-ms</c>), the instrument detected in the run (empty when
+        /// Carafe recognizes none; not <c>-ms_instrument</c>), the run's collision energy, its
+        /// rt_max (at least <c>-rt_max</c>), MS2 scan window and isolation range. The library
+        /// fragment range and count, which Carafe never sets, keep JMeta's defaults.
         /// </summary>
-        private void WriteMeta(IReadOnlyList<OspreyTrainingExport> exports, OspreyTrainingSetOptions options)
+        internal static IReadOnlyList<CarafeRunMeta> BuildRunMeta(IReadOnlyList<OspreyTrainingExport> exports,
+            IReadOnlyDictionary<string, string> runPaths, OspreyTrainingSetOptions options)
         {
-            var library = _settings.Library ?? new LibrarySettings();
-            var runs = new Dictionary<string, object>(StringComparer.Ordinal);
+            var runs = new List<CarafeRunMeta>();
             foreach (var export in exports)
             {
                 string stem = TrainingExportLocator.RunStem(export.Path);
-                string msFile = _settings.MsFiles.FirstOrDefault(f =>
-                    string.Equals(Path.GetFileNameWithoutExtension(f), stem, StringComparison.OrdinalIgnoreCase)) ?? stem;
                 var isolation = export.IsolationRange;
-                var scanWindow = export.Ms2ScanWindow ?? (library.MinFragmentMz, library.MaxFragmentMz);
-                runs[msFile] = new Dictionary<string, object>
+                var scanWindow = export.Ms2ScanWindow ?? (CarafeRunMeta.DEFAULT_MIN_FRAGMENT_ION_MZ, CarafeRunMeta.DEFAULT_MAX_FRAGMENT_ION_MZ);
+                runs.Add(new CarafeRunMeta
                 {
-                    { @"lf_frag_mz_max", library.MaxFragmentMz },
-                    { @"lf_frag_mz_min", library.MinFragmentMz },
-                    { @"lf_top_n_fragment_ions", library.TopFragments },
-                    { @"max_fragment_ion_mz", scanWindow.Upper },
-                    { @"min_fragment_ion_mz", scanWindow.Lower },
-                    { @"ms_file", msFile },
-                    { @"ms_instrument", options.Instrument ?? export.InstrumentModel ?? string.Empty },
-                    { @"nce", options.Nce ?? export.DominantCollisionEnergy ?? library.Nce },
-                    { @"precursor_ion_mz_max", isolation.Upper },
-                    { @"precursor_ion_mz_min", isolation.Lower },
-                    { @"rt_max", export.RtMax + options.RtMaxPadding },
-                    { @"rt_min", 0.0 },
-                };
+                    MsFile = runPaths.TryGetValue(stem, out string path) ? path : stem,
+                    MsInstrument = OspreyTrainingSet.GetCarafeInstrument(export.InstrumentModel) ?? string.Empty,
+                    Nce = OspreyTrainingSet.GetNce(export, options.Nce),
+                    MinFragmentIonMz = scanWindow.Lower,
+                    MaxFragmentIonMz = scanWindow.Upper,
+                    RtMax = OspreyTrainingSet.GetRtMax(export, options),
+                    PrecursorMzMin = isolation.Lower,
+                    PrecursorMzMax = isolation.Upper,
+                });
             }
-            File.WriteAllText(Path.Combine(_settings.OutputDirectory, ModelFiles.META),
-                JsonSerializer.Serialize(runs, new JsonSerializerOptions { WriteIndented = true }));
+            return runs;
         }
 
         private void Log(string message)

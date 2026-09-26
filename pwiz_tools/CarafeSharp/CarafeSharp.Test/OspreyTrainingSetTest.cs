@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CarafeSharp.IO;
+using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.CarafeSharp.Training;
 
@@ -227,6 +228,30 @@ namespace pwiz.CarafeSharp.Test
             rt = OspreyTrainingSet.Build(exports, new OspreyTrainingSetOptions { RtMax = 30 }).Rt.ToDictionary(e => e.Peptide.Sequence);
             Assert.AreEqual(5 / 30.0, rt[@"PEPTIDEK"].RtNorm, 1e-12);
             Assert.AreEqual(30.0, CarafeCommandLine.Parse(new[] { @"-i", @"a.training.parquet", @"-rt_max", @"30" }).TrainingSettings.RtMax);
+
+            string folder = Path.Combine(Path.GetTempPath(), @"CarafeSharpMeta_" + Guid.NewGuid().ToString(@"N"));
+            Directory.CreateDirectory(folder);
+            try
+            {
+                // A model -tf asks for with no training rows is an error, not a folder of old models.
+                Assert.ThrowsException<InvalidOperationException>(() => FineTuneRun.Run(Array.Empty<RtTrainingExample>(), null, null,
+                    new FineTuneOptions(), folder, null));
+
+                // meta.json: a run per export, keyed by its run's path, with the run's detected
+                // instrument (empty when Carafe recognizes none), NCE and rt_max, and Carafe's JMeta
+                // defaults where Carafe sets nothing; read back exactly as written.
+                var runPaths = new Dictionary<string, string> { { @"a", @"D:\data\a.mzML" } };
+                var options = new OspreyTrainingSetOptions { Nce = 25, RtMax = 15, Instrument = @"QE" };
+                CarafeModelDirectory.WriteMeta(folder, ModelTrainer.BuildRunMeta(exports, runPaths, options));
+                var runs = CarafeModelDirectory.Open(folder).Runs.ToDictionary(r => r.MsFile);
+                Assert.AreEqual(2, runs.Count);
+                AssertRunMeta(runs[@"D:\data\a.mzML"], @"Exploris", 30, 15);
+                AssertRunMeta(runs[@"b"], string.Empty, 25, 20.1);
+            }
+            finally
+            {
+                Directory.Delete(folder, true);
+            }
         }
 
         [TestMethod]
@@ -491,6 +516,22 @@ namespace pwiz.CarafeSharp.Test
             return record;
         }
 
+        private static void AssertRunMeta(CarafeRunMeta run, string instrument, double nce, double rtMax)
+        {
+            Assert.AreEqual(instrument, run.MsInstrument);
+            Assert.AreEqual(nce, run.Nce);
+            Assert.AreEqual(rtMax, run.RtMax, 1e-12);
+            Assert.AreEqual(0.0, run.RtMin);
+            Assert.AreEqual(400.5, run.PrecursorMzMin);
+            Assert.AreEqual(900.5, run.PrecursorMzMax);
+            // Carafe never sets the library fragment range or count, and no scan window is known.
+            Assert.AreEqual(200.0, run.LfFragMzMin);
+            Assert.AreEqual(1800.0, run.LfFragMzMax);
+            Assert.AreEqual(20, run.LfTopNFragmentIons);
+            Assert.AreEqual(200.0, run.MinFragmentIonMz);
+            Assert.AreEqual(2000.0, run.MaxFragmentIonMz);
+        }
+
         /// <summary>A run's export holding one confidently identified precursor at charge 2, every ion clean.</summary>
         private static OspreyTrainingExport NewExport(string stem, double rtMax, string collisionEnergies, string instrument,
             string sequence, double apexRt)
@@ -504,6 +545,8 @@ namespace pwiz.CarafeSharp.Test
             {
                 { @"osprey.rt_max", rtMax.ToString(CultureInfo.InvariantCulture) },
                 { @"osprey.instrument_model", instrument },
+                { @"osprey.isolation_mz_min", @"400.5" },
+                { @"osprey.isolation_mz_max", @"900.5" },
             };
             if (collisionEnergies != null)
                 metadata.Add(@"osprey.collision_energies", collisionEnergies);

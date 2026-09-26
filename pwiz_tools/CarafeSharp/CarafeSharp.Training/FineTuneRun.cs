@@ -83,23 +83,39 @@ namespace pwiz.CarafeSharp.Training
         public const string MS2_MODEL_FILE = ModelFiles.MS2_SAFETENSORS;
         public const string MODEL_INFO_FILE = ModelFiles.INFO;
 
+        /// <summary>
+        /// Fine-tunes the models given rows: <paramref name="rtRows"/> or <paramref name="ms2Rows"/>
+        /// null skips that model, and an empty list is an error, since the library would then
+        /// be predicted from whatever models an earlier run left in the folder.
+        /// </summary>
         public static FineTuneResult Run(IReadOnlyList<RtTrainingExample> rtRows, IReadOnlyList<Ms2TrainingExample> ms2Rows,
             PretrainedModels pretrained, FineTuneOptions options, string outputDirectory, Action<string> log)
         {
+            RequireRows(rtRows, @"RT");
+            RequireRows(ms2Rows, @"MS2");
             log = log ?? (_ => { });
             Directory.CreateDirectory(outputDirectory);
             manual_seed(options.Seed);
             var shuffle = new NumpyRandomState(options.Seed);
             var result = new FineTuneResult();
 
-            if (rtRows != null && rtRows.Count > 0)
+            if (rtRows != null)
                 TrainRt(rtRows, pretrained, options, outputDirectory, shuffle, result, log);
-            if (ms2Rows != null && ms2Rows.Count > 0)
+            if (ms2Rows != null)
                 TrainMs2(ms2Rows, pretrained, options, outputDirectory, shuffle, result, log);
 
             WriteMetrics(Path.Combine(outputDirectory, ModelFiles.METRICS), result);
             WriteModelInfo(Path.Combine(outputDirectory, MODEL_INFO_FILE), pretrained, options, result);
             return result;
+        }
+
+        private static void RequireRows<T>(IReadOnlyList<T> rows, string model)
+        {
+            if (rows != null && rows.Count == 0)
+            {
+                throw new InvalidOperationException(string.Format(
+                    @"No {0} training rows: no identification passed the filters for the {0} model -tf asks to fine-tune.", model));
+            }
         }
 
         private static void TrainRt(IReadOnlyList<RtTrainingExample> rows, PretrainedModels pretrained, FineTuneOptions options,
@@ -176,19 +192,19 @@ namespace pwiz.CarafeSharp.Training
             var metrics = new Dictionary<string, object>();
             if (result.Ms2FineTuned != null)
             {
-                metrics[@"ms2"] = new Dictionary<string, object>
+                metrics[ModelFiles.METRICS_MS2] = new Dictionary<string, object>
                 {
-                    { @"finetuned", Metrics(result.Ms2FineTuned) },
-                    { @"pretrained", Metrics(result.Ms2Pretrained) },
-                    { @"use_finetuned_for_prediction", result.UseFineTunedMs2 },
+                    { ModelFiles.METRICS_FINETUNED, Metrics(result.Ms2FineTuned) },
+                    { ModelFiles.METRICS_PRETRAINED, Metrics(result.Ms2Pretrained) },
+                    { ModelFiles.METRICS_USE_FINETUNED, result.UseFineTunedMs2 },
                 };
             }
             if (result.RtFineTuned != null)
             {
-                metrics[@"rt"] = new Dictionary<string, object>
+                metrics[ModelFiles.METRICS_RT] = new Dictionary<string, object>
                 {
-                    { @"finetuned", new { mae_normalized = result.RtFineTuned.MedianAbsoluteError, r2 = result.RtFineTuned.R2 } },
-                    { @"pretrained", new { mae_normalized = result.RtPretrained.MedianAbsoluteError, r2 = result.RtPretrained.R2 } },
+                    { ModelFiles.METRICS_FINETUNED, new { mae_normalized = result.RtFineTuned.MedianAbsoluteError, r2 = result.RtFineTuned.R2 } },
+                    { ModelFiles.METRICS_PRETRAINED, new { mae_normalized = result.RtPretrained.MedianAbsoluteError, r2 = result.RtPretrained.R2 } },
                 };
             }
             File.WriteAllText(path, JsonSerializer.Serialize(metrics, new JsonSerializerOptions { WriteIndented = true }));

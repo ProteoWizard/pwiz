@@ -42,6 +42,8 @@ namespace pwiz.CarafeSharp.Proteome
     /// <item>RT: the fine-tuned model whenever the file exists.</item>
     /// <item><c>-tf rt</c> takes the MS2 model pretrained and <c>-tf ms2</c> the RT model;
     /// a <c>-tf</c> other than all, rt, ms2 or test takes both pretrained.</item>
+    /// <item>A fine-tuned model is Carafe's checkpoint, else CarafeSharp's safetensors; the
+    /// library a training run predicts takes the safetensors that run wrote first.</item>
     /// </list>
     /// </summary>
     public sealed class CarafeModelDirectory
@@ -51,20 +53,46 @@ namespace pwiz.CarafeSharp.Proteome
         public const string METRICS_FILE = ModelFiles.METRICS;
         public const string META_FILE = ModelFiles.META;
 
+        /// <summary>The warning for a folder holding both a model's checkpoint and its safetensors: the one read, then the other.</summary>
+        public const string BOTH_MODELS_WARNING_FORMAT = @"WARNING: both {0} and {1} are in the model folder; the fine-tuned model is read from {0}.";
+
         /// <summary>
         /// Opens a model folder. A missing or unreadable metrics file counts as no metrics, as
         /// in Carafe's Python; meta.json is read when present.
         /// </summary>
-        public static CarafeModelDirectory Open(string directory)
+        /// <param name="directory">The folder.</param>
+        /// <param name="preferSafetensors">
+        /// Take CarafeSharp's safetensors models over Carafe's checkpoints beside them, as the
+        /// library after a training run does (<see cref="LibrarySettings.PreferSafetensors"/>).
+        /// </param>
+        public static CarafeModelDirectory Open(string directory, bool preferSafetensors = false)
         {
             if (!Directory.Exists(directory))
                 throw new DirectoryNotFoundException(@"Model folder not found: " + directory);
-            return new CarafeModelDirectory(directory);
+            return new CarafeModelDirectory(directory, preferSafetensors);
         }
 
-        private CarafeModelDirectory(string directory)
+        /// <summary>
+        /// Writes <paramref name="runs"/> as <paramref name="directory"/>'s meta.json, each keyed
+        /// by its <see cref="CarafeRunMeta.MsFile"/>, as Carafe's training run writes it.
+        /// </summary>
+        public static void WriteMeta(string directory, IEnumerable<CarafeRunMeta> runs)
+        {
+            var json = new Dictionary<string, IReadOnlyDictionary<string, object>>(StringComparer.Ordinal);
+            foreach (var run in runs)
+                json[run.MsFile] = run.ToJson();
+            File.WriteAllText(Path.Combine(directory, META_FILE), JsonSerializer.Serialize(json, new JsonSerializerOptions { WriteIndented = true }));
+        }
+
+        private readonly bool _preferSafetensors;
+        private readonly List<string> _warnings = new List<string>();
+
+        private CarafeModelDirectory(string directory, bool preferSafetensors)
         {
             DirectoryPath = directory;
+            _preferSafetensors = preferSafetensors;
+            WarnIfBoth(MS2_MODEL_FILE, ModelFiles.MS2_SAFETENSORS);
+            WarnIfBoth(RT_MODEL_FILE, ModelFiles.RT_SAFETENSORS);
             UseFineTunedMs2 = ReadUseFineTunedMs2(Path.Combine(directory, METRICS_FILE)) && File.Exists(Ms2ModelPath);
             string metaPath = Path.Combine(directory, META_FILE);
             Runs = File.Exists(metaPath) ? ReadMeta(metaPath) : new List<CarafeRunMeta>();
@@ -72,13 +100,22 @@ namespace pwiz.CarafeSharp.Proteome
 
         public string DirectoryPath { get; }
 
-        /// <summary>The fine-tuned MS2 model: Carafe's checkpoint, else CarafeSharp's safetensors.</summary>
+        /// <summary>Warnings about the folder, for the log: a model with both a checkpoint and safetensors, naming the one used.</summary>
+        public IReadOnlyList<string> Warnings
+        {
+            get { return _warnings; }
+        }
+
+        /// <summary>
+        /// The fine-tuned MS2 model: Carafe's checkpoint, else CarafeSharp's safetensors, or the
+        /// other way round when opened to prefer safetensors.
+        /// </summary>
         public string Ms2ModelPath
         {
             get { return ModelPath(MS2_MODEL_FILE, ModelFiles.MS2_SAFETENSORS); }
         }
 
-        /// <summary>The fine-tuned RT model: Carafe's checkpoint, else CarafeSharp's safetensors.</summary>
+        /// <summary>The fine-tuned RT model, chosen as <see cref="Ms2ModelPath"/> is.</summary>
         public string RtModelPath
         {
             get { return ModelPath(RT_MODEL_FILE, ModelFiles.RT_SAFETENSORS); }
@@ -92,9 +129,20 @@ namespace pwiz.CarafeSharp.Proteome
 
         private string ModelPath(string checkpoint, string safetensors)
         {
-            string path = Path.Combine(DirectoryPath, checkpoint);
-            string alternative = Path.Combine(DirectoryPath, safetensors);
-            return !File.Exists(path) && File.Exists(alternative) ? alternative : path;
+            string first = Path.Combine(DirectoryPath, _preferSafetensors ? safetensors : checkpoint);
+            string second = Path.Combine(DirectoryPath, _preferSafetensors ? checkpoint : safetensors);
+            return !File.Exists(first) && File.Exists(second) ? second : first;
+        }
+
+        /// <summary>A warning naming the file used when a model has both a checkpoint and safetensors.</summary>
+        private void WarnIfBoth(string checkpoint, string safetensors)
+        {
+            string checkpointPath = Path.Combine(DirectoryPath, checkpoint);
+            string safetensorsPath = Path.Combine(DirectoryPath, safetensors);
+            if (!File.Exists(checkpointPath) || !File.Exists(safetensorsPath))
+                return;
+            string used = ModelPath(checkpoint, safetensors);
+            _warnings.Add(string.Format(BOTH_MODELS_WARNING_FORMAT, used, used == checkpointPath ? safetensorsPath : checkpointPath));
         }
 
         /// <summary>The metrics say to predict with the fine-tuned MS2 model, and it exists.</summary>
@@ -188,8 +236,8 @@ namespace pwiz.CarafeSharp.Proteome
                 using (var json = JsonDocument.Parse(File.ReadAllText(path)))
                 {
                     if (json.RootElement.ValueKind != JsonValueKind.Object ||
-                        !json.RootElement.TryGetProperty(@"ms2", out var ms2) || ms2.ValueKind != JsonValueKind.Object ||
-                        !ms2.TryGetProperty(@"use_finetuned_for_prediction", out var use))
+                        !json.RootElement.TryGetProperty(ModelFiles.METRICS_MS2, out var ms2) || ms2.ValueKind != JsonValueKind.Object ||
+                        !ms2.TryGetProperty(ModelFiles.METRICS_USE_FINETUNED, out var use))
                     {
                         return false;
                     }

@@ -260,9 +260,11 @@ namespace pwiz.CarafeSharp
         private CarafeModelDirectory OpenModelDirectory()
         {
             string folder = _settings.ModelDirectory ?? _settings.OutputDirectory;
-            var modelDirectory = CarafeModelDirectory.Open(folder);
+            var modelDirectory = CarafeModelDirectory.Open(folder, _settings.PreferSafetensors);
             if (_settings.ModelDirectory != null)
                 Log(@"Use the model in the folder: " + folder + @" for spectral library generation");
+            foreach (string warning in modelDirectory.Warnings)
+                Log(warning);
             if (_settings.ApplyModelDirectoryMeta)
             {
                 modelDirectory.ApplyModelDirectoryOverrides(_settings);

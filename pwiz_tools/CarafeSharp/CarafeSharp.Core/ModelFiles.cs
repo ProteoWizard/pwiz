@@ -21,12 +21,35 @@
 namespace pwiz.CarafeSharp.Core
 {
     /// <summary>
-    /// The files of a fine-tuned model folder. Carafe writes the models as PyTorch
-    /// checkpoints and CarafeSharp as safetensors; both write Carafe's metrics and training-run
-    /// summary, so either folder predicts a library through <c>-model_dir</c>.
+    /// The files of a fine-tuned model folder, and the keys of its JSON files, which
+    /// CarafeSharp writes and reads. Carafe writes the models as PyTorch checkpoints and
+    /// CarafeSharp as safetensors; both write Carafe's metrics and training-run summary, so
+    /// either folder predicts a library through <c>-model_dir</c>.
     /// </summary>
     public static class ModelFiles
     {
+        // model_evaluation_metrics.json: {"ms2": {"finetuned": ..., "pretrained": ...,
+        // "use_finetuned_for_prediction": ...}, "rt": {"finetuned": ..., "pretrained": ...}}.
+        public const string METRICS_MS2 = @"ms2";
+        public const string METRICS_RT = @"rt";
+        public const string METRICS_FINETUNED = @"finetuned";
+        public const string METRICS_PRETRAINED = @"pretrained";
+        public const string METRICS_USE_FINETUNED = @"use_finetuned_for_prediction";
+
+        // meta.json: an object per training run, keyed by the run's path, with Carafe's JMeta fields.
+        public const string META_MS_FILE = @"ms_file";
+        public const string META_MS_INSTRUMENT = @"ms_instrument";
+        public const string META_NCE = @"nce";
+        public const string META_MIN_FRAGMENT_ION_MZ = @"min_fragment_ion_mz";
+        public const string META_MAX_FRAGMENT_ION_MZ = @"max_fragment_ion_mz";
+        public const string META_LF_FRAG_MZ_MIN = @"lf_frag_mz_min";
+        public const string META_LF_FRAG_MZ_MAX = @"lf_frag_mz_max";
+        public const string META_LF_TOP_N_FRAGMENT_IONS = @"lf_top_n_fragment_ions";
+        public const string META_RT_MAX = @"rt_max";
+        public const string META_RT_MIN = @"rt_min";
+        public const string META_PRECURSOR_ION_MZ_MIN = @"precursor_ion_mz_min";
+        public const string META_PRECURSOR_ION_MZ_MAX = @"precursor_ion_mz_max";
+
         /// <summary>Carafe's fine-tuned MS2 model (PyTorch state_dict).</summary>
         public const string MS2_CHECKPOINT = @"ms2_model.pt";
 
