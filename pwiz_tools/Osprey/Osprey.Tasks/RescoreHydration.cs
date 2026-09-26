@@ -296,13 +296,11 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     public static class RescoreHydration
     {
-        /// <summary>
-        /// The name the <c>--verbose</c> route notes give the ALL-RUNS reconciliation bundle when
-        /// either hydrate twin starts building it. The regression gate does not read it: its
-        /// negative route assertion reads <c>[PATH] all-runs-bundle</c>, which both twins and the
-        /// refusing guard emit, so the prose is free to change.
-        /// </summary>
-        public const string ALL_RUNS_BUNDLE_MARKER = @"ALL-RUNS reconciliation bundle";
+        // The --verbose note both all-runs builders print is prose; the regression gate reads
+        // [PATH] all-runs-bundle, which both builders and the refusing guard emit.
+        private const string ALL_RUNS_VERBOSE_NOTE =
+            "Loading the cross-run reconciliation files for all {0:N0} runs into memory at once; " +
+            "memory grows with the number of files.";
 
         /// <summary>
         /// Overlay the per-file 1st-pass FDR sidecars and parse the per-file
@@ -357,8 +355,8 @@ namespace pwiz.Osprey.Tasks
             if (OspreyOutput.Verbose)
             {
                 log?.LogInfo(string.Format(
-                    @"Hydrating the {0}: {1} run(s) held at once, O(files x entries).",
-                    ALL_RUNS_BUNDLE_MARKER, perFileEntries.Count));
+                    ALL_RUNS_VERBOSE_NOTE,
+                    perFileEntries.Count));
             }
             log?.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_ALL_RUNS_BUNDLE, @"built runs={0}",
                 perFileEntries.Count));
@@ -616,8 +614,8 @@ namespace pwiz.Osprey.Tasks
             if (OspreyOutput.Verbose)
             {
                 log?.LogInfo(string.Format(
-                    @"Hydrating the {0}: {1} run(s) held at once, O(files x entries).",
-                    ALL_RUNS_BUNDLE_MARKER, nFiles));
+                    ALL_RUNS_VERBOSE_NOTE,
+                    nFiles));
             }
             log?.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_ALL_RUNS_BUNDLE, @"built runs={0}", nFiles));
             using (var hydrateProgress = new ProgressReporter(

@@ -96,12 +96,12 @@ Osprey --task PerFileScoring -i s1.mzML -l hela.tsv -o out.blib --resolution uni
 Osprey --task FirstPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
 #   writes beside each parquet: &lt;stem&gt;.1st-pass.fdr_scores.bin, &lt;stem&gt;.reconciliation.json
 
-# split 2 - one process per file (parquet + its two sidecars co-located)
+# split 2 - one process per file (the scores parquet and its intermediate files together)
 Osprey --task PerFileRescoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
 #   writes: &lt;stem&gt;.scores-reconciled.parquet
 
 # join 2 - one process over ALL runs, reading their reconciled parquets (writes out.blib)
 Osprey --task SecondPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
 </pre>
-<p>EVERY task takes <code>-i</code>, naming the DATA files - the same names the first split was given. A join task derives each run's parquet and sidecars from the input stem, so the data file itself need not still exist: what has to be in the worker's working directory (or under <code>--output-dir</code>) is that run's artifacts. FirstPassFDR reconciliation is order-sensitive, so pass a deterministically sorted list - <code>--input-list</code> takes one path per line and is what a cohort past a few hundred runs needs, since <code>-i</code> spends the command line at O(files). Let the scheduler do the fan-out (one file per split process) rather than <code>--parallel-files</code>, which is the single-node multi-file mode.</p>
+<p>EVERY task takes <code>-i</code>, naming the DATA files - the same names the first split was given. A join task derives each run's parquet and intermediate files from the input stem, so the data file itself need not still exist: what has to be in the worker's working directory (or under <code>--output-dir</code>) is that run's artifacts. FirstPassFDR reconciliation is order-sensitive, so pass a deterministically sorted list - <code>--input-list</code> takes one path per line and is what a cohort past a few hundred runs needs, since <code>-i</code> spends the command line at O(files). Let the scheduler do the fan-out (one file per split process) rather than <code>--parallel-files</code>, which is the single-node multi-file mode.</p>
 </body></html>

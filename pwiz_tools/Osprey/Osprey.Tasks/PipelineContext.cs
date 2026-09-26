@@ -256,7 +256,7 @@ namespace pwiz.Osprey.Tasks
                 // --task PerFileScoring boundary, whose byproducts were already published
                 // before the stop) is intentionally left benign.
                 if (!task.Rehydrate(this) && ExitCode != 0)
-                    throw new RehydrateFailedException(taskType, ExitCode);
+                    throw new RehydrateFailedException(taskType, task.Name, ExitCode);
             }
             return task;
         }
@@ -604,9 +604,9 @@ namespace pwiz.Osprey.Tasks
         public Type TaskType { get; }
         public int ExitCode { get; }
 
-        public RehydrateFailedException(Type taskType, int exitCode)
-            : base(string.Format(@"Task '{0}' failed to rehydrate its state (exit code {1}).",
-                taskType?.FullName, exitCode))
+        public RehydrateFailedException(Type taskType, string taskName, int exitCode)
+            : base(string.Format("The {0} step could not reload its results from the intermediate files (exit code {1}).",
+                taskName, exitCode))
         {
             TaskType = taskType;
             ExitCode = exitCode;

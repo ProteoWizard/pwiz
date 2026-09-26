@@ -990,7 +990,7 @@ namespace pwiz.Osprey.Tasks
                     return false;  // load failure; ExitCode already set
             }
 
-            ctx.LogVerbose(@"Bundle hydration: skipping first-pass Percolator (sidecar provides q-values).");
+            ctx.LogVerbose("Using the first-pass q-values saved in the intermediate files; first-pass Percolator is not run again.");
 
             // The bundle's PreCompactionTallies are non-null only when the hydrate that
             // produced it STREAMED (compacting each file as it loaded, so it never held the
@@ -1988,7 +1988,6 @@ namespace pwiz.Osprey.Tasks
                         progress.Report(++files);
                         string runName = kvp.Key;
                         if (!StreamFirstPassFileScores(runName, perFileParquetPaths, config, ctx,
-                                @"FDRBench pass 1",
                                 (modseq, charge, isDecoy, record) =>
                                 {
                                     if (isDecoy)
@@ -2403,7 +2402,7 @@ namespace pwiz.Osprey.Tasks
                 if (string.IsNullOrEmpty(sidecarBase))
                 {
                     ctx.LogWarning(string.Format(
-                        "No sidecar base path for `{0}` — skipping fdr_scores.bin write", fileName));
+                        "Cannot write the first-pass intermediate file for '{0}': no location could be derived from its input path.", fileName));
                     failures++;
                     continue;
                 }
@@ -2458,9 +2457,9 @@ namespace pwiz.Osprey.Tasks
             if (string.IsNullOrEmpty(path))
             {
                 ctx.LogWarning(
-                    "No output blib to name the experiment-scope FDR sidecar after — skipping " +
-                    "fdr_experiment.bin write. Stage 6 compaction will not find the protein " +
-                    "q-values it rescues on.");
+                    "There is no output .blib to name the whole-experiment first-pass intermediate " +
+                    "file after, so it is not written. Cross-run reconciliation will not have the " +
+                    "protein q-values it needs.");
                 return 1;
             }
             PerFileResumeDriver.ClearStale(path, Name);
@@ -3245,7 +3244,7 @@ namespace pwiz.Osprey.Tasks
                 if (string.IsNullOrEmpty(sidecarBase))
                 {
                     ctx.LogWarning(string.Format(
-                        "No sidecar base path for `{0}` — skipping fdr_scores.bin write", fileName));
+                        "Cannot write the first-pass intermediate file for '{0}': no location could be derived from its input path.", fileName));
                     return 1;
                 }
                 string fdrPath = FdrScoresSidecar.Pass1Path(sidecarBase);
@@ -3407,9 +3406,9 @@ namespace pwiz.Osprey.Tasks
             {
                 var refusals = new List<string>();
                 if (string.IsNullOrEmpty(experimentPathForResume))
-                    refusals.Add(@"no experiment-sidecar path (no output blib to name it after)");
+                    refusals.Add("there is no output .blib to name the whole-experiment first-pass intermediate file after");
                 else if (!PerFileResumeDriver.IsCurrent(experimentPathForResume, Name, sidecarValidityKey))
-                    refusals.Add(string.Format(@"experiment sidecar not current: {0}", experimentPathForResume));
+                    refusals.Add(string.Format("the whole-experiment first-pass intermediate file is not up to date: {0}", experimentPathForResume));
                 var probe = FirstPassModelIO.LoadFromAny(perFileParquetPaths);
                 if (probe == null)
                     refusals.Add(@"no readable .1st-pass.model.json beside any input parquet");
@@ -3480,7 +3479,7 @@ namespace pwiz.Osprey.Tasks
                 IReadOnlyDictionary<uint, FdrExperimentRecord> experimentById = null;
                 if (FdrBenchInputWriter.PathForPass(config, OspreyConfig.FDRBENCH_PASS_1) != null)
                 {
-                    experimentById = LoadFirstPassExperimentRecords(config, ctx, @"FDRBench pass 1");
+                    experimentById = LoadFirstPassExperimentRecords(config, ctx);
                     if (experimentById == null)
                         return null;  // ExitCode set in the helper
                     if (!WriteFdrBenchPass1FromSidecarsIfRequested(
@@ -4050,7 +4049,6 @@ namespace pwiz.Osprey.Tasks
             {
                 reduceProgress.Report(++proteinReduceFiles);
                 if (!StreamFirstPassFileScores(kvp.Key, perFileParquetPaths, config, ctx,
-                        @"First-pass protein FDR",
                         (modseq, charge, isDecoy, record) =>
                             accumulator.Add(modseq, isDecoy, record.Score, record.RunPeptideQvalue)))
                 {
@@ -4113,8 +4111,7 @@ namespace pwiz.Osprey.Tasks
         /// bounded), then stream the parquet scalars (the modseq source PeptideById was
         /// interned from + charge + IsDecoy) in parquet-row order, joining each row to its
         /// sidecar record by entry_id. Returns <c>false</c> (ExitCode set) on a missing parquet
-        /// path, a missing sidecar base path, or an unreadable / size-mismatched sidecar, with
-        /// <paramref name="caller"/> naming the consumer in the message. A parquet row whose
+        /// path, a missing sidecar base path, or an unreadable / size-mismatched sidecar. A parquet row whose
         /// entry_id is absent from the sidecar is SKIPPED, not a fault: the sidecar is a SUBSET
         /// of the parquet rows, so a row with no record is simply not a first-pass row
         /// (superset tolerance mirroring the survivor reload -- see the inline note below).
@@ -4127,13 +4124,12 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config,
             PipelineContext ctx,
-            string caller,
             Action<string, byte, bool, FdrScoreRecord> onRow)
         {
             if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
             {
                 ctx.LogError(string.Format(
-                    @"{0}: no scores parquet path for {1}", caller, fileName));
+                    "Cannot locate the scores file for '{0}'.", fileName));
                 ctx.ExitCode = 1;
                 return false;
             }
@@ -4141,7 +4137,7 @@ namespace pwiz.Osprey.Tasks
             if (string.IsNullOrEmpty(sidecarBase))
             {
                 ctx.LogError(string.Format(
-                    @"{0}: no sidecar base path for {1}", caller, fileName));
+                    "Cannot locate the first-pass intermediate files for '{0}'.", fileName));
                 ctx.ExitCode = 1;
                 return false;
             }
@@ -4152,8 +4148,7 @@ namespace pwiz.Osprey.Tasks
                     record => recordByEntryId[record.EntryId] = record))
             {
                 ctx.LogError(string.Format(
-                    @"{0}: failed to read .1st-pass.fdr_scores.bin for {1} " +
-                    @"(expected at {2})", caller, fileName, fdrPath));
+                    "Failed to read the first-pass intermediate file for '{0}': {1}", fileName, fdrPath));
                 ctx.ExitCode = 1;
                 return false;
             }
@@ -4249,7 +4244,7 @@ namespace pwiz.Osprey.Tasks
                 if (string.IsNullOrEmpty(sidecarBase))
                 {
                     ctx.LogError(string.Format(
-                        @"First-pass compaction: no sidecar base path for {0}", fileName));
+                        "Cannot locate the first-pass intermediate files for '{0}'.", fileName));
                     ctx.ExitCode = 1;
                     return null;
                 }
@@ -4304,16 +4299,15 @@ namespace pwiz.Osprey.Tasks
         /// that still looks like a successful run.</para>
         /// </summary>
         private static Dictionary<uint, FdrExperimentRecord> LoadFirstPassExperimentRecords(
-            OspreyConfig config, PipelineContext ctx, string caller = @"First-pass compaction")
+            OspreyConfig config, PipelineContext ctx)
         {
             string path = FdrExperimentSidecar.PathFor(
                 config.OutputBlib, ScoringTaskShared.ArtifactSiblingPath(config),
                 FdrScoresSidecar.Pass.FirstPass);
             if (string.IsNullOrEmpty(path))
             {
-                ctx.LogError(
-                    string.Format(@"{0}: no output blib, so no experiment-scope FDR " +
-                    @"sidecar to read the protein-rescue q-values from.", caller));
+                ctx.LogError("There is no output .blib, so there is no whole-experiment first-pass " +
+                             "intermediate file to read protein q-values from.");
                 ctx.ExitCode = 1;
                 return null;
             }
@@ -4321,8 +4315,7 @@ namespace pwiz.Osprey.Tasks
             if (map == null)
             {
                 ctx.LogError(string.Format(
-                    @"{0}: failed to read the experiment-scope FDR sidecar " +
-                    @"(expected at {1})", caller, path));
+                    "Failed to read the whole-experiment first-pass intermediate file: {0}", path));
                 ctx.ExitCode = 1;
             }
             return map;

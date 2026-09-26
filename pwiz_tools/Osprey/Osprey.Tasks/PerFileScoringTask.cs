@@ -815,7 +815,7 @@ namespace pwiz.Osprey.Tasks
                             if (!probe.HasPinFeatures)
                             {
                                 ctx.LogError(string.Format(
-                                    @"  Resume rehydrate: {0} is missing the PIN feature columns -- it is not a valid Osprey scores parquet. Delete it and re-run so it is regenerated.",
+                                    "  Resuming: {0} has no feature columns, so it is not a valid Osprey scores file. Delete it and run again so it is written again.",
                                     scoresPath));
                                 ctx.ExitCode = 1;
                                 return false;
@@ -2056,7 +2056,7 @@ namespace pwiz.Osprey.Tasks
             }
             catch (InvalidDataException ex)
             {
-                ctx.LogError(string.Format(@"--input-scores hydration failed: {0}", ex.Message));
+                ctx.LogError(string.Format("Failed to load the scores files: {0}", ex.Message));
                 ctx.ExitCode = 1;
                 return null;
             }
@@ -2506,11 +2506,11 @@ namespace pwiz.Osprey.Tasks
                 {
                     if (resumeStrict)
                         ctx.LogError(string.Format(
-                            @"  Resume rehydrate: {0} has {1} stubs but {2} feature rows; cannot load valid-on-disk scores.",
+                            "  Resuming: {0} has {1:N0} precursor candidate peaks but {2:N0} feature rows, so its saved scores cannot be loaded.",
                             scoresPath, stubs.Count, features.Count));
                     else
                         ctx.LogWarning(string.Format(
-                            @"  Per-file resume: {0} has {1} stubs but {2} feature rows; will rescore.",
+                            "  Resuming: {0} has {1:N0} precursor candidate peaks but {2:N0} feature rows; scoring it again.",
                             scoresPath, stubs.Count, features.Count));
                     return null;
                 }
@@ -2521,11 +2521,11 @@ namespace pwiz.Osprey.Tasks
             {
                 if (resumeStrict)
                     ctx.LogError(string.Format(
-                        @"  Resume rehydrate: failed to load valid-on-disk scores from {0}: {1}",
+                        "  Resuming: failed to load the saved scores from {0}: {1}",
                         scoresPath, ex.Message));
                 else
                     ctx.LogWarning(string.Format(
-                        @"  Per-file resume: failed to load {0}: {1}; will rescore.",
+                        "  Resuming: failed to load {0}: {1}; scoring it again.",
                         scoresPath, ex.Message));
                 return null;
             }

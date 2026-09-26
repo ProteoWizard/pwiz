@@ -438,14 +438,15 @@ namespace pwiz.Osprey.Tasks
             }
             if (unusable.Stale.Count > 0)
             {
-                throw new InvalidOperationException(string.Format(
-                    "{0} of {1} reconciled parquet(s) predate the survivor-subset format, so " +
-                    "Stage 7 cannot read them. There is nothing to convert them to: the FDR " +
-                    "sidecars beside them are from the same older build and are equally " +
-                    "unusable, so a parquet-only rewrite would leave the directory " +
-                    "inconsistent. Re-run the analysis from Stage 5 over this directory. " +
-                    "Stale: [{2}].",
-                    unusable.Stale.Count, rescored.FileCount, string.Join(", ", unusable.Stale)));
+                throw new InvalidOperationException(CountText.Format(unusable.Stale.Count,
+                    "1 of {1:N0} re-scored intermediate files was written by an older Osprey build and " +
+                    "cannot be read by second-pass FDR, nor can the intermediate files beside it. Delete " +
+                    "this analysis's *.FirstPassFDR.osprey.task files and run the first pass again. Older file: {2}.",
+                    "{0:N0} of {1:N0} re-scored intermediate files were written by an older Osprey build " +
+                    "and cannot be read by second-pass FDR, nor can the intermediate files beside them. " +
+                    "Delete this analysis's *.FirstPassFDR.osprey.task files and run the first pass again. " +
+                    "Older files: {2}.",
+                    rescored.FileCount, string.Join(", ", unusable.Stale)));
             }
 
             // NO .Value here any more (#4486). Every consumer below folds through

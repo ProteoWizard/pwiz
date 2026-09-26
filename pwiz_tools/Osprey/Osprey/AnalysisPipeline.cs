@@ -237,7 +237,7 @@ namespace pwiz.Osprey
                 catch (Exception ex)
                 {
                     ctx.LogWarning(string.Format(
-                        @"Failed to write {0} sidecar for {1}: {2}",
+                        "Failed to record that --task {0} completed {1}: {2}. A resume will redo this step.",
                         task.Name, output, ex.Message));
                 }
             }

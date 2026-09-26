@@ -848,7 +848,7 @@ namespace pwiz.Osprey
             sb.AppendLine(@"Osprey --task FirstPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
             sb.AppendLine(@"#   writes beside each parquet: &lt;stem&gt;.1st-pass.fdr_scores.bin, &lt;stem&gt;.reconciliation.json");
             sb.AppendLine();
-            sb.AppendLine(@"# split 2 - one process per file (parquet + its two sidecars co-located)");
+            sb.AppendLine(@"# split 2 - one process per file (the scores parquet and its intermediate files together)");
             sb.AppendLine(@"Osprey --task PerFileRescoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
             sb.AppendLine(@"#   writes: &lt;stem&gt;.scores-reconciled.parquet");
             sb.AppendLine();
@@ -856,7 +856,7 @@ namespace pwiz.Osprey
             sb.AppendLine(@"Osprey --task SecondPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
             sb.AppendLine(@"</pre>");
             sb.AppendLine(@"<p>EVERY task takes <code>-i</code>, naming the DATA files - the same names " +
-                @"the first split was given. A join task derives each run's parquet and sidecars from " +
+                @"the first split was given. A join task derives each run's parquet and intermediate files from " +
                 @"the input stem, so the data file itself need not still exist: what has to be in the " +
                 @"worker's working directory (or under <code>--output-dir</code>) is that run's " +
                 @"artifacts. FirstPassFDR reconciliation is order-sensitive, so pass a " +

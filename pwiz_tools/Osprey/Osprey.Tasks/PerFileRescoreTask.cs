@@ -1080,8 +1080,8 @@ namespace pwiz.Osprey.Tasks
             if (sidecar?.Model == null)
             {
                 ctx.LogVerbose(
-                    @"Second-pass per-file competition: no readable 1st-pass model sidecar, so the " +
-                    @"per-file half stays in SecondPassFDR for this run.");
+                    "No readable saved first-pass model, so the per-file part of second-pass FDR " +
+                    "runs in SecondPassFDR for this run.");
                 return null;
             }
             var scorer = FrozenModelScorer.TryCreate(sidecar.Model);

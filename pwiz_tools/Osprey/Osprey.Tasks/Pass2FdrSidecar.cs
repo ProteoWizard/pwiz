@@ -681,8 +681,8 @@ namespace pwiz.Osprey.Tasks
                 return true;
             }
             logWarning(string.Format(
-                "Failed to reload 2nd-pass FDR sidecar for {0} ({1}); " +
-                "protein FDR will use stale 1st-pass q-values", fileName, pass2Path));
+                "Failed to reload the second-pass intermediate file for '{0}' ({1}); " +
+                "protein FDR will use its first-pass q-values.", fileName, pass2Path));
             return false;
         }
 
@@ -1172,12 +1172,14 @@ namespace pwiz.Osprey.Tasks
             var map = FdrExperimentSidecar.ReadMap(path, pass);
             if (map == null)
             {
+                // Not read as empty: that would leave every entry on its reset defaults (an
+                // experiment aggregate score of 0, an experiment q of 1) and report those as
+                // computed values (issue #4486).
                 throw new InvalidOperationException(string.Format(
-                    @"The {0} experiment-scope FDR sidecar exists but could not be read: {1}. " +
-                    @"Treating it as empty would leave every entry on its reset defaults - an " +
-                    @"experiment aggregate score of 0 and an experiment q of 1 - and the run " +
-                    @"would then report those as computed values. See issue #4486.",
-                    pass, path));
+                    pass == FdrScoresSidecar.Pass.FirstPass
+                        ? "The whole-experiment first-pass intermediate file exists but could not be read: {0}"
+                        : "The whole-experiment second-pass intermediate file exists but could not be read: {0}",
+                    path));
             }
             return map;
         }
@@ -3148,8 +3150,8 @@ namespace pwiz.Osprey.Tasks
             {
                 tally.MissingSidecar++;
                 logWarning(string.Format(
-                    "OSPREY_PASS2_QVALUE=transfer: could not read the 1st-pass sidecar for '{0}' " +
-                    "({1}); this file's per-run q is left unadjusted.", fileName, pass1Path));
+                    "OSPREY_PASS2_QVALUE=transfer: could not read the first-pass intermediate file " +
+                    "for '{0}' ({1}); this file's run-level q-values are left unadjusted.", fileName, pass1Path));
                 return;
             }
             BuildScoreToQTable(precScores, precQs, out double[] precScoresDesc, out double[] precQDesc);
@@ -3695,7 +3697,7 @@ namespace pwiz.Osprey.Tasks
                 catch (Exception ex) when (!(ex is OutOfMemoryException))
                 {
                     _ctx.LogWarning(string.Format(
-                        @"Failed to write 2nd-pass FDR sidecar for {0}: {1}", fileName, ex.Message));
+                        "Failed to write the second-pass intermediate file for '{0}': {1}", fileName, ex.Message));
                     Tallies.Failures++;
                     return false;
                 }
@@ -3708,7 +3710,8 @@ namespace pwiz.Osprey.Tasks
                 catch (Exception ex) when (!(ex is OutOfMemoryException))
                 {
                     _ctx.LogWarning(string.Format(
-                        @"Failed to write {0} sidecar for {1}: {2}", _taskName, pass2Path, ex.Message));
+                        "Failed to record that --task {0} completed {1}: {2}. A resume will redo this step.",
+                        _taskName, pass2Path, ex.Message));
                 }
                 return true;
             }

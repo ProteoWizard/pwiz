@@ -546,8 +546,8 @@ namespace pwiz.Osprey
             // answer that looks like a right one.
             if (!ModelDiagnosticsReport.HasCompletedFirstPass(config))
             {
-                LogError("--task ModelDiagnostics: no completed first-pass FDR state to " +
-                         "describe (no analysis-wide 1st-pass experiment sidecar beside the " +
+                LogError("--task ModelDiagnostics: there is no completed first pass to describe " +
+                         "(no first-pass intermediate file for the whole experiment beside the " +
                          "output). Run the analysis at least as far as FirstPassFDR first.");
                 return EXIT_CODE_FAILURE_TO_START;
             }
@@ -685,10 +685,12 @@ namespace pwiz.Osprey
                 return null;
             var sb = new StringBuilder();
             sb.AppendFormat(
-                "{0} input stem(s) appear more than once. Every per-run artifact is named " +
-                "<stem>.<suffix>, so runs sharing a stem cannot be told apart and would " +
-                "overwrite each other's parquets and sidecars. Rename or stage them so each " +
-                "run has a distinct file name:", collisions.Count);
+                collisions.Count == 1
+                    ? "1 input file name appears more than once. "
+                    : "{0:N0} input file names appear more than once. ", collisions.Count);
+            sb.Append("Every file Osprey writes for an input is named after the input without its " +
+                "extension, so inputs sharing a name would overwrite each other's intermediate " +
+                "files. Rename or stage them so each input has a distinct file name:");
             foreach (var kv in collisions)
                 sb.AppendFormat("\n  '{0}': {1}", kv.Key, string.Join(", ", kv.Value));
             return sb.ToString();
