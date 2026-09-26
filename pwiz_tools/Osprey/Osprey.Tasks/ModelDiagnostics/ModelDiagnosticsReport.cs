@@ -607,8 +607,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             if (config.SelectedTask?.IsPerFileWorker == true)
             {
                 OspreyLog.Write(logWarning, LogTag.MODEL_DIAGNOSTICS,
-                    @"fan-out worker: not writing the experiment-wide " +
-                    @"pass-1 diagnostics product (this node holds one run; FirstPassFDR owns it).");
+                    "Skipped the first-pass model diagnostics data: this task holds one file, and --task FirstPassFDR writes it for the whole experiment.");
                 return;
             }
             // Serialized without the pass-2 bundle even if one is attached to the in-memory

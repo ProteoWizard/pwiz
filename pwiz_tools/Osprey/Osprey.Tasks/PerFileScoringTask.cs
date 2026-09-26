@@ -2833,11 +2833,23 @@ namespace pwiz.Osprey.Tasks
                 "Coelution scoring: {0:F1}s ({1} candidates, {2:F0} cand/s)",
                 scoringSeconds, scoredEntries.Count, ratePerSec));
 
-            int nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
-            int nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
+            // Distinct candidates, not rows: with overlapping isolation windows ScoreWindow scores
+            // a candidate once per window, and the duplicates are only removed below. Counting rows
+            // would let the "N of M" line claim more candidates than the library holds.
+            var scoredIds = new HashSet<uint>();
+            int nScoredTargets = 0, nScoredDecoys = 0;
+            foreach (var entry in scoredEntries)
+            {
+                if (!scoredIds.Add(entry.EntryId))
+                    continue;
+                if (entry.IsDecoy)
+                    nScoredDecoys++;
+                else
+                    nScoredTargets++;
+            }
             ctx.LogInfo(string.Format(
                 "Scored peaks for {0:N0} of {1:N0} precursor candidates ({2:N0} targets, {3:N0} decoys) in {4}",
-                scoredEntries.Count,
+                scoredIds.Count,
                 fullLibrary.Count,
                 nScoredTargets,
                 nScoredDecoys,

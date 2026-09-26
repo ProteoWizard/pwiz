@@ -202,7 +202,10 @@ namespace pwiz.Osprey.Test
         /// tag's uses. Write <c>log.LogInfo(LogTag.COUNT, "...")</c> instead.
         ///
         /// A literal is flagged when its text starts with a bracketed upper-case word followed
-        /// by <c>]</c> or a space (<c>"[COUNT] "</c>, <c>"[MEM "</c>). Comments are ignored. For
+        /// by <c>]</c> or a space (<c>"[COUNT] "</c>, <c>"[MEM "</c>), after any leading spaces
+        /// or format holes (<c>"  [COUNT] "</c>, <c>"{0}[TIMING] "</c>, <c>$"{indent}[BENCH] "</c>):
+        /// the runtime filter that once caught those shapes is gone, so this test is the only
+        /// guard. Comments are ignored. For
         /// a genuine exception - a literal that is not a log line - add an inline comment
         /// beginning <c>// Log tag OK:</c> on the same line.
         /// </summary>
@@ -211,7 +214,7 @@ namespace pwiz.Osprey.Test
         {
             string sourceRoot = FindOspreySourceRoot();
             var violations = new List<string>();
-            var pattern = new Regex("@?\\$?\"\\[[A-Z][A-Z0-9-]*[\\] ]");
+            var pattern = new Regex("@?\\$?\"(?:\\s|\\{[^{}\"]*\\})*\\[[A-Z][A-Z0-9-]*[\\] ]");
             const string exemptionTag = "// Log tag OK:";
 
             foreach (var file in EnumerateProductionCsFiles(sourceRoot))
