@@ -190,7 +190,7 @@ namespace pwiz.SkylineTest
             var clauses = Enumerable.Range(1, filterSpecs.Length - 1).SelectMany(count => new[]
             {
                 new FilterClause(filterSpecs.Take(count)),
-                new FilterClause(filterSpecs.Reverse().Take(count))
+                new FilterClause(Enumerable.Reverse(filterSpecs).Take(count))
             }).ToList();
             foreach (var clause1 in clauses)
             {

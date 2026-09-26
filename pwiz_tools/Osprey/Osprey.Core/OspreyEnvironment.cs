@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -55,6 +55,20 @@ namespace pwiz.Osprey.Core
         /// (Astral HRAM) where three large working sets exceed a 64 GB budget.
         /// </summary>
         public static readonly int MaxParallelFiles = ParseIntOrZero(@"OSPREY_MAX_PARALLEL_FILES");
+
+        /// <summary>
+        /// OSPREY_KEEP_FAILED_WRITES: forensic opt-in for <see cref="FileSaver"/>. Every
+        /// durable write, diagnostic dumps included, goes through <c>FileSaver</c>, which
+        /// normally deletes its sibling temp file when an exception unwinds before
+        /// <c>Commit()</c> - the real path then holds the previous content or nothing,
+        /// never a partial write (see <c>FileSaver</c>'s own doc comment). Set this to
+        /// inspect what a write got through before it was abandoned: on an uncommitted
+        /// <c>Dispose()</c>, the temp is left in place (same directory as the real path,
+        /// its normal <c>~OS</c>-prefixed name) instead of deleted. It never touches the
+        /// real path, so presence-proves-completeness still holds for every consumer;
+        /// only a developer who knows to look for the temp sees the partial content.
+        /// </summary>
+        public static bool KeepFailedWrites { get; set; } = IsSetAndNotZero(@"OSPREY_KEEP_FAILED_WRITES");
 
         /// <summary>
         /// OSPREY_MAX_SCORING_WINDOWS: limits main-search isolation windows
@@ -138,29 +152,6 @@ namespace pwiz.Osprey.Core
         /// phase whose flatness is the claim. Timings taken through a runner include that cost.</para>
         /// </summary>
         public static readonly bool LogMemory = IsSetAndNotZero(@"OSPREY_LOG_MEMORY");
-
-        /// <summary>
-        /// OSPREY_MZML_VIA_MZMLREADER=1: read mzML with the hand-written
-        /// <c>MzmlReader</c> instead of ProteoWizard. Diagnostic only, and
-        /// meaningful only in a build that HAS ProteoWizard (net472 with
-        /// <c>/p:OspreyVendorReader=true</c>), where ProteoWizard is otherwise used
-        /// for every input format including mzML. A no-op anywhere else, since
-        /// <c>MzmlReader</c> is already the only reader there.
-        ///
-        /// This isolates the two READERS against a fixed input: run the same
-        /// mzML both ways and the resulting <c>.spectra.bin</c> files must be
-        /// byte-identical, because nothing about the source file differs. A
-        /// raw-vs-mzML comparison cannot make that claim - it varies the reader
-        /// and the file at the same time, so a difference could come from
-        /// either. Any difference this switch exposes is a defect in
-        /// <c>MzmlReader</c>, which is the only parser in the picture that is
-        /// not ProteoWizard.
-        ///
-        /// The switch is deliberately the ESCAPE HATCH rather than the opt-in: it
-        /// exists to keep that comparison possible, and it disappears along with
-        /// <c>MzmlReader</c> once ProteoWizard has a .NET 8 build (#4178).
-        /// </summary>
-        public static readonly bool MzmlViaMzmlReader = IsSetAndNotZero(@"OSPREY_MZML_VIA_MZMLREADER");
 
         /// <summary>
         /// OSPREY_CAL_MEDIANPOLISH=1: add median-polish cosine (the dominant full-search
@@ -476,6 +467,18 @@ namespace pwiz.Osprey.Core
         /// pre-held-out, validated behavior. Exposed so a regularization sweep or an
         /// in-sample-vs-held-out A/B runs without a code revert. Tree-only.</summary>
         public static readonly int GbtInnerFolds = ParseIntOrNull(@"OSPREY_GBT_INNER_FOLDS") ?? 5;
+
+        /// <summary>Threads pwiz-sharp uses to decode mzML binary arrays
+        /// (OSPREY_MZML_DECODE_THREADS, default 8). The library ships this OFF (1, decode
+        /// inline on the read thread) because a host processing several FILES at once should
+        /// not also go wide underneath its own parallelism. Osprey is the other shape: it
+        /// funnels reads through a one-permit gate, so the read phase has the machine to
+        /// itself. Measured on a 5.99 GB Astral mzML, 1 thread takes 83.4s and 8 takes 54.6s,
+        /// after which the curve is flat -- 16, 24 and 32 all land within a second of 8,
+        /// because the floor is the XML parse, which stays serial. Past the knee extra threads
+        /// only add memory pressure, so this does NOT scale off core count or --threads.
+        /// Set to 1 to A/B against the serial decode without a rebuild.</summary>
+        public static readonly int MzmlDecodeThreads = ParseIntOrNull(@"OSPREY_MZML_DECODE_THREADS") ?? 8;
 
         /// <summary>The <see cref="Pass2QValue"/> confidence-transfer mode: do NOT retrain
         /// or re-estimate a null; score each reconciled peak with the frozen 1st-pass model

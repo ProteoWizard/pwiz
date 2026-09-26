@@ -28,18 +28,18 @@ namespace pwiz.Osprey.Core
 {
     /// <summary>
     /// A read-only <see cref="Stream"/> decorator that drives a <see cref="ProgressReporter"/>
-    /// by the number of bytes that have passed through it, so a long byte-oriented read (the
-    /// Astral mzML parse, where the file is ~200k MS/MS spectra and the parse runs 40+ seconds
-    /// with no other console output) reports a throttled percent against the total file length.
+    /// by the number of bytes that have passed through it, so a long byte-oriented read (a
+    /// multi-GB spectral-library TSV, which otherwise runs for over a minute with nothing on
+    /// the console) reports a throttled percent against the total file length.
     ///
     /// Mirrors the role of Skyline's <c>pwiz.Common.SystemUtil.ProgressStream</c>, but reports
     /// through Osprey's lightweight <see cref="ProgressReporter"/> rather than the
     /// IProgressMonitor / ProgressStatus machinery (which Osprey deliberately does not yet
     /// pull into PortableUtil). Counting is the only added work on the hot path -- there are no
-    /// extra buffer copies -- so it does not perturb the read throughput that overlaps with the
-    /// parallel decode in <c>MzmlReader.LoadAllSpectra</c>.
+    /// extra buffer copies -- so it does not perturb read throughput that overlaps with parsing
+    /// work on another thread.
     ///
-    /// Forward-only: <see cref="CanSeek"/> is false (an <c>XmlReader</c> over the wrapped
+    /// Forward-only: <see cref="CanSeek"/> is false (a <c>TextReader</c> over the wrapped
     /// stream reads forward only, exactly as Skyline's ProgressStream is used). The decorator does
     /// NOT own the inner stream -- the caller keeps the inner stream in its own <c>using</c> and
     /// disposes it; disposing the ProgressStream is a no-op so an early dispose cannot truncate the

@@ -1025,11 +1025,15 @@ namespace pwiz.Skyline.Util
         {
         }
 
+        // Formatter-based serialization: obsolete on .NET 8, which dropped BinaryFormatter, but this
+        // constructor is part of the type's shape on both legs and subclasses chain to it.
+#pragma warning disable SYSLIB0051
         protected FileModifiedException(
             SerializationInfo info,
             StreamingContext context) : base(info, context)
         {
         }
+#pragma warning restore SYSLIB0051
     }
 
     public static class FileTimeEx
@@ -1894,13 +1898,11 @@ namespace pwiz.Skyline.Util
             if (runAsAdministrator)
                 startInfo.Verb = @"runas";
 
-            var process = new Process {StartInfo = startInfo, EnableRaisingEvents = true};
+            var process = new Process {StartInfo = startInfo};
             string pipeName = @"SkylineProcessRunnerPipe" + guidSuffix;
 
             using (var pipeStream = new NamedPipeServerStream(pipeName))
             {
-                bool processFinished = false;
-                process.Exited += (sender, args) => processFinished = true;
                 try
                 {
                     process.Start();
@@ -1924,7 +1926,20 @@ namespace pwiz.Skyline.Util
 
                     using var registration = cancellationToken.Register(o =>
                     {
-                        KillProcessAndDescendants(process.Id);
+                        // Nothing may escape here. A token cancelled by a timer runs this on a
+                        // ThreadPool thread, where an exception is unhandled and takes the process
+                        // down; KillProcessAndDescendants queries WMI and calls Process.Kill, both of
+                        // which throw for reasons that have nothing to do with us (WMI busy, an
+                        // elevated child, a PID that exited in between). Failing to kill leaves the
+                        // wait below to run its course, which is the same place we were without it.
+                        try
+                        {
+                            KillProcessAndDescendants(process.Id);
+                        }
+                        catch (Exception x)
+                        {
+                            Messages.WriteAsyncDebugMessage(@"Could not kill process tree {0}: {1}", pipeName, x.Message);
+                        }
                     }, null);
 
                     while (reader.ReadLine() is { } line)
@@ -1932,10 +1947,15 @@ namespace pwiz.Skyline.Util
                         writer.WriteLine(line);
                     }
 
-                    while (!processFinished)
-                    {
-                        // wait for process to finish
-                    }
+                    // Block rather than spinning on a flag set from Process.Exited. That flag was a
+                    // non-volatile captured local written on a ThreadPool thread, so once this loop
+                    // got hot the JIT hoisted the read into a register and never observed the write.
+                    // The thread then spun on a core forever and RunProcess never returned, which
+                    // made everything downstream of the caller unreachable - including
+                    // PythonInstaller's bootstrap timeout, which cannot fire from a call that never
+                    // returns. A race, so it was intermittent: when Exited fired before the loop got
+                    // hot the flag was already set and the call returned normally.
+                    process.WaitForExit();
 
                     return process.ExitCode;
                 }

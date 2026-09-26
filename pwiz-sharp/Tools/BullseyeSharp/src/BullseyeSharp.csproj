@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Pwiz.Tools.BullseyeSharp</RootNamespace>
+    <AssemblyName>bullseye-sharp</AssemblyName>
+    <Description>Port of Skyline's BullseyeSharp.exe to managed pwiz-sharp. Matches Hardklor MS1 features against MS2 scans and writes positive/negative match files.</Description>
+
+    <!-- Inherits transitively from Pwiz.Vendor.Thermo via ReaderList — the Thermo SDK needs en-US culture. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+
+    <!-- The wiff2 SDK uses BinaryFormatter at runtime; flip the switch so any wiff2-based read path still works. -->
+    <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+    <UseWindowsForms>False</UseWindowsForms>
+
+    <!-- This project mirrors Skyline's net47 BullseyeSharp source line-for-line (Program.cs +
+         CKronik2.cs) so the algorithm stays parity-tested against the existing Skyline pipeline.
+         Suppress style/perf analyzers that fire on the imported code shape (public fields, non-
+         invariant Convert calls, etc.) — the same approach used for ZedGraph / MSGraph / SeeMS.
+         Also disable nullable reference types: the source was written against net47 (pre-nullable)
+         and uses string fields that initialize lazily; opting in here would require touching every
+         field and divergence from upstream. -->
+    <NoWarn>$(NoWarn);CS0618;CS1591;CS8981;CA1416;CA1822;CA1031;CA1051;CA1715;CA2200;CA1825;NU1701;SYSLIB0003;SYSLIB0011;SYSLIB0050;SYSLIB0051</NoWarn>
+    <AnalysisLevel>none</AnalysisLevel>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Common\Common.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\MsData\MsData.csproj" />
+  </ItemGroup>
+
+  <!-- Vendor projects always build so Reader.Identify() works. Without
+       -p:IAgreeToVendorLicenses=true the vendor csprojs skip extracting their encrypted SDKs and
+       compile with NO_VENDOR_SUPPORT; Reader.Read() throws a clear "vendor support not enabled"
+       error if a user points BullseyeSharp at a vendor file in that mode. Identify remains
+       functional in both modes. -->
+  <ItemGroup>
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Thermo\Thermo.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Bruker\Bruker.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Waters\Waters.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Agilent\Agilent.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Sciex\Sciex.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Shimadzu\Shimadzu.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\UNIFI\UNIFI.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\UIMF\UIMF.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Mobilion\Mobilion.csproj" />
+  </ItemGroup>
+
+</Project>

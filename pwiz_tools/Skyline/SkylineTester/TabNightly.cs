@@ -25,9 +25,9 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.ServiceModel;
 using System.Windows.Forms;
 using Microsoft.Win32.TaskScheduler;
+using pwiz.Common.SystemUtil;
 using ZedGraph;
 using Timer = System.Windows.Forms.Timer;
 
@@ -36,6 +36,13 @@ namespace SkylineTester
     public class TabNightly : TabBase, SkylineTesterWindow.IMemoryGraphContainer
     {
         public const string NIGHTLY_TASK_NAME = "SkylineTester scheduled run"; // Not to be confused with the SkylineNightly task
+
+        // Run type names as they appear in the combo box and in the nightlyRunType element of a
+        // .skytr file, which is how SkylineNightly chooses the run - so don't change them casually.
+        public const string RUN_TYPE_STANDARD = "Standard";
+        public const string RUN_TYPE_LEAK_CHECKING = "Leak checking";
+        public const string RUN_TYPE_PERF = "Perf";
+        public const string RUN_TYPE_STANDARD_WITH_LEAK_CHECKING = "Standard with leak checking"; // Pass 0, 1 and 2 in one run, as every nightly was before the split
 
         private const int MINUTES_PER_INCREMENT = 60; // 1 hour
 
@@ -65,6 +72,8 @@ namespace SkylineTester
                 MainWindow.NightlyRunDate.SelectedIndex = 0;
             if (MainWindow.NightlyBuildType.SelectedIndex == -1)
                 MainWindow.NightlyBuildType.SelectedIndex = 0;
+            if (MainWindow.NightlyRunType.SelectedIndex == -1)
+                MainWindow.NightlyRunType.SelectedIndex = 0;
 
             MainWindow.NightlyDeleteRun.Enabled = MainWindow.Summary.Runs.Count > 0;
 
@@ -343,7 +352,7 @@ namespace SkylineTester
                 {
                     _updateTimer.Stop();
 
-                    MessageBox.Show(string.Format("Unexpected Error: {0}", x));
+                    MainWindow.ReportOrShow(string.Format("Unexpected Error: {0}", x));
 
                     Stop(false);
                 }
@@ -368,32 +377,24 @@ namespace SkylineTester
                 ? @"https://github.com/ProteoWizard/pwiz"
                 : MainWindow.NightlyBranchUrl.Text;
             var buildRoot = Path.Combine(MainWindow.GetNightlyBuildRoot(), "pwiz");
-            // Build Skyline.exe without testing during the build
-            if (!TabBuild.CreateBuildCommands(branchUrl, buildRoot, architectureList, true, false, false))
+            // Build Skyline.exe without testing during the build.
+            // Honor the Build tab's nuke/update choice rather than always nuking: SkylineNightly's
+            // --reuse-checkout writes updateBuild into the .skytr so an existing tree is synced with
+            // "git pull" instead of deleted and re-cloned. Defaults are unchanged - nukeBuild is the
+            // designer default, and a .skytr that says nothing still nukes.
+            // withTutorialPerf: a nightly selects its tests at run time, so TestTutorial and
+            // TestPerf have to be staged even though build.bat leaves them out by default.
+            if (!TabBuild.CreateBuildCommands(branchUrl, buildRoot, architectureList,
+                    MainWindow.NukeBuild.Checked, MainWindow.UpdateBuild.Checked, false, true))
                 MainWindow.CommandShell.Add("# Nightly cancelled.");
             else
             {
                 // Then add the testing command
-                int stressTestLoopCount;
-                if (!int.TryParse(MainWindow.NightlyRepeat.Text, out stressTestLoopCount))
-                    stressTestLoopCount = 0;
-
-                // Skip the special first pass if we're here to do stress tests or perftests
-                var pass0 = (stressTestLoopCount > 1 || MainWindow.NightlyRunPerfTests.Checked)
-                    ? "pass0=off " : "pass0=on ";
-
-                // Skip the leak test passes if we're here to do stress tests.
-                // Note that perftest runs perform leak testing, but only on the tests that regular nightlies do not.
-                var pass1 = (stressTestLoopCount > 1) ? "pass1=off " : "pass1=on ";
-
                 MainWindow.AddTestRunner("offscreen=on quality=on loop=-1 " +
-                                         pass0 + pass1 +
-                                         (MainWindow.NightlyRunPerfTests.Checked ? " perftests=on" : string.Empty) +
+                                         GetRunTypeArgs(MainWindow.NightlyRunType.SelectedItem as string) +
                                          " runsmallmoleculeversions=on" + // Run any provided tests that convert the document to small molecules
                                          " retrydatadownloads=on" + // In case of test failure, re-download test data in case staleness was the issue
-                                         (MainWindow.NightlyRandomize.Checked ? " random=on" : " random=off") +
-                                         (stressTestLoopCount > 1 ? " repeat=" + MainWindow.NightlyRepeat.Text : string.Empty)
-                                         + " dmpdir=" + MainWindow.GetMinidumpDir());
+                                         " dmpdir=" + MainWindow.GetMinidumpDir());
                 MainWindow.CommandShell.Add("# Nightly finished.");
             }
             MainWindow.CommandShell.IsUnattended = MainWindow.NightlyExit.Checked;
@@ -406,6 +407,26 @@ namespace SkylineTester
                 _updateTimer.Start();
             if (_stopTimer != null)
                 _stopTimer.Start();
+        }
+
+        /// <summary>
+        /// The TestRunner arguments for a nightly run type. Each type is one job: a standard run
+        /// cycles the suite, a leak checking run repeats pass 1, and a perf run puts the perf tests
+        /// first. Only the pre-split combined run does pass 0, 1 and 2 in one night.
+        /// </summary>
+        public static string GetRunTypeArgs(string runType)
+        {
+            switch (runType)
+            {
+                case RUN_TYPE_LEAK_CHECKING:
+                    return "pass0=off pass1=on pass2=off";
+                case RUN_TYPE_PERF:
+                    return "pass0=off pass1=off pass2=on perftests=on perffirst=on";
+                case RUN_TYPE_STANDARD_WITH_LEAK_CHECKING:
+                    return "pass0=on pass1=on pass2=on";
+                default:
+                    return "pass0=on pass1=off pass2=on";
+            }
         }
 
         /// <summary>
@@ -687,7 +708,8 @@ namespace SkylineTester
 
         public void BrowseBuild()
         {
-            using (var dlg = new FolderBrowserDialog())
+            // TODO: classic Browse-For-Folder, for parity with .NET Framework; revisit to adopt the newer picker
+            using (var dlg = FormUtil.CreateFolderBrowserDialog())
             {
                 dlg.Description = "Select or create a root folder for build source files.";
                 dlg.ShowNewFolderButton = true;
@@ -805,25 +827,23 @@ namespace SkylineTester
 
         BackgroundWorker SkylineTesterWindow.IMemoryGraphContainer.UpdateWorker { get; set; }
 
-        // Facilitates IPC so that we can receive signals from SkylineNightly
-        [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
-        public class NightlyListener: IEndTimeSetter
+        // net8 has no self-hosted WCF: ServiceHost / NetNamedPipeBinding require CoreWCF, a different
+        // (ASP.NET-Core-based) hosting model than the net472 System.ServiceModel self-host above. The
+        // nightly end-time IPC callback from SkylineNightly (itself still net472) is net472-only for
+        // now; this stub keeps the callers (InitNightlyListener / cleanup) framework-agnostic and
+        // no-ops the hosting. The stop-timer logic is retained so a future net8-native IPC (e.g. a
+        // plain named pipe or CoreWCF) can drive SetEndTime directly.
+        public class NightlyListener
         {
-            private readonly ServiceHost _host;
             private readonly Timer _stopTimer;
 
             public NightlyListener(Timer stopTimer)
             {
-                _host = new ServiceHost(this, new Uri("net.pipe://localhost/Nightly"));
-                _host.AddServiceEndpoint(typeof(IEndTimeSetter), new NetNamedPipeBinding(), "SetEndTime");
-                _host.Open();
-
                 _stopTimer = stopTimer;
             }
 
             public void Stop()
             {
-                _host.Close();
             }
 
             public void SetEndTime(DateTime endTime)
@@ -843,14 +863,6 @@ namespace SkylineTester
                 _stopTimer.Interval = (int) endTime.Subtract(now).TotalMilliseconds;
                 _stopTimer.Start();
             }
-        }
-
-        // Allows SkylineNightly to change the stop time of a nightly run via IPC
-        [ServiceContract]
-        public interface IEndTimeSetter
-        {
-            [OperationContract]
-            void SetEndTime(DateTime endTime);
         }
     }
 }

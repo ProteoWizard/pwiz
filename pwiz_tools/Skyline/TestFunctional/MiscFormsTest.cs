@@ -43,6 +43,14 @@ namespace pwiz.SkylineTestFunctional
             // Exercise MultiButtonMsgDlg's use of standard MessageBoxButtons button sets
             foreach (var buttonSet in (MessageBoxButtons[])Enum.GetValues(typeof(MessageBoxButtons)))
             {
+                // MessageBoxButtons.CancelTryContinue (value 6) was added after .NET Framework 4.7.2.
+                // MultiButtonMsgDlg/CommonAlertDlg supports only the six classic button sets net472 has
+                // (an unsupported set yields no buttons, leaving AcceptButton null), so skip anything past
+                // RetryCancel to match net472 behavior. Compared numerically because the enum member does
+                // not exist when compiling for net472.
+                if ((int)buttonSet > (int)MessageBoxButtons.RetryCancel)
+                    continue;
+
                 DialogResult result = DialogResult.Ignore;
                 RunDlg<MultiButtonMsgDlg>( () =>
                         result = MultiButtonMsgDlg.Show(Program.MainWindow, buttonSet.ToString(), buttonSet),

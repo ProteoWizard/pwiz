@@ -262,7 +262,7 @@ namespace pwiz.Skyline.SettingsUI
 
             private ImmutableList<int> CreateItem(string propertyName)
             {
-                var intList = new RangeList(new Range(0, _pepInfos.Count)).ToList();
+                var intList = new RangeList(new pwiz.Common.Collections.Range(0, _pepInfos.Count)).ToList();
                 if (propertyName.Equals(UNMODIFIED_TARGET_TEXT))
                 {
                     // The list of entries is already sorted by this field, so don't bother sorting it again
@@ -287,7 +287,7 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private List<int> PrefixSearchByProperty(string filterText)
         {
-            Range matchRange;
+            pwiz.Common.Collections.Range matchRange;
             var orderedList = _listCache.GetOrCreate(_selectedFilterCategory);
             // If an accession number type is set as the filter category then filter using 
             if (_accessionNumberTypes.Contains(_selectedFilterCategory))
