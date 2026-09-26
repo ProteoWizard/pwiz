@@ -356,7 +356,7 @@ flags: `// Array.Sort OK: <reason>` (`CodeInspectionTest.cs:94`) and
   runner availability — lines 487-509) predicated on the external Python mokapot
   tool. The C# port has a native managed Percolator SVM and no Python mokapot
   dependency, so those Mokapot-specific tests do not exist in `Osprey.Test`
-  (the `FdrMethod` enum retains a `Mokapot` value but it is not wired to the CLI).
+  (the never-wired `FdrMethod.Mokapot` value was deleted, #4543).
   Evidence: `FdrTest.cs` tests the native Percolator path; no `MokapotTest.cs`
   exists under `Osprey.Test/`. See 07-fdr-control.md. Severity: minor.
 

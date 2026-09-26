@@ -284,7 +284,10 @@ namespace pwiz.Osprey.Tasks
                 // it distinguished two arms an operator could pick between, and only one arm
                 // remains. It was empty on the streamed default, so no existing output directory
                 // is invalidated by its removal.
-                + LibraryFragmentRelease.ValidityKeySuffix(ctx);
+                + LibraryFragmentRelease.ValidityKeySuffix(ctx)
+                // The frozen first-pass model scores the second pass, so the classifier that
+                // trained it keys the .blib and 2nd-pass sidecars too (empty for the SVM).
+                + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config);
         }
 
         /// <summary>

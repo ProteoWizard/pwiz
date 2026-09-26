@@ -674,6 +674,66 @@ namespace pwiz.Osprey.Test
             }
         }
 
+        /// <summary>
+        /// <c>OSPREY_FDR_MODEL</c> selects the first-pass classifier. It is read once into a
+        /// static, so the PARSE is what is pinned here, as for the other OSPREY_* selectors
+        /// (<see cref="TestEnvFlagZeroCountsAsOff"/> says why the wiring cannot be).
+        ///
+        /// <para>The unrecognized case carries the weight. The classifier used to be a
+        /// command-line value that warned and fell back to the linear SVM, and a run that asked
+        /// for trees and trained the SVM is the #4491 defect: it completes, and its output reads
+        /// like a tree result. So an unrecognized value must be a startup error, never a
+        /// default.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestFdrModelSelection()
+        {
+            // Unset, empty and whitespace-only are the default, as for every OSPREY_* selector.
+            foreach (string unset in new[] { null, string.Empty, @"   " })
+            {
+                Assert.AreEqual(FdrMethod.Percolator, OspreyEnvironment.ParseFdrModel(unset));
+                Assert.IsNull(OspreyEnvironment.DescribeUnrecognizedFdrModel(unset));
+            }
+
+            // Both arms by name, case-insensitive and trimmed like OSPREY_PASS2_QVALUE. The
+            // default has an explicit spelling so a sweep can name both arms.
+            foreach (string svm in new[] { OspreyEnvironment.FDR_MODEL_SVM, @"SVM", @" svm " })
+            {
+                Assert.AreEqual(FdrMethod.Percolator, OspreyEnvironment.ParseFdrModel(svm), svm);
+                Assert.IsNull(OspreyEnvironment.DescribeUnrecognizedFdrModel(svm), svm);
+            }
+            foreach (string gbdt in new[] { OspreyEnvironment.FDR_MODEL_GBDT, @"GBDT", "\tGbdt " })
+            {
+                Assert.AreEqual(FdrMethod.Gbdt, OspreyEnvironment.ParseFdrModel(gbdt), gbdt);
+                Assert.IsNull(OspreyEnvironment.DescribeUnrecognizedFdrModel(gbdt), gbdt);
+            }
+
+            // Anything else fails, including the removed --fdr-method's own values and alias:
+            // they named the framework or the deleted simple method, not a classifier. The
+            // shell-quoted value is what cmd.exe stores for set X="gbdt".
+            foreach (string bad in new[] { @"percolator", @"simple", @"fasttree", @"mokapot", @"gbt", @"svm2", @"'gbdt'" })
+            {
+                Assert.IsNull(OspreyEnvironment.ParseFdrModel(bad), bad);
+                string err = OspreyEnvironment.DescribeUnrecognizedFdrModel(bad);
+                Assert.IsNotNull(err, bad);
+                // Names the value as given, so it cannot be mistaken for an unset variable, and
+                // both legal spellings, so the operator is told what to type.
+                StringAssert.Contains(err, bad);
+                StringAssert.Contains(err, OspreyEnvironment.FDR_MODEL_SVM);
+                StringAssert.Contains(err, OspreyEnvironment.FDR_MODEL_GBDT);
+            }
+
+            // The run log names the classifier only when it is not the default, so the linear
+            // SVM's log is unchanged.
+            Assert.IsNull(OspreyEnvironment.DescribeFdrModel(FdrMethod.Percolator));
+            StringAssert.Contains(OspreyEnvironment.DescribeFdrModel(FdrMethod.Gbdt), OspreyEnvironment.FDR_MODEL_GBDT);
+
+            // Not a search parameter: SearchParameterHash must match Rust, which has no trees, so
+            // the classifier keys only the tasks the model determines (TaskValidityKeyTest).
+            Assert.AreEqual(new OspreyConfig().Identity.SearchParameterHash(),
+                new OspreyConfig { FdrMethod = FdrMethod.Gbdt }.Identity.SearchParameterHash());
+        }
+
         #endregion
     }
 }

@@ -73,12 +73,12 @@ namespace pwiz.Osprey.Core
         // accumulator from the per-file load it already performs, off the same PRE-compaction
         // rows, so the flag arms no resident path at any file count and no token can name one.
 
-        /// <summary>
-        /// A non-Percolator <c>FdrMethod</c> (Simple / Mokapot), which does not use the
-        /// projection framework at all. By design rather than unfinished work, but it still
-        /// takes the resident path and so must be named to be allowed.
-        /// </summary>
-        public static readonly string NON_PERCOLATOR_FDR = @"non-percolator-fdr";
+        // non-percolator-fdr is GONE (#4543), the ratchet shrinking a sixth time. It named a
+        // non-Percolator FdrMethod, which never used the projection framework and so always took
+        // the resident path. Mokapot was never reachable, and the simple target-decoy
+        // competition was deleted: every method left is a classifier inside the Percolator
+        // framework, so none takes this path and no token can name one. Not to be re-added - an
+        // FDR method that cannot stream its first pass is a defect to fix, not a path to name.
 
         /// <summary>
         /// <c>OSPREY_FDR_PROJECTION=0</c>: the operator explicitly forced the legacy
@@ -91,11 +91,9 @@ namespace pwiz.Osprey.Core
         /// exempt every OTHER resident trigger too, which is the same masking property that hid
         /// the transfer regression. This entry leaves the list last: it can only go when the
         /// legacy path itself does. #4507 (FDRBench pass 1) was the last PERCOLATOR-framework
-        /// consumer that needed that path; with it streamed, the legacy implementation is
-        /// reached by this oracle and by a non-Percolator <c>FdrMethod</c>
-        /// (<see cref="NON_PERCOLATOR_FDR"/>), which has no projection path at all. Deleting
-        /// the legacy path therefore still means porting Simple / Mokapot onto the projection
-        /// framework first, or retiring them.</para>
+        /// consumer that needed that path, and #4543 retired the non-Percolator FDR methods,
+        /// its other consumer, with their <c>non-percolator-fdr</c> token. This oracle is now
+        /// the only trigger left for the legacy first-pass implementation.</para>
         /// </summary>
         public static readonly string PROJECTION_OFF = @"projection-off";
 
@@ -130,7 +128,7 @@ namespace pwiz.Osprey.Core
         // streamed arm byte for byte apart from generatedUtc. Not to be re-added - a second arm
         // kept alive only to keep it matching is a standing test cost, and every extra option
         // raises the testing burden. The fold's resident consumer survives for now, reached
-        // where NeedsResidentPool already forces it (projection-off, non-percolator-fdr) - and,
+        // where NeedsResidentPool already forces it (projection-off) - and,
         // NOT by any token here, under OSPREY_PASS2_QVALUE=transfer,
         // which leaves Pass2ProteinCompact false so Stage7StreamAdmittedBeforeRescore declines.
         // That last one is operator-chosen and untokened, exempt because transfer computes its
@@ -144,7 +142,7 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly IReadOnlyList<string> KNOWN_UNFIXED = new[]
         {
-            NON_PERCOLATOR_FDR, PROJECTION_OFF, COMPACTED_ENTRIES_BUFFER
+            PROJECTION_OFF, COMPACTED_ENTRIES_BUFFER
         };
     }
 }

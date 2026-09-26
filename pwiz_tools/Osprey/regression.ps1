@@ -456,7 +456,8 @@ $knownResidentGaps = @(
 # --task SecondPassFDR reconciled-input load takes the bounded streaming hydrate, so
 # mode 3's join node needs no token).
 # By design rather than unfinished, so no issue: projection-off and
-# compacted-entries-buffer (the A/B byte-identity oracles) and non-percolator-fdr.
+# compacted-entries-buffer (the A/B byte-identity oracles). non-percolator-fdr went with
+# #4543, which deleted the simple FDR method it named - the ratchet shrinking a sixth time.
 
 # Preserved and RESTORED at the end of the run (see the finally block): this mutates the
 # process environment, so a developer running the gate in their interactive shell would
@@ -713,6 +714,23 @@ if ($dupGolden.Count -gt 0) {
         "one dataset: {0}. Give each dataset its own GoldenFolder." -f
         (($dupGolden | ForEach-Object { $_.Name }) -join ', '))
     exit 1
+}
+
+# OSPREY_FDR_MODEL selects the first-pass classifier from the environment (#4543), so a shell
+# exported for gbdt work would train trees in every leg. The goldens are the linear SVM's:
+# capturing them under trees would bless tree output as the SVM baseline, and SearchParameterHash
+# does not tell the two apart. A compare run is left to proceed (an A/B is a legitimate use),
+# but says why mode 1 will diverge.
+$fdrModel = if ($env:OSPREY_FDR_MODEL) { $env:OSPREY_FDR_MODEL.Trim().ToLowerInvariant() } else { '' }
+if ($fdrModel -ne '' -and $fdrModel -ne 'svm') {
+    if ($CreateGolden) {
+        # Extra parens: -f binds TIGHTER than +.
+        Write-Problem-Tc (("OSPREY_FDR_MODEL='{0}' is set; the goldens are the linear SVM's. " +
+            "Unset it before -CreateGolden.") -f $env:OSPREY_FDR_MODEL)
+        exit 1
+    }
+    Write-Host (("OSPREY_FDR_MODEL='{0}' is set: every leg trains that classifier, so mode 1 " +
+        "will diverge from the linear-SVM goldens.") -f $env:OSPREY_FDR_MODEL) -ForegroundColor Yellow
 }
 
 # --- Reclaim disk: prune earlier TestResults run dirs --------------------------
@@ -2265,7 +2283,7 @@ foreach ($name in $selected) {
     # Whether this run was ASKED for a configuration that cannot stream the Stage-7 join, so
     # the legs below can tell "took the resident join" from "was told to". These are
     # CanStreamStage7Join's OWN terms, not a mode list: the switch that forces the resident
-    # join, the two that make NeedsResidentPool true, and any pass-2 mode other than
+    # join, the one that makes NeedsResidentPool true, and any pass-2 mode other than
     # protein-compact (transfer still computes its per-file half in Stage 7). Enumerated
     # rather than inferred from the log, because a resident run says nothing about WHY it was
     # resident - and a silent SKIP for the wrong reason is what these legs exist to prevent.
@@ -2283,10 +2301,11 @@ foreach ($name in $selected) {
     # PublishedSurvivorLoader, which deliberately bypasses the Stage-6 switch. A mode1-only
     # red that reads like a genuine regression is the worst shape a gate can have.
     #
-    # STILL INCOMPLETE, deliberately, and worth knowing: this reads env vars only, while one
-    # of the two NeedsResidentPool triggers is CLI/config (a non-Percolator --fdr-method;
-    # --fdrbench-pass 1 stopped being one with #4507). A spec setting it would red all three legs.
-    # No spec does today; if one is added, this has to grow a $cfg term.
+    # Reading env vars only is now COMPLETE for the resident-pool half: NeedsResidentPool's
+    # one remaining trigger is OSPREY_FDR_PROJECTION=0, tested below. Its CLI/config triggers are
+    # gone - --fdrbench-pass 1 streamed with #4507, and the non-Percolator --fdr-method went
+    # with #4543, which removed the argument and the simple FDR method. OSPREY_FDR_MODEL=gbdt
+    # does not belong here: trees run the same Percolator framework and stream.
     $cannotStreamJoin =
         ($env:OSPREY_STAGE6_STREAM_SURVIVORS -eq '0') -or
         ($env:OSPREY_FDR_PROJECTION -eq '0') -or

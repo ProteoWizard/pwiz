@@ -276,7 +276,10 @@ namespace pwiz.Osprey.Tasks
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
                 + OspreyEnvironment.TrainSampleValidityKeySuffix()
                 + OspreyEnvironment.Stage6StreamSurvivorsValidityKeySuffix()
-                + LibraryFragmentRelease.ValidityKeySuffix(ctx);
+                + LibraryFragmentRelease.ValidityKeySuffix(ctx)
+                // The Stage 6 competition and the 2nd-pass sidecar score with the first-pass
+                // model, so the classifier that trained it keys this task too (empty for the SVM).
+                + PercolatorEngine.GbdtValidityKeySuffix(ctx.Config);
         }
 
         public override bool Run(PipelineContext ctx)

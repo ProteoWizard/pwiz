@@ -70,6 +70,22 @@ namespace pwiz.Osprey.FDR
     /// </summary>
     public class PercolatorResults
     {
+        /// <summary>How a message names the linear classifier.</summary>
+        public const string CLASSIFIER_NAME_SVM = @"the linear SVM";
+
+        /// <summary>How a message names the tree classifier.</summary>
+        public const string CLASSIFIER_NAME_TREES = @"gradient-boosted trees";
+
+        /// <summary>
+        /// The classifier a message names, by what it is rather than by the command-line flag
+        /// that selects it: a message about a persisted model cannot know which flag the run
+        /// that trained it was given.
+        /// </summary>
+        public static string ClassifierName(bool gradientBoostedTrees)
+        {
+            return gradientBoostedTrees ? CLASSIFIER_NAME_TREES : CLASSIFIER_NAME_SVM;
+        }
+
         /// <summary>Per-entry results.</summary>
         public List<PercolatorResult> Entries { get; set; }
 
@@ -94,6 +110,14 @@ namespace pwiz.Osprey.FDR
         /// weights), which is why the SVM path keeps its cheaper weight-average form.
         /// </summary>
         public List<GradientBoostedTrees> FoldGbtModels { get; set; }
+
+        /// <summary>
+        /// True when this model is the gradient-boosted-tree ensemble
+        /// (<see cref="FoldGbtModels"/> populated), false for the linear SVM. The one test of
+        /// which classifier a trained or persisted model is, so a resume that must match the
+        /// model to the run cannot disagree with the score passes about it.
+        /// </summary>
+        public bool IsGradientBoostedTrees => FoldGbtModels != null && FoldGbtModels.Count > 0;
 
         /// <summary>
         /// The Skyline-style per-feature percent-contribution decomposition of the

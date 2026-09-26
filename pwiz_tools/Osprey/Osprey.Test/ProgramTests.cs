@@ -606,7 +606,7 @@ namespace pwiz.Osprey.Test
                 ArgTokens.Split(OspreyCommandArgs.ARG_PROTEIN_FDR),
                 ArgTokens.Split(OspreyCommandArgs.ARG_THREADS, OspreyCommandArgs.ARG_INPUT + @"f.mzML"),
                 ArgTokens.Split(OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST),
-                ArgTokens.Split(OspreyCommandArgs.ARG_FDR_METHOD, OspreyCommandArgs.ARG_OUTPUT + @"out.blib"),
+                ArgTokens.Split(OspreyCommandArgs.ARG_FDR_LEVEL, OspreyCommandArgs.ARG_OUTPUT + @"out.blib"),
                 ArgTokens.Split(OspreyCommandArgs.ARG_FDR_LEVEL),
                 ArgTokens.Split(OspreyCommandArgs.ARG_SHARED_PEPTIDES, OspreyCommandArgs.ARG_THREADS + 4),
             };

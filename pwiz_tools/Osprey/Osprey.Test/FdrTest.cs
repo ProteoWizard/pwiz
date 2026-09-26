@@ -34,6 +34,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
+using pwiz.Osprey.ML;
 using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
@@ -398,7 +399,7 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// --fdr-method gbdt trains tree ensembles instead of the linear SVM and
+        /// OSPREY_FDR_MODEL=gbdt trains tree ensembles instead of the linear SVM and
         /// scores through the same population/competition path: targets separate from
         /// decoys, one model per fold, and no linear weights (the tree path leaves
         /// FoldWeights empty and populates FoldGbtModels instead).
@@ -441,7 +442,7 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The reason --fdr-method gbdt exists: model capacity. On a population
+        /// The reason OSPREY_FDR_MODEL=gbdt exists: model capacity. On a population
         /// whose discriminating feature is NON-MONOTONE (targets near zero, decoys in
         /// both tails -- the shape that made several Rust CoelutionFeatureSet scores
         /// unusable with a linear SVM), a linear model can only exploit the weak
@@ -566,9 +567,15 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// A trained ensemble must score a given vector identically no matter which
         /// thread asks: the parallel full-population score pass
-        /// (<c>ScoreProjectionRowsGbt</c>) relies on <c>ScoreSingle</c> being pure, and on
-        /// chunk boundaries not perturbing any value. Scoring the same rows chunked-and-
-        /// concurrent vs straight-through must agree bit-for-bit.
+        /// (<see cref="PercolatorScorer.ScoreRowsGbt"/>) relies on <c>ScoreSingle</c> being
+        /// pure, and on chunk boundaries not perturbing any value. Scoring the same rows
+        /// chunked-and-concurrent vs straight-through must agree bit-for-bit.
+        ///
+        /// <para>Then the production pass itself against a serial <c>ScoreSingle</c> oracle:
+        /// standardize, average the fold margins in fold order. At thread counts that put the
+        /// chunk boundaries in different places, including more threads than rows, every row
+        /// must land in its own slot at the requested offset and nothing outside the slice may
+        /// be written.</para>
         /// </summary>
         [TestMethod]
         public void TestGbdtScoringIsThreadSafeAndChunkInvariant()
@@ -591,6 +598,46 @@ namespace pwiz.Osprey.Test
             {
                 Assert.AreEqual(serial[i], parallel[i],
                     string.Format("row {0}: concurrent scoring diverged from serial", i));
+            }
+
+            AssertScoreRowsGbtMatchesSerialOracle(rows, results.FoldGbtModels, results.Standardizer);
+        }
+
+        private static void AssertScoreRowsGbtMatchesSerialOracle(List<double[]> rows,
+            List<GradientBoostedTrees> folds, FeatureStandardizer standardizer)
+        {
+            int nFeatures = standardizer.NumFeatures;
+            var oracle = new double[rows.Count];
+            var buf = new double[nFeatures];
+            for (int r = 0; r < rows.Count; r++)
+            {
+                Array.Copy(rows[r], buf, nFeatures);
+                standardizer.TransformSlice(buf);
+                double sum = 0.0;
+                foreach (var fold in folds)
+                    sum += fold.ScoreSingle(buf);
+                oracle[r] = sum / folds.Count;
+            }
+
+            const int baseIndex = 3;
+            foreach (int threads in new[] { 1, 2, 3, 7, 16, rows.Count + 5 })
+            {
+                var scores = Enumerable.Repeat(double.NaN, rows.Count + 2 * baseIndex).ToArray();
+                PercolatorScorer.ScoreRowsGbt(rows.Count, r => rows[r], folds, standardizer,
+                    nFeatures, scores, baseIndex, threads);
+                for (int i = 0; i < scores.Length; i++)
+                {
+                    int r = i - baseIndex;
+                    if (r < 0 || r >= rows.Count)
+                    {
+                        Assert.IsTrue(double.IsNaN(scores[i]), string.Format(
+                            "{0} thread(s): slot {1} lies outside the scored slice and was written", threads, i));
+                        continue;
+                    }
+                    Assert.AreEqual(BitConverter.DoubleToInt64Bits(oracle[r]),
+                        BitConverter.DoubleToInt64Bits(scores[i]), string.Format(
+                            "{0} thread(s): row {1} diverged from the serial oracle", threads, r));
+                }
             }
         }
 
@@ -1298,53 +1345,371 @@ namespace pwiz.Osprey.Test
             // Streaming-from-row-source path (the change under test): identity streamed straight
             // from the fixture (== parquet), features by fileName, no resident projection.
             var fileNames = fixtureStr.ConvertAll(kv => kv.Key);
-            // Supplies apex RT whatever the pass asks for. The scorer's Core/ApexRt choice is
-            // about what the PARQUET reader decodes, not about what a fixture can hand over, and
-            // this test's job is to prove the streamed path matches the resident one on every
-            // value - which it cannot do if the fixture withholds one of them.
-            Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> streamFileRows =
-                (name, columns, onRow) =>
-                {
-                    var list = fixtureStr.Find(kv => kv.Key == name).Value;
-                    foreach (var e in list)
-                        onRow(e.EntryId, e.Charge, e.IsDecoy, e.CoelutionSum, e.ModifiedSequence, e.ApexRt);
-                };
             var sinkStr = new CapturingSink();
+            var flushes = new RunScopeFlushes();
+            PercolatorResults model = null;
             bool abortStr = PercolatorScorer.RunStreamingFirstPass(
-                fileNames, streamFileRows, f => featuresStr[f], percConfig, s => { }, "First-pass",
-                sinkStr);
+                fileNames, StreamRowsFrom(fixtureStr), f => featuresStr[f], percConfig, s => { },
+                "First-pass", sinkStr, captureModel: m => model = m, flushFileRunScope: flushes.Flush);
             Assert.IsFalse(abortStr);
 
-            Assert.AreEqual(sinkRes.Count, sinkStr.Count);
             Assert.AreEqual(projSet.PerFile.Count, fixtureStr.Count);
-            int compared = 0;
-            for (int f = 0; f < fixtureStr.Count; f++)
+            Assert.AreEqual(projSet.TotalRows, AssertSinksIdentical(fixtureStr, sinkRes, sinkStr));
+            flushes.AssertOnePerFile(fixtureStr, sinkStr);
+            AssertResumedFileMatchesFreshRun(fixtureStr, featuresStr, percConfig, model, sinkStr, flushes);
+        }
+
+        /// <summary>
+        /// <c>OSPREY_FDR_MODEL=gbdt</c> through the DEFAULT first pass. <see cref="PerFileScoringTask"/>
+        /// takes the lean counts-only path for gbdt exactly as it does for percolator - both are
+        /// the Percolator framework - so FirstPassFDR runs
+        /// <see cref="PercolatorScorer.RunStreamingFirstPass"/>. That path hand-copied its
+        /// training config without the classifier choice, so it trained the linear SVM under the
+        /// gbdt flag and then scored every row with the averaged SVM weights.
+        ///
+        /// <para>On the non-monotone population the trees were built for, so the tree scores
+        /// actually vary: a fixture every tree scores the same way would let a wrong row, file
+        /// or chunk hand-off compare equal. MaxTrainSize is below the best-per-precursor pool,
+        /// so the peptide-grouped subsample runs, as it does for the linear sibling.</para>
+        ///
+        /// <para>Checks, in order: the model it trains and publishes is the tree ensemble; every
+        /// score, q-value and identity is byte-identical to the resident projection path, which
+        /// already trained and scored trees; each file's run-scope output is flushed once, as it
+        /// completes; the per-feature distributions reach the model-diagnostics report and match
+        /// the resident path's; a resume handed the tree model reproduces the same output
+        /// without retraining, whether or not a file's scores come back off its sidecar; and a
+        /// persisted model of the other classifier is refused before a single row is
+        /// streamed.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestStreamingFirstPassTrainsGbdt()
+        {
+            var featureInfos = new[]
             {
-                var list = fixtureStr[f].Value;
+                new OspreyFeatureInfo("feat_monotone", "Monotone feature", false),
+                new OspreyFeatureInfo("feat_nonmonotone", "Non-monotone feature", false)
+            };
+            var fixtureRes = BuildNonMonotoneFirstPassFixture(out var featuresRes);
+            var fixtureStr = BuildNonMonotoneFirstPassFixture(out var featuresStr);
+            var projSet = FdrProjectionSet.BuildFromEntries(fixtureRes);
+            var treeConfig = new PercolatorConfig
+            {
+                MaxIterations = 3,
+                FeatureInfos = featureInfos,
+                UseGradientBoostedTrees = true,
+                MaxTrainSize = 60,
+                // Several chunks per file, so the parallel tree score pass is what runs.
+                NThreads = 4,
+                // What --model-diagnostics sets: the report's per-feature distributions.
+                CollectFeatureHistograms = true
+            };
+
+            // The resident projection path already trains and scores trees: the oracle.
+            PercolatorResults residentModel = null;
+            FeatureContributions residentContributions = null;
+            var sinkRes = new CapturingSink();
+            Assert.IsFalse(PercolatorEngine.RunStreamingIntoProjection(
+                projSet.PerFile, projSet.PeptideById, treeConfig, s => { }, "First-pass",
+                f => featuresRes[f], f => ApexRtsByParquetIndex(fixtureRes, f), sinkRes,
+                c => residentContributions = c, m => residentModel = m));
+            AssertTreeModel(residentModel, treeConfig.NFolds);
+
+            // The default path: streamed from the row source, no resident projection.
+            var fileNames = fixtureStr.ConvertAll(kv => kv.Key);
+            var streamRows = StreamRowsFrom(fixtureStr);
+            PercolatorResults streamedModel = null;
+            FeatureContributions streamedContributions = null;
+            var flushes = new RunScopeFlushes();
+            var sinkStr = new CapturingSink();
+            Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
+                fileNames, streamRows, f => featuresStr[f], treeConfig, s => { }, "First-pass",
+                sinkStr, c => streamedContributions = c, m => streamedModel = m,
+                flushFileRunScope: flushes.Flush));
+            AssertTreeModel(streamedModel, treeConfig.NFolds);
+            Assert.AreEqual(projSet.TotalRows, AssertSinksIdentical(fixtureStr, sinkRes, sinkStr));
+            AssertScoresVary(fixtureStr, sinkStr);
+            flushes.AssertOnePerFile(fixtureStr, sinkStr);
+            AssertTreeFeatureDistributions(residentContributions, streamedContributions, projSet.TotalRows);
+
+            // A resume adopts the persisted model instead of training. Scoring with the adopted
+            // trees must reproduce the fresh run exactly, or resumed and re-scored files would
+            // disagree about the same discriminant.
+            var sinkResumed = new CapturingSink();
+            Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
+                fileNames, streamRows, f => featuresStr[f], treeConfig, s => { }, "First-pass",
+                sinkResumed, pretrainedModel: streamedModel));
+            Assert.AreEqual(projSet.TotalRows, AssertSinksIdentical(fixtureStr, sinkStr, sinkResumed));
+            AssertResumedFileMatchesFreshRun(fixtureStr, featuresStr, treeConfig, streamedModel, sinkStr, flushes);
+
+            // A model of the other classifier is refused rather than adopted (the wrong method)
+            // or trained beside (two discriminants in one run), in both directions.
+            PercolatorResults linearModel = null;
+            var linearConfig = new PercolatorConfig { MaxIterations = 3, FeatureInfos = featureInfos };
+            Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
+                fileNames, streamRows, f => featuresStr[f], linearConfig, s => { }, "First-pass",
+                new CapturingSink(), captureModel: m => linearModel = m));
+            Assert.IsNotNull(linearModel);
+            Assert.AreEqual(0, linearModel.FoldGbtModels?.Count ?? 0);
+            AssertClassifierMismatchRefusedBeforeIngest(fixtureStr, featuresStr, treeConfig, linearModel);
+            AssertClassifierMismatchRefusedBeforeIngest(fixtureStr, featuresStr, linearConfig, streamedModel);
+        }
+
+        /// <summary>
+        /// A pretrained model of the other classifier must be refused, and refused before the
+        /// Pass 0 ingest: nothing that pass reads can change the answer, and it streams every
+        /// file of the join.
+        /// </summary>
+        private static void AssertClassifierMismatchRefusedBeforeIngest(
+            List<KeyValuePair<string, List<FdrEntry>>> fixture,
+            Dictionary<string, List<double[]>> features,
+            PercolatorConfig config, PercolatorResults otherClassifier)
+        {
+            var streamRows = StreamRowsFrom(fixture);
+            int filesStreamed = 0;
+            Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> countingRows =
+                (name, columns, onRow) =>
+                {
+                    filesStreamed++;
+                    streamRows(name, columns, onRow);
+                };
+            var refusal = Assert.ThrowsException<InvalidOperationException>(() => PercolatorScorer.RunStreamingFirstPass(
+                fixture.ConvertAll(kv => kv.Key), countingRows, f => features[f], config, s => { },
+                "First-pass", new CapturingSink(), pretrainedModel: otherClassifier));
+            Assert.AreEqual(0, filesStreamed, "the classifier refusal must precede the ingest");
+            Assert.AreNotEqual(config.UseGradientBoostedTrees, otherClassifier.IsGradientBoostedTrees);
+            Assert.AreEqual(PercolatorScorer.ClassifierMismatchMessage(
+                otherClassifier.IsGradientBoostedTrees, config.UseGradientBoostedTrees), refusal.Message);
+        }
+
+        /// <summary>
+        /// A resume that finds one file's scores already on its sidecar
+        /// (<c>tryStreamCompletedScores</c>) must emit exactly what the fresh run did, for either
+        /// classifier: the resumed file's scores come off the sidecar, the other file is scored
+        /// by the adopted model. The resumed file's features are never loaded, and its sidecar,
+        /// which a marker already attests, is not flushed again.
+        /// </summary>
+        private static void AssertResumedFileMatchesFreshRun(
+            List<KeyValuePair<string, List<FdrEntry>>> fixture,
+            Dictionary<string, List<double[]>> features,
+            PercolatorConfig config, PercolatorResults model,
+            CapturingSink freshSink, RunScopeFlushes freshFlushes)
+        {
+            Assert.IsNotNull(model, "the fresh run must publish the model a resume adopts");
+            string resumedFile = fixture[0].Key;
+            var featuresLoaded = new List<string>();
+            var flushes = new RunScopeFlushes();
+            var sink = new CapturingSink();
+            Assert.IsFalse(PercolatorScorer.RunStreamingFirstPass(
+                fixture.ConvertAll(kv => kv.Key), StreamRowsFrom(fixture),
+                f =>
+                {
+                    featuresLoaded.Add(f);
+                    return features[f];
+                },
+                config, s => { }, "First-pass", sink,
+                tryStreamCompletedScores: (fileName, onScore) =>
+                    fileName == resumedFile && freshFlushes.Replay(fileName, onScore),
+                pretrainedModel: model, flushFileRunScope: flushes.Flush));
+            AssertSinksIdentical(fixture, freshSink, sink);
+            Assert.IsFalse(featuresLoaded.Contains(resumedFile), "a resumed file's features are not loaded");
+            CollectionAssert.AreEqual(fixture.Skip(1).Select(kv => kv.Key).ToList(), flushes.FileNames,
+                "only the files actually scored are flushed");
+        }
+
+        /// <summary>
+        /// The fixture's tree scores must be varied, or the parity checks above prove nothing
+        /// about row placement: with every target on one score, any target row could stand in
+        /// for any other.
+        /// </summary>
+        private static void AssertScoresVary(List<KeyValuePair<string, List<FdrEntry>>> fixture,
+            CapturingSink sink)
+        {
+            var targetScores = new HashSet<double>();
+            for (int f = 0; f < fixture.Count; f++)
+            {
+                for (int r = 0; r < fixture[f].Value.Count; r++)
+                {
+                    if (!fixture[f].Value[r].IsDecoy)
+                        targetScores.Add(sink.ScoreAt(f, r));
+                }
+            }
+            Assert.IsTrue(targetScores.Count >= 20, string.Format(
+                "the tree fixture must score its targets differently, not {0} distinct value(s)",
+                targetScores.Count));
+        }
+
+        /// <summary>
+        /// The tree path's model-diagnostics input: the per-feature target/decoy distributions
+        /// are properties of the features, not of the classifier, so they are collected under
+        /// trees too and match the resident path's bin for bin. Only the weight-based half of
+        /// the table is absent.
+        /// </summary>
+        private static void AssertTreeFeatureDistributions(FeatureContributions expected,
+            FeatureContributions actual, long rows)
+        {
+            Assert.IsNotNull(expected, "the resident tree path must collect the feature distributions");
+            Assert.IsNotNull(actual, "the streaming tree path must collect the feature distributions");
+            Assert.IsTrue(expected.IsTreeEnsemble && actual.IsTreeEnsemble,
+                "a tree model's report must say it has no contribution table, not that none was trained");
+            Assert.IsNotNull(actual.TargetHistograms);
+            Assert.AreEqual(expected.Features.Count, actual.Features.Count);
+            for (int j = 0; j < actual.Features.Count; j++)
+            {
+                Assert.IsTrue(double.IsNaN(actual.Features[j].Coefficient), "a tree ensemble has no coefficients");
+                Assert.AreEqual(expected.Features[j].TargetDecoyMeanGap,
+                    actual.Features[j].TargetDecoyMeanGap, 0.0);
+                CollectionAssert.AreEqual(expected.TargetHistograms[j], actual.TargetHistograms[j]);
+                CollectionAssert.AreEqual(expected.DecoyHistograms[j], actual.DecoyHistograms[j]);
+                // Every scored row is binned once per feature (the fixture has no NaN feature).
+                Assert.AreEqual(rows, (long)actual.TargetHistograms[j].Sum() + actual.DecoyHistograms[j].Sum());
+            }
+        }
+
+        /// <summary>
+        /// Records every <see cref="FileRunScopeSink"/> flush a first pass makes, copied out of
+        /// the pass's reused scratch arrays, so a test can check the flushes happened once per
+        /// scored file with the values the sink received, and replay them as a resumed file's
+        /// sidecar.
+        /// </summary>
+        private sealed class RunScopeFlushes
+        {
+            private readonly List<Flushed> _flushes = new List<Flushed>();
+
+            public List<string> FileNames => _flushes.ConvertAll(fl => fl.FileName);
+
+            public void Flush(string fileName, int fileIndex, int rowCount, uint[] entryIds,
+                double[] scores, double[] runPrecursorQvalues, double[] runPeptideQvalues,
+                double[] apexRts)
+            {
+                _flushes.Add(new Flushed
+                {
+                    FileName = fileName,
+                    FileIndex = fileIndex,
+                    EntryIds = entryIds.Take(rowCount).ToArray(),
+                    Scores = scores.Take(rowCount).ToArray(),
+                    RunPrecursorQvalues = runPrecursorQvalues.Take(rowCount).ToArray(),
+                    RunPeptideQvalues = runPeptideQvalues.Take(rowCount).ToArray(),
+                    ApexRts = apexRts.Take(rowCount).ToArray()
+                });
+            }
+
+            /// <summary>Feed one flushed file back as <c>tryStreamCompletedScores</c> would read
+            /// it off that file's sidecar; false when the file was never flushed.</summary>
+            public bool Replay(string fileName, Action<uint, double> onScore)
+            {
+                int i = _flushes.FindIndex(fl => fl.FileName == fileName);
+                if (i < 0)
+                    return false;
+                for (int r = 0; r < _flushes[i].Scores.Length; r++)
+                    onScore(_flushes[i].EntryIds[r], _flushes[i].Scores[r]);
+                return true;
+            }
+
+            /// <summary>One flush per file, in file order, carrying the run-scope values the sink
+            /// was handed for that file.</summary>
+            public void AssertOnePerFile(List<KeyValuePair<string, List<FdrEntry>>> fixture, CapturingSink sink)
+            {
+                Assert.AreEqual(fixture.Count, _flushes.Count, "one run-scope flush per file");
+                for (int f = 0; f < fixture.Count; f++)
+                {
+                    var flushed = _flushes[f];
+                    Assert.AreEqual(fixture[f].Key, flushed.FileName);
+                    Assert.AreEqual(f, flushed.FileIndex);
+                    Assert.AreEqual(fixture[f].Value.Count, flushed.Scores.Length);
+                    for (int r = 0; r < flushed.Scores.Length; r++)
+                    {
+                        Assert.AreEqual(fixture[f].Value[r].EntryId, flushed.EntryIds[r]);
+                        Assert.AreEqual(sink.ScoreAt(f, r), flushed.Scores[r], 0.0);
+                        var q = sink.QAt(f, r);
+                        Assert.AreEqual(q.RunPrecursorQvalue, flushed.RunPrecursorQvalues[r], 0.0);
+                        Assert.AreEqual(q.RunPeptideQvalue, flushed.RunPeptideQvalues[r], 0.0);
+                        Assert.AreEqual(sink.ApexRtAt(f, r), flushed.ApexRts[r], 0.0);
+                    }
+                }
+            }
+
+            private sealed class Flushed
+            {
+                public string FileName;
+                public int FileIndex;
+                public uint[] EntryIds;
+                public double[] Scores;
+                public double[] RunPrecursorQvalues;
+                public double[] RunPeptideQvalues;
+                public double[] ApexRts;
+            }
+        }
+
+        /// <summary>A first-pass model that is the tree ensemble: one per fold, and no linear
+        /// weights beside it for a scorer to pick instead.</summary>
+        private static void AssertTreeModel(PercolatorResults model, int nFolds)
+        {
+            Assert.IsNotNull(model, "the first pass must publish the model it trained");
+            Assert.IsNotNull(model.FoldGbtModels,
+                "a gbdt first pass must train gradient-boosted trees, not the linear SVM");
+            Assert.AreEqual(nFolds, model.FoldGbtModels.Count, "one tree ensemble per fold");
+            Assert.AreEqual(0, model.FoldWeights.Count, "a tree model carries no linear weights");
+        }
+
+        /// <summary>
+        /// A <see cref="PercolatorScorer.RunStreamingFirstPass"/> row source over a resident
+        /// fixture, in its (file, row) order - the stand-in for the per-file parquet scalar reader.
+        ///
+        /// <para>Supplies apex RT whatever the pass asks for. The scorer's Core/ApexRt choice is
+        /// about what the PARQUET reader decodes, not about what a fixture can hand over, and a
+        /// test proving the streamed path matches the resident one on every value cannot do that
+        /// if the fixture withholds one of them.</para>
+        /// </summary>
+        private static Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> StreamRowsFrom(
+            List<KeyValuePair<string, List<FdrEntry>>> fixture)
+        {
+            return (name, columns, onRow) =>
+            {
+                var list = fixture.Find(kv => kv.Key == name).Value;
+                foreach (var e in list)
+                    onRow(e.EntryId, e.Charge, e.IsDecoy, e.CoelutionSum, e.ModifiedSequence, e.ApexRt);
+            };
+        }
+
+        /// <summary>
+        /// Positional, bit-exact comparison of two sinks fed the same <paramref name="fixture"/>
+        /// rows in the same (file, row) order: score, the five q-values, the experiment aggregate,
+        /// identity and apex RT. Returns the number of rows compared.
+        /// </summary>
+        private static int AssertSinksIdentical(List<KeyValuePair<string, List<FdrEntry>>> fixture,
+            CapturingSink expected, CapturingSink actual)
+        {
+            Assert.AreEqual(expected.Count, actual.Count);
+            int compared = 0;
+            for (int f = 0; f < fixture.Count; f++)
+            {
+                var list = fixture[f].Value;
                 for (int r = 0; r < list.Count; r++)
                 {
-                    Assert.AreEqual(sinkRes.ScoreAt(f, r), sinkStr.ScoreAt(f, r), 0.0);
-                    var qRes = sinkRes.QAt(f, r);
-                    var qStr = sinkStr.QAt(f, r);
-                    Assert.AreEqual(qRes.RunPrecursorQvalue, qStr.RunPrecursorQvalue, 0.0);
-                    Assert.AreEqual(qRes.RunPeptideQvalue, qStr.RunPeptideQvalue, 0.0);
-                    Assert.AreEqual(qRes.ExperimentPrecursorQvalue, qStr.ExperimentPrecursorQvalue, 0.0);
-                    Assert.AreEqual(qRes.ExperimentPeptideQvalue, qStr.ExperimentPeptideQvalue, 0.0);
-                    Assert.AreEqual(qRes.Pep, qStr.Pep, 0.0);
-                    var idRes = sinkRes.IdentAt(f, r);
-                    var idStr = sinkStr.IdentAt(f, r);
-                    Assert.AreEqual(idRes.EntryId, idStr.EntryId);
-                    Assert.AreEqual(idRes.IsDecoy, idStr.IsDecoy);
-                    Assert.AreEqual(idRes.Charge, idStr.Charge);
-                    Assert.AreEqual(idRes.Peptide, idStr.Peptide);
-                    // Sourced differently by the two paths - the resident one by ParquetIndex
-                    // against a column, the streaming one off the row stream - so this is the
+                    Assert.AreEqual(expected.ScoreAt(f, r), actual.ScoreAt(f, r), 0.0);
+                    var qExp = expected.QAt(f, r);
+                    var qAct = actual.QAt(f, r);
+                    Assert.AreEqual(qExp.RunPrecursorQvalue, qAct.RunPrecursorQvalue, 0.0);
+                    Assert.AreEqual(qExp.RunPeptideQvalue, qAct.RunPeptideQvalue, 0.0);
+                    Assert.AreEqual(qExp.ExperimentPrecursorQvalue, qAct.ExperimentPrecursorQvalue, 0.0);
+                    Assert.AreEqual(qExp.ExperimentPeptideQvalue, qAct.ExperimentPeptideQvalue, 0.0);
+                    Assert.AreEqual(qExp.Pep, qAct.Pep, 0.0);
+                    Assert.AreEqual(expected.ExperimentAggregateScoreAt(f, r),
+                        actual.ExperimentAggregateScoreAt(f, r), 0.0);
+                    var idExp = expected.IdentAt(f, r);
+                    var idAct = actual.IdentAt(f, r);
+                    Assert.AreEqual(idExp.EntryId, idAct.EntryId);
+                    Assert.AreEqual(idExp.IsDecoy, idAct.IsDecoy);
+                    Assert.AreEqual(idExp.Charge, idAct.Charge);
+                    Assert.AreEqual(idExp.Peptide, idAct.Peptide);
+                    // Sourced differently by the resident and streaming paths - by ParquetIndex
+                    // against a column on one, off the row stream on the other - so this is the
                     // one output a shared bug could NOT produce identically by accident.
-                    Assert.AreEqual(sinkRes.ApexRtAt(f, r), sinkStr.ApexRtAt(f, r), 0.0);
+                    Assert.AreEqual(expected.ApexRtAt(f, r), actual.ApexRtAt(f, r), 0.0);
                     compared++;
                 }
             }
-            Assert.AreEqual(projSet.TotalRows, compared);
+            return compared;
         }
 
         /// <summary>
@@ -1489,6 +1854,51 @@ namespace pwiz.Osprey.Test
                         });
                         featureRows.Add(decoyFeatures);
                     }
+                }
+                perFile.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, list));
+                featuresByFile[fileName] = featureRows;
+            }
+            return perFile;
+        }
+
+        /// <summary>
+        /// The first-pass fixture for the tree path: the <see cref="MakeNonMonotoneEntries"/>
+        /// population, built for trees, observed in two runs as per-file <see cref="FdrEntry"/>
+        /// rows with ParquetIndex == within-file position and CoelutionSum == features[0], the
+        /// production first-pass shape. The second run nudges the monotone feature and reflects
+        /// the non-monotone one, so every precursor has two different observations for the
+        /// best-per-precursor dedup to choose between, and the non-monotone signal survives
+        /// whichever run represents a precursor.
+        /// </summary>
+        private static List<KeyValuePair<string, List<FdrEntry>>> BuildNonMonotoneFirstPassFixture(
+            out Dictionary<string, List<double[]>> featuresByFile)
+        {
+            var population = MakeNonMonotoneEntries();
+            featuresByFile = new Dictionary<string, List<double[]>>();
+            var perFile = new List<KeyValuePair<string, List<FdrEntry>>>();
+            uint scan = 0;
+            for (int file = 0; file < 2; file++)
+            {
+                string fileName = string.Format("file{0}", file);
+                var list = new List<FdrEntry>();
+                var featureRows = new List<double[]>();
+                foreach (var e in population)
+                {
+                    var features = file == 0
+                        ? (double[])e.Features.Clone()
+                        : new[] { e.Features[0] + 0.05, -e.Features[1] };
+                    list.Add(new FdrEntry
+                    {
+                        EntryId = e.EntryId,
+                        ParquetIndex = (uint)featureRows.Count,
+                        ModifiedSequence = e.Peptide,
+                        Charge = e.Charge,
+                        ScanNumber = ++scan,
+                        IsDecoy = e.IsDecoy,
+                        CoelutionSum = features[0],
+                        ApexRt = ApexRtForRow(file, featureRows.Count)
+                    });
+                    featureRows.Add(features);
                 }
                 perFile.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, list));
                 featuresByFile[fileName] = featureRows;

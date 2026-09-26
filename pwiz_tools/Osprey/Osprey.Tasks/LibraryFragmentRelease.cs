@@ -109,19 +109,15 @@ namespace pwiz.Osprey.Tasks
         /// owns both halves of it - so it reads the analysis-wide summary that task left on
         /// disk (<c>ScoringTaskShared.ReadRetainedBaseIdsOrFail</c>).</para>
         ///
-        /// <para>Everywhere else the release rides <c>FirstPassFdrTask</c>'s projection path and
-        /// inherits its config conditions - today only the Percolator framework, since
-        /// <c>--fdrbench-pass 1</c> stopped forcing the resident pool (#4507; the pass-1 TSV is
-        /// emitted before compaction from the sidecars, so the release, which runs after, never
-        /// touches what it reads).</para>
+        /// <para>Everywhere else the release rides <c>FirstPassFdrTask</c>'s projection path,
+        /// which no config condition excludes any more. <c>--fdrbench-pass 1</c> stopped forcing
+        /// the resident pool with #4507 (the pass-1 TSV is emitted before compaction from the
+        /// sidecars, so the release, which runs after, never touches what it reads), and the
+        /// last non-Percolator FDR method, the other exclusion, was deleted with #4543.</para>
         /// </summary>
         private static bool LegAdmitsRelease(OspreyConfig config)
         {
-            if (config.StopAfterStage5)
-                return false;
-            if (config.ExpectReconciledInput)
-                return true;
-            return config.FdrMethod.UsesPercolatorFramework();
+            return !config.StopAfterStage5;
         }
 
         /// <summary>

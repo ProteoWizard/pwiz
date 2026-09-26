@@ -23,8 +23,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 
@@ -253,6 +255,75 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(1.0, orphan.ExperimentPrecursorQvalue, 1e-12);
             Assert.AreEqual(1.0, orphan.ExperimentPeptideQvalue, 1e-12);
             Assert.AreEqual(0.0, orphan.ExperimentAggregateScore, 1e-12);
+        }
+
+        /// <summary>
+        /// OSPREY_PASS2_QVALUE=transfer must re-score each survivor with whichever classifier the
+        /// first pass trained (<see cref="Pass2FdrSidecar.TransferOneFile"/>). It averaged the
+        /// fold weights itself, which threw on a gradient-boosted-tree model - there are no
+        /// weights - before a single file was transferred; nothing reached it with one while the
+        /// default first pass trained the SVM when gbdt was selected.
+        ///
+        /// <para>The UNCHANGED classification is the key check: it needs the re-score to
+        /// reproduce the first pass's score bit for bit, which only the tree model itself can.
+        /// One record carries a different first-pass score, standing in for a peak that
+        /// reconciliation moved, so the MOVED branch runs too.</para>
+        /// </summary>
+        [TestMethod]
+        public void TestTransferOneFileScoresTreeModel()
+        {
+            var scorer = FrozenModelScorer.TryCreate(FirstPassModelIoTest.MakeTreeModel());
+            Assert.IsNotNull(scorer);
+            Assert.IsTrue(scorer.IsGradientBoostedTrees);
+
+            string dir = Path.Combine(Path.GetTempPath(),
+                @"osprey_transfer_trees_" + Guid.NewGuid().ToString(@"N"));
+            Directory.CreateDirectory(dir);
+            string inputFile = Path.Combine(dir, @"run1.mzML");
+            string pass1Path = FdrScoresSidecar.Pass1Path(inputFile);
+            try
+            {
+                const uint movedId = 7;
+                var rng = new Random(3);
+                var survivors = new List<FdrEntry>();
+                var records = new List<FdrScoreRecord>();
+                for (uint id = 1; id <= 20; id++)
+                {
+                    var features = new double[scorer.NumFeatures];
+                    for (int j = 0; j < features.Length; j++)
+                        features[j] = rng.NextDouble();
+                    // The score the first pass wrote: this model, these features.
+                    double firstPassScore = scorer.Score(features);
+                    if (id == movedId)
+                        firstPassScore += 1.0;
+                    records.Add(new FdrScoreRecord(id, firstPassScore, 0.001 * id, 0.002 * id, 10.0 + id));
+                    survivors.Add(new FdrEntry { EntryId = id, Features = features });
+                }
+                FdrScoresSidecar.Write(pass1Path, records, FdrScoresSidecar.Pass.FirstPass);
+
+                var tally = new Pass2FdrSidecar.TransferTally();
+                Pass2FdrSidecar.TransferOneFile(@"run1", inputFile, survivors, scorer,
+                    new Dictionary<uint, FdrExperimentRecord>(), message => Assert.Fail(message), ref tally);
+
+                Assert.AreEqual(1, tally.FilesDone);
+                Assert.AreEqual(0, tally.Skipped);
+                Assert.AreEqual(1, tally.Moved);
+                Assert.AreEqual(survivors.Count - 1, tally.Unchanged);
+                foreach (var entry in survivors)
+                {
+                    if (entry.EntryId == movedId)
+                        continue;
+                    // Carried verbatim from the first-pass record it reproduced.
+                    Assert.AreEqual(0.001 * entry.EntryId, entry.RunPrecursorQvalue, 0.0);
+                    Assert.AreEqual(0.002 * entry.EntryId, entry.RunPeptideQvalue, 0.0);
+                }
+            }
+            finally
+            {
+                if (File.Exists(pass1Path))
+                    File.Delete(pass1Path);
+                Directory.Delete(dir, true);
+            }
         }
     }
 }

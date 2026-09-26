@@ -338,9 +338,12 @@ carrying an analysis-wide payload.** `<stem>.reconciliation.json` does this toda
 one of its N copies restates the same join-wide `first_pass_base_ids` array, which at 446
 runs is 2.79 GB of pure duplication inside 10.7 GB of envelopes that a fan-out worker then
 has to parse to rebuild a union it could have been handed. Replication is only benign when
-the payload is small and fixed, as the frozen model is; when it scales with the experiment
+the payload is fixed in size, as the frozen model is; when it scales with the experiment
 it belongs in one experiment-wide artifact, and the fan-out reads that instead. This is the
-P6 startup rule seen from the writer's side.
+P6 startup rule seen from the writer's side. Fixed is not the same as small: the linear
+model is a few hundred KB, but a tree model under `OSPREY_FDR_MODEL=gbdt` is about 3.4 MB per
+copy, 1.5 GB across 446 runs, so the writer serializes it once and writes that text beside
+every run, and `LoadFromAny` parses one copy rather than each in turn.
 
 Scope is not the same question as naming, and the two must not be conflated. Most
 per-run content is named for its run stem and most experiment-wide content is named for

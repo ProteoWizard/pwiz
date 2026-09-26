@@ -33,9 +33,11 @@ The 6 `major` items are: the sparse-library calibration retry omission (doc 04),
 > [README.md](README.md) for the index). Doc-number references in prose use the new
 > numbering.
 
-> **Updates since generation (features added after this report).** `--fdr-method
-> gbdt` (doc 07) is a **C#-only** addition — the Rust reference has no GBDT scorer,
-> so it is not a divergence to reconcile. The opt-in learned peak-pick model (doc 06)
+> **Updates since generation (features added after this report).** The experimental
+> `OSPREY_FDR_MODEL=gbdt` classifier (doc 07) is a **C#-only** addition - the Rust reference
+> has no GBDT scorer, so it is not a divergence to reconcile. Selecting it is: the Rust
+> `--fdr-method` argument was removed from C# (#4543), along with the Simple method and the
+> unreachable Mokapot value (see the doc 07 table and item 2 below). The opt-in learned peak-pick model (doc 06)
 > and the pass-2 frozen q-value modes (doc 12) postdate this report; both exist in
 > Rust too (the pick model in lock-step; the pass-2 modes ported C#→Rust in
 > maccoss/osprey#57) and are off the default parity-gated path. The one **PORT-ERROR**
@@ -80,7 +82,8 @@ This is the section a maintainer should read first. It lists the **single PORT-E
 - **C# evidence:** `Osprey.Scoring/CoelutionScorer.cs:462`
 - **Recommended action:** Read `BlibWriter.cs` and confirm boundaries are written straight from the CWT peak with no median-polish re-derivation. Given the byte-identical blib gate this is almost certainly doc-staleness, not a port error.
 
-#### U4. Simple FDR scores on `coelution_sum`, not a ROC-AUC-selected best feature — minor
+#### U4. Simple FDR scores on `coelution_sum`, not a ROC-AUC-selected best feature — minor - **resolved: Simple was deleted**
+- **Resolution:** C# no longer has a Simple method: `FdrMethod.Simple` and `RunSimpleFdr` were deleted with `--fdr-method` (#4543), so there is nothing left to diff against Rust. The record below is kept as it was found.
 - **Doc:** [07-fdr-control.md](07-fdr-control.md)
 - **Rust says:** Simple applies target-decoy competition on the best single feature selected by ROC AUC.
 - **C# does:** `RunSimpleFdr` scores directly by `e.CoelutionSum` (PIN feature 0) with no ROC-AUC selection. Whether current Rust Simple also just uses `coelution_sum` was not confirmed against Rust source.
@@ -191,18 +194,19 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 |---|---|---|---|---|---|
 | STALE | Re-scoring engine is `RunCoelutionScoring` | Re-score via `run_search()` w/ boundary_overrides | No `run_search`; overrides via `ScoringContext.BoundaryOverrides` from `PerFileRescoreTask` (equivalent) | `PeakDataExtractor.cs:82-167`; `PerFileRescoreTask.cs:733` | info |
 | INTENT | Consensus is a pure selection function | One `select_post_fdr_consensus()` selects + hands off | `SelectRescoreTargets` pure; merge + override re-scoring separate in `PerFileRescoreTask` | `MultiChargeConsensus.cs:51`; `PerFileRescoreTask.cs:879,1066` | info |
-| STALE | No Mokapot scoring | Lists Percolator/Mokapot | Native Percolator SVM only; Mokapot not CLI-wired | see 08 | info |
+| STALE | No Mokapot scoring | Lists Percolator/Mokapot | Native Percolator only; Mokapot never wired, and its enum value was deleted (#4543) | see 08 | info |
 | STALE | FDR gate is `RunPrecursorQvalue` | Generic "FDR threshold" | Gates on `RunPrecursorQvalue≤fdr` specifically (matches Rust `pipeline.rs`) | `MultiChargeConsensus.cs:115` | info |
 
 ### [07-fdr-control.md](07-fdr-control.md) — matches-with-notes
 
 | Classification | Title | Rust says | C# does | Evidence | Sev |
 |---|---|---|---|---|---|
-| INTENT | Native Percolator replaces external Mokapot | 3 methods incl Mokapot (Python subprocess, PIN round-trip) | Native Percolator + Simple only; `FdrMethod.Mokapot` enum never CLI-wired; no Python dep | `OspreyCommandArgs.cs:120`; `OspreyConfig.cs:422` | info |
+| INTENT | Native Percolator replaces external Mokapot | 3 methods incl Mokapot (Python subprocess, PIN round-trip) | Native Percolator only; the never-wired `FdrMethod.Mokapot` and the Simple method were deleted (#4543); no Python dep | `OspreyConfig.cs` (`FdrMethod`) | info |
+| INTENT | No `--fdr-method`; the classifier is `OSPREY_FDR_MODEL` | `--fdr-method {percolator\|mokapot\|simple}` selects the engine; an unknown value warns and runs percolator | Argument removed with no alias (#4543) and rejected as an unknown argument. The one remaining choice, the classifier inside Percolator, is the env var `OSPREY_FDR_MODEL` (unset / `svm` = linear SVM, `gbdt` = experimental trees); an unrecognized value fails at startup. A Rust command line passing `--fdr-method percolator` must drop it | `OspreyCommandArgs.cs`; `OspreyEnvironment.cs` (`FdrModel`) | info |
 | INTENT | No `FdrLevel::Protein`; `--fdr-level protein` unreachable | Supports {precursor,peptide,protein,both}; protein filters blib | Enum {Precursor,Peptide,Both}; effective-qvalue throws on Protein; protein q computed/reported but can't gate blib; 2 stale in-code comments | `OspreyConfig.cs:411`; `OspreyCommandArgs.cs:138`; `FdrEntry.cs:136` | major |
 | STALE | Default `--fdr-level` is Precursor, not Peptide | Default Peptide | Defaults Precursor (matches Rust `FdrLevel::default()`; doc prose stale) | `OspreyConfig.cs:284` | minor |
-| STALE | No gbdt/FastTree method in either impl | Lab memory mentions Rust `--fdr-method gbdt` | No gbdt symbol anywhere; enum {Percolator,Mokapot,Simple}, CLI percolator\|simple | `OspreyConfig.cs:422`; `OspreyCommandArgs.cs:120` | info |
-| UNVER | Simple scores on coelution_sum, not ROC-AUC best feature (**U4**) | Best single feature by ROC AUC | Scores directly by `CoelutionSum`; Rust Simple behavior not confirmed | `PercolatorEngine.cs:359` | minor |
+| STALE | No gbdt/FastTree method in either impl | Lab memory mentions Rust `--fdr-method gbdt` | At generation, no gbdt symbol anywhere. Since then C# gained the experimental gbdt classifier (`OSPREY_FDR_MODEL=gbdt`, a C#-only addition); Rust still has none | `OspreyConfig.cs` (`FdrMethod`) | info |
+| UNVER | Simple scores on coelution_sum, not ROC-AUC best feature (**U4**) | Best single feature by ROC AUC | Resolved: Simple was deleted (#4543) | - | minor |
 | INTENT | Streaming-only Percolator (matches Rust v26.7.0) | Direct path removed v26.7.0 | `DispatchSvm` always streams; former direct branch removed for parity | `PercolatorEngine.cs:336` | info |
 
 ### [08-protein-parsimony.md](08-protein-parsimony.md) — **diverges**
@@ -224,7 +228,7 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 | STALE | Planner passing-precursor precondition undocumented | "For each scored entry" no per-entry gate | Also requires `(base_id,charge)` in `passingBaseIds`; ties to Rust `reconciliation.rs:560-576` | `ReconciliationPlanner.cs:131-144,209` | minor |
 | STALE | Ceiling is sigma-clipped MAD, not plain | "calibration-MAD-based ceiling" | Sigma-clipped median of refined residuals, capped by first-pass MAD; ties to Rust docstring | `ReconciliationPlanner.cs:166-183,299-322` | minor |
 | INTENT | Decoy pairing by base_id, not prefix | Matched by DECOY_ prefix | Pairs by `EntryId & 0x7FFFFFFF`; recognizes prefix-less lib decoys | `ConsensusRts.cs:93-118`; `ReconciliationPlanner.cs:120-144` | info |
-| INTENT | Second-pass FDR is native Percolator only | "Percolator/Mokapot/Simple applies" | No Python Mokapot; native managed Percolator (or simple) | `SecondPassFdrTask.cs`; see 08 | info |
+| INTENT | Second-pass FDR is native Percolator only | "Percolator/Mokapot/Simple applies" | No Python Mokapot and no Simple; the frozen first-pass Percolator model (linear SVM, or experimental gbdt trees) | `SecondPassFdrTask.cs`; see 08 | info |
 
 ### [11-boundary-overrides.md](11-boundary-overrides.md) — matches-with-notes
 
@@ -329,9 +333,9 @@ Legend — Classification: **STALE** = STALE-RUST-DOC, **INTENT** = INTENTIONAL-
 
 These are the deliberate, output-preserving architectural choices in the C# port that recur across many documents. None is a defect; they are recorded so a reader knows what to expect and does not re-flag them:
 
-1. **Native managed Percolator, no Mokapot.** The external Python Mokapot path (PIN round-trip, subprocess, `--save_models`/`--load_models`) is not wired to the C# CLI. `--fdr-method` accepts `percolator | gbdt | simple`. The `FdrMethod.Mokapot` enum value survives but is unreachable. (docs 07, 09, 10, 13, 19)
+1. **Native managed Percolator, no Mokapot, no Simple.** The external Python Mokapot path (PIN round-trip, subprocess, `--save_models`/`--load_models`) was never wired to the C# CLI, and its unreachable `FdrMethod.Mokapot` value was deleted with the Simple method (#4543). (docs 07, 09, 10, 13, 19)
 
-2. **`gbdt` is a C#-only FDR method.** `--fdr-method gbdt` selects a gradient-boosted-tree classifier inside the Percolator framework (`GradientBoostedTrees.cs`); the linear-SVM Percolator remains the default. The Rust reference has **no** GBDT scorer, so this is a C# addition beyond the reference, not a divergence to reconcile. (doc 07)
+2. **No `--fdr-method`; `gbdt` is a C#-only, experimental classifier.** Rust's `--fdr-method {percolator|mokapot|simple}` was removed from C# with no alias (#4543) and is rejected as an unknown argument. The only choice left is the classifier inside the Percolator framework, a developer lever, so it is the environment variable `OSPREY_FDR_MODEL`: unset or `svm` for the linear SVM (the default and the parity-gated path), `gbdt` for gradient-boosted trees (`GradientBoostedTrees.cs`); anything else fails at startup. The Rust reference has **no** GBDT scorer, so the trees are a C# addition beyond the reference, not a divergence to reconcile; the CLI difference is one. (doc 07, doc 20)
 
 3. **`FdrLevel` has no `Protein` variant.** The enum is `{Precursor, Peptide, Both}`; `--fdr-level protein` is rejected. Protein q-values are still computed, propagated, and reported, but cannot gate blib output from the CLI. Two stale in-code comments still reference the removed mode. (docs 07, 08)
 

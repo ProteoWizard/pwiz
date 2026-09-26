@@ -70,6 +70,20 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// </summary>
         private const string Pass2SidecarSuffix = ".2nd-pass.model-diagnostics.json";
 
+        /// <summary>Logged when no first-pass model was trained on this run, so the Model tab
+        /// has nothing to show: a resumed or rehydrated run takes its q-values from sidecars.</summary>
+        internal const string MODEL_NOT_RETRAINED_NOTE =
+            @"[MODEL-DIAGNOSTICS] first-pass model not retrained on this run " +
+            @"(resumed/rehydrated); the Model tab's feature table and per-feature " +
+            @"distributions are unavailable. Clear the 1st-pass FDR sidecars to force a retrain.";
+
+        /// <summary>Logged for a gradient-boosted-tree first pass: the model was trained, but a tree
+        /// ensemble has no coefficients for the contribution table to decompose.</summary>
+        internal const string TREE_MODEL_NOTE =
+            @"[MODEL-DIAGNOSTICS] the first-pass model is gradient-boosted trees, which have no " +
+            @"coefficients to decompose, so the Model tab's contribution table is unavailable; its " +
+            @"per-feature target/decoy distributions are shown.";
+
         private static readonly JsonSerializerSettings SidecarSettings = new JsonSerializerSettings
         {
             ContractResolver = new CamelCasePropertyNamesContractResolver(),
@@ -113,13 +127,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // Serialized into the pass-1 data sidecar below, so it round-trips into
                 // WritePass2AndFinalize's reloaded object graph and survives to the final page.
                 data.Cal = cal;
-                // On a resumed / rehydrated run the first-pass SVM is not retrained
-                // (q-values come from sidecars), so there is no trained model to show.
-                // Surface it rather than silently emitting a blank Model tab.
-                if (contributions == null)
-                    logInfo(@"[MODEL-DIAGNOSTICS] first-pass model not retrained on this run " +
-                            @"(resumed/rehydrated); the Model tab's feature table and per-feature " +
-                            @"distributions are unavailable. Clear the 1st-pass FDR sidecars to force a retrain.");
+                LogModelTabNote(contributions, logInfo);
                 data.GeneratedUtc = DateTime.UtcNow.ToString(
                     @"yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
                 data.OspreyVersion = OspreyVersion.DisplayVersion;
@@ -179,10 +187,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // pass-1 data sidecar below so it round-trips into WritePass2AndFinalize's reloaded
                 // object graph and survives to the final page (same as Write).
                 data.Cal = cal;
-                if (contributions == null)
-                    logInfo(@"[MODEL-DIAGNOSTICS] first-pass model not retrained on this run " +
-                            @"(resumed/rehydrated); the Model tab's feature table and per-feature " +
-                            @"distributions are unavailable. Clear the 1st-pass FDR sidecars to force a retrain.");
+                LogModelTabNote(contributions, logInfo);
                 data.GeneratedUtc = DateTime.UtcNow.ToString(
                     @"yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
                 data.OspreyVersion = OspreyVersion.DisplayVersion;
@@ -201,6 +206,29 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // Never let a diagnostics-only artifact take down a real run.
                 logInfo(string.Format(@"[MODEL-DIAGNOSTICS] report generation failed: {0}", ex.Message));
             }
+        }
+
+        /// <summary>
+        /// What the report says about its Model tab, or null when the tab is complete (a linear
+        /// model). A null <paramref name="contributions"/> means no model was trained on this run;
+        /// a tree ensemble's was trained and has no contribution table. Kept apart because the
+        /// first note tells the operator to clear sidecars and force a retrain, which for a fresh
+        /// gbdt run would be both false and a wasted re-run.
+        /// </summary>
+        internal static string ModelTabNote(FeatureContributions contributions)
+        {
+            if (contributions == null)
+                return MODEL_NOT_RETRAINED_NOTE;
+            return contributions.IsTreeEnsemble ? TREE_MODEL_NOTE : null;
+        }
+
+        /// <summary>Log <see cref="ModelTabNote"/> when there is one, rather than silently emitting a
+        /// Model tab that is blank or half-empty.</summary>
+        private static void LogModelTabNote(FeatureContributions contributions, Action<string> logInfo)
+        {
+            string note = ModelTabNote(contributions);
+            if (note != null)
+                logInfo(note);
         }
 
         /// <summary>

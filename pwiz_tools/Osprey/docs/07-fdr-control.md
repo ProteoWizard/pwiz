@@ -18,7 +18,7 @@ Primary C# code:
 | `Osprey.FDR/PercolatorEngine.cs` | Orchestration: build `PercolatorEntry` input, dispatch, write results back onto stubs, best-of-runs clamp |
 | `Osprey.FDR/PercolatorTrainer.cs`, `PercolatorSampling.cs`, `PercolatorScorer.cs`, `PercolatorQValues.cs`, `StreamingFdr.cs` | Native Percolator (split out of the former `PercolatorFdr.cs` in #4490): standardize, subsample, fold assignment, SVM training, Granholm calibration, PEP, q-values |
 | `Osprey.FDR/PercolatorEntryBuilder.cs` | Build the flat `PercolatorEntry` list from `FdrEntry` stubs |
-| `Osprey.FDR/FdrController.cs` | Simple target-decoy competition (used by `--fdr-method simple`) |
+| `Osprey.FDR/FdrController.cs` | Generic target-decoy competition (`CompeteAndFilter`), the port of Rust's `FdrController`; kept with its tests, though no pipeline path calls it since the `simple` method was removed (#4543) |
 | `Osprey.FDR/FdrProjection.cs`, `FdrProjectionOutput.cs` | Thin peak-buffer projection path (issue #4355) driving the identical SVM core |
 | `Osprey.ML/LinearSvmClassifier.cs` | L2-regularized linear SVM via dual coordinate descent + grid search for C |
 | `Osprey.ML/PepEstimator.cs` | Posterior error probability (KDE + isotonic/PAVA), Sage-derived |
@@ -38,10 +38,9 @@ Stage 5 (first pass, after per-file coelution scoring):
   1. Each observation carries a 21-feature PIN vector (see 03-spectral-scoring.md),
      cached per file in .scores.parquet; the resident buffer is a lightweight FdrEntry stub.
   2. Build a flat PercolatorEntry list (one per observation) from the stubs.
-  3. Dispatch by --fdr-method:
-       percolator (default) -> native streaming linear-SVM Percolator
-       gbdt                 -> same Percolator framework, GBDT classifier per fold (C#-only)
-       simple               -> direct target-decoy competition on coelution_sum
+  3. Run the native streaming Percolator with the classifier OSPREY_FDR_MODEL selects:
+       unset / svm (default) -> linear SVM
+       gbdt (EXPERIMENTAL)   -> gradient-boosted trees per fold, same framework (C#-only)
   4. Native Percolator produces four q-value levels (run/experiment x precursor/peptide),
      PEP, and a combined SVM score; write them back onto the FdrEntry stubs.
   5. Best-of-runs clamp on experiment q-values.
@@ -86,40 +85,62 @@ ParquetIndex)` so the SVM working-set order is canonical across Rust and C#
 
 ---
 
-## Step 2 — Dispatch by FDR method
+## Step 2 — Classifier selection (`OSPREY_FDR_MODEL`)
 
-`FirstPassFdrTask.cs` switches on `config.FdrMethod`:
+There is no dispatch on an FDR method: every run goes through the one Percolator framework
+(`FirstPassFdrTask.RunPercolatorFdr` -> `PercolatorEngine.RunPercolatorFdr`), and
+`config.FdrMethod` only selects the classifier trained inside it:
 
-- `FdrMethod.Percolator` (default) → `PercolatorEngine.RunPercolatorFdr` (linear SVM)
-- `FdrMethod.Gbdt` → the **same** Percolator framework with a gradient-boosted-tree
-  classifier swapped in per fold (`--fdr-method gbdt`; C#-only, see below)
-- `FdrMethod.Simple` → `PercolatorEngine.RunSimpleFdr`
-- any other value → falls back to `RunSimpleFdr` with a warning
+- `FdrMethod.Percolator` (default) - the linear SVM
+- `FdrMethod.Gbdt` - a gradient-boosted-tree classifier swapped in per fold.
+  **Experimental**; see below.
 
-`--fdr-method` accepts `percolator | gbdt | simple` (`OspreyCommandArgs.cs:120`; the
-deprecated alias `fasttree` also parses → `Gbdt`). `FdrMethod.Mokapot` exists in the
-enum but **is not reachable from the CLI** — there is no Mokapot runner, no PIN-writing
-pre-competition, and no external subprocess in the C# port. See Divergences.
+The classifier is chosen by the `OSPREY_FDR_MODEL` environment variable, not a command-line
+argument, because it is a developer lever rather than a product setting. It is read once at
+process start (`OspreyEnvironment.FdrModel`) and copied onto `OspreyConfig.FdrMethod` when the
+command line is parsed; nothing else reads it.
 
-### Simple FDR (`--fdr-method simple`)
+| `OSPREY_FDR_MODEL` | Classifier |
+|---|---|
+| unset, empty, or `svm` | linear SVM (default) |
+| `gbdt` | gradient-boosted trees (**Experimental**) |
+| anything else | the run **fails at startup** |
 
-`PercolatorEngine.RunSimpleFdr` (`PercolatorEngine.cs:350`) runs
-`FdrController.CompeteAndFilter` per file, scoring directly by `e.CoelutionSum`
-(PIN feature 0, `fragment_coelution_sum`) with no ML reranking and no ROC-AUC feature
-selection. Passing targets get `RunPrecursorQvalue = RunPeptideQvalue =
-ExperimentPrecursorQvalue = ExperimentPeptideQvalue = FdrAtThreshold`; everything else
-stays at the `1.0` default. This is a baseline path; the default is Percolator.
+Values are case-insensitive and trimmed, like the other `OSPREY_*` selectors; `svm` is
+accepted so a sweep can name both arms. An unrecognized value is an error rather than a
+fallback to the SVM (`OspreyEnvironment.DescribeUnrecognizedFdrModel`, checked in `Program`
+at startup, before the pipeline runs): a run that asked for trees and trained the SVM completes normally and reads
+like a tree result, which is the #4491 defect. A `gbdt` run names the classifier in its
+startup log, marked experimental; the SVM's log is unchanged.
 
-### GBDT FDR (`--fdr-method gbdt`) — C#-only, no Rust counterpart
+`OSPREY_FDR_MODEL` replaced `--fdr-method` (#4543), which was removed with no alias; passing
+it is now rejected as any unknown argument is. Its `percolator` and `gbdt` values named the
+classifier. Its third value, `simple`, was a bare per-file target-decoy competition ranked on
+`coelution_sum`, with no model and no PEP, that stamped one run-level FDR on every passing
+target's experiment-level q fields; it was deleted with `FdrMethod.Simple` and
+`PercolatorEngine.RunSimpleFdr`. `FdrMethod.Mokapot`, which nothing ever set, was deleted too:
+there is no Mokapot runner, no PIN-writing pre-competition, and no external subprocess in the
+C# port. See Divergences.
 
-`gbdt` reuses the **entire** Percolator scaffold documented below — feature
+### GBDT (`OSPREY_FDR_MODEL=gbdt`) - Experimental, C#-only, no Rust counterpart
+
+**Experimental.** GBDT is not expected to improve results with the current features, which
+were chosen for the linear SVM. It exists so that features we want to add later, which do not
+work well with a linear SVM - some were removed earlier for that reason - can be evaluated. It
+has to keep working: every first-pass path trains and scores it, and its tests stay in the
+standing suite.
+
+`gbdt` reuses the **entire** Percolator scaffold documented below - feature
 standardization, 3-fold peptide-grouped CV, semi-supervised positive-set iteration,
-cross-fold score calibration, PEP, and the four q-value levels — and swaps only the
+full-population scoring, PEP, and the four q-value levels - and swaps only the
 per-fold classifier: `GradientBoostedTrees` (`Osprey.ML/GradientBoostedTrees.cs`)
 instead of the linear SVM. It is a pure-managed second-order (Newton) boosting
 implementation with the XGBoost regularized objective (logistic loss, per-leaf L2/L1,
 min split gain, row/column subsampling, histogram split finding), made deterministic
-with `XorShift64` and single-threaded float accumulation.
+with `XorShift64` and single-threaded float accumulation. The default feature set was chosen
+for the SVM, so the default classifier stays the SVM. `GradientBoostedTrees` and `XorShift64`
+are also vendored by MARS (`maccoss/mars`, `dotnet/third_party/Osprey.ML`), so changes to them
+are changes to MARS's model.
 
 Two structural differences from the SVM path (`PercolatorTrainer.TrainFoldGbt`, `PercolatorTrainer.cs:906`): there is
 **no `GridSearchC`** (trees have no cost parameter), and iteration selection is
@@ -129,12 +150,70 @@ pick the most-overfit round, so the best iteration is chosen on a held-out inner
 (trees can't be weight-averaged). The default iteration cap is `OSPREY_GBT_MAX_ITERATIONS`
 = 30 (vs the SVM's fixed 10); hyperparameters are overridable via `OSPREY_GBT_*`
 (gamma / lambda / alpha / max-depth / n-trees / min-child-weight / learning-rate /
-subsample / colsample).
+subsample / colsample). Every `OSPREY_GBT_*` variable applies only under
+`OSPREY_FDR_MODEL=gbdt`; the SVM ignores them.
+
+**Every row is scored by the average of the fold models, training-subset rows included.**
+Every production path trains with `TrainOnly` (`PercolatorConfig.CloneForTrainOnly()`), and
+`PercolatorTrainer.RunPercolator` returns the fold models before its held-out scoring and
+Granholm calibration (`PercolatorTrainer.cs:264-289`), so 3f's held-out scoring and 3g's
+calibration below do not run in a production pass, for either classifier. The score pass then
+applies the fold average to every row, so a row that was in the training subset is scored by
+models that trained on it. For the high-bias linear SVM that in-sample gap is small; trees can
+fit their own training rows closely. On the default feature set, 3-file Stellar with generated
+decoys and entrapment (2026-09-25) measured a true FDP at a reported 1% experiment q of 0.95%
+for `percolator` and 1.27% for `gbdt` in the second pass (1.24% and 1.65% in the first). That
+is a baseline for feature work, not a verdict on either classifier.
+
+**Every first-pass path trains and scores the trees.** A default run takes the lean
+counts-only first pass (`PercolatorScorer.RunStreamingFirstPass`) for `gbdt` exactly as for
+the SVM, since both are the Percolator framework; the projection buffer and
+`OSPREY_FDR_PROJECTION=0` take the resident paths. All three hand the trainer the same
+`PercolatorConfig.CloneForTrainOnly()` copy and score through the same per-classifier code:
+the averaged weights for the SVM, the fold tree margins averaged per row for GBDT. On the lean
+first pass and the projection buffer (`ScoreProjectionAndComputeFdrInPlace`), trees score a
+whole file at a time in parallel (`--threads`), because a tree score depends only on its own
+row; the resident `FdrEntry` path (`ScorePopulationAndComputeFdr`, under
+`OSPREY_FDR_PROJECTION=0`) scores them serially, row by row. The SVM keeps its serial,
+parity-locked loop on every path. The lean path used to build its own training config without
+the classifier choice, so a default gbdt run (then `--fdr-method gbdt`) trained the linear SVM (at the tree
+iteration cap, ignoring `OSPREY_GBT_*`) and pass 2 froze that SVM.
+`FdrTest.TestStreamingFirstPassTrainsGbdt` pins the fix against the resident projection path,
+byte for byte.
+
+Under `--model-diagnostics` the tree paths also bin each scored row's standardized features,
+so the report's per-feature target/decoy distributions exist for trees as for the SVM. A tree
+ensemble has no coefficients, so the contribution table itself is marked not applicable
+(`FeatureContributions.IsTreeEnsemble`) and the report says so, rather than that the model
+was not retrained.
+
+The trained ensembles persist in `<stem>.1st-pass.model.json` (`FirstPassModelIO`, as
+`GbtModelData`, which round-trips exactly), so a resume, the Stage 6 per-file competition and
+a distributed `--task SecondPassFDR` node score with the same trees the first pass used. A
+tree model's file is about 3.4 MB, against a few hundred KB for the linear model, so it is
+serialized once and the same text written beside every input. A linear model's file is
+unchanged. The first pass writes the file whenever it TRAINS a model, not only when none was on
+disk, so Stage 6 and SecondPassFDR, which read whichever copy is there, never score with a
+stale model of the other classifier.
+
+The validity keys of FirstPassFDR, PerFileRescoring and SecondPassFDR carry the classifier
+(`;fdrmodel=gbdt`) and every tree setting that changes the model - the effective `GbtParams`,
+`OSPREY_GBT_MAX_ITERATIONS` and `OSPREY_GBT_INNER_FOLDS`
+(`PercolatorEngine.GbdtValidityKeySuffix`). The term is empty for the linear SVM, so no SVM
+directory is invalidated, and it stays out of the base key and `SearchParameterHash`, which
+must match Rust. It prevents adoption across arms: a percolator directory
+re-run as gbdt, a gbdt directory written before the lean first pass trained trees, and one
+`OSPREY_GBT_*` sweep point re-run as the next all recompute instead of reusing the other arm's
+results. A current model of the other classifier can therefore only reach a resume through a
+defect, and the refusals that remain are the backstop: the lean first pass throws before its
+ingest when handed one (`PercolatorScorer.RunStreamingFirstPass`), and the all-sidecars-current
+resume declines to enter at the compaction gate with one and recomputes
+(`FirstPassFdrTask.CompactionGateRefusals`).
 
 **This method has no Rust counterpart** — grepping the Rust crates for
 `gbdt`/`GradientBoost` returns nothing. It is a C# addition *beyond* the reference
-engine, so it carries no cross-impl parity claim; `--fdr-method percolator` remains the
-default and the parity-gated path.
+engine, so it carries no cross-impl parity claim; the linear SVM remains the default and the
+parity-gated path.
 
 ---
 
@@ -230,12 +309,17 @@ The selected per-fold C is reported on the console (`PercolatorTrainer.cs:622-62
 
 ### 3f. Score all entries
 
-Held-out CV entries are scored by their fold's model; entries outside the training subset
-are scored by the **average** of all fold models (`ScoreEntriesWithFoldModels`, `PercolatorTrainer.cs:433-490`). On the
-streaming path this is done by `ScorePopulationAndComputeFdr` /
-`ScoreProjectionAndComputeFdrInPlace`, which average the fold weights + bias and apply
-`standardizer` + averaged model to every entry, reloading features one file at a time
-(`PercolatorScorer.cs:63`, `PercolatorScorer.cs:276`).
+Only when `RunPercolator` is called without `TrainOnly` (unit tests and other direct
+callers) are held-out CV entries scored by their fold's model and entries outside the
+training subset by the **average** of all fold models (`ScoreEntriesWithFoldModels`,
+`PercolatorTrainer.cs:433-490`). Every production path trains with `TrainOnly`, which returns
+before that step (`PercolatorTrainer.cs:264-289`). The streaming score passes -
+`ScorePopulationAndComputeFdr`, `ScoreProjectionAndComputeFdrInPlace` and
+`RunStreamingFirstPass` - then apply `standardizer` + the fold average (the averaged weights +
+bias for the SVM, the fold margins averaged per row for trees) to **every** entry, the
+training-subset entries included, reloading features one file at a time
+(`PercolatorScorer.cs:63`, `PercolatorScorer.cs:272`). See "GBDT" above for what that
+in-sample scoring means for trees.
 
 #### Reading the feature-contribution table
 
@@ -254,6 +338,9 @@ It is headed "Model sanity check" and it is a **description, not feature importa
 - Percolator's 3-fold CV gives fold-to-fold weight stability for free; the importance
   and redundancy diagnostics built on that (fold stability, univariate AUROC, grouped
   contribution, permutation importance) are #4467 and #4550.
+- Under `OSPREY_FDR_MODEL=gbdt` there is no table: a tree ensemble has no weights to
+  decompose. The report lists each feature's target-decoy mean gap and its per-feature
+  distributions instead, and says the contribution table does not apply.
 
 ### 3g. Granholm score calibration between folds
 
@@ -261,6 +348,10 @@ It is headed "Model sanity check" and it is a **description, not feature importa
 scores per Granholm et al. (2012): the score at the FDR threshold maps to 0 and the median
 decoy score maps to -1, via `(score - thresholdScore) / (thresholdScore - medianDecoy)`
 (`PercolatorTrainer.cs:1303-1312`).
+
+Like 3f's held-out scoring, this runs only without `TrainOnly`. A production pass returns the
+fold models before it (`PercolatorTrainer.cs:264-289`), so the scores every production path
+ranks, competes and reports are the uncalibrated fold averages of 3f, for either classifier.
 
 ### 3h. Posterior error probability (PEP)
 
@@ -645,12 +736,12 @@ gap-fill run-count exclusion, issue #4511).
 ## Step 6 — Second pass (Stage 7)
 
 `Pass2FdrSidecar` / `SecondPassFdrTask` (`--task SecondPassFDR`) reload the reconciled
-`.scores.parquet` entries and re-run the identical Percolator core with `passLabel =
-"Second-pass"` (`Pass2FdrSidecar.cs:521`), writing per-file `.2nd-pass.fdr_scores.bin`
-sidecars so reruns can skip SVM training. Only `FdrMethod.Percolator` is supported in the
-SecondPassFDR second pass — any other method throws
-(`Pass2FdrSidecar.cs:530`). The second-pass q-values are authoritative for blib output;
-the best-of-runs clamp is re-applied afterward.
+`.scores.parquet` entries and apply the FROZEN first-pass model to them - there is no
+second-pass training in any mode (`FrozenModelScorer`; see
+[12-second-pass-fdr.md](12-second-pass-fdr.md)) - writing per-file `.2nd-pass.fdr_scores.bin`
+sidecars so reruns can skip the second pass. Both classifiers share it, since the frozen
+scorer applies whichever one the first pass trained. The second-pass q-values are
+authoritative for blib output; the best-of-runs clamp is re-applied afterward.
 
 ---
 
@@ -672,8 +763,8 @@ All defaults are from `Osprey.Core/OspreyConfig.cs` and `Osprey/OspreyCommandArg
 
 | Flag / field | Default | Effect on this stage |
 |--------------|---------|----------------------|
-| `--fdr-method {percolator\|gbdt\|simple}` | `percolator` (`OspreyConfig.cs:188`) | Selects the FDR engine. `gbdt` swaps a gradient-boosted-tree classifier into the Percolator framework (**C#-only**; `fasttree` is a deprecated alias). `mokapot` exists in the enum but is **not accepted** by the CLI (`OspreyCommandArgs.cs:120`). |
-| `OSPREY_GBT_MAX_ITERATIONS` / `OSPREY_GBT_*` | `30` / classifier defaults | Iteration cap and hyperparameters for `--fdr-method gbdt` (max-depth, n-trees, learning-rate, subsample, λ/α/γ, min-child-weight, inner folds). Ignored by the SVM path. |
+| `OSPREY_FDR_MODEL` | unset (linear SVM) | **Experimental** when set to `gbdt`. Selects the classifier inside the Percolator framework: unset, empty or `svm` = linear SVM; `gbdt` = gradient-boosted trees (**C#-only**). Any other value fails the run at startup. Replaced the removed `--fdr-method`. See [Step 2](#step-2--classifier-selection-osprey_fdr_model). |
+| `OSPREY_GBT_MAX_ITERATIONS` / `OSPREY_GBT_*` | `30` / classifier defaults | Iteration cap and hyperparameters for `OSPREY_FDR_MODEL=gbdt` (max-depth, n-trees, learning-rate, subsample, lambda/alpha/gamma, min-child-weight, inner folds). Apply only under gbdt; ignored by the SVM path. Under gbdt every one is part of the FirstPassFDR, PerFileRescoring and SecondPassFDR validity keys, so one sweep point is never adopted by the next. |
 | `--fdr-level {precursor\|peptide\|both}` | `precursor` (`OspreyConfig.cs:284`) | Which q-value gates reported output via `EffectiveRunQvalue`/`EffectiveExperimentQvalue`. `protein` is **not** a valid value (`OspreyCommandArgs.cs:138`). |
 | `--run-fdr <threshold>` | `0.01` (`OspreyConfig.cs:120`) | Run-level q-value threshold; also the Percolator `TrainFdr`/`TestFdr` (`PercolatorEngine.cs:302`). |
 | `--experiment-fdr <threshold>` | `0.01` (`OspreyConfig.cs:123`) | Experiment-level q-value threshold. |
@@ -708,12 +799,23 @@ calibration LDA, not Percolator.
   Rust doc says three FDR methods exist (native Percolator, external Mokapot via
   `pip install mokapot` + PIN files + subprocess, and Simple) and documents Mokapot's
   two-step `--save_models`/`--load_models`/`--aggregate` flow, ROC-AUC pre-competition,
-  and `--subset_max_train` memory logic. C# ships only the native Percolator and Simple:
-  `--fdr-method` accepts `percolator | simple`; the `FdrMethod.Mokapot` enum value is
-  never wired to the CLI and there is no MokapotRunner, no PIN round-trip on the default
-  path, and no Python dependency. Evidence: `Osprey/OspreyCommandArgs.cs:120`,
-  `Osprey.Core/OspreyConfig.cs:422`. Behavior/outputs of the retained engine match Rust.
-  Severity: info.
+  and `--subset_max_train` memory logic. C# ships only the native Percolator: the
+  never-reachable `FdrMethod.Mokapot` value and the Simple method were both deleted (#4543),
+  and there is no MokapotRunner, no PIN round-trip on the default path, and no Python
+  dependency. Evidence: `Osprey.Core/OspreyConfig.cs` (`FdrMethod` is `{Percolator, Gbdt}`).
+  Behavior/outputs of the retained engine match Rust. Severity: info.
+
+- **[INTENTIONAL-CSHARP-DESIGN] No `--fdr-method`; the classifier is `OSPREY_FDR_MODEL`,
+  and there is no Simple method** - Rust selects its FDR engine with
+  `--fdr-method {percolator|mokapot|simple}`. C# removed the argument, with no alias (#4543):
+  passing it fails as an unknown argument. The only choice left is the classifier inside
+  the Percolator framework, a developer lever, so it is the environment variable
+  `OSPREY_FDR_MODEL` (unset or `svm` = linear SVM, `gbdt` = experimental trees; anything
+  else fails at startup). Simple - Rust's bare target-decoy competition on one feature -
+  was deleted rather than ported: it was untested, never set PEP, and stamped a run-level
+  FDR on the experiment-level q fields. A Rust command line that passes `--fdr-method
+  percolator` must drop it to run under C#. Evidence: `Osprey/OspreyCommandArgs.cs`,
+  `Osprey.Core/OspreyEnvironment.cs` (`FdrModel`). Severity: info.
 
 - **[INTENTIONAL-CSHARP-DESIGN] No `FdrLevel::Protein`; `--fdr-level protein` is
   unreachable in C#** - Rust doc §"FDR Filtering Level" documents four modes
@@ -736,24 +838,15 @@ calibration LDA, not Percolator.
   cross-impl-corrupting bug. The Rust doc's "Peptide default" prose is stale relative to
   the Rust config. Evidence: `Osprey.Core/OspreyConfig.cs:284`. Severity: minor.
 
-- **[C#-ONLY ADDITION] `gbdt` FDR method exists only in C#** - The C# `FdrMethod`
-  enum is `{Percolator, Mokapot, Simple, Gbdt}` and `--fdr-method gbdt` (deprecated
-  alias `fasttree`) selects a gradient-boosted-tree classifier inside the Percolator
-  framework (`Osprey.ML/GradientBoostedTrees.cs`; see "GBDT FDR" above). **The Rust
+- **[C#-ONLY ADDITION] The `gbdt` classifier exists only in C#** - The C# `FdrMethod`
+  enum is `{Percolator, Gbdt}` and `OSPREY_FDR_MODEL=gbdt` selects an **experimental**
+  gradient-boosted-tree classifier inside the Percolator framework
+  (`Osprey.ML/GradientBoostedTrees.cs`; see "GBDT" above). **The Rust
   reference has no GBDT scorer** — grepping the Rust crates for `gbdt`/`GradientBoost`
   returns nothing — so this is a C# addition *beyond* the reference engine, not a port,
-  and carries no cross-impl parity claim. `--fdr-method percolator` remains the default
-  and the parity-gated path. Evidence: `Osprey.Core/OspreyConfig.cs:446-455`,
-  `Osprey/OspreyCommandArgs.cs:120`. Severity: info.
-
-- **[UNVERIFIED] Simple FDR scores on `coelution_sum`, not a ROC-AUC-selected best
-  feature** - Rust doc §"Simple FDR" says the method "applies target-decoy competition
-  directly on the best single feature (selected by ROC AUC)". The C# `RunSimpleFdr` scores
-  directly by `e.CoelutionSum` (PIN feature 0) with no ROC-AUC selection
-  (`PercolatorEngine.cs:359`). Whether the current Rust Simple path also just uses
-  `coelution_sum` (making the doc stale) or truly selects by ROC AUC was not confirmed
-  against Rust source. Simple is a non-default baseline method. Evidence:
-  `Osprey.FDR/PercolatorEngine.cs:350`. Severity: minor.
+  and carries no cross-impl parity claim. The linear SVM remains the default
+  and the parity-gated path. Evidence: `Osprey.Core/OspreyConfig.cs` (`FdrMethod`),
+  `Osprey.Core/OspreyEnvironment.cs` (`FdrModel`). Severity: info.
 
 - **[INTENTIONAL-CSHARP-DESIGN] Streaming-only, matching Rust's v26.7.0 change** - The
   Rust doc notes the direct (non-streaming) path was removed in v26.7.0 and Percolator

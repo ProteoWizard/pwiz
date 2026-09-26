@@ -1184,8 +1184,8 @@ namespace pwiz.Osprey.IO
         /// has a column for one (format v7, issue #4522). Not the 2nd pass, which this used to
         /// claim, and NOT a cost the ordinary pipeline pays: a default run takes the lean arm
         /// (<c>PerFileScoringTask.CanUseLeanProjection</c>), so reaching this read means the run
-        /// asked for the resident pool - <c>OSPREY_FDR_PROJECTION=0</c> or a non-Percolator
-        /// <c>FdrMethod</c> - or carries reconciled input. The STREAMING first pass needs none
+        /// asked for the resident pool - <c>OSPREY_FDR_PROJECTION=0</c> - or carries
+        /// reconciled input. The STREAMING first pass needs none
         /// of it: it already has each row's apex RT in hand from the same stream that produced
         /// its score, which is the point of putting the column in the sidecar at all.</para>
         /// </summary>
