@@ -35,7 +35,8 @@ namespace pwiz.CarafeSharp.IO
     /// PrecursorCharge, Tr_recalibrated (<c>%.2f</c>), ProteinID, Decoy, FragmentMz (Java
     /// <c>Float.toString</c> of the float32 m/z), RelativeIntensity (<c>%.4f</c>),
     /// FragmentType, FragmentNumber, FragmentCharge and FragmentLossType. Lines end in LF and
-    /// the file is UTF-8 without a byte-order mark, as Carafe writes it.
+    /// the file is UTF-8 without a byte-order mark, as Carafe writes it. The rows go to a
+    /// <see cref="PartialFile"/> that <see cref="Complete"/> moves over the final name.
     /// </summary>
     public sealed class CarafeLibraryTsvWriter : IDisposable
     {
@@ -45,11 +46,17 @@ namespace pwiz.CarafeSharp.IO
                                      "ProteinID\tDecoy\tFragmentMz\tRelativeIntensity\tFragmentType\tFragmentNumber\t" +
                                      "FragmentCharge\tFragmentLossType";
 
+        private readonly PartialFile _file;
         private readonly StreamWriter _writer;
 
+        /// <summary>
+        /// Starts the TSV that <see cref="Complete"/> writes to <paramref name="path"/>; until
+        /// then any file already there is left as it is.
+        /// </summary>
         public CarafeLibraryTsvWriter(string path)
         {
-            _writer = new StreamWriter(path, false, new UTF8Encoding(false), 1 << 20) { NewLine = "\n" };
+            _file = new PartialFile(path);
+            _writer = new StreamWriter(_file.PartialPath, false, new UTF8Encoding(false), 1 << 20) { NewLine = "\n" };
             _writer.Write(HEADER + "\n");
         }
 
@@ -90,9 +97,18 @@ namespace pwiz.CarafeSharp.IO
             _writer.Write(rows);
         }
 
+        /// <summary>Closes the TSV and moves it over the final name, replacing any file there.</summary>
+        public void Complete()
+        {
+            _writer.Dispose();
+            _file.Commit();
+        }
+
+        /// <summary>Closes the TSV; without <see cref="Complete"/>, deletes it and leaves the final name as it was.</summary>
         public void Dispose()
         {
             _writer.Dispose();
+            _file.Discard();
         }
     }
 }

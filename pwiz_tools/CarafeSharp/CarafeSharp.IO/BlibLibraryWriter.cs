@@ -90,7 +90,7 @@ namespace pwiz.CarafeSharp.IO
 
         private static readonly string[] ION_MOBILITY_TYPES = { @"none", @"driftTime(msec)", @"inverseK0(Vsec/cm^2)", @"compensation(V)" };
 
-        private readonly string _path;
+        private readonly PartialFile _file;
         private readonly Dictionary<string, long> _proteinIds = new Dictionary<string, long>(StringComparer.Ordinal);
         private SQLiteConnection _connection;
         private SQLiteCommand _insertSpectrum;
@@ -101,24 +101,31 @@ namespace pwiz.CarafeSharp.IO
         private SQLiteCommand _insertSpectrumProtein;
         private SQLiteCommand _insertRetentionTime;
         private int _spectrumCount;
-        private bool _completed;
 
         /// <summary>
-        /// Creates <paramref name="path"/>, replacing any file there, with one source file
-        /// named <paramref name="sourceFileName"/> (Carafe uses the library file name without
-        /// its extension).
+        /// Starts the library that <see cref="Complete"/> writes to <paramref name="path"/>, with
+        /// one source file named <paramref name="sourceFileName"/> (Carafe uses the library file
+        /// name without its extension). It is written to a <see cref="PartialFile"/>, so until
+        /// then any library already at <paramref name="path"/> is left as it is.
         /// </summary>
         public BlibLibraryWriter(string path, string sourceFileName)
         {
-            _path = path;
-            if (File.Exists(path))
-                File.Delete(path);
-            _connection = new SQLiteConnection(@"Data Source=" + path + @";Version=3;");
-            _connection.Open();
-            Execute(@"PRAGMA synchronous=OFF");
-            Execute(@"PRAGMA journal_mode=MEMORY");
-            CreateSchema(sourceFileName);
-            PrepareStatements();
+            _file = new PartialFile(path);
+            try
+            {
+                var connectionString = new SQLiteConnectionStringBuilder { DataSource = _file.PartialPath, Version = 3 };
+                _connection = new SQLiteConnection(connectionString.ToString());
+                _connection.Open();
+                Execute(@"PRAGMA synchronous=OFF");
+                Execute(@"PRAGMA journal_mode=MEMORY");
+                CreateSchema(sourceFileName);
+                PrepareStatements();
+            }
+            catch
+            {
+                Dispose();
+                throw;
+            }
         }
 
         /// <summary>RefSpectra rows written so far; the next spectrum gets this plus one as its id.</summary>
@@ -177,7 +184,10 @@ namespace pwiz.CarafeSharp.IO
             }
         }
 
-        /// <summary>Records the spectrum count, adds BiblioSpec's indexes, and closes the file.</summary>
+        /// <summary>
+        /// Records the spectrum count, adds BiblioSpec's indexes, closes the file and moves it
+        /// over the final name, replacing any library there.
+        /// </summary>
         public void Complete()
         {
             using (var update = new SQLiteCommand(@"UPDATE LibInfo SET numSpecs = @count", _connection))
@@ -194,8 +204,8 @@ namespace pwiz.CarafeSharp.IO
             Execute(@"CREATE INDEX idxRefIdProteins ON RefSpectraProteins (RefSpectraId)");
             Execute(@"CREATE INDEX idxRefIdModifications ON Modifications (RefSpectraID)");
             Execute(@"CREATE INDEX idxRefIdRetentionTimes ON RetentionTimes (RefSpectraID)");
-            _completed = true;
-            Dispose();
+            CloseConnection();
+            _file.Commit();
         }
 
         /// <summary>
@@ -237,7 +247,14 @@ namespace pwiz.CarafeSharp.IO
             }
         }
 
+        /// <summary>Closes the file; without <see cref="Complete"/>, deletes it and leaves the final name as it was.</summary>
         public void Dispose()
+        {
+            CloseConnection();
+            _file.Discard();
+        }
+
+        private void CloseConnection()
         {
             _insertSpectrum?.Dispose();
             _insertPeaks?.Dispose();
@@ -248,13 +265,8 @@ namespace pwiz.CarafeSharp.IO
             _insertRetentionTime?.Dispose();
             _insertSpectrum = _insertPeaks = _insertAnnotation = _insertModification = null;
             _insertProtein = _insertSpectrumProtein = _insertRetentionTime = null;
-            if (_connection != null)
-            {
-                _connection.Dispose();
-                _connection = null;
-                if (!_completed && File.Exists(_path))
-                    File.Delete(_path);
-            }
+            _connection?.Dispose();
+            _connection = null;
         }
 
         private void InsertSpectrum(int id, LibrarySpectrum spectrum, byte[] mzBlob, byte[] intensityBlob)
@@ -354,7 +366,7 @@ namespace pwiz.CarafeSharp.IO
             {
                 using (var info = new SQLiteCommand(@"INSERT INTO LibInfo VALUES (@lsid, @time, 0, @major, @minor)", _connection))
                 {
-                    info.Parameters.AddWithValue(@"@lsid", @"urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:nr:" + Path.GetFileName(_path));
+                    info.Parameters.AddWithValue(@"@lsid", @"urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:nr:" + Path.GetFileName(_file.FinalPath));
                     // ctime() format, as BiblioSpec and Carafe write it.
                     info.Parameters.AddWithValue(@"@time", DateTime.Now.ToString(@"ddd MMM dd HH:mm:ss yyyy", CultureInfo.InvariantCulture));
                     info.Parameters.AddWithValue(@"@major", MAJOR_VERSION);

@@ -20,10 +20,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Core;
+using pwiz.CarafeSharp.Models;
+using pwiz.CarafeSharp.Models.Modules;
 using pwiz.CarafeSharp.Proteome;
+using static TorchSharp.torch;
 
 namespace pwiz.CarafeSharp.Test
 {
@@ -166,6 +171,46 @@ namespace pwiz.CarafeSharp.Test
             }
         }
 
+        /// <summary>
+        /// Library prediction end to end from a model folder of randomly initialized models, so
+        /// it needs no pretrained weights.
+        /// </summary>
+        [TestMethod]
+        public void TestLibraryGenerator()
+        {
+            string folder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"Generator_" + Guid.NewGuid().ToString(@"N"));
+            string models = Path.Combine(folder, @"models");
+            Directory.CreateDirectory(models);
+            try
+            {
+                WriteRandomModels(models);
+                string fasta = Path.Combine(folder, @"proteins.fasta");
+                File.WriteAllText(fasta, ">sp|P1|A\nMPEPTIDEKSAMPLERLVNELTEFAK\n");
+                var settings = new LibrarySettings
+                {
+                    Database = fasta,
+                    OutputDirectory = Path.Combine(folder, @"out"),
+                    ModelDirectory = models,
+                    LibraryFormat = LibraryOutputs.BLIB_FORMAT,
+                    Device = TorchDevice.CPU,
+                    RtMax = 30,
+                    MinFragments = 1,
+                    // A pairing manifest that cannot be read: Carafe logs the failure and keeps the library.
+                    PairingManifest = models,
+                };
+                var log = new StringWriter();
+                var generator = new LibraryGenerator(settings, log);
+                generator.Run();
+                Assert.IsTrue(generator.SpectrumCount > 0, log.ToString());
+                CollectionAssert.AreEqual(new[] { generator.BlibPath }, Directory.GetFiles(settings.OutputDirectory));
+            }
+            finally
+            {
+                SQLiteConnection.ClearAllPools();
+                Directory.Delete(folder, true);
+            }
+        }
+
         [TestMethod]
         public void TestDecoyPairPlanner()
         {
@@ -198,6 +243,17 @@ namespace pwiz.CarafeSharp.Test
             CollectionAssert.AreEqual(new[] { false, true, false, true, false, true }, rows.Select(r => r.IsDecoy).ToArray());
             CollectionAssert.AreEqual(new[] { null, @"reverse", null, @"reverse", null, @"reverse" }, rows.Select(r => r.Method).ToArray());
             Assert.IsFalse(rows.Any(r => r.IsEntrapment));
+        }
+
+        /// <summary>Randomly initialized MS2 and RT models, with metrics that say to use the MS2 one.</summary>
+        private static void WriteRandomModels(string folder)
+        {
+            manual_seed(1);
+            using (var ms2 = new ModelMs2Bert())
+                StateDict.WriteSafetensors(ms2, Path.Combine(folder, ModelFiles.MS2_SAFETENSORS));
+            using (var rt = new ModelRtLstmCnn())
+                StateDict.WriteSafetensors(rt, Path.Combine(folder, ModelFiles.RT_SAFETENSORS));
+            File.WriteAllText(Path.Combine(folder, ModelFiles.METRICS), "{\"ms2\":{\"use_finetuned_for_prediction\":true}}");
         }
 
         private static void AssertOutputs(string format, bool fast, bool tsv, bool blib, ModifiedPeptideStyle style)

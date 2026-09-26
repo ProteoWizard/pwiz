@@ -171,7 +171,10 @@ namespace pwiz.CarafeSharp
                     Log(@"The spectral library is saved to " + BlibPath);
                 }
                 if (tsv != null)
+                {
+                    tsv.Complete();
                     Log(@"The spectral library is saved to " + TsvPath);
+                }
             }
         }
 
@@ -237,9 +240,9 @@ namespace pwiz.CarafeSharp
                         @"where Carafe stops on a primary-key error", skipped));
                 }
             }
-            catch (IOException e)
+            catch (Exception e)
             {
-                // Carafe logs a DecoyPairs failure and keeps the library.
+                // Carafe catches any DecoyPairs failure, logs it and keeps the library.
                 Log(@"Failed to write DecoyPairs table: " + e.Message);
             }
         }

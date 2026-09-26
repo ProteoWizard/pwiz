@@ -44,7 +44,8 @@ namespace pwiz.CarafeSharp.Test
         [TestMethod]
         public void TestBlibRoundTrip()
         {
-            string folder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"Blib_" + Guid.NewGuid().ToString(@"N"));
+            // A ';' in the path must not end the connection string early.
+            string folder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"Blib;" + Guid.NewGuid().ToString(@"N"));
             Directory.CreateDirectory(folder);
             string path = Path.Combine(folder, BlibLibraryWriter.FILE_NAME);
             try
@@ -62,6 +63,17 @@ namespace pwiz.CarafeSharp.Test
                     writer.Complete();
                 }
                 VerifyLibrary(path, spectra);
+                CollectionAssert.AreEqual(new[] { path }, Directory.GetFiles(folder));
+
+                // A run that stops before Complete leaves the previous library as it was, and
+                // the library is readable while the next one is being written.
+                using (var writer = new BlibLibraryWriter(path, @"carafe_spectral_library"))
+                {
+                    writer.WriteBatch(spectra.Take(1).ToList());
+                    VerifyLibrary(path, spectra);
+                }
+                VerifyLibrary(path, spectra);
+                CollectionAssert.AreEqual(new[] { path }, Directory.GetFiles(folder));
             }
             finally
             {
@@ -81,6 +93,34 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(expectedPrefix + "400.25\t1.0000\ty\t3\t1\tnoloss", rows[0]);
             Assert.AreEqual(expectedPrefix + "250.125\t0.5000\tb\t2\t1\tnoloss", rows[1]);
             Assert.AreEqual(13, CarafeLibraryTsvWriter.HEADER.Split('\t').Length);
+
+            string folder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"Tsv_" + Guid.NewGuid().ToString(@"N"));
+            Directory.CreateDirectory(folder);
+            string path = Path.Combine(folder, CarafeLibraryTsvWriter.FILE_NAME);
+            try
+            {
+                using (var writer = new CarafeLibraryTsvWriter(path))
+                {
+                    writer.Write(spectrum);
+                    writer.Complete();
+                }
+                string expected = CarafeLibraryTsvWriter.HEADER + "\n" + CarafeLibraryTsvWriter.FormatRows(spectrum);
+                Assert.AreEqual(expected, File.ReadAllText(path));
+                CollectionAssert.AreEqual(new[] { path }, Directory.GetFiles(folder));
+
+                // A run that stops before Complete leaves the previous TSV as it was.
+                using (var writer = new CarafeLibraryTsvWriter(path))
+                {
+                    writer.Write(CreateSpectra()[1]);
+                    Assert.AreEqual(expected, File.ReadAllText(path));
+                }
+                Assert.AreEqual(expected, File.ReadAllText(path));
+                CollectionAssert.AreEqual(new[] { path }, Directory.GetFiles(folder));
+            }
+            finally
+            {
+                Directory.Delete(folder, true);
+            }
         }
 
         private static List<LibrarySpectrum> CreateSpectra()
@@ -128,7 +168,7 @@ namespace pwiz.CarafeSharp.Test
 
         private static void VerifyLibrary(string path, List<LibrarySpectrum> spectra)
         {
-            using (var connection = new SQLiteConnection(@"Data Source=" + path + @";Read Only=True;"))
+            using (var connection = new SQLiteConnection(new SQLiteConnectionStringBuilder { DataSource = path, ReadOnly = true }.ToString()))
             {
                 connection.Open();
                 var tables = Column<string>(connection, @"SELECT name FROM sqlite_master WHERE type='table'");
