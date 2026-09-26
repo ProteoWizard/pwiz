@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.Models;
@@ -47,6 +48,9 @@ namespace pwiz.CarafeSharp.Test
             @"-miss_c 1 -fixMod 1 -varMod 0 -maxVar 1 -clip_n_m -minLength 7 -maxLength 35 -min_pep_mz 400 -max_pep_mz 900 " +
             @"-min_pep_charge 2 -max_pep_charge 3 -lf_frag_mz_min 200 -lf_frag_mz_max 1960 -lf_top_n_frag 20 -lf_min_n_frag 2 " +
             @"-lf_frag_n_min 2 -lf_type DIA-NN -se Osprey -decoy_prefix decoy_ -nm -nf 4 -min_n 4 -valid -na 0 -ez -fast";
+
+        /// <summary>How long a test hook waits for another thread before the test fails.</summary>
+        private static readonly TimeSpan HOOK_TIMEOUT = TimeSpan.FromMinutes(1);
 
         public TestContext TestContext { get; set; }
 
@@ -284,6 +288,112 @@ namespace pwiz.CarafeSharp.Test
             }
         }
 
+        /// <summary>
+        /// The library writer thread: it writes every chunk in order, a writing failure stops
+        /// prediction and fails the run, a prediction failure stops the writer, and a failed
+        /// run leaves the previous library as it was.
+        /// </summary>
+        [TestMethod]
+        public void TestLibraryWriterThread()
+        {
+            string folder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"Writer_" + Guid.NewGuid().ToString(@"N"));
+            string models = Path.Combine(folder, @"models");
+            Directory.CreateDirectory(models);
+            try
+            {
+                WriteRandomModels(models);
+                string fasta = Path.Combine(folder, @"proteins.fasta");
+                File.WriteAllText(fasta, ">sp|P1|A\nMPEPTIDEKSAMPLERLVNELTEFAK\n");
+                var settings = new LibrarySettings
+                {
+                    Database = fasta,
+                    OutputDirectory = Path.Combine(folder, @"out"),
+                    ModelDirectory = models,
+                    PreferSafetensors = true,
+                    LibraryFormat = @"DIA-NN," + LibraryOutputs.BLIB_FORMAT,
+                    Device = TorchDevice.CPU,
+                    RtMax = 30,
+                    MinFragments = 1,
+                    // One peptidoform per batch, so each is a chunk of its own.
+                    PeptidesPerBatch = 1,
+                };
+
+                // Every chunk is written, in order, on one thread that is not the predicting one.
+                var generator = new LibraryGenerator(settings, null);
+                var writtenChunks = new List<int>();
+                var writerThreads = new HashSet<Thread>();
+                generator.BeforeWriteChunk = chunk =>
+                {
+                    writtenChunks.Add(chunk);
+                    writerThreads.Add(Thread.CurrentThread);
+                };
+                generator.Run();
+                int chunkCount = writtenChunks.Count;
+                Assert.IsTrue(chunkCount > LibraryChunkWriter.QUEUE_CAPACITY + 2, chunkCount.ToString());
+                CollectionAssert.AreEqual(Enumerable.Range(0, chunkCount).ToArray(), writtenChunks.ToArray());
+                Assert.AreEqual(1, writerThreads.Count);
+                Assert.AreNotSame(Thread.CurrentThread, writerThreads.Single());
+                Assert.IsTrue(generator.SpectrumCount > 0);
+                byte[] previousBlib = File.ReadAllBytes(generator.BlibPath);
+                string previousTsv = File.ReadAllText(generator.TsvPath);
+
+                // The writer fails while prediction waits for room in the queue: nothing more is
+                // predicted, and the run throws the writer's exception.
+                var writeFailure = new IOException(@"Test writing failure");
+                var predictedChunks = new List<int>();
+                using var queueFull = new ManualResetEventSlim();
+                var writerFails = new LibraryGenerator(settings, null)
+                {
+                    BeforePredictChunk = chunk =>
+                    {
+                        predictedChunks.Add(chunk);
+                        // Chunk 0 is being written, the next fills the queue, so this one must wait.
+                        if (chunk == LibraryChunkWriter.QUEUE_CAPACITY + 1)
+                            queueFull.Set();
+                    },
+                    BeforeWriteChunk = chunk =>
+                    {
+                        Assert.IsTrue(queueFull.Wait(HOOK_TIMEOUT));
+                        throw writeFailure;
+                    },
+                };
+                Assert.AreSame(writeFailure, Assert.ThrowsException<IOException>(() => writerFails.Run()));
+                CollectionAssert.AreEqual(Enumerable.Range(0, LibraryChunkWriter.QUEUE_CAPACITY + 2).ToArray(), predictedChunks.ToArray());
+                AssertPreviousLibrary(generator, settings.OutputDirectory, previousBlib, previousTsv);
+
+                // Prediction fails while a chunk is being written: the writer thread is stopped
+                // and has ended when the run throws the prediction's exception.
+                var predictionFailure = new InvalidOperationException(@"Test prediction failure");
+                Thread writerThread = null;
+                using var writing = new ManualResetEventSlim();
+                var predictionFails = new LibraryGenerator(settings, null)
+                {
+                    BeforeWriteChunk = chunk =>
+                    {
+                        writerThread = Thread.CurrentThread;
+                        writing.Set();
+                    },
+                    BeforePredictChunk = chunk =>
+                    {
+                        if (chunk == 1)
+                        {
+                            Assert.IsTrue(writing.Wait(HOOK_TIMEOUT));
+                            throw predictionFailure;
+                        }
+                    },
+                };
+                Assert.AreSame(predictionFailure, Assert.ThrowsException<InvalidOperationException>(() => predictionFails.Run()));
+                Assert.IsNotNull(writerThread);
+                Assert.IsFalse(writerThread.IsAlive);
+                AssertPreviousLibrary(generator, settings.OutputDirectory, previousBlib, previousTsv);
+            }
+            finally
+            {
+                SQLiteConnection.ClearAllPools();
+                Directory.Delete(folder, true);
+            }
+        }
+
         [TestMethod]
         public void TestDecoyPairPlanner()
         {
@@ -327,6 +437,14 @@ namespace pwiz.CarafeSharp.Test
             using (var rt = new ModelRtLstmCnn())
                 StateDict.WriteSafetensors(rt, Path.Combine(folder, ModelFiles.RT_SAFETENSORS));
             File.WriteAllText(Path.Combine(folder, ModelFiles.METRICS), "{\"ms2\":{\"use_finetuned_for_prediction\":true}}");
+        }
+
+        /// <summary>The library <paramref name="previous"/> wrote is as it was, with no partial file beside it.</summary>
+        private static void AssertPreviousLibrary(LibraryGenerator previous, string outputDirectory, byte[] blib, string tsv)
+        {
+            CollectionAssert.AreEquivalent(new[] { previous.BlibPath, previous.TsvPath }, Directory.GetFiles(outputDirectory));
+            CollectionAssert.AreEqual(blib, File.ReadAllBytes(previous.BlibPath));
+            Assert.AreEqual(tsv, File.ReadAllText(previous.TsvPath));
         }
 
         private static void AssertOutputs(string format, bool fast, bool tsv, bool blib, ModifiedPeptideStyle style)

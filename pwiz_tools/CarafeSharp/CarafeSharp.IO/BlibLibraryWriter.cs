@@ -27,6 +27,7 @@ using System.Data;
 using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using pwiz.CarafeSharp.Core;
 
@@ -60,6 +61,19 @@ namespace pwiz.CarafeSharp.IO
         /// <summary>SpectrumSourceFiles.workflowType: 1 is DIA, the use these libraries are built for.</summary>
         public const int WORKFLOW_TYPE_DIA = 1;
 
+        /// <summary>
+        /// The peak count up to which a spectrum's annotations go in one INSERT by default:
+        /// Carafe's default top-N fragments (<c>-lf_top_n_frag</c>).
+        /// </summary>
+        public const int DEFAULT_PEAKS_PER_INSERT = 20;
+
+        /// <summary>
+        /// The most annotation rows one INSERT takes. Each row binds 5 variables and the spectrum
+        /// id 1 more, so 100 rows bind 501: under 999, SQLite's SQLITE_MAX_VARIABLE_NUMBER before
+        /// 3.32, let alone the 32766 of the SQLite 3.46.1 in System.Data.SQLite 1.0.119.
+        /// </summary>
+        public const int MAX_PEAKS_PER_INSERT = 100;
+
         private const int SOURCE_FILE_ID = 1;
 
         /// <summary>BiblioSpec's ScoreTypes rows, as Osprey writes them.</summary>
@@ -92,14 +106,15 @@ namespace pwiz.CarafeSharp.IO
 
         private readonly PartialFile _file;
         private readonly Dictionary<string, long> _proteinIds = new Dictionary<string, long>(StringComparer.Ordinal);
+        // The INSERT of n annotation rows at index n, prepared when first needed.
+        private readonly AnnotationInsert[] _insertAnnotations;
         private SQLiteConnection _connection;
-        private SQLiteCommand _insertSpectrum;
-        private SQLiteCommand _insertPeaks;
-        private SQLiteCommand _insertAnnotation;
-        private SQLiteCommand _insertModification;
-        private SQLiteCommand _insertProtein;
-        private SQLiteCommand _insertSpectrumProtein;
-        private SQLiteCommand _insertRetentionTime;
+        private PreparedInsert _insertSpectrum;
+        private PreparedInsert _insertPeaks;
+        private PreparedInsert _insertModification;
+        private PreparedInsert _insertProtein;
+        private PreparedInsert _insertSpectrumProtein;
+        private PreparedInsert _insertRetentionTime;
         private int _spectrumCount;
 
         /// <summary>
@@ -108,8 +123,16 @@ namespace pwiz.CarafeSharp.IO
         /// name without its extension). It is written to a <see cref="PartialFile"/>, so until
         /// then any library already at <paramref name="path"/> is left as it is.
         /// </summary>
-        public BlibLibraryWriter(string path, string sourceFileName)
+        /// <param name="path">The library to write.</param>
+        /// <param name="sourceFileName">The name of its one source file.</param>
+        /// <param name="peaksPerInsert">
+        /// The peak count up to which a spectrum's annotations go in one INSERT, normally the
+        /// library's top-N fragments; a spectrum with more peaks takes several. Kept within 1 and
+        /// <see cref="MAX_PEAKS_PER_INSERT"/>.
+        /// </param>
+        public BlibLibraryWriter(string path, string sourceFileName, int peaksPerInsert = DEFAULT_PEAKS_PER_INSERT)
         {
+            _insertAnnotations = new AnnotationInsert[Math.Max(1, Math.Min(MAX_PEAKS_PER_INSERT, peaksPerInsert)) + 1];
             _file = new PartialFile(path);
             try
             {
@@ -258,52 +281,30 @@ namespace pwiz.CarafeSharp.IO
         {
             _insertSpectrum?.Dispose();
             _insertPeaks?.Dispose();
-            _insertAnnotation?.Dispose();
             _insertModification?.Dispose();
             _insertProtein?.Dispose();
             _insertSpectrumProtein?.Dispose();
             _insertRetentionTime?.Dispose();
-            _insertSpectrum = _insertPeaks = _insertAnnotation = _insertModification = null;
+            _insertSpectrum = _insertPeaks = _insertModification = null;
             _insertProtein = _insertSpectrumProtein = _insertRetentionTime = null;
+            for (int i = 0; i < _insertAnnotations.Length; i++)
+            {
+                _insertAnnotations[i]?.Dispose();
+                _insertAnnotations[i] = null;
+            }
             _connection?.Dispose();
             _connection = null;
         }
 
         private void InsertSpectrum(int id, LibrarySpectrum spectrum, byte[] mzBlob, byte[] intensityBlob)
         {
-            Set(_insertSpectrum, @"@id", id);
-            Set(_insertSpectrum, @"@seq", spectrum.Sequence);
-            Set(_insertSpectrum, @"@mz", spectrum.PrecursorMz);
-            Set(_insertSpectrum, @"@charge", spectrum.Charge);
-            Set(_insertSpectrum, @"@modseq", spectrum.SkylineModifiedSequence ?? spectrum.Sequence);
-            Set(_insertSpectrum, @"@numPeaks", spectrum.Fragments.Count);
-            Set(_insertSpectrum, @"@rt", spectrum.RetentionTime);
-            _insertSpectrum.ExecuteNonQuery();
-
-            Set(_insertPeaks, @"@id", id);
-            Set(_insertPeaks, @"@mz", mzBlob);
-            Set(_insertPeaks, @"@intensity", intensityBlob);
-            _insertPeaks.ExecuteNonQuery();
-
-            for (int i = 0; i < spectrum.Fragments.Count; i++)
-            {
-                var fragment = spectrum.Fragments[i];
-                Set(_insertAnnotation, @"@id", id);
-                Set(_insertAnnotation, @"@index", i);
-                Set(_insertAnnotation, @"@name", AnnotationName(fragment));
-                Set(_insertAnnotation, @"@charge", fragment.Charge);
-                Set(_insertAnnotation, @"@theoretical", fragment.TheoreticalMz);
-                Set(_insertAnnotation, @"@observed", (double)fragment.Mz);
-                _insertAnnotation.ExecuteNonQuery();
-            }
+            _insertSpectrum.Execute(id, spectrum.Sequence, spectrum.PrecursorMz, spectrum.Charge,
+                spectrum.SkylineModifiedSequence ?? spectrum.Sequence, spectrum.Fragments.Count, spectrum.RetentionTime);
+            _insertPeaks.Execute(id, mzBlob, intensityBlob);
+            InsertAnnotations(id, spectrum.Fragments);
 
             foreach (var modification in spectrum.SkylineModifications)
-            {
-                Set(_insertModification, @"@id", id);
-                Set(_insertModification, @"@position", modification.Position);
-                Set(_insertModification, @"@mass", modification.Mass);
-                _insertModification.ExecuteNonQuery();
-            }
+                _insertModification.Execute(id, modification.Position, modification.Mass);
 
             if (spectrum.ProteinId != LibrarySpectrum.NO_PROTEIN)
             {
@@ -311,15 +312,26 @@ namespace pwiz.CarafeSharp.IO
                 {
                     if (accession.Length == 0)
                         continue;
-                    Set(_insertSpectrumProtein, @"@id", id);
-                    Set(_insertSpectrumProtein, @"@protein", GetProteinId(accession));
-                    _insertSpectrumProtein.ExecuteNonQuery();
+                    _insertSpectrumProtein.Execute(id, GetProteinId(accession));
                 }
             }
 
-            Set(_insertRetentionTime, @"@id", id);
-            Set(_insertRetentionTime, @"@rt", spectrum.RetentionTime);
-            _insertRetentionTime.ExecuteNonQuery();
+            _insertRetentionTime.Execute(id, spectrum.RetentionTime);
+        }
+
+        /// <summary>
+        /// One annotation row per peak, in peak order, as few INSERTs as the cached statement
+        /// sizes allow: one for a spectrum of up to the top-N peaks.
+        /// </summary>
+        private void InsertAnnotations(int id, IReadOnlyList<LibraryFragment> fragments)
+        {
+            int maxRows = _insertAnnotations.Length - 1;
+            for (int start = 0; start < fragments.Count; start += maxRows)
+            {
+                int rows = Math.Min(maxRows, fragments.Count - start);
+                var insert = _insertAnnotations[rows] ??= new AnnotationInsert(_connection, rows);
+                insert.Execute(id, fragments, start);
+            }
         }
 
         private long GetProteinId(string accession)
@@ -327,9 +339,7 @@ namespace pwiz.CarafeSharp.IO
             if (_proteinIds.TryGetValue(accession, out long proteinId))
                 return proteinId;
             proteinId = _proteinIds.Count + 1;
-            Set(_insertProtein, @"@id", proteinId);
-            Set(_insertProtein, @"@accession", accession);
-            _insertProtein.ExecuteNonQuery();
+            _insertProtein.Execute(proteinId, accession);
             _proteinIds.Add(accession, proteinId);
             return proteinId;
         }
@@ -412,17 +422,12 @@ namespace pwiz.CarafeSharp.IO
                                       @"inchiKey, otherKeys, fileID, SpecIDinFile, score, scoreType) VALUES (@id, @seq, @mz, @charge, @modseq, " +
                                       @"'-', '-', 1, @numPeaks, NULL, NULL, NULL, 0, @rt, NULL, NULL, NULL, '', '', '', '', '', " +
                                       @"@file, NULL, 0, @scoreType)",
-                new[] { @"@id", @"@seq", @"@mz", @"@charge", @"@modseq", @"@numPeaks", @"@rt", @"@file", @"@scoreType" },
-                new[] { DbType.Int64, DbType.String, DbType.Double, DbType.Int32, DbType.String, DbType.Int32, DbType.Double, DbType.Int32, DbType.Int32 });
-            Set(_insertSpectrum, @"@file", SOURCE_FILE_ID);
-            Set(_insertSpectrum, @"@scoreType", SCORE_TYPE_UNKNOWN);
+                new[] { @"@id", @"@seq", @"@mz", @"@charge", @"@modseq", @"@numPeaks", @"@rt" },
+                new[] { DbType.Int64, DbType.String, DbType.Double, DbType.Int32, DbType.String, DbType.Int32, DbType.Double });
+            _insertSpectrum.AddConstant(@"@file", DbType.Int32, SOURCE_FILE_ID);
+            _insertSpectrum.AddConstant(@"@scoreType", DbType.Int32, SCORE_TYPE_UNKNOWN);
             _insertPeaks = Prepare(@"INSERT INTO RefSpectraPeaks (RefSpectraID, peakMZ, peakIntensity) VALUES (@id, @mz, @intensity)",
                 new[] { @"@id", @"@mz", @"@intensity" }, new[] { DbType.Int64, DbType.Binary, DbType.Binary });
-            _insertAnnotation = Prepare(@"INSERT INTO RefSpectraPeakAnnotations (RefSpectraID, peakIndex, name, formula, inchiKey, otherKeys, " +
-                                        @"charge, adduct, comment, mzTheoretical, mzObserved) VALUES (@id, @index, @name, '', '', '', @charge, '', '', " +
-                                        @"@theoretical, @observed)",
-                new[] { @"@id", @"@index", @"@name", @"@charge", @"@theoretical", @"@observed" },
-                new[] { DbType.Int64, DbType.Int32, DbType.String, DbType.Int32, DbType.Double, DbType.Double });
             _insertModification = Prepare(@"INSERT INTO Modifications (RefSpectraID, position, mass) VALUES (@id, @position, @mass)",
                 new[] { @"@id", @"@position", @"@mass" }, new[] { DbType.Int64, DbType.Int32, DbType.Double });
             _insertProtein = Prepare(@"INSERT INTO Proteins (id, accession) VALUES (@id, @accession)",
@@ -433,22 +438,13 @@ namespace pwiz.CarafeSharp.IO
             _insertRetentionTime = Prepare(@"INSERT INTO RetentionTimes (RefSpectraID, RedundantRefSpectraID, SpectrumSourceID, ionMobility, " +
                                            @"collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType, retentionTime, startTime, " +
                                            @"endTime, score, bestSpectrum) VALUES (@id, 0, @file, NULL, NULL, NULL, 0, @rt, NULL, NULL, 0, 1)",
-                new[] { @"@id", @"@rt", @"@file" }, new[] { DbType.Int64, DbType.Double, DbType.Int32 });
-            Set(_insertRetentionTime, @"@file", SOURCE_FILE_ID);
+                new[] { @"@id", @"@rt" }, new[] { DbType.Int64, DbType.Double });
+            _insertRetentionTime.AddConstant(@"@file", DbType.Int32, SOURCE_FILE_ID);
         }
 
-        private SQLiteCommand Prepare(string sql, string[] names, DbType[] types)
+        private PreparedInsert Prepare(string sql, string[] names, DbType[] types)
         {
-            var command = new SQLiteCommand(sql, _connection);
-            for (int i = 0; i < names.Length; i++)
-                command.Parameters.Add(names[i], types[i]);
-            command.Prepare();
-            return command;
-        }
-
-        private static void Set(SQLiteCommand command, string name, object value)
-        {
-            command.Parameters[name].Value = value;
+            return new PreparedInsert(_connection, sql, names, types);
         }
 
         private void Execute(string sql)
@@ -485,6 +481,115 @@ namespace pwiz.CarafeSharp.IO
             var bytes = new byte[values.Length * sizeof(float)];
             Buffer.BlockCopy(values, 0, bytes, 0, bytes.Length);
             return bytes;
+        }
+
+        /// <summary>
+        /// A prepared single-row INSERT whose parameters are set by position, without the name
+        /// lookup of <see cref="SQLiteParameterCollection"/>, plus constants set once.
+        /// </summary>
+        private sealed class PreparedInsert : IDisposable
+        {
+            private readonly SQLiteCommand _command;
+            private readonly SQLiteParameter[] _parameters;
+
+            public PreparedInsert(SQLiteConnection connection, string sql, string[] names, DbType[] types)
+            {
+                _command = new SQLiteCommand(sql, connection);
+                _parameters = new SQLiteParameter[names.Length];
+                for (int i = 0; i < names.Length; i++)
+                    _parameters[i] = _command.Parameters.Add(names[i], types[i]);
+                _command.Prepare();
+            }
+
+            /// <summary>Adds a parameter with the same value in every row.</summary>
+            public void AddConstant(string name, DbType type, object value)
+            {
+                _command.Parameters.Add(name, type).Value = value;
+            }
+
+            /// <summary>Inserts a row with these values of the parameters, in the order they were named.</summary>
+            public void Execute(params object[] values)
+            {
+                for (int i = 0; i < _parameters.Length; i++)
+                    _parameters[i].Value = values[i];
+                _command.ExecuteNonQuery();
+            }
+
+            public void Dispose()
+            {
+                _command.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// A prepared multi-row INSERT of a fixed number of consecutive peak annotations of one
+        /// spectrum. SQLite inserts the rows in the order listed, so their ids and values are
+        /// those of one single-row INSERT per peak, with the same parameter types.
+        /// </summary>
+        private sealed class AnnotationInsert : IDisposable
+        {
+            private readonly SQLiteCommand _command;
+            private readonly SQLiteParameter _id;
+            private readonly SQLiteParameter[] _peakIndex;
+            private readonly SQLiteParameter[] _name;
+            private readonly SQLiteParameter[] _charge;
+            private readonly SQLiteParameter[] _theoretical;
+            private readonly SQLiteParameter[] _observed;
+
+            public AnnotationInsert(SQLiteConnection connection, int rows)
+            {
+                var sql = new StringBuilder(@"INSERT INTO RefSpectraPeakAnnotations (RefSpectraID, peakIndex, name, formula, inchiKey, " +
+                                            @"otherKeys, charge, adduct, comment, mzTheoretical, mzObserved) VALUES ");
+                for (int row = 0; row < rows; row++)
+                {
+                    if (row > 0)
+                        sql.Append(@", ");
+                    sql.AppendFormat(CultureInfo.InvariantCulture,
+                        @"(@id, @index{0}, @name{0}, '', '', '', @charge{0}, '', '', @theoretical{0}, @observed{0})", row);
+                }
+                _command = new SQLiteCommand(sql.ToString(), connection);
+                _id = _command.Parameters.Add(@"@id", DbType.Int64);
+                _peakIndex = new SQLiteParameter[rows];
+                _name = new SQLiteParameter[rows];
+                _charge = new SQLiteParameter[rows];
+                _theoretical = new SQLiteParameter[rows];
+                _observed = new SQLiteParameter[rows];
+                for (int row = 0; row < rows; row++)
+                {
+                    _peakIndex[row] = AddParameter(@"@index", row, DbType.Int32);
+                    _name[row] = AddParameter(@"@name", row, DbType.String);
+                    _charge[row] = AddParameter(@"@charge", row, DbType.Int32);
+                    _theoretical[row] = AddParameter(@"@theoretical", row, DbType.Double);
+                    _observed[row] = AddParameter(@"@observed", row, DbType.Double);
+                }
+                _command.Prepare();
+            }
+
+            /// <summary>Inserts the annotations of the peaks from <paramref name="start"/> of spectrum <paramref name="id"/>.</summary>
+            public void Execute(int id, IReadOnlyList<LibraryFragment> fragments, int start)
+            {
+                _id.Value = id;
+                for (int row = 0; row < _name.Length; row++)
+                {
+                    var fragment = fragments[start + row];
+                    _peakIndex[row].Value = start + row;
+                    _name[row].Value = AnnotationName(fragment);
+                    _charge[row].Value = fragment.Charge;
+                    _theoretical[row].Value = fragment.TheoreticalMz;
+                    _observed[row].Value = (double)fragment.Mz;
+                }
+                _command.ExecuteNonQuery();
+            }
+
+            public void Dispose()
+            {
+                _command.Dispose();
+            }
+
+            private SQLiteParameter AddParameter(string name, int row, DbType type)
+            {
+                return _command.Parameters.Add(name + row.ToString(CultureInfo.InvariantCulture), type);
+            }
         }
     }
 }
