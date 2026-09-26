@@ -107,28 +107,30 @@ namespace pwiz.Osprey.Core
         /// assumes: a decoy's id is its target's base id plus the decoy bit, so two decoys on one
         /// id means one of them was paired to something that was not a target. Per-file
         /// deduplication then keeps whichever scores better, one entry_id carries two peptides,
-        /// and first-pass FDR aborts hours later on the experiment-scope check. Returns false
-        /// when every decoy id is unique; otherwise the library indices of the first pair found.
+        /// and first-pass FDR aborts hours later on the experiment-scope check. Returns EVERY
+        /// shared id, each as the library indices that share it in library order, so a report
+        /// can show the whole class of defect rather than one row at a time; empty when every
+        /// decoy id is unique.
         /// </summary>
-        public static bool TryFindSharedDecoyId(IReadOnlyList<LibraryEntry> library,
-            out int firstIndex, out int secondIndex)
+        public static List<List<int>> FindSharedDecoyIds(IReadOnlyList<LibraryEntry> library)
         {
-            var seen = new Dictionary<uint, int>();
+            var byId = new Dictionary<uint, List<int>>();
+            var shared = new List<List<int>>();
             for (int i = 0; i < library.Count; i++)
             {
                 var entry = library[i];
                 if (entry == null || !entry.IsDecoy)
                     continue;
-                if (seen.TryGetValue(entry.Id, out int prior))
+                if (!byId.TryGetValue(entry.Id, out var indices))
                 {
-                    firstIndex = prior;
-                    secondIndex = i;
-                    return true;
+                    byId.Add(entry.Id, new List<int> { i });
+                    continue;
                 }
-                seen.Add(entry.Id, i);
+                if (indices.Count == 1)
+                    shared.Add(indices);
+                indices.Add(i);
             }
-            firstIndex = secondIndex = -1;
-            return false;
+            return shared;
         }
 
         /// <summary>

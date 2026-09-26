@@ -188,7 +188,8 @@ namespace pwiz.Osprey.IO
                         if (LibrarySuppliesDecoys(config))
                         {
                             LogCachedPairingSummary(RecoverPairingStats(cached), logInfo);
-                            if (TryDescribeSharedDecoyId(cached, out error))
+                            error = DescribeSharedDecoyIds(cached);
+                            if (error != null)
                                 return null;
                         }
                         return cached;
@@ -395,6 +396,12 @@ namespace pwiz.Osprey.IO
                     return false;
                 }
                 var manifestStats = manifest.ApplyToLibrary(library, pairingState, logInfo);
+                if (manifestStats.DecoysListedAsTargets.Count > 0)
+                {
+                    error = DescribeDecoysListedAsTargets(library,
+                        manifestStats.DecoysListedAsTargets, config.DecoyPairingManifestPath);
+                    return false;
+                }
                 pairingStats.NPairedViaManifest = manifestStats.NPaired;
                 if (manifestStats.NProteinsReplaced > 0)
                 {
@@ -437,7 +444,8 @@ namespace pwiz.Osprey.IO
             pairingStats.NUnpairedTargets = Math.Max(0,
                 pairingStats.NTargets - pairingState.ClaimedTargets.Count);
             LogPairingSummary(pairingStats, logInfo);
-            if (TryDescribeSharedDecoyId(library, out error))
+            error = DescribeSharedDecoyIds(library);
+            if (error != null)
                 return false;
             if (pairingStats.PairedFraction < config.DecoyPairMinFraction)
             {
@@ -493,6 +501,58 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// The load-time error for library entries that are decoys by protein prefix but that the
+        /// pairing manifest lists as targets (<see cref="ManifestApplyStats.DecoysListedAsTargets"/>).
+        /// Every row is listed, not the first: the provider can then fix them in one pass and see
+        /// the class of defect behind them.
+        /// </summary>
+        private static string DescribeDecoysListedAsTargets(List<LibraryEntry> library,
+            List<int> indices, string manifestPath)
+        {
+            var sb = new StringBuilder();
+            sb.AppendFormat(
+                @"The library and its decoy pairing manifest disagree: {0} library entries are " +
+                @"decoys by their protein accessions, but the manifest {1} lists their sequence " +
+                @"as a target. This happens when a library merges a decoy with an identical real " +
+                @"target into one row. Regenerate the library so each row is one or the other.",
+                indices.Count, manifestPath);
+            foreach (int i in indices)
+                sb.AppendLine().Append(@"  ").Append(DescribeEntry(library[i]));
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// The load-time error for decoys that share an entry_id (see
+        /// <see cref="LibraryDecoyPairing.FindSharedDecoyIds"/>), or null when every decoy id is
+        /// unique. Checked at load because the same defect otherwise surfaces only in first-pass
+        /// FDR, hours into a large run, as an experiment-scope q-value disagreement that says
+        /// nothing about the library. Every group is listed, not the first.
+        /// </summary>
+        private static string DescribeSharedDecoyIds(List<LibraryEntry> library)
+        {
+            var groups = LibraryDecoyPairing.FindSharedDecoyIds(library);
+            if (groups.Count == 0)
+                return null;
+            var sb = new StringBuilder();
+            sb.AppendFormat(
+                @"Library-decoy pairing gave {0} entry_ids to more than one decoy. Each decoy must " +
+                @"pair with a distinct target.", groups.Count);
+            foreach (var group in groups)
+            {
+                sb.AppendLine().AppendFormat(@"  entry_id {0}:", library[group[0]].Id);
+                foreach (int i in group)
+                    sb.AppendLine().Append(@"    ").Append(DescribeEntry(library[i]));
+            }
+            return sb.ToString();
+        }
+
+        private static string DescribeEntry(LibraryEntry entry)
+        {
+            return string.Format(@"{0} z{1} ({2})", entry.ModifiedSequence, entry.Charge,
+                string.Join(@";", entry.ProteinIds));
+        }
+
+        /// <summary>
         /// Recover the pairing statistics from a library that is ALREADY paired, so a cache hit
         /// reports what the cache-miss path reported. Paired-ness is readable from the finished
         /// library: a decoy is paired exactly when its Id is <c>target | DECOY_ID_BIT</c> for a
@@ -503,30 +563,6 @@ namespace pwiz.Osprey.IO
         /// under composition, and the summary line says "from cache" so the two are not confused
         /// with a fresh pairing's split.</para>
         /// </summary>
-        /// <summary>
-        /// The load-time error for two decoys on one entry_id (see
-        /// <see cref="LibraryDecoyPairing.TryFindSharedDecoyId"/>), naming both library rows so
-        /// the operator can find them. Checked at load because the same defect otherwise surfaces
-        /// only in first-pass FDR, hours into a large run, as an experiment-scope q-value
-        /// disagreement that says nothing about the library.
-        /// </summary>
-        private static bool TryDescribeSharedDecoyId(List<LibraryEntry> library, out string error)
-        {
-            if (!LibraryDecoyPairing.TryFindSharedDecoyId(library, out int a, out int b))
-            {
-                error = null;
-                return false;
-            }
-            error = string.Format(
-                @"Library-decoy pairing gave two decoys the same entry_id {0}: '{1}' z{2} ({3}) and " +
-                @"'{4}' z{5} ({6}). Each decoy must pair with a distinct target. Check whether the " +
-                @"library merged a decoy with an identical target into one row.",
-                library[a].Id,
-                library[a].ModifiedSequence, library[a].Charge, string.Join(@";", library[a].ProteinIds),
-                library[b].ModifiedSequence, library[b].Charge, string.Join(@";", library[b].ProteinIds));
-            return true;
-        }
-
         private static PairingStats RecoverPairingStats(List<LibraryEntry> library)
         {
             var targetIds = new HashSet<uint>();

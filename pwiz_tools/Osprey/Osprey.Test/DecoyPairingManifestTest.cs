@@ -346,14 +346,20 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(0, stats.NPaired, @"a decoy is not a target to pair against");
                 Assert.AreEqual(10u, lib[0].Id & 0x7FFFFFFFu);
                 Assert.AreEqual(11u, lib[1].Id & 0x7FFFFFFFu);
-                Assert.IsFalse(LibraryDecoyPairing.TryFindSharedDecoyId(lib, out _, out _));
+                // The disagreement is reported, which the loader turns into an error listing it.
+                CollectionAssert.AreEqual(new[] { 0 }, stats.DecoysListedAsTargets);
+                Assert.AreEqual(0, LibraryDecoyPairing.FindSharedDecoyIds(lib).Count);
 
-                // The load-time check finds the state the old pairing produced, so any other route
-                // to it fails at load rather than in first-pass FDR.
+                // The backstop finds the state the old pairing produced, so any other route to it
+                // fails at load rather than in first-pass FDR - and reports every group whole.
                 lib[1].Id = lib[0].Id;
-                Assert.IsTrue(LibraryDecoyPairing.TryFindSharedDecoyId(lib, out int first, out int second));
-                Assert.AreEqual(0, first);
-                Assert.AreEqual(1, second);
+                lib.Add(MakeEntry(12, @"LQKDTAR", 2, true));
+                lib[2].Id = lib[0].Id;
+                lib.Add(MakeEntry(13, @"TARGETK", 2, false));
+                lib[3].Id = lib[0].Id & 0x7FFFFFFFu;
+                var shared = LibraryDecoyPairing.FindSharedDecoyIds(lib);
+                Assert.AreEqual(1, shared.Count, @"one id shared, reported once");
+                CollectionAssert.AreEqual(new[] { 0, 1, 2 }, shared[0], @"targets are not decoys");
             }
             finally
             {
