@@ -296,6 +296,12 @@ namespace pwiz.Osprey.IO
                 if (!_seqToInfo.TryGetValue(entry.Sequence, out var info))
                     continue;
                 bool isTargetSide = IsTargetSideOf(info.Kind);
+                // A decoy is never a pairing target, even where the manifest calls its
+                // sequence one (Carafe merges a decoy with an identical real target into one
+                // "decoy_"-prefixed row). Its id already carries the decoy bit, so a decoy
+                // paired to it would copy that id and two decoys would share an entry_id.
+                if (isTargetSide && entry.IsDecoy)
+                    continue;
                 var key = new BucketKey(info.PairIndex, PartitionOf(info.Kind),
                     entry.Charge, isTargetSide);
                 if (!buckets.TryGetValue(key, out var list))

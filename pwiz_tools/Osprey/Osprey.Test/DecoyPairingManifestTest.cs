@@ -314,6 +314,46 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
+        public void ManifestNeverPairsADecoyAsTheTargetSide()
+        {
+            // Carafe can merge a decoy with an identical real target into one row whose
+            // ProteinID starts "decoy_" (SEA-AD 07-27 library: AQLKDTR, "decoy_...LZTR1...;
+            // sp|Q9Y250|LZTS1"). The prefix marker makes it a decoy, but the manifest lists
+            // AQLKDTR as the TARGET of pair 5, so pairing its reversed decoy TDKLQAR to it
+            // copied an id that already carried the decoy bit: two decoys, one entry_id.
+            // At 82 files first-pass FDR then aborts on the experiment-scope check.
+            string path = WriteManifest(new[]
+            {
+                @"AQLKDTR	No	protT	target	5",
+                @"TDKLQAR	Yes	decoy_protT	decoy	5",
+            });
+            try
+            {
+                var m = DecoyPairingManifest.FromTsv(path);
+                var lib = new List<LibraryEntry>
+                {
+                    MakeEntry(10, @"AQLKDTR", 2, true),
+                    MakeEntry(11, @"TDKLQAR", 2, true),
+                };
+                // As LibraryDecoyMarker leaves prefix-marked decoys.
+                lib[0].Id |= LibraryEntry.DECOY_ID_BIT;
+                lib[1].Id |= LibraryEntry.DECOY_ID_BIT;
+
+                var state = new PairingState();
+                var stats = m.ApplyToLibrary(lib, state);
+
+                Assert.AreNotEqual(lib[0].Id, lib[1].Id, @"two decoys must not share an entry_id");
+                Assert.AreEqual(0, stats.NPaired, @"a decoy is not a target to pair against");
+                Assert.AreEqual(10u, lib[0].Id & 0x7FFFFFFFu);
+                Assert.AreEqual(11u, lib[1].Id & 0x7FFFFFFFu);
+            }
+            finally
+            {
+                File.Delete(path);
+            }
+        }
+
+        [TestMethod]
         public void ManifestReplacesProteinIdsWithCleanAccessions()
         {
             // Cross-impl port of Rust `manifest_replaces_protein_ids_with_clean_accessions`
