@@ -209,11 +209,37 @@ Rules for code and for consumers:
   invariant culture with no group separators. Adding a key is free; renaming one means updating
   its consumers (`regression.ps1`, the `ai/scripts/Osprey` tools) in the same change.
 - **Every tag comes from `LogTag`** (`Osprey.Core/LogTag.cs`), and the route and count keys
-  come from `LogKey` in the same file. Code writes `log.LogInfo(LogTag.COUNT, text)` through an
-  `IOspreyLog`; `OspreyLog.Write` is the one place that decides whether the line is emitted.
+  come from `LogKey` in the same file. Code writes `log.LogInfo(LogTag.COUNT, format, args)`
+  through an `IOspreyLog`: that overload formats with the invariant culture, so a tagged line
+  reads `12.3s` under every UI language. `OspreyLog.Write` is the one place that decides whether
+  the line is emitted.
   `CodeInspectionTest.TestLogTagsComeFromLogTag` fails on a tag written as a string literal.
 
 ---
+
+### Localization
+
+Osprey's prose - the log, `--help`, warnings and errors - comes from resource files and follows
+the user's culture, as Skyline's does:
+
+- One `.resx` per assembly that writes user text: `OspreyCoreResources`, `OspreyIOResources`,
+  `OspreyScoringResources`, `OspreyFDRResources`, `OspreyTasksResources` and `OspreyResources`
+  (the exe). Each project opts in to ReSharper's `LocalizableElement` inspection with a
+  `<Project>.csproj.DotSettings`, so a plain string literal fails `Build-Osprey.ps1 -RunInspection`.
+- Translations are Japanese (`.ja.resx`) and Chinese (`.zh-Hans.resx`) only, produced by
+  Skyline's translation pipeline (`pwiz_tools/Skyline/Executables/DevTools/ResourcesOrganizer`),
+  which scans every `.resx` under `pwiz_tools`.
+- Text written for a PERSON uses the current culture: in fr-FR a count reads `1 234 567` and a
+  fraction `12,5 %`. Text written for a PROGRAM uses the invariant culture: every output file
+  (blib, TSV report, FDRBench input, parquet, JSON, `.osprey.task`) and every tagged log line.
+  A run under any culture writes byte-identical files.
+- `@"..."` marks text that is deliberately NOT translated: tagged lines, file headings and keys,
+  argument and environment variable names, internal-invariant exceptions, and diagnostics reached
+  only through `-d` or an `OSPREY_*` setting.
+- `--culture <name>` (internal, not in `--help`, as in Skyline) runs Osprey under a named culture
+  instead of the OS one, e.g. `--culture fr-FR` or `--culture ja`. The unit tests take the same
+  choice from `OSPREY_TEST_CULTURE` (`Build-Osprey.ps1 -RunTests -Culture ja-JP`); fr-FR and
+  tr-TR are test cultures for number formatting, not translation targets.
 
 ## Distributed execution (HPC)
 
