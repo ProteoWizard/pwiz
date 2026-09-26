@@ -83,8 +83,17 @@ namespace pwiz.CarafeSharp
         /// <summary>A test hook called with each chunk's index before it is predicted, on the predicting thread.</summary>
         internal Action<int> BeforePredictChunk { get; set; }
 
-        /// <summary>A test hook called with each chunk's index before it is written, on the writer thread.</summary>
-        internal Action<int> BeforeWriteChunk { get; set; }
+        /// <summary>
+        /// A test hook called with each chunk's index and the threads it is written with, before it
+        /// is written, on the writer thread.
+        /// </summary>
+        internal Action<int, int> BeforeWriteChunk { get; set; }
+
+        /// <summary>
+        /// A test hook called with a chunk's index when it is about to wait for room in the full
+        /// writer queue, on the predicting thread.
+        /// </summary>
+        internal Action<int> BeforeQueueWait { get; set; }
 
         public void Run()
         {
@@ -131,12 +140,10 @@ namespace pwiz.CarafeSharp
                 ? new List<DecoyPairPlanner.Precursor>()
                 : null;
             using (var tsv = TsvPath != null ? new CarafeLibraryTsvWriter(TsvPath) : null)
-            using (var blib = BlibPath != null
-                       ? new BlibLibraryWriter(BlibPath, Path.GetFileNameWithoutExtension(BlibPath), _settings.TopFragments)
-                       : null)
+            using (var blib = BlibPath != null ? new BlibLibraryWriter(BlibPath, Path.GetFileNameWithoutExtension(BlibPath)) : null)
             {
                 // Disposed before tsv and blib, so a failure stops the writer thread before their partial files are discarded.
-                using (var writer = new LibraryChunkWriter(tsv, blib, pairingPrecursors, BeforeWriteChunk))
+                using (var writer = new LibraryChunkWriter(tsv, blib, pairingPrecursors, BeforeWriteChunk, BeforeQueueWait))
                 {
                     PredictChunks(forms, builder, ms2, rt, irt, writer);
                     var finishClock = Stopwatch.StartNew();

@@ -52,6 +52,9 @@ namespace pwiz.CarafeSharp.Test
         /// <summary>How long a test hook waits for another thread before the test fails.</summary>
         private static readonly TimeSpan HOOK_TIMEOUT = TimeSpan.FromMinutes(1);
 
+        // Set when a run did not end: its thread still holds files in the test folder.
+        private bool _runHung;
+
         public TestContext TestContext { get; set; }
 
         [TestMethod]
@@ -238,30 +241,17 @@ namespace pwiz.CarafeSharp.Test
         public void TestLibraryGenerator()
         {
             string folder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"Generator_" + Guid.NewGuid().ToString(@"N"));
-            string models = Path.Combine(folder, @"models");
-            Directory.CreateDirectory(models);
+            Directory.CreateDirectory(folder);
             try
             {
-                WriteRandomModels(models);
+                var settings = CreateGeneratorSettings(folder, LibraryOutputs.BLIB_FORMAT);
+                string models = settings.ModelDirectory;
                 // Checkpoints an earlier Carafe run left: the library after training uses the models it wrote.
                 string checkpoint = Path.Combine(models, ModelFiles.MS2_CHECKPOINT);
                 File.WriteAllText(checkpoint, @"not a checkpoint");
                 File.WriteAllText(Path.Combine(models, ModelFiles.RT_CHECKPOINT), @"not a checkpoint");
-                string fasta = Path.Combine(folder, @"proteins.fasta");
-                File.WriteAllText(fasta, ">sp|P1|A\nMPEPTIDEKSAMPLERLVNELTEFAK\n");
-                var settings = new LibrarySettings
-                {
-                    Database = fasta,
-                    OutputDirectory = Path.Combine(folder, @"out"),
-                    ModelDirectory = models,
-                    PreferSafetensors = true,
-                    LibraryFormat = LibraryOutputs.BLIB_FORMAT,
-                    Device = TorchDevice.CPU,
-                    RtMax = 30,
-                    MinFragments = 1,
-                    // A pairing manifest that cannot be read: Carafe logs the failure and keeps the library.
-                    PairingManifest = models,
-                };
+                // A pairing manifest that cannot be read: Carafe logs the failure and keeps the library.
+                settings.PairingManifest = models;
                 var log = new StringWriter();
                 var generator = new LibraryGenerator(settings, log);
                 generator.Run();
@@ -289,81 +279,87 @@ namespace pwiz.CarafeSharp.Test
         }
 
         /// <summary>
-        /// The library writer thread: it writes every chunk in order, a writing failure stops
-        /// prediction and fails the run, a prediction failure stops the writer, and a failed
-        /// run leaves the previous library as it was.
+        /// The library writer thread: it writes every chunk predicted, in order, on all processors
+        /// once a chunk is waiting; a writing failure ends a wait for room in the queue and fails
+        /// the run; a prediction failure stops the writer; and a failed run leaves the previous
+        /// library as it was.
         /// </summary>
         [TestMethod]
         public void TestLibraryWriterThread()
         {
-            // A quarter of the processors while the writer keeps up, all of them once a chunk waits.
-            Assert.AreEqual(4, LibraryChunkWriter.WriteThreads(0, 16));
-            Assert.AreEqual(1, LibraryChunkWriter.WriteThreads(0, 3));
-            Assert.AreEqual(-1, LibraryChunkWriter.WriteThreads(1, 16));
+            // A quarter of the processors while the writer keeps up, all of them once it is behind.
+            Assert.AreEqual(4, LibraryChunkWriter.WriteThreads(false, 16));
+            Assert.AreEqual(1, LibraryChunkWriter.WriteThreads(false, 3));
+            Assert.AreEqual(-1, LibraryChunkWriter.WriteThreads(true, 16));
 
             string folder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"Writer_" + Guid.NewGuid().ToString(@"N"));
-            string models = Path.Combine(folder, @"models");
-            Directory.CreateDirectory(models);
+            Directory.CreateDirectory(folder);
             try
             {
-                WriteRandomModels(models);
-                string fasta = Path.Combine(folder, @"proteins.fasta");
-                File.WriteAllText(fasta, ">sp|P1|A\nMPEPTIDEKSAMPLERLVNELTEFAK\n");
-                var settings = new LibrarySettings
-                {
-                    Database = fasta,
-                    OutputDirectory = Path.Combine(folder, @"out"),
-                    ModelDirectory = models,
-                    PreferSafetensors = true,
-                    LibraryFormat = @"DIA-NN," + LibraryOutputs.BLIB_FORMAT,
-                    Device = TorchDevice.CPU,
-                    RtMax = 30,
-                    MinFragments = 1,
-                    // One peptidoform per batch, so each is a chunk of its own.
-                    PeptidesPerBatch = 1,
-                };
+                var settings = CreateGeneratorSettings(folder, @"DIA-NN," + LibraryOutputs.BLIB_FORMAT);
+                // One peptidoform per batch, so each is a chunk of its own.
+                settings.PeptidesPerBatch = 1;
 
-                // Every chunk is written, in order, on one thread that is not the predicting one.
+                // Every chunk predicted is written, in order, on one thread that is not the
+                // predicting one. Chunk 0 is written only once chunk 1 waits behind it, so chunk 0
+                // gets a quarter of the processors and chunk 1 all of them.
                 var generator = new LibraryGenerator(settings, null);
+                var predictedChunks = new List<int>();
                 var writtenChunks = new List<int>();
+                var writeThreads = new List<int>();
                 var writerThreads = new HashSet<Thread>();
-                generator.BeforeWriteChunk = chunk =>
+                using var chunkWaiting = new ManualResetEventSlim();
+                generator.BeforePredictChunk = chunk =>
                 {
+                    predictedChunks.Add(chunk);
+                    // Chunk 1 is queued before chunk 2 is predicted.
+                    if (chunk == 2)
+                        chunkWaiting.Set();
+                };
+                generator.BeforeWriteChunk = (chunk, threads) =>
+                {
+                    if (chunk == 0)
+                        Assert.IsTrue(chunkWaiting.Wait(HOOK_TIMEOUT));
                     writtenChunks.Add(chunk);
+                    writeThreads.Add(threads);
                     writerThreads.Add(Thread.CurrentThread);
                 };
                 generator.Run();
-                int chunkCount = writtenChunks.Count;
-                Assert.IsTrue(chunkCount > LibraryChunkWriter.QUEUE_CAPACITY + 2, chunkCount.ToString());
-                CollectionAssert.AreEqual(Enumerable.Range(0, chunkCount).ToArray(), writtenChunks.ToArray());
+                Assert.IsTrue(predictedChunks.Count > LibraryChunkWriter.QUEUE_CAPACITY + 2, predictedChunks.Count.ToString());
+                CollectionAssert.AreEqual(predictedChunks, writtenChunks);
+                Assert.AreEqual(LibraryChunkWriter.WriteThreads(false, Environment.ProcessorCount), writeThreads[0]);
+                Assert.AreEqual(-1, writeThreads[1]);
                 Assert.AreEqual(1, writerThreads.Count);
                 Assert.AreNotSame(Thread.CurrentThread, writerThreads.Single());
                 Assert.IsTrue(generator.SpectrumCount > 0);
                 byte[] previousBlib = File.ReadAllBytes(generator.BlibPath);
                 string previousTsv = File.ReadAllText(generator.TsvPath);
 
-                // The writer fails while prediction waits for room in the queue: nothing more is
-                // predicted, and the run throws the writer's exception.
+                // The writer fails while prediction waits for room in the full queue: the wait
+                // ends, nothing more is predicted, and the run throws the writer's exception.
                 var writeFailure = new IOException(@"Test writing failure");
-                var predictedChunks = new List<int>();
+                var predictedBeforeFailure = new List<int>();
+                var queueWaits = new List<int>();
                 using var queueFull = new ManualResetEventSlim();
                 var writerFails = new LibraryGenerator(settings, null)
                 {
-                    BeforePredictChunk = chunk =>
+                    BeforePredictChunk = chunk => predictedBeforeFailure.Add(chunk),
+                    // Chunk 0 is being written and chunk 1 fills the queue, so chunk 2 waits.
+                    BeforeQueueWait = chunk =>
                     {
-                        predictedChunks.Add(chunk);
-                        // Chunk 0 is being written, the next fills the queue, so this one must wait.
+                        queueWaits.Add(chunk);
                         if (chunk == LibraryChunkWriter.QUEUE_CAPACITY + 1)
                             queueFull.Set();
                     },
-                    BeforeWriteChunk = chunk =>
+                    BeforeWriteChunk = (chunk, threads) =>
                     {
                         Assert.IsTrue(queueFull.Wait(HOOK_TIMEOUT));
                         throw writeFailure;
                     },
                 };
-                Assert.AreSame(writeFailure, Assert.ThrowsException<IOException>(() => writerFails.Run()));
-                CollectionAssert.AreEqual(Enumerable.Range(0, LibraryChunkWriter.QUEUE_CAPACITY + 2).ToArray(), predictedChunks.ToArray());
+                Assert.AreSame(writeFailure, RunExpectingFailure(writerFails));
+                CollectionAssert.AreEqual(Enumerable.Range(0, LibraryChunkWriter.QUEUE_CAPACITY + 2).ToArray(), predictedBeforeFailure.ToArray());
+                CollectionAssert.Contains(queueWaits, LibraryChunkWriter.QUEUE_CAPACITY + 1);
                 AssertPreviousLibrary(generator, settings.OutputDirectory, previousBlib, previousTsv);
 
                 // Prediction fails while a chunk is being written: the writer thread is stopped
@@ -373,7 +369,7 @@ namespace pwiz.CarafeSharp.Test
                 using var writing = new ManualResetEventSlim();
                 var predictionFails = new LibraryGenerator(settings, null)
                 {
-                    BeforeWriteChunk = chunk =>
+                    BeforeWriteChunk = (chunk, threads) =>
                     {
                         writerThread = Thread.CurrentThread;
                         writing.Set();
@@ -387,7 +383,7 @@ namespace pwiz.CarafeSharp.Test
                         }
                     },
                 };
-                Assert.AreSame(predictionFailure, Assert.ThrowsException<InvalidOperationException>(() => predictionFails.Run()));
+                Assert.AreSame(predictionFailure, RunExpectingFailure(predictionFails));
                 Assert.IsNotNull(writerThread);
                 Assert.IsFalse(writerThread.IsAlive);
                 AssertPreviousLibrary(generator, settings.OutputDirectory, previousBlib, previousTsv);
@@ -395,7 +391,9 @@ namespace pwiz.CarafeSharp.Test
             finally
             {
                 SQLiteConnection.ClearAllPools();
-                Directory.Delete(folder, true);
+                // Deleting files a hung run still holds would replace its failure with an IOException.
+                if (!_runHung)
+                    Directory.Delete(folder, true);
             }
         }
 
@@ -442,6 +440,58 @@ namespace pwiz.CarafeSharp.Test
             using (var rt = new ModelRtLstmCnn())
                 StateDict.WriteSafetensors(rt, Path.Combine(folder, ModelFiles.RT_SAFETENSORS));
             File.WriteAllText(Path.Combine(folder, ModelFiles.METRICS), "{\"ms2\":{\"use_finetuned_for_prediction\":true}}");
+        }
+
+        /// <summary>
+        /// Settings that predict a library on the CPU from randomly initialized models and a
+        /// one-protein FASTA, both written into <paramref name="folder"/>.
+        /// </summary>
+        private static LibrarySettings CreateGeneratorSettings(string folder, string libraryFormat)
+        {
+            string models = Path.Combine(folder, @"models");
+            Directory.CreateDirectory(models);
+            WriteRandomModels(models);
+            string fasta = Path.Combine(folder, @"proteins.fasta");
+            File.WriteAllText(fasta, ">sp|P1|A\nMPEPTIDEKSAMPLERLVNELTEFAK\n");
+            return new LibrarySettings
+            {
+                Database = fasta,
+                OutputDirectory = Path.Combine(folder, @"out"),
+                ModelDirectory = models,
+                PreferSafetensors = true,
+                LibraryFormat = libraryFormat,
+                Device = TorchDevice.CPU,
+                RtMax = 30,
+                MinFragments = 1,
+            };
+        }
+
+        /// <summary>
+        /// Runs the generator on a thread of its own and returns the exception it throws. A run
+        /// that has not ended in time fails the test instead of hanging it.
+        /// </summary>
+        private Exception RunExpectingFailure(LibraryGenerator generator)
+        {
+            Exception thrown = null;
+            var runner = new Thread(() =>
+            {
+                try
+                {
+                    generator.Run();
+                }
+                catch (Exception e)
+                {
+                    thrown = e;
+                }
+            }) { IsBackground = true };
+            runner.Start();
+            if (!runner.Join(HOOK_TIMEOUT))
+            {
+                _runHung = true;
+                Assert.Fail(@"The run did not end");
+            }
+            Assert.IsNotNull(thrown, @"The run did not fail");
+            return thrown;
         }
 
         /// <summary>The library <paramref name="previous"/> wrote is as it was, with no partial file beside it.</summary>

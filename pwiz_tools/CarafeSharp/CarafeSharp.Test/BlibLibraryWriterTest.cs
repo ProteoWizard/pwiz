@@ -125,8 +125,9 @@ namespace pwiz.CarafeSharp.Test
         }
 
         /// <summary>
-        /// A spectrum's annotations go in one multi-row INSERT up to the top-N peaks and in
+        /// A spectrum's annotations go in one multi-row INSERT up to the INSERT's row limit and in
         /// several above it, and the rows, ids included, are those of one INSERT per peak.
+        /// Compressing the peaks on one thread gives the same tables as on many.
         /// </summary>
         [TestMethod]
         public void TestAnnotationInserts()
@@ -135,25 +136,19 @@ namespace pwiz.CarafeSharp.Test
             Directory.CreateDirectory(folder);
             try
             {
-                const int topN = BlibLibraryWriter.DEFAULT_PEAKS_PER_INSERT;
-                // One peak, the top-N, one more than the top-N, and more than two INSERTs' worth.
-                var peakCounts = new[] { 1, topN, topN + 1, 2 * topN + 5, 3 };
+                const int maxRows = BlibLibraryWriter.MAX_PEAKS_PER_INSERT;
+                // One peak, the default top-N, the most one INSERT takes, one more, and more than two INSERTs' worth.
+                var peakCounts = new[] { 1, 20, maxRows, maxRows + 1, 2 * maxRows + 5, 3 };
                 var spectra = peakCounts.Select(CreateSpectrum).ToList();
-                string multiRow = WriteLibrary(folder, @"multi_row.blib", spectra, topN);
-                VerifyAnnotations(multiRow, spectra);
+                string library = WriteLibrary(folder, @"library.blib", spectra);
+                VerifyAnnotations(library, spectra);
 
-                // One row per INSERT, as before the multi-row INSERT, INSERTs of 7 rows, and compression
-                // on one thread give the same tables.
-                string singleRow = WriteLibrary(folder, @"single_row.blib", spectra, 1);
-                string sevenRows = WriteLibrary(folder, @"seven_rows.blib", spectra, 7);
-                string oneThread = WriteLibrary(folder, @"one_thread.blib", spectra, topN, 1);
+                string oneThread = WriteLibrary(folder, @"one_thread.blib", spectra, 1);
                 foreach (string table in new[] { @"RefSpectra", @"RefSpectraPeaks", @"RefSpectraPeakAnnotations", @"Modifications",
                              @"Proteins", @"RefSpectraProteins", @"RetentionTimes" })
                 {
-                    var expected = TableRows(singleRow, table);
+                    var expected = TableRows(library, table);
                     Assert.IsTrue(expected.Count > 0, table);
-                    CollectionAssert.AreEqual(expected, TableRows(multiRow, table), table);
-                    CollectionAssert.AreEqual(expected, TableRows(sevenRows, table), table);
                     CollectionAssert.AreEqual(expected, TableRows(oneThread, table), table);
                 }
             }
@@ -279,8 +274,7 @@ namespace pwiz.CarafeSharp.Test
                 Assert.AreEqual(fragment.Mz, peakMz);
                 Assert.AreEqual(fragment.RelativeIntensity, BitConverter.ToSingle(intensityBytes, i * sizeof(float)));
                 Assert.AreEqual((long)i, annotations[i][0]);
-                string expectedName = fragment.IonType + fragment.Ordinal.ToString() + (fragment.HasLoss ? @"-" + fragment.LossType : string.Empty);
-                Assert.AreEqual(expectedName, annotations[i][1]);
+                Assert.AreEqual(ExpectedAnnotationName(fragment), annotations[i][1]);
                 Assert.AreEqual((long)fragment.Charge, annotations[i][2]);
                 Assert.AreEqual(fragment.TheoreticalMz, annotations[i][3]);
                 Assert.AreEqual(peakMz, annotations[i][4]);
@@ -300,11 +294,10 @@ namespace pwiz.CarafeSharp.Test
             };
         }
 
-        private static string WriteLibrary(string folder, string fileName, List<LibrarySpectrum> spectra, int peaksPerInsert,
-            int maxCompressionThreads = -1)
+        private static string WriteLibrary(string folder, string fileName, List<LibrarySpectrum> spectra, int maxCompressionThreads = -1)
         {
             string path = Path.Combine(folder, fileName);
-            using (var writer = new BlibLibraryWriter(path, @"carafe_spectral_library", peaksPerInsert))
+            using (var writer = new BlibLibraryWriter(path, @"carafe_spectral_library"))
             {
                 writer.WriteBatch(spectra, maxCompressionThreads);
                 writer.Complete();
@@ -327,14 +320,20 @@ namespace pwiz.CarafeSharp.Test
                     for (int peak = 0; peak < spectra[i].Fragments.Count; peak++)
                     {
                         var fragment = spectra[i].Fragments[peak];
-                        string name = fragment.IonType + fragment.Ordinal.ToString(CultureInfo.InvariantCulture) +
-                                      (fragment.HasLoss ? @"-" + fragment.LossType : string.Empty);
-                        CollectionAssert.AreEqual(new object[] { row + 1L, i + 1L, (long)peak, name, string.Empty, string.Empty, string.Empty,
-                            (long)fragment.Charge, string.Empty, string.Empty, fragment.TheoreticalMz, (double)fragment.Mz }, rows[row]);
+                        CollectionAssert.AreEqual(new object[] { row + 1L, i + 1L, (long)peak, ExpectedAnnotationName(fragment),
+                            string.Empty, string.Empty, string.Empty, (long)fragment.Charge, string.Empty, string.Empty,
+                            fragment.TheoreticalMz, (double)fragment.Mz }, rows[row]);
                         row++;
                     }
                 }
             }
+        }
+
+        /// <summary>The annotation name BiblioSpec readers expect, built independently of the writer's code.</summary>
+        private static string ExpectedAnnotationName(LibraryFragment fragment)
+        {
+            return fragment.IonType + fragment.Ordinal.ToString(CultureInfo.InvariantCulture) +
+                   (fragment.HasLoss ? @"-" + fragment.LossType : string.Empty);
         }
 
         /// <summary>A table's rows in rowid order, each value with its SQLite storage class, doubles round-trip, blobs in hex.</summary>

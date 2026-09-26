@@ -58,7 +58,8 @@ namespace pwiz.CarafeSharp
         private readonly CarafeLibraryTsvWriter _tsv;
         private readonly BlibLibraryWriter _blib;
         private readonly List<DecoyPairPlanner.Precursor> _pairingPrecursors;
-        private readonly Action<int> _beforeWrite;
+        private readonly Action<int, int> _beforeWrite;
+        private readonly Action<int> _beforeQueueWait;
         private readonly BlockingCollection<List<LibrarySpectrum>> _queue =
             new BlockingCollection<List<LibrarySpectrum>>(new ConcurrentQueue<List<LibrarySpectrum>>(), QUEUE_CAPACITY);
         private readonly CancellationTokenSource _stop = new CancellationTokenSource();
@@ -67,18 +68,28 @@ namespace pwiz.CarafeSharp
         private ExceptionDispatchInfo _failure;
         private long _writeTicks;
         private int _written;
+        private int _added;
+        private bool _disposed;
 
         /// <param name="tsv">The TSV to write, or null.</param>
         /// <param name="blib">The .blib to write, or null.</param>
         /// <param name="pairingPrecursors">Receives each precursor written to the .blib, for DecoyPairs, or null.</param>
-        /// <param name="beforeWrite">A test hook the writer thread calls with each chunk's index before writing it, or null.</param>
+        /// <param name="beforeWrite">
+        /// A test hook the writer thread calls with each chunk's index and its <see cref="WriteThreads"/>
+        /// before writing it, or null.
+        /// </param>
+        /// <param name="beforeQueueWait">
+        /// A test hook <see cref="Add"/> calls with the chunk's index when the queue is full, just
+        /// before it waits for room, or null.
+        /// </param>
         public LibraryChunkWriter(CarafeLibraryTsvWriter tsv, BlibLibraryWriter blib, List<DecoyPairPlanner.Precursor> pairingPrecursors,
-            Action<int> beforeWrite = null)
+            Action<int, int> beforeWrite = null, Action<int> beforeQueueWait = null)
         {
             _tsv = tsv;
             _blib = blib;
             _pairingPrecursors = pairingPrecursors;
             _beforeWrite = beforeWrite;
+            _beforeQueueWait = beforeQueueWait;
             _thread = new Thread(WriteChunks) { Name = @"CarafeSharp library writer", IsBackground = true };
             _thread.Start();
         }
@@ -108,10 +119,13 @@ namespace pwiz.CarafeSharp
         public void Add(List<LibrarySpectrum> spectra)
         {
             ThrowIfFailed();
+            if (_queue.Count >= QUEUE_CAPACITY)
+                _beforeQueueWait?.Invoke(_added);
             _queueWaitClock.Start();
             try
             {
                 _queue.Add(spectra, _stop.Token);
+                _added++;
             }
             catch (OperationCanceledException)
             {
@@ -150,6 +164,9 @@ namespace pwiz.CarafeSharp
         /// </summary>
         public void Dispose()
         {
+            if (_disposed)
+                return;
+            _disposed = true;
             _stop.Cancel();
             _queue.CompleteAdding();
             _thread.Join();
@@ -162,8 +179,14 @@ namespace pwiz.CarafeSharp
             try
             {
                 int chunkIndex = 0;
+                // Whether the next chunk was already waiting when the last one was written, or
+                // prediction has finished. Read before the take, which empties the one-chunk queue.
+                bool behind = false;
                 foreach (var spectra in _queue.GetConsumingEnumerable(_stop.Token))
-                    WriteChunk(chunkIndex++, spectra);
+                {
+                    WriteChunk(chunkIndex++, spectra, WriteThreads(behind, Environment.ProcessorCount));
+                    behind = _queue.Count > 0 || _queue.IsAddingCompleted;
+                }
             }
             catch (OperationCanceledException) when (_stop.IsCancellationRequested)
             {
@@ -177,11 +200,10 @@ namespace pwiz.CarafeSharp
             }
         }
 
-        private void WriteChunk(int chunkIndex, List<LibrarySpectrum> spectra)
+        private void WriteChunk(int chunkIndex, List<LibrarySpectrum> spectra, int threads)
         {
-            _beforeWrite?.Invoke(chunkIndex);
+            _beforeWrite?.Invoke(chunkIndex, threads);
             long start = Stopwatch.GetTimestamp();
-            int threads = WriteThreads(_queue.Count, Environment.ProcessorCount);
             if (_tsv != null)
             {
                 var rows = new string[spectra.Count];
@@ -208,16 +230,17 @@ namespace pwiz.CarafeSharp
         }
 
         /// <summary>
-        /// Threads for formatting and compressing a chunk. While the writer keeps up, no chunk
-        /// waits (<paramref name="backlog"/> 0), and a quarter of the processors are enough and
-        /// leave the rest to the prediction thread that feeds the GPU. On a shared 16-thread machine
-        /// with a GTX 1650, writing on every thread beside prediction slowed MS2 prediction by 23% on
-        /// Stellar (26% on Astral), and on a quarter of them by 10%. When a chunk is waiting,
-        /// prediction is ahead, and writing uses them all.
+        /// Threads for formatting and compressing a chunk. While the writer keeps up, no chunk is
+        /// waiting when it finishes one (<paramref name="behind"/> false), and a quarter of the
+        /// processors are enough and leave the rest to the prediction thread that feeds the GPU.
+        /// On a shared 16-thread machine with a GTX 1650, writing on every thread beside
+        /// prediction slowed MS2 prediction by 23% on Stellar (26% on Astral), and on a quarter of
+        /// them by 10%. When a chunk was waiting, prediction is ahead, or it has finished, and
+        /// writing uses them all.
         /// </summary>
-        internal static int WriteThreads(int backlog, int processorCount)
+        internal static int WriteThreads(bool behind, int processorCount)
         {
-            return backlog > 0 ? -1 : Math.Max(1, processorCount / 4);
+            return behind ? -1 : Math.Max(1, processorCount / 4);
         }
     }
 }

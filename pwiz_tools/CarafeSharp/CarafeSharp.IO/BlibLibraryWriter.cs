@@ -62,13 +62,7 @@ namespace pwiz.CarafeSharp.IO
         public const int WORKFLOW_TYPE_DIA = 1;
 
         /// <summary>
-        /// The peak count up to which a spectrum's annotations go in one INSERT by default:
-        /// Carafe's default top-N fragments (<c>-lf_top_n_frag</c>).
-        /// </summary>
-        public const int DEFAULT_PEAKS_PER_INSERT = 20;
-
-        /// <summary>
-        /// The most annotation rows one INSERT takes. Each row binds 5 variables and the spectrum
+        /// The most annotation rows one INSERT takes; a spectrum with more peaks takes several. Each row binds 5 variables and the spectrum
         /// id 1 more, so 100 rows bind 501: under 999, SQLite's SQLITE_MAX_VARIABLE_NUMBER before
         /// 3.32, let alone the 32766 of the SQLite 3.46.1 in System.Data.SQLite 1.0.119.
         /// </summary>
@@ -107,7 +101,7 @@ namespace pwiz.CarafeSharp.IO
         private readonly PartialFile _file;
         private readonly Dictionary<string, long> _proteinIds = new Dictionary<string, long>(StringComparer.Ordinal);
         // The INSERT of n annotation rows at index n, prepared when first needed.
-        private readonly AnnotationInsert[] _insertAnnotations;
+        private readonly AnnotationInsert[] _insertAnnotations = new AnnotationInsert[MAX_PEAKS_PER_INSERT + 1];
         private SQLiteConnection _connection;
         private PreparedInsert _insertSpectrum;
         private PreparedInsert _insertPeaks;
@@ -123,16 +117,8 @@ namespace pwiz.CarafeSharp.IO
         /// name without its extension). It is written to a <see cref="PartialFile"/>, so until
         /// then any library already at <paramref name="path"/> is left as it is.
         /// </summary>
-        /// <param name="path">The library to write.</param>
-        /// <param name="sourceFileName">The name of its one source file.</param>
-        /// <param name="peaksPerInsert">
-        /// The peak count up to which a spectrum's annotations go in one INSERT, normally the
-        /// library's top-N fragments; a spectrum with more peaks takes several. Kept within 1 and
-        /// <see cref="MAX_PEAKS_PER_INSERT"/>.
-        /// </param>
-        public BlibLibraryWriter(string path, string sourceFileName, int peaksPerInsert = DEFAULT_PEAKS_PER_INSERT)
+        public BlibLibraryWriter(string path, string sourceFileName)
         {
-            _insertAnnotations = new AnnotationInsert[Math.Max(1, Math.Min(MAX_PEAKS_PER_INSERT, peaksPerInsert)) + 1];
             _file = new PartialFile(path);
             try
             {
@@ -325,15 +311,14 @@ namespace pwiz.CarafeSharp.IO
         }
 
         /// <summary>
-        /// One annotation row per peak, in peak order, as few INSERTs as the cached statement
-        /// sizes allow: one for a spectrum of up to the top-N peaks.
+        /// One annotation row per peak, in peak order: one INSERT for a spectrum of up to
+        /// <see cref="MAX_PEAKS_PER_INSERT"/> peaks (the default top-N is 20), several above that.
         /// </summary>
         private void InsertAnnotations(int id, IReadOnlyList<LibraryFragment> fragments)
         {
-            int maxRows = _insertAnnotations.Length - 1;
-            for (int start = 0; start < fragments.Count; start += maxRows)
+            for (int start = 0; start < fragments.Count; start += MAX_PEAKS_PER_INSERT)
             {
-                int rows = Math.Min(maxRows, fragments.Count - start);
+                int rows = Math.Min(MAX_PEAKS_PER_INSERT, fragments.Count - start);
                 var insert = _insertAnnotations[rows] ??= new AnnotationInsert(_connection, rows);
                 insert.Execute(id, fragments, start);
             }
