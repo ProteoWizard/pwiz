@@ -130,7 +130,7 @@ namespace pwiz.CarafeSharp.Test
             string warning = null;
             records = FastaReader.Read(new StringReader(">one\nPEPK\n>empty\n>three\nACDK\n"), w => warning = w).ToArray();
             Assert.AreEqual(1, records.Length);
-            Assert.AreEqual(@"invalid fasta element [empty]", warning);
+            Assert.AreEqual(string.Format(FastaReader.INVALID_ELEMENT_FORMAT, @"empty"), warning);
 
             // Anything before the first header, including a byte-order mark, is a format error.
             Assert.ThrowsException<InvalidDataException>(() => Read("\n>one\nPEPK\n"));

@@ -127,9 +127,9 @@ These are `OspreyMaskingSettings` fields. None of them is on the command line ye
 
 | Setting | Default | Effect |
 |---|---|---|
-| `OutOfRange` | `TrainAsAbsent` (Carafe) | `Masked` leaves ions outside the scan window out of the loss instead of training them as absent |
-| `Correlation` | `Polish` | `Reference` uses Osprey's reference XIC |
+| `OutOfRange` | `train_as_absent` (Carafe) | `masked` leaves ions outside the scan window out of the loss instead of training them as absent |
+| `Correlation` | `polish` | `reference` uses Osprey's reference XIC |
 | `MaskSharedCoelution` | off | Also masks ions a co-eluting confident precursor could explain (`shared_coelute_n`) |
 | `SharedOnlyWhenBetterClaimant` | off | Masks a shared ion only when the other precursor is the better identification |
 | `MaxPolishOutlierZ` | off | Masks an apex outlier against the median polish; calibrate it on core ions first (see 22-training-export.md) |
-| `IntensitySource` | `Apex` (Carafe) | `Polish` trains on the polish's row effects |
+| `IntensitySource` | `apex` (Carafe) | `polish` trains on the polish's row effects |

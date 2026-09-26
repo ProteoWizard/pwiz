@@ -11,9 +11,6 @@
     <!-- CarafeSharp.sln uses x64 configurations; advertise both so they map cleanly while
          an AnyCPU build still works on other hosts. -->
     <Platforms>AnyCPU;x64</Platforms>
-    <!-- Carry Configuration/Platform across ProjectReferences to projects outside
-         CarafeSharp.sln (CommonUtil), exactly as Osprey does. -->
-    <ShouldUnsetParentConfigurationAndPlatform>false</ShouldUnsetParentConfigurationAndPlatform>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>

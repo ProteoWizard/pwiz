@@ -44,6 +44,9 @@ namespace pwiz.CarafeSharp.Proteome
     /// </summary>
     public static class FastaReader
     {
+        /// <summary>jfasta's warning for an entry without a sequence, formatted with its header.</summary>
+        public const string INVALID_ELEMENT_FORMAT = @"invalid fasta element [{0}]";
+
         /// <summary>jfasta's read chunk; a chunk of nothing but whitespace also ends a sequence.</summary>
         private const int CHUNK_SIZE = 8192;
 
@@ -75,7 +78,7 @@ namespace pwiz.CarafeSharp.Proteome
                 string sequence = ReadSequence(reader);
                 if (sequence == null)
                 {
-                    warn?.Invoke(@"invalid fasta element [" + header + @"]");
+                    warn?.Invoke(string.Format(INVALID_ELEMENT_FORMAT, header));
                     yield break;
                 }
                 yield return new FastaRecord(header, sequence);

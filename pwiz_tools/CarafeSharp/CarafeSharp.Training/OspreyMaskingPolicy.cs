@@ -25,6 +25,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
 
 namespace pwiz.CarafeSharp.Training
@@ -33,30 +34,30 @@ namespace pwiz.CarafeSharp.Training
     public enum TrainingIntensitySource
     {
         /// <summary>The apex spectrum's matched peak, as Carafe trains.</summary>
-        Apex,
+        apex,
 
         /// <summary>The median polish's interference-resistant estimate <c>exp(row effect)</c>.</summary>
-        Polish,
+        polish,
     }
 
     /// <summary>Which correlation the correlation rule reads.</summary>
     public enum MaskingCorrelation
     {
         /// <summary>Correlation with the median polish's elution profile (closest to Carafe on Stellar).</summary>
-        Polish,
+        polish,
 
         /// <summary>Correlation with Osprey's reference XIC, its most intense top-6 fragment.</summary>
-        Reference,
+        reference,
     }
 
     /// <summary>What happens to an ion outside the run's MS2 scan window.</summary>
     public enum OutOfRangeIons
     {
         /// <summary>Intensity 0 and valid: the model learns the ion is not seen, as Carafe trains.</summary>
-        TrainAsAbsent,
+        train_as_absent,
 
         /// <summary>Masked out of the loss, since it could not have been observed.</summary>
-        Masked,
+        masked,
     }
 
     /// <summary>
@@ -84,12 +85,12 @@ namespace pwiz.CarafeSharp.Training
         /// <summary>The correlation (exclusive) a clean intense low-ordinal ion needs.</summary>
         public double LowOrdinalMinCorrelation { get; set; } = 0.9;
 
-        public OutOfRangeIons OutOfRange { get; set; } = OutOfRangeIons.TrainAsAbsent;
+        public OutOfRangeIons OutOfRange { get; set; } = OutOfRangeIons.train_as_absent;
 
         /// <summary>A matched ion correlating below this with the elution profile is masked (Carafe <c>-cor</c>; inclusive pass).</summary>
         public double MinCorrelation { get; set; } = 0.8;
 
-        public MaskingCorrelation Correlation { get; set; } = MaskingCorrelation.Polish;
+        public MaskingCorrelation Correlation { get; set; } = MaskingCorrelation.polish;
 
         /// <summary>Mask a matched ion whose apex peak another confident precursor also matched.</summary>
         public bool MaskSharedApex { get; set; } = true;
@@ -118,7 +119,7 @@ namespace pwiz.CarafeSharp.Training
         /// <summary>A spectrum's top ion must be valid (Carafe <c>-valid</c>).</summary>
         public bool RequireTopIonValid { get; set; } = true;
 
-        public TrainingIntensitySource IntensitySource { get; set; } = TrainingIntensitySource.Apex;
+        public TrainingIntensitySource IntensitySource { get; set; } = TrainingIntensitySource.apex;
     }
 
     /// <summary>One precursor's training intensities and mask, with what decided them.</summary>
@@ -150,7 +151,7 @@ namespace pwiz.CarafeSharp.Training
     /// <list type="bullet">
     /// <item>An unmatched ion trains as intensity 0 (the model learns it is absent); only the
     /// ordinal floor masks unmatched ions. An ion outside the scan window is 0 and valid, or
-    /// masked with <see cref="OutOfRangeIons.Masked"/>.</item>
+    /// masked with <see cref="OutOfRangeIons.masked"/>.</item>
     /// <item>A matched ion is masked when its apex peak is shared (another confident precursor,
     /// or another ion of this one), when it correlates poorly with the elution profile, when it
     /// is elevated at both peak boundaries, and, for an intense low-ordinal ion, when it is not
@@ -180,8 +181,6 @@ namespace pwiz.CarafeSharp.Training
         /// <summary>Two matched ions whose observed m/z agree this closely matched the same peak.</summary>
         public const double SAME_PEAK_TOLERANCE = 1e-4;
 
-        private const int TYPES = 4;
-
         private readonly OspreyMaskingSettings _settings;
 
         public OspreyMaskingPolicy(OspreyMaskingSettings settings)
@@ -204,7 +203,7 @@ namespace pwiz.CarafeSharp.Training
             var inRange = new bool[slots];
             for (int slot = 0; slot < slots; slot++)
             {
-                int position = slot / TYPES;
+                int position = slot / AlphabaseFragmentMz.COLUMN_COUNT;
                 ordinals[slot] = IsB(slot) ? position + 1 : length - 1 - position;
                 matched[slot] = record.Has(slot, OspreyIonFlags.MATCHED_AT_APEX) && record.ApexIntensity[slot] > 0;
                 inRange[slot] = record.Has(slot, OspreyIonFlags.IN_SCAN_RANGE);
@@ -229,7 +228,7 @@ namespace pwiz.CarafeSharp.Training
                 int invalid = 0;
                 if (!record.Has(slot, OspreyIonFlags.APPLICABLE))
                     invalid += Mask(result, RULE_NOT_APPLICABLE);
-                else if (!inRange[slot] && _settings.OutOfRange == OutOfRangeIons.Masked)
+                else if (!inRange[slot] && _settings.OutOfRange == OutOfRangeIons.masked)
                     invalid += Mask(result, RULE_OUT_OF_RANGE);
                 if (scored[slot])
                     invalid += MatchedRules(record, slot, ordinals[slot], skew[slot], selfShared[slot], topIntensity, result);
@@ -281,7 +280,7 @@ namespace pwiz.CarafeSharp.Training
                 invalid += Mask(result, RULE_SHARED_COELUTION);
             }
             // An ion without a correlation (under 3 peak scans) cannot pass.
-            float correlation = _settings.Correlation == MaskingCorrelation.Reference
+            float correlation = _settings.Correlation == MaskingCorrelation.reference
                 ? record.CorrReference[slot]
                 : record.CorrPolish[slot];
             if (!(correlation >= _settings.MinCorrelation))
@@ -356,7 +355,7 @@ namespace pwiz.CarafeSharp.Training
         /// </summary>
         private double TrainingIntensity(OspreyTrainingRecord record, int slot)
         {
-            if (_settings.IntensitySource == TrainingIntensitySource.Polish && record.MedianPolishFitted)
+            if (_settings.IntensitySource == TrainingIntensitySource.polish && record.MedianPolishFitted)
             {
                 float rowEffect = record.PolishRowEffect[slot];
                 return float.IsNaN(rowEffect) ? 0 : Math.Exp(rowEffect);
@@ -366,7 +365,7 @@ namespace pwiz.CarafeSharp.Training
 
         private static bool IsB(int slot)
         {
-            return slot % TYPES < 2;
+            return slot % AlphabaseFragmentMz.COLUMN_COUNT < AlphabaseFragmentMz.Y_Z1;
         }
 
         private static double Median(IEnumerable<double> values)

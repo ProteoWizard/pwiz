@@ -48,7 +48,9 @@ namespace pwiz.CarafeSharp.Training
 
         private const char TAB = '\t';
 
-        private static readonly string[] FRAGMENT_COLUMNS = { @"b_z1", @"b_z2", @"y_z1", @"y_z2" };
+        /// <summary>The non-modloss fragment columns, b_z1, b_z2, y_z1 and y_z2.</summary>
+        private static readonly string[] FRAGMENT_COLUMNS =
+            PeptdeepConstants.CHARGED_FRAG_TYPES.Take(PeptdeepConstants.NUM_NON_MODLOSS_FRAG_TYPES).ToArray();
 
         /// <summary>
         /// The MS2 training spectra in <c>psm_pdv.txt</c> order. Carafe passes one collision energy

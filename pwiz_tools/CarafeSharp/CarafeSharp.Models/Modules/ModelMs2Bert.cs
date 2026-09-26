@@ -34,9 +34,9 @@ namespace pwiz.CarafeSharp.Models.Modules
     /// b_z1, b_z2, y_z1, y_z2 and their four modloss counterparts; row r is b(r+1) and
     /// y(nAA-1-r).
     ///
-    /// The modloss branch (<c>modloss_nn</c>) is always built so the checkpoint's keys load,
-    /// but with <see cref="MaskModLoss"/> (general and ubiquitin modes) its columns are exact
-    /// zeros and it takes no part in the forward pass or in training.
+    /// The modloss branch (<c>modloss_nn</c>) is built so the checkpoint's keys load, but as in
+    /// peptdeep's general mode (<c>mask_modloss</c>, the only mode CarafeSharp ports) its
+    /// columns are exact zeros and it takes no part in the forward pass or in training.
     /// </summary>
     internal sealed class ModelMs2Bert : nn.Module<Tensor, Tensor, Tensor, Tensor, Tensor, Tensor>
     {
@@ -58,14 +58,15 @@ namespace pwiz.CarafeSharp.Models.Modules
         private readonly HiddenHFaceTransformer _hiddenNn;
         [ComponentName(Name = @"output_nn")]
         private readonly DecoderLinear _outputNn;
-        // peptdeep's modloss_nn = ModuleList([Hidden_HFace_Transformer(1 layer), Decoder_Linear]).
+        // peptdeep's modloss_nn = ModuleList([Hidden_HFace_Transformer(1 layer), Decoder_Linear]),
+        // registered only so the checkpoint's modloss keys load.
+        // ReSharper disable once NotAccessedField.Local
         [ComponentName(Name = @"modloss_nn")]
         private readonly ModuleList<nn.Module<Tensor, Tensor>> _modlossNn;
 
-        public ModelMs2Bert(bool maskModLoss, double dropout = 0.1)
+        public ModelMs2Bert(double dropout = 0.1)
             : base(nameof(ModelMs2Bert))
         {
-            MaskModLoss = maskModLoss;
             _dropout = nn.Dropout(dropout);
             _inputNn = new InputAaModPositionalEncoding(HIDDEN - META_DIM);
             _metaNn = new MetaEmbedding(META_DIM);
@@ -77,9 +78,6 @@ namespace pwiz.CarafeSharp.Models.Modules
             RegisterComponents();
         }
 
-        /// <summary>True in general mode: the modloss columns are zeros.</summary>
-        public bool MaskModLoss { get; }
-
         public override Tensor forward(Tensor aaIndices, Tensor modX, Tensor charges, Tensor nces, Tensor instrumentIndices)
         {
             var inX = _dropout.call(_inputNn.call(aaIndices, modX));
@@ -89,16 +87,8 @@ namespace pwiz.CarafeSharp.Models.Modules
             var hiddenX = _dropout.call(_hiddenNn.call(inX) + inX * RESIDUAL_SCALE);
             var outX = _outputNn.call(hiddenX);
 
-            Tensor modloss;
-            if (MaskModLoss)
-            {
-                modloss = zeros(outX.shape[0], outX.shape[1], PeptdeepConstants.NUM_MODLOSS_FRAG_TYPES,
-                    dtype: outX.dtype, device: outX.device);
-            }
-            else
-            {
-                modloss = _modlossNn[1].call(_modlossNn[0].call(inX) + hiddenX);
-            }
+            var modloss = zeros(outX.shape[0], outX.shape[1], PeptdeepConstants.NUM_MODLOSS_FRAG_TYPES,
+                dtype: outX.dtype, device: outX.device);
             outX = cat(new[] { outX, modloss }, 2);
             return outX[TensorIndex.Colon, TensorIndex.Slice(OUTPUT_OFFSET), TensorIndex.Colon];
         }

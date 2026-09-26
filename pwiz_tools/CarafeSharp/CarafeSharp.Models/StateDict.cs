@@ -80,30 +80,28 @@ namespace pwiz.CarafeSharp.Models
             return result;
         }
 
-        public static Dictionary<string, Tensor> ReadSafetensors(string path, out Dictionary<string, string> metadata)
+        public static Dictionary<string, Tensor> ReadSafetensors(string path)
         {
             var result = new Dictionary<string, Tensor>(StringComparer.Ordinal);
-            foreach (var pair in SafetensorsFile.Read(path, out metadata))
+            foreach (var pair in SafetensorsFile.Read(path))
                 result[StripWrapperPrefix(pair.Key)] = pair.Value;
             return result;
         }
 
-        public static void WriteSafetensors(nn.Module module, string path, IReadOnlyDictionary<string, string> metadata = null)
+        public static void WriteSafetensors(nn.Module module, string path)
         {
-            SafetensorsFile.Write(path, module.state_dict(), metadata);
+            SafetensorsFile.Write(path, module.state_dict());
         }
 
         /// <summary>
         /// Copies <paramref name="source"/> into <paramref name="module"/>. Every module key must
-        /// be present with the same shape and every source key must be used, except keys for
-        /// which <paramref name="isOptional"/> returns true, which may be missing on either side.
+        /// be present with the same shape and every source key must be used.
         /// </summary>
-        public static void Load(nn.Module module, IReadOnlyDictionary<string, Tensor> source, Func<string, bool> isOptional = null)
+        public static void Load(nn.Module module, IReadOnlyDictionary<string, Tensor> source)
         {
-            isOptional = isOptional ?? (key => false);
             var target = module.state_dict();
-            var missing = target.Keys.Where(k => !source.ContainsKey(k) && !isOptional(k)).ToList();
-            var unexpected = source.Keys.Where(k => !target.ContainsKey(k) && !isOptional(k)).ToList();
+            var missing = target.Keys.Where(k => !source.ContainsKey(k)).ToList();
+            var unexpected = source.Keys.Where(k => !target.ContainsKey(k)).ToList();
             if (missing.Count > 0 || unexpected.Count > 0)
             {
                 throw new InvalidDataException(string.Format(@"Checkpoint does not match {0}. Missing: [{1}]. Unexpected: [{2}].",

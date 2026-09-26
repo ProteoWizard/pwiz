@@ -12,7 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj" />
     <ProjectReference Include="..\CarafeSharp.Core\CarafeSharp.Core.csproj" />
     <ProjectReference Include="..\CarafeSharp.Models\CarafeSharp.Models.csproj" />
     <ProjectReference Include="..\CarafeSharp.IO\CarafeSharp.IO.csproj" />

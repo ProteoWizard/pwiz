@@ -52,11 +52,9 @@ namespace pwiz.CarafeSharp.Models
             { ScalarType.Bool, (@"BOOL", 1) },
         };
 
-        public static void Write(string path, IReadOnlyDictionary<string, Tensor> tensors, IReadOnlyDictionary<string, string> metadata = null)
+        public static void Write(string path, IReadOnlyDictionary<string, Tensor> tensors)
         {
             var header = new Dictionary<string, object>(StringComparer.Ordinal);
-            if (metadata != null && metadata.Count > 0)
-                header[METADATA_KEY] = metadata;
             var payloads = new List<byte[]>();
             long offset = 0;
             // Ordinal key order, so the same weights always produce the same bytes.
@@ -90,9 +88,9 @@ namespace pwiz.CarafeSharp.Models
             }
         }
 
-        public static Dictionary<string, Tensor> Read(string path, out Dictionary<string, string> metadata)
+        /// <summary>The tensors of a safetensors file; its optional free-text metadata is skipped.</summary>
+        public static Dictionary<string, Tensor> Read(string path)
         {
-            metadata = new Dictionary<string, string>(StringComparer.Ordinal);
             var result = new Dictionary<string, Tensor>(StringComparer.Ordinal);
             using (var stream = File.OpenRead(path))
             using (var reader = new BinaryReader(stream))
@@ -106,11 +104,7 @@ namespace pwiz.CarafeSharp.Models
                     foreach (var property in header.RootElement.EnumerateObject())
                     {
                         if (property.Name == METADATA_KEY)
-                        {
-                            foreach (var item in property.Value.EnumerateObject())
-                                metadata[item.Name] = item.Value.GetString();
                             continue;
-                        }
                         string dtypeName = property.Value.GetProperty(@"dtype").GetString();
                         var dtype = DTYPES.First(p => p.Value.Name == dtypeName).Key;
                         long[] shape = property.Value.GetProperty(@"shape").EnumerateArray().Select(e => e.GetInt64()).ToArray();

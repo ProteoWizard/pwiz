@@ -40,33 +40,33 @@ namespace pwiz.CarafeSharp.Models
         public const int DEFAULT_BATCH_SIZE = 512;
 
         /// <summary>
-        /// Loads the pretrained generic MS2 model. <paramref name="maskModLoss"/> is true for
-        /// general mode, where the four modloss columns are predicted as zeros.
+        /// Loads the pretrained generic MS2 model. As in peptdeep's general mode, the four
+        /// modloss columns are predicted as zeros.
         /// </summary>
-        public static Ms2Model FromPretrained(PretrainedModels pretrained, Device device, bool maskModLoss = true)
+        public static Ms2Model FromPretrained(PretrainedModels pretrained, Device device)
         {
             var weights = StateDict.ReadPthFromZip(pretrained.ZipPath, PretrainedModels.MS2_ENTRY);
-            return Create(weights, device, maskModLoss);
+            return Create(weights, device);
         }
 
         /// <summary>
         /// Loads a PyTorch checkpoint, such as the <c>ms2_model.pt</c> Carafe writes after
         /// fine-tuning.
         /// </summary>
-        public static Ms2Model FromPthFile(string path, Device device, bool maskModLoss = true)
+        public static Ms2Model FromPthFile(string path, Device device)
         {
-            return Create(StateDict.ReadPthFile(path), device, maskModLoss);
+            return Create(StateDict.ReadPthFile(path), device);
         }
 
         /// <summary>Loads a model saved with <see cref="Save"/>.</summary>
-        public static Ms2Model FromSafetensors(string path, Device device, bool maskModLoss = true)
+        public static Ms2Model FromSafetensors(string path, Device device)
         {
-            return Create(StateDict.ReadSafetensors(path, out _), device, maskModLoss);
+            return Create(StateDict.ReadSafetensors(path), device);
         }
 
-        private static Ms2Model Create(IReadOnlyDictionary<string, Tensor> weights, Device device, bool maskModLoss)
+        private static Ms2Model Create(IReadOnlyDictionary<string, Tensor> weights, Device device)
         {
-            var network = new ModelMs2Bert(maskModLoss);
+            var network = new ModelMs2Bert();
             StateDict.Load(network, weights);
             foreach (var tensor in weights.Values)
                 tensor.Dispose();

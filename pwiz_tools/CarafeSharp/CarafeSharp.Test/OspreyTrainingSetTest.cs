@@ -136,7 +136,7 @@ namespace pwiz.CarafeSharp.Test
             record.IonFlags[18] = OspreyIonFlags.APPLICABLE;
             record.ApexIntensity[18] = 0;
             Assert.AreEqual(0.0, Apply(settings, record).Invalid[18]);
-            settings.OutOfRange = OutOfRangeIons.Masked;
+            settings.OutOfRange = OutOfRangeIons.masked;
             masked = Apply(settings, record);
             Assert.AreEqual(1.0, masked.Invalid[18]);
             Assert.AreEqual(1L, masked.MaskedBy[OspreyMaskingPolicy.RULE_OUT_OF_RANGE]);
@@ -163,7 +163,7 @@ namespace pwiz.CarafeSharp.Test
                 Match(polished, slot, 100 + slot, 0.95f);
                 polished.PolishRowEffect[slot] = (float)Math.Log(slot + 1);
             }
-            masked = Apply(new OspreyMaskingSettings { IntensitySource = TrainingIntensitySource.Polish }, polished);
+            masked = Apply(new OspreyMaskingSettings { IntensitySource = TrainingIntensitySource.polish }, polished);
             // The top ion is still the most intense apex peak above the ordinal floor (slot 25).
             Assert.AreEqual(25, masked.TopSlot);
             Assert.AreEqual(3.0 / 26, masked.Intensities[2], 1e-6);

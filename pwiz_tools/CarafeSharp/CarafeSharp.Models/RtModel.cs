@@ -73,7 +73,7 @@ namespace pwiz.CarafeSharp.Models
 
         public static RtModel FromSafetensors(string path, Device device)
         {
-            return Create(StateDict.ReadSafetensors(path, out _), device);
+            return Create(StateDict.ReadSafetensors(path), device);
         }
 
         private static RtModel Create(IReadOnlyDictionary<string, Tensor> weights, Device device)

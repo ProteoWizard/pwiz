@@ -28,7 +28,7 @@ namespace pwiz.CarafeSharp.Models
     /// The AlphaPeptDeep pretrained weights, <c>pretrained_models.zip</c> from the MannLabs
     /// "pre-trained-models" release. That release URL is unversioned, which is how two
     /// Carafe runs came to predict from different weights, so CarafeSharp pins the exact
-    /// archive by SHA-256 and refuses any other unless told to accept it.
+    /// archive by SHA-256 and refuses any other.
     /// </summary>
     public sealed class PretrainedModels
     {
@@ -39,7 +39,6 @@ namespace pwiz.CarafeSharp.Models
 
         public const string MS2_ENTRY = @"generic/ms2.pth";
         public const string RT_ENTRY = @"generic/rt.pth";
-        public const string CCS_ENTRY = @"generic/ccs.pth";
 
         /// <summary>Environment variable naming the archive, overriding the default location.</summary>
         public const string PATH_VARIABLE = @"CARAFESHARP_PRETRAINED_MODELS";
@@ -49,7 +48,7 @@ namespace pwiz.CarafeSharp.Models
         /// null: <c>%CARAFESHARP_PRETRAINED_MODELS%</c>, else peptdeep's own
         /// <c>~/peptdeep/pretrained_models/pretrained_models.zip</c>, which Carafe shares.
         /// </summary>
-        public static PretrainedModels Open(string zipPath = null, bool allowUnpinned = false)
+        public static PretrainedModels Open(string zipPath = null)
         {
             zipPath = zipPath ?? DefaultPath;
             if (!File.Exists(zipPath))
@@ -59,7 +58,7 @@ namespace pwiz.CarafeSharp.Models
                     zipPath, DOWNLOAD_URL), zipPath);
             }
             string sha256 = ComputeSha256(zipPath);
-            if (!allowUnpinned && !string.Equals(sha256, PINNED_SHA256, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(sha256, PINNED_SHA256, StringComparison.OrdinalIgnoreCase))
             {
                 throw new InvalidDataException(string.Format(
                     @"{0} has SHA-256 {1}, not the pinned {2}. A different pretrained archive changes every prediction.",
