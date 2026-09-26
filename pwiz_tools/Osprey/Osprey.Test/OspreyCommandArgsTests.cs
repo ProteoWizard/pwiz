@@ -351,6 +351,9 @@ namespace pwiz.Osprey.Test
             foreach (var arg in OspreyCommandArgs.AllArguments)
             {
                 Assert.AreEqual(1, seen[arg.Name], string.Format(@"Argument {0} must be in exactly one group", arg.Name));
+                // An internal argument (--culture) is never shown in help, so it has no text to drift.
+                if (arg.InternalUse)
+                    continue;
                 string description = ArgUsage.Provider.GetDescription(arg.Name);
                 Assert.IsFalse(string.IsNullOrEmpty(description),
                     string.Format(@"Argument {0} has no description", arg.Name));

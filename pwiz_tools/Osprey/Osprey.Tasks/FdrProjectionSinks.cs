@@ -129,9 +129,8 @@ namespace pwiz.Osprey.Tasks
             var perFile = Projections.PerFile;
             for (int f = 0; f < perFile.Count; f++)
             {
-                log.LogInfo(LogTag.COUNT, string.Format(
-                    "{0} Percolator pass [{1}]: {2} targets, {3} decoys at {4:P0} FDR",
-                    _passLabel, perFile[f].Key, _fileTargets[f], _fileDecoys[f], _runFdr));
+                log.LogInfo(LogTag.COUNT, @"{0} Percolator pass [{1}]: {2} targets, {3} decoys at {4:P0} FDR",
+                    _passLabel, perFile[f].Key, _fileTargets[f], _fileDecoys[f], _runFdr);
                 nTargetPassing += _fileTargets[f];
                 nDecoyPassing += _fileDecoys[f];
             }
@@ -139,14 +138,12 @@ namespace pwiz.Osprey.Tasks
             log.LogInfo(string.Format(
                 "{0} Percolator results: {1:N0} targets, {2:N0} decoys pass {3:P1} FDR",
                 _passLabel, nTargetPassing, nDecoyPassing, _runFdr));
-            log.LogInfo(LogTag.COUNT, string.Format(
-                "{0} total across files: {1}",
-                _passLabel, nTargetPassing));
+            log.LogInfo(LogTag.COUNT, @"{0} total across files: {1}",
+                _passLabel, nTargetPassing);
             if (_passingPrecursors != null)
             {
-                log.LogInfo(LogTag.COUNT, string.Format(
-                    "{0} unique precursors (best q across files): {1}",
-                    _passLabel, _passingPrecursors.Count));
+                log.LogInfo(LogTag.COUNT, @"{0} unique precursors (best q across files): {1}",
+                    _passLabel, _passingPrecursors.Count);
             }
         }
 

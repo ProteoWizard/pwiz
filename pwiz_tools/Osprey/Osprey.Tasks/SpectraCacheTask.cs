@@ -24,7 +24,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -166,10 +165,9 @@ namespace pwiz.Osprey.Tasks
                 // time for a measurement, not a second report of the same numbers.
                 string cachePath = SpectraCache.GetCachePath(inputFile);
                 var cacheInfo = new FileInfo(cachePath);
-                ctx.LogInfo(LogTag.TIMING, string.Format(CultureInfo.InvariantCulture,
-                    @"Spectra cache {0}: ms2={1} ms1={2} {3:F2} GB in {4:F1}s",
+                ctx.LogInfo(LogTag.TIMING, @"Spectra cache {0}: ms2={1} ms1={2} {3:F2} GB in {4:F1}s",
                     Path.GetFileName(cachePath), index.Ms2Count, index.Ms1Spectra.Count,
-                    cacheInfo.Length / (1024.0 * 1024.0 * 1024.0), swFile.Elapsed.TotalSeconds));
+                    cacheInfo.Length / (1024.0 * 1024.0 * 1024.0), swFile.Elapsed.TotalSeconds);
             }
 
             swAll.Stop();

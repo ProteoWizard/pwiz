@@ -255,8 +255,7 @@ namespace pwiz.Osprey.Tasks
                         swRestore.Stop();
                         if (OspreyOutput.Verbose)
                         {
-                            ctx.LogInfo(LogTag.STAGE_WALL, string.Format(
-                                "pass-1 scalar restore: {0:F1}s", swRestore.Elapsed.TotalSeconds));
+                            ctx.LogInfo(LogTag.STAGE_WALL, @"pass-1 scalar restore: {0:F1}s", swRestore.Elapsed.TotalSeconds);
                         }
                     }
 
@@ -291,9 +290,8 @@ namespace pwiz.Osprey.Tasks
                         ComputePass2Resident(ctx, Pool(), perFileParquetPaths, config);
                     }
                     swPass2.Stop();
-                    ctx.LogInfo(LogTag.STAGE_WALL, string.Format(
-                        "second-pass-fdr: {0:F1}s",
-                        swPass2.Elapsed.TotalSeconds));
+                    ctx.LogInfo(LogTag.STAGE_WALL, @"second-pass-fdr: {0:F1}s",
+                        swPass2.Elapsed.TotalSeconds);
                 }
             }
 
@@ -2542,9 +2540,8 @@ namespace pwiz.Osprey.Tasks
             }
             reloadProgress.Dispose();
             swReloadFeats.Stop();
-            ctx.LogInfo(LogTag.TIMING, string.Format(
-                "Reloaded PIN features for {0} entries: {1:F1}s",
-                nReloaded, swReloadFeats.Elapsed.TotalSeconds));
+            ctx.LogInfo(LogTag.TIMING, @"Reloaded PIN features for {0} entries: {1:F1}s",
+                nReloaded, swReloadFeats.Elapsed.TotalSeconds);
 
             switch (config.FdrMethod)
             {

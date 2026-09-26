@@ -2899,8 +2899,8 @@ namespace pwiz.Osprey.Tasks
                 }
             }
             sw.Stop();
-            ctx.LogInfo(LogTag.STAGE_WALL, string.Format(@"survivor-pool {0:F1}s ({1} files)",
-                sw.Elapsed.TotalSeconds, plan.Buffer.Count));
+            ctx.LogInfo(LogTag.STAGE_WALL, @"survivor-pool {0:F1}s ({1} files)",
+                sw.Elapsed.TotalSeconds, plan.Buffer.Count);
         }
 
         /// <summary>

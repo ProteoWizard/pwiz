@@ -113,7 +113,7 @@ namespace pwiz.Osprey.IO
         public static ReconciliationFile Load(string path)
         {
             if (string.IsNullOrEmpty(path))
-                throw new ArgumentException("path must not be null or empty", nameof(path));
+                throw new ArgumentException(@"path must not be null or empty", nameof(path));
             if (!File.Exists(path))
                 throw new FileNotFoundException("Reconciliation file not found: " + path, path);
 
@@ -172,7 +172,7 @@ namespace pwiz.Osprey.IO
         public static void Save(string path, ReconciliationFile file)
         {
             if (string.IsNullOrEmpty(path))
-                throw new ArgumentException("path must not be null or empty", nameof(path));
+                throw new ArgumentException(@"path must not be null or empty", nameof(path));
             if (file == null)
                 throw new ArgumentNullException(nameof(file));
 

@@ -85,19 +85,56 @@ namespace pwiz.Osprey
             // Before parsing, so a warning OspreyCommandArgs raises while parsing reaches the
             // caller's writer too; the --log-file swap later re-points it.
             OspreyOutput.Out = _out;
-            try
+            // Before anything is written, so every line - a parse error included - is in the
+            // requested culture. A test runs a command line in process, so the scope also puts
+            // the caller's culture back.
+            using (CreateCultureScope(args, out string cultureError))
             {
-                return ReconcileExitCode(Run(args));
-            }
-            finally
-            {
-                // A --log-file swap replaced _out; flush and close that writer, never the caller's.
-                if (!ReferenceEquals(_out, _consoleOut))
+                try
                 {
-                    _out.Flush();
-                    _out.Dispose();
+                    if (cultureError != null)
+                    {
+                        LogError(cultureError);
+                        return ReconcileExitCode(EXIT_CODE_FAILURE_TO_START);
+                    }
+                    return ReconcileExitCode(Run(args));
+                }
+                finally
+                {
+                    // A --log-file swap replaced _out; flush and close that writer, never the caller's.
+                    if (!ReferenceEquals(_out, _consoleOut))
+                    {
+                        _out.Flush();
+                        _out.Dispose();
+                    }
                 }
             }
+        }
+
+        /// <summary>
+        /// A scope for the culture named by <c>--culture</c>, or null when there is none. A name
+        /// .NET does not know also gives null, with <paramref name="error"/> set to .NET's own
+        /// (already localized) message, and the run stops there.
+        /// </summary>
+        private static CultureScope CreateCultureScope(string[] args, out string error)
+        {
+            error = null;
+            string argText = OspreyCommandArgs.ARG_INTERNAL_CULTURE.ArgumentText;
+            for (int i = 0; i + 1 < args.Length; i++)
+            {
+                if (!string.Equals(args[i], argText, StringComparison.Ordinal))
+                    continue;
+                try
+                {
+                    return new CultureScope(CultureInfo.GetCultureInfo(args[i + 1]));
+                }
+                catch (CultureNotFoundException ex)
+                {
+                    error = ex.Message;
+                    return null;
+                }
+            }
+            return null;
         }
 
         /// <summary>
@@ -738,6 +775,12 @@ namespace pwiz.Osprey
         internal static void LogInfo(LogTag tag, string text)
         {
             OspreyLog.Out.LogInfo(tag, text);
+        }
+
+        /// <summary>A tagged line formatted with the invariant culture (see <see cref="OspreyLog"/>).</summary>
+        internal static void LogInfo(LogTag tag, string format, params object[] args)
+        {
+            OspreyLog.Out.LogInfo(tag, format, args);
         }
 
         internal static void LogWarning(string message)

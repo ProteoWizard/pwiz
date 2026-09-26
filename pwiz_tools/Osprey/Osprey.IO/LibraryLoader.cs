@@ -174,10 +174,9 @@ namespace pwiz.Osprey.IO
                                 if (entry.IsSpectrumReleased)
                                     skipped++;
                             }
-                            log.LogInfo(LogTag.Mem(@"library-fragments"), string.Format(
-                                @"Skipped library fragments for {0} of {1} entries at load " +
+                            log.LogInfo(LogTag.Mem(@"library-fragments"), @"Skipped library fragments for {0} of {1} entries at load " +
                                 @"({2} base_ids retained for the 1st-pass retained set)",
-                                skipped, cached.Count, options.RetainFragmentsFor.Count));
+                                skipped, cached.Count, options.RetainFragmentsFor.Count);
                             log.LogInfo(LogTag.COUNT, LogKey.Format(LogKey.COUNT_LIBRARY_FRAGMENTS_SKIPPED,
                                 @"skipped={0} entries={1} retained={2}",
                                 skipped, cached.Count, options.RetainFragmentsFor.Count));
@@ -344,9 +343,8 @@ namespace pwiz.Osprey.IO
             log.LogInfo(string.Format(
                 "Library decoys are recognized by the protein accession prefixes {0}",
                 FormatPrefixList(config.DecoyPrefixes)));
-            log.LogInfo(LogTag.COUNT, string.Format(
-                @"Library-decoy mode: {0} flagged ({1} via Decoy column, {2} via protein-accession prefix)",
-                markingStats.NMarked, markingStats.NViaColumn, markingStats.NViaPrefix));
+            log.LogInfo(LogTag.COUNT, @"Library-decoy mode: {0} flagged ({1} via Decoy column, {2} via protein-accession prefix)",
+                markingStats.NMarked, markingStats.NViaColumn, markingStats.NViaPrefix);
 
             int nLibraryTargets = 0;
             foreach (var entry in library)

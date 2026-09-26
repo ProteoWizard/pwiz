@@ -85,9 +85,8 @@ namespace pwiz.Osprey.FDR
             if (log == null)
                 return;
 
-            log.LogInfo(LogTag.COUNT, string.Format(
-                "First-pass detected peptides for protein FDR: {0} unique",
-                result.DetectedPeptides.Count));
+            log.LogInfo(LogTag.COUNT, @"First-pass detected peptides for protein FDR: {0} unique",
+                result.DetectedPeptides.Count);
 
             int nAtRunFdr = 0;
             foreach (var qv in result.ProteinFdr.GroupQvalues.Values)
@@ -164,17 +163,15 @@ namespace pwiz.Osprey.FDR
                 "{0:N0} of {1:N0} scored target peptides detected at {2:P1} experiment-level {3} FDR.",
                 detectedPeptides.Count, scoredTargetPeptides, config.ExperimentFdr,
                 peptideGateLevel.GetLocalizedString()));
-            log?.LogInfo(LogTag.COUNT, string.Format(
-                "Detected peptides for protein FDR: {0} unique",
-                detectedPeptides.Count));
+            log?.LogInfo(LogTag.COUNT, @"Detected peptides for protein FDR: {0} unique",
+                detectedPeptides.Count);
 
             // Build protein parsimony
             var parsimony = ProteinFdr.BuildProteinParsimony(
                 fullLibrary, config.SharedPeptides, detectedPeptides);
 
             log?.LogInfo(string.Format("Protein parsimony: {0:N0} groups", parsimony.Groups.Count));
-            log?.LogInfo(LogTag.COUNT, string.Format(
-                "Protein parsimony groups: {0}", parsimony.Groups.Count));
+            log?.LogInfo(LogTag.COUNT, @"Protein parsimony groups: {0}", parsimony.Groups.Count);
 
             // Compute protein FDR. Gate is config.RunFdr (1x) per Savitski's
             // convention, matching Rust pipeline.rs:4389
@@ -192,9 +189,8 @@ namespace pwiz.Osprey.FDR
 
             log?.LogInfo(string.Format("{0:N0} protein groups pass {1:P1} protein FDR",
                 passingProteins, config.EffectiveProteinFdr));
-            log?.LogInfo(LogTag.COUNT, string.Format(
-                "Protein groups passing FDR: {0} at {1:P0}",
-                passingProteins, config.EffectiveProteinFdr));
+            log?.LogInfo(LogTag.COUNT, @"Protein groups passing FDR: {0} at {1:P0}",
+                passingProteins, config.EffectiveProteinFdr);
 
             // No propagation onto the stubs. The protein q-value's only consumer past this
             // point is the 2nd-pass sidecar, and its producer is now the caller's per-file

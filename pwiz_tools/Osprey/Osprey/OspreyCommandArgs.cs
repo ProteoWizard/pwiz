@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -67,7 +68,7 @@ namespace pwiz.Osprey
             // ParseInt / ParseDouble read numbers in the invariant culture, so a number a
             // test joins to an argument must render that way too. When Osprey's locale
             // handling is designed, this moves with the parsers.
-            ArgUsage.ValueFormatProvider = System.Globalization.CultureInfo.InvariantCulture;
+            ArgUsage.ValueFormatProvider = CultureInfo.InvariantCulture;
         }
 
         // --- Raw parse sinks (applied to the config in ToConfig) ---------------------------
@@ -317,10 +318,16 @@ namespace pwiz.Osprey
             (c, p) => true) { ShortName = @"h" };
         public static readonly OspreyArgument ARG_VERSION = new OspreyArgument(@"version",
             (c, p) => true) { ShortName = @"v" };
+        // Skyline's internal --culture: run under a named culture instead of the OS one, for
+        // formatting and for resource lookup. Program applies it before anything is written
+        // (see Program.RunCommand), which also reports a name .NET does not know; the parser
+        // only consumes the value.
+        public static readonly OspreyArgument ARG_INTERNAL_CULTURE = new OspreyArgument(@"culture",
+            () => @"en|fr|ja|zh-Hans...", (c, p) => true) { InternalUse = true };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_INFO =
             new ArgumentGroup<OspreyCommandArgs>(() => @"Diagnostics & Info", true,
-                ARG_DIAGNOSTICS, ARG_MODEL_DIAGNOSTICS, ARG_HELP, ARG_VERSION);
+                ARG_DIAGNOSTICS, ARG_MODEL_DIAGNOSTICS, ARG_HELP, ARG_VERSION, ARG_INTERNAL_CULTURE);
 
         public static IEnumerable<IUsageBlock> UsageBlocks
         {
@@ -680,8 +687,8 @@ namespace pwiz.Osprey
         private static int ParseInt(NameValuePair p)
         {
             int result;
-            if (!int.TryParse(p.Value, System.Globalization.NumberStyles.Integer,
-                System.Globalization.CultureInfo.InvariantCulture, out result))
+            if (!int.TryParse(p.Value, NumberStyles.Integer,
+                CultureInfo.InvariantCulture, out result))
             {
                 throw new ArgumentException(InvalidValueMessage(p));
             }
@@ -697,8 +704,8 @@ namespace pwiz.Osprey
         private static double ParseDouble(NameValuePair p)
         {
             double result;
-            if (!double.TryParse(p.Value, System.Globalization.NumberStyles.Float,
-                System.Globalization.CultureInfo.InvariantCulture, out result))
+            if (!double.TryParse(p.Value, NumberStyles.Float,
+                CultureInfo.InvariantCulture, out result))
             {
                 throw new ArgumentException(InvalidValueMessage(p));
             }

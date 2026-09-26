@@ -510,9 +510,8 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            Log.LogInfo(LogTag.COUNT, string.Format(CultureInfo.InvariantCulture,
-                @"Wrote calibration sample: {0} ({1} targets)",
-                dumpPath, tuples.Count));
+            Log.LogInfo(LogTag.COUNT, @"Wrote calibration sample: {0} ({1} targets)",
+                dumpPath, tuples.Count);
         }
 
         // ----- Cal scalars + grid dump (gated by same DumpCalSample flag) -----
@@ -640,9 +639,8 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            Log.LogInfo(LogTag.COUNT, string.Format(CultureInfo.InvariantCulture,
-                @"Wrote calibration windows dump (pass {0}): cs_cal_windows.txt ({1} rows)",
-                passNumber, rows.Count));
+            Log.LogInfo(LogTag.COUNT, @"Wrote calibration windows dump (pass {0}): cs_cal_windows.txt ({1} rows)",
+                passNumber, rows.Count);
             s_calWindowRows = null;
         }
 
@@ -720,9 +718,8 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            Log.LogInfo(LogTag.COUNT, string.Format(inv,
-                @"Wrote calibration match dump (pass {0}): {1} ({2} matched, {3} unmatched)",
-                passNumber, dumpPath, nMatched, nUnmatched));
+            Log.LogInfo(LogTag.COUNT, @"Wrote calibration match dump (pass {0}): {1} ({2} matched, {3} unmatched)",
+                passNumber, dumpPath, nMatched, nUnmatched);
         }
 
         // ----- LDA scores dump -----
@@ -781,9 +778,8 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            Log.LogInfo(LogTag.COUNT, string.Format(inv,
-                @"Wrote MS2 cal errors dump: cs_ms2_cal_errors.txt ({0} rows across {1} matches)",
-                nRows, nMatches));
+            Log.LogInfo(LogTag.COUNT, @"Wrote MS2 cal errors dump: cs_ms2_cal_errors.txt ({0} rows across {1} matches)",
+                nRows, nMatches);
         }
 
         public void WriteLdaScoresDump(int passNumber, IEnumerable<CalibrationMatch> matchArray)
@@ -808,9 +804,8 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            Log.LogInfo(LogTag.COUNT, string.Format(inv,
-                @"Wrote LDA scores dump (pass {0}): cs_lda_scores.txt ({1} entries)",
-                passNumber, sortedByEntry.Length));
+            Log.LogInfo(LogTag.COUNT, @"Wrote LDA scores dump (pass {0}): cs_lda_scores.txt ({1} entries)",
+                passNumber, sortedByEntry.Length);
         }
 
         // ----- LOESS input dump -----
@@ -848,9 +843,8 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            Log.LogInfo(LogTag.COUNT, string.Format(inv,
-                @"Wrote LOESS input dump (pass {0}): cs_loess_input.txt ({1} pairs)",
-                passNumber, pairs.Count));
+            Log.LogInfo(LogTag.COUNT, @"Wrote LOESS input dump (pass {0}): cs_loess_input.txt ({1} pairs)",
+                passNumber, pairs.Count);
         }
 
         // ----- Calibration summary dump -----
@@ -902,8 +896,7 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            Log.LogInfo(LogTag.COUNT, string.Format(inv,
-                @"Wrote calibration summary: cs_cal_summary.txt (11 scalars)"));
+            Log.LogInfo(LogTag.COUNT, @"Wrote calibration summary: cs_cal_summary.txt (11 scalars)");
         }
 
         // ----- Per-entry calibration XIC dump -----

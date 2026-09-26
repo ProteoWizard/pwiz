@@ -512,8 +512,8 @@ namespace pwiz.Osprey.Tasks
             var swProtein = Stopwatch.StartNew();
             RunProteinFdr(rescored, perFileParquetPaths, fullLibrary, config, ctx);
             swProtein.Stop();
-            ctx.LogInfo(LogTag.STAGE_WALL, string.Format(@"stage7: {0:F1}s",
-                swProtein.Elapsed.TotalSeconds));
+            ctx.LogInfo(LogTag.STAGE_WALL, @"stage7: {0:F1}s",
+                swProtein.Elapsed.TotalSeconds);
             // Parsimony + picked-protein TDC are genuinely whole-run, so this probe is what
             // decides whether they are a REASON Stage 7 must hold every file at once or
             // merely a consumer of a pool held for other reasons (#4486). The pre-GC line is
@@ -561,8 +561,8 @@ namespace pwiz.Osprey.Tasks
             // not parse.
             if (!config.DiagnosticsOnly)
             {
-                ctx.LogInfo(LogTag.STAGE_WALL, string.Format(@"blib: {0:F1}s",
-                    swBlib.Elapsed.TotalSeconds));
+                ctx.LogInfo(LogTag.STAGE_WALL, @"blib: {0:F1}s",
+                    swBlib.Elapsed.TotalSeconds);
             }
             // The blib write builds several whole-run indexes over the pool (passing
             // precursors, best-per-precursor, shared boundaries, cross-file observations),
@@ -605,8 +605,8 @@ namespace pwiz.Osprey.Tasks
                     ctx.LogInfo(string.Format(
                         @"{0} FDRBench rows had oversize protein-ID lists; truncated with ';...+N_more'",
                         benchResult.TruncatedProtein));
-                ctx.LogInfo(LogTag.STAGE_WALL, string.Format(@"fdrbench: {0:F1}s",
-                    swFdrBench.Elapsed.TotalSeconds));
+                ctx.LogInfo(LogTag.STAGE_WALL, @"fdrbench: {0:F1}s",
+                    swFdrBench.Elapsed.TotalSeconds);
             }
 
             // --model-diagnostics: append the pass-2 (final reported pool) FDR
@@ -1052,9 +1052,8 @@ namespace pwiz.Osprey.Tasks
 
             var retained = ScoringTaskShared.ReadRetainedBaseIdsOrFail(ctx.Config);
             int released = LibraryFragmentRelease.ReleaseFragments(fullLibrary, retained);
-            ctx.LogInfo(LogTag.Mem(@"library-fragments"), string.Format(
-                @"Released library fragments for {0} of {1} entries ({2} base_ids retained for the 1st-pass retained set)",
-                released, fullLibrary.Count, retained.Count));
+            ctx.LogInfo(LogTag.Mem(@"library-fragments"), @"Released library fragments for {0} of {1} entries ({2} base_ids retained for the 1st-pass retained set)",
+                released, fullLibrary.Count, retained.Count);
             LibraryFragmentRelease.LogRelease(ctx, released, fullLibrary.Count, retained.Count,
                 LogKey.SCOPE_RETAINED_SUMMARY);
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"after library-fragment release");
@@ -1285,10 +1284,8 @@ namespace pwiz.Osprey.Tasks
                 rescored.StreamFiles(), passingPrecursors, nFiles, ctx.Get<SequencePool>().Value,
                 out var bestByPrecursor);
 
-            ctx.LogInfo(LogTag.COUNT, string.Format(
-                "Stage 1 passing peptides: {0}", passingPeptides.Count));
-            ctx.LogInfo(LogTag.COUNT, string.Format(
-                "Stage 2 passing precursors: {0}", passingPrecursors.Count));
+            ctx.LogInfo(LogTag.COUNT, @"Stage 1 passing peptides: {0}", passingPeptides.Count);
+            ctx.LogInfo(LogTag.COUNT, @"Stage 2 passing precursors: {0}", passingPrecursors.Count);
 
             if (passingEntries.Count == 0)
             {
@@ -1300,8 +1297,7 @@ namespace pwiz.Osprey.Tasks
             if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
                 Directory.CreateDirectory(outputDir);
 
-            ctx.LogInfo(LogTag.COUNT, string.Format(
-                "Best-per-precursor for blib: {0}", bestByPrecursor.Count));
+            ctx.LogInfo(LogTag.COUNT, @"Best-per-precursor for blib: {0}", bestByPrecursor.Count);
 
             // All three take the ALREADY-FILTERED passing entries, not the pool. Each applied
             // exactly the filter CollectPassingEntries applied 20 lines earlier - non-decoy
@@ -1315,8 +1311,7 @@ namespace pwiz.Osprey.Tasks
 
             var precursorFacts = BuildPrecursorFacts(passingEntries, config.RunFdr);
 
-            ctx.LogInfo(LogTag.COUNT, string.Format(
-                "Cross-file observations to write: {0}", passingEntries.Count));
+            ctx.LogInfo(LogTag.COUNT, @"Cross-file observations to write: {0}", passingEntries.Count);
 
             BlibOutputWriter.Write(config, rescored.FileNames, libraryById, bestByPrecursor,
                 bestExpPrecursorQ, sharedBounds, passingEntries, precursorFacts);

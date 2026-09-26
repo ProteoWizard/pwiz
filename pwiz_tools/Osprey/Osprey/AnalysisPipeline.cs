@@ -113,7 +113,7 @@ namespace pwiz.Osprey
 
                     if (ctx.CanRehydrate(task))
                     {
-                        ctx.LogInfo(LogTag.TASK, string.Format(@"{0}:skipping (outputs valid)", task.Name));
+                        ctx.LogInfo(LogTag.TASK, @"{0}:skipping (outputs valid)", task.Name);
                         continue;
                     }
 
@@ -127,8 +127,8 @@ namespace pwiz.Osprey
 
                 stopwatch.Stop();
                 LogInfo("");
-                ctx.LogInfo(LogTag.TIMING, string.Format("Total pipeline: {0:F1}s",
-                    stopwatch.Elapsed.TotalSeconds));
+                ctx.LogInfo(LogTag.TIMING, @"Total pipeline: {0:F1}s",
+                    stopwatch.Elapsed.TotalSeconds);
                 LogInfo(string.Format("Analysis complete in {0}", FormatDuration(stopwatch.Elapsed)));
                 return 0;
             }
@@ -173,7 +173,7 @@ namespace pwiz.Osprey
             // sidecars at the start of Run.
 
             var sw = Stopwatch.StartNew();
-            ctx.LogInfo(LogTag.TASK, string.Format(@"{0}:starting", task.Name));
+            ctx.LogInfo(LogTag.TASK, @"{0}:starting", task.Name);
             bool keepGoing = task.Run(ctx);
             // The driver has now run this task, so its state is in memory: mark it
             // materialized so a later Demand/Get by a downstream task returns the
@@ -181,8 +181,8 @@ namespace pwiz.Osprey
             // _runOrHydrated guard that formerly bridged the Run and Rehydrate paths.
             ctx.MarkMaterialized(task);
             sw.Stop();
-            ctx.LogInfo(LogTag.TASK, string.Format(@"{0}:done ({1:F1}s)",
-                task.Name, sw.Elapsed.TotalSeconds));
+            ctx.LogInfo(LogTag.TASK, @"{0}:done ({1:F1}s)",
+                task.Name, sw.Elapsed.TotalSeconds);
             // DIAGNOSTIC (OSPREY_DROP_BETWEEN_TASKS=1): make the in-process pipeline behave like
             // the HPC split - this task drops everything but the library, and the next reloads
             // what it needs from artifacts. Off by default; the whole experiment reverts
@@ -203,8 +203,8 @@ namespace pwiz.Osprey
             };
             if (stageName != null)
             {
-                ctx.LogInfo(LogTag.STAGE_WALL, string.Format(@"{0}: {1:F1}s",
-                    stageName, sw.Elapsed.TotalSeconds));
+                ctx.LogInfo(LogTag.STAGE_WALL, @"{0}: {1:F1}s",
+                    stageName, sw.Elapsed.TotalSeconds);
             }
 
             // Write sidecars whenever the task ran without setting a

@@ -100,7 +100,7 @@ namespace pwiz.Osprey.Tasks
             try
             {
                 write();
-                log?.LogInfo(LogTag.COUNT, string.Format("Wrote {0} report: {1}", label, path));
+                log?.LogInfo(LogTag.COUNT, @"Wrote {0} report: {1}", label, path);
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
             {

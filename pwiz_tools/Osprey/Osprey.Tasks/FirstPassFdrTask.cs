@@ -739,8 +739,8 @@ namespace pwiz.Osprey.Tasks
                         ValidityKey(ctx), ctx);
                 }
                 swFdr.Stop();
-                ctx.LogInfo(LogTag.TIMING, string.Format(@"Percolator/Simple FDR: {0:F1}s",
-                    swFdr.Elapsed.TotalSeconds));
+                ctx.LogInfo(LogTag.TIMING, @"Percolator/Simple FDR: {0:F1}s",
+                    swFdr.Elapsed.TotalSeconds);
                 ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"after first-pass Percolator FDR");
                 ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx, @"first-pass-fdr-live",
                     string.Format(@"(post-GC, resident pool, files={0})", perFileEntries.Count));
@@ -762,8 +762,8 @@ namespace pwiz.Osprey.Tasks
                     var swFirstPassProtein = Stopwatch.StartNew();
                     RunFirstPassProteinFdr(perFileEntries, fullLibrary, perFileParquetPaths, config, ctx);
                     swFirstPassProtein.Stop();
-                    ctx.LogInfo(LogTag.TIMING, string.Format(@"First-pass protein FDR: {0:F1}s",
-                        swFirstPassProtein.Elapsed.TotalSeconds));
+                    ctx.LogInfo(LogTag.TIMING, @"First-pass protein FDR: {0:F1}s",
+                        swFirstPassProtein.Elapsed.TotalSeconds);
                 }
 
                 // Persist the per-file `.1st-pass.fdr_scores.bin` sidecars
@@ -2064,8 +2064,8 @@ namespace pwiz.Osprey.Tasks
                     @"{0} FDRBench rows had oversize protein-ID lists; truncated with ';...+N_more'",
                     benchResult.TruncatedProtein));
             }
-            ctx.LogInfo(LogTag.STAGE_WALL, string.Format(@"fdrbench-pass1: {0:F1}s",
-                swFdrBench.Elapsed.TotalSeconds));
+            ctx.LogInfo(LogTag.STAGE_WALL, @"fdrbench-pass1: {0:F1}s",
+                swFdrBench.Elapsed.TotalSeconds);
             return true;
         }
 
@@ -3067,9 +3067,8 @@ namespace pwiz.Osprey.Tasks
             var retained = LibraryFragmentRelease.BuildRetainedBaseIds(
                 _firstPassBaseIds, _perFileGapFillForRescore);
             int released = LibraryFragmentRelease.ReleaseFragments(fullLibrary, retained);
-            ctx.LogInfo(LogTag.Mem(@"library-fragments"), string.Format(
-                @"Released library fragments for {0} of {1} entries ({2} base_ids retained for rescore + gap-fill)",
-                released, fullLibrary.Count, retained.Count));
+            ctx.LogInfo(LogTag.Mem(@"library-fragments"), @"Released library fragments for {0} of {1} entries ({2} base_ids retained for rescore + gap-fill)",
+                released, fullLibrary.Count, retained.Count);
             LibraryFragmentRelease.LogRelease(ctx, released, fullLibrary.Count, retained.Count,
                 LogKey.SCOPE_RESCORE_GAP_FILL);
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"after library-fragment release");
@@ -3651,8 +3650,8 @@ namespace pwiz.Osprey.Tasks
                 ctx.LogInfo(LogTag.BISECT, @"Percolator diagnostic-only dump complete - aborting run");
                 Environment.Exit(0);
             }
-            ctx.LogInfo(LogTag.TIMING, string.Format(@"Percolator/Simple FDR: {0:F1}s",
-                swFdr.Elapsed.TotalSeconds));
+            ctx.LogInfo(LogTag.TIMING, @"Percolator/Simple FDR: {0:F1}s",
+                swFdr.Elapsed.TotalSeconds);
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"after first-pass Percolator FDR");
             ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx, @"first-pass-fdr-live",
                 string.Format(@"(post-GC, projection path, rows={0})", projections.TotalRows));
@@ -3714,8 +3713,8 @@ namespace pwiz.Osprey.Tasks
                         OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_PROTEIN_FDR_ONLY");
                 }
                 swProt.Stop();
-                ctx.LogInfo(LogTag.TIMING, string.Format(@"First-pass protein FDR: {0:F1}s",
-                    swProt.Elapsed.TotalSeconds));
+                ctx.LogInfo(LogTag.TIMING, @"First-pass protein FDR: {0:F1}s",
+                    swProt.Elapsed.TotalSeconds);
 
                 // Build + publish the protein-compact stratum on the PROJECTION (production)
                 // path too -- the compaction gate below (ComputeFirstPassBaseIds) reads it to

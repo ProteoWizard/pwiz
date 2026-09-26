@@ -375,8 +375,8 @@ namespace pwiz.Osprey.Tasks
                 }
             }
             swAllFiles.Stop();
-            ctx.LogInfo(LogTag.TIMING, string.Format(@"All files processed: {0:F1}s",
-                swAllFiles.Elapsed.TotalSeconds));
+            ctx.LogInfo(LogTag.TIMING, @"All files processed: {0:F1}s",
+                swAllFiles.Elapsed.TotalSeconds);
 
             // Populate perFileParquetPaths from config.InputFiles so Stage 6
             // reconciliation can locate each file's freshly-written
@@ -586,8 +586,8 @@ namespace pwiz.Osprey.Tasks
             swAllFiles.Stop();
             if (hydrationFailed)
                 return false;  // Error already logged and ExitCode set by the hydrate.
-            ctx.LogInfo(LogTag.TIMING, string.Format(@"All files processed: {0:F1}s",
-                swAllFiles.Elapsed.TotalSeconds));
+            ctx.LogInfo(LogTag.TIMING, @"All files processed: {0:F1}s",
+                swAllFiles.Elapsed.TotalSeconds);
 
             // long: TotalPreCompactionStubs below is ~4.2 M per file and overflows an int
             // past ~505 files. Null on the per-run arms, which read each run later, one at a
@@ -901,8 +901,8 @@ namespace pwiz.Osprey.Tasks
                 }
             }
             swAllFiles.Stop();
-            ctx.LogInfo(LogTag.TIMING, string.Format(@"All files processed: {0:F1}s",
-                swAllFiles.Elapsed.TotalSeconds));
+            ctx.LogInfo(LogTag.TIMING, @"All files processed: {0:F1}s",
+                swAllFiles.Elapsed.TotalSeconds);
 
             // long, not int: the deferred total is a footer sum over the whole cohort and hit
             // 1,342,686,095 at 446 files - two thirds of int.MaxValue, and cohorts keep growing.
@@ -1178,7 +1178,7 @@ namespace pwiz.Osprey.Tasks
                     nLibraryTargets++;
             }
             double libLoadSec = swLibrary.Elapsed.TotalSeconds;
-            ctx.LogInfo(LogTag.COUNT, string.Format(@"Library targets loaded: {0}", nLibraryTargets));
+            ctx.LogInfo(LogTag.COUNT, @"Library targets loaded: {0}", nLibraryTargets);
 
             List<LibraryEntry> decoys;
             // ORDER MATTERS. A library that supplies its own decoys is handled FIRST,
@@ -1230,10 +1230,10 @@ namespace pwiz.Osprey.Tasks
             }
             swLibrary.Stop();
             double totalSec = swLibrary.Elapsed.TotalSeconds;
-            ctx.LogInfo(LogTag.TIMING, string.Format(@"Library loading + decoys: {0:F1}s (load: {1:F1}s, decoys: {2:F1}s)",
-                totalSec, libLoadSec, totalSec - libLoadSec));
+            ctx.LogInfo(LogTag.TIMING, @"Library loading + decoys: {0:F1}s (load: {1:F1}s, decoys: {2:F1}s)",
+                totalSec, libLoadSec, totalSec - libLoadSec);
 
-            ctx.LogInfo(LogTag.COUNT, string.Format(@"Library decoys generated: {0}", decoys.Count));
+            ctx.LogInfo(LogTag.COUNT, @"Library decoys generated: {0}", decoys.Count);
 
             fullLibrary = new List<LibraryEntry>(library.Count + decoys.Count);
             fullLibrary.AddRange(library);
@@ -1253,8 +1253,8 @@ namespace pwiz.Osprey.Tasks
                 ctx.LogInfo(string.Format("Full library: {0:N0} precursor candidates ({1:N0} targets + {2:N0} decoys)",
                     fullLibrary.Count, fullLibrary.Count - nFullDecoys, nFullDecoys));
             }
-            ctx.LogInfo(LogTag.COUNT, string.Format(@"Full library: {0} ({1} targets + {2} decoys)",
-                fullLibrary.Count, library.Count, decoys.Count));
+            ctx.LogInfo(LogTag.COUNT, @"Full library: {0} ({1} targets + {2} decoys)",
+                fullLibrary.Count, library.Count, decoys.Count);
 
             // Count entries with few fragments (diagnostic for entry count
             // parity). Skipped whenever the load was LEAN, in either of the two ways it can be.
@@ -1280,8 +1280,8 @@ namespace pwiz.Osprey.Tasks
                         nTwoFrag++;
                 }
                 if (nZeroFrag + nOneFrag + nTwoFrag > 0)
-                    ctx.LogInfo(LogTag.COUNT, string.Format(@"Entries with <3 fragments: {0} (0={1}, 1={2}, 2={3})",
-                        nZeroFrag + nOneFrag + nTwoFrag, nZeroFrag, nOneFrag, nTwoFrag));
+                    ctx.LogInfo(LogTag.COUNT, @"Entries with <3 fragments: {0} (0={1}, 1={2}, 2={3})",
+                        nZeroFrag + nOneFrag + nTwoFrag, nZeroFrag, nOneFrag, nTwoFrag);
             }
 
             // Build library lookup by ID for fast access
@@ -1306,9 +1306,8 @@ namespace pwiz.Osprey.Tasks
                 GC.WaitForPendingFinalizers();
                 GC.Collect();
                 long managedBytes = GC.GetTotalMemory(false);
-                ctx.LogInfo(LogTag.Mem(@"library-resident"), string.Format(CultureInfo.InvariantCulture,
-                    @"managed_heap={0:F2} GB ({1} entries)",
-                    managedBytes / (1024.0 * 1024.0 * 1024.0), fullLibrary.Count));
+                ctx.LogInfo(LogTag.Mem(@"library-resident"), @"managed_heap={0:F2} GB ({1} entries)",
+                    managedBytes / (1024.0 * 1024.0 * 1024.0), fullLibrary.Count);
             }
 
             return true;
@@ -2565,9 +2564,8 @@ namespace pwiz.Osprey.Tasks
             if (ctx.RunPlan.EffectiveFileParallelism > 1)
             {
                 int perFileThreads = Math.Max(1, config.NThreads / ctx.RunPlan.EffectiveFileParallelism);
-                ctx.LogInfo(LogTag.BENCH, string.Format(
-                    "Per-file thread cap: {0} ({1} total / {2} files in parallel)",
-                    perFileThreads, config.NThreads, ctx.RunPlan.EffectiveFileParallelism));
+                ctx.LogInfo(LogTag.BENCH, @"Per-file thread cap: {0} ({1} total / {2} files in parallel)",
+                    perFileThreads, config.NThreads, ctx.RunPlan.EffectiveFileParallelism);
                 config.NThreads = perFileThreads;
             }
 
@@ -2606,12 +2604,12 @@ namespace pwiz.Osprey.Tasks
             if (inputBytes > 0 && parseSeconds > 0.001)
             {
                 double mbPerSec = (inputBytes / 1024.0 / 1024.0) / parseSeconds;
-                ctx.LogInfo(LogTag.TIMING, string.Format("mzML parsing: {0:F1}s ({1:F1} MB/s)",
-                    parseSeconds, mbPerSec));
+                ctx.LogInfo(LogTag.TIMING, @"mzML parsing: {0:F1}s ({1:F1} MB/s)",
+                    parseSeconds, mbPerSec);
             }
             else
             {
-                ctx.LogInfo(LogTag.TIMING, string.Format("mzML parsing: {0:F1}s", parseSeconds));
+                ctx.LogInfo(LogTag.TIMING, @"mzML parsing: {0:F1}s", parseSeconds);
             }
 
             if (windowIndex == null || windowIndex.Ms2Count == 0)
@@ -2630,10 +2628,10 @@ namespace pwiz.Osprey.Tasks
                 unsortedCount > 0
                     ? string.Format(" ({0:N0} spectra had unsorted peaks and were sorted; use --verbose for detail)", unsortedCount)
                     : string.Empty));
-            ctx.LogInfo(LogTag.COUNT, string.Format("mzML spectra loaded [{0}]: {1} MS2 + {2} MS1",
-                fileName, windowIndex.Ms2Count, ms1Spectra.Count));
-            ctx.LogInfo(LogTag.COUNT, string.Format("Isolation windows [{0}]: {1}",
-                fileName, isolationWindows.Count));
+            ctx.LogInfo(LogTag.COUNT, @"mzML spectra loaded [{0}]: {1} MS2 + {2} MS1",
+                fileName, windowIndex.Ms2Count, ms1Spectra.Count);
+            ctx.LogInfo(LogTag.COUNT, @"Isolation windows [{0}]: {1}",
+                fileName, isolationWindows.Count);
 
             // Resolve the per-file calibration (load a cached/Rust JSON or
             // compute via Calibrator) and persist the calibration JSON.
@@ -2679,7 +2677,7 @@ namespace pwiz.Osprey.Tasks
             // search incrementally without paying the Stage 4 cost.
             if (OspreyEnvironment.ExitAfterCalibration)
             {
-                ctx.LogInfo(LogTag.BENCH, "OSPREY_EXIT_AFTER_CALIBRATION set - exiting after Stage 3 (calibration done)");
+                ctx.LogInfo(LogTag.BENCH, @"OSPREY_EXIT_AFTER_CALIBRATION set - exiting after Stage 3 (calibration done)");
                 return new List<FdrEntry>();
             }
 
@@ -2831,9 +2829,8 @@ namespace pwiz.Osprey.Tasks
             double ratePerSec = scoringSeconds > 0.001
                 ? scoredEntries.Count / scoringSeconds
                 : 0.0;
-            ctx.LogInfo(LogTag.TIMING, string.Format(
-                "Coelution scoring: {0:F1}s ({1} candidates, {2:F0} cand/s)",
-                scoringSeconds, scoredEntries.Count, ratePerSec));
+            ctx.LogInfo(LogTag.TIMING, @"Coelution scoring: {0:F1}s ({1} candidates, {2:F0} cand/s)",
+                scoringSeconds, scoredEntries.Count, ratePerSec);
 
             // Distinct candidates, not rows: with overlapping isolation windows ScoreWindow scores
             // a candidate once per window, and the duplicates are only removed below. Counting rows
@@ -2866,17 +2863,15 @@ namespace pwiz.Osprey.Tasks
                 isolationWindows, config);
             nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
             nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
-            ctx.LogInfo(LogTag.COUNT, string.Format(
-                "Coelution scored [{0}]: {1} entries ({2} targets, {3} decoys)",
-                fileName, scoredEntries.Count, nScoredTargets, nScoredDecoys));
+            ctx.LogInfo(LogTag.COUNT, @"Coelution scored [{0}]: {1} entries ({2} targets, {3} decoys)",
+                fileName, scoredEntries.Count, nScoredTargets, nScoredDecoys);
 
             // Deduplicate: keep best target and best decoy per base_id
             int nBeforeDedup = scoredEntries.Count;
             scoredEntries = ScoringTaskShared.Pipeline(ctx).DeduplicatePairs(scoredEntries);
             int nAfterDedup = scoredEntries.Count;
-            ctx.LogInfo(LogTag.COUNT, string.Format(
-                "Deduplication [{0}]: {1} -> {2} ({3} removed)",
-                fileName, nBeforeDedup, nAfterDedup, nBeforeDedup - nAfterDedup));
+            ctx.LogInfo(LogTag.COUNT, @"Deduplication [{0}]: {1} -> {2} ({3} removed)",
+                fileName, nBeforeDedup, nAfterDedup, nBeforeDedup - nAfterDedup);
 
             return scoredEntries;
         }
@@ -2973,9 +2968,8 @@ namespace pwiz.Osprey.Tasks
                     out calInitialRtTolerance, out calDiagnostics);
                 swCal.Stop();
                 int nPoints = rtCalibration != null ? rtCalibration.Stats().NPoints : 0;
-                ctx.LogInfo(LogTag.TIMING, string.Format(
-                    "RT calibration: {0:F1}s ({1} calibration points)",
-                    swCal.Elapsed.TotalSeconds, nPoints));
+                ctx.LogInfo(LogTag.TIMING, @"RT calibration: {0:F1}s ({1} calibration points)",
+                    swCal.Elapsed.TotalSeconds, nPoints);
 
                 // Curated calibration summary on the DEFAULT console (issue #4364):
                 // the RT window before vs. after, the final search-window half-width
@@ -3256,8 +3250,8 @@ namespace pwiz.Osprey.Tasks
                 saver.Commit();
             }
 
-            ctx.LogInfo(LogTag.COUNT, string.Format("Wrote feature dump: {0} ({1} entries)",
-                dumpPath, sorted.Count));
+            ctx.LogInfo(LogTag.COUNT, @"Wrote feature dump: {0} ({1} entries)",
+                dumpPath, sorted.Count);
         }
 
     }

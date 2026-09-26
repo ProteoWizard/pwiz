@@ -220,9 +220,8 @@ namespace pwiz.Osprey.Scoring
             if (maxWindows > 0 && maxWindows < isolationWindows.Count)
             {
                 windowsToScore = isolationWindows.Take(maxWindows).ToList();
-                _log.LogInfo(LogTag.BENCH, string.Format(
-                    "OSPREY_MAX_SCORING_WINDOWS={0} - capping {1} windows to first {0}",
-                    maxWindows, isolationWindows.Count));
+                _log.LogInfo(LogTag.BENCH, @"OSPREY_MAX_SCORING_WINDOWS={0} - capping {1} windows to first {0}",
+                    maxWindows, isolationWindows.Count);
             }
 
             // Process each isolation window (parallelizable). Per-window
@@ -605,9 +604,8 @@ namespace pwiz.Osprey.Scoring
             double maxS = sorted[n - 1].Seconds;
             double medS = sorted[n / 2].Seconds;
             var slowest = sorted[n - 1];
-            _log.LogInfo(LogTag.TIMING, string.Format(
-                "Per-window: min={0:F2}s, median={1:F2}s, max={2:F2}s (slowest m/z={3:F1} had {4} candidates)",
-                minS, medS, maxS, slowest.CenterMz, slowest.CandidateCount));
+            _log.LogInfo(LogTag.TIMING, @"Per-window: min={0:F2}s, median={1:F2}s, max={2:F2}s (slowest m/z={3:F1} had {4} candidates)",
+                minS, medS, maxS, slowest.CenterMz, slowest.CandidateCount);
         }
     }
 }
