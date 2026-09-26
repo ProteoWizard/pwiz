@@ -210,6 +210,11 @@ matchPaths = [
     ("pwiz_tools/Shared/CommonMsData/RemoteApi/.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['BumbershootRelease'], targets['Container'])),
     ("pwiz_tools/Osprey/.*", targets['Osprey']),
+    # CarafeSharp (the C# Carafe port) has no TeamCity config yet, and no other build compiles
+    # it: it depends on pwiz_tools/Shared/CommonUtil, never the reverse. Without this entry a
+    # CarafeSharp-only change falls through to pwiz_tools/.* and rebuilds All for nothing. Point
+    # it at the CarafeSharp config once one exists.
+    ("pwiz_tools/CarafeSharp/.*", {}),
     ("pwiz_tools/.*", targets['All']),
     ("Jamroot.jam", targets['All']),
     (".*\\.bat", targets['Windows']),

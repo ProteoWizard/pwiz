@@ -207,6 +207,18 @@ namespace pwiz.CarafeSharp.Test
                 Assert.AreEqual(300.0, run.PrecursorMzMin);
                 Assert.AreEqual(1800.0, run.PrecursorMzMax);
                 Assert.AreEqual(0.0, run.RtMax);
+
+                // A raw key's \n and \u are path characters, as Carafe's Python reads them, while a
+                // value's escaped \\ still decodes. Runs follow the HashMap order of the literal keys.
+                const string keyA = @"C:\new\users\a.mzML";
+                const string keyB = @"C:\new\users\b.mzML";
+                File.WriteAllText(Path.Combine(folder, CarafeModelDirectory.META_FILE),
+                    @"{""" + keyA + @""":{""nce"":1.0,""ms_file"":""C:\\new\\users\\a.mzML""}," + "\n" +
+                    @"""" + keyB + @""":{""nce"":2.0}}");
+                var runs = CarafeModelDirectory.Open(folder).Runs;
+                var expectedNce = JavaHashOrder.OrderStringKeys(new[] { keyA, keyB }).Select(k => k == keyA ? 1.0 : 2.0);
+                CollectionAssert.AreEqual(expectedNce.ToList(), runs.Select(r => r.Nce).ToList());
+                Assert.AreEqual(keyA, runs.Single(r => r.Nce == 1.0).MsFile);
             }
             finally
             {

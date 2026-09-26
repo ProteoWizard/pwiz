@@ -270,9 +270,10 @@ namespace pwiz.CarafeSharp.Proteome
         }
 
         /// <summary>
-        /// Reads meta.json, which Carafe writes with raw Windows paths as keys: a backslash that
-        /// does not start a JSON escape is read as a literal one, as Carafe's lenient parser
-        /// reads it. Entries come back in the order Carafe's HashMap iterates them.
+        /// Reads meta.json, which Carafe writes with raw Windows paths as keys. Carafe's Java
+        /// reader (fastjson2) throws on such a file; its Python reader (ai.py) reads each raw
+        /// backslash as a literal one, and so does this, so <c>C:\new\users\run.mzML</c> keeps its
+        /// <c>\n</c> and <c>\u</c>. Entries come back in the order Carafe's HashMap iterates them.
         /// </summary>
         private static List<CarafeRunMeta> ReadMeta(string path)
         {
@@ -290,6 +291,11 @@ namespace pwiz.CarafeSharp.Proteome
             return JavaHashOrder.OrderStringKeys(keys).Select(k => runs[k]).ToList();
         }
 
+        /// <summary>
+        /// ai.py's <c>re.sub(r'(?&lt;!\\)\\(?![\\"])', r'\\', content)</c>: doubles each backslash
+        /// that neither follows a backslash nor precedes a backslash or quote. The escapes Carafe's
+        /// writer puts in values (<c>\\</c> and <c>\"</c>) pass through unchanged.
+        /// </summary>
         private static string EscapeStrayBackslashes(string text)
         {
             var builder = new StringBuilder(text.Length + 16);
@@ -297,15 +303,18 @@ namespace pwiz.CarafeSharp.Proteome
             {
                 char c = text[i];
                 builder.Append(c);
-                if (c != '\\')
-                    continue;
-                char next = i + 1 < text.Length ? text[i + 1] : '\0';
-                if (@"""\/bfnrtu".IndexOf(next) >= 0)
-                    builder.Append(text[++i]);
-                else
+                if (c == '\\' && !IsEscapePart(text, i))
                     builder.Append('\\');
             }
             return builder.ToString();
+        }
+
+        private static bool IsEscapePart(string text, int i)
+        {
+            if (i > 0 && text[i - 1] == '\\')
+                return true;
+            char next = i + 1 < text.Length ? text[i + 1] : '\0';
+            return next == '\\' || next == '"';
         }
     }
 }
