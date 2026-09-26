@@ -1929,7 +1929,9 @@ namespace ZedGraph
             if (FitsDecimal(baseVal) && FitsDecimal(stepSize) && FitsDecimal(stepCount) && FitsDecimal(result))
             {
                 // If every term could fit in a decimal, do the math in decimal to avoid binary floating point noise.
-                return (double)((decimal)baseVal + (decimal)stepSize * (decimal)stepCount);
+                double decimalResult = (double)((decimal)baseVal + (decimal)stepSize * (decimal)stepCount);
+                // A decimal zero can carry a negative sign, which would be shown as "-0"
+                return decimalResult == 0 ? 0 : decimalResult;
             }
             return result;
 		}
