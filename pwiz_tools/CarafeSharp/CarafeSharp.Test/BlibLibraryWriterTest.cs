@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -119,6 +120,41 @@ namespace pwiz.CarafeSharp.Test
             }
             finally
             {
+                Directory.Delete(folder, true);
+            }
+        }
+
+        /// <summary>
+        /// A spectrum's annotations go in one multi-row INSERT up to the INSERT's row limit and in
+        /// several above it, and the rows, ids included, are those of one INSERT per peak.
+        /// Compressing the peaks on one thread gives the same tables as on many.
+        /// </summary>
+        [TestMethod]
+        public void TestAnnotationInserts()
+        {
+            string folder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"Annotations_" + Guid.NewGuid().ToString(@"N"));
+            Directory.CreateDirectory(folder);
+            try
+            {
+                const int maxRows = BlibLibraryWriter.MAX_PEAKS_PER_INSERT;
+                // One peak, the default top-N, the most one INSERT takes, one more, and more than two INSERTs' worth.
+                var peakCounts = new[] { 1, 20, maxRows, maxRows + 1, 2 * maxRows + 5, 3 };
+                var spectra = peakCounts.Select(CreateSpectrum).ToList();
+                string library = WriteLibrary(folder, @"library.blib", spectra);
+                VerifyAnnotations(library, spectra);
+
+                string oneThread = WriteLibrary(folder, @"one_thread.blib", spectra, 1);
+                foreach (string table in new[] { @"RefSpectra", @"RefSpectraPeaks", @"RefSpectraPeakAnnotations", @"Modifications",
+                             @"Proteins", @"RefSpectraProteins", @"RetentionTimes" })
+                {
+                    var expected = TableRows(library, table);
+                    Assert.IsTrue(expected.Count > 0, table);
+                    CollectionAssert.AreEqual(expected, TableRows(oneThread, table), table);
+                }
+            }
+            finally
+            {
+                SQLiteConnection.ClearAllPools();
                 Directory.Delete(folder, true);
             }
         }
@@ -238,11 +274,91 @@ namespace pwiz.CarafeSharp.Test
                 Assert.AreEqual(fragment.Mz, peakMz);
                 Assert.AreEqual(fragment.RelativeIntensity, BitConverter.ToSingle(intensityBytes, i * sizeof(float)));
                 Assert.AreEqual((long)i, annotations[i][0]);
-                string expectedName = fragment.IonType + fragment.Ordinal.ToString() + (fragment.HasLoss ? @"-" + fragment.LossType : string.Empty);
-                Assert.AreEqual(expectedName, annotations[i][1]);
+                Assert.AreEqual(ExpectedAnnotationName(fragment), annotations[i][1]);
                 Assert.AreEqual((long)fragment.Charge, annotations[i][2]);
                 Assert.AreEqual(fragment.TheoreticalMz, annotations[i][3]);
                 Assert.AreEqual(peakMz, annotations[i][4]);
+            }
+        }
+
+        /// <summary>A spectrum with this many peaks, each distinct, some with a neutral loss.</summary>
+        private static LibrarySpectrum CreateSpectrum(int peakCount, int index)
+        {
+            var fragments = Enumerable.Range(0, peakCount).Select(i => new LibraryFragment(i % 2 == 0 ? 'y' : 'b', i + 1, 1 + i % 3,
+                i % 5 == 4 ? @"H2O" : LibraryFragment.NO_LOSS, 200 + 100 * index + i + 1e-4, 200.5f + 100 * index + i, 1.0f / (i + 1))).ToArray();
+            return new LibrarySpectrum(Precursor(@"PEPTMCK", @"Carbamidomethyl@C", @"6", 2), 400.25 + index, 10.5 + index,
+                @"sp|P" + index + @"|A;sp|P" + (index + 1) + @"|B", 0, fragments)
+            {
+                SkylineModifiedSequence = @"PEPTMC[+57.02146372057]K",
+                SkylineModifications = new[] { new SkylineModification(6, 57.02146372057) },
+            };
+        }
+
+        private static string WriteLibrary(string folder, string fileName, List<LibrarySpectrum> spectra, int maxCompressionThreads = -1)
+        {
+            string path = Path.Combine(folder, fileName);
+            using (var writer = new BlibLibraryWriter(path, @"carafe_spectral_library"))
+            {
+                writer.WriteBatch(spectra, maxCompressionThreads);
+                writer.Complete();
+            }
+            return path;
+        }
+
+        /// <summary>Every annotation row, in id order: spectrum by spectrum, then peak by peak.</summary>
+        private static void VerifyAnnotations(string path, List<LibrarySpectrum> spectra)
+        {
+            using (var connection = new SQLiteConnection(new SQLiteConnectionStringBuilder { DataSource = path, ReadOnly = true }.ToString()))
+            {
+                connection.Open();
+                var rows = Rows(connection, @"SELECT id, RefSpectraID, peakIndex, name, formula, inchiKey, otherKeys, charge, adduct, comment, " +
+                                            @"mzTheoretical, mzObserved FROM RefSpectraPeakAnnotations ORDER BY id");
+                Assert.AreEqual(spectra.Sum(s => s.Fragments.Count), rows.Count);
+                int row = 0;
+                for (int i = 0; i < spectra.Count; i++)
+                {
+                    for (int peak = 0; peak < spectra[i].Fragments.Count; peak++)
+                    {
+                        var fragment = spectra[i].Fragments[peak];
+                        CollectionAssert.AreEqual(new object[] { row + 1L, i + 1L, (long)peak, ExpectedAnnotationName(fragment),
+                            string.Empty, string.Empty, string.Empty, (long)fragment.Charge, string.Empty, string.Empty,
+                            fragment.TheoreticalMz, (double)fragment.Mz }, rows[row]);
+                        row++;
+                    }
+                }
+            }
+        }
+
+        /// <summary>The annotation name BiblioSpec readers expect, built independently of the writer's code.</summary>
+        private static string ExpectedAnnotationName(LibraryFragment fragment)
+        {
+            return fragment.IonType + fragment.Ordinal.ToString(CultureInfo.InvariantCulture) +
+                   (fragment.HasLoss ? @"-" + fragment.LossType : string.Empty);
+        }
+
+        /// <summary>A table's rows in rowid order, each value with its SQLite storage class, doubles round-trip, blobs in hex.</summary>
+        private static List<string> TableRows(string path, string table)
+        {
+            using (var connection = new SQLiteConnection(new SQLiteConnectionStringBuilder { DataSource = path, ReadOnly = true }.ToString()))
+            {
+                connection.Open();
+                var columns = Column<string>(connection, @"SELECT name FROM pragma_table_info('" + table + @"')");
+                string values = string.Join(@", ", columns.Select(column => @"typeof(" + column + @"), " + column));
+                return Rows(connection, @"SELECT " + values + @" FROM " + table + @" ORDER BY rowid")
+                    .Select(row => string.Join(@"|", row.Select(FormatValue))).ToList();
+            }
+        }
+
+        private static string FormatValue(object value)
+        {
+            switch (value)
+            {
+                case byte[] bytes:
+                    return Convert.ToHexString(bytes);
+                case double number:
+                    return number.ToString(@"R", CultureInfo.InvariantCulture);
+                default:
+                    return Convert.ToString(value, CultureInfo.InvariantCulture);
             }
         }
 
