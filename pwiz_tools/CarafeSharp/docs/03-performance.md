@@ -86,6 +86,12 @@ library. The project search that follows is the same Osprey work for both and is
   `Build-Osprey.ps1 -VendorReader`. On both instruments Osprey's spectra cache from the `.raw`
   is byte-identical to the one from the converted mzML (only the source file's size and time in
   the header differ), so both paths train on exactly the same spectra.
+- **The whole workflow runs without mzML.** A complete `Run-CarafeSharpWorkflow.ps1` run on Stellar
+  read only the `.raw` files, in the training search and in the three-run project search. With
+  Osprey's C-selection fix (#4703) its project search gave 31,246 precursors, 28,390 peptides and
+  4,302 proteins at 0.61% combined FDP, against 31,460 / 28,637 / 4,338 (0.66%) and 31,104 / 28,240 /
+  4,326 (0.57%) for two runs from mzML. Without the fix, Osprey 0a0b744 sometimes picks an SVM C that
+  loses about a third of the experiment-level IDs; that happens with mzML input too.
 - **Reading `.raw` is slower than reading mzML.** On Astral, Osprey's per-file scoring took 899 s
   from the `.raw` and 541 s from the mzML, which is most of CarafeSharp's longer Osprey bar. Its
   search also writes the training export (16 s on Astral).
