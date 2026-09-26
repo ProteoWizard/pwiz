@@ -56,10 +56,12 @@ namespace pwiz.CarafeSharp
 
         public void Run()
         {
-            // What the run needs before hours of work: the library FASTA, the device, and the
-            // pretrained models the fine-tuning starts from.
+            // What the run needs before hours of work: the library FASTA, any -ms2_model, the
+            // device, and the pretrained models the fine-tuning starts from.
             if (_settings.Library != null && !File.Exists(_settings.Library.Database))
                 throw new FileNotFoundException(@"Library FASTA (-db) not found: " + _settings.Library.Database, _settings.Library.Database);
+            if (_settings.Ms2Model != null && !File.Exists(_settings.Ms2Model))
+                throw new FileNotFoundException(@"MS2 model (-ms2_model) not found: " + _settings.Ms2Model, _settings.Ms2Model);
             var device = TorchDevice.Resolve(_settings.Device, out string fallback);
             if (fallback != null)
                 Log(fallback);
@@ -106,7 +108,7 @@ namespace pwiz.CarafeSharp
                 Log(@"-no_masking: training on every ion of the kept spectra");
             CarafeTrainingDirectory.Write(_settings.OutputDirectory, trainingSet.Rt, trainingSet.Ms2);
 
-            var fineTune = new FineTuneOptions { Seed = _settings.Seed, Device = device };
+            var fineTune = new FineTuneOptions { Seed = _settings.Seed, Device = device, Ms2Model = _settings.Ms2Model };
             Result = FineTuneRun.Run(_settings.TrainRt ? trainingSet.Rt : null, _settings.TrainMs2 ? trainingSet.Ms2 : null,
                 pretrained, fineTune, _settings.OutputDirectory, Log);
             CarafeModelDirectory.WriteMeta(_settings.OutputDirectory, BuildRunMeta(exports, selection.Runs, options));

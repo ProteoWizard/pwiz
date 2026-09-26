@@ -26,9 +26,10 @@ namespace pwiz.CarafeSharp.Test
 {
     /// <summary>
     /// The pieces of Carafe's fine-tuning that are deterministic: numpy's legacy random state,
-    /// pandas sampling, the train/test split, batch-size adjustment and the learning-rate
-    /// schedule. Expected values were produced by numpy 2.5 / pandas 3.0 (the legacy
-    /// RandomState stream is frozen, so they equal Carafe's numpy 1.26 / pandas 2.2).
+    /// pandas sampling, the epoch order, the train/test split, batch-size adjustment and the
+    /// learning-rate schedule. Expected values were produced by numpy 2.5 / pandas 3.0 (the
+    /// legacy RandomState stream is frozen, so they equal Carafe's numpy 1.26 / pandas 2.2); the
+    /// epoch order by Carafe's own venv.
     /// </summary>
     [TestClass]
     public class FineTuneSamplingTest
@@ -51,6 +52,14 @@ namespace pwiz.CarafeSharp.Test
             var large = new NumpyRandomState(99).Permutation(100000);
             CollectionAssert.AreEqual(new[] { 86155, 29633, 67710, 62348, 98787 }, large.Take(5).ToArray());
             Assert.AreEqual(51894556L, large.Take(1000).Sum(v => (long)v));
+
+            // Carafe's epoch order (models.py _train_one_epoch) after np.random.seed(2024), for 20
+            // rows of lengths 7 + i % 3 in batches of 4: sample(frac=1), grouped by length, the
+            // groups in np.random.permutation order; two epochs continue the stream.
+            var shuffle = new NumpyRandomState(2024);
+            var rows = Enumerable.Range(0, 20).ToArray();
+            Assert.AreEqual(@"19,13,16,10|1,7,4|15,6,12,3|9,18,0|11,5,17,2|14,8", EpochOrder(rows, shuffle));
+            Assert.AreEqual(@"12,0,3,15|18,6,9|19,16,4,13|7,1,10|17,14,2,8|5,11", EpochOrder(rows, shuffle));
         }
 
         [TestMethod]
@@ -74,6 +83,11 @@ namespace pwiz.CarafeSharp.Test
             var none = Enumerable.Repeat(string.Empty, 30).ToArray();
             var (_, allRows) = TrainingSplit.Split(repeated, none, 29, TrainingSplit.TestCount(30));
             CollectionAssert.AreEqual(Enumerable.Range(0, 30).ToArray(), allRows);
+
+            // When every row is a training row, Carafe returns them all as they are, with no
+            // rows added per modification (psm_sampling_with_important_mods).
+            var (everyRow, _) = TrainingSplit.Split(sequences, mods, 200, testCount);
+            CollectionAssert.AreEqual(Enumerable.Range(0, 200).ToArray(), everyRow);
         }
 
         [TestMethod]
@@ -94,6 +108,12 @@ namespace pwiz.CarafeSharp.Test
             // A warmup longer than the run is halved.
             var shortRun = new FineTuneSettings { Epochs = 6, WarmupEpochs = 10, BatchSize = 64, LearningRate = 1e-4 };
             Assert.AreEqual(1.0 / 3, shortRun.LearningRateFactor(1), 1e-12);
+        }
+
+        /// <summary>One epoch's batches of <paramref name="rows"/> (length 7 + row % 3, batch 4), as "a,b|c".</summary>
+        private static string EpochOrder(int[] rows, NumpyRandomState shuffle)
+        {
+            return string.Join(@"|", ModelFineTuner.EpochBatches(rows, r => 7 + r % 3, 4, shuffle).Select(b => string.Join(@",", b)));
         }
     }
 }

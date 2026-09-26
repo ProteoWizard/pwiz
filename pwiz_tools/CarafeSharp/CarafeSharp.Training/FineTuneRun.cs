@@ -45,6 +45,12 @@ namespace pwiz.CarafeSharp.Training
 
         public int Ms2MaxTest { get; set; } = TrainingSplit.DEFAULT_MAX_TEST;
 
+        /// <summary>
+        /// Carafe's <c>--ms2_model</c>: the MS2 model to fine-tune (a checkpoint or safetensors),
+        /// which is also the baseline the fine-tuned model must beat; null for the pretrained one.
+        /// </summary>
+        public string Ms2Model { get; set; }
+
         public Device Device { get; set; } = CPU;
     }
 
@@ -70,10 +76,11 @@ namespace pwiz.CarafeSharp.Training
     }
 
     /// <summary>
-    /// Fine-tunes the pretrained RT and then MS2 model on a set of identifications, the way
-    /// Carafe's <c>ai.py --tf_type all</c> does: one seed for the run, RT first, each model
-    /// scored before and after training on the same held-out rows, and the fine-tuned MS2 model
-    /// kept only when it beats the pretrained one on all four similarity medians. Writes
+    /// Fine-tunes the pretrained RT and then MS2 model (or the MS2 model of
+    /// <see cref="FineTuneOptions.Ms2Model"/>) on a set of identifications, the way Carafe's
+    /// <c>ai.py --tf_type all</c> does: one seed for the run, RT first, each model scored before
+    /// and after training on the same held-out rows, and the fine-tuned MS2 model kept only
+    /// when it beats the starting one on all four similarity medians. Writes
     /// <c>rt.safetensors</c>, <c>ms2.safetensors</c>, Carafe's
     /// <c>model_evaluation_metrics.json</c> and CarafeSharp's <c>model.json</c>.
     /// </summary>
@@ -164,7 +171,12 @@ namespace pwiz.CarafeSharp.Training
             log(string.Format(@"MS2: {0} spectra, {1} training rows, {2} test rows, batch {3}",
                 rows.Count, train.Length, test.Length, batchSize));
 
-            using (var model = Ms2Model.FromPretrained(pretrained, options.Device))
+            // Carafe's --ms2_model replaces the pretrained model, as the start and the baseline.
+            if (options.Ms2Model != null)
+                log(@"MS2: fine-tuning " + options.Ms2Model);
+            using (var model = options.Ms2Model != null
+                       ? Ms2Model.FromFile(options.Ms2Model, options.Device)
+                       : Ms2Model.FromPretrained(pretrained, options.Device))
             {
                 result.Ms2Pretrained = Ms2Metrics.Evaluate(model, test);
                 log(@"MS2 pretrained: " + result.Ms2Pretrained);
@@ -215,10 +227,12 @@ namespace pwiz.CarafeSharp.Training
             var info = new Dictionary<string, object>
             {
                 { @"format", @"carafesharp-model-1" },
-                { @"pretrained_sha256", pretrained.Sha256 },
+                { @"pretrained_sha256", pretrained?.Sha256 },
                 { @"seed", options.Seed },
                 { @"use_finetuned_ms2", result.UseFineTunedMs2 },
             };
+            if (options.Ms2Model != null)
+                info[@"ms2_start_model"] = options.Ms2Model;
             if (result.RtFineTuned != null)
             {
                 info[@"rt"] = new Dictionary<string, object>

@@ -19,9 +19,12 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Training;
 
@@ -74,10 +77,11 @@ namespace pwiz.CarafeSharp.Test
             TestContext.WriteLine(@"Masked by: " + string.Join(@", ", trainingSet.Stats.MaskedBy.OrderBy(p => p.Key, StringComparer.Ordinal)
                 .Select(p => p.Key + @" " + p.Value)));
 
-            var carafe = CarafeTrainingDirectory.ReadMs2(carafeFolder, 30, @"Eclipse")
-                .ToDictionary(e => Key(e.Sequence, e.Precursor.Charge), StringComparer.Ordinal);
-            var records = export.Records.Where(r => r.RunPrecursorQ <= options.MaxRunQ)
-                .ToDictionary(r => Key(r.Sequence, r.Charge), StringComparer.Ordinal);
+            // Spectra by modified form and charge; a repeated key keeps its first row.
+            var carafe = FirstByKey(CarafeTrainingDirectory.ReadMs2(carafeFolder, 30, @"Eclipse"),
+                e => Key(e.Precursor.Peptide, e.Precursor.Charge), out int carafeRepeats);
+            var records = FirstByKey(export.Records.Where(r => r.RunPrecursorQ <= options.MaxRunQ), RecordKey, out int exportRepeats);
+            TestContext.WriteLine(@"Repeated keys: Carafe {0}, export {1}", carafeRepeats, exportRepeats);
             var policy = new OspreyMaskingPolicy(options.Masking);
             int common = 0, keptByBoth = 0;
             long slots = 0, agree = 0;
@@ -105,9 +109,37 @@ namespace pwiz.CarafeSharp.Test
             Assert.IsTrue(keptByBoth >= MIN_SHARED_KEPT_FRACTION * common, string.Format(@"Kept by both {0} of {1}", keptByBoth, common));
         }
 
-        private static string Key(string sequence, int charge)
+        /// <summary>A modified form and charge, its modifications in site order whatever order the source lists them in.</summary>
+        private static string Key(PeptideForm peptide, int charge)
         {
-            return sequence + @"/" + charge;
+            var modifications = Enumerable.Range(0, peptide.ModNames.Count)
+                .Select(i => peptide.ModSites[i].ToString(CultureInfo.InvariantCulture) + @":" + peptide.ModNames[i])
+                .OrderBy(m => m, StringComparer.Ordinal);
+            return peptide.Sequence + @"|" + string.Join(@";", modifications) + @"/" + charge.ToString(CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>The key of a record's mapped form, or null when its modifications do not map.</summary>
+        private static string RecordKey(OspreyTrainingRecord record)
+        {
+            return OspreyModificationMapper.TryMap(record.Sequence, record.ModifiedSequence, record.ModPositions, record.ModMasses,
+                record.ModUnimodIds, out var peptide, out _)
+                ? Key(peptide, record.Charge)
+                : null;
+        }
+
+        private static Dictionary<string, T> FirstByKey<T>(IEnumerable<T> items, Func<T, string> getKey, out int repeats)
+        {
+            var byKey = new Dictionary<string, T>(StringComparer.Ordinal);
+            repeats = 0;
+            foreach (var item in items)
+            {
+                string key = getKey(item);
+                if (key == null)
+                    continue;
+                if (!byKey.TryAdd(key, item))
+                    repeats++;
+            }
+            return byKey;
         }
     }
 }

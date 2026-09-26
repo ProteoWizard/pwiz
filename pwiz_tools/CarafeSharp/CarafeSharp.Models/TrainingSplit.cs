@@ -35,7 +35,7 @@ namespace pwiz.CarafeSharp.Models
     /// <item><c>n_test = max(1, min(maxTest, ceil(0.1 N) - 10))</c>, <c>n_train = N - n_test</c>.</item>
     /// <item>Training rows: <c>n_train</c> rows drawn with seed 1337, then for each of the 10
     /// most frequent modifications, up to 50 more rows carrying it (also seed 1337, so rows
-    /// can repeat).</item>
+    /// can repeat); when <c>n_train</c> covers every row, just the rows.</item>
     /// <item>Test rows: the rows whose sequence never occurs in training, down-sampled to
     /// <c>n_test</c> with seed 1337; all rows when none are left.</item>
     /// </list>
@@ -65,10 +65,14 @@ namespace pwiz.CarafeSharp.Models
         {
             int n = sequences.Count;
             var train = new List<int>(SampleRows(Enumerable.Range(0, n).ToArray(), trainCount));
-            foreach (string mod in TopModifications(mods))
+            // Carafe returns every row, with none added per modification, when it samples them all.
+            if (trainCount < n)
             {
-                var carrying = Enumerable.Range(0, n).Where(i => mods[i].Contains(mod, StringComparison.Ordinal)).ToArray();
-                train.AddRange(SampleRows(carrying, ROWS_PER_MOD));
+                foreach (string mod in TopModifications(mods))
+                {
+                    var carrying = Enumerable.Range(0, n).Where(i => mods[i].Contains(mod, StringComparison.Ordinal)).ToArray();
+                    train.AddRange(SampleRows(carrying, ROWS_PER_MOD));
+                }
             }
 
             var trainSequences = new HashSet<string>(train.Select(i => sequences[i]), StringComparer.Ordinal);

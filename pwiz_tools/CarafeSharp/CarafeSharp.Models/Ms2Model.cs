@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using pwiz.CarafeSharp.Models.Modules;
 using TorchSharp;
@@ -62,6 +63,14 @@ namespace pwiz.CarafeSharp.Models
         public static Ms2Model FromSafetensors(string path, Device device)
         {
             return Create(StateDict.ReadSafetensors(path), device);
+        }
+
+        /// <summary>Loads a <c>.safetensors</c> model, or else a PyTorch checkpoint.</summary>
+        public static Ms2Model FromFile(string path, Device device)
+        {
+            return string.Equals(Path.GetExtension(path), @".safetensors", StringComparison.OrdinalIgnoreCase)
+                ? FromSafetensors(path, device)
+                : FromPthFile(path, device);
         }
 
         private static Ms2Model Create(IReadOnlyDictionary<string, Tensor> weights, Device device)

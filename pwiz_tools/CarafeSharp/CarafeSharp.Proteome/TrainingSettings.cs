@@ -94,6 +94,13 @@ namespace pwiz.CarafeSharp.Proteome
         /// <summary><c>-rt_max</c>, a floor on the RT normalizer (0 = none).</summary>
         public double RtMax { get; set; }
 
+        /// <summary>
+        /// <c>-ms2_model</c>: the MS2 model (a Carafe checkpoint or CarafeSharp safetensors) to
+        /// fine-tune instead of the pretrained one, and the baseline the fine-tuned model must
+        /// beat; null for the pretrained model.
+        /// </summary>
+        public string Ms2Model { get; set; }
+
         /// <summary>CarafeSharp's <c>-pretrained</c> models zip, or null for the default.</summary>
         public string PretrainedModels { get; set; }
 

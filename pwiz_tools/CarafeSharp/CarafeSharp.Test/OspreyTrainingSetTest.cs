@@ -304,6 +304,8 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(CarafeCommandMode.predict_library,
                 CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-i", @"osprey.blib" }).Mode);
 
+            // -ms2_model: the MS2 model fine-tuning starts from.
+            Assert.AreEqual(@"m.pt", ParseExport(@"-ms2_model", @"m.pt").TrainingSettings.Ms2Model);
             // -seed is Carafe's Integer.parseInt, and numpy rejects a negative seed.
             Assert.AreEqual(7u, ParseExport(@"-seed", @"7").TrainingSettings.Seed);
             AssertThrows<ArgumentException>(() => ParseExport(@"-seed", @"-1"));
@@ -333,6 +335,10 @@ namespace pwiz.CarafeSharp.Test
                 Assert.AreEqual(fasta, Assert.ThrowsException<FileNotFoundException>(() => trainer.Run()).FileName);
                 File.WriteAllText(fasta, ">P1\nPEPTIDEK\n");
                 Assert.AreEqual(zip, Assert.ThrowsException<FileNotFoundException>(() => trainer.Run()).FileName);
+                string ms2Model = Path.Combine(folder, @"ms2_model.pt");
+                var fromMs2Model = new ModelTrainer(CarafeCommandLine.Parse(new[] { @"-i", Path.Combine(folder, @"osprey.blib"),
+                    @"-ms", @"run.mzML", @"-o", folder, @"-db", fasta, @"-pretrained", zip, @"-ms2_model", ms2Model }).TrainingSettings, null);
+                Assert.AreEqual(ms2Model, Assert.ThrowsException<FileNotFoundException>(() => fromMs2Model.Run()).FileName);
             }
             finally
             {
