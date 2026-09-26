@@ -103,6 +103,35 @@ namespace pwiz.Osprey.Core
     public static class LibraryDecoyPairing
     {
         /// <summary>
+        /// Find two decoys that share an entry_id, the pairing invariant every later stage
+        /// assumes: a decoy's id is its target's base id plus the decoy bit, so two decoys on one
+        /// id means one of them was paired to something that was not a target. Per-file
+        /// deduplication then keeps whichever scores better, one entry_id carries two peptides,
+        /// and first-pass FDR aborts hours later on the experiment-scope check. Returns false
+        /// when every decoy id is unique; otherwise the library indices of the first pair found.
+        /// </summary>
+        public static bool TryFindSharedDecoyId(IReadOnlyList<LibraryEntry> library,
+            out int firstIndex, out int secondIndex)
+        {
+            var seen = new Dictionary<uint, int>();
+            for (int i = 0; i < library.Count; i++)
+            {
+                var entry = library[i];
+                if (entry == null || !entry.IsDecoy)
+                    continue;
+                if (seen.TryGetValue(entry.Id, out int prior))
+                {
+                    firstIndex = prior;
+                    secondIndex = i;
+                    return true;
+                }
+                seen.Add(entry.Id, i);
+            }
+            firstIndex = secondIndex = -1;
+            return false;
+        }
+
+        /// <summary>
         /// Pair each un-paired decoy with a target sharing the same
         /// stripped protein accession, charge, and sorted-AA composition.
         /// Updates <paramref name="state"/> in place with new pairings;

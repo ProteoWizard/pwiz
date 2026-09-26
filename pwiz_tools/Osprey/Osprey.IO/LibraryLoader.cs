@@ -186,7 +186,11 @@ namespace pwiz.Osprey.IO
                         // from the finished library, so a cached run is not silent about the
                         // pairing fraction (issue #4650).
                         if (LibrarySuppliesDecoys(config))
+                        {
                             LogCachedPairingSummary(RecoverPairingStats(cached), logInfo);
+                            if (TryDescribeSharedDecoyId(cached, out error))
+                                return null;
+                        }
                         return cached;
                     }
                     if (status == LibraryCache.LibraryCacheStatus.IdentityMismatch)
@@ -433,6 +437,8 @@ namespace pwiz.Osprey.IO
             pairingStats.NUnpairedTargets = Math.Max(0,
                 pairingStats.NTargets - pairingState.ClaimedTargets.Count);
             LogPairingSummary(pairingStats, logInfo);
+            if (TryDescribeSharedDecoyId(library, out error))
+                return false;
             if (pairingStats.PairedFraction < config.DecoyPairMinFraction)
             {
                 error = string.Format(
@@ -497,6 +503,30 @@ namespace pwiz.Osprey.IO
         /// under composition, and the summary line says "from cache" so the two are not confused
         /// with a fresh pairing's split.</para>
         /// </summary>
+        /// <summary>
+        /// The load-time error for two decoys on one entry_id (see
+        /// <see cref="LibraryDecoyPairing.TryFindSharedDecoyId"/>), naming both library rows so
+        /// the operator can find them. Checked at load because the same defect otherwise surfaces
+        /// only in first-pass FDR, hours into a large run, as an experiment-scope q-value
+        /// disagreement that says nothing about the library.
+        /// </summary>
+        private static bool TryDescribeSharedDecoyId(List<LibraryEntry> library, out string error)
+        {
+            if (!LibraryDecoyPairing.TryFindSharedDecoyId(library, out int a, out int b))
+            {
+                error = null;
+                return false;
+            }
+            error = string.Format(
+                @"Library-decoy pairing gave two decoys the same entry_id {0}: '{1}' z{2} ({3}) and " +
+                @"'{4}' z{5} ({6}). Each decoy must pair with a distinct target. Check whether the " +
+                @"library merged a decoy with an identical target into one row.",
+                library[a].Id,
+                library[a].ModifiedSequence, library[a].Charge, string.Join(@";", library[a].ProteinIds),
+                library[b].ModifiedSequence, library[b].Charge, string.Join(@";", library[b].ProteinIds));
+            return true;
+        }
+
         private static PairingStats RecoverPairingStats(List<LibraryEntry> library)
         {
             var targetIds = new HashSet<uint>();

@@ -346,6 +346,14 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(0, stats.NPaired, @"a decoy is not a target to pair against");
                 Assert.AreEqual(10u, lib[0].Id & 0x7FFFFFFFu);
                 Assert.AreEqual(11u, lib[1].Id & 0x7FFFFFFFu);
+                Assert.IsFalse(LibraryDecoyPairing.TryFindSharedDecoyId(lib, out _, out _));
+
+                // The load-time check finds the state the old pairing produced, so any other route
+                // to it fails at load rather than in first-pass FDR.
+                lib[1].Id = lib[0].Id;
+                Assert.IsTrue(LibraryDecoyPairing.TryFindSharedDecoyId(lib, out int first, out int second));
+                Assert.AreEqual(0, first);
+                Assert.AreEqual(1, second);
             }
             finally
             {
