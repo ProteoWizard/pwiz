@@ -173,6 +173,12 @@ namespace pwiz.CarafeSharp.IO
             return ParquetColumns.ReadMetadata(path);
         }
 
+        /// <summary>An export built in memory, for tests.</summary>
+        internal static OspreyTrainingExport Create(string path, IReadOnlyList<OspreyTrainingRecord> records, IReadOnlyDictionary<string, string> metadata)
+        {
+            return new OspreyTrainingExport(path, records, metadata);
+        }
+
         private OspreyTrainingExport(string path, IReadOnlyList<OspreyTrainingRecord> records, IReadOnlyDictionary<string, string> metadata)
         {
             Path = path;

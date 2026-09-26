@@ -45,6 +45,7 @@ The final value is a sum of increments. A slot is valid only when the sum is 0.
 | Correlation | Pearson correlation of the 3-point-smoothed XIC with the "best ion" (weighted by apex intensity, skewed XICs excluded), over the refined boundaries. Masked below `-cor` (a value equal to the threshold passes). A PSM with fewer than 4 XICs or 3 scans fails for every ion. | matched |
 | Boundary skew | With `M = max apex`, `Lmed = 1.5 * median(x[start])` and `Rmed = 1.5 * median(x[end])`, set `f = 0.10` when the ion's apex is at least `0.5 * M`, else `0.25`. The ion is skewed on a side when it is above both `Lmed` (or `Rmed`) and `f * apex` there. Skew on both sides masks it. | matched |
 | m/z range | A theoretical m/z outside the MS2 scan window resets the slot to **valid, 0**; it is not masked. | any |
+| Fragment charge | A charge 2 slot of a 1+ precursor has no m/z (alphabase writes 0) and stays **valid, 0**, in the loss and the metrics. | any |
 | Intense low ordinal | b ions up to `-n_ion_min` and y ions up to `-c_ion_min` with intensity >= 0.5 x the top ion are masked unless correlation > 0.9 and skew <= 1. | matched |
 | Ordinal floor | Ordinal below `-lf_frag_n_min` (b1 and y1, both charges) is always masked. | any |
 
@@ -64,7 +65,16 @@ Intensities are divided by the top ion's intensity.
 
 Carafe takes every loaded PSM, before the MS2 gates, and collapses them to one row per peptide
 form, keeping the one with the minimum q-value. It sets `rt_norm = apex_rt / rt_max`, where
-`rt_max` is the last MS2 retention time + 0.1 min.
+`rt_max` is the last MS2 retention time + 0.1 min. With several runs it is one normalizer for
+all of them, the largest run's, or `-rt_max` when that is larger.
+
+### Collision energy and instrument
+
+Carafe trains each run at the collision energy its spectra record, else `-nce`, else 27. The
+instrument is `-ms_instrument` when given, else Carafe's name for the run's instrument model
+(`DIAMeta.get_ms_instrument`: Orbitrap Exploris 480 is Exploris, Q Exactive HF is QEHF,
+TripleTOF 6600 is SciexTOF, and so on), else Eclipse. An unrecognized model, such as the
+Stellar, trains as Eclipse, which peptdeep groups with the Stellar's Lumos family anyway.
 
 ---
 
@@ -80,7 +90,8 @@ form, keeping the one with the minimum q-value. It sets `rt_norm = apex_rt / rt_
 | Correlation to the best ion | `corr_polish`: Pearson correlation with the median polish's elution profile, over Osprey's final peak |
 | Skew inputs | `xic_start`, `xic_end` and `apex_intensity`, with Carafe's formula |
 | Scan window | `IN_SCAN_RANGE`, from the run's `.run-info.json` |
-| `rt_max`, NCE, isolation range | Footer: `osprey.rt_max` + 0.1, the dominant `osprey.collision_energies`, `osprey.isolation_mz_min/max` |
+| `rt_max`, NCE, instrument, isolation range | Footer: `osprey.rt_max` + 0.1, the dominant `osprey.collision_energies`, `osprey.instrument_model` (its PSI-MS name), `osprey.isolation_mz_min/max` |
+| No m/z for a slot | A slot without the `APPLICABLE` flag: a charge 2 slot of a 1+ precursor whose charge 1 slot is applicable stays valid; any other (a non-standard residue) is masked (`not_applicable`) |
 
 The training set (`OspreyTrainingSet`) keeps targets at run precursor q <= `-fdr` and leaves out
 entrapment peptides. It keeps one spectrum per precursor, from the run where the precursor

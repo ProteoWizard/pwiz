@@ -20,6 +20,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -55,12 +56,23 @@ namespace pwiz.CarafeSharp.Test
             Assert.IsTrue(OspreyModificationMapper.TryMap(@"SAMPLER", @"(UniMod:1)SAMPLER", new[] { 0 },
                 new[] { 42.010565 }, new[] { 1 }, out peptide, out reason), reason);
             Assert.AreEqual(@"0", peptide.ModSitesText);
-            StringAssert.EndsWith(peptide.ModsText, @"N-term");
-            // The same mass written on the residue is the residue's modification.
+            Assert.AreEqual(OspreyModificationMapper.PROTEIN_N_TERM_ACETYL, peptide.ModsText);
+            // In DIA-NN text, the same mass written on the residue is the residue's modification.
             Assert.IsTrue(OspreyModificationMapper.TryMap(@"SAMPLER", @"S(UniMod:1)AMPLER", new[] { 0 },
                 new[] { 42.010565 }, new[] { 1 }, out peptide, out reason), reason);
             Assert.AreEqual(@"Acetyl@S", peptide.ModsText);
             Assert.AreEqual(@"1", peptide.ModSitesText);
+            // A blib writes the N-term acetyl on residue 1 (BiblioSpec's convention); Carafe's
+            // OspreyBlibReader reads an acetyl there as N-terminal, whatever the residue.
+            Assert.IsTrue(OspreyModificationMapper.TryMap(@"SAMPLER", @"S[+42.0105646837]AMPLER", new[] { 0 },
+                new[] { 42.0105646837 }, new[] { -1 }, out peptide, out reason), reason);
+            Assert.AreEqual(OspreyModificationMapper.PROTEIN_N_TERM_ACETYL, peptide.ModsText);
+            Assert.AreEqual(@"0", peptide.ModSitesText);
+            // A blib sums the N-term acetyl and residue 1's own modification into one mass.
+            Assert.IsTrue(OspreyModificationMapper.TryMap(@"MPEPTIDEK", @"M[+58.00547930326]PEPTIDEK", new[] { 0 },
+                new[] { 58.00547930326 }, new[] { -1 }, out peptide, out reason), reason);
+            Assert.AreEqual(OspreyModificationMapper.PROTEIN_N_TERM_ACETYL + @";Oxidation@M", peptide.ModsText);
+            Assert.AreEqual(@"0;1", peptide.ModSitesText);
 
             // A mass alphabase does not know cannot be featurized.
             Assert.IsFalse(OspreyModificationMapper.TryMap(@"PEPCK", @"PEPC[+12.3456]K", new[] { 3 },
@@ -169,11 +181,52 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(25, masked.TopSlot);
             Assert.AreEqual(3.0 / 26, masked.Intensities[2], 1e-6);
 
-            // A charge 1 precursor has no charge 2 ions; they are masked.
+            // A charge 1 precursor has no charge 2 ions, which Carafe trains as valid zeros, even
+            // when ions outside the scan window are masked; only the ordinal floor masks them.
             var singly = NewRecord(@"PEPTIDEK", 1);
             for (int slot = 0; slot < singly.SlotCount; slot += 2)
                 Match(singly, slot, 100 + slot, 0.95f);
-            Assert.AreEqual(14L, Apply(new OspreyMaskingSettings(), singly).MaskedBy[OspreyMaskingPolicy.RULE_NOT_APPLICABLE]);
+            masked = Apply(new OspreyMaskingSettings { OutOfRange = OutOfRangeIons.masked }, singly);
+            Assert.IsNull(masked.RejectReason);
+            CollectionAssert.AreEqual(new[] { 0, 1, 26, 27 }, InvalidSlots(masked));
+            Assert.IsFalse(masked.MaskedBy.ContainsKey(OspreyMaskingPolicy.RULE_NOT_APPLICABLE));
+            Assert.IsFalse(masked.MaskedBy.ContainsKey(OspreyMaskingPolicy.RULE_OUT_OF_RANGE));
+            Assert.AreEqual(0.0, masked.Intensities[3]);
+            // An ion without an m/z (a non-standard residue) is masked, at any charge.
+            singly.IonFlags[12] = singly.IonFlags[14] = 0;
+            masked = Apply(new OspreyMaskingSettings(), singly);
+            Assert.AreEqual(4L, masked.MaskedBy[OspreyMaskingPolicy.RULE_NOT_APPLICABLE]);
+            CollectionAssert.AreEqual(new[] { 0, 1, 12, 13, 14, 15, 26, 27 }, InvalidSlots(masked));
+        }
+
+        [TestMethod]
+        public void TestTrainingRows()
+        {
+            // Two runs of unequal length, one with a collision energy and a model Carafe names,
+            // one with neither.
+            var exploris = NewExport(@"a", 10, @"{""30"":1000}", @"Orbitrap Exploris 480", @"PEPTIDEK", 5);
+            var stellar = NewExport(@"b", 20, null, @"Stellar", @"SAMPLERK", 8);
+            var exports = new[] { exploris, stellar };
+            var trainingSet = OspreyTrainingSet.Build(exports, new OspreyTrainingSetOptions { Nce = 25 });
+            // Carafe's NCE: the run's own, then -nce, then 27; its instrument name, else Eclipse.
+            var ms2 = trainingSet.Ms2.ToDictionary(e => e.Sequence);
+            Assert.AreEqual(30.0, ms2[@"PEPTIDEK"].Nce);
+            Assert.AreEqual(@"Exploris", ms2[@"PEPTIDEK"].Instrument);
+            Assert.AreEqual(25.0, ms2[@"SAMPLERK"].Nce);
+            Assert.AreEqual(OspreyTrainingSetOptions.DEFAULT_INSTRUMENT, ms2[@"SAMPLERK"].Instrument);
+            Assert.AreEqual(OspreyTrainingSetOptions.DEFAULT_NCE,
+                OspreyTrainingSet.Build(new[] { stellar }, new OspreyTrainingSetOptions()).Ms2.Single().Nce);
+            Assert.AreEqual(LibrarySettings.DEFAULT_NCE, OspreyTrainingSetOptions.DEFAULT_NCE);
+            Assert.AreEqual(LibrarySettings.DEFAULT_INSTRUMENT, OspreyTrainingSetOptions.DEFAULT_INSTRUMENT);
+            // -ms_instrument names every row's instrument.
+            Assert.IsTrue(OspreyTrainingSet.Build(exports, new OspreyTrainingSetOptions { Instrument = @"QE" }).Ms2.All(e => e.Instrument == @"QE"));
+            // One RT normalizer for every run: the longest run's rt_max, or -rt_max when larger.
+            var rt = trainingSet.Rt.ToDictionary(e => e.Peptide.Sequence);
+            Assert.AreEqual(5 / 20.1, rt[@"PEPTIDEK"].RtNorm, 1e-12);
+            Assert.AreEqual(8 / 20.1, rt[@"SAMPLERK"].RtNorm, 1e-12);
+            rt = OspreyTrainingSet.Build(exports, new OspreyTrainingSetOptions { RtMax = 30 }).Rt.ToDictionary(e => e.Peptide.Sequence);
+            Assert.AreEqual(5 / 30.0, rt[@"PEPTIDEK"].RtNorm, 1e-12);
+            Assert.AreEqual(30.0, CarafeCommandLine.Parse(new[] { @"-i", @"a.training.parquet", @"-rt_max", @"30" }).TrainingSettings.RtMax);
         }
 
         [TestMethod]
@@ -436,6 +489,25 @@ namespace pwiz.CarafeSharp.Test
                     record.IonMz[slot] = double.NaN;
             }
             return record;
+        }
+
+        /// <summary>A run's export holding one confidently identified precursor at charge 2, every ion clean.</summary>
+        private static OspreyTrainingExport NewExport(string stem, double rtMax, string collisionEnergies, string instrument,
+            string sequence, double apexRt)
+        {
+            var record = NewRecord(sequence, 2);
+            for (int slot = 0; slot < record.SlotCount; slot++)
+                Match(record, slot, slot == 10 ? 1000 : 100 + slot, 0.95f);
+            record.FileName = stem;
+            record.ApexRt = apexRt;
+            var metadata = new Dictionary<string, string>
+            {
+                { @"osprey.rt_max", rtMax.ToString(CultureInfo.InvariantCulture) },
+                { @"osprey.instrument_model", instrument },
+            };
+            if (collisionEnergies != null)
+                metadata.Add(@"osprey.collision_energies", collisionEnergies);
+            return OspreyTrainingExport.Create(stem + OspreyTrainingExport.FILE_SUFFIX, new[] { record }, metadata);
         }
 
         private static void Match(OspreyTrainingRecord record, int slot, float intensity, float correlation)

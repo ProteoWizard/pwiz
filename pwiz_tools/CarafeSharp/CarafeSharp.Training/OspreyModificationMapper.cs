@@ -30,13 +30,30 @@ namespace pwiz.CarafeSharp.Training
     /// alphabase <see cref="PeptideForm"/> (<c>Name@Site</c> at site 0 for the N-terminus and
     /// 1..n for residues). The UniMod id decides the name when the library gave one; otherwise
     /// the mass does, within <see cref="MASS_TOLERANCE"/>. Osprey puts an N-terminal
-    /// modification at position 0 like a modification of the first residue, so the modified
-    /// sequence's leading bracket tells them apart.
+    /// modification at position 0 like a modification of the first residue:
+    /// <list type="bullet">
+    /// <item>A modified sequence with a leading bracket (DIA-NN's <c>(UniMod:1)PEPTIDE</c>) marks
+    /// it N-terminal.</item>
+    /// <item>An acetyl (UniMod 1, or 42.010565 Da) at position 0 is N-terminal whatever residue
+    /// it is written on, as Carafe's OspreyBlibReader reads a blib, where BiblioSpec writes the
+    /// N-terminal acetyl on residue 1 (<c>S[+42.0106]AMPLER</c>); only DIA-NN text (UniMod
+    /// notation) can put it on the residue itself (<c>S(UniMod:1)</c>).</item>
+    /// <item>A blib sums the N-terminal acetyl with residue 1's own modification
+    /// (<c>M[+58.0055]</c>); a position 0 mass matching no residue modification is read as the
+    /// acetyl plus the modification of the rest.</item>
+    /// </list>
     /// </summary>
     public static class OspreyModificationMapper
     {
         public const double MASS_TOLERANCE = 0.001;
 
+        /// <summary>The alphabase name Carafe gives an N-terminal acetyl.</summary>
+        public const string PROTEIN_N_TERM_ACETYL = @"Acetyl@Protein_N-term";
+
+        /// <summary>The acetyl mass Carafe's OspreyBlibReader matches.</summary>
+        public const double ACETYL_MASS = 42.010565;
+
+        private const int ACETYL_UNIMOD_ID = 1;
         private const string ANY_N_TERM = @"Any N-term";
         private const string PROTEIN_N_TERM = @"Protein N-term";
 
@@ -57,6 +74,7 @@ namespace pwiz.CarafeSharp.Training
             var names = new List<string>(positions.Count);
             var sites = new List<int>(positions.Count);
             bool leadingNTerm = HasLeadingModification(modifiedSequence);
+            bool uniModText = modifiedSequence != null && modifiedSequence.IndexOf(@"(UniMod:", StringComparison.Ordinal) >= 0;
             for (int i = 0; i < positions.Count; i++)
             {
                 int position = positions[i];
@@ -65,16 +83,38 @@ namespace pwiz.CarafeSharp.Training
                     reason = string.Format(@"modification position {0} is outside {1}", position, sequence);
                     return false;
                 }
+                double mass = masses[i];
                 int unimod = i < unimodIds.Count ? unimodIds[i] : -1;
-                // Only the first modification at position 0 can be the bracketed N-terminal one.
-                bool nTerm = position == 0 && leadingNTerm && !sites.Contains(0);
+                string residue = sequence[position].ToString();
+                // Only the first modification at position 0 can be the N-terminal one.
+                bool atStart = position == 0 && !sites.Contains(0);
+                if (atStart && (leadingNTerm || !uniModText) && IsAcetyl(mass, unimod))
+                {
+                    names.Add(PROTEIN_N_TERM_ACETYL);
+                    sites.Add(0);
+                    continue;
+                }
+                bool nTerm = atStart && leadingNTerm;
                 var definition = nTerm
-                    ? Find(ANY_N_TERM, masses[i], unimod) ?? Find(PROTEIN_N_TERM, masses[i], unimod)
-                    : Find(sequence[position].ToString(), masses[i], unimod);
+                    ? Find(ANY_N_TERM, mass, unimod) ?? Find(PROTEIN_N_TERM, mass, unimod)
+                    : Find(residue, mass, unimod);
+                if (definition == null && atStart && !leadingNTerm)
+                {
+                    // A blib's sum of the N-terminal acetyl and residue 1's modification.
+                    var remainder = Find(residue, mass - ACETYL_MASS, -1);
+                    if (remainder != null)
+                    {
+                        names.Add(PROTEIN_N_TERM_ACETYL);
+                        sites.Add(0);
+                        names.Add(remainder.Name);
+                        sites.Add(1);
+                        continue;
+                    }
+                }
                 if (definition == null)
                 {
                     reason = string.Format(@"no alphabase modification of {0:F4} Da (UniMod {1}) at {2}{3}",
-                        masses[i], unimod, nTerm ? @"the N-terminus of " : sequence[position] + @" of ", sequence);
+                        mass, unimod, nTerm ? @"the N-terminus of " : residue + @" of ", sequence);
                     return false;
                 }
                 names.Add(definition.Name);
@@ -82,6 +122,11 @@ namespace pwiz.CarafeSharp.Training
             }
             peptide = new PeptideForm(sequence, names, sites);
             return true;
+        }
+
+        private static bool IsAcetyl(double mass, int unimod)
+        {
+            return unimod == ACETYL_UNIMOD_ID || Math.Abs(mass - ACETYL_MASS) <= MASS_TOLERANCE;
         }
 
         private static ModificationDefinition Find(string site, double mass, int unimod)

@@ -151,7 +151,9 @@ namespace pwiz.CarafeSharp.Training
     /// <list type="bullet">
     /// <item>An unmatched ion trains as intensity 0 (the model learns it is absent); only the
     /// ordinal floor masks unmatched ions. An ion outside the scan window is 0 and valid, or
-    /// masked with <see cref="OutOfRangeIons.masked"/>.</item>
+    /// masked with <see cref="OutOfRangeIons.masked"/>. A charge 2 ion of a 1+ precursor is 0
+    /// and valid, as Carafe trains it; an ion without an m/z (a non-standard residue) is
+    /// masked.</item>
     /// <item>A matched ion is masked when its apex peak is shared (another confident precursor,
     /// or another ion of this one), when it correlates poorly with the elution profile, when it
     /// is elevated at both peak boundaries, and, for an intense low-ordinal ion, when it is not
@@ -226,10 +228,17 @@ namespace pwiz.CarafeSharp.Training
             for (int slot = 0; slot < slots; slot++)
             {
                 int invalid = 0;
+                // A charge 2 ion of a 1+ precursor is a valid zero, as Carafe trains it; only an
+                // ion without an m/z (a non-standard residue) is not applicable.
                 if (!record.Has(slot, OspreyIonFlags.APPLICABLE))
-                    invalid += Mask(result, RULE_NOT_APPLICABLE);
+                {
+                    if (!IsNotApplicableByChargeOnly(record, slot))
+                        invalid += Mask(result, RULE_NOT_APPLICABLE);
+                }
                 else if (!inRange[slot] && _settings.OutOfRange == OutOfRangeIons.masked)
+                {
                     invalid += Mask(result, RULE_OUT_OF_RANGE);
+                }
                 if (scored[slot])
                     invalid += MatchedRules(record, slot, ordinals[slot], skew[slot], selfShared[slot], topIntensity, result);
                 if (ordinals[slot] < _settings.MinFragmentOrdinal)
@@ -366,6 +375,17 @@ namespace pwiz.CarafeSharp.Training
         private static bool IsB(int slot)
         {
             return slot % AlphabaseFragmentMz.COLUMN_COUNT < AlphabaseFragmentMz.Y_Z1;
+        }
+
+        /// <summary>
+        /// True for a slot that is not applicable only because its fragment charge exceeds the
+        /// precursor's: a charge 2 ion of a 1+ precursor whose charge 1 ion is applicable.
+        /// </summary>
+        private static bool IsNotApplicableByChargeOnly(OspreyTrainingRecord record, int slot)
+        {
+            int column = slot % AlphabaseFragmentMz.COLUMN_COUNT;
+            bool charge2 = column == AlphabaseFragmentMz.B_Z2 || column == AlphabaseFragmentMz.Y_Z2;
+            return charge2 && record.Charge < 2 && record.Has(slot - 1, OspreyIonFlags.APPLICABLE);
         }
 
         private static double Median(IEnumerable<double> values)

@@ -172,7 +172,7 @@ namespace pwiz.CarafeSharp.Proteome
                     @"  -device cpu|gpu -pairing_manifest <tsv>; CarafeSharp only: -pretrained <pretrained_models.zip>",
                     @"Training options (Carafe's): -se Osprey -fdr <q> -cor <r> -n_ion_min <n> -c_ion_min <n> -lf_frag_n_min <n>",
                     @"  -nf <n> -min_n <n> -valid -no_masking -tf all|ms2|rt -seed <n> -nce <nce> -ms_instrument <name>",
-                    @"  -device cpu|gpu; CarafeSharp only: -pretrained <pretrained_models.zip>");
+                    @"  -rt_max <min> -device cpu|gpu; CarafeSharp only: -pretrained <pretrained_models.zip>");
             }
         }
 
@@ -329,6 +329,8 @@ namespace pwiz.CarafeSharp.Proteome
                 settings.Nce = ParseDouble(@"nce", nce);
             if (TryGet(@"ms_instrument", out string instrument))
                 settings.Instrument = instrument;
+            if (TryGet(@"rt_max", out string rtMax))
+                settings.RtMax = ParseDouble(@"rt_max", rtMax);
             if (TryGet(@"pretrained", out string pretrained))
                 settings.PretrainedModels = pretrained;
             if (Has(@"db"))

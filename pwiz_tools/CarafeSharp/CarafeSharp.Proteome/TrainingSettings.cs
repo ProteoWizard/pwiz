@@ -82,11 +82,17 @@ namespace pwiz.CarafeSharp.Proteome
         /// <summary><c>-device</c>: cpu or gpu (falls back to the CPU).</summary>
         public string Device { get; set; } = LibrarySettings.DEFAULT_DEVICE;
 
-        /// <summary><c>-nce</c>, or null to take each export's dominant collision energy.</summary>
+        /// <summary>
+        /// <c>-nce</c>: the collision energy of a run whose export records none, as Carafe uses
+        /// it (a run's own collision energy comes first); null for Carafe's default of 27.
+        /// </summary>
         public double? Nce { get; set; }
 
-        /// <summary><c>-ms_instrument</c>, or null to take the export's instrument model.</summary>
+        /// <summary><c>-ms_instrument</c>, or null to take each run's instrument model by Carafe's name for it.</summary>
         public string Instrument { get; set; }
+
+        /// <summary><c>-rt_max</c>, a floor on the RT normalizer (0 = none).</summary>
+        public double RtMax { get; set; }
 
         /// <summary>CarafeSharp's <c>-pretrained</c> models zip, or null for the default.</summary>
         public string PretrainedModels { get; set; }

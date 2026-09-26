@@ -86,6 +86,7 @@ namespace pwiz.CarafeSharp
                 MaxRunQ = _settings.Fdr,
                 Nce = _settings.Nce,
                 Instrument = _settings.Instrument,
+                RtMax = _settings.RtMax,
                 UseMasking = !_settings.NoMasking,
                 Masking = new OspreyMaskingSettings
                 {

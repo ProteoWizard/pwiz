@@ -30,6 +30,12 @@ namespace pwiz.CarafeSharp.Training
     /// <summary>Options for <see cref="OspreyTrainingSet.Build"/>, with Carafe's defaults.</summary>
     public sealed class OspreyTrainingSetOptions
     {
+        /// <summary>Carafe's default collision energy (<c>CParameter.NCE</c>).</summary>
+        public const double DEFAULT_NCE = 27.0;
+
+        /// <summary>Carafe's default instrument, for a run whose instrument it does not recognize.</summary>
+        public const string DEFAULT_INSTRUMENT = @"Eclipse";
+
         /// <summary>Carafe's <c>-fdr</c>: the second-pass run precursor q-value a training precursor needs.</summary>
         public double MaxRunQ { get; set; } = 0.01;
 
@@ -37,15 +43,29 @@ namespace pwiz.CarafeSharp.Training
         public bool IncludeEntrapment { get; set; }
 
         /// <summary>
-        /// Added to the run's last MS2 retention time to give the RT normalizer, as Carafe's
-        /// <c>rt_max</c> is (<c>rt_norm = rt / (last MS2 RT + 0.1)</c>).
+        /// Added to a run's last MS2 retention time to give its <c>rt_max</c>, as Carafe's is
+        /// (the last MS2 RT + 0.1).
         /// </summary>
         public double RtMaxPadding { get; set; } = 0.1;
 
-        /// <summary>The collision energy to train with; null takes the export's dominant one.</summary>
+        /// <summary>
+        /// Carafe's <c>-rt_max</c>, a floor on the RT normalizer (0 = none). Every RT row is
+        /// divided by one normalizer, the larger of this and every run's rt_max, as Carafe's is.
+        /// </summary>
+        public double RtMax { get; set; }
+
+        /// <summary>
+        /// Carafe's <c>-nce</c>: the collision energy of a run whose export records none (the
+        /// run's own is used when it has one, as Carafe does); null for Carafe's default,
+        /// <see cref="DEFAULT_NCE"/>.
+        /// </summary>
         public double? Nce { get; set; }
 
-        /// <summary>The instrument to train with; null takes the export's instrument model.</summary>
+        /// <summary>
+        /// Carafe's <c>-ms_instrument</c>, the instrument of every row; null takes each run's
+        /// instrument model by Carafe's name for it (<see cref="OspreyTrainingSet.GetCarafeInstrument"/>), else
+        /// <see cref="DEFAULT_INSTRUMENT"/>.
+        /// </summary>
         public string Instrument { get; set; }
 
         public OspreyMaskingSettings Masking { get; set; } = new OspreyMaskingSettings();
@@ -68,6 +88,9 @@ namespace pwiz.CarafeSharp.Training
         public int Unmapped { get; set; }
         public int DuplicatePrecursors { get; set; }
         public int RtRows { get; set; }
+
+        /// <summary>The normalizer every RT row was divided by.</summary>
+        public double RtMax { get; set; }
         public int Ms2Candidates { get; set; }
         public int Ms2Rows { get; set; }
         public Dictionary<string, int> Ms2Rejected { get; } = new Dictionary<string, int>(StringComparer.Ordinal);
@@ -81,11 +104,12 @@ namespace pwiz.CarafeSharp.Training
         {
             return string.Format(
                 @"{0} exported precursors: {1} above q, {2} entrapment, {3} unmappable, {4} repeats of a precursor in another run; " +
-                @"RT {5} peptide forms; MS2 {6} of {7} spectra kept ({8}); slots {9}, matched {10:P1}, valid of matched {11:P1}, masked of unmatched {12:P1}",
+                @"RT {5} peptide forms (rt_max {13:F4}); MS2 {6} of {7} spectra kept ({8}); slots {9}, matched {10:P1}, valid of matched {11:P1}, " +
+                @"masked of unmatched {12:P1}",
                 Records, AboveQ, Entrapment, Unmapped, DuplicatePrecursors, RtRows, Ms2Rows, Ms2Candidates,
                 string.Join(@", ", Ms2Rejected.OrderBy(p => p.Key, StringComparer.Ordinal).Select(p => p.Key + @" " + p.Value)),
                 Slots, Fraction(MatchedSlots, Slots), Fraction(ValidMatchedSlots, MatchedSlots),
-                Fraction(MaskedUnmatchedSlots, Slots - MatchedSlots));
+                Fraction(MaskedUnmatchedSlots, Slots - MatchedSlots), RtMax);
         }
 
         private static double Fraction(long part, long whole)
@@ -103,17 +127,34 @@ namespace pwiz.CarafeSharp.Training
     /// </summary>
     public sealed class OspreyTrainingSet
     {
+        /// <summary>
+        /// Carafe's names for the instrument models it recognizes, by the PSI-MS name Osprey
+        /// reports (DIAMeta.get_ms_instrument maps the same models by CV accession).
+        /// </summary>
+        private static readonly Dictionary<string, string> CARAFE_INSTRUMENTS = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            { @"Orbitrap Eclipse", @"Eclipse" },         // MS:1003029
+            { @"Orbitrap Exploris 480", @"Exploris" },   // MS:1003028
+            { @"Orbitrap Astral", @"Astral" },           // MS:1003378
+            { @"Orbitrap Fusion", @"Fusion" },           // MS:1002416
+            { @"Orbitrap Fusion Lumos", @"Lumos" },      // MS:1002732
+            { @"Q Exactive", @"QE" },                    // MS:1001911
+            { @"Q Exactive HF", @"QEHF" },               // MS:1002523
+            { @"Exactive Plus", @"QE+" },                // MS:1002526
+            { @"Q Exactive Plus", @"QE+" },              // MS:1002634
+            { @"Q Exactive HF-X", @"QEHFX" },            // MS:1002877
+            { @"TripleTOF 6600", @"SciexTOF" },          // MS:1002533
+        };
+
         public static OspreyTrainingSet Build(IReadOnlyList<OspreyTrainingExport> exports, OspreyTrainingSetOptions options)
         {
             var stats = new OspreyTrainingSetStats();
             var candidates = new List<Candidate>();
+            double rtMax = GetRtMax(exports, options);
             foreach (var export in exports)
             {
-                double rtMax = export.RtMax + options.RtMaxPadding;
-                double nce = options.Nce ?? export.DominantCollisionEnergy ??
-                    throw new InvalidOperationException(string.Format(
-                        @"{0} records no collision energy; give one explicitly.", export.Path));
-                string instrument = options.Instrument ?? export.InstrumentModel ?? string.Empty;
+                double nce = GetNce(export, options.Nce);
+                string instrument = options.Instrument ?? GetCarafeInstrument(export.InstrumentModel) ?? OspreyTrainingSetOptions.DEFAULT_INSTRUMENT;
                 foreach (var record in export.Records)
                 {
                     stats.Records++;
@@ -133,7 +174,7 @@ namespace pwiz.CarafeSharp.Training
                         stats.Unmapped++;
                         continue;
                     }
-                    candidates.Add(new Candidate(record, peptide, rtMax, nce, instrument));
+                    candidates.Add(new Candidate(record, peptide, nce, instrument));
                 }
             }
 
@@ -152,9 +193,10 @@ namespace pwiz.CarafeSharp.Training
                 .Select(g => g.OrderBy(c => c.Record.RunPrecursorQ).ThenBy(c => c.Record.Pep)
                     .ThenByDescending(c => c.Record.Score).First())
                 .OrderBy(c => c.Record.FileName, StringComparer.Ordinal).ThenBy(c => c.Record.EntryId)
-                .Select(c => new RtTrainingExample(c.Peptide, c.Record.ApexRt / c.RtMax))
+                .Select(c => new RtTrainingExample(c.Peptide, c.Record.ApexRt / rtMax))
                 .ToArray();
             stats.RtRows = rt.Length;
+            stats.RtMax = rtMax;
 
             var policy = new OspreyMaskingPolicy(options.Masking);
             var ms2 = new List<Ms2TrainingExample>(best.Length);
@@ -182,6 +224,33 @@ namespace pwiz.CarafeSharp.Training
             return new OspreyTrainingSet(rt, ms2, stats);
         }
 
+        /// <summary>
+        /// Carafe's name for an instrument model as Osprey reports it (its PSI-MS name), or null
+        /// for a model Carafe does not recognize.
+        /// </summary>
+        public static string GetCarafeInstrument(string instrumentModel)
+        {
+            return instrumentModel != null && CARAFE_INSTRUMENTS.TryGetValue(instrumentModel.Trim(), out string name) ? name : null;
+        }
+
+        /// <summary>The collision energy Carafe trains a run with: its own, else <paramref name="nce"/>, else 27.</summary>
+        public static double GetNce(OspreyTrainingExport export, double? nce)
+        {
+            return export.DominantCollisionEnergy ?? nce ?? OspreyTrainingSetOptions.DEFAULT_NCE;
+        }
+
+        /// <summary>A run's <c>rt_max</c>, the larger of <c>-rt_max</c> and its last MS2 RT plus the padding.</summary>
+        public static double GetRtMax(OspreyTrainingExport export, OspreyTrainingSetOptions options)
+        {
+            return Math.Max(options.RtMax, export.RtMax + options.RtMaxPadding);
+        }
+
+        /// <summary>The one RT normalizer of a training set: the largest <see cref="GetRtMax(OspreyTrainingExport, OspreyTrainingSetOptions)"/>.</summary>
+        public static double GetRtMax(IReadOnlyList<OspreyTrainingExport> exports, OspreyTrainingSetOptions options)
+        {
+            return exports.Aggregate(options.RtMax, (max, export) => Math.Max(max, GetRtMax(export, options)));
+        }
+
         private OspreyTrainingSet(IReadOnlyList<RtTrainingExample> rt, IReadOnlyList<Ms2TrainingExample> ms2, OspreyTrainingSetStats stats)
         {
             Rt = rt;
@@ -197,11 +266,10 @@ namespace pwiz.CarafeSharp.Training
 
         private sealed class Candidate
         {
-            public Candidate(OspreyTrainingRecord record, PeptideForm peptide, double rtMax, double nce, string instrument)
+            public Candidate(OspreyTrainingRecord record, PeptideForm peptide, double nce, string instrument)
             {
                 Record = record;
                 Peptide = peptide;
-                RtMax = rtMax;
                 Nce = nce;
                 Instrument = instrument;
                 FormKey = peptide.Sequence + @"|" + peptide.ModsText + @"|" + peptide.ModSitesText;
@@ -210,7 +278,6 @@ namespace pwiz.CarafeSharp.Training
 
             public OspreyTrainingRecord Record { get; }
             public PeptideForm Peptide { get; }
-            public double RtMax { get; }
             public double Nce { get; }
             public string Instrument { get; }
             public string FormKey { get; }
