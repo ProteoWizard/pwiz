@@ -55,10 +55,11 @@ namespace pwiz.Osprey.IO
         /// consumer parse-order decoy ids. The header hash widened to match (see
         /// <c>LibraryLoader.LibraryCompositionHash</c>), so a v2 file fails both checks.
         ///
-        /// <para>v4: manifest pairing no longer pairs a decoy against a decoy the manifest calls a
-        /// target, which gave two decoys one entry_id. A v3 cache can hold that finished state,
-        /// and it is keyed on the source hash alone, so without the bump a fixed build would keep
-        /// loading the colliding ids.</para>
+        /// <para>v4: the loader now refuses a library whose manifest lists a decoy's sequence as
+        /// a target, a case that used to give two decoys one entry_id. A v3 cache can hold that
+        /// finished, colliding state, and the composition hash does not change with the build.
+        /// The cached-path backstop would still refuse it, but only with the generic shared-id
+        /// message; the bump forces the rebuild that produces the per-row listing.</para>
         /// </remarks>
         private const uint VERSION = 4;
 

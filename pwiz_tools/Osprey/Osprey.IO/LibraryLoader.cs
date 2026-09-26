@@ -179,7 +179,7 @@ namespace pwiz.Osprey.IO
                                 @"({2} base_ids retained for the 1st-pass retained set)",
                                 skipped, cached.Count, options.RetainFragmentsFor.Count));
                         }
-                        // ALREADY FINISHED. A v3 cache was written after marking and pairing, so
+                        // ALREADY FINISHED. A v3+ cache was written after marking and pairing, so
                         // re-running them here would redo work whose result is in the bytes -
                         // and, for the manifest arm, re-read a file the composition hash has
                         // already proven unchanged. The summary is still reported, recovered
@@ -312,8 +312,9 @@ namespace pwiz.Osprey.IO
         }
         /// <summary>
         /// Finish a supplied-decoy library: mark the decoys, then pair each to its target.
-        /// Returns false with <paramref name="error"/> set on the two faults that make the
-        /// library unusable - no decoys matched at all, and a paired fraction below the
+        /// Returns false with <paramref name="error"/> set on the faults that make the library
+        /// unusable - no decoys matched at all, a manifest that lists a library decoy's sequence
+        /// as a target, two decoys sharing an entry_id, and a paired fraction below the
         /// configured threshold.
         ///
         /// <para>INSIDE the load, and ahead of the cache write, deliberately (issue #4650).
@@ -325,7 +326,7 @@ namespace pwiz.Osprey.IO
         /// finish the same way. Anything keyed on a FINAL base_id - the retained-set skip this
         /// issue exists to enable - could not address those rows at all.</para>
         ///
-        /// <para>The caller keeps the failure semantics it always had: these two faults are
+        /// <para>The caller keeps the failure semantics it always had: these faults are
         /// errors that stop the run, not warnings, because FDR estimates without proper
         /// target-decoy competition are not worth producing.</para>
         /// </summary>

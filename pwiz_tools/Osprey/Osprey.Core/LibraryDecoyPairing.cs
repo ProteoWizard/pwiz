@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace pwiz.Osprey.Core
 {
@@ -114,23 +115,30 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static List<List<int>> FindSharedDecoyIds(IReadOnlyList<LibraryEntry> library)
         {
-            var byId = new Dictionary<uint, List<int>>();
-            var shared = new List<List<int>>();
+            // First index per id, and a list only once an id repeats: a library is millions of
+            // decoys and almost never has a collision, so a list per decoy would be hundreds of
+            // MB of garbage on every load.
+            var firstById = new Dictionary<uint, int>(library.Count / 2);
+            var groupById = new Dictionary<uint, List<int>>();
             for (int i = 0; i < library.Count; i++)
             {
                 var entry = library[i];
                 if (entry == null || !entry.IsDecoy)
                     continue;
-                if (!byId.TryGetValue(entry.Id, out var indices))
+                if (!firstById.TryGetValue(entry.Id, out int first))
                 {
-                    byId.Add(entry.Id, new List<int> { i });
+                    firstById.Add(entry.Id, i);
                     continue;
                 }
-                if (indices.Count == 1)
-                    shared.Add(indices);
-                indices.Add(i);
+                if (!groupById.TryGetValue(entry.Id, out var group))
+                {
+                    group = new List<int> { first };
+                    groupById.Add(entry.Id, group);
+                }
+                group.Add(i);
             }
-            return shared;
+            // Ordered by first member, as the Rust implementation reports them.
+            return groupById.Values.OrderBy(group => group[0]).ToList();
         }
 
         /// <summary>

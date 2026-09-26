@@ -360,6 +360,20 @@ namespace pwiz.Osprey.Test
                 var shared = LibraryDecoyPairing.FindSharedDecoyIds(lib);
                 Assert.AreEqual(1, shared.Count, @"one id shared, reported once");
                 CollectionAssert.AreEqual(new[] { 0, 1, 2 }, shared[0], @"targets are not decoys");
+
+                // Several groups come back ordered by first member, as Rust reports them:
+                // interleaved ids A, B, B, A give [0, 3] before [1, 2].
+                var interleaved = new List<LibraryEntry>
+                {
+                    MakeEntry(20, @"PEPA", 2, true), MakeEntry(21, @"PEPB", 2, true),
+                    MakeEntry(22, @"PEPC", 2, true), MakeEntry(23, @"PEPD", 2, true),
+                };
+                interleaved[0].Id = interleaved[3].Id = 20u | LibraryEntry.DECOY_ID_BIT;
+                interleaved[1].Id = interleaved[2].Id = 21u | LibraryEntry.DECOY_ID_BIT;
+                var groups = LibraryDecoyPairing.FindSharedDecoyIds(interleaved);
+                Assert.AreEqual(2, groups.Count);
+                CollectionAssert.AreEqual(new[] { 0, 3 }, groups[0]);
+                CollectionAssert.AreEqual(new[] { 1, 2 }, groups[1]);
             }
             finally
             {
