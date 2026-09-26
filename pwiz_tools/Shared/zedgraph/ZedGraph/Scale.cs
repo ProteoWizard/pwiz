@@ -1,6 +1,6 @@
 //============================================================================
 //ZedGraph Class Library - A Flexible Line Graph/Bar Graph Library in C#
-//Copyright © 2004  John Champion
+//Copyright Â© 2004  John Champion
 //
 //This library is free software; you can redistribute it and/or
 //modify it under the terms of the GNU Lesser General Public
@@ -1916,7 +1916,31 @@ namespace ZedGraph
 		virtual internal double CalcMajorTicValue( double baseVal, double tic )
 		{
 			// Default behavior is a normal linear scale (also works for ordinal types)
-			return baseVal + (double) _majorStep * tic;
+			return AddSteps( baseVal, _majorStep, tic );
+		}
+
+        /// <summary>
+        /// Adds a multiple of stepSize to baseVal. This method should be used in order to avoid
+        /// introducing floating point noise.
+        /// </summary>
+        internal static double AddSteps( double baseVal, double stepSize, double stepCount )
+		{
+			double result = baseVal + stepSize * stepCount;
+            if (FitsDecimal(baseVal) && FitsDecimal(stepSize) && FitsDecimal(stepCount) && FitsDecimal(result))
+            {
+                // If every term could fit in a decimal, do the math in decimal to avoid binary floating point noise.
+                double decimalResult = (double)((decimal)baseVal + (decimal)stepSize * (decimal)stepCount);
+                // A decimal zero can carry a negative sign, which would be shown as "-0"
+                return decimalResult == 0 ? 0 : decimalResult;
+            }
+            return result;
+		}
+
+		private static bool FitsDecimal( double value )
+		{
+			// Outside this range decimal either overflows or cannot hold 15 significant digits
+			double abs = Math.Abs( value );
+			return abs == 0 || ( abs >= 1e-13 && abs <= 1e27 );
 		}
 
 		/// <summary>
@@ -1939,7 +1963,7 @@ namespace ZedGraph
 		virtual internal double CalcMinorTicValue( double baseVal, int iTic )
 		{
 			// default behavior is a linear axis (works for ordinal types too
-			return baseVal + (double) _minorStep * (double) iTic;
+			return AddSteps( baseVal, _minorStep, iTic );
 		}
 
 		/// <summary>
@@ -1984,8 +2008,7 @@ namespace ZedGraph
 			{
 				// default behavior is linear or ordinal type
 				// go to the nearest even multiple of the step size
-				return Math.Ceiling( (double)_min / (double)_majorStep - 0.00000001 )
-														* (double)_majorStep;
+				return AddSteps( 0, _majorStep, Math.Ceiling( (double)_min / (double)_majorStep - 0.00000001 ) );
 			}
 		}
 
