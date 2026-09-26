@@ -126,10 +126,10 @@ namespace pwiz.Osprey
                 }
 
                 stopwatch.Stop();
-                LogInfo("");
+                LogInfo(@"");
                 ctx.LogInfo(LogTag.TIMING, @"Total pipeline: {0:F1}s",
                     stopwatch.Elapsed.TotalSeconds);
-                LogInfo(string.Format("Analysis complete in {0}", FormatDuration(stopwatch.Elapsed)));
+                LogInfo(string.Format(OspreyResources.AnalysisPipeline_Run_Analysis_complete_in__0_, FormatDuration(stopwatch.Elapsed)));
                 return 0;
             }
             catch (Exception ex)
@@ -141,7 +141,7 @@ namespace pwiz.Osprey
                 // constructor frame, which leaves a file lock, a full disk and a missing
                 // native library indistinguishable. ToString() prints the type, the message,
                 // every inner exception and the stack.
-                LogError(string.Format("Pipeline failed: {0}", ex));
+                LogError(string.Format(OspreyResources.AnalysisPipeline_Run_Pipeline_failed___0_, ex));
                 return 1;
             }
         }
@@ -196,9 +196,9 @@ namespace pwiz.Osprey
             // (one task -> two pipeline stages).
             string stageName = task.Name switch
             {
-                PerFileScoringTask.TASK_NAME => "stage1to4",
-                FirstPassFdrTask.TASK_NAME => "stage5",
-                PerFileRescoreTask.TASK_NAME => "stage6",
+                PerFileScoringTask.TASK_NAME => @"stage1to4",
+                FirstPassFdrTask.TASK_NAME => @"stage5",
+                PerFileRescoreTask.TASK_NAME => @"stage6",
                 _                => null,
             };
             if (stageName != null)
@@ -237,7 +237,7 @@ namespace pwiz.Osprey
                 catch (Exception ex)
                 {
                     ctx.LogWarning(string.Format(
-                        "Failed to record that --task {0} completed {1}: {2}. A resume will redo this step.",
+                        OspreyResources.AnalysisPipeline_WriteTaskSidecars_Failed_to_record_that_task__0__completed__1____2___A_resume_will_redo_this_step_,
                         task.Name, output, ex.Message));
                 }
             }
@@ -248,24 +248,24 @@ namespace pwiz.Osprey
             if (duration.TotalDays >= 1)
             {
                 if (duration.Hours > 0)
-                    return string.Format("{0} days {1} hours", (int)duration.TotalDays, duration.Hours);
-                return string.Format("{0} days", (int)duration.TotalDays);
+                    return string.Format(OspreyResources.AnalysisPipeline_FormatDuration__0__days__1__hours, (int)duration.TotalDays, duration.Hours);
+                return string.Format(OspreyResources.AnalysisPipeline_FormatDuration__0__days, (int)duration.TotalDays);
             }
             if (duration.TotalHours >= 1)
             {
                 if (duration.Minutes > 0)
-                    return string.Format("{0} hours {1} minutes", (int)duration.TotalHours, duration.Minutes);
-                return string.Format("{0} hours", (int)duration.TotalHours);
+                    return string.Format(OspreyResources.AnalysisPipeline_FormatDuration__0__hours__1__minutes, (int)duration.TotalHours, duration.Minutes);
+                return string.Format(OspreyResources.AnalysisPipeline_FormatDuration__0__hours, (int)duration.TotalHours);
             }
             if (duration.TotalMinutes >= 1)
             {
                 if (duration.Seconds > 0)
-                    return string.Format("{0} minutes {1} seconds", (int)duration.TotalMinutes, duration.Seconds);
-                return string.Format("{0} minutes", (int)duration.TotalMinutes);
+                    return string.Format(OspreyResources.AnalysisPipeline_FormatDuration__0__minutes__1__seconds, (int)duration.TotalMinutes, duration.Seconds);
+                return string.Format(OspreyResources.AnalysisPipeline_FormatDuration__0__minutes, (int)duration.TotalMinutes);
             }
             if (duration.TotalSeconds >= 1)
-                return string.Format("{0:F3} seconds", duration.TotalSeconds);
-            return string.Format("{0} ms", (int)duration.TotalMilliseconds);
+                return string.Format(OspreyResources.AnalysisPipeline_FormatDuration__0__seconds, duration.TotalSeconds);
+            return string.Format(OspreyResources.AnalysisPipeline_FormatDuration__0__ms, (int)duration.TotalMilliseconds);
         }
 
         private static void LogInfo(string message)

@@ -400,9 +400,8 @@ namespace pwiz.Osprey.Test
                 LibrarySource = LibrarySource.FromPath("ref.blib"),
                 OutputBlib = "out.blib"
             };
-            string err = Program.ValidateArgs(config);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, "No input files");
+            Assert.AreEqual(string.Format(OspreyResources.Program_ValidateArgs_No_input_files_specified__Use__0_, Program.USAGE_INPUT),
+                Program.ValidateArgs(config));
         }
 
         // --- ResolveTask (--task) -----------------------------------------
@@ -440,14 +439,10 @@ namespace pwiz.Osprey.Test
             Assert.IsNull(Program.ResolveTask(PerFileRescoreTask.TASK_NAME.ToLowerInvariant(), tasks, out OspreyTask lower));
             Assert.AreEqual(PerFileRescoreTask.TASK_NAME, lower.Name);
 
-            string err = Program.ResolveTask("Bogus", tasks, out OspreyTask none);
+            string err = Program.ResolveTask(@"Bogus", tasks, out OspreyTask none);
             Assert.IsNull(none);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, "unknown task");
-            StringAssert.Contains(err, "Bogus");
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK.ArgumentText);
-            foreach (var task in tasks.All)
-                StringAssert.Contains(err, task.Name);
+            Assert.AreEqual(string.Format(OspreyResources.Program_ResolveTask__0___unknown_task___1____Valid_tasks___2__,
+                OspreyCommandArgs.ARG_TASK.ArgumentText, @"Bogus", string.Join(@", ", tasks.All.Select(t => t.Name))), err);
         }
 
         [TestMethod]

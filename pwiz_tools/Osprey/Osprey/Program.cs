@@ -62,8 +62,11 @@ namespace pwiz.Osprey
         internal const int EXIT_CODE_FAILURE_TO_START = 1;
         internal const int EXIT_CODE_RAN_WITH_ERRORS = 2;
 
-        // Skyline's warning prefix. English until Osprey's user text moves to resources.
-        private const string WARNING_PREFIX = @"Warning:";
+        // The command-line text the "not specified" errors in ValidateArgs tell the user to add.
+        // Argument names and example values, so not translated.
+        internal const string USAGE_INPUT = @"-i <file1.mzML> [file2.mzML ...]";
+        internal const string USAGE_LIBRARY = @"-l <library.tsv>";
+        internal const string USAGE_OUTPUT = @"-o <output.blib>";
 
         // The caller's writer (stderr from Main), kept after a --log-file swap replaces _out,
         // so an error reported before the swap still counts when the exit code is reconciled.
@@ -151,7 +154,7 @@ namespace pwiz.Osprey
             if (agreement.Mismatch != null)
                 LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_EXIT_RECONCILED, @"{0}", agreement.Mismatch));
             if (agreement.NeedsErrorLine)
-                LogError("Failure occurred. Exiting...");
+                LogError(OspreyResources.Program_ReconcileExitCode_Failure_occurred__Exiting___);
             return agreement.ExitCode;
         }
 
@@ -183,7 +186,7 @@ namespace pwiz.Osprey
                 // Console.Error); an explicit --help instead writes to stdout (see
                 // OspreyCommandArgs.PrintUsage).
                 OspreyCommandArgs.PrintUsage(null, _out);
-                LogError("No arguments were given; see the usage above.");
+                LogError(OspreyResources.Program_Run_No_arguments_were_given__see_the_usage_above_);
                 return EXIT_CODE_FAILURE_TO_START;
             }
 
@@ -202,21 +205,21 @@ namespace pwiz.Osprey
                 for (int i = 0; i < args.Length; i++)
                 {
                     string a = args[i];
-                    if (a == "--task")
+                    if (a == @"--task")
                     {
-                        if (i + 1 >= args.Length || args[i + 1].StartsWith("-", StringComparison.Ordinal))
+                        if (i + 1 >= args.Length || args[i + 1].StartsWith(@"-", StringComparison.Ordinal))
                         {
-                            LogError(string.Format("{0} requires a task name ({1}).",
+                            LogError(string.Format(OspreyResources.Program_Run__0__requires_a_task_name___1___,
                                 OspreyCommandArgs.ARG_TASK.ArgumentText,
-                                string.Join(", ", OspreyCommandArgs.ARG_TASK.Values)));
+                                string.Join(@", ", OspreyCommandArgs.ARG_TASK.Values)));
                             return EXIT_CODE_FAILURE_TO_START;
                         }
                         taskName = args[i + 1];
                         i++; // consume value
                     }
-                    else if (a.StartsWith("--task=", StringComparison.Ordinal))
+                    else if (a.StartsWith(@"--task=", StringComparison.Ordinal))
                     {
-                        taskName = a.Substring("--task=".Length);
+                        taskName = a.Substring(@"--task=".Length);
                     }
                 }
 
@@ -303,7 +306,7 @@ namespace pwiz.Osprey
                     }
                     catch (Exception ex)
                     {
-                        LogError(string.Format("Failed to open log file {0}: {1}", config.LogFilePath, ex.Message));
+                        LogError(string.Format(OspreyResources.Program_Run_Failed_to_open_log_file__0____1_, config.LogFilePath, ex.Message));
                         return EXIT_CODE_FAILURE_TO_START;
                     }
                 }
@@ -383,8 +386,7 @@ namespace pwiz.Osprey
                         continue;
                     }
                     LogError(string.Format(
-                        "Input file not found, and no spectra cache or intermediate file exists to " +
-                        "stand in for it: {0}", inputFile));
+                        OspreyResources.Program_Run_Input_file_not_found__and_no_spectra_cache_or_intermediate_file_exists_to_stand_in_for_it_, inputFile));
                     return EXIT_CODE_FAILURE_TO_START;
                 }
                 // Announced, not silent: a run whose sources are gone cannot rebuild a
@@ -392,9 +394,9 @@ namespace pwiz.Osprey
                 if (cacheOnlyInputs > 0)
                 {
                     LogInfo(CountText.Format(cacheOnlyInputs, config.InputFiles.Count == 1
-                            ? "The input file is not present but has a spectra cache; reading it from the cache."
-                            : "1 of {1:N0} input files is not present but has a spectra cache; reading it from the cache.",
-                        "{0:N0} of {1:N0} input files are not present but have a spectra cache; reading those from the cache.",
+                            ? OspreyResources.Program_Run_The_input_file_is_not_present_but_has_a_spectra_cache__reading_it_from_the_cache_
+                            : OspreyResources.Program_Run_1_of__1__input_files_is_not_present_but_has_a_spectra_cache__reading_it_from_the_cache_,
+                        OspreyResources.Program_Run__0__of__1__input_files_are_not_present_but_have_a_spectra_cache__reading_those_from_the_,
                         config.InputFiles.Count));
                     LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_INPUT_SOURCE, @"spectra-cache {0}/{1}",
                         cacheOnlyInputs, config.InputFiles.Count));
@@ -402,44 +404,44 @@ namespace pwiz.Osprey
                 if (artifactOnlyInputs > 0)
                 {
                     LogInfo(CountText.Format(artifactOnlyInputs, config.InputFiles.Count == 1
-                            ? "The input file is not present; using the intermediate scores file written for it."
-                            : "1 of {1:N0} input files is not present; using the intermediate scores file written for it.",
-                        "{0:N0} of {1:N0} input files are not present; using the intermediate scores file written for each one.",
+                            ? OspreyResources.Program_Run_The_input_file_is_not_present__using_the_intermediate_scores_file_written_for_it_
+                            : OspreyResources.Program_Run_1_of__1__input_files_is_not_present__using_the_intermediate_scores_file_written_for_it_,
+                        OspreyResources.Program_Run__0__of__1__input_files_are_not_present__using_the_intermediate_scores_file_written_for_,
                         config.InputFiles.Count));
                     LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_INPUT_SOURCE, @"scores-parquet {0}/{1}",
                         artifactOnlyInputs, config.InputFiles.Count));
                 }
                 if (config.LibrarySource != null && !File.Exists(config.LibrarySource.Path))
                 {
-                    LogError(string.Format("Library file not found: {0}", config.LibrarySource.Path));
+                    LogError(string.Format(OspreyResources.Program_Run_Library_file_not_found___0_, config.LibrarySource.Path));
                     return EXIT_CODE_FAILURE_TO_START;
                 }
 
                 // Log startup info
-                LogInfo(string.Format("Osprey v{0}", OspreyVersion.DisplayVersion));
-                LogInfo(string.Format("Command: {0}", string.Join(" ", args)));
-                LogInfo(string.Format("Input files: {0}", config.InputFiles.Count));
-                LogInfo(string.Format("Library: {0} ({1})",
-                    config.LibrarySource?.Path ?? "(none)",
-                    config.LibrarySource?.Format.GetLocalizedString() ?? "?"));
+                LogInfo(string.Format(OspreyResources.Program_Run_Osprey_v_0_, OspreyVersion.DisplayVersion));
+                LogInfo(string.Format(OspreyResources.Program_Run_Command___0_, string.Join(@" ", args)));
+                LogInfo(string.Format(OspreyResources.Program_Run_Input_files___0_, config.InputFiles.Count));
+                LogInfo(string.Format(OspreyResources.Program_Run_Library___0____1__,
+                    config.LibrarySource?.Path ?? OspreyResources.Program_Run__none_,
+                    config.LibrarySource?.Format.GetLocalizedString() ?? @"?"));
                 // A --task run executes one HPC stage rather than the full pipeline;
                 // name it so the log says which single task ran (no --task = full
                 // pipeline, no line). The Name is the canonical spelling, whatever
                 // case the operator typed.
                 if (config.SelectedTask != null)
-                    LogInfo(string.Format("Task: {0} (single-task run)", config.SelectedTask.Name));
+                    LogInfo(string.Format(OspreyResources.Program_Run_Task___0___single_task_run_, config.SelectedTask.Name));
                 // A task that writes something other than the blib - per-file parquets,
                 // per-file spectra caches, the diagnostics report alone - names its real
                 // output, so the log does not read as if the --output blib were being
                 // rebuilt: every selectable task but SecondPassFDR describes its own output.
-                LogInfo(string.Format("Output: {0}",
+                LogInfo(string.Format(OspreyResources.Program_Run_Output___0_,
                     config.SelectedTask?.DescribeOutput(config) ?? config.OutputBlib));
-                LogInfo(string.Format("Resolution: {0}", config.ResolutionMode.GetLocalizedString()));
-                LogInfo(string.Format("Fragment tolerance: {0} {1}",
+                LogInfo(string.Format(OspreyResources.Program_Run_Resolution___0_, config.ResolutionMode.GetLocalizedString()));
+                LogInfo(string.Format(OspreyResources.Program_Run_Fragment_tolerance___0___1_,
                     config.FragmentTolerance.Tolerance,
-                    config.FragmentTolerance.Unit == ToleranceUnit.Ppm ? "ppm" : "Th"));
-                LogInfo(string.Format("Run FDR: {0:P1}", config.RunFdr));
-                LogInfo(string.Format("Experiment FDR: {0:P1}", config.ExperimentFdr));
+                    config.FragmentTolerance.Unit == ToleranceUnit.Ppm ? @"ppm" : @"Th"));
+                LogInfo(string.Format(OspreyResources.Program_Run_Run_FDR___0_, config.RunFdr));
+                LogInfo(string.Format(OspreyResources.Program_Run_Experiment_FDR___0_, config.ExperimentFdr));
                 // Always print which experiment-wide aggregation is in force, active or not.
                 // Reported HERE and not from Stage 5 because FirstPassFdrTask.Run is skipped on
                 // --task SecondPassFDR, on a Rehydrate, and on any warm resume - exactly the runs
@@ -448,8 +450,8 @@ namespace pwiz.Osprey
                 if (OspreyEnvironment.ExperimentAggUnrecognized)
                 {
                     LogWarning(string.Format(
-                        "OSPREY_EXPERIMENT_AGG was set to an unrecognized value; using the default " +
-                        "'{0}'. Recognized values: '{0}', or '{1}<N>' with N in [2, {2}] (e.g. '{1}2').",
+                        @"OSPREY_EXPERIMENT_AGG was set to an unrecognized value; using the default " +
+                        @"'{0}'. Recognized values: '{0}', or '{1}<N>' with N in [2, {2}] (e.g. '{1}2').",
                         OspreyEnvironment.EXPERIMENT_AGG_MAX,
                         OspreyEnvironment.EXPERIMENT_AGG_MEAN_BEST_PREFIX,
                         OspreyEnvironment.MEAN_BEST_N_MAX));
@@ -464,8 +466,8 @@ namespace pwiz.Osprey
                     // Why 'percolator' and 'transfer-compete' were removed, with the entrapment
                     // numbers, is in docs/12-second-pass-fdr.md and on OspreyEnvironment.Pass2QValue.
                     LogError(string.Format(
-                        "OSPREY_PASS2_QVALUE='{2}' is not recognized. Use '{0}' or '{1}', or unset it " +
-                        "for the default ('{1}'). The 'percolator' and 'transfer-compete' modes were removed.",
+                        @"OSPREY_PASS2_QVALUE='{2}' is not recognized. Use '{0}' or '{1}', or unset it " +
+                        @"for the default ('{1}'). The 'percolator' and 'transfer-compete' modes were removed.",
                         OspreyEnvironment.PASS2_QVALUE_TRANSFER,
                         OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT,
                         OspreyEnvironment.Pass2QValueSetting));
@@ -502,8 +504,8 @@ namespace pwiz.Osprey
                 if (OspreyEnvironment.Stage7StreamRetiredSet)
                 {
                     LogError(
-                        "OSPREY_STAGE7_STREAM was removed and has no effect. Unset it. Second-pass " +
-                        "FDR now always processes one run at a time where the analysis allows it.");
+                        @"OSPREY_STAGE7_STREAM was removed and has no effect. Unset it. Second-pass " +
+                        @"FDR now always processes one run at a time where the analysis allows it.");
                     return EXIT_CODE_FAILURE_TO_START;
                 }
                 // A token that names nothing admits nothing, so the run proceeds - but say so
@@ -527,20 +529,20 @@ namespace pwiz.Osprey
                     // reconciled-input load and the pass-1 FDRBench emitter both stream and need
                     // no allowance.
                     LogWarning(string.Format(
-                        "OSPREY_ALLOW_UNFIXED_RESIDENT contains tokens that are not recognized and " +
-                        "have no effect: {0}. Recognized: {1}. Any recognized token in the same value " +
-                        "is still honored.",
+                        @"OSPREY_ALLOW_UNFIXED_RESIDENT contains tokens that are not recognized and " +
+                        @"have no effect: {0}. Recognized: {1}. Any recognized token in the same value " +
+                        @"is still honored.",
                         OspreyEnvironment.UnrecognizedResidentTokens,
-                        string.Join(", ", ResidentPaths.KNOWN_UNFIXED)));
+                        string.Join(@", ", ResidentPaths.KNOWN_UNFIXED)));
                 }
-                LogInfo(string.Format("Protein FDR: {0:P1}", config.EffectiveProteinFdr));
-                LogInfo(string.Format("Threads: {0}", config.NThreads));
+                LogInfo(string.Format(OspreyResources.Program_Run_Protein_FDR___0_, config.EffectiveProteinFdr));
+                LogInfo(string.Format(OspreyResources.Program_Run_Threads___0_, config.NThreads));
                 // Machine twins of the banner: the liveness anchor a route assertion needs
                 // before it can trust an absence, and the aggregation arm, which the prose
                 // above states for a person.
                 LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_EXPERIMENT_AGG, @"{0}", OspreyEnvironment.ExperimentAgg));
                 LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_STARTUP, @"threads={0}", config.NThreads));
-                LogInfo("");
+                LogInfo(@"");
 
                 // --task ModelDiagnostics is a RENDER over completed analysis state, not a run.
                 // Settled before the pipeline is built, because the whole point is that most
@@ -567,7 +569,7 @@ namespace pwiz.Osprey
                 // output directories, the input checks, the model-diagnostics render -
                 // reported one line and no frames. Usage errors do not reach here; the
                 // parser's catch above reports them as the one-line messages they are.
-                LogError(string.Format("Fatal error: {0}", ex));
+                LogError(string.Format(OspreyResources.Program_Run_Fatal_error___0_, ex));
                 return EXIT_CODE_FAILURE_TO_START;
             }
         }
@@ -602,9 +604,8 @@ namespace pwiz.Osprey
             // answer that looks like a right one.
             if (!ModelDiagnosticsReport.HasCompletedFirstPass(config))
             {
-                LogError("--task ModelDiagnostics: there is no completed first pass to describe " +
-                         "(no first-pass intermediate file for the whole experiment beside the " +
-                         "output). Run the analysis at least as far as FirstPassFDR first.");
+                LogError(string.Format(OspreyResources.Program_RunModelDiagnosticsTask__0___there_is_no_completed_first_pass_to_describe__no_first_pass_intermediate_file_for_,
+                    ModelDiagnosticsTaskText, FirstPassFdrTask.TASK_NAME));
                 return EXIT_CODE_FAILURE_TO_START;
             }
             // Everything this analysis can have is on disk: a pure render, seconds, no pipeline.
@@ -612,17 +613,23 @@ namespace pwiz.Osprey
             {
                 if (ModelDiagnosticsReport.TryRenderFromProducts(config, OspreyLog.Out))
                     return EXIT_CODE_SUCCESS;
-                LogError("--task ModelDiagnostics: the saved model diagnostics data for this " +
-                         "analysis could not be read, so the report was not built.");
+                LogError(string.Format(OspreyResources.Program_RunModelDiagnosticsTask__0___the_saved_model_diagnostics_data_for_this_analysis_could_not_be_read__so_the_report_,
+                    ModelDiagnosticsTaskText));
                 return EXIT_CODE_FAILURE_TO_START;
             }
 
             // A product is outstanding. Say so before the pipeline banner, because the next
             // thing the log shows is task machinery and an operator needs to know it is a fold
             // rather than the re-analysis this task used to refuse to start.
-            LogInfo("--task ModelDiagnostics: building the report from the completed analysis. " +
-                    "Nothing is re-run and no other output changes.");
+            LogInfo(string.Format(OspreyResources.Program_RunModelDiagnosticsTask__0___building_the_report_from_the_completed_analysis__Nothing_is_re_run_and_no_other_,
+                ModelDiagnosticsTaskText));
             return -1;
+        }
+
+        /// <summary>The command-line text that selects this task, which its messages start with.</summary>
+        internal static string ModelDiagnosticsTaskText
+        {
+            get { return OspreyCommandArgs.ARG_TASK + ModelDiagnosticsTask.TASK_NAME; }
         }
 
         /// <summary>
@@ -650,8 +657,8 @@ namespace pwiz.Osprey
             task = tasks.FindByName(taskName);
             if (task != null)
                 return null;
-            return string.Format("{0}: unknown task '{1}'. Valid tasks: {2}.",
-                OspreyCommandArgs.ARG_TASK.ArgumentText, taskName, string.Join(", ", tasks.All.Select(t => t.Name)));
+            return string.Format(OspreyResources.Program_ResolveTask__0___unknown_task___1____Valid_tasks___2__,
+                OspreyCommandArgs.ARG_TASK.ArgumentText, taskName, string.Join(@", ", tasks.All.Select(t => t.Name)));
         }
 
         /// <summary>
@@ -710,11 +717,11 @@ namespace pwiz.Osprey
             // directory that already holds each run's artifacts skips to whichever stage is
             // outstanding, which the per-task validity sidecars decide - not the input kind.
             if (!hasInputFiles)
-                return "No input files specified. Use -i <file1.mzML> [file2.mzML ...]";
+                return string.Format(OspreyResources.Program_ValidateArgs_No_input_files_specified__Use__0_, USAGE_INPUT);
             if (config.LibrarySource == null)
-                return "No spectral library specified. Use -l <library.tsv>";
+                return string.Format(OspreyResources.Program_ValidateArgs_No_spectral_library_specified__Use__0_, USAGE_LIBRARY);
             if (string.IsNullOrEmpty(config.OutputBlib))
-                return "No output path specified. Use -o <output.blib>";
+                return string.Format(OspreyResources.Program_ValidateArgs_No_output_path_specified__Use__0_, USAGE_OUTPUT);
             return null;
         }
 
@@ -742,13 +749,11 @@ namespace pwiz.Osprey
             var sb = new StringBuilder();
             sb.AppendFormat(
                 collisions.Count == 1
-                    ? "1 input file name appears more than once. "
-                    : "{0:N0} input file names appear more than once. ", collisions.Count);
-            sb.Append("Every file Osprey writes for an input is named after the input without its " +
-                "extension, so inputs sharing a name would overwrite each other's intermediate " +
-                "files. Rename or stage them so each input has a distinct file name:");
+                    ? OspreyResources.Program_DuplicateInputStemError_1_input_file_name_appears_more_than_once_
+                    : OspreyResources.Program_DuplicateInputStemError__0__input_file_names_appear_more_than_once_, collisions.Count);
+            sb.Append(' ').Append(OspreyResources.Program_DuplicateInputStemError_Every_file_Osprey_writes_for_an_input_is_named_after_the_input_without_its_extension__so_);
             foreach (var kv in collisions)
-                sb.AppendFormat("\n  '{0}': {1}", kv.Key, string.Join(", ", kv.Value));
+                sb.Append('\n').AppendFormat(@"  '{0}': {1}", kv.Key, string.Join(@", ", kv.Value));
             return sb.ToString();
         }
 
@@ -796,7 +801,7 @@ namespace pwiz.Osprey
             // user, not for a tool, and follow Skyline's command-line convention (translated
             // with the rest of the text; CommandStatusWriter recognizes "Error:" in every
             // language Skyline ships).
-            OspreyOutput.Out.WriteLine(WARNING_PREFIX + @" " + message);
+            OspreyOutput.Out.WriteLine(WarningPrefix + @" " + message);
         }
 
         internal static void LogError(string message)
@@ -804,7 +809,26 @@ namespace pwiz.Osprey
             // Errors go straight to the process writer (NOT the per-file buffer):
             // surface immediately rather than waiting for the file's block to flush
             // on completion, so a failing run reports the cause right away.
-            _out.WriteLine(CommandStatusWriter.ERROR_MESSAGE_HINT + @" " + message);
+            _out.WriteLine(ErrorPrefix + @" " + message);
+        }
+
+        /// <summary>
+        /// The "Warning:" a warning line starts with, in the current UI language. Read at each
+        /// call, never cached, because tests switch the language in process.
+        /// </summary>
+        internal static string WarningPrefix
+        {
+            get { return OspreyResources.Program_LogWarning_Warning_; }
+        }
+
+        /// <summary>
+        /// The "Error:" an error line starts with, in the current UI language. Every translation
+        /// must be one <see cref="CommandStatusWriter.ERROR_PREFIXES"/> lists, or the exit code
+        /// stops agreeing with the log.
+        /// </summary>
+        internal static string ErrorPrefix
+        {
+            get { return OspreyResources.Program_LogError_Error_; }
         }
 
         /// <summary>

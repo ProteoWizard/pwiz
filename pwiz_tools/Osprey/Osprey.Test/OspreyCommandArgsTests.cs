@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -272,7 +273,7 @@ namespace pwiz.Osprey.Test
             // A comma-decimal culture built rather than looked up by name, so the assertions
             // do not depend on ICU data being present on the agent. CurrentCulture is
             // per-thread; the separator and the format provider are process-wide.
-            var commaDecimal = (System.Globalization.CultureInfo)System.Globalization.CultureInfo.InvariantCulture.Clone();
+            var commaDecimal = (CultureInfo)CultureInfo.InvariantCulture.Clone();
             commaDecimal.NumberFormat.NumberDecimalSeparator = @",";
             var argTolerance = OspreyCommandArgs.ARG_FRAGMENT_TOLERANCE;
             string ospreySeparator = ArgUsage.ArgumentValueSeparator;
@@ -366,8 +367,11 @@ namespace pwiz.Osprey.Test
             // Default (no format): unicode tables, like Skyline. Every group title and a
             // representative arg present, and box-drawing borders (not lower-128 ascii).
             string defaultHelp = OspreyCommandArgs.BuildUsage(null);
-            foreach (var title in new[] { @"General I/O", @"Scoring & Tolerance", @"FDR & Protein Inference",
-                @"Decoys", @"Performance", @"Distributed / HPC", @"Logging", @"Diagnostics & Info" })
+            foreach (var title in new[] { OspreyResources.OspreyCommandArgs_Group_General_IO,
+                OspreyResources.OspreyCommandArgs_Group_Scoring_Tolerance, OspreyResources.OspreyCommandArgs_Group_FDR_Protein_Inference,
+                OspreyResources.OspreyCommandArgs_Group_Decoys, OspreyResources.OspreyCommandArgs_Group_Performance,
+                OspreyResources.OspreyCommandArgs_Group_Distributed_HPC, OspreyResources.OspreyCommandArgs_Group_Logging,
+                OspreyResources.OspreyCommandArgs_Group_Diagnostics_Info })
                 StringAssert.Contains(defaultHelp, title);
             StringAssert.Contains(defaultHelp, OspreyCommandArgs.ARG_INPUT.ArgumentText);
             StringAssert.Contains(defaultHelp, OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText);
@@ -389,17 +393,19 @@ namespace pwiz.Osprey.Test
 
             // sections: one section title per line, nothing else.
             string sections = OspreyCommandArgs.BuildUsage(@"sections");
-            foreach (var title in new[] { @"General I/O", @"Diagnostics & Info" })
+            foreach (var title in new[] { OspreyResources.OspreyCommandArgs_Group_General_IO, OspreyResources.OspreyCommandArgs_Group_Diagnostics_Info })
                 StringAssert.Contains(sections, title);
             Assert.IsFalse(sections.Contains(OspreyCommandArgs.ARG_INPUT.ArgumentText), @"sections should list titles only");
 
             // section filter: only the matching group.
-            string filtered = OspreyCommandArgs.BuildUsage(@"Decoys");
+            string filtered = OspreyCommandArgs.BuildUsage(OspreyResources.OspreyCommandArgs_Group_Decoys);
             StringAssert.Contains(filtered, OspreyCommandArgs.ARG_WRITE_PIN.ArgumentText);
             Assert.IsFalse(filtered.Contains(OspreyCommandArgs.ARG_RUN_FDR.ArgumentText), @"section filter should show only the matched group");
 
             // unknown section: a helpful message, no crash.
-            StringAssert.Contains(OspreyCommandArgs.BuildUsage(@"NoSuchSection"), @"sections");
+            Assert.AreEqual(string.Format(OspreyResources.OspreyCommandArgs_BuildUsage_No_help_section_matching___0___found__Use__1__to_list_available_sections_,
+                    @"NoSuchSection", OspreyCommandArgs.ARG_HELP.ArgumentText + @" sections") + Environment.NewLine,
+                OspreyCommandArgs.BuildUsage(@"NoSuchSection"));
 
             // html: well-formed-ish document with a table.
             string html = OspreyCommandArgs.GenerateUsageHtml();
@@ -421,7 +427,12 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestCommandLineHelpDocumentation()
         {
-            string generated = OspreyCommandArgs.GenerateUsageHtml();
+            // The committed page is the English one (Help/en), whatever culture the suite runs in.
+            string generated;
+            using (new CultureScope(CultureInfo.GetCultureInfo(@"en")))
+            {
+                generated = OspreyCommandArgs.GenerateUsageHtml();
+            }
             string committedPath = Path.Combine(FindOspreySourceRoot(),
                 @"Documentation", @"Help", @"en", @"CommandLine.html");
 

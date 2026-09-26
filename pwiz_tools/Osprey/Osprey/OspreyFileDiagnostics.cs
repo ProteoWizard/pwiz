@@ -31,6 +31,10 @@ using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.Reconciliation;
 using pwiz.Osprey.Scoring;
 
+// Developer-only dump files (-d / OSPREY_DUMP_*): TSV headers and rows for comparison tools,
+// never user text. The whole file, because nearly every literal is tab-separated file content.
+// ReSharper disable LocalizableElement
+
 namespace pwiz.Osprey
 {
     /// <summary>
@@ -489,7 +493,7 @@ namespace pwiz.Osprey
         /// </summary>
         public void WriteCalSampleDump(string fileName, IEnumerable<LibraryEntry> sampledEntries)
         {
-            string dumpPath = fileName + ".cs_cal_sample.txt";
+            string dumpPath = fileName + @".cs_cal_sample.txt";
             var tuples = new List<string>();
             foreach (var e in sampledEntries)
             {
@@ -833,7 +837,7 @@ namespace pwiz.Osprey
                 using (var w = new StreamWriter(saver.SafeName))
                 {
                     w.WriteLine(string.Format(inv,
-                        "# n_library_rts={0} n_measured_rts={1}", libRts.Length, measuredRts.Length));
+                        @"# n_library_rts={0} n_measured_rts={1}", libRts.Length, measuredRts.Length));
                     w.WriteLine("idx\tlib_rt\tmeasured_rt");
                     for (int i = 0; i < pairs.Count; i++)
                     {
@@ -874,24 +878,24 @@ namespace pwiz.Osprey
 
                     if (ms1Cal != null)
                     {
-                        writeD("ms1.mean",      ms1Cal.Mean);
-                        writeD("ms1.sd",        ms1Cal.SD);
-                        writeI("ms1.count",     ms1Cal.Count);
-                        writeD("ms1.tolerance", ms1Cal.AdjustedTolerance ?? 0.0);
+                        writeD(@"ms1.mean",      ms1Cal.Mean);
+                        writeD(@"ms1.sd",        ms1Cal.SD);
+                        writeI(@"ms1.count",     ms1Cal.Count);
+                        writeD(@"ms1.tolerance", ms1Cal.AdjustedTolerance ?? 0.0);
                     }
                     if (ms2Cal != null)
                     {
-                        writeD("ms2.mean",      ms2Cal.Mean);
-                        writeD("ms2.sd",        ms2Cal.SD);
-                        writeI("ms2.count",     ms2Cal.Count);
-                        writeD("ms2.tolerance", ms2Cal.AdjustedTolerance ?? 0.0);
+                        writeD(@"ms2.mean",      ms2Cal.Mean);
+                        writeD(@"ms2.sd",        ms2Cal.SD);
+                        writeI(@"ms2.count",     ms2Cal.Count);
+                        writeD(@"ms2.tolerance", ms2Cal.AdjustedTolerance ?? 0.0);
                     }
                     if (rtCal != null)
                     {
                         var stats = rtCal.Stats();
-                        writeI("rt.n_points",    stats.NPoints);
-                        writeD("rt.r_squared",   stats.RSquared);
-                        writeD("rt.residual_sd", stats.ResidualSD);
+                        writeI(@"rt.n_points",    stats.NPoints);
+                        writeD(@"rt.r_squared",   stats.RSquared);
+                        writeD(@"rt.residual_sd", stats.ResidualSD);
                     }
                 }
                 saver.Commit();
@@ -949,27 +953,27 @@ namespace pwiz.Osprey
                     if (calibrationModel != null)
                     {
                         var loessStats = calibrationModel.Stats();
-                        dw.WriteLine("# LOESS MODEL (pass 2 RT calibration)");
-                        dw.WriteLine(string.Format(inv, "# loess.n_points={0}", loessStats.NPoints));
-                        dw.WriteLine(string.Format(inv, "# loess.r_squared={0:F10}", loessStats.RSquared));
-                        dw.WriteLine(string.Format(inv, "# loess.residual_sd={0:F10}", loessStats.ResidualSD));
-                        dw.WriteLine(string.Format(inv, "# loess.mean_residual={0:F10}", loessStats.MeanResidual));
-                        dw.WriteLine(string.Format(inv, "# loess.max_residual={0:F10}", loessStats.MaxResidual));
-                        dw.WriteLine(string.Format(inv, "# loess.p20_abs_residual={0:F10}", loessStats.P20AbsResidual));
-                        dw.WriteLine(string.Format(inv, "# loess.p80_abs_residual={0:F10}", loessStats.P80AbsResidual));
-                        dw.WriteLine(string.Format(inv, "# loess.mad={0:F10}", loessStats.MAD));
+                        dw.WriteLine(@"# LOESS MODEL (pass 2 RT calibration)");
+                        dw.WriteLine(string.Format(inv, @"# loess.n_points={0}", loessStats.NPoints));
+                        dw.WriteLine(string.Format(inv, @"# loess.r_squared={0:F10}", loessStats.RSquared));
+                        dw.WriteLine(string.Format(inv, @"# loess.residual_sd={0:F10}", loessStats.ResidualSD));
+                        dw.WriteLine(string.Format(inv, @"# loess.mean_residual={0:F10}", loessStats.MeanResidual));
+                        dw.WriteLine(string.Format(inv, @"# loess.max_residual={0:F10}", loessStats.MaxResidual));
+                        dw.WriteLine(string.Format(inv, @"# loess.p20_abs_residual={0:F10}", loessStats.P20AbsResidual));
+                        dw.WriteLine(string.Format(inv, @"# loess.p80_abs_residual={0:F10}", loessStats.P80AbsResidual));
+                        dw.WriteLine(string.Format(inv, @"# loess.mad={0:F10}", loessStats.MAD));
                     }
-                    dw.WriteLine("# PASS CALCULATIONS");
-                    dw.WriteLine(string.Format(inv, "# pass.library_rt={0:F10}", entry.RetentionTime));
-                    dw.WriteLine(string.Format(inv, "# pass.expected_rt={0:F10}", expectedRt));
-                    dw.WriteLine(string.Format(inv, "# pass.tolerance={0:F10}", initialTolerance));
-                    dw.WriteLine(string.Format(inv, "# pass.rt_window_lo={0:F10}", expectedRt - initialTolerance));
-                    dw.WriteLine(string.Format(inv, "# pass.rt_window_hi={0:F10}", expectedRt + initialTolerance));
-                    dw.WriteLine(string.Format(inv, "# pass.rt_slope={0:F10}", rtSlope));
-                    dw.WriteLine(string.Format(inv, "# pass.rt_intercept={0:F10}", rtIntercept));
+                    dw.WriteLine(@"# PASS CALCULATIONS");
+                    dw.WriteLine(string.Format(inv, @"# pass.library_rt={0:F10}", entry.RetentionTime));
+                    dw.WriteLine(string.Format(inv, @"# pass.expected_rt={0:F10}", expectedRt));
+                    dw.WriteLine(string.Format(inv, @"# pass.tolerance={0:F10}", initialTolerance));
+                    dw.WriteLine(string.Format(inv, @"# pass.rt_window_lo={0:F10}", expectedRt - initialTolerance));
+                    dw.WriteLine(string.Format(inv, @"# pass.rt_window_hi={0:F10}", expectedRt + initialTolerance));
+                    dw.WriteLine(string.Format(inv, @"# pass.rt_slope={0:F10}", rtSlope));
+                    dw.WriteLine(string.Format(inv, @"# pass.rt_intercept={0:F10}", rtIntercept));
 
-                    dw.WriteLine("# n_post_prefilter_candidates=" + candidateSpectra.Count);
-                    dw.WriteLine("# CANDIDATES (post-prefilter, sorted by RT)");
+                    dw.WriteLine(@"# n_post_prefilter_candidates=" + candidateSpectra.Count);
+                    dw.WriteLine(@"# CANDIDATES (post-prefilter, sorted by RT)");
                     dw.WriteLine("candidate\tscan_idx\tscan_number\trt\tiso_lower\tiso_upper");
                     for (int i = 0; i < candidateSpectra.Count; i++)
                     {
@@ -987,7 +991,7 @@ namespace pwiz.Osprey
                     sortedByIntensity.Sort((a, b) => b.Value.CompareTo(a.Value)); // Array.Sort OK: diagnostic dump only, not parity-sensitive
                     int topN = Math.Min(6, sortedByIntensity.Count);
 
-                    dw.WriteLine("# TOP-6 FRAGMENTS (selected by intensity desc)");
+                    dw.WriteLine(@"# TOP-6 FRAGMENTS (selected by intensity desc)");
                     dw.WriteLine("topfrag\ttop_idx\tlib_idx\tlib_mz\tlib_intensity");
                     for (int rank = 0; rank < topN; rank++)
                     {
@@ -998,7 +1002,7 @@ namespace pwiz.Osprey
                             rank, fi, F10(fobj.Mz), F10(fobj.RelativeIntensity)));
                     }
 
-                    dw.WriteLine("# EXTRACTED XICS (lib_idx, scan_idx, rt, intensity)");
+                    dw.WriteLine(@"# EXTRACTED XICS (lib_idx, scan_idx, rt, intensity)");
                     dw.WriteLine("xic\tlib_idx\tscan_idx\trt\tintensity");
                     foreach (var xic in xics)
                     {
@@ -1068,7 +1072,7 @@ namespace pwiz.Osprey
                     dw.WriteLine(string.Format(inv,
                         @"# scan_range=[{0}..{1}] n_scans={2}",
                         startScan, endScan, rangeLen));
-                    dw.WriteLine("# CANDIDATES (scan_idx, scan_number, rt)");
+                    dw.WriteLine(@"# CANDIDATES (scan_idx, scan_number, rt)");
                     dw.WriteLine("candidate\tscan_idx\tscan_number\trt");
                     for (int i = startScan; i <= endScan; i++)
                     {
@@ -1077,7 +1081,7 @@ namespace pwiz.Osprey
                             i - startScan, windowSpectra[i].ScanNumber,
                             windowSpectra[i].RetentionTime));
                     }
-                    dw.WriteLine("# EXTRACTED XICS (lib_idx, scan_idx, rt, intensity)");
+                    dw.WriteLine(@"# EXTRACTED XICS (lib_idx, scan_idx, rt, intensity)");
                     dw.WriteLine("xic\tlib_idx\tscan_idx\trt\tintensity");
                     foreach (var xic in xics)
                     {
@@ -1098,9 +1102,9 @@ namespace pwiz.Osprey
                     var xicList = xics is List<XicData> xicL ? xicL : new List<XicData>(xics);
                     double[] consensusSig = CwtPeakDetector.GetConsensusSignal(
                         xicList, out double cwtSigma);
-                    dw.WriteLine("# CWT CONSENSUS (sigma, scan_idx, value)");
+                    dw.WriteLine(@"# CWT CONSENSUS (sigma, scan_idx, value)");
                     dw.WriteLine(string.Format(inv,
-                        "# sigma={0}", Diagnostics.FormatF64Roundtrip(cwtSigma)));
+                        @"# sigma={0}", Diagnostics.FormatF64Roundtrip(cwtSigma)));
                     if (consensusSig != null)
                     {
                         dw.WriteLine("consensus\tscan_idx\tvalue");
@@ -1158,11 +1162,11 @@ namespace pwiz.Osprey
                     dw.WriteLine(string.Format(inv,
                         @"# mp_cosine={0:F10} mp_rr={1:F10} mp_r2={2:F10} mp_rc={3:F10}",
                         mpCosine, mpResidualRatio, mpMinFragmentR2, mpResidualCorr));
-                    dw.WriteLine("# ELUTION PROFILE (ColEffects)");
+                    dw.WriteLine(@"# ELUTION PROFILE (ColEffects)");
                     for (int ep = 0; ep < polish.ColEffects.Length; ep++)
                         dw.WriteLine(string.Format(inv,
                             "elution\t{0}\t{1:F10}", ep, polish.ColEffects[ep]));
-                    dw.WriteLine("# FRAGMENT EFFECTS (RowEffects)");
+                    dw.WriteLine(@"# FRAGMENT EFFECTS (RowEffects)");
                     for (int fe = 0; fe < polish.RowEffects.Length; fe++)
                         dw.WriteLine(string.Format(inv,
                             "frag_effect\t{0}\t{1:F10}", fe, polish.RowEffects[fe]));
@@ -1170,7 +1174,7 @@ namespace pwiz.Osprey
                         @"# grand_mean={0:F10}", polish.Overall));
                     dw.WriteLine(string.Format(inv,
                         @"# n_iterations={0} converged={1}", polish.NIterations, polish.Converged));
-                    dw.WriteLine("# INPUT MATRIX (frag_idx, scan_idx, value)");
+                    dw.WriteLine(@"# INPUT MATRIX (frag_idx, scan_idx, value)");
                     for (int xi = 0; xi < peakXics.Count; xi++)
                         for (int s = 0; s < peakXics[xi].Value.Length; s++)
                             dw.WriteLine(string.Format(inv,
@@ -1427,7 +1431,7 @@ namespace pwiz.Osprey
                 nCwtPeaks.ToString(inv), '\t',
                 nFinalPeaks.ToString(inv), '\t',
                 nScored.ToString(inv), '\t',
-                (scored ? "1" : "0"), '\t',
+                (scored ? @"1" : @"0"), '\t',
                 Diagnostics.FormatF64Roundtrip(sigma), '\t',
                 Diagnostics.FormatF64Roundtrip(consensusL1), '\t',
                 Diagnostics.FormatF64Roundtrip(consensusMaxAbs), '\t',
