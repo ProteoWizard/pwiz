@@ -4,6 +4,9 @@ Every step of the **Targeted Method Refinement** tutorial (`Tutorials/MethodRefi
 MCP calls that performed it and a screenshot of the result. Driven live on 2026-09-24 against the Release x64
 build of branch `Skyline/work/20260921_typing_in_sequence_tree` at commit `983fcf0d4e`, from a blank document
 through the five scheduled replicates, including the optional re-import of the 39 unrefined RAW files.
+The steps through s-12 were driven again on 2026-09-26 at commit `9254d0aec1`, after the Ion Types, graph
+right-click menu and key-preview fixes, on a fresh extraction (`MethodRefine_20260926`); s-01, s-08, s-09
+and s-12 come from that run, and the steps below show the calls that now work.
 
 - **Data:** fresh extractions of `MethodRefine.zip` and `MethodRefineSupplement.zip` (the RAW versions) to
   `E:\Users\nicksh\SkylineDownloadPath2\Tutorials\MethodRefine_20260924`
@@ -17,8 +20,9 @@ through the five scheduled replicates, including the optional re-import of the 3
   extra captures of steps the tutorial describes but does not picture. The main window was sized, and its
   panes arranged, the way `TestMethodRefinementTutorial` does before each screenshot, so s-09, s-14, s-15,
   s-17 and s-21 come out at the tutorial's size and layout.
-- **Missing:** s-03 (the import progress form): the 15-file import finished before the next call could see
-  the form. It was caught for the unscheduled import instead (`11-importing-unscheduled.png`).
+- **Missing:** s-03 (the import progress form): in both runs the 15-file import finished before a capture
+  could reach the form (the second run saw it listed, then it was gone). It was caught for the unscheduled
+  import instead (`11-importing-unscheduled.png`).
 
 ## How to read the calls
 
@@ -32,7 +36,9 @@ are written `tool(arg=value)` with the `skyline_` prefix dropped. A few more mat
   "Source name" and clicking Open navigates to it, as it does for a reader; `select_item` on its `ListView`
   adds a file to the selection, so a run of files is selected one at a time (see the table below).
 - **A graph's right-click menu** is `click_control_menu_item` with an empty `control` (the graph form's own
-  menu) or the graph control's type (`MSGraphControl`).
+  menu) or the graph control's type (`MSGraphControl`; `MsGraphExtension` for Library Match).
+- **A toolbar combo box** (a `ToolStripComboBox`) is reached one level down, at the `ComboBox` it hosts,
+  which takes `get_options` and `set_value`.
 - **A graph rendered straight from Skyline** (`get_graph_image`) needs nothing in front of it; a capture
   of a form (`get_form_image`) needs Skyline in front and uncovered, or what covers it comes out cyan.
 - **Anything asynchronous is polled**: a settings change (s-07's predicted-time band showed up on the
@@ -60,11 +66,7 @@ in for a tutorial step (dragging the two replicate-comparison graphs to the dock
 
 | Tutorial step | What happened | Stand-in used here |
 |---|---|---|
-| View > Libraries > Ion Types > B (s-01, s-12) | "Menu item not found". **A Skyline bug, not an MCP gap**: the submenu's panel is built only while `ViewMenu.ProteomicsEnabled` is true, and that flag is set only when a document's ion types *change* (`SkylineGraphs.UpdateGraphUI`). Opening WormUnrefined.sky (ion type y) over a default document (also y) leaves it false, so the item is hidden for a reader too. (#4671 item 3) | None. s-01 and s-12 show y-ions only, which loses s-12's point (y10/b10 and y12/b12 share a peak) |
-| Library Match right-click > Ion Types | The menu the connector builds has only Show Mass Error, Auto-scale Y-axis, rulers and copy items. `PopulateGraphContextMenu` does not set the menu's `SourceControl`, and `SpectrumContextMenu.BuildSpectrumMenu` finds the spectrum control through it, so it takes the "not annotated" branch and leaves out Ion Types, Charges, Ranks and the rest. Addressing `MsGraphExtension` instead gives "msGraphExtension has no context menu" | None |
 | Delete key on the Targets tree | No effect, as in MethodEdit | `click_main_menu_item("Edit > Delete")` |
-| Escape on the regression graph (s-08) | `GraphSummary` handles Escape in the *form's* `KeyDown` (`KeyPreview`); `send_key_stroke` raises `KeyDown` on the `ZedGraphControl` only, so the handler never runs, and the form itself "does not support the action 'send_key_stroke'" | None; s-08 has the right rows, but the selection is grey because the tree does not have the focus |
-| "Click on this list" (the chromatogram's File combo, s-09) | The `ToolStripComboBox` item itself supports only `get_actions`, `get_children`, `click`, `get_value`. Not a gap: the combo box it hosts is its child, and takes `get_options` / `set_value` (checked afterwards on a two-file replicate): `path={"parent":{"parent":{"parent":{"text":"GraphChromatogram:<replicate>","type":"Form"},"type":"ToolStrip"},"type":"ToolStripComboBox","index":0},"type":"ComboBox"}` | (none needed) |
 | F11 / Shift-F11 | Main-menu shortcut keys sent to the tree have no effect (the zoom stayed 0-100 min) | View > Auto-Zoom > Best Peak / None |
 | Home key (review after automated refinement) | No effect; only the arrows and Ctrl+Home / Ctrl+End are handled | `Ctrl+Home` |
 | Click, then Shift-click a run of files | No Shift-click verb | `select_item` once per file: 15, 24, then 5 calls |
@@ -74,10 +76,25 @@ in for a tutorial step (dragging the two replicate-comparison graphs to the dock
 | Close a graph with its red x | Works: `dismiss_with_cancel_button` on the graph form closes it | (not a gap) |
 | Windows Explorer / Excel views of the output | Outside Skyline | Row counts and first lines read from the files |
 
-Since this run, three of these have been fixed: the Ion Types submenu now follows the current document; the
-connector sets a graph menu's `SourceControl`, so the Library Match right-click menu is complete (and
-`MsGraphExtension` resolves to its graph); and `send_key_stroke` lets a form with `KeyPreview` see the key
-first, so Escape on a graph returns to the Targets view.
+### Fixed after the first run
+
+The first run (2026-09-24) hit three more problems, fixed on the branch and confirmed in the 2026-09-26 run:
+
+| Tutorial step | What happened | Fix |
+|---|---|---|
+| View > Libraries > Ion Types > B (s-01, s-12) | "Menu item not found". **A Skyline bug**: the submenu's panel was built only while `ViewMenu.ProteomicsEnabled` was true, a flag set only when a document's ion types *changed*; opening WormUnrefined.sky (y) over a default document (also y) left it false and the item hidden, for a reader too (#4671 item 3). s-01 and s-12 showed y-ions only | `ProteomicsEnabled` / `SmallMoleculesEnabled` now come from the current document |
+| Library Match right-click > Ion Types | The connector's menu had only Show Mass Error, Auto-scale Y-axis, rulers and copy items: it did not set the menu's `SourceControl`, through which `SpectrumContextMenu` finds the annotated spectrum. `MsGraphExtension` gave "has no context menu" | `SourceControl` is set to the graph; `MsGraphExtension` resolves to its graph |
+| Escape on the regression graph (s-08) | `GraphSummary` takes Escape in the *form's* `KeyDown` (`KeyPreview`); `send_key_stroke` raised `KeyDown` on the graph control only, so the Targets view never got the focus and s-08's selection was grey | `send_key_stroke` raises `KeyDown` on each enclosing `KeyPreview` form first |
+
+The chromatogram's File list (s-09) looked like a gap in the first run and is not: the toolbar item only
+supports `click` and `get_value`, but the combo box it hosts is its child and takes `get_options` /
+`set_value` (section 7).
+
+Two things found in the second run: a list of quoted file names typed into the results browser's "Source
+name" is refused ("Please select one or more data sources"), so files are still selected one at a time; and
+`Create Regression` right after the threshold dialog closes can capture the regression from before the
+threshold change (a 22.8 min window, 140 peptides), so the graph is rendered first until it shows r = 0.9511
+(section 6).
 
 ### Differences from the tutorial text (not MCP gaps)
 
@@ -93,7 +110,8 @@ the ja and zh-CHS versions still have the old text.
   times 4 minutes apart" as the text says; the tutorial's spreadsheet picture shows the same values
   (40.97, 4) as this run.
 - **s-09's legend lists each transition twice** (16 entries) where the tutorial's lists 8; the curves and
-  labels are otherwise the same.
+  labels are otherwise the same. It is the same with the re-imported data and with the `.skyd` that ships
+  in `MethodRefine.zip`, so it is how this Skyline draws the graph, not an import artifact.
 
 ---
 
@@ -129,12 +147,19 @@ send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", key
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Down")
 get_selection()   -> Molecule:/peptides1/YLGAYLLATLGGNASPSAQDVLK
 click_main_menu_item(menuPath="View > Auto-Zoom > Best Peak")
-click_main_menu_item(menuPath="View > Libraries > Ion Types > B")   -> Menu item not found (see above)
 resize_window(formId="SkylineWindow:Skyline - WormUnrefined.sky", width=1266, height=736)
+get_graph_image(formId="GraphSpectrum:Library Match")   # y-ions only: b-ions are off
+click_main_menu_item(menuPath="View > Libraries > Ion Types > B")
+get_graph_image(formId="GraphSpectrum:Library Match")   # not redrawn yet
+get_graph_image(formId="GraphSpectrum:Library Match")   # b5 ... b15 in purple
 get_form_image(formId="SkylineWindow:Skyline - WormUnrefined.sky")
 ```
 
-**s-01**: the tutorial's window, graphs and `1/225 pep  1/2,096 tran`, without the b-ions.
+The B item toggles, and the setting outlives the document, so the spectrum is looked at before clicking it.
+The same toggle is on the spectrum's right-click menu:
+`click_control_menu_item(formId="GraphSpectrum:Library Match", control="MsGraphExtension", menuPath="Ion Types > B")`.
+
+**s-01**: the tutorial's window, graphs, b-ions and `1/225 pep  1/2,096 tran`.
 
 ![s-01](images/s-01.png)
 
@@ -251,7 +276,9 @@ dismiss_with_accept_button(formId="RegressionRTThresholdDlg:Set Retention Time T
 get_graph_image(formId="GraphSummary:Retention Times - Score To Run Regression")
 ```
 
-**s-06**: r = 0.9511, window 15.8.
+**s-06**: r = 0.9511, window 15.8. Wait for this before Create Regression: the regression is recalculated in
+the background, and in the second run a Create Regression sent straight after the threshold dialog closed
+took the old one (140 peptides, a 22.8 min window, and a Predicted 46.3 in s-09).
 
 ![s-06](images/s-06.png)
 
@@ -285,11 +312,11 @@ click_graph(formId="GraphSummary:Retention Times - Score To Run Regression",
             left=18.6674448596158, top=0, right=18.6674448596158, bottom=0)
 get_selection()   -> Molecule:/peptides1/YLAEVASEDR
 send_key_stroke(formId="GraphSummary:Retention Times - Score To Run Regression",
-                controlId="ZedGraphControl", keyStroke="Esc")          # no effect (see above)
+                controlId="ZedGraphControl", keyStroke="Esc")          # the graph form sends the focus to Targets
 get_form_image(formId="SequenceTreeForm:Targets")
 ```
 
-**s-08**: the 7 peptides without peak icons above YLAEVASEDR; the selection is grey rather than blue.
+**s-08**: the 7 peptides without peak icons above YLAEVASEDR, which is selected in the focused tree.
 
 ![s-08](images/s-08.png)
 
@@ -308,12 +335,18 @@ get_form_image(formId="GraphChromatogram:Unrefined")
 
 ![s-09](images/s-09.png)
 
+"If you click on this list, it will show that both worm_0027.RAW and worm_0028.RAW contained measurements":
+the list is the combo box hosted by the toolbar's `ToolStripComboBox`, addressed one level below it.
+
 ```
 perform_action(form="GraphChromatogram:Unrefined", action="get_options",
-  path={"parent":{"parent":{"text":"GraphChromatogram:Unrefined","type":"Form"},"type":"ToolStrip"},
-        "type":"ToolStripComboBox","index":0})
-  -> "does not support the action 'get_options'"
+  path={"parent":{"parent":{"parent":{"text":"GraphChromatogram:Unrefined","type":"Form"},"type":"ToolStrip"},
+                  "type":"ToolStripComboBox","index":0},
+        "type":"ComboBox"})
+  -> ["worm_0027.RAW","worm_0028.RAW"]
 ```
+
+`set_value` on the same path chooses a file (tried on a two-file replicate).
 
 The p13 layout closed the regression graph, which is where the tutorial clicks its red x.
 
@@ -348,7 +381,8 @@ get_graph_image(formId="GraphSpectrum:Library Match")            # blank: still 
 get_graph_image(formId="GraphSpectrum:Library Match")
 ```
 
-**s-12**: y10 (rank 1) and y12 (rank 2) are the tallest, but without the b10/b12 labels (see above).
+**s-12**: the two tallest peaks are y10 (rank 1) with b10 and y12 (rank 2) with b12, the overlap the tutorial
+points out, and b4 to b14 in purple.
 
 ![s-12](images/s-12.png)
 
