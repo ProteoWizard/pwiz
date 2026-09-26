@@ -117,6 +117,10 @@ namespace pwiz.Osprey.Core
                 sb.AppendFormat(ic, "rt_cal.calibration_sample_size:{0}\n", _config.RtCalibration.CalibrationSampleSize);
                 sb.AppendFormat(ic, "rt_cal.calibration_retry_factor:{0}\n", _config.RtCalibration.CalibrationRetryFactor);
                 sb.AppendFormat(ic, "reconciliation.top_n_peaks:{0}\n", _config.Reconciliation.TopNPeaks);
+                // Osprey-only, and appended only when enabled: with demux off the recipe, and so
+                // every existing hash, is unchanged, including the cross-impl match with Rust.
+                if (_config.DemuxMode != DemuxMode.off)
+                    sb.AppendFormat(ic, "demux:{0}\n", _config.DemuxMode);
 
                 byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
                 var result = new StringBuilder(64);

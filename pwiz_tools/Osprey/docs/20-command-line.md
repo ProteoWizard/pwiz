@@ -104,6 +104,7 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 | `--fragment-tolerance` | `<value>` | `10` | Fragment m/z tolerance (ignored at unit resolution). |
 | `--fragment-unit` | `ppm \| mz` | `ppm` | Unit for `--fragment-tolerance`. |
 | `--no-prefilter` | — | prefilter on | Disable the coelution signal pre-filter (scores every candidate; ~30% slower). See [06-peak-detection.md](06-peak-detection.md). |
+| `--demux` | `off`, `auto` | `off` | Demultiplex overlapping-window (staggered) DIA to its narrow bins before searching, into `<stem>.demux.spectra.bin` (see [22-demultiplexing.md](22-demultiplexing.md)). `auto` leaves a non-overlapping run as acquired. With `off`, a run whose windows overlap is refused, since searching it as acquired scores every precursor in more than one window. Osprey-only. |
 
 ### FDR & Protein Inference
 

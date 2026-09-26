@@ -244,6 +244,21 @@ namespace pwiz.Osprey
                         cacheOnlyInputs++;
                         continue;
                     }
+                    // With --demux, the demultiplexed cache alone is enough to search from,
+                    // but only while its descriptor matches. With neither the source nor the
+                    // .spectra.bin, one written by other demux settings or another demux
+                    // algorithm version cannot be rebuilt, so it is checked here, at start-up,
+                    // rather than failing on the missing source hours in.
+                    var demuxRejection = SpectraCacheRejection.Absent;
+                    if (config.DemuxMode != DemuxMode.off)
+                    {
+                        demuxRejection = DemuxCacheBuilder.CheckDemuxCache(inputFile, config);
+                        if (demuxRejection == SpectraCacheRejection.None)
+                        {
+                            cacheOnlyInputs++;
+                            continue;
+                        }
+                    }
                     // ...and so is an absent source with no cache, once its SCORES exist.
                     // A join node is shipped parquets and sidecars and nothing else - that
                     // is the whole point of the split - so demanding the data file back
@@ -270,6 +285,15 @@ namespace pwiz.Osprey
                     {
                         artifactOnlyInputs++;
                         continue;
+                    }
+                    if (demuxRejection != SpectraCacheRejection.Absent)
+                    {
+                        LogError(string.Format(
+                            "Input file not found, and its demultiplexed spectra cache cannot stand in " +
+                            "for it: {0} ({1}). It can be rebuilt only from the source or its " +
+                            ".spectra.bin; restore one of them.",
+                            inputFile, SpectraCacheException.Describe(demuxRejection)));
+                        return 1;
                     }
                     LogError(string.Format(
                         "Input file not found, and it has neither a spectra cache nor a scores " +
