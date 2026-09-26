@@ -47,6 +47,12 @@ namespace pwiz.Osprey.Test
     [TestClass]
     public class MultiProgressReporterTest
     {
+        // The tags --perf-stats gates.
+        private static readonly LogTag[] GATED_TAGS =
+        {
+            LogTag.COUNT, LogTag.BENCH, LogTag.TIMING, LogTag.STAGE_WALL, LogTag.PATH, LogTag.TRAIN
+        };
+
         [TestMethod]
         public void TestMultiProgressReporter()
         {
@@ -95,13 +101,13 @@ namespace pwiz.Osprey.Test
                 file.CurrentSegmentSink.Report(100);    // (2*100 + 100) / 4 = 75
                 percents.Add(file.Slot.Percent);
 
-                // Machine stat lines must be filtered OUT of the buffered block (default
-                // PerfStats=false) exactly as the unbuffered Out filters them -- otherwise a
-                // buffered run leaks [COUNT]/[BENCH]/etc. and looks like perf mode. A plain
-                // narrative line survives.
-                OspreyOutput.Out.WriteLine(@"[COUNT] suppressed count line");
-                OspreyOutput.Out.WriteLine(@"[BENCH] suppressed bench line");
-                OspreyOutput.Out.WriteLine(@"[TIMING] suppressed timing line");
+                // Gated machine tags must stay OUT of the buffered block (default
+                // PerfStats=false), exactly as they stay out of the unbuffered log --
+                // otherwise a buffered run leaks [COUNT]/[BENCH]/etc. and looks like perf
+                // mode. An ungated tag and a plain narrative line survive.
+                foreach (var tag in GATED_TAGS)
+                    OspreyLog.Out.LogInfo(tag, @"suppressed");
+                OspreyLog.Out.LogInfo(LogTag.TASK, @"Demo:starting");
                 OspreyOutput.Out.WriteLine(@"plain narrative survives");
 
                 // Read the file's OWN buffer (not the full capture, which also holds
@@ -120,12 +126,13 @@ namespace pwiz.Osprey.Test
                 @"inside a scope the reporter must route its percent, not print a '%' line into the block");
             StringAssert.Contains(fileBlock, @"plain narrative survives",
                 @"a non-stat narrative line must remain in the buffered block");
-            Assert.IsFalse(fileBlock.Contains(@"[COUNT]"),
-                @"[COUNT] stat lines must be filtered out of the buffered block (default PerfStats)");
-            Assert.IsFalse(fileBlock.Contains(@"[BENCH]"),
-                @"[BENCH] stat lines must be filtered out of the buffered block (default PerfStats)");
-            Assert.IsFalse(fileBlock.Contains(@"[TIMING]"),
-                @"[TIMING] stat lines must be filtered out of the buffered block (default PerfStats)");
+            StringAssert.Contains(fileBlock, LogTag.TASK.Format(@"Demo:starting"),
+                @"an ungated tag must be written whatever PerfStats says");
+            foreach (var tag in GATED_TAGS)
+            {
+                Assert.IsFalse(fileBlock.Contains(tag.ToString()),
+                    tag + @" lines must not be written into the buffered block (default PerfStats)");
+            }
         }
 
         // Two concurrent files: the aggregate line shows both active slots, each

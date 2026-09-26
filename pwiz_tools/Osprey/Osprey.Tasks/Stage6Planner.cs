@@ -232,7 +232,10 @@ namespace pwiz.Osprey.Tasks
             var cwtInvalid = new List<string>();
 
             using (var scanProgress = new ProgressReporter(
-                       string.Format(@"Reconciliation scan (pass 1 of 2) across {0} file(s)", fileNames.Count),
+                       ScoringTaskShared.IsSingleFileSearch(config)
+                           ? "Multi-charge consensus planning (pass 1 of 2)"
+                           : CountText.Format(fileNames.Count, "Reconciliation planning (pass 1 of 2) for 1 file",
+                               "Reconciliation planning (pass 1 of 2) across {0:N0} files"),
                        fileNames.Count))
             {
                 int done = 0;
@@ -260,9 +263,12 @@ namespace pwiz.Osprey.Tasks
             }
             CwtCandidateLoader.ThrowIfAnyInvalid(cwtInvalid, fileNames.Count);
 
-            _ctx.LogInfo(string.Format(
-                @"Reconciliation multi-charge consensus: {0} entries need re-scoring across {1} files",
-                scan.TotalMulticharge, fileNames.Count));
+            _ctx.LogInfo(CountText.Format(fileNames.Count,
+                "Multi-charge consensus: {1:N0} charge states will be re-scored at the peak " +
+                "boundaries of the best charge state of the same peptide.",
+                "Multi-charge consensus: {1:N0} charge states across {0:N0} files will be re-scored " +
+                "at the peak boundaries of the best charge state of the same peptide.",
+                scan.TotalMulticharge));
 
             if (_ctx.Diagnostics?.DumpMulticharge ?? false)
             {
@@ -309,9 +315,13 @@ namespace pwiz.Osprey.Tasks
                 if (c.IsDecoy) nDecoys++;
                 else nTargets++;
             }
-            _ctx.LogInfo(string.Format(
-                @"Reconciliation consensus: {0} target peptides, {1} decoy peptides",
-                nTargets, nDecoys));
+            // One file has no other run to agree with, so there is no consensus to report.
+            if (fileCount > 1)
+            {
+                _ctx.LogInfo(string.Format(
+                    "Cross-run consensus retention times computed for {0:N0} target and {1:N0} decoy peptides.",
+                    nTargets, nDecoys));
+            }
 
             // Fires UNCONDITIONALLY when OSPREY_DUMP_CONSENSUS=1, so an empty consensus
             // still produces a header-only cs_stage6_consensus.tsv - the same rule the
@@ -392,7 +402,10 @@ namespace pwiz.Osprey.Tasks
                 : null;
 
             using (var planProgress = new ProgressReporter(
-                       string.Format(@"Reconciliation planning (pass 2 of 2) across {0} file(s)", fileNames.Count),
+                       ScoringTaskShared.IsSingleFileSearch(config)
+                           ? "Multi-charge consensus planning (pass 2 of 2)"
+                           : CountText.Format(fileNames.Count, "Reconciliation planning (pass 2 of 2) for 1 file",
+                               "Reconciliation planning (pass 2 of 2) across {0:N0} files"),
                        fileNames.Count))
             {
                 int done = 0;
@@ -437,9 +450,12 @@ namespace pwiz.Osprey.Tasks
                 }
             }
 
-            _ctx.LogInfo(string.Format(
-                @"Reconciliation calibration refit: {0}/{1} files produced refined calibrations",
-                refinedCalibrations.Count, fileNames.Count));
+            if (fileNames.Count > 1)
+            {
+                _ctx.LogInfo(string.Format(
+                    "Refined the retention time calibration of {0:N0} of {1:N0} files using the cross-run consensus.",
+                    refinedCalibrations.Count, fileNames.Count));
+            }
 
             if (_ctx.Diagnostics?.DumpLoessFit ?? false)
             {
@@ -458,11 +474,20 @@ namespace pwiz.Osprey.Tasks
             if (planning)
             {
                 _ctx.LogInfo(string.Format(
-                    @"Reconciliation: {0} per-(file, entry) actions planned", actions.Count));
+                    @"Cross-run reconciliation: {0:N0} peak re-picks and boundary imputations planned across {1:N0} files.",
+                    actions.Count, fileNames.Count));
+            }
+            else if (fileNames.Count == 1)
+            {
+                // A one-file search says nothing here: it has no cross-run reconciliation to skip.
+                // A --task run over one file does: that task is named for the reconciliation.
+                if (!ScoringTaskShared.IsSingleFileSearch(config))
+                    _ctx.LogInfo("Cross-run reconciliation: skipped, because there is only one file.");
             }
             else
             {
-                _ctx.LogInfo(@"Reconciliation: skipped (empty consensus; single-file or no cross-file evidence)");
+                _ctx.LogInfo("Cross-run reconciliation: skipped, because no peptide was detected in " +
+                             "enough files to compute a cross-run consensus retention time.");
             }
 
             // Stage 6 cross-impl bisection dump for the planner output. Fires

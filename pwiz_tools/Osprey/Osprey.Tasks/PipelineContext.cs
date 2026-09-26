@@ -45,7 +45,7 @@ namespace pwiz.Osprey.Tasks
     /// <c>AnalysisPipeline.Run</c> and lives for the duration of the
     /// pipeline execution.
     /// </summary>
-    public sealed class PipelineContext
+    public sealed class PipelineContext : IOspreyLog
     {
         private readonly Action<string> _logInfo;
         private readonly Action<string> _logWarning;
@@ -222,6 +222,8 @@ namespace pwiz.Osprey.Tasks
         }
 
         public void LogInfo(string message) { _logInfo(message); }
+        /// <summary>A machine-channel line; <see cref="OspreyLog.Write"/> decides whether it is emitted.</summary>
+        public void LogInfo(LogTag tag, string text) { OspreyLog.Write(_logInfo, tag, text); }
         /// <summary>Implementer-grade detail: emitted only under --verbose (same sink as LogInfo).</summary>
         public void LogVerbose(string message) { if (OspreyOutput.Verbose) _logInfo(message); }
         public void LogWarning(string message) { _logWarning(message); }
@@ -254,7 +256,7 @@ namespace pwiz.Osprey.Tasks
                 // --task PerFileScoring boundary, whose byproducts were already published
                 // before the stop) is intentionally left benign.
                 if (!task.Rehydrate(this) && ExitCode != 0)
-                    throw new RehydrateFailedException(taskType, ExitCode);
+                    throw new RehydrateFailedException(taskType, task.Name, ExitCode);
             }
             return task;
         }
@@ -368,8 +370,8 @@ namespace pwiz.Osprey.Tasks
             // every slot is legitimately republished, so its history no longer applies.
             _consumedByproducts.Clear();
 #endif
-            LogInfo(string.Format(
-                @"[DROP] Released {0} byproduct(s) at the task boundary; the library stays resident.",
+            LogInfo(LogTag.DROP, string.Format(
+                @"Released {0} byproduct(s) at the task boundary; the library stays resident.",
                 dropped.Count));
         }
 
@@ -602,9 +604,9 @@ namespace pwiz.Osprey.Tasks
         public Type TaskType { get; }
         public int ExitCode { get; }
 
-        public RehydrateFailedException(Type taskType, int exitCode)
-            : base(string.Format(@"Task '{0}' failed to rehydrate its state (exit code {1}).",
-                taskType?.FullName, exitCode))
+        public RehydrateFailedException(Type taskType, string taskName, int exitCode)
+            : base(string.Format("The {0} step could not reload its results from the intermediate files (exit code {1}).",
+                taskName, exitCode))
         {
             TaskType = taskType;
             ExitCode = exitCode;

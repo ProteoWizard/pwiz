@@ -112,10 +112,11 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
-        /// When false (default), the machine-parseable [COUNT]/[TIMING]/[BENCH]/[STAGE-WALL]
-        /// lines are suppressed so the human log stays clean (each has a human-readable plain
-        /// twin that remains). The --perf-stats flag sets this true so the perf tools
-        /// (Test-PerfGate.ps1, Measure-Pipeline.ps1, Osprey-workflow.html) get the tagged lines.
+        /// When false (default), the gated machine tags (<see cref="LogTag.COUNT"/>,
+        /// <see cref="LogTag.TIMING"/>, <see cref="LogTag.BENCH"/>, <see cref="LogTag.STAGE_WALL"/>,
+        /// <see cref="LogTag.PATH"/>, <see cref="LogTag.TRAIN"/>) are not written, so the human log
+        /// stays clean. The --perf-stats flag sets this true so the perf tools and the regression
+        /// gate get the tagged lines.
         /// </summary>
         public static bool PerfStats { get; set; }
 
@@ -129,75 +130,12 @@ namespace pwiz.Osprey.Core
         /// <summary>
         /// Write a line to <see cref="Out"/> only when <see cref="Verbose"/> is set. The
         /// inherited WriteLine(format, args) overload routes through the overridden
-        /// WriteLine(string), so stamps/filtering still apply.
+        /// WriteLine(string), so the stamps still apply.
         /// </summary>
         public static void WriteVerbose(string format, params object[] args)
         {
             if (Verbose)
                 Out.WriteLine(format, args);
-        }
-
-        /// <summary>
-        /// True if a line is a machine-parseable stat line (leading
-        /// [COUNT]/[TIMING]/[BENCH]/[STAGE-WALL], ignoring leading spaces) gated by
-        /// <see cref="PerfStats"/>.
-        /// </summary>
-        public static bool IsStatLine(string line)
-        {
-            if (string.IsNullOrEmpty(line))
-                return false;
-            int i = 0;
-            while (i < line.Length && line[i] == ' ')
-                i++;
-            return string.CompareOrdinal(line, i, "[COUNT]", 0, 7) == 0
-                || string.CompareOrdinal(line, i, "[TIMING]", 0, 8) == 0
-                || string.CompareOrdinal(line, i, "[BENCH]", 0, 7) == 0
-                || string.CompareOrdinal(line, i, "[STAGE-WALL]", 0, 12) == 0;
-        }
-    }
-
-    /// <summary>
-    /// Wraps an inner <see cref="TextWriter"/> and drops machine-parseable stat lines
-    /// (<see cref="OspreyOutput.IsStatLine"/>) unless <see cref="OspreyOutput.PerfStats"/> is
-    /// set, forwarding everything else unchanged. <c>Program</c> wraps its
-    /// CommandStatusWriter in one of these so the default human log is clean while
-    /// --perf-stats restores the tagged lines for the perf tools. Inherited WriteLine(format,
-    /// args) overloads route through <see cref="WriteLine(string)"/>, so they are filtered too.
-    /// </summary>
-    public sealed class StatFilteringTextWriter : TextWriter
-    {
-        private readonly TextWriter _inner;
-
-        public StatFilteringTextWriter(TextWriter inner)
-        {
-            _inner = inner;
-        }
-
-        public override System.Text.Encoding Encoding
-        {
-            get { return _inner.Encoding; }
-        }
-
-        public override void Flush()
-        {
-            _inner.Flush();
-        }
-
-        public override void Write(char value)
-        {
-            _inner.Write(value);
-        }
-
-        public override void Write(string value)
-        {
-            _inner.Write(value);
-        }
-
-        public override void WriteLine(string value)
-        {
-            if (!OspreyOutput.PerfStats && OspreyOutput.IsStatLine(value))
-                return;
-            _inner.WriteLine(value);
         }
     }
 }

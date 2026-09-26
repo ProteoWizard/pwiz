@@ -466,7 +466,7 @@ namespace pwiz.Osprey
         /// </summary>
         public void ExitAfterDump(string varName)
         {
-            LogAction(string.Format(@"[BISECT] {0} set - aborting after dump", varName));
+            Log.LogInfo(LogTag.BISECT, string.Format(@"{0} set - aborting after dump", varName));
             Environment.Exit(0);
         }
 
@@ -477,7 +477,7 @@ namespace pwiz.Osprey
         // The pipeline-wired logger lives on the OspreyDiagnostics facade; the
         // sink's own dump methods log through it via this alias so [COUNT] /
         // [BISECT] lines flow through the same channel as before.
-        private static Action<string> LogAction => OspreyDiagnosticsLog.LogAction;
+        private static IOspreyLog Log => OspreyDiagnosticsLog.Log;
 
         // ----- Cal sample dump -----
 
@@ -510,8 +510,8 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            LogAction(string.Format(CultureInfo.InvariantCulture,
-                @"[COUNT] Wrote calibration sample: {0} ({1} targets)",
+            Log.LogInfo(LogTag.COUNT, string.Format(CultureInfo.InvariantCulture,
+                @"Wrote calibration sample: {0} ({1} targets)",
                 dumpPath, tuples.Count));
         }
 
@@ -640,8 +640,8 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            LogAction(string.Format(CultureInfo.InvariantCulture,
-                @"[COUNT] Wrote calibration windows dump (pass {0}): cs_cal_windows.txt ({1} rows)",
+            Log.LogInfo(LogTag.COUNT, string.Format(CultureInfo.InvariantCulture,
+                @"Wrote calibration windows dump (pass {0}): cs_cal_windows.txt ({1} rows)",
                 passNumber, rows.Count));
             s_calWindowRows = null;
         }
@@ -720,8 +720,8 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            LogAction(string.Format(inv,
-                @"[COUNT] Wrote calibration match dump (pass {0}): {1} ({2} matched, {3} unmatched)",
+            Log.LogInfo(LogTag.COUNT, string.Format(inv,
+                @"Wrote calibration match dump (pass {0}): {1} ({2} matched, {3} unmatched)",
                 passNumber, dumpPath, nMatched, nUnmatched));
         }
 
@@ -781,8 +781,8 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            LogAction(string.Format(inv,
-                @"[COUNT] Wrote MS2 cal errors dump: cs_ms2_cal_errors.txt ({0} rows across {1} matches)",
+            Log.LogInfo(LogTag.COUNT, string.Format(inv,
+                @"Wrote MS2 cal errors dump: cs_ms2_cal_errors.txt ({0} rows across {1} matches)",
                 nRows, nMatches));
         }
 
@@ -808,8 +808,8 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            LogAction(string.Format(inv,
-                @"[COUNT] Wrote LDA scores dump (pass {0}): cs_lda_scores.txt ({1} entries)",
+            Log.LogInfo(LogTag.COUNT, string.Format(inv,
+                @"Wrote LDA scores dump (pass {0}): cs_lda_scores.txt ({1} entries)",
                 passNumber, sortedByEntry.Length));
         }
 
@@ -848,8 +848,8 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            LogAction(string.Format(inv,
-                @"[COUNT] Wrote LOESS input dump (pass {0}): cs_loess_input.txt ({1} pairs)",
+            Log.LogInfo(LogTag.COUNT, string.Format(inv,
+                @"Wrote LOESS input dump (pass {0}): cs_loess_input.txt ({1} pairs)",
                 passNumber, pairs.Count));
         }
 
@@ -902,8 +902,8 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            LogAction(string.Format(inv,
-                @"[COUNT] Wrote calibration summary: cs_cal_summary.txt (11 scalars)"));
+            Log.LogInfo(LogTag.COUNT, string.Format(inv,
+                @"Wrote calibration summary: cs_cal_summary.txt (11 scalars)"));
         }
 
         // ----- Per-entry calibration XIC dump -----
@@ -1020,8 +1020,8 @@ namespace pwiz.Osprey
                 saver.Commit();
             }
             }
-            LogAction(string.Format(inv,
-                @"[BISECT] OSPREY_DIAG_XIC_ENTRY_ID matched on pass {0} - wrote {1} and exiting",
+            Log.LogInfo(LogTag.BISECT, string.Format(inv,
+                @"OSPREY_DIAG_XIC_ENTRY_ID matched on pass {0} - wrote {1} and exiting",
                 currentPass, diagXicPath));
             Environment.Exit(0);
         }
@@ -1122,8 +1122,8 @@ namespace pwiz.Osprey
                 saver.Commit();
             }
             }
-            LogAction(string.Format(inv,
-                @"[BISECT] Search XIC dump for entry {0}: {1} xics, {2} scans -> {3}",
+            Log.LogInfo(LogTag.BISECT, string.Format(inv,
+                @"Search XIC dump for entry {0}: {1} xics, {2} scans -> {3}",
                 candidate.Id, xics.Count, rangeLen, dumpPath));
         }
 
@@ -1185,7 +1185,7 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            LogAction(@"[BISECT] Wrote median polish diagnostic: cs_mp_diag.txt");
+            Log.LogInfo(LogTag.BISECT, @"Wrote median polish diagnostic: cs_mp_diag.txt");
         }
 
         // ----- Median polish inputs (cross-impl bisection) -----
@@ -1249,8 +1249,8 @@ namespace pwiz.Osprey
                     _mpInputsWriter.NewLine = LF;
                     _mpInputsWriter.WriteLine(
                         "# entry_id\tapex_scan\tfrag_pos\tfrag_idx\tscan_idx\trt\tintensity");
-                    LogAction(
-                        @"[BISECT] OSPREY_DUMP_MP_INPUTS active: writing tukey_median_polish inputs to cs_stage6_mp_inputs.tsv");
+                    Log.LogInfo(LogTag.BISECT, 
+                        @"OSPREY_DUMP_MP_INPUTS active: writing tukey_median_polish inputs to cs_stage6_mp_inputs.tsv");
                 }
                 _mpInputsWriter.Write(payload);
             }
@@ -1298,8 +1298,8 @@ namespace pwiz.Osprey
             _predictRtWriter.NewLine = LF;
             _predictRtWriter.WriteLine(
                 "# section\tfile_name_or_entry_id\tarray_or_apex\tidx_or_lib_rt\tvalue_or_expected_rt");
-            LogAction(
-                @"[BISECT] OSPREY_DUMP_PREDICT_RT active: writing predict() inputs/outputs to cs_stage6_predict_rt.tsv");
+            Log.LogInfo(LogTag.BISECT, 
+                @"OSPREY_DUMP_PREDICT_RT active: writing predict() inputs/outputs to cs_stage6_predict_rt.tsv");
         }
 
         /// <summary>
@@ -1447,8 +1447,8 @@ namespace pwiz.Osprey
                     _cwtPathWriter.NewLine = LF;
                     _cwtPathWriter.WriteLine(
                         "file_name\tentry_id\tn_cwt_peaks\tn_final_peaks\tn_scored\tscored\tsigma\tconsensus_l1\tconsensus_max_abs\tconsensus_argmax");
-                    LogAction(
-                        @"[BISECT] OSPREY_DUMP_CWT_PATH active: writing CWT path summary to cs_stage6_cwt_path.tsv");
+                    Log.LogInfo(LogTag.BISECT, 
+                        @"OSPREY_DUMP_CWT_PATH active: writing CWT path summary to cs_stage6_cwt_path.tsv");
                 }
                 _cwtPathWriter.Write(line);
             }
@@ -1600,7 +1600,7 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            LogAction(string.Format(@"Wrote Stage 5 Percolator dump: {0} ({1} rows)", path, rows.Count));
+            Log.LogInfo(string.Format(@"Wrote Stage 5 Percolator dump: {0} ({1} rows)", path, rows.Count));
         }
 
         /// <summary>
@@ -1672,7 +1672,7 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            LogAction(string.Format(@"Wrote Stage 6 rescored dump: {0} ({1} rows)", path, rows.Count));
+            Log.LogInfo(string.Format(@"Wrote Stage 6 rescored dump: {0} ({1} rows)", path, rows.Count));
         }
 
         // ---- Stage 6 planning dumps ----
@@ -1712,7 +1712,7 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            LogAction(string.Format(@"Wrote Stage 6 consensus dump: {0} ({1} rows)", path, consensus.Count));
+            Log.LogInfo(string.Format(@"Wrote Stage 6 consensus dump: {0} ({1} rows)", path, consensus.Count));
         }
 
         /// <summary>
@@ -1773,7 +1773,7 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            LogAction(string.Format(@"Wrote Stage 6 multi-charge dump: {0} ({1} rows)", path, rows.Count));
+            Log.LogInfo(string.Format(@"Wrote Stage 6 multi-charge dump: {0} ({1} rows)", path, rows.Count));
         }
 
         /// <summary>
@@ -1809,7 +1809,7 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            LogAction(string.Format(@"Wrote Stage 6 refit dump: {0} ({1} rows)", path, fileNames.Count));
+            Log.LogInfo(string.Format(@"Wrote Stage 6 refit dump: {0} ({1} rows)", path, fileNames.Count));
         }
 
         /// <summary>
@@ -1898,7 +1898,7 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            LogAction(string.Format(@"Wrote Stage 6 reconciliation dump: {0} ({1} rows)",
+            Log.LogInfo(string.Format(@"Wrote Stage 6 reconciliation dump: {0} ({1} rows)",
                 path, rows.Count));
         }
 
@@ -1945,7 +1945,7 @@ namespace pwiz.Osprey
                     _stage6CalibrationWriter.WriteLine(Diagnostics.FormatF64Roundtrip(fittedValues[i]));
                 }
             }
-            LogAction(string.Format(
+            Log.LogInfo(string.Format(
                 @"Appended {0} calibration rows for {1} to cs_stage6_calibration.tsv", n, fileName));
         }
 
@@ -2041,7 +2041,7 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            LogAction(string.Format(
+            Log.LogInfo(string.Format(
                 @"Wrote Stage 6 inverse-predict dump: {0} ({1} rows)",
                 path, sorted.Count));
         }
@@ -2103,7 +2103,7 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            LogAction(string.Format(
+            Log.LogInfo(string.Format(
                 @"Wrote Stage 6 first-pass protein FDR dump: {0} ({1} rows)",
                 path, rows.Count));
         }
@@ -2201,7 +2201,7 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            LogAction(string.Format(
+            Log.LogInfo(string.Format(
                 @"Wrote Stage 7 second-pass protein FDR dump: {0} ({1} rows)",
                 path, rows.Count));
         }
@@ -2260,7 +2260,7 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            LogAction(string.Format(
+            Log.LogInfo(string.Format(
                 @"Wrote Stage 6 LOESS fit dump: {0} ({1} rows across {2} files)",
                 path, totalRows, fileNames.Count));
         }
@@ -2288,7 +2288,7 @@ namespace pwiz.Osprey
                 }
                 saver.Commit();
             }
-            LogAction(string.Format(@"[DIAG] Wrote {0} ({1} entries)", path, sorted.Count));
+            Log.LogInfo(LogTag.DIAG, string.Format(@"Wrote {0} ({1} entries)", path, sorted.Count));
         }
 
     }

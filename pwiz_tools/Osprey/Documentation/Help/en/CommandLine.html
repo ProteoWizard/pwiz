@@ -75,7 +75,7 @@ a { color: #1565c0; }
 <tr><td><nobr>--timestamp</nobr></td><td>Prefix each output line with [yyyy/MM/dd HH:mm:ss]</td></tr>
 <tr><td><nobr>--memstamp</nobr></td><td>Prefix each output line with managed and private memory in MB (pair with <nobr>--timestamp</nobr> for perfviz)</td></tr>
 <tr><td><nobr>--log-file</nobr>&nbsp;&lt;path&gt;</td><td>Write all output to this file instead of stderr</td></tr>
-<tr><td><nobr>--perf-stats</nobr></td><td>Emit <nobr>machine-parseable</nobr> [COUNT]/[TIMING]/[<nobr>STAGE-WALL</nobr>] lines for perf tools (off by default)</td></tr>
+<tr><td><nobr>--perf-stats</nobr></td><td>Emit the <nobr>machine-parseable</nobr> [COUNT], [TIMING], [BENCH], [<nobr>STAGE-WALL</nobr>], [PATH] and [TRAIN] lines that scripts and perf tools read (off by default)</td></tr>
 <tr><td><nobr>--verbose</nobr></td><td>Show <nobr>implementer-grade</nobr> detail (e.g. <nobr>per-fold</nobr> Percolator iterations) hidden by default</td></tr>
 </table>
 <div class="RowType">Diagnostics &amp; Info</div>
@@ -96,12 +96,12 @@ Osprey --task PerFileScoring -i s1.mzML -l hela.tsv -o out.blib --resolution uni
 Osprey --task FirstPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
 #   writes beside each parquet: &lt;stem&gt;.1st-pass.fdr_scores.bin, &lt;stem&gt;.reconciliation.json
 
-# split 2 - one process per file (parquet + its two sidecars co-located)
+# split 2 - one process per file (the scores parquet and its intermediate files together)
 Osprey --task PerFileRescoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
 #   writes: &lt;stem&gt;.scores-reconciled.parquet
 
 # join 2 - one process over ALL runs, reading their reconciled parquets (writes out.blib)
 Osprey --task SecondPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
 </pre>
-<p>EVERY task takes <code>-i</code>, naming the DATA files - the same names the first split was given. A join task derives each run's parquet and sidecars from the input stem, so the data file itself need not still exist: what has to be in the worker's working directory (or under <code>--output-dir</code>) is that run's artifacts. FirstPassFDR reconciliation is order-sensitive, so pass a deterministically sorted list - <code>--input-list</code> takes one path per line and is what a cohort past a few hundred runs needs, since <code>-i</code> spends the command line at O(files). Let the scheduler do the fan-out (one file per split process) rather than <code>--parallel-files</code>, which is the single-node multi-file mode.</p>
+<p>EVERY task takes <code>-i</code>, naming the DATA files - the same names the first split was given. A join task derives each run's parquet and intermediate files from the input stem, so the data file itself need not still exist: what has to be in the worker's working directory (or under <code>--output-dir</code>) is that run's artifacts. FirstPassFDR reconciliation is order-sensitive, so pass a deterministically sorted list - <code>--input-list</code> takes one path per line and is what a cohort past a few hundred runs needs, since <code>-i</code> spends the command line at O(files). Let the scheduler do the fan-out (one file per split process) rather than <code>--parallel-files</code>, which is the single-node multi-file mode.</p>
 </body></html>

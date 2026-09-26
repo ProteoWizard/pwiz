@@ -121,8 +121,12 @@ namespace pwiz.Osprey.Tasks
         /// the protein-FDR rescue -- is applied UPSTREAM by FirstPassFDR when it
         /// builds that set (<see cref="FirstPassFdrTask"/>'s compaction), matching
         /// Rust's <c>rescore::run_rescore</c>. This method only consumes the set.
+        ///
+        /// <paramref name="singleFileSearch"/> only words the progress heading: a one-file
+        /// search has no cross-run reconciliation to keep candidates for
+        /// (<see cref="ScoringTaskShared.IsSingleFileSearch"/>).
         /// </summary>
-        public static Stats Apply(RescoreInputs inputs)
+        public static Stats Apply(RescoreInputs inputs, bool singleFileSearch = false)
         {
             if (inputs == null) throw new ArgumentNullException(nameof(inputs));
 
@@ -224,8 +228,11 @@ namespace pwiz.Osprey.Tasks
             // with, and Report is cheap enough to sit in the outer loop only.
             int compactIdx = 0;
             using (var progress = new ProgressReporter(
-                       string.Format(@"Applying the retained set across {0} file(s)",
-                                     inputs.PerFileEntries.Count),
+                       singleFileSearch
+                           ? "Trimming the file to the precursor candidates kept for re-scoring and second-pass FDR"
+                           : CountText.Format(inputs.PerFileEntries.Count,
+                               "Trimming the file to the precursor candidates kept for cross-run reconciliation",
+                               "Trimming each file to the precursor candidates kept for cross-run reconciliation ({0:N0} files)"),
                        inputs.PerFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 foreach (var kvp in inputs.PerFileEntries)

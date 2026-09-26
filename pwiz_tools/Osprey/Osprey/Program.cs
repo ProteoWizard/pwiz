@@ -56,25 +56,98 @@ namespace pwiz.Osprey
         // uniformly. Defaults to stderr; --version / --help stay on stdout.
         private static CommandStatusWriter _out = new CommandStatusWriter(Console.Error);
 
+        // Exit codes, as Skyline's command line defines them.
+        internal const int EXIT_CODE_SUCCESS = 0;
+        internal const int EXIT_CODE_FAILURE_TO_START = 1;
+        internal const int EXIT_CODE_RAN_WITH_ERRORS = 2;
+
+        // Skyline's warning prefix. English until Osprey's user text moves to resources.
+        private const string WARNING_PREFIX = @"Warning:";
+
+        // The caller's writer (stderr from Main), kept after a --log-file swap replaces _out,
+        // so an error reported before the swap still counts when the exit code is reconciled.
+        private static CommandStatusWriter _consoleOut = _out;
+
         static int Main(string[] args)
+        {
+            return RunCommand(args, new CommandStatusWriter(Console.Error));
+        }
+
+        /// <summary>
+        /// Run one command line in this process, writing to <paramref name="consoleOut"/>, and
+        /// return the exit code - Skyline's <c>CommandLineRunner.RunCommand</c>. Tests call it so
+        /// a failing command line can be debugged in place instead of in a child process.
+        /// </summary>
+        internal static int RunCommand(string[] args, CommandStatusWriter consoleOut)
+        {
+            _out = _consoleOut = consoleOut;
+            // Before parsing, so a warning OspreyCommandArgs raises while parsing reaches the
+            // caller's writer too; the --log-file swap later re-points it.
+            OspreyOutput.Out = _out;
+            try
+            {
+                return ReconcileExitCode(Run(args));
+            }
+            finally
+            {
+                // A --log-file swap replaced _out; flush and close that writer, never the caller's.
+                if (!ReferenceEquals(_out, _consoleOut))
+                {
+                    _out.Flush();
+                    _out.Dispose();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Make the exit code and the log agree, as Skyline's <c>CommandLine.Run</c> does: an
+        /// "Error:" line under a success code becomes <see cref="EXIT_CODE_RAN_WITH_ERRORS"/>,
+        /// and a failure code with no "Error:" line gets one. Either case also writes a
+        /// <c>[PATH] exit-reconciled</c> line, because it means some code path reported an error
+        /// without failing, or failed without saying why - which the regression gate fails on.
+        /// </summary>
+        private static int ReconcileExitCode(int exitCode)
+        {
+            bool errorReported = _consoleOut.IsErrorReported || _out.IsErrorReported;
+            var agreement = GetExitAgreement(exitCode, errorReported);
+            if (agreement.Mismatch != null)
+                LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_EXIT_RECONCILED, @"{0}", agreement.Mismatch));
+            if (agreement.NeedsErrorLine)
+                LogError("Failure occurred. Exiting...");
+            return agreement.ExitCode;
+        }
+
+        /// <summary>
+        /// The decision behind <see cref="ReconcileExitCode"/>, free of process state so it can be
+        /// tested: the exit code to return, whether an "Error:" line must still be written, and the
+        /// mismatch that forced either (null when the code and the log already agree).
+        /// </summary>
+        internal static (int ExitCode, bool NeedsErrorLine, string Mismatch) GetExitAgreement(
+            int exitCode, bool errorReported)
+        {
+            if (exitCode == EXIT_CODE_SUCCESS && errorReported)
+                return (EXIT_CODE_RAN_WITH_ERRORS, false, @"error-with-success");
+            if (exitCode != EXIT_CODE_SUCCESS && !errorReported)
+                return (exitCode, true, @"failure-without-error");
+            return (exitCode, false, null);
+        }
+
+        private static int Run(string[] args)
         {
             // Route OspreyDiagnostics dump messages through the same logging
             // channel as the rest of the pipeline so bisection logs appear
             // alongside normal output.
-            OspreyDiagnosticsLog.LogAction = LogInfo;
+            OspreyDiagnosticsLog.Log = OspreyLog.Out;
 
             if (args.Length == 0)
             {
-                // No args is a usage error (exit 1), so the prompt goes to stderr (_out
-                // wraps Console.Error); an explicit --help instead writes to stdout
-                // (see OspreyCommandArgs.PrintUsage).
+                // No args is a usage error, so the prompt goes to stderr (_out wraps
+                // Console.Error); an explicit --help instead writes to stdout (see
+                // OspreyCommandArgs.PrintUsage).
                 OspreyCommandArgs.PrintUsage(null, _out);
-                return 1;
+                LogError("No arguments were given; see the usage above.");
+                return EXIT_CODE_FAILURE_TO_START;
             }
-
-            // Tracks whether _out was swapped to a --log-file StreamWriter we must
-            // flush and dispose (never dispose the shared Console.Error writer).
-            bool loggingToFile = false;
 
             try
             {
@@ -98,7 +171,7 @@ namespace pwiz.Osprey
                             LogError(string.Format("{0} requires a task name ({1}).",
                                 OspreyCommandArgs.ARG_TASK.ArgumentText,
                                 string.Join(", ", OspreyCommandArgs.ARG_TASK.Values)));
-                            return 1;
+                            return EXIT_CODE_FAILURE_TO_START;
                         }
                         taskName = args[i + 1];
                         i++; // consume value
@@ -120,7 +193,7 @@ namespace pwiz.Osprey
                     if (taskErr != null)
                     {
                         LogError(taskErr);
-                        return 1;
+                        return EXIT_CODE_FAILURE_TO_START;
                     }
                 }
 
@@ -128,6 +201,7 @@ namespace pwiz.Osprey
                 try
                 {
                     config = ParseArgs(args);
+                    CanonicalizeOutputPaths(config);
                 }
                 catch (Exception ex) when (ex is ArgumentException || ex is FileNotFoundException || ex is InvalidDataException)
                 {
@@ -146,7 +220,7 @@ namespace pwiz.Osprey
                     // convert FormatException into an ArgumentException naming the flag, so
                     // no parse failure needs an entry of its own here.
                     LogError(ex.Message);
-                    return 1;
+                    return EXIT_CODE_FAILURE_TO_START;
                 }
                 // --task selects one task and, with it, the pipeline it runs - the canonical
                 // stages, or a selector's own list (OspreyTasks.PipelineFor). Membership is
@@ -171,7 +245,7 @@ namespace pwiz.Osprey
                 if (err != null)
                 {
                     LogError(err);
-                    return 1;
+                    return EXIT_CODE_FAILURE_TO_START;
                 }
 
                 // Apply per-line output decoration and optional log-file redirection now
@@ -188,22 +262,21 @@ namespace pwiz.Osprey
                             IsTimeStamped = config.IsTimeStamped,
                             IsMemStamped = config.IsMemStamped
                         };
-                        loggingToFile = true;
                     }
                     catch (Exception ex)
                     {
                         LogError(string.Format("Failed to open log file {0}: {1}", config.LogFilePath, ex.Message));
-                        return 1;
+                        return EXIT_CODE_FAILURE_TO_START;
                     }
                 }
 
-                // Point the Core output seam at a stat-filtering wrapper over _out: below-exe
-                // layers (FDR, IO) and LogInfo emit through the same CommandStatusWriter (stamps
-                // + --log-file), with machine [COUNT]/[TIMING]/[STAGE-WALL] lines dropped unless
-                // --perf-stats is set (perf tools pass it; default human log stays clean).
+                // Point the Core output seam at _out: below-exe layers (FDR, IO) and LogInfo emit
+                // through the same CommandStatusWriter (stamps + --log-file). Whether a tagged
+                // line is written at all is decided where it is emitted (OspreyLog.Write), which
+                // reads PerfStats here.
                 OspreyOutput.PerfStats = config.PerfStats;
                 OspreyOutput.Verbose = config.Verbose;
-                OspreyOutput.Out = new StatFilteringTextWriter(_out);
+                OspreyOutput.Out = _out;
 
                 // Create the configured directories only after args validate, so
                 // an invalid command line surfaces the validation message instead
@@ -272,29 +345,36 @@ namespace pwiz.Osprey
                         continue;
                     }
                     LogError(string.Format(
-                        "Input file not found, and it has neither a spectra cache nor a scores " +
-                        "parquet to stand in for it: {0}", inputFile));
-                    return 1;
+                        "Input file not found, and no spectra cache or intermediate file exists to " +
+                        "stand in for it: {0}", inputFile));
+                    return EXIT_CODE_FAILURE_TO_START;
                 }
                 // Announced, not silent: a run whose sources are gone cannot rebuild a
                 // cache that turns out to be wrong, so the log is the only provenance.
                 if (cacheOnlyInputs > 0)
                 {
-                    LogInfo(string.Format(
-                        "{0} of {1} input(s) are absent but have a spectra cache; reading those from the cache.",
+                    LogInfo(CountText.Format(cacheOnlyInputs, config.InputFiles.Count == 1
+                            ? "The input file is not present but has a spectra cache; reading it from the cache."
+                            : "1 of {1:N0} input files is not present but has a spectra cache; reading it from the cache.",
+                        "{0:N0} of {1:N0} input files are not present but have a spectra cache; reading those from the cache.",
+                        config.InputFiles.Count));
+                    LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_INPUT_SOURCE, @"spectra-cache {0}/{1}",
                         cacheOnlyInputs, config.InputFiles.Count));
                 }
                 if (artifactOnlyInputs > 0)
                 {
-                    LogInfo(string.Format(
-                        "{0} of {1} input(s) are absent and have no spectra cache; reading those from " +
-                        "their scores parquet, which is what a task after Stage 4 needs.",
+                    LogInfo(CountText.Format(artifactOnlyInputs, config.InputFiles.Count == 1
+                            ? "The input file is not present; using the intermediate scores file written for it."
+                            : "1 of {1:N0} input files is not present; using the intermediate scores file written for it.",
+                        "{0:N0} of {1:N0} input files are not present; using the intermediate scores file written for each one.",
+                        config.InputFiles.Count));
+                    LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_INPUT_SOURCE, @"scores-parquet {0}/{1}",
                         artifactOnlyInputs, config.InputFiles.Count));
                 }
                 if (config.LibrarySource != null && !File.Exists(config.LibrarySource.Path))
                 {
                     LogError(string.Format("Library file not found: {0}", config.LibrarySource.Path));
-                    return 1;
+                    return EXIT_CODE_FAILURE_TO_START;
                 }
 
                 // Log startup info
@@ -303,7 +383,7 @@ namespace pwiz.Osprey
                 LogInfo(string.Format("Input files: {0}", config.InputFiles.Count));
                 LogInfo(string.Format("Library: {0} ({1})",
                     config.LibrarySource?.Path ?? "(none)",
-                    config.LibrarySource?.Format.ToString() ?? "?"));
+                    config.LibrarySource?.Format.GetLocalizedString() ?? "?"));
                 // A --task run executes one HPC stage rather than the full pipeline;
                 // name it so the log says which single task ran (no --task = full
                 // pipeline, no line). The Name is the canonical spelling, whatever
@@ -316,7 +396,7 @@ namespace pwiz.Osprey
                 // rebuilt: every selectable task but SecondPassFDR describes its own output.
                 LogInfo(string.Format("Output: {0}",
                     config.SelectedTask?.DescribeOutput(config) ?? config.OutputBlib));
-                LogInfo(string.Format("Resolution: {0}", config.ResolutionMode));
+                LogInfo(string.Format("Resolution: {0}", config.ResolutionMode.GetLocalizedString()));
                 LogInfo(string.Format("Fragment tolerance: {0} {1}",
                     config.FragmentTolerance.Tolerance,
                     config.FragmentTolerance.Unit == ToleranceUnit.Ppm ? "ppm" : "Th"));
@@ -343,18 +423,15 @@ namespace pwiz.Osprey
                 // instead of a full Stage 1-5.
                 if (OspreyEnvironment.Pass2QValueUnrecognized)
                 {
+                    // Why 'percolator' and 'transfer-compete' were removed, with the entrapment
+                    // numbers, is in docs/12-second-pass-fdr.md and on OspreyEnvironment.Pass2QValue.
                     LogError(string.Format(
-                        "OSPREY_PASS2_QVALUE is not a recognized mode. Recognized: '{0}', '{1}'. " +
-                        "Unset it for the default ('{1}'). 'percolator' was REMOVED: it retrained " +
-                        "the 2nd-pass SVM on a compaction-depleted decoy pool, which reports " +
-                        "anti-conservative q-values. 'transfer-compete' was REMOVED for a related " +
-                        "reason: it selected survivors by TARGET per-run q and admitted decoys only " +
-                        "by pairing, stripping decoys that won the 1st-pass competition, so its q " +
-                        "improved with no added evidence - 1.96% true FDP at a nominal 1% on 82-file " +
-                        "SEA-AD, against 1.53% for the default, and with FEWER ids.",
+                        "OSPREY_PASS2_QVALUE='{2}' is not recognized. Use '{0}' or '{1}', or unset it " +
+                        "for the default ('{1}'). The 'percolator' and 'transfer-compete' modes were removed.",
                         OspreyEnvironment.PASS2_QVALUE_TRANSFER,
-                        OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT));
-                    return 1;
+                        OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT,
+                        OspreyEnvironment.Pass2QValueSetting));
+                    return EXIT_CODE_FAILURE_TO_START;
                 }
                 // OSPREY_STAGE7_STREAM was REMOVED (2026-09-10): the streamed Stage-7 join is the
                 // only arm there is. Setting it to 0 used to select the RESIDENT join, so a sweep
@@ -362,18 +439,16 @@ namespace pwiz.Osprey
                 // under the resident one - the misattribution case these variables have to be
                 // strict about, and the reason this is an error rather than a warning. Checked at
                 // startup so a stale script dies in seconds instead of after Stage 1-5.
+                // It kept the RESIDENT Stage-7 join as an A/B byte-identity oracle for the
+                // streamed default; that A/B was banked (the resident arm matched the committed
+                // golden at 1e-9 with a byte-identical diagnostics report). The configurations
+                // that still take the resident arm do so by their own declaration (ResidentPaths).
                 if (OspreyEnvironment.Stage7StreamRetiredSet)
                 {
                     LogError(
-                        "OSPREY_STAGE7_STREAM was REMOVED and setting it does nothing. Unset it. " +
-                        "It kept the RESIDENT Stage-7 join as an A/B byte-identity oracle for the " +
-                        "streamed default; that A/B was banked (the resident arm matched the " +
-                        "committed golden at 1e-9 and produced a byte-identical diagnostics " +
-                        "report), and the switch went with it. Stage 7 streams by default and this " +
-                        "variable can no longer select the resident arm; the configurations that " +
-                        "still take it do so by their own declaration (see ResidentPaths), not " +
-                        "through this setting.");
-                    return 1;
+                        "OSPREY_STAGE7_STREAM was removed and has no effect. Unset it. Second-pass " +
+                        "FDR now always processes one run at a time where the analysis allows it.");
+                    return EXIT_CODE_FAILURE_TO_START;
                 }
                 // A token that names nothing admits nothing, so the run proceeds - but say so
                 // (#4486). 'hpc-merge' was retired when --task SecondPassFDR started streaming
@@ -392,16 +467,23 @@ namespace pwiz.Osprey
                     // whole value would push the operator to rewrite or unset a variable whose
                     // valid half the run still needs, and the run then aborts on a guard the
                     // warning said was not engaged.
+                    // 'hpc-merge' and 'fdrbench-pass1' were retired: the --task SecondPassFDR
+                    // reconciled-input load and the pass-1 FDRBench emitter both stream and need
+                    // no allowance.
                     LogWarning(string.Format(
-                        "OSPREY_ALLOW_UNFIXED_RESIDENT contains unrecognized token(s) that grant " +
-                        "nothing: {0}. Recognized: {1}. ('hpc-merge' and 'fdrbench-pass1' were retired - the " +
-                        "--task SecondPassFDR reconciled-input load and the pass-1 FDRBench emitter both stream and need no allowance.) " +
-                        "Any recognized token in the same value is still honored.",
+                        "OSPREY_ALLOW_UNFIXED_RESIDENT contains tokens that are not recognized and " +
+                        "have no effect: {0}. Recognized: {1}. Any recognized token in the same value " +
+                        "is still honored.",
                         OspreyEnvironment.UnrecognizedResidentTokens,
                         string.Join(", ", ResidentPaths.KNOWN_UNFIXED)));
                 }
                 LogInfo(string.Format("Protein FDR: {0:P1}", config.EffectiveProteinFdr));
                 LogInfo(string.Format("Threads: {0}", config.NThreads));
+                // Machine twins of the banner: the liveness anchor a route assertion needs
+                // before it can trust an absence, and the aggregation arm, which the prose
+                // above states for a person.
+                LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_EXPERIMENT_AGG, @"{0}", OspreyEnvironment.ExperimentAgg));
+                LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_STARTUP, @"threads={0}", config.NThreads));
                 LogInfo("");
 
                 // --task ModelDiagnostics is a RENDER over completed analysis state, not a run.
@@ -430,16 +512,7 @@ namespace pwiz.Osprey
                 // reported one line and no frames. Usage errors do not reach here; the
                 // parser's catch above reports them as the one-line messages they are.
                 LogError(string.Format("Fatal error: {0}", ex));
-                return 1;
-            }
-            finally
-            {
-                // Flush and close the --log-file writer (never the shared Console.Error).
-                if (loggingToFile)
-                {
-                    _out.Flush();
-                    _out.Dispose();
-                }
+                return EXIT_CODE_FAILURE_TO_START;
             }
         }
 
@@ -473,22 +546,26 @@ namespace pwiz.Osprey
             // answer that looks like a right one.
             if (!ModelDiagnosticsReport.HasCompletedFirstPass(config))
             {
-                LogError("--task ModelDiagnostics: no completed first-pass FDR state to " +
-                         "describe (no analysis-wide 1st-pass experiment sidecar beside the " +
+                LogError("--task ModelDiagnostics: there is no completed first pass to describe " +
+                         "(no first-pass intermediate file for the whole experiment beside the " +
                          "output). Run the analysis at least as far as FirstPassFDR first.");
-                return 1;
+                return EXIT_CODE_FAILURE_TO_START;
             }
             // Everything this analysis can have is on disk: a pure render, seconds, no pipeline.
             if (ModelDiagnosticsReport.AllProductsCurrent(config))
-                return ModelDiagnosticsReport.TryRenderFromProducts(config, LogInfo) ? 0 : 1;
+            {
+                if (ModelDiagnosticsReport.TryRenderFromProducts(config, OspreyLog.Out))
+                    return EXIT_CODE_SUCCESS;
+                LogError("--task ModelDiagnostics: the saved model diagnostics data for this " +
+                         "analysis could not be read, so the report was not built.");
+                return EXIT_CODE_FAILURE_TO_START;
+            }
 
             // A product is outstanding. Say so before the pipeline banner, because the next
             // thing the log shows is task machinery and an operator needs to know it is a fold
             // rather than the re-analysis this task used to refuse to start.
-            LogInfo("--task ModelDiagnostics: a diagnostics product is missing for this " +
-                    "analysis; folding it from the completed artifacts. No analysis is re-run - " +
-                    "each pass produces its own report from its own sidecars, and every other " +
-                    "output is left as it stands.");
+            LogInfo("--task ModelDiagnostics: building the report from the completed analysis. " +
+                    "Nothing is re-run and no other output changes.");
             return -1;
         }
 
@@ -608,10 +685,12 @@ namespace pwiz.Osprey
                 return null;
             var sb = new StringBuilder();
             sb.AppendFormat(
-                "{0} input stem(s) appear more than once. Every per-run artifact is named " +
-                "<stem>.<suffix>, so runs sharing a stem cannot be told apart and would " +
-                "overwrite each other's parquets and sidecars. Rename or stage them so each " +
-                "run has a distinct file name:", collisions.Count);
+                collisions.Count == 1
+                    ? "1 input file name appears more than once. "
+                    : "{0:N0} input file names appear more than once. ", collisions.Count);
+            sb.Append("Every file Osprey writes for an input is named after the input without its " +
+                "extension, so inputs sharing a name would overwrite each other's intermediate " +
+                "files. Rename or stage them so each input has a distinct file name:");
             foreach (var kv in collisions)
                 sb.AppendFormat("\n  '{0}': {1}", kv.Key, string.Join(", ", kv.Value));
             return sb.ToString();
@@ -637,15 +716,25 @@ namespace pwiz.Osprey
             OspreyOutput.Out.WriteLine(message);
         }
 
+        internal static void LogInfo(LogTag tag, string text)
+        {
+            OspreyLog.Out.LogInfo(tag, text);
+        }
+
         internal static void LogWarning(string message)
         {
             // Through OspreyOutput.Out (not _out directly) so a warning emitted
             // while a file runs in a MultiProgressReporter per-file scope
             // (--parallel-files) lands in that file's buffered block, in context,
             // instead of interleaving with the live "[i] p%" aggregate line. Off
-            // the parallel path OspreyOutput.Out is the same CommandStatusWriter
-            // (wrapped for stat-filtering), so the output is unchanged.
-            OspreyOutput.Out.WriteLine("[WARN] {0}", message);
+            // the parallel path OspreyOutput.Out is the same CommandStatusWriter,
+            // so the output is unchanged.
+            //
+            // "Warning:" / "Error:" rather than a [TAG]: these lines are written for the
+            // user, not for a tool, and follow Skyline's command-line convention (translated
+            // with the rest of the text; CommandStatusWriter recognizes "Error:" in every
+            // language Skyline ships).
+            OspreyOutput.Out.WriteLine(WARNING_PREFIX + @" " + message);
         }
 
         internal static void LogError(string message)
@@ -653,7 +742,28 @@ namespace pwiz.Osprey
             // Errors go straight to the process writer (NOT the per-file buffer):
             // surface immediately rather than waiting for the file's block to flush
             // on completion, so a failing run reports the cause right away.
-            _out.WriteLine("[ERROR] {0}", message);
+            _out.WriteLine(CommandStatusWriter.ERROR_MESSAGE_HINT + @" " + message);
+        }
+
+        /// <summary>
+        /// Make the paths Osprey builds artifact paths FROM absolute, with the platform
+        /// separator: --output-dir, --cache-dir (both set by --work-dir) and -o. Given as
+        /// D:/runs/x, a work directory was joined with '\' into D:/runs/x\file.spectra.bin in
+        /// every artifact path and every log line that names one. The input and library paths
+        /// stay as typed: they are echoed back to the user, and the input names are written
+        /// into the blib. No hash or resume stamp reads a directory, so this changes no cache
+        /// decision (<see cref="SearchIdentity"/> hashes file names only).
+        /// </summary>
+        private static void CanonicalizeOutputPaths(OspreyConfig config)
+        {
+            config.OutputDir = FullPathOrEmpty(config.OutputDir);
+            config.CacheDir = FullPathOrEmpty(config.CacheDir);
+            config.OutputBlib = FullPathOrEmpty(config.OutputBlib);
+        }
+
+        private static string FullPathOrEmpty(string path)
+        {
+            return string.IsNullOrEmpty(path) ? path : Path.GetFullPath(path);
         }
     }
 }

@@ -848,7 +848,7 @@ namespace pwiz.Osprey
             sb.AppendLine(@"Osprey --task FirstPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
             sb.AppendLine(@"#   writes beside each parquet: &lt;stem&gt;.1st-pass.fdr_scores.bin, &lt;stem&gt;.reconciliation.json");
             sb.AppendLine();
-            sb.AppendLine(@"# split 2 - one process per file (parquet + its two sidecars co-located)");
+            sb.AppendLine(@"# split 2 - one process per file (the scores parquet and its intermediate files together)");
             sb.AppendLine(@"Osprey --task PerFileRescoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
             sb.AppendLine(@"#   writes: &lt;stem&gt;.scores-reconciled.parquet");
             sb.AppendLine();
@@ -856,7 +856,7 @@ namespace pwiz.Osprey
             sb.AppendLine(@"Osprey --task SecondPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
             sb.AppendLine(@"</pre>");
             sb.AppendLine(@"<p>EVERY task takes <code>-i</code>, naming the DATA files - the same names " +
-                @"the first split was given. A join task derives each run's parquet and sidecars from " +
+                @"the first split was given. A join task derives each run's parquet and intermediate files from " +
                 @"the input stem, so the data file itself need not still exist: what has to be in the " +
                 @"worker's working directory (or under <code>--output-dir</code>) is that run's " +
                 @"artifacts. FirstPassFDR reconciliation is order-sensitive, so pass a " +
@@ -911,7 +911,7 @@ namespace pwiz.Osprey
                 { @"timestamp", @"Prefix each output line with [yyyy/MM/dd HH:mm:ss]" },
                 { @"memstamp", @"Prefix each output line with managed and private memory in MB (pair with --timestamp for perfviz)" },
                 { @"log-file", @"Write all output to this file instead of stderr" },
-                { @"perf-stats", @"Emit machine-parseable [COUNT]/[TIMING]/[STAGE-WALL] lines for perf tools (off by default)" },
+                { @"perf-stats", @"Emit the machine-parseable [COUNT], [TIMING], [BENCH], [STAGE-WALL], [PATH] and [TRAIN] lines that scripts and perf tools read (off by default)" },
                 { @"verbose", @"Show implementer-grade detail (e.g. per-fold Percolator iterations) hidden by default" },
                 { @"diagnostics", @"Write cross-impl bisection dumps (OSPREY_DUMP_* bundle)" },
                 { @"model-diagnostics", @"Write a self-contained interactive HTML report of the trained scoring model, FDR calibration, and single-peak multiple-ID co-assignment" },

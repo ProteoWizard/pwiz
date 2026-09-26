@@ -35,6 +35,23 @@ namespace pwiz.Osprey.Core
     }
 
     /// <summary>
+    /// The user-facing name of a <see cref="LibraryFormat"/>. Skyline's
+    /// <c>GetLocalizedString</c> pattern.
+    /// </summary>
+    public static class LibraryFormatExtension
+    {
+        private static string[] LOCALIZED_VALUES
+        {
+            get { return new[] { "DIA-NN TSV", "BiblioSpec", "Skyline document" }; }
+        }
+
+        public static string GetLocalizedString(this LibraryFormat val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
+    }
+
+    /// <summary>
     /// Spectral library source, combining format and file path.
     /// Maps to osprey-core/src/config.rs LibrarySource.
     /// </summary>
