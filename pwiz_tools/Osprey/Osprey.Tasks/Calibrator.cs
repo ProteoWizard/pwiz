@@ -448,10 +448,10 @@ namespace pwiz.Osprey.Tasks
                 if (decision.Action == CalibrationLadderAction.Retry)
                 {
                     currentSampleSize = decision.NextSampleSize;
-                    _ctx.LogWarning(string.Format(
-                        "Calibration attempt {0} found only {1} confident peptides (need {2}). Retrying with {3} targets...",
-                        attempt, nConfident, config.RtCalibration.MinCalibrationPoints,
-                        currentSampleSize == 0 ? "ALL" : string.Format("{0}", currentSampleSize)));
+                    _ctx.LogWarning(string.Format(currentSampleSize == 0
+                            ? "Calibration attempt {0} found only {1:N0} confident peptides (need {2:N0}). Retrying with all targets..."
+                            : "Calibration attempt {0} found only {1:N0} confident peptides (need {2:N0}). Retrying with {3:N0} targets...",
+                        attempt, nConfident, config.RtCalibration.MinCalibrationPoints, currentSampleSize));
                     continue;
                 }
 
