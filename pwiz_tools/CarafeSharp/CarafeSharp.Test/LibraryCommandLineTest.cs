@@ -34,8 +34,8 @@ namespace pwiz.CarafeSharp.Test
 {
     /// <summary>
     /// Carafe's library-prediction command line as CarafeCommandLine reads it, the output
-    /// formats an <c>-lf_type</c> selects, a model folder's meta.json and metrics, and the
-    /// DecoyPairs plan.
+    /// formats an <c>-lf_type</c> selects, a model folder's meta.json and metrics, library
+    /// prediction itself, and the DecoyPairs plan.
     /// </summary>
     [TestClass]
     public class LibraryCommandLineTest
@@ -102,6 +102,22 @@ namespace pwiz.CarafeSharp.Test
             Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.tsv" }));
             Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-mode", @"phosphorylation" }));
             Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-min_pep_charge", @"3", @"-max_pep_charge", @"2" }));
+
+            // The device and the modifications are checked with the other options, before any work.
+            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-device", @"tpu" }));
+            var badIds = Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-varMod", @"2, 7" }));
+            Assert.IsInstanceOfType(badIds.InnerException, typeof(FormatException));
+            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-fixMod", @"99" }));
+            // TMT (11) has no alphabase name, so Carafe's library prediction cannot use it.
+            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-varMod", @"11" }));
+            // Only the DIA-NN notation can write a protein N-term acetyl in a TSV; a .blib can too.
+            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-varMod", @"5", @"-lf_type", @"EncyclopeDIA" }));
+            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-fixMod", @"5", @"-lf_type", @"Skyline" }));
+            CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-varMod", @"5", @"-lf_type", @"DIA-NN" });
+            CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-varMod", @"5", @"-lf_type", @"Skyline", @"-fast" });
+            // Stage 1 reads ids 11 to 27 for its m/z filter, so its command line accepts them.
+            Assert.AreEqual(CarafeCommandMode.build_entrapment_fasta, CarafeCommandLine.Parse(new[]
+                { @"-build_entrapment_fasta", @"out.fasta", @"-db", @"x.fasta", @"-varMod", @"11", @"-mz_filter" }).Mode);
         }
 
         [TestMethod]
@@ -203,6 +219,17 @@ namespace pwiz.CarafeSharp.Test
                 generator.Run();
                 Assert.IsTrue(generator.SpectrumCount > 0, log.ToString());
                 CollectionAssert.AreEqual(new[] { generator.BlibPath }, Directory.GetFiles(settings.OutputDirectory));
+
+                // The models are opened, and the pretrained weights checked, before the FASTA is digested.
+                string zip = Path.Combine(folder, @"pretrained_models.zip");
+                var early = new LibrarySettings
+                {
+                    Database = Path.Combine(folder, @"missing.fasta"),
+                    OutputDirectory = Path.Combine(folder, @"empty"),
+                    PretrainedModels = zip,
+                    Device = TorchDevice.CPU,
+                };
+                Assert.AreEqual(zip, Assert.ThrowsException<FileNotFoundException>(() => new LibraryGenerator(early, null).Run()).FileName);
             }
             finally
             {

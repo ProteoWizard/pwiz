@@ -210,7 +210,9 @@ namespace pwiz.CarafeSharp.Test
             StringAssert.Contains(commandLine.Warnings[0], @"-itol -itolu -rf -rf_rt_win -min_mz");
             StringAssert.Contains(commandLine.Warnings[1], @"-ez");
 
-            // Carafe's code defaults when the options are absent; training exports named directly.
+            // Carafe's code defaults when the options are absent; training exports named directly
+            // train without -ms, which Carafe could never have read.
+            Assert.AreEqual(OspreyTrainingExport.FILE_SUFFIX, CarafeCommandLine.TRAINING_EXPORT_SUFFIX);
             settings = CarafeCommandLine.Parse(new[] { @"-i", @"a.training.parquet", @"-tf", @"ms2" }).TrainingSettings;
             Assert.AreEqual(TrainingSettings.DEFAULT_CORRELATION, settings.MinCorrelation);
             Assert.AreEqual(0, settings.LowOrdinalB);
@@ -218,11 +220,46 @@ namespace pwiz.CarafeSharp.Test
             Assert.IsTrue(settings.TrainMs2);
             Assert.IsFalse(settings.TrainRt);
             Assert.IsNull(settings.Library);
+            Assert.AreEqual(CarafeCommandMode.train, CarafeCommandLine.Parse(new[] { @"-i", Path.GetTempPath() }).Mode);
+            // Carafe trains only with -ms: -i without it is a library run, as the GUI's initial library is.
+            Assert.AreEqual(CarafeCommandMode.predict_library,
+                CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-i", @"osprey.blib" }).Mode);
+
+            // -seed is Carafe's Integer.parseInt, and numpy rejects a negative seed.
+            Assert.AreEqual(7u, ParseExport(@"-seed", @"7").TrainingSettings.Seed);
+            AssertThrows<ArgumentException>(() => ParseExport(@"-seed", @"-1"));
+            AssertThrows<ArgumentException>(() => ParseExport(@"-seed", @"4294967296"));
+            // A flag given a value is an error, as it is to Carafe's option parser.
+            AssertThrows<ArgumentException>(() => ParseExport(@"-valid=false"));
+            AssertThrows<ArgumentException>(() => ParseExport(@"-device", @"tpu"));
+            AssertThrows<NotSupportedException>(() => ParseExport(@"-ai_version", @"v1"));
+            AssertThrows<NotSupportedException>(() => ParseExport(@"-user_var_mods", @"x"));
+            AssertThrows<NotSupportedException>(() => ParseExport(@"-mod2mass", @"x"));
 
             AssertThrows<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-ms", @"run.mzML" }));
-            AssertThrows<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-i", @"report.tsv", @"-se", @"DIA-NN" }));
-            AssertThrows<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-i", @"x.blib", @"-na", @"2" }));
-            AssertThrows<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-i", @"x.blib", @"-tf", @"test" }));
+            AssertThrows<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-i", @"report.tsv", @"-ms", @"run.mzML", @"-se", @"DIA-NN" }));
+            AssertThrows<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-i", @"x.blib", @"-ms", @"run.mzML", @"-na", @"2" }));
+            AssertThrows<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-i", @"x.blib", @"-ms", @"run.mzML", @"-tf", @"test" }));
+
+            // Training checks the library FASTA, then opens the pretrained models, before it
+            // reads any export.
+            string folder = Path.Combine(Path.GetTempPath(), @"CarafeSharpTrainer_" + Guid.NewGuid().ToString(@"N"));
+            Directory.CreateDirectory(folder);
+            try
+            {
+                string fasta = Path.Combine(folder, @"library.fasta");
+                string zip = Path.Combine(folder, @"pretrained_models.zip");
+                var trainer = new ModelTrainer(CarafeCommandLine.Parse(new[] { @"-i", Path.Combine(folder, @"osprey.blib"),
+                    @"-ms", @"run.mzML", @"-o", folder, @"-db", fasta, @"-pretrained", zip }).TrainingSettings, null);
+                Assert.AreEqual(fasta, Assert.ThrowsException<FileNotFoundException>(() => trainer.Run()).FileName);
+                File.WriteAllText(fasta, ">P1\nPEPTIDEK\n");
+                Assert.AreEqual(zip, Assert.ThrowsException<FileNotFoundException>(() => trainer.Run()).FileName);
+            }
+            finally
+            {
+                if (Directory.Exists(folder))
+                    Directory.Delete(folder, true);
+            }
         }
 
         [TestMethod]
@@ -272,6 +309,12 @@ namespace pwiz.CarafeSharp.Test
             string path = Path.Combine(folder, name);
             File.WriteAllText(path, string.Empty);
             return path;
+        }
+
+        /// <summary>A training command line on an export named directly, plus <paramref name="options"/>.</summary>
+        private static CarafeCommandLine ParseExport(params string[] options)
+        {
+            return CarafeCommandLine.Parse(new[] { @"-i", @"a.training.parquet" }.Concat(options).ToArray());
         }
 
         private static void AssertThrows<T>(Action action) where T : Exception

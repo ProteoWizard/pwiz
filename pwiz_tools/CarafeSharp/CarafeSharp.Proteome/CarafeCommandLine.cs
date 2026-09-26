@@ -44,8 +44,9 @@ namespace pwiz.CarafeSharp.Proteome
     /// library prediction from <c>-db</c>), so CarafeSharp accepts exactly what Carafe's GUI
     /// passes. Options are Carafe's single-dash names, taking a value as the next
     /// token (or after '='), unless that token is itself an option; a repeated option keeps its
-    /// first value; an unknown option is an error. Every Carafe option is recognized, and the
-    /// ones these modes do not read are ignored, as Carafe ignores them.
+    /// first value; an unknown option, or a flag given a value with '=', is an error. Every
+    /// Carafe option is recognized, and the ones these modes do not read are ignored, as Carafe
+    /// ignores them.
     /// <para>
     /// Defaults are Carafe's effective ones, which are not all its help text's: without the
     /// options, missed cleavages are 2 (help: 1), the precursor m/z window is 300-2000 (help:
@@ -62,8 +63,17 @@ namespace pwiz.CarafeSharp.Proteome
         public const int DEFAULT_MIN_CHARGE = 2;
         public const int DEFAULT_MAX_CHARGE = 3;
 
+        /// <summary>
+        /// The file suffix of Osprey's training export (CarafeSharp.IO's
+        /// <c>OspreyTrainingExport.FILE_SUFFIX</c>, which this project does not reference).
+        /// </summary>
+        public const string TRAINING_EXPORT_SUFFIX = @".training.parquet";
+
         /// <summary>Carafe's options: name to whether it takes a value.</summary>
         private static readonly Dictionary<string, bool> OPTIONS = BuildOptionTable();
+
+        /// <summary>The <c>-device</c> values libtorch can be asked for.</summary>
+        private static readonly string[] DEVICES = { @"cpu", @"gpu", @"cuda" };
 
         private readonly Dictionary<string, string> _values;
         private readonly HashSet<string> _flags;
@@ -93,7 +103,12 @@ namespace pwiz.CarafeSharp.Proteome
                 }
                 flags.Add(name);
                 if (!OPTIONS[name])
+                {
+                    // Carafe's option parser does not read "-flag=value" as the flag.
+                    if (inlineValue != null)
+                        throw new ArgumentException(@"Unrecognized option: " + args[i]);
                     continue;
+                }
                 string value = inlineValue;
                 if (value == null)
                 {
@@ -141,8 +156,10 @@ namespace pwiz.CarafeSharp.Proteome
                     @"Usage: CarafeSharp -build_entrapment_fasta <peptides.fasta> -db <proteins.fasta> [options]",
                     @"       CarafeSharp -reconcile_manifest <out.tsv> -manifest <in.tsv> -predicted_library <library.tsv|.blib>",
                     @"       CarafeSharp -db <peptides.fasta|proteins.fasta> -o <folder> [options]   (library prediction)",
-                    @"       CarafeSharp -i <osprey.blib|x.training.parquet|folder> [-ms <runs>] -o <folder> [-db <fasta>] [options]",
-                    @"                   (fine-tuning on Osprey's --training-export, then the library from -db)",
+                    @"       CarafeSharp -i <osprey.blib> -ms <runs> -o <folder> [-db <fasta>] [options]",
+                    @"       CarafeSharp -i <x.training.parquet|folder> [-ms <runs>] -o <folder> [-db <fasta>] [options]",
+                    @"                   (fine-tuning on Osprey's --training-export, then the library from -db;",
+                    @"                   -i with a blib and no -ms is library prediction, as in Carafe)",
                     @"Build options (Carafe's): -manifest <tsv> -entrapment -no_decoys -decoy_prefix <p> -mz_filter",
                     @"  -min_pep_mz <mz> -max_pep_mz <mz> -min_pep_charge <z> -max_pep_charge <z> -entrapment_seed <n>",
                     @"  -entrapment_db <fasta> -entrapment_ratio <r> -no_similarity_gate -ignore_pairing_errors",
@@ -154,7 +171,8 @@ namespace pwiz.CarafeSharp.Proteome
                     @"  -nce <nce> -ms_instrument <name> -rt_max <min> -model_dir <folder> -tf all|ms2|rt",
                     @"  -device cpu|gpu -pairing_manifest <tsv>; CarafeSharp only: -pretrained <pretrained_models.zip>",
                     @"Training options (Carafe's): -se Osprey -fdr <q> -cor <r> -n_ion_min <n> -c_ion_min <n> -lf_frag_n_min <n>",
-                    @"  -nf <n> -min_n <n> -valid -no_masking -tf all|ms2|rt -seed <n> -nce <nce> -ms_instrument <name>");
+                    @"  -nf <n> -min_n <n> -valid -no_masking -tf all|ms2|rt -seed <n> -nce <nce> -ms_instrument <name>",
+                    @"  -device cpu|gpu; CarafeSharp only: -pretrained <pretrained_models.zip>");
             }
         }
 
@@ -214,7 +232,10 @@ namespace pwiz.CarafeSharp.Proteome
             }
             if (Has(@"build_koina_library"))
                 throw new NotSupportedException(@"-build_koina_library is not supported by CarafeSharp");
-            if ((Has(@"ms") || Has(@"i")) && !Has(@"model_dir"))
+            // Carafe trains when -ms is given. CarafeSharp also trains on Osprey's training exports
+            // named by -i directly, which Carafe could never have read; -i alone is otherwise
+            // ignored, as Carafe ignores it.
+            if ((Has(@"ms") || NamesTrainingExports()) && !Has(@"model_dir"))
             {
                 Mode = CarafeCommandMode.train;
                 TrainingSettings = InterpretTraining(digest, modifications, minMz, maxMz);
@@ -226,7 +247,8 @@ namespace pwiz.CarafeSharp.Proteome
                 LibrarySettings = InterpretLibrary(digest, modifications, minMz, maxMz);
                 return;
             }
-            throw new ArgumentException(@"CarafeSharp supports -build_entrapment_fasta, -reconcile_manifest, library prediction from -db and training from -i");
+            throw new ArgumentException(@"CarafeSharp supports -build_entrapment_fasta, -reconcile_manifest, library prediction from -db " +
+                                        @"and training from -i with -ms (or -i naming Osprey's training exports)");
         }
 
         /// <summary>
@@ -242,6 +264,9 @@ namespace pwiz.CarafeSharp.Proteome
                 throw new NotSupportedException(@"-se " + searchEngine + @" is not supported by CarafeSharp, which trains on Osprey's training export (-se Osprey)");
             if (TryGet(@"mode", out string mode) && mode != @"-" && !string.Equals(mode, @"general", StringComparison.OrdinalIgnoreCase))
                 throw new NotSupportedException(@"-mode " + mode + @" is not supported by CarafeSharp; only general");
+            CheckAiVersion();
+            if (Has(@"user_var_mods") || Has(@"mod2mass"))
+                throw new NotSupportedException(@"-user_var_mods and -mod2mass are not supported by CarafeSharp");
             foreach (string option in new[] { @"cs", @"y1", @"use_all_peaks", @"ccs" })
             {
                 if (Has(option))
@@ -291,9 +316,15 @@ namespace pwiz.CarafeSharp.Proteome
                 settings.TrainingType = trainingType.ToLowerInvariant();
             }
             if (TryGet(@"seed", out string seed))
-                settings.Seed = (uint)ParseLong(@"seed", seed);
+            {
+                // Carafe's Integer.parseInt, and numpy's seed must not be negative.
+                int value = ParseInt(@"seed", seed);
+                if (value < 0)
+                    throw new ArgumentException(@"-seed must not be negative: " + seed);
+                settings.Seed = (uint)value;
+            }
             if (TryGet(@"device", out string device))
-                settings.Device = device;
+                settings.Device = ParseDevice(device);
             if (TryGet(@"nce", out string nce))
                 settings.Nce = ParseDouble(@"nce", nce);
             if (TryGet(@"ms_instrument", out string instrument))
@@ -327,8 +358,11 @@ namespace pwiz.CarafeSharp.Proteome
                 throw new NotSupportedException(@"-mode " + mode + @" is not supported by CarafeSharp; only general");
             if (TryGet(@"lf_format", out string fileFormat) && string.Equals(fileFormat, @"parquet", StringComparison.OrdinalIgnoreCase))
                 throw new NotSupportedException(@"-lf_format parquet is not supported by CarafeSharp");
-            if (TryGet(@"ai_version", out string aiVersion) && !string.Equals(aiVersion, @"v2", StringComparison.OrdinalIgnoreCase))
-                throw new NotSupportedException(@"-ai_version " + aiVersion + @" is not supported by CarafeSharp; only v2");
+            CheckAiVersion();
+            // Parsed here, not only after the digest, so a bad id stops the run before any work.
+            // Stage 1 does not come here: its m/z filter reads ids 11 to 27 too.
+            var fixedModifications = GetModifications(@"fixMod", modifications.FixedModifications, modifications.GetFixedModifications);
+            var variableModifications = GetModifications(@"varMod", modifications.VariableModifications, modifications.GetVariableModifications);
 
             digest.ConvertIToL = Has(@"I2L");
             var settings = new LibrarySettings
@@ -381,14 +415,40 @@ namespace pwiz.CarafeSharp.Proteome
                     throw new NotSupportedException(@"-tf test is not supported by CarafeSharp");
             }
             if (TryGet(@"device", out string device))
-                settings.Device = device;
+                settings.Device = ParseDevice(device);
             if (TryGet(@"pairing_manifest", out string manifest))
                 settings.PairingManifest = manifest;
             if (TryGet(@"pretrained", out string pretrained))
                 settings.PretrainedModels = pretrained;
             // Fails here for -lf_type mzSpecLib, before any prediction.
-            LibraryOutputs.FromFormat(settings.LibraryFormat, settings.Fast);
+            var outputs = LibraryOutputs.FromFormat(settings.LibraryFormat, settings.Fast);
+            // Carafe fails on the first such peptide, part way through writing the library.
+            if (outputs.WritesTsv && outputs.TsvStyle != ModifiedPeptideStyle.dia_nn &&
+                fixedModifications.Concat(variableModifications).Any(m => m.Type == CarafeModificationType.protein_n_term))
+            {
+                throw new NotSupportedException(string.Format(
+                    @"-lf_type {0} writes a TSV in the {1} notation, which cannot write a protein N-term modification; " +
+                    @"use -lf_type DIA-NN, or a .blib (-lf_type Skyline -fast)", settings.LibraryFormat, outputs.TsvStyle));
+            }
             return settings;
+        }
+
+        /// <summary>Carafe's Python v2 is the only one ported.</summary>
+        private void CheckAiVersion()
+        {
+            if (TryGet(@"ai_version", out string aiVersion) && !string.Equals(aiVersion, @"v2", StringComparison.OrdinalIgnoreCase))
+                throw new NotSupportedException(@"-ai_version " + aiVersion + @" is not supported by CarafeSharp; only v2");
+        }
+
+        /// <summary>
+        /// True when <c>-i</c> names an Osprey training export or a folder of them, input Carafe
+        /// could not read, so CarafeSharp trains on it without <c>-ms</c>.
+        /// </summary>
+        private bool NamesTrainingExports()
+        {
+            return TryGet(@"i", out string identifications) &&
+                   identifications.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Any(input =>
+                       input.EndsWith(TRAINING_EXPORT_SUFFIX, StringComparison.OrdinalIgnoreCase) || Directory.Exists(input));
         }
 
         private EntrapmentFastaSettings InterpretBuild(DigestSettings digest, ModificationSettings modifications,
@@ -489,6 +549,40 @@ namespace pwiz.CarafeSharp.Proteome
             if (equals >= 0)
                 inlineValue = body.Substring(equals + 1);
             return true;
+        }
+
+        /// <summary>
+        /// The modifications of <c>-fixMod</c> or <c>-varMod</c>: an id that is not a number is
+        /// an <see cref="ArgumentException"/> naming the option, and one Carafe's library
+        /// prediction has no alphabase name for is not supported.
+        /// </summary>
+        private static IReadOnlyList<CarafeModification> GetModifications(string option, string ids,
+            Func<IReadOnlyList<CarafeModification>> parse)
+        {
+            IReadOnlyList<CarafeModification> modifications;
+            try
+            {
+                modifications = parse();
+            }
+            catch (Exception e) when (e is FormatException || e is OverflowException)
+            {
+                throw new ArgumentException(string.Format(@"Invalid -{0} {1}: {2}", option, ids, e.Message), e);
+            }
+            var unsupported = modifications.FirstOrDefault(m => m.AlphabaseName == null);
+            if (unsupported != null)
+            {
+                throw new NotSupportedException(string.Format(@"-{0}: Carafe's library generation does not support the modification {1} ({2})",
+                    option, unsupported.Id, unsupported.Name));
+            }
+            return modifications;
+        }
+
+        /// <summary>A <c>-device</c> CarafeSharp can run on: cpu, or gpu / cuda (the CPU when there is no CUDA device).</summary>
+        private static string ParseDevice(string value)
+        {
+            if (!DEVICES.Contains(value, StringComparer.OrdinalIgnoreCase))
+                throw new ArgumentException(string.Format(@"Unknown -device {0} (expected {1})", value, string.Join(@", ", DEVICES)));
+            return value;
         }
 
         /// <summary>Java's <c>Integer.parseInt</c>: an optional sign and digits, nothing else.</summary>

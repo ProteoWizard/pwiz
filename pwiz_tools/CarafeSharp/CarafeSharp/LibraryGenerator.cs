@@ -59,11 +59,16 @@ namespace pwiz.CarafeSharp
         private readonly Stopwatch _rtClock = new Stopwatch();
         private readonly Stopwatch _buildClock = new Stopwatch();
         private readonly Stopwatch _writeClock = new Stopwatch();
+        private PretrainedModels _pretrained;
 
-        public LibraryGenerator(LibrarySettings settings, TextWriter log)
+        /// <param name="settings">The library to predict.</param>
+        /// <param name="log">Receives progress, or null.</param>
+        /// <param name="pretrained">The pretrained models already opened (and checked), or null to open them when needed.</param>
+        public LibraryGenerator(LibrarySettings settings, TextWriter log, PretrainedModels pretrained = null)
         {
             _settings = settings;
             _log = log ?? TextWriter.Null;
+            _pretrained = pretrained;
         }
 
         /// <summary>The .blib written, or null.</summary>
@@ -84,20 +89,21 @@ namespace pwiz.CarafeSharp
             if (outputs.Warning != null)
                 Log(outputs.Warning);
 
-            var digester = new Digester(_settings.Digest);
-            var peptides = LibraryDatabase.DigestPeptides(_settings.Database, digester, Log);
-            var generator = new PeptideIsoformGenerator(_settings.Modifications, digester.ProteinNTermPeptides);
-            var forms = LibraryPeptideForms.Enumerate(peptides, generator);
-            Log(string.Format(CultureInfo.InvariantCulture, @"Generating peptide forms: {0}", forms.Count));
-            var peptideToProteins = LibraryDatabase.MapPeptidesToProteins(_settings.Database, _settings.Digest);
-            Log(string.Format(CultureInfo.InvariantCulture, @"Mapped {0} peptides to proteins", peptideToProteins.Count));
-
+            // The models first: a missing or wrong pretrained archive fails before the digest.
             var device = TorchDevice.Resolve(_settings.Device, out string fallback);
             if (fallback != null)
                 Log(fallback);
             using (var ms2 = LoadMs2Model(modelDirectory, device))
             using (var rt = LoadRtModel(modelDirectory, device))
             {
+                var digester = new Digester(_settings.Digest);
+                var peptides = LibraryDatabase.DigestPeptides(_settings.Database, digester, Log);
+                var generator = new PeptideIsoformGenerator(_settings.Modifications, digester.ProteinNTermPeptides);
+                var forms = LibraryPeptideForms.Enumerate(peptides, generator);
+                Log(string.Format(CultureInfo.InvariantCulture, @"Generating peptide forms: {0}", forms.Count));
+                var peptideToProteins = LibraryDatabase.MapPeptidesToProteins(_settings.Database, _settings.Digest);
+                Log(string.Format(CultureInfo.InvariantCulture, @"Mapped {0} peptides to proteins", peptideToProteins.Count));
+
                 var irt = _settings.RtMax > 0 ? (Slope: 0.0, Intercept: 0.0) : rt.FitIrtCalibration();
                 if (_settings.RtMax > 0)
                     Log(string.Format(CultureInfo.InvariantCulture, @"Library RT: rt_pred * rt_max ({0})", _settings.RtMax));
@@ -299,9 +305,10 @@ namespace pwiz.CarafeSharp
             return RtModel.FromPretrained(OpenPretrained(), device);
         }
 
+        /// <summary>The pretrained models, opened (and their SHA-256 checked) once.</summary>
         private PretrainedModels OpenPretrained()
         {
-            return PretrainedModels.Open(_settings.PretrainedModels);
+            return _pretrained ??= PretrainedModels.Open(_settings.PretrainedModels);
         }
 
         private void Log(string message)

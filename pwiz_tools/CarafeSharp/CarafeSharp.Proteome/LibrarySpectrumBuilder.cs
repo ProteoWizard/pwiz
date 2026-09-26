@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using pwiz.CarafeSharp.Core;
 
 namespace pwiz.CarafeSharp.Proteome
@@ -32,12 +33,15 @@ namespace pwiz.CarafeSharp.Proteome
     /// Turns one precursor's predictions into a library spectrum as Carafe's Java does: the
     /// fragments of <see cref="CarafeFragmentSelector"/> over alphabase's fragment m/z (a
     /// precursor with fewer than <c>-lf_min_n_frag</c> is left out), the peptide's proteins
-    /// (<c>-</c> when none), the Decoy flag (always 0 on Carafe's <c>-fast</c> path; otherwise 1
+    /// (<c>-</c> when none on the <c>-fast</c> path, an error otherwise), the Decoy flag (always 0 on Carafe's <c>-fast</c> path; otherwise 1
     /// when every protein carries the decoy prefix), and the notations the requested outputs
     /// need. Stateless apart from its settings, so precursors can be built in parallel.
     /// </summary>
     public sealed class LibrarySpectrumBuilder
     {
+        /// <summary>Carafe's error for a peptide missing from the protein map without <c>-fast</c>.</summary>
+        public const string PEPTIDE_NOT_FOUND_FORMAT = @"Peptide not found in protein database: {0}";
+
         /// <summary>
         /// Carafe's library retention time: <c>rt_max * rt_pred</c> when the training gradient
         /// length is known, else <c>irt_pred</c>.
@@ -79,7 +83,13 @@ namespace pwiz.CarafeSharp.Proteome
             var fragments = _selector.Select(intensities, stride, AlphabaseFragmentMz.Calculate(precursor));
             if (fragments.Count < _minFragments)
                 return null;
-            string proteins = _peptideToProteins.TryGetValue(isoform.Sequence, out string found) ? found : LibrarySpectrum.NO_PROTEIN;
+            if (!_peptideToProteins.TryGetValue(isoform.Sequence, out string proteins))
+            {
+                // Carafe's -fast path writes '-'; its TSV path stops (DBGear.add_protein_to_psm_table).
+                if (!_fast)
+                    throw new InvalidDataException(string.Format(PEPTIDE_NOT_FOUND_FORMAT, isoform.Sequence));
+                proteins = LibrarySpectrum.NO_PROTEIN;
+            }
             var spectrum = new LibrarySpectrum(precursor, isoform.GetMz(precursor.Charge), retentionTime, proteins,
                 _fast ? 0 : IsDecoy(proteins) ? 1 : 0, fragments);
             if (_outputs.WritesTsv)

@@ -58,7 +58,16 @@ namespace pwiz.CarafeSharp
 
         public void Run()
         {
+            // What the run needs before hours of work: the library FASTA, the device, and the
+            // pretrained models the fine-tuning starts from.
+            if (_settings.Library != null && !File.Exists(_settings.Library.Database))
+                throw new FileNotFoundException(@"Library FASTA (-db) not found: " + _settings.Library.Database, _settings.Library.Database);
+            var device = TorchDevice.Resolve(_settings.Device, out string fallback);
+            if (fallback != null)
+                Log(fallback);
+            var pretrained = PretrainedModels.Open(_settings.PretrainedModels);
             Directory.CreateDirectory(_settings.OutputDirectory);
+
             var paths = TrainingExportLocator.Find(_settings.Identifications, _settings.MsFiles);
             var exports = new List<OspreyTrainingExport>(paths.Count);
             foreach (string path in paths)
@@ -96,18 +105,15 @@ namespace pwiz.CarafeSharp
                 Log(@"-no_masking: training on every ion of the kept spectra");
             CarafeTrainingDirectory.Write(_settings.OutputDirectory, trainingSet.Rt, trainingSet.Ms2);
 
-            var device = TorchDevice.Resolve(_settings.Device, out string fallback);
-            if (fallback != null)
-                Log(fallback);
             var fineTune = new FineTuneOptions { Seed = _settings.Seed, Device = device };
             Result = FineTuneRun.Run(_settings.TrainRt ? trainingSet.Rt : null, _settings.TrainMs2 ? trainingSet.Ms2 : null,
-                PretrainedModels.Open(_settings.PretrainedModels), fineTune, _settings.OutputDirectory, Log);
+                pretrained, fineTune, _settings.OutputDirectory, Log);
             WriteMeta(exports, options);
 
             if (_settings.Library != null)
             {
                 _settings.Library.OutputDirectory = _settings.OutputDirectory;
-                new LibraryGenerator(_settings.Library, _log).Run();
+                new LibraryGenerator(_settings.Library, _log, pretrained).Run();
             }
         }
 

@@ -20,6 +20,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CarafeSharp.Core;
@@ -194,6 +195,22 @@ namespace pwiz.CarafeSharp.Test
                 tieIntensities[position - 1] = 0.5f;
             fragments = new CarafeFragmentSelector(120, 2000, 1, 1).Select(tieIntensities, 4, tieMz);
             CollectionAssert.AreEqual(new[] { @"b9^1" }, fragments.Select(f => f.ToString()).ToArray());
+
+            // A peptide missing from the protein map, as -I2L peptides are (the map is built
+            // without it): '-' on Carafe's -fast path, an error without -fast
+            // (DBGear.add_protein_to_psm_table).
+            var isoform = new PeptideIsoform(@"PEPTLDEK", new List<ModificationSite>());
+            var precursor = new PrecursorForm(isoform.ToAlphabase(), 2);
+            var predicted = Enumerable.Repeat(0.5f, (isoform.Sequence.Length - 1) * 4).ToArray();
+            var proteins = new Dictionary<string, string> { { @"PEPTIDEK", @"sp|P1|A" } };
+            var fast = new LibrarySettings { Fast = true };
+            var spectrum = new LibrarySpectrumBuilder(fast, LibraryOutputs.FromFormat(fast.LibraryFormat, true), proteins)
+                .Build(isoform, precursor, predicted, 4, 10);
+            Assert.AreEqual(LibrarySpectrum.NO_PROTEIN, spectrum.ProteinId);
+            var notFast = new LibrarySettings();
+            var builder = new LibrarySpectrumBuilder(notFast, LibraryOutputs.FromFormat(notFast.LibraryFormat, false), proteins);
+            var missing = Assert.ThrowsException<InvalidDataException>(() => builder.Build(isoform, precursor, predicted, 4, 10));
+            Assert.AreEqual(string.Format(LibrarySpectrumBuilder.PEPTIDE_NOT_FOUND_FORMAT, isoform.Sequence), missing.Message);
         }
 
         private static void AssertFragmentRow(string sequence, string mods, string sites, int charge, int row, params int[] expectedBits)
