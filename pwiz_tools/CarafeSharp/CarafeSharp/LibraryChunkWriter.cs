@@ -181,16 +181,18 @@ namespace pwiz.CarafeSharp
         {
             _beforeWrite?.Invoke(chunkIndex);
             long start = Stopwatch.GetTimestamp();
+            int threads = WriteThreads(_queue.Count, Environment.ProcessorCount);
             if (_tsv != null)
             {
                 var rows = new string[spectra.Count];
-                Parallel.For(0, spectra.Count, i => rows[i] = CarafeLibraryTsvWriter.FormatRows(spectra[i]));
+                Parallel.For(0, spectra.Count, new ParallelOptions { MaxDegreeOfParallelism = threads },
+                    i => rows[i] = CarafeLibraryTsvWriter.FormatRows(spectra[i]));
                 foreach (string text in rows)
                     _tsv.WriteRows(text);
             }
             if (_blib != null)
             {
-                int firstId = _blib.WriteBatch(spectra);
+                int firstId = _blib.WriteBatch(spectra, threads);
                 if (_pairingPrecursors != null)
                 {
                     for (int i = 0; i < spectra.Count; i++)
@@ -203,6 +205,19 @@ namespace pwiz.CarafeSharp
             }
             Interlocked.Add(ref _writeTicks, Stopwatch.GetElapsedTime(start).Ticks);
             Interlocked.Add(ref _written, spectra.Count);
+        }
+
+        /// <summary>
+        /// Threads for formatting and compressing a chunk. While the writer keeps up, no chunk
+        /// waits (<paramref name="backlog"/> 0), and a quarter of the processors are enough and
+        /// leave the rest to the prediction thread that feeds the GPU. On a shared 16-thread machine
+        /// with a GTX 1650, writing on every thread beside prediction slowed MS2 prediction by 23% on
+        /// Stellar (26% on Astral), and on a quarter of them by 10%. When a chunk is waiting,
+        /// prediction is ahead, and writing uses them all.
+        /// </summary>
+        internal static int WriteThreads(int backlog, int processorCount)
+        {
+            return backlog > 0 ? -1 : Math.Max(1, processorCount / 4);
         }
     }
 }

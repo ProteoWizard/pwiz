@@ -142,9 +142,11 @@ namespace pwiz.CarafeSharp.Test
                 string multiRow = WriteLibrary(folder, @"multi_row.blib", spectra, topN);
                 VerifyAnnotations(multiRow, spectra);
 
-                // One row per INSERT, as before the multi-row INSERT, and INSERTs of 7 rows, give the same tables.
+                // One row per INSERT, as before the multi-row INSERT, INSERTs of 7 rows, and compression
+                // on one thread give the same tables.
                 string singleRow = WriteLibrary(folder, @"single_row.blib", spectra, 1);
                 string sevenRows = WriteLibrary(folder, @"seven_rows.blib", spectra, 7);
+                string oneThread = WriteLibrary(folder, @"one_thread.blib", spectra, topN, 1);
                 foreach (string table in new[] { @"RefSpectra", @"RefSpectraPeaks", @"RefSpectraPeakAnnotations", @"Modifications",
                              @"Proteins", @"RefSpectraProteins", @"RetentionTimes" })
                 {
@@ -152,6 +154,7 @@ namespace pwiz.CarafeSharp.Test
                     Assert.IsTrue(expected.Count > 0, table);
                     CollectionAssert.AreEqual(expected, TableRows(multiRow, table), table);
                     CollectionAssert.AreEqual(expected, TableRows(sevenRows, table), table);
+                    CollectionAssert.AreEqual(expected, TableRows(oneThread, table), table);
                 }
             }
             finally
@@ -297,12 +300,13 @@ namespace pwiz.CarafeSharp.Test
             };
         }
 
-        private static string WriteLibrary(string folder, string fileName, List<LibrarySpectrum> spectra, int peaksPerInsert)
+        private static string WriteLibrary(string folder, string fileName, List<LibrarySpectrum> spectra, int peaksPerInsert,
+            int maxCompressionThreads = -1)
         {
             string path = Path.Combine(folder, fileName);
             using (var writer = new BlibLibraryWriter(path, @"carafe_spectral_library", peaksPerInsert))
             {
-                writer.WriteBatch(spectra);
+                writer.WriteBatch(spectra, maxCompressionThreads);
                 writer.Complete();
             }
             return path;

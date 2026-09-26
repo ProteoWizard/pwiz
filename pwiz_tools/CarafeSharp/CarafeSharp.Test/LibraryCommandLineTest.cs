@@ -296,6 +296,11 @@ namespace pwiz.CarafeSharp.Test
         [TestMethod]
         public void TestLibraryWriterThread()
         {
+            // A quarter of the processors while the writer keeps up, all of them once a chunk waits.
+            Assert.AreEqual(4, LibraryChunkWriter.WriteThreads(0, 16));
+            Assert.AreEqual(1, LibraryChunkWriter.WriteThreads(0, 3));
+            Assert.AreEqual(-1, LibraryChunkWriter.WriteThreads(1, 16));
+
             string folder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"Writer_" + Guid.NewGuid().ToString(@"N"));
             string models = Path.Combine(folder, @"models");
             Directory.CreateDirectory(models);

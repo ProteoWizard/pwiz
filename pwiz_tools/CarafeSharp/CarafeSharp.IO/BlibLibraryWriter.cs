@@ -161,11 +161,16 @@ namespace pwiz.CarafeSharp.IO
         /// Writes spectra in order, in one transaction, compressing their peaks in parallel
         /// first. Returns the RefSpectra id of the first.
         /// </summary>
-        public int WriteBatch(IReadOnlyList<LibrarySpectrum> spectra)
+        /// <param name="spectra">The spectra, in id order.</param>
+        /// <param name="maxCompressionThreads">
+        /// The most threads the compression may use, or -1 for no limit. Each spectrum's blobs are
+        /// the same whichever thread compresses them.
+        /// </param>
+        public int WriteBatch(IReadOnlyList<LibrarySpectrum> spectra, int maxCompressionThreads = -1)
         {
             var mzBlobs = new byte[spectra.Count][];
             var intensityBlobs = new byte[spectra.Count][];
-            Parallel.For(0, spectra.Count, i =>
+            Parallel.For(0, spectra.Count, new ParallelOptions { MaxDegreeOfParallelism = maxCompressionThreads }, i =>
             {
                 EncodePeaks(spectra[i], out mzBlobs[i], out intensityBlobs[i]);
             });
