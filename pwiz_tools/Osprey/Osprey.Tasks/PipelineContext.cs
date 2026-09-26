@@ -605,7 +605,7 @@ namespace pwiz.Osprey.Tasks
         public int ExitCode { get; }
 
         public RehydrateFailedException(Type taskType, string taskName, int exitCode)
-            : base(string.Format("The {0} step could not reload its results from the intermediate files (exit code {1}).",
+            : base(string.Format(OspreyTasksResources.RehydrateFailedException_The__0__step_could_not_reload_its_results_from_the_intermediate_files__exit_code__1___,
                 taskName, exitCode))
         {
             TaskType = taskType;

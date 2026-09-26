@@ -89,7 +89,7 @@ namespace pwiz.Osprey.Tasks
             if (!config.HasInputFiles)
                 return RequiresError(@"--input <file...>");
             if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
-                return RequiresError(@"--library and --output");
+                return RequiresError(OspreyTasksResources.OspreyTask_ValidateSelection___library_and___output);
             return null;
         }
 
@@ -207,7 +207,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         protected string RequiresError(string requirement)
         {
-            return string.Format(@"--task {0} requires {1}.", Name, requirement);
+            return string.Format(OspreyTasksResources.OspreyTask_RequiresError___task__0__requires__1__, Name, requirement);
         }
 
         /// <summary>
@@ -221,8 +221,8 @@ namespace pwiz.Osprey.Tasks
             if (config.InputFiles != null && config.InputFiles.Count == 1)
                 return pathFor(config.InputFiles[0]);
             return string.IsNullOrEmpty(directory)
-                ? string.Format("a {0} file next to each input", extension)
-                : string.Format("a {0} file for each input, in {1}", extension, directory);
+                ? string.Format(OspreyTasksResources.OspreyTask_DescribePerInputOutput_a__0__file_next_to_each_input, extension)
+                : string.Format(OspreyTasksResources.OspreyTask_DescribePerInputOutput_a__0__file_for_each_input__in__1_, extension, directory);
         }
     }
 }

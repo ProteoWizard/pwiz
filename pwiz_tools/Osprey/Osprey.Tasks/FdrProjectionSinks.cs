@@ -105,7 +105,7 @@ namespace pwiz.Osprey.Tasks
                     _fileTargets[fileIdx]++;
             }
             if (_passingPrecursors != null && !isDecoy && eff <= _runFdr)
-                _passingPrecursors.Add(peptide + "|" + charge);
+                _passingPrecursors.Add(peptide + @"|" + charge);
 
             // --model-diagnostics: fold this pre-compaction row into the streaming report
             // reductions (every row -- targets, decoys, entrapment, failing -- not just the
@@ -136,7 +136,7 @@ namespace pwiz.Osprey.Tasks
             }
 
             log.LogInfo(string.Format(
-                "{0} Percolator results: {1:N0} targets, {2:N0} decoys pass {3:P1} FDR",
+                OspreyTasksResources.FdrProjectionSinkBase_Finish__0__Percolator_results___1__targets___2__decoys_pass__3__FDR,
                 _passLabel, nTargetPassing, nDecoyPassing, _runFdr));
             log.LogInfo(LogTag.COUNT, @"{0} total across files: {1}",
                 _passLabel, nTargetPassing);

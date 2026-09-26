@@ -376,9 +376,11 @@ namespace pwiz.Osprey.Tasks
         {
             var settings = new JsonSerializerSettings { Converters = { new RoundtripDoubleConverter() } };
             string json = JsonConvert.SerializeObject(dto, Formatting.Indented, settings);
+            // ReSharper disable LocalizableElement
             json = json.Replace("\r\n", "\n");
             if (!json.EndsWith("\n", StringComparison.Ordinal))
                 json += "\n";
+            // ReSharper restore LocalizableElement
             return json;
         }
     }

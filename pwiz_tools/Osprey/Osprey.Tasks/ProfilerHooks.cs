@@ -198,7 +198,7 @@ namespace pwiz.Osprey.Tasks
 #if NETCOREAPP || NET5_0_OR_GREATER
             var gcInfo = GC.GetGCMemoryInfo();
             gcDetail = string.Format(CultureInfo.InvariantCulture,
-                ", gc_committed_last_gc={0:F2} GB, gc_heap_last_gc={1:F2} GB, gc_fragmented_last_gc={2:F2} GB",
+                @", gc_committed_last_gc={0:F2} GB, gc_heap_last_gc={1:F2} GB, gc_fragmented_last_gc={2:F2} GB",
                 gcInfo.TotalCommittedBytes / gb,
                 gcInfo.HeapSizeBytes / gb,
                 gcInfo.FragmentedBytes / gb);

@@ -258,10 +258,12 @@ namespace pwiz.Osprey.Tasks
                 try
                 {
                     _writer = new StreamWriter(_saver.SafeName, false);
+                    // ReSharper disable LocalizableElement
                     _writer.NewLine = "\n"; // emit '\n' line endings for the TSV body
                     _writer.WriteLine(perRun
                         ? "peptide\tmod_peptide\tcharge\tq_value\tscore\tprotein\trun"
                         : "peptide\tmod_peptide\tcharge\tq_value\tscore\tprotein");
+                    // ReSharper restore LocalizableElement
                 }
                 catch
                 {
@@ -395,6 +397,7 @@ namespace pwiz.Osprey.Tasks
             {
                 using (var writer = new StreamWriter(saver.SafeName, false))
                 {
+                    // ReSharper disable LocalizableElement
                     writer.NewLine = "\n";
                     writer.WriteLine("sequence\tdecoy\tproteins\tpeptide_type\tpeptide_pair_index");
                     foreach (var kv in rows)
@@ -406,13 +409,14 @@ namespace pwiz.Osprey.Tasks
                         writer.WriteLine(string.Join("\t", new[]
                         {
                             lib.Sequence,
-                            "No",
+                            @"No",
                             protein,
-                            entrap ? "p_target" : "target",
+                            entrap ? @"p_target" : @"target",
                             pair.ToString(CultureInfo.InvariantCulture)
                         }));
                         written++;
                     }
+                    // ReSharper restore LocalizableElement
                 }
                 saver.Commit();
             }
@@ -423,6 +427,7 @@ namespace pwiz.Osprey.Tasks
         private static string FormatRow(string peptide, string modSeq, byte charge,
             double qValue, double score, string protein, string runName)
         {
+            // ReSharper disable LocalizableElement
             string row = string.Join("\t", new[]
             {
                 peptide,
@@ -433,6 +438,7 @@ namespace pwiz.Osprey.Tasks
                 protein
             });
             return runName == null ? row : row + "\t" + runName;
+            // ReSharper restore LocalizableElement
         }
 
         /// <summary>Resolve an entry id to its (sequence, protein-field), updating warning counts.</summary>

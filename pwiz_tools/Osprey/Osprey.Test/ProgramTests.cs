@@ -239,7 +239,7 @@ namespace pwiz.Osprey.Test
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + PerFileRescoreTask.TASK_NAME);
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_LIBRARY.ArgumentText + @" and " + OspreyCommandArgs.ARG_OUTPUT.ArgumentText);
+            StringAssert.Contains(err, OspreyTasksResources.OspreyTask_ValidateSelection___library_and___output);
         }
 
         // - FirstPassFDR (2+ runs in, reconciliation on) --
@@ -274,7 +274,7 @@ namespace pwiz.Osprey.Test
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME);
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_LIBRARY.ArgumentText + @" and " + OspreyCommandArgs.ARG_OUTPUT.ArgumentText);
+            StringAssert.Contains(err, OspreyTasksResources.OspreyTask_ValidateSelection___library_and___output);
         }
 
         [TestMethod]
@@ -289,7 +289,9 @@ namespace pwiz.Osprey.Test
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME);
-            StringAssert.Contains(err, "2+ files");
+            StringAssert.Contains(err, string.Format(
+                OspreyTasksResources.FirstPassFdrTask_ValidateSelection___task__0__requires_at_least_2_input_files____input___but__1__were_given__The_,
+                FirstPassFdrTask.TASK_NAME, 1, PerFileRescoreTask.TASK_NAME));
         }
 
         [TestMethod]
@@ -302,7 +304,9 @@ namespace pwiz.Osprey.Test
             config.Reconciliation.Enabled = false;
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "Reconciliation.Enabled");
+            StringAssert.Contains(err, string.Format(
+                OspreyTasksResources.FirstPassFdrTask_ValidateSelection___task__0__requires_cross_run_reconciliation__which_the_configuration_turns_off__The_,
+                FirstPassFdrTask.TASK_NAME, PerFileRescoreTask.TASK_NAME));
         }
 
         // - SecondPassFDR (every run in, reading their reconciled parquets) --
@@ -340,7 +344,7 @@ namespace pwiz.Osprey.Test
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + SecondPassFdrTask.TASK_NAME);
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_LIBRARY.ArgumentText + @" and " + OspreyCommandArgs.ARG_OUTPUT.ArgumentText);
+            StringAssert.Contains(err, OspreyTasksResources.OspreyTask_ValidateSelection___library_and___output);
         }
 
         // - ModelDiagnostics (the completed run's own command line, replayed) --

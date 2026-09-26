@@ -21,7 +21,9 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -74,7 +76,7 @@ namespace pwiz.Osprey.Tasks
             // leave sidecar files that the rename would not carry.
             using (var saver = new FileSaver(config.OutputBlib))
             {
-                using (var writer = new BlibWriter(saver.SafeName))
+                using (var writer = OpenBlibWriter(saver.SafeName, config.OutputBlib))
                 {
                     writer.BeginBatch();
 
@@ -110,7 +112,32 @@ namespace pwiz.Osprey.Tasks
 
                     writer.FinalizeDatabase();
                 }
-                saver.Commit();
+                try
+                {
+                    saver.Commit();
+                }
+                catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+                {
+                    throw new BlibOutputException(config.OutputBlib, ex);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Open the SQLite writer on the temp file beside the output. A failure here is a
+        /// user-correctable condition (the folder is not writable, or the file is locked), so
+        /// it becomes a <see cref="BlibOutputException"/> naming the output rather than a raw
+        /// <see cref="SQLiteException"/> whose type and stack would bury the cause.
+        /// </summary>
+        private static BlibWriter OpenBlibWriter(string tempPath, string outputPath)
+        {
+            try
+            {
+                return new BlibWriter(tempPath);
+            }
+            catch (Exception ex) when (ex is SQLiteException || ex is IOException || ex is UnauthorizedAccessException)
+            {
+                throw new BlibOutputException(outputPath, ex);
             }
         }
 
@@ -149,7 +176,7 @@ namespace pwiz.Osprey.Tasks
                 // the bare name the writer always used to record rather than
                 // fail the whole blib over it.
                 if (!sourcePathByName.TryGetValue(fileName, out string sourcePath))
-                    sourcePath = fileName + ".mzML";
+                    sourcePath = fileName + @".mzML";
                 sourceFileIds[fileName] = writer.AddSourceFile(
                     sourcePath, libraryIdName, fdrThreshold);
             }
@@ -178,7 +205,7 @@ namespace pwiz.Osprey.Tasks
             // under that flag (the same trap the calibration scoring loop records).
             int precompressed = 0;
             using (var progress = new ProgressReporter(
-                       string.Format(@"Compressing {0:N0} library spectra for the blib", blibN),
+                       string.Format(OspreyTasksResources.BlibOutputWriter_PrecompressSpectra_Compressing__0__library_spectra_for_the_blib, blibN),
                        blibN, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 Parallel.For(0, blibN,
@@ -229,7 +256,7 @@ namespace pwiz.Osprey.Tasks
             // Reported for the same reason as the pre-compress pass above: this emits five row
             // families per spectrum into SQLite and ran silent inside the same 47 s gap.
             using (var progress = new ProgressReporter(
-                       string.Format(@"Writing {0:N0} spectra to the blib", blibEntries.Count),
+                       string.Format(OspreyTasksResources.BlibOutputWriter_PrecompressSpectra_Writing__0__spectra_to_the_blib, blibEntries.Count),
                        blibEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 for (int blibIdx = 0; blibIdx < blibEntries.Count; blibIdx++)
@@ -369,7 +396,7 @@ namespace pwiz.Osprey.Tasks
             double fdrThreshold)
         {
             using (var progress = new ProgressReporter(
-                       string.Format("Writing {0:N0} peak retention times to the blib",
+                       string.Format(OspreyTasksResources.BlibOutputWriter_WriteRetentionTimesFileMajor_Writing__0__peak_retention_times_to_the_blib,
                                      passingEntries.Count),
                        passingEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
@@ -422,6 +449,20 @@ namespace pwiz.Osprey.Tasks
                         isBest);
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// The output .blib could not be opened or put in place. Reported as an Error: line
+    /// naming the file and the likely cause, not as a stack trace.
+    /// </summary>
+    public class BlibOutputException : IOException
+    {
+        public BlibOutputException(string outputPath, Exception inner)
+            : base(string.Format(
+                OspreyTasksResources.BlibOutputException_Could_not_write_the_spectral_library__0____1____Check_that_the_file_is_not_open_in_,
+                outputPath, inner.Message), inner)
+        {
         }
     }
 }

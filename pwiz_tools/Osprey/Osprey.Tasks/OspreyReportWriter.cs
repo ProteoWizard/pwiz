@@ -70,21 +70,21 @@ namespace pwiz.Osprey.Tasks
             if (stem == null)
             {
                 log?.LogInfo(
-                    "Skipping reports: no output path (-o) to derive report file names from.");
+                    OspreyTasksResources.OspreyReportWriter_WriteReports_Skipping_reports__no_output_path___o__to_derive_report_file_names_from_);
                 return;
             }
 
             if (config.WriteProteinReport)
             {
                 string path = stem + @".protein_groups.tsv";
-                TryWriteReport("protein-group", path, log, logWarning,
+                TryWriteReport(@"protein-group", path, log, logWarning,
                     () => WriteProteinGroups(path, experimentResult, fullLibrary, config));
             }
 
             if (config.WriteSummaryReport)
             {
                 string path = stem + @".stats.tsv";
-                TryWriteReport("summary", path, log, logWarning,
+                TryWriteReport(@"summary", path, log, logWarning,
                     () => WriteSummary(path, experimentResult, rescored, fullLibrary, config));
             }
         }
@@ -105,7 +105,7 @@ namespace pwiz.Osprey.Tasks
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
             {
                 logWarning?.Invoke(string.Format(
-                    "Failed to write the {0} report {1}: {2}", label, path, ex.Message));
+                    OspreyTasksResources.OspreyReportWriter_TryWriteReport_Failed_to_write_the__0__report__1____2_, label, path, ex.Message));
             }
         }
 
@@ -148,8 +148,8 @@ namespace pwiz.Osprey.Tasks
             int groupIdx = 0;
             var rows = new List<string[]>(groups.Count);
             using (var progress = new ProgressReporter(
-                       CountText.Format(groups.Count, "Building the protein-group report for 1 group",
-                           "Building the protein-group report for {0:N0} groups"),
+                       CountText.Format(groups.Count, OspreyTasksResources.OspreyReportWriter_WriteProteinGroups_Building_the_protein_group_report_for_1_group,
+                           OspreyTasksResources.OspreyReportWriter_WriteProteinGroups_Building_the_protein_group_report_for__0__groups),
                        groups.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 foreach (var g in groups)
@@ -205,8 +205,8 @@ namespace pwiz.Osprey.Tasks
 
             WriteTsv(path, new[]
             {
-                "Protein.Group", "Protein.Names", "N.Peptides", "N.Proteotypic",
-                "PG.Q.Value", "Passes.PG.FDR", "Grouping.Peptides", "Library.Unique.Peptides"
+                @"Protein.Group", @"Protein.Names", @"N.Peptides", @"N.Proteotypic",
+                @"PG.Q.Value", @"Passes.PG.FDR", @"Grouping.Peptides", @"Library.Unique.Peptides"
             }, ordered);
         }
 
@@ -275,8 +275,8 @@ namespace pwiz.Osprey.Tasks
             int runIdx = 0;
             using (var progress = new ProgressReporter(
                        nFiles == 1
-                           ? "Per-replicate protein FDR for 1 file"
-                           : string.Format("Per-replicate protein FDR for {0:N0} files", nFiles),
+                           ? OspreyTasksResources.OspreyReportWriter_WriteSummary_Per_replicate_protein_FDR_for_1_file
+                           : string.Format(OspreyTasksResources.OspreyReportWriter_WriteSummary_Per_replicate_protein_FDR_for__0__files, nFiles),
                        nFiles, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 foreach (var kvp in rescored.StreamFiles())
@@ -308,13 +308,13 @@ namespace pwiz.Osprey.Tasks
                 if (q <= config.EffectiveProteinFdr) expProteins++;
             rows.Add(new[]
             {
-                "Experiment",
+                @"Experiment",
                 expPrec.ToString(CultureInfo.InvariantCulture),
                 expPep.ToString(CultureInfo.InvariantCulture),
                 expProteins.ToString(CultureInfo.InvariantCulture),
             });
 
-            WriteTsv(path, new[] { "Run", "Precursors", "Peptides", "Proteins" }, rows);
+            WriteTsv(path, new[] { @"Run", @"Precursors", @"Peptides", @"Proteins" }, rows);
         }
 
         // Distinct precursors (modseq + charge) and distinct peptides (modseq) among
@@ -347,7 +347,7 @@ namespace pwiz.Osprey.Tasks
                 double q = runLevel ? e.EffectiveRunQvalue(level) : e.EffectiveExperimentQvalue(level);
                 if (q > gate)
                     continue;
-                precSet.Add(e.ModifiedSequence + "|" + e.Charge.ToString(CultureInfo.InvariantCulture));
+                precSet.Add(e.ModifiedSequence + @"|" + e.Charge.ToString(CultureInfo.InvariantCulture));
                 pepSet.Add(e.ModifiedSequence);
             }
         }
@@ -374,10 +374,12 @@ namespace pwiz.Osprey.Tasks
             {
                 using (var w = new StreamWriter(saver.SafeName, false))
                 {
+                    // ReSharper disable LocalizableElement
                     w.NewLine = "\n";
                     w.WriteLine(string.Join("\t", header));
                     foreach (var r in rows)
                         w.WriteLine(string.Join("\t", r));
+                    // ReSharper restore LocalizableElement
                 }
                 saver.Commit();
             }
