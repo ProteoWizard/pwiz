@@ -302,7 +302,7 @@ namespace pwiz.CarafeSharp.Test
                     dropped++;
                     continue;
                 }
-                expected[CarafeLibraryTsv.Key(spectrum.ModifiedPeptide, spectrum.Charge.ToString(CultureInfo.InvariantCulture))] =
+                expected[CarafeLibraryTsv.Key(spectrum.ModifiedPeptide, spectrum.Charge.ToString(CultureInfo.InvariantCulture), spectrum.PrecursorMz)] =
                     CarafeLibraryTsvWriter.FormatRows(spectrum);
             }
         }

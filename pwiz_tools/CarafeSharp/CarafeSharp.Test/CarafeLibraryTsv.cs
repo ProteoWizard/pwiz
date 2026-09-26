@@ -70,12 +70,12 @@ namespace pwiz.CarafeSharp.Test
                         lastPrefix = line.Substring(0, prefixEnd);
                         string[] precursorCells = lastPrefix.Split('\t');
                         lastKept = (keep == null || keep(precursorCells[STRIPPED_PEPTIDE])) &&
-                                   (keys == null || keys.Contains(Key(precursorCells[MODIFIED_PEPTIDE], precursorCells[PRECURSOR_CHARGE])));
+                                   (keys == null || keys.Contains(Key(precursorCells[MODIFIED_PEPTIDE], precursorCells[PRECURSOR_CHARGE], precursorCells[PRECURSOR_MZ])));
                     }
                     if (!lastKept)
                         continue;
                     string[] cells = line.Split('\t');
-                    string key = Key(cells[MODIFIED_PEPTIDE], cells[PRECURSOR_CHARGE]);
+                    string key = Key(cells[MODIFIED_PEPTIDE], cells[PRECURSOR_CHARGE], cells[PRECURSOR_MZ]);
                     if (!library.Precursors.TryGetValue(key, out var precursor))
                         library.Precursors.Add(key, precursor = new Precursor(cells));
                     precursor.Rows.Add(line);
@@ -85,10 +85,21 @@ namespace pwiz.CarafeSharp.Test
             return library;
         }
 
-        /// <summary>A precursor's key from its ModifiedPeptide and PrecursorCharge text.</summary>
-        public static string Key(string modifiedPeptide, string charge)
+        /// <summary>
+        /// A precursor's key from its ModifiedPeptide, PrecursorCharge and PrecursorMz text. The
+        /// m/z, to two decimals, is in the key because Carafe's DIA-NN notation drops a protein
+        /// N-term acetyl when residue 1 is also modified, so the acetylated and plain precursors
+        /// share a ModifiedPeptide and differ only in m/z (42.01 / z).
+        /// </summary>
+        public static string Key(string modifiedPeptide, string charge, string precursorMz)
         {
-            return modifiedPeptide + "\t" + charge;
+            return Key(modifiedPeptide, charge, double.Parse(precursorMz, NumberStyles.Float, CultureInfo.InvariantCulture));
+        }
+
+        /// <summary>A precursor's key, as <see cref="Key(string, string, string)"/>, from its m/z value.</summary>
+        public static string Key(string modifiedPeptide, string charge, double precursorMz)
+        {
+            return modifiedPeptide + "\t" + charge + "\t" + precursorMz.ToString(@"F2", CultureInfo.InvariantCulture);
         }
 
         private CarafeLibraryTsv()
