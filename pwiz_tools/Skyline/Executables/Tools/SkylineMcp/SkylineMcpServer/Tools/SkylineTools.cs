@@ -963,8 +963,8 @@ public static class SkylineTools
         "A form that previews keys sees the key first, as it does for a user (e.g. Escape on a graph returns " +
         "to the Targets view). NOTE: this raises the control's KeyDown, so a key handled by the control's DEFAULT behavior rather " +
         "than by a handler - Backspace editing a text box, an arrow moving a plain list's selection - will " +
-        "NOT take effect. The Targets tree is the exception for the arrow keys: Up and Down move its selection " +
-        "and Left and Right collapse and expand, as they do for a user. Discover control names with " +
+        "NOT take effect. The Targets tree is the exception for its navigation keys: Up, Down, Home, End, PgUp " +
+        "and PgDn move its selection and Left and Right collapse and expand, as they do for a user. Discover control names with " +
         "skyline_get_controls.")]
     public static string SendKeyStroke(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,

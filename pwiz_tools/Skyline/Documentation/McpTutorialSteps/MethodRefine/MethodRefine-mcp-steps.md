@@ -67,7 +67,7 @@ in for a tutorial step (dragging the two replicate-comparison graphs to the dock
 | Tutorial step | What happened | Stand-in used here |
 |---|---|---|
 | Delete, F11, Shift-F11 | Main-menu shortcuts: sent to the tree they had no effect in both runs (the zoom stayed 0-100 min), because a shortcut is matched in the form's `ProcessCmdKey`, not in a control's `KeyDown`. **Fixed since**: `send_key_stroke` with an empty `controlId` now presses the key on the form, as while the window is active, and all three work (checked live: F11 to 71.4-73.7 min, Shift+F11 back to 0-100, Delete removes the selected peptide) | `click_main_menu_item` for Edit > Delete and View > Auto-Zoom in these runs; now `send_key_stroke(formId="SkylineWindow:...", controlId="", keyStroke="F11")` |
-| Home key (review after automated refinement) | No effect; only the arrows and Ctrl+Home / Ctrl+End are handled | `Ctrl+Home` |
+| Home key (review after automated refinement) | No effect in these runs: the tree's window procedure moves the selection for Home, as for the arrows, but only the arrows were sent to it as key messages. **Fixed since**: Home, End, PgUp and PgDn on `SequenceTree` now move the selection (sent to the main window they do nothing: they are not shortcuts) | `Ctrl+Home` in these runs; now `send_key_stroke(..., controlId="SequenceTree", keyStroke="Home")` |
 | Click, then Shift-click a run of files | No Shift-click verb | `select_item` once per file: 15, 24, then 5 calls |
 | Ctrl-click transitions to delete | No Ctrl-click verb on the tree | `set_selection` with `additionalLocators` |
 | Click and drag a box to zoom (s-04, optional) | Not tried; `click_graph` drags | Not needed |
@@ -463,7 +463,7 @@ set_form_value(formId="RefineDlg:Refine", controlId="Min dotp", value="0.8")
 dismiss_with_accept_button(formId="RefineDlg:Refine")
 get_document_status()   -> 80 peptides, 240 transitions
 click_main_menu_item(menuPath="Edit > Collapse All > Peptides")
-send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Home")       # no effect
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Home")       # no effect (works now)
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Ctrl+Home")
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Down")       # and on
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Ctrl+End")

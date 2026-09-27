@@ -598,8 +598,9 @@ namespace SkylineTool
         /// handler reads a keystroke from, after any form around it that previews keys (KeyPreview) has
         /// seen it, as for a user's key. A key handled by the control's DEFAULT behavior rather than by a
         /// handler - Backspace editing a text box, an arrow moving a plain list's selection - will NOT take
-        /// effect through this. The Targets tree is the exception for the arrow keys: Up and Down move its
-        /// selection and Left and Right collapse and expand, as they do for a user.</para>
+        /// effect through this. The Targets tree is the exception for its navigation keys: Up, Down, Home, End,
+        /// Page Up and Page Down move its selection and Left and Right collapse and expand, as they do for a
+        /// user.</para>
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="controlId">The control to press the key on, matched as <see cref="GetControls"/>
