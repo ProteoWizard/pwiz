@@ -167,6 +167,7 @@ struct PWIZ_API_DECL UnifiChromatogramInfo
     Type type;
     double Q1;
     double Q3;
+    double collisionEnergy = 0; // MRM only; 0 when not reported
     std::pair<double, double> acquiredTimeRange;
     Polarity polarity;
 

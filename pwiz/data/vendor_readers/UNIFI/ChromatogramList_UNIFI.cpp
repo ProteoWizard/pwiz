@@ -190,7 +190,8 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_UNIFI::chromatogram(size_t index,
             result->set(translate(chromatogram.polarity));
 
             result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, chromatogram.Q1, MS_m_z);
-            //result->precursor.activation.set(MS_collision_energy, );
+            if (chromatogram.collisionEnergy > 0)
+                result->precursor.activation.set(MS_collision_energy, chromatogram.collisionEnergy, UO_electronvolt);
 
             result->product.isolationWindow.set(MS_isolation_window_target_m_z, chromatogram.Q3, MS_m_z);
 
