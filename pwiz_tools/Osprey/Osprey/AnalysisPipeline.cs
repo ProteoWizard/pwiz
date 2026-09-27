@@ -102,8 +102,10 @@ namespace pwiz.Osprey
                 // stages whose outputs already exist (ctx.CanRehydrate) - are
                 // not run here; their state lazy-rehydrates through ctx.Demand
                 // when a running stage reaches for it. A task returning false is
-                // still the signal to stop and propagate ctx.ExitCode (e.g. an
-                // empty score set or a sidecar-write failure).
+                // still the signal to stop: with a failure exit code the run ends
+                // there (e.g. a sidecar-write failure); with exit code 0 the task
+                // stopped on purpose (a per-file worker's boundary, an empty score
+                // set), so the run is complete and says so like any other.
                 foreach (var task in pipeline)
                 {
                     if (!config.Includes(task))
@@ -111,17 +113,21 @@ namespace pwiz.Osprey
 
                     if (ctx.CanRehydrate(task))
                     {
-                        LogInfo(string.Format(@"[TASK] {0}:skipping (outputs valid)", task.Name));
+                        ctx.LogInfo(LogTag.TASK, string.Format(@"{0}:skipping (outputs valid)", task.Name));
                         continue;
                     }
 
                     if (!RunTask(task, ctx))
-                        return ctx.ExitCode;
+                    {
+                        if (ctx.ExitCode != 0)
+                            return ctx.ExitCode;
+                        break;
+                    }
                 }
 
                 stopwatch.Stop();
                 LogInfo("");
-                LogInfo(string.Format("[TIMING] Total pipeline: {0:F1}s",
+                ctx.LogInfo(LogTag.TIMING, string.Format("Total pipeline: {0:F1}s",
                     stopwatch.Elapsed.TotalSeconds));
                 LogInfo(string.Format("Analysis complete in {0}", FormatDuration(stopwatch.Elapsed)));
                 return 0;
@@ -167,7 +173,7 @@ namespace pwiz.Osprey
             // sidecars at the start of Run.
 
             var sw = Stopwatch.StartNew();
-            ctx.LogInfo(string.Format(@"[TASK] {0}:starting", task.Name));
+            ctx.LogInfo(LogTag.TASK, string.Format(@"{0}:starting", task.Name));
             bool keepGoing = task.Run(ctx);
             // The driver has now run this task, so its state is in memory: mark it
             // materialized so a later Demand/Get by a downstream task returns the
@@ -175,7 +181,7 @@ namespace pwiz.Osprey
             // _runOrHydrated guard that formerly bridged the Run and Rehydrate paths.
             ctx.MarkMaterialized(task);
             sw.Stop();
-            ctx.LogInfo(string.Format(@"[TASK] {0}:done ({1:F1}s)",
+            ctx.LogInfo(LogTag.TASK, string.Format(@"{0}:done ({1:F1}s)",
                 task.Name, sw.Elapsed.TotalSeconds));
             // DIAGNOSTIC (OSPREY_DROP_BETWEEN_TASKS=1): make the in-process pipeline behave like
             // the HPC split - this task drops everything but the library, and the next reloads
@@ -197,7 +203,7 @@ namespace pwiz.Osprey
             };
             if (stageName != null)
             {
-                ctx.LogInfo(string.Format(@"[STAGE-WALL] {0}: {1:F1}s",
+                ctx.LogInfo(LogTag.STAGE_WALL, string.Format(@"{0}: {1:F1}s",
                     stageName, sw.Elapsed.TotalSeconds));
             }
 
@@ -231,7 +237,7 @@ namespace pwiz.Osprey
                 catch (Exception ex)
                 {
                     ctx.LogWarning(string.Format(
-                        @"Failed to write {0} sidecar for {1}: {2}",
+                        "Failed to record that --task {0} completed {1}: {2}. A resume will redo this step.",
                         task.Name, output, ex.Message));
                 }
             }

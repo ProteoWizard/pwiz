@@ -266,7 +266,7 @@ namespace pwiz.Osprey.IO
                 // caller logs nothing until it finishes (LibraryLoader announces only the
                 // source-parse path), so without this the console looks hung on the fast path.
                 using (var progress = new ProgressReporter(
-                    string.Format("Loading library cache ({0} entries)", count), (long)count,
+                    string.Format("Loading library cache ({0:N0} precursors)", count), (long)count,
                     string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
                 {
                     for (ulong idx = 0; idx < count; idx++)
