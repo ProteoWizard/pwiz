@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace pwiz.Osprey.Core
 {
@@ -102,6 +103,44 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public static class LibraryDecoyPairing
     {
+        /// <summary>
+        /// Find two decoys that share an entry_id, the pairing invariant every later stage
+        /// assumes: a decoy's id is its target's base id plus the decoy bit, so two decoys on one
+        /// id means one of them was paired to something that was not a target. Per-file
+        /// deduplication then keeps whichever scores better, one entry_id carries two peptides,
+        /// and first-pass FDR aborts hours later on the experiment-scope check. Returns EVERY
+        /// shared id, each as the library indices that share it in library order, so a report
+        /// can show the whole class of defect rather than one row at a time; empty when every
+        /// decoy id is unique.
+        /// </summary>
+        public static List<List<int>> FindSharedDecoyIds(IReadOnlyList<LibraryEntry> library)
+        {
+            // First index per id, and a list only once an id repeats: a library is millions of
+            // decoys and almost never has a collision, so a list per decoy would be hundreds of
+            // MB of garbage on every load.
+            var firstById = new Dictionary<uint, int>(library.Count / 2);
+            var groupById = new Dictionary<uint, List<int>>();
+            for (int i = 0; i < library.Count; i++)
+            {
+                var entry = library[i];
+                if (entry == null || !entry.IsDecoy)
+                    continue;
+                if (!firstById.TryGetValue(entry.Id, out int first))
+                {
+                    firstById.Add(entry.Id, i);
+                    continue;
+                }
+                if (!groupById.TryGetValue(entry.Id, out var group))
+                {
+                    group = new List<int> { first };
+                    groupById.Add(entry.Id, group);
+                }
+                group.Add(i);
+            }
+            // Ordered by first member, as the Rust implementation reports them.
+            return groupById.Values.OrderBy(group => group[0]).ToList();
+        }
+
         /// <summary>
         /// Pair each un-paired decoy with a target sharing the same
         /// stripped protein accession, charge, and sorted-AA composition.
