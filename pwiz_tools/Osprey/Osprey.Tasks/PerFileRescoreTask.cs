@@ -3468,6 +3468,12 @@ namespace pwiz.Osprey.Tasks
         private SpectraWindowIndex LoadSpectraForRescore(string inputFile, string fileName,
             PipelineContext ctx)
         {
+            // A demultiplexed run is rescored from the same demultiplexed cache Stages 1-4
+            // searched.
+            var demuxIndex = DemuxCacheBuilder.TryOpenDemuxCache(inputFile, ctx);
+            if (demuxIndex != null)
+                return demuxIndex;
+
             string cachePath = SpectraCache.GetCachePath(inputFile);
             SpectraWindowIndex index;
             var reason = SpectraCacheRejection.None;
@@ -3506,6 +3512,9 @@ namespace pwiz.Osprey.Tasks
                     cachePath, SpectraCacheException.Describe(reason), remedy),
                     reason, cachePath);
             }
+            // Only the .spectra.bin was found: right for a run that does not overlap, wrong
+            // for one that Stages 1-4 searched demultiplexed.
+            DemuxCacheBuilder.ThrowIfDemuxCacheMissing(inputFile, index, ctx);
 
             ctx.LogInfo(string.Format(
                 "  Streaming {1} MS1 and {0} MS/MS spectra from cache for {2}",

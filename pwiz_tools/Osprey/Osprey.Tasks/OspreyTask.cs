@@ -194,12 +194,17 @@ namespace pwiz.Osprey.Tasks
         /// selects which peak a precursor's row describes, in Stage 4, and
         /// everything downstream inherits that choice. Putting it here also
         /// means a task added later carries it without having to know.
+        ///
+        /// The demultiplexing settings are here for the same reason: they
+        /// decide the spectra every task's output is computed from. See
+        /// <see cref="DemuxCacheBuilder.ValidityKeySuffix(OspreyConfig)"/>.
         /// </summary>
         public virtual string ValidityKey(PipelineContext ctx) => string.Format(
-            @"search={0};library={1}{2}",
+            @"search={0};library={1}{2}{3}",
             ctx.Config.Identity.SearchParameterHash(),
             ctx.Config.Identity.LibraryIdentityHash(),
-            OspreyEnvironment.PickValidityKeySuffix());
+            OspreyEnvironment.PickValidityKeySuffix(),
+            DemuxCacheBuilder.ValidityKeySuffix(ctx.Config));
 
         /// <summary>
         /// A <see cref="ValidateSelection"/> error naming this task and what it is missing,

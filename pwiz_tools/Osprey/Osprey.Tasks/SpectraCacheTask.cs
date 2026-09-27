@@ -154,7 +154,9 @@ namespace pwiz.Osprey.Tasks
                 }
                 built++;
 
-                string cachePath = SpectraCache.GetCachePath(inputFile);
+                // The cache the search will read: the .spectra.bin, or the demultiplexed
+                // cache derived from it.
+                string cachePath = index.CachePath;
                 var cacheInfo = new FileInfo(cachePath);
                 ctx.LogInfo(string.Format(
                     "  {0}: ms2={1:N0} ms1={2:N0} {3:N2} GB in {4:N1}s",

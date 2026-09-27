@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -137,9 +138,16 @@ namespace pwiz.Osprey.Tasks
             out int unsortedCount, PipelineContext ctx)
         {
             unsortedCount = 0;
+            // With --demux, a valid demultiplexed cache is all the search needs, so a run
+            // staged with demux can be searched after its .spectra.bin is gone.
+            var demuxHit = DemuxCacheBuilder.TryOpenDemuxCache(inputFile, ctx);
+            if (demuxHit != null)
+                return demuxHit;
+
             // Shared GetCachePath so the write and the rescore read (PerFileRescoreTask)
             // derive an identical filename + directory (ArtifactPaths redirects the dir).
             string cachePath = SpectraCache.GetCachePath(inputFile);
+            SpectraWindowIndex hit = null;
             if (File.Exists(cachePath))
             {
                 try
@@ -147,13 +155,9 @@ namespace pwiz.Osprey.Tasks
                     // Cache hit: index the file directly (header pass only) -- never build the
                     // full MS2 list. Returns null when stale/invalid (bad magic/version or the
                     // source fingerprint changed), which falls through to a re-parse below.
-                    var hit = SpectraWindowIndex.BuildFromCache(cachePath, inputFile);
-                    if (hit != null)
-                    {
-                        ctx.LogInfo(string.Format("Streaming spectra from cache: {0}", cachePath));
-                        return hit;
-                    }
-                    ctx.LogInfo("Spectra cache stale or invalid; re-parsing the input.");
+                    hit = SpectraWindowIndex.BuildFromCache(cachePath, inputFile);
+                    if (hit == null)
+                        ctx.LogInfo("Spectra cache stale or invalid; re-parsing the input.");
                 }
                 catch (Exception ex)
                 {
@@ -165,6 +169,14 @@ namespace pwiz.Osprey.Tasks
                     ctx.LogWarning(string.Format(
                         "Failed to index spectra cache: {0}. Re-parsing the input.", ex.Message));
                 }
+            }
+            if (hit != null)
+            {
+                // Outside the try above on purpose: that catch treats every exception as a
+                // corrupt cache and re-parses, which would swallow the demux-off refusal of an
+                // overlapping run and any real demultiplexing error.
+                ctx.LogInfo(string.Format("Streaming spectra from cache: {0}", cachePath));
+                return DemuxCacheBuilder.Resolve(inputFile, hit, null, double.NaN, ctx);
             }
 
             // Miss/stale/absent: parse the input once (materialized only transiently here),
@@ -189,6 +201,7 @@ namespace pwiz.Osprey.Tasks
             SpectrumFileResult mzmlResult;
             if (serializeMzmlRead)
                 s_mzmlReadGate.Wait();
+            var parseStopwatch = Stopwatch.StartNew();
             try
             {
                 mzmlResult = SpectrumFileReader.LoadAllSpectra(inputFile);
@@ -198,6 +211,7 @@ namespace pwiz.Osprey.Tasks
                 if (serializeMzmlRead)
                     s_mzmlReadGate.Release();
             }
+            double parseSeconds = parseStopwatch.Elapsed.TotalSeconds;
             unsortedCount = mzmlResult.UnsortedSpectrumCount;
 
             try
@@ -247,7 +261,8 @@ namespace pwiz.Osprey.Tasks
                     "Could not index the spectra cache for '{0}'. Per-file scoring streams MS2 from " +
                     "'{1}'; ensure that directory is writable (the .scores.parquet and .calibration.json " +
                     "outputs are written to the same place).", inputFile, cachePath), indexError);
-            return index;
+            // The spectra just parsed are still resident, so demultiplexing needs no re-read.
+            return DemuxCacheBuilder.Resolve(inputFile, index, mzmlResult, parseSeconds, ctx);
         }
 
         /// <summary>

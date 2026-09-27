@@ -277,6 +277,13 @@ namespace pwiz.Osprey.Core
         public bool PrefilterEnabled { get; set; } = true;
 
         /// <summary>
+        /// Demultiplex overlapping-window DIA into its narrow bins before searching
+        /// (<c>--demux</c>). Enters the search hash only when enabled, so existing
+        /// caches and goldens are unaffected while it is off.
+        /// </summary>
+        public DemuxMode DemuxMode { get; set; } = DemuxMode.off;
+
+        /// <summary>
         /// Protein-level FDR threshold. Optional on the command line
         /// (<c>--protein-fdr</c>); when unset, <see cref="EffectiveProteinFdr"/>
         /// falls back to <see cref="DefaultProteinFdr"/>. To match Rust osprey
@@ -538,5 +545,21 @@ namespace pwiz.Osprey.Core
         All,
         Razor,
         Unique
+    }
+
+    /// <summary>
+    /// Whether overlapping-window (staggered) DIA is demultiplexed before searching.
+    /// Osprey-only; there is no Rust counterpart.
+    /// </summary>
+    public enum DemuxMode
+    {
+        /// <summary>Search spectra as acquired. The default while demux is validated.</summary>
+        off,
+
+        /// <summary>
+        /// Detect the isolation scheme and demultiplex it when it overlaps; a
+        /// non-overlapping run is searched as acquired.
+        /// </summary>
+        auto,
     }
 }

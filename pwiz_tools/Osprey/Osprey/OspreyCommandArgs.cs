@@ -126,10 +126,13 @@ namespace pwiz.Osprey
             new[] { @"ppm", @"mz" }, (c, p) => c._fragmentUnit = p.Value.ToLowerInvariant());
         public static readonly OspreyArgument ARG_NO_PREFILTER = new OspreyArgument(@"no-prefilter",
             (c, p) => c._config.PrefilterEnabled = false);
+        public static readonly OspreyArgument ARG_DEMUX = new OspreyArgument(@"demux",
+            new[] { @"off", @"auto" }, (c, p) => c._config.DemuxMode =
+                p.Value.ToLowerInvariant() == @"auto" ? DemuxMode.auto : DemuxMode.off);
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_SCORING =
             new ArgumentGroup<OspreyCommandArgs>(() => @"Scoring & Tolerance", true,
-                ARG_RESOLUTION, ARG_FRAGMENT_TOLERANCE, ARG_FRAGMENT_UNIT, ARG_NO_PREFILTER);
+                ARG_RESOLUTION, ARG_FRAGMENT_TOLERANCE, ARG_FRAGMENT_UNIT, ARG_NO_PREFILTER, ARG_DEMUX);
 
         // --- FDR & Protein Inference ------------------------------------------------------
         public static readonly OspreyArgument ARG_RUN_FDR = new OspreyArgument(@"run-fdr",
@@ -892,6 +895,7 @@ namespace pwiz.Osprey
                 { @"fragment-tolerance", @"Fragment m/z tolerance (default: 10)" },
                 { @"fragment-unit", @"Fragment tolerance unit (default: ppm)" },
                 { @"no-prefilter", @"Disable coelution signal pre-filter" },
+                { @"demux", @"Demultiplex overlapping-window (staggered) DIA to its narrow bins before searching (default: off)" },
                 { @"run-fdr", @"Run-level FDR threshold (default: 0.01)" },
                 { @"experiment-fdr", @"Experiment-level FDR threshold (default: 0.01)" },
                 { @"reconciliation-compaction-fdr", @"Peptide q-value gate for first-pass compaction (default: 0.01 = run-fdr; loosen e.g. to 0.05 to broaden the reconciliation pool)" },
