@@ -1,50 +1,53 @@
 # Targeted Method Refinement, driven through the Skyline MCP
 
 Every step of the **Targeted Method Refinement** tutorial (`Tutorials/MethodRefine/en/index.html`), with the
-MCP calls that performed it and a screenshot of the result. Driven live on 2026-09-24 against the Release x64
-build of branch `Skyline/work/20260921_typing_in_sequence_tree` at commit `983fcf0d4e`, from a blank document
-through the five scheduled replicates, including the optional re-import of the 39 unrefined RAW files.
-The steps through s-12 were driven again on 2026-09-26 at commit `9254d0aec1`, after the Ion Types, graph
-right-click menu and key-preview fixes, on a fresh extraction (`MethodRefine_20260926`); s-01, s-08, s-09
-and s-12 come from that run, and the steps below show the calls that now work.
+MCP calls that performed it and a screenshot of the result. Driven live on 2026-09-26 against the Release x64
+build of branch `Skyline/work/20260921_typing_in_sequence_tree` at commit `8db86a365c`, from a blank document
+through the five scheduled replicates, including the optional re-import of the 39 unrefined RAW files. Where
+the tutorial says to press a key (Delete, F11, Shift-F11, Home, Ctrl-Z, Ctrl-R, Ctrl-S, Ctrl-T, F7, F8,
+Escape) or Shift-click, that is what was done.
 
 - **Data:** fresh extractions of `MethodRefine.zip` and `MethodRefineSupplement.zip` (the RAW versions) to
-  `E:\Users\nicksh\SkylineDownloadPath2\Tutorials\MethodRefine_20260924`
+  `E:\Users\nicksh\SkylineDownloadPath2\Tutorials\MethodRefine_20260926b`
 - **Outcome:** every count the tutorial gives matched: 225 peptides / 2096 transitions at the start, 39
-  `worm_NNNN.csv` lists (2096 rows), 146 peptides and a 15.8 min window in the regression, 80 / 240 after the
-  strict refinement, 127 after the loose one, 86 / 255 after the unscheduled import, 2 `Unscheduled_NNNN.csv`
-  lists (129 + 126 rows), and a 255-row `Scheduled.csv` whose first rows are the tutorial's spreadsheet
-  exactly. The scheduled import leaves 65 peptides / 194 transitions (the tutorial gives no count; the
-  s-21 status bar agrees).
-- **Screenshots:** `images/s-NN.png` correspond to the tutorial's own `s-NN.png`; `images/NN-*.png` are
-  extra captures of steps the tutorial describes but does not picture. The main window was sized, and its
-  panes arranged, the way `TestMethodRefinementTutorial` does before each screenshot, so s-09, s-14, s-15,
-  s-17 and s-21 come out at the tutorial's size and layout.
-- **Missing:** s-03 (the import progress form): in both runs the 15-file import finished before a capture
-  could reach the form (the second run saw it listed, then it was gone). It was caught for the unscheduled
-  import instead (`11-importing-unscheduled.png`).
+  `worm_NNNN.csv` lists (2096 rows), 146 peptides and a 15.77 min window in the regression, 80 / 240 after
+  the strict refinement, 127 after the loose one, 86 / 255 after the unscheduled import, 2
+  `Unscheduled_NNNN.csv` lists (129 + 126 rows), and a 255-row `Scheduled.csv` whose first rows are the
+  tutorial's spreadsheet exactly. The scheduled import leaves 65 peptides / 194 transitions (the tutorial
+  gives no count; the s-21 status bar agrees).
+- **Screenshots:** `images/s-NN.png` correspond to the tutorial's own `s-NN.png`, all 21 of them;
+  `images/NN-*.png` are extra captures of steps the tutorial describes but does not picture. The main window
+  was sized, and its panes arranged, the way `TestMethodRefinementTutorial` does before each screenshot.
 
 ## How to read the calls
 
 The conventions are those of the MethodEdit walkthrough (`../MethodEdit/MethodEdit-mcp-steps.md`). Calls
 are written `tool(arg=value)` with the `skyline_` prefix dropped. A few more matter here:
 
+- **A key is pressed the way the keyboard presses it.** `send_key_stroke` runs the control's shortcut and
+  dialog-key processing first, then the key-down (forms that preview keys, KeyDown handlers, the control's
+  own behavior), then the character it types, with the modifiers held down for the duration. So the main
+  window's shortcuts work sent to any control in it, and an arrow or Home moves a tree's or a list's
+  selection. With an empty `controlId` the key goes where the keyboard's would: to the form's focused
+  control, or the form itself.
+- **Shift-click is `select_item`, then Shift and the arrows.** `select_item` makes the item the list's
+  current item, as a click does, so Shift+Down, Shift+End and the like extend the selection from it.
+- **Ctrl-click in the Targets tree is `set_selection` with `additionalLocators`.**
 - **The main window's form id carries its title**, dirty marker included: `SkylineWindow:Skyline -
-  WormUnrefined.sky` becomes `SkylineWindow:Skyline - WormUnrefined.sky *` after the first edit. Read it
-  from `get_open_forms` before addressing the window.
+  WormUnrefined.sky` becomes `SkylineWindow:Skyline - WormUnrefined.sky *` after the first edit.
 - **Skyline's own results browser (`OpenDataSourceDialog`) is a WinForms form.** Typing a folder into
-  "Source name" and clicking Open navigates to it, as it does for a reader; `select_item` on its `ListView`
-  adds a file to the selection, so a run of files is selected one at a time (see the table below).
+  "Source name" and clicking Open navigates to it; files are chosen in its list, as a reader does.
 - **A graph's right-click menu** is `click_control_menu_item` with an empty `control` (the graph form's own
   menu) or the graph control's type (`MSGraphControl`; `MsGraphExtension` for Library Match).
 - **A toolbar combo box** (a `ToolStripComboBox`) is reached one level down, at the `ComboBox` it hosts,
   which takes `get_options` and `set_value`.
-- **A graph rendered straight from Skyline** (`get_graph_image`) needs nothing in front of it; a capture
-  of a form (`get_form_image`) needs Skyline in front and uncovered, or what covers it comes out cyan.
-- **Anything asynchronous is polled**: a settings change (s-07's predicted-time band showed up on the
-  second render), a newly shown graph (s-12 was blank on the first render after a layout change), an import
-  (`get_open_forms` until `AllChromatogramsGraph` is gone), and the common-prefix form that follows the file
-  browser.
+- **A graph rendered straight from Skyline** (`get_graph_image`) needs nothing in front of it; a capture of a
+  form (`get_form_image`) needs Skyline uncovered, or what covers it comes out cyan.
+- **Anything asynchronous is polled.** A newly shown or recalculated graph can render blank or stale on the
+  first try (s-05, s-06, s-07, s-12); an import is over when `AllChromatogramsGraph` leaves
+  `get_open_forms`; the common-prefix form follows the file browser a moment later. **Wait for s-06's r =
+  0.9511 before Create Regression**: sent while the threshold change is still being applied, it takes the
+  previous regression (140 peptides, a 22.8 min window, and Predicted 46.3 in s-09).
 
 ## Window sizes and layouts
 
@@ -57,66 +60,57 @@ are written `tool(arg=value)` with the `skyline_` prefix dropped. A few more mat
 | s-17 | `SkylineWindow.Size = 1060 x 550`, `RestoreViewOnScreen(21)` | `resize_window(..., 1060, 550)`, `p21.view` |
 | s-21 | `SkylineWindow.Size = 1024 x 768`, `RestoreViewOnScreen(26)` | `resize_window(..., 1024, 768)`, `p26.view` |
 
-The test also sets chromatogram and spectrum font sizes to 14 and the Targets text to Large; those were
-not reproduced, so the tree and graph text is a little smaller than the tutorial's. The `.view` files come
-with the test, not with `MethodRefine.zip`, so a reader does not have them. For s-21 the layout also stands
-in for a tutorial step (dragging the two replicate-comparison graphs to the dock arrows).
+Arranging panes is meant to be done with File > Import > Window Layout, not by driving the docking UI, so
+for s-21 the layout also stands in for dragging the two replicate-comparison graphs to the dock arrows. The
+`.view` files come with the test, not with `MethodRefine.zip`, so a reader does not have them. The test also
+sets chromatogram and spectrum font sizes to 14 and the Targets text to Large; those were not reproduced.
+After a layout change the Targets view can lose the focus (a grey selection); Escape on a graph gives it
+back, as the test's `FocusDocument` does.
 
-## What did not work, and what stood in for it
+## Gaps
 
 | Tutorial step | What happened | Stand-in used here |
 |---|---|---|
-| Delete, F11, Shift-F11 | Main-menu shortcuts: sent to the tree they had no effect in both runs (the zoom stayed 0-100 min), because a shortcut is matched in the form's `ProcessCmdKey`, not in a control's `KeyDown`. **Fixed since**: `send_key_stroke` with an empty `controlId` now presses the key on the form, as while the window is active, and all three work (checked live: F11 to 71.4-73.7 min, Shift+F11 back to 0-100, Delete removes the selected peptide). Since `send_key_stroke` now presses keys the way the keyboard does (shortcuts first, up the parent chain), they also work sent to `SequenceTree`, as they do for a reader | `click_main_menu_item` for Edit > Delete and View > Auto-Zoom in these runs; now `send_key_stroke(formId="SkylineWindow:...", controlId="", keyStroke="F11")` |
-| Home key (review after automated refinement) | No effect in these runs: the tree's window procedure moves the selection for Home, as for the arrows, but only the arrows were sent to it as key messages. **Fixed since**: Home, End, PgUp and PgDn on `SequenceTree` now move the selection, and so does a key sent to the main window with an empty `controlId`, which goes to the focused control as the keyboard's would (the tree, when it has the focus) | `Ctrl+Home` in these runs; now `send_key_stroke(..., controlId="SequenceTree", keyStroke="Home")` |
-| Click, then Shift-click a run of files | No Shift-click verb | `select_item` once per file: 15, 24, then 5 calls |
-| Ctrl-click transitions to delete | No Ctrl-click verb on the tree | `set_selection` with `additionalLocators` |
-| Click and drag a box to zoom (s-04, optional) | Not tried; `click_graph` drags | Not needed |
-| Drag a graph onto a dock arrow (s-21) | Not a gap: arranging panes is meant to be done with File > Import > Window Layout, not by driving the docking UI | `p26.view` window layout |
-| Close a graph with its red x | Works: `dismiss_with_cancel_button` on the graph form closes it | (not a gap) |
+| "Make sure the MethodRefine folder is selected" in Browse For Folder | The native folder dialog exposes only its label and buttons, so the folder it has selected cannot be read (a reader sees it on screen); it can only be set | `set_form_value` with the folder path, then OK |
+| Ctrl-click transitions in the Targets tree | No Ctrl-click in the tree | `set_selection` with `additionalLocators` |
 | Windows Explorer / Excel views of the output | Outside Skyline | Row counts and first lines read from the files |
 
-### Fixed after the first run
+### Fixed during this work
 
-The first run (2026-09-24) hit three more problems, fixed on the branch and confirmed in the 2026-09-26 run:
+The first run (2026-09-24) found these, all fixed on the branch before this run:
 
 | Tutorial step | What happened | Fix |
 |---|---|---|
-| View > Libraries > Ion Types > B (s-01, s-12) | "Menu item not found". **A Skyline bug**: the submenu's panel was built only while `ViewMenu.ProteomicsEnabled` was true, a flag set only when a document's ion types *changed*; opening WormUnrefined.sky (y) over a default document (also y) left it false and the item hidden, for a reader too (#4671 item 3). s-01 and s-12 showed y-ions only | `ProteomicsEnabled` / `SmallMoleculesEnabled` now come from the current document |
-| Library Match right-click > Ion Types | The connector's menu had only Show Mass Error, Auto-scale Y-axis, rulers and copy items: it did not set the menu's `SourceControl`, through which `SpectrumContextMenu` finds the annotated spectrum. `MsGraphExtension` gave "has no context menu" | `SourceControl` is set to the graph; `MsGraphExtension` resolves to its graph |
-| Escape on the regression graph (s-08) | `GraphSummary` takes Escape in the *form's* `KeyDown` (`KeyPreview`); `send_key_stroke` raised `KeyDown` on the graph control only, so the Targets view never got the focus and s-08's selection was grey | `send_key_stroke` raises `KeyDown` on each enclosing `KeyPreview` form first |
-
-The chromatogram's File list (s-09) looked like a gap in the first run and is not: the toolbar item only
-supports `click` and `get_value`, but the combo box it hosts is its child and takes `get_options` /
-`set_value` (section 7).
-
-Two things found in the second run: a list of quoted file names typed into the results browser's "Source
-name" is refused ("Please select one or more data sources"), so files are still selected one at a time; and
-`Create Regression` right after the threshold dialog closes can capture the regression from before the
-threshold change (a 22.8 min window, 140 peptides), so the graph is rendered first until it shows r = 0.9511
-(section 6).
+| View > Libraries > Ion Types > B (s-01, s-12) | "Menu item not found": a Skyline bug. The submenu was built only while a flag set on an ion-type *change* was true, so opening a y-only document over default settings hid it, for a reader too (#4671 item 3) | The flag comes from the current document |
+| Library Match right-click > Ion Types | The connector's menu lacked Ion Types, Charges, Ranks: it did not set the menu's `SourceControl`, through which the spectrum menu finds its graph | `SourceControl` is set; `MsGraphExtension` resolves to its graph |
+| Escape on the regression graph (s-08) | The graph form takes Escape in its own KeyDown (`KeyPreview`), which a raised KeyDown on the graph control never reached | Keys go through the real keyboard path |
+| Delete, F11, Shift-F11 | Main-menu shortcuts had no effect sent to the tree or the main window | Keys go through the control's `PreProcessMessage` (ProcessCmdKey up the parent chain) |
+| Home in the Targets tree | Handled by the tree's own window procedure, which a raised KeyDown never reached | Same |
+| Shift-click a run of files | `select_item` selected without making the item current, so Shift+arrows extended from elsewhere | `select_item` sets the focused item and the anchor |
+| The chromatogram's File list (s-09) | Looked like a gap: the toolbar item supports only `click` and `get_value` | Not a gap: the hosted `ComboBox` is its child |
 
 ### Differences from the tutorial text (not MCP gaps)
 
-The first three have since been corrected in the English tutorial (`Tutorials/MethodRefine/en/index.html`);
-the ja and zh-CHS versions still have the old text.
+The first three have been corrected in the English tutorial; the ja and zh-CHS versions still have the old
+text (they are updated through translation).
 
-- **Browse For Folder** (Scheduling for Efficient Acquisition) did not default to the document folder,
-  as the tutorial says: it opened on the last results folder, `MethodRefineSupplement`, and accepting it gave
-  "No results found in the folder". A reader who did the optional re-import hits the same thing.
-- **"Click the Do not remove button"**: Do not remove is now a radio button on the common-prefix form; it
-  needs OK afterwards.
-- **The Scheduled.csv columns D and E** are the retention time and the 4-minute window, not "start and stop
-  times 4 minutes apart" as the text says; the tutorial's spreadsheet picture shows the same values
-  (40.97, 4) as this run.
-- **s-09's legend lists each transition twice** (16 entries) where the tutorial's lists 8; the curves and
-  labels are otherwise the same. It is the same with the re-imported data and with the `.skyd` that ships
-  in `MethodRefine.zip`, so it is how this Skyline draws the graph, not an import artifact.
+- **Browse For Folder** did not default to the document folder: it opened on the last results folder,
+  `MethodRefineSupplement`, which gives "No results found" if accepted. A reader who did the optional
+  re-import hits the same thing.
+- **"Do not remove"** is a radio button on the common-prefix form; it needs OK afterwards.
+- **The Scheduled.csv columns D and E** are the retention time and the 4-minute window, not start and stop
+  times; the tutorial's spreadsheet picture shows the same values (40.97, 4) as this run.
+- **s-09's legend lists each transition twice** (16 entries) where the tutorial's lists 8; it is the same with
+  the `.skyd` that ships in `MethodRefine.zip`.
+- **The Export Transition List form remembers Ignore proteins** from the previous export; it was cleared for
+  s-02 to match the tutorial's picture (the method count does not depend on it).
 
 ---
 
 ## 1. Getting started
 
 ```
+get_form_image(formId="StartPage:Start Page")
 click_form_button(formId="StartPage:Start Page", button="Blank Document")
 click_main_menu_item(menuPath="Settings > Default")
   -> did not complete; left 'MultiButtonMsgDlg:Skyline' open ("save your current settings?")
@@ -127,6 +121,15 @@ perform_action(form="SkylineWindow:Skyline", action="click",
                   "text":"User interface selection","type":"ToolStripDropDownButton"},
         "text":"Proteomics interface","type":"ToolStripButton"})
 get_ui_mode()   -> proteomic
+```
+
+![Start page](images/00-start-page.png)
+
+The first `get_form_image` of a session opens Skyline's screen-capture consent dialog, answered once. As
+preparation, not a tutorial step, the Peptide Settings > Prediction list was checked for a WormUnrefined
+predictor left by an earlier run (there was none), so Create Regression proposes the tutorial's name.
+
+```
 click_main_menu_item(menuPath="File > Open")
   -> did not complete; left 'MultiButtonMsgDlg:Skyline' open ("save changes?")
 dismiss_with_button(formId="MultiButtonMsgDlg:Skyline", button="No")   -> 'Dialog:Open'
@@ -134,10 +137,6 @@ set_form_value(formId="Dialog:Open", controlId="", value="\"...\MethodRefine\Wor
 dismiss_with_accept_button(formId="Dialog:Open")
 get_document_status()   -> 1 protein, 225 peptides, 225 precursors, 2096 transitions, 1 replicate
 ```
-
-The first `get_form_image` of the session opened Skyline's screen-capture consent dialog, answered once.
-The "save changes?" prompt comes from the blank document having been changed by Settings > Default and the
-interface switch; the tutorial does not mention it.
 
 ## 2. Results data
 
@@ -149,8 +148,7 @@ click_main_menu_item(menuPath="View > Auto-Zoom > Best Peak")
 resize_window(formId="SkylineWindow:Skyline - WormUnrefined.sky", width=1266, height=736)
 get_graph_image(formId="GraphSpectrum:Library Match")   # y-ions only: b-ions are off
 click_main_menu_item(menuPath="View > Libraries > Ion Types > B")
-get_graph_image(formId="GraphSpectrum:Library Match")   # not redrawn yet
-get_graph_image(formId="GraphSpectrum:Library Match")   # b5 ... b15 in purple
+get_graph_image(formId="GraphSpectrum:Library Match")   # redrawn a moment later: b5 ... b15 in purple
 get_form_image(formId="SkylineWindow:Skyline - WormUnrefined.sky")
 ```
 
@@ -170,7 +168,7 @@ click_form_button(formId="ExportMethodDlg:Export Transition List", button="Multi
 set_form_value(formId=..., controlId="Max transitions per sample injection", value="59")
 ```
 
-**s-02**: `Methods: 39`.
+**s-02**: `Methods: 39` (counted a moment after the value is set; the first capture showed "...").
 
 ![s-02](images/s-02.png)
 
@@ -180,16 +178,15 @@ set_form_value(formId="Dialog:Export Transition List", controlId="", value="...\
 dismiss_with_accept_button(formId="Dialog:Export Transition List")
 ```
 
-`worm_0001.csv` to `worm_0039.csv`, 2096 rows in all, about 3 KB each.
+`worm_0001.csv` to `worm_0039.csv`, 2096 rows in all.
 
 ## 4. Importing multiple injection data
 
 ```
 click_main_menu_item(menuPath="Edit > Manage Results")   -> 'ManageResultsDlg:Manage Results'
 click_form_button(formId="ManageResultsDlg:Manage Results", button="Remove")
-perform_action(form="ManageResultsDlg:Manage Results", action="get_options", type="ListBox")   -> []
 dismiss_with_accept_button(formId="ManageResultsDlg:Manage Results")
-click_main_menu_item(menuPath="File > Save")
+send_key_stroke(formId="SkylineWindow:Skyline - WormUnrefined.sky *", controlId="", keyStroke="Ctrl+S")
 get_document_status()   -> 0 replicates, no unsaved changes
 click_main_menu_item(menuPath="File > Import > Results")   -> 'ImportResultsDlg:Import Results'
 click_form_button(formId="ImportResultsDlg:Import Results", button="Add one new replicate")
@@ -198,15 +195,15 @@ set_form_value(formId="ImportResultsDlg:Import Results", controlId="Name", value
 
 ![Import Results, one new replicate](images/01-import-results-unrefined.png)
 
+"Click on worm_0001.RAW, Shift-click on worm_0015.RAW":
+
 ```
 dismiss_with_accept_button(formId="ImportResultsDlg:Import Results")   -> 'OpenDataSourceDialog:Import Results Files'
 set_form_value(formId="OpenDataSourceDialog:Import Results Files", controlId="Source name",
                value="...\MethodRefineSupplement")
 click_form_button(formId="OpenDataSourceDialog:Import Results Files", button="Open")    # navigates
-get_form_value(formId=..., controlId="Look in")   -> TreeNode: MethodRefineSupplement
 perform_action(form=..., action="select_item", type="ListView", value="worm_0001.RAW")
-  ... one call per file ...
-perform_action(form=..., action="select_item", type="ListView", value="worm_0015.RAW")
+send_key_stroke(formId=..., controlId="ListView", keyStroke="Shift+Down")   # x14
 get_form_value(formId=..., controlId="Source name")   -> "worm_0001.RAW" ... "worm_0015.RAW"
 ```
 
@@ -214,7 +211,17 @@ get_form_value(formId=..., controlId="Source name")   -> "worm_0001.RAW" ... "wo
 
 ```
 click_form_button(formId="OpenDataSourceDialog:Import Results Files", button="Open")
-get_open_forms()   -> no 'AllChromatogramsGraph' (already finished; no s-03)
+get_form_image(formId="AllChromatogramsGraph:Importing Results...")   # straight away, while it is up
+```
+
+**s-03**: caught at the very start of the import, before any chromatogram is drawn.
+
+![s-03](images/s-03.png)
+
+"Click on worm_0016.RAW, Shift-click on worm_0039.RAW":
+
+```
+get_open_forms()   # polled until 'AllChromatogramsGraph' was gone
 click_main_menu_item(menuPath="File > Import > Results")
 click_form_button(formId="ImportResultsDlg:Import Results", button="Add files to an existing replicate")
 ```
@@ -225,8 +232,7 @@ click_form_button(formId="ImportResultsDlg:Import Results", button="Add files to
 dismiss_with_accept_button(formId="ImportResultsDlg:Import Results")   # the browser is still in MethodRefineSupplement
 perform_action(form="OpenDataSourceDialog:Import Results Files", action="select_item", type="ListView",
                value="worm_0016.RAW")
-  ... one call per file ...
-perform_action(form=..., action="select_item", type="ListView", value="worm_0039.RAW")
+send_key_stroke(formId=..., controlId="ListView", keyStroke="Shift+End")   -> worm_0016 ... worm_0039
 click_form_button(formId="OpenDataSourceDialog:Import Results Files", button="Open")
 get_report_from_definition_rows(reportDefinitionJson={"select":["Replicate","FileName"]}, count=0)
   -> total_rows 39
@@ -235,8 +241,9 @@ get_report_from_definition_rows(reportDefinitionJson={"select":["Replicate","Fil
 ## 5. Simple manual refinement
 
 ```
-get_selection()   -> Molecule:/peptides1/YLGAYLLATLGGNASPSAQDVLK
-click_main_menu_item(menuPath="View > Auto-Zoom > None")
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Ctrl+Home")
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Down")
+send_key_stroke(formId="SkylineWindow:Skyline - WormUnrefined.sky *", controlId="", keyStroke="Shift+F11")
 get_graph_image(formId="GraphChromatogram:Unrefined")
 ```
 
@@ -245,9 +252,7 @@ get_graph_image(formId="GraphChromatogram:Unrefined")
 ![s-04](images/s-04.png)
 
 ```
-send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Delete")   # no effect
-# (now: send_key_stroke(formId="SkylineWindow:Skyline - WormUnrefined.sky *", controlId="", keyStroke="Delete"))
-click_main_menu_item(menuPath="Edit > Delete")
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Delete")
 get_document_status()   -> 224 peptides, 2083 transitions
 get_selection()         -> Molecule:/peptides1/VLEAGGLDC[+57.021464]DMENANSVVDALK
 ```
@@ -256,6 +261,7 @@ get_selection()         -> Molecule:/peptides1/VLEAGGLDC[+57.021464]DMENANSVVDAL
 
 ```
 click_main_menu_item(menuPath="View > Retention Times > Regression > Score To Run")
+get_graph_image(formId="GraphSummary:Retention Times - Score To Run Regression")   # blank, then:
 get_graph_image(formId="GraphSummary:Retention Times - Score To Run Regression")
 ```
 
@@ -273,12 +279,11 @@ set_form_value(formId="RegressionRTThresholdDlg:Set Retention Time Threshold", c
 
 ```
 dismiss_with_accept_button(formId="RegressionRTThresholdDlg:Set Retention Time Threshold")
-get_graph_image(formId="GraphSummary:Retention Times - Score To Run Regression")
+get_graph_image(formId="GraphSummary:Retention Times - Score To Run Regression")   # still r = 0.9033
+get_graph_image(formId="GraphSummary:Retention Times - Score To Run Regression")   # r = 0.9511
 ```
 
-**s-06**: r = 0.9511, window 15.8. Wait for this before Create Regression: the regression is recalculated in
-the background, and in the second run a Create Regression sent straight after the threshold dialog closed
-took the old one (140 peptides, a 22.8 min window, and a Predicted 46.3 in s-09).
+**s-06**: r = 0.9511, window 15.8. Wait for this before Create Regression (see "How to read the calls").
 
 ![s-06](images/s-06.png)
 
@@ -289,12 +294,12 @@ click_control_menu_item(formId="GraphSummary:Retention Times - Score To Run Regr
 
 ![Edit Retention Time Predictor](images/05-edit-rt-predictor.png)
 
-146 peptides, R = 0.9511, time window 15.7657, SSRCalc 3.0 (300A), as the tutorial says.
+WormUnrefined, 146 peptides, R = 0.9511, time window 15.7657, SSRCalc 3.0 (300A), as the tutorial says.
 
 ```
 dismiss_with_accept_button(formId="EditRTDlg:Edit Retention Time Predictor")
-get_graph_image(formId="GraphChromatogram:Unrefined")   # no band yet
-get_graph_image(formId="GraphChromatogram:Unrefined")   # band shown
+get_graph_image(formId="GraphChromatogram:Unrefined")   # no band yet, then:
+get_graph_image(formId="GraphChromatogram:Unrefined")
 ```
 
 **s-07**: Predicted 63.1 and its shaded window.
@@ -303,40 +308,33 @@ get_graph_image(formId="GraphChromatogram:Unrefined")   # band shown
 
 ## 7. Missing data
 
-The left-most point on the x-axis is found in the graph's data, then clicked in data coordinates:
+The left-most point on the x-axis is found in the graph's data (`get_graph_data`: the left-most Outliers point
+with Measured Time 0 has score 18.6674), then clicked in data coordinates:
 
 ```
-get_graph_data(formId="GraphSummary:Retention Times - Score To Run Regression")
-  -> left-most Outliers point with Measured Time 0: score 18.6674
 click_graph(formId="GraphSummary:Retention Times - Score To Run Regression",
             left=18.6674448596158, top=0, right=18.6674448596158, bottom=0)
 get_selection()   -> Molecule:/peptides1/YLAEVASEDR
-send_key_stroke(formId="GraphSummary:Retention Times - Score To Run Regression",
-                controlId="ZedGraphControl", keyStroke="Esc")          # the graph form sends the focus to Targets
+send_key_stroke(formId="GraphSummary:Retention Times - Score To Run Regression", controlId="", keyStroke="Esc")
 get_form_image(formId="SequenceTreeForm:Targets")
 ```
 
-**s-08**: the 7 peptides without peak icons above YLAEVASEDR, which is selected in the focused tree.
+**s-08**: the 7 peptides without peak icons above YLAEVASEDR, selected in the focused tree.
 
 ![s-08](images/s-08.png)
 
 ```
 perform_action(form="SequenceTreeForm:Targets", action="select_item", type="SequenceTree",
                value="peptides1>VTVVDDQSVILK")
-get_form_image(formId="GraphChromatogram:Unrefined")   # the floating regression graph covered it
-click_main_menu_item(menuPath="File > Import > Window Layout")
-set_form_value(formId="Dialog:Import Window Layout", controlId="",
-               value="\"...\pwiz_tools\Skyline\TestTutorial\MethodRefinementViews.data\p13.view\"")
-dismiss_with_accept_button(formId="Dialog:Import Window Layout")
+click_main_menu_item(menuPath="File > Import > Window Layout")   # p13.view (moves the regression graph away)
 get_form_image(formId="GraphChromatogram:Unrefined")
 ```
 
-**s-09**: the File list shows worm_0027.RAW, Predicted 45.7. The legend lists each transition twice.
+**s-09**: Predicted 45.7, the File list showing worm_0027.RAW. The legend lists each transition twice.
 
 ![s-09](images/s-09.png)
 
 "If you click on this list, it will show that both worm_0027.RAW and worm_0028.RAW contained measurements":
-the list is the combo box hosted by the toolbar's `ToolStripComboBox`, addressed one level below it.
 
 ```
 perform_action(form="GraphChromatogram:Unrefined", action="get_options",
@@ -346,21 +344,17 @@ perform_action(form="GraphChromatogram:Unrefined", action="get_options",
   -> ["worm_0027.RAW","worm_0028.RAW"]
 ```
 
-`set_value` on the same path chooses a file (tried on a two-file replicate).
-
-The p13 layout closed the regression graph, which is where the tutorial clicks its red x.
+`set_value` on the same path chooses a file. The p13 layout closed the regression graph, which is where the
+tutorial clicks its red x (`dismiss_with_cancel_button` on a graph form closes it, as in section 13).
 
 ## 8. Picking measurable peptides and transitions
 
 ```
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Ctrl+Home")
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Down")
-send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="F11")   # no effect
-# (now: send_key_stroke(formId="SkylineWindow:Skyline - WormUnrefined.sky *", controlId="", keyStroke="F11"))
+send_key_stroke(formId="SkylineWindow:Skyline - WormUnrefined.sky *", controlId="", keyStroke="F11")
 click_main_menu_item(menuPath="Edit > Expand All > Peptides")
-get_graph_zoom(formId="GraphChromatogram:Unrefined")   -> 0 to 100 (F11 did nothing)
-click_main_menu_item(menuPath="View > Auto-Zoom > Best Peak")
-get_graph_zoom(formId="GraphChromatogram:Unrefined")   -> 62.35 to 65.45
+get_graph_zoom(formId="GraphChromatogram:Unrefined")   -> 62.35 to 65.45 (Best Peak)
 get_form_image(formId="SequenceTreeForm:Targets")
 ```
 
@@ -378,7 +372,7 @@ get_graph_image(formId="GraphChromatogram:Unrefined")
 
 ```
 click_main_menu_item(menuPath="File > Import > Window Layout")   # p16.view
-get_graph_image(formId="GraphSpectrum:Library Match")            # blank: still loading
+get_graph_image(formId="GraphSpectrum:Library Match")            # blank: still loading, then:
 get_graph_image(formId="GraphSpectrum:Library Match")
 ```
 
@@ -388,8 +382,11 @@ points out, and b4 to b14 in purple.
 ![s-12](images/s-12.png)
 
 ```
+click_main_menu_item(menuPath="View > Libraries > Library Match")   # closed, as the test does, so it
+                                                                     # cannot overlap the Targets capture
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Down")    # precursor
-send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Right")   # expand
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Right")   # (already open: to y13)
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Up")      # the precursor
 get_form_image(formId="SequenceTreeForm:Targets")
 ```
 
@@ -398,25 +395,27 @@ get_form_image(formId="SequenceTreeForm:Targets")
 ![s-13](images/s-13.png)
 
 ```
-send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Up")      # the peptide
-click_main_menu_item(menuPath="Edit > Delete")
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Up")       # the peptide
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Delete")
 get_selection()   -> Molecule:/peptides1/WNTENQLGTVIEVNEQFGR
-click_main_menu_item(menuPath="Edit > Delete")
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Delete")
 get_document_status()   -> 222 peptides, 2061 transitions
 ```
 
-VTLDSLYAPHAGK: the tree shows SRM ranks [1] y5, [2] y7, [3] y6, so the other six go. Ctrl-click is
-`set_selection` with the extra transitions:
+VTLDSLYAPHAGK keeps its SRM ranks [1] y5, [2] y7, [3] y6; LDWALPTAR keeps y6, y5, y4. The other transitions
+are Ctrl-clicked (`set_selection` with the extra locators) and deleted with the Delete key:
 
 ```
-set_selection(elementLocator="Precursor:/peptides1/VTLDSLYAPHAGK/light++")   # then Right to expand
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Down")    # its precursor
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Right")   # expand
 set_selection(elementLocator="Transition:/peptides1/VTLDSLYAPHAGK/light++/y11+",
               additionalLocators="...y10+\n...y9+\n...y8+\n...y4+\n...y3+")
-click_main_menu_item(menuPath="Edit > Delete")   -> 2055 transitions
-set_selection(elementLocator="Precursor:/peptides1/LDWALPTAR/light++")        # then Right
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Delete")   -> 2055
+set_selection(elementLocator="Precursor:/peptides1/LDWALPTAR/light++")
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Right")
 set_selection(elementLocator="Transition:/peptides1/LDWALPTAR/light++/y7+",
               additionalLocators="Transition:/peptides1/LDWALPTAR/light++/y3+")
-click_main_menu_item(menuPath="Edit > Delete")   -> 2053 transitions
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Delete")   -> 2053
 set_selection(elementLocator="Transition:/peptides1/LDWALPTAR/light++/y4+")
 resize_window(formId="SkylineWindow:Skyline - WormUnrefined.sky *", width=722, height=449)
 click_main_menu_item(menuPath="File > Import > Window Layout")   # p17.view
@@ -432,15 +431,12 @@ get_graph_image(formId="GraphChromatogram:Unrefined")
 
 ![s-15](images/s-15.png)
 
-For VTADVGVTSAPVINAAGVFSR, keep y14, y13 and y11. The transitions were listed with a report:
+For VTADVGVTSAPVINAAGVFSR, keep y14, y13 and y11:
 
 ```
-get_report_from_definition_rows(reportDefinitionJson={"select":["FragmentIon"],
-  "filter":[{"column":"PeptideModifiedSequence","op":"equals","value":"VTADVGVTSAPVINAAGVFSR"}]}, count=50)
-  -> y15 ... y3
 set_selection(elementLocator="Transition:/peptides1/VTADVGVTSAPVINAAGVFSR/light++/y15+",
               additionalLocators="...y12+ ...y10+ ...y9+ ...y8+ ...y7+ ...y6+ ...y5+ ...y4+ ...y3+")
-click_main_menu_item(menuPath="Edit > Delete")   -> 2043 transitions
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Delete")   -> 2043
 ```
 
 ![Three peptides with three transitions each](images/06-three-peptides-refined.png)
@@ -463,26 +459,22 @@ set_form_value(formId="RefineDlg:Refine", controlId="Min dotp", value="0.8")
 dismiss_with_accept_button(formId="RefineDlg:Refine")
 get_document_status()   -> 80 peptides, 240 transitions
 click_main_menu_item(menuPath="Edit > Collapse All > Peptides")
-send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Home")       # no effect (works now)
-send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Ctrl+Home")
-send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Down")       # and on
-send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Ctrl+End")
-send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Up")
-get_selection()   -> Molecule:/peptides1/EIFNLYDEELDGK   (the last peptide)
-click_main_menu_item(menuPath="Edit > Undo")
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Home")   -> peptides1
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Down")   # and on
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="End")    # the blank node
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Up")     # the last peptide
+get_selection()   -> Molecule:/peptides1/EIFNLYDEELDGK
+send_key_stroke(formId="SkylineWindow:Skyline - WormUnrefined.sky *", controlId="", keyStroke="Ctrl+Z")
 get_document_status()   -> 222 peptides, 2043 transitions
 click_main_menu_item(menuPath="Refine > Advanced")
 perform_action(form="RefineDlg:Refine", action="select_tab", type="TabControl", value="Results")
-```
-
-The form opens blank each time, so nothing carries over from the first pass.
-
-```
 set_form_value(formId="RefineDlg:Refine", controlId="Max transition peak rank", value="6")
 click_form_button(formId="RefineDlg:Refine", button="Remove nodes missing results")
 set_form_value(formId="RefineDlg:Refine", controlId="Target r value for linear regression", value="0.9")
 set_form_value(formId="RefineDlg:Refine", controlId="Min dotp", value="0.712")
 ```
+
+The form opens blank each time, so nothing carries over from the first pass.
 
 ![Refine, loose](images/08-refine-loose.png)
 
@@ -494,30 +486,27 @@ get_document_status()   -> 127 peptides, 742 transitions
 ## 10. Scheduling for efficient acquisition
 
 ```
-click_main_menu_item(menuPath="Edit > Undo")
-click_main_menu_item(menuPath="Edit > Manage Results")
+send_key_stroke(formId="SkylineWindow:Skyline - WormUnrefined.sky *", controlId="", keyStroke="Ctrl+Z")
+send_key_stroke(formId="SkylineWindow:Skyline - WormUnrefined.sky *", controlId="", keyStroke="Ctrl+R")
+  -> did not complete; left 'ManageResultsDlg:Manage Results' open
 click_form_button(formId="ManageResultsDlg:Manage Results", button="Remove")
 dismiss_with_accept_button(formId="ManageResultsDlg:Manage Results")
-click_main_menu_item(menuPath="File > Save")
+send_key_stroke(formId="SkylineWindow:Skyline - WormUnrefined.sky *", controlId="", keyStroke="Ctrl+S")
 get_document_status()   -> 222 peptides, 2043 transitions, 0 replicates
 click_main_menu_item(menuPath="File > Import > Results")
 click_form_button(formId="ImportResultsDlg:Import Results", button="Add multi-injection replicates in directories")
 dismiss_with_accept_button(formId="ImportResultsDlg:Import Results")   -> 'Dialog:Browse For Folder'
+set_form_value(formId="Dialog:Browse For Folder", controlId="", value="...\MethodRefine")
 ```
+
+"Make sure the MethodRefine folder is selected": it opens on the last results folder, MethodRefineSupplement,
+and which folder is selected cannot be read through the MCP (see Gaps), so it is set.
 
 ![Browse For Folder](images/09-browse-for-folder.png)
 
 ```
-dismiss_with_accept_button(formId="Dialog:Browse For Folder")
-  -> did not complete; left 'MessageDlg:Skyline' open
-     ("No results found in the folder ...\MethodRefineSupplement.")
-dismiss_with_accept_button(formId="MessageDlg:Skyline")
-dismiss_with_accept_button(formId="ImportResultsDlg:Import Results")   -> 'Dialog:Browse For Folder'
-set_form_value(formId="Dialog:Browse For Folder", controlId="", value="...\MethodRefine")
 dismiss_with_accept_button(formId="Dialog:Browse For Folder")   -> 'ImportResultsNameDlg:Import Results'
 ```
-
-The default folder was the last results folder, not the document's (see above).
 
 ![Common prefix Unscheduled0](images/10-common-prefix-unscheduled.png)
 
@@ -556,13 +545,15 @@ dismiss_with_accept_button(formId="Dialog:Export Transition List")
 
 ## 12. Reviewing retention time runs
 
-The Library Match pane was already closed by the p17 layout.
+The Library Match pane is already closed (section 8). Tiled is Ctrl-T; the peptide pictured is the one the
+test selects.
 
 ```
-click_main_menu_item(menuPath="View > Arrange Graphs > Tiled")
-set_selection(elementLocator="Molecule:/peptides1/FWEVISDEHGIQPDGTFK")   # the peptide the test pictures
+send_key_stroke(formId="SkylineWindow:Skyline - WormUnrefined.sky *", controlId="", keyStroke="Ctrl+T")
+set_selection(elementLocator="Molecule:/peptides1/FWEVISDEHGIQPDGTFK")
 resize_window(formId="SkylineWindow:Skyline - WormUnrefined.sky *", width=1060, height=550)
 click_main_menu_item(menuPath="File > Import > Window Layout")          # p21.view
+send_key_stroke(formId="GraphChromatogram:Unscheduled02", controlId="", keyStroke="Esc")   # focus to Targets
 get_form_image(formId="SkylineWindow:Skyline - WormUnrefined.sky *")
 ```
 
@@ -571,9 +562,10 @@ get_form_image(formId="SkylineWindow:Skyline - WormUnrefined.sky *")
 ![s-17](images/s-17.png)
 
 ```
-click_main_menu_item(menuPath="View > Auto-Zoom > None")        # Shift-F11
+send_key_stroke(formId="SkylineWindow:Skyline - WormUnrefined.sky *", controlId="", keyStroke="Shift+F11")
 get_graph_zoom(formId="GraphChromatogram:Unscheduled01")   -> 0 to 100
-click_main_menu_item(menuPath="View > Auto-Zoom > Best Peak")   # F11
+send_key_stroke(formId="SkylineWindow:Skyline - WormUnrefined.sky *", controlId="", keyStroke="F11")
+get_graph_zoom(formId="GraphChromatogram:Unscheduled01")   -> 60.6 to 63.8
 click_main_menu_item(menuPath="View > Retention Times > Scheduling")
 get_graph_image(formId="GraphSummary:Retention Times - Scheduling")
 ```
@@ -586,7 +578,7 @@ test's asserted values).
 ## 13. Creating a scheduled transition list
 
 ```
-dismiss_with_cancel_button(formId="GraphSummary:Retention Times - Scheduling")   # closes the view
+dismiss_with_cancel_button(formId="GraphSummary:Retention Times - Scheduling")   # its red x
 click_main_menu_item(menuPath="Settings > Peptide Settings")
 perform_action(form="PeptideSettingsUI:Peptide Settings", action="select_tab", type="TabControl", value="Prediction")
 set_form_value(formId="PeptideSettingsUI:Peptide Settings", controlId="Time window", value="4")
@@ -630,17 +622,19 @@ dismiss_with_accept_button(formId="Dialog:Export Transition List")
 
 ## 14. Reviewing multi-replicate data
 
+"Click on Scheduled_REP01.RAW, Shift-click on Scheduled_REP05.RAW":
+
 ```
-click_main_menu_item(menuPath="Edit > Manage Results")
+send_key_stroke(formId="SkylineWindow:Skyline - WormUnrefined.sky *", controlId="", keyStroke="Ctrl+R")
 click_form_button(formId="ManageResultsDlg:Manage Results", button="Remove All")
 dismiss_with_accept_button(formId="ManageResultsDlg:Manage Results")
-click_main_menu_item(menuPath="File > Save")
+send_key_stroke(formId="SkylineWindow:Skyline - WormUnrefined.sky *", controlId="", keyStroke="Ctrl+S")
 click_main_menu_item(menuPath="File > Import > Results")
 click_form_button(formId="ImportResultsDlg:Import Results", button="Add single-injection replicates in files")
 dismiss_with_accept_button(formId="ImportResultsDlg:Import Results")   -> 'OpenDataSourceDialog:Import Results Files'
 perform_action(form="OpenDataSourceDialog:Import Results Files", action="select_item", type="ListView",
                value="Scheduled_REP01.RAW")
-  ... REP02 to REP05 ...
+send_key_stroke(formId=..., controlId="ListView", keyStroke="Shift+Down")   # x4
 ```
 
 ![Five scheduled files selected](images/13-import-scheduled-files.png)
@@ -655,19 +649,29 @@ set_form_value(formId="ImportResultsNameDlg:Import Results", controlId="Common p
 
 ```
 dismiss_with_accept_button(formId="ImportResultsNameDlg:Import Results")
+get_form_image(formId="AllChromatogramsGraph:Importing Results...")
+```
+
+![Importing the scheduled replicates](images/15-importing-scheduled.png)
+
+Tiled is Ctrl-T, Retention Times > Replicate Comparison F8, Peak Areas > Replicate Comparison F7:
+
+```
 get_open_forms()   # polled until 'AllChromatogramsGraph' was gone; tabs REP01 to REP05
 click_main_menu_item(menuPath="Refine > Remove Missing Results")
 get_document_status()   -> 65 peptides, 194 transitions, 5 replicates
-click_main_menu_item(menuPath="View > Arrange Graphs > Tiled")
-click_main_menu_item(menuPath="View > Retention Times > Replicate Comparison")   # opens floating
-click_main_menu_item(menuPath="View > Peak Areas > Replicate Comparison")
+send_key_stroke(formId="SkylineWindow:Skyline - WormUnrefined.sky *", controlId="", keyStroke="Ctrl+T")
+send_key_stroke(formId="SkylineWindow:Skyline - WormUnrefined.sky *", controlId="", keyStroke="F8")
+send_key_stroke(formId="SkylineWindow:Skyline - WormUnrefined.sky *", controlId="", keyStroke="F7")
 click_control_menu_item(formId="GraphChromatogram:REP01", control="MSGraphControl", menuPath="Legend")
 resize_window(formId="SkylineWindow:Skyline - WormUnrefined.sky *", width=1024, height=768)
 click_main_menu_item(menuPath="File > Import > Window Layout")   # p26.view: docks the two graphs
 click_main_menu_item(menuPath="Edit > Collapse All > Peptides")
-send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Ctrl+Home")
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Home")
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Down")
-get_form_image(formId="SkylineWindow:Skyline - WormUnrefined.sky *")
+send_key_stroke(formId="GraphChromatogram:REP05", controlId="", keyStroke="Esc")   # focus to Targets
+get_form_image(formId="SkylineWindow:Skyline - WormUnrefined.sky *")   # the first capture caught the
+get_form_image(formId="SkylineWindow:Skyline - WormUnrefined.sky *")   # RT graph mid-redraw
 ```
 
 **s-21**: five tiled replicates without legends, peak areas docked right, retention times docked at the
