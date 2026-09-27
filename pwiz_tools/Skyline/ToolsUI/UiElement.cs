@@ -711,38 +711,12 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>PRESSES ONE KEY on the control, named with its modifiers - "Ctrl+V", "Down", "Enter",
-        /// "Ctrl+Shift+Home". It raises KeyDown with the composed <see cref="Keys"/> value, which is where a
-        /// WinForms handler reads a keystroke from. Composing the value is what lets a modifier be expressed:
-        /// a delivered key message carries only the virtual key, and WinForms fills the modifiers in from the
-        /// GLOBAL keyboard state, which this does not touch. As for a user's key, a form containing the
-        /// control that sets KeyPreview sees it first (the graph forms take Escape back to the Targets view
-        /// this way), and a form that handles it keeps it from the control.
-        ///
-        /// <para>KNOWN LIMIT: raising KeyDown does not run the control's default window procedure, so a key
-        /// whose effect comes from that rather than from a handler - Backspace editing a text box, an arrow
-        /// moving a plain list's selection - has no effect.</para></summary>
+        /// "Ctrl+Shift+Home" - the way the keyboard does (see <see cref="KeyStroke"/>): shortcuts and dialog
+        /// keys first, then forms that preview keys, KeyDown handlers and the control's own behavior, then the
+        /// character the key types.</summary>
         public virtual void SendKeyStrokeNow(string keyStroke)
         {
-            var e = new KeyEventArgs(ParseKeyStroke(keyStroke));
-            if (!RaiseKeyPreview(Control, e))
-                RaiseProtectedHandler(Control, @"OnKeyDown", e);
-        }
-
-        // Raises KeyDown on each form around the control that sets KeyPreview, innermost first, the way
-        // WinForms previews a key message (Control.ProcessKeyPreview up the parent chain). Returns true when
-        // one of them handled the key, so the control does not see it.
-        private static bool RaiseKeyPreview(Control control, KeyEventArgs e)
-        {
-            for (var parent = control.Parent; parent != null; parent = parent.Parent)
-            {
-                if (parent is Form { KeyPreview: true } form)
-                {
-                    RaiseProtectedHandler<Control>(form, @"OnKeyDown", e);
-                    if (e.Handled)
-                        return true;
-                }
-            }
-            return false;
+            KeyStroke.Press(Control, ParseKeyStroke(keyStroke));
         }
 
         /// <summary>Brings up the tooltip of the item at <paramref name="itemBounds"/> (client coordinates) the way a
@@ -1153,23 +1127,12 @@ namespace pwiz.Skyline.ToolsUI
         public override string DetailedMessage => (Form as CommonFormEx)?.DetailedMessage ?? Form.Text;
 
         /// <summary>Presses a key on the form itself, as while it is the active window with no particular
-        /// control in mind: its command keys first (ProcessCmdKey - the main window's menu shortcuts, e.g. F11
-        /// for Auto-Zoom Best Peak), then its dialog keys (ProcessDialogKey - Enter and Escape for a dialog's
-        /// OK and Cancel), then its own KeyDown. The key carries its modifiers, so the real keyboard state is
-        /// not involved.</summary>
+        /// control in mind (see <see cref="KeyStroke"/>): its command keys first (the main window's menu
+        /// shortcuts, e.g. F11 for Auto-Zoom Best Peak), then its dialog keys (Enter and Escape for a dialog's
+        /// OK and Cancel), then its own KeyDown.</summary>
         public void SendKeyStrokeNow(string keyStroke)
         {
-            var keyData = ControlElement.ParseKeyStroke(keyStroke);
-            var msg = Message.Create(Form.Handle, (int) User32.WinMessageType.WM_KEYDOWN,
-                (IntPtr) (int) (keyData & Keys.KeyCode), IntPtr.Zero);
-            var args = new object[] { msg, keyData };
-            if ((bool) typeof(Control).GetMethod(@"ProcessCmdKey", BindingFlags.Instance | BindingFlags.NonPublic)
-                    .Invoke(Form, args))
-                return;
-            if ((bool) typeof(Control).GetMethod(@"ProcessDialogKey", BindingFlags.Instance | BindingFlags.NonPublic)
-                    .Invoke(Form, new object[] { keyData }))
-                return;
-            ControlElement.RaiseProtectedHandler<Control>(Form, @"OnKeyDown", new KeyEventArgs(keyData));
+            KeyStroke.Press(Form, ControlElement.ParseKeyStroke(keyStroke));
         }
 
         // Only the main Skyline window pastes / selects all at the window level (into/over the document); any
@@ -1789,7 +1752,9 @@ namespace pwiz.Skyline.ToolsUI
         public override ContextMenuStrip BuildContextMenu() =>
             OpenContextMenu(Program.MainWindow.ContextMenuTreeNode);
 
-        public override void SendKeyStrokeNow(string keyStroke) => SequenceTree.PressKey(ParseKeyStroke(keyStroke));
+        // While a label is being edited, a key goes to its edit box, as a user's would.
+        public override void SendKeyStrokeNow(string keyStroke) =>
+            KeyStroke.Press(SequenceTree.KeyTarget, ParseKeyStroke(keyStroke));
     }
 
     /// <summary>The list on the completion pop-up that typing into the Targets tree brings up (a

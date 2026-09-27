@@ -594,13 +594,12 @@ namespace SkylineTool
         /// popup, or to paste with "Ctrl+V" where the form's own handler does the pasting. The control is
         /// verified enabled first.
         ///
-        /// <para>This raises the control's KeyDown with the named key and modifiers, which is where a WinForms
-        /// handler reads a keystroke from, after any form around it that previews keys (KeyPreview) has
-        /// seen it, as for a user's key. A key handled by the control's DEFAULT behavior rather than by a
-        /// handler - Backspace editing a text box, an arrow moving a plain list's selection - will NOT take
-        /// effect through this. The Targets tree is the exception for its navigation keys: Up, Down, Home, End,
-        /// Page Up and Page Down move its selection and Left and Right collapse and expand, as they do for a
-        /// user.</para>
+        /// <para>The key goes through everything a real press does: keyboard shortcuts and dialog keys first
+        /// (the control's PreProcessMessage), then the key-down message - seen by any form around it that
+        /// previews keys, by KeyDown handlers, and by the control's own window procedure (an arrow moving a
+        /// list's selection) - then the character the key types (Backspace editing a text box), unless a
+        /// handler suppressed it, then the key-up. The modifiers are in the thread's keyboard state while the
+        /// key is pressed, as they are for a user.</para>
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="controlId">The control to press the key on, matched as <see cref="GetControls"/>

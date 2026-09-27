@@ -1145,39 +1145,12 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        // The keys the tree's own window procedure acts on, rather than a KeyDown handler.
-        private static readonly Keys[] NAVIGATION_KEYS =
-        {
-            Keys.Up, Keys.Down, Keys.Left, Keys.Right, Keys.Home, Keys.End, Keys.PageUp, Keys.PageDown
-        };
-
         /// <summary>
-        /// Presses a key, with its modifiers, whether or not the tree has the focus, for the AI connector, which
-        /// does not move the focus. The key goes where a user's would: to the label's edit box while a label is
-        /// being edited (Down and Up move through the completion pop-up, Enter accepts, Esc cancels), otherwise to
-        /// the tree. A navigation key (an arrow, Home, End, Page Up, Page Down) moves the selection, or collapses
-        /// and expands, in the tree's own window procedure rather than in a KeyDown handler, so it arrives as the
-        /// key message a press sends and WinForms raises KeyDown from it before handing it on. Any other key, and
-        /// a navigation key with a modifier (Ctrl+Home), raises KeyDown with the modifiers given, which a key
-        /// message could not carry.
+        /// The control a key pressed on the tree goes to, for the AI connector, which does not move the focus:
+        /// the label's edit box while a label is being edited (Down and Up move through the completion pop-up,
+        /// Enter accepts, Esc cancels), otherwise the tree itself.
         /// </summary>
-        public void PressKey(Keys keyData)
-        {
-            if (_editTextBox != null)
-                ((LabelTextBox) _editTextBox.TextBox).PressKey(keyData);
-            else if (NAVIGATION_KEYS.Contains(keyData))
-                User32.SendMessage(Handle, User32.WinMessageType.WM_KEYDOWN, (IntPtr) keyData, (IntPtr) 1);
-            else
-                OnKeyDown(new KeyEventArgs(keyData));
-        }
-
-        private class LabelTextBox : TextBox
-        {
-            public void PressKey(Keys keyData)
-            {
-                OnKeyDown(new KeyEventArgs(keyData));
-            }
-        }
+        public Control KeyTarget => (Control) _editTextBox?.TextBox ?? this;
 
         protected override void OnBeforeLabelEdit(NodeLabelEditEventArgs e)
         {
@@ -1269,7 +1242,7 @@ namespace pwiz.Skyline.Controls
 
         private void BeginEditNode(TreeNode node, bool commitOnLoseFocus)
         {
-            var textBox = new LabelTextBox
+            var textBox = new TextBox
             {
                 Text = node.Text,
                 Bounds = node is TreeNodeMS ? (node as TreeNodeMS).BoundsMS : node.Bounds,

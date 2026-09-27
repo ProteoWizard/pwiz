@@ -958,14 +958,13 @@ public static class SkylineTools
     }
 
     [McpServerTool(Name = "skyline_send_key_stroke"),
-     Description("Press one key on a control, whether or not it has the focus - e.g. to accept or step " +
-        "through a popup, or to paste with 'Ctrl+V' where a form's own handler does the pasting. " +
-        "A form that previews keys sees the key first, as it does for a user (e.g. Escape on a graph returns " +
-        "to the Targets view). NOTE: this raises the control's KeyDown, so a key handled by the control's DEFAULT behavior rather " +
-        "than by a handler - Backspace editing a text box, an arrow moving a plain list's selection - will " +
-        "NOT take effect. The Targets tree is the exception for its navigation keys: Up, Down, Home, End, PgUp " +
-        "and PgDn move its selection and Left and Right collapse and expand, as they do for a user. Discover control names with " +
-        "skyline_get_controls.")]
+     Description("Press one key on a control, whether or not it has the focus, as the keyboard does - e.g. to " +
+        "accept or step through a popup, to paste with 'Ctrl+V', or to move through a list or tree with the " +
+        "arrows, Home and End. The key goes through everything a real press does: keyboard shortcuts and dialog " +
+        "keys first, then a form that previews keys (e.g. Escape on a graph returns to the Targets view), the " +
+        "control's own handlers and behavior (an arrow moving a list's selection, Backspace editing text), then " +
+        "the character the key types. In the Targets tree while a label is being edited, keys go to the edit " +
+        "box. Discover control names with skyline_get_controls.")]
     public static string SendKeyStroke(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
         [Description("Control to press the key on, as skyline_get_controls reports it; empty to press it on the " +
