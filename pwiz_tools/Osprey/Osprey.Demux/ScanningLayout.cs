@@ -1,0 +1,183 @@
+/*
+ * Original author: Michael MacCoss <maccoss .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+
+namespace pwiz.Osprey.Demux
+{
+    /// <summary>How demultiplexed scanning data is laid out in output spectra.</summary>
+    public enum ScanningLayoutKind
+    {
+        /// <summary>
+        /// One spectrum per encoded bin, under that bin's own window, carrying the demultiplexed
+        /// signal of the k positions centered on it: each precursor sits in the middle of what
+        /// its spectrum carries.
+        /// </summary>
+        centered,
+
+        /// <summary>
+        /// One spectrum per k consecutive encoded bins, under their combined window: ordinary
+        /// narrow-window DIA, about k times fewer spectra.
+        /// </summary>
+        tiled,
+    }
+
+    /// <summary>One output spectrum of a layout, as encoded bin ranges.</summary>
+    public struct ScanningOutputSpectrum
+    {
+        public ScanningOutputSpectrum(int firstBin, int lastBin, int firstSourceBin, int lastSourceBin)
+        {
+            FirstBin = firstBin;
+            LastBin = lastBin;
+            FirstSourceBin = firstSourceBin;
+            LastSourceBin = lastSourceBin;
+        }
+
+        /// <summary>First encoded bin of the spectrum's isolation window.</summary>
+        public int FirstBin { get; }
+
+        /// <summary>Last encoded bin of the spectrum's isolation window.</summary>
+        public int LastBin { get; }
+
+        /// <summary>First source position whose demultiplexed signal the spectrum carries.</summary>
+        public int FirstSourceBin { get; }
+
+        /// <summary>Last source position whose demultiplexed signal the spectrum carries.</summary>
+        public int LastSourceBin { get; }
+    }
+
+    /// <summary>
+    /// A layout of demultiplexed scanning data into spectra: <c>centered:k</c> (k odd) or
+    /// <c>tiled:k</c>, k encoded bins per spectrum.
+    /// </summary>
+    /// <remarks>
+    /// One sweep's counts cannot place a fragment within one 1.18 Th encoded bin, so each
+    /// spectrum carries several neighboring source positions. Measured on a ZT Scan slice with
+    /// DIA-NN: one position per spectrum halved identifications, 3 lost about 12%, and 5 matched
+    /// the undemultiplexed data at about half its window width.
+    /// </remarks>
+    public sealed class ScanningLayout
+    {
+        /// <summary>Peaks of one channel from neighboring positions closer than this merge, in ppm.</summary>
+        public const double MERGE_PPM = 5.0;
+
+        public ScanningLayout(ScanningLayoutKind kind, int bins)
+        {
+            if (bins < 1)
+                throw new ArgumentOutOfRangeException(nameof(bins));
+            if (kind == ScanningLayoutKind.centered && bins % 2 == 0)
+                throw new ArgumentException(@"A centered layout needs an odd number of bins.");
+            Kind = kind;
+            Bins = bins;
+        }
+
+        /// <summary>Parses <c>centered:5</c> or <c>tiled:5</c>.</summary>
+        public static ScanningLayout Parse(string text)
+        {
+            string[] parts = text.Split(':');
+            if (parts.Length != 2 || !Enum.TryParse(parts[0], out ScanningLayoutKind kind) ||
+                !int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out int bins))
+            {
+                throw new FormatException(string.Format(CultureInfo.InvariantCulture,
+                    @"'{0}' is not a scanning layout (centered:k or tiled:k).", text));
+            }
+            return new ScanningLayout(kind, bins);
+        }
+
+        public ScanningLayoutKind Kind { get; }
+        public int Bins { get; }
+
+        /// <summary>A short name, for file names and provenance: centered5, tiled5.</summary>
+        public string Name
+        {
+            get { return Kind.ToString() + Bins.ToString(CultureInfo.InvariantCulture); }
+        }
+
+        /// <summary>The output spectra of one sweep, for the encoded bins firstBin to lastBin.</summary>
+        public List<ScanningOutputSpectrum> Plan(int firstBin, int lastBin)
+        {
+            var spectra = new List<ScanningOutputSpectrum>();
+            if (Kind == ScanningLayoutKind.centered)
+            {
+                int half = Bins / 2;
+                for (int b = firstBin; b <= lastBin; b++)
+                    spectra.Add(new ScanningOutputSpectrum(b, b, b - half, b + half));
+            }
+            else
+            {
+                for (int b = firstBin; b <= lastBin; b += Bins)
+                {
+                    int last = Math.Min(lastBin, b + Bins - 1);
+                    spectra.Add(new ScanningOutputSpectrum(b, last, b, last));
+                }
+            }
+            return spectra;
+        }
+
+        /// <summary>
+        /// The peaks of one output spectrum: the pass-through peaks of its own bins as acquired,
+        /// and the demultiplexed peaks of its source positions, with one channel's peaks from
+        /// neighboring positions (closer than <see cref="MERGE_PPM"/>) summed at their
+        /// intensity-weighted m/z. Sorted by m/z.
+        /// </summary>
+        public static void Assemble(IEnumerable<ScanningPeak> passedThrough, IEnumerable<ScanningPeak> demultiplexed,
+            out double[] mz, out double[] ions)
+        {
+            var dem = new List<ScanningPeak>(demultiplexed);
+            dem.Sort(CompareMz); // Array.Sort OK: ties broken by bin and intensity in CompareMz
+            var merged = new List<(double Mz, double Ions)>();
+            int i = 0;
+            while (i < dem.Count)
+            {
+                double sum = dem[i].Ions, weighted = dem[i].Ions * dem[i].Mz;
+                int j = i + 1;
+                while (j < dem.Count && dem[j].Mz - dem[j - 1].Mz <= dem[j].Mz * MERGE_PPM * 1e-6)
+                {
+                    sum += dem[j].Ions;
+                    weighted += dem[j].Ions * dem[j].Mz;
+                    j++;
+                }
+                merged.Add((weighted / sum, sum));
+                i = j;
+            }
+            foreach (var peak in passedThrough)
+                merged.Add((peak.Mz, peak.Ions));
+            merged.Sort((a, b) => a.Mz != b.Mz ? a.Mz.CompareTo(b.Mz) : a.Ions.CompareTo(b.Ions)); // Array.Sort OK: equal m/z ordered by intensity
+            mz = new double[merged.Count];
+            ions = new double[merged.Count];
+            for (int k = 0; k < merged.Count; k++)
+            {
+                mz[k] = merged[k].Mz;
+                ions[k] = merged[k].Ions;
+            }
+        }
+
+        private static int CompareMz(ScanningPeak a, ScanningPeak b)
+        {
+            int byMz = a.Mz.CompareTo(b.Mz);
+            if (byMz != 0)
+                return byMz;
+            int byBin = a.Bin.CompareTo(b.Bin);
+            return byBin != 0 ? byBin : a.Ions.CompareTo(b.Ions);
+        }
+    }
+}

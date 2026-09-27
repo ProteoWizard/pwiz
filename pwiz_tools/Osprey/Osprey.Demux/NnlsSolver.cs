@@ -154,19 +154,57 @@ namespace pwiz.Osprey.Demux
             return SolveActiveSet(b, x, workspace);
         }
 
+        /// <summary>
+        /// Solves min ||A x - b||^2 subject to x &gt;= 0 from its normal equations: the n x n
+        /// row-major Gram matrix <paramref name="ata"/> = A^T A (or A^T W A for row weights W)
+        /// and <paramref name="atb"/> = A^T b. For callers whose design matrix changes from solve
+        /// to solve, where building an <see cref="NnlsSolver"/> each time would cost more than the
+        /// solve. <paramref name="atb"/> is not modified; the solution goes to the first
+        /// <paramref name="n"/> entries of <paramref name="x"/>.
+        /// </summary>
+        public static NnlsPath SolveNormal(double[] ata, double[] atb, int n, double[] x, Workspace workspace,
+            int maxIterations = 0)
+        {
+            Array.Clear(x, 0, n);
+            bool allZero = true;
+            for (int c = 0; c < n; c++)
+            {
+                if (atb[c] != 0)
+                {
+                    allZero = false;
+                    break;
+                }
+            }
+            if (allZero)
+                return NnlsPath.zero;
+            Array.Copy(atb, workspace.Atb, n);
+            return ActiveSet(ata, n, maxIterations > 0 ? maxIterations : 3 * Math.Max(1, n), x, workspace);
+        }
+
         private NnlsPath SolveActiveSet(double[] b, double[] x, Workspace ws)
         {
             int n = _columns;
             var atb = ws.Atb;
-            double scale = 0;
             for (int c = 0; c < n; c++)
             {
                 double sum = 0;
                 for (int r = 0; r < _rows; r++)
                     sum += _a[r * n + c] * b[r];
                 atb[c] = sum;
-                scale = Math.Max(scale, Math.Abs(sum));
             }
+            return ActiveSet(_ata, n, _maxIterations, x, ws);
+        }
+
+        /// <summary>
+        /// Lawson-Hanson on the normal equations, from x = 0, with A^T b already in the
+        /// workspace's <see cref="Workspace.Atb"/>.
+        /// </summary>
+        private static NnlsPath ActiveSet(double[] ata, int n, int maxIterations, double[] x, Workspace ws)
+        {
+            var atb = ws.Atb;
+            double scale = 0;
+            for (int c = 0; c < n; c++)
+                scale = Math.Max(scale, Math.Abs(atb[c]));
             // Gradient tolerance relative to the problem's own scale, so intensities of 1e2
             // and 1e8 converge the same way.
             double tolerance = 1e-12 * Math.Max(scale, double.Epsilon) * n;
@@ -181,7 +219,7 @@ namespace pwiz.Osprey.Demux
 
             while (true)
             {
-                ComputeGradient(atb, x, w);
+                ComputeGradient(ata, n, atb, x, w);
                 int enter = -1;
                 double best = tolerance;
                 for (int c = 0; c < n; c++)
@@ -201,9 +239,9 @@ namespace pwiz.Osprey.Demux
                 bool firstPass = true;
                 while (true)
                 {
-                    if (++iterations > _maxIterations)
+                    if (++iterations > maxIterations)
                         return NnlsPath.iteration_cap;
-                    if (!SolvePassive(atb, passive, z, ws))
+                    if (!SolvePassive(ata, n, atb, passive, z, ws))
                     {
                         // The passive columns became numerically dependent; the entering column
                         // cannot help, so exclude it and look for another.
@@ -257,14 +295,13 @@ namespace pwiz.Osprey.Demux
             }
         }
 
-        private void ComputeGradient(double[] atb, double[] x, double[] w)
+        private static void ComputeGradient(double[] ata, int n, double[] atb, double[] x, double[] w)
         {
-            int n = _columns;
             for (int i = 0; i < n; i++)
             {
                 double sum = atb[i];
                 for (int j = 0; j < n; j++)
-                    sum -= _ata[i * n + j] * x[j];
+                    sum -= ata[i * n + j] * x[j];
                 w[i] = sum;
             }
         }
@@ -274,9 +311,8 @@ namespace pwiz.Osprey.Demux
         /// writing zeros elsewhere. Returns false if that block of A^T A is not positive
         /// definite.
         /// </summary>
-        private bool SolvePassive(double[] atb, bool[] passive, double[] z, Workspace ws)
+        private static bool SolvePassive(double[] ata, int n, double[] atb, bool[] passive, double[] z, Workspace ws)
         {
-            int n = _columns;
             var index = ws.Index;
             int p = 0;
             for (int c = 0; c < n; c++)
@@ -286,7 +322,7 @@ namespace pwiz.Osprey.Demux
                     index[p++] = c;
             }
             var l = ws.Factor;
-            if (!CholeskyFactor(_ata, n, index, p, l))
+            if (!CholeskyFactor(ata, n, index, p, l))
                 return false;
             var y = ws.Scratch;
             for (int i = 0; i < p; i++)
@@ -383,6 +419,7 @@ namespace pwiz.Osprey.Demux
         {
             public Workspace(int columns)
             {
+                Capacity = columns;
                 Atb = new double[columns];
                 Gradient = new double[columns];
                 Candidate = new double[columns];
@@ -392,6 +429,9 @@ namespace pwiz.Osprey.Demux
                 Factor = new double[columns * columns];
                 Scratch = new double[columns];
             }
+
+            /// <summary>The most columns a solver may have to use this workspace.</summary>
+            public int Capacity { get; }
 
             internal double[] Atb { get; }
             internal double[] Gradient { get; }

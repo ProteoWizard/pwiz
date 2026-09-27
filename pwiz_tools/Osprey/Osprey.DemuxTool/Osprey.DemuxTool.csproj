@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>pwiz.Osprey.DemuxTool</RootNamespace>
+    <AssemblyName>Osprey.DemuxTool</AssemblyName>
+  </PropertyGroup>
+
+  <!-- An evaluation tool: reads an mzML with pwiz-sharp, demultiplexes it with Osprey.Demux
+       and writes mzML, so the demultiplexing can be judged by any search engine. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Osprey.Demux\Osprey.Demux.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\MsData\MsData.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Analysis\Analysis.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Common\Common.csproj" />
+  </ItemGroup>
+
+</Project>
