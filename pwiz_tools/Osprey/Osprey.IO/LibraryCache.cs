@@ -54,8 +54,14 @@ namespace pwiz.Osprey.IO
         /// not a stale v3, it is a different thing, and reading one as v3 would hand every
         /// consumer parse-order decoy ids. The header hash widened to match (see
         /// <c>LibraryLoader.LibraryCompositionHash</c>), so a v2 file fails both checks.
+        ///
+        /// <para>v4: the loader now refuses a library whose manifest lists a decoy's sequence as
+        /// a target, a case that used to give two decoys one entry_id. A v3 cache can hold that
+        /// finished, colliding state, and the composition hash does not change with the build.
+        /// The cached-path backstop would still refuse it, but only with the generic shared-id
+        /// message; the bump forces the rebuild that produces the per-row listing.</para>
         /// </remarks>
-        private const uint VERSION = 3;
+        private const uint VERSION = 4;
 
         /// <summary>
         /// Outcome of a <see cref="LoadCache(string,string,out LibraryCacheStatus)"/>
