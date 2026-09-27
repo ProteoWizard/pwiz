@@ -1874,7 +1874,10 @@ namespace pwiz.Skyline.ToolsUI
             switch (control)
             {
                 case ListBox listBox: // CheckedListBox derives from ListBox
-                    listBox.SetSelected(FindListItemIndex(listBox, item), selected);
+                    int index = FindListItemIndex(listBox, item);
+                    listBox.SetSelected(index, selected);
+                    if (selected)
+                        MakeCurrent(listBox, index);
                     break;
                 case TreeView treeView:
                     var node = FindTreeNode(treeView, item);
@@ -1887,7 +1890,10 @@ namespace pwiz.Skyline.ToolsUI
                     var listViewItem = FindListViewItem(listView, item);
                     listViewItem.Selected = selected;
                     if (selected)
+                    {
+                        MakeCurrent(listViewItem);
                         listViewItem.EnsureVisible();
+                    }
                     break;
                 default:
                     throw new ArgumentException(LlmInstruction.Format(
@@ -1906,6 +1912,7 @@ namespace pwiz.Skyline.ToolsUI
                     RequireIndexInRange(index, listBox.Items.Count, listBox.Name);
                     listBox.ClearSelected();
                     listBox.SetSelected(index, true);
+                    MakeCurrent(listBox, index);
                     break;
                 case TreeView treeView:
                     RequireIndexInRange(index, treeView.Nodes.Count, treeView.Name);
@@ -1916,11 +1923,32 @@ namespace pwiz.Skyline.ToolsUI
                     listView.SelectedItems.Clear();
                     var listViewItem = listView.Items[index];
                     listViewItem.Selected = true;
+                    MakeCurrent(listViewItem);
                     listViewItem.EnsureVisible();
                     break;
                 default:
                     throw new ArgumentException(LlmInstruction.Format(
                         @"Setting the selected index is supported for a ListBox, TreeView, or ListView, not {0}.", control.Name));
+            }
+        }
+
+        // Clicking an item makes it the list's current item as well as selecting it: the one the keyboard moves
+        // on from (the focused item) and the one Shift extends a range from (the anchor). A tree's selected node
+        // is already both.
+        private static void MakeCurrent(ListViewItem item)
+        {
+            item.Focused = true;
+            User32.SendMessage(item.ListView.Handle, User32.WinMessageType.LVM_SETSELECTIONMARK,
+                IntPtr.Zero, (IntPtr) item.Index);
+        }
+
+        private static void MakeCurrent(ListBox listBox, int index)
+        {
+            // A single-selection list moves its caret with its selection; a multi-selection one does not.
+            if (listBox.SelectionMode == SelectionMode.MultiSimple || listBox.SelectionMode == SelectionMode.MultiExtended)
+            {
+                User32.SendMessage(listBox.Handle, User32.WinMessageType.LB_SETANCHORINDEX, (IntPtr) index, IntPtr.Zero);
+                User32.SendMessage(listBox.Handle, User32.WinMessageType.LB_SETCARETINDEX, (IntPtr) index, IntPtr.Zero);
             }
         }
 
