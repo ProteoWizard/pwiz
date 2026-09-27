@@ -163,9 +163,6 @@
   <data name="ReportsAddForm_btnAddRScript_Click_Could_not_find_any_R_Installations_in__" xml:space="preserve">
     <value>Could not find any R Installations in: </value>
   </data>
-  <data name="Program_SendAnalyticsHit_There_was_an_error_connecting_to__0___Skipping_sending_analytics_" xml:space="preserve">
-    <value>There was an error connecting to {0}. Skipping sending analytics.</value>
-  </data>
   <data name="ReportInfo_ValidateReportPath_report_path" xml:space="preserve">
     <value>report path</value>
   </data>

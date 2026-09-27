@@ -265,7 +265,7 @@ namespace pwiz.Osprey.Tasks
             if (staleRunInfo)
             {
                 ctx.LogWarning(string.Format(
-                    @"[TRAIN-EXPORT] {0}: run info '{1}' describes a different version of the source than the spectra " +
+                    @"{0}: run info '{1}' describes a different version of the source than the spectra " +
                     @"cache does (size or mtime), so it is ignored and the instrument and collision-energy footer keys " +
                     @"are empty. Rebuilding the spectra cache rewrites it.", stem, runInfoPath));
                 runInfo = null;
@@ -307,33 +307,33 @@ namespace pwiz.Osprey.Tasks
             TrainingExportParquet.Write(output, records, metadata, settings.WriteXics);
             sw.Stop();
 
-            ctx.LogInfo(string.Format(
-                @"[TRAIN-EXPORT] {0}: {1:N0} target precursors at run q <= {2} ({3:N0} entrapment) of {4:N0} reconciled targets in {5:F1}s",
+            ctx.LogInfo(LogTag.TRAIN_EXPORT, string.Format(
+                @"{0}: {1:N0} target precursors at run q <= {2} ({3:N0} entrapment) of {4:N0} reconciled targets in {5:F1}s",
                 stem, records.Count, maxQ.ToString(@"R", CultureInfo.InvariantCulture), nEntrapment, targets.Count,
                 sw.Elapsed.TotalSeconds));
-            ctx.LogInfo(string.Format(@"[TRAIN-EXPORT] mp_cosine parity: {0}/{1}", nParity, records.Count));
+            ctx.LogInfo(LogTag.TRAIN_EXPORT, string.Format(@"mp_cosine parity: {0}/{1}", nParity, records.Count));
             if (nParity != records.Count)
             {
                 ctx.LogWarning(string.Format(
-                    @"[TRAIN-EXPORT] {0}: {1:N0} of {2:N0} exported precursors did not reproduce the scored median_polish_cosine.",
+                    @"{0}: {1:N0} of {2:N0} exported precursors did not reproduce the scored median_polish_cosine.",
                     stem, records.Count - nParity, records.Count));
             }
             if (nUnplaced > 0)
             {
                 ctx.LogWarning(string.Format(
-                    @"[TRAIN-EXPORT] {0}: {1:N0} precursors had no isolation window holding their apex scan and were not exported.",
+                    @"{0}: {1:N0} precursors had no isolation window holding their apex scan and were not exported.",
                     stem, nUnplaced));
             }
             if (nNoLibrary > 0)
             {
                 ctx.LogWarning(string.Format(
-                    @"[TRAIN-EXPORT] {0}: {1:N0} reconciled targets have no library spectrum and were skipped.",
+                    @"{0}: {1:N0} reconciled targets have no library spectrum and were skipped.",
                     stem, nNoLibrary));
             }
             if (runInfo == null && !staleRunInfo)
             {
                 ctx.LogWarning(string.Format(
-                    @"[TRAIN-EXPORT] {0}: no run info at '{1}' (written when the spectra cache is built); " +
+                    @"{0}: no run info at '{1}' (written when the spectra cache is built); " +
                     @"the instrument and collision-energy footer keys are empty.", stem, runInfoPath));
             }
         }
@@ -572,7 +572,7 @@ namespace pwiz.Osprey.Tasks
             {
                 RetainFragmentsFor = ScoringTaskShared.ReadRetainedBaseIds(ctx.Config, out _),
             };
-            var library = LibraryLoader.Load(ctx.Config, options, ctx.LogInfo, ctx.LogWarning, out string error);
+            var library = LibraryLoader.Load(ctx.Config, options, ctx, ctx.LogWarning, out string error);
             if (error != null || library == null || library.Count == 0)
             {
                 ctx.LogError(error ?? @"Library is empty after loading");
