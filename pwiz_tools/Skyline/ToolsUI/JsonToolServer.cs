@@ -1136,9 +1136,9 @@ namespace pwiz.Skyline.ToolsUI
                 UiActions.SendText.InvokeNow(form.FindElement(controlId, UiActions.SendText), text));
         }
 
-        // A blank control presses the key on the form itself -- every control takes a key, so "the one control
-        // that supports the action" would never be a single answer, and a key a user presses with the window
-        // active (a menu shortcut, Enter or Escape on a dialog) belongs to the form, not to one of its controls.
+        // A blank control presses the key where the keyboard would with the window active -- on its focused
+        // control, or the form -- since every control takes a key, so "the one control that supports the
+        // action" would never be a single answer.
         public ActionResult SendKeyStroke(string formId, string controlId, string keyStroke)
         {
             return InvokeOnForm<StandaloneForm>(formId, form =>

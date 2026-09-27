@@ -1126,13 +1126,24 @@ namespace pwiz.Skyline.ToolsUI
         public override bool IsProgressing => Form is ILongWaitForm { IsBusy: true };
         public override string DetailedMessage => (Form as CommonFormEx)?.DetailedMessage ?? Form.Text;
 
-        /// <summary>Presses a key on the form itself, as while it is the active window with no particular
-        /// control in mind (see <see cref="KeyStroke"/>): its command keys first (the main window's menu
-        /// shortcuts, e.g. F11 for Auto-Zoom Best Peak), then its dialog keys (Enter and Escape for a dialog's
-        /// OK and Cancel), then its own KeyDown.</summary>
+        /// <summary>Presses a key on the form as the keyboard does while it is the active window: on the
+        /// control that has the focus in it, or on the form itself when none does (see <see cref="KeyStroke"/>).
+        /// So its shortcuts (the main window's F11 for Auto-Zoom Best Peak), its dialog keys (Enter and Escape
+        /// for a dialog's OK and Cancel) and the focused control's own keys (Escape closing a pick-list, Home in
+        /// the Targets tree) all work.</summary>
         public void SendKeyStrokeNow(string keyStroke)
         {
-            KeyStroke.Press(Form, ControlElement.ParseKeyStroke(keyStroke));
+            KeyStroke.Press(FocusedControl(Form), ControlElement.ParseKeyStroke(keyStroke));
+        }
+
+        // The control a key goes to: each container's active control in turn, down through nested containers
+        // (a docked pane is a form within the main window), or the form itself when nothing in it is active.
+        private static Control FocusedControl(Form form)
+        {
+            Control control = form;
+            while (control is ContainerControl { ActiveControl: { } active })
+                control = active;
+            return control;
         }
 
         // Only the main Skyline window pastes / selects all at the window level (into/over the document); any
