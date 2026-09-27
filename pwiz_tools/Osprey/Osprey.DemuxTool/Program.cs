@@ -137,6 +137,7 @@ namespace pwiz.Osprey.DemuxTool
             var msd = new MSData();
             ReaderList.Default.Read(input, msd);
             var spectra = msd.Run.SpectrumList;
+            Console.WriteLine(@"Opened {0} spectra in {1:F0} s", spectra.Count, stopwatch.Elapsed.TotalSeconds);
             if (SpectrumList_PeakPicker.SupportsVendorPeakPicking(input))
             {
                 // A vendor file (.wiff2) is read directly, centroided by the vendor library as

@@ -138,7 +138,8 @@ namespace pwiz.Osprey.DemuxTool
         public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
         {
             var (k, bin) = _output[index];
-            var spectrum = Inner.GetSpectrum(k, getBinaryData);
+            // A demultiplexed spectrum's peaks are replaced, so only a pass-through reads the acquired peaks.
+            var spectrum = Inner.GetSpectrum(k, getBinaryData && bin < 0);
             spectrum.Index = index;
             if (bin < 0)
                 return spectrum;

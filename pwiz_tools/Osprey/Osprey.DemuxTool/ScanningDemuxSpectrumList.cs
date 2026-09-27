@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Pwiz.Analysis;
 using Pwiz.Data.Common.Cv;
@@ -72,8 +73,8 @@ namespace pwiz.Osprey.DemuxTool
     /// </summary>
     /// <remarks>
     /// Blocks of sweeps are read in order, a batch at a time, and demultiplexed in parallel, one
-    /// task per block of encoded bins. The writer asks for spectra in index order, so only the
-    /// current batch is resident.
+    /// task per block of encoded bins, while the next batch is read. The writer asks for spectra
+    /// in index order, so only the current batch and the next one's sweeps are resident.
     /// </remarks>
     internal sealed class ScanningDemuxSpectrumList : SpectrumListWrapper
     {
@@ -177,7 +178,8 @@ namespace pwiz.Osprey.DemuxTool
         public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
         {
             var (cycle, slot) = _output[index];
-            var spectrum = Inner.GetSpectrum(InnerIndex(index), getBinaryData);
+            // A layout spectrum's peaks are replaced, so only an MS1 reads the acquired peaks.
+            var spectrum = Inner.GetSpectrum(InnerIndex(index), getBinaryData && slot < 0);
             spectrum.Index = index;
             if (slot < 0)
                 return spectrum;
@@ -225,15 +227,23 @@ namespace pwiz.Osprey.DemuxTool
                     return cached;
                 foreach (int old in _built.Keys.Where(c => c < cycle).ToList())
                     _built.Remove(old);
-                int blocksPerBatch = Math.Max(1, 2 * _options.Threads /
-                    Math.Max(1, (_lastOutBin - _firstOutBin + _options.GroupBins) / _options.GroupBins));
-                int batchLast = Math.Min(LastCycle, cycle + blocksPerBatch * _options.BlockCycles - 1);
+                int batchLast = Math.Min(LastCycle, cycle + BatchCycles - 1);
                 if (_options.Raw)
                     BuildRaw(cycle, batchLast);
                 else
                     BuildDemux(cycle, batchLast);
                 _log.WriteLine(@"  sweeps {0}-{1} of {2} written", cycle, batchLast, CycleCount);
                 return _built[cycle];
+            }
+        }
+
+        /// <summary>Sweeps demultiplexed together: enough blocks to keep every thread busy.</summary>
+        private int BatchCycles
+        {
+            get
+            {
+                int groups = Math.Max(1, (_lastOutBin - _firstOutBin + _options.GroupBins) / _options.GroupBins);
+                return Math.Max(1, 2 * _options.Threads / groups) * _options.BlockCycles;
             }
         }
 
@@ -287,9 +297,36 @@ namespace pwiz.Osprey.DemuxTool
             }
 
             double unitSeconds = clock.Elapsed.TotalSeconds - readSeconds;
+
+            // Solve on worker threads while this thread reads the next batch's sweeps. The units
+            // hold copies of their peaks, and the source spectra are read from this thread only.
             var results = new ScanningUnitResult[units.Count];
-            Parallel.For(0, units.Count, new ParallelOptions { MaxDegreeOfParallelism = _options.Threads },
-                i => results[i] = ScanningDemultiplexer.DemuxUnit(units[i], _options.Parameters));
+            Exception solveException = null;
+            var solver = new Thread(() =>
+            {
+                try
+                {
+                    Parallel.For(0, units.Count, new ParallelOptions { MaxDegreeOfParallelism = _options.Threads },
+                        i => results[i] = ScanningDemultiplexer.DemuxUnit(units[i], _options.Parameters));
+                }
+                catch (Exception e)
+                {
+                    solveException = e;
+                }
+            });
+            solver.IsBackground = true;
+            solver.Name = @"ScanningDemuxSolve";
+            solver.Start();
+            if (lastCycle < LastCycle)
+            {
+                int nextPadHi = Math.Min(CycleCount - 1, Math.Min(LastCycle, lastCycle + BatchCycles) + _options.CyclePad);
+                for (int c = padHi + 1; c <= nextPadHi; c++)
+                    SweepPeaks(c);
+            }
+            double readAheadSeconds = clock.Elapsed.TotalSeconds - readSeconds - unitSeconds;
+            solver.Join();
+            if (solveException != null)
+                throw new AggregateException(@"Exception while demultiplexing sweeps", solveException);
             double solveSeconds = clock.Elapsed.TotalSeconds - readSeconds - unitSeconds;
 
             // Peaks by (cycle, bin), then each layout spectrum from its bins and source positions.
@@ -321,9 +358,9 @@ namespace pwiz.Osprey.DemuxTool
                 }
                 _built[cycle] = spectra;
             }
-            _log.WriteLine(@"  read {0:F1} s, units {1:F1} s, solve {2:F1} s, layout {3:F1} s ({4} units)", readSeconds,
-                unitSeconds, solveSeconds, clock.Elapsed.TotalSeconds - readSeconds - unitSeconds - solveSeconds,
-                units.Count);
+            _log.WriteLine(@"  read {0:F1} s, units {1:F1} s, solve {2:F1} s (read ahead {3:F1} s), layout {4:F1} s ({5} units)",
+                readSeconds, unitSeconds, solveSeconds, readAheadSeconds,
+                clock.Elapsed.TotalSeconds - readSeconds - unitSeconds - solveSeconds, units.Count);
         }
 
         private static ScanningUnit MakeUnit(double[,] a, int[] rowBins, int[] columnBins, int[] cycles, int g0, int g1,
