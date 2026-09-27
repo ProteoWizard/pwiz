@@ -41,7 +41,7 @@ namespace pwiz.Osprey.DemuxTool
         private const string USAGE =
             @"Usage: Osprey.DemuxTool --in <run.wiff2|.raw|.mzML> --out <demux.mzML> [--scheme scanning|staggered]" +
             @" [--kernel <profile.tsv>] [--layout centered:5|tiled:5] [--threads N] [--cycles first:last]" +
-            @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--unweighted] [--raw]";
+            @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--unweighted] [--raw]";
 
         private static int Main(string[] args)
         {
@@ -85,6 +85,15 @@ namespace pwiz.Osprey.DemuxTool
                         break;
                     case @"--counts-per-ion":
                         options.CountsPerIon = double.Parse(value, CultureInfo.InvariantCulture);
+                        break;
+                    case @"--min-out":
+                        options.Parameters.MinOutputIons = double.Parse(value, CultureInfo.InvariantCulture);
+                        break;
+                    case @"--apportion":
+                        // Each observed peak scaled by the share of its signal within this many
+                        // positions of its own bin; one spectrum per bin, so the layout is centered:1.
+                        options.Parameters.ApportionHalfWidth = int.Parse(value, CultureInfo.InvariantCulture);
+                        options.Layout = new ScanningLayout(ScanningLayoutKind.centered, 1);
                         break;
                     case @"--cycles":
                         string[] cycles = value.Split(':');

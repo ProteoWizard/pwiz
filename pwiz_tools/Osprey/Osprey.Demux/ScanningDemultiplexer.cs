@@ -47,6 +47,14 @@ namespace pwiz.Osprey.Demux
 
         /// <summary>The expected count below which a row's weight stops growing, in ions.</summary>
         public double WeightFloorIons { get; set; } = 0.5;
+
+        /// <summary>
+        /// Scanning data: -1 writes the solved intensities by source position. Zero or more
+        /// apportions instead: each observed peak of an encoded bin's spectrum is scaled by the
+        /// share of its signal the solution places within this many positions of that bin, at its
+        /// own m/z, and written to that bin. Nothing is invented and no m/z moves.
+        /// </summary>
+        public int ApportionHalfWidth { get; set; } = -1;
     }
 
     /// <summary>
@@ -281,6 +289,7 @@ namespace pwiz.Osprey.Demux
 
             var y = new double[rows * cycles];
             var touched = new List<int>();
+            var observedCells = new Dictionary<int, List<int>>();
             var solver = new ChannelSolver(unit.Transmission, parameters);
             int k = 0;
             while (k < peaks)
@@ -317,6 +326,28 @@ namespace pwiz.Osprey.Demux
                             unit.Mz[i], unit.Ions[i]));
                         result.IonsPassedThrough += unit.Ions[i];
                     }
+                }
+                else if (parameters.ApportionHalfWidth >= 0)
+                {
+                    // The channel's observed peaks in the block's own bins and sweeps, by cell.
+                    observedCells.Clear();
+                    for (int m = k; m < end; m++)
+                    {
+                        int i = (int)(order[m] % peaks);
+                        if (!coreRow[unit.Row[i]] || !coreCycle[unit.Cycle[i]])
+                            continue;
+                        int cell = unit.Row[i] * cycles + unit.Cycle[i];
+                        if (!observedCells.TryGetValue(cell, out var list))
+                        {
+                            list = new List<int>();
+                            observedCells[cell] = list;
+                        }
+                        list.Add(i);
+                    }
+                    solver.Solve(y, cycles, coreCycle, (c, nc, x, cols) =>
+                        ApportionScanning(unit, observedCells, cycles, c, nc, x, cols, parameters.ApportionHalfWidth,
+                            result.Demultiplexed));
+                    result.ChannelsSolved++;
                 }
                 else
                 {
@@ -493,6 +524,38 @@ namespace pwiz.Osprey.Demux
                 k = end;
             }
             return result;
+        }
+
+        /// <summary>
+        /// Scales each observed peak of sweep <paramref name="c"/> in each of the block's own rows by
+        /// the share of that row's modeled signal, (transmission x solved intensity), that comes
+        /// from source positions within <paramref name="halfWidth"/> of the row's own bin, and
+        /// writes it to that bin at the peak's own m/z. A solution of zero in the row drops the peak.
+        /// </summary>
+        private static void ApportionScanning(ScanningUnit unit, Dictionary<int, List<int>> observedCells, int cycles,
+            int c, int nc, double[] x, int[] cols, int halfWidth, List<ScanningPeak> output)
+        {
+            var a = unit.Transmission;
+            for (int r = 0; r < unit.RowBins.Length; r++)
+            {
+                if (!observedCells.TryGetValue(r * cycles + c, out var observed))
+                    continue;
+                double total = 0, near = 0;
+                for (int jj = 0; jj < nc; jj++)
+                {
+                    double part = a[r, cols[jj]] * x[jj];
+                    total += part;
+                    if (Math.Abs(unit.ColumnBins[cols[jj]] - unit.RowBins[r]) <= halfWidth)
+                        near += part;
+                }
+                if (total <= 0 || near <= 0)
+                    continue;
+                double share = near / total;
+                if (share < SHARE_FLOOR)
+                    continue;
+                foreach (int i in observed)
+                    output.Add(new ScanningPeak(unit.RowBins[r], unit.Cycles[c], unit.Mz[i], unit.Ions[i] * share));
+            }
         }
 
         /// <summary>

@@ -123,6 +123,13 @@ namespace pwiz.Osprey.Test
             }
             Assert.AreEqual(1, exact.PassedThrough.Count);  // the lone weak peak only
 
+            // Apportioned: an isolated source's own bin keeps its observed peaks whole; a neighbor
+            // that only transmits it keeps nothing.
+            var apportioned = ScanningDemultiplexer.DemuxUnit(Simulate(a, sources, null),
+                new ScanningDemuxParams { ApportionHalfWidth = 0 });
+            Assert.AreEqual(1000 * TotalElution(), Sum(apportioned.Demultiplexed, 20, 300.1234), 1e-6 * 1000);
+            Assert.AreEqual(0, Sum(apportioned.Demultiplexed, 21, 300.1234), 1e-6 * 1000);
+
             var noisy = Simulate(a, sources, new Random(11));
             var first = ScanningDemultiplexer.DemuxUnit(noisy, parameters);
             foreach (var s in sources.Where(t => t.Mz != 701.5678))
