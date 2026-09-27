@@ -442,7 +442,7 @@ namespace pwiz.Osprey
                 {
                     LogError(string.Format(
                         "OSPREY_SVM_C_TOLERANCE must be a number in [0, 1) such as '0.01', not '{0}'. " +
-                        "Unset it for the default ({1}); 0 selects the strict maximum the Rust implementation uses.",
+                        "Unset it for the default ({1}); 0 selects the strict maximum of the cross-validation counts.",
                         OspreyEnvironment.SvmCSelectionToleranceSetting,
                         OspreyEnvironment.DEFAULT_SVM_C_SELECTION_TOLERANCE.ToString(CultureInfo.InvariantCulture)));
                     return 1;

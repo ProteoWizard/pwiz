@@ -452,8 +452,8 @@ namespace pwiz.Osprey.Core
 
         /// <summary>OSPREY_SVM_C_TOLERANCE exactly as set, or null when unset: an override for
         /// <see cref="DEFAULT_SVM_C_SELECTION_TOLERANCE"/>, a number in [0, 1). 0 restores the
-        /// strict maximum that the Rust implementation uses, for cross-implementation
-        /// comparisons.</summary>
+        /// strict maximum (the pre-#4703 rule), for A/B work. Rust has used the same 1% default
+        /// since maccoss/osprey#69, with no opt-out.</summary>
         public static readonly string SvmCSelectionToleranceSetting =
             Environment.GetEnvironmentVariable(@"OSPREY_SVM_C_TOLERANCE");
 
