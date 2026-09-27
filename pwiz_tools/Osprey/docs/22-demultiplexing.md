@@ -11,18 +11,27 @@ Demultiplexing does that recovery. Searching the result gets the bin width's pre
 selectivity, where searching the raw spectra would get the window width's, and would also score
 every precursor in two windows.
 
-**Where it stands.** This is the first step: reproducing, inside Osprey, the overlap
-demultiplexing msconvert does (`--filter "demultiplex optimization=overlap_only"`). It reads the
-raw file directly and caches the result as Osprey spectra. The goal beyond it is one
-demultiplexer for every compressed-sampling scheme, where each measured spectrum mixes several
-precursor bins in known proportions:
-- staggered windows at any overlap (k = 2, 3, 4) and variable widths, supported now;
+**Where it stands.** There are two demultiplexers, in the same library (`Osprey.Demux`):
+- **The overlap demultiplexer**, run by `--demux auto`. It reproduces, inside Osprey, the overlap
+  demultiplexing msconvert does (`--filter "demultiplex optimization=overlap_only"`), reads the
+  raw file directly and caches the result as Osprey spectra. Everything from
+  [Using it](#using-it) to [Validation](#validation) describes it.
+- **The per-channel demultiplexer**, one algorithm for staggered windows and for a scanning
+  quadrupole (SCIEX ZT Scan). It solves each fragment channel with the quadrupole's measured
+  transmission and counting-statistics weights. It is not wired into `--demux` yet; it runs in
+  `Osprey.DemuxTool`, which writes a demultiplexed mzML that Osprey or DIA-NN can search. See
+  [The per-channel demultiplexer](#the-per-channel-demultiplexer-staggered-and-zt-scan).
+
+The goal is one demultiplexer for every compressed-sampling scheme, where each measured spectrum
+mixes several precursor bins in known proportions:
+- staggered windows at any overlap (k = 2, 3, 4) and variable widths: both demultiplexers;
+- scanning-quadrupole methods: SCIEX ZT Scan on the ZenoTOF (the per-channel demultiplexer), and
+  Waters SONAR;
 - Thermo MSX (random multiplexed co-isolation);
 - comb (parallel isolation) acquisitions;
-- scanning-quadrupole methods: SCIEX ZT Scan on the ZenoTOF, and Waters SONAR;
 - profile-domain demultiplexing with Osprey's own centroiding, for the Stellar.
 
-Only the first is implemented. See [Status and limitations](#status-and-limitations).
+See [Status and limitations](#status-and-limitations).
 
 ## Using it
 
@@ -111,7 +120,8 @@ demux off, neither the key nor the hash changes.
 
 ## The algorithm
 
-For each acquired MS2 spectrum (the *target*), independently and in parallel:
+This is the overlap demultiplexer that `--demux auto` runs. For each acquired MS2 spectrum (the
+*target*), independently and in parallel:
 
 1. **Scheme.** Detected once per run from every distinct isolation window
    (`DemuxSchemeDetector`).
@@ -227,20 +237,392 @@ The comparison tools are in pwiz-ai, under `ai/scripts/Osprey/Compare`:
 - `Measure-StaggerConsistency.py`: the zig-zag measure;
 - `Compare-DemuxSearches.py`: detections, entrapment FDP and overlap.
 
+## The per-channel demultiplexer (staggered and ZT Scan)
+
+`ScanningDemultiplexer` is the second demultiplexer: one algorithm for a scanning quadrupole (SCIEX
+ZT Scan) and for stepped staggered windows. Like the overlap demultiplexer it solves one fragment
+m/z channel at a time, y = A x with x >= 0. It never couples a fragment to other fragments or to
+the MS1: everything happens at the product-ion level, where MS2 is most sensitive.
+
+It differs from the overlap demultiplexer in four ways, each explained below:
+
+| | Overlap demultiplexer | Per-channel demultiplexer |
+|---|---|---|
+| Entries of A | 0/1 window coverage | the quadrupole's measured transmission (ZT Scan); 0/1 for staggered windows |
+| Fragment channels | each centroid of the target spectrum, ±10 ppm | maxima of the whole block's m/z histogram |
+| Solve | NNLS | NNLS, then a refit with Poisson row weights from that fit |
+| Output | the target's observed peaks, apportioned | staggered: the same; ZT Scan: solved intensities, several positions per spectrum (a *layout*) |
+
+### Running it
+
+`Osprey.DemuxTool` reads a vendor file (.wiff2 or .raw, vendor-centroided as msconvert's
+`peakPicking vendor msLevel=1-` does) or an mzML, and writes a demultiplexed mzML:
+
+```
+Osprey.DemuxTool --in run.wiff2 --out run.demux.mzML --kernel kernel.profile.tsv --layout framed:3:1
+Osprey.DemuxTool --in run.raw --out run.demux.mzML --scheme staggered
+```
+
+| Option | Default | Meaning |
+|---|---|---|
+| `--scheme` | `scanning` | `scanning` (ZT Scan; needs `--kernel`) or `staggered` |
+| `--kernel` | - | the measured transmission profile (see [below](#the-transmission-zt-scan)) |
+| `--layout` | `centered:5` | ZT Scan output layout: `centered:k`, `tiled:k` or `framed:k:m` |
+| `--min-out` | 0.2 | ZT Scan: solved intensities below this many ions are not written |
+| `--apportion H` | off | ZT Scan: apportion observed peaks instead of writing solved values |
+| `--counts-per-ion` | 100 | the detector counts of one ion, for the weights and the ion thresholds |
+| `--ppm` | 10 | the channel tolerance |
+| `--unweighted` | off | skip the Poisson refit |
+| `--raw` | off | ZT Scan: write the selected spectra as acquired (a control arm) |
+| `--cycles`, `--mz` | all | restrict to sweeps `first:last` (0-based) and precursor m/z `low:high` |
+| `--threads` | all | the output does not depend on it |
+
+The tool is for evaluation until the demultiplexer is wired into `--demux`. The Sciex.Wiff2
+reader plugin and its native SQLite libraries are staged beside the tool when it is built with
+the vendor readers. Osprey.exe does not stage them yet.
+
+### The ZT Scan acquisition
+
+On the ZenoTOF 8600 runs used here (`250814_ZTScan_100spd_*`):
+- Each cycle is one MS1 scan and one sweep of the quadrupole from 392.76 to 899.78 m/z. The sweep
+  is recorded as 429 MS2 spectra, the *encoded bins*, 1.181866 Th and 2.01 ms apart. A cycle takes
+  0.971 s, and a run has 699 of them.
+- The file reports each spectrum's isolation window as its own 1.18 Th bin. The quadrupole
+  actually transmits a precursor into about 16 consecutive bins (below). So each spectrum mixes
+  the precursors of about 16 bins, and each fragment appears in about 16 consecutive spectra of
+  every sweep in which its precursor elutes.
+- Intensities are about 100 counts per ion, so a fragment is often a few ions per spectrum.
+  Counting noise, not the arithmetic of the solve, is what limits demultiplexing here.
+
+### The transmission (ZT Scan)
+
+The kernel is the fraction of a precursor at m/z `m` that an encoded bin centered at `c` records,
+as a function of `c - m`. It is **measured from the data**, not assumed (`ScanningKernel`):
+- **Probes** are the 40 most intense peaks of each MS1 scan between 405 and 885 m/z. In the sweep
+  that follows, a probe's own m/z survives unfragmented in every bin whose quadrupole position
+  transmits it. Its intensity against `c - m` therefore traces the transmission, and no
+  identifications are needed.
+- Each probe's profile is taken over ±20 Th. Profiles whose maximum is under 10 times their median
+  are dropped as noise. The median of the normalized profiles is taken on a 0.25 Th grid.
+- **Measured on A1 at 3-8 min, from 10,168 probes:**
+  - The shape is a trapezoid: a flat top about 4 Th wide and linear edges about 6 Th long.
+  - Its width at half height is 10.55 Th, and it is zero outside -9.5 to +10.75 Th.
+  - It is nearly symmetric, and the same within noise at low, middle and high m/z. The run's
+    method states a Q1 width of 5.9 Th, about half what the quadrupole transmits.
+- **An independent check from identified precursors:** the fragments of precursors that DIA-NN
+  identified start to appear at about -8.5 Th and disappear at about +8.8 Th. That matches the
+  kernel's support. These edges, where the signal starts and where it stops, are what locate a
+  precursor within the sweep.
+
+The kernel is a table, linearly interpolated, with values under 0.5% of its peak set to zero. It
+is measured by a script in pwiz-ai (`ai/scripts/Osprey/Demux/Measure-ZtScanKernel.py`; the edge
+check is `Measure-ZtScanEdges.py` beside it) and passed to the tool with `--kernel`. The C# per-file calibration is not written yet, so one kernel serves all three
+replicates.
+
+**The matrix** (`ScanningDemultiplexer.TransmissionMatrix`):
+- Row i, column j is the transmission of a precursor at source position j into the spectrum of
+  encoded bin i.
+- A precursor can lie anywhere in its 1.18 Th position, so the kernel is averaged over 21 points
+  across the position.
+- The matrix is scaled so that a precursor at the center of its own bin averages 1.
+- For staggered windows, A is 0/1 as in the overlap demultiplexer: a window transmits a bin
+  entirely or not at all.
+
+### Blocks
+
+Each run is cut into independent blocks, which are solved in parallel:
+
+| | ZT Scan | Staggered |
+|---|---|---|
+| Output a block owns | 16 encoded bins x 12 sweeps | 16 narrow bins x 12 cycles |
+| Source positions (columns) | the owned bins, ±10 | the owned bins, ±max(2, 2k) |
+| Spectra (rows) | the encoded bins within the kernel's reach of any column (9 more on each side) | every window that covers any column |
+| Time context | ±4 sweeps | ±4 cycles |
+
+- A block reads more than it owns, so the positions at its edges are solved with all the rows that
+  see them. Every output peak belongs to exactly one block.
+- The time context gives the channel histogram more evidence. For staggered data it also supplies
+  the interpolation points.
+
+### Fragment channels
+
+`FragmentChannelFinder` decides which peaks, across a block's spectra, are the same product ion:
+1. Every peak in the block goes onto 1 ppm bins of log m/z, weighted by its ions, and the
+   histogram is smoothed over ±4 ppm.
+2. Maxima are taken largest first. Each claims ±10 ppm around it, so smaller maxima inside that
+   range are dropped. A center needs at least 8 ions within its smoothing width.
+3. Each peak joins the nearest center within 10 ppm, the lower m/z on a tie.
+
+**Why a histogram.**
+- A real fragment recurs at nearly the same m/z in the ~16 spectra of each sweep that transmit
+  its precursor, and in every sweep of its elution. It therefore stands out as a sharp maximum,
+  even where unrelated peaks fall about every ppm (a ZT Scan spectrum has about 5,000).
+- Linking neighboring peaks by their m/z gap does not work at that density: the whole spectrum
+  chains into one channel.
+- The overlap demultiplexer's choice, each target centroid as its own channel, suits Orbitrap
+  spectra but not ZT Scan's density.
+
+**Weak channels are not solved.** A channel with fewer than 8 ions in the block, or seen in fewer
+than 3 (spectrum, sweep) cells, has too few counts to place. Its peaks pass through as acquired,
+as do peaks near no center. On A1 that was 0.46% of the ions.
+
+### The solve
+
+For each channel, the solve runs once per sweep (ZT Scan) or at each acquired spectrum's time
+(staggered):
+1. **Observations.** y is the channel's ions in each row.
+   - A ZT Scan sweep takes 0.86 s, so a sweep is treated as one moment and needs no interpolation.
+   - For staggered data, each window's channel is interpolated by makima to the output spectrum's
+     time, from that window's own acquisitions, and clamped at zero. The output spectrum's own
+     window uses its measured value.
+   - Only spectra in which the channel was observed are solved.
+2. **Rows and columns.**
+   - The columns are the positions that any row with signal can see.
+   - The rows are every row that sees those columns, including rows where the channel is zero.
+   - A zero is evidence that no source in the positions that row sees is present. On ZT Scan the
+     zeros just before and after the signal are what fix a precursor's position.
+3. **Unweighted fit.** min ||y - A x||² with x >= 0 (`NnlsSolver.SolveNormal`: Lawson-Hanson on
+   AᵀA and Aᵀy).
+4. **Poisson refit.**
+   - With mu = A x from step 3, each row gets the weight 1 / max(mu_i, 0.5 ion), and the weighted
+     fit min Σ w_i (y_i - (A x)_i)², x >= 0, is solved.
+   - The variance of a count is its mean, so this weighs each spectrum by its precision. Rows
+     crowded by several strong sources stop dominating the positions that a weak source's own rows
+     inform.
+   - The 0.5-ion floor keeps rows predicted near zero from taking unbounded weight.
+
+In a simulation of 500 peptides in a realistic ZT Scan background, the weights cut the scatter
+of the quantities of targets that did not change from 0.078 to 0.046. In the least abundant
+third they cut it from 0.40 to 0.17. On real data they turned a 5-position layout from even with
+the raw data into +5% identifications (below). The simulation is in pwiz-ai
+(`ai/todos/active/TODO-20260923_osprey_demux/modeling-2026-09-26.md`).
+
+**Implementation.**
+- **Shared Gram matrix.** AᵀA over a channel's rows and columns is the same for every sweep. It is
+  built once per channel from sparse rows, since a row sees only the positions within the kernel's
+  reach.
+- **Low-rank weight update.** Rows at or below the floor all share one weight, so the weighted
+  Gram is that weight times AᵀA plus a correction from only the rows above the floor.
+- **Incremental factorization.** The NNLS keeps a Cholesky factor of its passive set: it appends a
+  row when a variable enters and refactors when one leaves.
+- **Warm start.** The weighted refit starts from the unweighted solution's passive set.
+- **Measured gain.** Together these made the solve about 3 times faster than the dense version, on
+  the same machine and load.
+
+### Output: staggered data
+
+As in the overlap demultiplexer and msconvert, each acquired spectrum becomes one spectrum per
+narrow bin its window covers. The ids take a ` demux=k` suffix, and each **observed peak is
+apportioned**:
+- Each peak is split among its window's bins by the solution's shares at that spectrum's time.
+  The share of a bin is its transmission times its solved intensity, over the sum across the
+  window.
+- Each piece keeps the peak's own m/z.
+- The solve decides only the split. The intensity and m/z come from what the instrument recorded
+  in that spectrum, at that time.
+- A solution of zero over the window drops the peak.
+- Peaks of channels that pass through are shared equally among the window's bins.
+
+For example, say a window covering bins A and B records a peak at 714.3524 with 10,800 counts,
+and the solve assigns 3,000 to A and 7,000 to B:
+
+| | bin A spectrum | bin B spectrum |
+|---|---|---|
+| solved values | 3,000 at the channel's mean m/z | 7,000 at the channel's mean m/z |
+| apportioned (written) | 3,240 at 714.3524 | 7,560 at 714.3524 |
+
+Writing the solved values instead lost 4.5% of precursors on the Orbitrap Eclipse data, for two
+reasons:
+- **Peaks the instrument cannot record.** The solve leaves small values wherever the fit puts a
+  little intensity. Written down to 0.2 ions (20 counts), they doubled the peaks per spectrum,
+  while the Orbitrap records nothing under about 780 counts. Apportioning can only divide peaks
+  that were recorded.
+- **Moved m/z.** A channel pools peaks across many spectra within 10 ppm. Writing each at the
+  channel's mean moved 30% of the strong peaks by more than 3 ppm.
+
+The cost is that the pieces always add up to what was measured. A mass-balance check therefore
+cannot reveal a biased solve.
+
+### Output: ZT Scan, and layouts
+
+The solved intensity of each source position is written when it reaches `--min-out` ions. It is
+written at the channel's intensity-weighted mean m/z over the block. The *layout* decides which
+positions each output spectrum carries, and what isolation window it reports:
+
+| Layout | Spectra per sweep | Isolation window written | Positions carried |
+|---|---|---|---|
+| `centered:k` (k odd) | one per encoded bin | that bin (1.18 Th) | the k positions centered on the bin |
+| `tiled:k` | one per k bins | those k bins | those k positions |
+| `framed:k:m` | one per k bins | those k bins | those k positions, plus m on each side |
+
+- A window is the union of its bins' spans, so the windows tile the sweep without overlap. A
+  framed spectrum carries m positions more on each side than its window.
+- Within a spectrum, one channel's peaks from neighboring positions that lie within 5 ppm are
+  summed at their weighted m/z. The pass-through peaks of its own bins are added as acquired.
+
+**Why several positions per spectrum.**
+- **One position fails.** The kernel's edges slope, so a precursor's column of A depends on where
+  inside its 1.18 Th position it sits.
+  - In simulation, 29% of a precursor's signal lands in a neighboring position even without
+    noise.
+  - Under counting noise, the split between neighbors flips from sweep to sweep.
+  - On real data, one position per spectrum halved the identifications.
+- **Three or five positions recover it.** A spectrum that carries the positions around a
+  precursor collects the signal wherever the split put it.
+- **Tiled windows lose precursors near their edges.** The signal that placement noise moved into
+  the next position lands in the next tile. On the slice, tiled:5 lost about 9% against
+  centered:5, and tiled:4 lost more.
+- **framed:k:m keeps a margin but still tiles.** On the slice, framed:3:1 (3.5 Th windows, each
+  carrying 5.9 Th of demultiplexed signal) matched centered:5's identifications and precision,
+  with a third of its spectra and 2.8 times smaller files.
+  - Over the whole A1 run, with the output floor, it fell 1.2% below the acquired data, where
+    centered:5 without the floor gained 1.7% (below).
+  - Which layout to use is therefore still open. The whole-run arm without the floor, which would
+    separate the layout from the floor, has not been run.
+
+**The output floor.** `--min-out 1` stops the tool writing solved values under one ion.
+- On the slice it added 3-7% identifications, presumably because sub-ion values act as noise in
+  DIA-NN's scoring.
+- It raises the replicate CV from about 0.10 to 0.11-0.12, because the quantities of weak
+  fragments are truncated.
+- One way to get both is to search a file written with the floor and quantify from one written
+  without it.
+
+**Apportioning on ZT Scan** (`--apportion H`) scales each observed peak of a bin's spectrum by the
+share of that spectrum's modeled signal from positions within ±H. It does worse on both counts
+(below). An observed ZT Scan peak mixes about 16 positions and is often a few ions, so one peak
+times a small share is a noisy estimate. The solved value pools every spectrum that saw the
+source.
+
+### Determinism
+
+- The rules are the overlap demultiplexer's: index order everywhere, ties to the lowest index, and
+  capped NNLS iterations.
+- Blocks are independent, and each writes only the output it owns.
+- The tool solves a batch of blocks on worker threads while its calling thread reads the next
+  batch. The source file is read from one thread only.
+- The output is byte-identical at any thread count, and with or without that overlap.
+
+### Speed
+
+- **A full A1 ZT Scan run from .wiff2, centered:5, 10 threads on a shared machine: 8,906 s.**
+  - Opening the file took 123-442 s, depending on load.
+  - Reading spectra took 3,109 s, about 8-9 ms per spectrum through the SCIEX SDK.
+  - Solving took 1,405 s. It now runs while the next batch is read.
+  - Most of the rest was writing a 13.6 GB mzML.
+- **framed:3:1 with the floor, on the current build and 4 threads: 3,657 s.**
+- Inside Osprey, the demultiplexer would run from spectra Osprey has already parsed, as the overlap
+  demultiplexer does, and the separate read and write would go away.
+
+### Validation of the per-channel demultiplexer
+
+**Unit tests** (`Osprey.Test/ScanningDemuxTest.cs`, and `DemuxTest` for the solver):
+- **Channels:** a jittered fragment is one channel; fragments 30 ppm apart are two, and 6 ppm
+  apart one; a weak lone peak is in none; and the peak order does not matter.
+- **ZT Scan recovery, simulated through a trapezoid kernel:**
+  - noiseless, every fragment returns exactly to its precursor's position, including one fragment
+    two precursors share;
+  - under Poisson noise, the three positions centered on each precursor hold its intensity within
+    15%;
+  - apportioning keeps an isolated source's peaks whole;
+  - a lone weak peak passes through;
+  - the result repeats exactly.
+- **Staggered recovery:** two offset window sets acquired half a cycle apart. Each spectrum's
+  peaks are apportioned exactly to their sources' bins, and only to its own window's bins.
+- **Layouts:** the spectra each layout plans, the merging of neighboring positions, and parsing.
+- **NNLS** on the normal equations, cold and warm-started, against the brute-force optimum.
+
+**Orbitrap Eclipse** (EV13 and EV14, searched with Osprey as in [Validation](#validation);
+counted together in one pass, below 1000.70 m/z):
+
+| Demultiplexing | Experiment precursors | Entrapment FDP | Peptides |
+|---|---|---|---|
+| msconvert | 38,411 | 0.28% | 33,145 |
+| overlap demultiplexer | 39,355 (+2.5%) | 0.27% | 33,905 |
+| per-channel, solved values written | 36,670 (-4.5%) | 0.20% | 30,945 |
+| **per-channel, apportioned** | **40,009 (+4.2%)** | **0.26%** | **34,501** |
+
+- The same channels and weighted solve beat both, at equal FDP: 52 entrapment hits, against 54.
+- It shares 31,327 peptides with msconvert, adds 3,174 of its own, and misses 1,818.
+
+**ZT Scan, a slice** (A1, D1 and G1 at 4.1-5.9 min, 500-700 m/z; searched with DIA-NN 2.3.2
+against a Carafe library with entrapment; CV of `Precursor.Quantity` over the 1,386 precursors
+every arm found in all three runs):
+
+| Arm | Target precursors (A1 / D1 / G1) | CV | A1 file |
+|---|---|---|---|
+| as acquired | 2,659 / 2,694 / 2,627 | 0.094 | - |
+| as acquired, DIA-NN `--scanning-swath` | 2,768 / 2,807 / 2,958 | 0.095 | - |
+| centered:5 | 2,712 / 2,804 / 2,701 | 0.099 | 1.51 GB |
+| **framed:3:1** | **2,759 / 2,859 / 2,724** | **0.096** | **0.54 GB** |
+| centered:5, `--min-out 1` | 2,907 / 2,928 / 2,817 | 0.117 | 0.57 GB |
+| framed:3:1, `--min-out 1` | 2,778 / 2,892 / 2,907 | 0.112 | 0.23 GB |
+| tiled:5 (Python prototype) | 2,508-2,590 | 0.127 | 0.30 GB |
+| apportioned, ±2 positions | 2,592 / 2,773 / 2,828 | 0.136 | - |
+
+- Entrapment FDP was 0.2-1.2% in every arm. These counts are small, so a single run's FDP moves
+  with a few hits.
+- The C# and Python versions agree spectrum by spectrum (median cosine 0.9997, total intensity
+  ratio 1.0001), and within 0-4% on identifications.
+- Reading the .wiff2 directly gives the same spectra as msconvert's centroided mzML (cosine
+  1.0000).
+
+**ZT Scan, the whole A1 run** (DIA-NN as above; the numbers are DIA-NN's precursors at 1% FDR,
+targets only):
+
+| Arm | Target precursors | Entrapment FDP | Peptides |
+|---|---|---|---|
+| as acquired | 27,341 | 0.72% | 24,459 |
+| as acquired, DIA-NN `--scanning-swath` | 29,373 | 0.84% | 26,273 |
+| centered:5 | 27,794 (+1.7%) | 0.88% | 24,973 |
+| framed:3:1, `--min-out 1` | 27,009 (-1.2%) | 0.90% | 24,163 |
+
+- Over the whole run the gain of centered:5 shrinks to +1.7%, against about +5% on the slice.
+- It is +3.8% in the slice's own region, and larger where the run is densest: 4-8 min at 500-700
+  m/z. There, co-isolation is worst.
+- Early in the gradient (2-4 min) it loses precursors, presumably because there is little
+  interference to remove there while demultiplexing still adds noise.
+- The identifications turn over far more than their count changes: 23,773 are shared with the
+  acquired data, 3,568 are found only there, and 4,021 only after demultiplexing.
+- framed:3:1 with the floor has a different pattern. It gains below 600 m/z from 2 to 8 min
+  (+170 to +280 per 2-minute, 100 m/z cell). It loses above 600 m/z at nearly every retention
+  time, by up to 189 per cell. The slice (500-700 m/z) straddles that boundary and nets a gain.
+  The cause of the loss is not yet known.
+- DIA-NN's own scanning mode, given the acquired spectra as an mzML, finds 5% more than any
+  demultiplexed file so far. It uses the sweep's quadrupole dimension directly rather than
+  searching narrowed windows.
+
+The scripts behind these ZT Scan tables are in pwiz-ai, under `ai/scripts/Osprey/Demux`.
+
 ## Status and limitations
 
-- **Supported:** stepped overlapping windows (staggered DIA) at any overlap factor, including
+- **Supported (`--demux auto`):** stepped overlapping windows (staggered DIA) at any overlap factor, including
   variable widths, from centroided data (vendor centroiding, or a centroided mzML).
+- **Supported in `Osprey.DemuxTool` only:** the per-channel demultiplexer, for staggered windows
+  and for SCIEX ZT Scan. Wiring it into `--demux` still needs:
+  - the .wiff2 reader staged for Osprey.exe;
+  - the transmission calibrated per file, in C#;
+  - its descriptor in the demultiplexed cache.
+- **Open questions for ZT Scan:**
+  - the layout and floor, since framed:3:1 with the floor loses precursors above 600 m/z over a
+    whole run;
+  - whether writing each channel at its block-mean m/z costs identifications, as it did on the
+    Orbitrap;
+  - how to recover the early-gradient losses, for instance by scoring a precursor against both the
+    acquired and the demultiplexed spectra;
+  - whether the counts-per-ion scale, which sets the weights, should be calibrated rather than
+    fixed at 100. The Orbitrap runs used the same 100.
 - **MSX is not supported, and is misread today.** The reader keeps only a spectrum's first
   precursor, so each multiplexed spectrum is treated as a single window, and nothing refuses such
   a file yet. Support needs every precursor and its own fill time, which the ProteoWizard Thermo
   reader does not yet report.
-- **Scanning quadrupole (ZT Scan, SONAR) is not supported.** Their bins are reported at their
-  nominal width, while the quadrupole transmits about ten times that. They need a transmission
-  model fitted from the data rather than 0/1 windows.
+- **Scanning quadrupole in `--demux auto`: not supported.** Their bins are reported at their
+  nominal width, while the quadrupole transmits about ten times that, so they need the measured
+  transmission of the per-channel demultiplexer rather than 0/1 windows. Waters SONAR has not been
+  tried.
 - **Unit-resolution data** (Stellar centroids) is demultiplexed with the same fixed 10 ppm channel
   tolerance, which is not right for it and has not been validated.
 - **Isotope envelopes straddle narrow bins.** A precursor's M+1 and M+2 can fall in the bin above
   its monoisotopic one. Scoring still looks only in the bin that contains the monoisotopic m/z.
-- **No fragment coupling.** Each fragment channel is solved on its own; fragments of one precursor
-  do not yet constrain each other.
+- **No fragment coupling.** In both demultiplexers each fragment channel is solved on its own;
+  fragments of one precursor do not constrain each other.

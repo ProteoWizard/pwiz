@@ -73,14 +73,14 @@ namespace pwiz.Osprey.Demux
     }
 
     /// <summary>
-    /// A layout of demultiplexed scanning data into spectra: <c>centered:k</c> (k odd) or
-    /// <c>tiled:k</c>, k encoded bins per spectrum.
+    /// A layout of demultiplexed scanning data into spectra: <c>centered:k</c> (k odd),
+    /// <c>tiled:k</c> or <c>framed:k:m</c>.
     /// </summary>
     /// <remarks>
     /// One sweep's counts cannot place a fragment within one 1.18 Th encoded bin, so each
     /// spectrum carries several neighboring source positions. Measured on a ZT Scan slice with
-    /// DIA-NN: one position per spectrum halved identifications, 3 lost about 12%, and 5 matched
-    /// the undemultiplexed data at about half its window width.
+    /// DIA-NN: one position per spectrum halved identifications; with Poisson weights, centered:5
+    /// and framed:3:1 gained 3-5% over the undemultiplexed data. See docs/22-demultiplexing.md.
     /// </remarks>
     public sealed class ScanningLayout
     {

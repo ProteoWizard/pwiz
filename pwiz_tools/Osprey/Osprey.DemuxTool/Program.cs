@@ -32,15 +32,15 @@ using pwiz.Osprey.Demux;
 namespace pwiz.Osprey.DemuxTool
 {
     /// <summary>
-    /// Writes a demultiplexed mzML of a scanning-quadrupole (SCIEX ZT Scan) acquisition, read
-    /// from the vendor file (.wiff2, vendor-centroided) or from an mzML, for evaluating the
-    /// demultiplexing with any search engine before Osprey reads the data itself.
+    /// Writes a demultiplexed mzML of a scanning-quadrupole (SCIEX ZT Scan) or stepped staggered
+    /// acquisition, read from the vendor file (.wiff2 or .raw, vendor-centroided) or from an mzML,
+    /// for evaluating the demultiplexing with any search engine before Osprey reads the data itself.
     /// </summary>
     internal static class Program
     {
         private const string USAGE =
             @"Usage: Osprey.DemuxTool --in <run.wiff2|.raw|.mzML> --out <demux.mzML> [--scheme scanning|staggered]" +
-            @" [--kernel <profile.tsv>] [--layout centered:5|tiled:5] [--threads N] [--cycles first:last]" +
+            @" [--kernel <profile.tsv>] [--layout centered:k|tiled:k|framed:k:m] [--threads N] [--cycles first:last]" +
             @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--unweighted] [--raw]";
 
         private static int Main(string[] args)
