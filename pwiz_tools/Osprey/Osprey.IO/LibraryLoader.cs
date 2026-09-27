@@ -182,14 +182,19 @@ namespace pwiz.Osprey.IO
                                 @"skipped={0} entries={1} retained={2}",
                                 skipped, cached.Count, options.RetainFragmentsFor.Count));
                         }
-                        // ALREADY FINISHED. A v3 cache was written after marking and pairing, so
+                        // ALREADY FINISHED. A v3+ cache was written after marking and pairing, so
                         // re-running them here would redo work whose result is in the bytes -
                         // and, for the manifest arm, re-read a file the composition hash has
                         // already proven unchanged. The summary is still reported, recovered
                         // from the finished library, so a cached run is not silent about the
                         // pairing fraction (issue #4650).
                         if (LibrarySuppliesDecoys(config))
+                        {
                             LogCachedPairingSummary(RecoverPairingStats(cached), log);
+                            error = DescribeSharedDecoyIds(cached);
+                            if (error != null)
+                                return null;
+                        }
                         return cached;
                     }
                     if (status == LibraryCache.LibraryCacheStatus.IdentityMismatch)
@@ -310,8 +315,9 @@ namespace pwiz.Osprey.IO
         }
         /// <summary>
         /// Finish a supplied-decoy library: mark the decoys, then pair each to its target.
-        /// Returns false with <paramref name="error"/> set on the two faults that make the
-        /// library unusable - no decoys matched at all, and a paired fraction below the
+        /// Returns false with <paramref name="error"/> set on the faults that make the library
+        /// unusable - no decoys matched at all, a manifest that lists a library decoy's sequence
+        /// as a target, two decoys sharing an entry_id, and a paired fraction below the
         /// configured threshold.
         ///
         /// <para>INSIDE the load, and ahead of the cache write, deliberately (issue #4650).
@@ -323,7 +329,7 @@ namespace pwiz.Osprey.IO
         /// finish the same way. Anything keyed on a FINAL base_id - the retained-set skip this
         /// issue exists to enable - could not address those rows at all.</para>
         ///
-        /// <para>The caller keeps the failure semantics it always had: these two faults are
+        /// <para>The caller keeps the failure semantics it always had: these faults are
         /// errors that stop the run, not warnings, because FDR estimates without proper
         /// target-decoy competition are not worth producing.</para>
         /// </summary>
@@ -394,6 +400,12 @@ namespace pwiz.Osprey.IO
                     return false;
                 }
                 var manifestStats = manifest.ApplyToLibrary(library, pairingState, log.LogInfo);
+                if (manifestStats.DecoysListedAsTargets.Count > 0)
+                {
+                    error = DescribeDecoysListedAsTargets(library,
+                        manifestStats.DecoysListedAsTargets, config.DecoyPairingManifestPath);
+                    return false;
+                }
                 pairingStats.NPairedViaManifest = manifestStats.NPaired;
                 if (manifestStats.NProteinsReplaced > 0)
                 {
@@ -435,6 +447,9 @@ namespace pwiz.Osprey.IO
             pairingStats.NUnpairedTargets = Math.Max(0,
                 pairingStats.NTargets - pairingState.ClaimedTargets.Count);
             LogPairingSummary(pairingStats, log);
+            error = DescribeSharedDecoyIds(library);
+            if (error != null)
+                return false;
             if (pairingStats.PairedFraction < config.DecoyPairMinFraction)
             {
                 error = string.Format(
@@ -487,6 +502,58 @@ namespace pwiz.Osprey.IO
                 "library cache). {3:N0} decoys and {4:N0} targets have no partner.",
                 stats.NPaired, stats.NDecoys, stats.PairedFraction * 100.0,
                 stats.NUnpairedDecoys, stats.NUnpairedTargets));
+        }
+
+        /// <summary>
+        /// The load-time error for library entries that are decoys by protein prefix but that the
+        /// pairing manifest lists as targets (<see cref="ManifestApplyStats.DecoysListedAsTargets"/>).
+        /// Every row is listed, not the first: the provider can then fix them in one pass and see
+        /// the class of defect behind them.
+        /// </summary>
+        private static string DescribeDecoysListedAsTargets(List<LibraryEntry> library,
+            List<int> indices, string manifestPath)
+        {
+            var sb = new StringBuilder();
+            sb.AppendFormat(
+                @"The library and its decoy pairing manifest disagree: {0} library entries are " +
+                @"decoys by their protein accessions, but the manifest {1} lists their sequence " +
+                @"as a target. This happens when a library merges a decoy with an identical real " +
+                @"target into one row. Regenerate the library so each row is one or the other.",
+                indices.Count, manifestPath);
+            foreach (int i in indices)
+                sb.AppendLine().Append(@"  ").Append(DescribeEntry(library[i]));
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// The load-time error for decoys that share an entry_id (see
+        /// <see cref="LibraryDecoyPairing.FindSharedDecoyIds"/>), or null when every decoy id is
+        /// unique. Checked at load because the same defect otherwise surfaces only in first-pass
+        /// FDR, hours into a large run, as an experiment-scope q-value disagreement that says
+        /// nothing about the library. Every group is listed, not the first.
+        /// </summary>
+        private static string DescribeSharedDecoyIds(List<LibraryEntry> library)
+        {
+            var groups = LibraryDecoyPairing.FindSharedDecoyIds(library);
+            if (groups.Count == 0)
+                return null;
+            var sb = new StringBuilder();
+            sb.AppendFormat(
+                @"Library-decoy pairing gave {0} entry_ids to more than one decoy. Each decoy must " +
+                @"pair with a distinct target.", groups.Count);
+            foreach (var group in groups)
+            {
+                sb.AppendLine().AppendFormat(@"  entry_id {0}:", library[group[0]].Id);
+                foreach (int i in group)
+                    sb.AppendLine().Append(@"    ").Append(DescribeEntry(library[i]));
+            }
+            return sb.ToString();
+        }
+
+        private static string DescribeEntry(LibraryEntry entry)
+        {
+            return string.Format(@"{0} z{1} ({2})", entry.ModifiedSequence, entry.Charge,
+                string.Join(@";", entry.ProteinIds));
         }
 
         /// <summary>
