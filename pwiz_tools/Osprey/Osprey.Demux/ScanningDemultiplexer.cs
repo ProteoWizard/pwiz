@@ -55,6 +55,14 @@ namespace pwiz.Osprey.Demux
         /// own m/z, and written to that bin. Nothing is invented and no m/z moves.
         /// </summary>
         public int ApportionHalfWidth { get; set; } = -1;
+
+        /// <summary>
+        /// Scanning data: write each solved intensity at the m/z of the observed peaks it was
+        /// solved from, in its own sweep. Each row's peaks count by the share of the row's modeled
+        /// signal the position explains. False writes every value of a channel at the channel's
+        /// mean m/z over the whole block.
+        /// </summary>
+        public bool PositionMz { get; set; }
     }
 
     /// <summary>
@@ -288,9 +296,13 @@ namespace pwiz.Osprey.Demux
             Array.Sort(order); // Array.Sort OK: keys are unique ((channel + 1) * count + index)
 
             var y = new double[rows * cycles];
+            var mzSum = new double[rows * cycles];  // ions x m/z of the channel's peaks in each cell
             var touched = new List<int>();
             var observedCells = new Dictionary<int, List<int>>();
             var solver = new ChannelSolver(unit.Transmission, parameters);
+            var positionMz = parameters.PositionMz ? new double[columns] : null;
+            var mzNumerator = parameters.PositionMz ? new double[columns] : null;
+            var mzDenominator = parameters.PositionMz ? new double[columns] : null;
             int k = 0;
             while (k < peaks)
             {
@@ -308,6 +320,7 @@ namespace pwiz.Osprey.Demux
                     if (y[cell] == 0)
                         touched.Add(cell);
                     y[cell] += unit.Ions[i];
+                    mzSum[cell] += unit.Ions[i] * unit.Mz[i];
                     ions += unit.Ions[i];
                     weightedMz += unit.Ions[i] * unit.Mz[i];
                     if (coreRow[unit.Row[i]] && coreCycle[unit.Cycle[i]])
@@ -354,17 +367,28 @@ namespace pwiz.Osprey.Demux
                     double mz = weightedMz / ions;
                     solver.Solve(y, cycles, coreCycle, (c, nc, x, cols) =>
                     {
+                        if (positionMz != null)
+                        {
+                            AttributedMz(unit.Transmission, y, mzSum, cycles, c, nc, x, cols, mz, mzNumerator,
+                                mzDenominator, positionMz);
+                        }
                         for (int jj = 0; jj < nc; jj++)
                         {
                             int j = cols[jj];
                             if (coreColumn[j] && x[jj] >= parameters.MinOutputIons)
-                                result.Demultiplexed.Add(new ScanningPeak(unit.ColumnBins[j], unit.Cycles[c], mz, x[jj]));
+                            {
+                                result.Demultiplexed.Add(new ScanningPeak(unit.ColumnBins[j], unit.Cycles[c],
+                                    positionMz != null ? positionMz[jj] : mz, x[jj]));
+                            }
                         }
                     });
                     result.ChannelsSolved++;
                 }
                 foreach (int cell in touched)
+                {
                     y[cell] = 0;
+                    mzSum[cell] = 0;
+                }
                 k = end;
             }
             return result;
@@ -592,6 +616,41 @@ namespace pwiz.Osprey.Demux
         {
             int spectrum = unit.RowSpectra[unit.Row[peak]][unit.Acquisition[peak]];
             return ownOutput.TryGetValue(spectrum, out bool own) && own;
+        }
+
+        /// <summary>
+        /// The m/z of each solved position in sweep <paramref name="c"/>: the intensity-weighted m/z
+        /// of the channel's observed peaks in each row, counted by the share of that row's modeled
+        /// signal, (transmission x solved intensity) over the row's sum, the position explains. A
+        /// position no row attributes signal to keeps the channel's block mean.
+        /// </summary>
+        private static void AttributedMz(double[,] a, double[] y, double[] mzSum, int cycles, int c, int nc, double[] x,
+            int[] cols, double blockMz, double[] numerator, double[] denominator, double[] result)
+        {
+            Array.Clear(numerator, 0, nc);
+            Array.Clear(denominator, 0, nc);
+            int rows = a.GetLength(0);
+            for (int r = 0; r < rows; r++)
+            {
+                int cell = r * cycles + c;
+                if (y[cell] <= 0)
+                    continue;
+                double modeled = 0;
+                for (int jj = 0; jj < nc; jj++)
+                    modeled += a[r, cols[jj]] * x[jj];
+                if (modeled <= 0)
+                    continue;
+                for (int jj = 0; jj < nc; jj++)
+                {
+                    double share = a[r, cols[jj]] * x[jj] / modeled;
+                    if (share <= 0)
+                        continue;
+                    numerator[jj] += share * mzSum[cell];
+                    denominator[jj] += share * y[cell];
+                }
+            }
+            for (int jj = 0; jj < nc; jj++)
+                result[jj] = denominator[jj] > 0 ? numerator[jj] / denominator[jj] : blockMz;
         }
 
         private static double Offset(int point, int points, double binWidth)

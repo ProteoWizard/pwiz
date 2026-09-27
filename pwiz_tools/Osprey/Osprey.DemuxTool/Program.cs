@@ -41,7 +41,8 @@ namespace pwiz.Osprey.DemuxTool
         private const string USAGE =
             @"Usage: Osprey.DemuxTool --in <run.wiff2|.raw|.mzML> --out <demux.mzML> [--scheme scanning|staggered]" +
             @" [--kernel <profile.tsv>] [--layout centered:k|tiled:k|framed:k:m] [--threads N] [--cycles first:last]" +
-            @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--unweighted] [--raw]";
+            @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--position-mz] [--unweighted]" +
+            @" [--raw]";
 
         private static int Main(string[] args)
         {
@@ -52,7 +53,7 @@ namespace pwiz.Osprey.DemuxTool
             {
                 // Every option but the switches takes a value.
                 string option = args[i];
-                bool isSwitch = option == @"--raw" || option == @"--unweighted";
+                bool isSwitch = option == @"--raw" || option == @"--unweighted" || option == @"--position-mz";
                 if (!isSwitch && i + 1 >= args.Length)
                 {
                     Console.Error.WriteLine(USAGE);
@@ -107,6 +108,10 @@ namespace pwiz.Osprey.DemuxTool
                         break;
                     case @"--unweighted":
                         options.Parameters.PoissonWeights = false;
+                        break;
+                    case @"--position-mz":
+                        // Each solved value at the m/z of the peaks it was solved from, in its sweep.
+                        options.Parameters.PositionMz = true;
                         break;
                     case @"--raw":
                         // The selected spectra as acquired, zeros dropped: the control arm.

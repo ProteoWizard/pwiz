@@ -90,8 +90,9 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// Demultiplexing sweeps simulated through the solve's own transmission: noiseless, every
         /// fragment returns exactly to its precursor's bin, including a fragment two precursors
-        /// share; with counting noise, the three bins centered on each precursor hold its
-        /// intensity; a lone weak peak passes through; and the result is the same twice.
+        /// share; with position m/z, a drifting fragment keeps each sweep's own m/z; with counting
+        /// noise, the three bins centered on each precursor hold its intensity; a lone weak peak
+        /// passes through; and the result is the same twice.
         /// </summary>
         [TestMethod]
         public void TestScanningDemuxRecovers()
@@ -129,6 +130,25 @@ namespace pwiz.Osprey.Test
                 new ScanningDemuxParams { ApportionHalfWidth = 0 });
             Assert.AreEqual(1000 * TotalElution(), Sum(apportioned.Demultiplexed, 20, 300.1234), 1e-6 * 1000);
             Assert.AreEqual(0, Sum(apportioned.Demultiplexed, 21, 300.1234), 1e-6 * 1000);
+
+            // Position m/z: a fragment whose m/z drifts 2 ppm per sweep is written at each sweep's
+            // own m/z rather than the block mean, with the same intensities.
+            var drifting = Simulate(a, new[] { (Bin: 20, Mz: 500.0, Amount: 1000.0) }, null);
+            for (int i = 0; i < drifting.Mz.Length; i++)
+            {
+                if (drifting.Mz[i] < 900)  // not the lone peak
+                    drifting.Mz[i] += 0.001 * (drifting.Cycles[drifting.Cycle[i]] - 4);
+            }
+            var byBlock = ScanningDemultiplexer.DemuxUnit(drifting, parameters);
+            var byPosition = ScanningDemultiplexer.DemuxUnit(drifting, new ScanningDemuxParams { PositionMz = true });
+            Assert.AreEqual(byBlock.Demultiplexed.Count, byPosition.Demultiplexed.Count);
+            for (int p = 0; p < byPosition.Demultiplexed.Count; p++)
+            {
+                var peak = byPosition.Demultiplexed[p];
+                Assert.AreEqual(byBlock.Demultiplexed[p].Ions, peak.Ions, 1e-9);
+                Assert.AreEqual(500.0 + 0.001 * (peak.Cycle - 4), peak.Mz, 1e-9);
+            }
+            Assert.IsTrue(byBlock.Demultiplexed.Any(p => Math.Abs(p.Mz - (500.0 + 0.001 * (p.Cycle - 4))) > 1e-4));
 
             var noisy = Simulate(a, sources, new Random(11));
             var first = ScanningDemultiplexer.DemuxUnit(noisy, parameters);
