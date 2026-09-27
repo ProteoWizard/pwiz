@@ -66,13 +66,12 @@ in for a tutorial step (dragging the two replicate-comparison graphs to the dock
 
 | Tutorial step | What happened | Stand-in used here |
 |---|---|---|
-| Delete key on the Targets tree | No effect, as in MethodEdit | `click_main_menu_item("Edit > Delete")` |
-| F11 / Shift-F11 | Main-menu shortcut keys sent to the tree have no effect (the zoom stayed 0-100 min) | View > Auto-Zoom > Best Peak / None |
+| Delete, F11, Shift-F11 | Main-menu shortcuts: sent to the tree they had no effect in both runs (the zoom stayed 0-100 min), because a shortcut is matched in the form's `ProcessCmdKey`, not in a control's `KeyDown`. **Fixed since**: `send_key_stroke` with an empty `controlId` now presses the key on the form, as while the window is active, and all three work (checked live: F11 to 71.4-73.7 min, Shift+F11 back to 0-100, Delete removes the selected peptide) | `click_main_menu_item` for Edit > Delete and View > Auto-Zoom in these runs; now `send_key_stroke(formId="SkylineWindow:...", controlId="", keyStroke="F11")` |
 | Home key (review after automated refinement) | No effect; only the arrows and Ctrl+Home / Ctrl+End are handled | `Ctrl+Home` |
 | Click, then Shift-click a run of files | No Shift-click verb | `select_item` once per file: 15, 24, then 5 calls |
 | Ctrl-click transitions to delete | No Ctrl-click verb on the tree | `set_selection` with `additionalLocators` |
 | Click and drag a box to zoom (s-04, optional) | Not tried; `click_graph` drags | Not needed |
-| Drag a graph onto a dock arrow (s-21) | No verb for docking a floating pane | `p26.view` window layout |
+| Drag a graph onto a dock arrow (s-21) | Not a gap: arranging panes is meant to be done with File > Import > Window Layout, not by driving the docking UI | `p26.view` window layout |
 | Close a graph with its red x | Works: `dismiss_with_cancel_button` on the graph form closes it | (not a gap) |
 | Windows Explorer / Excel views of the output | Outside Skyline | Row counts and first lines read from the files |
 
@@ -247,6 +246,7 @@ get_graph_image(formId="GraphChromatogram:Unrefined")
 
 ```
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Delete")   # no effect
+# (now: send_key_stroke(formId="SkylineWindow:Skyline - WormUnrefined.sky *", controlId="", keyStroke="Delete"))
 click_main_menu_item(menuPath="Edit > Delete")
 get_document_status()   -> 224 peptides, 2083 transitions
 get_selection()         -> Molecule:/peptides1/VLEAGGLDC[+57.021464]DMENANSVVDALK
@@ -356,6 +356,7 @@ The p13 layout closed the regression graph, which is where the tutorial clicks i
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Ctrl+Home")
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Down")
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="F11")   # no effect
+# (now: send_key_stroke(formId="SkylineWindow:Skyline - WormUnrefined.sky *", controlId="", keyStroke="F11"))
 click_main_menu_item(menuPath="Edit > Expand All > Peptides")
 get_graph_zoom(formId="GraphChromatogram:Unrefined")   -> 0 to 100 (F11 did nothing)
 click_main_menu_item(menuPath="View > Auto-Zoom > Best Peak")

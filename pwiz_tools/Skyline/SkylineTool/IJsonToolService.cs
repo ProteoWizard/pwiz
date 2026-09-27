@@ -603,7 +603,8 @@ namespace SkylineTool
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="controlId">The control to press the key on, matched as <see cref="GetControls"/>
-        /// reports it.</param>
+        /// reports it; empty to press it on the form itself, as while the window is active - its keyboard
+        /// shortcuts (e.g. F11 on the main window), then its dialog keys (Enter, Esc), then its KeyDown.</param>
         /// <param name="keyStroke">The key with any modifiers, '+'-separated and in any order, e.g.
         /// <c>"Down"</c>, <c>"Enter"</c>, <c>"Ctrl+V"</c>, <c>"Ctrl+Shift+Home"</c>.</param>
         ActionResult SendKeyStroke(string formId, string controlId, string keyStroke);

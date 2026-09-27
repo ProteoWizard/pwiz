@@ -968,13 +968,17 @@ public static class SkylineTools
         "skyline_get_controls.")]
     public static string SendKeyStroke(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
-        [Description("Control to press the key on, as skyline_get_controls reports it")] string controlId,
+        [Description("Control to press the key on, as skyline_get_controls reports it; empty to press it on the " +
+            "form itself, as while the window is active - its keyboard shortcuts (e.g. F11 on the main window) " +
+            "and its dialog keys (Enter, Esc)")] string controlId,
         [Description("The key with any modifiers, '+'-separated and in any order: e.g. 'Down', 'Enter', 'Ctrl+V', 'Ctrl+Shift+Home', 'Alt+F4'. Key names are A-Z, 0-9, Enter, Down, Up, Left, Right, Tab, Esc, Backspace, Delete, Home, End, PgUp, PgDn, F1-F12, Space.")] string keyStroke)
     {
         return Invoke(connection =>
         {
             var result = connection.SendKeyStroke(formId, controlId, keyStroke);
-            return DescribeAction(result, $"Pressed '{keyStroke}' on '{controlId}' in {formId}.");
+            return DescribeAction(result, string.IsNullOrEmpty(controlId)
+                ? $"Pressed '{keyStroke}' on {formId}."
+                : $"Pressed '{keyStroke}' on '{controlId}' in {formId}.");
         });
     }
 

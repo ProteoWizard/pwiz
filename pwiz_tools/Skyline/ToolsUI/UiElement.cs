@@ -98,13 +98,19 @@ namespace pwiz.Skyline.ToolsUI
     /// a tree's selected node, a list's selected item, a grid's current cell.</summary>
     public interface ITooltipElement { void ShowTooltipNow(); }
 
-    /// <summary>An element the keyboard can be driven on, without it having the focus. Every control is one.
-    /// <see cref="SendTextNow"/> takes LITERAL text, so nothing in it needs escaping;
+    /// <summary>An element a key can be pressed on, without it having the focus: every control, and a form,
+    /// which takes a key the way it does while it is the active window (its shortcuts, then its dialog keys).
     /// <see cref="SendKeyStrokeNow"/> takes one key named with its modifiers ("Ctrl+V", "Down").</summary>
-    public interface IKeyboardElement
+    public interface IKeyStrokeElement
+    {
+        void SendKeyStrokeNow(string keyStroke);
+    }
+
+    /// <summary>An element that can also be typed into. Every control is one; a form is not.
+    /// <see cref="SendTextNow"/> takes LITERAL text, so nothing in it needs escaping.</summary>
+    public interface IKeyboardElement : IKeyStrokeElement
     {
         void SendTextNow(string text);
-        void SendKeyStrokeNow(string keyStroke);
     }
 
     /// <summary>An element that offers a fixed list of choices whose visible text can be read (get_options) --
@@ -1084,7 +1090,7 @@ namespace pwiz.Skyline.ToolsUI
     /// a managed formId to this and call its methods, which marshal to the UI thread (and watch for a dialog
     /// a mutation pops) so the connector drives a form the same way whether or not it is native. It is the
     /// factory (<see cref="ElementFor"/>) for the elements in its tree, tagging each with itself.</summary>
-    public class StandaloneForm : StandaloneWindow
+    public class StandaloneForm : StandaloneWindow, IKeyStrokeElement
     {
         // Wraps a managed form, reading its window handle now. Must be built on the form's own UI thread -- reading
         // Form.Handle off it trips the cross-thread check -- which the assertion enforces. Off that thread, build it
@@ -1145,6 +1151,26 @@ namespace pwiz.Skyline.ToolsUI
         public override bool IsTransient => Form is LongWaitDlg;
         public override bool IsProgressing => Form is ILongWaitForm { IsBusy: true };
         public override string DetailedMessage => (Form as CommonFormEx)?.DetailedMessage ?? Form.Text;
+
+        /// <summary>Presses a key on the form itself, as while it is the active window with no particular
+        /// control in mind: its command keys first (ProcessCmdKey - the main window's menu shortcuts, e.g. F11
+        /// for Auto-Zoom Best Peak), then its dialog keys (ProcessDialogKey - Enter and Escape for a dialog's
+        /// OK and Cancel), then its own KeyDown. The key carries its modifiers, so the real keyboard state is
+        /// not involved.</summary>
+        public void SendKeyStrokeNow(string keyStroke)
+        {
+            var keyData = ControlElement.ParseKeyStroke(keyStroke);
+            var msg = Message.Create(Form.Handle, (int) User32.WinMessageType.WM_KEYDOWN,
+                (IntPtr) (int) (keyData & Keys.KeyCode), IntPtr.Zero);
+            var args = new object[] { msg, keyData };
+            if ((bool) typeof(Control).GetMethod(@"ProcessCmdKey", BindingFlags.Instance | BindingFlags.NonPublic)
+                    .Invoke(Form, args))
+                return;
+            if ((bool) typeof(Control).GetMethod(@"ProcessDialogKey", BindingFlags.Instance | BindingFlags.NonPublic)
+                    .Invoke(Form, new object[] { keyData }))
+                return;
+            ControlElement.RaiseProtectedHandler<Control>(Form, @"OnKeyDown", new KeyEventArgs(keyData));
+        }
 
         // Only the main Skyline window pastes / selects all at the window level (into/over the document); any
         // other form has no window-level clipboard gesture, so refuse it with a clear message.
