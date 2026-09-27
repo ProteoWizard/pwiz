@@ -349,17 +349,7 @@ namespace pwiz.Osprey.IO
                 var interner = new LibraryStringInterner();
                 foreach (var kv in proteinOverride)
                     library[kv.Key].ProteinIds = interner.InternToArray(kv.Value);
-                if (logInfo != null)
-                {
-                    long total = interner.TotalReferences;
-                    double pct = total > 0
-                        ? 100.0 * (total - interner.DistinctCount) / total
-                        : 0.0;
-                    logInfo(string.Format(
-                        @"Library-decoy mode: interned manifest protein accessions " +
-                        @"({0} distinct / {1} total, {2:F1}% collapsed)",
-                        interner.DistinctCount, total, pct));
-                }
+                interner.LogPairingManifestSummary(logInfo);
             }
 
             // Walk every target-side bucket; pair with the matching

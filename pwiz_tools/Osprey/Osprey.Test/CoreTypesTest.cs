@@ -674,6 +674,22 @@ namespace pwiz.Osprey.Test
             }
         }
 
+        /// <summary>
+        /// <see cref="CountText.Format"/> picks the whole singular sentence for exactly one and
+        /// the plural format otherwise - zero included - with the count as {0} and any further
+        /// arguments after it. The sentences here are test inputs, not product text.
+        /// </summary>
+        [TestMethod]
+        public void TestCountTextChoosesWholeSentence()
+        {
+            const string one = @"one: {1}";
+            const string many = @"many {0}: {1}";
+            Assert.AreEqual(@"one: x", CountText.Format(1, one, many, @"x"));
+            Assert.AreEqual(@"many 0: x", CountText.Format(0, one, many, @"x"));
+            Assert.AreEqual(@"many 2: x", CountText.Format(2, one, many, @"x"));
+            Assert.AreEqual(string.Format(@"{0:N0}", 1234567L), CountText.Format(1234567, @"one", @"{0:N0}"));
+        }
+
         #endregion
     }
 }

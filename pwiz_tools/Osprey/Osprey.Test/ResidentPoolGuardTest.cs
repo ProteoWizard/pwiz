@@ -324,10 +324,9 @@ namespace pwiz.Osprey.Test
         /// whose absence sent the run down this arm. So both halves are pinned, and the null
         /// half is the one that would otherwise regress silently.</para>
         ///
-        /// <para>The refusing half also asserts the message says what happened and what to do -
-        /// the shape (O(files x entries)), the measured cost, the bounded alternative, and that
-        /// no token admits it, so nobody burns an afternoon hunting the environment variable
-        /// that would let it through.</para>
+        /// <para>The refusing half also asserts a supplied token is named back, so nobody burns
+        /// an afternoon hunting the environment variable that would let it through. The wording
+        /// is user text and is not asserted.</para>
         /// </summary>
         private static void AssertAllRunsBundleGuard()
         {
@@ -360,9 +359,6 @@ namespace pwiz.Osprey.Test
                     new[] { 1u, 2u, 3u });
                 string err = ScoringTaskShared.AllRunsBundleGuardError(config, null);
                 Assert.IsNotNull(err, "the all-runs bundle must never be admitted silently");
-                StringAssert.Contains(err, "O(files x entries)");
-                StringAssert.Contains(err, "per-run survivor loader");
-                StringAssert.Contains(err, "cannot admit this path");
 
                 // A supplied token changes the wording but not the answer. Naming the value back
                 // is what stops a stale or misspelled token reading exactly like an unset one,
