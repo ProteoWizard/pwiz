@@ -175,14 +175,14 @@ namespace pwiz.Osprey.IO
                 nEntries++;
             }
 
+            // Left in place, every peptide is its own protein: protein parsimony and
+            // picked-protein FDR break, and the protein-compact second pass gets an empty stratum
+            // because no protein can reach 2 detected peptides.
             logWarning?.Invoke(string.Format(
-                @"Spectral library protein accessions carry Carafe's per-peptide '_pepNNNNN' " +
-                @"suffix: {0:N0} distinct accessions on {1:N0} entries collapse to {2:N0} real " +
-                @"proteins (e.g. '{3}' -> '{4}'). Stripping it - left in place every peptide is " +
-                @"its own protein, which breaks protein parsimony and picked-protein FDR, and " +
-                @"leaves OSPREY_PASS2_QVALUE=protein-compact with an empty stratum because no " +
-                @"protein can reach 2 detected peptides.",
-                cleaned.Count, nEntries, realAccessions.Count, example, exampleCleaned));
+                "Library protein accessions carry the per-peptide '_pepNNNNN' suffix that Carafe " +
+                "adds (e.g. '{2}' -> '{3}'); removing it maps {0:N0} accessions to {1:N0} proteins. " +
+                "Without this, every peptide would count as its own protein.",
+                cleaned.Count, realAccessions.Count, example, exampleCleaned));
             return nEntries;
         }
     }

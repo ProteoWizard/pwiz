@@ -51,7 +51,10 @@ namespace pwiz.Osprey.Tasks
         private readonly string _passLabel;
         private readonly int[] _fileTargets;
         private readonly int[] _fileDecoys;
-        private readonly Dictionary<string, double> _bestQByPrecursor;
+        // Distinct passing precursors (modseq|charge) for the unique-precursors [COUNT] line, its
+        // only reader. Null when --perf-stats is off: the tally is a string per passing row, tens
+        // of millions at cohort scale, for a line that would not be written.
+        private readonly HashSet<string> _passingPrecursors;
         // Streaming --model-diagnostics accumulator (null off the report path): folds every
         // pre-compaction row into the reduced report structures so the projection path can emit
         // the pass-1 report without holding the resident FdrEntry pool. Fed in Accept.
@@ -68,7 +71,7 @@ namespace pwiz.Osprey.Tasks
             int nFiles = projections.PerFile.Count;
             _fileTargets = new int[nFiles];
             _fileDecoys = new int[nFiles];
-            _bestQByPrecursor = new Dictionary<string, double>(StringComparer.Ordinal);
+            _passingPrecursors = LogTag.COUNT.IsEnabled ? new HashSet<string>(StringComparer.Ordinal) : null;
             _mdiagAccumulator = mdiagAccumulator;
         }
 
@@ -89,8 +92,8 @@ namespace pwiz.Osprey.Tasks
             double apexRt, in FdrQValues q)
         {
             // Tail [COUNT] tally, identical to the retired inline block: passing =
-            // EffectiveRunQvalue <= RunFdr, split target/decoy; best-q-per-precursor
-            // over passing targets keyed by modseq|charge. peptide + charge are passed in
+            // EffectiveRunQvalue <= RunFdr, split target/decoy; distinct passing target
+            // precursors keyed by modseq|charge. peptide + charge are passed in
             // (issue #4355 struct-shrink S3 Stage B) so this works whether the caller holds
             // a resident projection (2nd pass) or streams the row straight from parquet.
             double eff = q.EffectiveRunQvalue(_fdrLevel);
@@ -101,13 +104,8 @@ namespace pwiz.Osprey.Tasks
                 else
                     _fileTargets[fileIdx]++;
             }
-            if (!isDecoy && eff <= _runFdr)
-            {
-                string pkey = peptide + "|" + charge;
-                double existing;
-                if (!_bestQByPrecursor.TryGetValue(pkey, out existing) || eff < existing)
-                    _bestQByPrecursor[pkey] = eff;
-            }
+            if (_passingPrecursors != null && !isDecoy && eff <= _runFdr)
+                _passingPrecursors.Add(peptide + "|" + charge);
 
             // --model-diagnostics: fold this pre-compaction row into the streaming report
             // reductions (every row -- targets, decoys, entrapment, failing -- not just the
@@ -119,7 +117,7 @@ namespace pwiz.Osprey.Tasks
                 apexRt, in q);
         }
 
-        public void Finish(Action<string> logInfo)
+        public void Finish(IOspreyLog log)
         {
             // Flush any deferred per-file output first (2nd-pass empty-file sidecars);
             // the [COUNT] lines follow so they land at the same position the retired
@@ -131,22 +129,25 @@ namespace pwiz.Osprey.Tasks
             var perFile = Projections.PerFile;
             for (int f = 0; f < perFile.Count; f++)
             {
-                logInfo(string.Format(
-                    "[COUNT] {0} Percolator pass [{1}]: {2} targets, {3} decoys at {4:P0} FDR",
+                log.LogInfo(LogTag.COUNT, string.Format(
+                    "{0} Percolator pass [{1}]: {2} targets, {3} decoys at {4:P0} FDR",
                     _passLabel, perFile[f].Key, _fileTargets[f], _fileDecoys[f], _runFdr));
                 nTargetPassing += _fileTargets[f];
                 nDecoyPassing += _fileDecoys[f];
             }
 
-            logInfo(string.Format(
-                "{0} Percolator results: {1} targets, {2} decoys pass {3:P1} FDR",
+            log.LogInfo(string.Format(
+                "{0} Percolator results: {1:N0} targets, {2:N0} decoys pass {3:P1} FDR",
                 _passLabel, nTargetPassing, nDecoyPassing, _runFdr));
-            logInfo(string.Format(
-                "[COUNT] {0} total across files: {1}",
+            log.LogInfo(LogTag.COUNT, string.Format(
+                "{0} total across files: {1}",
                 _passLabel, nTargetPassing));
-            logInfo(string.Format(
-                "[COUNT] {0} unique precursors (best q across files): {1}",
-                _passLabel, _bestQByPrecursor.Count));
+            if (_passingPrecursors != null)
+            {
+                log.LogInfo(LogTag.COUNT, string.Format(
+                    "{0} unique precursors (best q across files): {1}",
+                    _passLabel, _passingPrecursors.Count));
+            }
         }
 
         /// <summary>Handle one row's persisted output (park it, or stream it to the sidecar).</summary>

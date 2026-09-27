@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Long-path support for Osprey.exe on Windows.
+
+  .NET's managed file APIs already accept paths past 260 characters. This declaration extends
+  that to native code in the process - SQLite (the .blib writer) and the vendor readers - which
+  call the Win32 file APIs directly. Windows honors it only when the machine setting
+  HKLM\SYSTEM\CurrentControlSet\Control\FileSystem\LongPathsEnabled is 1; without it, it is
+  ignored. Skyline declares the same for TestRunner (Skyline/TestRunner/app.manifest).
+-->
+<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
+  <assemblyIdentity version="1.0.0.0" name="Osprey.app"/>
+  <application xmlns="urn:schemas-microsoft-com:asm.v3">
+    <windowsSettings>
+      <longPathAware xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">true</longPathAware>
+    </windowsSettings>
+  </application>
+</assembly>

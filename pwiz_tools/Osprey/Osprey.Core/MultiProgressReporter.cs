@@ -147,14 +147,10 @@ namespace pwiz.Osprey.Core
             }
             // Redirect narrative (ctx.LogInfo, ProgressReporter headings, WARN) for
             // this async flow -- and the inner scoring Parallel.For it spawns -- into
-            // the file buffer until the scope is disposed, then publish the scope.
-            // Wrap the buffer in a StatFilteringTextWriter so the machine-parseable
-            // [COUNT]/[TIMING]/[BENCH]/[STAGE-WALL] lines are dropped as they are
-            // buffered (unless --perf-stats), exactly as the unbuffered Out does --
-            // otherwise a file's buffered block would leak the stat lines the default
-            // log suppresses, making a normal run look like perf mode.
-            scope.OutCookie = OspreyOutput.PushScopedOut(
-                new StatFilteringTextWriter(scope.ScopedWriter));
+            // the file buffer until the scope is disposed, then publish the scope. Tagged
+            // lines need no filtering here: a disabled tag is never written
+            // (OspreyLog.Write), so the buffered block matches the unbuffered log.
+            scope.OutCookie = OspreyOutput.PushScopedOut(scope.ScopedWriter);
             _current.Value = scope;
             return scope;
         }
