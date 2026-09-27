@@ -252,8 +252,16 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(new ScanningOutputSpectrum(100, 104, 100, 104), planTiled[0]);
             Assert.AreEqual(new ScanningOutputSpectrum(110, 112, 110, 112), planTiled[2]);
 
+            var framed = ScanningLayout.Parse(@"framed:3:1");
+            var planFramed = framed.Plan(100, 112);
+            Assert.AreEqual(5, planFramed.Count);
+            Assert.AreEqual(new ScanningOutputSpectrum(100, 102, 99, 103), planFramed[0]);
+            Assert.AreEqual(new ScanningOutputSpectrum(112, 112, 111, 113), planFramed[4]);
+            Assert.AreEqual(@"framed3m1", framed.Name);
+
             Assert.ThrowsException<ArgumentException>(() => ScanningLayout.Parse(@"centered:4"));
             Assert.ThrowsException<FormatException>(() => ScanningLayout.Parse(@"stacked:5"));
+            Assert.ThrowsException<FormatException>(() => ScanningLayout.Parse(@"framed:3"));
 
             // One channel from three positions (the third 2 ppm off) merges; a pass-through peak at
             // the same m/z does not.

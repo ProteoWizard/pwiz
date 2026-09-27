@@ -39,6 +39,13 @@ namespace pwiz.Osprey.Demux
         /// narrow-window DIA, about k times fewer spectra.
         /// </summary>
         tiled,
+
+        /// <summary>
+        /// Like tiled, but each spectrum also carries the demultiplexed signal of m positions
+        /// beyond its window on each side, so a precursor near a window edge keeps the signal that
+        /// placement noise moved into the next position. Windows still tile without overlap.
+        /// </summary>
+        framed,
     }
 
     /// <summary>One output spectrum of a layout, as encoded bin ranges.</summary>
@@ -80,36 +87,53 @@ namespace pwiz.Osprey.Demux
         /// <summary>Peaks of one channel from neighboring positions closer than this merge, in ppm.</summary>
         public const double MERGE_PPM = 5.0;
 
-        public ScanningLayout(ScanningLayoutKind kind, int bins)
+        public ScanningLayout(ScanningLayoutKind kind, int bins, int margin = 0)
         {
             if (bins < 1)
                 throw new ArgumentOutOfRangeException(nameof(bins));
+            if (margin < 0 || (margin > 0 && kind != ScanningLayoutKind.framed))
+                throw new ArgumentOutOfRangeException(nameof(margin));
             if (kind == ScanningLayoutKind.centered && bins % 2 == 0)
                 throw new ArgumentException(@"A centered layout needs an odd number of bins.");
             Kind = kind;
             Bins = bins;
+            Margin = margin;
         }
 
-        /// <summary>Parses <c>centered:5</c> or <c>tiled:5</c>.</summary>
+        /// <summary>Parses <c>centered:5</c>, <c>tiled:5</c> or <c>framed:3:1</c> (3 bins, 1 bin of margin).</summary>
         public static ScanningLayout Parse(string text)
         {
             string[] parts = text.Split(':');
-            if (parts.Length != 2 || !Enum.TryParse(parts[0], out ScanningLayoutKind kind) ||
-                !int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out int bins))
+            ScanningLayoutKind kind = ScanningLayoutKind.centered;
+            int bins = 0, margin = 0;
+            bool valid = parts.Length >= 2 && Enum.TryParse(parts[0], out kind) &&
+                int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out bins);
+            if (valid && kind == ScanningLayoutKind.framed)
+                valid = parts.Length == 3 && int.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out margin);
+            else if (valid)
+                valid = parts.Length == 2;
+            if (!valid)
             {
                 throw new FormatException(string.Format(CultureInfo.InvariantCulture,
-                    @"'{0}' is not a scanning layout (centered:k or tiled:k).", text));
+                    @"'{0}' is not a scanning layout (centered:k, tiled:k or framed:k:m).", text));
             }
-            return new ScanningLayout(kind, bins);
+            return new ScanningLayout(kind, bins, margin);
         }
 
         public ScanningLayoutKind Kind { get; }
         public int Bins { get; }
 
-        /// <summary>A short name, for file names and provenance: centered5, tiled5.</summary>
+        /// <summary>For a framed layout, the positions carried beyond the window on each side.</summary>
+        public int Margin { get; }
+
+        /// <summary>A short name, for file names and provenance: centered5, tiled5, framed3m1.</summary>
         public string Name
         {
-            get { return Kind.ToString() + Bins.ToString(CultureInfo.InvariantCulture); }
+            get
+            {
+                string name = Kind.ToString() + Bins.ToString(CultureInfo.InvariantCulture);
+                return Kind == ScanningLayoutKind.framed ? name + @"m" + Margin.ToString(CultureInfo.InvariantCulture) : name;
+            }
         }
 
         /// <summary>The output spectra of one sweep, for the encoded bins firstBin to lastBin.</summary>
@@ -127,7 +151,7 @@ namespace pwiz.Osprey.Demux
                 for (int b = firstBin; b <= lastBin; b += Bins)
                 {
                     int last = Math.Min(lastBin, b + Bins - 1);
-                    spectra.Add(new ScanningOutputSpectrum(b, last, b, last));
+                    spectra.Add(new ScanningOutputSpectrum(b, last, b - Margin, last + Margin));
                 }
             }
             return spectra;
