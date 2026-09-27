@@ -142,8 +142,9 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// The same channels and weighted solve on a stepped staggered acquisition: twelve bins,
         /// windows of two bins in one set and offset by one bin in the other, the sets acquired
-        /// half a cycle apart. With a constant elution the interpolation is exact, so every
-        /// spectrum's bins get exactly their sources, including a fragment two bins share.
+        /// half a cycle apart. With a constant elution the interpolation is exact, so each
+        /// spectrum's observed peaks are apportioned exactly to their sources' bins, including a
+        /// fragment two bins share.
         /// </summary>
         [TestMethod]
         public void TestStaggeredDemuxRecovers()
@@ -165,6 +166,7 @@ namespace pwiz.Osprey.Test
             var rowTimes = new double[windows.Count][];
             var rowSpectra = new int[windows.Count][];
             var outputRow = new List<int>();
+            var outputAcquisition = new List<int>();
             var outputTime = new List<double>();
             var outputSpectrum = new List<int>();
             var mz = new List<double>();
@@ -182,6 +184,7 @@ namespace pwiz.Osprey.Test
                     if (c >= 2 && c <= 7)
                     {
                         outputRow.Add(r);
+                        outputAcquisition.Add(c);
                         outputTime.Add(rowTimes[r][c]);
                         outputSpectrum.Add(rowSpectra[r][c]);
                     }
@@ -198,7 +201,7 @@ namespace pwiz.Osprey.Test
                 }
             }
             var unit = new InterpolatedUnit(a, Enumerable.Range(0, bins).ToArray(), rowTimes, rowSpectra,
-                outputRow.ToArray(), outputTime.ToArray(), outputSpectrum.ToArray(), 0, bins - 1)
+                outputRow.ToArray(), outputAcquisition.ToArray(), outputTime.ToArray(), outputSpectrum.ToArray(), 0, bins - 1)
             {
                 Mz = mz.ToArray(),
                 Ions = ions.ToArray(),

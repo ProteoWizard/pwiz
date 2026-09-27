@@ -270,6 +270,7 @@ namespace pwiz.Osprey.DemuxTool
             var rowSpectra = acquisitions.Select(list => list.Select(i => _ms2Spectra[i]).ToArray()).ToArray();
 
             var outputRow = new List<int>();
+            var outputAcquisition = new List<int>();
             var outputTime = new List<double>();
             var outputSpectrum = new List<int>();
             var mz = new List<double>();
@@ -286,6 +287,7 @@ namespace pwiz.Osprey.DemuxTool
                     if (coversCore && _cycleOfMs2[i] >= k0 && _cycleOfMs2[i] <= k1)
                     {
                         outputRow.Add(r);
+                        outputAcquisition.Add(q);
                         outputTime.Add(_ms2Time[i]);
                         outputSpectrum.Add(_ms2Spectra[i]);
                     }
@@ -299,8 +301,8 @@ namespace pwiz.Osprey.DemuxTool
                     }
                 }
             }
-            return new InterpolatedUnit(a, columnBins, rowTimes, rowSpectra, outputRow.ToArray(), outputTime.ToArray(),
-                outputSpectrum.ToArray(), g0, g1)
+            return new InterpolatedUnit(a, columnBins, rowTimes, rowSpectra, outputRow.ToArray(), outputAcquisition.ToArray(),
+                outputTime.ToArray(), outputSpectrum.ToArray(), g0, g1)
             {
                 Mz = mz.ToArray(),
                 Ions = ions.ToArray(),

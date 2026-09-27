@@ -116,18 +116,21 @@ namespace pwiz.Osprey.Demux
         /// <param name="rowTimes">Each window's acquisition times in the block, increasing.</param>
         /// <param name="rowSpectra">The spectrum of each of those acquisitions.</param>
         /// <param name="outputRow">For each output spectrum, its window (row).</param>
+        /// <param name="outputAcquisition">For each output spectrum, its index among its row's acquisitions.</param>
         /// <param name="outputTime">For each output spectrum, its acquisition time.</param>
         /// <param name="outputSpectrum">For each output spectrum, its index in the input.</param>
         /// <param name="firstCoreBin">First bin whose output the block owns.</param>
         /// <param name="lastCoreBin">Last bin whose output the block owns.</param>
         public InterpolatedUnit(double[,] transmission, int[] columnBins, double[][] rowTimes, int[][] rowSpectra,
-            int[] outputRow, double[] outputTime, int[] outputSpectrum, int firstCoreBin, int lastCoreBin)
+            int[] outputRow, int[] outputAcquisition, double[] outputTime, int[] outputSpectrum, int firstCoreBin,
+            int lastCoreBin)
         {
             Transmission = transmission;
             ColumnBins = columnBins;
             RowTimes = rowTimes;
             RowSpectra = rowSpectra;
             OutputRow = outputRow;
+            OutputAcquisition = outputAcquisition;
             OutputTime = outputTime;
             OutputSpectrum = outputSpectrum;
             FirstCoreBin = firstCoreBin;
@@ -139,6 +142,7 @@ namespace pwiz.Osprey.Demux
         public double[][] RowTimes { get; }
         public int[][] RowSpectra { get; }
         public int[] OutputRow { get; }
+        public int[] OutputAcquisition { get; }
         public double[] OutputTime { get; }
         public int[] OutputSpectrum { get; }
         public int FirstCoreBin { get; }
@@ -209,6 +213,12 @@ namespace pwiz.Osprey.Demux
     /// </remarks>
     public static class ScanningDemultiplexer
     {
+        /// <summary>
+        /// Shares of an observed staggered peak below this are not written: they are round-off of
+        /// the solve, not signal (as in <see cref="DemuxParams"/>'s share floor).
+        /// </summary>
+        public const double SHARE_FLOOR = 1e-6;
+
         /// <summary>
         /// The transmission matrix for a block: A[i, j] is the transmission of a precursor spread
         /// uniformly over source bin j into the spectrum of bin i, averaged over the source bin
@@ -310,8 +320,16 @@ namespace pwiz.Osprey.Demux
                 }
                 else
                 {
-                    solver.Solve(y, cycles, coreCycle, (c, j) => coreColumn[j], unit.Cycles, unit.ColumnBins,
-                        weightedMz / ions, result.Demultiplexed);
+                    double mz = weightedMz / ions;
+                    solver.Solve(y, cycles, coreCycle, (c, nc, x, cols) =>
+                    {
+                        for (int jj = 0; jj < nc; jj++)
+                        {
+                            int j = cols[jj];
+                            if (coreColumn[j] && x[jj] >= parameters.MinOutputIons)
+                                result.Demultiplexed.Add(new ScanningPeak(unit.ColumnBins[j], unit.Cycles[c], mz, x[jj]));
+                        }
+                    });
                     result.ChannelsSolved++;
                 }
                 foreach (int cell in touched)
@@ -369,15 +387,23 @@ namespace pwiz.Osprey.Demux
             Array.Sort(order); // Array.Sort OK: keys are unique ((channel + 1) * count + index)
 
             var series = new double[rows][];
+            var outputOf = new int[rows][];  // the output spectrum of each acquisition, or -1
             for (int r = 0; r < rows; r++)
+            {
                 series[r] = new double[unit.RowTimes[r].Length];
+                outputOf[r] = new int[unit.RowTimes[r].Length];
+                for (int q = 0; q < outputOf[r].Length; q++)
+                    outputOf[r][q] = -1;
+            }
+            for (int s = 0; s < outputs; s++)
+                outputOf[unit.OutputRow[s]][unit.OutputAcquisition[s]] = s;
             var rowHasSignal = new bool[rows];
             var y = new double[rows * outputs];
-            var solveAll = new bool[outputs];
+            var observed = new List<int>[outputs];  // the channel's peaks in each output spectrum
             for (int s = 0; s < outputs; s++)
-                solveAll[s] = true;
+                observed[s] = new List<int>();
+            var solveObserved = new bool[outputs];
             var solver = new ChannelSolver(a, parameters);
-            bool Emit(int s, int j) => keep[s * columns + j];
             int k = 0;
             while (k < peaks)
             {
@@ -417,6 +443,17 @@ namespace pwiz.Osprey.Demux
                 }
                 else
                 {
+                    // Only spectra where the channel was observed are solved: their observed peaks
+                    // are what gets apportioned.
+                    for (int m = k; m < end; m++)
+                    {
+                        int i = (int)(order[m] % peaks);
+                        int s = outputOf[unit.Row[i]][unit.Acquisition[i]];
+                        if (s < 0)
+                            continue;
+                        observed[s].Add(i);
+                        solveObserved[s] = true;
+                    }
                     for (int r = 0; r < rows; r++)
                     {
                         if (!rowHasSignal[r])
@@ -424,17 +461,26 @@ namespace pwiz.Osprey.Demux
                         var times = unit.RowTimes[r];
                         for (int s = 0; s < outputs; s++)
                         {
+                            if (!solveObserved[s])
+                                continue;
                             y[r * outputs + s] = Math.Max(0, RtInterpolator.Interpolate(interpolation, times, series[r],
                                 times.Length, unit.OutputTime[s]));
                         }
                     }
-                    solver.Solve(y, outputs, solveAll, Emit, unit.OutputSpectrum, unit.ColumnBins, weightedMz / ions,
-                        result.Demultiplexed);
+                    solver.Solve(y, outputs, solveObserved, (s, nc, x, cols) =>
+                        Apportion(unit, keep, observed[s], s, nc, x, cols, result.Demultiplexed));
                     result.ChannelsSolved++;
                     for (int r = 0; r < rows; r++)
                     {
                         if (rowHasSignal[r])
                             Array.Clear(y, r * outputs, outputs);
+                    }
+                    for (int s = 0; s < outputs; s++)
+                    {
+                        if (!solveObserved[s])
+                            continue;
+                        observed[s].Clear();
+                        solveObserved[s] = false;
                     }
                 }
                 for (int r = 0; r < rows; r++)
@@ -447,6 +493,36 @@ namespace pwiz.Osprey.Demux
                 k = end;
             }
             return result;
+        }
+
+        /// <summary>
+        /// Splits each observed peak of output spectrum <paramref name="s"/> among the bins of its
+        /// window by the solution's shares, (transmission x solved intensity) over their sum, at the
+        /// peak's own m/z, as pwiz's demultiplexer does. A spectrum's bins then sum to what was
+        /// acquired, no peak is invented, and no m/z moves; a solution of zero over the window
+        /// drops the peak.
+        /// </summary>
+        private static void Apportion(InterpolatedUnit unit, bool[] keep, List<int> observed, int s, int nc, double[] x,
+            int[] cols, List<ScanningPeak> output)
+        {
+            int r = unit.OutputRow[s], columns = unit.ColumnBins.Length;
+            double total = 0;
+            for (int jj = 0; jj < nc; jj++)
+                total += unit.Transmission[r, cols[jj]] * x[jj];
+            if (total <= 0)
+                return;
+            foreach (int i in observed)
+            {
+                for (int jj = 0; jj < nc; jj++)
+                {
+                    int j = cols[jj];
+                    if (!keep[s * columns + j] || x[jj] <= 0)
+                        continue;
+                    double share = unit.Transmission[r, j] * x[jj] / total;
+                    if (share >= SHARE_FLOOR)
+                        output.Add(new ScanningPeak(unit.ColumnBins[j], unit.OutputSpectrum[s], unit.Mz[i], unit.Ions[i] * share));
+                }
+            }
         }
 
         private static bool OwnsPassThrough(InterpolatedUnit unit, Dictionary<int, bool> ownOutput, int peak)
@@ -507,15 +583,11 @@ namespace pwiz.Osprey.Demux
 
             /// <summary>
             /// Solves the channel whose counts are <paramref name="y"/> (rows x times, row-major)
-            /// at each time <paramref name="solveTime"/> selects, and adds the demultiplexed
-            /// intensities <paramref name="emit"/> (time, column) accepts to <paramref name="output"/>,
-            /// at m/z <paramref name="mz"/>, labeled with <paramref name="timeLabels"/> and
-            /// <paramref name="columnBins"/>.
+            /// at each time <paramref name="solveTime"/> selects, and hands each solution to
+            /// <paramref name="solved"/> as (time, column count, solution, the solution's columns).
             /// </summary>
-            public void Solve(double[] y, int cycles, bool[] solveTime, Func<int, int, bool> emit, int[] timeLabels,
-                int[] columnBins, double mz, List<ScanningPeak> output)
+            public void Solve(double[] y, int cycles, bool[] solveTime, Action<int, int, double[], int[]> solved)
             {
-                double minOutput = _parameters.MinOutputIons;
                 // The columns any of the channel's signal-bearing rows could come from, and the
                 // rows that see any of those columns (their zeros are information too).
                 for (int r = 0; r < _rows; r++)
@@ -568,12 +640,7 @@ namespace pwiz.Osprey.Demux
                     NnlsSolver.SolveNormal(_gram, _atb, nc, _x, _workspace);
                     if (_parameters.PoissonWeights)
                         SolveWeighted(y, c, cycles, nr, nc);
-                    for (int jj = 0; jj < nc; jj++)
-                    {
-                        int j = _columnIndex[jj];
-                        if (_x[jj] >= minOutput && emit(c, j))
-                            output.Add(new ScanningPeak(columnBins[j], timeLabels[c], mz, _x[jj]));
-                    }
+                    solved(c, nc, _x, _columnIndex);
                 }
             }
 
