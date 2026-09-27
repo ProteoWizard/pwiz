@@ -477,7 +477,11 @@ namespace pwiz.Osprey.Demux
             private readonly double[] _atb;
             private readonly double[] _x;
             private readonly double[] _mu;
+            private readonly double[] _start;
             private readonly bool[] _rowSignal;
+            private readonly int[] _rowStart;      // used row rr's entries are [_rowStart[rr], _rowStart[rr + 1])
+            private readonly int[] _nzColumn;      // an entry's column, as an index into the channel's columns
+            private readonly double[] _nzValue;
             private readonly NnlsSolver.Workspace _workspace;
 
             public ChannelSolver(double[,] a, ScanningDemuxParams parameters)
@@ -493,7 +497,11 @@ namespace pwiz.Osprey.Demux
                 _atb = new double[_columns];
                 _x = new double[_columns];
                 _mu = new double[_rows];
+                _start = new double[_columns];
                 _rowSignal = new bool[_rows];
+                _rowStart = new int[_rows + 1];
+                _nzColumn = new int[_rows * _columns];
+                _nzValue = new double[_rows * _columns];
                 _workspace = new NnlsSolver.Workspace(_columns);
             }
 
@@ -524,31 +532,33 @@ namespace pwiz.Osprey.Demux
                         }
                     }
                 }
-                int nr = 0;
+                // Each used row's nonzero entries over those columns, compactly: a row sees only the
+                // positions within the transmission's reach, about half of the columns.
+                int nr = 0, nnz = 0;
                 for (int r = 0; r < _rows; r++)
                 {
+                    int start = nnz;
                     for (int jj = 0; jj < nc; jj++)
                     {
-                        if (_a[r, _columnIndex[jj]] > 0)
-                        {
-                            _rowIndex[nr++] = r;
-                            break;
-                        }
+                        double value = _a[r, _columnIndex[jj]];
+                        if (value <= 0)
+                            continue;
+                        _nzColumn[nnz] = jj;
+                        _nzValue[nnz] = value;
+                        nnz++;
                     }
+                    if (nnz == start)
+                        continue;
+                    _rowIndex[nr] = r;
+                    _rowStart[nr] = start;
+                    nr++;
+                    _rowStart[nr] = nnz;
                 }
 
                 // A^T A over those rows and columns: the same for every sweep of the channel.
-                for (int p = 0; p < nc; p++)
-                {
-                    for (int q = 0; q <= p; q++)
-                    {
-                        double sum = 0;
-                        for (int rr = 0; rr < nr; rr++)
-                            sum += _a[_rowIndex[rr], _columnIndex[p]] * _a[_rowIndex[rr], _columnIndex[q]];
-                        _gram[p * nc + q] = sum;
-                        _gram[q * nc + p] = sum;
-                    }
-                }
+                Array.Clear(_gram, 0, nc * nc);
+                for (int rr = 0; rr < nr; rr++)
+                    AddOuterProduct(_gram, nc, rr, 1);
 
                 for (int c = 0; c < cycles; c++)
                 {
@@ -580,25 +590,17 @@ namespace pwiz.Osprey.Demux
                     _weighted[i] = baseWeight * _gram[i];
                 for (int rr = 0; rr < nr; rr++)
                 {
-                    int r = _rowIndex[rr];
                     double mu = 0;
-                    for (int jj = 0; jj < nc; jj++)
-                        mu += _a[r, _columnIndex[jj]] * _x[jj];
+                    for (int e = _rowStart[rr]; e < _rowStart[rr + 1]; e++)
+                        mu += _nzValue[e] * _x[_nzColumn[e]];
                     _mu[rr] = mu;
-                    if (mu <= floor)
-                        continue;
-                    double correction = 1 / mu - baseWeight;
-                    for (int p = 0; p < nc; p++)
-                    {
-                        double ap = _a[r, _columnIndex[p]];
-                        if (ap == 0)
-                            continue;
-                        for (int q = 0; q < nc; q++)
-                            _weighted[p * nc + q] += correction * ap * _a[r, _columnIndex[q]];
-                    }
+                    if (mu > floor)
+                        AddOuterProduct(_weighted, nc, rr, 1 / mu - baseWeight);
                 }
                 ComputeAtb(y, c, cycles, nr, nc, _mu);
-                NnlsSolver.SolveNormal(_weighted, _atb, nc, _x, _workspace);
+                // The weighted solution usually has the unweighted one's support: start there.
+                Array.Copy(_x, _start, nc);
+                NnlsSolver.SolveNormal(_weighted, _atb, nc, _x, _workspace, 0, _start);
             }
 
             /// <summary>A^T y for one sweep, or A^T W y with weights 1 / max(mu, floor) when mu is given.</summary>
@@ -612,8 +614,21 @@ namespace pwiz.Osprey.Demux
                         continue;
                     if (mu != null)
                         value /= Math.Max(mu[rr], _parameters.WeightFloorIons);
-                    for (int jj = 0; jj < nc; jj++)
-                        _atb[jj] += _a[_rowIndex[rr], _columnIndex[jj]] * value;
+                    for (int e = _rowStart[rr]; e < _rowStart[rr + 1]; e++)
+                        _atb[_nzColumn[e]] += _nzValue[e] * value;
+                }
+            }
+
+            /// <summary>Adds weight times the outer product of used row rr with itself to an nc x nc matrix.</summary>
+            private void AddOuterProduct(double[] matrix, int nc, int rr, double weight)
+            {
+                int start = _rowStart[rr], end = _rowStart[rr + 1];
+                for (int e = start; e < end; e++)
+                {
+                    double scaled = weight * _nzValue[e];
+                    int offset = _nzColumn[e] * nc;
+                    for (int f = start; f < end; f++)
+                        matrix[offset + _nzColumn[f]] += scaled * _nzValue[f];
                 }
             }
 

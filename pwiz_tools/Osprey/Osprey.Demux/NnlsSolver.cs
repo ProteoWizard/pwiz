@@ -162,8 +162,24 @@ namespace pwiz.Osprey.Demux
         /// solve. <paramref name="atb"/> is not modified; the solution goes to the first
         /// <paramref name="n"/> entries of <paramref name="x"/>.
         /// </summary>
+        /// <param name="ata">The Gram matrix.</param>
+        /// <param name="atb">A^T b.</param>
+        /// <param name="n">The number of columns.</param>
+        /// <param name="x">Receives the solution.</param>
+        /// <param name="workspace">Buffers for at least <paramref name="n"/> columns.</param>
+        /// <param name="maxIterations">Cap on least-squares sub-problems; 0 selects 3 x columns.</param>
+        /// <param name="initial">
+        /// A feasible starting point (entries &gt;= 0), typically the solution of a nearby problem:
+        /// its positive entries start in the passive set, which spares the iterations that would
+        /// rediscover them. Null starts from x = 0.
+        /// </param>
+        /// <remarks>
+        /// Lawson-Hanson like <see cref="Solve"/>, but the Cholesky factor of the passive block is
+        /// extended by one row when a column enters rather than refactored, and only refactored
+        /// when columns leave. Same result, same tie-breaking to the lowest index.
+        /// </remarks>
         public static NnlsPath SolveNormal(double[] ata, double[] atb, int n, double[] x, Workspace workspace,
-            int maxIterations = 0)
+            int maxIterations = 0, double[] initial = null)
         {
             Array.Clear(x, 0, n);
             bool allZero = true;
@@ -177,8 +193,220 @@ namespace pwiz.Osprey.Demux
             }
             if (allZero)
                 return NnlsPath.zero;
-            Array.Copy(atb, workspace.Atb, n);
-            return ActiveSet(ata, n, maxIterations > 0 ? maxIterations : 3 * Math.Max(1, n), x, workspace);
+            return ActiveSetIncremental(ata, atb, n, maxIterations > 0 ? maxIterations : 3 * Math.Max(1, n), x,
+                workspace, initial);
+        }
+
+        private static NnlsPath ActiveSetIncremental(double[] g, double[] h, int n, int maxIterations, double[] x,
+            Workspace ws, double[] initial)
+        {
+            double scale = 0;
+            for (int c = 0; c < n; c++)
+                scale = Math.Max(scale, Math.Abs(h[c]));
+            double tolerance = 1e-12 * Math.Max(scale, double.Epsilon) * n;
+
+            var passive = ws.Passive;
+            var blocked = ws.Blocked;
+            Array.Clear(passive, 0, n);
+            Array.Clear(blocked, 0, n);
+            var order = ws.Index;      // passive columns, in the factor's row order
+            var l = ws.Factor;         // lower Cholesky factor of the passive block, row stride n
+            var y = ws.Scratch;
+            int p = 0;
+            int iterations = 0;
+
+            bool resume = false;
+            if (initial != null)
+            {
+                for (int c = 0; c < n; c++)
+                {
+                    if (initial[c] > 0)
+                    {
+                        x[c] = initial[c];
+                        passive[c] = true;
+                        order[p++] = c;
+                    }
+                }
+                if (p > 0 && !Refactor(g, n, order, p, l))
+                {
+                    // The warm start's columns are numerically dependent here: start cold.
+                    for (int q = 0; q < p; q++)
+                    {
+                        x[order[q]] = 0;
+                        passive[order[q]] = false;
+                    }
+                    p = 0;
+                }
+                resume = p > 0;
+            }
+
+            while (true)
+            {
+                int enter = -1;
+                if (!resume)
+                {
+                    // The gradient h - G x, where x is nonzero only on the passive columns.
+                    double best = tolerance;
+                    for (int c = 0; c < n; c++)
+                    {
+                        if (passive[c] || blocked[c])
+                            continue;
+                        double w = h[c];
+                        for (int q = 0; q < p; q++)
+                            w -= g[c * n + order[q]] * x[order[q]];
+                        if (w > best)
+                        {
+                            best = w;
+                            enter = c;
+                        }
+                    }
+                    if (enter < 0)
+                        return NnlsPath.active_set;
+                    if (!Append(g, n, order, p, l, enter))
+                    {
+                        // Numerically dependent on the passive columns: it cannot help.
+                        blocked[enter] = true;
+                        continue;
+                    }
+                    passive[enter] = true;
+                    order[p++] = enter;
+                }
+                bool firstPass = !resume;
+                resume = false;
+
+                while (true)
+                {
+                    if (++iterations > maxIterations)
+                        return NnlsPath.iteration_cap;
+                    for (int q = 0; q < p; q++)
+                        y[q] = h[order[q]];
+                    SolveFactor(l, n, p, y);
+                    if (firstPass && y[p - 1] <= 0)
+                    {
+                        // The entering column's own solution is not positive: chosen on round-off.
+                        passive[enter] = false;
+                        blocked[enter] = true;
+                        p--;
+                        break;
+                    }
+                    firstPass = false;
+
+                    double alpha = 1;
+                    int leave = -1;
+                    for (int q = 0; q < p; q++)
+                    {
+                        int c = order[q];
+                        if (y[q] > 0)
+                            continue;
+                        double step = x[c] / (x[c] - y[q]);
+                        if (step < alpha || (step == alpha && leave >= 0 && c < leave))
+                        {
+                            alpha = step;
+                            leave = c;
+                        }
+                    }
+                    if (leave < 0)
+                    {
+                        for (int q = 0; q < p; q++)
+                            x[order[q]] = y[q];
+                        Array.Clear(blocked, 0, n);
+                        break;
+                    }
+                    int kept = 0;
+                    for (int q = 0; q < p; q++)
+                    {
+                        int c = order[q];
+                        x[c] += alpha * (y[q] - x[c]);
+                        if (c == leave || x[c] <= 0)
+                        {
+                            x[c] = 0;
+                            passive[c] = false;
+                        }
+                        else
+                        {
+                            order[kept++] = c;
+                        }
+                    }
+                    p = kept;
+                    if (p > 0 && !Refactor(g, n, order, p, l))
+                        return NnlsPath.active_set;  // not reached for a subset of a definite block
+                }
+            }
+        }
+
+        /// <summary>
+        /// Extends the factor of the passive block by column <paramref name="t"/>. False if the
+        /// column is numerically dependent on the passive ones.
+        /// </summary>
+        private static bool Append(double[] g, int n, int[] order, int p, double[] l, int t)
+        {
+            double maxDiagonal = g[t * n + t];
+            for (int q = 0; q < p; q++)
+                maxDiagonal = Math.Max(maxDiagonal, g[order[q] * n + order[q]]);
+            double pivotFloor = 1e-10 * Math.Max(maxDiagonal, double.Epsilon);
+            double sumSquares = 0;
+            for (int i = 0; i < p; i++)
+            {
+                double sum = g[order[i] * n + t];
+                for (int k = 0; k < i; k++)
+                    sum -= l[i * n + k] * l[p * n + k];
+                double value = sum / l[i * n + i];
+                l[p * n + i] = value;
+                sumSquares += value * value;
+            }
+            double d = g[t * n + t] - sumSquares;
+            if (d <= pivotFloor)
+                return false;
+            l[p * n + p] = Math.Sqrt(d);
+            return true;
+        }
+
+        /// <summary>The factor of the passive block from scratch, row stride n.</summary>
+        private static bool Refactor(double[] g, int n, int[] order, int p, double[] l)
+        {
+            double maxDiagonal = 0;
+            for (int i = 0; i < p; i++)
+                maxDiagonal = Math.Max(maxDiagonal, g[order[i] * n + order[i]]);
+            double pivotFloor = 1e-10 * Math.Max(maxDiagonal, double.Epsilon);
+            for (int i = 0; i < p; i++)
+            {
+                for (int j = 0; j <= i; j++)
+                {
+                    double sum = g[order[i] * n + order[j]];
+                    for (int k = 0; k < j; k++)
+                        sum -= l[i * n + k] * l[j * n + k];
+                    if (i == j)
+                    {
+                        if (sum <= pivotFloor)
+                            return false;
+                        l[i * n + i] = Math.Sqrt(sum);
+                    }
+                    else
+                    {
+                        l[i * n + j] = sum / l[j * n + j];
+                    }
+                }
+            }
+            return true;
+        }
+
+        /// <summary>Solves L L^T y = b in place for the p x p factor held with row stride n.</summary>
+        private static void SolveFactor(double[] l, int n, int p, double[] y)
+        {
+            for (int i = 0; i < p; i++)
+            {
+                double sum = y[i];
+                for (int k = 0; k < i; k++)
+                    sum -= l[i * n + k] * y[k];
+                y[i] = sum / l[i * n + i];
+            }
+            for (int i = p - 1; i >= 0; i--)
+            {
+                double sum = y[i];
+                for (int k = i + 1; k < p; k++)
+                    sum -= l[k * n + i] * y[k];
+                y[i] = sum / l[i * n + i];
+            }
         }
 
         private NnlsPath SolveActiveSet(double[] b, double[] x, Workspace ws)

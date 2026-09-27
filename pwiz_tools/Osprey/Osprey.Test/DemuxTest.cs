@@ -697,7 +697,37 @@ namespace pwiz.Osprey.Test
                 double best = BruteForceObjective(a, b);
                 Assert.AreEqual(best, objective, 1e-9 * Math.Max(1, best),
                     string.Format(@"system {0}: {1} x {2}", s, rows, columns));
+
+                // The normal-equations path with the incremental factor, from x = 0 and warm-started
+                // from a feasible point near the answer, reaches the same optimum.
+                var (ata, atb) = NormalEquations(a, b);
+                var cold = new double[columns];
+                Assert.AreNotEqual(NnlsPath.iteration_cap, NnlsSolver.SolveNormal(ata, atb, columns, cold, workspace));
+                Assert.AreEqual(best, Objective(a, b, cold), 1e-9 * Math.Max(1, best), @"cold, system " + s);
+                var start = x.Select(v => random.Next(3) == 0 ? 0 : v + random.NextDouble() * 0.1).ToArray();
+                var warm = new double[columns];
+                Assert.AreNotEqual(NnlsPath.iteration_cap,
+                    NnlsSolver.SolveNormal(ata, atb, columns, warm, workspace, 0, start));
+                Assert.AreEqual(best, Objective(a, b, warm), 1e-9 * Math.Max(1, best), @"warm, system " + s);
             }
+        }
+
+        private static (double[] Ata, double[] Atb) NormalEquations(double[,] a, double[] b)
+        {
+            int rows = a.GetLength(0), columns = a.GetLength(1);
+            var ata = new double[columns * columns];
+            var atb = new double[columns];
+            for (int i = 0; i < columns; i++)
+            {
+                for (int r = 0; r < rows; r++)
+                    atb[i] += a[r, i] * b[r];
+                for (int j = 0; j < columns; j++)
+                {
+                    for (int r = 0; r < rows; r++)
+                        ata[i * columns + j] += a[r, i] * a[r, j];
+                }
+            }
+            return (ata, atb);
         }
 
         /// <summary>
