@@ -166,6 +166,15 @@
   <data name="LibraryDeduplicator_DeduplicateLibrary_Merging_duplicate_library_precursors" xml:space="preserve">
     <value>Merging duplicate library precursors</value>
   </data>
+  <data name="LibraryLoader_DescribeDecoysListedAsTargets_The_library_and_its_decoy_pairing_manifest_disagree___0__library_precursors_are_" xml:space="preserve">
+    <value>The library and its decoy pairing manifest disagree: {0:N0} library precursors are decoys by their protein accessions, but the manifest {1} lists their sequences as targets. This happens when a library merges a decoy with an identical real target into one row. Regenerate the library so each row is one or the other.</value>
+  </data>
+  <data name="LibraryLoader_DescribeSharedDecoyIds_Library_decoy_pairing_gave__0__library_precursor_IDs_to_more_than_one_decoy__Each_decoy_" xml:space="preserve">
+    <value>Library-decoy pairing gave {0:N0} library precursor IDs to more than one decoy. Each decoy must pair with a distinct target.</value>
+  </data>
+  <data name="LibraryLoader_DescribeSharedDecoyIds_Library_precursor_ID__0__" xml:space="preserve">
+    <value>Library precursor ID {0}:</value>
+  </data>
   <data name="LibraryLoader_Load_Failed_to_load_the_library_cache___0___Reading_the_library_file_instead_" xml:space="preserve">
     <value>Failed to load the library cache: {0}. Reading the library file instead.</value>
   </data>

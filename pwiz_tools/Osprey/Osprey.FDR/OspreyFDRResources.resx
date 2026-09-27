@@ -196,6 +196,12 @@
   <data name="PercolatorScorer_ScoreProjectionAndComputeFdrInPlace_Scoring__0__precursor_candidate_peaks" xml:space="preserve">
     <value>Scoring {0:N0} precursor candidate peaks</value>
   </data>
+  <data name="PercolatorTrainer_DescribeCSelection_most_regularized_within__0___of_the_best" xml:space="preserve">
+    <value>most regularized within {0:G6}% of the best</value>
+  </data>
+  <data name="PercolatorTrainer_DescribeCSelection_strict_maximum" xml:space="preserve">
+    <value>strict maximum</value>
+  </data>
   <data name="PercolatorTrainer_TrainFoldModels_Gradient_boosted_trees___0__trees__max_depth__1__learning_rate__2__subsample__3__colsample__4_" xml:space="preserve">
     <value>Gradient-boosted trees: {0} trees, max depth {1}, learning rate {2}, subsample {3}, colsample {4}, lambda {5}, alpha {6}, gamma {7}, min child weight {8}</value>
   </data>

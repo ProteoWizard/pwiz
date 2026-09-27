@@ -274,6 +274,35 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The library and its decoy pairing manifest disagree: {0:N0} library precursors are decoys by their protein accessions, but the manifest {1} lists their sequences as targets. This happens when a library merges a decoy with an identical real target into one row. Regenerate the library so each row is one or the other..
+        /// </summary>
+        public static string LibraryLoader_DescribeDecoysListedAsTargets_The_library_and_its_decoy_pairing_manifest_disagree___0__library_precursors_are_ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_DescribeDecoysListedAsTargets_The_library_and_its_decoy_pairing_man" +
+                        "ifest_disagree___0__library_precursors_are_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library-decoy pairing gave {0:N0} library precursor IDs to more than one decoy. Each decoy must pair with a distinct target..
+        /// </summary>
+        public static string LibraryLoader_DescribeSharedDecoyIds_Library_decoy_pairing_gave__0__library_precursor_IDs_to_more_than_one_decoy__Each_decoy_ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_DescribeSharedDecoyIds_Library_decoy_pairing_gave__0__library_precu" +
+                        "rsor_IDs_to_more_than_one_decoy__Each_decoy_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library precursor ID {0}:.
+        /// </summary>
+        public static string LibraryLoader_DescribeSharedDecoyIds_Library_precursor_ID__0__ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_DescribeSharedDecoyIds_Library_precursor_ID__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to load the library cache: {0}. Reading the library file instead..
         /// </summary>
         public static string LibraryLoader_Load_Failed_to_load_the_library_cache___0___Reading_the_library_file_instead_ {

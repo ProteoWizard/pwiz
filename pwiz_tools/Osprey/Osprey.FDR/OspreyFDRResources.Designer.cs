@@ -376,6 +376,24 @@ namespace pwiz.Osprey.FDR {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to most regularized within {0:G6}% of the best.
+        /// </summary>
+        public static string PercolatorTrainer_DescribeCSelection_most_regularized_within__0___of_the_best {
+            get {
+                return ResourceManager.GetString("PercolatorTrainer_DescribeCSelection_most_regularized_within__0___of_the_best", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to strict maximum.
+        /// </summary>
+        public static string PercolatorTrainer_DescribeCSelection_strict_maximum {
+            get {
+                return ResourceManager.GetString("PercolatorTrainer_DescribeCSelection_strict_maximum", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}-fold cross-validation on {1:N0} training peaks ({2:N0} targets).
         /// </summary>
         public static string PercolatorTrainer_TrainFoldModels__0__fold_cross_validation_on__1__training_peaks___2__targets_ {
@@ -405,7 +423,7 @@ namespace pwiz.Osprey.FDR {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to SVM regularization C (swept over {0}, chosen by cross-validation per fold):.
+        ///   Looks up a localized string similar to SVM regularization C (swept over {0}, chosen by cross-validation per fold, {1}):.
         /// </summary>
         public static string PercolatorTrainer_TrainFoldModels_SVM_regularization_C__swept_over__0___chosen_by_cross_validation_per_fold__ {
             get {

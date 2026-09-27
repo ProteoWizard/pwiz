@@ -480,15 +480,15 @@ namespace pwiz.Osprey
                 if (OspreyEnvironment.SvmCSelectionToleranceUnrecognized)
                 {
                     LogError(string.Format(
-                        "OSPREY_SVM_C_TOLERANCE must be a number in [0, 1) such as '0.01', not '{0}'. " +
-                        "Unset it for the default ({1}); 0 selects the strict maximum the Rust implementation uses.",
+                        @"OSPREY_SVM_C_TOLERANCE must be a number in [0, 1) such as '0.01', not '{0}'. " +
+                        @"Unset it for the default ({1}); 0 selects the strict maximum the Rust implementation uses.",
                         OspreyEnvironment.SvmCSelectionToleranceSetting,
                         OspreyEnvironment.DEFAULT_SVM_C_SELECTION_TOLERANCE.ToString(CultureInfo.InvariantCulture)));
                     return 1;
                 }
                 if (!string.IsNullOrEmpty(OspreyEnvironment.SvmCSelectionToleranceSetting))
                 {
-                    LogInfo(string.Format("First-pass SVM C selection: OSPREY_SVM_C_TOLERANCE = {0}",
+                    LogInfo(string.Format(@"First-pass SVM C selection: OSPREY_SVM_C_TOLERANCE = {0}",
                         OspreyEnvironment.SvmCSelectionTolerance.ToString(CultureInfo.InvariantCulture)));
                 }
                 // OSPREY_STAGE7_STREAM was REMOVED (2026-09-10): the streamed Stage-7 join is the

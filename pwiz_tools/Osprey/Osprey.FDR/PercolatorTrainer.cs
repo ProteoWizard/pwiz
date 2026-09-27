@@ -1384,11 +1384,10 @@ namespace pwiz.Osprey.FDR
         private static string DescribeCSelection(double tolerance)
         {
             if (!(tolerance > 0))
-                return "strict maximum";
+                return OspreyFDRResources.PercolatorTrainer_DescribeCSelection_strict_maximum;
             // General format, not fixed decimals: a small non-zero tolerance must not print
             // as "0%", which would read as the strict maximum it is not.
-            return string.Format(CultureInfo.InvariantCulture,
-                "most regularized within {0:G6}% of the best", tolerance * 100);
+            return string.Format(OspreyFDRResources.PercolatorTrainer_DescribeCSelection_most_regularized_within__0___of_the_best, tolerance * 100);
         }
 
         /// <summary>

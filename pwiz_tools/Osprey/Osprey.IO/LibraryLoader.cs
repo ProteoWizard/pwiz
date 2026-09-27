@@ -499,11 +499,7 @@ namespace pwiz.Osprey.IO
             List<int> indices, string manifestPath)
         {
             var sb = new StringBuilder();
-            sb.AppendFormat(
-                @"The library and its decoy pairing manifest disagree: {0} library entries are " +
-                @"decoys by their protein accessions, but the manifest {1} lists their sequence " +
-                @"as a target. This happens when a library merges a decoy with an identical real " +
-                @"target into one row. Regenerate the library so each row is one or the other.",
+            sb.AppendFormat(OspreyIOResources.LibraryLoader_DescribeDecoysListedAsTargets_The_library_and_its_decoy_pairing_manifest_disagree___0__library_precursors_are_,
                 indices.Count, manifestPath);
             foreach (int i in indices)
                 sb.AppendLine().Append(@"  ").Append(DescribeEntry(library[i]));
@@ -523,12 +519,10 @@ namespace pwiz.Osprey.IO
             if (groups.Count == 0)
                 return null;
             var sb = new StringBuilder();
-            sb.AppendFormat(
-                @"Library-decoy pairing gave {0} entry_ids to more than one decoy. Each decoy must " +
-                @"pair with a distinct target.", groups.Count);
+            sb.AppendFormat(OspreyIOResources.LibraryLoader_DescribeSharedDecoyIds_Library_decoy_pairing_gave__0__library_precursor_IDs_to_more_than_one_decoy__Each_decoy_, groups.Count);
             foreach (var group in groups)
             {
-                sb.AppendLine().AppendFormat(@"  entry_id {0}:", library[group[0]].Id);
+                sb.AppendLine().Append(@"  ").AppendFormat(OspreyIOResources.LibraryLoader_DescribeSharedDecoyIds_Library_precursor_ID__0__, library[group[0]].Id);
                 foreach (int i in group)
                     sb.AppendLine().Append(@"    ").Append(DescribeEntry(library[i]));
             }
