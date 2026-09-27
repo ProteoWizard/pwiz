@@ -745,12 +745,16 @@ public static class VendorReaderTestHarness
     }
 
     /// <summary>
-    /// Mirrors pwiz cpp <c>VendorReaderTestHarness.cpp</c> lines 1004–1019: after the reader
-    /// has been disposed, rename the vendor source to <c>&lt;path&gt;.renamed</c> and back.
-    /// If a vendor handle is still open the OS will reject the rename with a sharing-violation
-    /// IOException; that's the regression we want to catch (vendor SpectrumList missed a
-    /// Dispose, MSData/Run didn't propagate, Converter didn't `using`, etc.).
+    /// After the reader has been disposed, assert that THIS process holds no handle on the
+    /// vendor source. That is the regression we want to catch: a vendor SpectrumList that
+    /// missed a Dispose, an MSData/Run that didn't propagate one, a Converter without a
+    /// `using`.
     /// </summary>
+    /// <remarks>
+    /// cpp <c>VendorReaderTestHarness.cpp</c> lines 1004–1019 renames the source and back, and
+    /// this port did too until a shared-fixture race showed the rename answers a wider question
+    /// than the one being asked — see the comment on the check below.
+    /// </remarks>
     private static void AssertFilesUnlocked(string rawPath, bool knownLeakySdk = false,
         string probeDescription = "after Dispose",
         string lockHint = "Likely a missing Dispose somewhere in the SpectrumList -> backing-data chain.")
@@ -765,69 +769,55 @@ public static class VendorReaderTestHarness
         GC.WaitForPendingFinalizers();
         GC.Collect();
 
-        string renamed = rawPath.TrimEnd('/', '\\') + ".renamed";
-        IOException? lastError = null;
-        // 5×50ms wasn't enough for cleanup that happens to fall on a finalizer
-        // schedule (the SDK queues handle release rather than synchronizing).
-        // 5×100ms is plenty for the well-behaved cases; known-leaky cases short-
-        // circuit to soft-fail below.
-        int maxAttempts = 5;
+        // Ask whether WE still hold a handle, instead of renaming the fixture to see if the OS
+        // objects. The rename was a proxy for that question and answered a wider one: it fails
+        // for a handle held by ANY process, so a sibling suite reading the same shared fixture
+        // failed this probe with nothing wrong in our code (CI build #500: msconvert, spawned
+        // by Installer.Tests, holding FT-HCD-MSX.raw). It also mutated shared state on every
+        // run, and on Linux it could never fail at all, because POSIX allows renaming an open
+        // file and a directory containing one.
+        //
+        // Retry as the rename did: an SDK that queues handle release through a finalizer can
+        // still need a moment after the GC pair above.
+        const int maxAttempts = 5;
+        var verdict = FileLockReporter.HandleCheck.Unsupported;
         for (int attempt = 0; attempt < maxAttempts; attempt++)
         {
-            try
-            {
-                Directory.Move(rawPath, renamed);
-                lastError = null;
-                break;
-            }
-            catch (IOException ex)
-            {
-                lastError = ex;
-                Thread.Sleep(100);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                lastError = new IOException(ex.Message, ex);
-                Thread.Sleep(100);
-            }
-        }
-        if (lastError is not null)
-        {
-            // The IOException says a process holds the path but never which one, and this has
-            // only ever failed on CI agents. Name the holder at the point of failure: whether
-            // it is this process, a sibling test host sharing the fixture, or something
-            // environmental decides which of three different bugs this is.
-            string holders = FileLockReporter.Describe(rawPath);
-            // cpp VendorReaderTestHarness.cpp:1014-1016 has the same HACK for Bruker YEP/FID
-            // CompassXtract leaks. We tag the cases where Clearcore2 / wiff2 deliberately
-            // retain handles on .NET 8 (see IsKnownLeakySdkPath in TestOne) and soft-fail
-            // those — the read+diff already passed, so the rename probe's only role here
-            // would be to flag a regression in our own Dispose plumbing, not in SDK lifetime.
-            if (knownLeakySdk)
-            {
-                Console.Error.WriteLine(
-                    $"warning: cannot rename {rawPath} {probeDescription} (vendor SDK retains handles " +
-                    $"on .NET 8 - see VendorReaderTestHarness.IsKnownLeakySdkPath): {lastError.Message}" +
-                    $"{Environment.NewLine}{holders}");
-                return;
-            }
-            throw new InvalidOperationException(
-                $"Cannot rename {rawPath} {probeDescription}: there are unreleased file locks. " +
-                $"{lockHint} " +
-                $"Underlying error: {lastError.Message}" +
-                $"{Environment.NewLine}{holders}", lastError);
+            verdict = FileLockReporter.SelfHoldsPath(rawPath);
+            if (verdict != FileLockReporter.HandleCheck.SelfHolds) break;
+            Thread.Sleep(100);
         }
 
-        try
+        if (verdict == FileLockReporter.HandleCheck.Unsupported)
         {
-            Directory.Move(renamed, rawPath);
+            // Not a pass. Say so, rather than let an unimplemented platform read as green.
+            Console.Error.WriteLine(
+                $"warning: cannot check handles on {rawPath} {probeDescription}: no " +
+                $"implementation for this platform, so the probe was skipped.");
+            return;
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        if (verdict == FileLockReporter.HandleCheck.SelfDoesNotHold)
+            return;
+
+        string holders = FileLockReporter.Describe(rawPath);
+        // cpp VendorReaderTestHarness.cpp:1014-1016 has the same HACK for Bruker YEP/FID
+        // CompassXtract leaks. We tag the cases where Clearcore2 / wiff2 deliberately
+        // retain handles on .NET 8 (see IsKnownLeakySdkPath in TestOne) and soft-fail
+        // those — the read+diff already passed, so the probe's only role here would be to
+        // flag a regression in our own Dispose plumbing, not in SDK lifetime.
+        if (knownLeakySdk)
         {
-            throw new InvalidOperationException(
-                $"Renamed {rawPath} -> {renamed} succeeded but couldn't move it back; " +
-                $"underlying error: {ex.Message}", ex);
+            Console.Error.WriteLine(
+                $"warning: this process still holds a handle on {rawPath} {probeDescription} " +
+                $"(vendor SDK retains handles on .NET 8 - see " +
+                $"VendorReaderTestHarness.IsKnownLeakySdkPath)" +
+                $"{Environment.NewLine}{holders}");
+            return;
         }
+        throw new InvalidOperationException(
+            $"This process still holds a handle on {rawPath} {probeDescription}. " +
+            $"{lockHint}" +
+            $"{Environment.NewLine}{holders}");
     }
 
     // Run the undisposed-open finalizer probe only once per fixture path (finalizer behavior is
@@ -837,8 +827,8 @@ public static class VendorReaderTestHarness
 
     /// <summary>
     /// Regression guard for the vendor readers' finalizers: open <paramref name="rawPath"/> through
-    /// the reader WITHOUT disposing it, drop the reference, force GC + finalizers, then assert the
-    /// raw source can be renamed. A reader that owns a native handle / SQLite connection must release
+    /// the reader WITHOUT disposing it, drop the reference, force GC + finalizers, then assert this
+    /// process holds no handle on it. A reader that owns a native handle / SQLite connection must release
     /// it from a finalizer so a caller who forgets Dispose (or whose Dispose is GC-deferred) doesn't
     /// leave the file locked -- exactly the leak that broke Skyline's Bruker <c>.d</c> cleanup on CI
     /// while the disposed-path <see cref="AssertFilesUnlocked"/> probe passed. Runs once per fixture
@@ -856,7 +846,7 @@ public static class VendorReaderTestHarness
         if (!OpenWithoutDispose(reader, rawPath, config))
             return; // vendor SDK not built into this configuration; no handle was opened to probe
 
-        // AssertFilesUnlocked forces GC.Collect() + GC.WaitForPendingFinalizers() before the rename,
+        // AssertFilesUnlocked forces GC.Collect() + GC.WaitForPendingFinalizers() before the check,
         // which is the pass that has to run the reader's finalizer to release the handle.
         AssertFilesUnlocked(rawPath, IsKnownLeakySdkPath(rawPath, config),
             "after finalizer (source opened without Dispose)",
