@@ -152,7 +152,7 @@ namespace pwiz.Osprey.FDR
         /// total, unique precursors) and flush any deferred per-file output. Called once
         /// at the end of the score pass, replacing the former inline tail block.
         /// </summary>
-        void Finish(Action<string> logInfo);
+        void Finish(IOspreyLog log);
     }
 
     /// <summary>

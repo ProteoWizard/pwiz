@@ -74,7 +74,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         internal static ScoringPipeline Pipeline(PipelineContext ctx)
         {
-            return new ScoringPipeline(ctx.LogInfo, ctx.Diagnostics as IScoringDiagnostics);
+            return new ScoringPipeline(ctx, ctx.Diagnostics as IScoringDiagnostics);
         }
 
         /// <summary>
@@ -218,7 +218,7 @@ namespace pwiz.Osprey.Tasks
                 {
                     cacheBytes = 0;
                 }
-                ctx.LogInfo(string.Format("Saved spectra cache ({0} MS2 + {1} MS1, {2:F2} GB) to '{3}'",
+                ctx.LogInfo(string.Format("Saved spectra cache ({0:N0} MS2 + {1:N0} MS1, {2:F2} GB) to '{3}'",
                     mzmlResult.Ms2Spectra.Count, mzmlResult.Ms1Spectra.Count,
                     cacheBytes / 1024.0 / 1024.0 / 1024.0, cachePath));
             }
@@ -836,19 +836,21 @@ namespace pwiz.Osprey.Tasks
             // Named the same way the sibling guards name theirs, so a stale or misspelled token
             // cannot read as an unset one - even though no token can admit this path, an
             // operator who set one is owed the answer that it was not the problem.
+            // For the developer who hits this: the run was about to build the ALL-RUNS
+            // reconciliation bundle, O(files x entries) at 0.10 GB/file (past a 63.7 GB box by
+            // file ~310 of 446), although the per-run survivor loader built from the
+            // analysis-wide retained base_id summary was available. Something that was streamed
+            // is resident again - fix that rather than allowing it.
             string supplied = string.IsNullOrWhiteSpace(allowUnfixedResident)
                 ? string.Empty
-                : string.Format(@" OSPREY_ALLOW_UNFIXED_RESIDENT is currently '{0}'; no token " +
-                                @"admits this path.", allowUnfixedResident);
+                : string.Format(" OSPREY_ALLOW_UNFIXED_RESIDENT is set to '{0}', but no setting " +
+                                "allows this.", allowUnfixedResident);
             return string.Format(
-                @"This run is about to build the {0}, which holds every run's survivors at " +
-                @"once and grows O(files x entries) - measured at 0.10 GB/file on a 446-run " +
-                @"cohort, i.e. past a 63.7 GB box by file ~310. The bounded alternative " +
-                @"exists: the per-run survivor loader, built from the analysis-wide retained " +
-                @"base_id summary. Something that was streamed is resident again - fix that " +
-                @"rather than allowing it. OSPREY_ALLOW_UNFIXED_RESIDENT cannot admit this " +
-                @"path.{1}",
-                RescoreHydration.ALL_RUNS_BUNDLE_MARKER, supplied);
+                "Stopped before holding the first-pass precursor candidates of every run in memory " +
+                "at once, which grows with the number of runs (about 0.1 GB per run). This analysis " +
+                "can be processed one run at a time, so reaching this point is an Osprey defect; " +
+                "please report it.{0}",
+                supplied);
         }
 
         /// <summary>
@@ -895,10 +897,10 @@ namespace pwiz.Osprey.Tasks
             if (retained != null)
                 return retained;
             // ONE remedy, and it comes from the inner error.
+            // Continuing would fold every run as empty and write an empty library.
             throw new InvalidDataException(string.Format(
-                @"The analysis-wide retained base_id summary is required here and could not be " +
-                @"read: {0} Continuing would fold every run as empty and write an empty library.",
-                error ?? @"(no reason reported)"));
+                "{0} Stopping, because continuing would write an empty library.",
+                error ?? "The list of precursor candidates kept for cross-run reconciliation could not be read."));
         }
 
         /// <summary>
@@ -921,22 +923,22 @@ namespace pwiz.Osprey.Tasks
             if (string.IsNullOrEmpty(path))
             {
                 error =
-                    @"No output blib, so the analysis-wide retained base_id summary cannot be " +
-                    @"located. It is written by FirstPassFDR and names itself after the blib.";
+                    "No output .blib was given, so the list of precursor candidates kept for " +
+                    "cross-run reconciliation cannot be found: it is named after the output .blib.";
                 return null;
             }
             var retained = RetainedBaseIdSidecar.Read(path);
             if (retained == null)
             {
+                // FirstPassFDR writes this when Stage 6 planning ends, and every run's compaction
+                // reads it. The remedy is the stamp deletion, not "re-run FirstPassFDR": the task
+                // declares this file in neither Outputs nor its ValidityKey, so re-running it over
+                // a complete analysis reports its outputs valid and writes nothing.
                 error = string.Format(
-                    @"The analysis-wide retained base_id summary is missing or unreadable at {0}. " +
-                    @"It is written by FirstPassFDR when Stage 6 planning ends, and every run's " +
-                    @"compaction reads it; without it a run cannot be compacted without " +
-                    @"re-reading every other run's reconciliation.json. To produce it, delete " +
-                    @"this analysis's '<output>.FirstPassFDR.osprey.task' stamp and run the " +
-                    @"first pass again - FirstPassFDR declares this file in neither Outputs nor " +
-                    @"its ValidityKey, so re-running the task over a complete analysis reports " +
-                    @"its outputs valid and writes nothing.", path);
+                    "The list of precursor candidates kept for cross-run reconciliation is missing " +
+                    "or unreadable: {0}. To rebuild it, delete this analysis's " +
+                    "*.FirstPassFDR.osprey.task files and run the first pass again.",
+                    path);
                 return null;
             }
             return retained;
@@ -966,6 +968,37 @@ namespace pwiz.Osprey.Tasks
                     new FdrQValues(entry.RunPrecursorQvalue, entry.RunPeptideQvalue,
                         entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue, entry.Pep));
             }
+        }
+
+        /// <summary>
+        /// Report the first-pass compaction: what was kept, for the person watching, and the
+        /// admission detail behind <c>--verbose</c>. The base_id count mixes three admission
+        /// rules (run-level peptide q, protein q, and proteins with 2 or more detections), so it
+        /// does not belong in a one-line summary. <paramref name="droppedActions"/> is null where
+        /// the caller has no reconciliation plan to trim.
+        /// </summary>
+        internal static void LogCompaction(PipelineContext ctx, long before, long after,
+            int passingBaseIds, int? droppedActions)
+        {
+            ctx.LogInfo(string.Format(IsSingleFileSearch(ctx.Config)
+                    ? "Kept {0:N0} of {1:N0} precursor candidates for re-scoring and second-pass FDR."
+                    : "Kept {0:N0} of {1:N0} precursor candidates for cross-run reconciliation.",
+                after, before));
+            ctx.LogVerbose(droppedActions.HasValue
+                ? string.Format("  {0:N0} passing target-decoy pairs; {1:N0} planned peak re-picks and boundary imputations dropped",
+                    passingBaseIds, droppedActions.Value)
+                : string.Format("  {0:N0} passing target-decoy pairs", passingBaseIds));
+        }
+
+        /// <summary>
+        /// A search of one input file with no <c>--task</c>: the only configuration with no other
+        /// run to reconcile against, so its log never mentions cross-run reconciliation. A
+        /// <c>--task PerFileRescoring</c> worker also holds one input, but it re-scores against
+        /// the cross-run plan a multi-file FirstPassFDR wrote, and says so.
+        /// </summary>
+        internal static bool IsSingleFileSearch(OspreyConfig config)
+        {
+            return config.SelectedTask == null && config.InputFiles != null && config.InputFiles.Count == 1;
         }
     }
 }

@@ -118,6 +118,132 @@ public static class FileLockReporter
         }
     }
 
+    /// <summary>Outcome of <see cref="SelfHoldsPath"/>.</summary>
+    public enum HandleCheck
+    {
+        /// <summary>This process holds a handle on the path — a leak in our own dispose chain.</summary>
+        SelfHolds,
+        /// <summary>This process holds no handle on the path. Other processes may.</summary>
+        SelfDoesNotHold,
+        /// <summary>No implementation for this platform; the caller must not read this as a pass.</summary>
+        Unsupported,
+    }
+
+    /// <summary>
+    /// Answers whether THIS process holds a handle on <paramref name="path"/> (or, for a
+    /// directory, anything beneath it).
+    /// </summary>
+    /// <remarks>
+    /// <para>This is the question the vendor rename probe was really asking. Renaming was a
+    /// proxy for it, and a poor one: the OS denies a rename for a handle held by ANY process,
+    /// so a sibling test suite reading the same shared fixture failed the probe with no defect
+    /// in our code (observed on CI: msconvert, spawned by Installer.Tests, holding
+    /// FT-HCD-MSX.raw). Asking only about our own handles cannot be perturbed that way.</para>
+    /// <para>The two platform implementations are asymmetric but converge on the same
+    /// predicate. Windows asks the Restart Manager who holds the path and keeps only our own
+    /// pid. Linux reads <c>/proc/self/fd</c>, which is self-scoped by construction. Linux also
+    /// gains real coverage here for the first time: POSIX allows renaming an open file, and a
+    /// directory containing one, so the rename probe could never fail there.</para>
+    /// <para>Accepted limitation on Windows: the Restart Manager sees open file handles only,
+    /// so a self-held CURRENT DIRECTORY on the path is not detected. That is a false negative,
+    /// which is the safer direction than the false positives the rename produced.</para>
+    /// </remarks>
+    public static HandleCheck SelfHoldsPath(string path)
+    {
+        try
+        {
+            if (OperatingSystem.IsWindows())
+                return TryGetWindowsHolderPids(path, out var pids)
+                    ? (pids.Contains(Environment.ProcessId) ? HandleCheck.SelfHolds : HandleCheck.SelfDoesNotHold)
+                    : HandleCheck.Unsupported;
+            if (OperatingSystem.IsLinux())
+                return LinuxSelfHoldsPath(path) ? HandleCheck.SelfHolds : HandleCheck.SelfDoesNotHold;
+            return HandleCheck.Unsupported;
+        }
+        catch (Exception)
+        {
+            // Never let the check itself decide a test's fate.
+            return HandleCheck.Unsupported;
+        }
+    }
+
+    /// <summary>
+    /// Enumerates <c>/proc/self/fd</c>, whose entries are symlinks to the paths this process
+    /// has open. Four shapes have to be handled, all of them observed: non-file descriptors
+    /// (<c>pipe:[…]</c>, <c>socket:[…]</c>) which are not absolute paths; a deleted target,
+    /// rendered <c>/path/to/f (deleted)</c>, which still represents a held handle; entries that
+    /// disappear mid-walk as descriptors close; and a directory probe, where a handle on any
+    /// child counts.
+    /// <para>Gap: a memory mapping does not require the descriptor to stay open, so a leak that
+    /// only holds an <c>mmap</c> is invisible here. <c>/proc/self/maps</c> would cover it; no
+    /// vendor reader is known to need that yet.</para>
+    /// </summary>
+    private static bool LinuxSelfHoldsPath(string path)
+    {
+        const string deletedSuffix = " (deleted)";
+        string target = Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
+        bool probeIsDirectory = Directory.Exists(path);
+
+        foreach (string entry in Directory.EnumerateFileSystemEntries("/proc/self/fd"))
+        {
+            string? link;
+            try
+            {
+                link = new FileInfo(entry).LinkTarget ?? new DirectoryInfo(entry).LinkTarget;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                continue; // descriptor closed while we walked, or is not inspectable
+            }
+            if (string.IsNullOrEmpty(link)) continue;
+
+            if (link.EndsWith(deletedSuffix, StringComparison.Ordinal))
+                link = link.Substring(0, link.Length - deletedSuffix.Length);
+            if (!link.StartsWith('/')) continue; // pipe:[…], socket:[…], anon_inode:…
+
+            link = Path.TrimEndingDirectorySeparator(link);
+            if (string.Equals(link, target, StringComparison.Ordinal)) return true;
+            if (probeIsDirectory && link.StartsWith(target + '/', StringComparison.Ordinal)) return true;
+        }
+        return false;
+    }
+
+    /// <summary>Runs the Restart Manager query and returns the holding pids.</summary>
+    private static bool TryGetWindowsHolderPids(string path, out List<int> pids)
+    {
+        pids = new List<int>();
+        string[] resources = CollectResources(path);
+        if (resources.Length == 0) return true; // nothing to hold
+
+        var key = new char[CCH_RM_SESSION_KEY + 1];
+        if (RmStartSession(out uint session, 0, key) != ERROR_SUCCESS) return false;
+        try
+        {
+            if (RmRegisterResources(session, (uint)resources.Length, resources, 0, null, 0, null) != ERROR_SUCCESS)
+                return false;
+
+            uint procInfo = 0;
+            uint rebootReasons = RmRebootReasonNone;
+            int rc = RmGetList(session, out uint needed, ref procInfo, null, ref rebootReasons);
+            if (rc == ERROR_SUCCESS && needed == 0) return true; // no holders
+            if (rc != ERROR_MORE_DATA) return false;
+
+            var infos = new RM_PROCESS_INFO[needed];
+            procInfo = needed;
+            if (RmGetList(session, out needed, ref procInfo, infos, ref rebootReasons) != ERROR_SUCCESS)
+                return false;
+            for (int i = 0; i < procInfo; i++)
+                pids.Add(infos[i].Process.dwProcessId);
+            return true;
+        }
+        finally
+        {
+            int endRc = RmEndSession(session);
+            if (endRc != ERROR_SUCCESS)
+                Debug.WriteLine($"FileLockReporter: RmEndSession failed (rc={endRc}).");
+        }
+    }
+
     private static string DescribeWindows(string path)
     {
         string[] resources = CollectResources(path);
@@ -195,11 +321,17 @@ public static class FileLockReporter
             // Process exited between the RM query and here, or is not inspectable.
         }
 
+        // The first CI failure this reporter explained was msconvert, spawned by
+        // Installer.Tests converting the same shared fixture. Calling that "foreign,
+        // environmental" told the reader to dismiss the actual cause, so our own tools get
+        // their own verdict.
         string verdict = isSelf
             ? "THIS TEST PROCESS - a handle we did not release"
             : IsTestHost(name)
-                ? "a SIBLING test host - shared-fixture isolation problem, not a lifetime bug"
-                : "a FOREIGN process - environmental, not a defect in our code";
+                ? "a SIBLING test host - another suite sharing this fixture"
+                : IsOurTool(name)
+                    ? "OUR OWN TOOL, spawned by a sibling suite sharing this fixture"
+                    : "a FOREIGN process - environmental, not a defect in our code";
 
         return $"    pid {pid} {name}{start} [{info.ApplicationType}] -> {verdict}{extra}";
     }
@@ -227,6 +359,13 @@ public static class FileLockReporter
         }
         return string.Empty;
     }
+
+    /// <summary>Tools this repository builds and tests spawn against vendor fixtures.</summary>
+    private static readonly string[] OurTools =
+        { "msconvert", "blibbuild", "blibfilter", "blibtoms2", "msbenchmark", "bullseyesharp", "msdiff" };
+
+    private static bool IsOurTool(string processName) =>
+        Array.Exists(OurTools, t => processName.StartsWith(t, StringComparison.OrdinalIgnoreCase));
 
     private static bool IsTestHost(string processName) =>
         processName.StartsWith("testhost", StringComparison.OrdinalIgnoreCase)
