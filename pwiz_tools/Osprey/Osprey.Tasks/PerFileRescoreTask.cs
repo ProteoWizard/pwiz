@@ -169,8 +169,8 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public override string DescribeOutput(OspreyConfig config)
         {
-            return @"per-file .scores-reconciled.parquet (next to each input's .scores.parquet; " +
-                   @"--output locates the analysis-wide intermediate files and is not written)";
+            return DescribePerInputOutput(config, ParquetScoreCache.GetReconciledScoresPath,
+                @".scores-reconciled.parquet", config.OutputDir);
         }
 
         // The final milestone of the shared mutable entry buffer: this task
@@ -416,9 +416,11 @@ namespace pwiz.Osprey.Tasks
             if (pass2Present > 0 && !allPass2Present)
             {
                 ctx.LogInfo(string.Format(
-                    @"Rescore resume: {0} of {1} run(s) already carry a current 2nd-pass sidecar; " +
-                    @"re-scoring the remaining {2}.",
+                    "Resuming: {0:N0} of {1:N0} runs already have second-pass intermediate files; " +
+                    "re-scoring the remaining {2:N0}.",
                     pass2Present, pass2Expected, pass2Expected - pass2Present));
+                ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_RESCORE_RESUME, @"adopted={0} rescore={1}",
+                    pass2Present, pass2Expected - pass2Present));
             }
 
             // A THIRD source of "there is a plan to execute", alongside FirstPassFDR's in-process
@@ -468,15 +470,17 @@ namespace pwiz.Osprey.Tasks
                 // under it either. An operator told that would drop the flag, re-run for hours
                 // and hit the identical refusal. The TASK is a different matter: it is the whole
                 // reason this run will not re-score, so it is named.
+                // Not DiagnosticsOnly: FirstPassFDR did not plan in this process, no worker bundle
+                // was supplied, and the per-run hydrate is unavailable.
                 string reason = ctx.Config.DiagnosticsOnly
-                    ? @"this process is --task ModelDiagnostics, which re-renders the report of a " +
-                      @"COMPLETED analysis and writes nothing else, so it will not re-score them. " +
-                      @"Finish the analysis first; the report can be regenerated afterwards."
-                    : @"this process has no plan to do it - FirstPassFDR did not plan here, no " +
-                      @"worker bundle was supplied, and the per-run hydrate is unavailable. " +
-                      @"Continuing would write an output silently missing those runs.";
+                    ? "--task ModelDiagnostics only builds the report for a completed analysis. " +
+                      "Finish the analysis first; the report can be built afterwards."
+                    : "the cross-run reconciliation data they need is not available to this run. " +
+                      "To rebuild it, delete this analysis's *.FirstPassFDR.osprey.task files and " +
+                      "run the first pass again. Stopping, because continuing would write output " +
+                      "missing those runs.";
                 ctx.LogError(string.Format(
-                    @"Rescore resume: {0} of {1} run(s) still need re-scoring, but {2}",
+                    "Cannot resume: {0:N0} of {1:N0} runs still need re-scoring, but {2}",
                     pass2Expected - pass2Present, pass2Expected, reason));
                 ctx.ExitCode = 1;
                 return false;
@@ -580,8 +584,11 @@ namespace pwiz.Osprey.Tasks
                 out var rescoredFiles,
                 joinFileStems,
                 survivorLoader);
-            ctx.LogInfo(string.Format(
-                @"Reconciliation rescore: {0} entries re-scored ({1} reconciliation actions executed)",
+            ctx.LogInfo(string.Format(ScoringTaskShared.IsSingleFileSearch(ctx.Config)
+                    ? "Multi-charge consensus re-scored {0:N0} peaks."
+                    : "Cross-run reconciliation re-scored {0:N0} peaks, including missing peaks.",
+                rescoreStats.TotalRescored));
+            ctx.LogInfo(LogTag.COUNT, LogKey.Format(LogKey.COUNT_RESCORED_PEAKS, @"total={0} actions={1}",
                 rescoreStats.TotalRescored, rescoreStats.TotalReconciliation));
 
             // No rebuild of the whole-run buffer here. The streamed loop emptied every file's
@@ -830,7 +837,7 @@ namespace pwiz.Osprey.Tasks
                     ProteinFdrEngine.RunFirstPass(
                         bundle.PerFileEntries, fullLibrary, ctx.Config, null);
                 }
-                var stats = RescoreCompaction.Apply(bundle);
+                var stats = RescoreCompaction.Apply(bundle, ScoringTaskShared.IsSingleFileSearch(ctx.Config));
                 // On the streaming hydrate stats.EntriesBefore EQUALS EntriesAfter by
                 // construction - RescoreCompaction sums an already-compacted pool and makes
                 // "removes nothing" a hard invariant - so reporting it raw prints
@@ -841,10 +848,8 @@ namespace pwiz.Osprey.Tasks
                 long entriesBefore = preCompacted
                     ? bundle.TotalPreCompactionStubs
                     : stats.EntriesBefore;
-                ctx.LogInfo(string.Format(
-                    @"--task SecondPassFDR compaction: {0} -> {1} entries ({2} passing base_ids; {3} action(s) dropped)",
-                    entriesBefore, stats.EntriesAfter,
-                    stats.FirstPassBaseIds, stats.DroppedActions));
+                ScoringTaskShared.LogCompaction(ctx, entriesBefore, stats.EntriesAfter,
+                    stats.FirstPassBaseIds, stats.DroppedActions);
             }
             return true;
         }
@@ -934,8 +939,8 @@ namespace pwiz.Osprey.Tasks
             // Clean PERSISTENT floor entering reconciliation (post-GC, before the
             // rescore loop repopulates the heavy per-entry arrays) -- fires early,
             // so it lands even if a long run is later killed. #4376.
-            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"reconciliation start (pre-GC)");
-            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"reconciliation-floor",
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"reconciliation start (pre-GC)");
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx, @"reconciliation-floor",
                 string.Format(@"(post-GC, entering rescore, files={0})", perFileEntries.Count));
 
             int nTotalFiles = perFileEntries.Count;
@@ -1003,8 +1008,8 @@ namespace pwiz.Osprey.Tasks
             // per-file ~1.5 GB spectra + parquet reload); the forced-GC line is the
             // clean PERSISTENT managed heap (all files' rescored FdrEntry buffer +
             // library). Zero-cost when OSPREY_LOG_MEMORY is unset.
-            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"reconciliation end (pre-GC)");
-            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"reconciliation-resident",
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"reconciliation end (pre-GC)");
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx, @"reconciliation-resident",
                 string.Format(@"(files={0}, file_parallelism={1})", nTotalFiles, parallelism));
 
             int totalRescored = 0;
@@ -1074,17 +1079,17 @@ namespace pwiz.Osprey.Tasks
             var sidecar = FirstPassModelIO.LoadFromAny(perFileParquetPaths);
             if (sidecar?.Model == null)
             {
-                ctx.LogWarning(
-                    "Second-pass per-file competition: no readable 1st-pass model sidecar, so the " +
-                    "per-file half stays in SecondPassFDR for this run.");
+                ctx.LogVerbose(
+                    "No readable saved first-pass model, so the per-file part of second-pass FDR " +
+                    "runs in SecondPassFDR for this run.");
                 return null;
             }
             var scorer = FrozenModelScorer.TryCreate(sidecar.Model);
             if (scorer == null)
             {
-                ctx.LogWarning(
-                    "Second-pass per-file competition: the frozen 1st-pass model has no usable " +
-                    "model/standardizer, so the per-file half stays in SecondPassFDR for this run.");
+                ctx.LogVerbose(
+                    @"Second-pass per-file competition: the frozen 1st-pass model has no usable " +
+                    @"model/standardizer, so the per-file half stays in SecondPassFDR for this run.");
                 return null;
             }
             // protein-compact is the only competition mode - the guard above returned already
@@ -1404,8 +1409,8 @@ namespace pwiz.Osprey.Tasks
             // line is the live number and, under Profile-Osprey.ps1 -MemoryProfile, captures
             // a "perfile-rescore-loaded" retention snapshot. Zero cost -- collection
             // included -- when OSPREY_LOG_MEMORY is unset.
-            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"perfile-rescore-loaded (pre-GC)");
-            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"perfile-rescore-loaded",
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"perfile-rescore-loaded (pre-GC)");
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx, @"perfile-rescore-loaded",
                 @"(post-GC, streaming index resident)");
 
             // Load the sibling .calibration.json so the search uses the
@@ -1502,12 +1507,12 @@ namespace pwiz.Osprey.Tasks
             if (nNoPeak > 0)
             {
                 ctx.LogInfo(string.Format(
-                    "  {0} targets had no peak at override boundary (reset to defaults)",
+                    "  {0:N0} targets had no signal within their new peak boundaries; their scores were reset.",
                     nNoPeak));
             }
 
             ctx.LogInfo(string.Format(
-                "  {0} of {1} existing entries re-scored ({2:F1}s)",
+                "  Re-scored {0:N0} of {1:N0} peaks ({2:F1}s)",
                 nOverlay, combinedTargets.Count, swRescore.Elapsed.TotalSeconds));
 
             // PHASE 2 -- gap-fill two-pass.
@@ -1575,7 +1580,7 @@ namespace pwiz.Osprey.Tasks
             // copies here, so this is the reduced "after" peak vs the resident baseline.
             // A forced-GC [MEM] is deliberately NOT taken (it would just show the
             // post-release floor). Zero cost when OSPREY_LOG_MEMORY is unset.
-            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"perfile-rescore-peak (pre-GC)");
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx, @"perfile-rescore-peak (pre-GC)");
 
             // Apex retention snapshot (dotMemory only). Once the resident MS2 is streamed,
             // the remaining per-file accumulation is the scored + reconciled entries still
@@ -1631,7 +1636,7 @@ namespace pwiz.Osprey.Tasks
             // it is the true floor, and it captures a "perfile-rescore-live" retention
             // snapshot to pair with the loaded snapshot. Zero cost -- collection included --
             // when OSPREY_LOG_MEMORY is unset.
-            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"perfile-rescore-live",
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx, @"perfile-rescore-live",
                 @"(post-GC, after release)");
 
             return (totalRescored, totalGapCwt, totalGapForced, true);
@@ -1750,7 +1755,7 @@ namespace pwiz.Osprey.Tasks
                 && pass2Done)
             {
                 ctx.LogInfo(string.Format(
-                    @"[file] {0}/{1} {2}: skipping (outputs valid)",
+                    "File {0:N0}/{1:N0}: {2} was already re-scored; keeping it.",
                     fileNum + 1, nTotalFiles, fileName));
 
                 // CLEAR, do not overlay. This arm used to rebuild the file's in-memory entries
@@ -1856,20 +1861,18 @@ namespace pwiz.Osprey.Tasks
             if (!inputs.FileNameToIdx.TryGetValue(fileName, out int inputIdx))
             {
                 ctx.LogWarning(string.Format(
-                    "Reconciliation rescore: no input_files entry for {0} (skipping)", fileName));
+                    "Cross-run reconciliation: {0} is not among the inputs of this run; skipping it.", fileName));
                 return false;
             }
             inputFile = inputs.Config.InputFiles[inputIdx];
 
             ctx.LogInfo(string.Format(
                 "Re-scoring file {0}/{1}: {2}", fileNum + 1, nTotalFiles, fileName));
+            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_RESCORE_FILE, @"{0}/{1}", fileNum + 1, nTotalFiles));
             ctx.LogInfo(string.Format(
-                "  {0} entries ({1} consensus, {2} reconciliation, {3} gap-fill, {4} unique after dedup)",
-                combinedTargets.Count + gapFillTargets.Count * 2,
-                consensusTargets.Count,
-                reconTargets.Count,
-                gapFillTargets.Count,
-                combinedTargets.Count));
+                "  {0:N0} peaks to re-score at new boundaries, {1:N0} missing peaks",
+                combinedTargets.Count,
+                gapFillTargets.Count));
             return true;
         }
 
@@ -2061,10 +2064,14 @@ namespace pwiz.Osprey.Tasks
             // which was null on a straight-through run, and it threw a NullReferenceException
             // on the first one after the predicate above stopped requiring that list. The
             // paths are the right source regardless: they are what the loop iterates.
-            ctx.LogInfo(string.Format(
-                @"Per-run rescore: hydrating each of {0} run(s) from its own artifacts " +
-                @"(no all-runs pre-load; {1} retained base_id(s) read once).",
-                perFileParquetPaths.Count, retainedBaseIds.Count));
+            ctx.LogVerbose(CountText.Format(perFileParquetPaths.Count,
+                "Re-scoring loads the file from its own intermediate files; the list of {1:N0} kept " +
+                "target-decoy pairs is read once.",
+                "Re-scoring loads one file at a time ({0:N0} files) from its own intermediate files; " +
+                "the list of {1:N0} kept target-decoy pairs is read once.",
+                retainedBaseIds.Count));
+            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_RESCORE_HYDRATE, @"per-run runs={0}",
+                perFileParquetPaths.Count));
             var sequencePool = ctx.Get<SequencePool>().Value;
             return fileName =>
             {
@@ -2121,12 +2128,14 @@ namespace pwiz.Osprey.Tasks
             List<KeyValuePair<string, List<FdrEntry>>> buffer,
             Action<string, List<FdrEntry>> source, PipelineContext ctx)
         {
-            ctx.LogWarning(string.Format(
-                @"Second-pass join: a consumer asked for the whole-run survivor pool, so all " +
-                @"{0} run(s) are being materialized at once. This is the O(runs x entries) peak " +
-                @"the per-run fold exists to avoid.", buffer.Count));
-            using (var progress = new ProgressReporter(string.Format(
-                       @"Materializing survivors for {0} run(s)", buffer.Count), buffer.Count))
+            ctx.LogVerbose(CountText.Format(buffer.Count,
+                "Second-pass FDR is loading the kept precursor candidates of the file into memory.",
+                "Second-pass FDR is loading the kept precursor candidates of all {0:N0} files into memory " +
+                "at once; memory grows with the number of files."));
+            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_SURVIVOR_POOL, @"materialized runs={0}", buffer.Count));
+            using (var progress = new ProgressReporter(CountText.Format(buffer.Count,
+                       "Loading the kept precursor candidates from 1 file",
+                       "Loading the kept precursor candidates from {0:N0} files"), buffer.Count))
             {
                 int done = 0;
                 foreach (var kv in buffer)
@@ -2191,12 +2200,11 @@ namespace pwiz.Osprey.Tasks
             // gives: without it the only evidence is a memory profile, and "the gate is green so
             // the new path must have run" is the inference that lets a resident path pass as a
             // streamed one.
-            ctx.LogInfo(string.Format(
-                @"Second-pass join: folding over {0} run(s), each rebuilt from its own " +
-                @"reconciled parquet and dropped (no all-runs survivor pool). {1} of {0} run(s) " +
-                @"carry a current reconciled parquet; a run without one is an error, not a " +
-                @"run that keeps its 1st-pass boundaries.",
-                _perFileEntries.Count, reconciledPaths.Count));
+            ctx.LogVerbose(CountText.Format(_perFileEntries.Count,
+                "Second-pass FDR reads the re-scored results of the file ({1:N0} of 1 current).",
+                "Second-pass FDR reads the re-scored results one file at a time ({1:N0} of {0:N0} files current).",
+                reconciledPaths.Count));
+            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run runs={0}", _perFileEntries.Count));
             return (fileName, survivors) =>
                 MaterializeResumedFile(fileName, survivors, loader, reconciledPaths, gapFill, ctx);
         }
@@ -2238,12 +2246,14 @@ namespace pwiz.Osprey.Tasks
             // The second count is the boundary claim, said out loud: an orchestrator that
             // trimmed the first-pass sidecars is entitled to know how many runs would have
             // needed them.
-            ctx.LogInfo(string.Format(
-                @"Second-pass join: folding over {0} run(s), each rebuilt from its own artifacts " +
-                @"and dropped (no all-runs survivor pool; {1} retained base_id(s) read once). " +
-                @"{2} of {0} run(s) carry a current 2nd-pass sidecar and are rebuilt without " +
-                @"opening any 1st-pass file.",
-                perFileParquetPaths.Count, retainedBaseIds.Count, haveSecondPass.Count));
+            ctx.LogVerbose(CountText.Format(perFileParquetPaths.Count,
+                "Second-pass FDR reads the file from its own intermediate files; the list of {1:N0} " +
+                "kept target-decoy pairs is read once, and {2:N0} of 1 file already has second-pass results.",
+                "Second-pass FDR reads one file at a time ({0:N0} files) from its own intermediate files; " +
+                "the list of {1:N0} kept target-decoy pairs is read once, and {2:N0} of {0:N0} files " +
+                "already have second-pass results.",
+                retainedBaseIds.Count, haveSecondPass.Count));
+            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run runs={0}", perFileParquetPaths.Count));
             // LAZY, and deliberately so. On the default Boundary 3 -> 4 path every run carries a
             // second-pass sidecar, RefillOneRunSurvivors dereferences this map only on the
             // overlayFirstPass branch, and it is never read at all - while being ~400 MB
@@ -2796,16 +2806,16 @@ namespace pwiz.Osprey.Tasks
                 if (kv.Value.Count > 0)
                     return null;
             }
-            // The SAME opening words as the other two arms' markers, deliberately: the gate
-            // asserts the per-run fold by that phrase, and an arm that streams under a different
-            // sentence is an arm no verifier can see. Said HERE, at the top of Stage 6, because
+            // The SAME [PATH] second-pass-join key as the other two arms, deliberately: the gate
+            // asserts the per-run fold by that key, and an arm that streams under a different
+            // key is an arm no verifier can see. Said HERE, at the top of Stage 6, because
             // this is where the decision is taken - a worker that exits before Stage 7 has still
             // made it, and the alternative (report it when the fold starts) is a fact about the
             // consumer rather than about this task.
-            ctx.LogInfo(string.Format(
-                @"Second-pass join: folding over {0} run(s), each rebuilt from its own artifacts " +
-                @"and dropped (no all-runs survivor pool). Decided at Stage 6, where the " +
-                @"survivors were released.", _perFileEntries.Count));
+            ctx.LogVerbose(CountText.Format(_perFileEntries.Count,
+                "Second-pass FDR will read the file from its own intermediate files.",
+                "Second-pass FDR will read one file at a time ({0:N0} files) from their own intermediate files."));
+            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run runs={0}", _perFileEntries.Count));
             return (fileName, entries) =>
             {
                 var plan = PoolPlanForBuild();
@@ -2876,8 +2886,9 @@ namespace pwiz.Osprey.Tasks
             // consumer that folds and drops has to be able to ask for ONE file's post-rescore
             // state (#4486). Until Stage 7 does that this is also one progress line where
             // there were two.
-            using (var progress = new ProgressReporter(string.Format(
-                       @"Rebuilding first-pass survivors from {0} file(s)", plan.Buffer.Count),
+            using (var progress = new ProgressReporter(CountText.Format(plan.Buffer.Count,
+                       "Rebuilding the kept precursor candidates from 1 file",
+                       "Rebuilding the kept precursor candidates from {0:N0} files"),
                        plan.Buffer.Count))
             {
                 int done = 0;
@@ -2888,7 +2899,7 @@ namespace pwiz.Osprey.Tasks
                 }
             }
             sw.Stop();
-            ctx.LogInfo(string.Format(@"[STAGE-WALL] survivor-pool {0:F1}s ({1} files)",
+            ctx.LogInfo(LogTag.STAGE_WALL, string.Format(@"survivor-pool {0:F1}s ({1} files)",
                 sw.Elapsed.TotalSeconds, plan.Buffer.Count));
         }
 
@@ -3000,8 +3011,9 @@ namespace pwiz.Osprey.Tasks
             // and the resident-join landmark in ai/scripts/Osprey/CHS/README.md keeps meaning
             // what it says. It names WHAT is rebuilt (the first-pass survivor subset), not
             // which file supplied the rows.
-            using (var progress = new ProgressReporter(string.Format(
-                       @"Rebuilding first-pass survivors from {0} file(s)", perFileEntries.Count),
+            using (var progress = new ProgressReporter(CountText.Format(perFileEntries.Count,
+                       "Rebuilding the kept precursor candidates from 1 file",
+                       "Rebuilding the kept precursor candidates from {0:N0} files"),
                        perFileEntries.Count))
             {
                 int done = 0;
@@ -3349,7 +3361,7 @@ namespace pwiz.Osprey.Tasks
                     gapFillLibrary, spectraProvider, ms1Spectra,
                     isolationWindows, rtCal,
                     ms2Cal, ms1Cal,
-                    cwtContext, passLabel: "Gap-fill scoring");
+                    cwtContext, passLabel: "Finding missing peaks in", logSearchSettings: false);
                 swCwt.Stop();
 
                 cwtHitIds = new HashSet<uint>();
@@ -3368,7 +3380,7 @@ namespace pwiz.Osprey.Tasks
                 }
 
                 ctx.LogInfo(string.Format(
-                    "  Gap-fill CWT: {0} hits ({1:F1}s)",
+                    "  Missing peaks found by peak detection: {0:N0} ({1:F1}s)",
                     nGapCwt, swCwt.Elapsed.TotalSeconds));
             }
             else
@@ -3410,7 +3422,8 @@ namespace pwiz.Osprey.Tasks
                     forcedLibrary, spectraProvider, ms1Spectra,
                     isolationWindows, rtCal,
                     ms2Cal, ms1Cal,
-                    forcedContext, passLabel: "Gap-fill forced integration");
+                    forcedContext, passLabel: "Integrating missing peaks at imputed boundaries in",
+                    logSearchSettings: false);
                 swForced.Stop();
                 nGapForced = forcedResults.Count;
 
@@ -3422,7 +3435,7 @@ namespace pwiz.Osprey.Tasks
                 }
 
                 ctx.LogInfo(string.Format(
-                    "  Gap-fill forced: {0} integrated ({1:F1}s)",
+                    "  Missing peaks integrated at imputed boundaries: {0:N0} ({1:F1}s)",
                     nGapForced, swForced.Elapsed.TotalSeconds));
             }
 
@@ -3508,7 +3521,7 @@ namespace pwiz.Osprey.Tasks
             }
 
             ctx.LogInfo(string.Format(
-                "  Streaming {1} MS1 and {0} MS/MS spectra from cache for {2}",
+                "  Streaming {1:N0} MS1 and {0:N0} MS/MS spectra from cache for {2}",
                 index.Ms2Count, index.Ms1Spectra.Count, fileName));
             return index;
         }

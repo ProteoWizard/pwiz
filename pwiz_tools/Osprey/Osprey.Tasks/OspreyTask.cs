@@ -209,5 +209,20 @@ namespace pwiz.Osprey.Tasks
         {
             return string.Format(@"--task {0} requires {1}.", Name, requirement);
         }
+
+        /// <summary>
+        /// A <see cref="DescribeOutput"/> for a task that writes one file per input: the file
+        /// itself when there is one input (every HPC worker), else the extension and where the
+        /// files go - <paramref name="directory"/>, or beside each input when that is empty.
+        /// </summary>
+        protected static string DescribePerInputOutput(OspreyConfig config, Func<string, string> pathFor,
+            string extension, string directory)
+        {
+            if (config.InputFiles != null && config.InputFiles.Count == 1)
+                return pathFor(config.InputFiles[0]);
+            return string.IsNullOrEmpty(directory)
+                ? string.Format("a {0} file next to each input", extension)
+                : string.Format("a {0} file for each input, in {1}", extension, directory);
+        }
     }
 }

@@ -843,10 +843,10 @@ namespace pwiz.Osprey.Scoring
         public IEnumerable<string> ToReportLines(string label)
         {
             yield return string.Format(
-                @"  Calibration LDA model [{0}]: {1} matches ({2} target / {3} decoy)",
+                "  Calibration LDA model [{0}]: {1:N0} matches ({2:N0} target / {3:N0} decoy)",
                 label, NTotal, NTargets, NDecoys);
             yield return string.Format(
-                @"    seed feature: {0} @ {1:F1}% FDR ({2} targets passing)",
+                "    seed feature: {0} @ {1:F1}% FDR ({2:N0} targets passing)",
                 FeatureName(SeedFeatureIndex), SeedFdr * 100.0, SeedPassing);
 
             if (Iterations.Count == 0)
@@ -861,23 +861,24 @@ namespace pwiz.Osprey.Scoring
                     if (it.AllFoldsFailed)
                     {
                         yield return string.Format(
-                            @"      iter {0}: cutoff {1:F1}%, positive pool {2} -> all folds singular",
+                            "      iter {0}: cutoff {1:F1}%, positive pool {2:N0} -> all folds singular",
                             it.Iteration, it.Fdr * 100.0, it.PositivePoolSize);
                     }
                     else
                     {
                         yield return string.Format(
-                            @"      iter {0}: cutoff {1:F1}%, positive pool {2}, passing {3}{4}",
+                            "      iter {0}: cutoff {1:F1}%, positive pool {2:N0}, passing {3:N0}{4}",
                             it.Iteration, it.Fdr * 100.0, it.PositivePoolSize, it.Passing,
                             it.Improved ? @"  (new best)" : string.Empty);
                     }
                 }
             }
+            yield return CountText.Format(Iterations.Count,
+                "    stopped: {1} (1 iteration run)",
+                "    stopped: {1} ({0:N0} iterations run)",
+                StopReason ?? @"(unknown)");
             yield return string.Format(
-                @"    stopped: {0} ({1} iteration(s) run)",
-                StopReason ?? @"(unknown)", Iterations.Count);
-            yield return string.Format(
-                @"    calibrator yield: {0} targets @ q<=1%, {1} @ q<=0.1%",
+                "    calibrator yield: {0:N0} targets @ q<=1%, {1:N0} @ q<=0.1%",
                 NTargetsAt1Pct, NTargetsAtTenthPct);
 
             foreach (string line in ContributionLines())

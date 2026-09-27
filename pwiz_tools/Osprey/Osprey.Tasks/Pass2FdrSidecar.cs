@@ -93,12 +93,14 @@ namespace pwiz.Osprey.Tasks
             // token never reaches here: Program aborts at startup.
             if (OspreyEnvironment.Pass2TransferQ)
             {
+                // The pass-1 model scores the moved peaks and each file maps score to run q with
+                // its own first-pass table; experiment q stays anchored on the best peak.
                 ctx.LogInfo(string.Format(
-                    "OSPREY_PASS2_QVALUE={0}: pass-2 carries the pass-1 q through and re-maps ONLY the " +
-                    "per-run q of reconciliation-moved peaks (frozen 1st-pass model + each file's own " +
-                    "score->run-q table); experiment q is frozen by the best-peak anchor, no retrain.",
+                    "OSPREY_PASS2_QVALUE={0}: first-pass q-values are kept; only peaks moved by " +
+                    "cross-run reconciliation get a new run-level q-value.",
                     OspreyEnvironment.PASS2_QVALUE_TRANSFER));
             }
+            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_PASS2_QVALUE, @"{0}", OspreyEnvironment.Pass2QValue));
 
             EnsureFrozenFirstPassPublished(ctx, perFileParquetPaths);
 
@@ -165,10 +167,9 @@ namespace pwiz.Osprey.Tasks
                 if (unmatchedKeys.Count > 0)
                 {
                     ctx.LogWarning(string.Format(
-                        "--task SecondPassFDR: {0} perFileEntries key(s) have no matching " +
-                        "config.InputFiles entry and will be skipped: [{1}]. This usually " +
-                        "indicates an input-file rename or path drift between Stage 5 and " +
-                        "Stage 7; the skipped files will not get a 2nd-pass sidecar.",
+                        "--task SecondPassFDR: {0:N0} files from the first pass are not among the " +
+                        "inputs of this run and will be skipped: [{1}]. This usually means an input " +
+                        "was renamed or moved between the first-pass and second-pass tasks.",
                         unmatchedKeys.Count, string.Join(", ", unmatchedKeys)));
                 }
 
@@ -210,10 +211,12 @@ namespace pwiz.Osprey.Tasks
                     // LogInfo, not LogVerbose: this is the heading for the longest stretch of
                     // work left in Stage 7, and a --verbose-only heading is invisible on the runs
                     // that actually take the time (#4571).
-                    ctx.LogInfo(string.Format(
-                        "{0}/{1} file(s) have no precomputed second-pass FDR scores - computing " +
-                        "them here from the reconciled features (reused distributed-run code path).",
-                        missingPass2, totalFiles));
+                    ctx.LogInfo(CountText.Format(totalFiles, "Computing second-pass FDR scores for 1 file.",
+                        "Computing second-pass FDR scores for {0:N0} files."));
+                    ctx.LogVerbose(CountText.Format(totalFiles,
+                        "{1:N0} of 1 file had no saved second-pass FDR scores; {2:N0} have scores written by per-file re-scoring.",
+                        "{1:N0} of {0:N0} files had no saved second-pass FDR scores; {2:N0} have scores written by per-file re-scoring.",
+                        missingPass2, workerWroteFiles?.Count ?? 0));
                     // Stage 6's post-rescore overlay calls FdrEntry.ResetScores(), which clears
                     // eight fields - one for every scalar the v4 record carries. Three of them
                     // can reach the sidecar at their reset defaults (issue #4553):
@@ -250,8 +253,11 @@ namespace pwiz.Osprey.Tasks
                         var swRestore = Stopwatch.StartNew();
                         RestorePass1Scalars(ctx, Pool(), pass2Writer);
                         swRestore.Stop();
-                        ctx.LogVerbose(string.Format(
-                            "[STAGE-WALL] pass-1 scalar restore: {0:F1}s", swRestore.Elapsed.TotalSeconds));
+                        if (OspreyOutput.Verbose)
+                        {
+                            ctx.LogInfo(LogTag.STAGE_WALL, string.Format(
+                                "pass-1 scalar restore: {0:F1}s", swRestore.Elapsed.TotalSeconds));
+                        }
                     }
 
                     var swPass2 = Stopwatch.StartNew();
@@ -285,8 +291,8 @@ namespace pwiz.Osprey.Tasks
                         ComputePass2Resident(ctx, Pool(), perFileParquetPaths, config);
                     }
                     swPass2.Stop();
-                    ctx.LogInfo(string.Format(
-                        "[STAGE-WALL] second-pass-fdr: {0:F1}s",
+                    ctx.LogInfo(LogTag.STAGE_WALL, string.Format(
+                        "second-pass-fdr: {0:F1}s",
                         swPass2.Elapsed.TotalSeconds));
                 }
             }
@@ -334,8 +340,8 @@ namespace pwiz.Osprey.Tasks
                 if (unmatchedSidecarKeys.Count > 0)
                 {
                     ctx.LogWarning(string.Format(
-                        "2nd-pass sidecar write: {0} perFileEntries key(s) have no matching " +
-                        "config.InputFiles entry and will be skipped: [{1}].",
+                        "{0:N0} files from the first pass are not among the inputs of this run, so " +
+                        "no second-pass intermediate file is written for them: [{1}].",
                         unmatchedSidecarKeys.Count, string.Join(", ", unmatchedSidecarKeys)));
                 }
 
@@ -381,7 +387,8 @@ namespace pwiz.Osprey.Tasks
                     // the 38s gap perfviz reports between the competition's [STAGE-WALL] line
                     // and the next probe (#4486). IO-paced, like the other disk loops here.
                     using (var writeProgress = new ProgressReporter(
-                        string.Format(@"Writing 2nd-pass FDR scores for {0} file(s)", rescored.FileCount),
+                        CountText.Format(rescored.FileCount, "Writing second-pass FDR scores for 1 file",
+                            "Writing second-pass FDR scores for {0:N0} files"),
                         rescored.FileCount, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
                     {
                         long nWrittenReported = 0;
@@ -394,17 +401,17 @@ namespace pwiz.Osprey.Tasks
                 }
                 if (pass2Tally.Failures == 0 && pass2Tally.Written > 0)
                 {
-                    ctx.LogVerbose(string.Format(
-                        @"Wrote 2nd-pass FDR scores for {0} file(s)", pass2Tally.Written));
+                    ctx.LogVerbose(CountText.Format(pass2Tally.Written, "Wrote second-pass FDR scores for 1 file",
+                        "Wrote second-pass FDR scores for {0:N0} files"));
                 }
                 // Said out loud rather than inferred from a smaller count: this is the one
                 // path that leaves a file untouched, and an unexplained gap between the file
                 // count and the write count is exactly the ambiguity always-writing removes.
                 if (pass2Tally.Skipped > 0)
                 {
-                    ctx.LogVerbose(string.Format(
-                        @"Left {0} 2nd-pass FDR sidecar(s) untouched (--task ModelDiagnostics writes no artifact but the report)",
-                        pass2Tally.Skipped));
+                    ctx.LogVerbose(CountText.Format(pass2Tally.Skipped,
+                        "Left the second-pass FDR scores file of 1 file untouched (--task ModelDiagnostics writes only the report)",
+                        "Left the second-pass FDR scores files of {0:N0} files untouched (--task ModelDiagnostics writes only the report)"));
                 }
             }
 
@@ -471,17 +478,17 @@ namespace pwiz.Osprey.Tasks
             // says nothing about it, so carry the recorded value rather than re-reading.
             ctx.Publish(new FirstPassPercolatorModel
                 { Results = reloaded.Model, ExperimentAgg = reloaded.ExperimentAgg });
-            ctx.LogInfo(string.Format(
-                @"Reloaded persisted 1st-pass model sidecar for frozen 2nd-pass (pass-1 " +
-                @"experiment aggregation: {0}).",
+            ctx.LogInfo("Reusing the saved first-pass model.");
+            ctx.LogVerbose(string.Format(
+                "Reloaded the saved first-pass model for second-pass FDR (first-pass experiment aggregation: {0}).",
                 reloaded.ExperimentAgg ?? @"not recorded"));
 
             if (OspreyEnvironment.Pass2ProteinCompact && reloaded.StratumBaseIds != null &&
                 !ctx.TryGet<ProteinCompactStratum>(out _))
             {
                 ctx.Publish(new ProteinCompactStratum(reloaded.StratumBaseIds));
-                ctx.LogInfo(string.Format(
-                    @"Reloaded the persisted protein-compact stratum ({0} base ids).",
+                ctx.LogVerbose(string.Format(
+                    "Reloaded the precursor candidates from proteins with 2 or more detections ({0:N0} target-decoy pairs).",
                     reloaded.StratumBaseIds.Count));
             }
         }
@@ -595,8 +602,8 @@ namespace pwiz.Osprey.Tasks
             // the competition's [STAGE-WALL] line and the next probe (#4486); the write loop is
             // the first half.
             using (var reloadProgress = new ProgressReporter(
-                string.Format(@"Reloading 2nd-pass FDR scores ({0}) for {1} file(s)",
-                              phase, perFileEntries.Count),
+                CountText.Format(perFileEntries.Count, "Checking second-pass intermediate files for 1 file",
+                    "Checking second-pass intermediate files for {0:N0} files"),
                 perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 long nReloadReported = 0;
@@ -617,9 +624,10 @@ namespace pwiz.Osprey.Tasks
             }
             if (filesReloaded > 0)
             {
-                ctx.LogVerbose(string.Format(
-                    "Reloaded 2nd-pass FDR scores ({0}) for {1}/{2} file(s) post-compaction",
-                    phase, filesReloaded, filesReloaded + filesMissing));
+                ctx.LogVerbose(CountText.Format(filesReloaded + filesMissing,
+                    "Reloaded second-pass FDR scores ({1}) for 1 file",
+                    "Reloaded second-pass FDR scores ({1}) for {2:N0} of {0:N0} files",
+                    phase, filesReloaded));
             }
         }
 
@@ -673,8 +681,8 @@ namespace pwiz.Osprey.Tasks
                 return true;
             }
             logWarning(string.Format(
-                "Failed to reload 2nd-pass FDR sidecar for {0} ({1}); " +
-                "protein FDR will use stale 1st-pass q-values", fileName, pass2Path));
+                "Failed to reload the second-pass intermediate file for '{0}' ({1}); " +
+                "protein FDR will use its first-pass q-values.", fileName, pass2Path));
             return false;
         }
 
@@ -750,8 +758,8 @@ namespace pwiz.Osprey.Tasks
             // --task SecondPassFDR leg the same step is a 127 s gap. It ran unbracketed: the
             // "N/M file(s) have no precomputed second-pass FDR scores" heading above was
             // LogVerbose (this change promotes it to LogInfo, so it is now visible), and the
-            // swRestore duration goes out as a [STAGE-WALL] line, which OspreyOutput.IsStatLine
-            // filters unless --perf-stats. A heading alone would not cover this anyway - the
+            // swRestore duration goes out as a [STAGE-WALL] line, which LogTag.STAGE_WALL
+            // writes only under --perf-stats. A heading alone would not cover this anyway - the
             // step is O(records) and the silence is INSIDE it.
             int restoreIdx = 0;
             // ONE index and ONE staging buffer for the whole loop, cleared per file rather than
@@ -778,7 +786,8 @@ namespace pwiz.Osprey.Tasks
             var seeder = new Pass1ScalarSeeder(maxEntries,
                 LoadExperimentRecords(ctx.Config, FdrScoresSidecar.Pass.FirstPass));
             using (var progress = new ProgressReporter(
-                       string.Format(@"Seeding pass-1 scalars from {0} file(s)", perFileEntries.Count),
+                       CountText.Format(perFileEntries.Count, "Restoring first-pass scores for 1 file",
+                           "Restoring first-pass scores for {0:N0} files"),
                        perFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 foreach (var kvp in perFileEntries)
@@ -1163,18 +1172,47 @@ namespace pwiz.Osprey.Tasks
             var map = FdrExperimentSidecar.ReadMap(path, pass);
             if (map == null)
             {
+                // Not read as empty: that would leave every entry on its reset defaults (an
+                // experiment aggregate score of 0, an experiment q of 1) and report those as
+                // computed values (issue #4486).
                 throw new InvalidOperationException(string.Format(
-                    @"The {0} experiment-scope FDR sidecar exists but could not be read: {1}. " +
-                    @"Treating it as empty would leave every entry on its reset defaults - an " +
-                    @"experiment aggregate score of 0 and an experiment q of 1 - and the run " +
-                    @"would then report those as computed values. See issue #4486.",
-                    pass, path));
+                    pass == FdrScoresSidecar.Pass.FirstPass
+                        ? "The whole-experiment first-pass intermediate file exists but could not be read: {0}"
+                        : "The whole-experiment second-pass intermediate file exists but could not be read: {0}",
+                    path));
             }
             return map;
         }
 
         internal sealed class Pass1ScalarSeeder
         {
+            /// <summary>
+            /// Report what one or more seeders restored and which files they could not read. The
+            /// rescore worker aggregates its per-thread seeders and calls this once; a single
+            /// seeder calls it through <see cref="LogSummary"/>.
+            ///
+            /// <para>For the developer: peaks Stage 6 changed in an unreadable file keep reset
+            /// defaults, so their 2nd-pass sidecars are wrong AND a Score of 0 enters the
+            /// second-pass protein FDR null unfiltered.</para>
+            /// </summary>
+            public static void LogSeedSummary(PipelineContext ctx, IReadOnlyList<string> unreadable,
+                int restored, int filesRead)
+            {
+                if (unreadable.Count > 0)
+                {
+                    ctx.LogWarning(CountText.Format(unreadable.Count,
+                        "The first-pass intermediate file (.1st-pass.fdr_scores.bin) is missing or " +
+                        "unreadable for 1 file: {1}. Treat the protein-level results of this run as unreliable.",
+                        "The first-pass intermediate files (.1st-pass.fdr_scores.bin) are missing or " +
+                        "unreadable for {0:N0} files: {1}. Treat the protein-level results of this run as unreliable.",
+                        string.Join(", ", unreadable)));
+                }
+                ctx.LogVerbose(CountText.Format(filesRead,
+                    "Restored the first-pass scores of {1:N0} kept precursor candidate peaks in 1 file.",
+                    "Restored the first-pass scores of {1:N0} kept precursor candidate peaks across {0:N0} files.",
+                    restored));
+            }
+
             private readonly List<string> _unreadable = new List<string>();
 
             /// <summary>
@@ -1333,19 +1371,7 @@ namespace pwiz.Osprey.Tasks
 
             public void LogSummary(PipelineContext ctx)
             {
-                if (_unreadable.Count > 0)
-                {
-                    ctx.LogWarning(string.Format(
-                        "1st-pass Score/Pep/ExperimentAggregateScore could not be " +
-                        "restored for {0} file(s) (no readable 1st-pass sidecar): [{1}]. Peaks Stage 6 " +
-                        "changed in those files keep reset defaults, so their 2nd-pass sidecars are " +
-                        "wrong AND a Score of 0 enters the second-pass protein FDR null unfiltered. " +
-                        "Treat this run's protein-level numbers as unreliable.",
-                        _unreadable.Count, string.Join(", ", _unreadable)));
-                }
-                ctx.LogVerbose(string.Format(
-                    "Restored 1st-pass Score/Pep/ExperimentAggregateScore onto {0} survivor(s) across {1} file(s).",
-                    _nRestored, _filesRead));
+                LogSeedSummary(ctx, _unreadable, _nRestored, _filesRead);
             }
 
             /// <summary>
@@ -1485,7 +1511,8 @@ namespace pwiz.Osprey.Tasks
             // it is per-file work and reports as such.
             int patchIdx = 0;
             using (var progress = new ProgressReporter(
-                       string.Format(@"Patching pass-2 protein q into {0} sidecar(s)", fileNames.Count),
+                       CountText.Format(fileNames.Count, "Writing protein q-values for 1 file",
+                           "Writing protein q-values for {0:N0} files"),
                        fileNames.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 foreach (string fileName in fileNames)
@@ -1557,18 +1584,18 @@ namespace pwiz.Osprey.Tasks
             // rather than implying the file is merely missing an optional extra.
             if (failed.Count > 0)
             {
+                // Each record keeps what it held when the sidecar was written: the reset default
+                // for every entry Stage 6 rescored or gap-filled, a pass-1 value only for entries
+                // Stage 6 left alone. Any consumer joining on that column reads the wrong pass.
                 ctx.LogWarning(string.Format(
-                    "Could not patch the second-pass protein q-value into the 2nd-pass FDR " +
-                    "sidecar for {0} file(s): [{1}]. Those files carry no pass-2 protein " +
-                    "q-value: each record keeps what it held when the sidecar was written, " +
-                    "which is the reset default for every entry Stage 6 rescored or gap-filled " +
-                    "and a pass-1 value only for entries Stage 6 left alone. Any consumer " +
-                    "joining on that column is reading the wrong pass.",
+                    "Protein q-values could not be written for {0:N0} files: [{1}]. The " +
+                    "second-pass intermediate files for those files carry no valid protein q-value.",
                     failed.Count, string.Join(", ", failed)));
             }
-            ctx.LogVerbose(string.Format(
-                "Resolved the second-pass protein q-value for {0} record(s) across {1} file(s).",
-                nPatched, filesPatched));
+            ctx.LogVerbose(CountText.Format(filesPatched,
+                "Resolved the second-pass protein q-values of {1:N0} precursor candidate peaks in 1 file.",
+                "Resolved the second-pass protein q-values of {1:N0} precursor candidate peaks across {0:N0} files.",
+                nPatched));
 
             // The experiment-scope record set is complete now that protein FDR has filled the
             // one column it owns, so write it once beside the blib.
@@ -1577,16 +1604,16 @@ namespace pwiz.Osprey.Tasks
             if (string.IsNullOrEmpty(experimentPath))
             {
                 ctx.LogWarning(
-                    "No output blib to name the 2nd-pass experiment-scope FDR sidecar after, so " +
-                    "this run's experiment q-values are not persisted.");
+                    "No output .blib was given, so the second-pass experiment-level q-values are " +
+                    "not saved to an intermediate file.");
                 return;
             }
             try
             {
                 FdrExperimentSidecar.Write(experimentPath, experiment.Records,
                     FdrScoresSidecar.Pass.SecondPass);
-                ctx.LogInfo(string.Format(
-                    @"Wrote experiment-scope FDR sidecar: {0} ({1} distinct entry ids)",
+                ctx.LogVerbose(string.Format(
+                    "Wrote experiment-level FDR results for {1:N0} precursor candidates to {0}",
                     experimentPath, experiment.Count));
             }
             catch (Exception ex)
@@ -1655,14 +1682,14 @@ namespace pwiz.Osprey.Tasks
             {
                 return true;
             }
-            throw new InvalidOperationException(string.Format(
-                "OSPREY_PASS2_QVALUE={0} could not run the frozen recompute (the frozen 1st-pass " +
-                "model, 1st-pass scalar sidecars or protein stratum are absent, or a file's input " +
-                "path could not be resolved - e.g. a warm " +
-                "rerun or a distributed SecondPassFDR node that did not train pass 1 in-process). " +
-                "The warning above names which. Run this mode on the straight-through path, or " +
-                "rerun without the score cache so the 1st pass trains in-process.",
-                OspreyEnvironment.Pass2QValue));
+            // Absent inputs: the frozen 1st-pass model, 1st-pass scalar sidecars or protein
+            // stratum, or a file whose input path could not be resolved - e.g. a warm rerun or a
+            // distributed SecondPassFDR node that did not train pass 1 in-process.
+            throw new InvalidOperationException(
+                "Second-pass FDR cannot run: the saved first-pass model, a first-pass intermediate " +
+                "file, or the list of precursor candidates from proteins with 2 or more detections " +
+                "is missing or unreadable (a warning above names the file when one is at fault). " +
+                "Run the analysis straight through without --task.");
         }
 
         /// <summary>
@@ -1724,7 +1751,8 @@ namespace pwiz.Osprey.Tasks
             var scorer = FrozenModelScorer.TryCreate(frozenModel);
             if (scorer == null)
             {
-                ctx.LogWarning(mode + ": frozen 1st-pass model has no usable model/standardizer.");
+                // The frozen 1st-pass model has no usable model or standardizer.
+                ctx.LogWarning("Second-pass FDR: the saved first-pass model cannot be used.");
                 return false;
             }
             var sw = Stopwatch.StartNew();
@@ -1785,7 +1813,8 @@ namespace pwiz.Osprey.Tasks
             // multi-hour search. The two steps after it (sidecar path validation and the protein
             // stratum build) are in the same silence and are NOT yet reported - see the TODO.
             using (var mergeProgress = new ProgressReporter(
-                string.Format(@"Collecting pass-2 survivors from {0} file(s)", fileNames.Count),
+                CountText.Format(fileNames.Count, "Collecting second-pass precursor candidates from 1 file",
+                    "Collecting second-pass precursor candidates from {0:N0} files"),
                 fileNames.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 int mergeIdx = 0;
@@ -1846,8 +1875,9 @@ namespace pwiz.Osprey.Tasks
             {
                 if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
                 {
-                    ctx.LogWarning(mode + ": no parquet path for '" + fileName +
-                                   "'; cannot locate its 1st-pass scalar sidecar.");
+                    ctx.LogWarning(string.Format(
+                        "Second-pass FDR: no .scores.parquet file is known for '{0}', so its " +
+                        "first-pass intermediate file cannot be found.", fileName));
                     return false;
                 }
                 // ONLY WHEN THIS PASS WILL READ THEM. The default path applies the worker's own
@@ -1877,7 +1907,8 @@ namespace pwiz.Osprey.Tasks
                     fileName + ".1st-pass.fdr_scores.bin");
                 if (!File.Exists(sidecarPath))
                 {
-                    ctx.LogWarning(mode + ": 1st-pass scalar sidecar not found: " + sidecarPath);
+                    ctx.LogWarning(string.Format(
+                        "Second-pass FDR: first-pass intermediate file not found: {0}", sidecarPath));
                     return false;
                 }
                 // Existence was never enough. ReadScalars THROWS on bad magic, a stale version, a
@@ -1889,9 +1920,9 @@ namespace pwiz.Osprey.Tasks
                 // Checking the header here keeps the refusal where the contract says it is.
                 if (!FdrScoresSidecar.IsCurrentFormat(sidecarPath, FdrScoresSidecar.Pass.FirstPass))
                 {
-                    ctx.LogWarning(
-                        mode + ": 1st-pass scalar sidecar is not a readable v" +
-                        FdrScoresSidecar.FormatVersion + " first-pass file: " + sidecarPath);
+                    ctx.LogWarning(string.Format(
+                        "Second-pass FDR: {0} is not a first-pass intermediate file this version of " +
+                        "Osprey can read (format {1}).", sidecarPath, FdrScoresSidecar.FormatVersion));
                     return false;
                 }
                 // No input file means no .2nd-pass.fdr_scores.bin path, and the sidecar is where
@@ -1904,20 +1935,27 @@ namespace pwiz.Osprey.Tasks
                 // already warned about twice by the time this runs.
                 if (writer.InputFor(fileName) == null)
                 {
-                    ctx.LogWarning(mode + ": no input file matches '" + fileName +
-                                   "'; its 2nd-pass FDR sidecar cannot be written.");
+                    ctx.LogWarning(string.Format(
+                        "Second-pass FDR: no input file matches '{0}', so its second-pass " +
+                        "intermediate file cannot be written.", fileName));
                     return false;
                 }
                 fileKeys.Add(fileName);
                 sidecarByKey[fileName] = sidecarPath;
             }
 
-            ctx.LogInfo(string.Format(
-                "OSPREY_PASS2_QVALUE={0}: recomputing q/PEP by streaming {1} file(s), frozen-model " +
-                "scores swapped in for up to {2} reconciled survivor observations - no retrain, one " +
-                "file resident at a time{3}.",
-                mode, fileKeys.Count, survivorObservations,
-                ", competition CONSTRAINED to the " + stratumBaseIds.Count + "-base_id protein stratum"));
+            // What happens to the q-values, not how: the mode is on the [PATH] pass2-qvalue line,
+            // and the frozen model, streaming and survivor-observation count are mechanism.
+            ctx.LogInfo(CountText.Format(fileKeys.Count,
+                "Second-pass FDR: recomputing q-values for {1:N0} precursor candidates from proteins " +
+                "with 2 or more detections; other candidates keep their first-pass q-values.",
+                "Second-pass FDR over {0:N0} files: recomputing q-values for {1:N0} precursor " +
+                "candidates from proteins with 2 or more detections; other candidates keep their " +
+                "first-pass q-values.",
+                stratumBaseIds.Count));
+            ctx.LogVerbose(string.Format(
+                "{0}: scoring up to {1:N0} re-scored peaks with the first-pass model, one file at a time.",
+                mode, survivorObservations));
 
             // This competition reduces per base_id by MAX, and BOTH modes that reach it then
             // overwrite the reported experiment q from that reduction. Neither is compatible with
@@ -2012,7 +2050,8 @@ namespace pwiz.Osprey.Tasks
             // a callback through the FDR layer. It now covers the frozen-model feature reload too
             // (folded in below), which is the expensive half and used to have its own reporter.
             using (var progress = new ProgressReporter(
-                string.Format("{0}: streaming the competition over {1} file(s)", mode, fileKeys.Count),
+                CountText.Format(fileKeys.Count, "Recomputing second-pass q-values for 1 file",
+                    "Recomputing second-pass q-values across {0:N0} files"),
                 fileKeys.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 long nRead = 0;
@@ -2185,18 +2224,21 @@ namespace pwiz.Osprey.Tasks
                 }
                 else if (answered == fileKeys.Count)
                 {
-                    ctx.LogInfo(string.Format(
-                        @"Second-pass fold reading the worker's written answer for all {0} " +
-                        @"file(s); no 1st-pass sidecar is opened.", fileKeys.Count));
+                    ctx.LogVerbose(CountText.Format(fileKeys.Count,
+                        "Second-pass FDR uses the results written during re-scoring for the file.",
+                        "Second-pass FDR uses the results written during re-scoring for all {0:N0} files."));
                 }
                 else
                 {
-                    ctx.LogInfo(string.Format(
-                        @"Second-pass fold has a worker answer for {0} of {1} file(s); the " +
-                        @"remaining {2} are RECOMPUTED from their 1st-pass sidecars. A node given " +
-                        @"complete worker output would open none.",
-                        answered, fileKeys.Count, fileKeys.Count - answered));
+                    ctx.LogVerbose(CountText.Format(fileKeys.Count,
+                        "Second-pass FDR has no results from re-scoring for the file, so they are " +
+                        "recomputed from its first-pass intermediate files.",
+                        "Second-pass FDR has results from re-scoring for {1:N0} of {0:N0} files; the other " +
+                        "{2:N0} are recomputed from their first-pass intermediate files.",
+                        answered, fileKeys.Count - answered));
                 }
+                ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_SECOND_PASS_FOLD, @"verify={0} answered={1}/{2}",
+                    OspreyEnvironment.Pass2VerifyWorker ? @"on" : @"off", answered, fileKeys.Count));
 
                 try
                 {
@@ -2259,7 +2301,8 @@ namespace pwiz.Osprey.Tasks
             var unpatched = new List<string>(writeFailures);
             var experiment = new FdrExperimentAccumulator();
             using (var patchProgress = new ProgressReporter(
-                string.Format("{0}: writing experiment q to {1} file(s)", mode, sidecarsWritten.Count),
+                CountText.Format(sidecarsWritten.Count, "Writing experiment-level q-values for 1 file",
+                    "Writing experiment-level q-values for {0:N0} files"),
                 sidecarsWritten.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 int patchIdx = 0;
@@ -2313,10 +2356,9 @@ namespace pwiz.Osprey.Tasks
             floors.DerivePeptideFloors();
             int raised = experiment.ApplyRunQFloors(entryId => floors.FloorsFor(entryId));
             ctx.LogInfo(string.Format(
-                @"[FDR] experiment-q floors: folded {0} entry_id and {1} peptide floor(s) from " +
-                @"the per-file second-pass records - no pass over the runs - and raised {2} " +
-                @"experiment q-value(s) to them.",
-                floors.EntryIdCount, floors.PeptideCount, raised));
+                @"Raised {0:N0} of {1:N0} experiment-level precursor candidate q-values to their " +
+                @"best run-level value.",
+                raised, experiment.Count));
 
             // Handed to the protein-FDR step, which fills the one column it owns and writes the
             // 2nd-pass experiment sidecar. Published rather than returned because the protein
@@ -2331,14 +2373,14 @@ namespace pwiz.Osprey.Tasks
                 // next gates on ExperimentPrecursorQvalue, so continuing means reporting a
                 // protein set computed from unfinished numbers.
                 throw new IOException(string.Format(
-                    "{0}: could not write the recomputed experiment q-values into the 2nd-pass FDR " +
-                    "sidecar for {1} file(s): [{2}]. Those files' experiment q, PEP and experiment " +
-                    "aggregate are not second-pass values, and the protein FDR that reads them runs next.",
-                    mode, unpatched.Count, string.Join(", ", unpatched)));
+                    "Second-pass experiment-level q-values could not be written for {0:N0} files: " +
+                    "[{1}]. Stopping, because protein FDR would otherwise read values that are not " +
+                    "second-pass values.",
+                    unpatched.Count, string.Join(", ", unpatched)));
             }
-            ctx.LogInfo(string.Format(
-                "{0}: mapped recomputed q onto {1} reported survivors ({2} frozen-model scores " +
-                "swapped in) in {3:F1}s.",
+            ctx.LogVerbose(string.Format(
+                "{0}: applied the recomputed q-values to {1:N0} precursor candidate peaks ({2:N0} " +
+                "scored with the first-pass model) in {3:F1}s.",
                 mode, nMapped, nScored, sw.Elapsed.TotalSeconds));
             return true;
 
@@ -2442,7 +2484,8 @@ namespace pwiz.Osprey.Tasks
             // Per-file progress: reloading each file's reconciled PIN features from parquet
             // ran ~10 min silent before 2nd-pass Percolator. Console-only.
             var reloadProgress = new ProgressReporter(
-                string.Format(@"Reloading reconciled features from {0} file(s)", perFileEntries.Count),
+                CountText.Format(perFileEntries.Count, "Reloading re-scored peak features from 1 file",
+                    "Reloading re-scored peak features from {0:N0} files"),
                 perFileEntries.Count);
             int reloadIdx = 0;
             foreach (var kvp in perFileEntries)
@@ -2456,9 +2499,8 @@ namespace pwiz.Osprey.Tasks
                     // regresses 2nd-pass FDR -- log so the operator can detect
                     // an incomplete hand-off.
                     ctx.LogWarning(string.Format(
-                        "Second-pass FDR: no parquet path mapped for file '{0}' " +
-                        "({1} entries will run with stale/null features). " +
-                        "Check that each file's scores parquet was produced and mapped.",
+                        "Second-pass FDR: no .scores.parquet file is known for '{0}', so {1:N0} " +
+                        "precursor candidates will be scored without features.",
                         kvp.Key, kvp.Value.Count));
                     continue;
                 }
@@ -2476,7 +2518,7 @@ namespace pwiz.Osprey.Tasks
                 catch (Exception ex)
                 {
                     ctx.LogWarning(string.Format(
-                        "Second-pass FDR: failed to reload PIN features from {0}: {1}",
+                        "Second-pass FDR: could not read the re-scored intermediate file {0}: {1}",
                         effectiveParquetPath, ex.Message));
                     continue;
                 }
@@ -2490,18 +2532,18 @@ namespace pwiz.Osprey.Tasks
                 if (nMapped < kvp.Value.Count)
                 {
                     ctx.LogWarning(string.Format(
-                        "Second-pass FDR: file '{0}' reconciled parquet has {1} feature rows " +
-                        "but {2} FDR entries reference it; {3} entries will run with " +
-                        "stale/null features. Stub/parquet mismatch - check reconciled-parquet " +
-                        "output integrity.",
-                        kvp.Key, featByScoreIndex.Count, kvp.Value.Count, kvp.Value.Count - nMapped));
+                        "Second-pass FDR: the re-scored intermediate file '{3}' does not match the " +
+                        "first-pass intermediate file for '{0}' ({1:N0} rows, {2:N0} expected); " +
+                        "{4:N0} precursor candidates will be scored without features.",
+                        kvp.Key, featByScoreIndex.Count, kvp.Value.Count, effectiveParquetPath,
+                        kvp.Value.Count - nMapped));
                 }
                 nReloaded += nMapped;
             }
             reloadProgress.Dispose();
             swReloadFeats.Stop();
-            ctx.LogInfo(string.Format(
-                "[TIMING] Reloaded PIN features for {0} entries: {1:F1}s",
+            ctx.LogInfo(LogTag.TIMING, string.Format(
+                "Reloaded PIN features for {0} entries: {1:F1}s",
                 nReloaded, swReloadFeats.Elapsed.TotalSeconds));
 
             switch (config.FdrMethod)
@@ -2553,13 +2595,9 @@ namespace pwiz.Osprey.Tasks
                     // list, an unreadable 1st-pass experiment sidecar - so this states the
                     // consequence and the remedy rather than re-deriving the cause.
                     throw new InvalidOperationException(
-                        @"Second-pass FDR could not transfer the first-pass confidence, and " +
-                        @"there is no second-pass retrain to fall back on (removed for issue " +
-                        @"#4484: the compacted pool is decoy-depleted, so retraining on it " +
-                        @"mis-estimates the null). The preceding log line names which input " +
-                        @"was missing; the first pass must have completed and left its model " +
-                        @"and experiment-scope sidecars beside the analysis output. Re-run " +
-                        @"FirstPassFDR for this cohort, then SecondPassFDR again.");
+                        "Second-pass FDR in transfer mode cannot run without the first-pass model " +
+                        "and experiment-level intermediate file (see the warning above). Re-run " +
+                        "--task FirstPassFDR, then --task SecondPassFDR.");
                 // Simple / Mokapot 2nd-pass paths intentionally
                 // not implemented yet -- the in-process pipeline's
                 // FirstPassFdrTask.RunFdr already covers Simple, and
@@ -2568,9 +2606,9 @@ namespace pwiz.Osprey.Tasks
                 // mirror the Rust dispatch in pipeline.rs:4424-4448.
                 default:
                     ctx.LogWarning(string.Format(
-                        "Second-pass FDR: {0} is not supported in SecondPassFdrTask; " +
-                        "skipping (protein FDR will run on first-pass scores)",
-                        config.FdrMethod));
+                        "Second-pass FDR is not available for the {0} FDR method; protein FDR will " +
+                        "use first-pass scores.",
+                        config.FdrMethod.GetLocalizedString()));
                     return;
             }
         }
@@ -2950,8 +2988,9 @@ namespace pwiz.Osprey.Tasks
         /// </list>
         /// No global full-population table and no resident first-pass pool: the frozen model is
         /// captured on the lean projection first pass and each file's table is built from data
-        /// already on disk, one file at a time. Returns false (caller falls back to the retrain)
-        /// when the frozen model is unusable or the input-file list is absent.
+        /// already on disk, one file at a time. Returns false (the caller stops with an error;
+        /// there is no retrain to fall back on) when the frozen model is unusable, the
+        /// input-file list is absent or the 1st-pass experiment sidecar cannot be read.
         /// </summary>
         internal static bool TransferPerRunQ(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
@@ -2962,16 +3001,16 @@ namespace pwiz.Osprey.Tasks
             var scorer = FrozenModelScorer.TryCreate(firstPassModel);
             if (scorer == null)
             {
+                // The frozen 1st-pass model has no usable model or standardizer.
                 ctx.LogWarning(
-                    "OSPREY_PASS2_QVALUE=transfer: frozen 1st-pass model has no usable model " +
-                    "or standardizer; cannot transfer.");
+                    "OSPREY_PASS2_QVALUE=transfer: the saved first-pass model cannot be used.");
                 return false;
             }
             if (config.InputFiles == null)
             {
                 ctx.LogWarning(
-                    "OSPREY_PASS2_QVALUE=transfer: no input-file list to locate the per-file " +
-                    "1st-pass sidecars; cannot transfer.");
+                    "OSPREY_PASS2_QVALUE=transfer: no input files are known, so the first-pass " +
+                    "intermediate files cannot be found.");
                 return false;
             }
 
@@ -3006,13 +3045,11 @@ namespace pwiz.Osprey.Tasks
                     FdrScoresSidecar.Pass.FirstPass);
             if (globalExperiment == null)
             {
-                // Same disposition the unreadable per-file sidecar had: fall back to the
-                // 2nd-pass retrain rather than silently leaving moved peaks at q = 1.0, which
-                // drops them from the output. Hard-fail over warn-and-proceed.
+                // Decline rather than silently leave moved peaks at q = 1.0, which drops them
+                // from the output. The caller turns the decline into a hard failure.
                 ctx.LogWarning(
-                    "OSPREY_PASS2_QVALUE=transfer: the 1st-pass experiment-scope FDR sidecar is " +
-                    "missing or unreadable; falling back to the 2nd-pass Percolator retrain " +
-                    "rather than silently dropping reconciliation-moved peaks.");
+                    "OSPREY_PASS2_QVALUE=transfer: the first-pass experiment-level intermediate " +
+                    "file is missing or unreadable.");
                 return false;
             }
 
@@ -3021,7 +3058,8 @@ namespace pwiz.Osprey.Tasks
             // Per-file progress: building each file's per-run tables + classifying its survivors ran
             // silently for minutes on an 82-file join (the gap between Stage 6 and the summary below).
             var transferProgress = new ProgressReporter(
-                string.Format(@"Transferring per-run q-values across {0} file(s)", perFileEntries.Count),
+                CountText.Format(perFileEntries.Count, "Transferring run-level q-values for 1 file",
+                    "Transferring run-level q-values for {0:N0} files"),
                 perFileEntries.Count);
             int transferIdx = 0;
             foreach (var kvp in perFileEntries)
@@ -3038,15 +3076,15 @@ namespace pwiz.Osprey.Tasks
             transferProgress.Dispose();
 
             ctx.LogInfo(string.Format(
-                "OSPREY_PASS2_QVALUE=transfer: per-run q transfer over {0} file(s) -- {1} unchanged " +
-                "(pass-1 q carried), {2} moved (run q re-mapped, experiment q carried), {3} gap-fill " +
-                "(new run q + carried experiment q){4}{5}.",
+                "OSPREY_PASS2_QVALUE=transfer over {0:N0} files: {1:N0} peaks keep their first-pass " +
+                "q-values, {2:N0} peaks moved by cross-run reconciliation and {3:N0} missing peaks get " +
+                "a new run-level q-value{4}{5}.",
                 tally.FilesDone, tally.Unchanged, tally.Moved, tally.GapFill,
                 tally.MissingSidecar > 0
-                    ? string.Format("; {0} file(s) had no readable 1st-pass sidecar", tally.MissingSidecar)
+                    ? string.Format("; {0:N0} files had no readable first-pass intermediate file", tally.MissingSidecar)
                     : string.Empty,
                 tally.Skipped > 0
-                    ? string.Format("; {0} entr(y/ies) skipped for missing features", tally.Skipped)
+                    ? string.Format("; {0:N0} precursor candidates were skipped for missing features", tally.Skipped)
                     : string.Empty));
 
             // PUBLISH THE EXPERIMENT SCOPE, exactly as the competition modes do. This mode writes
@@ -3112,8 +3150,8 @@ namespace pwiz.Osprey.Tasks
             {
                 tally.MissingSidecar++;
                 logWarning(string.Format(
-                    "OSPREY_PASS2_QVALUE=transfer: could not read the 1st-pass sidecar for '{0}' " +
-                    "({1}); this file's per-run q is left unadjusted.", fileName, pass1Path));
+                    "OSPREY_PASS2_QVALUE=transfer: could not read the first-pass intermediate file " +
+                    "for '{0}' ({1}); this file's run-level q-values are left unadjusted.", fileName, pass1Path));
                 return;
             }
             BuildScoreToQTable(precScores, precQs, out double[] precScoresDesc, out double[] precQDesc);
@@ -3659,7 +3697,7 @@ namespace pwiz.Osprey.Tasks
                 catch (Exception ex) when (!(ex is OutOfMemoryException))
                 {
                     _ctx.LogWarning(string.Format(
-                        @"Failed to write 2nd-pass FDR sidecar for {0}: {1}", fileName, ex.Message));
+                        "Failed to write the second-pass intermediate file for '{0}': {1}", fileName, ex.Message));
                     Tallies.Failures++;
                     return false;
                 }
@@ -3672,7 +3710,8 @@ namespace pwiz.Osprey.Tasks
                 catch (Exception ex) when (!(ex is OutOfMemoryException))
                 {
                     _ctx.LogWarning(string.Format(
-                        @"Failed to write {0} sidecar for {1}: {2}", _taskName, pass2Path, ex.Message));
+                        "Failed to record that --task {0} completed {1}: {2}. A resume will redo this step.",
+                        _taskName, pass2Path, ex.Message));
                 }
                 return true;
             }

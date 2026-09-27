@@ -296,14 +296,11 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     public static class RescoreHydration
     {
-        /// <summary>
-        /// The one substring every disclosure of the ALL-RUNS reconciliation bundle carries:
-        /// both hydrate twins log it when they start building the bundle, and the guard that
-        /// refuses the bundle names it in the refusal. The regression gate's negative route
-        /// assertion reads this constant's value, so a run that built the bundle, or was refused
-        /// for trying, is visible in its log by construction rather than by wording coincidence.
-        /// </summary>
-        public const string ALL_RUNS_BUNDLE_MARKER = @"ALL-RUNS reconciliation bundle";
+        // The --verbose note both all-runs builders print is prose; the regression gate reads
+        // [PATH] all-runs-bundle, which both builders and the refusing guard emit.
+        private const string ALL_RUNS_VERBOSE_NOTE =
+            "Loading the cross-run reconciliation files for all {0:N0} runs into memory at once; " +
+            "memory grows with the number of files.";
 
         /// <summary>
         /// Overlay the per-file 1st-pass FDR sidecars and parse the per-file
@@ -331,7 +328,7 @@ namespace pwiz.Osprey.Tasks
             IList<string> parquetPaths,
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             LibraryStringInterner sequencePool = null,
-            Action<string> logInfo = null)
+            IOspreyLog log = null)
         {
             if (perFileEntries == null) throw new ArgumentNullException(nameof(perFileEntries));
             if (parquetPaths == null) throw new ArgumentNullException(nameof(parquetPaths));
@@ -346,19 +343,23 @@ namespace pwiz.Osprey.Tasks
             // shape has at gate scale: every value and every artifact is identical to the
             // bounded twin's, and 3 files make the memory difference free. The regression gate's
             // negative route assertion reads this line, so it must not be a ProgressReporter
-            // heading - that is deferred by LOG_WAIT_SECONDS and never appears on a 3-file
-            // hydrate, and the bounded HydrateCompactedStreaming prints the identical heading
-            // when it IS slow enough. A marker that both routes emit, and neither emits quickly,
-            // cannot tell them apart; this one is emitted here and nowhere else.
+            // heading - the bounded HydrateCompactedStreaming prints the identical heading, so a
+            // marker that both routes emit cannot tell them apart; this one is emitted here and
+            // nowhere else.
             //
             // On the builder rather than at a caller so it covers every door into the all-runs
             // bundle at once - the resume rehydrate, the --input-scores load, and any added
             // later, which is the case a per-caller marker would silently miss. BOTH twins emit
             // it: this overlay, and HydrateCompactedStreaming below, which streams the reading
             // but accumulates the result and is the twin the 446-run incident actually took.
-            logInfo?.Invoke(string.Format(
-                @"Hydrating the {0}: {1} run(s) held at once, O(files x entries).",
-                ALL_RUNS_BUNDLE_MARKER, perFileEntries.Count));
+            if (OspreyOutput.Verbose)
+            {
+                log?.LogInfo(string.Format(
+                    ALL_RUNS_VERBOSE_NOTE,
+                    perFileEntries.Count));
+            }
+            log?.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_ALL_RUNS_BUNDLE, @"built runs={0}",
+                perFileEntries.Count));
 
             var refinedCalibrations = new Dictionary<string, RTCalibration>();
             var perFileGapFill = new Dictionary<string, List<GapFillTarget>>();
@@ -373,7 +374,7 @@ namespace pwiz.Osprey.Tasks
             // HEARTBEAT_SECONDS tick. That bounds the gap only while Report keeps being
             // called - it fires from inside Report - so a single slow file still reopens it.
             using (var hydrateProgress = new ProgressReporter(
-                       @"Hydrating reconciliation bundle", perFileEntries.Count))
+                       @"Loading cross-run reconciliation files", perFileEntries.Count))
             {
                 for (int i = 0; i < perFileEntries.Count; i++)
                 {
@@ -441,7 +442,7 @@ namespace pwiz.Osprey.Tasks
             Action<int, string, List<FdrEntry>> onStubsHydrated,
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             HashSet<uint> retainedBaseIds,
-            Action<string> logInfo = null)
+            IOspreyLog log = null)
         {
             if (parquetPaths == null)
                 throw new ArgumentNullException(nameof(parquetPaths));
@@ -453,7 +454,7 @@ namespace pwiz.Osprey.Tasks
                 throw new ArgumentNullException(nameof(retainedBaseIds));
 
             using (var progress = new ProgressReporter(
-                       @"Folding first-pass diagnostics", parquetPaths.Count))
+                       "Reading first-pass results for the model diagnostics report", parquetPaths.Count))
             {
                 for (int i = 0; i < parquetPaths.Count; i++)
                 {
@@ -495,7 +496,7 @@ namespace pwiz.Osprey.Tasks
                     // set with --memstamp carries uncollected garbage, so it can only show shape.
                     // Reading shape as magnitude is what sent the previous fix after the wrong
                     // structure; this probe is what settles it.
-                    ProfilerHooks.LogManagedHeapAfterGcIfEnabled(logInfo, @"mdiag-fold-live",
+                    ProfilerHooks.LogManagedHeapAfterGcIfEnabled(log, @"mdiag-fold-live",
                         string.Format(@"(post-GC, diagnostics fold, run {0} of {1})",
                             i + 1, parquetPaths.Count));
                 }
@@ -559,7 +560,7 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             HashSet<uint> retainedBaseIds,
             LibraryStringInterner sequencePool = null,
-            Action<string> logInfo = null)
+            IOspreyLog log = null)
         {
             if (perFileEntries == null)
                 throw new ArgumentNullException(nameof(perFileEntries));
@@ -608,13 +609,17 @@ namespace pwiz.Osprey.Tasks
             // perFileEntries and held together, so this is the all-runs builder as much as the
             // overlay twin is - it is the route the 446-run --task ModelDiagnostics incident
             // took. Same marker as the overlay, for the same negative route assertion, and
-            // emitted here rather than through the ProgressReporter heading above, which is
-            // deferred and never appears on a small cohort.
-            logInfo?.Invoke(string.Format(
-                @"Hydrating the {0}: {1} run(s) held at once, O(files x entries).",
-                ALL_RUNS_BUNDLE_MARKER, nFiles));
+            // emitted here rather than through the ProgressReporter heading above, which the
+            // bounded route prints too.
+            if (OspreyOutput.Verbose)
+            {
+                log?.LogInfo(string.Format(
+                    ALL_RUNS_VERBOSE_NOTE,
+                    nFiles));
+            }
+            log?.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_ALL_RUNS_BUNDLE, @"built runs={0}", nFiles));
             using (var hydrateProgress = new ProgressReporter(
-                       @"Hydrating reconciliation bundle", nFiles))
+                       @"Loading cross-run reconciliation files", nFiles))
             {
                 for (int i = 0; i < nFiles; i++)
                 {

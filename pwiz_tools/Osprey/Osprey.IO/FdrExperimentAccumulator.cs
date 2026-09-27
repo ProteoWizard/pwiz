@@ -138,7 +138,8 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Raise every record's two experiment q-values to this entry's best-of-runs floors -
         /// the min-over-runs combined run q for the entry_id, and for its peptide identity -
-        /// returning how many values were raised.
+        /// returning how many records had either value raised. Records, not values: a record
+        /// carries two q-values, so a count of values has no denominator to state it against.
         ///
         /// <para>Applied HERE, before the records are written, because this is the last moment
         /// the analysis holds both the value and its floor. Experiment-scope FDR competes each
@@ -170,7 +171,7 @@ namespace pwiz.Osprey.IO
             // throw InvalidOperationException on net472.
             var entryIds = new uint[_byEntryId.Count];
             _byEntryId.Keys.CopyTo(entryIds, 0);
-            int raised = 0;
+            int precursorsRaised = 0;
             foreach (uint entryId in entryIds)
             {
                 var r = _byEntryId[entryId];
@@ -178,25 +179,20 @@ namespace pwiz.Osprey.IO
                 double precursorQ = r.ExperimentPrecursorQvalue;
                 double peptideQ = r.ExperimentPeptideQvalue;
                 if (floors.Entry > precursorQ)
-                {
                     precursorQ = floors.Entry;
-                    raised++;
-                }
                 if (floors.Peptide > peptideQ)
-                {
                     peptideQ = floors.Peptide;
-                    raised++;
-                }
                 if (precursorQ.Equals(r.ExperimentPrecursorQvalue) &&
                     peptideQ.Equals(r.ExperimentPeptideQvalue))
                 {
                     continue;
                 }
+                precursorsRaised++;
                 _byEntryId[entryId] = new FdrExperimentRecord(r.EntryId,
                     precursorQ, peptideQ,
                     r.ExperimentProteinQvalue, r.ExperimentAggregateScore, r.Pep);
             }
-            return raised;
+            return precursorsRaised;
         }
     }
 }
