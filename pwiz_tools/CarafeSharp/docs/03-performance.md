@@ -53,6 +53,11 @@ Phase times, medians in seconds:
   writer therefore compresses on a quarter of the processors while it keeps up, and on all of
   them once a chunk is waiting or prediction has finished. Compressing on every processor slowed
   MS2 prediction by 23-26% in earlier runs on a busy machine.
+- **The CPU build gains too.** The default build runs the models on the CPU, where inference
+  already uses every core, so the writer shares them instead of filling idle time. On every fifth
+  Stellar library peptide (193,504 precursors) the library step took 116 s before and 108 s after
+  (medians of 3 interleaved runs, 1.07x), with identical output: MS2 slows by 8%, and the 15 s of
+  writing is hidden.
 - **Multi-row annotation INSERTs.** One INSERT writes all of a spectrum's peak annotations, up to
   100 peaks, instead of one INSERT per peak.
 
