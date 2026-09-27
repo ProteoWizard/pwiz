@@ -140,6 +140,97 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The same channels and weighted solve on a stepped staggered acquisition: twelve bins,
+        /// windows of two bins in one set and offset by one bin in the other, the sets acquired
+        /// half a cycle apart. With a constant elution the interpolation is exact, so every
+        /// spectrum's bins get exactly their sources, including a fragment two bins share.
+        /// </summary>
+        [TestMethod]
+        public void TestStaggeredDemuxRecovers()
+        {
+            const int bins = 12, cycles = 10;
+            var windows = new List<(int First, int Last, double Offset)>();
+            for (int b = 0; b < bins; b += 2)
+                windows.Add((b, b + 1, 0.0));
+            for (int b = 1; b + 1 < bins; b += 2)
+                windows.Add((b, b + 1, 0.5));
+            var a = new double[windows.Count, bins];
+            for (int r = 0; r < windows.Count; r++)
+            {
+                for (int j = windows[r].First; j <= windows[r].Last; j++)
+                    a[r, j] = 1;
+            }
+            var sources = new[] { (Bin: 3, Mz: 500.1, Amount: 100.0), (Bin: 6, Mz: 500.1, Amount: 60.0), (Bin: 5, Mz: 610.2, Amount: 80.0) };
+
+            var rowTimes = new double[windows.Count][];
+            var rowSpectra = new int[windows.Count][];
+            var outputRow = new List<int>();
+            var outputTime = new List<double>();
+            var outputSpectrum = new List<int>();
+            var mz = new List<double>();
+            var ions = new List<double>();
+            var row = new List<int>();
+            var acquisition = new List<int>();
+            for (int r = 0; r < windows.Count; r++)
+            {
+                rowTimes[r] = new double[cycles];
+                rowSpectra[r] = new int[cycles];
+                for (int c = 0; c < cycles; c++)
+                {
+                    rowTimes[r][c] = c + windows[r].Offset + 0.01 * r;
+                    rowSpectra[r][c] = r * cycles + c;
+                    if (c >= 2 && c <= 7)
+                    {
+                        outputRow.Add(r);
+                        outputTime.Add(rowTimes[r][c]);
+                        outputSpectrum.Add(rowSpectra[r][c]);
+                    }
+                    foreach (var fragment in sources.GroupBy(s => s.Mz))
+                    {
+                        double value = fragment.Where(s => a[r, s.Bin] > 0).Sum(s => s.Amount);
+                        if (value <= 0)
+                            continue;
+                        mz.Add(fragment.Key);
+                        ions.Add(value);
+                        row.Add(r);
+                        acquisition.Add(c);
+                    }
+                }
+            }
+            var unit = new InterpolatedUnit(a, Enumerable.Range(0, bins).ToArray(), rowTimes, rowSpectra,
+                outputRow.ToArray(), outputTime.ToArray(), outputSpectrum.ToArray(), 0, bins - 1)
+            {
+                Mz = mz.ToArray(),
+                Ions = ions.ToArray(),
+                Row = row.ToArray(),
+                Acquisition = acquisition.ToArray(),
+            };
+
+            var result = ScanningDemultiplexer.DemuxInterpolatedUnit(unit, new ScanningDemuxParams());
+            Assert.AreEqual(0, result.PassedThrough.Count);
+            for (int s = 0; s < outputRow.Count; s++)
+            {
+                var w = windows[outputRow[s]];
+                for (int bin = w.First; bin <= w.Last; bin++)
+                {
+                    foreach (var fragment in sources.GroupBy(t => t.Mz))
+                    {
+                        double expected = fragment.Where(t => t.Bin == bin).Sum(t => t.Amount);
+                        double found = result.Demultiplexed
+                            .Where(p => p.Cycle == outputSpectrum[s] && p.Bin == bin && Math.Abs(p.Mz - fragment.Key) < 1e-6)
+                            .Sum(p => p.Ions);
+                        Assert.AreEqual(expected, found, 1e-6 * 100,
+                            string.Format(@"spectrum {0}, bin {1}, m/z {2}", outputSpectrum[s], bin, fragment.Key));
+                    }
+                }
+            }
+            // Each spectrum keeps only its own window's bins.
+            Assert.IsTrue(result.Demultiplexed.All(p =>
+                windows[outputRow[outputSpectrum.IndexOf(p.Cycle)]].First <= p.Bin &&
+                p.Bin <= windows[outputRow[outputSpectrum.IndexOf(p.Cycle)]].Last));
+        }
+
+        /// <summary>
         /// Layouts: the spectra a centered and a tiled layout plan for a run of bins; merging of
         /// one channel's peaks from neighboring positions; and parsing.
         /// </summary>

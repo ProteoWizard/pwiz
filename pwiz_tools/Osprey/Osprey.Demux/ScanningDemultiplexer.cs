@@ -104,6 +104,59 @@ namespace pwiz.Osprey.Demux
         public int[] Cycle { get; set; }
     }
 
+    /// <summary>
+    /// One block of a stepped staggered acquisition (Orbitrap, Astral): its windows (rows), the
+    /// narrow bins they tile (columns), each window's acquisitions in the block, the spectra
+    /// whose output it owns, and their peaks.
+    /// </summary>
+    public sealed class InterpolatedUnit
+    {
+        /// <param name="transmission">Rows: windows. Columns: bins. Entry: the share of the bin the window isolates.</param>
+        /// <param name="columnBins">Bin index of each column.</param>
+        /// <param name="rowTimes">Each window's acquisition times in the block, increasing.</param>
+        /// <param name="rowSpectra">The spectrum of each of those acquisitions.</param>
+        /// <param name="outputRow">For each output spectrum, its window (row).</param>
+        /// <param name="outputTime">For each output spectrum, its acquisition time.</param>
+        /// <param name="outputSpectrum">For each output spectrum, its index in the input.</param>
+        /// <param name="firstCoreBin">First bin whose output the block owns.</param>
+        /// <param name="lastCoreBin">Last bin whose output the block owns.</param>
+        public InterpolatedUnit(double[,] transmission, int[] columnBins, double[][] rowTimes, int[][] rowSpectra,
+            int[] outputRow, double[] outputTime, int[] outputSpectrum, int firstCoreBin, int lastCoreBin)
+        {
+            Transmission = transmission;
+            ColumnBins = columnBins;
+            RowTimes = rowTimes;
+            RowSpectra = rowSpectra;
+            OutputRow = outputRow;
+            OutputTime = outputTime;
+            OutputSpectrum = outputSpectrum;
+            FirstCoreBin = firstCoreBin;
+            LastCoreBin = lastCoreBin;
+        }
+
+        public double[,] Transmission { get; }
+        public int[] ColumnBins { get; }
+        public double[][] RowTimes { get; }
+        public int[][] RowSpectra { get; }
+        public int[] OutputRow { get; }
+        public double[] OutputTime { get; }
+        public int[] OutputSpectrum { get; }
+        public int FirstCoreBin { get; }
+        public int LastCoreBin { get; }
+
+        /// <summary>Peak m/z values.</summary>
+        public double[] Mz { get; set; }
+
+        /// <summary>Peak intensities in ions.</summary>
+        public double[] Ions { get; set; }
+
+        /// <summary>Each peak's window (row).</summary>
+        public int[] Row { get; set; }
+
+        /// <summary>Each peak's acquisition (an index into its row's <see cref="RowTimes"/>).</summary>
+        public int[] Acquisition { get; set; }
+    }
+
     /// <summary>One output peak: an encoded bin, a sweep, an m/z and an intensity in ions.</summary>
     public struct ScanningPeak
     {
@@ -257,8 +310,8 @@ namespace pwiz.Osprey.Demux
                 }
                 else
                 {
-                    solver.Solve(y, cycles, coreCycle, coreColumn, unit, weightedMz / ions, parameters.MinOutputIons,
-                        result.Demultiplexed);
+                    solver.Solve(y, cycles, coreCycle, (c, j) => coreColumn[j], unit.Cycles, unit.ColumnBins,
+                        weightedMz / ions, result.Demultiplexed);
                     result.ChannelsSolved++;
                 }
                 foreach (int cell in touched)
@@ -266,6 +319,140 @@ namespace pwiz.Osprey.Demux
                 k = end;
             }
             return result;
+        }
+
+        /// <summary>
+        /// Demultiplexes one block of a stepped staggered acquisition with the same channels and
+        /// the same weighted per-channel solve. The windows are acquired at different times, so at
+        /// each output spectrum's time every window's channel intensity is interpolated from that
+        /// window's own acquisitions (the spectrum's own window is exact at its own time), and the
+        /// spectrum keeps the bins of its window.
+        /// </summary>
+        /// <remarks>
+        /// Demultiplexed peaks are labeled with their bin and the spectrum they belong to;
+        /// pass-through peaks with bin -1 and their spectrum, for the caller to share among the
+        /// spectrum's bins.
+        /// </remarks>
+        public static ScanningUnitResult DemuxInterpolatedUnit(InterpolatedUnit unit, ScanningDemuxParams parameters,
+            RtInterpolation interpolation = RtInterpolation.makima)
+        {
+            var result = new ScanningUnitResult();
+            int peaks = unit.Mz.Length;
+            int rows = unit.RowTimes.Length, outputs = unit.OutputRow.Length, columns = unit.ColumnBins.Length;
+            var a = unit.Transmission;
+
+            // Which bins each output spectrum keeps (its window's, within the block's own bins), and
+            // which spectra this block owns the pass-through peaks of: those whose window's first
+            // bin is one of the block's own, so exactly one block passes each through.
+            var keep = new bool[outputs * columns];
+            var ownOutput = new Dictionary<int, bool>();
+            for (int s = 0; s < outputs; s++)
+            {
+                int r = unit.OutputRow[s];
+                int firstBin = int.MaxValue;
+                for (int j = 0; j < columns; j++)
+                {
+                    if (a[r, j] < 0.5)
+                        continue;
+                    firstBin = Math.Min(firstBin, unit.ColumnBins[j]);
+                    keep[s * columns + j] = unit.ColumnBins[j] >= unit.FirstCoreBin && unit.ColumnBins[j] <= unit.LastCoreBin;
+                }
+                ownOutput[unit.OutputSpectrum[s]] = firstBin >= unit.FirstCoreBin && firstBin <= unit.LastCoreBin;
+            }
+
+            var channel = new int[peaks];
+            result.Channels = FragmentChannelFinder.Find(unit.Mz, unit.Ions, parameters.ChannelTolerancePpm,
+                parameters.MinChannelIons, channel);
+            var order = new long[peaks];
+            for (int i = 0; i < peaks; i++)
+                order[i] = (long)(channel[i] + 1) * peaks + i;
+            Array.Sort(order); // Array.Sort OK: keys are unique ((channel + 1) * count + index)
+
+            var series = new double[rows][];
+            for (int r = 0; r < rows; r++)
+                series[r] = new double[unit.RowTimes[r].Length];
+            var rowHasSignal = new bool[rows];
+            var y = new double[rows * outputs];
+            var solveAll = new bool[outputs];
+            for (int s = 0; s < outputs; s++)
+                solveAll[s] = true;
+            var solver = new ChannelSolver(a, parameters);
+            bool Emit(int s, int j) => keep[s * columns + j];
+            int k = 0;
+            while (k < peaks)
+            {
+                int ch = (int)(order[k] / peaks) - 1;
+                int end = k;
+                while (end < peaks && (int)(order[end] / peaks) - 1 == ch)
+                    end++;
+
+                double ions = 0, weightedMz = 0;
+                int cells = 0;
+                for (int m = k; m < end; m++)
+                {
+                    int i = (int)(order[m] % peaks);
+                    var rowSeries = series[unit.Row[i]];
+                    if (rowSeries[unit.Acquisition[i]] == 0)
+                        cells++;
+                    rowSeries[unit.Acquisition[i]] += unit.Ions[i];
+                    rowHasSignal[unit.Row[i]] = true;
+                    ions += unit.Ions[i];
+                    weightedMz += unit.Ions[i] * unit.Mz[i];
+                    if (OwnsPassThrough(unit, ownOutput, i))
+                        result.IonsIn += unit.Ions[i];
+                }
+
+                bool strong = ch >= 0 && ions >= parameters.MinChannelIons && cells >= parameters.MinChannelCells;
+                if (!strong)
+                {
+                    for (int m = k; m < end; m++)
+                    {
+                        int i = (int)(order[m] % peaks);
+                        if (!OwnsPassThrough(unit, ownOutput, i))
+                            continue;
+                        result.PassedThrough.Add(new ScanningPeak(-1, unit.RowSpectra[unit.Row[i]][unit.Acquisition[i]],
+                            unit.Mz[i], unit.Ions[i]));
+                        result.IonsPassedThrough += unit.Ions[i];
+                    }
+                }
+                else
+                {
+                    for (int r = 0; r < rows; r++)
+                    {
+                        if (!rowHasSignal[r])
+                            continue;
+                        var times = unit.RowTimes[r];
+                        for (int s = 0; s < outputs; s++)
+                        {
+                            y[r * outputs + s] = Math.Max(0, RtInterpolator.Interpolate(interpolation, times, series[r],
+                                times.Length, unit.OutputTime[s]));
+                        }
+                    }
+                    solver.Solve(y, outputs, solveAll, Emit, unit.OutputSpectrum, unit.ColumnBins, weightedMz / ions,
+                        result.Demultiplexed);
+                    result.ChannelsSolved++;
+                    for (int r = 0; r < rows; r++)
+                    {
+                        if (rowHasSignal[r])
+                            Array.Clear(y, r * outputs, outputs);
+                    }
+                }
+                for (int r = 0; r < rows; r++)
+                {
+                    if (!rowHasSignal[r])
+                        continue;
+                    Array.Clear(series[r], 0, series[r].Length);
+                    rowHasSignal[r] = false;
+                }
+                k = end;
+            }
+            return result;
+        }
+
+        private static bool OwnsPassThrough(InterpolatedUnit unit, Dictionary<int, bool> ownOutput, int peak)
+        {
+            int spectrum = unit.RowSpectra[unit.Row[peak]][unit.Acquisition[peak]];
+            return ownOutput.TryGetValue(spectrum, out bool own) && own;
         }
 
         private static double Offset(int point, int points, double binWidth)
@@ -311,13 +498,16 @@ namespace pwiz.Osprey.Demux
             }
 
             /// <summary>
-            /// Solves the channel whose counts are <paramref name="y"/> (rows x cycles, row-major)
-            /// and adds its demultiplexed intensities for the core columns and sweeps to
-            /// <paramref name="output"/>, at m/z <paramref name="mz"/>.
+            /// Solves the channel whose counts are <paramref name="y"/> (rows x times, row-major)
+            /// at each time <paramref name="solveTime"/> selects, and adds the demultiplexed
+            /// intensities <paramref name="emit"/> (time, column) accepts to <paramref name="output"/>,
+            /// at m/z <paramref name="mz"/>, labeled with <paramref name="timeLabels"/> and
+            /// <paramref name="columnBins"/>.
             /// </summary>
-            public void Solve(double[] y, int cycles, bool[] coreCycle, bool[] coreColumn, ScanningUnit unit, double mz,
-                double minOutput, List<ScanningPeak> output)
+            public void Solve(double[] y, int cycles, bool[] solveTime, Func<int, int, bool> emit, int[] timeLabels,
+                int[] columnBins, double mz, List<ScanningPeak> output)
             {
+                double minOutput = _parameters.MinOutputIons;
                 // The columns any of the channel's signal-bearing rows could come from, and the
                 // rows that see any of those columns (their zeros are information too).
                 for (int r = 0; r < _rows; r++)
@@ -362,7 +552,7 @@ namespace pwiz.Osprey.Demux
 
                 for (int c = 0; c < cycles; c++)
                 {
-                    if (!coreCycle[c] || !CycleHasSignal(y, c, cycles))
+                    if (!solveTime[c] || !CycleHasSignal(y, c, cycles))
                         continue;
                     ComputeAtb(y, c, cycles, nr, nc, null);
                     NnlsSolver.SolveNormal(_gram, _atb, nc, _x, _workspace);
@@ -371,8 +561,8 @@ namespace pwiz.Osprey.Demux
                     for (int jj = 0; jj < nc; jj++)
                     {
                         int j = _columnIndex[jj];
-                        if (coreColumn[j] && _x[jj] >= minOutput)
-                            output.Add(new ScanningPeak(unit.ColumnBins[j], unit.Cycles[c], mz, _x[jj]));
+                        if (_x[jj] >= minOutput && emit(c, j))
+                            output.Add(new ScanningPeak(columnBins[j], timeLabels[c], mz, _x[jj]));
                     }
                 }
             }

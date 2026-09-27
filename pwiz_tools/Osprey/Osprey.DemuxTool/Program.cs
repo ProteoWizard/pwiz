@@ -22,6 +22,7 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using Pwiz.Analysis;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData;
 using Pwiz.Data.MsData.Encoding;
@@ -31,19 +32,21 @@ using pwiz.Osprey.Demux;
 namespace pwiz.Osprey.DemuxTool
 {
     /// <summary>
-    /// Writes a demultiplexed copy of a scanning-quadrupole (SCIEX ZT Scan) mzML, for evaluating
-    /// the demultiplexing with any search engine before Osprey reads the data itself.
+    /// Writes a demultiplexed mzML of a scanning-quadrupole (SCIEX ZT Scan) acquisition, read
+    /// from the vendor file (.wiff2, vendor-centroided) or from an mzML, for evaluating the
+    /// demultiplexing with any search engine before Osprey reads the data itself.
     /// </summary>
     internal static class Program
     {
         private const string USAGE =
-            @"Usage: Osprey.DemuxTool --in <run.mzML> --out <demux.mzML> --kernel <profile.tsv>" +
-            @" [--layout centered:5|tiled:5] [--threads N] [--cycles first:last] [--mz low:high] [--ppm P]" +
-            @" [--counts-per-ion C] [--unweighted] [--raw]";
+            @"Usage: Osprey.DemuxTool --in <run.wiff2|.raw|.mzML> --out <demux.mzML> [--scheme scanning|staggered]" +
+            @" [--kernel <profile.tsv>] [--layout centered:5|tiled:5] [--threads N] [--cycles first:last]" +
+            @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--unweighted] [--raw]";
 
         private static int Main(string[] args)
         {
             string input = null, output = null, kernelPath = null;
+            bool staggered = false;
             var options = new ScanningDemuxOptions();
             for (int i = 0; i < args.Length; i++)
             {
@@ -66,6 +69,10 @@ namespace pwiz.Osprey.DemuxTool
                         break;
                     case @"--kernel":
                         kernelPath = value;
+                        break;
+                    case @"--scheme":
+                        // scanning: SCIEX ZT Scan (needs --kernel); staggered: stepped overlapping windows.
+                        staggered = value == @"staggered";
                         break;
                     case @"--layout":
                         options.Layout = ScanningLayout.Parse(value);
@@ -101,24 +108,50 @@ namespace pwiz.Osprey.DemuxTool
                         return 1;
                 }
             }
-            if (input == null || output == null || kernelPath == null)
+            if (input == null || output == null || (kernelPath == null && !staggered))
             {
                 Console.Error.WriteLine(USAGE);
                 return 1;
             }
 
             var stopwatch = Stopwatch.StartNew();
-            var kernel = ScanningKernel.Load(kernelPath);
-            Console.WriteLine(@"Kernel: {0}", kernel.Descriptor);
-            Console.WriteLine(@"Layout: {0}{1}", options.Raw ? @"raw" : options.Layout.Name,
+            var kernel = staggered ? null : ScanningKernel.Load(kernelPath);
+            if (kernel != null)
+                Console.WriteLine(@"Kernel: {0}", kernel.Descriptor);
+            Console.WriteLine(@"Layout: {0}{1}", staggered ? @"staggered bins" : options.Raw ? @"raw" : options.Layout.Name,
                 options.Parameters.PoissonWeights ? string.Empty : @", unweighted");
 
+            // pwiz-sharp's default reader list holds only the open formats; vendor readers are
+            // appended, as Osprey's own reader does on load.
+            ReaderList.AdditionalReaders.Add(new Pwiz.Vendor.Sciex.Reader_Sciex());
+            ReaderList.AdditionalReaders.Add(new Pwiz.Vendor.Thermo.Reader_Thermo());
             var msd = new MSData();
             ReaderList.Default.Read(input, msd);
-            var demux = new ScanningDemuxSpectrumList(msd.Run.SpectrumList, kernel, options, Console.Out);
-            msd.Run.SpectrumList = demux;
-            Console.WriteLine(@"Indexed {0} sweeps in {1:F0} s; writing sweeps {2}-{3}, {4} spectra", demux.CycleCount,
-                stopwatch.Elapsed.TotalSeconds, demux.FirstCycle, demux.LastCycle, demux.Count);
+            var spectra = msd.Run.SpectrumList;
+            if (SpectrumList_PeakPicker.SupportsVendorPeakPicking(input))
+            {
+                // A vendor file (.wiff2) is read directly, centroided by the vendor library as
+                // msconvert's "peakPicking vendor msLevel=1-" does; with no fallback detector a
+                // reader that cannot centroid fails rather than handing profile data on.
+                spectra = new SpectrumList_PeakPicker(spectra, null, true, @"1-");
+                Console.WriteLine(@"Vendor centroiding: {0}", input);
+            }
+            ScanningDemuxSpectrumList scanning = null;
+            StaggeredDemuxSpectrumList stepped = null;
+            if (staggered)
+            {
+                stepped = new StaggeredDemuxSpectrumList(spectra, options, Console.Out);
+                msd.Run.SpectrumList = stepped;
+                Console.WriteLine(@"Indexed in {0:F0} s; writing {1} spectra", stopwatch.Elapsed.TotalSeconds, stepped.Count);
+            }
+            else
+            {
+                scanning = new ScanningDemuxSpectrumList(spectra, kernel, options, Console.Out);
+                msd.Run.SpectrumList = scanning;
+                Console.WriteLine(@"Indexed {0} sweeps in {1:F0} s; writing sweeps {2}-{3}, {4} spectra",
+                    scanning.CycleCount, stopwatch.Elapsed.TotalSeconds, scanning.FirstCycle, scanning.LastCycle,
+                    scanning.Count);
+            }
 
             var config = new WriteConfig { Format = WriteFormat.Mzml };
             config.EncoderConfig.Precision = BinaryPrecision.Bits32;
@@ -129,9 +162,12 @@ namespace pwiz.Osprey.DemuxTool
             MSDataFile.Write(msd, partial, config);
             File.Move(partial, output, true);
 
+            long channels = stepped?.Channels ?? scanning.Channels;
+            long solved = stepped?.ChannelsSolved ?? scanning.ChannelsSolved;
+            double ionsIn = stepped?.IonsIn ?? scanning.IonsIn;
+            double passed = stepped?.IonsPassedThrough ?? scanning.IonsPassedThrough;
             Console.WriteLine(@"Wrote {0} in {1:F0} s: {2:N0} channels, {3:N0} solved; {4:P2} of {5:E3} ions passed through",
-                output, stopwatch.Elapsed.TotalSeconds, demux.Channels, demux.ChannelsSolved,
-                demux.IonsPassedThrough / Math.Max(demux.IonsIn, 1e-30), demux.IonsIn);
+                output, stopwatch.Elapsed.TotalSeconds, channels, solved, passed / Math.Max(ionsIn, 1e-30), ionsIn);
             return 0;
         }
     }

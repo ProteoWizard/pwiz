@@ -20,6 +20,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -255,9 +256,11 @@ namespace pwiz.Osprey.DemuxTool
             int padHi = Math.Min(CycleCount - 1, lastCycle + _options.CyclePad);
             foreach (int old in _peaks.Keys.Where(c => c < padLo).ToList())
                 _peaks.Remove(old);
+            var clock = Stopwatch.StartNew();
             var sweeps = new Dictionary<int, List<(double[] Mz, double[] Ions)>>();
             for (int c = padLo; c <= padHi; c++)
                 sweeps[c] = SweepPeaks(c);
+            double readSeconds = clock.Elapsed.TotalSeconds;
 
             // One unit per block of sweeps and group of encoded bins.
             var units = new List<ScanningUnit>();
@@ -283,9 +286,11 @@ namespace pwiz.Osprey.DemuxTool
                 }
             }
 
+            double unitSeconds = clock.Elapsed.TotalSeconds - readSeconds;
             var results = new ScanningUnitResult[units.Count];
             Parallel.For(0, units.Count, new ParallelOptions { MaxDegreeOfParallelism = _options.Threads },
                 i => results[i] = ScanningDemultiplexer.DemuxUnit(units[i], _options.Parameters));
+            double solveSeconds = clock.Elapsed.TotalSeconds - readSeconds - unitSeconds;
 
             // Peaks by (cycle, bin), then each layout spectrum from its bins and source positions.
             var through = new Dictionary<(int, int), List<ScanningPeak>>();
@@ -316,6 +321,9 @@ namespace pwiz.Osprey.DemuxTool
                 }
                 _built[cycle] = spectra;
             }
+            _log.WriteLine(@"  read {0:F1} s, units {1:F1} s, solve {2:F1} s, layout {3:F1} s ({4} units)", readSeconds,
+                unitSeconds, solveSeconds, clock.Elapsed.TotalSeconds - readSeconds - unitSeconds - solveSeconds,
+                units.Count);
         }
 
         private static ScanningUnit MakeUnit(double[,] a, int[] rowBins, int[] columnBins, int[] cycles, int g0, int g1,
