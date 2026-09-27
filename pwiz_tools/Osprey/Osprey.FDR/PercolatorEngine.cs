@@ -347,7 +347,8 @@ namespace pwiz.Osprey.FDR
         /// SVM runs off a <see cref="PercolatorEntry"/> list or the projection row
         /// count -- the two buffer shapes cannot select a different SVM path for the
         /// same population. <c>MaxTrainSize</c> (the streaming training-subsample size)
-        /// is left at the <see cref="PercolatorConfig"/> default (300000).
+        /// is the <see cref="PercolatorConfig"/> default (300000) unless
+        /// OSPREY_MAX_TRAIN_SIZE overrides it.
         /// </summary>
         private static PercolatorConfig BuildProjectionPercolatorConfig(
             OspreyConfig config,
@@ -392,6 +393,10 @@ namespace pwiz.Osprey.FDR
                 // Percolator-3.0 training-subsample cap (mirrors the PercolatorConfig ctor
                 // default); OSPREY_MAX_TRAIN_SIZE raises it to feed the model more rows.
                 MaxTrainSize = OspreyEnvironment.MaxTrainSizeOverride ?? 300000,
+                // The most regularized C within this fraction of the best inner-CV count
+                // (OSPREY_SVM_C_TOLERANCE, range-checked at startup; 0 is the strict maximum
+                // Rust uses).
+                CSelectionTolerance = OspreyEnvironment.SvmCSelectionTolerance,
                 // Honors --threads; drives only the tree score pass (see NThreads).
                 NThreads = config.NThreads,
                 // Collect per-feature target/decoy score histograms only for the
