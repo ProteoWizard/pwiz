@@ -150,6 +150,31 @@ namespace pwiz.Osprey.Test
             }
             Assert.IsTrue(byBlock.Demultiplexed.Any(p => Math.Abs(p.Mz - (500.0 + 0.001 * (p.Cycle - 4))) > 1e-4));
 
+            // Source positions: precursors off their bin centers, simulated through the kernel at
+            // their exact positions, one fragment shared by two; each source returns to the bin
+            // nearest its position with its intensity, and the placement repeats exactly.
+            var kernel = TrapezoidKernel();
+            double scale = ScanningDemultiplexer.KernelScale(kernel, STEP);
+            var offCenter = new[]
+            {
+                (Position: centers[20] + 0.3, Mz: 300.1234, Amount: 1000.0),
+                (Position: centers[34] - 0.45, Mz: 520.3456, Amount: 800.0),
+                (Position: centers[34] - 0.45, Mz: 701.5678, Amount: 500.0),
+                (Position: centers[40] + 0.2, Mz: 701.5678, Amount: 250.0),  // shared with bin 34
+            };
+            var byPositionParams = new ScanningDemuxParams { SourcePositions = true };
+            var placed = ScanningDemultiplexer.DemuxUnit(SimulateAt(a, centers, kernel, scale, offCenter), byPositionParams);
+            Assert.AreEqual(offCenter.Length, placed.Sources);
+            foreach (var s in offCenter)
+            {
+                int bin = (int)Math.Round((s.Position - FIRST_CENTER) / STEP);
+                double expected = s.Amount * TotalElution();
+                Assert.AreEqual(expected, Sum(placed.Demultiplexed, bin, s.Mz), 0.02 * expected,
+                    string.Format(@"m/z {0}, bin {1}", s.Mz, bin));
+            }
+            var again = ScanningDemultiplexer.DemuxUnit(SimulateAt(a, centers, kernel, scale, offCenter), byPositionParams);
+            CollectionAssert.AreEqual(placed.Demultiplexed, again.Demultiplexed);
+
             var noisy = Simulate(a, sources, new Random(11));
             var first = ScanningDemultiplexer.DemuxUnit(noisy, parameters);
             foreach (var s in sources.Where(t => t.Mz != 701.5678))
@@ -348,6 +373,51 @@ namespace pwiz.Osprey.Test
                 Ions = ions.ToArray(),
                 Row = row.ToArray(),
                 Cycle = cycle.ToArray(),
+            };
+        }
+
+        /// <summary>
+        /// Like <see cref="Simulate"/> without noise, but each source at its own exact position,
+        /// transmitted through <paramref name="kernel"/> at that position (in the matrix's scale),
+        /// and the unit carrying the centers and kernel that source positions need.
+        /// </summary>
+        private static ScanningUnit SimulateAt(double[,] a, double[] centers, ScanningKernel kernel, double scale,
+            (double Position, double Mz, double Amount)[] sources)
+        {
+            var bins = Enumerable.Range(0, BINS).ToArray();
+            var cycles = Enumerable.Range(0, CYCLES).ToArray();
+            var mz = new List<double>();
+            var ions = new List<double>();
+            var row = new List<int>();
+            var cycle = new List<int>();
+            for (int c = 0; c < CYCLES; c++)
+            {
+                for (int r = 0; r < BINS; r++)
+                {
+                    foreach (var fragment in sources.GroupBy(s => s.Mz))
+                    {
+                        int bin = r;
+                        double value = fragment.Sum(s => s.Amount * kernel.Evaluate(centers[bin] - s.Position) / scale) *
+                            Elution(c);
+                        if (value <= 0)
+                            continue;
+                        mz.Add(fragment.Key);
+                        ions.Add(value);
+                        row.Add(r);
+                        cycle.Add(c);
+                    }
+                }
+            }
+            return new ScanningUnit(a, bins, bins, cycles, 10, 49, 2, 6)
+            {
+                Mz = mz.ToArray(),
+                Ions = ions.ToArray(),
+                Row = row.ToArray(),
+                Cycle = cycle.ToArray(),
+                RowCenters = centers,
+                ColumnCenters = centers,
+                Kernel = kernel,
+                KernelScale = scale,
             };
         }
 

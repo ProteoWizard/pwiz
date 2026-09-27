@@ -63,6 +63,42 @@ namespace pwiz.Osprey.Demux
         /// mean m/z over the whole block.
         /// </summary>
         public bool PositionMz { get; set; }
+
+        /// <summary>
+        /// Scanning data: place each channel's sources once from the whole block instead of per
+        /// sweep on fixed positions. The channel's profile summed over the block's sweeps is fitted
+        /// on the bin columns; runs of adjacent solved columns are sources, merged when closer than
+        /// <see cref="SourceMergeTh"/> and dropped when small; each source's position is refined
+        /// against the kernel at exact positions; then each sweep is solved over just those sources
+        /// and each source is written to the bin nearest its position. Needs the unit's centers and
+        /// kernel (<see cref="ScanningUnit.Kernel"/>).
+        /// </summary>
+        public bool SourcePositions { get; set; }
+
+        /// <summary>Sources of one channel closer than this (Th) are one source.</summary>
+        public double SourceMergeTh { get; set; } = 0.8;
+
+        /// <summary>Sources smaller than this many ions over the block are dropped.</summary>
+        public double MinSourceIons { get; set; } = 2.0;
+
+        /// <summary>Sources smaller than this fraction of the channel's solved total are dropped.</summary>
+        public double MinSourceFraction { get; set; } = 0.05;
+
+        /// <summary>
+        /// A non-negative L1 (lasso) weight for the summed-profile fit that finds the sources, in the
+        /// weighted fit's units (0: off). With x &gt;= 0 the penalty is linear, so the fit is NNLS on
+        /// A^T y - L1 / 2. The per-sweep quantities are refitted without it.
+        /// </summary>
+        public double SourceL1 { get; set; }
+
+        /// <summary>How far (Th) each source's position is searched either side of its start.</summary>
+        public double RefineHalfWidthTh { get; set; } = 0.6;
+
+        /// <summary>The position search's step, Th.</summary>
+        public double RefineStepTh { get; set; } = 0.1;
+
+        /// <summary>Most sources kept per channel; the largest are kept.</summary>
+        public int MaxSources { get; set; } = 12;
     }
 
     /// <summary>
@@ -118,6 +154,18 @@ namespace pwiz.Osprey.Demux
 
         /// <summary>Each peak's sweep (an index into <see cref="Cycles"/>).</summary>
         public int[] Cycle { get; set; }
+
+        /// <summary>Center m/z of each row's encoded bin; needed by <see cref="ScanningDemuxParams.SourcePositions"/>.</summary>
+        public double[] RowCenters { get; set; }
+
+        /// <summary>Center m/z of each column's source bin; needed by <see cref="ScanningDemuxParams.SourcePositions"/>.</summary>
+        public double[] ColumnCenters { get; set; }
+
+        /// <summary>The kernel the transmission was built from; needed by <see cref="ScanningDemuxParams.SourcePositions"/>.</summary>
+        public ScanningKernel Kernel { get; set; }
+
+        /// <summary>The kernel's scale in <see cref="Transmission"/> (see <see cref="ScanningDemultiplexer.KernelScale"/>).</summary>
+        public double KernelScale { get; set; } = 1;
     }
 
     /// <summary>
@@ -205,6 +253,9 @@ namespace pwiz.Osprey.Demux
 
         public int Channels { get; set; }
         public int ChannelsSolved { get; set; }
+
+        /// <summary>Sources placed, with <see cref="ScanningDemuxParams.SourcePositions"/>.</summary>
+        public int Sources { get; set; }
         public double IonsIn { get; set; }
         public double IonsPassedThrough { get; set; }
     }
@@ -248,12 +299,7 @@ namespace pwiz.Osprey.Demux
             double binWidth)
         {
             const int points = 21;
-            double center = 0;
-            for (int p = 0; p < points; p++)
-                center += kernel.Evaluate(Offset(p, points, binWidth));
-            center /= points;
-            if (center <= 0)
-                throw new ArgumentException(@"The kernel does not transmit at zero offset.");
+            double center = KernelScale(kernel, binWidth);
             var a = new double[rowCenters.Length, columnCenters.Length];
             for (int i = 0; i < rowCenters.Length; i++)
             {
@@ -266,6 +312,22 @@ namespace pwiz.Osprey.Demux
                 }
             }
             return a;
+        }
+
+        /// <summary>
+        /// The kernel's average over a source bin centered on its encoded bin: the scale that makes
+        /// <see cref="TransmissionMatrix"/> 1 for a precursor at its own bin's center.
+        /// </summary>
+        public static double KernelScale(ScanningKernel kernel, double binWidth)
+        {
+            const int points = 21;
+            double center = 0;
+            for (int p = 0; p < points; p++)
+                center += kernel.Evaluate(Offset(p, points, binWidth));
+            center /= points;
+            if (center <= 0)
+                throw new ArgumentException(@"The kernel does not transmit at zero offset.");
+            return center;
         }
 
         /// <summary>Demultiplexes one block.</summary>
@@ -303,6 +365,7 @@ namespace pwiz.Osprey.Demux
             var positionMz = parameters.PositionMz ? new double[columns] : null;
             var mzNumerator = parameters.PositionMz ? new double[columns] : null;
             var mzDenominator = parameters.PositionMz ? new double[columns] : null;
+            var sourceFitter = parameters.SourcePositions ? new SourceFitter(unit, parameters, solver) : null;
             int k = 0;
             while (k < peaks)
             {
@@ -360,6 +423,12 @@ namespace pwiz.Osprey.Demux
                     solver.Solve(y, cycles, coreCycle, (c, nc, x, cols) =>
                         ApportionScanning(unit, observedCells, cycles, c, nc, x, cols, parameters.ApportionHalfWidth,
                             result.Demultiplexed));
+                    result.ChannelsSolved++;
+                }
+                else if (sourceFitter != null)
+                {
+                    result.Sources += sourceFitter.Solve(y, mzSum, cycles, coreCycle, coreColumn, weightedMz / ions,
+                        result.Demultiplexed);
                     result.ChannelsSolved++;
                 }
                 else
@@ -659,6 +728,319 @@ namespace pwiz.Osprey.Demux
         }
 
         /// <summary>
+        /// Places a channel's sources once per block (<see cref="ScanningDemuxParams.SourcePositions"/>):
+        /// the summed profile's bin-level fit gives the sources, a 1-D search refines each position
+        /// against the kernel at exact positions, and each sweep is solved over just those sources.
+        /// One per block, reusing its buffers from channel to channel.
+        /// </summary>
+        private sealed class SourceFitter
+        {
+            private readonly ScanningUnit _unit;
+            private readonly ScanningDemuxParams _parameters;
+            private readonly ChannelSolver _solver;
+            private readonly double[] _total;
+            private readonly bool[] _one = { true };
+            private readonly double[] _binX;
+            private readonly int[] _binCols;
+            private int _binCount;
+            private readonly List<(double Position, double Amount)> _sources = new List<(double, double)>();
+            private readonly double[] _position;
+            private readonly int[] _column;       // the column nearest each source
+            private readonly double[] _s;         // rows x sources, the kernel at the sources' positions
+            private readonly double[] _weight;    // per row, from the summed fit
+            private readonly double[] _gram;
+            private readonly double[] _rhs;
+            private readonly double[] _amount;
+            private readonly double[] _start;
+            private readonly double[] _counts;    // one sweep's counts, by row
+            private readonly NnlsSolver.Workspace _workspace;
+
+            public SourceFitter(ScanningUnit unit, ScanningDemuxParams parameters, ChannelSolver solver)
+            {
+                if (unit.Kernel == null || unit.RowCenters == null || unit.ColumnCenters == null)
+                    throw new ArgumentException(@"Source positions need the unit's kernel and bin centers.");
+                _unit = unit;
+                _parameters = parameters;
+                _solver = solver;
+                int rows = unit.RowBins.Length, columns = unit.ColumnBins.Length, k = parameters.MaxSources;
+                _total = new double[rows];
+                _binX = new double[columns];
+                _binCols = new int[columns];
+                _position = new double[k];
+                _column = new int[k];
+                _s = new double[rows * k];
+                _weight = new double[rows];
+                _gram = new double[k * k];
+                _rhs = new double[k];
+                _amount = new double[k];
+                _start = new double[k];
+                _counts = new double[rows];
+                _workspace = new NnlsSolver.Workspace(k);
+            }
+
+            /// <summary>
+            /// Solves one channel and adds its peaks for the block's own bins and sweeps to
+            /// <paramref name="output"/>; returns the number of sources placed.
+            /// </summary>
+            public int Solve(double[] y, double[] mzSum, int cycles, bool[] coreCycle, bool[] coreColumn, double blockMz,
+                List<ScanningPeak> output)
+            {
+                int rows = _unit.RowBins.Length;
+                for (int r = 0; r < rows; r++)
+                {
+                    double sum = 0;
+                    for (int c = 0; c < cycles; c++)
+                        sum += y[r * cycles + c];
+                    _total[r] = sum;
+                }
+                _binCount = 0;
+                _solver.L1 = _parameters.SourceL1;
+                _solver.Solve(_total, 1, _one, (c, nc, x, cols) =>
+                {
+                    Array.Copy(x, _binX, nc);
+                    Array.Copy(cols, _binCols, nc);
+                    _binCount = nc;
+                });
+                _solver.L1 = 0;
+                int k = FindSources();
+                if (k == 0)
+                    return 0;
+
+                // Weights for the position search, from the bin-level fit: 1 / max(mu, floor).
+                var a = _unit.Transmission;
+                for (int r = 0; r < rows; r++)
+                {
+                    double mu = 0;
+                    for (int jj = 0; jj < _binCount; jj++)
+                        mu += a[r, _binCols[jj]] * _binX[jj];
+                    _weight[r] = 1 / Math.Max(mu, _parameters.WeightFloorIons);
+                }
+                Refine(k);
+
+                // The column nearest each source; only the block's own columns are written.
+                var centers = _unit.ColumnCenters;
+                for (int s = 0; s < k; s++)
+                {
+                    int best = 0;
+                    for (int j = 1; j < centers.Length; j++)
+                    {
+                        if (Math.Abs(centers[j] - _position[s]) < Math.Abs(centers[best] - _position[s]))
+                            best = j;
+                    }
+                    _column[s] = best;
+                }
+                FillColumns(k);
+                for (int c = 0; c < cycles; c++)
+                {
+                    if (!coreCycle[c])
+                        continue;
+                    bool signal = false;
+                    for (int r = 0; r < rows && !signal; r++)
+                        signal = y[r * cycles + c] > 0;
+                    if (!signal)
+                        continue;
+                    SolveSweep(y, c, cycles, k);
+                    for (int s = 0; s < k; s++)
+                    {
+                        if (!coreColumn[_column[s]] || _amount[s] < _parameters.MinOutputIons)
+                            continue;
+                        double mz = _parameters.PositionMz ? SourceMz(y, mzSum, c, cycles, k, s, blockMz) : blockMz;
+                        output.Add(new ScanningPeak(_unit.ColumnBins[_column[s]], _unit.Cycles[c], mz, _amount[s]));
+                    }
+                }
+                return k;
+            }
+
+            /// <summary>
+            /// Sources from the bin-level fit: each run of adjacent solved columns, at its
+            /// intensity-weighted center; merged when closer than the merge distance; small ones
+            /// dropped; at most MaxSources kept, the largest. Positions ascending in _position.
+            /// </summary>
+            private int FindSources()
+            {
+                _sources.Clear();
+                int jj = 0;
+                while (jj < _binCount)
+                {
+                    if (_binX[jj] <= 0)
+                    {
+                        jj++;
+                        continue;
+                    }
+                    double sum = 0, weighted = 0;
+                    int start = jj;
+                    while (jj < _binCount && _binX[jj] > 0 && (jj == start || _binCols[jj] == _binCols[jj - 1] + 1))
+                    {
+                        sum += _binX[jj];
+                        weighted += _binX[jj] * _unit.ColumnCenters[_binCols[jj]];
+                        jj++;
+                    }
+                    var run = (Position: weighted / sum, Amount: sum);
+                    int last = _sources.Count - 1;
+                    if (last >= 0 && run.Position - _sources[last].Position <= _parameters.SourceMergeTh)
+                    {
+                        double amount = _sources[last].Amount + run.Amount;
+                        _sources[last] = ((_sources[last].Position * _sources[last].Amount + run.Position * run.Amount) / amount,
+                            amount);
+                    }
+                    else
+                    {
+                        _sources.Add(run);
+                    }
+                }
+                double total = 0;
+                foreach (var source in _sources)
+                    total += source.Amount;
+                double floor = Math.Max(_parameters.MinSourceIons, _parameters.MinSourceFraction * total);
+                _sources.RemoveAll(source => source.Amount < floor);
+                if (_sources.Count > _parameters.MaxSources)
+                {
+                    // The largest, ties to the lower position; then back in position order.
+                    var kept = new List<(double Position, double Amount)>(_sources);
+                    kept.Sort((p, q) => p.Amount != q.Amount ? q.Amount.CompareTo(p.Amount) : p.Position.CompareTo(q.Position)); // Array.Sort OK: ties broken by position
+                    kept.RemoveRange(_parameters.MaxSources, kept.Count - _parameters.MaxSources);
+                    kept.Sort((p, q) => p.Position.CompareTo(q.Position)); // Array.Sort OK: positions of one channel's sources are distinct
+                    _sources.Clear();
+                    _sources.AddRange(kept);
+                }
+                for (int s = 0; s < _sources.Count; s++)
+                    _position[s] = _sources[s].Position;
+                return _sources.Count;
+            }
+
+            /// <summary>
+            /// Two passes of a 1-D search per source over +/- RefineHalfWidthTh in RefineStepTh
+            /// steps: the position whose weighted fit of the summed profile, over all sources, has
+            /// the smallest residual. Only a strictly smaller residual moves a source.
+            /// </summary>
+            private void Refine(int k)
+            {
+                double step = _parameters.RefineStepTh, half = _parameters.RefineHalfWidthTh;
+                if (step <= 0 || half <= 0)
+                    return;
+                int steps = (int)Math.Round(half / step);
+                for (int pass = 0; pass < 2; pass++)
+                {
+                    for (int s = 0; s < k; s++)
+                    {
+                        double start = _position[s], best = start;
+                        double bestResidual = double.MaxValue;
+                        for (int d = -steps; d <= steps; d++)
+                        {
+                            _position[s] = start + d * step;
+                            FillColumns(k);
+                            double residual = FitTotal(k);
+                            if (residual < bestResidual)
+                            {
+                                bestResidual = residual;
+                                best = _position[s];
+                            }
+                        }
+                        _position[s] = best;
+                    }
+                }
+            }
+
+            /// <summary>The kernel at each source's exact position, for every row, in the transmission's scale.</summary>
+            private void FillColumns(int k)
+            {
+                int rows = _unit.RowBins.Length;
+                var kernel = _unit.Kernel;
+                for (int r = 0; r < rows; r++)
+                {
+                    for (int s = 0; s < k; s++)
+                        _s[r * k + s] = kernel.Evaluate(_unit.RowCenters[r] - _position[s]) / _unit.KernelScale;
+                }
+            }
+
+            /// <summary>The weighted NNLS of the summed profile over the sources; returns its weighted residual.</summary>
+            private double FitTotal(int k)
+            {
+                int rows = _unit.RowBins.Length;
+                Normal(k, _total, _weight);
+                NnlsSolver.SolveNormal(_gram, _rhs, k, _amount, _workspace);
+                double residual = 0;
+                for (int r = 0; r < rows; r++)
+                {
+                    double model = 0;
+                    for (int s = 0; s < k; s++)
+                        model += _s[r * k + s] * _amount[s];
+                    double d = _total[r] - model;
+                    residual += _weight[r] * d * d;
+                }
+                return residual;
+            }
+
+            /// <summary>One sweep over the sources: NNLS, then the Poisson-weighted refit, into _amount.</summary>
+            private void SolveSweep(double[] y, int c, int cycles, int k)
+            {
+                int rows = _unit.RowBins.Length;
+                for (int r = 0; r < rows; r++)
+                    _counts[r] = y[r * cycles + c];
+                Normal(k, _counts, null);
+                NnlsSolver.SolveNormal(_gram, _rhs, k, _amount, _workspace);
+                if (!_parameters.PoissonWeights)
+                    return;
+                for (int r = 0; r < rows; r++)
+                {
+                    double model = 0;
+                    for (int s = 0; s < k; s++)
+                        model += _s[r * k + s] * _amount[s];
+                    _weight[r] = 1 / Math.Max(model, _parameters.WeightFloorIons);
+                }
+                Normal(k, _counts, _weight);
+                Array.Copy(_amount, _start, k);
+                NnlsSolver.SolveNormal(_gram, _rhs, k, _amount, _workspace, 0, _start);
+            }
+
+            /// <summary>S^T W S and S^T W b over the rows, W the given weights or 1.</summary>
+            private void Normal(int k, double[] b, double[] weight)
+            {
+                int rows = _unit.RowBins.Length;
+                Array.Clear(_gram, 0, k * k);
+                Array.Clear(_rhs, 0, k);
+                for (int r = 0; r < rows; r++)
+                {
+                    double w = weight == null ? 1 : weight[r];
+                    for (int s = 0; s < k; s++)
+                    {
+                        double ws = w * _s[r * k + s];
+                        if (ws == 0)
+                            continue;
+                        _rhs[s] += ws * b[r];
+                        for (int t = 0; t < k; t++)
+                            _gram[s * k + t] += ws * _s[r * k + t];
+                    }
+                }
+            }
+
+            /// <summary>
+            /// The m/z of source s in sweep c: the channel's observed peaks in each row, counted by
+            /// the share of the row's modeled signal the source explains.
+            /// </summary>
+            private double SourceMz(double[] y, double[] mzSum, int c, int cycles, int k, int s, double blockMz)
+            {
+                int rows = _unit.RowBins.Length;
+                double numerator = 0, denominator = 0;
+                for (int r = 0; r < rows; r++)
+                {
+                    int cell = r * cycles + c;
+                    if (y[cell] <= 0)
+                        continue;
+                    double model = 0;
+                    for (int t = 0; t < k; t++)
+                        model += _s[r * k + t] * _amount[t];
+                    if (model <= 0)
+                        continue;
+                    double share = _s[r * k + s] * _amount[s] / model;
+                    numerator += share * mzSum[cell];
+                    denominator += share * y[cell];
+                }
+                return denominator > 0 ? numerator / denominator : blockMz;
+            }
+        }
+
+        /// <summary>
         /// Solves one channel sweep by sweep, reusing its buffers from channel to channel within a
         /// block (one per block, so not shared across threads).
         /// </summary>
@@ -759,6 +1141,7 @@ namespace pwiz.Osprey.Demux
                     if (!solveTime[c] || !CycleHasSignal(y, c, cycles))
                         continue;
                     ComputeAtb(y, c, cycles, nr, nc, null);
+                    Penalize(nc);
                     NnlsSolver.SolveNormal(_gram, _atb, nc, _x, _workspace);
                     if (_parameters.PoissonWeights)
                         SolveWeighted(y, c, cycles, nr, nc);
@@ -787,9 +1170,24 @@ namespace pwiz.Osprey.Demux
                         AddOuterProduct(_weighted, nc, rr, 1 / mu - baseWeight);
                 }
                 ComputeAtb(y, c, cycles, nr, nc, _mu);
+                Penalize(nc);
                 // The weighted solution usually has the unweighted one's support: start there.
                 Array.Copy(_x, _start, nc);
                 NnlsSolver.SolveNormal(_weighted, _atb, nc, _x, _workspace, 0, _start);
+            }
+
+            /// <summary>
+            /// A non-negative L1 (lasso) weight for the next solves (0: none). With x &gt;= 0 the
+            /// penalty is linear, so it enters the normal equations as A^T y - L1 / 2.
+            /// </summary>
+            public double L1 { get; set; }
+
+            private void Penalize(int nc)
+            {
+                if (L1 <= 0)
+                    return;
+                for (int jj = 0; jj < nc; jj++)
+                    _atb[jj] -= 0.5 * L1;
             }
 
             /// <summary>A^T y for one sweep, or A^T W y with weights 1 / max(mu, floor) when mu is given.</summary>

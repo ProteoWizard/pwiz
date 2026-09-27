@@ -292,7 +292,13 @@ namespace pwiz.Osprey.DemuxTool
                             columnBins.Select(b => _centers[b]).ToArray(), _centers[g0 + 1] - _centers[g0]);
                         _transmission[g0] = a;
                     }
-                    units.Add(MakeUnit(a, rowBins, columnBins, cycles, g0, g1, k0, k1, sweeps));
+                    var unit = MakeUnit(a, rowBins, columnBins, cycles, g0, g1, k0, k1, sweeps);
+                    // Source positions evaluate the kernel at exact positions, in the matrix's scale.
+                    unit.RowCenters = rowBins.Select(b => _centers[b]).ToArray();
+                    unit.ColumnCenters = columnBins.Select(b => _centers[b]).ToArray();
+                    unit.Kernel = _kernel;
+                    unit.KernelScale = ScanningDemultiplexer.KernelScale(_kernel, _centers[g0 + 1] - _centers[g0]);
+                    units.Add(unit);
                 }
             }
 
