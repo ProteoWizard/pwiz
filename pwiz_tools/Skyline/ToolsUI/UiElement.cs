@@ -24,6 +24,7 @@ using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Databinding.AuditLog;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Util;
@@ -2523,6 +2524,26 @@ namespace pwiz.Skyline.ToolsUI
             if (cell.EditType == null)
                 _dataGridView.Focus();
             _dataGridView.CurrentCell = cell;
+        }
+
+        // Clicks one of the images drawn in the current cell (e.g. the Audit Log's undo arrow or magnifying
+        // glass), counting the images the cell shows from the left. A real click needs the mouse over the
+        // image, so this goes through the cell's own ClickImage rather than a synthesized mouse gesture.
+        public void ClickCellImageNow(int index)
+        {
+            var cell = _dataGridView.CurrentCell;
+            if (cell == null)
+                throw new ArgumentException(new LlmInstruction(
+                    @"The grid has no current cell -- move to one first with set_current_cell_address."));
+            if (!(cell is TextImageCell imageCell) || !(cell.OwningColumn is TextImageColumn column))
+                throw new ArgumentException(new LlmInstruction(@"The current cell shows no images."));
+            // The cell draws its visible images right to left from the last, so left to right is ascending order
+            var shown = Enumerable.Range(0, imageCell.Items.Length)
+                .Where(i => column.ShouldDisplay(cell.Value, i)).ToArray();
+            if (index < 0 || index >= shown.Length)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Image {0} is out of range; the current cell shows {1} images.", index, shown.Length));
+            imageCell.ClickImage(shown[index]);
         }
 
         // A grid's menu is the one for its current cell (move there first with SetCurrentCellAddress), built

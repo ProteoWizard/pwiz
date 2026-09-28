@@ -579,7 +579,9 @@ public static class SkylineTools
         "list/tree/list-view item by its text, value the item -- a TreeView node by a '>'-separated path, " +
         "which may start at any node showing in the tree, e.g. a peptide under its expanded protein); " +
         "'set_selected_index' (a list, value the index); 'get_grid_text'/'set_grid_text' (a grid's text); " +
-        "'set_current_cell_address' (value a [column, row] array, e.g. [0, 1]); 'select_tab' (a TabControl, value the tab text); " +
+        "'set_current_cell_address' (value a [column, row] array, e.g. [0, 1]); 'click_cell_image' (a grid: clicks an image " +
+        "drawn in the current cell, e.g. the Audit Log's undo arrow or magnifying glass; value the zero-based index among the " +
+        "images the cell shows, from the left); 'select_tab' (a TabControl, value the tab text); " +
         "'expand'/'collapse' (a TreeView node, value a JSON array path whose segments are a child's text or " +
         "its index, e.g. [\"Peptides\", 0]); 'paste' (value the text to paste into a text box, a grid, the " +
         "Targets tree, or the main Skyline window -- without using the clipboard); 'select_all' (selects all " +
@@ -594,7 +596,7 @@ public static class SkylineTools
         "skyline_get_controls; the typed tools (skyline_click_form_button, ...) remain for common cases.")]
     public static string PerformAction(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string form,
-        [Description("Action: get_actions, get_children, click, get_value, set_value, send_text, send_key_stroke, get_options, check_item, uncheck_item, select_item, unselect_item, set_selected_index, get_grid_text, set_grid_text, set_current_cell_address, get_graph_zoom, zoom_graph_to, click_graph, expand, collapse, select_tab, dismiss, paste, select_all, show_tooltip")] string action,
+        [Description("Action: get_actions, get_children, click, get_value, set_value, send_text, send_key_stroke, get_options, check_item, uncheck_item, select_item, unselect_item, set_selected_index, get_grid_text, set_grid_text, set_current_cell_address, click_cell_image, get_graph_zoom, zoom_graph_to, click_graph, expand, collapse, select_tab, dismiss, paste, select_all, show_tooltip")] string action,
         [Description("Visible label that names the control (optional)")] string label = null,
         [Description("Control type for a caption-less control, e.g. TreeView/ListView (optional)")] string type = null,
         [Description("Value for set_value/set_grid_text, the text for send_text/paste, the key for send_key_stroke (e.g. 'Ctrl+V'), a [column, row] array for set_current_cell_address, a [left, top, right, bottom] array of graph data coordinates for zoom_graph_to/click_graph, the tab text for select_tab, or a JSON array path for expand/collapse (optional)")] string value = null,

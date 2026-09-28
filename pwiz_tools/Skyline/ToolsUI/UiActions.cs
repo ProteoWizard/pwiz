@@ -384,6 +384,10 @@ namespace pwiz.Skyline.ToolsUI
                 @"SetCurrentCellAddress", (e, arg) => { var cell = UiValue.ToColumnRow(arg); e.SetCurrentCellAddressNow(cell[0], cell[1]); return null; })
             .Describe(new LlmInstruction(@"Move the grid's current cell (do this before set_grid_text or opening a cell's menu)."), new LlmInstruction(@"a [column, row] array, e.g. [0, 1]"));
 
+        public static readonly UiAction ClickCellImage = SimpleAction<GridElement, object>(
+                @"ClickCellImage", (e, arg) => { e.ClickCellImageNow(UiValue.ToInt(arg)); return null; })
+            .Describe(new LlmInstruction(@"Click an image drawn in the grid's current cell (move there first with set_current_cell_address), e.g. the Audit Log's undo arrow or magnifying glass."), new LlmInstruction(@"the zero-based index of the image among those the cell shows, counting from the left"));
+
         // The graph's own actions, on GraphElement the way the grid actions are on GridElement - so a graph
         // takes part in the same machinery as every other control: get_actions lists them, perform_action drives
         // them, and a form with a single graph resolves them without the caller naming the control.
@@ -438,7 +442,7 @@ namespace pwiz.Skyline.ToolsUI
         public static readonly UiAction[] AllActions =
         {
             GetActions, GetChildren, Click, GetValue, SetValue, SendText, SendKeyStroke, GetOptions, CheckItem, UncheckItem,
-            SelectItem, UnselectItem, SetSelectedIndex, GetGridText, SetGridText, SetCurrentCellAddress,
+            SelectItem, UnselectItem, SetSelectedIndex, GetGridText, SetGridText, SetCurrentCellAddress, ClickCellImage,
             GetGraphZoom, ZoomGraphTo, ClickGraph, Expand,
             Collapse, SelectTab, Dismiss, Paste, SelectAll, ShowTooltip
         };
