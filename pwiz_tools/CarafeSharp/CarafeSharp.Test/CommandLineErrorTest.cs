@@ -202,19 +202,45 @@ namespace pwiz.CarafeSharp.Test
         {
             string proteins = WriteText(@"proteins.fasta", PROTEINS);
             string built = Path.Combine(_folder, @"built.fasta");
-            // The manifest path is a folder, so it cannot be written after the FASTA is.
+            // A manifest path that is a folder, or that shares the FASTA's file or temporary file, is
+            // refused before anything is written.
             string manifest = Path.Combine(_folder, @"manifest.tsv");
             Directory.CreateDirectory(manifest);
-            var (code, _, error) = Run(@"-build_entrapment_fasta", built, @"-db", proteins, @"-manifest", manifest);
-            Assert.AreEqual(1, code, error);
-            Assert.IsFalse(File.Exists(built), @"The failed build left " + built);
-            Assert.IsFalse(File.Exists(built + PartialFile.SUFFIX));
-            Assert.IsFalse(File.Exists(manifest + PartialFile.SUFFIX));
+            foreach (string badManifest in new[] { manifest, built, built + PartialFile.SUFFIX })
+            {
+                var (badCode, _, badError) = Run(@"-build_entrapment_fasta", built, @"-db", proteins, @"-manifest", badManifest);
+                Assert.AreEqual(1, badCode, badError);
+                Assert.IsFalse(File.Exists(built), @"The failed build left " + built);
+                Assert.IsFalse(File.Exists(built + PartialFile.SUFFIX));
+                Assert.IsFalse(File.Exists(badManifest + PartialFile.SUFFIX));
+            }
+
+            string goodManifest = Path.Combine(_folder, @"good-manifest.tsv");
+            var (code, _, error) = Run(@"-build_entrapment_fasta", built, @"-db", proteins, @"-manifest", goodManifest);
+            Assert.AreEqual(0, code, error);
+            if (OperatingSystem.IsWindows())
+            {
+                // A rebuild that cannot replace the earlier FASTA (read-only here; open in another
+                // program is the same) leaves the earlier FASTA and manifest both as they were, not a
+                // new manifest beside the old FASTA.
+                byte[] fastaBefore = File.ReadAllBytes(built), manifestBefore = File.ReadAllBytes(goodManifest);
+                File.SetAttributes(built, FileAttributes.ReadOnly);
+                try
+                {
+                    (code, _, error) = Run(@"-build_entrapment_fasta", built, @"-db", proteins, @"-manifest", goodManifest, @"-no_similarity_gate", @"-miss_c", @"2");
+                    Assert.AreEqual(1, code, error);
+                }
+                finally
+                {
+                    File.SetAttributes(built, FileAttributes.Normal);
+                }
+                CollectionAssert.AreEqual(fastaBefore, File.ReadAllBytes(built));
+                CollectionAssert.AreEqual(manifestBefore, File.ReadAllBytes(goodManifest));
+                Assert.IsFalse(File.Exists(built + PartialFile.SUFFIX));
+                Assert.IsFalse(File.Exists(goodManifest + PartialFile.SUFFIX));
+            }
 
             // A reconciliation whose output cannot take its name leaves no partial manifest either.
-            string goodManifest = Path.Combine(_folder, @"good-manifest.tsv");
-            (code, _, error) = Run(@"-build_entrapment_fasta", built, @"-db", proteins, @"-manifest", goodManifest);
-            Assert.AreEqual(0, code, error);
             string library = WriteText(@"library.tsv", PairingManifestReconciler.LIBRARY_SEQUENCE_COLUMN + "\nPEPTIDEK\nSAMPLER\n");
             string reconciled = Path.Combine(_folder, @"reconciled-folder.tsv");
             Directory.CreateDirectory(reconciled);

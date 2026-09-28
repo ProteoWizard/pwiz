@@ -52,8 +52,8 @@ namespace pwiz.CarafeSharp.Test
         [TestMethod]
         public void TestMaskingAgreesWithCarafe()
         {
-            TestData.InconclusiveUnlessAvailable(TestData.TrainingExports);
-            TestData.InconclusiveUnlessAvailable(TestData.FineTunedLibraries);
+            // Both packages in one call: with either one present, a missing other one fails.
+            TestData.InconclusiveUnlessAvailable(TestData.TrainingExports, TestData.FineTunedLibraries);
             string carafeFolder = TestData.FineTunedLibraries.Resolve().First();
             TestData.RequireFiles(carafeFolder, CarafeTrainingDirectory.PSM_FILE, CarafeModelDirectory.META_FILE);
             // What the Carafe run trained with, from its meta.json: the run's NCE, its instrument (else

@@ -46,9 +46,10 @@ namespace pwiz.CarafeSharp.Test
     /// <para>
     /// Missing data fails, except when there is none at all. A test is inconclusive only when no
     /// package it reads is present and no variable for its items is set, which is what a machine
-    /// without the data (and CI) sees. Once a package folder exists, a package without its
-    /// <c>MANIFEST.sha256</c> (written last, when the zip is built) fails, and so does any file the
-    /// test needs that is not there, with its path. A variable naming a missing path fails too.
+    /// without the data (and CI) sees. Otherwise every item the test reads must have data: a package
+    /// without its <c>MANIFEST.sha256</c> (the zip's last entry) fails, and so does any file the test
+    /// needs that is not there, with its path, an item with neither a package nor a variable, and a
+    /// variable that names no path or a missing one.
     /// </para>
     /// </summary>
     public static class TestData
@@ -84,6 +85,9 @@ namespace pwiz.CarafeSharp.Test
 
         /// <summary>The category of the GPU tests, which the CPU pass leaves out.</summary>
         public const string CUDA_CATEGORY = @"Cuda";
+
+        /// <summary>Set to 1 by <c>build.ps1 -Torch cuda</c>: a GPU test without a usable GPU fails instead of being inconclusive.</summary>
+        public const string REQUIRE_CUDA_VARIABLE = @"CARAFESHARP_REQUIRE_CUDA";
 
         // The known-folder registry value of the Downloads folder, which RegressionData.ps1 reads too.
         private const string SHELL_FOLDERS_KEY = @"Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders";
@@ -254,14 +258,15 @@ namespace pwiz.CarafeSharp.Test
         /// Where a file a reference run recorded by its absolute path on another machine is here.
         /// <para>
         /// Inside a test data package it is always the package's copy, never the recorded location,
-        /// so a package is tested as it would be on a machine without the original folders. Walking up
-        /// from <paramref name="folder"/> to the package's top folder, each level is tried with the
-        /// longest trailing part of the recorded path first, down to its file name. A file the package
-        /// lacks fails the test.
+        /// so a package is tested as it would be on a machine without the original folders. The
+        /// trailing parts of the recorded path are tried longest first, each under every folder from
+        /// <paramref name="folder"/> up to the package's top folder, so a copy matching more of the
+        /// path wins over a file of the same name nearer the run. Nothing outside the package is
+        /// returned, and a file the package lacks fails the test.
         /// </para>
         /// <para>
         /// Outside a package (a folder an environment variable named), the recorded path is used when it
-        /// exists, else the same walk, up to the drive root, and the recorded path when that finds nothing.
+        /// exists, else the same search, up to the drive root, and the recorded path when that finds nothing.
         /// </para>
         /// Recorded paths are split at both separators, so a Windows path relocates on Linux too.
         /// </summary>
@@ -272,16 +277,21 @@ namespace pwiz.CarafeSharp.Test
                 return recordedPath;
             // Leave out the drive or root: only the relative tail is tried under each folder.
             var parts = SplitPath(recordedPath).Where(p => p.IndexOf(':') < 0).ToArray();
+            var levels = new List<string>();
             for (string dir = folder; !string.IsNullOrEmpty(dir); dir = Path.GetDirectoryName(dir))
             {
-                for (int start = 0; start < parts.Length; start++)
-                {
-                    string candidate = Path.Combine(new[] { dir }.Concat(parts.Skip(start)).ToArray());
-                    if (File.Exists(candidate))
-                        return candidate;
-                }
+                levels.Add(dir);
                 if (dir == packageRoot)
                     break;
+            }
+            for (int start = 0; start < parts.Length; start++)
+            {
+                foreach (string dir in levels)
+                {
+                    string candidate = Path.Combine(new[] { dir }.Concat(parts.Skip(start)).ToArray());
+                    if (IsInPackage(candidate, packageRoot) && File.Exists(candidate))
+                        return candidate;
+                }
             }
             if (packageRoot != null)
                 Assert.Fail(@"The test data package {0} has no copy of {1}, recorded by a run in {2}", packageRoot, recordedPath, folder);
@@ -299,7 +309,10 @@ namespace pwiz.CarafeSharp.Test
             string packageRoot = FindPackageRoot(folder);
             if (packageRoot == null)
                 Assert.Fail(@"{0} uses {1}, but no folder above it holds a test data package's {2}", folder, DATA_TOKEN, MANIFEST_FILE);
-            return Path.Combine(new[] { packageRoot }.Concat(argument.Substring(DATA_TOKEN.Length).Split('/')).ToArray());
+            string path = Path.Combine(new[] { packageRoot }.Concat(argument.Substring(DATA_TOKEN.Length).Split('/')).ToArray());
+            if (!IsInPackage(path, packageRoot))
+                Assert.Fail(@"{0} in {1} leads outside the test data package {2}", argument, folder, packageRoot);
+            return path;
         }
 
         /// <summary>The file name of a path recorded on any system: the text after its last '\' or '/'.</summary>
@@ -324,6 +337,15 @@ namespace pwiz.CarafeSharp.Test
         private static string[] SplitPath(string path)
         {
             return path.Split(new[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        /// <summary>True when <paramref name="path"/>, with any '..' resolved, is inside <paramref name="packageRoot"/>, or there is no package.</summary>
+        private static bool IsInPackage(string path, string packageRoot)
+        {
+            if (packageRoot == null)
+                return true;
+            string root = Path.TrimEndingDirectorySeparator(Path.GetFullPath(packageRoot)) + Path.DirectorySeparatorChar;
+            return Path.GetFullPath(path).StartsWith(root, OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
         }
 
         private static Package GetPackage(string id)
@@ -440,15 +462,20 @@ namespace pwiz.CarafeSharp.Test
             }
 
             /// <summary>
-            /// The item's paths: the variable's list when it is set, else the package's copies when the
-            /// package is present, else none. Each must exist, or the test fails naming it.
+            /// The item's paths: the variable's list, made absolute, when it is set, else the package's
+            /// copies. Each must exist, or the test fails naming it. With neither, the test fails too: a
+            /// test resolves its items only once <see cref="InconclusiveUnlessAvailable"/> found data
+            /// for one of them, and an item without data would otherwise drop out of it unnoticed.
             /// </summary>
             public IReadOnlyList<string> Resolve()
             {
                 string value = VariableValue;
                 if (!string.IsNullOrEmpty(value))
                 {
-                    var paths = value.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    var paths = value.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                        .Select(Path.GetFullPath).ToArray();
+                    if (paths.Length == 0)
+                        Assert.Fail(@"{0} is set but names no path: '{1}'", Variable, value);
                     foreach (string path in paths)
                     {
                         if (!File.Exists(path) && !Directory.Exists(path))
@@ -457,7 +484,10 @@ namespace pwiz.CarafeSharp.Test
                     return paths;
                 }
                 if (!Package.IsPresent)
-                    return Array.Empty<string>();
+                {
+                    Assert.Fail(@"Missing test data: extract {0} into {1}{2}.", Package.Zip, Root,
+                        Variable != null ? @", or set " + Variable : string.Empty);
+                }
                 var copies = _relativePaths.Select(Package.GetPath).ToArray();
                 foreach (string path in copies)
                 {

@@ -49,10 +49,11 @@ namespace pwiz.CarafeSharp.Test
     /// lists hold M-clipped copies of M-initial records, which the port of origin/main does
     /// not make. Those are counted apart as explained.
     /// <para>
-    /// The two set checks over every precursor (peptide forms and fragment m/z) compare the
-    /// precursors in one hash partition of their key, the same on both sides, unless
-    /// <c>CARAFESHARP_FULL_PARITY=1</c>. A run kept without its library TSV (the second Stellar
-    /// run keeps only its prediction inputs) is left out of the two library checks.
+    /// The two set checks over every precursor (peptide forms and fragment m/z) compare every
+    /// precursor of the Stellar runs. The Astral run, ten times larger, compares one hash partition
+    /// of the keys, the same on both sides, unless <c>CARAFESHARP_FULL_PARITY=1</c>. A run kept
+    /// without its library TSV (the second Stellar run keeps only its prediction inputs) is left out
+    /// of the two library checks, but every item must keep at least one run with its TSV.
     /// </para>
     /// </summary>
     [TestClass]
@@ -60,8 +61,13 @@ namespace pwiz.CarafeSharp.Test
     {
         public const string FULL_PARITY_VARIABLE = @"CARAFESHARP_FULL_PARITY";
 
-        /// <summary>The set checks keep the precursors whose key hash is 0 modulo this, a sixteenth of them.</summary>
-        private const ulong PARTITION_MODULUS = 16;
+        /// <summary>A partitioned set check keeps one precursor in this many: those whose key hash has its top bits zero.</summary>
+        private const int PARTITION_MODULUS = 16;
+
+        /// <summary>FNV-1a mixes each byte into the high bits, so the partition reads the top four bits, not the low ones.</summary>
+        private const int PARTITION_SHIFT = 60;
+
+        private static readonly bool FULL_PARITY = Environment.GetEnvironmentVariable(FULL_PARITY_VARIABLE) == @"1";
 
         // 64-bit FNV-1a.
         private const ulong FNV_OFFSET_BASIS = 14695981039346656037UL;
@@ -80,7 +86,7 @@ namespace pwiz.CarafeSharp.Test
         public void TestPeptideFormsMatchCarafe()
         {
             foreach (var run in ReferenceRuns())
-                CheckPeptideForms(run);
+                CheckPeptideForms(run, false);
         }
 
         /// <summary>Requirement 2: alphabase fragment m/z against the _ms2_mz_df float32 values.</summary>
@@ -88,7 +94,7 @@ namespace pwiz.CarafeSharp.Test
         public void TestFragmentMzMatchesCarafe()
         {
             foreach (var run in ReferenceRuns())
-                CheckFragmentMz(run);
+                CheckFragmentMz(run, false);
         }
 
         /// <summary>
@@ -98,7 +104,7 @@ namespace pwiz.CarafeSharp.Test
         [TestMethod]
         public void TestLibraryAssemblyMatchesCarafe()
         {
-            foreach (var run in LibraryRuns(ReferenceRuns()))
+            foreach (var run in LibraryRuns(TestData.PretrainedLibraries, TestData.FineTunedLibraries, TestData.LibraryReferences))
                 CheckLibraryAssembly(run);
         }
 
@@ -110,7 +116,7 @@ namespace pwiz.CarafeSharp.Test
         [TestMethod]
         public void TestPredictedLibraryMatchesCarafe()
         {
-            var runs = LibraryRuns(ReferenceRuns());
+            var runs = LibraryRuns(TestData.PretrainedLibraries, TestData.FineTunedLibraries, TestData.LibraryReferences);
             InScratchFolder(scratch =>
             {
                 foreach (var run in runs)
@@ -125,10 +131,10 @@ namespace pwiz.CarafeSharp.Test
             var runs = OpenRuns(TestData.AstralPretrainedLibraries, TestData.AstralFineTunedLibraries);
             foreach (var run in runs)
             {
-                CheckPeptideForms(run);
-                CheckFragmentMz(run);
+                CheckPeptideForms(run, true);
+                CheckFragmentMz(run, true);
             }
-            var libraryRuns = LibraryRuns(runs);
+            var libraryRuns = LibraryRuns(TestData.AstralPretrainedLibraries, TestData.AstralFineTunedLibraries);
             foreach (var run in libraryRuns)
                 CheckLibraryAssembly(run);
             InScratchFolder(scratch =>
@@ -138,10 +144,10 @@ namespace pwiz.CarafeSharp.Test
             });
         }
 
-        private void CheckPeptideForms(CarafeReferenceRun run)
+        private void CheckPeptideForms(CarafeReferenceRun run, bool partition)
         {
             var fasta = ReadFastaSequences(run.FastaPath);
-            var ours = EnumeratePrecursors(run.Settings);
+            var ours = EnumeratePrecursors(run.Settings, partition);
             int oracleRows = 0, explained = 0, oracleOnly = 0, mzDiffers = 0, sameId = 0;
             double maxMzDiff = 0;
             var seen = new HashSet<string>(StringComparer.Ordinal);
@@ -157,7 +163,7 @@ namespace pwiz.CarafeSharp.Test
                 for (int i = 0; i < forms.RowCount; i++)
                 {
                     string key = PrecursorKey(sequences[i], charges[i], mods[i], sites[i]);
-                    if (!IsSampled(key))
+                    if (!IsSampled(key, partition))
                         continue;
                     oracleRows++;
                     seen.Add(key);
@@ -181,14 +187,14 @@ namespace pwiz.CarafeSharp.Test
             int oursOnly = ours.Keys.Count(k => !seen.Contains(k));
             Log(@"{0}: {1} Carafe precursors, {2} CarafeSharp{3}; Carafe only {4} (+{5} M-clipped copies), CarafeSharp only {6}; " +
                 @"m/z differs {7} (max {8:E2}); same pepID {9}",
-                run.Folder, oracleRows, ours.Count, SampleDescription, oracleOnly, explained, oursOnly, mzDiffers, maxMzDiff, sameId);
+                run.Folder, oracleRows, ours.Count, SampleDescription(partition), oracleOnly, explained, oursOnly, mzDiffers, maxMzDiff, sameId);
             Assert.IsTrue(oracleRows > 0, run.Folder);
             Assert.AreEqual(0, oracleOnly, run.Folder);
             Assert.AreEqual(0, oursOnly, run.Folder);
             Assert.AreEqual(0, mzDiffers, run.Folder);
         }
 
-        private void CheckFragmentMz(CarafeReferenceRun run)
+        private void CheckFragmentMz(CarafeReferenceRun run, bool partition)
         {
             long values = 0, exact = 0, oneUlp = 0;
             int maxUlp = 0;
@@ -205,7 +211,7 @@ namespace pwiz.CarafeSharp.Test
                 var starts = frame.Get<long>(@"frag_start_idx");
                 for (int i = 0; i < frame.RowCount; i++)
                 {
-                    if (!IsSampled(PrecursorKey(sequences[i], charges[i], mods[i], sites[i])))
+                    if (!IsSampled(PrecursorKey(sequences[i], charges[i], mods[i], sites[i]), partition))
                         continue;
                     var precursor = new PrecursorForm(PeptideForm.FromAlphabase(sequences[i], mods[i], sites[i]), charges[i]);
                     var mz = AlphabaseFragmentMz.ToFloat32(AlphabaseFragmentMz.Calculate(precursor));
@@ -226,7 +232,7 @@ namespace pwiz.CarafeSharp.Test
                 }
             }
             Log(@"{0}: {1} fragment m/z values{2}, {3} bit-identical, {4} one float32 ulp apart, max {5} ulp",
-                run.Folder, values, SampleDescription, exact, oneUlp, maxUlp);
+                run.Folder, values, SampleDescription(partition), exact, oneUlp, maxUlp);
             Assert.IsTrue(values > 0, run.Folder);
             Assert.IsTrue(maxUlp <= 1, run.Folder + @" max ulp " + maxUlp);
         }
@@ -242,7 +248,7 @@ namespace pwiz.CarafeSharp.Test
             int skippedClipped = 0, dropped = 0;
             foreach (int batch in run.Batches)
                 BuildFromCarafePredictions(run, batch, builder, fasta, expected, ref skippedClipped, ref dropped);
-            var reference = CarafeLibraryTsv.Read(run.LibraryTsv, null, new HashSet<string>(expected.Keys, StringComparer.Ordinal));
+            var reference = CarafeLibraryTsv.Read(run.LibraryTsv, null, new HashSet<string>(expected.Keys, StringComparer.Ordinal), false);
             int same = 0, missing = 0;
             var mismatches = new List<string>();
             foreach (var pair in expected)
@@ -425,8 +431,8 @@ namespace pwiz.CarafeSharp.Test
             return spectra;
         }
 
-        /// <summary>Our precursors in the compared partition, keyed as the peptide_forms rows are, with their m/z and pepID.</summary>
-        private static Dictionary<string, (double Mz, int PepId)> EnumeratePrecursors(LibrarySettings settings)
+        /// <summary>Our precursors (in the compared partition, when partitioned), keyed as the peptide_forms rows are, with their m/z and pepID.</summary>
+        private static Dictionary<string, (double Mz, int PepId)> EnumeratePrecursors(LibrarySettings settings, bool partition)
         {
             var digester = new Digester(settings.Digest);
             var peptides = LibraryDatabase.DigestPeptides(settings.Database, digester);
@@ -442,7 +448,7 @@ namespace pwiz.CarafeSharp.Test
                 foreach (int charge in charges)
                 {
                     string key = PrecursorKey(form.Sequence, charge, alphabase.ModsText, alphabase.ModSitesText);
-                    if (IsSampled(key))
+                    if (IsSampled(key, partition))
                         precursors.Add(key, (form.GetMz(charge), pepId));
                 }
                 pepId++;
@@ -534,30 +540,40 @@ namespace pwiz.CarafeSharp.Test
             return items.SelectMany(i => i.Resolve()).SelectMany(CarafeReferenceRun.FindRuns).Select(CarafeReferenceRun.Open).ToList();
         }
 
-        /// <summary>The runs that kept their library TSV; the test fails when none did.</summary>
-        private IReadOnlyList<CarafeReferenceRun> LibraryRuns(IReadOnlyList<CarafeReferenceRun> runs)
+        /// <summary>
+        /// The items' runs that kept their library TSV. Each item must keep at least one, so a package
+        /// or variable whose fine-tuned run lost its TSV fails rather than dropping that comparison.
+        /// </summary>
+        private IReadOnlyList<CarafeReferenceRun> LibraryRuns(params TestData.Item[] items)
         {
-            foreach (var run in runs.Where(r => r.LibraryTsv == null))
-                Log(@"{0}: no library TSV, prediction inputs only", run.Folder);
-            var libraryRuns = runs.Where(r => r.LibraryTsv != null).ToList();
-            Assert.IsTrue(libraryRuns.Count > 0, @"No reference run has a Carafe library TSV");
+            TestData.InconclusiveUnlessAvailable(items);
+            var libraryRuns = new List<CarafeReferenceRun>();
+            foreach (var item in items)
+            {
+                var folders = item.Resolve();
+                var runs = folders.SelectMany(CarafeReferenceRun.FindRuns).Select(CarafeReferenceRun.Open).ToList();
+                foreach (var run in runs.Where(r => r.LibraryTsv == null))
+                    Log(@"{0}: no library TSV, prediction inputs only", run.Folder);
+                var kept = runs.Where(r => r.LibraryTsv != null).ToList();
+                if (kept.Count == 0)
+                    Assert.Fail(@"No run in {0} has a Carafe library TSV", string.Join(@", ", folders));
+                libraryRuns.AddRange(kept);
+            }
             return libraryRuns;
         }
 
-        /// <summary>True for a precursor in the compared partition, or for every one with <c>CARAFESHARP_FULL_PARITY=1</c>.</summary>
-        private static bool IsSampled(string precursorKey)
+        /// <summary>
+        /// True unless <paramref name="partition"/> is set and the precursor is outside the compared
+        /// partition; always true with <c>CARAFESHARP_FULL_PARITY=1</c>.
+        /// </summary>
+        private static bool IsSampled(string precursorKey, bool partition)
         {
-            return IsFullParity || StableHash(precursorKey) % PARTITION_MODULUS == 0;
+            return !partition || FULL_PARITY || StableHash(precursorKey) >> PARTITION_SHIFT == 0;
         }
 
-        private static bool IsFullParity
+        private static string SampleDescription(bool partition)
         {
-            get { return Environment.GetEnvironmentVariable(FULL_PARITY_VARIABLE) == @"1"; }
-        }
-
-        private static string SampleDescription
-        {
-            get { return IsFullParity ? string.Empty : @" (the 1/" + PARTITION_MODULUS + @" hash partition)"; }
+            return !partition || FULL_PARITY ? string.Empty : @" (the 1/" + PARTITION_MODULUS + @" hash partition)";
         }
 
         /// <summary>64-bit FNV-1a over the key's UTF-8 bytes: the same on every run and platform, unlike string.GetHashCode.</summary>

@@ -71,7 +71,11 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+# A failing native command must reach the outcome report below, not throw first.
+$PSNativeCommandUseErrorActionPreference = $false
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+# ValidateSet ignores case, but the value names output folders, which Linux compares by case.
+$Configuration = @('Debug', 'Release') | Where-Object { $_ -eq $Configuration }
 
 $scriptRoot = Split-Path -Parent $PSCommandPath
 $sln = Join-Path $scriptRoot 'CarafeSharp.sln'
@@ -107,31 +111,45 @@ function Test-CudaHardware {
     if (-not $smi) {
         Stop-WithProblem 'The CUDA build needs an NVIDIA GPU and driver, but nvidia-smi was not found. Use -Torch cpu.'
     }
-    $rows = & $smi --query-gpu=name,compute_cap,driver_version,memory.total --format=csv,noheader 2>&1
-    if ($LASTEXITCODE -ne 0 -or -not $rows) {
-        Stop-WithProblem "nvidia-smi could not query a GPU: $rows"
+    # Standard error is left out of the rows parsed below.
+    $rows = @(& $smi --query-gpu=name,compute_cap,driver_version,memory.total --format=csv,noheader 2>$null)
+    if ($LASTEXITCODE -ne 0 -or $rows.Count -eq 0) {
+        Stop-WithProblem 'nvidia-smi could not query a GPU. Check the NVIDIA driver, or use -Torch cpu.'
     }
-    $usable = $false
-    foreach ($row in @($rows)) {
-        $fields = "$row".Split(',') | ForEach-Object { $_.Trim() }
-        $name, $cap, $driver, $memory = $fields
-        $capOk = [double]::Parse($cap, [Globalization.CultureInfo]::InvariantCulture) -ge 7.0
-        $driverOk = [int]($driver.Split('.')[0]) -ge 570
-        Write-Host ("GPU: {0}, compute capability {1}, driver {2}, {3}" -f $name, $cap, $driver, $memory)
-        if (-not $capOk) {
-            Write-Host "  compute capability $cap is below 7.0: the CUDA 12.8 libtorch has no kernels for it (Maxwell and Pascal)." -ForegroundColor Yellow
+    # libtorch runs on the first CUDA device, so that is the one that must qualify. CUDA orders
+    # devices fastest first and nvidia-smi by bus, so with several GPUs each one is reported and
+    # the first listed is checked; set CUDA_VISIBLE_DEVICES to pick another.
+    $invariant = [Globalization.CultureInfo]::InvariantCulture
+    for ($i = 0; $i -lt $rows.Count; $i++) {
+        # The name comes first and may itself contain commas, so read the fields from the end.
+        $fields = @("$($rows[$i])".Split(',') | ForEach-Object { $_.Trim() })
+        $n = $fields.Count
+        $memory = if ($n -ge 4) { $fields[$n - 1] } else { '' }
+        $driver = if ($n -ge 4) { $fields[$n - 2] } else { '' }
+        $cap = if ($n -ge 4) { $fields[$n - 3] } else { '' }
+        $name = if ($n -ge 4) { $fields[0..($n - 4)] -join ',' } else { "$($rows[$i])" }
+        Write-Host ("GPU {0}: {1}, compute capability {2}, driver {3}, {4}" -f $i, $name, $cap, $driver, $memory)
+        if ($i -gt 0) {
+            continue
         }
-        if (-not $driverOk) {
-            Write-Host "  driver $driver is older than release 570, which CUDA 12.8 needs." -ForegroundColor Yellow
+        $capValue = 0.0
+        $driverMajor = 0
+        if (-not [double]::TryParse($cap, [Globalization.NumberStyles]::Float, $invariant, [ref]$capValue)) {
+            Stop-WithProblem "nvidia-smi reported no compute capability for $name ('$cap'). Use -Torch cpu."
         }
-        $usable = $usable -or ($capOk -and $driverOk)
-    }
-    if (-not $usable) {
-        Stop-WithProblem 'No GPU here can run the CUDA build. Update the driver, or use -Torch cpu.'
+        if (-not [int]::TryParse(($driver -split '\.')[0], [Globalization.NumberStyles]::Integer, $invariant, [ref]$driverMajor)) {
+            Stop-WithProblem "nvidia-smi reported no driver version for $name ('$driver')."
+        }
+        if ($capValue -lt 7.0) {
+            Stop-WithProblem "$name has compute capability $cap, below 7.0: the CUDA 12.8 libtorch has no kernels for it (Maxwell and Pascal). Use -Torch cpu."
+        }
+        if ($driverMajor -lt 570) {
+            Stop-WithProblem "Driver $driver is older than release 570, which CUDA 12.8 needs. Update the driver, or use -Torch cpu."
+        }
     }
 }
 
-if (-not (Test-Path $sln)) {
+if (-not (Test-Path -LiteralPath $sln)) {
     Stop-WithProblem "CarafeSharp.sln not found at $sln" 2
 }
 if ($Torch -eq 'cuda') {
@@ -148,7 +166,7 @@ if (-not $NoBuild) {
     Write-Host ("Build succeeded in {0:F1}s" -f ((Get-Date) - $buildStart).TotalSeconds) -ForegroundColor Green
     if ($Torch -eq 'cuda') {
         $cudaLib = if ($IsWindows) { 'runtimes/win-x64/native/torch_cuda.dll' } else { 'runtimes/linux-x64/native/libtorch_cuda.so' }
-        if (-not (Test-Path (Join-Path $exeDir $cudaLib))) {
+        if (-not (Test-Path -LiteralPath (Join-Path $exeDir $cudaLib))) {
             Stop-WithProblem "The CUDA build did not deliver $cudaLib to $exeDir"
         }
     }
@@ -157,13 +175,17 @@ if (-not $NoBuild) {
 if ($NoTests) {
     exit 0
 }
-if (-not (Test-Path $testDll)) {
+if (-not (Test-Path -LiteralPath $testDll)) {
     Stop-WithProblem "Test assembly not found: $testDll (build first, without -NoBuild)"
 }
 
+# A named test runs whatever its category. Otherwise CPU builds leave out the GPU and Astral
+# categories, and CUDA builds run the GPU category.
 $filters = @()
 if ($TestCategory) {
     $filters += "TestCategory=$TestCategory"
+} elseif ($TestName) {
+    # No category filter, so a named Astral or Cuda test is not filtered away.
 } elseif ($Torch -eq 'cuda') {
     $filters += 'TestCategory=Cuda'
 } else {
@@ -172,31 +194,40 @@ if ($TestCategory) {
 if ($TestName) {
     $filters += "FullyQualifiedName~$TestName"
 }
-if ($Torch -eq 'cuda' -or $TestCategory -eq 'Cuda') {
-    # A GPU test that quietly falls back to the CPU would pass without testing anything.
-    $env:CARAFESHARP_REQUIRE_CUDA = '1'
-}
 
 $resultsDir = Join-Path $scriptRoot 'TestResults'
 $trxName = "CarafeSharp.Test-$Configuration-$Torch.trx"
 $trxPath = Join-Path $resultsDir $trxName
-if (Test-Path $trxPath) { Remove-Item $trxPath }
+if (Test-Path -LiteralPath $trxPath) { Remove-Item -LiteralPath $trxPath }
 Write-Step ("Running tests ({0})" -f ($filters -join ' & '))
-& dotnet test $testDll --nologo --filter ($filters -join '&') --results-directory $resultsDir `
-    --logger "trx;LogFileName=$trxName" --logger 'console;verbosity=normal'
-$testExit = $LASTEXITCODE
-if ($TeamCity -and (Test-Path $trxPath)) {
+# A GPU test that quietly fell back to the CPU would pass without testing anything, so a CUDA
+# build's tests must find a GPU. Set for the test run only, not left in the caller's session.
+$requireCuda = $env:CARAFESHARP_REQUIRE_CUDA
+if ($Torch -eq 'cuda' -or $TestCategory -eq 'Cuda') {
+    $env:CARAFESHARP_REQUIRE_CUDA = '1'
+}
+try {
+    & dotnet test $testDll --nologo --filter ($filters -join '&') --results-directory $resultsDir `
+        --logger "trx;LogFileName=$trxName" --logger 'console;verbosity=normal'
+    $testExit = $LASTEXITCODE
+} finally {
+    $env:CARAFESHARP_REQUIRE_CUDA = $requireCuda
+}
+if ($TeamCity -and (Test-Path -LiteralPath $trxPath)) {
     Write-Host ("##teamcity[importData type='vstest' path='{0}']" -f (Format-TcMessage $trxPath))
 }
-if (-not (Test-Path $trxPath)) {
+if (-not (Test-Path -LiteralPath $trxPath)) {
     Stop-WithProblem "No test results were written ($trxPath)" $(if ($testExit -ne 0) { $testExit } else { 1 })
 }
 
 # dotnet test exits 0 when tests are Inconclusive, which is also what a missing data package
 # looks like, so count the outcomes from the results file.
-[xml]$trx = Get-Content -Raw $trxPath
+[xml]$trx = Get-Content -Raw -LiteralPath $trxPath
 $ns = @{ t = 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010' }
 $results = Select-Xml -Xml $trx -XPath '//t:UnitTestResult' -Namespace $ns | ForEach-Object { $_.Node }
+if (@($results).Count -eq 0) {
+    Stop-WithProblem ("No test matched the filter ({0}); results in {1}" -f ($filters -join ' & '), $trxPath)
+}
 $byOutcome = $results | Group-Object outcome | Sort-Object Name
 Write-Host ('Test outcomes: ' + (($byOutcome | ForEach-Object { '{0} {1}' -f $_.Name, $_.Count }) -join ', '))
 $notRun = @($results | Where-Object { $_.outcome -in @('NotExecuted', 'Inconclusive') })

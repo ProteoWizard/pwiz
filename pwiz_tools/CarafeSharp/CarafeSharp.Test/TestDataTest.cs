@@ -57,7 +57,10 @@ namespace pwiz.CarafeSharp.Test
             }
         }
 
-        /// <summary>No package is inconclusive; a package without its manifest, or without an item, fails.</summary>
+        /// <summary>
+        /// No package is inconclusive; a package without its manifest, or without an item, fails, and
+        /// so does an item without data once another item of the test has some.
+        /// </summary>
         private static void CheckPackagePresence(string root)
         {
             Environment.SetEnvironmentVariable(TestData.ROOT_VARIABLE, Path.Combine(root, @"missing"));
@@ -66,8 +69,8 @@ namespace pwiz.CarafeSharp.Test
             Environment.SetEnvironmentVariable(TestData.ROOT_VARIABLE, root);
             var item = TestData.PretrainedLibraries;
             Assert.IsFalse(item.IsAvailable);
-            Assert.AreEqual(0, item.Resolve().Count);
             Assert.ThrowsException<AssertInconclusiveException>(() => TestData.InconclusiveUnlessAvailable(item));
+            Assert.ThrowsException<AssertFailedException>(() => item.Resolve());
 
             string package = Path.Combine(root, TestData.TestFiles.Folder);
             Directory.CreateDirectory(package);
@@ -91,6 +94,14 @@ namespace pwiz.CarafeSharp.Test
             CollectionAssert.AreEqual(new[] { first, second }, TestData.PretrainedLibraries.Resolve().ToArray());
             Environment.SetEnvironmentVariable(TestData.PRETRAINED_REFERENCE_VARIABLE, first + Path.PathSeparator + Path.Combine(root, @"missing"));
             Assert.ThrowsException<AssertFailedException>(() => TestData.PretrainedLibraries.Resolve());
+            // Set but naming no path is a mistake, not an empty list of references.
+            Environment.SetEnvironmentVariable(TestData.PRETRAINED_REFERENCE_VARIABLE, @" " + Path.PathSeparator + @" ");
+            Assert.IsTrue(TestData.PretrainedLibraries.IsAvailable);
+            Assert.ThrowsException<AssertFailedException>(() => TestData.PretrainedLibraries.Resolve());
+            // A relative path is taken from the working folder and made absolute.
+            string relative = Path.GetRelativePath(Environment.CurrentDirectory, first);
+            Environment.SetEnvironmentVariable(TestData.PRETRAINED_REFERENCE_VARIABLE, relative);
+            CollectionAssert.AreEqual(new[] { first }, TestData.PretrainedLibraries.Resolve().ToArray());
             Environment.SetEnvironmentVariable(TestData.PRETRAINED_REFERENCE_VARIABLE, null);
         }
 
@@ -103,20 +114,27 @@ namespace pwiz.CarafeSharp.Test
             string run = CreateFolder(package, @"library-references", @"m3", @"ref", @"nocut-every50");
             string fasta = CreateFile(package, @"library-references", @"m3", @"fixtures", @"peptides_every50.fasta");
             string pairing = CreateFile(package, @"stellar", @"carafe-osprey-entrapment", @"osprey_train_db_pairing.tsv");
-            CreateFile(package, @"stellar", @"carafe-osprey", @"osprey_train_db_pairing.tsv");
+            string siblingPairing = CreateFile(package, @"stellar", @"carafe-osprey", @"osprey_train_db_pairing.tsv");
             string parent = Path.GetDirectoryName(run);
             Assert.AreEqual(package, TestData.FindPackageRoot(run));
             Assert.AreEqual(fasta, TestData.Relocate(@"D:/Dev/ai/.tmp/sessions/x/m3/fixtures/peptides_every50.fasta", parent));
             // Of two copies with the file's name, the one more of the recorded path matches.
-            Assert.AreEqual(pairing, TestData.Relocate(@"D:\GitHub-Repo\osprey\stellar\carafe-osprey-entrapment\osprey_train_db_pairing.tsv", parent));
+            const string recordedPairing = @"D:\GitHub-Repo\osprey\stellar\carafe-osprey-entrapment\osprey_train_db_pairing.tsv";
+            Assert.AreEqual(pairing, TestData.Relocate(recordedPairing, parent));
+            // It wins even over a same-named copy nearer the run: the sibling run's own pairing file.
+            string siblingRun = CreateFolder(package, @"stellar", @"carafe-osprey", @"osprey_initial_library");
+            Assert.AreEqual(pairing, TestData.Relocate(recordedPairing, siblingRun));
+            Assert.AreEqual(siblingPairing, TestData.Relocate(@"D:\elsewhere\osprey_train_db_pairing.tsv", siblingRun));
             // A file the package lacks fails, even where the recorded path exists on this machine.
             string outside = CreateFile(root, @"elsewhere", @"hela-filtered.fasta");
             Assert.ThrowsException<AssertFailedException>(() => TestData.Relocate(outside, parent));
+            Assert.ThrowsException<AssertFailedException>(() => TestData.Relocate(@"..\..\elsewhere\hela-filtered.fasta", package));
 
-            // {DATA}/ is the package's top folder.
+            // {DATA}/ is the package's top folder, and cannot lead out of it.
             Assert.AreEqual(fasta, TestData.ExpandDataToken(@"{DATA}/library-references/m3/fixtures/peptides_every50.fasta", run));
             Assert.AreEqual(@"-enzyme", TestData.ExpandDataToken(@"-enzyme", run));
             Assert.ThrowsException<AssertFailedException>(() => TestData.ExpandDataToken(@"{DATA}/x.fasta", root));
+            Assert.ThrowsException<AssertFailedException>(() => TestData.ExpandDataToken(@"{DATA}/../elsewhere/hela-filtered.fasta", run));
 
             // Outside a package, the recorded path when it exists, else a file of its name above the folder.
             string loose = CreateFolder(root, @"loose", @"run");
