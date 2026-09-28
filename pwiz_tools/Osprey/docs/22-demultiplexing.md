@@ -613,10 +613,21 @@ MS1 tolerances, against 18-19), which `--centroid events` no longer does. The gr
 model: a sparse peak whose ions land on non-adjacent samples becomes several centroids.
 
 **A first joint prototype** (pwiz-ai `joint_prototype.py`: Poisson-weighted NNLS over A kron B, B a
-Gaussian TOF peak, no L1) scored by placement on 341 identified precursors: own bin / within one bin
-0.48 / 0.84, against 0.51 / 0.87 for the per-sweep channel solve on vendor centroids and 0.43 / 0.81 for
-per-sample profile demultiplexing (§5.4c). The per-sample solve is clearly worst, as §5.4d argues; the
-joint solve without its L1 does not yet beat the channel solve.
+Gaussian TOF peak), scored by placement on 341 identified precursors (own bin / within one bin / median
+per-precursor own share):
+
+| Solve | Own | Within 1 | Median own |
+|---|---|---|---|
+| per-sweep channel solve, vendor centroids | 0.51 | 0.87 | 0.34 |
+| per-sample profile demultiplexing (§5.4c) | 0.43 | 0.81 | 0.28 |
+| joint, no L1 | 0.48 | 0.84 | 0.33 |
+| joint, per-column L1 of 2 sigma (as `--sweep-l1-z 2`) | 0.49 | 0.85 | 0.35 |
+
+The per-sample solve is clearly worst, as §5.4d argues. The Poisson-scaled L1 helps the joint solve, which
+is then comparable to the channel solve on placement while carrying the full profile area, about four
+times the vendor centroids' signal. Placement of identified precursors' strong fragments cannot show
+what only the joint solve does, separating near-isobaric fragments of different precursors; that needs a
+demultiplexed file searched with DIA-NN, and so a C# implementation.
 
 ### Determinism
 
