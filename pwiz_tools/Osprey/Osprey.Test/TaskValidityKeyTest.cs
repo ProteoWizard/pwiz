@@ -22,6 +22,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -60,72 +61,26 @@ namespace pwiz.Osprey.Test
             AssertEveryTaskCarriesTheSuffixesItNeeds();
             AssertLibraryFragmentArmIsPinnedToThePipeline();
             AssertDiagnosticsReportIsADeclaredOutputOnlyWhenAsked();
-            AssertOnlyAnnotatedBlibsCarryTheReaderTerm();
-            AssertOnlyStackedLibrariesCarryTheDecoyTerm();
+            AssertLibraryTermsKeyOnlyWhatChanged();
         }
 
         /// <summary>
-        /// Decoys of an entry with two modifications on one residue changed when decoy fragments
-        /// started adding them, so a search that generates its decoys from a library holding such
-        /// an entry keys on <see cref="OspreyTask.DECOY_MODS_TERM"/>. The same library with its
-        /// decoys supplied, and a library whose modifications only sit side by side, key exactly
-        /// as before.
+        /// Each library term keys the tasks its change reaches, and no others:
+        /// <list type="bullet">
+        /// <item>a blib whose <c>RefSpectraPeakAnnotations</c> table has rows is read differently
+        /// since the reader started typing fragments from it, so every task keys on
+        /// <see cref="OspreyTask.LIBRARY_READER_TERM"/>; a TSV library and a blib with no
+        /// annotation rows get no reader term, in the keys or the <c>.libcache</c> composition;</item>
+        /// <item>BiblioSpec's one-decimal modification text now reads with exact masses, which reach
+        /// only the output blib, so only SecondPassFDR keys on
+        /// <see cref="OspreyTask.LIBRARY_MODS_TERM"/>, while the <c>.libcache</c> is re-read once;</item>
+        /// <item>every search that generates its decoys keys on
+        /// <see cref="OspreyTask.DECOY_MODS_TERM"/>, because decoy fragments now add two
+        /// modifications on one residue; a search whose decoys come from the library keys exactly
+        /// as before.</item>
+        /// </list>
         /// </summary>
-        private static void AssertOnlyStackedLibrariesCarryTheDecoyTerm()
-        {
-            string dir = Path.Combine(Path.GetTempPath(), @"osprey_decoymods_" + Path.GetRandomFileName());
-            Directory.CreateDirectory(dir);
-            try
-            {
-                const string header = "ModifiedPeptide\tStrippedPeptide\tPrecursorMz\n";
-                string stackedTsv = Path.Combine(dir, @"stacked.tsv");
-                File.WriteAllText(stackedTsv, header +
-                    "_C[UniMod:4]PEPTIDEK_\tCPEPTIDEK\t500.0\n" +
-                    "_[UniMod:1]M[UniMod:35]PEPTIDEK_\tMPEPTIDEK\t520.0\n");
-                string sideBySideTsv = Path.Combine(dir, @"side-by-side.tsv");
-                File.WriteAllText(sideBySideTsv, header +
-                    "_[UniMod:1]APEPTIDEK_\tAPEPTIDEK\t500.0\n" +
-                    "_C[UniMod:4]M[UniMod:35]PEPTIDEK_\tCMPEPTIDEK\t520.0\n");
-                string stackedBlib = BlibLibraryInputTest.CreateBlib(Path.Combine(dir, @"stacked.blib"),
-                    @"[+42.010565]M[+15.994915]PEPTIDEK", new[] { 300.0, 400.0 }, new (int, string, int)[0]);
-
-                foreach (string library in new[] { stackedTsv, stackedBlib })
-                {
-                    string name = Path.GetFileName(library);
-                    var generated = new OspreyConfig { LibrarySource = LibrarySource.FromPath(library) };
-                    Assert.AreEqual(PreUpgradeBaseKey(generated) + OspreyTask.DECOY_MODS_TERM, BaseKey(generated), name);
-                    var inLibrary = new OspreyConfig { LibrarySource = LibrarySource.FromPath(library), DecoysInLibrary = true };
-                    Assert.AreEqual(PreUpgradeBaseKey(inLibrary), BaseKey(inLibrary), name + @" with library decoys");
-                    var fromLibrary = new OspreyConfig { LibrarySource = LibrarySource.FromPath(library), DecoyMethod = DecoyMethod.FromLibrary };
-                    Assert.AreEqual(PreUpgradeBaseKey(fromLibrary), BaseKey(fromLibrary), name + @" with DecoyMethod.FromLibrary");
-                }
-                var sideBySide = new OspreyConfig { LibrarySource = LibrarySource.FromPath(sideBySideTsv) };
-                Assert.AreEqual(PreUpgradeBaseKey(sideBySide), BaseKey(sideBySide), @"modifications side by side do not stack");
-            }
-            finally
-            {
-                foreach (string file in Directory.GetFiles(dir))
-                    BlibLibraryInputTest.TryDeleteFile(file);
-                Directory.Delete(dir, true);
-            }
-        }
-
-        /// <summary>PerFileScoring's key, which every task's key starts with.</summary>
-        private static string BaseKey(OspreyConfig config)
-        {
-            var tasks = OspreyTasks.Create().Pipeline;
-            var ctx = new PipelineContext(config, tasks, null, null, null);
-            return tasks.OfType<PerFileScoringTask>().Single().ValidityKey(ctx);
-        }
-
-        /// <summary>
-        /// A blib whose <c>RefSpectraPeakAnnotations</c> table has rows is read differently since
-        /// the reader started typing fragments from it, so every task keys on that: a directory
-        /// scored before the upgrade against an annotated blib must not be adopted after it. A
-        /// TSV library and a blib with no annotation rows are read exactly as before, so their
-        /// keys - and the <c>.libcache</c> composition terms - must not move at all.
-        /// </summary>
-        private static void AssertOnlyAnnotatedBlibsCarryTheReaderTerm()
+        private static void AssertLibraryTermsKeyOnlyWhatChanged()
         {
             string dir = Path.Combine(Path.GetTempPath(), @"osprey_libext_" + Path.GetRandomFileName());
             Directory.CreateDirectory(dir);
@@ -138,61 +93,82 @@ namespace pwiz.Osprey.Test
                     @"PEPC[+57.021464]TIDEK", peaks, new (int, string, int)[0]);
                 string annotated = BlibLibraryInputTest.CreateBlib(Path.Combine(dir, @"annotated.blib"),
                     @"PEPC[+57.021464]TIDEK", peaks, new[] { (0, @"y3", 1) });
-
-                // BiblioSpec's one-decimal text: the residue- and precision-aware modification
-                // reader gives it exact masses now. They reach no score for an unannotated blib,
-                // but they reach the output blib's Modifications table, so its .libcache is
-                // re-read once and its task keys gain LIBRARY_MODS_TERM.
                 string oneDecimal = BlibLibraryInputTest.CreateBlib(Path.Combine(dir, @"bibliospec.blib"),
                     @"PEPC[+57.0]TIDEK", peaks, new (int, string, int)[0]);
 
-                foreach (var (unchanged, readerTerms) in new[]
-                         {
-                             (tsv, string.Empty), (plain, string.Empty),
-                         })
+                foreach (string unchanged in new[] { tsv, plain })
                 {
+                    string name = Path.GetFileName(unchanged);
                     var config = new OspreyConfig { LibrarySource = LibrarySource.FromPath(unchanged) };
-                    var tasks = OspreyTasks.Create().Pipeline;
-                    var ctx = new PipelineContext(config, tasks, null, null, null);
-                    Assert.AreEqual(PreUpgradeBaseKey(config), tasks.OfType<PerFileScoringTask>().Single().ValidityKey(ctx),
-                        Path.GetFileName(unchanged) + @" must key exactly as before the reader change");
-                    foreach (var task in tasks)
-                        Assert.IsFalse(task.ValidityKey(ctx).Contains(LIBEXT_TERM), task.Name);
-                    Assert.AreEqual(readerTerms, LibraryLoader.LibraryReaderTerms(config),
-                        Path.GetFileName(unchanged) + @" .libcache reader terms");
+                    var keys = TaskKeys(config);
+                    Assert.AreEqual(PreUpgradeBaseKey(config) + OspreyTask.DECOY_MODS_TERM, keys[PerFileScoringTask.TASK_NAME],
+                        name + @" keys as before the reader change, plus the generated-decoy term");
+                    foreach (var key in keys)
+                    {
+                        Assert.IsFalse(key.Value.Contains(LIBEXT_TERM), key.Key);
+                        Assert.IsFalse(key.Value.Contains(OspreyTask.LIBRARY_MODS_TERM), key.Key);
+                    }
+                    Assert.AreEqual(string.Empty, LibraryLoader.LibraryReaderTerms(config), name + @" .libcache reader terms");
+
+                    var inLibrary = new OspreyConfig { LibrarySource = LibrarySource.FromPath(unchanged), DecoysInLibrary = true };
+                    var fromLibrary = new OspreyConfig { LibrarySource = LibrarySource.FromPath(unchanged), DecoyMethod = DecoyMethod.FromLibrary };
+                    foreach (var supplied in new[] { inLibrary, fromLibrary })
+                    {
+                        Assert.AreEqual(PreUpgradeBaseKey(supplied), TaskKeys(supplied)[PerFileScoringTask.TASK_NAME],
+                            name + @" with decoys from the library keys exactly as before");
+                    }
                 }
 
                 var oneDecimalConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(oneDecimal) };
-                var oneDecimalTasks = OspreyTasks.Create().Pipeline;
-                var oneDecimalCtx = new PipelineContext(oneDecimalConfig, oneDecimalTasks, null, null, null);
-                Assert.AreEqual(PreUpgradeBaseKey(oneDecimalConfig) + OspreyTask.LIBRARY_MODS_TERM,
-                    oneDecimalTasks.OfType<PerFileScoringTask>().Single().ValidityKey(oneDecimalCtx),
-                    @"a blib whose modification text reads differently must not adopt a directory written before");
-                foreach (var task in oneDecimalTasks)
+                var oneDecimalKeys = TaskKeys(oneDecimalConfig);
+                Assert.AreEqual(PreUpgradeBaseKey(oneDecimalConfig) + OspreyTask.DECOY_MODS_TERM,
+                    oneDecimalKeys[PerFileScoringTask.TASK_NAME], @"the masses reach no score of an unannotated blib");
+                foreach (var key in oneDecimalKeys)
                 {
-                    StringAssert.Contains(task.ValidityKey(oneDecimalCtx), OspreyTask.LIBRARY_MODS_TERM, task.Name);
-                    Assert.IsFalse(task.ValidityKey(oneDecimalCtx).Contains(LIBEXT_TERM), task.Name);
+                    Assert.AreEqual(key.Key == SecondPassFdrTask.TASK_NAME, key.Value.Contains(OspreyTask.LIBRARY_MODS_TERM),
+                        key.Key + @": only the task that writes the output blib keys on the modification reader");
+                    Assert.IsFalse(key.Value.Contains(LIBEXT_TERM), key.Key);
                 }
                 Assert.AreEqual("blib_mods:2\n", LibraryLoader.LibraryReaderTerms(oneDecimalConfig));
 
                 var annotatedConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(annotated) };
-                var annotatedTasks = OspreyTasks.Create().Pipeline;
-                var annotatedCtx = new PipelineContext(annotatedConfig, annotatedTasks, null, null, null);
+                var annotatedKeys = TaskKeys(annotatedConfig);
                 Assert.AreEqual(LIBEXT_TERM, OspreyTask.LIBRARY_READER_TERM);
-                Assert.AreEqual(PreUpgradeBaseKey(annotatedConfig) + LIBEXT_TERM,
-                    annotatedTasks.OfType<PerFileScoringTask>().Single().ValidityKey(annotatedCtx));
-                foreach (var task in annotatedTasks)
-                {
-                    StringAssert.Contains(task.ValidityKey(annotatedCtx), LIBEXT_TERM,
-                        task.Name + @" must key on the annotated blib's reader");
-                }
+                Assert.AreEqual(PreUpgradeBaseKey(annotatedConfig) + LIBEXT_TERM + OspreyTask.DECOY_MODS_TERM,
+                    annotatedKeys[PerFileScoringTask.TASK_NAME]);
+                foreach (var key in annotatedKeys)
+                    StringAssert.Contains(key.Value, LIBEXT_TERM, key.Key + @" must key on the annotated blib's reader");
                 Assert.AreEqual("blib_reader:2\n", LibraryLoader.LibraryReaderTerms(annotatedConfig));
             }
             finally
             {
-                foreach (string file in Directory.GetFiles(dir))
-                    BlibLibraryInputTest.TryDeleteFile(file);
+                DeleteTempDirectory(dir);
+            }
+        }
+
+        /// <summary>Every pipeline task's validity key for <paramref name="config"/>, by task name.</summary>
+        private static Dictionary<string, string> TaskKeys(OspreyConfig config)
+        {
+            var tasks = OspreyTasks.Create().Pipeline;
+            var ctx = new PipelineContext(config, tasks, null, null, null);
+            return tasks.ToDictionary(t => t.Name, t => t.ValidityKey(ctx));
+        }
+
+        /// <summary>
+        /// Removes a test's temp folder best effort, so a lingering SQLite handle cannot replace
+        /// the assertion that failed with an IOException from a finally block.
+        /// </summary>
+        private static void DeleteTempDirectory(string dir)
+        {
+            foreach (string file in Directory.GetFiles(dir))
+                BlibLibraryInputTest.TryDeleteFile(file);
+            try
+            {
                 Directory.Delete(dir, true);
+            }
+            catch (IOException)
+            {
+                // A test's temp folder; a lingering handle must not fail the test.
             }
         }
 

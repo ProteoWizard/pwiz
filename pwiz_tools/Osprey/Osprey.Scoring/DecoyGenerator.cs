@@ -131,7 +131,7 @@ namespace pwiz.Osprey.Scoring
             decoy.Modifications = RemapModifications(target.Modifications, positionMapping);
 
             // Recalculate fragment m/z values for the reversed sequence
-            decoy.Fragments = RecalculateFragments(target, positionMapping, decoySequence);
+            decoy.Fragments = RecalculateFragments(target, decoy.Modifications, decoySequence);
 
             // Update protein IDs to indicate decoy
             decoy.ProteinIds = BuildDecoyProteinIds(target.ProteinIds, null);
@@ -537,11 +537,10 @@ namespace pwiz.Osprey.Scoring
                 target.RetentionTime);
             decoy.RtCalibrated = target.RtCalibrated;
             decoy.IsDecoy = true;
-            decoy.Modifications = RemapModificationsStatic(
-                target.Modifications, positionMapping);
+            decoy.Modifications = RemapModifications(target.Modifications, positionMapping);
             decoy.Fragments = omitFragments
                 ? Array.Empty<LibraryFragment>()
-                : RecalculateFragmentsStatic(target, positionMapping, decoySequence);
+                : RecalculateFragments(target, decoy.Modifications, decoySequence);
             // Strings stay un-interned here (this runs in a Parallel.For body);
             // the sequential collection loop interns every decoy afterwards.
             decoy.ProteinIds = BuildDecoyProteinIds(target.ProteinIds, null);
@@ -655,18 +654,10 @@ namespace pwiz.Osprey.Scoring
         }
 
         /// <summary>
-        /// Public static wrapper for <see cref="RemapModifications"/> so that
-        /// AnalysisPipeline can build decoys using a collision-checked sequence
-        /// while reusing the remapping logic.
+        /// The target's modifications moved with their residues to the decoy's positions
+        /// (<paramref name="positionMapping"/>: decoy position -> target position).
         /// </summary>
-        public static Modification[] RemapModificationsStatic(
-            IReadOnlyList<Modification> modifications, int[] positionMapping)
-        {
-            var instance = new DecoyGenerator();
-            return instance.RemapModifications(modifications, positionMapping);
-        }
-
-        private Modification[] RemapModifications(IReadOnlyList<Modification> modifications, int[] positionMapping)
+        private static Modification[] RemapModifications(IReadOnlyList<Modification> modifications, int[] positionMapping)
         {
             // Create reverse mapping: old_pos -> new_pos
             var reverseMap = new Dictionary<int, int>();
@@ -697,26 +688,20 @@ namespace pwiz.Osprey.Scoring
         }
 
         /// <summary>
-        /// Public static wrapper for <see cref="RecalculateFragments"/> so that
-        /// AnalysisPipeline can rebuild fragments for a collision-checked decoy.
+        /// The target's fragments for <paramref name="decoySequence"/>: each b or y ion keeps its
+        /// type, ordinal and intensity and gets the decoy's m/z, computed with
+        /// <paramref name="decoyModifications"/> - the decoy's own list, already remapped by
+        /// <see cref="RemapModifications"/>, so the fragments and the entry carry one set.
         /// </summary>
-        public static LibraryFragment[] RecalculateFragmentsStatic(
-            LibraryEntry target, int[] positionMapping, string decoySequence)
-        {
-            var instance = new DecoyGenerator();
-            return instance.RecalculateFragments(target, positionMapping, decoySequence);
-        }
-
-        private LibraryFragment[] RecalculateFragments(
-            LibraryEntry target, int[] positionMapping, string decoySequence)
+        private static LibraryFragment[] RecalculateFragments(
+            LibraryEntry target, IReadOnlyList<Modification> decoyModifications, string decoySequence)
         {
             int seqLen = target.Sequence.Length;
 
             // Modification mass by decoy position. Modifications that land on one residue add -
             // an N-terminal acetyl and an oxidized first methionine both sit at position 0 - so
             // every decoy ion spanning it carries both, as the target's ions do.
-            var modMasses = PeptideFragmentMass.ModMassesByPosition(
-                RemapModifications(target.Modifications, positionMapping));
+            var modMasses = PeptideFragmentMass.ModMassesByPosition(decoyModifications);
 
             var result = new List<LibraryFragment>();
             foreach (var frag in target.Fragments)

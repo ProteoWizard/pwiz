@@ -67,6 +67,10 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(2, FragmentLadder.SlotOf(0, IonType.Y, 1));
             Assert.AreEqual(3, FragmentLadder.SlotOf(0, IonType.Y, 2));
             Assert.AreEqual(4 * 5 + 2, FragmentLadder.SlotOf(5, IonType.Y, 1));
+            // Ions the ladder has no slot for never land in a b or y column.
+            Assert.AreEqual(-1, FragmentLadder.SlotOf(0, IonType.A, 1));
+            Assert.AreEqual(-1, FragmentLadder.SlotOf(0, IonType.B, 3));
+            Assert.AreEqual(-1, FragmentLadder.SlotOf(0, IonType.Y, 0));
             for (int slot = 0; slot < FragmentLadder.SlotCount(length); slot++)
             {
                 int p = slot / 4;
@@ -148,13 +152,19 @@ namespace pwiz.Osprey.Test
             }
         }
 
-        /// <summary>A b or y ion longer than the peptide has no m/z (y used to index before the sequence).</summary>
+        /// <summary>
+        /// A b or y ion longer than the peptide, or of no residues at all, has no m/z (y used to
+        /// index before the sequence; ordinal 0 gave a bare proton or water).
+        /// </summary>
         private static void AssertOrdinalPastTheEndHasNoMz()
         {
             var noMods = PeptideFragmentMass.ModMassesByPosition(null);
             Assert.IsNull(PeptideFragmentMass.CalculateFragmentMz(IonType.B, 8, 1, @"PEPTIDE", noMods, null));
             Assert.IsNull(PeptideFragmentMass.CalculateFragmentMz(IonType.Y, 8, 1, @"PEPTIDE", noMods, null));
             Assert.IsNotNull(PeptideFragmentMass.CalculateFragmentMz(IonType.Y, 7, 1, @"PEPTIDE", noMods, null));
+            Assert.IsNull(PeptideFragmentMass.CalculateFragmentMz(IonType.B, 0, 1, @"PEPTIDE", noMods, null));
+            Assert.IsNull(PeptideFragmentMass.CalculateFragmentMz(IonType.Y, 0, 1, @"PEPTIDE", noMods, null));
+            Assert.IsNull(PeptideFragmentMass.CalculateFragmentMz(IonType.Y, -1, 1, @"PEPTIDE", noMods, null));
         }
 
         private static void AssertAnnotationsMapOntoSlots()

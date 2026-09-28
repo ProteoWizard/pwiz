@@ -46,20 +46,31 @@ namespace pwiz.Osprey.IO
         private const double MOD_TOLERANCE = 0.01;
         private const double CYSTEINE_RESIDUE_MASS = 103.009185;
 
+        /// <summary>
+        /// Version of the reader that types fragments from <c>RefSpectraPeakAnnotations</c>. The
+        /// <c>.libcache</c> composition term and the task-key term are both built from it, so a
+        /// change to how annotations are read moves both by editing this one value.
+        /// </summary>
+        public const string ANNOTATION_READER_VERSION = @"2";
+
+        /// <summary>
+        /// Version of the residue- and precision-aware modification reader
+        /// (<see cref="IdentifyModification"/>); the cache and key terms are built from it too.
+        /// </summary>
+        public const string MODIFICATION_READER_VERSION = @"2";
+
         // The probes the validity keys and the library cache ask on every task and load, each
         // answered once per version of the file.
         private static readonly FileVersionProbe _annotationProbe = new FileVersionProbe(
             path => WithReadOnlyConnection(path, conn => HasRows(conn, BlibPeakAnnotations.TABLE_NAME)));
         private static readonly FileVersionProbe _modificationProbe = new FileVersionProbe(
             path => WithReadOnlyConnection(path, HasPrecisionSensitiveModificationText));
-        private static readonly FileVersionProbe _stackedModificationProbe = new FileVersionProbe(
-            path => WithReadOnlyConnection(path, HasStackedModificationText));
 
         /// <summary>
         /// Whether the blib at <paramref name="path"/> has <c>RefSpectraPeakAnnotations</c>
         /// rows, which this reader types fragments from (<see cref="BlibPeakAnnotations"/>).
         /// A blib without them is read exactly as it was before the reader did. False for a
-        /// missing or unreadable file.
+        /// missing file; true for one that cannot be read, so the keys fail toward re-running.
         /// </summary>
         public static bool HasPeakAnnotations(string path)
         {
@@ -71,23 +82,12 @@ namespace pwiz.Osprey.IO
         /// <see cref="IdentifyModification"/> became residue- and precision-aware: a value
         /// printed with fewer than two decimals, or one between 100 and 200 Da. A superset of
         /// the libraries whose masses moved - BiblioSpec's one-decimal text is always in it -
-        /// so a blib outside it is read exactly as before. False for a missing or unreadable
-        /// file.
+        /// so a blib outside it is read exactly as before. False for a missing file; true for
+        /// one that cannot be read.
         /// </summary>
         public static bool HasPrecisionSensitiveModifications(string path)
         {
             return _modificationProbe.Ask(path);
-        }
-
-        /// <summary>
-        /// Whether any modified sequence in the blib puts two modifications on one residue: an
-        /// N-terminal one before a modified first residue (<c>[+42.0]M[+16.0]</c>, both at
-        /// position 0 in <see cref="ParseBlibModifications"/>), or two brackets in a row. False
-        /// for a missing or unreadable file.
-        /// </summary>
-        public static bool HasStackedModifications(string path)
-        {
-            return _stackedModificationProbe.Ask(path);
         }
 
         /// <summary>
@@ -178,33 +178,6 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Streams the modified sequences that could stack two modifications on one residue -
-        /// those opening with a bracket, or holding two in a row - and stops at the first that
-        /// does.
-        /// </summary>
-        private static bool HasStackedModificationText(SQLiteConnection conn)
-        {
-            if (!TableExists(conn, @"RefSpectra"))
-                return false;
-            using (var cmd = conn.CreateCommand())
-            {
-                cmd.CommandText = @"SELECT peptideModSeq FROM RefSpectra WHERE substr(peptideModSeq, 1, 1) = '[' OR instr(peptideModSeq, '][') > 0";
-                using (var reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        if (!reader.IsDBNull(0) &&
-                            PeptideFragmentMass.HasStackedModifications(ParseBlibModifications(reader.GetString(0))))
-                        {
-                            return true;
-                        }
-                    }
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
         /// Whether a modified sequence holds a bracket value printed with fewer than two
         /// decimals or lying between 100 and 200 Da - the two cases the residue- and
         /// precision-aware <see cref="IdentifyModification"/> can read differently.
@@ -285,9 +258,13 @@ namespace pwiz.Osprey.IO
                             fragments = DecodeBlibPeaks(peakMzBlob, peakIntBlob, numPeaks).ToArray();
                         else
                             fragments = Array.Empty<LibraryFragment>();
-                        var rows = annotations?.RowsFor(id);
-                        if (rows != null && rows.Count > 0)
-                            BlibPeakAnnotations.Apply(peptideSeq, modifications, fragments, rows, annotationStats);
+                        if (annotations != null)
+                        {
+                            annotationStats.NSpectra++;
+                            var rows = annotations.RowsFor(id);
+                            if (rows.Count > 0)
+                                BlibPeakAnnotations.Apply(peptideSeq, modifications, fragments, rows, annotationStats);
+                        }
 
                         var entry = new LibraryEntry((uint)id,
                             interner.Intern(peptideSeq), interner.Intern(peptideModSeq),
@@ -711,17 +688,34 @@ namespace pwiz.Osprey.IO
 
             public AnnotationCursor(SQLiteConnection conn)
             {
-                // RefSpectraID, id - not peakIndex as well: BiblioSpec's index on RefSpectraID
-                // (id is the rowid) serves this order with no sort, where adding peakIndex made
-                // SQLite sort each spectrum's rows. Apply picks per peak and breaks ties by the
-                // first row, which id order still gives.
+                // Ordered by RefSpectraID, rowid - not peakIndex as well: BiblioSpec's index on
+                // RefSpectraID serves this order with no sort, where adding peakIndex made SQLite
+                // sort each spectrum's rows. Apply picks per peak and breaks ties by the first
+                // row, which rowid order still gives; rowid rather than id, because a table
+                // written without the id column (Skyline's schema comment shows none) reads the
+                // same. The CASE columns hand back only integers, so a malformed row - a NULL or
+                // text RefSpectraID, a text peakIndex or charge - is passed over or counted as
+                // rejected instead of failing the load.
                 _command = conn.CreateCommand();
-                _command.CommandText = @"
-                    SELECT RefSpectraID, peakIndex, name, charge
-                    FROM RefSpectraPeakAnnotations
-                    ORDER BY RefSpectraID, id";
-                _reader = _command.ExecuteReader();
-                _hasRow = _reader.Read();
+                try
+                {
+                    _command.CommandText = @"
+                        SELECT RefSpectraID,
+                               CASE typeof(peakIndex) WHEN 'integer' THEN peakIndex ELSE -1 END,
+                               CAST(name AS TEXT),
+                               CASE typeof(charge) WHEN 'integer' THEN charge ELSE 0 END
+                        FROM RefSpectraPeakAnnotations
+                        WHERE typeof(RefSpectraID) = 'integer'
+                        ORDER BY RefSpectraID, rowid";
+                    _reader = _command.ExecuteReader();
+                    _hasRow = _reader.Read();
+                }
+                catch (Exception)
+                {
+                    _reader?.Dispose();
+                    _command.Dispose();
+                    throw;
+                }
             }
 
             /// <summary>
@@ -737,9 +731,9 @@ namespace pwiz.Osprey.IO
                 {
                     _rows.Add(new BlibAnnotationRow
                     {
-                        PeakIndex = _reader.IsDBNull(1) ? -1 : _reader.GetInt32(1),
+                        PeakIndex = ReadInt(1, -1),
                         Name = _reader.IsDBNull(2) ? null : _reader.GetString(2),
-                        Charge = _reader.IsDBNull(3) ? 0 : _reader.GetInt32(3),
+                        Charge = ReadInt(3, 0),
                     });
                     _hasRow = _reader.Read();
                 }
@@ -750,6 +744,16 @@ namespace pwiz.Osprey.IO
             {
                 _reader.Dispose();
                 _command.Dispose();
+            }
+
+            /// <summary>
+            /// An integer column of the current row, or <paramref name="fallback"/> for a value
+            /// outside the int range, which no peak index or charge can take.
+            /// </summary>
+            private int ReadInt(int ordinal, int fallback)
+            {
+                long value = _reader.GetInt64(ordinal);
+                return value >= int.MinValue && value <= int.MaxValue ? (int)value : fallback;
             }
         }
 

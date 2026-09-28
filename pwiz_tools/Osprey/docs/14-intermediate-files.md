@@ -615,6 +615,19 @@ lever that reaches every task: the pick decides which peak a precursor's row des
 back in Stage 4, and everything downstream inherits that choice. Putting it in the base
 also means a task added later carries it without having to know.
 
+Two library terms sit in the base for the same reason, and one in SecondPassFDR only
+([13](13-blib-output-schema.md) has the reader details):
+
+| Term | Where | When | Without it |
+|---|---|---|---|
+| `;libext=ann2` | every task | a blib whose `RefSpectraPeakAnnotations` has rows (a blib that cannot be read counts as annotated) | a directory scored before fragments were typed from annotations is adopted |
+| `;decoymods=2` | every task | Osprey generates the decoys | a directory whose decoys dropped one of two modifications on a residue is adopted; the build stamp already refuses it, so this matters under `OSPREY_VERSION_OVERRIDE` |
+| `;libmods=2` | SecondPassFDR | a blib whose modification text the precision-aware reader reads differently | the output blib keeps the old reader's modification masses |
+
+The two blib terms carry `BlibLoader.ANNOTATION_READER_VERSION` and
+`MODIFICATION_READER_VERSION`, as the `.libcache` composition terms `blib_reader:` and
+`blib_mods:` do, so one edit moves a reader's key term and cache term together.
+
 Read that table as a worked example of P15's asymmetry. Every row was added after an
 under-inclusive key reused something it should not have, and none of them cost more than
 a recompute if they were unnecessary.

@@ -61,11 +61,11 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Library fragment annotations: {0:N0} spectra, {1:N0} peaks typed, {2:N0} peaks without an annotation, {3:N0} annotations with an unreadable name, {4:N0} annotations of an a, c, x or z ion, which cannot be checked against its peak, {5:N0} annotations naming a peak or an ion the spectrum does not have, {6:N0} annotations whose m/z disagrees with the peak.
+        ///   Looks up a localized string similar to Library fragment annotations: {0:N0} of {1:N0} spectra typed, {2:N0} peaks typed, {3:N0} peaks without an annotation, {4:N0} annotations with an unreadable name, {5:N0} annotations of an a, c, x or z ion, which cannot be checked against its peak, {6:N0} annotations naming a peak or an ion the spectrum does not have, {7:N0} annotations whose m/z disagrees with the peak.
         /// </summary>
-        public static string BlibAnnotationStats_Summary_Library_fragment_annotations___0_N0__spectra___1_N0__peaks_typed {
+        public static string BlibAnnotationStats_Summary_Library_fragment_annotations___0_N0__of__1_N0__spectra_typed {
             get {
-                return ResourceManager.GetString("BlibAnnotationStats_Summary_Library_fragment_annotations___0_N0__spectra___1_N0__peaks_typed", resourceCulture);
+                return ResourceManager.GetString("BlibAnnotationStats_Summary_Library_fragment_annotations___0_N0__of__1_N0__spectra_typed", resourceCulture);
             }
         }
         

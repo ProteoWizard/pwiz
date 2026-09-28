@@ -50,9 +50,15 @@ namespace pwiz.Osprey.Core
             return length < 2 ? 0 : TYPES_PER_POSITION * (length - 1);
         }
 
-        /// <summary>The slot index of an ion (see the class summary for the layout).</summary>
+        /// <summary>
+        /// The slot index of an ion (see the class summary for the layout), or -1 for an ion the
+        /// ladder has no slot for: another ion type, or a charge outside 1 to
+        /// <see cref="MAX_FRAGMENT_CHARGE"/>.
+        /// </summary>
         public static int SlotOf(int position, IonType ionType, int fragmentCharge)
         {
+            if ((ionType != IonType.B && ionType != IonType.Y) || fragmentCharge < 1 || fragmentCharge > MAX_FRAGMENT_CHARGE)
+                return -1;
             return position * TYPES_PER_POSITION + TypeIndex(ionType, fragmentCharge);
         }
 
