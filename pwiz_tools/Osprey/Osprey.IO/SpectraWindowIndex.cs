@@ -251,8 +251,7 @@ namespace pwiz.Osprey.IO
                 {
                     if (fs.Position != offset)
                         throw new InvalidDataException(string.Format(
-                            "Spectra cache window is not contiguous (expected record at " +
-                            "{0} but stream is at {1}).", offset, fs.Position));
+                            OspreyIOResources.SpectraWindowIndex_LoadWindow_The_spectra_cache_is_damaged__a_record_is_not_where_its_index_says__expected_byte__0___, offset, fs.Position));
                     result.Add(SpectraCache.ReadMs2Record(r));
                 }
             }

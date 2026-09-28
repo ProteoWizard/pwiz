@@ -53,7 +53,7 @@ namespace pwiz.Osprey.ML
         {
             if (data.Length != rows * cols)
                 throw new ArgumentException(
-                    string.Format("data length {0} does not match shape ({1}, {2})", data.Length, rows, cols));
+                    string.Format(@"data length {0} does not match shape ({1}, {2})", data.Length, rows, cols));
             _data = (double[])data.Clone();
             _rows = rows;
             _cols = cols;
@@ -69,7 +69,7 @@ namespace pwiz.Osprey.ML
         {
             if (data.Length != rows * cols)
                 throw new ArgumentException(
-                    string.Format("data length {0} does not match shape ({1}, {2})", data.Length, rows, cols));
+                    string.Format(@"data length {0} does not match shape ({1}, {2})", data.Length, rows, cols));
             return new Matrix(data, rows, cols, takeOwnership: true);
         }
 
@@ -86,7 +86,7 @@ namespace pwiz.Osprey.ML
             int need = rows * cols;
             if (data.Length < need)
                 throw new ArgumentException(
-                    string.Format("data length {0} < required prefix {1} for shape ({2}, {3})",
+                    string.Format(@"data length {0} < required prefix {1} for shape ({2}, {3})",
                         data.Length, need, rows, cols));
             return new Matrix(data, rows, cols, takeOwnership: true);
         }
@@ -140,7 +140,7 @@ namespace pwiz.Osprey.ML
             for (int r = 0; r < rows.Length; r++)
             {
                 if (rows[r].Length != cols)
-                    throw new ArgumentException("All rows must have the same number of columns");
+                    throw new ArgumentException(@"All rows must have the same number of columns");
                 Array.Copy(rows[r], 0, data, r * cols, cols);
             }
             return new Matrix(data, rows.Length, cols);
@@ -169,7 +169,7 @@ namespace pwiz.Osprey.ML
         {
             if (row < 0 || row >= _rows || col < 0 || col >= _cols)
                 throw new IndexOutOfRangeException(
-                    string.Format("Index ({0}, {1}) out of bounds for shape ({2}, {3})", row, col, _rows, _cols));
+                    string.Format(@"Index ({0}, {1}) out of bounds for shape ({2}, {3})", row, col, _rows, _cols));
             return _data[_cols * row + col];
         }
 
@@ -180,7 +180,7 @@ namespace pwiz.Osprey.ML
         {
             if (row < 0 || row >= _rows || col < 0 || col >= _cols)
                 throw new IndexOutOfRangeException(
-                    string.Format("Index ({0}, {1}) out of bounds for shape ({2}, {3})", row, col, _rows, _cols));
+                    string.Format(@"Index ({0}, {1}) out of bounds for shape ({2}, {3})", row, col, _rows, _cols));
             _data[_cols * row + col] = value;
         }
 
@@ -236,7 +236,7 @@ namespace pwiz.Osprey.ML
         {
             if (lhs._cols != rhs._rows)
                 throw new ArgumentException(
-                    string.Format("Shape mismatch: ({0},{1}) x ({2},{3})",
+                    string.Format(@"Shape mismatch: ({0},{1}) x ({2},{3})",
                         lhs._rows, lhs._cols, rhs._rows, rhs._cols));
 
             var result = new double[lhs._rows * rhs._cols];
@@ -260,7 +260,7 @@ namespace pwiz.Osprey.ML
         {
             if (m._cols != v.Length)
                 throw new ArgumentException(
-                    string.Format("Shape mismatch: ({0},{1}) x ({2})", m._rows, m._cols, v.Length));
+                    string.Format(@"Shape mismatch: ({0},{1}) x ({2})", m._rows, m._cols, v.Length));
 
             var result = new double[m._rows];
             for (int row = 0; row < m._rows; row++)
@@ -299,7 +299,7 @@ namespace pwiz.Osprey.ML
         {
             if (rowStart < 0 || rowEnd > _rows || rowStart > rowEnd)
                 throw new ArgumentOutOfRangeException(
-                    string.Format("Slice [{0}, {1}) out of bounds for {2} rows", rowStart, rowEnd, _rows));
+                    string.Format(@"Slice [{0}, {1}) out of bounds for {2} rows", rowStart, rowEnd, _rows));
             int count = rowEnd - rowStart;
             var data = new double[count * _cols];
             Array.Copy(_data, rowStart * _cols, data, 0, count * _cols);
@@ -373,7 +373,7 @@ namespace pwiz.Osprey.ML
         public void AddInPlace(Matrix rhs)
         {
             if (_rows != rhs._rows || _cols != rhs._cols)
-                throw new ArgumentException("Matrices must have equal shape to add");
+                throw new ArgumentException(@"Matrices must have equal shape to add");
             // Bound the loop by active rows*cols, not _data.Length, so
             // matrices wrapped via WrapPrefixNoClone (pool-backed,
             // possibly oversized) don't touch the suffix.

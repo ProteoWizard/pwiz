@@ -107,7 +107,8 @@ namespace pwiz.Osprey.Tasks
             {
                 var result = ParquetScoreCache.StreamReconciledScoresParquet(
                     originalPath, reconciledPath, overlayByIndex, gapFill,
-                    metadata, libraryById, fileName, keepIdentities, @"  ", logWarning);
+                    metadata, libraryById, fileName, keepIdentities, PerFileRescoreTask.TASK_NAME,
+                    TextUtil.GetIndentation(1), logWarning);
                 nReplaced = result.NReplaced;
                 nAppended = result.NAppended;
                 origRowCount = result.OrigRowCount;
@@ -120,7 +121,7 @@ namespace pwiz.Osprey.Tasks
             catch (Exception ex) when (!(ex is InvalidOperationException))
             {
                 logWarning(string.Format(
-                    "Could not write the re-scored intermediate file {1} from {0}: {2}",
+                    OspreyTasksResources.ReconciledParquetWriter_Write_Could_not_write_the_re_scored_intermediate_file__1__from__0____2_,
                     originalPath, reconciledPath, ex.Message));
                 return false;
             }
@@ -128,8 +129,8 @@ namespace pwiz.Osprey.Tasks
             // Reports what was WRITTEN against what was read. The two differ now that the
             // compacted-away rows are dropped, and the ratio is the whole point of the
             // artifact - a log that still printed original+appended would hide it.
-            logInfo(string.Format(
-                "  Wrote {1:N0} precursor candidate peaks for {0}: {2:N0} re-scored and {3:N0} missing peaks added, from {4:N0} first-pass peaks",
+            logInfo(TextUtil.GetIndentation(1) + string.Format(
+                OspreyTasksResources.ReconciledParquetWriter_Write___Wrote__1__precursor_candidate_peaks_for__0____2__re_scored_and__3__missing_peaks_added__,
                 fileName, nWritten, nReplaced, nAppended, origRowCount));
             return true;
         }

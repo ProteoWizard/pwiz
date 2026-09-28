@@ -24,4 +24,30 @@
     <ProjectReference Include="..\Osprey.Tasks\Osprey.Tasks.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- User-facing text. The Designer is checked in; VS regenerates it when the .resx is saved. -->
+    <Compile Update="OspreyResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>OspreyResources.resx</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="OspreyResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>OspreyResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- User-facing text. The Designer is checked in; VS regenerates it when the .resx is saved. -->
+    <Compile Update="OspreyCommandArgUsage.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>OspreyCommandArgUsage.resx</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="OspreyCommandArgUsage.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>OspreyCommandArgUsage.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
 </Project>

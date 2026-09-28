@@ -35,8 +35,12 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public static class LibraryCache
     {
+        public const string EXT = @".libcache";
+
+        // ReSharper disable LocalizableElement
         /// <summary>Magic bytes at the start of every cache file.</summary>
         private static readonly byte[] MAGIC = Encoding.ASCII.GetBytes("OSPRLBR\0");
+        // ReSharper restore LocalizableElement
 
         /// <summary>
         /// Current cache format version. v2 stamps the source library's
@@ -102,7 +106,7 @@ namespace pwiz.Osprey.IO
                     // The cold path's tail: multi-GB of BinaryWriter output over every entry,
                     // silent until "Saved library cache" appears. Guarded so the ~12 round-trip
                     // unit tests and the regression's staged copies stay quiet.
-                    var progress = new ProgressReporter(@"Writing library cache", entries.Count,
+                    var progress = new ProgressReporter(OspreyIOResources.LibraryCacheStatus_SaveCache_Writing_library_cache, entries.Count,
                             string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
                     long nWritten = 0;
 
@@ -272,7 +276,7 @@ namespace pwiz.Osprey.IO
                 // caller logs nothing until it finishes (LibraryLoader announces only the
                 // source-parse path), so without this the console looks hung on the fast path.
                 using (var progress = new ProgressReporter(
-                    string.Format("Loading library cache ({0:N0} precursors)", count), (long)count,
+                    string.Format(OspreyIOResources.LibraryCacheStatus_LoadCache_Loading_library_cache___0__precursors_, count), (long)count,
                     string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
                 {
                     for (ulong idx = 0; idx < count; idx++)
@@ -318,10 +322,7 @@ namespace pwiz.Osprey.IO
                         // or a lean OmitFragments load (issue #4355 / PR #4434 review). A stale cache
                         // built before this guard rebuilds from source, which fails fast there too.
                         if (nFrags == 0)
-                            throw new InvalidDataException(string.Format(
-                                "Library entry {0} ({1}) has no fragment peaks; peak-less entries support " +
-                                "BiblioSpec MS1 feature finding and are not valid for DIA search.",
-                                id, modifiedSequence));
+                            throw LibraryLoader.PeaklessPrecursorException(id, modifiedSequence);
                         // Per ENTRY, not per load. `omitFragments` drops every entry's peaks;
                         // `retainFragmentsFor` keeps them only for the base_ids a later stage will
                         // actually score, and skips the rest at the same cost SkipFragment already
@@ -536,7 +537,7 @@ namespace pwiz.Osprey.IO
                     return (NeutralLossCode.Custom, mass);
                 default:
                     throw new InvalidDataException(string.Format(
-                        "Unknown neutral loss tag: {0}", tag));
+                        OspreyIOResources.LibraryCacheStatus_static_The_library_cache_is_damaged__unknown_neutral_loss_tag__0____Delete_it_to_rebuild_it_from_, tag));
             }
         }
 

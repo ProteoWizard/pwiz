@@ -42,7 +42,15 @@ namespace pwiz.Osprey.Core
     {
         private static string[] LOCALIZED_VALUES
         {
-            get { return new[] { "DIA-NN TSV", "BiblioSpec", "Skyline document" }; }
+            get
+            {
+                return new[]
+                {
+                    OspreyCoreResources.LibraryFormatExtension_LOCALIZED_VALUES_DIA_NN_TSV,
+                    OspreyCoreResources.LibraryFormatExtension_LOCALIZED_VALUES_BiblioSpec,
+                    OspreyCoreResources.LibraryFormatExtension_LOCALIZED_VALUES_Skyline_document
+                };
+            }
         }
 
         public static string GetLocalizedString(this LibraryFormat val)
@@ -57,6 +65,10 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public class LibrarySource
     {
+        public const string EXT_BLIB = @".blib";
+        public const string EXT_ELIB = @".elib";
+        public const string EXT_SKY = @".sky";
+
         /// <summary>The detected or specified library format.</summary>
         public LibraryFormat Format { get; }
 
@@ -80,13 +92,12 @@ namespace pwiz.Osprey.Core
             string ext = (System.IO.Path.GetExtension(path) ?? string.Empty).ToLowerInvariant();
             switch (ext)
             {
-                case ".blib":
+                case EXT_BLIB:
                     return new LibrarySource(LibraryFormat.Blib, path);
-                case ".elib":
+                case EXT_ELIB:
                     throw new System.NotSupportedException(
-                        "EncyclopeDIA .elib spectral libraries are no longer supported; " +
-                        "convert the library to DIA-NN TSV (.tsv) or .blib.");
-                case ".sky":
+                        OspreyCoreResources.LibrarySource_FromPath_EncyclopeDIA__elib_spectral_libraries_are_no_longer_supported__convert_the_library_to_DIA_);
+                case EXT_SKY:
                     return new LibrarySource(LibraryFormat.SkylineDocument, path);
                 default:
                     return new LibrarySource(LibraryFormat.DiannTsv, path);

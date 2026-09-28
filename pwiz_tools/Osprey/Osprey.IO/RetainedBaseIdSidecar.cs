@@ -74,6 +74,8 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public static class RetainedBaseIdSidecar
     {
+        public const string EXT = @".retained_base_ids.bin";
+
         // 8-byte magic. ASCII "OSPRYRET".
         private static readonly byte[] Magic =
             { (byte)'O', (byte)'S', (byte)'P', (byte)'R', (byte)'Y', (byte)'R', (byte)'E', (byte)'T' };
@@ -120,7 +122,7 @@ namespace pwiz.Osprey.IO
             string stem = Path.GetFileNameWithoutExtension(outputBlib);
             if (string.IsNullOrEmpty(stem))
                 return null;
-            string filename = string.Format("{0}.1st-pass.retained_base_ids.bin", stem);
+            string filename = string.Format(@"{0}.{1}{2}", stem, FdrScoresSidecar.LABEL_FIRST_PASS, EXT);
             string parent = ArtifactPaths.ResolveOutputDir(siblingArtifactPath);
             return string.IsNullOrEmpty(parent) ? filename : Path.Combine(parent, filename);
         }

@@ -150,10 +150,10 @@ namespace pwiz.Osprey.Tasks
                     var hit = SpectraWindowIndex.BuildFromCache(cachePath, inputFile);
                     if (hit != null)
                     {
-                        ctx.LogInfo(string.Format("Streaming spectra from cache: {0}", cachePath));
+                        ctx.LogInfo(string.Format(OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Streaming_spectra_from_cache___0_, cachePath));
                         return hit;
                     }
-                    ctx.LogInfo("Spectra cache stale or invalid; re-parsing the input.");
+                    ctx.LogInfo(OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Spectra_cache_stale_or_invalid__re_parsing_the_input_);
                 }
                 catch (Exception ex)
                 {
@@ -163,7 +163,7 @@ namespace pwiz.Osprey.Tasks
                     // LoadSpectra fallback. Only the miss-path re-index below stays a hard
                     // error, since that indexes a cache we just wrote.
                     ctx.LogWarning(string.Format(
-                        "Failed to index spectra cache: {0}. Re-parsing the input.", ex.Message));
+                        OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Failed_to_index_spectra_cache___0___Re_parsing_the_input_, ex.Message));
                 }
             }
 
@@ -183,7 +183,7 @@ namespace pwiz.Osprey.Tasks
             if (!File.Exists(inputFile) && !Directory.Exists(inputFile))
             {
                 throw new InvalidDataException(string.Format(
-                    @"Spectra cache '{0}' is not usable and cannot be rebuilt because the source '{1}' is missing. Restore the source and re-run.",
+                    OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_The_spectra_cache___0___cannot_be_used_and_cannot_be_rebuilt__because_its_source___1___is_,
                     cachePath, inputFile));
             }
             SpectrumFileResult mzmlResult;
@@ -218,13 +218,13 @@ namespace pwiz.Osprey.Tasks
                 {
                     cacheBytes = 0;
                 }
-                ctx.LogInfo(string.Format("Saved spectra cache ({0:N0} MS2 + {1:N0} MS1, {2:F2} GB) to '{3}'",
+                ctx.LogInfo(string.Format(OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Saved_spectra_cache___0__MS2____1__MS1___2__GB__to___3__,
                     mzmlResult.Ms2Spectra.Count, mzmlResult.Ms1Spectra.Count,
                     cacheBytes / 1024.0 / 1024.0 / 1024.0, cachePath));
             }
             catch (Exception ex)
             {
-                ctx.LogWarning(string.Format("Failed to save spectra cache: {0}", ex.Message));
+                ctx.LogWarning(string.Format(OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Failed_to_save_spectra_cache___0_, ex.Message));
             }
 
             // Index the just-written cache and stream from it (the parsed MS2 list drops when
@@ -244,9 +244,7 @@ namespace pwiz.Osprey.Tasks
             }
             if (index == null)
                 throw new IOException(string.Format(
-                    "Could not index the spectra cache for '{0}'. Per-file scoring streams MS2 from " +
-                    "'{1}'; ensure that directory is writable (the .scores.parquet and .calibration.json " +
-                    "outputs are written to the same place).", inputFile, cachePath), indexError);
+                    OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Could_not_index_the_spectra_cache_for___0____Per_file_scoring_reads_MS_MS_spectra_from___, inputFile, cachePath), indexError);
             return index;
         }
 
@@ -300,8 +298,8 @@ namespace pwiz.Osprey.Tasks
             if (perFileParquetPaths != null
                 && perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
             {
-                string parent = Path.GetDirectoryName(parquetPath) ?? ".";
-                return Path.Combine(parent, fileName + ".mzML");
+                string parent = Path.GetDirectoryName(parquetPath) ?? @".";
+                return Path.Combine(parent, fileName + SpectrumFileReader.EXT_MZML);
             }
             return null;
         }
@@ -843,13 +841,10 @@ namespace pwiz.Osprey.Tasks
             // is resident again - fix that rather than allowing it.
             string supplied = string.IsNullOrWhiteSpace(allowUnfixedResident)
                 ? string.Empty
-                : string.Format(" OSPREY_ALLOW_UNFIXED_RESIDENT is set to '{0}', but no setting " +
-                                "allows this.", allowUnfixedResident);
+                : string.Format(@" OSPREY_ALLOW_UNFIXED_RESIDENT is set to '{0}', but no setting " +
+                                @"allows this.", allowUnfixedResident);
             return string.Format(
-                "Stopped before holding the first-pass precursor candidates of every run in memory " +
-                "at once, which grows with the number of runs (about 0.1 GB per run). This analysis " +
-                "can be processed one run at a time, so reaching this point is an Osprey defect; " +
-                "please report it.{0}",
+                OspreyTasksResources.ScoringTaskShared_AllRunsBundleGuardError_Stopped_before_holding_the_first_pass_precursor_candidates_of_every_run_in_memory_at_once_,
                 supplied);
         }
 
@@ -899,8 +894,8 @@ namespace pwiz.Osprey.Tasks
             // ONE remedy, and it comes from the inner error.
             // Continuing would fold every run as empty and write an empty library.
             throw new InvalidDataException(string.Format(
-                "{0} Stopping, because continuing would write an empty library.",
-                error ?? "The list of precursor candidates kept for cross-run reconciliation could not be read."));
+                OspreyTasksResources.ScoringTaskShared_ReadRetainedBaseIdsOrFail__0__Stopping__because_continuing_would_write_an_empty_library_,
+                error ?? OspreyTasksResources.ScoringTaskShared_ReadRetainedBaseIdsOrFail_The_list_of_precursor_candidates_kept_for_cross_run_reconciliation_could_not_be_read_));
         }
 
         /// <summary>
@@ -923,8 +918,7 @@ namespace pwiz.Osprey.Tasks
             if (string.IsNullOrEmpty(path))
             {
                 error =
-                    "No output .blib was given, so the list of precursor candidates kept for " +
-                    "cross-run reconciliation cannot be found: it is named after the output .blib.";
+                    OspreyTasksResources.ScoringTaskShared_ReadRetainedBaseIds_No_output__blib_was_given__so_the_list_of_precursor_candidates_kept_for_cross_run_;
                 return null;
             }
             var retained = RetainedBaseIdSidecar.Read(path);
@@ -935,9 +929,7 @@ namespace pwiz.Osprey.Tasks
                 // declares this file in neither Outputs nor its ValidityKey, so re-running it over
                 // a complete analysis reports its outputs valid and writes nothing.
                 error = string.Format(
-                    "The list of precursor candidates kept for cross-run reconciliation is missing " +
-                    "or unreadable: {0}. To rebuild it, delete this analysis's " +
-                    "*.FirstPassFDR.osprey.task files and run the first pass again.",
+                    OspreyTasksResources.ScoringTaskShared_ReadRetainedBaseIds_The_list_of_precursor_candidates_kept_for_cross_run_reconciliation_is_missing_or_,
                     path);
                 return null;
             }
@@ -981,13 +973,13 @@ namespace pwiz.Osprey.Tasks
             int passingBaseIds, int? droppedActions)
         {
             ctx.LogInfo(string.Format(IsSingleFileSearch(ctx.Config)
-                    ? "Kept {0:N0} of {1:N0} precursor candidates for re-scoring and second-pass FDR."
-                    : "Kept {0:N0} of {1:N0} precursor candidates for cross-run reconciliation.",
+                    ? OspreyTasksResources.ScoringTaskShared_LogCompaction_Kept__0__of__1__precursor_candidates_for_re_scoring_and_second_pass_FDR_
+                    : OspreyTasksResources.ScoringTaskShared_LogCompaction_Kept__0__of__1__precursor_candidates_for_cross_run_reconciliation_,
                 after, before));
             ctx.LogVerbose(droppedActions.HasValue
-                ? string.Format("  {0:N0} passing target-decoy pairs; {1:N0} planned peak re-picks and boundary imputations dropped",
+                ? TextUtil.GetIndentation(1) + string.Format(OspreyTasksResources.ScoringTaskShared_LogCompaction____0__passing_target_decoy_pairs___1__planned_peak_re_picks_and_boundary_imputations_,
                     passingBaseIds, droppedActions.Value)
-                : string.Format("  {0:N0} passing target-decoy pairs", passingBaseIds));
+                : TextUtil.GetIndentation(1) + string.Format(OspreyTasksResources.ScoringTaskShared_LogCompaction____0__passing_target_decoy_pairs, passingBaseIds));
         }
 
         /// <summary>

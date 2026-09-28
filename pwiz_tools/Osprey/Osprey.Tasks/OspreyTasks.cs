@@ -89,7 +89,7 @@ namespace pwiz.Osprey.Tasks
             foreach (var task in all.Where(t => !pipeline.Contains(t)))
             {
                 if (!pipelineBySelector.ContainsKey(task))
-                    throw new InvalidOperationException(string.Format(@"--task {0} is not a stage and names no pipeline to run.", task.Name));
+                    throw new InvalidOperationException(string.Format(@"{0} is not a stage and names no pipeline to run.", OspreyArgNames.TaskText(task.Name)));
             }
             // A selector's pipeline is built from THIS set's instances - the membership rule
             // compares by reference, so a fresh instance in a declared pipeline would be a
@@ -98,9 +98,9 @@ namespace pwiz.Osprey.Tasks
             foreach (var kv in pipelineBySelector)
             {
                 if (!all.Contains(kv.Key) || pipeline.Contains(kv.Key))
-                    throw new InvalidOperationException(string.Format(@"--task {0} declares a pipeline but is a stage or is not listed.", kv.Key.Name));
+                    throw new InvalidOperationException(string.Format(@"{0} declares a pipeline but is a stage or is not listed.", OspreyArgNames.TaskText(kv.Key.Name)));
                 if (kv.Value.Any(t => !all.Contains(t)))
-                    throw new InvalidOperationException(string.Format(@"--task {0}'s pipeline uses a task instance that is not in the task list.", kv.Key.Name));
+                    throw new InvalidOperationException(string.Format(@"{0}'s pipeline uses a task instance that is not in the task list.", OspreyArgNames.TaskText(kv.Key.Name)));
             }
         }
 

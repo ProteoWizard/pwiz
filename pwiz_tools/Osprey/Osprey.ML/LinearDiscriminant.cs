@@ -53,7 +53,7 @@ namespace pwiz.Osprey.ML
         public static LinearDiscriminant FromWeights(double[] weights)
         {
             if (weights == null || weights.Length == 0)
-                throw new ArgumentException("Weights vector cannot be empty");
+                throw new ArgumentException(@"Weights vector cannot be empty");
             return new LinearDiscriminant((double[])weights.Clone());
         }
 
@@ -66,7 +66,7 @@ namespace pwiz.Osprey.ML
         public static LinearDiscriminant Fit(Matrix features, bool[] decoy)
         {
             if (features.Rows != decoy.Length)
-                throw new ArgumentException("Feature rows must match label count");
+                throw new ArgumentException(@"Feature rows must match label count");
 
             bool hasDecoy = false;
             bool hasTarget = false;
@@ -80,7 +80,7 @@ namespace pwiz.Osprey.ML
                     break;
             }
             if (!hasDecoy || !hasTarget)
-                throw new ArgumentException("Labels must contain at least one decoy and one target");
+                throw new ArgumentException(@"Labels must contain at least one decoy and one target");
 
             // Calculate overall mean
             var xBar = features.Mean();

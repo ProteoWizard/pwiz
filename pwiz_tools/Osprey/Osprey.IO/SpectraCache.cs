@@ -64,6 +64,8 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public static class SpectraCache
     {
+        public const string EXT = @".spectra.bin";
+
         private static readonly byte[] MAGIC = new byte[] {
             (byte)'O', (byte)'S', (byte)'P', (byte)'R',
             (byte)'S', (byte)'P', (byte)'C', 0
@@ -179,7 +181,7 @@ namespace pwiz.Osprey.IO
                     // showed up only as an unexplained gap between the reader's "100%" and the
                     // "Loaded N MS1 and M MS/MS spectra" line - long enough that a run looked
                     // hung, with nothing in the log naming the file being written.
-                    using (var progress = new ProgressReporter(@"Writing spectra cache", nMs2,
+                    using (var progress = new ProgressReporter(OspreyIOResources.SpectraCache_SaveSpectraCache_Writing_spectra_cache, nMs2,
                         string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
                     {
                         long nWritten = 0;
@@ -260,8 +262,7 @@ namespace pwiz.Osprey.IO
                 {
                     if (fs.Position != index.RecordOffsets[i])
                         throw new InvalidDataException(string.Format(
-                            "Spectra cache MS2 body is not contiguous in offset order " +
-                            "(expected record at {0} but stream is at {1}).",
+                            OspreyIOResources.SpectraCache_LoadSpectraCache_The_spectra_cache_is_damaged__a_record_is_not_where_its_index_says__expected_byte__0___,
                             index.RecordOffsets[i], fs.Position));
                     ms2[i] = ReadMs2Record(r);
                 }
@@ -285,7 +286,7 @@ namespace pwiz.Osprey.IO
             // result Path.ChangeExtension produced); only the directory is
             // redirected by ArtifactPaths (beside the data file by default, else
             // the configured cache/output dir).
-            string fileName = Path.GetFileNameWithoutExtension(inputFile) + ".spectra.bin";
+            string fileName = Path.GetFileNameWithoutExtension(inputFile) + EXT;
             return Path.Combine(ArtifactPaths.ResolveCacheDir(inputFile), fileName);
         }
 
@@ -387,7 +388,7 @@ namespace pwiz.Osprey.IO
         internal static SpectraCacheIndex ReadIndex(FileStream fs, BinaryReader r, uint nMs2)
         {
             if (fs.Length < FOOTER_BYTES)
-                throw new InvalidDataException("Spectra cache too small to contain a v4 footer.");
+                throw new InvalidDataException(OspreyIOResources.SpectraCache_ReadIndex_The_spectra_cache_is_damaged__it_is_too_small_to_hold_its_footer__Delete_the__spectra_bin_);
 
             fs.Seek(-FOOTER_BYTES, SeekOrigin.End);
             long ms1SectionOffset = r.ReadInt64();
@@ -584,7 +585,7 @@ namespace pwiz.Osprey.IO
             int byteCount = count * 8;
             byte[] bytes = r.ReadBytes(byteCount);
             if (bytes.Length != byteCount)
-                throw new InvalidDataException("Unexpected end of spectra cache while reading double array.");
+                throw new InvalidDataException(OspreyIOResources.SpectraCache_ReadDoubleArray_The_spectra_cache_is_damaged__it_ends_in_the_middle_of_a_record__Delete_the__spectra_bin_);
             double[] result = new double[count];
             Buffer.BlockCopy(bytes, 0, result, 0, byteCount);
             return result;
@@ -595,7 +596,7 @@ namespace pwiz.Osprey.IO
             int byteCount = count * 4;
             byte[] bytes = r.ReadBytes(byteCount);
             if (bytes.Length != byteCount)
-                throw new InvalidDataException("Unexpected end of spectra cache while reading float array.");
+                throw new InvalidDataException(OspreyIOResources.SpectraCache_ReadFloatArray_The_spectra_cache_is_damaged__it_ends_in_the_middle_of_a_record__Delete_the__spectra_bin_);
             float[] result = new float[count];
             Buffer.BlockCopy(bytes, 0, result, 0, byteCount);
             return result;
