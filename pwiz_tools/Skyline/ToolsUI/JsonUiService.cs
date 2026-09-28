@@ -293,9 +293,13 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 else
                 {
+                    var elementRef = ElementRefs.FromObjectReference(ElementLocator.Parse(elementLocatorString));
+                    // Navigation falls back to the nearest ancestor that exists, which would report success
+                    // with something else selected
+                    if (elementRef is NodeRef nodeRef && nodeRef.ToIdentityPath(skylineWindow.DocumentUI) == null)
+                        throw NoSuchElement(elementLocatorString);
                     // Full navigation (bookmark, replicate, scroll)
-                    skylineWindow.SelectElement(
-                        ElementRefs.FromObjectReference(ElementLocator.Parse(elementLocatorString)));
+                    skylineWindow.SelectElement(elementRef);
                 }
 
                 // Secondary selections
@@ -317,13 +321,21 @@ namespace pwiz.Skyline.ToolsUI
                         if (elementRef is NodeRef nodeRef)
                         {
                             var path = nodeRef.ToIdentityPath(document);
-                            if (path != null)
-                                allPaths.Add(path);
+                            if (path == null)
+                                throw NoSuchElement(trimmed);
+                            allPaths.Add(path);
                         }
                     }
                     skylineWindow.SequenceTree.SelectedPaths = allPaths;
                 }
             });
+        }
+
+        private static Exception NoSuchElement(string elementLocator)
+        {
+            return new ArgumentException(LlmInstruction.Format(
+                @"No element in the document matches '{0}'. A modified peptide's locator includes its modifications (e.g. C[+57.021464]): take locators from skyline_get_selection or a report's Locator columns.",
+                elementLocator));
         }
 
         public static void SetReplicate(string replicateName)
