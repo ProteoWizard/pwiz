@@ -176,9 +176,10 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// Each run's export reads that run's reconciled parquet, second-pass sidecar and run
-        /// info, so each one's identity keys that run's output - absent and present differ, and
-        /// so do two versions of one file - while another run's output does not move.
+        /// A run's export is PerFileRescoring's product, and it reads that run's reconciled
+        /// parquet, both q-value sidecars, calibration and spectra cache, so each one's identity
+        /// keys that run's export - absent and present differ, and so do two versions of one file
+        /// - while another run's export, the task key and the task's other outputs do not move.
         /// </summary>
         private static void AssertTrainingExportKeyFollowsEachRunsInputs()
         {
@@ -198,7 +199,7 @@ namespace pwiz.Osprey.Test
                 config.OutputBlib = Path.Combine(dir, @"out.blib");
                 config.TrainingExport.Enabled = true;
                 var ctx = TaskConfigs.ContextFor(config);
-                var task = config.Pipeline.OfType<TrainingExportTask>().Single();
+                var task = config.Pipeline.OfType<PerFileRescoreTask>().Single();
                 string key = task.ValidityKey(ctx);
                 string RunKey(string input) => task.OutputValidityKey(ctx, key, TrainingExportParquet.PathFor(input));
 
@@ -207,10 +208,10 @@ namespace pwiz.Osprey.Test
                 foreach (string artifact in new[]
                          {
                              ParquetScoreCache.GetReconciledScoresPath(runA),
+                             FdrScoresSidecar.Pass1Path(runA),
                              FdrScoresSidecar.Pass2Path(runA),
                              CalibrationIO.CalibrationPathForInput(runA, ArtifactPaths.ResolveOutputDir(runA)),
                              SpectraCache.GetCachePath(runA),
-                             RunInfoFile.PathFor(runA),
                          })
                 {
                     File.WriteAllText(artifact, @"first");
@@ -221,7 +222,10 @@ namespace pwiz.Osprey.Test
                     Assert.AreNotEqual(written, current, Path.GetFileName(artifact) + @" rewritten must invalidate the run's export");
                     Assert.AreEqual(otherRun, RunKey(runB), @"another run's export does not depend on this run's files");
                 }
-                Assert.AreEqual(key, task.ValidityKey(ctx), @"the per-run identities belong to the run's output, not the task key (P4)");
+                Assert.AreEqual(key, task.ValidityKey(ctx), @"the per-run identities belong to the run's export, not the task key (P4)");
+                string reconciled = ParquetScoreCache.GetReconciledScoresPath(runA);
+                Assert.AreEqual(key, task.OutputValidityKey(ctx, key, reconciled),
+                    @"the task's other outputs key on the task key alone");
             }
             finally
             {
@@ -232,60 +236,57 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The training export's key follows everything its parquet depends on and nothing it
-        /// does not. Each export setting keys differently; a rewritten second-pass experiment
-        /// sidecar (Stage 7 re-ran) invalidates the export; and neither the cohort (P4) nor the
-        /// leg does - a straight-through run and a <c>--task TrainingExport</c> node compute the
-        /// same key, or a pay-later export run on one would be redone on the other.
+        /// The training export is a declared output of PerFileRescoring only when asked for, and
+        /// asking for it moves no other key: PerFileRescoring's own key is the same with the flag
+        /// or without, so adding the flag to a finished analysis leaves every other output
+        /// valid and only the exports outstanding (P16). The export's key follows each export
+        /// setting, and the straight-through run and a <c>--task TrainingExport</c> selector
+        /// compute the same key, so a pay-later export is never redone.
         /// </summary>
         private static void AssertTrainingExportKey()
         {
-            string dir = Path.Combine(Path.GetTempPath(), @"osprey_trainkey_" + Path.GetRandomFileName());
-            Directory.CreateDirectory(dir);
-            string savedOutput = ArtifactPaths.OutputDir;
-            try
+            var off = TaskConfigs.StraightThrough();
+            off.InputFiles = new List<string> { @"a.mzML" };
+            off.LibrarySource = LibrarySource.FromPath(@"ref.tsv");
+            off.OutputBlib = @"out.blib";
+            var offCtx = TaskConfigs.ContextFor(off);
+            var offTask = off.Pipeline.OfType<PerFileRescoreTask>().Single();
+            string export = TrainingExportParquet.PathFor(@"a.mzML");
+            Assert.IsFalse(offTask.Outputs(offCtx).Contains(export), @"no export is declared with the flag off");
+
+            string straight = ExportKey(TaskConfigs.StraightThrough(), c => { }, out string taskKeyOn, out bool declared);
+            Assert.IsTrue(declared, @"the export is a declared output of PerFileRescoring under the flag");
+            Assert.AreEqual(offTask.ValidityKey(offCtx), taskKeyOn, @"the flag must not move PerFileRescoring's key");
+            Assert.AreEqual(straight, ExportKey(TaskConfigs.ForTask(TrainingExportTask.TASK_NAME), c => { }, out _, out _),
+                @"the --task TrainingExport selector must compute the straight-through key");
+            Assert.AreEqual(straight, ExportKey(TaskConfigs.StraightThrough(), c => c.TrainingExport.MaxQ = c.RunFdr, out _, out _),
+                @"an explicit max-q equal to the default is the same export");
+            foreach (var change in new Action<OspreyConfig>[]
+                     {
+                         c => c.TrainingExport.MaxQ = 0.05,
+                         c => c.TrainingExport.ClaimantQ = 0.05,
+                         c => c.TrainingExport.WriteXics = true,
+                         c => c.RunFdr = 0.05,
+                     })
             {
-                ArtifactPaths.OutputDir = dir;
-                string experiment = Path.Combine(dir, @"out.2nd-pass.fdr_experiment.bin");
-                File.WriteAllText(experiment, @"first");
-                string straight = ExportKey(TaskConfigs.StraightThrough(), c => { });
-                Assert.AreEqual(straight, ExportKey(TaskConfigs.ForTask(TrainingExportTask.TASK_NAME), c => { }),
-                    @"the --task TrainingExport leg must compute the straight-through key");
-                Assert.AreEqual(straight, ExportKey(TaskConfigs.StraightThrough(),
-                        c => c.InputFiles = new List<string> { @"a.mzML", @"b.mzML", @"c.mzML" }),
-                    @"the key must not name the cohort (P4)");
-                Assert.AreEqual(straight, ExportKey(TaskConfigs.StraightThrough(), c => c.TrainingExport.MaxQ = c.RunFdr),
-                    @"an explicit max-q equal to the default is the same export");
-                foreach (var change in new Action<OspreyConfig>[]
-                         {
-                             c => c.TrainingExport.MaxQ = 0.05,
-                             c => c.TrainingExport.ClaimantQ = 0.05,
-                             c => c.TrainingExport.WriteXics = true,
-                             c => c.RunFdr = 0.05,
-                         })
-                {
-                    Assert.AreNotEqual(straight, ExportKey(TaskConfigs.StraightThrough(), change),
-                        @"an export setting must change the key");
-                }
-                File.WriteAllText(experiment, @"a rewritten second pass");
-                Assert.AreNotEqual(straight, ExportKey(TaskConfigs.StraightThrough(), c => { }),
-                    @"a rewritten experiment sidecar must invalidate the export");
-            }
-            finally
-            {
-                ArtifactPaths.OutputDir = savedOutput;
-                Directory.Delete(dir, true);
+                Assert.AreNotEqual(straight, ExportKey(TaskConfigs.StraightThrough(), change, out _, out _),
+                    @"an export setting must change the key");
             }
         }
 
-        private static string ExportKey(OspreyConfig config, Action<OspreyConfig> mutate)
+        private static string ExportKey(OspreyConfig config, Action<OspreyConfig> mutate, out string taskKey, out bool declared)
         {
             config.InputFiles = new List<string> { @"a.mzML" };
-            config.LibrarySource = LibrarySource.FromPath(@"ref.blib");
+            config.LibrarySource = LibrarySource.FromPath(@"ref.tsv");
             config.OutputBlib = @"out.blib";
+            config.TrainingExport.Enabled = true;
             mutate(config);
             var ctx = TaskConfigs.ContextFor(config);
-            return config.Pipeline.OfType<TrainingExportTask>().Single().ValidityKey(ctx);
+            var task = config.Pipeline.OfType<PerFileRescoreTask>().Single();
+            string export = TrainingExportParquet.PathFor(@"a.mzML");
+            taskKey = task.ValidityKey(ctx);
+            declared = task.Outputs(ctx).Contains(export);
+            return task.OutputValidityKey(ctx, taskKey, export);
         }
 
         /// <summary>The base task key as every build before the blib reader change wrote it.</summary>
@@ -481,8 +482,7 @@ namespace pwiz.Osprey.Test
                     task.Name, expectPass2 ? @"" : @"NOT "));
                 bool expectTrain = task.Name == FirstPassFdrTask.TASK_NAME ||
                                    task.Name == PerFileRescoreTask.TASK_NAME ||
-                                   task.Name == SecondPassFdrTask.TASK_NAME ||
-                                   task.Name == TrainingExportTask.TASK_NAME;
+                                   task.Name == SecondPassFdrTask.TASK_NAME;
                 Assert.AreEqual(expectTrain, key.Contains(train), string.Format(
                     @"{0} must {1} key on the first-pass training selection",
                     task.Name, expectTrain ? @"" : @"NOT "));

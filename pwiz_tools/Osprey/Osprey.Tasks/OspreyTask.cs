@@ -115,8 +115,6 @@ namespace pwiz.Osprey.Tasks
 
         public virtual bool HydratesPerRun => false;
 
-        public virtual bool IsEnabled(OspreyConfig config) => true;
-
         public virtual void ApplySelection(OspreyConfig config)
         {
         }

@@ -65,8 +65,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// The canonical pipeline: the stages a full run walks, in execution order
         /// (PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR), alternating
-        /// fan-out and join, then the optional TrainingExport fan-out, included only when
-        /// <c>--training-export</c> asks for it.
+        /// fan-out and join.
         /// </summary>
         public IReadOnlyList<OspreyTask> Pipeline { get; }
 
@@ -106,8 +105,8 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// A fresh set of instances: the seven tasks, the canonical pipeline over five of them
-        /// (the fifth optional), and what the other two run when selected.
+        /// A fresh set of instances: the seven tasks, the canonical pipeline over four of them,
+        /// and what the other three run when selected.
         /// </summary>
         public static OspreyTasks Create()
         {
@@ -119,10 +118,7 @@ namespace pwiz.Osprey.Tasks
             var trainingExport = new TrainingExportTask();
             var modelDiagnostics = new ModelDiagnosticsTask();
 
-            // The training export is the fifth stage and an OPTIONAL one: it walks after the
-            // final join like any stage, and OspreyConfig.Includes leaves it out of every run
-            // whose --training-export is off (TrainingExportTask.IsEnabled).
-            var pipeline = new OspreyTask[] { perFileScoring, firstPassFdr, perFileRescore, secondPassFdr, trainingExport };
+            var pipeline = new OspreyTask[] { perFileScoring, firstPassFdr, perFileRescore, secondPassFdr };
             return new OspreyTasks(
                 new OspreyTask[] { spectraCache, perFileScoring, firstPassFdr, perFileRescore, secondPassFdr, trainingExport, modelDiagnostics },
                 pipeline,
@@ -135,6 +131,11 @@ namespace pwiz.Osprey.Tasks
                     // the report with every other write suppressed.
                     { spectraCache, new OspreyTask[] { spectraCache } },
                     { modelDiagnostics, pipeline },
+                    // TrainingExport asks for the export, a declared output of PerFileRescoring:
+                    // on a finished analysis every other stage rehydrates and PerFileRescoring
+                    // writes only the missing exports; on an unfinished one the analysis runs
+                    // with the export. A selector, never a stage (P16).
+                    { trainingExport, pipeline },
                 });
         }
 

@@ -23,7 +23,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Threading;
 using Pwiz.Data.MsData.Readers;
@@ -77,7 +76,6 @@ namespace pwiz.Osprey.IO
             var ms2Spectra = new List<Spectrum>();
             var ms1Spectra = new List<MS1Spectrum>();
             int unsortedCount = 0;
-            var runInfo = new RunInfoCollector(path);
 
             ReportVendorRegistrationFailures();
 
@@ -124,7 +122,6 @@ namespace pwiz.Osprey.IO
                            combineIonMobilitySpectra: false,
                            mzmlDecodeThreads: OspreyEnvironment.MzmlDecodeThreads))
                 {
-                    runInfo.ObserveFile(msData);
                     // A chromatogram-only file has no spectrum list, so SpectrumCount is 0
                     // and this reads nothing. Osprey has no use for such a file, but an
                     // empty result says so far more clearly than a throw would.
@@ -139,7 +136,7 @@ namespace pwiz.Osprey.IO
                         for (int i = 0; i < count; i++)
                         {
                             AddSpectrum(msData.GetSpectrum(i), i, ms2Spectra, ms1Spectra,
-                                ref unsortedCount, runInfo);
+                                ref unsortedCount);
                             progress.Report(i + 1);
                         }
                     }
@@ -175,10 +172,41 @@ namespace pwiz.Osprey.IO
                     OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_build_of_Osprey_has_no_vendor_instrument_support__Rebuild_with__p_, path), ex);
             }
 
-            return new SpectrumFileResult(ms2Spectra, ms1Spectra, unsortedCount)
+            return new SpectrumFileResult(ms2Spectra, ms1Spectra, unsortedCount);
+        }
+
+        /// <summary>
+        /// What the source file says about its acquisition (<see cref="SourceRunMetadata"/>),
+        /// from its declared instrument and its first <see cref="SourceRunMetadata.MAX_MS2_SPECTRA"/>
+        /// MS2 spectra. Read only for a training export, never by the search, so it adds no work
+        /// to a parse. Null when the source is not present - an HPC node handed only the spectra
+        /// cache - or cannot be opened; the export's footer then leaves the keys empty.
+        /// </summary>
+        public static SourceRunMetadata TryReadSourceMetadata(string path)
+        {
+            if (string.IsNullOrEmpty(path) || !(File.Exists(path) || Directory.Exists(path)))
+                return null;
+            try
             {
-                RunInfo = runInfo.Build(ms2Spectra, ms1Spectra),
-            };
+                var metadata = new SourceRunMetadata();
+                using (var msData = new MsDataFileImpl(path, simAsSpectra: true, combineIonMobilitySpectra: false))
+                {
+                    metadata.ObserveFile(msData);
+                    int count = msData.SpectrumCount;
+                    for (int i = 0; i < count && metadata.NMs2Sampled < SourceRunMetadata.MAX_MS2_SPECTRA; i++)
+                    {
+                        var spectrum = msData.GetSpectrum(i);
+                        if (spectrum == null || spectrum.Level != 2 || spectrum.Precursors.Count == 0)
+                            continue;
+                        metadata.ObserveMs2(spectrum, spectrum.Precursors[0]);
+                    }
+                }
+                return metadata;
+            }
+            catch (Exception ex) when (!(ex is OutOfMemoryException))
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -224,8 +252,7 @@ namespace pwiz.Osprey.IO
         }
 
         private static void AddSpectrum(MsDataSpectrum spectrum, int spectrumIndex,
-            List<Spectrum> ms2Spectra, List<MS1Spectrum> ms1Spectra, ref int unsortedCount,
-            RunInfoCollector runInfo)
+            List<Spectrum> ms2Spectra, List<MS1Spectrum> ms1Spectra, ref int unsortedCount)
         {
             if (spectrum == null)
                 return;
@@ -260,7 +287,6 @@ namespace pwiz.Osprey.IO
             {
                 ms1Spectra.Add(SpectrumBuilder.CreateMs1Spectrum(index, retentionTime,
                     mzs, intensities));
-                runInfo.ObserveMs1(spectrum);
                 return;
             }
 
@@ -283,10 +309,7 @@ namespace pwiz.Osprey.IO
                 isolationTarget?.Value ?? 0.0, precursor.IsolationWindowLower ?? 0.0,
                 precursor.IsolationWindowUpper ?? 0.0, mzs, intensities);
             if (ms2 != null)
-            {
                 ms2Spectra.Add(ms2);
-                runInfo.ObserveMs2(spectrum, precursor, ms2);
-            }
         }
 
         /// <summary>
@@ -317,198 +340,11 @@ namespace pwiz.Osprey.IO
         public List<MS1Spectrum> Ms1Spectra { get; private set; }
         public int UnsortedSpectrumCount { get; private set; }
 
-        /// <summary>
-        /// What the file says about its acquisition, gathered during the same read. Null only
-        /// for a result built without a read (tests).
-        /// </summary>
-        public RunInfo RunInfo { get; set; }
-
         public SpectrumFileResult(List<Spectrum> ms2, List<MS1Spectrum> ms1, int unsortedSpectrumCount = 0)
         {
             Ms2Spectra = ms2;
             Ms1Spectra = ms1;
             UnsortedSpectrumCount = unsortedSpectrumCount;
-        }
-    }
-
-    /// <summary>
-    /// Gathers <see cref="RunInfo"/> from the spectra <see cref="SpectrumFileReader"/> is
-    /// already reading: every field comes from a value the ProteoWizard read populated for
-    /// the search, so collecting it costs no extra pass over the file. Nothing here can fail
-    /// the read - a file that declares no instrument simply records none.
-    /// </summary>
-    internal sealed class RunInfoCollector
-    {
-        private readonly RunInfo _info = new RunInfo();
-        private double? _ms1WindowLo, _ms1WindowHi, _ms2WindowLo, _ms2WindowHi;
-        private bool _sawFirstMs2;
-
-        // By isolation-window key, in key order, so the record lists the windows by center
-        // whatever order the file cycles through them.
-        private readonly SortedDictionary<int, IsolationScanRange> _ms2WindowsByIsolation =
-            new SortedDictionary<int, IsolationScanRange>();
-
-        public RunInfoCollector(string path)
-        {
-            _info.SourceFile = Path.GetFileName(path?.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-            if (SpectraCache.TryComputeSourceFingerprint(path, out long size, out long mtimeMs))
-            {
-                _info.SourceSize = size;
-                _info.SourceMtimeMs = mtimeMs;
-            }
-        }
-
-        /// <summary>
-        /// File-level facts: run id, start time and the declared instrument configurations.
-        /// </summary>
-        public void ObserveFile(MsDataFileImpl msData)
-        {
-            try
-            {
-                _info.RunId = msData.RunId;
-                _info.RunStartTime = FormatRunStartTime(msData.RunStartTime);
-                _info.InstrumentSerialNumber = msData.GetInstrumentSerialNumber();
-                foreach (var config in msData.GetInstrumentConfigInfoList())
-                {
-                    _info.InstrumentConfigurations.Add(new RunInfo.InstrumentConfiguration
-                    {
-                        Model = config.Model,
-                        Ionization = config.Ionization,
-                        Analyzer = config.Analyzer,
-                        Detector = config.Detector,
-                    });
-                }
-                if (_info.InstrumentConfigurations.Count > 0)
-                    _info.InstrumentModel = _info.InstrumentConfigurations[0].Model;
-            }
-            catch (Exception ex) when (!(ex is OutOfMemoryException))
-            {
-                // Descriptive metadata only: a reader that cannot answer leaves it unknown.
-            }
-        }
-
-        public void ObserveMs1(MsDataSpectrum spectrum)
-        {
-            var metadata = spectrum.Metadata;
-            if (metadata != null)
-                Widen(ref _ms1WindowLo, ref _ms1WindowHi, metadata.ScanWindowLowerLimit, metadata.ScanWindowUpperLimit);
-        }
-
-        public void ObserveMs2(MsDataSpectrum spectrum, MsPrecursor precursor, Spectrum ms2)
-        {
-            if (!_sawFirstMs2)
-            {
-                _sawFirstMs2 = true;
-                _info.InstrumentVendor = spectrum.InstrumentVendor;
-                string model = spectrum.InstrumentInfo?.Model;
-                if (!string.IsNullOrEmpty(model))
-                    _info.InstrumentModel = model;
-            }
-            var metadata = spectrum.Metadata;
-            ObserveMs2ScanWindow(ms2.IsolationWindow, metadata?.ScanWindowLowerLimit, metadata?.ScanWindowUpperLimit);
-            if (metadata != null)
-                Count(_info.Ms2Analyzers, string.IsNullOrEmpty(metadata.Analyzer) ? RunInfo.NONE_KEY : metadata.Analyzer);
-            Count(_info.DissociationMethods,
-                string.IsNullOrEmpty(precursor.DissociationMethod) ? RunInfo.NONE_KEY : precursor.DissociationMethod);
-            Count(_info.CollisionEnergies, RunInfo.CollisionEnergyKey(precursor.PrecursorCollisionEnergy));
-        }
-
-        /// <summary>
-        /// One kept MS2 spectrum's scan window, widened into the run-wide window and into its
-        /// own isolation window's (grouped by the key the spectra cache groups by).
-        /// </summary>
-        internal void ObserveMs2ScanWindow(IsolationWindow isolation, double? scanLower, double? scanUpper)
-        {
-            Widen(ref _ms2WindowLo, ref _ms2WindowHi, scanLower, scanUpper);
-            int key = SpectraCache.WindowKey(isolation.Center);
-            if (!_ms2WindowsByIsolation.TryGetValue(key, out var window))
-            {
-                window = new IsolationScanRange { Isolation = isolation };
-                _ms2WindowsByIsolation.Add(key, window);
-            }
-            Widen(ref window.Lower, ref window.Upper, scanLower, scanUpper);
-        }
-
-        /// <summary>
-        /// The finished record, with the counts and ranges taken from the spectra the read
-        /// actually kept.
-        /// </summary>
-        public RunInfo Build(List<Spectrum> ms2Spectra, List<MS1Spectrum> ms1Spectra)
-        {
-            _info.NMs1 = ms1Spectra.Count;
-            _info.NMs2 = ms2Spectra.Count;
-            _info.Ms1ScanWindow = Range(_ms1WindowLo, _ms1WindowHi);
-            _info.Ms2ScanWindow = Range(_ms2WindowLo, _ms2WindowHi);
-            if (_ms2WindowsByIsolation.Count > 0)
-            {
-                _info.Ms2ScanWindows = new List<RunInfo.IsolationScanWindow>(_ms2WindowsByIsolation.Count);
-                foreach (var window in _ms2WindowsByIsolation.Values)
-                {
-                    _info.Ms2ScanWindows.Add(new RunInfo.IsolationScanWindow
-                    {
-                        IsolationCenter = window.Isolation.Center,
-                        IsolationLower = window.Isolation.LowerBound,
-                        IsolationUpper = window.Isolation.UpperBound,
-                        ScanWindow = Range(window.Lower, window.Upper),
-                    });
-                }
-            }
-            double? rtLo = null, rtHi = null;
-            foreach (var s in ms1Spectra)
-                Widen(ref rtLo, ref rtHi, s.RetentionTime, s.RetentionTime);
-            _info.Ms1RtRange = Range(rtLo, rtHi);
-            rtLo = rtHi = null;
-            double? isoLo = null, isoHi = null;
-            foreach (var s in ms2Spectra)
-            {
-                Widen(ref rtLo, ref rtHi, s.RetentionTime, s.RetentionTime);
-                Widen(ref isoLo, ref isoHi, s.IsolationWindow.LowerBound, s.IsolationWindow.UpperBound);
-            }
-            _info.Ms2RtRange = Range(rtLo, rtHi);
-            _info.Ms2IsolationRange = Range(isoLo, isoHi);
-            return _info;
-        }
-
-        /// <summary>
-        /// The run start time as <see cref="RunInfo.RunStartTime"/> records it, the same text
-        /// on every machine. A zoned stamp is parsed into the reading machine's LOCAL time,
-        /// whose round-trip form carries that machine's offset, so it is written in UTC; a
-        /// stamp with no zone is written as the file wrote it, since assuming one would be
-        /// the machine's guess.
-        /// </summary>
-        internal static string FormatRunStartTime(DateTime? start)
-        {
-            if (!start.HasValue)
-                return null;
-            var value = start.Value.Kind == DateTimeKind.Local ? start.Value.ToUniversalTime() : start.Value;
-            return value.ToString(@"o", CultureInfo.InvariantCulture);
-        }
-
-        private static void Count(SortedDictionary<string, int> histogram, string key)
-        {
-            histogram.TryGetValue(key, out int n);
-            histogram[key] = n + 1;
-        }
-
-        private static void Widen(ref double? lo, ref double? hi, double? valueLo, double? valueHi)
-        {
-            if (valueLo.HasValue && (!lo.HasValue || valueLo.Value < lo.Value))
-                lo = valueLo;
-            if (valueHi.HasValue && (!hi.HasValue || valueHi.Value > hi.Value))
-                hi = valueHi;
-        }
-
-        private static double[] Range(double? lo, double? hi)
-        {
-            return lo.HasValue && hi.HasValue ? new[] { lo.Value, hi.Value } : null;
-        }
-
-        /// <summary>One isolation window and the scan range its spectra have covered so far.</summary>
-        private sealed class IsolationScanRange
-        {
-            public IsolationWindow Isolation;
-            public double? Lower;
-            public double? Upper;
         }
     }
 }

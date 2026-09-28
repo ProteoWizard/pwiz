@@ -261,14 +261,17 @@ namespace pwiz.Osprey.Test
             straight.TrainingExport.Enabled = true;
             string runs = Program.DescribeTrainingExport(straight);
             Assert.IsNotNull(runs);
+            // The export is a product of PerFileRescoring, so a node running that task writes it.
             Assert.AreEqual(runs, Program.DescribeTrainingExport(ExportNode(TrainingExportTask.TASK_NAME)));
+            Assert.AreEqual(runs, Program.DescribeTrainingExport(ExportNode(PerFileRescoreTask.TASK_NAME)));
             Assert.IsNull(Program.DescribeTrainingExport(FullPipelineConfig()), @"no line at all with the option off");
-            string elsewhere = string.Format(OspreyResources.Program_DescribeTrainingExport_Training_export__not_written_by_this_run___0__writes_it_under__1___2__or_a_run_without__1__, OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText,
-                OspreyCommandArgs.ARG_TASK.ArgumentText, TrainingExportTask.TASK_NAME);
+            string elsewhere = string.Format(OspreyResources.Program_DescribeTrainingExport_Training_export__not_written_by_this_run___0__writes_it_under__1___2___1___3__or_a_run_without__1__,
+                OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText, OspreyCommandArgs.ARG_TASK.ArgumentText,
+                TrainingExportTask.TASK_NAME, PerFileRescoreTask.TASK_NAME);
             foreach (string taskName in new[]
                      {
                          SpectraCacheTask.TASK_NAME, PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME,
-                         PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME, ModelDiagnosticsTask.TASK_NAME,
+                         SecondPassFdrTask.TASK_NAME, ModelDiagnosticsTask.TASK_NAME,
                      })
             {
                 var node = ExportNode(taskName);
@@ -616,7 +619,7 @@ namespace pwiz.Osprey.Test
             // No selection: the full pipeline, every flag off, the canonical pipeline carried.
             var full = TaskConfigs.StraightThrough();
             Assert.IsNull(full.SelectedTask);
-            Assert.AreEqual(5, full.Pipeline.Count);
+            Assert.AreEqual(4, full.Pipeline.Count);
             Assert.IsFalse(full.StopAfterStage5 || full.ExpectReconciledInput || full.DiagnosticsOnly);
             // A re-selection holds exactly the new task's flags and pipeline: nothing a
             // previous selection set survives, so a config reused across selections cannot

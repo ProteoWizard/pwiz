@@ -22,8 +22,10 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -142,6 +144,11 @@ namespace pwiz.Osprey.Tasks
         // See RescoreOneFileStreamed for why that trade is free.
         private readonly object _survivorLoadLock = new object();
 
+        // Training exports that failed this run, by input: an export that failed while its run
+        // re-scored is reported with the rest by WriteTrainingExports rather than retried there.
+        private readonly ConcurrentDictionary<string, string> _trainingExportErrors =
+            new ConcurrentDictionary<string, string>(StringComparer.Ordinal);
+
         /// <summary>
         /// This task's name, as a constant so the CLI selector, the validity stamp another
         /// task looks for, and the tests all spell it from here rather than duplicating it (#4486).
@@ -222,6 +229,17 @@ namespace pwiz.Osprey.Tasks
             foreach (var input in ctx.Config.InputFiles)
                 yield return ParquetScoreCache.GetReconciledScoresPath(input);
 
+            // The training export (--training-export) is this task's product: it reads the
+            // spectra, reconciled boundaries and run q-values this task holds or has just
+            // written, so it is declared here rather than as a stage of its own (P16). Added to
+            // a finished analysis, it is then the only output outstanding, which is the
+            // export-only arm at the top of Run.
+            if (ExportsTraining(ctx.Config))
+            {
+                foreach (var input in ctx.Config.InputFiles)
+                    yield return TrainingExportParquet.PathFor(input);
+            }
+
             // The per-run 2nd-pass FDR sidecar is THIS task's output now (#4486): the per-file
             // half of the second pass runs in the rescore worker, so the file is produced here
             // and merely READ by SecondPassFDR. Declaring it matters beyond provenance -
@@ -279,7 +297,167 @@ namespace pwiz.Osprey.Tasks
                 + LibraryFragmentRelease.ValidityKeySuffix(ctx);
         }
 
+        /// <summary>
+        /// A training export's key: this task's key, the export settings, and the identities of
+        /// the run's own files the export reads (<see cref="TrainingExportWriter.RunInputIdentities"/>).
+        /// Changing an export setting or rewriting one run's inputs therefore redoes those
+        /// exports and never re-scores; every other output keys on the task key alone, so
+        /// adding the flag leaves them valid.
+        /// </summary>
+        public override string OutputValidityKey(PipelineContext ctx, string taskKey, string output)
+        {
+            string input = TrainingExportInputFor(ctx.Config, output);
+            return input == null
+                ? taskKey
+                : taskKey + TrainingExportKeyTerms(ctx.Config) + TrainingExportWriter.RunInputIdentities(input);
+        }
+
         public override bool Run(PipelineContext ctx)
+        {
+            // The export added to a finished analysis: nothing else of this task is outstanding,
+            // so write the exports from each run's own artifacts and re-score nothing - P16's
+            // pay-later path, the counterpart of FirstPassFdrTask.FoldDiagnosticsOnly. Taken
+            // before anything below demands FirstPassFDR's buffer, which would load it.
+            if (OnlyTrainingExportsOutstanding(ctx))
+            {
+                if (!WriteTrainingExports(ctx))
+                    return false;
+                // The driver marks this task done after Run, so a SecondPassFDR that still has
+                // to run would find RescoredEntries unpublished: publish it the way a skipped
+                // task does.
+                return !SecondPassFdrWillRun(ctx) || Rehydrate(ctx);
+            }
+            return RunRescore(ctx) && WriteTrainingExports(ctx);
+        }
+
+        /// <summary>
+        /// Writes each run's training export that is not current, from the run's own artifacts,
+        /// stamping each as it lands. A run whose export was written while it re-scored is
+        /// current and skipped; every other route - a run resumed as already re-scored, a run
+        /// with no re-scoring work, the export-only arm - lands here, so no route leaves an
+        /// export missing or lets the driver stamp a stale one. A failed run is reported and
+        /// the rest still export; the task then fails, which stops the analysis before
+        /// SecondPassFDR writes the blib, and a re-run retries only the failed exports.
+        /// </summary>
+        private bool WriteTrainingExports(PipelineContext ctx)
+        {
+            var config = ctx.Config;
+            if (!ExportsTraining(config) || config.InputFiles == null)
+                return true;
+            string key = ValidityKey(ctx);
+            IReadOnlyDictionary<uint, LibraryEntry> library = null;
+            int nFiles = config.InputFiles.Count;
+            for (int i = 0; i < nFiles; i++)
+            {
+                string input = config.InputFiles[i];
+                string output = TrainingExportParquet.PathFor(input);
+                string runKey = OutputValidityKey(ctx, key, output);
+                if (_trainingExportErrors.ContainsKey(input) || PerFileResumeDriver.IsCurrent(output, Name, runKey))
+                    continue;
+                library = library ?? TrainingExportWriter.ResolveTargets(ctx);
+                if (library == null)
+                    return false;
+                ctx.LogInfo(string.Format(OspreyTasksResources.PerFileRescoreTask_WriteTrainingExports_Training_export__0___1____2_,
+                    i + 1, nFiles, Path.GetFileNameWithoutExtension(input)));
+                WriteTrainingExport(input, output, runKey, library, ctx, config.NThreads, null, null);
+            }
+            if (_trainingExportErrors.IsEmpty)
+                return true;
+            foreach (var failure in _trainingExportErrors.OrderBy(f => f.Key, StringComparer.Ordinal))
+            {
+                ctx.LogError(string.Format(OspreyTasksResources.PerFileRescoreTask_WriteTrainingExports_The_training_export_failed_for__0____1_,
+                    failure.Key, failure.Value));
+            }
+            ctx.ExitCode = 1;
+            return false;
+        }
+
+        /// <summary>
+        /// One run's training export, stale stamp cleared first and the new one written as it
+        /// lands, so a kill loses only the run in flight; a failure is recorded, not thrown,
+        /// since this can run inside the per-file loop.
+        /// </summary>
+        private void WriteTrainingExport(string input, string output, string runKey,
+            IReadOnlyDictionary<uint, LibraryEntry> library, PipelineContext ctx, int maxThreads,
+            SpectraWindowIndex spectra, MzCalibrationResult ms2Cal)
+        {
+            PerFileResumeDriver.ClearStale(output, Name);
+            try
+            {
+                TrainingExportWriter.ExportRun(input, output, library, ctx, maxThreads, spectra, ms2Cal);
+            }
+            catch (Exception ex) when (!(ex is OutOfMemoryException))
+            {
+                _trainingExportErrors[input] = ex.Message;
+                return;
+            }
+            PerFileResumeDriver.Stamp(output, Name, OspreyVersion.Current, runKey, TrainingExportWriter.RunInputs(input), ctx.LogWarning);
+        }
+
+        /// <summary>
+        /// Whether the only outputs of this task not current are training exports: the flag
+        /// added to an analysis whose re-scoring is done. The counterpart of FirstPassFdrTask's
+        /// OnlyDiagnosticsProductOutstanding - every other declared output must be current
+        /// against its own key, so a partly re-scored analysis still takes the full path.
+        /// </summary>
+        private bool OnlyTrainingExportsOutstanding(PipelineContext ctx)
+        {
+            if (!ExportsTraining(ctx.Config))
+                return false;
+            string key = ValidityKey(ctx);
+            bool anyExportOutstanding = false;
+            foreach (string output in Outputs(ctx))
+            {
+                bool current = PerFileResumeDriver.IsCurrent(output, Name, OutputValidityKey(ctx, key, output));
+                if (TrainingExportInputFor(ctx.Config, output) != null)
+                    anyExportOutstanding |= !current;
+                else if (!current)
+                    return false;
+            }
+            return anyExportOutstanding;
+        }
+
+        /// <summary>Whether SecondPassFDR is in this run and will run rather than rehydrate.</summary>
+        private static bool SecondPassFdrWillRun(PipelineContext ctx)
+        {
+            var secondPass = ctx.TaskOf<SecondPassFdrTask>();
+            return secondPass != null && ScoringTaskShared.Includes<SecondPassFdrTask>(ctx.Config) &&
+                   !ctx.CanRehydrate(secondPass);
+        }
+
+        /// <summary>Asked for, and never under a diagnostics-only render, which writes nothing but its report.</summary>
+        private static bool ExportsTraining(OspreyConfig config)
+        {
+            return config.TrainingExport.Enabled && !config.DiagnosticsOnly;
+        }
+
+        /// <summary>The input whose training export <paramref name="output"/> is, or null.</summary>
+        private static string TrainingExportInputFor(OspreyConfig config, string output)
+        {
+            if (!ExportsTraining(config) || config.InputFiles == null)
+                return null;
+            foreach (string input in config.InputFiles)
+            {
+                if (string.Equals(TrainingExportParquet.PathFor(input), output, StringComparison.Ordinal))
+                    return input;
+            }
+            return null;
+        }
+
+        /// <summary>The export settings a training export keys on.</summary>
+        private static string TrainingExportKeyTerms(OspreyConfig config)
+        {
+            var settings = config.TrainingExport;
+            return string.Format(CultureInfo.InvariantCulture, @";trainexport={0};maxq={1:R};claimq={2:R};xics={3}",
+                TrainingExportParquet.FORMAT_VERSION, settings.EffectiveMaxQ(config.RunFdr),
+                settings.EffectiveClaimantQ, settings.WriteXics ? 1 : 0);
+        }
+
+        /// <summary>
+        /// Stage 6: re-score each run against the consensus and reconciliation boundaries and
+        /// write its reconciled parquet (and, under protein-compact, its per-run second pass).
+        /// </summary>
+        private bool RunRescore(PipelineContext ctx)
         {
             // Compute path (Stage 6 rescore): re-score each file's entries
             // against the consensus + reconciliation boundaries and write the
@@ -1567,6 +1745,16 @@ namespace pwiz.Osprey.Tasks
                     // absence is a failure to report, not a reason to read Stage 4's.
                     ParquetScoreCache.ReconciledPathFromScoresPath(parquetPath),
                     fdrEntries);
+            }
+
+            // The training export, while this run's spectra are in hand. Every run this does not
+            // reach - resumed, with no re-scoring work, or failed here - WriteTrainingExports
+            // writes from disk; the file is the same either way.
+            if (wroteReconciled && ExportsTraining(inputs.Config))
+            {
+                string exportPath = TrainingExportParquet.PathFor(inputFile);
+                WriteTrainingExport(inputFile, exportPath, OutputValidityKey(ctx, inputs.TaskValidityKey, exportPath),
+                    inputs.LibraryById, ctx, fileConfig.NThreads, spectraIndex, ms2Cal);
             }
 
             // Per-file rescore high-water mark: the raw (pre-GC) working_set peak and

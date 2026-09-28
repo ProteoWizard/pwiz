@@ -34,7 +34,7 @@ namespace pwiz.Osprey.Test
     /// well-formed row with another precursor's peak or q-value in it.
     /// </summary>
     [TestClass]
-    public class TrainingExportTaskTest
+    public class TrainingExportWriterTest
     {
         private const string RECONCILED = @"run1.scores-reconciled.parquet";
         private const string PASS2 = @"run1.2nd-pass.fdr_scores.bin";
@@ -69,7 +69,7 @@ namespace pwiz.Osprey.Test
                 new FdrScoreRecord(5, 4.0, 0.001, 0.001, 10.0),
                 new FdrScoreRecord(5, 0.5, 0.2, 0.2, 12.0),
             };
-            var targets = TrainingExportTask.PairTargets(RECONCILED, rows, library, PASS2, records, out int nNoLibrary);
+            var targets = TrainingExportWriter.PairTargets(RECONCILED, rows, library, PASS2, records, out int nNoLibrary);
             Assert.AreEqual(3, targets.Count);
             Assert.AreEqual(1, nNoLibrary, @"the released spectrum");
             Assert.AreEqual(10.0, targets[0].Row.ApexRt);
@@ -91,7 +91,7 @@ namespace pwiz.Osprey.Test
             var library = Library(Entry(5, @"PEPTIDEK", 2));
             foreach (var row in new[] { Row(5, @"PEPTIDER", 2, 10.0), Row(5, @"PEPTIDEK", 3, 10.0) })
             {
-                var ex = Assert.ThrowsException<InvalidDataException>(() => TrainingExportTask.PairTargets(RECONCILED,
+                var ex = Assert.ThrowsException<InvalidDataException>(() => TrainingExportWriter.PairTargets(RECONCILED,
                     new List<FdrEntry> { row }, library, PASS2, new List<FdrScoreRecord>(), out _));
                 StringAssert.Contains(ex.Message, RECONCILED);
             }
@@ -106,7 +106,7 @@ namespace pwiz.Osprey.Test
                 new FdrScoreRecord(5, 4.0, 0.001, 0.001, 10.0),
                 new FdrScoreRecord(5, 0.5, 0.2, 0.2, 10.0),
             };
-            var ex = Assert.ThrowsException<InvalidDataException>(() => TrainingExportTask.PairTargets(RECONCILED,
+            var ex = Assert.ThrowsException<InvalidDataException>(() => TrainingExportWriter.PairTargets(RECONCILED,
                 new List<FdrEntry> { Row(5, @"PEPTIDEK", 2, 10.0) }, library, PASS2, records, out _));
             StringAssert.Contains(ex.Message, PASS2);
         }

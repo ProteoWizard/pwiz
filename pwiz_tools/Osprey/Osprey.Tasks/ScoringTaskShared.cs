@@ -201,12 +201,6 @@ namespace pwiz.Osprey.Tasks
             }
             unsortedCount = mzmlResult.UnsortedSpectrumCount;
 
-            // The run's own description, beside the cache and BEFORE it (P14: the cache is the
-            // file whose presence ends this parse, so it lands last). Written only here, where
-            // the source has just been read - never lazily on a cache hit, which would add a
-            // file to a directory a resume is otherwise asserted to leave untouched.
-            WriteRunInfo(inputFile, mzmlResult.RunInfo, ctx);
-
             try
             {
                 SpectraCache.SaveSpectraCache(cachePath, mzmlResult.Ms2Spectra, mzmlResult.Ms1Spectra, inputFile);
@@ -253,26 +247,6 @@ namespace pwiz.Osprey.Tasks
                 throw new IOException(string.Format(
                     OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Could_not_index_the_spectra_cache_for___0____Per_file_scoring_reads_MS_MS_spectra_from___, inputFile, cachePath), indexError);
             return index;
-        }
-
-        /// <summary>
-        /// Write <c>&lt;stem&gt;.run-info.json</c> for a run whose source was just parsed. The
-        /// file is descriptive (nothing Osprey scores reads it), so a failed write is a warning
-        /// and never a reason to stop the run.
-        /// </summary>
-        private static void WriteRunInfo(string inputFile, RunInfo info, PipelineContext ctx)
-        {
-            if (info == null)
-                return;
-            string path = RunInfoFile.PathFor(inputFile);
-            try
-            {
-                RunInfoFile.Save(path, info);
-            }
-            catch (Exception ex) when (!(ex is OutOfMemoryException))
-            {
-                ctx.LogWarning(string.Format(@"Failed to write run info '{0}': {1}", path, ex.Message));
-            }
         }
 
         /// <summary>

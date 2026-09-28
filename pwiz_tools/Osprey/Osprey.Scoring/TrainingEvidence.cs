@@ -294,10 +294,6 @@ namespace pwiz.Osprey.Scoring
                 SharedApexN = new byte[nSlots],
                 SharedCoeluteN = new byte[nSlots],
                 MinClaimantQ = NaNs(nSlots),
-                ExperimentPrecursorQ = double.NaN,
-                ExperimentPeptideQ = double.NaN,
-                ExperimentProteinQ = double.NaN,
-                Pep = double.NaN,
                 RunPeptideQ = double.NaN,
             };
             return record;
@@ -632,14 +628,29 @@ namespace pwiz.Osprey.Scoring
             });
             Rts = new double[Spectra.Count];
             _indexByScan = new Dictionary<uint, int>(Spectra.Count);
+            double lower = double.PositiveInfinity, upper = double.NegativeInfinity;
             for (int i = 0; i < Spectra.Count; i++)
             {
                 Rts[i] = Spectra[i].RetentionTime;
                 _indexByScan[Spectra[i].ScanNumber] = i;
+                var mzs = Spectra[i].Mzs;
+                if (mzs != null && mzs.Length > 0)
+                {
+                    lower = Math.Min(lower, mzs[0]);
+                    upper = Math.Max(upper, mzs[mzs.Length - 1]);
+                }
             }
+            ObservedMzRange = lower <= upper ? new[] { lower, upper } : null;
         }
 
         public List<Spectrum> Spectra { get; }
+
+        /// <summary>
+        /// [lowest, highest] peak m/z across the window's spectra (each sorted by m/z), or null
+        /// for a window with no peaks. The range the instrument is known to have measured: an
+        /// ion outside it was not observed, so its absence says nothing.
+        /// </summary>
+        public double[] ObservedMzRange { get; }
 
         public double[] Rts { get; }
 
@@ -715,8 +726,11 @@ namespace pwiz.Osprey.Scoring
         public OspreyConfig SearchConfig { get; set; }
 
         /// <summary>
-        /// [lower, upper] MS2 scan window of the isolation window being computed, or null when
-        /// the run did not record one (every applicable ion is then in range).
+        /// [lower, upper] m/z range of the isolation window being computed that an ion must fall
+        /// in to count as measured: the export passes the window's
+        /// <see cref="TrainingEvidenceWindow.ObservedMzRange"/>, so an ion outside what the
+        /// spectra hold is unknown rather than an observed zero. Null (every applicable ion in
+        /// range) only where a caller has no spectra to measure it from.
         /// </summary>
         public double[] Ms2ScanWindow { get; set; }
 

@@ -835,11 +835,11 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Training export: not written by this run; {0} writes it under {1} {2} or a run without {1}..
+        ///   Looks up a localized string similar to Training export: not written by this run; {0} writes it under {1} {2}, {1} {3} or a run without {1}..
         /// </summary>
-        public static string Program_DescribeTrainingExport_Training_export__not_written_by_this_run___0__writes_it_under__1___2__or_a_run_without__1__ {
+        public static string Program_DescribeTrainingExport_Training_export__not_written_by_this_run___0__writes_it_under__1___2___1___3__or_a_run_without__1__ {
             get {
-                return ResourceManager.GetString("Program_DescribeTrainingExport_Training_export__not_written_by_this_run___0__writes_it_under__1___2__or_a_run_without__1__", resourceCulture);
+                return ResourceManager.GetString("Program_DescribeTrainingExport_Training_export__not_written_by_this_run___0__writes_it_under__1___2___1___3__or_a_run_without__1__", resourceCulture);
             }
         }
         
@@ -849,6 +849,15 @@ namespace pwiz.Osprey {
         public static string Program_TrainingExportError__0____1__and__2__apply_only_with__3__ {
             get {
                 return ResourceManager.GetString("Program_TrainingExportError__0____1__and__2__apply_only_with__3__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} cannot run with {1}: that mode computes the run q-values in SecondPassFDR, after the per-run export is written. Leave out {0}, or run without {1}..
+        /// </summary>
+        public static string Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_each_run_s_q_values_in_SecondPassFDR {
+            get {
+                return ResourceManager.GetString("Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_each_run_s_q_values_in_SecondPassFDR", resourceCulture);
             }
         }
         

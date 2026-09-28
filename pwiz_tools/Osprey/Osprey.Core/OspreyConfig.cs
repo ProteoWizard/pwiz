@@ -415,15 +415,10 @@ namespace pwiz.Osprey.Core
         /// all of it - the diagnostics render - and every stage is included. Replaces the
         /// three membership flags (<c>NoJoin</c>, and the two above read as membership) that
         /// each stage's own predicate used to combine, which encoded one fan-out and one
-        /// join over a pipeline that has two of each. An optional stage whose option is off
-        /// (<see cref="ISelectableTask.IsEnabled"/> false) is excluded before any of that.
+        /// join over a pipeline that has two of each.
         /// </summary>
         public bool Includes(ISelectableTask stage)
         {
-            // An OPTIONAL stage whose option is off is not part of the run under any
-            // selection: not run, not stamped, not logged.
-            if (!stage.IsEnabled(this))
-                return false;
             if (SelectedTask == null || ReferenceEquals(SelectedTask, stage))
                 return true;
             return !Pipeline.Contains(SelectedTask);

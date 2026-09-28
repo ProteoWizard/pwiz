@@ -2949,6 +2949,24 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The training export failed for {0}: {1}.
+        /// </summary>
+        public static string PerFileRescoreTask_WriteTrainingExports_The_training_export_failed_for__0____1_ {
+            get {
+                return ResourceManager.GetString("PerFileRescoreTask_WriteTrainingExports_The_training_export_failed_for__0____1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Training export {0}/{1}: {2}.
+        /// </summary>
+        public static string PerFileRescoreTask_WriteTrainingExports_Training_export__0___1____2_ {
+            get {
+                return ResourceManager.GetString("PerFileRescoreTask_WriteTrainingExports_Training_export__0___1____2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Missing peaks found by peak detection: {0:N0} ({1:F1}s).
         /// </summary>
         public static string PerFileRescoreTask_private___Missing_peaks_found_by_peak_detection___0____1_s_ {
@@ -4690,20 +4708,20 @@ namespace pwiz.Osprey.Tasks {
             }
         }
         /// <summary>
+        ///   Looks up a localized string similar to a .training.parquet file for each run, written by PerFileRescoring (on a finished analysis nothing else is re-run).
+        /// </summary>
+        public static string TrainingExportTask_DescribeOutput_per_file__training_parquet__written_by_PerFileRescoring {
+            get {
+                return ResourceManager.GetString("TrainingExportTask_DescribeOutput_per_file__training_parquet__written_by_PerFileRescoring", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The reconciled scores file '{0}' is missing. The training export reads the final peak boundaries from it..
         /// </summary>
         public static string TrainingExportTask_ExportRun_The_reconciled_scores_file___0___is_missing__The_training_export_ {
             get {
                 return ResourceManager.GetString("TrainingExportTask_ExportRun_The_reconciled_scores_file___0___is_missing__The_training_export_", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to The SecondPassFDR intermediate file '{0}' holds two records for precursor candidate {1} at apex RT {2}, so the training export cannot tell which one belongs to that peak..
-        /// </summary>
-        public static string TrainingExportTask_PairTargets_The_SecondPassFDR_intermediate_file___0___holds_two_records_for_precursor_candidate__1__at_ {
-            get {
-                return ResourceManager.GetString("TrainingExportTask_PairTargets_The_SecondPassFDR_intermediate_file___0___holds_two_records_for_precursor_candidate__1__at_", resourceCulture);
             }
         }
 
@@ -4726,11 +4744,101 @@ namespace pwiz.Osprey.Tasks {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to The SecondPassFDR intermediate file '{0}' is missing or unreadable..
+        ///   Looks up a localized string similar to {0}: {1:N0} of {2:N0} fitted precursors did not reproduce the scored median polish cosine..
         /// </summary>
-        public static string TrainingExportTask_ReadPass2_The_SecondPassFDR_intermediate_file___0___is_missing_or_unreadable_ {
+        public static string TrainingExportWriter_ExportRun__0____1_N0__of__2_N0__fitted_precursors_did_not_reproduce_the_scored_median_polish_cosine_ {
             get {
-                return ResourceManager.GetString("TrainingExportTask_ReadPass2_The_SecondPassFDR_intermediate_file___0___is_missing_or_unreadable_", resourceCulture);
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun__0____1_N0__of__2_N0__fitted_precursors_did_not_reproduce_the_scored_median_polish_cosine_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: {1:N0} precursors had no isolation window holding their apex scan and were not exported..
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun__0____1_N0__precursors_had_no_isolation_window_holding_their_apex_scan_and_were_not_exported_ {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun__0____1_N0__precursors_had_no_isolation_window_holding_their_apex_scan_and_were_not_exported_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: {1:N0} reconciled targets have no library spectrum and were skipped..
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun__0____1_N0__reconciled_targets_have_no_library_spectrum_and_were_skipped_ {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun__0____1_N0__reconciled_targets_have_no_library_spectrum_and_were_skipped_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: {1:N0} target precursors at run q &lt;= {2} ({3:N0} entrapment) of {4:N0} reconciled targets, by the {5} run q, in {6:F1}s.
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun__0____1_N0__target_precursors_at_run_q____2___3_N0__entrapment__of__4_N0__reconciled_targets {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun__0____1_N0__target_precursors_at_run_q____2___3_N0__entrapment__of__4_N0__reconciled_targets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: median polish cosine reproduced for {1:N0} of {2:N0} fitted precursors ({3:N0} exported without a fit).
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun__0___median_polish_cosine_reproduced_for__1_N0__of__2_N0__fitted_precursors {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun__0___median_polish_cosine_reproduced_for__1_N0__of__2_N0__fitted_precursors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: the source file '{1}' is not here or cannot be read, so the instrument, dissociation and collision-energy footer keys are empty..
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun__0___the_source_file___1___is_not_here_or_cannot_be_read__so_the_instrument_ {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun__0___the_source_file___1___is_not_here_or_cannot_be_read__so_the_instrument_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to first pass.
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun_first_pass {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun_first_pass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to second pass.
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun_second_pass {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun_second_pass", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The intermediate file '{0}' holds two records for precursor candidate {1} at apex RT {2}, so the training export cannot tell which one belongs to that peak..
+        /// </summary>
+        public static string TrainingExportWriter_PairTargets_The_intermediate_file___0___holds_two_records_for_precursor_candidate__1__at_apex_RT__2_ {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_PairTargets_The_intermediate_file___0___holds_two_records_for_precursor_candidate__1__at_apex_RT__2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The intermediate file '{0}' is missing or unreadable..
+        /// </summary>
+        public static string TrainingExportWriter_ReadRunQ_The_intermediate_file___0___is_missing_or_unreadable_ {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ReadRunQ_The_intermediate_file___0___is_missing_or_unreadable_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The library is empty after loading..
+        /// </summary>
+        public static string TrainingExportWriter_ResolveTargets_The_library_is_empty_after_loading_ {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ResolveTargets_The_library_is_empty_after_loading_", resourceCulture);
             }
         }
 

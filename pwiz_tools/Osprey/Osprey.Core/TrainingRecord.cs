@@ -66,10 +66,6 @@ namespace pwiz.Osprey.Core
         public double Score { get; set; }
         public double RunPrecursorQ { get; set; }
         public double RunPeptideQ { get; set; }
-        public double ExperimentPrecursorQ { get; set; }
-        public double ExperimentPeptideQ { get; set; }
-        public double ExperimentProteinQ { get; set; }
-        public double Pep { get; set; }
 
         // ---- Apex-spectrum summary -------------------------------------------------------
         public double ApexTic { get; set; }

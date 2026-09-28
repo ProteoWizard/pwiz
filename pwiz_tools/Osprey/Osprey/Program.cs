@@ -736,17 +736,18 @@ namespace pwiz.Osprey
 
         /// <summary>
         /// The startup line naming the training export, or null when <c>--training-export</c>
-        /// is off. The export is described only where its stage runs - a straight-through run
-        /// or <c>--task TrainingExport</c> - by the same membership rule the driver applies.
+        /// is off. The export is a product of PerFileRescoring, so it is described only where
+        /// that task runs - a straight-through run, <c>--task PerFileRescoring</c> or
+        /// <c>--task TrainingExport</c> - by the same membership rule the driver applies.
         /// </summary>
         internal static string DescribeTrainingExport(OspreyConfig config)
         {
             if (!config.TrainingExport.Enabled)
                 return null;
-            if (!ScoringTaskShared.Includes<TrainingExportTask>(config))
+            if (!ScoringTaskShared.Includes<PerFileRescoreTask>(config) || config.DiagnosticsOnly)
             {
-                return string.Format(OspreyResources.Program_DescribeTrainingExport_Training_export__not_written_by_this_run___0__writes_it_under__1___2__or_a_run_without__1__, OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText,
-                    OspreyCommandArgs.ARG_TASK.ArgumentText, TrainingExportTask.TASK_NAME);
+                return string.Format(OspreyResources.Program_DescribeTrainingExport_Training_export__not_written_by_this_run___0__writes_it_under__1___2___1___3__or_a_run_without__1__, OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText,
+                    OspreyCommandArgs.ARG_TASK.ArgumentText, TrainingExportTask.TASK_NAME, PerFileRescoreTask.TASK_NAME);
             }
             return string.Format(OspreyResources.Program_DescribeTrainingExport_Training_export___0__per_run__run_q_____1___claimant_q_____2___XICs__3__,
                 @"<stem>" + TrainingExportParquet.EXT, config.TrainingExport.EffectiveMaxQ(config.RunFdr),
@@ -773,6 +774,14 @@ namespace pwiz.Osprey
                 return string.Format(OspreyResources.Program_TrainingExportError__0__must_be_in__0__1__, OspreyCommandArgs.ARG_TRAINING_EXPORT_MAX_Q.ArgumentText);
             if (export.ClaimantQ.HasValue && !(export.ClaimantQ.Value > 0 && export.ClaimantQ.Value <= 1))
                 return string.Format(OspreyResources.Program_TrainingExportError__0__must_be_in__0__1__, OspreyCommandArgs.ARG_TRAINING_EXPORT_CLAIMANT_Q.ArgumentText);
+            // The transfer arm computes every run's second-pass q in SecondPassFDR, after
+            // PerFileRescoring has written the export, so the export would have no second-pass
+            // values for any run to select on.
+            if (export.Enabled && OspreyEnvironment.Pass2TransferQ)
+            {
+                return string.Format(OspreyResources.Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_each_run_s_q_values_in_SecondPassFDR,
+                    OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText, @"OSPREY_PASS2_QVALUE=" + OspreyEnvironment.PASS2_QVALUE_TRANSFER);
+            }
             return null;
         }
 

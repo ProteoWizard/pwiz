@@ -45,7 +45,7 @@ namespace pwiz.Osprey.IO
         public const string EXT = @".training.parquet";
 
         /// <summary>Written to the footer as <see cref="KEY_FORMAT_VERSION"/>.</summary>
-        public const int FORMAT_VERSION = 1;
+        public const int FORMAT_VERSION = 2;
 
         public const string KEY_FORMAT_VERSION = @"osprey.training_export.format_version";
 
@@ -81,10 +81,6 @@ namespace pwiz.Osprey.IO
             Scalar(@"score", r => r.Score, (r, v) => r.Score = v),
             Scalar(@"run_precursor_q", r => r.RunPrecursorQ, (r, v) => r.RunPrecursorQ = v),
             Scalar(@"run_peptide_q", r => r.RunPeptideQ, (r, v) => r.RunPeptideQ = v),
-            Scalar(@"experiment_precursor_q", r => r.ExperimentPrecursorQ, (r, v) => r.ExperimentPrecursorQ = v),
-            Scalar(@"experiment_peptide_q", r => r.ExperimentPeptideQ, (r, v) => r.ExperimentPeptideQ = v),
-            Scalar(@"experiment_protein_q", r => r.ExperimentProteinQ, (r, v) => r.ExperimentProteinQ = v),
-            Scalar(@"pep", r => r.Pep, (r, v) => r.Pep = v),
             Scalar(@"apex_tic", r => r.ApexTic, (r, v) => r.ApexTic = v),
             Scalar(@"explained_intensity", r => r.ExplainedIntensity, (r, v) => r.ExplainedIntensity = v),
             Scalar(@"n_slots", r => r.NSlots, (r, v) => r.NSlots = v),
