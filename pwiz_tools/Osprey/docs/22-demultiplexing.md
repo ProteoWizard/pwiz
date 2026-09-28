@@ -655,12 +655,20 @@ precursors all three arms found in all three runs):
 | as acquired | 27,341 / 27,952 / 28,470 | 0.112 |
 | the vendor `.wiff`, DIA-NN `--scanning-swath` | 29,552 / 30,285 / 30,882 | 0.089 |
 | centered:5 | 27,794 / 28,144 / 28,843 | 0.135 |
+| **centered:7, `--position-mz`, DIA-NN settings pinned** | **31,512 / 31,506 / 32,117** | **0.119** |
 
-- **Over whole runs the demultiplexed quantities are noisier than the acquired ones**, and DIA-NN's
-  scanning mode is better than both. On the slice the demultiplexed CV matched the acquired data's,
-  so the slice did not show this.
-- This is the gap `--source-positions` addresses: two or three columns per sweep instead of about
-  40 should add less noise to each quantity.
+(The CV is on the 18,035 precursors all four arms found in all three runs; the pinned arm's FDP was
+0.79-0.89%.)
+
+- **centered:7 with `--position-mz` identifies 4-7% more than DIA-NN's scanning mode** on the vendor
+  file, and 13-15% more than the acquired data, at equal or lower FDP.
+- **Its quantities are still noisier** than scanning mode's and the acquired data's. On the slice
+  the demultiplexed CV matched the acquired data's, so the slice did not show this.
+- `--source-positions` was built for that gap: two or three columns per sweep instead of about 40
+  should add less noise to each quantity. On the slice as implemented, it lost identifications and
+  precision (2,391 / 2,423 / 2,359 targets, CV 0.130 against 0.093), probably from its rule that
+  drops sources under 5% of a channel, or DIA-NN's choice of an 8 ppm tolerance for that file. It
+  stays off by default.
 
 The scripts behind these ZT Scan tables are in pwiz-ai, under `ai/scripts/Osprey/Demux`.
 
