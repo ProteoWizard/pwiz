@@ -1460,6 +1460,11 @@ namespace pwiz.Skyline.ToolsUI
 
         public SkylineWindow SkylineWindow => (SkylineWindow) Form;
 
+        // A segment with no selector (a perform_action naming neither label nor type) is this window itself, whose
+        // paste and select_all the container that holds its controls does not have
+        public override UiElement GetChild(UiElementPath path) =>
+            string.IsNullOrEmpty(path.Type) && path.Text == null && !path.Index.HasValue ? this : base.GetChild(path);
+
         public void PasteNow(string text) => SkylineWindow.Paste(text);
 
         public void SelectAllNow() => SkylineWindow.SelectAll();

@@ -1,7 +1,7 @@
 # Existing and Quantitative Experiments, driven through the Skyline MCP
 
 Every step of the **Existing and Quantitative Experiments** tutorial (`Tutorials/ExistingQuant/en/index.html`), with
-the MCP calls that performed it and a screenshot of the result. Driven live on 2026-09-28 (00:20-01:10 PDT)
+the MCP calls that performed it and a screenshot of the result. Driven live on 2026-09-28 (00:05-00:45 PDT)
 against the Release x64 build of branch `Skyline/work/20260921_typing_in_sequence_tree` at `4f6b3b2006`.
 
 - **Data:** a fresh extraction of `ExistingQuant.zip` (the raw WIFF data the tutorial describes) to
@@ -43,10 +43,10 @@ written `tool(arg=value)` with the `skyline_` prefix dropped. Here:
 |---|---|---|
 | Nearly every graph after a selection or view change (s-08, s-10, s-24, s-25, s-34) | `get_graph_image` and `get_form_image` showed the graph as it was before the change, sometimes for tens of seconds: the Peak Areas graph across 40 replicates is recalculated in the background | **Fixed**: the image and graph-data verbs first wait (up to 10 s) until Skyline reports no graph update pending, as a test's `WaitForGraphs` does. Checked live: two selection changes on Study 7, each captured at once, both current |
 | Edit Modifications (s-17 and the two later peptides) | Each drop-down list was labeled with its own value ("Carbamidomethyl (C)", "Label:13C(6) (C-term R)") instead of the amino acid beside it, so `set_form_value(controlId="R")` could not find a labeled row | **Fixed**: a `LiteDropDownList` is named by the label before it, like a combo box. Checked live: V, G, W... name the heavy drop-downs of IVGGWECEK |
-| `set_selection` with a wrong locator (a guessed protein, or a peptide without its `[+57.021464]`) | Reported "Selection set." and selected the nearest ancestor that exists | Open: should report the element it could not find. The run used `select_item` in the tree, which matches the bare sequence |
-| `paste` on the main window | "SkylineWindow does not support the action 'paste'", though `perform_action` says it does | Open (the Targets tree takes it) |
+| `set_selection` with a wrong locator (a guessed protein, or a peptide without its `[+57.021464]`) | Reported "Selection set." and selected the nearest ancestor that exists | **Fixed** (08a51c2b90): an error names the locator. Checked live: `Molecule:/APR/AGLCQTFVYGGCR` is refused, `Molecule:/PSA/IVGGWEC[+57.021464]EK` selects. The run used `select_item` in the tree, which matches the bare sequence |
+| `paste` on the main window | "SkylineWindow does not support the action 'paste'", though `perform_action` says it does: with no label or type the call resolved to the container holding the window's controls, not the window | **Fixed**: that empty segment is the main window itself. Checked live: a two-peptide paste on a blank document adds 1 / 2 / 4 / 12. The run pasted into the Targets tree |
 | `click_form_button` / `set_form_value` by control name (`btnEditHeavyMods`, `comboHeavy13_1`) | Not found; `get_controls` calls the name "informational" but those tools' descriptions still offer it | Open: the descriptions are stale |
-| Area Graph Properties | "Display Type" resolves to the cutoff grid and "Maximum area" is labeled "%" | Open: the form's tab indexes collide (listed in the handoff); the combo box was set by type and index |
+| Area Graph Properties | "Display Type" resolves to the cutoff grid and "Maximum area" is labeled "%" | **Fixed** (ec82f8f224): the form's tab indexes collided; each label now precedes its field. The run set the combo box by type and index |
 | s-29, the floating Document Grid | Capturing it showed the floating Peak Areas window over its top half | Open: activating a docked pane does not raise its floating window above another floating window |
 | `get_grid_text(gridId="null")` | The error says `set_grid_text` | Open, wording |
 
