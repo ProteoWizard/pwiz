@@ -339,7 +339,7 @@ namespace pwiz.Osprey.Test
         /// The per-sweep lasso: noiseless, the penalty keeps each source's own bin but shrinks it,
         /// and the relaxed refit returns every source exactly. Under counting noise the lasso writes
         /// fewer positions than the plain solve, and with the refit the three bins centered on each
-        /// precursor still hold its intensity.
+        /// precursor still hold its intensity. The z-scaled lasso does the same.
         /// </summary>
         private static void AssertSweepLasso(double[,] a, (int Bin, double Mz, double Amount)[] sources,
             ScanningUnitResult exact, ScanningUnitResult noisy)
@@ -370,6 +370,30 @@ namespace pwiz.Osprey.Test
                 double expected = s.Amount * TotalElution();
                 double found = Enumerable.Range(s.Bin - 1, 3).Sum(bin => Sum(noisyRelaxed.Demultiplexed, bin, s.Mz));
                 Assert.AreEqual(expected, found, 0.15 * expected, string.Format(@"relaxed lasso, m/z {0}, 3 bins", s.Mz));
+            }
+
+            // The z-scaled lasso, relaxed: the same exact recovery without noise, and fewer positions
+            // than the plain solve with it, at the same three-bin intensities.
+            var zParams = new ScanningDemuxParams { SweepL1Z = 2, SweepL1Refit = true };
+            var zExact = ScanningDemultiplexer.DemuxUnit(Simulate(a, sources, null), zParams);
+            foreach (var s in sources.GroupBy(s => s.Mz))
+            {
+                for (int bin = 10; bin < 50; bin++)
+                {
+                    double expected = s.Where(t => t.Bin == bin).Sum(t => t.Amount) * TotalElution();
+                    Assert.AreEqual(expected, Sum(zExact.Demultiplexed, bin, s.Key), 1e-6 * s.Max(t => t.Amount),
+                        string.Format(@"z lasso, m/z {0}, bin {1}", s.Key, bin));
+                }
+            }
+            var zNoisy = ScanningDemultiplexer.DemuxUnit(Simulate(a, sources, new Random(11)), zParams);
+            Assert.IsTrue(zNoisy.Demultiplexed.Count < noisy.Demultiplexed.Count,
+                string.Format(@"{0} positions written with the z lasso, {1} without", zNoisy.Demultiplexed.Count,
+                    noisy.Demultiplexed.Count));
+            foreach (var s in sources.Where(t => t.Mz != 701.5678))
+            {
+                double expected = s.Amount * TotalElution();
+                double found = Enumerable.Range(s.Bin - 1, 3).Sum(bin => Sum(zNoisy.Demultiplexed, bin, s.Mz));
+                Assert.AreEqual(expected, found, 0.15 * expected, string.Format(@"z lasso, m/z {0}, 3 bins", s.Mz));
             }
         }
 

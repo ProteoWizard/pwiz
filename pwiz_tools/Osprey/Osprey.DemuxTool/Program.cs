@@ -42,7 +42,7 @@ namespace pwiz.Osprey.DemuxTool
             @"Usage: Osprey.DemuxTool --in <run.wiff2|.raw|.mzML> --out <demux.mzML> [--scheme scanning|staggered]" +
             @" [--kernel <profile.tsv>] [--layout centered:k|tiled:k|framed:k:m] [--threads N] [--cycles first:last]" +
             @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--position-mz] [--unweighted]" +
-            @" [--sweep-l1 L] [--sweep-l1-refit] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw]";
+            @" [--sweep-l1 L] [--sweep-l1-z Z] [--sweep-l1-refit] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw]";
 
         private static int Main(string[] args)
         {
@@ -117,6 +117,10 @@ namespace pwiz.Osprey.DemuxTool
                     case @"--sweep-l1":
                         // A lasso weight on each per-sweep solve.
                         options.Parameters.SweepL1 = double.Parse(value, CultureInfo.InvariantCulture);
+                        break;
+                    case @"--sweep-l1-z":
+                        // A lasso on each per-sweep weighted solve of this many noise standard deviations per position.
+                        options.Parameters.SweepL1Z = double.Parse(value, CultureInfo.InvariantCulture);
                         break;
                     case @"--sweep-l1-refit":
                         // Each lasso solve refitted without the penalty on the positions it kept.
@@ -217,10 +221,10 @@ namespace pwiz.Osprey.DemuxTool
                 settings += string.Format(CultureInfo.InvariantCulture, @", source positions (L1 {0}, min fraction {1})",
                     parameters.SourceL1, parameters.MinSourceFraction);
             }
-            else if (parameters.SweepL1 > 0)
+            else if (parameters.SweepL1 > 0 || parameters.SweepL1Z > 0)
             {
-                settings += string.Format(CultureInfo.InvariantCulture, @", sweep L1 {0}{1}", parameters.SweepL1,
-                    parameters.SweepL1Refit ? @" refit" : string.Empty);
+                settings += string.Format(CultureInfo.InvariantCulture, @", sweep L1 {0}, L1 z {1}{2}", parameters.SweepL1,
+                    parameters.SweepL1Z, parameters.SweepL1Refit ? @", refit" : string.Empty);
             }
             return settings;
         }

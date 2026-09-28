@@ -74,9 +74,19 @@ namespace pwiz.Osprey.Demux
         public double SweepL1 { get; set; }
 
         /// <summary>
-        /// With <see cref="SweepL1"/>: refit each sweep without the penalty over the positions the
-        /// lasso kept (a relaxed lasso), so the lasso chooses the support and the quantities are not
-        /// shrunk.
+        /// Scanning data: a lasso on every per-sweep weighted solve whose weight differs per position:
+        /// SweepL1Z standard deviations of the position's score under Poisson noise, sqrt((A^T W A)_jj)
+        /// (0: off). A position then stays at zero unless the evidence for it, given the others,
+        /// exceeds that many standard deviations, wherever the background is. A fixed
+        /// <see cref="SweepL1"/> is instead a threshold that tightens as the background grows. Needs
+        /// <see cref="PoissonWeights"/>; the unweighted fit that sets the weights is not penalized.
+        /// </summary>
+        public double SweepL1Z { get; set; }
+
+        /// <summary>
+        /// With <see cref="SweepL1"/> or <see cref="SweepL1Z"/>: refit each sweep without the penalty
+        /// over the positions the lasso kept (a relaxed lasso), so the lasso chooses the support and
+        /// the quantities are not shrunk.
         /// </summary>
         public bool SweepL1Refit { get; set; }
 
@@ -386,7 +396,8 @@ namespace pwiz.Osprey.Demux
             {
                 // Source positions set the solver's penalty themselves, for their summed fit only.
                 solver.L1 = parameters.SweepL1;
-                solver.RefitSupport = parameters.SweepL1 > 0 && parameters.SweepL1Refit;
+                solver.L1Z = parameters.SweepL1Z;
+                solver.RefitSupport = (parameters.SweepL1 > 0 || parameters.SweepL1Z > 0) && parameters.SweepL1Refit;
             }
             int k = 0;
             while (k < peaks)
@@ -1205,6 +1216,7 @@ namespace pwiz.Osprey.Demux
                 }
                 ComputeAtb(y, c, cycles, nr, nc, _mu);
                 Penalize(nc);
+                PenalizeZ(nc);
                 // The weighted solution usually has the unweighted one's support: start there.
                 Array.Copy(_x, _start, nc);
                 NnlsSolver.SolveNormal(_weighted, _atb, nc, _x, _workspace, 0, _start);
@@ -1215,6 +1227,12 @@ namespace pwiz.Osprey.Demux
             /// penalty is linear, so it enters the normal equations as A^T y - L1 / 2.
             /// </summary>
             public double L1 { get; set; }
+
+            /// <summary>
+            /// A lasso on the weighted solve only, per column: this many standard deviations of the
+            /// column's score under Poisson noise, sqrt((A^T W A)_jj) (0: none).
+            /// </summary>
+            public double L1Z { get; set; }
 
             /// <summary>
             /// Refit each penalized solve without the penalty over the columns it kept, with the
@@ -1228,6 +1246,18 @@ namespace pwiz.Osprey.Demux
                     return;
                 for (int jj = 0; jj < nc; jj++)
                     _atb[jj] -= 0.5 * L1;
+            }
+
+            /// <summary>
+            /// The weighted normal equations become A^T W A x = A^T W y - L1Z sqrt((A^T W A)_jj): a zero
+            /// column stays zero while its score, A^T W (y - A x), is within L1Z standard deviations.
+            /// </summary>
+            private void PenalizeZ(int nc)
+            {
+                if (L1Z <= 0)
+                    return;
+                for (int jj = 0; jj < nc; jj++)
+                    _atb[jj] -= L1Z * Math.Sqrt(_weighted[jj * nc + jj]);
             }
 
             /// <summary>
