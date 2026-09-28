@@ -37,7 +37,7 @@ are written `tool(arg=value)` with the `skyline_` prefix dropped. Here:
   2. Click the button with `perform_action(... label="Add", action="click")`.
   3. Choose the item with `click_control_menu_item(control="Add", menuPath=...)`.
 
-  Right after the click the menu was sometimes not yet found. See Gaps.
+  Without the capture first, the menu closed as soon as it opened. See Gaps.
 - **A graph's right-click menu**: `click_control_menu_item(control="", menuPath="Calculator > iRT-C18")`, with the
   form id of the graph.
 
@@ -45,8 +45,8 @@ are written `tool(arg=value)` with the `skyline_` prefix dropped. Here:
 
 | Tutorial step | What happened | Status |
 |---|---|---|
-| Calculator **Add** > Add Results / Add Spectral Library | `click_control_menu_item` right after the click said "&Add... has no menu open"; about 1.5 s later it found the menu, if Skyline stayed in front | **Fix written, not yet built**: the menu lookup waits up to 2 s for the menu to appear. It also names the button without its "&" |
-| Shift+F8 (Score To Run) with no Retention Times graph open | Nothing happened: the key only works while an RT graph has focus. The run used the View menu instead | **Skyline bug, fix written, not yet built**: `scoreToRunMenuItem` had lost its Shift+F8 shortcut in 2017 (commit 0a3e766670); restored in ViewMenu.resx |
+| Calculator **Add** > Add Results / Add Spectral Library | `click_control_menu_item` after the click said "&Add... has no menu open" whenever another application was in the foreground: the menu closes as soon as it opens. Capturing the form first (which activates it) made it work | **Open.** Measured afterwards: a 2 s wait for the menu found nothing (it is closed, not late). Activating the form inside the click brought Skyline to the front, but the menu was found in only 1 of 2 tries, so neither was kept. The error now names a text-less button by its control name |
+| Shift+F8 (Score To Run) with no Retention Times graph open | Nothing happened: the key only works while an RT graph has focus. The run used the View menu instead | **Skyline bug, fixed**: `scoreToRunMenuItem` had lost its Shift+F8 shortcut in 2017 (commit 0a3e766670); restored in ViewMenu.resx. Checked live: Shift+F8 with every RT graph closed opens Score To Run |
 | `click_control_menu_item(control="graphControl", ...)` | Naming the graph control failed ("No control matching 'graphControl'"); leaving `control` empty works for a graph form | Not changed: an empty `control` is the documented form |
 
 ### Found in the tutorial (English corrected)

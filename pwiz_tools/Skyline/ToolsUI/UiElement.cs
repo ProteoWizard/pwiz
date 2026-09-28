@@ -631,7 +631,8 @@ namespace pwiz.Skyline.ToolsUI
         {
             if (string.IsNullOrEmpty(text))
                 return text;
-            var normalized = text.Replace(@"&", string.Empty).Trim().TrimEnd('.', '…', '：', ':', ' ').Trim();
+            // A single '&' marks the mnemonic; '&&' is a literal ampersand ("Use start && end RTs")
+            var normalized = Regex.Replace(text, @"&(&?)", @"$1").Trim().TrimEnd('.', '…', '：', ':', ' ').Trim();
             return normalized.Length == 0 ? text : normalized;
         }
 
@@ -1528,7 +1529,7 @@ namespace pwiz.Skyline.ToolsUI
             if (droppedDown == null)
                 throw new ArgumentException(LlmInstruction.Format(
                     @"{0} has no menu open. Click it first (skyline_click_form_button) to drop its menu down.",
-                    Label ?? Name));
+                    NullIfEmpty(Label) ?? NullIfEmpty(Name) ?? ElementType.Name));
             return droppedDown;
         }
     }
