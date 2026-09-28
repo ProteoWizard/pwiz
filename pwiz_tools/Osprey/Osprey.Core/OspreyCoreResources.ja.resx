@@ -1,6 +1,6 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
-	<!-- 
+  <!-- 
 		Microsoft ResX Schema
 
 		Version 1.3
@@ -98,22 +98,28 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="DecoyMethodExtension_LOCALIZED_VALUES_library_supplied" xml:space="preserve">
-    <value>library-supplied</value>
+    <value>ライブラリ提供</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="DecoyMethodExtension_LOCALIZED_VALUES_reverse_sequence" xml:space="preserve">
-    <value>reverse-sequence</value>
+    <value>逆シークエンス</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="DecoyMethodExtension_LOCALIZED_VALUES_shuffled_sequence" xml:space="preserve">
-    <value>shuffled-sequence</value>
+    <value>シャッフルシークエンス</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FdrLevelExtension_LOCALIZED_VALUES_peptide" xml:space="preserve">
-    <value>peptide</value>
+    <value>ペプチド</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FdrLevelExtension_LOCALIZED_VALUES_precursor" xml:space="preserve">
-    <value>precursor</value>
+    <value>プリカーサー</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FdrLevelExtension_LOCALIZED_VALUES_precursor_and_peptide" xml:space="preserve">
-    <value>precursor and peptide</value>
+    <value>プリカーサーとペプチド</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FdrMethodExtensions_LOCALIZED_VALUES_Mokapot" xml:space="preserve">
     <value>Mokapot</value>
@@ -122,28 +128,36 @@
     <value>Percolator</value>
   </data>
   <data name="FdrMethodExtensions_LOCALIZED_VALUES_gradient_boosted_tree" xml:space="preserve">
-    <value>gradient-boosted tree</value>
+    <value>勾配ブースティング木</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FdrMethodExtensions_LOCALIZED_VALUES_simple_target_decoy" xml:space="preserve">
-    <value>simple target-decoy</value>
+    <value>単純ターゲット-デコイ</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FileParallelismResolver_ResolveAuto_File_parallelism___0___auto__CPU_bound___1__cores___2__files__memory_estimate_unavailable_" xml:space="preserve">
-    <value>File parallelism: {0} (auto, CPU-bound: {1} cores, {2} files; memory estimate unavailable)</value>
+    <value>ファイル並列度：{0}（自動、CPUバウンド：{1}コア、{2}ファイル、メモリ推定値なし）</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FileParallelismResolver_ResolveAuto_File_parallelism___0___auto___1__GB_free_x__2______3__GB_est_per_file_____4__by_RAM__" xml:space="preserve">
-    <value>File parallelism: {0} (auto: {1:F1} GB free x {2:P0} / ~{3:F1} GB est per file -&gt; {4} by RAM, capped to {5} cores / {6} files)</value>
+    <value>ファイル並列度：{0}（自動：空き{1:F1} GB x {2:P0} / ファイルあたり推定~{3:F1} GB -&gt; RAMにより{4}、上限{5}コア / {6}ファイル）</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FileParallelismResolver_Resolve_File_parallelism__1__sequential_default__pass___parallel_files_to_score__0__files_" xml:space="preserve">
-    <value>File parallelism: 1 (sequential default; pass {1} to score {0} files concurrently)</value>
+    <value>ファイル並列度：1（デフォルトは逐次処理。{0}個のファイルを同時にスコアリングするには{1}を指定）</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FileParallelismResolver_Resolve_File_parallelism___0___explicit___parallel_files___1__files_" xml:space="preserve">
-    <value>File parallelism: {0} (explicit {2}, {1} files)</value>
+    <value>ファイル並列度：{0}（明示的な{2}、{1}ファイル）</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FileSaver_GetTempFileName_Access_denied__unable_to_create_a_file_in_the_folder___0____Adjust_the_folder_write_" xml:space="preserve">
-    <value>Access denied: unable to create a file in the folder '{0}'. Adjust the folder write permissions or retry the operation after moving or copying files to a different folder.</value>
+    <value>アクセスが拒否されました。フォルダ「{0}」にはファイルを作成できません。フォルダの書き込み権限を変更するか、ファイルを別のフォルダに移動するかコピーした後、操作を再試行してください。</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FileSaver_GetTempFileName_Failed_to_allocate_a_temporary_file_in_the_folder___0___after__1__attempts_" xml:space="preserve">
-    <value>Failed to allocate a temporary file in the folder '{0}' after {1} attempts.</value>
+    <value>{1}回試行しましたが、フォルダ「{0}」に一時ファイルを割り当てられませんでした。</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="LibraryFormatExtension_LOCALIZED_VALUES_BiblioSpec" xml:space="preserve">
     <value>BiblioSpec</value>
@@ -152,46 +166,58 @@
     <value>DIA-NN TSV</value>
   </data>
   <data name="LibraryFormatExtension_LOCALIZED_VALUES_Skyline_document" xml:space="preserve">
-    <value>Skyline document</value>
+    <value>Skylineドキュメント</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="LibrarySource_FromPath_EncyclopeDIA__elib_spectral_libraries_are_no_longer_supported__convert_the_library_to_DIA_" xml:space="preserve">
-    <value>EncyclopeDIA {0} spectral libraries are no longer supported; convert the library to DIA-NN TSV ({1}) or BiblioSpec ({2}).</value>
+    <value>EncyclopeDIA {0}スペクトルライブラリは今後サポートされません。ライブラリをDIA-NN TSV（{1}）またはBiblioSpec（{2}）に変換してください。</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="LibraryStringInterner_LogDecoySummary_Unique_decoy_strings___0_____1__total___2___reduced_" xml:space="preserve">
-    <value>Unique decoy strings: {0:N0} / {1:N0} total ({2:F1}% reduced)</value>
+    <value>一意のデコイ文字列：{0:N0} / 合計{1:N0}（{2:F1}%削減）</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="LibraryStringInterner_LogPairingManifestSummary_Unique_pairing_manifest_protein_accessions___0_____1__total___2___reduced_" xml:space="preserve">
-    <value>Unique pairing-manifest protein accessions: {0:N0} / {1:N0} total ({2:F1}% reduced)</value>
+    <value>一意のペアリングマニフェストのタンパク質アクセッション：{0:N0} / 合計{1:N0}（{2:F1}%削減）</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="LibraryStringInterner_LogSummary_Unique_library_strings___0_____1__total___2___reduced_" xml:space="preserve">
-    <value>Unique library strings: {0:N0} / {1:N0} total ({2:F1}% reduced)</value>
+    <value>一意のライブラリ文字列：{0:N0} / 合計{1:N0}（{2:F1}%削減）</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="OspreyEnvironment_DescribeExperimentAgg_Experiment_aggregation___0___default___best_observation_per_unit_" xml:space="preserve">
-    <value>Experiment aggregation: {0} (default - best observation per unit)</value>
+    <value>実験集約：{0}（デフォルト - 単位ごとの最良の観測）</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProgressReporter_FormatElapsed__0_h_1_00_m" xml:space="preserve">
-    <value>{0}h{1:00}m</value>
+    <value>{0}時間{1:00}分</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProgressReporter_FormatElapsed__0_m_1_00_s" xml:space="preserve">
-    <value>{0}m{1:00}s</value>
+    <value>{0}分{1:00}秒</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProgressReporter_FormatElapsed__0_s" xml:space="preserve">
-    <value>{0}s</value>
+    <value>{0}秒</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProgressReporter_ProgressReporter__0____" xml:space="preserve">
     <value>{0}...</value>
   </data>
   <data name="ProgressReporter_Report__0____1_____2___3____4__elapsed_" xml:space="preserve">
-    <value>{0}  {1:0.00}% ({2:N0}/{3:N0}, {4} elapsed)</value>
+    <value>{0}  {1:0.00}%（{2:N0}/{3:N0}、経過{4}）</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ResolutionModeExtension_LOCALIZED_VALUES_HRAM" xml:space="preserve">
     <value>HRAM</value>
   </data>
   <data name="ResolutionModeExtension_LOCALIZED_VALUES_auto" xml:space="preserve">
-    <value>auto</value>
+    <value>自動</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ResolutionModeExtension_LOCALIZED_VALUES_unit" xml:space="preserve">
-    <value>unit</value>
+    <value>ユニット</value>
+    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ToleranceUnitExtension_LOCALIZED_VALUES_mz" xml:space="preserve">
     <value>m/z</value>

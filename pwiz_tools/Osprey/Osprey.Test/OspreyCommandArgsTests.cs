@@ -519,20 +519,40 @@ namespace pwiz.Osprey.Test
         /// <c>Documentation/Help/en/CommandLine.html</c>. The test is self-updating: when they
         /// differ it overwrites the committed file with the freshly generated content and then
         /// fails, so the fix is simply to review and commit the regenerated file. (CI fails the same
-        /// way, flagging an argument or generated-prose change that was not regenerated.) The
-        /// per-language folder leaves room for ja / zh-CHS once the descriptions move to a .resx.
+        /// way, flagging an argument or generated-prose change that was not regenerated.) As in
+        /// Skyline's Documentation/Help, there is one page per shipped language: en, ja, zh-Hans.
         /// </summary>
         [TestMethod]
         public void TestCommandLineHelpDocumentation()
         {
-            // The committed page is the English one (Help/en), whatever culture the suite runs in.
+            // Each page is generated in its own language, whatever culture the suite runs in.
+            var rewritten = new List<string>();
+            foreach (var language in new[] { @"en", @"ja", @"zh-Hans" })
+            {
+                string path = UpdateHelpPage(language);
+                if (path != null)
+                    rewritten.Add(path);
+            }
+            // Out of date (or missing): the pages were rewritten; fail so the developer reviews and
+            // commits them. Re-running after the commit passes.
+            Assert.AreEqual(0, rewritten.Count,
+                @"Command-line help pages were out of date or missing and were regenerated; review and commit: " +
+                string.Join(@", ", rewritten));
+        }
+
+        /// <summary>
+        /// Regenerates Documentation/Help/&lt;language&gt;/CommandLine.html when its content differs
+        /// from the committed page, returning its path, or null when it is up to date.
+        /// </summary>
+        private static string UpdateHelpPage(string language)
+        {
             string generated;
-            using (new CultureScope(CultureInfo.GetCultureInfo(@"en")))
+            using (new CultureScope(CultureInfo.GetCultureInfo(language)))
             {
                 generated = OspreyCommandArgs.GenerateUsageHtml();
             }
             string committedPath = Path.Combine(FindOspreySourceRoot(),
-                @"Documentation", @"Help", @"en", @"CommandLine.html");
+                @"Documentation", @"Help", language, @"CommandLine.html");
 
             // Compare EOL-agnostically: GenerateUsageHtml builds with Environment.NewLine, which
             // differs between the Windows (net472) and Linux (net8.0) test runs, and git may rewrite
@@ -540,18 +560,13 @@ namespace pwiz.Osprey.Test
             // and it keeps a pure EOL difference from triggering a spurious rewrite.
             string committed = File.Exists(committedPath) ? File.ReadAllText(committedPath) : null;
             if (committed != null && NormalizeEol(committed) == NormalizeEol(generated))
-                return;
+                return null;
 
-            // Out of date (or missing): self-heal by writing the regenerated page, then fail so the
-            // developer reviews and commits it. Re-running after the commit passes.
             string committedDir = Path.GetDirectoryName(committedPath);
             if (!string.IsNullOrEmpty(committedDir))
                 Directory.CreateDirectory(committedDir);
             File.WriteAllText(committedPath, generated);
-            Assert.Fail(committed == null
-                    ? @"Generated usage doc did not exist; wrote {0}. Review and commit it."
-                    : @"Documentation/Help/en/CommandLine.html was out of date; regenerated it at {0}. Review and commit the change.",
-                committedPath);
+            return committedPath;
         }
 
         private static string NormalizeEol(string s)

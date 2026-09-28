@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
@@ -55,8 +55,9 @@ namespace pwiz.Osprey.Test
                     p.Report(1);            // still 0% -> heartbeat line
                 });
             // Only the heartbeat line carries the "(... elapsed)" parenthetical; the plain
-            // "N%" advance lines and the heading do not (punctuation, not localizable text).
-            StringAssert.Contains(string.Join("\n", frozen), "(");
+            // "N%" advance lines and the heading do not. The parenthesis is read from the
+            // resource, because Japanese and Chinese write it full-width.
+            StringAssert.Contains(string.Join("\n", frozen), HeartbeatMarker);
 
             // A phase that advances on every report but never idles past a (wide) heartbeat
             // threshold emits only advance lines -- no heartbeat clutter on healthy phases.
@@ -67,7 +68,7 @@ namespace pwiz.Osprey.Test
                     p.Report(50);
                     p.Report(75);
                 });
-            Assert.IsFalse(string.Join("\n", fast).Contains("("),
+            Assert.IsFalse(string.Join("\n", fast).Contains(HeartbeatMarker),
                 "a fast, always-advancing phase should emit no heartbeat line");
         }
 
@@ -86,20 +87,20 @@ namespace pwiz.Osprey.Test
             var fast = CaptureLines(total: 100, intervalSeconds: 60.0, heartbeatSeconds: 60.0,
                 act: p => p.Report(50), minPercentSeconds: 60.0);
             Assert.AreEqual(1, fast.Count, @"a fast step prints only its heading");
-            StringAssert.Contains(fast[0], @"phase...");
+            StringAssert.Contains(fast[0], Heading(@"phase"));
 
             // Past MinPercentTime but no percent shown (the interval has not elapsed): the
             // heading, then the closing 100%.
             var announced = CaptureLines(total: 100, intervalSeconds: 60.0, heartbeatSeconds: 60.0,
                 act: p => p.Report(50), minPercentSeconds: 0.0);
             Assert.AreEqual(2, announced.Count, @"expected the heading and its completion line");
-            StringAssert.Contains(announced[0], @"phase...");
+            StringAssert.Contains(announced[0], Heading(@"phase"));
             StringAssert.Contains(announced[1], @"100%");
 
             // MinPercentTime is clamped to the interval, so a step that showed 50% always closes.
             var partial = CaptureLines(total: 100, intervalSeconds: 0.0, heartbeatSeconds: 60.0,
                 act: p => p.Report(50), minPercentSeconds: 60.0);
-            StringAssert.Contains(partial[0], @"phase...");
+            StringAssert.Contains(partial[0], Heading(@"phase"));
             StringAssert.Contains(string.Join("\n", partial), @"50%");
             StringAssert.Contains(partial[partial.Count - 1], @"100%");
         }
@@ -127,6 +128,31 @@ namespace pwiz.Osprey.Test
                 .ReadLines()
                 .Where(line => line.Length > 0)
                 .ToList();
+        }
+
+        /// <summary>
+        /// The text between the percent and the counts in the heartbeat line - "% (" in English,
+        /// "%" and a full-width parenthesis in Japanese - which no plain advance line or heading
+        /// contains.
+        /// </summary>
+        private static string HeartbeatMarker
+        {
+            get
+            {
+                string format = OspreyCoreResources.ProgressReporter_Report__0____1_____2___3____4__elapsed_;
+                int start = format.IndexOf("{1", StringComparison.Ordinal);
+                start = format.IndexOf('}', start) + 1;
+                return format.Substring(start, format.IndexOf("{2", start, StringComparison.Ordinal) - start).Trim();
+            }
+        }
+
+        /// <summary>
+        /// A progress heading as the reporter prints it in the current UI language: the ellipsis
+        /// is part of the resource because Chinese writes it as one full-width character.
+        /// </summary>
+        private static string Heading(string activity)
+        {
+            return string.Format(OspreyCoreResources.ProgressReporter_ProgressReporter__0____, activity);
         }
     }
 }

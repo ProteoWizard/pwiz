@@ -1,0 +1,418 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+		Microsoft ResX Schema
+
+		Version 1.3
+
+		The primary goals of this format is to allow a simple XML format 
+		that is mostly human readable. The generation and parsing of the 
+		various data types are done through the TypeConverter classes 
+		associated with the data types.
+
+		Example:
+
+		... ado.net/XML headers & schema ...
+		<resheader name="resmimetype">text/microsoft-resx</resheader>
+		<resheader name="version">1.3</resheader>
+		<resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+		<resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+		<data name="Name1">this is my long string</data>
+		<data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+		<data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+			[base64 mime encoded serialized .NET Framework object]
+		</data>
+		<data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+			[base64 mime encoded string representing a byte array form of the .NET Framework object]
+		</data>
+
+		There are any number of "resheader" rows that contain simple 
+		name/value pairs.
+
+		Each data row contains a name, and value. The row also contains a 
+		type or mimetype. Type corresponds to a .NET class that support 
+		text/value conversion through the TypeConverter architecture. 
+		Classes that don't support this are serialized and stored with the 
+		mimetype set.
+
+		The mimetype is used for serialized objects, and tells the 
+		ResXResourceReader how to depersist the object. This is currently not 
+		extensible. For a given mimetype the value must be set accordingly:
+
+		Note - application/x-microsoft.net.object.binary.base64 is the format 
+		that the ResXResourceWriter will generate, however the reader can 
+		read any of the formats listed below.
+
+		mimetype: application/x-microsoft.net.object.binary.base64
+		value   : The object must be serialized with 
+			: System.Serialization.Formatters.Binary.BinaryFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.soap.base64
+		value   : The object must be serialized with 
+			: System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.bytearray.base64
+		value   : The object must be serialized into a byte array 
+			: using a System.ComponentModel.TypeConverter
+			: and then encoded with base64 encoding.
+	-->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>1.3</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AnalysisPipeline_FormatDuration__0__days" xml:space="preserve">
+    <value>{0} 天</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AnalysisPipeline_FormatDuration__0__days__1__hours" xml:space="preserve">
+    <value>{0} 天 {1} 小时</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AnalysisPipeline_FormatDuration__0__hours" xml:space="preserve">
+    <value>{0} 小时</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AnalysisPipeline_FormatDuration__0__hours__1__minutes" xml:space="preserve">
+    <value>{0} 小时 {1} 分钟</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AnalysisPipeline_FormatDuration__0__minutes" xml:space="preserve">
+    <value>{0} 分钟</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AnalysisPipeline_FormatDuration__0__minutes__1__seconds" xml:space="preserve">
+    <value>{0} 分钟 {1} 秒</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AnalysisPipeline_FormatDuration__0__ms" xml:space="preserve">
+    <value>{0} ms</value>
+  </data>
+  <data name="AnalysisPipeline_FormatDuration__0__seconds" xml:space="preserve">
+    <value>{0:F3} 秒</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AnalysisPipeline_Run_Analysis_complete_in__0_" xml:space="preserve">
+    <value>分析完成，用时 {0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AnalysisPipeline_Run_Pipeline_failed___0_" xml:space="preserve">
+    <value>流程失败：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="AnalysisPipeline_WriteTaskSidecars_Failed_to_record_that_task__0__completed__1____2___A_resume_will_redo_this_step_" xml:space="preserve">
+    <value>无法记录任务 {0} 已完成 {1}：{2}。恢复运行时将重做此步骤。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyArgUsageProvider_AppliesToHeader_Applies_To" xml:space="preserve">
+    <value>适用于</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyArgUsageProvider_ArgumentHeader_Argument" xml:space="preserve">
+    <value>参数</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyArgUsageProvider_DescriptionHeader_Description" xml:space="preserve">
+    <value>描述</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyArgUsageProvider_ValueInvalidMessage_Invalid_value___0___for__1__" xml:space="preserve">
+    <value>{1} 的值“{0}”无效。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyArgUsageProvider_ValueInvalidMessage_Invalid_value___0___for__1___expected__2___" xml:space="preserve">
+    <value>{1} 的值“{0}”无效（应为 {2}）。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyArgUsageProvider_ValueMissingMessage__0__requires_a_value_" xml:space="preserve">
+    <value>{0} 需要一个值。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyArgUsageProvider_ValueOutOfRangeMessage_Value__0__for__1__out_of_range___2____3___" xml:space="preserve">
+    <value>{1} 的值 {0} 超出范围 [{2}, {3}]。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyArgUsageProvider_ValueUnexpectedMessage__0__does_not_take_a_value_" xml:space="preserve">
+    <value>{0} 不接受值。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_BuildUsage_No_help_section_matching___0___found__Use__1__to_list_available_sections_" xml:space="preserve">
+    <value>未找到与“{0}”匹配的帮助部分。请使用 {1} 列出可用的部分。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_FdrBenchMissingMessage__0__is_set_without__1___no_FDRBench_input_will_be_written__Pass__1___2__to_enable_FDRBench_output_" xml:space="preserve">
+    <value>设置了 {0} 但未设置 {1}；不会写入 FDRBench 输入。请传入 {1} {2} 以启用 FDRBench 输出。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_Group_Decoys" xml:space="preserve">
+    <value>诱饵</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_Group_Diagnostics_Info" xml:space="preserve">
+    <value>诊断与信息</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_Group_Distributed_HPC" xml:space="preserve">
+    <value>分布式 / HPC</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_Group_FDR_Protein_Inference" xml:space="preserve">
+    <value>FDR 与蛋白质推断</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_Group_General_IO" xml:space="preserve">
+    <value>一般输入/输出</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_Group_Logging" xml:space="preserve">
+    <value>日志</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_Group_Performance" xml:space="preserve">
+    <value>性能</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_Group_Scoring_Tolerance" xml:space="preserve">
+    <value>评分与耐受性</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_ReadInputList_The__0__file_lists_no_input_files___1_" xml:space="preserve">
+    <value>{0} 文件未列出任何输入文件：{1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_ReadInputList__0__file_not_found___1_" xml:space="preserve">
+    <value>未找到 {0} 文件：{1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_ToConfig__0__is_set_without__1___so_the_manifest_will_not_be_used" xml:space="preserve">
+    <value>设置了 {0} 但未设置 {1}，因此不会使用该清单。它仍属于搜索设置的一部分，因此不会重用在没有它的情况下评分的现有 {2} 文件。请传入 {1} 以使用库中的诱饵。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_TokenizeAndDispatch_Unknown_argument___0_" xml:space="preserve">
+    <value>未知参数：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_TokenizeAndDispatch_Unknown_argument___0___Run_with__1__to_see_valid_options_" xml:space="preserve">
+    <value>未知参数：{0}。请使用 {1} 运行以查看有效选项。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_Unknown_FDR_level___0____defaulting_to__1_" xml:space="preserve">
+    <value>未知的 FDR 水平“{0}”，默认使用 {1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_Unknown_FDR_method___0____defaulting_to__1_" xml:space="preserve">
+    <value>未知的 FDR 方法“{0}”，默认使用 {1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_Unknown_fragment_unit___0____defaulting_to__1_" xml:space="preserve">
+    <value>未知的碎片单位“{0}”，默认使用 {1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_Unknown_shared_peptides_mode___0____defaulting_to__1_" xml:space="preserve">
+    <value>未知的共享肽段模式“{0}”，默认使用 {1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_UsageBlocks_EXAMPLES_" xml:space="preserve">
+    <value>示例：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_UsageBlocks_HPC_SPLIT__one_node___one__0____see__0__above_" xml:space="preserve">
+    <value>HPC 拆分（一个节点 = 一个 {0}）：请参见上方的 {0}。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_UsageBlocks_Osprey___Peptide_centric_DIA_analysis__NET_port_of_Osprey_" xml:space="preserve">
+    <value>Osprey - 以肽段为中心的 DIA 分析（Osprey 的 .NET 移植版）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_UsageBlocks_USAGE___0_" xml:space="preserve">
+    <value>用法：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_DuplicateInputStemError_1_input_file_name_appears_more_than_once_" xml:space="preserve">
+    <value>有 1 个输入文件名出现了不止一次。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_DuplicateInputStemError_Every_file_Osprey_writes_for_an_input_is_named_after_the_input_without_its_extension__so_" xml:space="preserve">
+    <value>Osprey 为某个输入写入的每个文件都以该输入不带扩展名的名称命名，因此同名的输入会相互覆盖中间文件。请重命名或分别存放这些输入，使每个输入都有不同的文件名：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_DuplicateInputStemError__0__input_file_names_appear_more_than_once_" xml:space="preserve">
+    <value>有 {0:N0} 个输入文件名出现了不止一次。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_LogError_Error_" xml:space="preserve">
+    <value>错误：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_LogWarning_Warning_" xml:space="preserve">
+    <value>警告：</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_ReconcileExitCode_Failure_occurred__Exiting___" xml:space="preserve">
+    <value>发生故障。正在退出…</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_ResolveTask__0___unknown_task___1____Valid_tasks___2__" xml:space="preserve">
+    <value>{0}：未知任务“{1}”。有效任务：{2}。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_RunModelDiagnosticsTask__0___building_the_report_from_the_completed_analysis__Nothing_is_re_run_and_no_other_" xml:space="preserve">
+    <value>{0}：正在根据已完成的分析构建报告。不会重新运行任何内容，其他输出也不会改变。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_RunModelDiagnosticsTask__0___the_saved_model_diagnostics_data_for_this_analysis_could_not_be_read__so_the_report_" xml:space="preserve">
+    <value>{0}：无法读取此分析已保存的模型诊断数据，因此未构建报告。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_RunModelDiagnosticsTask__0___there_is_no_completed_first_pass_to_describe__no_first_pass_intermediate_file_for_" xml:space="preserve">
+    <value>{0}：没有可描述的已完成第一轮（输出旁没有整个实验的第一轮中间文件）。请先至少将分析运行到 {1}。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_Run_1_of__1__input_files_is_not_present__using_the_intermediate_scores_file_written_for_it_" xml:space="preserve">
+    <value>{1:N0} 个输入文件中有 1 个不存在；使用为其写入的中间得分文件。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_Run_1_of__1__input_files_is_not_present_but_has_a_spectra_cache__reading_it_from_the_cache_" xml:space="preserve">
+    <value>{1:N0} 个输入文件中有 1 个不存在，但有谱图缓存；从缓存读取该文件。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_Run_Command___0_" xml:space="preserve">
+    <value>命令：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_Run_Experiment_FDR___0_" xml:space="preserve">
+    <value>实验 FDR：{0:P1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_Run_Failed_to_open_log_file__0____1_" xml:space="preserve">
+    <value>无法打开日志文件 {0}：{1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_Run_Fatal_error___0_" xml:space="preserve">
+    <value>严重错误：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_Run_Fragment_tolerance___0___1_" xml:space="preserve">
+    <value>碎片耐受性：{0} {1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_Run_Input_file_not_found__and_no_spectra_cache_or_intermediate_file_exists_to_stand_in_for_it_" xml:space="preserve">
+    <value>未找到输入文件，并且没有可替代它的谱图缓存或中间文件：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_Run_Input_files___0_" xml:space="preserve">
+    <value>输入文件：{0:N0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_Run_Library___0____1__" xml:space="preserve">
+    <value>库：{0}（{1}）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_Run_Library_file_not_found___0_" xml:space="preserve">
+    <value>未找到库文件：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_Run_No_arguments_were_given__see_the_usage_above_" xml:space="preserve">
+    <value>未提供任何参数；请参见上方的用法。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_Run_Osprey_v_0_" xml:space="preserve">
+    <value>Osprey v{0}</value>
+  </data>
+  <data name="Program_Run_Output___0_" xml:space="preserve">
+    <value>输出：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_Run_Protein_FDR___0_" xml:space="preserve">
+    <value>蛋白质 FDR：{0:P1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_Run_Resolution___0_" xml:space="preserve">
+    <value>分辨率：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_Run_Run_FDR___0_" xml:space="preserve">
+    <value>运行 FDR：{0:P1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_Run_Task___0___single_task_run_" xml:space="preserve">
+    <value>任务：{0}（单任务运行）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_Run_The_input_file_is_not_present__using_the_intermediate_scores_file_written_for_it_" xml:space="preserve">
+    <value>输入文件不存在；使用为其写入的中间得分文件。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_Run_The_input_file_is_not_present_but_has_a_spectra_cache__reading_it_from_the_cache_" xml:space="preserve">
+    <value>输入文件不存在，但有谱图缓存；从缓存读取该文件。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_Run_Threads___0_" xml:space="preserve">
+    <value>线程数：{0:N0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_Run__0__of__1__input_files_are_not_present__using_the_intermediate_scores_file_written_for_" xml:space="preserve">
+    <value>{1:N0} 个输入文件中有 {0:N0} 个不存在；对每个文件使用为其写入的中间得分文件。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_Run__0__of__1__input_files_are_not_present_but_have_a_spectra_cache__reading_those_from_the_" xml:space="preserve">
+    <value>{1:N0} 个输入文件中有 {0:N0} 个不存在，但有谱图缓存；从缓存读取这些文件。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_Run__0__requires_a_task_name___1___" xml:space="preserve">
+    <value>{0} 需要一个任务名称（{1}）。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_Run__none_" xml:space="preserve">
+    <value>（无）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_ValidateArgs_No_input_files_specified__Use__0_" xml:space="preserve">
+    <value>未指定输入文件。请使用 {0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_ValidateArgs_No_output_path_specified__Use__0_" xml:space="preserve">
+    <value>未指定输出路径。请使用 {0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Program_ValidateArgs_No_spectral_library_specified__Use__0_" xml:space="preserve">
+    <value>未指定谱图库。请使用 {0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+</root>

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
@@ -120,7 +120,7 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(50, percents[2], @"two segments behind should floor the file at 50%");
             Assert.AreEqual(75, percents[3], @"segment 3 at 100% should compose to 75%");
 
-            StringAssert.Contains(fileBlock, @"Reading fileA...",
+            StringAssert.Contains(fileBlock, Heading(@"Reading fileA"),
                 @"the reporter heading must buffer into the file block");
             Assert.IsFalse(fileBlock.Contains(@"%"),
                 @"inside a scope the reporter must route its percent, not print a '%' line into the block");
@@ -186,8 +186,17 @@ namespace pwiz.Osprey.Test
                 progress.Report(50);
 
             string output = capture.ToString();
-            StringAssert.Contains(output, @"Standalone...");
+            StringAssert.Contains(output, Heading(@"Standalone"));
             StringAssert.Contains(output, @"50%");
+        }
+
+        /// <summary>
+        /// A progress heading as the reporter prints it in the current UI language: the ellipsis
+        /// is part of the resource because Chinese writes it as one full-width character.
+        /// </summary>
+        private static string Heading(string activity)
+        {
+            return string.Format(OspreyCoreResources.ProgressReporter_ProgressReporter__0____, activity);
         }
     }
 }

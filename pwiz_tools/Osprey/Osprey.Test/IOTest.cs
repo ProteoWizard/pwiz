@@ -4461,7 +4461,10 @@ namespace pwiz.Osprey.Test
                 }
                 catch (InvalidDataException ex)
                 {
-                    StringAssert.Contains(ex.Message, "unsupported format_version");
+                    Assert.AreEqual(string.Format(
+                        OspreyIOResources.ReconciliationFile_Load_Reconciliation_file__0__has_unsupported_format_version__1___expected__2____Delete_this_,
+                        path, 99, ReconciliationFile.CurrentFormatVersion, "format_version",
+                        OspreyTaskNames.TaskFilePattern(OspreyTaskNames.FIRST_PASS_FDR)), ex.Message);
                 }
             }
             finally

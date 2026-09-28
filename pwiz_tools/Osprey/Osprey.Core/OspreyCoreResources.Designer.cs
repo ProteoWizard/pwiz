@@ -315,6 +315,15 @@ namespace pwiz.Osprey.Core {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}....
+        /// </summary>
+        public static string ProgressReporter_ProgressReporter__0____ {
+            get {
+                return ResourceManager.GetString("ProgressReporter_ProgressReporter__0____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}  {1:0.00}% ({2:N0}/{3:N0}, {4} elapsed).
         /// </summary>
         public static string ProgressReporter_Report__0____1_____2___3____4__elapsed_ {

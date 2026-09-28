@@ -1,0 +1,107 @@
+<html><head>
+<meta charset="utf-8">
+<title>Osprey command-line usage</title>
+<meta name="description" content="Command-line usage for Osprey, the C# (.NET 8) implementation of Mike MacCoss's peptide-centric DIA search tool: search and FDR arguments, protein inference, the SpectraCache staging task, the ModelDiagnostics report-only task, and the four distributed HPC --task workers (PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR).">
+<style>
+body { font: .875em/1.35 'Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif; max-width: 70em; }
+h1 { font-size: 1.6em; font-weight: 600; color: #000; margin: 0 0 .3em; }
+.RowType { font-size: 1.769em; line-height: 1.3em; font-family: 'Segoe UI Semibold','Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif; color: #000; }
+table { border: 1px solid #bbb; border-collapse: collapse; margin-top: 20px; margin-bottom: 20px; }
+th { background-color: #ededed; color: #636363; text-align: left; padding: 10px 8px; font-weight: bold; border: 1px solid #bbb; }
+td { color: #2a2a2a; vertical-align: top; padding: 10px 8px; border: 1px solid #bbb; }
+pre { background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px; font-family: Consolas,'Courier New',monospace; font-size: .92em; white-space: pre-wrap; }
+code { font-family: Consolas,'Courier New',monospace; }
+a { color: #1565c0; }
+</style>
+</head><body>
+<h1>Osprey command-line usage</h1>
+<p>Osprey is Mike MacCoss's peptide-centric DIA search tool, implemented in C# (.NET 8). (The original Rust prototype is <a href="https://github.com/maccoss/osprey">maccoss/osprey</a>.) It reads DIA mzML files plus a spectral library and writes a BiblioSpecLite (<code>.blib</code>) library of FDR-controlled results that imports directly into Skyline. It runs as a standalone executable on Windows and Linux.</p>
+<p>For the pipeline overview, per-stage detail, and how the four distributed HPC tasks split and join, see the workflow diagram: <a href="https://raw.githack.com/ProteoWizard/pwiz/master/pwiz_tools/Osprey/Osprey-workflow.html">Osprey-workflow.html</a>. The argument tables below are generated from the command-line declarations, so they always match the build; run <code>Osprey --help</code> for the same reference as text.</p>
+<p>Osprey - ペプチド中心のDIA解析（Ospreyの.NET移植版）</p><p>使用法：osprey -i <file1.mzML> [file2.mzML ...] -l <library.tsv> -o <output.blib></p><div class="RowType">一般I/O</div>
+<table>
+<tr><th>引数</th><th>説明</th></tr>
+<tr><td><nobr>-i</nobr>,&nbsp;<nobr>--input</nobr>&nbsp;&lt;file1.mzML&nbsp;...&gt;</td><td>入力mzMLファイル</td></tr>
+<tr><td><nobr>--input-list</nobr>&nbsp;&lt;list.txt&gt;</td><td>入力パスを記載したファイル（1行に1つ、#コメントは無視）。<nobr>長い-iリストの代わりに使用できます</nobr>。</td></tr>
+<tr><td><nobr>-l</nobr>, <nobr>--library</nobr> &lt;library.tsv|.blib&gt;</td><td>スペクトルライブラリ（.tsv、.blib）</td></tr>
+<tr><td><nobr>-o</nobr>,&nbsp;<nobr>--output</nobr>&nbsp;&lt;output.blib&gt;</td><td>出力blibファイル</td></tr>
+<tr><td><nobr>--work-dir</nobr>&nbsp;&lt;dir&gt;</td><td>中間ファイルとスペクトルキャッシュをここに書き込みます（入力データを読み取り専用にできます）。デフォルト：入力の横</td></tr>
+<tr><td><nobr>--output-dir</nobr>&nbsp;&lt;dir&gt;</td><td>中間ファイルのディレクトリ（<nobr>--work-dirより優先</nobr>）</td></tr>
+<tr><td><nobr>--cache-dir</nobr>&nbsp;&lt;dir&gt;</td><td>.spectra.binキャッシュのディレクトリ（<nobr>--work-dirより優先</nobr>）</td></tr>
+<tr><td><nobr>--report</nobr>&nbsp;&lt;report.tsv&gt;</td><td>TSVレポートをファイルに書き込みます</td></tr>
+</table>
+<div class="RowType">スコアリングと許容誤差</div>
+<table>
+<tr><th>引数</th><th>説明</th></tr>
+<tr><td><nobr>--resolution</nobr> &lt;unit | hram | auto&gt;</td><td>分解能モード（デフォルト：auto）</td></tr>
+<tr><td><nobr>--fragment-tolerance</nobr>&nbsp;&lt;value&gt;</td><td>フラグメントm/z許容誤差（デフォルト：10）</td></tr>
+<tr><td><nobr>--fragment-unit</nobr> &lt;ppm | mz&gt;</td><td>フラグメント許容誤差の単位（デフォルト：ppm）</td></tr>
+<tr><td><nobr>--no-prefilter</nobr></td><td>共溶出シグナルのプレフィルタを無効にします</td></tr>
+</table>
+<div class="RowType">FDRとタンパク質推定</div>
+<table>
+<tr><th>引数</th><th>説明</th></tr>
+<tr><td><nobr>--run-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td>ランレベルFDR閾値（デフォルト：0.01）</td></tr>
+<tr><td><nobr>--experiment-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td>実験レベルFDR閾値（デフォルト：0.01）</td></tr>
+<tr><td><nobr>--reconciliation-compaction-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td>ラン間整合と第2パスのために第1パスのペプチドを保持する、ペプチドQ値閾値（デフォルト：0.01 = <nobr>--run-fdr</nobr>。整合のプールを広げるには、例えば0.05に緩めます）</td></tr>
+<tr><td><nobr>--protein-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td>タンパク質レベルFDR閾値（オプション）</td></tr>
+<tr><td><nobr>--fdr-method</nobr> &lt;percolator | gbdt | simple&gt;</td><td>FDR手法（デフォルト：percolator）</td></tr>
+<tr><td><nobr>--fdr-level</nobr> &lt;precursor | peptide | both&gt;</td><td>FDRレベル（デフォルト：precursor）</td></tr>
+<tr><td><nobr>--shared-peptides</nobr> &lt;all | razor | unique&gt;</td><td>共有ペプチドの処理（デフォルト：all）</td></tr>
+<tr><td><nobr>--fdrbench</nobr>&nbsp;&lt;input.tsv&gt;</td><td>FDRBench互換の入力TSVをこのパスに書き込みます。<nobr>レベルは--fdr-levelから取得します</nobr>（peptide。precursorとbothはプリカーサーレベルを出力）。報告されたすべてのターゲット（つまり実際に出力に書き込まれたペプチド）をQ値に関係なく含み、生のSVM判別値を「score」として出力するため、FDRBenchはOspreyの閾値で切り捨てられることなく、エントラップメントのカウントによって真のFDRを計算できます。</td></tr>
+<tr><td><nobr>--fdrbench-per-run</nobr></td><td><nobr>--fdrbenchと併用</nobr>：ランレベルのQ値を使用して（プリカーサー、ラン）ごとに1行を出力します（「run」列を追加）。デフォルトでは、実験レベルのQ値を使用してプリカーサーごとに1行を出力します。</td></tr>
+<tr><td><nobr>--fdrbench-pass</nobr> &lt;1 | 2 | both&gt;</td><td><nobr>--fdrbenchと併用</nobr>：出力するFDRパス。2（デフォルト）= blibに書き込まれる第2パスの結果（Ospreyが報告するもののFDR）。1 = 第2パス用にフィルタリングされる前の第1パスの全プール（Q値に関係なく、スコアリングされたすべてのターゲット）と第1パスのQ値で、元のRust版OspreyのFDRBench入力と一致します（第2パスの出力が前提とするもの）。both = 1回の実行で両方を出力し、<nobr>--fdrbenchのパスに</nobr>.pass1 / .pass2のステムサフィックスを付けて書き込みます。</td></tr>
+</table>
+<div class="RowType">デコイ</div>
+<table>
+<tr><th>引数</th><th>説明</th></tr>
+<tr><td><nobr>--decoys-in-library</nobr></td><td>リバースデコイを生成する代わりに、スペクトルライブラリにすでに含まれるデコイを使用します。デコイが認識されない場合は、エラーで停止します。</td></tr>
+<tr><td><nobr>--decoy-pairing-manifest</nobr>&nbsp;&lt;manifest.tsv&gt;</td><td>FDRBench 5列ペアリングマニフェスト（TSV）、<nobr>--decoys-in-libraryと併用</nobr></td></tr>
+<tr><td><nobr>--write-pin</nobr></td><td>外部ツール用のPINファイルを書き込みます</td></tr>
+</table>
+<div class="RowType">パフォーマンス</div>
+<table>
+<tr><th>引数</th><th>説明</th></tr>
+<tr><td><nobr>--parallel-files</nobr>&nbsp;[&lt;N&gt;]</td><td>並列にスコアリングする入力ファイル数（OUTER）。指定なし：1ファイルずつ（デフォルト）。値なし：空きRAMとコア数から自動。&lt;N&gt;：RAM/コア数に関係なく正確にN。<nobr>--threadsとは別の設定です</nobr>。</td></tr>
+<tr><td><nobr>--threads</nobr>&nbsp;&lt;count&gt;</td><td>ファイルごとのメイン検索スレッド数（INNER。デフォルト：全コア）。<nobr>--parallel-filesで並行実行されるファイル間で分割されます</nobr></td></tr>
+</table>
+<div class="RowType">分散 / HPC</div>
+<table>
+<tr><th>引数</th><th>説明</th></tr>
+<tr><td><nobr>--task</nobr> &lt;SpectraCache | PerFileScoring | FirstPassFDR | PerFileRescoring | SecondPassFDR | ModelDiagnostics&gt;</td><td>HPC：パイプラインタスクを1つだけ実行します（1ノード = 1タスク）。完全なパイプラインを実行する場合は省略します。SpectraCacheは.spectra.binキャッシュを準備し、<nobr>ModelDiagnosticsは完了済みの実行の--model-diagnosticsレポートのみを再生成し</nobr>、その他の出力は書き込みません。</td></tr>
+</table>
+<div class="RowType">ログ記録</div>
+<table>
+<tr><th>引数</th><th>説明</th></tr>
+<tr><td><nobr>--timestamp</nobr></td><td>各出力行の先頭に[yyyy/MM/dd HH:mm:ss]を付加します</td></tr>
+<tr><td><nobr>--memstamp</nobr></td><td>各出力行の先頭に、マネージドメモリとプライベートメモリ（MB）を付加します（<nobr>perfviz用に--timestampと併用</nobr>）</td></tr>
+<tr><td><nobr>--log-file</nobr>&nbsp;&lt;path&gt;</td><td>すべての出力をstderrではなくこのファイルに書き込みます</td></tr>
+<tr><td><nobr>--perf-stats</nobr></td><td>スクリプトやパフォーマンスツールが読み取る、機械解析可能な[COUNT], [TIMING], [BENCH], [<nobr>STAGE-WALL</nobr>], [PATH], [TRAIN]行を出力します（デフォルトはオフ）</td></tr>
+<tr><td><nobr>--verbose</nobr></td><td>デフォルトでは非表示の詳細（フォールドごとのPercolator反復など）を表示します</td></tr>
+</table>
+<div class="RowType">診断と情報</div>
+<table>
+<tr><th>引数</th><th>説明</th></tr>
+<tr><td><nobr>-d</nobr>,&nbsp;<nobr>--diagnostics</nobr></td><td>開発者向けの診断ダンプファイルを書き込みます（Rust実装との比較用）</td></tr>
+<tr><td><nobr>--model-diagnostics</nobr></td><td>トレーニング済みスコアリングモデル、FDR校正、単一ピークに対する複数IDの重複割り当てについて、自己完結型のインタラクティブなHTMLレポートを書き込みます</td></tr>
+<tr><td><nobr>-h</nobr>,&nbsp;<nobr>--help</nobr></td><td>このヘルプメッセージを表示します（[ascii|unicode|sections|html|&lt;Section&gt;]）</td></tr>
+<tr><td><nobr>-v</nobr>,&nbsp;<nobr>--version</nobr></td><td>バージョンを表示します</td></tr>
+</table>
+<p>例：</p><p>  osprey -i sample.mzML -l library.tsv -o results.blib</p><p>  osprey -i *.mzML -l library.tsv -o results.blib --resolution hram</p><p>HPC分割（1ノード = 1つの--task）：上記の--taskを参照してください。</p><div class="RowType">Distributed execution (HPC)</div>
+<p>Run with no <code>--task</code> for the whole pipeline in one process. For distributed (HPC / workflow-engine) execution the pipeline splits at its join / fan-out boundaries into four single-task workers &mdash; one node = one <code>--task</code>: <code>PerFileScoring</code> (split, per file) &rarr; <code>FirstPassFDR</code> (join, all files) &rarr; <code>PerFileRescoring</code> (split, per file) &rarr; <code>SecondPassFDR</code> (join, all files). Pass the same <code>--library</code> and search options to every task; the parquet integrity check rejects inputs whose search/library hash does not match.</p>
+<pre>
+# split 1 - one process per mzML (writes &lt;stem&gt;.scores.parquet, &lt;stem&gt;.calibration.json beside each input)
+Osprey --task PerFileScoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+
+# join 1 - one process over ALL runs (pass a sorted list so the order is deterministic)
+Osprey --task FirstPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+#   writes beside each parquet: &lt;stem&gt;.1st-pass.fdr_scores.bin, &lt;stem&gt;.reconciliation.json
+
+# split 2 - one process per file (the scores parquet and its intermediate files together)
+Osprey --task PerFileRescoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+#   writes: &lt;stem&gt;.scores-reconciled.parquet
+
+# join 2 - one process over ALL runs, reading their reconciled parquets (writes out.blib)
+Osprey --task SecondPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+</pre>
+<p>EVERY task takes <code>-i</code>, naming the DATA files - the same names the first split was given. A join task derives each run's parquet and intermediate files from the input stem, so the data file itself need not still exist: what has to be in the worker's working directory (or under <code>--output-dir</code>) is that run's artifacts. FirstPassFDR reconciliation is order-sensitive, so pass a deterministically sorted list - <code>--input-list</code> takes one path per line and is what a cohort past a few hundred runs needs, since <code>-i</code> spends the command line at O(files). Let the scheduler do the fan-out (one file per split process) rather than <code>--parallel-files</code>, which is the single-node multi-file mode.</p>
+</body></html>
