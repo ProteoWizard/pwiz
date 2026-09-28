@@ -58,7 +58,6 @@ namespace pwiz.Osprey.Tasks
     {
         private readonly FrozenModelScorer _scorer;
         private readonly int _nFeatures;
-        private readonly string _mode;
         private readonly HashSet<uint> _stratumBaseIds;
         private readonly Action<string> _logWarning;
 
@@ -98,7 +97,7 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyDictionary<uint, (double score, uint entryId)>> _writeAnswer;
 
         public Pass2PerFileWorker(
-            FrozenModelScorer scorer, string mode, HashSet<uint> stratumBaseIds,
+            FrozenModelScorer scorer, HashSet<uint> stratumBaseIds,
             IReadOnlyDictionary<uint, FdrExperimentRecord> pass1Experiment,
             Action<string, IReadOnlyList<FdrScoreRecord>,
                 IReadOnlyDictionary<uint, (double score, uint entryId)>> writeAnswer,
@@ -107,7 +106,6 @@ namespace pwiz.Osprey.Tasks
             _writeAnswer = writeAnswer ?? throw new ArgumentNullException(nameof(writeAnswer));
             _scorer = scorer ?? throw new ArgumentNullException(nameof(scorer));
             _nFeatures = scorer.NumFeatures;
-            _mode = mode;
             _stratumBaseIds = stratumBaseIds;
             _logWarning = logWarning ?? throw new ArgumentNullException(nameof(logWarning));
             _seeders = new ThreadLocal<Pass2FdrSidecar.Pass1ScalarSeeder>(() =>
@@ -159,7 +157,7 @@ namespace pwiz.Osprey.Tasks
 
             Pass2FdrSidecar.ReadOneFilePass2Inputs(
                 pass1SidecarPath, effectiveParquetPath, survivors,
-                _scorer, _nFeatures, _seeders.Value, _logWarning, _mode,
+                _scorer, _nFeatures, _seeders.Value, _logWarning,
                 survivorIds, pass1Records,
                 out uint[] entryIds, out double[] scores, out var survivorScores);
 

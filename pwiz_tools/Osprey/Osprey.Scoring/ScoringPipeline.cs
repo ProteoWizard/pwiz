@@ -70,6 +70,9 @@ namespace pwiz.Osprey.Scoring
         /// fragment tolerances under <c>--verbose</c>. A file re-scored in several passes shares
         /// one calibration, so only its first pass reports them; otherwise the same three lines
         /// repeat inside every file's block.</para>
+        ///
+        /// <para><paramref name="passLabel"/> is the whole progress heading of a labeled pass (a
+        /// resource, never an English fragment to be completed here), and indents its block.</para>
         /// </summary>
         public List<FdrEntry> RunCoelutionScoring(
             List<LibraryEntry> fullLibrary,
@@ -149,9 +152,11 @@ namespace pwiz.Osprey.Scoring
                 if (logSettings)
                 {
                     _log.LogInfo(settingsIndent + string.Format(
-                        "Coelution search RT tolerance: {0:F2} min (3*MAD*1.4826, MAD={1:F3}{2})",
+                        OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Coelution_search_RT_tolerance___0__min__3_MAD_1_4826__MAD__1___2__,
                         rtToleranceGlobal, mad,
-                        context.OriginalRtMad.HasValue ? " from .calibration.json" : " from cal stats"));
+                        context.OriginalRtMad.HasValue
+                            ? string.Format(OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_from_the__0__file, CalibrationIO.EXT)
+                            : OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_from_the_calibration_statistics));
                 }
             }
             else
@@ -176,12 +181,11 @@ namespace pwiz.Osprey.Scoring
                     Tolerance = calTol,
                     Unit = calUnit
                 };
-                string unitStr = calUnit == ToleranceUnit.Ppm ? "ppm" : "Th";
                 if (logSettings)
                 {
                     _log.LogInfo(settingsIndent + string.Format(
-                        "Coelution search using calibrated fragment tolerance: {0:F4} {1}",
-                        calTol, unitStr));
+                        OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Coelution_search_using_calibrated_fragment_tolerance___0___1_,
+                        calTol, calUnit.GetLocalizedString()));
                 }
 
                 // Use calibrated tolerance for all downstream scoring. (The
@@ -192,8 +196,8 @@ namespace pwiz.Osprey.Scoring
                 if (logSettings)
                 {
                     _log.LogInfo(settingsIndent + string.Format(
-                        "Applying MS2 calibration: mean error = {0:F4} {1} -> correcting by {2:+0.0000;-0.0000;0} {1}",
-                        ms2Calibration.Mean, ms2Calibration.Unit, -ms2Calibration.Mean));
+                        OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Applying_MS2_calibration__mean_error____0___1_____correcting_by__2___1_,
+                        ms2Calibration.Mean, MzCalibration.GetUnitText(ms2Calibration.Unit), -ms2Calibration.Mean));
                 }
             }
 
@@ -204,7 +208,7 @@ namespace pwiz.Osprey.Scoring
             if (diagSearchIds != null)
             {
                 _log.LogInfo(LogTag.BISECT, string.Format(
-                    "OSPREY_DIAG_SEARCH_ENTRY_IDS: will dump {0} entries",
+                    @"OSPREY_DIAG_SEARCH_ENTRY_IDS: will dump {0} entries",
                     diagSearchIds.Count));
             }
 
@@ -220,9 +224,8 @@ namespace pwiz.Osprey.Scoring
             if (maxWindows > 0 && maxWindows < isolationWindows.Count)
             {
                 windowsToScore = isolationWindows.Take(maxWindows).ToList();
-                _log.LogInfo(LogTag.BENCH, string.Format(
-                    "OSPREY_MAX_SCORING_WINDOWS={0} - capping {1} windows to first {0}",
-                    maxWindows, isolationWindows.Count));
+                _log.LogInfo(LogTag.BENCH, @"OSPREY_MAX_SCORING_WINDOWS={0} - capping {1} windows to first {0}",
+                    maxWindows, isolationWindows.Count);
             }
 
             // Process each isolation window (parallelizable). Per-window
@@ -242,8 +245,8 @@ namespace pwiz.Osprey.Scoring
             var coelutionScorer = new CoelutionScorer(_diagnostics);
 
             using (var progress = new ProgressReporter(
-                string.Format("{0} isolation windows", passLabel ?? "Scoring"),
-                windowsToScore.Count, passLabel == null ? string.Empty : "  ", 2.0))
+                passLabel ?? OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Scoring_isolation_windows,
+                windowsToScore.Count, passLabel == null ? string.Empty : @"  ", 2.0))
             {
                 Parallel.For(0, windowsToScore.Count, new ParallelOptions
                 {
@@ -442,8 +445,7 @@ namespace pwiz.Osprey.Scoring
             if (removedCount > 0)
             {
                 _log.LogInfo(string.Format(
-                    "Removed {0:N0} precursor candidate peaks ({1:N0} targets, {2:N0} decoys) already " +
-                    "claimed by a stronger candidate in the same isolation window; {3:N0} remain.",
+                    OspreyScoringResources.ScoringPipeline_DeduplicateDoubleCounting_Removed__0__precursor_candidate_peaks___1__targets___2__decoys__already_claimed_by_a_,
                     removedCount, removedTargets, removedDecoys,
                     originalCount - removedCount));
             }
@@ -597,7 +599,7 @@ namespace pwiz.Osprey.Scoring
             int removed = entries.Count - deduped.Count;
             if (removed > 0)
             {
-                _log.LogInfo(string.Format("Deduplicated: {0} -> {1} entries ({2} removed)",
+                _log.LogInfo(string.Format(OspreyScoringResources.ScoringPipeline_DeduplicatePairs_Deduplicated_precursor_candidates___0______1____2__removed_,
                     entries.Count, deduped.Count, removed));
             }
 
@@ -630,9 +632,8 @@ namespace pwiz.Osprey.Scoring
             double maxS = sorted[n - 1].Seconds;
             double medS = sorted[n / 2].Seconds;
             var slowest = sorted[n - 1];
-            _log.LogInfo(LogTag.TIMING, string.Format(
-                "Per-window: min={0:F2}s, median={1:F2}s, max={2:F2}s (slowest m/z={3:F1} had {4} candidates)",
-                minS, medS, maxS, slowest.CenterMz, slowest.CandidateCount));
+            _log.LogInfo(LogTag.TIMING, @"Per-window: min={0:F2}s, median={1:F2}s, max={2:F2}s (slowest m/z={3:F1} had {4} candidates)",
+                minS, medS, maxS, slowest.CenterMz, slowest.CandidateCount);
         }
     }
 }

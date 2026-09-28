@@ -170,6 +170,18 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
+        /// Write a tagged line whose text is <paramref name="format"/> formatted with the
+        /// INVARIANT culture. Machine-channel text is read by scripts, so a number in it must
+        /// look the same under every UI culture: <c>12.3s</c>, never the <c>12,3s</c> that
+        /// fr-FR gives. Prose is the opposite case and is formatted with the current culture by
+        /// the caller.
+        /// </summary>
+        public static void LogInfo(this IOspreyLog log, LogTag tag, string format, params object[] args)
+        {
+            log.LogInfo(tag, string.Format(CultureInfo.InvariantCulture, format, args));
+        }
+
+        /// <summary>
         /// Wrap a prose delegate so it can take tagged lines. Null in, null out, so an optional
         /// delegate stays optional.
         /// </summary>
@@ -295,6 +307,16 @@ namespace pwiz.Osprey.Core
         public const string SCOPE_RESCORE_GAP_FILL = @"rescore-gap-fill";
         /// <summary>The release after second-pass FDR, keeping the first-pass retained set.</summary>
         public const string SCOPE_RETAINED_SUMMARY = @"retained-summary";
+
+        /// <summary>
+        /// The text after the tag for a keyed line whose value is already text:
+        /// <c>key: value</c>. A number is passed as <c>ToString(CultureInfo.InvariantCulture)</c>,
+        /// or through the format overload below.
+        /// </summary>
+        public static string Format(string key, string value)
+        {
+            return key + @": " + value;
+        }
 
         /// <summary>
         /// The text after the tag for a keyed line: <c>key: value</c>, with

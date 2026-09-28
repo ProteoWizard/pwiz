@@ -101,7 +101,8 @@ namespace pwiz.Osprey.IO
                 return Array.Empty<double>();
             if (blob.Length % 8 != 0)
                 throw new InvalidDataException(string.Format(
-                    "f64 blob length {0} is not a multiple of 8", blob.Length));
+                    OspreyIOResources.ParquetBlobCodec_Decode_The_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__,
+                    blob.Length, 8));
             int n = blob.Length / 8;
             var values = new double[n];
             for (int i = 0; i < n; i++)
@@ -124,7 +125,8 @@ namespace pwiz.Osprey.IO
                 return Array.Empty<float>();
             if (blob.Length % 4 != 0)
                 throw new InvalidDataException(string.Format(
-                    "f32 blob length {0} is not a multiple of 4", blob.Length));
+                    OspreyIOResources.ParquetBlobCodec_Decode_The_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__,
+                    blob.Length, 4));
             int n = blob.Length / 4;
             var values = new float[n];
             Buffer.BlockCopy(blob, 0, values, 0, blob.Length);
@@ -150,7 +152,8 @@ namespace pwiz.Osprey.IO
             if (blob.Length % 4 != 0)
             {
                 throw new InvalidDataException(string.Format(
-                    "i32 blob length {0} is not a multiple of 4", blob.Length));
+                    OspreyIOResources.ParquetBlobCodec_Decode_The_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__,
+                    blob.Length, 4));
             }
             var values = new int[blob.Length / 4];
             for (int i = 0; i < values.Length; i++)
@@ -177,7 +180,8 @@ namespace pwiz.Osprey.IO
             if (blob.Length % 2 != 0)
             {
                 throw new InvalidDataException(string.Format(
-                    "u16 blob length {0} is not a multiple of 2", blob.Length));
+                    OspreyIOResources.ParquetBlobCodec_Decode_The_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__,
+                    blob.Length, 2));
             }
             var values = new ushort[blob.Length / 2];
             for (int i = 0; i < values.Length; i++)

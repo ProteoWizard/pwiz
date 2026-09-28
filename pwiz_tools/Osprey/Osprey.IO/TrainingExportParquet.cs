@@ -41,6 +41,9 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public static class TrainingExportParquet
     {
+        /// <summary>The file extension of a run's training export: <c>&lt;stem&gt;.training.parquet</c>.</summary>
+        public const string EXT = @".training.parquet";
+
         /// <summary>Written to the footer as <see cref="KEY_FORMAT_VERSION"/>.</summary>
         public const int FORMAT_VERSION = 1;
 
@@ -137,7 +140,7 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static string PathFor(string inputFile)
         {
-            string fileName = Path.GetFileNameWithoutExtension(inputFile) + @".training.parquet";
+            string fileName = Path.GetFileNameWithoutExtension(inputFile) + EXT;
             return Path.Combine(ArtifactPaths.ResolveOutputDir(inputFile), fileName);
         }
 

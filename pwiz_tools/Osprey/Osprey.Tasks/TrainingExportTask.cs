@@ -239,7 +239,7 @@ namespace pwiz.Osprey.Tasks
             if (!File.Exists(reconciledPath))
             {
                 throw new FileNotFoundException(string.Format(
-                    @"The reconciled scores '{0}' are missing; the training export reads the final boundaries from them.",
+                    OspreyTasksResources.TrainingExportTask_ExportRun_The_reconciled_scores_file___0___is_missing__The_training_export_,
                     reconciledPath), reconciledPath);
             }
             // The footer check every other post-Stage-4 consumer makes - this build's version,
@@ -483,8 +483,7 @@ namespace pwiz.Osprey.Tasks
                 if (!pass2.TryAdd(ObservationKey(r.EntryId, r.ApexRt), r))
                 {
                     throw new InvalidDataException(string.Format(
-                        @"The SecondPassFDR intermediate file '{0}' holds two records for entry_id {1} at apex RT {2}; " +
-                        @"the training export cannot tell which one is that observation's.",
+                        OspreyTasksResources.TrainingExportTask_PairTargets_The_SecondPassFDR_intermediate_file___0___holds_two_records_for_precursor_candidate__1__at_,
                         pass2Path, r.EntryId, r.ApexRt.ToString(@"R", CultureInfo.InvariantCulture)));
                 }
             }
@@ -504,9 +503,7 @@ namespace pwiz.Osprey.Tasks
                     row.Charge != entry.Charge)
                 {
                     throw new InvalidDataException(string.Format(
-                        @"The reconciled scores '{0}' name entry_id {1} as {2} {3}+, but the library's entry {1} is {4} {5}+. " +
-                        @"The file was scored against another library or by a build that numbered it differently; " +
-                        @"re-run the pipeline against this library before exporting.",
+                        OspreyTasksResources.TrainingExportTask_PairTargets_The_reconciled_scores_file___0___names_precursor_candidate__1__as__2___3____,
                         reconciledPath, row.EntryId, row.ModifiedSequence, row.Charge, entry.ModifiedSequence, entry.Charge));
                 }
                 if (entry.IsSpectrumReleased)
@@ -521,8 +518,7 @@ namespace pwiz.Osprey.Tasks
                     if (!paired.Add(key))
                     {
                         throw new InvalidDataException(string.Format(
-                            @"The reconciled scores '{0}' hold two rows for entry_id {1} at apex RT {2}; the training " +
-                            @"export cannot tell which one the second-pass record in '{3}' belongs to.",
+                            OspreyTasksResources.TrainingExportTask_PairTargets_The_reconciled_scores_file___0___holds_two_peaks_for_precursor_candidate__1__at_,
                             reconciledPath, row.EntryId, row.ApexRt.ToString(@"R", CultureInfo.InvariantCulture), pass2Path));
                     }
                     record = found;
@@ -546,7 +542,7 @@ namespace pwiz.Osprey.Tasks
             if (!FdrScoresSidecar.ReadRecords(path, FdrScoresSidecar.Pass.SecondPass, records.Add))
             {
                 throw new InvalidDataException(string.Format(
-                    @"The SecondPassFDR intermediate file '{0}' is missing or unreadable.", path));
+                    OspreyTasksResources.TrainingExportTask_ReadPass2_The_SecondPassFDR_intermediate_file___0___is_missing_or_unreadable_, path));
             }
             return records;
         }

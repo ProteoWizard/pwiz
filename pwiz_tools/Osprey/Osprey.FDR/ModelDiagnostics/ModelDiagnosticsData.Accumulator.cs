@@ -187,7 +187,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 uint baseId = entryId & BASE_ID_MASK;
                 EntrapmentClass cls = Classify(isDecoy, baseId, _classByBaseId, _haveManifest,
                     ref _nWithClass, ref _nWithoutClass);
-                string key = modifiedSequence + "|" + charge;
+                string key = modifiedSequence + @"|" + charge;
 
                 // --- best-per-precursor (== ReduceToPrecs: max score, min q at each scope) ---
                 uint pairIdx = 0;

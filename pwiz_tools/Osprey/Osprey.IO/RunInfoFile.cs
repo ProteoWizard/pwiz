@@ -241,7 +241,7 @@ namespace pwiz.Osprey.IO
             using (var text = new StringWriter(json, CultureInfo.InvariantCulture))
             using (var writer = new JsonTextWriter(text))
             {
-                text.NewLine = "\n";
+                text.NewLine = TextUtil.LF;
                 writer.Formatting = Formatting.Indented;
                 JsonSerializer.CreateDefault().Serialize(writer, info);
             }

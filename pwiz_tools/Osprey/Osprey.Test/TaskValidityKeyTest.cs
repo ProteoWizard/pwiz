@@ -303,7 +303,7 @@ namespace pwiz.Osprey.Test
                 bool declared = false;
                 foreach (string o in second.Outputs(ctx))
                 {
-                    if (o != null && o.EndsWith(ModelDiagnosticsReport.HtmlSuffix, StringComparison.Ordinal))
+                    if (o != null && o.EndsWith(ModelDiagnosticsReport.EXT_HTML, StringComparison.Ordinal))
                         declared = true;
                 }
                 Assert.AreEqual(wanted, declared, wanted

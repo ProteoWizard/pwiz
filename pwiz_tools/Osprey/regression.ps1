@@ -329,7 +329,12 @@ param(
     # tiers mix into the log across every route, not for a gate run. Without dashes because a
     # `pwsh -File` argument that starts with '-' binds as a parameter NAME, so '--verbose'
     # cannot be passed through as a value. Only value-less flags are supported.
-    [string]$ExtraOspreyFlags
+    [string]$ExtraOspreyFlags,
+    # Run every leg under this culture (Osprey's internal --culture), e.g. fr-FR. Every output
+    # is written in the invariant culture, so the SAME golden must match: a fr-FR run that
+    # passes proves no number in a file or a tagged line follows the UI culture. The log's
+    # prose is in fr-FR form (1 234 567, 12,5 %) and is never compared.
+    [string]$Culture
 )
 
 $ErrorActionPreference = 'Stop'
@@ -496,7 +501,7 @@ if (-not [string]::IsNullOrWhiteSpace($env:OSPREY_ALLOW_UNFIXED_RESIDENT)) {
 }
 
 # The goldens are captured under the shipped first-pass SVM C selection, so an inherited
-# OSPREY_SVM_C_TOLERANCE (the cross-implementation scripts set it to 0) would train every leg
+# OSPREY_SVM_C_TOLERANCE (for example a 0 left over from an A/B shell) would train every leg
 # under another rule and fail every dataset - or, under -CreateGolden, bless that rule as the
 # golden. Cleared, announced, and restored in the finally block like the allowance above.
 $script:priorSvmCTolerance = $env:OSPREY_SVM_C_TOLERANCE
@@ -527,6 +532,10 @@ if ($ExtraOspreyFlags) {
         $memStampArgs += ('--' + $flag.TrimStart('-'))
     }
     Write-Host ("==> extra Osprey flags on every leg: {0}" -f (($memStampArgs | Select-Object -Skip 3) -join ' ')) -ForegroundColor Yellow
+}
+if ($Culture) {
+    $memStampArgs += @('--culture', $Culture)
+    Write-Host "==> every leg runs under culture $Culture" -ForegroundColor Yellow
 }
 
 # The data zip on panorama, chosen by -Source. The URL's second-to-last segment

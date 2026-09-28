@@ -410,7 +410,7 @@ namespace pwiz.Osprey.Test
         {
             var grid = new[] { 0.001, 0.01, 0.1, 1.0, 10.0, 100.0 };
             var stellar = new[] { 4670, 4925, 5025, 5037, 5002, 4971 };
-            // Strict maximum (tolerance 0, the Rust behavior): C = 1 wins by 12 of 5,037.
+            // Strict maximum (tolerance 0, the pre-#4703 rule): C = 1 wins by 12 of 5,037.
             Assert.AreEqual(1.0, PercolatorTrainer.SelectC(grid, stellar, 0));
             // Within 1% (>= 4,986.6): 0.1, 1 and 10 qualify and the most regularized is 0.1; 0.01's 4,925 does not.
             Assert.AreEqual(0.1, PercolatorTrainer.SelectC(grid, stellar, 0.01));
@@ -1658,9 +1658,8 @@ namespace pwiz.Osprey.Test
 
             // The model sanity-check block appears only under --verbose, reframed away
             // from importance/weight wording (issue #4364).
-            StringAssert.Contains(report,
-                "Model sanity check -- feature share of target-decoy separation");
-            Assert.IsFalse(defaultReport.Contains("Model sanity check"),
+            StringAssert.Contains(report, OspreyFDRResources.FeatureContributions_ToReportLines_Model_sanity_check___feature_share_of_target_decoy_separation__trained_linear_model__coefficients_standardized__);
+            Assert.IsFalse(defaultReport.Contains(OspreyFDRResources.FeatureContributions_ToReportLines_Model_sanity_check___feature_share_of_target_decoy_separation__trained_linear_model__coefficients_standardized__),
                 "the feature share table must be gated behind --verbose");
 
             // Parse the percent column from the three feature rows. The table rows
@@ -1668,11 +1667,14 @@ namespace pwiz.Osprey.Test
             // coefficient-then-percent shape so the unrelated "{F1}% at {P0} FDR"
             // training-progress lines (which have "(" / " at " around the percent)
             // are not picked up.
+            // The table is prose in the current culture, so its decimal separator is that
+            // culture's (12,3 under fr-FR).
+            string dec = Regex.Escape(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
             var percents = new List<double>();
             foreach (Match m in Regex.Matches(report,
-                         @"^    \S.*\s-?\d+\.\d{4}\s+(-?\d+\.\d)%",
+                         @"^    \S.*\s-?\d+" + dec + @"\d{4}\s+(-?\d+" + dec + @"\d)%",
                          RegexOptions.Multiline))
-                percents.Add(double.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture));
+                percents.Add(double.Parse(m.Groups[1].Value, CultureInfo.CurrentCulture));
             Assert.AreEqual(3, percents.Count,
                 "expected exactly three percent rows in the contribution table");
             double total = percents.Sum();
@@ -1689,7 +1691,7 @@ namespace pwiz.Osprey.Test
                     string.Format("Feature {0} object flag mismatch (weight={1})",
                         (char)('A' + j), features[j].Coefficient));
                 bool rowFlagged = Regex.IsMatch(report,
-                    @"Feature " + (char)('A' + j) + @"\b.*\(unexpected direction\)");
+                    @"Feature " + (char)('A' + j) + @"\b.*" + Regex.Escape(OspreyFDRResources.FeatureContributions_ToReportLines__unexpected_direction_));
                 Assert.AreEqual(expectedFlag, rowFlagged,
                     string.Format("Feature {0} printed-flag mismatch (weight={1})",
                         (char)('A' + j), features[j].Coefficient));
@@ -1699,7 +1701,7 @@ namespace pwiz.Osprey.Test
             // flagged one: its trained weight is positive.
             Assert.IsTrue(features[1].Coefficient > 0.0,
                 "fixture should drive a positive weight on the declared-reversed feature B");
-            StringAssert.Contains(report, "(unexpected direction)");
+            StringAssert.Contains(report, OspreyFDRResources.FeatureContributions_ToReportLines__unexpected_direction_);
 
             // Reporting did not disturb scoring: targets still outscore decoys.
             double avgTarget = 0.0, avgDecoy = 0.0;
