@@ -177,9 +177,13 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// A run's export is PerFileRescoring's product, and it reads that run's reconciled
-        /// parquet, both q-value sidecars, calibration and spectra cache, so each one's identity
+        /// parquet, one q-value sidecar, calibration and spectra cache, so each one's identity
         /// keys that run's export - absent and present differ, and so do two versions of one file
         /// - while another run's export, the task key and the task's other outputs do not move.
+        /// The q-value sidecar is the second-pass one only when PerFileRescoring wrote it: one
+        /// SecondPassFDR writes after the export (PerFileRescoring had no readable first-pass
+        /// model to compete with) is not read and must not key it, or every export is redone on
+        /// the next resume.
         /// </summary>
         private static void AssertTrainingExportKeyFollowsEachRunsInputs()
         {
@@ -209,19 +213,28 @@ namespace pwiz.Osprey.Test
                          {
                              ParquetScoreCache.GetReconciledScoresPath(runA),
                              FdrScoresSidecar.Pass1Path(runA),
-                             FdrScoresSidecar.Pass2Path(runA),
                              CalibrationIO.CalibrationPathForInput(runA, ArtifactPaths.ResolveOutputDir(runA)),
                              SpectraCache.GetCachePath(runA),
                          })
                 {
-                    File.WriteAllText(artifact, @"first");
-                    string written = RunKey(runA);
-                    Assert.AreNotEqual(current, written, Path.GetFileName(artifact) + @" appearing must invalidate the run's export");
-                    File.WriteAllText(artifact, @"rewritten, and longer");
-                    current = RunKey(runA);
-                    Assert.AreNotEqual(written, current, Path.GetFileName(artifact) + @" rewritten must invalidate the run's export");
+                    current = AssertRewritesInvalidate(artifact, current, () => RunKey(runA));
                     Assert.AreEqual(otherRun, RunKey(runB), @"another run's export does not depend on this run's files");
                 }
+
+                string pass2 = FdrScoresSidecar.Pass2Path(runA);
+                File.WriteAllText(pass2, @"SecondPassFDR's");
+                Assert.AreEqual(current, RunKey(runA), @"a second-pass sidecar PerFileRescoring did not write is not read, so it must not key the export");
+                Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out var pass));
+                Assert.AreEqual(FdrScoresSidecar.Pass.FirstPass, pass);
+                File.WriteAllText(TaskValiditySidecar.PathFor(pass2, PerFileRescoreTask.TASK_NAME), @"stamp");
+                Assert.AreEqual(pass2, TrainingExportWriter.RunQPath(runA, out pass), @"PerFileRescoring's stamp makes the second pass the one read");
+                Assert.AreEqual(FdrScoresSidecar.Pass.SecondPass, pass);
+                Assert.AreNotEqual(current, RunKey(runA), @"switching the sidecar read must invalidate the run's export");
+                current = AssertRewritesInvalidate(pass2, RunKey(runA), () => RunKey(runA));
+                File.WriteAllText(FdrScoresSidecar.Pass1Path(runA), @"no longer read");
+                Assert.AreEqual(current, RunKey(runA), @"the first-pass sidecar is not read once the second pass is");
+                Assert.AreEqual(otherRun, RunKey(runB), @"another run's export does not depend on this run's files");
+
                 Assert.AreEqual(key, task.ValidityKey(ctx), @"the per-run identities belong to the run's export, not the task key (P4)");
                 string reconciled = ParquetScoreCache.GetReconciledScoresPath(runA);
                 Assert.AreEqual(key, task.OutputValidityKey(ctx, key, reconciled),
@@ -233,6 +246,21 @@ namespace pwiz.Osprey.Test
                 ArtifactPaths.CacheDir = savedCache;
                 Directory.Delete(dir, true);
             }
+        }
+
+        /// <summary>
+        /// Writes <paramref name="artifact"/> and then rewrites it longer, asserting that each
+        /// moves the key <paramref name="runKey"/> computes; returns the key after the rewrite.
+        /// </summary>
+        private static string AssertRewritesInvalidate(string artifact, string current, Func<string> runKey)
+        {
+            File.WriteAllText(artifact, @"first");
+            string written = runKey();
+            Assert.AreNotEqual(current, written, Path.GetFileName(artifact) + @" appearing must invalidate the run's export");
+            File.WriteAllText(artifact, @"rewritten, and longer");
+            string rewritten = runKey();
+            Assert.AreNotEqual(written, rewritten, Path.GetFileName(artifact) + @" rewritten must invalidate the run's export");
+            return rewritten;
         }
 
         /// <summary>

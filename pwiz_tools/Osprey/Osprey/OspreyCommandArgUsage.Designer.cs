@@ -331,7 +331,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to HPC: run exactly one pipeline task (one node = one task). Omit for the full pipeline. {0} stages the {1} caches; {4} writes only the {5} parquets of a COMPLETED run; {2} regenerates only the {3} report for a COMPLETED run, writing no other output..
+        ///   Looks up a localized string similar to HPC: run exactly one pipeline task (one node = one task). Omit for the full pipeline. {0} stages the {1} caches; {4} writes the {5} parquets, and on a COMPLETED run only the missing ones; {2} regenerates only the {3} report for a COMPLETED run, writing no other output..
         /// </summary>
         public static string _task {
             get {
@@ -358,7 +358,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Write {0} per run: every target precursor at run q &lt;= {1} with the observed intensities of its full b/y ladder and per-ion interference evidence (for training CarafeSharp). Adding it to a finished run runs only the export..
+        ///   Looks up a localized string similar to Write {0} per run: every target precursor at run q &lt;= {1} with the observed intensities of its full b/y ladder and per-ion interference evidence (for training CarafeSharp). Adding it to a finished run writes only the exports and re-scores nothing..
         /// </summary>
         public static string _training_export {
             get {

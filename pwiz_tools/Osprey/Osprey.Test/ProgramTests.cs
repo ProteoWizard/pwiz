@@ -199,13 +199,13 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(err, expected);
         }
 
-        // - TrainingExport (the optional fifth task) --
+        // - TrainingExport (a selector for PerFileRescoring's export) --
 
         /// <summary>
-        /// --task TrainingExport needs what the final join needs (inputs, library, output - the
-        /// output blib names the experiment sidecar it reads), and the export settings are
-        /// refused when they cannot apply: given without the export they would be silently
-        /// inert, and a q threshold outside (0, 1] selects nothing or everything.
+        /// --task TrainingExport validates like the full pipeline it selects (inputs, library,
+        /// output), and the export settings are refused when they cannot apply: given without
+        /// the export they would be silently inert, and a q threshold outside (0, 1] selects
+        /// nothing or everything.
         /// </summary>
         [TestMethod]
         public void TestValidateTrainingExport()

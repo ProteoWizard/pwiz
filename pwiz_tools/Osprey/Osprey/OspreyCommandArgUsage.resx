@@ -188,7 +188,7 @@
     <value>Shared peptide handling (default: {0})</value>
   </data>
   <data name="_task" xml:space="preserve">
-    <value>HPC: run exactly one pipeline task (one node = one task). Omit for the full pipeline. {0} stages the {1} caches; {4} writes only the {5} parquets of a COMPLETED run; {2} regenerates only the {3} report for a COMPLETED run, writing no other output.</value>
+    <value>HPC: run exactly one pipeline task (one node = one task). Omit for the full pipeline. {0} stages the {1} caches; {4} writes the {5} parquets, and on a COMPLETED run only the missing ones; {2} regenerates only the {3} report for a COMPLETED run, writing no other output.</value>
   </data>
   <data name="_threads" xml:space="preserve">
     <value>Per-file main-search threads (INNER; default: all cores), divided across files run concurrently by {0}</value>
@@ -197,7 +197,7 @@
     <value>Prefix each output line with {0}</value>
   </data>
   <data name="_training_export" xml:space="preserve">
-    <value>Write {0} per run: every target precursor at run q &lt;= {1} with the observed intensities of its full b/y ladder and per-ion interference evidence (for training CarafeSharp). Adding it to a finished run runs only the export.</value>
+    <value>Write {0} per run: every target precursor at run q &lt;= {1} with the observed intensities of its full b/y ladder and per-ion interference evidence (for training CarafeSharp). Adding it to a finished run writes only the exports and re-scores nothing.</value>
   </data>
   <data name="_training_export_claimant_q" xml:space="preserve">
     <value>With {0}: the run q-value at which another target counts as a claimant of a shared fragment peak (default: {1})</value>

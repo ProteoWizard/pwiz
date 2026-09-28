@@ -132,7 +132,7 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 
 | Option | Value | Default | Effect |
 |--------|-------|---------|--------|
-| `--training-export` | - | off | Write `<stem>.training.parquet` per run: every target at run q <= `--training-export-max-q` with its full b/y ladder's observed intensities and per-ion interference evidence. Adding it to a finished run runs only this task. See [22-training-export.md](22-training-export.md). |
+| `--training-export` | - | off | Write `<stem>.training.parquet` per run: every target at run q <= `--training-export-max-q` with its full b/y ladder's observed intensities and per-ion interference evidence. Written by `PerFileRescoring`; adding it to a finished run writes only the exports and re-scores nothing. See [22-training-export.md](22-training-export.md). |
 | `--training-export-max-q` | `<q>` | `--run-fdr` | With `--training-export`: the second-pass run precursor q-value a target must reach. |
 | `--training-export-claimant-q` | `<q>` | 0.01 | With `--training-export`: the run q-value at which another target counts as a claimant of a shared peak. |
 | `--training-export-xics` | - | off | With `--training-export`: also write each precursor's per-ion XIC matrix over its final peak. |
@@ -148,7 +148,7 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 
 | Option | Value | Effect |
 |--------|-------|--------|
-| `--task` | `SpectraCache \| PerFileScoring \| FirstPassFDR \| PerFileRescoring \| SecondPassFDR \| TrainingExport \| ModelDiagnostics` | Run exactly one pipeline task (one node = one task). Omit for the whole pipeline. `SpectraCache` stages the `.spectra.bin` caches and needs no library; `TrainingExport` writes only the `--training-export` parquets of a completed run (it implies `--training-export`); `ModelDiagnostics` regenerates only the `--model-diagnostics` report for a completed run. EVERY task takes `-i`/`--input-list` naming the data files; the parquets and sidecars are derived from their stems. See [15-hpc-scoring-split.md](15-hpc-scoring-split.md). |
+| `--task` | `SpectraCache \| PerFileScoring \| FirstPassFDR \| PerFileRescoring \| SecondPassFDR \| TrainingExport \| ModelDiagnostics` | Run exactly one pipeline task (one node = one task). Omit for the whole pipeline. `SpectraCache` stages the `.spectra.bin` caches and needs no library; `TrainingExport` is `--training-export` with no `--task`: a selector, not a stage, that runs the whole pipeline with the export on, so a completed run writes only its missing exports; `ModelDiagnostics` regenerates only the `--model-diagnostics` report for a completed run. EVERY task takes `-i`/`--input-list` naming the data files; the parquets and sidecars are derived from their stems. See [15-hpc-scoring-split.md](15-hpc-scoring-split.md). |
 
 ### Logging
 

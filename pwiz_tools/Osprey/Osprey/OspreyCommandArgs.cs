@@ -232,9 +232,10 @@ namespace pwiz.Osprey
                 ARG_DECOYS_IN_LIBRARY, ARG_DECOY_PAIRING_MANIFEST, ARG_WRITE_PIN);
 
         // --- Training Export ---------------------------------------------------------------
-        // The optional fifth task (docs/22-training-export.md). Off, nothing about the run
-        // changes; on, it adds one <stem>.training.parquet per run and reruns nothing else, so
-        // adding it to a finished directory runs the export alone.
+        // A PerFileRescoring product (docs/22-training-export.md; P17 in
+        // docs/00-pipeline-architecture.md). Off, nothing about the run changes; on, it adds
+        // one <stem>.training.parquet per run, and adding it to a finished directory writes
+        // only the exports and re-scores nothing.
         public static readonly OspreyArgument ARG_TRAINING_EXPORT = new OspreyArgument(@"training-export",
             (c, p) => c._config.TrainingExport.Enabled = true) { DescriptionArgs = () => new object[] { @"<stem>" + TrainingExportParquet.EXT, ARG_TRAINING_EXPORT_MAX_Q.ArgumentText } };
         public static readonly OspreyArgument ARG_TRAINING_EXPORT_MAX_Q = new OspreyArgument(@"training-export-max-q",
@@ -973,14 +974,10 @@ namespace pwiz.Osprey
             sb.AppendLine();
             sb.AppendLine(@"# split 2 - one process per file (the scores parquet and its intermediate files together)");
             sb.AppendLine(@"Osprey --task PerFileRescoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
-            sb.AppendLine(@"#   writes: &lt;stem&gt;.scores-reconciled.parquet");
+            sb.AppendLine(@"#   writes: &lt;stem&gt;.scores-reconciled.parquet, and &lt;stem&gt;.training.parquet with --training-export");
             sb.AppendLine();
             sb.AppendLine(@"# join 2 - one process over ALL runs, reading their reconciled parquets (writes out.blib)");
             sb.AppendLine(@"Osprey --task SecondPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
-            sb.AppendLine();
-            sb.AppendLine(@"# optional split 3 - one process per file, only for --training-export (writes &lt;stem&gt;.training.parquet;");
-            sb.AppendLine(@"#   reads the run's reconciled parquet, 2nd-pass sidecar, calibration and spectra cache, and out.2nd-pass.fdr_experiment.bin)");
-            sb.AppendLine(@"Osprey --task TrainingExport -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
             sb.AppendLine(@"</pre>");
             sb.AppendLine(@"<p>EVERY task takes <code>-i</code>, naming the DATA files - the same names " +
                 @"the first split was given. A join task derives each run's parquet and intermediate files from " +

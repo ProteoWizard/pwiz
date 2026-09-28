@@ -181,21 +181,12 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// The run q-values an export selects on, as records keyed by (entry_id, apex RT), and
-        /// which pass they are. The second-pass sidecar when the per-run second pass in
-        /// PerFileRescoring wrote it - a PerFileRescoring stamp beside it, the test SecondPassFDR
-        /// itself uses to know the worker's answer is final (Pass2FdrSidecar.WorkerOwnedPass2Sidecars);
-        /// otherwise the first-pass sidecar, whose values are the final ones for a run nothing
-        /// re-scored. Deciding by who wrote the file, which never changes once it is written,
-        /// makes an export written while re-scoring and one written later from disk agree.
+        /// The run q-values an export selects on, as records keyed by (entry_id, apex RT), from
+        /// the sidecar <see cref="RunQPath"/> chooses, and which pass they are.
         /// </summary>
         internal static List<FdrScoreRecord> ReadRunQ(string input, out FdrScoresSidecar.Pass pass, out string path)
         {
-            string pass2Path = FdrScoresSidecar.Pass2Path(input);
-            bool workerOwned = File.Exists(pass2Path) &&
-                               File.Exists(TaskValiditySidecar.PathFor(pass2Path, PerFileRescoreTask.TASK_NAME));
-            pass = workerOwned ? FdrScoresSidecar.Pass.SecondPass : FdrScoresSidecar.Pass.FirstPass;
-            path = workerOwned ? pass2Path : FdrScoresSidecar.Pass1Path(input);
+            path = RunQPath(input, out pass);
             var records = new List<FdrScoreRecord>();
             if (!FdrScoresSidecar.ReadRecords(path, pass, records.Add))
             {
@@ -314,15 +305,18 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// The identities of the per-run artifacts one run's export reads - its reconciled
-        /// parquet, both q-value sidecars, calibration and spectra cache (name, size, mtime;
-        /// <c>absent</c> for a missing file) - so a rewritten input redoes that run's export and
-        /// no other.
+        /// parquet, the q-value sidecar it selects on, calibration and spectra cache (name, size,
+        /// mtime; <c>absent</c> for a missing file) - so a rewritten input redoes that run's
+        /// export and no other. Only the sidecar the export reads: when PerFileRescoring could
+        /// not build its per-run second pass (no readable saved first-pass model), SecondPassFDR
+        /// writes the second-pass sidecar after the export, and a key that followed it would
+        /// redo every export on the next resume for a file none of them read.
         /// </summary>
         public static string RunInputIdentities(string input)
         {
+            string runQPath = RunQPath(input, out var pass);
             return @";recon=" + IdentityOrAbsent(ParquetScoreCache.GetReconciledScoresPath(input))
-                + @";pass1run=" + IdentityOrAbsent(FdrScoresSidecar.Pass1Path(input))
-                + @";pass2run=" + IdentityOrAbsent(FdrScoresSidecar.Pass2Path(input))
+                + @";runq=" + (pass == FdrScoresSidecar.Pass.SecondPass ? @"2:" : @"1:") + IdentityOrAbsent(runQPath)
                 + @";calib=" + IdentityOrAbsent(CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input)))
                 + @";spectra=" + IdentityOrAbsent(SpectraCache.GetCachePath(input));
         }
@@ -331,10 +325,27 @@ namespace pwiz.Osprey.Tasks
         public static IEnumerable<string> RunInputs(string input)
         {
             yield return ParquetScoreCache.GetReconciledScoresPath(input);
-            yield return FdrScoresSidecar.Pass1Path(input);
-            yield return FdrScoresSidecar.Pass2Path(input);
+            yield return RunQPath(input, out _);
             yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
             yield return SpectraCache.GetCachePath(input);
+        }
+
+        /// <summary>
+        /// The q-value sidecar a run's export selects on, and which pass it is. The second-pass
+        /// sidecar when the per-run second pass in PerFileRescoring wrote it - a PerFileRescoring
+        /// stamp beside it, the test SecondPassFDR itself uses to know the worker's answer is
+        /// final (Pass2FdrSidecar.WorkerOwnedPass2Sidecars); otherwise the first-pass sidecar,
+        /// whose values are the final ones for a run nothing re-scored. Deciding by who wrote the
+        /// file, which never changes once it is written, makes an export written while
+        /// re-scoring and one written later from disk agree.
+        /// </summary>
+        internal static string RunQPath(string input, out FdrScoresSidecar.Pass pass)
+        {
+            string pass2Path = FdrScoresSidecar.Pass2Path(input);
+            bool workerOwned = File.Exists(pass2Path) &&
+                               File.Exists(TaskValiditySidecar.PathFor(pass2Path, PerFileRescoreTask.TASK_NAME));
+            pass = workerOwned ? FdrScoresSidecar.Pass.SecondPass : FdrScoresSidecar.Pass.FirstPass;
+            return workerOwned ? pass2Path : FdrScoresSidecar.Pass1Path(input);
         }
 
         /// <summary>

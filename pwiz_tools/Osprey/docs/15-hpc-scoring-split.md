@@ -21,12 +21,12 @@ There is one task set, `OspreyTasks.Create()` (`Osprey.Tasks/OspreyTasks.cs`), h
 | Stage 5 first-pass FDR | `FirstPassFDR` | `FirstPassFdrTask` | yes |
 | Stage 6 per-file rescore | `PerFileRescoring` | `PerFileRescoreTask` | yes |
 | Stages 7-8 second-pass FDR | `SecondPassFDR` | `SecondPassFdrTask` | yes |
-| After Stage 8, optional (`--training-export`) | `TrainingExport` | `TrainingExportTask` | yes - excluded unless the option is on |
 | Render over a completed analysis | `ModelDiagnostics` | `ModelDiagnosticsTask` | no - runs the canonical stages |
+| Ask for the training export | `TrainingExport` | `TrainingExportTask` | no - runs the canonical stages |
 
-- `SpectraCache` and `ModelDiagnostics` are **not pipeline stages**: both are reachable only by naming them in `--task`, and neither belongs in an HPC relay plan. What each runs when selected is declared in the set (`OspreyTasks.PipelineFor`): `SpectraCache` a one-task pipeline of its own, `ModelDiagnostics` the canonical stages (which rehydrate from their stamps and fold the report with every other write suppressed). `ModelDiagnosticsTask` is therefore never in a pipeline list and its `Run` / `Rehydrate` are unreachable; what it owns is the name, what it consumes, and the two flags the selection implies. See 00-pipeline-architecture.md, "Two selectable tasks that are not pipeline tasks".
+- `SpectraCache`, `ModelDiagnostics` and `TrainingExport` are **not pipeline stages**: each is reachable only by naming it in `--task`, and none belongs in an HPC relay plan. What each runs when selected is declared in the set (`OspreyTasks.PipelineFor`): `SpectraCache` a one-task pipeline of its own, `ModelDiagnostics` and `TrainingExport` the canonical stages. Under `ModelDiagnostics` those stages rehydrate from their stamps and fold the report with every other write suppressed. Under `TrainingExport` the export is on, so a finished analysis skips every stage but `PerFileRescoring`, which writes only the missing exports (the export is its declared output, P17). `ModelDiagnosticsTask` and `TrainingExportTask` are therefore never in a pipeline list, and their `Run` / `Rehydrate` are unreachable (they throw); what each owns is the name, what it consumes, and the flags the selection implies. See 00-pipeline-architecture.md, "Three selectable tasks that are not pipeline tasks".
 - The residual spelling to read carefully is `PerFileRescoring` (the name) vs `PerFileRescoreTask` (the class); everything else differs only in the `Fdr`/`FDR` casing, which follows this codebase's own type convention (`FdrEntry`, `FdrController`) rather than the all-caps `pwiz.Osprey.FDR` namespace.
-- **Adding a stage** is one class deriving from `OspreyTask` (its `TASK_NAME`, its overrides) plus its place in the two lists of `OspreyTasks.Create()`; a selector-only task additionally declares there which pipeline it runs. Nothing in `Program`, `OspreyCommandArgs` or `ScoringTaskShared` switches on a task name; `PipelineMembershipTest` goes red until the new task has its rows (and a subclass missing from the set fails its reflection guard), and the `--task` help prose (`OspreyCommandArgs`) describes the two selector-only tasks by name and wants a sentence for a new one; [20-command-line.md](20-command-line.md)'s `--task` row lists the values. A second pipeline - selectable by a future `--pipeline <name>` - would be another ordered list declared beside `Pipeline`.
+- **Adding a stage** is one class deriving from `OspreyTask` (its `TASK_NAME`, its overrides) plus its place in the two lists of `OspreyTasks.Create()`; a selector-only task additionally declares there which pipeline it runs. Nothing in `Program`, `OspreyCommandArgs` or `ScoringTaskShared` switches on a task name; `PipelineMembershipTest` goes red until the new task has its rows (and a subclass missing from the set fails its reflection guard), and the `--task` help prose (`OspreyCommandArgs`) describes the tasks that are not stages by name and wants a sentence for a new one; [20-command-line.md](20-command-line.md)'s `--task` row lists the values. A second pipeline - selectable by a future `--pipeline <name>` - would be another ordered list declared beside `Pipeline`.
 
 ## Orchestration model: `--task` + one membership rule
 
@@ -59,26 +59,25 @@ Cross-task state flows through a typed byproduct registry (`PipelineContext.Get<
 | `FirstPassFDR` | - | - | yes | - | - |
 | `PerFileRescoring` | yes | yes | yes | - | - |
 | `SecondPassFDR` | - | - | yes | yes | yes |
-| `TrainingExport` | yes | - | yes | yes | - |
 | `ModelDiagnostics` | - | yes | - | - | yes |
+| `TrainingExport` | - | yes | - | - | yes |
 | *(no `--task`)* | | | - | - | yes |
 
 ### Membership truth table
 
 The exact per-stage membership per mode is pinned by `PipelineMembershipTest.TestIncludesMembershipTable`, with each row's config built by `TaskConfigs.ForTask` - i.e. through the same `SelectTask` the CLI goes through, carrying the pipeline the selection was resolved against:
 
-| Mode | `PerFileScoring` | `FirstPassFDR` | `PerFileRescoring` | `SecondPassFDR` | `TrainingExport` |
-|---|---|---|---|---|---|
-| straight-through (no `--task`, `-i mzML`) | run | run | run | run | - |
-| straight-through with `--training-export` | run | run | run | run | run |
-| `--task PerFileScoring` | run | - | - | - | - |
-| `--task FirstPassFDR` | rehydrate | run | - | - | - |
-| `--task PerFileRescoring` | rehydrate | rehydrate | run | - | - |
-| `--task SecondPassFDR` | rehydrate | (skipped) | rehydrate | run | - |
-| `--task TrainingExport` | - | - | - | - | run |
-| `--task ModelDiagnostics` (not a stage of the pipeline it runs) | run | run | run | run | - |
+| Mode | `PerFileScoring` | `FirstPassFDR` | `PerFileRescoring` | `SecondPassFDR` |
+|---|---|---|---|---|
+| straight-through (no `--task`, `-i mzML`) | run | run | run | run |
+| `--task PerFileScoring` | run | – | – | – |
+| `--task FirstPassFDR` | rehydrate | run | – | – |
+| `--task PerFileRescoring` | rehydrate | rehydrate | run | – |
+| `--task SecondPassFDR` | rehydrate | (skipped) | rehydrate | run |
+| `--task ModelDiagnostics` (not a stage of the pipeline it runs) | run | run | run | run |
+| `--task TrainingExport` (not a stage of the pipeline it runs) | run | run | run | run |
 
-("rehydrate" = excluded from the driver loop but lazily materialized on demand from disk; "-" = never touched.) `--task ModelDiagnostics` sets neither stop boundary and is a member of every stage, like the straight-through run, suppressing artifact WRITES rather than membership. It is listed here because a truth-table row claiming otherwise stood in this file and in a unit test. `--task SpectraCache` has no row: it walks a one-task pipeline of its own, in which it is the selection and so included.
+("rehydrate" = excluded from the driver loop but lazily materialized on demand from disk; "–" = never touched.) `--task ModelDiagnostics` sets neither stop boundary and is a member of every stage, like the straight-through run, suppressing artifact WRITES rather than membership. It is listed here because a truth-table row claiming otherwise stood in this file and in a unit test. `--task TrainingExport` is the same shape: every stage is a member, and the resume scan decides what runs - on a finished analysis only `PerFileRescoring`'s export-only arm. `--task SpectraCache` has no row: it walks a one-task pipeline of its own, in which it is the selection and so included.
 ## Stage 1-4 — Per-file scoring (`--task PerFileScoring`)
 
 `PerFileScoringTask` (`Osprey.Tasks/PerFileScoringTask.cs`). Load the library + generate/pair decoys (`LoadLibraryAndDecoys`, `:695`), then score every input mzML (`Run`, `:173-421`). Each file's parse → RT/mass calibration → coelution scoring writes:
@@ -116,6 +115,8 @@ Under `--task FirstPassFDR` (`config.StopAfterStage5`), `PlanStage6` writes the 
 
 Reconciled output goes to a **separate** `<stem>.scores-reconciled.parquet` sibling, leaving the Stage 4 `<stem>.scores.parquet` intact (`ParquetScoreCache.GetReconciledScoresPath`; `WriteReconciledAndStamp`, `:944-987`). Its footer carries `osprey.reconciled = "true"` plus `osprey.reconciliation_hash` (`Osprey.Tasks/ReconciledParquetWriter.cs:198-205`). This differs from the Rust doc, which says Stage 6 "rewrites each `<stem>.scores.parquet`" in place (see Divergences).
 
+With `--training-export` this task also writes `<stem>.training.parquet` per run ([22-training-export.md](22-training-export.md)): while the run's spectra are in hand, after its per-run second pass, or - when the flag is added to a finished analysis and the exports are all this task has outstanding - from the run's own artifacts, re-scoring nothing (`OnlyTrainingExportsOutstanding`). A failed export is reported and the other runs still export; the task then fails, so `SecondPassFDR` does not write the blib, and a re-run retries only the failed exports.
+
 Under `--task PerFileRescoring` the membership rule includes only this stage (the selection is a stage of the pipeline it runs, so it runs alone; the input KIND used to tell the two per-file workers apart, and now the selection itself does); `PerFileScoringTask` and `FirstPassFdrTask` lazy-rehydrate the upstream state from the boundary files via `ctx.Demand`. The worker is the canonical driver, not a path of its own - the hand-rolled worker was collapsed into it, and the `RescoreWorker` alias that survived that collapse with no callers was removed. `ValidateSelection` requires `--input` (the run this worker rescores, whose parquet and sidecars derive from its stem) plus `--library` + `--output`.
 
 ## Stages 7-8 — Second-pass FDR (`--task SecondPassFDR`)
@@ -131,22 +132,9 @@ Under `--task SecondPassFDR` (`config.ExpectReconciledInput`), `Rehydrate` (`:31
 
 `SecondPassFdrTask.Rehydrate` returns `true` as a no-op (`:113`): nothing consumes SecondPassFDR's state in-memory, so it is never demanded.
 
-## After Stage 8 - Training export (`--task TrainingExport`, optional)
-
-`TrainingExportTask` (`Osprey.Tasks/TrainingExportTask.cs`). The optional fifth stage: with
-`--training-export` it writes `<stem>.training.parquet` per run, and with the option off
-`OspreyConfig.Includes` leaves it out of every mode (`ISelectableTask.IsEnabled`), which is the
-`TrainingExport` column above. A fan-out worker like `PerFileRescoring`: one node can take any
-batch of runs, its key names no cohort, and it reads only artifacts - each run's reconciled
-parquet, `.2nd-pass.fdr_scores.bin`, `.calibration.json`, `.spectra.bin` and `.run-info.json`,
-plus the analysis-wide `<blib-stem>.2nd-pass.fdr_experiment.bin` and the library. It
-rehydrates no other task. Selecting it implies `--training-export`; `ValidateSelection` (the
-base default) requires `--input` plus `--library` + `--output` (the output blib names the
-experiment file). Schema, key and relay list: [22-training-export.md](22-training-export.md).
-
 ## Full pipeline (default)
 
-With no `--task`, all four analysis tasks run in one process, and the training export as a fifth with `--training-export` (the `straight-through` rows of the truth table): output is identical to running the same workers in sequence over the same files. A run whose per-file artifacts are already on disk resumes to whichever stage is outstanding - the per-task validity sidecars decide that, not the input kind.
+With no `--task`, all four tasks run in one process (`straight-through` row of the truth table): output is identical to running the four workers in sequence over the same files. A run whose per-file artifacts are already on disk resumes to whichever stage is outstanding - the per-task validity sidecars decide that, not the input kind.
 
 The row that used to sit beside it, `--input-scores` with no `--task` (a single-node full run started from parquets), retired with the flag. It was the same run: the pipeline resumes from whatever is current in the output directory either way.
 

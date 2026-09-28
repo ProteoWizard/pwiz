@@ -1,7 +1,7 @@
 # 22. Training Export (C#)
 
-> Pipeline stage: an OPTIONAL fifth task, after Stage 7. No Rust counterpart: the task, its
-> file and its schema are C#-only. This document is the contract a consumer reads - every
+> Pipeline stage: a product of Stage 6 (`PerFileRescoring`), written only under
+> `--training-export`. No Rust counterpart: the product, its file and its schema are C#-only. This document is the contract a consumer reads - every
 > column, blob, flag bit and footer key of `<stem>.training.parquet` is defined here, and
 > `TrainingExportParquetTest` fails when the writer emits a column this document does not name.
 
@@ -22,39 +22,53 @@ Osprey decides nothing from this evidence. The consumer applies its own masking 
 
 | | |
 |---|---|
-| Task | `TrainingExport` (`Osprey.Tasks/TrainingExportTask.cs`), the fifth entry of `OspreyTasks.Pipeline`, after `SecondPassFDR` |
-| Shape | fan-out over runs (`IsPerFileWorker`), one run's artifacts at a time, and the spectra of the isolation windows in flight - one per worker thread, so up to `--threads` windows |
-| Enabled | only with `--training-export` (or `--task TrainingExport`, which implies it); never under `--task ModelDiagnostics`. Accepted but inert under any other `--task`, which logs where the export runs instead |
-| Reads | the run's `.scores-reconciled.parquet`, `.2nd-pass.fdr_scores.bin`, `.calibration.json`, `.spectra.bin`, `.run-info.json` (optional); the analysis-wide `<blib-stem>.2nd-pass.fdr_experiment.bin` and `<blib-stem>.1st-pass.retained_base_ids.bin`; the library |
-| Writes | `<stem>.training.parquet` per run, and its `.TrainingExport.osprey.task` stamp. Nothing else |
+| Written by | `PerFileRescoring` (`Osprey.Tasks/PerFileRescoreTask.cs`), through `Osprey.Tasks/TrainingExportWriter.cs`. A declared output of that task, not a stage: the pipeline stays four stages (P17 in [00](00-pipeline-architecture.md)) |
+| Shape | per run, inside the fan-out: one run's artifacts at a time, and the spectra of the isolation windows in flight - one per worker thread, so up to `--threads` windows |
+| Enabled | only with `--training-export` (or `--task TrainingExport`, the same request as a selector); never under `--task ModelDiagnostics`. On an HPC chain it is written by the `--task PerFileRescoring` nodes; every other `--task` accepts the flag, because a wrapper hands every node the same options, and ignores it, and the startup line says where the export is written |
+| Reads | the run's `.scores-reconciled.parquet`, one q-value sidecar (below), `.calibration.json` and `.spectra.bin`; the run's data file for the instrument footer, when it is there; the library, and `<blib-stem>.1st-pass.retained_base_ids.bin` when it loads the library itself |
+| Writes | `<stem>.training.parquet` per run, and its `.PerFileRescoring.osprey.task` stamp. Nothing else |
 
-**Off means absent.** With the option off, `OspreyConfig.Includes` excludes the task under
-every selection (`ISelectableTask.IsEnabled`), so it is not run, not stamped and not logged, and
-every other artifact of the run is byte-identical to a run without the feature.
+**Off means absent.** With the option off the export is not a declared output, so nothing is
+written, stamped or logged, and every other artifact of the run is byte-identical to a run
+without the feature. The option enters no other output's key.
 
-**Why after Stage 7 and not inside it.** The export needs the FINAL answer - the Stage 6
-reconciled boundaries and the Stage 7 q-values and PEP - so it cannot run earlier. It is not
-part of `SecondPassFDR` because that task is a join that holds no spectra; making the export one
-of its outputs would re-run the whole join every time an export setting changed, and would put
-per-run spectral work on the one node that cannot scale out (P3).
+**Why PerFileRescoring.** The export reads each run's calibrated spectra, reconciled boundaries
+and run q-values, and `PerFileRescoring` is the task that streams exactly those for the run. An
+export written there costs no second pass over the spectra, no second round of HPC nodes, and
+no wait behind the final join; an appended stage cost all three (P17 lists why).
 
-**Why it reads artifacts only.** The straight-through run, a pay-later run and an HPC node all
-take the same path (P10). The one in-process shortcut is the library: when an earlier stage of
-the same process still holds it, the task reuses it rather than loading the `.libcache` a
-second time. A load retains fragments only for the base_ids in the retained summary, as
-`--task SecondPassFDR` loads it: every row the export reads is a reconciled survivor, so none
-loses its spectrum, and the rest of the library's peaks are never allocated.
+**Two routes, one file.** With the flag up front, each run's export is written as soon as that
+run's reconciled parquet and per-run second pass have landed, while its spectra are in hand.
+With the flag added to a finished analysis, `PerFileRescoring` takes its export-only arm
+(`OnlyTrainingExportsOutstanding`): every other output of the task is current, so it writes each
+missing export from the run's own artifacts and re-scores nothing. Every run the in-flight
+route does not reach - one resumed as already re-scored, one with no re-scoring work - takes
+the same from-disk route at the end of the task. Both routes read the reconciled parquet and
+the q-value sidecar back from disk, so they write the same bytes. The one shortcut is the
+library: when the process already holds it, the export uses it rather than loading the
+`.libcache` again. A load of its own retains fragments only for the base_ids in the retained
+summary, as `--task SecondPassFDR` loads it: every row the export reads is a reconciled
+survivor, so none loses its spectrum.
 
 **What it checks before reading a run.** The reconciled parquet's footer, as every other
 post-Stage-4 consumer checks it (`ParquetScoreCache.ValidateScoresParquetGroup`): this build's
 version, this search and library, and `osprey.reconciled`. A mismatch fails the run with the
 file named.
 
-**Pay later.** The four earlier tasks' keys do not change with the option, so adding
-`--training-export` to a finished run's command line reports each of them
-`skipping (outputs valid)` and runs only this task. Measured on one Stellar run (the smoke run
-in the development TODO): 24.6 s for the task, 18.7 s of it the export itself and the rest the
-library load, against 17.5 minutes for the analysis.
+**When one run's export fails.** The failure is recorded and the other runs still export. The
+task then reports each failed run with its reason, sets exit code 1 and fails, so the analysis
+stops before `SecondPassFDR` writes the blib. Every other output is stamped as it lands, so a
+re-run of the same command retries only the failed exports. An export that was asked for and
+not written is a failed run, not a warning; a run that needs the blib regardless drops the flag.
+
+**Pay later.** `PerFileRescoring`'s key does not change with the option, and neither does any
+other task's, so adding `--training-export` to a finished run's command line reports
+`PerFileScoring`, `FirstPassFDR` and `SecondPassFDR` as `skipping (outputs valid)` and runs only
+the export-only arm. Measured on the 3-run Stellar set: the pay-later run took 15 s, 4-6 s per
+run for the export itself, against 6.5 minutes for the analysis. Each run's parquet was
+byte-identical to the one written with the flag up front, and every table of the blib but its
+`LibInfo` row (a fresh LSID and creation time on every write) was identical to the blib of the
+run without the flag.
 
 ---
 
@@ -66,7 +80,7 @@ library load, against 17.5 minutes for the analysis.
 | `--training-export-max-q <q>` | `--run-fdr` | Export targets whose second-pass run precursor q-value is at most `q` |
 | `--training-export-claimant-q <q>` | 0.01 | The run q-value at or below which another target counts as a CLAIMANT of shared peaks |
 | `--training-export-xics` | off | Also write each precursor's full per-ion XIC matrix over its final peak |
-| `--task TrainingExport` | | Run only this task (an HPC node, or a pay-later run that should not even check the others) |
+| `--task TrainingExport` | | The same request as `--training-export`, as a selector: the whole pipeline with the export on. It is not a stage, so on a finished analysis it writes only the missing exports |
 
 The three settings are refused without the export (they would be silently inert), and a q
 outside (0, 1] is refused.
@@ -78,22 +92,34 @@ outside (0, 1] is refused.
 One row per exported precursor per run, in ascending `entry_id` order:
 
 - **Targets only.** Decoys are never exported.
-- **Run q.** The precursor's second-pass run precursor q-value (`.2nd-pass.fdr_scores.bin`) is at
-  most `--training-export-max-q`. The experiment q-values and PEP are exported as columns; filter
-  on them in the consumer if wanted.
+- **Run q.** The precursor's run precursor q-value is at most `--training-export-max-q`. It is
+  the second-pass run q when `PerFileRescoring`'s per-run second pass wrote
+  `<stem>.2nd-pass.fdr_scores.bin` - a `PerFileRescoring` stamp beside it, the test
+  `SecondPassFDR` itself uses to fold the worker's answer - and the first-pass run q from
+  `<stem>.1st-pass.fdr_scores.bin` otherwise (`TrainingExportWriter.RunQPath`). The footer's
+  `osprey.training_export.run_q_pass` says which. The first pass is the final answer for a run
+  nothing re-scored, as in a single-run analysis. The other case is a `PerFileRescoring` that
+  had no readable saved first-pass model to compete with and left the second pass to
+  `SecondPassFDR`: there the first-pass q is not the final one, and a row reconciliation moved
+  has no first-pass record at its new apex, so it is not exported.
+- **No experiment-level values.** Experiment q-values and PEP exist only after `SecondPassFDR`,
+  which runs after the export, and a per-run file is written once (P11). Join
+  `<blib-stem>.2nd-pass.fdr_experiment.bin` by `entry_id` for them.
+- **Not under transfer.** `OSPREY_PASS2_QVALUE=transfer` computes each run's q-values in
+  `SecondPassFDR`, after the per-run export is written, so `--training-export` is refused at
+  startup in that mode.
 - **Entrapment is exported and marked.** `is_entrapment` / `peptide_kind` come from the
   library's protein accessions (`EntrapmentLibraryClassifier`: a `_p_target` accession is an
   entrapment peptide), so a consumer can exclude entrapment peptides from training while still
   using them to measure false discovery.
 - **The final peak.** Apex scan, boundaries and features are the reconciled parquet's row - the
-  Stage 6 answer - and the q-values are Stage 7's.
+  Stage 6 answer.
 - **Paired exactly, or refused.** A row joins its library entry by `entry_id`, and a row whose
   modified sequence or charge is not that entry's fails the run (the parquet was scored against
-  another library). It joins its second-pass record by (`entry_id`, apex RT), not `entry_id`
+  another library). It joins its q-value record by (`entry_id`, apex RT), not `entry_id`
   alone: Stage 6 gap-fill can leave two rows of one `entry_id` in a run (one target scored in
   two overlapping windows, so two scans), and each takes its own peak's record. Every writer of
-  `.2nd-pass.fdr_scores.bin` records the row's own apex RT; position is exact only for the
-  per-file worker's sidecar, not for the Stage 7 writers. Two records, or two rows, the key cannot
+  a q-value sidecar records the row's own apex RT. Two records, or two rows, the key cannot
   separate fail the run rather than one silently replacing the other.
 
 A run with nothing to export still gets a valid zero-row file with its footer (P13).
@@ -159,11 +185,8 @@ ladder.
 | `isolation_lower`, `isolation_upper` | double | Isolation window of the apex spectrum, m/z |
 | `bounds_area` | double | Osprey's integrated area of the reference XIC over the peak |
 | `coelution_sum` | double | Feature `fragment_coelution_sum` |
-| `score` | double | Second-pass SVM discriminant |
-| `run_precursor_q`, `run_peptide_q` | double | Second-pass run q-values |
-| `experiment_precursor_q`, `experiment_peptide_q` | double | Second-pass experiment q-values (NaN when absent) |
-| `experiment_protein_q` | double | Second-pass picked-protein q-value of the peptide |
-| `pep` | double | Posterior error probability (one value per precursor, from the experiment sidecar) |
+| `score` | double | SVM discriminant, from the q-value sidecar the export selected on (`run_q_pass`) |
+| `run_precursor_q`, `run_peptide_q` | double | Run q-values, from the same sidecar |
 | `apex_tic` | double | Sum of every peak intensity in the apex spectrum |
 | `explained_intensity` | double | Feature `explained_intensity` |
 | `n_slots` | int32 | `4 * (L - 1)` |
@@ -218,7 +241,7 @@ and 0 when either series is constant.
 | Bit | Value | Name | Set when |
 |---|---|---|---|
 | 0 | 1 | `APPLICABLE` | The slot's charge is at most `min(precursor charge, 2)` and its m/z is defined |
-| 1 | 2 | `IN_SCAN_RANGE` | `ion_mz` lies inside the MS2 scan window of this precursor's isolation window (the run info's `ms2_scan_windows`; the run-wide window for a run info that predates it; set for every applicable ion when neither is known) |
+| 1 | 2 | `IN_SCAN_RANGE` | `ion_mz` lies inside the m/z range this precursor's isolation window measured: the lowest to the highest peak m/z over that window's MS2 spectra in `.spectra.bin`, after calibration (`TrainingEvidenceWindow.ObservedMzRange`). Over a run's worth of spectra that is the scan range as the data shows it, a little inside the method's nominal limits; an ion outside it was not measured, so its absence is not a zero. A window with no peaks marks every applicable ion |
 | 2 | 4 | `MATCHED_AT_APEX` | A peak was found within the tolerance in the apex spectrum |
 | 3 | 8 | `CORE` | One of the library fragments Osprey's median polish was fit to |
 | 4 | 16 | `LIBRARY_ANNOTATED` | The library holds this ion by annotation (b/y, ordinal, charge, no loss) |
@@ -240,23 +263,25 @@ with a Savitzky-Golay filter; Osprey's XICs are unsmoothed - see Risks).
 
 | Key | Value |
 |---|---|
-| `osprey.training_export.format_version` | `1` |
+| `osprey.training_export.format_version` | `2` (version 1 carried experiment q-value and PEP columns) |
 | `osprey.version`, `osprey.search_hash`, `osprey.library_hash` | As in the scores parquet |
 | `osprey.file_name` | Run stem |
 | `osprey.training_export.rows` | Rows written |
 | `osprey.training_export.max_q`, `osprey.training_export.claimant_q` | The thresholds applied |
 | `osprey.training_export.xics` | `true` / `false` |
 | `osprey.training_export.slot_order` | The slot layout, in words |
-| `osprey.training_export.mp_cosine_parity` | `N/M`: rows whose `mp_cosine_parity` is true, of all rows |
+| `osprey.training_export.run_q_pass` | `2` or `1`: the pass whose run q-values the rows were selected on (see Which rows) |
+| `osprey.training_export.mp_cosine_parity` | `N/M`: rows whose `mp_cosine_parity` is true, of all rows. A row with no fit counts as a match (both cosines are the no-fit value) |
+| `osprey.training_export.mp_cosine_parity_fitted` | `N/M`: the same over rows with a median-polish fit only - the count that tests the recomputation |
 | `osprey.rt_min`, `osprey.rt_max` | First and last MS2 retention time of the run, minutes |
 | `osprey.isolation_mz_min`, `osprey.isolation_mz_max` | Range of the run's isolation windows |
 | `osprey.fragment_tolerance`, `osprey.fragment_tolerance_unit` | The MS2-calibrated tolerance every match above used (`ppm` or `Th`) |
 | `osprey.ms2_calibration.calibrated`, `.mean`, `.sd`, `.unit` | The run's MS2 mass calibration |
 | `osprey.ddc.tolerance`, `osprey.ddc.tolerance_unit`, `osprey.ddc.rt_neighborhood` | The double-counting dedup's tolerance and RT neighborhood for this run |
-| `osprey.run_info` | The run's `.run-info.json` as one line of JSON, or empty when it is absent |
-| `osprey.instrument_vendor`, `osprey.instrument_model` | From the run info |
-| `osprey.ms2_scan_window` | `lower,upper` run-wide MS2 scan window, or empty when unknown (each isolation window's own is in `osprey.run_info`) |
-| `osprey.dissociation_methods`, `osprey.collision_energies` | JSON histograms (method or energy -> MS2 spectrum count) |
+| `osprey.ms2_scan_window` | `lower,upper`: the union of every isolation window's measured m/z range (`IN_SCAN_RANGE` uses each window's own), or empty when no window has peaks |
+| `osprey.instrument_vendor`, `osprey.instrument_model` | From the run's data file (see Source metadata), or empty without it |
+| `osprey.source_ms2_sampled` | MS2 spectra the two histograms below were counted over; `0` without the data file |
+| `osprey.dissociation_methods`, `osprey.collision_energies` | JSON histograms (method or energy -> MS2 spectrum count) over the sampled spectra, or empty without the data file |
 
 Collision energy is exported as the file reports it, which differs by vendor (normalized for
 Thermo, eV for Sciex, stepped HCD as several values), hence a histogram rather than a number.
@@ -344,66 +369,64 @@ broader measure.
 
 ---
 
-## Run information: `<stem>.run-info.json`
+## Source metadata
 
-The instrument and fragmentation facts in the footer come from a per-run cache written beside
-`.spectra.bin` when that cache is built, from fields the ProteoWizard read already populates
-(`Osprey.IO/RunInfoFile.cs`, collected in `SpectrumFileReader`): source file name and
-fingerprint, run id and start time, instrument vendor / model / serial number and every declared
-instrument configuration, MS1 and MS2 counts and retention-time ranges, MS1 and MS2 scan
-windows (the MS2 one run-wide and per isolation window), the MS2 isolation range, and histograms
-of MS2 analyzer, dissociation method and collision energy. It is written ONLY when the cache is
-built - never on a cache hit - so a run whose cache predates it has none, and its export says so
-(empty footer keys and a warning). A run info whose source fingerprint (size, mtime) disagrees
-with the one `.spectra.bin` records describes another version of the source; the export ignores
-it with a warning. Format and invalidation: [14-intermediate-files](14-intermediate-files.md).
+The instrument and fragmentation facts in the footer come from the run's data file, read only
+when an export asks for them (`SpectrumFileReader.TryReadSourceMetadata`, into
+`Osprey.IO/SourceRunMetadata.cs`): the instrument vendor and model, and the dissociation method
+and collision energy of the first 200 MS2 spectra (`SourceRunMetadata.MAX_MS2_SPECTRA`) - enough
+to see every method and energy of a DIA cycle without reading the run. Nothing is cached and
+nothing is read during the search, so a run whose `.spectra.bin` was built before the export
+existed describes itself as well as a new one, and a search without the flag pays nothing.
+
+Without the data file - an HPC node shipped only `.spectra.bin`, or a cohort whose sources were
+deleted after staging - those keys are empty and the export warns, naming the file. Everything
+else in the export comes from the spectra cache and is unaffected. The scan ranges are not
+source metadata: they come from the spectra themselves (`IN_SCAN_RANGE` above).
 
 ---
 
 ## Resume and validity
 
-`TrainingExportTask.ValidityKey` is the base key (search parameters, library identity,
-peak-pick arm, and `;libext=ann` for a blib library with fragment annotations), plus:
+Each run's parquet is a declared output of `PerFileRescoring` and is stamped with that task's
+key plus the export's own terms (`PerFileRescoreTask.OutputValidityKey`):
 
 | Term | Why |
 |---|---|
-| `fdrsidecar=<version>` | The q-values come from the per-run sidecar format |
-| the experiment-aggregation, pass-2 q-value, training-sample and library-fragment arms | The same arms `SecondPassFDR` keys on, because they change the q-values exported |
-| `pass2exp=<identity>` | Name + size + mtime of `<blib-stem>.2nd-pass.fdr_experiment.bin`: it is rewritten whenever Stage 7 re-runs, so an export of an older second pass is recomputed |
 | `trainexport=<format>;maxq=;claimq=;xics=` | The export's own format and settings |
-
-It deliberately omits the cohort (P4): no reconciliation hash, no stem list, so an HPC node
-handed any subset of runs computes the key a straight-through run does.
-
-Each run's parquet is stamped with that key plus the identities (name, size, mtime; `absent`
-for a missing file) of the five per-run artifacts it reads that the key does not already
-follow (`TrainingExportTask.OutputValidityKey`):
-
-| Term | File |
-|---|---|
-| `recon=<identity>` | `<stem>.scores-reconciled.parquet` |
-| `pass2run=<identity>` | `<stem>.2nd-pass.fdr_scores.bin` |
-| `calib=<identity>` | `<stem>.calibration.json` |
+| `recon=<identity>` | `<stem>.scores-reconciled.parquet`: the rows and their features |
+| `runq=<pass>:<identity>` | The q-value sidecar the export selects on, and which pass it is (Which rows) |
+| `calib=<identity>` | `<stem>.calibration.json`: the MS2 calibration the spectra and tolerance are corrected by |
 | `spectra=<identity>` | `<stem>.spectra.bin` |
-| `runinfo=<identity>` | `<stem>.run-info.json` - so rebuilding a spectra cache, which writes it, redoes an export made without it |
 
-A rewritten input redoes that run's export and no other. Resume is per run: a run whose parquet
-exists with a matching stamp is skipped (`(current, skipped)`), a stale stamp is cleared before
-its run is recomputed, and each run is stamped as it lands, so a killed export loses only the
-run in flight. With every run current the driver skips the task.
+An identity is name, size and mtime (`SearchIdentity.FileIdentityTerm`), or `absent` for a
+missing file. Only the q-value sidecar the export reads is in the key: when `SecondPassFDR`
+writes `<stem>.2nd-pass.fdr_scores.bin` after the export (the no-model case above), that file is
+not read, and a key that followed it would redo every export on the next resume.
+
+None of these terms enters `PerFileRescoring`'s own key, which is what makes the flag free to
+add later: every other output stays valid, and only the exports are outstanding. The key names
+no cohort (P4) - no reconciliation hash beyond the one the task key already carries, no stem
+list - so an HPC node handed any subset of runs computes the key a straight-through run does.
+
+A rewritten input redoes that run's export and no other, and never re-scores. Resume is per run:
+a run whose parquet exists with a matching stamp is skipped, a stale stamp is cleared before its
+run is recomputed, and each run is stamped as it lands, so a killed export loses only the run in
+flight.
 
 ### HPC relay
 
-A `--task TrainingExport` node needs, per run in its batch: `<stem>.scores-reconciled.parquet`,
-`<stem>.2nd-pass.fdr_scores.bin`, `<stem>.calibration.json`, `<stem>.spectra.bin` (with
-`--cache-dir` if it is not in the output directory) and, for the instrument footer,
-`<stem>.run-info.json`; and experiment-wide, the library, `<blib-stem>.2nd-pass.fdr_experiment.bin`
-and `<blib-stem>.1st-pass.retained_base_ids.bin` (without it the library loads every spectrum).
-It needs no `.scores.parquet` and no other first-pass artifact.
+The export is written on the `PerFileRescoring` node, from files that node already has for the
+rescore (Boundary 2 -> 3 in [00](00-pipeline-architecture.md)); it adds nothing to that relay
+list. It writes `<stem>.training.parquet` beside the node's other outputs, and no task reads
+it. Two notes:
 
-**Relay with mtimes preserved** (`cp -p`, robocopy `/COPY:DAT`), as the library already
-requires: the keys follow each input's name, size and mtime, so a copy that stamps a new mtime
-redoes every export it touches.
+- **The data file is optional.** Without it the instrument footer keys are empty and the node
+  warns. Do not ship the mzML only for the footer; the relay rule against data files on a
+  fan-out node still holds.
+- **Relay with mtimes preserved** (`cp -p`, robocopy `/COPY:DAT`), as the library already
+  requires: the keys follow each input's name, size and mtime, so a copy that stamps a new mtime
+  redoes every export it touches.
 
 ---
 

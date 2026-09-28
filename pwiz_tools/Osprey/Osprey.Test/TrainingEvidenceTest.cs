@@ -66,6 +66,7 @@ namespace pwiz.Osprey.Test
             AssertDoubleCountingNeighbors();
             AssertDoubleCountingNeighborsTakeTheDedupsOrder();
             AssertProteinIdsMatchTheScoresParquet();
+            AssertScanRangeIsTheMeasuredRange();
         }
 
         private static void AssertCleanPrecursor()
@@ -337,6 +338,53 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(string.Empty, Compute(entry, row, window, null).ProteinIds);
             entry.ProteinIds = null;
             Assert.IsNull(Compute(entry, row, window, null).ProteinIds);
+        }
+
+        /// <summary>
+        /// An ion is in the scan range when it lies inside the m/z range its isolation window's
+        /// spectra measured - the lowest to the highest peak over them - which is what the export
+        /// hands the evidence, so an ion the instrument never scanned is unknown rather than an
+        /// observed zero. Without a range every applicable ion is in it, and a window with no
+        /// peaks has no range.
+        /// </summary>
+        private static void AssertScanRangeIsTheMeasuredRange()
+        {
+            var entry = Peptide(SEQUENCE, 2, 1);
+            var window = Window(entry, spikeSlot: -1);
+            // The fixture's two unrelated peaks bound every spectrum.
+            CollectionAssert.AreEqual(new[] { 150.5, 1234.5 }, window.ObservedMzRange);
+
+            var row = Row(entry, FIRST, LAST);
+            var measured = TrainingEvidence.Compute(entry, row, 0.005, 3.0, window, null,
+                Settings(false).WithMs2ScanWindow(window.ObservedMzRange));
+            var unmeasured = TrainingEvidence.Compute(entry, row, 0.005, 3.0, window, null,
+                Settings(false).WithMs2ScanWindow(null));
+            var ladder = FragmentLadder.Build(SEQUENCE, null, 2);
+            int nBelow = 0;
+            for (int slot = 0; slot < ladder.Length; slot++)
+            {
+                if (double.IsNaN(ladder[slot]))
+                    continue;
+                bool inRange = ladder[slot] >= 150.5 && ladder[slot] <= 1234.5;
+                if (!inRange)
+                    nBelow++;
+                Assert.AreEqual(inRange, (measured.IonFlags[slot] & TrainingIonFlags.IN_SCAN_RANGE) != 0,
+                    string.Format(@"slot {0} at m/z {1} against the measured range", slot, ladder[slot]));
+                Assert.AreNotEqual(0, unmeasured.IonFlags[slot] & TrainingIonFlags.IN_SCAN_RANGE,
+                    string.Format(@"slot {0} with no range", slot));
+            }
+            Assert.IsTrue(nBelow > 0, @"b1 and y1 fall below the measured range");
+
+            var noPeaks = new TrainingEvidenceWindow(new List<Spectrum>
+            {
+                new Spectrum
+                {
+                    ScanNumber = SCAN0, RetentionTime = RT0, PrecursorMz = 500.0,
+                    IsolationWindow = new IsolationWindow(500.0, 2.0, 2.0),
+                    Mzs = new double[0], Intensities = new float[0],
+                },
+            });
+            Assert.IsNull(noPeaks.ObservedMzRange);
         }
 
         // ---- fixtures ------------------------------------------------------------------------
