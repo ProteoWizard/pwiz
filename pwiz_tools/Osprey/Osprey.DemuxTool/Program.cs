@@ -42,19 +42,19 @@ namespace pwiz.Osprey.DemuxTool
             @"Usage: Osprey.DemuxTool --in <run.wiff2|.raw|.mzML> --out <demux.mzML> [--scheme scanning|staggered]" +
             @" [--kernel <profile.tsv>] [--layout centered:k|tiled:k|framed:k:m] [--threads N] [--cycles first:last]" +
             @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--position-mz] [--unweighted]" +
-            @" [--sweep-l1 L] [--sweep-l1-z Z] [--sweep-l1-refit] [--block-support-z Z] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw]";
+            @" [--sweep-l1 L] [--sweep-l1-z Z] [--sweep-l1-refit] [--block-support-z Z] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw] [--profile] [--centroid vendor|events]";
 
         private static int Main(string[] args)
         {
             string input = null, output = null, kernelPath = null;
-            bool staggered = false;
+            bool staggered = false, profile = false, eventCentroids = false;
             var options = new ScanningDemuxOptions();
             for (int i = 0; i < args.Length; i++)
             {
                 // Every option but the switches takes a value.
                 string option = args[i];
                 bool isSwitch = option == @"--raw" || option == @"--unweighted" || option == @"--position-mz" ||
-                    option == @"--source-positions" || option == @"--sweep-l1-refit";
+                    option == @"--source-positions" || option == @"--sweep-l1-refit" || option == @"--profile";
                 if (!isSwitch && i + 1 >= args.Length)
                 {
                     Console.Error.WriteLine(USAGE);
@@ -145,6 +145,15 @@ namespace pwiz.Osprey.DemuxTool
                         // The selected spectra as acquired, zeros dropped: the control arm.
                         options.Raw = true;
                         break;
+                    case @"--profile":
+                        // A vendor file read without vendor centroiding, to see what centroiding keeps.
+                        profile = true;
+                        break;
+                    case @"--centroid":
+                        // events: the profile centroided keeping every single ion event; vendor: the
+                        // vendor library's centroids (the default for a vendor file).
+                        eventCentroids = value == @"events";
+                        break;
                     default:
                         Console.Error.WriteLine(USAGE);
                         return 1;
@@ -172,7 +181,13 @@ namespace pwiz.Osprey.DemuxTool
             ReaderList.Default.Read(input, msd);
             var spectra = msd.Run.SpectrumList;
             Console.WriteLine(@"Opened {0} spectra in {1:F0} s", spectra.Count, stopwatch.Elapsed.TotalSeconds);
-            if (SpectrumList_PeakPicker.SupportsVendorPeakPicking(input))
+            if (eventCentroids)
+            {
+                // The profile as acquired, centroided with each run of adjacent points one peak.
+                spectra = new SpectrumList_PeakPicker(spectra, new EventPeakDetector(), false, @"1-");
+                Console.WriteLine(@"Event centroiding: {0}", input);
+            }
+            else if (!profile && SpectrumList_PeakPicker.SupportsVendorPeakPicking(input))
             {
                 // A vendor file (.wiff2) is read directly, centroided by the vendor library as
                 // msconvert's "peakPicking vendor msLevel=1-" does; with no fallback detector a
