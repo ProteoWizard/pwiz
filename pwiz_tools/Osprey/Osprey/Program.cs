@@ -88,6 +88,8 @@ namespace pwiz.Osprey
             // Before parsing, so a warning OspreyCommandArgs raises while parsing reaches the
             // caller's writer too; the --log-file swap later re-points it.
             OspreyOutput.Out = _out;
+            // One command line is one run, however many a test runs in this process.
+            FdrScoresSidecar.BeginRun();
             // Before anything is written, so every line - a parse error included - is in the
             // requested culture. A test runs a command line in process, so the scope also puts
             // the caller's culture back.

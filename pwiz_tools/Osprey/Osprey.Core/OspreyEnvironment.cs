@@ -663,8 +663,11 @@ namespace pwiz.Osprey.Core
         /// <para>Deliberately NOT in any validity key: it changes no output, so including it
         /// would invalidate every cached artifact the moment it was flipped, turning a
         /// diagnostic into a re-run.</para>
+        ///
+        /// <para>Re-read on each access rather than fixed at class load, so an in-process test
+        /// can switch it per command line with <see cref="OverrideVariables"/>.</para>
         /// </summary>
-        public static readonly bool Pass2VerifyWorker =
+        public static bool Pass2VerifyWorker =>
             IsSetAndNotZero(@"OSPREY_PASS2_VERIFY_WORKER");
 
         /// <summary>

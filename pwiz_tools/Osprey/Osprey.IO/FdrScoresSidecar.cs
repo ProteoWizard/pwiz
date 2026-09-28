@@ -552,10 +552,11 @@ namespace pwiz.Osprey.IO
         /// harness check on the HPC legs - those only see cross-TASK modification, and this
         /// catches a task rewriting its own output too.</para>
         ///
-        /// <para>Per PROCESS, keyed by full path. A resumed run is a new process and legitimately
-        /// rewrites what a previous one left; what is forbidden is producing the same artifact
-        /// twice inside one run, because only one of those writes can be the one that was
-        /// stamped.</para>
+        /// <para>Per RUN, keyed by full path. A resumed run legitimately rewrites what a previous
+        /// one left; what is forbidden is producing the same artifact twice inside one run,
+        /// because only one of those writes can be the one that was stamped. A run is one
+        /// command line, which starts with <see cref="BeginRun"/> - usually one per process, but
+        /// a test runs several in one.</para>
         /// </summary>
         private static void AssertNotWrittenAlready(string path)
         {
@@ -574,10 +575,22 @@ namespace pwiz.Osprey.IO
                 @"sidecar, not in a second pass over this one. See issue #4486.", key));
         }
 
-        // Full paths of every per-file sidecar written by this process. Never cleared: the
-        // question it answers is "twice in one run", and a run is a process.
+        // Full paths of every per-file sidecar written by this run. Cleared only when a new
+        // command line starts: the question it answers is "twice in one run".
         private static readonly HashSet<string> WrittenThisRun =
             new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Start a new run for the write-once check: a sidecar a previous command line in this
+        /// process wrote may be written again. Called once per command line, before any work.
+        /// </summary>
+        public static void BeginRun()
+        {
+            lock (WrittenThisRun)
+            {
+                WrittenThisRun.Clear();
+            }
+        }
 
         private static void WriteRecord(
             BinaryWriter bw, uint entryId, double score,
