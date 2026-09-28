@@ -21,11 +21,11 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
+using pwiz.CarafeSharp.Proteome;
 using pwiz.CarafeSharp.Training;
 
 namespace pwiz.CarafeSharp.Test
@@ -36,17 +36,12 @@ namespace pwiz.CarafeSharp.Test
     /// folder): the RT normalizer and collision energy from the footer, how many spectra each
     /// keeps, and the per-ion masking decisions on the spectra both have. Carafe reads its own
     /// XICs and CarafeSharp reads Osprey's evidence, so this is agreement, not identity.
-    /// Inconclusive unless <c>CARAFESHARP_OSPREY_TRAINING_EXPORT</c> names the export and
-    /// <c>CARAFESHARP_CARAFE_FINETUNED</c> the Carafe folder.
+    /// <see cref="TestData"/> finds the export (<c>CARAFESHARP_OSPREY_TRAINING_EXPORT</c>) and the
+    /// Carafe folder, the first fine-tuning folder (<c>CARAFESHARP_CARAFE_FINETUNED</c>).
     /// </summary>
     [TestClass]
     public class OspreyMaskingParityTest
     {
-        public const string EXPORT_VARIABLE = @"CARAFESHARP_OSPREY_TRAINING_EXPORT";
-
-        // Carafe's meta.json for the June Stellar run: max MS2 RT + 0.1.
-        private const double CARAFE_RT_MAX = 24.104256448433002;
-
         // Agreement measured when the policy was ported (Stellar _21, Osprey 0a0b74432a):
         // 85.0% of slots, 12,404 spectra kept by both; the floors leave room for Osprey changes.
         private const double MIN_SLOT_AGREEMENT = 0.83;
@@ -57,19 +52,26 @@ namespace pwiz.CarafeSharp.Test
         [TestMethod]
         public void TestMaskingAgreesWithCarafe()
         {
-            string exportPath = Environment.GetEnvironmentVariable(EXPORT_VARIABLE);
-            string carafeFolder = Environment.GetEnvironmentVariable(CarafeParityTest.FINETUNED_REFERENCE_VARIABLE);
-            if (string.IsNullOrEmpty(exportPath) || !File.Exists(exportPath))
-                Assert.Inconclusive(EXPORT_VARIABLE + @" does not name an Osprey training export.");
-            if (string.IsNullOrEmpty(carafeFolder) || !File.Exists(Path.Combine(carafeFolder, CarafeTrainingDirectory.PSM_FILE)))
-                Assert.Inconclusive(CarafeParityTest.FINETUNED_REFERENCE_VARIABLE + @" does not name a Carafe fine-tuning folder.");
+            TestData.InconclusiveUnlessAvailable(TestData.TrainingExports);
+            TestData.InconclusiveUnlessAvailable(TestData.FineTunedLibraries);
+            string carafeFolder = TestData.FineTunedLibraries.Resolve().First();
+            TestData.RequireFiles(carafeFolder, CarafeTrainingDirectory.PSM_FILE, CarafeModelDirectory.META_FILE);
+            // What the Carafe run trained with, from its meta.json: the run's NCE, its instrument (else
+            // Carafe's default) and its rt_max, the last MS2 RT + 0.1.
+            var carafeSettings = CarafeReferenceRun.Open(carafeFolder).Settings;
+            foreach (string exportPath in TestData.TrainingExports.Resolve())
+                CompareMasking(TestData.RequireFile(exportPath), carafeFolder, carafeSettings);
+        }
 
+        private void CompareMasking(string exportPath, string carafeFolder, LibrarySettings carafeSettings)
+        {
+            TestContext.WriteLine(@"{0} against {1}", exportPath, carafeFolder);
             var export = OspreyTrainingExport.Read(exportPath);
             TestContext.WriteLine(@"{0} rows, rt_max {1}, NCE {2}, instrument {3}", export.Records.Count, export.RtMax,
                 export.DominantCollisionEnergy, export.InstrumentModel);
             var options = new OspreyTrainingSetOptions();
-            Assert.AreEqual(CARAFE_RT_MAX, export.RtMax + options.RtMaxPadding, 1e-9);
-            Assert.AreEqual(30.0, export.DominantCollisionEnergy);
+            Assert.AreEqual(carafeSettings.RtMax, export.RtMax + options.RtMaxPadding, 1e-9);
+            Assert.AreEqual(carafeSettings.Nce, export.DominantCollisionEnergy);
             Assert.IsTrue(export.Records.All(r => r.SlotCount == 4 * (r.Sequence.Length - 1)));
 
             var trainingSet = OspreyTrainingSet.Build(new[] { export }, options);
@@ -78,7 +80,7 @@ namespace pwiz.CarafeSharp.Test
                 .Select(p => p.Key + @" " + p.Value)));
 
             // Spectra by modified form and charge; a repeated key keeps its first row.
-            var carafe = FirstByKey(CarafeTrainingDirectory.ReadMs2(carafeFolder, 30, @"Eclipse"),
+            var carafe = FirstByKey(CarafeTrainingDirectory.ReadMs2(carafeFolder, carafeSettings.Nce, carafeSettings.Instrument),
                 e => Key(e.Precursor.Peptide, e.Precursor.Charge), out int carafeRepeats);
             var records = FirstByKey(export.Records.Where(r => r.RunPrecursorQ <= options.MaxRunQ), RecordKey, out int exportRepeats);
             TestContext.WriteLine(@"Repeated keys: Carafe {0}, export {1}", carafeRepeats, exportRepeats);

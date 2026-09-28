@@ -32,60 +32,69 @@ namespace pwiz.CarafeSharp.Test
 {
     /// <summary>
     /// Rebuilds whole entrapment FASTAs and pairing manifests Carafe wrote and requires the same
-    /// bytes. Two sources, each optional (the test is inconclusive when neither is set):
+    /// bytes. Two sources (<see cref="TestData"/> finds them):
     /// <list type="bullet">
-    /// <item><c>CARAFESHARP_STAGE1_REFERENCE</c>: a Carafe GUI output folder from before the
-    /// similarity gate (e.g. the Stellar <c>carafe-osprey-entrapment</c> run of Carafe 2.2.0).
-    /// Every <c>*.carafe.sig</c> in it records the command line that built a peptide FASTA; each is
-    /// rerun with <c>-no_similarity_gate</c>, which reproduces pre-gate output.</item>
-    /// <item><c>CARAFESHARP_STAGE1_BUILDS</c>: a folder of reference builds, one per subfolder,
+    /// <item>Carafe GUI output folders from before the similarity gate (the Carafe 2.2.0 runs of
+    /// the examples, <c>CARAFESHARP_STAGE1_REFERENCE</c>). Every <c>*.carafe.sig</c> in one records
+    /// the command line that built a peptide FASTA; each is rerun with <c>-no_similarity_gate</c>,
+    /// which reproduces pre-gate output.</item>
+    /// <item>Folders of reference builds, one per subfolder (<c>CARAFESHARP_STAGE1_BUILDS</c>),
     /// each holding <c>peptides.fasta</c>, <c>pairing.tsv</c> and <c>command.txt</c> (the rest of
-    /// the Carafe command line, one argument per line, <c>-db</c> included).</item>
+    /// the Carafe command line, one argument per line, <c>-db</c> included). A path in it starting
+    /// <c>{DATA}/</c> is in the test data package holding the build.</item>
     /// </list>
     /// </summary>
     [TestClass]
     public class EntrapmentFastaParityTest
     {
-        public const string REFERENCE_VARIABLE = @"CARAFESHARP_STAGE1_REFERENCE";
-        public const string BUILDS_VARIABLE = @"CARAFESHARP_STAGE1_BUILDS";
-
         private const string SIGNATURE_SUFFIX = @".carafe.sig";
+        private const string COMMAND_FILE = @"command.txt";
+        private const string FASTA_FILE = @"peptides.fasta";
+        private const string MANIFEST_FILE = @"pairing.tsv";
 
         public TestContext TestContext { get; set; }
 
         [TestMethod]
         public void TestFullFastaBuildsMatchCarafe()
         {
-            string referenceDir = ReferenceDir(REFERENCE_VARIABLE);
-            string buildsDir = ReferenceDir(BUILDS_VARIABLE);
-            if (referenceDir == null && buildsDir == null)
-                Assert.Inconclusive(@"Neither {0} nor {1} names a Carafe entrapment FASTA reference folder.", REFERENCE_VARIABLE, BUILDS_VARIABLE);
+            CompareBuilds(TestData.Stage1References, TestData.Stage1Builds);
+        }
+
+        [TestMethod, TestCategory(TestData.ASTRAL_CATEGORY)]
+        public void TestAstralFastaBuildsMatchCarafe()
+        {
+            CompareBuilds(TestData.AstralStage1References, null);
+        }
+
+        private void CompareBuilds(TestData.Item referenceItem, TestData.Item buildsItem)
+        {
+            var items = buildsItem == null ? new[] { referenceItem } : new[] { referenceItem, buildsItem };
+            TestData.InconclusiveUnlessAvailable(items);
+            var signatures = new List<(string Signature, string ReferenceDir)>();
+            foreach (string referenceDir in referenceItem.Resolve())
+            {
+                var found = Directory.GetFiles(referenceDir, @"*" + SIGNATURE_SUFFIX).OrderBy(f => f, StringComparer.Ordinal).ToArray();
+                Assert.IsTrue(found.Length > 0, @"No *" + SIGNATURE_SUFFIX + @" in " + referenceDir);
+                signatures.AddRange(found.Select(f => (f, referenceDir)));
+            }
+            var builds = new List<string>();
+            foreach (string buildsDir in buildsItem?.Resolve() ?? Array.Empty<string>())
+            {
+                var found = Directory.GetDirectories(buildsDir).Where(d => File.Exists(Path.Combine(d, COMMAND_FILE)))
+                    .OrderBy(d => d, StringComparer.Ordinal).ToArray();
+                Assert.IsTrue(found.Length > 0, @"No builds (subfolders with a " + COMMAND_FILE + @") in " + buildsDir);
+                builds.AddRange(found);
+            }
 
             string scratch = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"EntrapmentParity_" + Guid.NewGuid().ToString(@"N"));
             Directory.CreateDirectory(scratch);
             try
             {
                 var mismatches = new List<string>();
-                int compared = 0;
-                if (referenceDir != null)
-                {
-                    foreach (string signature in Directory.GetFiles(referenceDir, @"*" + SIGNATURE_SUFFIX).OrderBy(f => f, StringComparer.Ordinal))
-                    {
-                        CompareSignature(signature, referenceDir, scratch, mismatches);
-                        compared++;
-                    }
-                }
-                if (buildsDir != null)
-                {
-                    foreach (string build in Directory.GetDirectories(buildsDir).OrderBy(d => d, StringComparer.Ordinal))
-                    {
-                        if (!File.Exists(Path.Combine(build, @"command.txt")))
-                            continue;
-                        CompareBuild(build, scratch, mismatches);
-                        compared++;
-                    }
-                }
-                Assert.IsTrue(compared > 0, @"No reference builds found");
+                foreach (var (signature, referenceDir) in signatures)
+                    CompareSignature(signature, referenceDir, scratch, mismatches);
+                foreach (string build in builds)
+                    CompareBuild(build, scratch, mismatches);
                 Assert.AreEqual(0, mismatches.Count, @"Differs from Carafe: " + string.Join(@"; ", mismatches));
             }
             finally
@@ -100,16 +109,17 @@ namespace pwiz.CarafeSharp.Test
             string command;
             using (var json = JsonDocument.Parse(File.ReadAllText(signature)))
                 command = json.RootElement.GetProperty(@"command").GetString() ?? string.Empty;
-            // The executable, then Carafe's arguments; the GUI's paths carry no spaces.
+            // The executable, then Carafe's arguments; the GUI's paths carry no spaces. The paths are
+            // those of the machine Carafe ran on, and only their file names are used here.
             var args = command.Split(' ', StringSplitOptions.RemoveEmptyEntries).Skip(1).ToList();
-            string fastaName = FileName(ReplaceValue(args, @"-build_entrapment_fasta", null));
-            string manifestName = FileName(ReplaceValue(args, @"-manifest", null));
+            string fastaName = TestData.FileName(ReplaceValue(args, @"-build_entrapment_fasta", null));
+            string manifestName = TestData.FileName(ReplaceValue(args, @"-manifest", null));
             string db = ReplaceValue(args, @"-db", null);
-            if (!File.Exists(db))
-                ReplaceValue(args, @"-db", Path.Combine(Path.GetDirectoryName(referenceDir) ?? string.Empty, FileName(db)));
+            ReplaceValue(args, @"-db", TestData.RequireFile(TestData.Relocate(db, Path.GetDirectoryName(referenceDir))));
             args.Add(@"-no_similarity_gate");
 
-            string name = FileName(signature);
+            // Runs of different examples use the same signature names.
+            string name = TestData.FileName(referenceDir) + @"_" + TestData.FileName(signature);
             string outputDir = Path.Combine(scratch, name);
             ReplaceValue(args, @"-build_entrapment_fasta", Path.Combine(outputDir, fastaName));
             ReplaceValue(args, @"-manifest", Path.Combine(outputDir, manifestName));
@@ -119,21 +129,24 @@ namespace pwiz.CarafeSharp.Test
 
         private void CompareBuild(string build, string scratch, List<string> mismatches)
         {
-            string name = FileName(build);
+            string name = TestData.FileName(build);
             string outputDir = Path.Combine(scratch, name);
             var args = new List<string>
             {
-                @"-build_entrapment_fasta", Path.Combine(outputDir, @"peptides.fasta"),
-                @"-manifest", Path.Combine(outputDir, @"pairing.tsv"),
+                @"-build_entrapment_fasta", Path.Combine(outputDir, FASTA_FILE),
+                @"-manifest", Path.Combine(outputDir, MANIFEST_FILE),
             };
-            args.AddRange(File.ReadAllLines(Path.Combine(build, @"command.txt")).Where(line => line.Length > 0));
-            RunAndCompare(name, args, Path.Combine(build, @"peptides.fasta"), Path.Combine(build, @"pairing.tsv"),
-                Path.Combine(outputDir, @"peptides.fasta"), Path.Combine(outputDir, @"pairing.tsv"), mismatches);
+            args.AddRange(File.ReadAllLines(Path.Combine(build, COMMAND_FILE)).Where(line => line.Length > 0)
+                .Select(line => TestData.ExpandDataToken(line, build)));
+            RunAndCompare(name, args, Path.Combine(build, FASTA_FILE), Path.Combine(build, MANIFEST_FILE),
+                Path.Combine(outputDir, FASTA_FILE), Path.Combine(outputDir, MANIFEST_FILE), mismatches);
         }
 
         private void RunAndCompare(string name, List<string> args, string expectedFasta, string expectedManifest,
             string actualFasta, string actualManifest, List<string> mismatches)
         {
+            TestData.RequireFile(expectedFasta);
+            TestData.RequireFile(expectedManifest);
             var settings = CarafeCommandLine.Parse(args).BuildSettings;
             var stopwatch = Stopwatch.StartNew();
             var result = new EntrapmentFastaBuilder(settings).Run();
@@ -157,13 +170,6 @@ namespace pwiz.CarafeSharp.Test
             if (value != null)
                 args[index + 1] = value;
             return old;
-        }
-
-        private static string FileName(string path)
-        {
-            string name = Path.GetFileName(path);
-            Assert.IsFalse(string.IsNullOrEmpty(name), path);
-            return name;
         }
 
         private static bool FilesMatch(string expected, string actual, out string actualSha)
@@ -194,12 +200,6 @@ namespace pwiz.CarafeSharp.Test
         {
             using (var stream = File.OpenRead(path))
                 return Convert.ToHexStringLower(SHA256.HashData(stream));
-        }
-
-        private static string ReferenceDir(string variable)
-        {
-            string dir = Environment.GetEnvironmentVariable(variable);
-            return string.IsNullOrEmpty(dir) || !Directory.Exists(dir) ? null : dir;
         }
     }
 }

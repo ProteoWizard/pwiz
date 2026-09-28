@@ -34,25 +34,38 @@ using pwiz.CarafeSharp.Proteome;
 namespace pwiz.CarafeSharp.Test
 {
     /// <summary>
-    /// Compares CarafeSharp's library prediction with Carafe's own output folders, each named
-    /// by an environment variable (the tests are inconclusive when none is set):
+    /// Compares CarafeSharp's library prediction with Carafe's own output folders, which
+    /// <see cref="TestData"/> finds:
     /// <list type="bullet">
-    /// <item><c>CARAFESHARP_CARAFE_REFERENCE</c>: a library Carafe predicted with the generic
-    /// pretrained models (the Stellar <c>osprey_initial_library</c>).</item>
-    /// <item><c>CARAFESHARP_CARAFE_FINETUNED</c>: a library Carafe predicted after fine-tuning
-    /// (<c>osprey_new_library</c>).</item>
-    /// <item><c>CARAFESHARP_LIBRARY_REFERENCES</c>: a folder of small Carafe runs, one per
-    /// subfolder, each with its parameter.txt, TSV and Skyline .blib.</item>
+    /// <item>libraries Carafe predicted with the generic pretrained models (the Stellar
+    /// <c>osprey_initial_library</c> folders, <c>CARAFESHARP_CARAFE_REFERENCE</c>);</item>
+    /// <item>libraries Carafe predicted after fine-tuning (<c>osprey_new_library</c>,
+    /// <c>CARAFESHARP_CARAFE_FINETUNED</c>);</item>
+    /// <item>small Carafe runs, each with its parameter.txt, TSV and Skyline .blib
+    /// (<c>CARAFESHARP_LIBRARY_REFERENCES</c>, which may also name folders of such runs).</item>
     /// </list>
     /// The Stellar folders were written by Carafe 2.2.0 of June 2026, before Carafe stopped
     /// clipping the initiator methionine of NoCut records (maccoss/carafe#11): their peptide
     /// lists hold M-clipped copies of M-initial records, which the port of origin/main does
     /// not make. Those are counted apart as explained.
+    /// <para>
+    /// The two set checks over every precursor (peptide forms and fragment m/z) compare the
+    /// precursors in one hash partition of their key, the same on both sides, unless
+    /// <c>CARAFESHARP_FULL_PARITY=1</c>. A run kept without its library TSV (the second Stellar
+    /// run keeps only its prediction inputs) is left out of the two library checks.
+    /// </para>
     /// </summary>
     [TestClass]
     public class LibraryParityTest
     {
-        public const string REFERENCES_VARIABLE = @"CARAFESHARP_LIBRARY_REFERENCES";
+        public const string FULL_PARITY_VARIABLE = @"CARAFESHARP_FULL_PARITY";
+
+        /// <summary>The set checks keep the precursors whose key hash is 0 modulo this, a sixteenth of them.</summary>
+        private const ulong PARTITION_MODULUS = 16;
+
+        // 64-bit FNV-1a.
+        private const ulong FNV_OFFSET_BASIS = 14695981039346656037UL;
+        private const ulong FNV_PRIME = 1099511628211UL;
 
         /// <summary>Every n-th FASTA record is predicted in the subset comparison.</summary>
         private const int SUBSET_STRIDE = 50;
@@ -67,51 +80,7 @@ namespace pwiz.CarafeSharp.Test
         public void TestPeptideFormsMatchCarafe()
         {
             foreach (var run in ReferenceRuns())
-            {
-                var fasta = ReadFastaSequences(run.FastaPath);
-                var ours = EnumeratePrecursors(run.Settings);
-                int oracleRows = 0, explained = 0, oracleOnly = 0, mzDiffers = 0, sameId = 0;
-                double maxMzDiff = 0;
-                var seen = new HashSet<string>(StringComparer.Ordinal);
-                foreach (string file in run.PeptideFormFiles)
-                {
-                    var forms = ParquetColumns.Read(file, @"pepID", @"sequence", @"mz", @"charge", @"mods", @"mod_sites");
-                    var ids = forms.Get<int>(@"pepID");
-                    var sequences = forms.Get<string>(@"sequence");
-                    var mzs = forms.Get<double>(@"mz");
-                    var charges = forms.Get<int>(@"charge");
-                    var mods = forms.Get<string>(@"mods");
-                    var sites = forms.Get<string>(@"mod_sites");
-                    for (int i = 0; i < forms.RowCount; i++)
-                    {
-                        oracleRows++;
-                        string key = PrecursorKey(sequences[i], charges[i], mods[i], sites[i]);
-                        seen.Add(key);
-                        if (!ours.TryGetValue(key, out var mine))
-                        {
-                            if (IsClippedCopy(sequences[i], fasta, run.Settings))
-                                explained++;
-                            else
-                                oracleOnly++;
-                            continue;
-                        }
-                        if (mine.Mz != mzs[i])
-                        {
-                            mzDiffers++;
-                            maxMzDiff = Math.Max(maxMzDiff, Math.Abs(mine.Mz - mzs[i]));
-                        }
-                        if (mine.PepId == ids[i])
-                            sameId++;
-                    }
-                }
-                int oursOnly = ours.Keys.Count(k => !seen.Contains(k));
-                Log(@"{0}: {1} Carafe precursors, {2} CarafeSharp; Carafe only {3} (+{4} M-clipped copies), CarafeSharp only {5}; " +
-                    @"m/z differs {6} (max {7:E2}); same pepID {8}",
-                    run, oracleRows, ours.Count, oracleOnly, explained, oursOnly, mzDiffers, maxMzDiff, sameId);
-                Assert.AreEqual(0, oracleOnly, run.Name);
-                Assert.AreEqual(0, oursOnly, run.Name);
-                Assert.AreEqual(0, mzDiffers, run.Name);
-            }
+                CheckPeptideForms(run);
         }
 
         /// <summary>Requirement 2: alphabase fragment m/z against the _ms2_mz_df float32 values.</summary>
@@ -119,45 +88,7 @@ namespace pwiz.CarafeSharp.Test
         public void TestFragmentMzMatchesCarafe()
         {
             foreach (var run in ReferenceRuns())
-            {
-                long values = 0, exact = 0, oneUlp = 0;
-                int maxUlp = 0;
-                foreach (int batch in run.Batches)
-                {
-                    var frame = ParquetColumns.Read(run.BatchFile(batch, @"_ms2_df.parquet"),
-                        @"sequence", @"mods", @"mod_sites", @"charge", @"frag_start_idx");
-                    var mzFrame = ParquetColumns.Read(run.BatchFile(batch, @"_ms2_mz_df.parquet"), @"b_z1", @"b_z2", @"y_z1", @"y_z2");
-                    var columns = new[] { @"b_z1", @"b_z2", @"y_z1", @"y_z2" }.Select(c => mzFrame.Get<float>(c)).ToArray();
-                    var sequences = frame.Get<string>(@"sequence");
-                    var mods = frame.Get<string>(@"mods");
-                    var sites = frame.Get<string>(@"mod_sites");
-                    var charges = frame.Get<int>(@"charge");
-                    var starts = frame.Get<long>(@"frag_start_idx");
-                    for (int i = 0; i < frame.RowCount; i++)
-                    {
-                        var precursor = new PrecursorForm(PeptideForm.FromAlphabase(sequences[i], mods[i], sites[i]), charges[i]);
-                        var mz = AlphabaseFragmentMz.ToFloat32(AlphabaseFragmentMz.Calculate(precursor));
-                        for (int row = 0; row < sequences[i].Length - 1; row++)
-                        {
-                            for (int k = 0; k < AlphabaseFragmentMz.COLUMN_COUNT; k++)
-                            {
-                                int ulp = Math.Abs(BitConverter.SingleToInt32Bits(mz[row * AlphabaseFragmentMz.COLUMN_COUNT + k]) -
-                                                   BitConverter.SingleToInt32Bits(columns[k][starts[i] + row]));
-                                values++;
-                                if (ulp == 0)
-                                    exact++;
-                                else if (ulp == 1)
-                                    oneUlp++;
-                                maxUlp = Math.Max(maxUlp, ulp);
-                            }
-                        }
-                    }
-                }
-                Log(@"{0}: {1} fragment m/z values, {2} bit-identical, {3} one float32 ulp apart, max {4} ulp",
-                    run, values, exact, oneUlp, maxUlp);
-                Assert.IsTrue(values > 0, run.Name);
-                Assert.IsTrue(maxUlp <= 1, run.Name + @" max ulp " + maxUlp);
-            }
+                CheckFragmentMz(run);
         }
 
         /// <summary>
@@ -167,39 +98,8 @@ namespace pwiz.CarafeSharp.Test
         [TestMethod]
         public void TestLibraryAssemblyMatchesCarafe()
         {
-            foreach (var run in ReferenceRuns())
-            {
-                var fasta = ReadFastaSequences(run.FastaPath);
-                var settings = run.Settings;
-                var outputs = LibraryOutputs.FromFormat(settings.LibraryFormat, settings.Fast);
-                var builder = new LibrarySpectrumBuilder(settings, outputs,
-                    LibraryDatabase.MapPeptidesToProteins(settings.Database, settings.Digest));
-                var expected = new Dictionary<string, string>(StringComparer.Ordinal);
-                int skippedClipped = 0, dropped = 0;
-                foreach (int batch in run.Batches)
-                    BuildFromCarafePredictions(run, batch, builder, fasta, expected, ref skippedClipped, ref dropped);
-                var reference = CarafeLibraryTsv.Read(run.LibraryTsv, null, new HashSet<string>(expected.Keys, StringComparer.Ordinal));
-                int same = 0, missing = 0;
-                var mismatches = new List<string>();
-                foreach (var pair in expected)
-                {
-                    if (!reference.Precursors.TryGetValue(pair.Key, out var precursor))
-                    {
-                        missing++;
-                        continue;
-                    }
-                    if (string.Join("\n", precursor.Rows) + "\n" == pair.Value)
-                        same++;
-                    else if (mismatches.Count < 3)
-                        mismatches.Add(pair.Key);
-                }
-                Log(@"{0}: {1} precursors assembled from Carafe's predictions, {2} identical to Carafe's TSV rows, {3} missing from it, " +
-                    @"{4} dropped for too few fragments, {5} M-clipped copies skipped{6}",
-                    run, expected.Count, same, missing, dropped, skippedClipped,
-                    mismatches.Count > 0 ? @"; first differences: " + string.Join(@", ", mismatches) : string.Empty);
-                Assert.IsTrue(expected.Count > 0, run.Name);
-                Assert.AreEqual(expected.Count, same, run.Name);
-            }
+            foreach (var run in LibraryRuns(ReferenceRuns()))
+                CheckLibraryAssembly(run);
         }
 
         /// <summary>
@@ -210,42 +110,202 @@ namespace pwiz.CarafeSharp.Test
         [TestMethod]
         public void TestPredictedLibraryMatchesCarafe()
         {
+            var runs = LibraryRuns(ReferenceRuns());
+            InScratchFolder(scratch =>
+            {
+                foreach (var run in runs)
+                    CheckPredictedLibrary(run, scratch);
+            });
+        }
+
+        /// <summary>All four requirements on the Astral run, whose package is optional.</summary>
+        [TestMethod, TestCategory(TestData.ASTRAL_CATEGORY)]
+        public void TestAstralLibraryMatchesCarafe()
+        {
+            var runs = OpenRuns(TestData.AstralPretrainedLibraries, TestData.AstralFineTunedLibraries);
+            foreach (var run in runs)
+            {
+                CheckPeptideForms(run);
+                CheckFragmentMz(run);
+            }
+            var libraryRuns = LibraryRuns(runs);
+            foreach (var run in libraryRuns)
+                CheckLibraryAssembly(run);
+            InScratchFolder(scratch =>
+            {
+                foreach (var run in libraryRuns)
+                    CheckPredictedLibrary(run, scratch);
+            });
+        }
+
+        private void CheckPeptideForms(CarafeReferenceRun run)
+        {
+            var fasta = ReadFastaSequences(run.FastaPath);
+            var ours = EnumeratePrecursors(run.Settings);
+            int oracleRows = 0, explained = 0, oracleOnly = 0, mzDiffers = 0, sameId = 0;
+            double maxMzDiff = 0;
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            foreach (string file in run.PeptideFormFiles)
+            {
+                var forms = ParquetColumns.Read(file, @"pepID", @"sequence", @"mz", @"charge", @"mods", @"mod_sites");
+                var ids = forms.Get<int>(@"pepID");
+                var sequences = forms.Get<string>(@"sequence");
+                var mzs = forms.Get<double>(@"mz");
+                var charges = forms.Get<int>(@"charge");
+                var mods = forms.Get<string>(@"mods");
+                var sites = forms.Get<string>(@"mod_sites");
+                for (int i = 0; i < forms.RowCount; i++)
+                {
+                    string key = PrecursorKey(sequences[i], charges[i], mods[i], sites[i]);
+                    if (!IsSampled(key))
+                        continue;
+                    oracleRows++;
+                    seen.Add(key);
+                    if (!ours.TryGetValue(key, out var mine))
+                    {
+                        if (IsClippedCopy(sequences[i], fasta, run.Settings))
+                            explained++;
+                        else
+                            oracleOnly++;
+                        continue;
+                    }
+                    if (mine.Mz != mzs[i])
+                    {
+                        mzDiffers++;
+                        maxMzDiff = Math.Max(maxMzDiff, Math.Abs(mine.Mz - mzs[i]));
+                    }
+                    if (mine.PepId == ids[i])
+                        sameId++;
+                }
+            }
+            int oursOnly = ours.Keys.Count(k => !seen.Contains(k));
+            Log(@"{0}: {1} Carafe precursors, {2} CarafeSharp{3}; Carafe only {4} (+{5} M-clipped copies), CarafeSharp only {6}; " +
+                @"m/z differs {7} (max {8:E2}); same pepID {9}",
+                run.Folder, oracleRows, ours.Count, SampleDescription, oracleOnly, explained, oursOnly, mzDiffers, maxMzDiff, sameId);
+            Assert.IsTrue(oracleRows > 0, run.Folder);
+            Assert.AreEqual(0, oracleOnly, run.Folder);
+            Assert.AreEqual(0, oursOnly, run.Folder);
+            Assert.AreEqual(0, mzDiffers, run.Folder);
+        }
+
+        private void CheckFragmentMz(CarafeReferenceRun run)
+        {
+            long values = 0, exact = 0, oneUlp = 0;
+            int maxUlp = 0;
+            foreach (int batch in run.Batches)
+            {
+                var frame = ParquetColumns.Read(run.BatchFile(batch, @"_ms2_df.parquet"),
+                    @"sequence", @"mods", @"mod_sites", @"charge", @"frag_start_idx");
+                var mzFrame = ParquetColumns.Read(run.BatchFile(batch, @"_ms2_mz_df.parquet"), @"b_z1", @"b_z2", @"y_z1", @"y_z2");
+                var columns = new[] { @"b_z1", @"b_z2", @"y_z1", @"y_z2" }.Select(c => mzFrame.Get<float>(c)).ToArray();
+                var sequences = frame.Get<string>(@"sequence");
+                var mods = frame.Get<string>(@"mods");
+                var sites = frame.Get<string>(@"mod_sites");
+                var charges = frame.Get<int>(@"charge");
+                var starts = frame.Get<long>(@"frag_start_idx");
+                for (int i = 0; i < frame.RowCount; i++)
+                {
+                    if (!IsSampled(PrecursorKey(sequences[i], charges[i], mods[i], sites[i])))
+                        continue;
+                    var precursor = new PrecursorForm(PeptideForm.FromAlphabase(sequences[i], mods[i], sites[i]), charges[i]);
+                    var mz = AlphabaseFragmentMz.ToFloat32(AlphabaseFragmentMz.Calculate(precursor));
+                    for (int row = 0; row < sequences[i].Length - 1; row++)
+                    {
+                        for (int k = 0; k < AlphabaseFragmentMz.COLUMN_COUNT; k++)
+                        {
+                            int ulp = Math.Abs(BitConverter.SingleToInt32Bits(mz[row * AlphabaseFragmentMz.COLUMN_COUNT + k]) -
+                                               BitConverter.SingleToInt32Bits(columns[k][starts[i] + row]));
+                            values++;
+                            if (ulp == 0)
+                                exact++;
+                            else if (ulp == 1)
+                                oneUlp++;
+                            maxUlp = Math.Max(maxUlp, ulp);
+                        }
+                    }
+                }
+            }
+            Log(@"{0}: {1} fragment m/z values{2}, {3} bit-identical, {4} one float32 ulp apart, max {5} ulp",
+                run.Folder, values, SampleDescription, exact, oneUlp, maxUlp);
+            Assert.IsTrue(values > 0, run.Folder);
+            Assert.IsTrue(maxUlp <= 1, run.Folder + @" max ulp " + maxUlp);
+        }
+
+        private void CheckLibraryAssembly(CarafeReferenceRun run)
+        {
+            var fasta = ReadFastaSequences(run.FastaPath);
+            var settings = run.Settings;
+            var outputs = LibraryOutputs.FromFormat(settings.LibraryFormat, settings.Fast);
+            var builder = new LibrarySpectrumBuilder(settings, outputs,
+                LibraryDatabase.MapPeptidesToProteins(settings.Database, settings.Digest));
+            var expected = new Dictionary<string, string>(StringComparer.Ordinal);
+            int skippedClipped = 0, dropped = 0;
+            foreach (int batch in run.Batches)
+                BuildFromCarafePredictions(run, batch, builder, fasta, expected, ref skippedClipped, ref dropped);
+            var reference = CarafeLibraryTsv.Read(run.LibraryTsv, null, new HashSet<string>(expected.Keys, StringComparer.Ordinal));
+            int same = 0, missing = 0;
+            var mismatches = new List<string>();
+            foreach (var pair in expected)
+            {
+                if (!reference.Precursors.TryGetValue(pair.Key, out var precursor))
+                {
+                    missing++;
+                    continue;
+                }
+                if (string.Join("\n", precursor.Rows) + "\n" == pair.Value)
+                    same++;
+                else if (mismatches.Count < 3)
+                    mismatches.Add(pair.Key);
+            }
+            Log(@"{0}: {1} precursors assembled from Carafe's predictions, {2} identical to Carafe's TSV rows, {3} missing from it, " +
+                @"{4} dropped for too few fragments, {5} M-clipped copies skipped{6}",
+                run.Folder, expected.Count, same, missing, dropped, skippedClipped,
+                mismatches.Count > 0 ? @"; first differences: " + string.Join(@", ", mismatches) : string.Empty);
+            Assert.IsTrue(expected.Count > 0, run.Folder);
+            Assert.AreEqual(expected.Count, same, run.Folder);
+        }
+
+        private void CheckPredictedLibrary(CarafeReferenceRun run, string scratch)
+        {
+            // Runs of different examples share folder names.
+            string output = Path.Combine(scratch, TestData.FileName(Path.GetDirectoryName(run.Folder)) + @"_" + run.Name);
+            Directory.CreateDirectory(output);
+            bool subset = run.LibraryBlib == null;
+            string fasta = subset ? WriteSubsetFasta(run.FastaPath, Path.Combine(output, @"subset.fasta")) : run.FastaPath;
+            var settings = run.CreateSettings(fasta, output);
+            settings.LibraryFormat = @"Skyline,DIA-NN";
+            var clock = Stopwatch.StartNew();
+            var generator = new LibraryGenerator(settings, new TestContextWriter(TestContext));
+            generator.Run();
+            Log(@"{0}: predicted {1} precursors in {2:F1} s", run.Folder, generator.SpectrumCount, clock.Elapsed.TotalSeconds);
+
+            var ours = CarafeLibraryTsv.Read(generator.TsvPath);
+            var sequences = new HashSet<string>(ours.Precursors.Values.Select(p => p.Sequence), StringComparer.Ordinal);
+            var fastaSequences = ReadFastaSequences(run.FastaPath);
+            var reference = CarafeLibraryTsv.Read(run.LibraryTsv, subset ? sequences.Contains : null);
+            var comparison = reference.Compare(ours, (a, b) => IsClipExplained(a, b, fastaSequences, run.Settings) ||
+                                                                (subset && IsSubsetExplained(a, b)));
+            Log(@"{0}: {1}", run.Folder, comparison);
+            Assert.AreEqual(0, comparison.ReferenceOnly, run.Folder);
+            Assert.AreEqual(0, comparison.OursOnly, run.Folder);
+            Assert.AreEqual(0, comparison.PrecursorMzDiffers, run.Folder);
+            Assert.AreEqual(0, comparison.ProteinIdDiffers, run.Folder);
+            Assert.AreEqual(0, comparison.DecoyDiffers, run.Folder);
+            Assert.AreEqual(0, comparison.FragmentMzDiffers, run.Folder);
+            Assert.IsTrue(comparison.IdenticalFraction > 0.97, run.Folder);
+            Assert.IsTrue(comparison.MaxIntensityDiff < 0.002, run.Folder);
+            Assert.IsTrue(comparison.MaxRetentionTimeDiff <= 0.011, run.Folder);
+            if (run.LibraryBlib != null)
+                CompareBlibs(run, run.LibraryBlib, generator.BlibPath);
+        }
+
+        private void InScratchFolder(Action<string> action)
+        {
             string scratch = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"LibraryParity_" + Guid.NewGuid().ToString(@"N"));
             Directory.CreateDirectory(scratch);
             try
             {
-                foreach (var run in ReferenceRuns())
-                {
-                    string output = Path.Combine(scratch, run.Name);
-                    Directory.CreateDirectory(output);
-                    bool subset = run.LibraryBlib == null;
-                    string fasta = subset ? WriteSubsetFasta(run.FastaPath, Path.Combine(output, @"subset.fasta")) : run.FastaPath;
-                    var settings = run.CreateSettings(fasta, output);
-                    settings.LibraryFormat = @"Skyline,DIA-NN";
-                    var clock = Stopwatch.StartNew();
-                    var generator = new LibraryGenerator(settings, new TestContextWriter(TestContext));
-                    generator.Run();
-                    Log(@"{0}: predicted {1} precursors in {2:F1} s", run, generator.SpectrumCount, clock.Elapsed.TotalSeconds);
-
-                    var ours = CarafeLibraryTsv.Read(generator.TsvPath);
-                    var sequences = new HashSet<string>(ours.Precursors.Values.Select(p => p.Sequence), StringComparer.Ordinal);
-                    var fastaSequences = ReadFastaSequences(run.FastaPath);
-                    var reference = CarafeLibraryTsv.Read(run.LibraryTsv, subset ? sequences.Contains : null);
-                    var comparison = reference.Compare(ours, (a, b) => IsClipExplained(a, b, fastaSequences, run.Settings) ||
-                                                                        (subset && IsSubsetExplained(a, b)));
-                    Log(@"{0}: {1}", run, comparison);
-                    Assert.AreEqual(0, comparison.ReferenceOnly, run.Name);
-                    Assert.AreEqual(0, comparison.OursOnly, run.Name);
-                    Assert.AreEqual(0, comparison.PrecursorMzDiffers, run.Name);
-                    Assert.AreEqual(0, comparison.ProteinIdDiffers, run.Name);
-                    Assert.AreEqual(0, comparison.DecoyDiffers, run.Name);
-                    Assert.AreEqual(0, comparison.FragmentMzDiffers, run.Name);
-                    Assert.IsTrue(comparison.IdenticalFraction > 0.97, run.Name);
-                    Assert.IsTrue(comparison.MaxIntensityDiff < 0.002, run.Name);
-                    Assert.IsTrue(comparison.MaxRetentionTimeDiff <= 0.011, run.Name);
-                    if (run.LibraryBlib != null)
-                        CompareBlibs(run, run.LibraryBlib, generator.BlibPath);
-                }
+                action(scratch);
             }
             finally
             {
@@ -327,10 +387,10 @@ namespace pwiz.CarafeSharp.Test
                 maxRtDiff = Math.Max(maxRtDiff, Math.Abs(pair.Value.RetentionTime - mine.RetentionTime));
             }
             Log(@"{0}: Carafe .blib {1} spectra, CarafeSharp {2}; missing {3}; precursorMZ differs {4}; Modifications differ {5}; " +
-                @"max |retentionTime diff| {6:E2}", run, carafe.Count, ours.Count, missing, mzDiffers, modsDiffer, maxRtDiff);
-            Assert.AreEqual(carafe.Count, ours.Count, run.Name);
-            Assert.AreEqual(0, missing + mzDiffers + modsDiffer, run.Name);
-            Assert.IsTrue(maxRtDiff < 1e-3, run.Name);
+                @"max |retentionTime diff| {6:E2}", run.Folder, carafe.Count, ours.Count, missing, mzDiffers, modsDiffer, maxRtDiff);
+            Assert.AreEqual(carafe.Count, ours.Count, run.Folder);
+            Assert.AreEqual(0, missing + mzDiffers + modsDiffer, run.Folder);
+            Assert.IsTrue(maxRtDiff < 1e-3, run.Folder);
         }
 
         /// <summary>RefSpectra by peptideModSeq and charge: m/z, RT and the Modifications rows as text.</summary>
@@ -365,7 +425,7 @@ namespace pwiz.CarafeSharp.Test
             return spectra;
         }
 
-        /// <summary>Our precursors keyed as the peptide_forms rows are, with their m/z and pepID.</summary>
+        /// <summary>Our precursors in the compared partition, keyed as the peptide_forms rows are, with their m/z and pepID.</summary>
         private static Dictionary<string, (double Mz, int PepId)> EnumeratePrecursors(LibrarySettings settings)
         {
             var digester = new Digester(settings.Digest);
@@ -380,7 +440,11 @@ namespace pwiz.CarafeSharp.Test
                     continue;
                 var alphabase = form.ToAlphabase();
                 foreach (int charge in charges)
-                    precursors.Add(PrecursorKey(form.Sequence, charge, alphabase.ModsText, alphabase.ModSitesText), (form.GetMz(charge), pepId));
+                {
+                    string key = PrecursorKey(form.Sequence, charge, alphabase.ModsText, alphabase.ModSitesText);
+                    if (IsSampled(key))
+                        precursors.Add(key, (form.GetMz(charge), pepId));
+                }
                 pepId++;
             }
             return precursors;
@@ -457,25 +521,52 @@ namespace pwiz.CarafeSharp.Test
             return path;
         }
 
-        private IEnumerable<CarafeReferenceRun> ReferenceRuns()
+        /// <summary>The Stellar reference runs and the small library references.</summary>
+        private static IReadOnlyList<CarafeReferenceRun> ReferenceRuns()
         {
-            var runs = new List<CarafeReferenceRun>();
-            foreach (string variable in new[] { CarafeParityTest.PRETRAINED_REFERENCE_VARIABLE, CarafeParityTest.FINETUNED_REFERENCE_VARIABLE })
-            {
-                string folder = Environment.GetEnvironmentVariable(variable);
-                if (!string.IsNullOrEmpty(folder) && Directory.Exists(folder))
-                    runs.Add(CarafeReferenceRun.Open(folder));
-            }
-            string references = Environment.GetEnvironmentVariable(REFERENCES_VARIABLE);
-            if (!string.IsNullOrEmpty(references) && Directory.Exists(references))
-                runs.AddRange(Directory.GetDirectories(references).OrderBy(d => d, StringComparer.Ordinal).Select(CarafeReferenceRun.Open));
-            runs.RemoveAll(r => r == null);
-            if (runs.Count == 0)
-            {
-                Assert.Inconclusive(@"None of {0}, {1} or {2} names a Carafe library output folder.",
-                    CarafeParityTest.PRETRAINED_REFERENCE_VARIABLE, CarafeParityTest.FINETUNED_REFERENCE_VARIABLE, REFERENCES_VARIABLE);
-            }
-            return runs;
+            return OpenRuns(TestData.PretrainedLibraries, TestData.FineTunedLibraries, TestData.LibraryReferences);
+        }
+
+        /// <summary>The runs in the items' folders; inconclusive when none of them has data.</summary>
+        private static IReadOnlyList<CarafeReferenceRun> OpenRuns(params TestData.Item[] items)
+        {
+            TestData.InconclusiveUnlessAvailable(items);
+            return items.SelectMany(i => i.Resolve()).SelectMany(CarafeReferenceRun.FindRuns).Select(CarafeReferenceRun.Open).ToList();
+        }
+
+        /// <summary>The runs that kept their library TSV; the test fails when none did.</summary>
+        private IReadOnlyList<CarafeReferenceRun> LibraryRuns(IReadOnlyList<CarafeReferenceRun> runs)
+        {
+            foreach (var run in runs.Where(r => r.LibraryTsv == null))
+                Log(@"{0}: no library TSV, prediction inputs only", run.Folder);
+            var libraryRuns = runs.Where(r => r.LibraryTsv != null).ToList();
+            Assert.IsTrue(libraryRuns.Count > 0, @"No reference run has a Carafe library TSV");
+            return libraryRuns;
+        }
+
+        /// <summary>True for a precursor in the compared partition, or for every one with <c>CARAFESHARP_FULL_PARITY=1</c>.</summary>
+        private static bool IsSampled(string precursorKey)
+        {
+            return IsFullParity || StableHash(precursorKey) % PARTITION_MODULUS == 0;
+        }
+
+        private static bool IsFullParity
+        {
+            get { return Environment.GetEnvironmentVariable(FULL_PARITY_VARIABLE) == @"1"; }
+        }
+
+        private static string SampleDescription
+        {
+            get { return IsFullParity ? string.Empty : @" (the 1/" + PARTITION_MODULUS + @" hash partition)"; }
+        }
+
+        /// <summary>64-bit FNV-1a over the key's UTF-8 bytes: the same on every run and platform, unlike string.GetHashCode.</summary>
+        private static ulong StableHash(string key)
+        {
+            ulong hash = FNV_OFFSET_BASIS;
+            foreach (byte b in Encoding.UTF8.GetBytes(key))
+                hash = (hash ^ b) * FNV_PRIME;
+            return hash;
         }
 
         private void Log(string format, params object[] args)

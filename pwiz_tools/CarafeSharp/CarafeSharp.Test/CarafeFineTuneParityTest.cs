@@ -26,6 +26,7 @@ using System.Linq;
 using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CarafeSharp.Models;
+using pwiz.CarafeSharp.Proteome;
 using pwiz.CarafeSharp.Training;
 using static TorchSharp.torch;
 
@@ -43,16 +44,18 @@ namespace pwiz.CarafeSharp.Test
     /// fine-tuned scores within a small tolerance (dropout noise differs between runs, so this
     /// is statistical, not exact). That takes tens of minutes on a CPU.</item>
     /// </list>
-    /// Inconclusive unless <c>CARAFESHARP_CARAFE_FINETUNED</c> names such a folder.
+    /// The training rows are featurized with the NCE and instrument each run was trained with,
+    /// from its meta.json and parameter.txt. <see cref="TestData"/> finds the folders
+    /// (<c>CARAFESHARP_CARAFE_FINETUNED</c>).
     /// </summary>
     [TestClass]
     public class CarafeFineTuneParityTest
     {
         public const string FULL_RUN_VARIABLE = @"CARAFESHARP_FINETUNE_FULL";
 
-        // Carafe's ai.py arguments for this data (carafe_log.txt): --nce 30 --instrument Eclipse.
-        private const double NCE = 30;
-        private const string INSTRUMENT = @"Eclipse";
+        private const string METRICS_FILE = @"model_evaluation_metrics.json";
+        private const string RT_TEST_FILE = @"rt_test.tsv";
+        private const string MS2_TEST_FILE = @"test_true_intensity.tsv";
 
         private const double PRETRAINED_METRIC_TOLERANCE = 2e-4;
         private const double FINETUNED_MS2_TOLERANCE = 0.01;
@@ -63,15 +66,38 @@ namespace pwiz.CarafeSharp.Test
         [TestMethod]
         public void TestFineTuneMatchesCarafe()
         {
-            string folder = Environment.GetEnvironmentVariable(CarafeParityTest.FINETUNED_REFERENCE_VARIABLE);
-            if (string.IsNullOrEmpty(folder) || !File.Exists(Path.Combine(folder, CarafeTrainingDirectory.PSM_FILE)))
-                Assert.Inconclusive(CarafeParityTest.FINETUNED_REFERENCE_VARIABLE + @" does not name a Carafe fine-tuning folder.");
-            if (!File.Exists(PretrainedModels.DefaultPath))
-                Assert.Inconclusive(@"No pretrained_models.zip at " + PretrainedModels.DefaultPath);
-            var pretrained = PretrainedModels.Open();
-            using (var carafeMetrics = JsonDocument.Parse(File.ReadAllText(Path.Combine(folder, @"model_evaluation_metrics.json"))))
+            CompareFineTunes(TestData.FineTunedLibraries);
+        }
+
+        [TestMethod, TestCategory(TestData.ASTRAL_CATEGORY)]
+        public void TestAstralFineTuneMatchesCarafe()
+        {
+            CompareFineTunes(TestData.AstralFineTunedLibraries);
+        }
+
+        private void CompareFineTunes(TestData.Item item)
+        {
+            TestData.InconclusiveUnlessAvailable(item);
+            var folders = item.Resolve();
+            foreach (string folder in folders)
             {
-                var ms2Rows = CarafeTrainingDirectory.ReadMs2(folder, NCE, INSTRUMENT);
+                TestData.RequireFiles(folder, CarafeTrainingDirectory.PSM_FILE, CarafeModelDirectory.META_FILE, METRICS_FILE,
+                    RT_TEST_FILE, MS2_TEST_FILE);
+            }
+            var pretrained = PretrainedModels.Open();
+            foreach (string folder in folders)
+                CompareFineTune(pretrained, folder);
+        }
+
+        private void CompareFineTune(PretrainedModels pretrained, string folder)
+        {
+            // The NCE and instrument Carafe passed ai.py (carafe_log.txt): the run's own from meta.json,
+            // and Carafe's default instrument for a run it does not recognize.
+            var settings = CarafeReferenceRun.Open(folder).Settings;
+            TestContext.WriteLine(@"{0}: NCE {1}, instrument {2}", folder, settings.Nce, settings.Instrument);
+            using (var carafeMetrics = JsonDocument.Parse(File.ReadAllText(Path.Combine(folder, METRICS_FILE))))
+            {
+                var ms2Rows = CarafeTrainingDirectory.ReadMs2(folder, settings.Nce, settings.Instrument);
                 var rtRows = CarafeTrainingDirectory.ReadRt(folder);
                 var rtTest = CheckRtSplit(folder, rtRows);
                 var ms2Test = CheckMs2Split(folder, ms2Rows);
@@ -89,7 +115,7 @@ namespace pwiz.CarafeSharp.Test
             var (_, test) = TrainingSplit.Split(forms.Select(f => f.Peptide.Sequence).ToArray(),
                 forms.Select(f => f.Peptide.ModsText).ToArray(), rows.Count - testCount, testCount);
             var ours = test.Select(i => Key(forms[i])).ToArray();
-            var theirs = ReadRtTestKeys(Path.Combine(folder, @"rt_test.tsv"));
+            var theirs = ReadRtTestKeys(Path.Combine(folder, RT_TEST_FILE));
             TestContext.WriteLine(@"RT test rows: ours {0}, Carafe {1}", ours.Length, theirs.Length);
             CollectionAssert.AreEquivalent(theirs, ours, @"RT held-out rows differ from Carafe's");
             return test.Select(i => forms[i]).ToArray();
@@ -102,7 +128,7 @@ namespace pwiz.CarafeSharp.Test
                 rows.Select(r => r.Precursor.Peptide.ModsText).ToArray(), rows.Count - testCount, testCount);
             var testRows = test.Select(i => rows[i]).ToArray();
             // Carafe writes the observed intensities of its test spectra in test-set order.
-            var theirs = ReadFragmentValues(Path.Combine(folder, @"test_true_intensity.tsv"));
+            var theirs = ReadFragmentValues(Path.Combine(folder, MS2_TEST_FILE));
             var ours = testRows.SelectMany(r => r.Intensities).ToArray();
             TestContext.WriteLine(@"MS2 test spectra: {0}, fragment values ours {1}, Carafe {2}", testRows.Length, ours.Length, theirs.Length);
             Assert.AreEqual(theirs.Length, ours.Length, @"MS2 held-out spectra differ from Carafe's");

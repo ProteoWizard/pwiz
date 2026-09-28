@@ -27,6 +27,18 @@
     <PackageReference Include="libtorch-cuda-12.8-linux-x64" Version="$(LibTorchVersion)" />
   </ItemGroup>
 
+  <!-- The AlphaPeptDeep v1 pretrained models Carafe 2.2 uses, committed in models/alphapeptdeep-v1
+       (its README.md has the provenance), placed beside the executable and the test assembly, where
+       PretrainedModels.DefaultPath looks for them. -->
+  <ItemGroup Condition="'$(UseLibTorch)' == 'true'">
+    <None Include="$(MSBuildThisFileDirectory)models\alphapeptdeep-v1\pretrained_models.zip"
+          Link="models\alphapeptdeep-v1\pretrained_models.zip"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory)models\alphapeptdeep-v1\LICENSE.txt"
+          Link="models\alphapeptdeep-v1\LICENSE.txt"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
+  </ItemGroup>
+
   <!-- Deploy pwiz's patched Parquet.Net (pwiz_tools/Shared/Lib/Parquet/ParquetNet.dll) over the
        NuGet Parquet.dll, exactly as pwiz_tools/Osprey/Directory.Build.targets does; that file
        documents the fork's deltas. A no-op for projects without Parquet.dll in their output. -->

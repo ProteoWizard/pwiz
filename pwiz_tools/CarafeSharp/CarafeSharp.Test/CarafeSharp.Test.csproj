@@ -24,4 +24,9 @@
     <ProjectReference Include="..\CarafeSharp\CarafeSharp.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The test data package list TestData.cs reads, which the data scripts share. -->
+    <None Include="..\testdata.json" Link="testdata.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

@@ -32,7 +32,15 @@ namespace pwiz.CarafeSharp.Models
     /// </summary>
     public sealed class PretrainedModels
     {
+        /// <summary>
+        /// Where the pinned archive came from. The URL is unversioned and the asset has been replaced
+        /// before, so it is recorded here, not fetched: the archive is committed in
+        /// models/alphapeptdeep-v1 and copied next to the executable.
+        /// </summary>
         public const string DOWNLOAD_URL = @"https://github.com/MannLabs/alphapeptdeep/releases/download/pre-trained-models/pretrained_models.zip";
+
+        /// <summary>Where the build places the committed archive, relative to the executable.</summary>
+        public const string BUNDLED_RELATIVE_PATH = @"models/alphapeptdeep-v1/pretrained_models.zip";
 
         /// <summary>The v1 archive Carafe uses (25,614,761 bytes, generic/ms2.pth dated 2022-10-28).</summary>
         public const string PINNED_SHA256 = @"75e6037db3280a513d0f6010a21dba4e8ea47a8d67127f38c77fb1f9a7d408eb";
@@ -44,9 +52,7 @@ namespace pwiz.CarafeSharp.Models
         public const string PATH_VARIABLE = @"CARAFESHARP_PRETRAINED_MODELS";
 
         /// <summary>
-        /// Opens the archive at <paramref name="zipPath"/>, or at the default location when it is
-        /// null: <c>%CARAFESHARP_PRETRAINED_MODELS%</c>, else peptdeep's own
-        /// <c>~/peptdeep/pretrained_models/pretrained_models.zip</c>, which Carafe shares.
+        /// Opens the archive at <paramref name="zipPath"/>, or at <see cref="DefaultPath"/> when it is null.
         /// </summary>
         public static PretrainedModels Open(string zipPath = null)
         {
@@ -54,8 +60,8 @@ namespace pwiz.CarafeSharp.Models
             if (!File.Exists(zipPath))
             {
                 throw new FileNotFoundException(string.Format(
-                    @"AlphaPeptDeep pretrained models not found at {0}. Download {1} there, or pass its location.",
-                    zipPath, DOWNLOAD_URL), zipPath);
+                    @"AlphaPeptDeep pretrained models not found at {0}. CarafeSharp ships them as {1} beside the executable; {2} or -pretrained can name another copy of the pinned archive (SHA-256 {3}).",
+                    zipPath, BUNDLED_RELATIVE_PATH, PATH_VARIABLE, PINNED_SHA256), zipPath);
             }
             string sha256 = ComputeSha256(zipPath);
             if (!string.Equals(sha256, PINNED_SHA256, StringComparison.OrdinalIgnoreCase))
@@ -67,16 +73,33 @@ namespace pwiz.CarafeSharp.Models
             return new PretrainedModels(zipPath, sha256);
         }
 
+        /// <summary>
+        /// The archive used when none is named: <c>%CARAFESHARP_PRETRAINED_MODELS%</c> when it is set,
+        /// else the committed copy beside the executable, else peptdeep's own
+        /// <c>~/peptdeep/pretrained_models/pretrained_models.zip</c>, which Carafe shares.
+        /// </summary>
         public static string DefaultPath
         {
             get
             {
-                string fromEnvironment = Environment.GetEnvironmentVariable(PATH_VARIABLE);
-                if (!string.IsNullOrEmpty(fromEnvironment))
-                    return fromEnvironment;
-                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                    @"peptdeep", @"pretrained_models", @"pretrained_models.zip");
+                return ResolveDefaultPath(Environment.GetEnvironmentVariable(PATH_VARIABLE), AppContext.BaseDirectory,
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
             }
+        }
+
+        /// <summary>
+        /// <see cref="DefaultPath"/> for the given environment. A set variable wins even when it names a
+        /// missing file, so a mistyped path fails in <see cref="Open"/> instead of silently falling back to
+        /// another copy.
+        /// </summary>
+        internal static string ResolveDefaultPath(string fromEnvironment, string baseDirectory, string userProfile)
+        {
+            if (!string.IsNullOrEmpty(fromEnvironment))
+                return fromEnvironment;
+            string bundled = Path.Combine(baseDirectory, BUNDLED_RELATIVE_PATH);
+            if (File.Exists(bundled))
+                return bundled;
+            return Path.Combine(userProfile, @"peptdeep", @"pretrained_models", @"pretrained_models.zip");
         }
 
         private PretrainedModels(string zipPath, string sha256)
