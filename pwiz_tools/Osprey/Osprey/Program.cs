@@ -119,7 +119,7 @@ namespace pwiz.Osprey
         /// .NET does not know also gives null, with <paramref name="error"/> set to .NET's own
         /// (already localized) message, and the run stops there.
         /// </summary>
-        private static CultureScope CreateCultureScope(string[] args, out string error)
+        internal static CultureScope CreateCultureScope(string[] args, out string error)
         {
             error = null;
             string argText = OspreyCommandArgs.ARG_INTERNAL_CULTURE.ArgumentText;

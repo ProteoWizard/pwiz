@@ -167,15 +167,23 @@ namespace pwiz.Osprey.Test
             output = RunCommandAndValidateError(OspreyCommandArgs.ARG_INTERNAL_CULTURE.ArgumentText, otherCulture);
             Assert.AreSame(callerCulture, CultureInfo.CurrentCulture);
             Assert.AreSame(callerUiCulture, CultureInfo.CurrentUICulture);
-            // The run wrote in the other culture, so its expected text is formatted there too. Its
-            // Error: prefix is translated, so matching it proves --culture was applied at all.
-            string callerPrefix = Program.ErrorPrefix;
+            // The run wrote in the other culture, so its expected text is formatted there too.
             using (new CultureScope(CultureInfo.GetCultureInfo(otherCulture)))
             {
-                Assert.AreNotEqual(callerPrefix, Program.ErrorPrefix, otherCulture);
                 AssertErrorMessage(output, string.Format(OspreyResources.Program_ValidateArgs_No_input_files_specified__Use__0_,
                     Program.USAGE_INPUT));
             }
+            // --culture is applied to formatting and resource lookup for the whole run (the scope
+            // RunCommand holds), and not only parsed.
+            using (Program.CreateCultureScope(new[] { OspreyCommandArgs.ARG_INTERNAL_CULTURE.ArgumentText, otherCulture },
+                       out string scopeError))
+            {
+                Assert.IsNull(scopeError);
+                Assert.AreEqual(otherCulture, CultureInfo.CurrentCulture.Name);
+                Assert.AreEqual(otherCulture, CultureInfo.CurrentUICulture.Name);
+                Assert.AreEqual(otherCulture, CultureInfo.DefaultThreadCurrentCulture?.Name);
+            }
+            Assert.AreSame(callerCulture, CultureInfo.CurrentCulture);
         }
 
         /// <summary>
