@@ -84,7 +84,8 @@ namespace pwiz.CarafeSharp.IO
         internal static void Write(string path, IReadOnlyList<KeyValuePair<string, Array>> columns,
             IReadOnlyDictionary<string, string> metadata, int rowsPerGroup)
         {
-            var fields = columns.Select(c => new DataField(c.Key, c.Value.GetType().GetElementType())).ToArray();
+            var elementTypes = columns.Select(c => c.Value.GetType().GetElementType() ?? typeof(object)).ToArray();
+            var fields = columns.Select((c, i) => new DataField(c.Key, elementTypes[i])).ToArray();
             int rowCount = columns.Count == 0 ? 0 : columns[0].Value.Length;
             using (var stream = File.Create(path))
             using (var writer = RunSync(ParquetWriter.CreateAsync(new ParquetSchema(fields), stream)))
@@ -97,7 +98,7 @@ namespace pwiz.CarafeSharp.IO
                     {
                         for (int i = 0; i < fields.Length; i++)
                         {
-                            var slice = Array.CreateInstance(columns[i].Value.GetType().GetElementType() ?? typeof(object), count);
+                            var slice = Array.CreateInstance(elementTypes[i], count);
                             Array.Copy(columns[i].Value, start, slice, 0, count);
                             RunSync(group.WriteColumnAsync(new DataColumn(fields[i], slice)));
                         }

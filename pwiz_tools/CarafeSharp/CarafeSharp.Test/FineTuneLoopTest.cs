@@ -31,6 +31,7 @@ using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Models.Modules;
 using pwiz.CarafeSharp.Proteome;
 using pwiz.CarafeSharp.Training;
+using TorchSharp;
 using static TorchSharp.torch;
 
 namespace pwiz.CarafeSharp.Test
@@ -253,6 +254,52 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(12.1, run.RtMax, 1e-12);
             Assert.AreEqual(150.0, run.MinFragmentIonMz);
             Assert.AreEqual(380.0, run.PrecursorMzMin);
+        }
+
+        [TestMethod]
+        public void TestDevicesAndIrtCalibration()
+        {
+            // The CPU by default and on request; a GPU request on a machine without CUDA falls
+            // back to the CPU and says so; anything else is an error.
+            Assert.AreEqual(DeviceType.CPU, TorchDevice.Resolve(null, out string fallback).type);
+            Assert.IsNull(fallback);
+            Assert.AreEqual(DeviceType.CPU, TorchDevice.Resolve(@"CPU", out fallback).type);
+            Assert.IsNull(fallback);
+            var gpu = TorchDevice.Resolve(TorchDevice.GPU, out fallback);
+            Assert.AreEqual(fallback != null, gpu.type == DeviceType.CPU);
+            Assert.ThrowsException<ArgumentException>(() => TorchDevice.Resolve(@"tpu", out _));
+
+            // The iRT map is the least-squares line from the model's predictions of the eleven
+            // Biognosys kit peptides to their iRT values.
+            var kit = new (string Sequence, double Irt)[]
+            {
+                (@"LGGNEQVTR", -24.92), (@"GAGSSEPVTGLDAK", 0.00), (@"VEATFGVDESNAK", 12.39), (@"YILAGVENSK", 19.79),
+                (@"TPVISGGPYEYR", 28.71), (@"TPVITGAPYEYR", 33.38), (@"DGLDAASYYAPVR", 42.26), (@"ADVTPADFSEWSK", 54.62),
+                (@"GTFIIDPGGVIR", 70.52), (@"GTFIIDPAAVIR", 87.23), (@"LFLQFGAQGSPFLK", 100.00),
+            };
+            using (var model = RtModel.FromSafetensors(RandomRtModel(@"irt_rt", 4), CPU))
+            {
+                var (slope, intercept) = model.FitIrtCalibration();
+                double[] x = model.Predict(kit.Select(p => new PeptideForm(p.Sequence)).ToArray());
+                double[] y = kit.Select(p => p.Irt).ToArray();
+                double xMean = x.Average(), yMean = y.Average();
+                double expectedSlope = x.Zip(y, (a, b) => (a - xMean) * (b - yMean)).Sum() / x.Sum(a => (a - xMean) * (a - xMean));
+                Assert.AreEqual(expectedSlope, slope, 1e-9 * Math.Abs(expectedSlope));
+                Assert.AreEqual(yMean - expectedSlope * xMean, intercept, 1e-9 * Math.Max(1, Math.Abs(intercept)));
+                // Predictions are clipped at 0.
+                Assert.IsTrue(x.All(v => v >= 0));
+            }
+
+            // numpy's random_interval of 0 is 0 without a draw, and above 2^32 draws 64 bits.
+            var random = new NumpyRandomState(1);
+            Assert.AreEqual(0L, random.RandomInterval(0));
+            long wide = random.RandomInterval(1L << 40);
+            Assert.IsTrue(wide >= 0 && wide <= 1L << 40);
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => random.ChooseWithoutReplacement(3, 4));
+            Assert.ThrowsException<ArgumentOutOfRangeException>(() => random.ChooseWithoutReplacement(3, -1));
+            // A training row of the wrong width is refused.
+            Assert.ThrowsException<ArgumentException>(() => new Ms2TrainingExample(new PrecursorForm(new PeptideForm(@"PEPTIDEK"), 2),
+                30, @"Lumos", new double[4], new double[4]));
         }
 
         /// <summary>A randomly initialized MS2 model from <paramref name="seed"/>, saved under <paramref name="name"/>.</summary>

@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
@@ -185,6 +186,15 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(0, code, error);
             CollectionAssert.AreEquivalent(new[] { blocker, Path.Combine(libraryFolder, CarafeLibraryTsvWriter.FILE_NAME) },
                 Directory.GetFileSystemEntries(libraryFolder));
+
+            // The library of stage 1's peptide FASTA with its pairing manifest carries Carafe's
+            // DecoyPairs table (and, without -rt_max, iRT retention times): every pair one target
+            // and one decoy of the same charge, the decoy the reverse of the target when so named.
+            string pairedFolder = Path.Combine(_folder, @"paired");
+            (code, _, error) = Run(@"-db", built, @"-o", pairedFolder, @"-model_dir", models, @"-lf_type", @"blib",
+                @"-lf_min_n_frag", @"1", @"-device", @"cpu", @"-pairing_manifest", manifest);
+            Assert.AreEqual(0, code, error);
+            AssertDecoyPairs(Path.Combine(pairedFolder, BlibLibraryWriter.FILE_NAME));
         }
 
         [TestMethod]
@@ -200,6 +210,37 @@ namespace pwiz.CarafeSharp.Test
             var (code, _, error) = Run(@"-build_entrapment_fasta", built, @"-db", proteins, @"-manifest", manifest);
             Assert.AreEqual(1, code, error);
             Assert.IsFalse(File.Exists(built), @"The failed build left " + built);
+        }
+
+        private static void AssertDecoyPairs(string blib)
+        {
+            using (var connection = new SQLiteConnection(new SQLiteConnectionStringBuilder { DataSource = blib, ReadOnly = true }.ToString()))
+            {
+                connection.Open();
+                var rows = new List<(long Pair, long Decoy, string Method, string Sequence, long Charge)>();
+                using (var command = new SQLiteCommand(@"SELECT d.PairID, d.IsDecoy, d.Method, r.peptideSeq, r.precursorCharge " +
+                                                       @"FROM DecoyPairs d JOIN RefSpectra r ON r.id = d.RefSpectraID ORDER BY d.PairID, d.IsDecoy", connection))
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        rows.Add((reader.GetInt64(0), reader.GetInt64(1), reader.IsDBNull(2) ? null : reader.GetString(2),
+                            reader.GetString(3), reader.GetInt64(4)));
+                    }
+                }
+                Assert.IsTrue(rows.Count > 0);
+                foreach (var pair in rows.GroupBy(r => r.Pair))
+                {
+                    var members = pair.ToArray();
+                    Assert.AreEqual(2, members.Length);
+                    Assert.AreEqual(0L, members[0].Decoy);
+                    Assert.AreEqual(1L, members[1].Decoy);
+                    Assert.AreEqual(members[0].Charge, members[1].Charge);
+                    Assert.IsNull(members[0].Method);
+                    if (members[1].Method == @"reverse")
+                        Assert.AreEqual(EntrapmentSequences.ReversePreservingCterm(members[0].Sequence), members[1].Sequence);
+                }
+            }
         }
 
         private static void AssertHelp(params string[] args)
