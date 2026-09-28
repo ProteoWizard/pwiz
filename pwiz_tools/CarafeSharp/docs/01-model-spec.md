@@ -15,7 +15,10 @@ CarafeSharp runs the same networks on libtorch 2.10.0 through TorchSharp 0.106.0
   25,614,761 bytes, SHA-256 `75e6037db3280a513d0f6010a21dba4e8ea47a8d67127f38c77fb1f9a7d408eb`.
   The URL is unversioned (the release later gained `_v2`/`_v3` zips); CarafeSharp refuses any
   other archive unless told otherwise (`PretrainedModels.PINNED_SHA256`).
-- Default location, shared with peptdeep and Carafe: `~/peptdeep/pretrained_models/pretrained_models.zip`.
+- Committed with CarafeSharp at `models/alphapeptdeep-v1/pretrained_models.zip` and copied beside the
+  executable. `PretrainedModels.DefaultPath` takes `CARAFESHARP_PRETRAINED_MODELS` when it is set (a
+  missing file fails), then that bundled copy, then peptdeep's and Carafe's shared
+  `~/peptdeep/pretrained_models/pretrained_models.zip`. See `models/alphapeptdeep-v1/README.md`.
 - Members: `generic/ms2.pth`, `generic/rt.pth`, `generic/ccs.pth`, plus `phospho/rt_phos.pth`
   and `digly/rt_digly.pth` for the phospho and ubiquitin modes.
 - Each member is `torch.save(model.state_dict())` in the zip format. peptdeep loads with

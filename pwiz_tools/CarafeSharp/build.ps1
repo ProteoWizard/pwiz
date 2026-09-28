@@ -44,8 +44,13 @@
     Fail when any test did not run to a pass or fail (NotExecuted or Inconclusive), which is
     how a missing or incomplete test-data package shows up.
 
+.PARAMETER Coverage
+    Run the tests under JetBrains dotCover (2023.3.3, from .config/dotnet-tools.json, the version
+    Osprey pins) and print the statement coverage of each CarafeSharp assembly. The .dcvr snapshot
+    and a JSON report are written to TestResults. Windows only, as for Osprey.
+
 .PARAMETER TeamCity
-    Emit TeamCity service messages and import the test results.
+    Emit TeamCity service messages and import the test results (and the coverage, with -Coverage).
 
 .PARAMETER Verbosity
     MSBuild verbosity (quiet|minimal|normal|detailed|diagnostic). Default minimal.
@@ -65,6 +70,7 @@ param(
     [string]$TestName,
     [string]$TestCategory,
     [switch]$RequireData,
+    [switch]$Coverage,
     [switch]$TeamCity,
     [ValidateSet('quiet', 'minimal', 'normal', 'detailed', 'diagnostic')]
     [string]$Verbosity = 'minimal'
@@ -206,12 +212,48 @@ $requireCuda = $env:CARAFESHARP_REQUIRE_CUDA
 if ($Torch -eq 'cuda' -or $TestCategory -eq 'Cuda') {
     $env:CARAFESHARP_REQUIRE_CUDA = '1'
 }
+$testArgs = @('test', $testDll, '--nologo', '--filter', ($filters -join '&'), '--results-directory', $resultsDir,
+    '--logger', "trx;LogFileName=$trxName", '--logger', 'console;verbosity=normal')
+$dcvrPath = Join-Path $resultsDir "CarafeSharp.Test-$Configuration-$Torch.dcvr"
+if ($Coverage -and -not $IsWindows) {
+    Write-Host 'Coverage requested, but dotCover runs on Windows only; running the tests without it.' -ForegroundColor Yellow
+    $Coverage = $false
+}
 try {
-    & dotnet test $testDll --nologo --filter ($filters -join '&') --results-directory $resultsDir `
-        --logger "trx;LogFileName=$trxName" --logger 'console;verbosity=normal'
-    $testExit = $LASTEXITCODE
+    if ($Coverage) {
+        $dotcover = @(& (Join-Path $scriptRoot '../../pwiz-sharp/scripts/Ensure-DotCover.ps1') -ManifestDir $scriptRoot)[-1]
+        # The 2023.3.3 console runner's /Name=value syntax, with the target's (dotnet's) own
+        # arguments after --. The command line is built by hand, as Osprey's build.ps1 does, so the
+        # filter's '&' and '!' and the logger's ';' reach the target unchanged.
+        $dotnet = (Get-Command dotnet).Source
+        $quoted = $testArgs | ForEach-Object { if ($_ -match '[\s;&|<>]') { '"' + $_ + '"' } else { $_ } }
+        $psi = New-Object System.Diagnostics.ProcessStartInfo
+        $psi.FileName = $dotcover
+        $psi.Arguments = (@('cover', "/TargetExecutable=`"$dotnet`"", "/Output=`"$dcvrPath`"",
+            '/Filters=+:module=CarafeSharp*;-:module=CarafeSharp.Test', '/ReturnTargetExitCode', '--') + $quoted) -join ' '
+        $psi.UseShellExecute = $false
+        $process = [System.Diagnostics.Process]::Start($psi)
+        $process.WaitForExit()
+        $testExit = $process.ExitCode
+    } else {
+        & dotnet @testArgs
+        $testExit = $LASTEXITCODE
+    }
 } finally {
     $env:CARAFESHARP_REQUIRE_CUDA = $requireCuda
+}
+if ($Coverage -and (Test-Path -LiteralPath $dcvrPath)) {
+    if ($TeamCity) {
+        Write-Host ("##teamcity[importData type='dotNetCoverage' tool='dotcover' path='{0}']" -f (Format-TcMessage $dcvrPath))
+    }
+    $coverageJson = [IO.Path]::ChangeExtension($dcvrPath, '.json')
+    & $dotcover report "/Source=$dcvrPath" "/Output=$coverageJson" '/ReportType=JSON' | Out-Null
+    $report = Get-Content -Raw -LiteralPath $coverageJson | ConvertFrom-Json
+    Write-Host 'Statement coverage:'
+    foreach ($assembly in $report.Children | Where-Object { $_.Name -like 'CarafeSharp*' } | Sort-Object Name) {
+        $percent = if ([int]$assembly.TotalStatements -gt 0) { 100.0 * $assembly.CoveredStatements / $assembly.TotalStatements } else { 0 }
+        Write-Host ('  {0,-22} {1,5:F1}% ({2}/{3})' -f $assembly.Name, $percent, $assembly.CoveredStatements, $assembly.TotalStatements)
+    }
 }
 if ($TeamCity -and (Test-Path -LiteralPath $trxPath)) {
     Write-Host ("##teamcity[importData type='vstest' path='{0}']" -f (Format-TcMessage $trxPath))
