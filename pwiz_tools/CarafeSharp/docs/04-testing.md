@@ -106,6 +106,7 @@ new version.
 | CPU, with data | `build.ps1 -RequireData` | all 68 | about 10 min |
 | Astral | `build.ps1 -TestCategory Astral -RequireData` | 4, on the Astral package | about 12 min |
 | CUDA | `build.ps1 -Torch cuda` | the `Cuda` category: pretrained predictions on the GPU against the CPU | not yet timed |
+| Regression | `regression.ps1` | the `Regression` category: a fine-tune and library against the golden (see "Regression") | 20-35 min on the CPU |
 
 - **CUDA:** the pass sets `CARAFESHARP_REQUIRE_CUDA=1`, so a GPU test that finds no usable GPU fails
   instead of passing untested. The GPU and CPU predictions agree within 3e-5 in intensity and 5e-5 in
@@ -175,6 +176,26 @@ fine-tuned MS2 model that does not beat the pretrained one on COS, PCC, SA and S
 prediction. With a golden already there it compares the run with it, lists the `golden.json` values that
 change, and replaces it only with `-Force`. The golden records its commit, device, processor, OS,
 libtorch thread count and the inputs' SHA-256.
+
+**The Stellar golden** is a CPU run (Intel i9-9900K, Windows, 8 libtorch threads, 33 minutes under load):
+19,401 precursors and 336,403 peaks, and a 1,955-precursor sample of 429 KB. It was made from the
+development export, which Osprey wrote from mzML in June; it is recreated when the export package is
+regenerated from .raw. Two other CPU runs, made independently under other machine loads (one of them
+with `-nce 25`, which has no effect), matched it in exact mode on every check.
+
+**Mutation checks.** Each run changes one thing and must fail the golden:
+
+| Mutation | Exact mode | Statistical mode |
+|---|---|---|
+| `-cor 0.7` | fails: 3 training tables, `ms2.safetensors`, the 8 MS2 metrics, peaks (+2.3%), content hash | fails: training tables, MS2 metrics, peaks |
+| `-lf_top_n_frag 19` | fails: peaks (-2.8%) and content hash; the models, metrics and training tables are identical | fails: peaks |
+| `-nce 25` | passes: identical on every check | passes |
+
+`-nce` has no effect here, so that mutation does not fail the golden: as in Carafe, a training run uses
+the export's own collision energy (`osprey.collision_energies`, 30) and the library predicted after it
+uses the training run's. Checking NCE off by 5 needs an export whose footer records another energy;
+`regression.ps1` has no switch for that yet. `-cor` and `-lf_top_n_frag` are caught in both modes,
+`-lf_top_n_frag` in statistical mode by the peak count alone (the sampled cosine stays above its bounds).
 
 ## Coverage
 
