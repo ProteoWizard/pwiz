@@ -49,6 +49,15 @@ namespace pwiz.Osprey.DemuxTool
         /// <summary>Detector counts per ion (about 100 on a ZenoTOF 8600).</summary>
         public double CountsPerIon { get; set; } = 100;
 
+        /// <summary>
+        /// Demultiplex and centroid profile spectra in one solve (<see cref="JointDemultiplexer"/>) instead of
+        /// demultiplexing centroids channel by channel. Needs profile input on one TOF grid.
+        /// </summary>
+        public bool Joint { get; set; }
+
+        /// <summary>Settings for <see cref="Joint"/>.</summary>
+        public JointDemuxParams JointParameters { get; set; } = new JointDemuxParams();
+
         /// <summary>Sweeps whose output one block owns.</summary>
         public int BlockCycles { get; set; } = 12;
 
@@ -92,6 +101,7 @@ namespace pwiz.Osprey.DemuxTool
         private readonly Dictionary<int, List<(double[] Mz, double[] Ions)>> _peaks = new Dictionary<int, List<(double[], double[])>>();
         private readonly Dictionary<int, double[,]> _transmission = new Dictionary<int, double[,]>();
         private readonly object _lock = new object();
+        private TofGrid _grid;
 
         public ScanningDemuxSpectrumList(ISpectrumList inner, ScanningKernel kernel, ScanningDemuxOptions options,
             TextWriter log)
@@ -271,6 +281,7 @@ namespace pwiz.Osprey.DemuxTool
             for (int c = padLo; c <= padHi; c++)
                 sweeps[c] = SweepPeaks(c);
             double readSeconds = clock.Elapsed.TotalSeconds;
+            var grid = _options.Joint ? TofGridOf(sweeps) : null;
 
             // One unit per block of sweeps and group of encoded bins.
             var units = new List<ScanningUnit>();
@@ -313,7 +324,9 @@ namespace pwiz.Osprey.DemuxTool
                 try
                 {
                     Parallel.For(0, units.Count, new ParallelOptions { MaxDegreeOfParallelism = _options.Threads },
-                        i => results[i] = ScanningDemultiplexer.DemuxUnit(units[i], _options.Parameters));
+                        i => results[i] = _options.Joint
+                            ? JointDemultiplexer.DemuxUnit(units[i], _options.JointParameters, grid)
+                            : ScanningDemultiplexer.DemuxUnit(units[i], _options.Parameters));
                 }
                 catch (Exception e)
                 {
@@ -398,6 +411,30 @@ namespace pwiz.Osprey.DemuxTool
                 Row = row.ToArray(),
                 Cycle = cycle.ToArray(),
             };
+        }
+
+        /// <summary>
+        /// The TOF grid of the profile spectra, taken once from the first spectrum with enough points: every
+        /// spectrum of a ZenoTOF 8600 run lies on the same grid.
+        /// </summary>
+        private TofGrid TofGridOf(Dictionary<int, List<(double[] Mz, double[] Ions)>> sweeps)
+        {
+            if (_grid != null)
+                return _grid;
+            foreach (var sweep in sweeps.Values)
+            {
+                foreach (var (mz, _) in sweep)
+                {
+                    if (mz.Length < 1000)
+                        continue;
+                    _grid = TofGrid.Detect(mz);
+                    if (_grid == null)
+                        throw new InvalidOperationException(@"The joint solve needs profile spectra on one TOF grid.");
+                    _log.WriteLine(@"TOF grid: step {0:E6} in sqrt(m/z)", _grid.Step);
+                    return _grid;
+                }
+            }
+            throw new InvalidOperationException(@"The joint solve found no profile spectrum to take the TOF grid from.");
         }
 
         private static void Bucket(List<ScanningPeak> peaks, Dictionary<(int, int), List<ScanningPeak>> byCell)

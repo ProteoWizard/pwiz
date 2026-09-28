@@ -511,18 +511,18 @@ namespace pwiz.Osprey.Test
             };
         }
 
-        private static double Elution(int cycle)
+        internal static double Elution(int cycle)
         {
             return Math.Exp(-0.5 * Math.Pow((cycle - 4) / 1.2, 2));
         }
 
         /// <summary>The elution summed over the core sweeps 2 to 6.</summary>
-        private static double TotalElution()
+        internal static double TotalElution()
         {
             return Enumerable.Range(2, 5).Sum(Elution);
         }
 
-        private static ScanningKernel TrapezoidKernel()
+        internal static ScanningKernel TrapezoidKernel()
         {
             var offsets = new List<double>();
             var values = new List<double>();
@@ -554,7 +554,7 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>A Poisson draw: Knuth's method for small means, a rounded normal for large ones.</summary>
-        private static double Poisson(Random random, double mean)
+        internal static double Poisson(Random random, double mean)
         {
             if (mean > 50)
             {

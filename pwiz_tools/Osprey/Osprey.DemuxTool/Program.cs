@@ -42,7 +42,8 @@ namespace pwiz.Osprey.DemuxTool
             @"Usage: Osprey.DemuxTool --in <run.wiff2|.raw|.mzML> --out <demux.mzML> [--scheme scanning|staggered]" +
             @" [--kernel <profile.tsv>] [--layout centered:k|tiled:k|framed:k:m] [--threads N] [--cycles first:last]" +
             @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--position-mz] [--unweighted]" +
-            @" [--sweep-l1 L] [--sweep-l1-z Z] [--sweep-l1-refit] [--block-support-z Z] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw] [--profile] [--centroid vendor|events]";
+            @" [--sweep-l1 L] [--sweep-l1-z Z] [--sweep-l1-refit] [--block-support-z Z] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw] [--profile] [--centroid vendor|events]" +
+            @" [--joint] [--joint-z Z] [--joint-relaxed]";
 
         private static int Main(string[] args)
         {
@@ -54,7 +55,8 @@ namespace pwiz.Osprey.DemuxTool
                 // Every option but the switches takes a value.
                 string option = args[i];
                 bool isSwitch = option == @"--raw" || option == @"--unweighted" || option == @"--position-mz" ||
-                    option == @"--source-positions" || option == @"--sweep-l1-refit" || option == @"--profile";
+                    option == @"--source-positions" || option == @"--sweep-l1-refit" || option == @"--profile" ||
+                    option == @"--joint" || option == @"--joint-relaxed";
                 if (!isSwitch && i + 1 >= args.Length)
                 {
                     Console.Error.WriteLine(USAGE);
@@ -90,6 +92,7 @@ namespace pwiz.Osprey.DemuxTool
                         break;
                     case @"--min-out":
                         options.Parameters.MinOutputIons = double.Parse(value, CultureInfo.InvariantCulture);
+                        options.JointParameters.MinOutputIons = options.Parameters.MinOutputIons;
                         break;
                     case @"--apportion":
                         // Each observed peak scaled by the share of its signal within this many
@@ -149,6 +152,17 @@ namespace pwiz.Osprey.DemuxTool
                         // A vendor file read without vendor centroiding, to see what centroiding keeps.
                         profile = true;
                         break;
+                    case @"--joint":
+                        // Demultiplex and centroid the profile in one solve; reads the profile.
+                        options.Joint = true;
+                        profile = true;
+                        break;
+                    case @"--joint-z":
+                        options.JointParameters.L1Z = double.Parse(value, CultureInfo.InvariantCulture);
+                        break;
+                    case @"--joint-relaxed":
+                        options.JointParameters.Relaxed = true;
+                        break;
                     case @"--centroid":
                         // events: the profile centroided keeping every single ion event; vendor: the
                         // vendor library's centroids (the default for a vendor file).
@@ -171,7 +185,11 @@ namespace pwiz.Osprey.DemuxTool
                 Console.WriteLine(@"Kernel: {0}", kernel.Descriptor);
             Console.WriteLine(@"Layout: {0}{1}", staggered ? @"staggered bins" : options.Raw ? @"raw" : options.Layout.Name,
                 options.Parameters.PoissonWeights ? string.Empty : @", unweighted");
-            Console.WriteLine(@"Solve: {0}", SolveSettings(options.Parameters));
+            Console.WriteLine(@"Solve: {0}", options.Joint
+                ? string.Format(CultureInfo.InvariantCulture, @"joint profile demux and centroiding, L1 z {0}{1}, min-out {2}",
+                    options.JointParameters.L1Z, options.JointParameters.Relaxed ? @", relaxed" : string.Empty,
+                    options.JointParameters.MinOutputIons)
+                : SolveSettings(options.Parameters));
 
             // pwiz-sharp's default reader list holds only the open formats; vendor readers are
             // appended, as Osprey's own reader does on load.
