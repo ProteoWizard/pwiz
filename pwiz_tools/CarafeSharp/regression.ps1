@@ -9,9 +9,11 @@
       2. Finds the inputs in the test data packages (testdata.json; the root is
          CARAFESHARP_TESTDATA, else <Downloads>/Perftests): the training export from the
          'export' package, and the library FASTA and pairing manifest from 'testfiles'.
-      3. Writes a subset of the library FASTA, every 50th record as LibraryParityTest's subset
-         takes them, and the pairing-manifest rows of the peptides it keeps, so a CPU run
-         predicts about 20,000 precursors instead of a million.
+      3. Writes a subset of the library: the pair groups of the pairing manifest whose
+         peptide_pair_index is a multiple of 50, each with all its members (target, p_target,
+         decoy, p_decoy). The subset manifest is exactly those groups' rows and the subset
+         FASTA those peptides' records, so a CPU run predicts about 20,000 precursors instead
+         of a million, and its library has a DecoyPairs table as a full library does.
       4. Runs CarafeSharp once: -tf all fine-tunes the RT and MS2 models on the export and
          predicts the library from the subset, with the library arguments of the CarafeSharp
          workflow's stage 4-5. The library is not rebuilt from the model folder with
@@ -19,10 +21,10 @@
       5. Runs the comparator, RegressionTest in CarafeSharp.Test (TestCategory Regression),
          through build.ps1 on the run folder.
 
-    The comparator's checks, and which ones apply to which run, are in docs/04-testing.md
-    ("Regression"). In short: on the CPU of the machine that made the golden a run must be
-    identical (training tables, model weights, metrics, library content); anywhere else it
-    is compared within the calibrated tolerances. The training tables are exact everywhere.
+    The comparator's checks are in docs/04-testing.md ("Regression"). The calibrated
+    tolerances decide pass or fail on every machine and device. The exact hashes (training
+    tables, model weights, library content) are compared and reported as SAME or DIFFERS,
+    but never fail a run.
 
     Each run gets its own folder under -WorkDir, holding the CarafeSharp output (out/), its
     log, the subset inputs, regression-run.json (what was run, on what) and the comparator's
@@ -42,23 +44,20 @@
 .PARAMETER CreateGolden
     Make this run the dataset's golden, in regression.data/<dataset>. It refuses a working
     tree with changes (the golden records the commit it came from), a cuda run that fell
-    back to the CPU, a run with -ExtraArgs, and a fine-tuned model that does not beat the
-    pretrained one on all four MS2 metrics. With a golden already there, it shows the
-    differences and replaces it only with -Force.
+    back to the CPU, a run with -ExtraArgs, a fine-tuned model that does not beat the
+    pretrained one on all four MS2 metrics, and a library whose DecoyPairs table leaves a
+    target unpaired although its decoy was written. With a golden already there, it shows
+    the differences and replaces it only with -Force.
 
 .PARAMETER Force
     With -CreateGolden, replace an existing golden.
 
 .PARAMETER ExtraArgs
-    CarafeSharp arguments added to the run, for mutation checks: an option given here
+    CarafeSharp arguments added to the run, for sensitivity checks: an option given here
     replaces the default's value (CarafeSharp takes the first occurrence of an option, so
     they are merged, not appended). Items are split at whitespace, so from pwsh -File write
     -ExtraArgs "-cor 0.7"; from PowerShell, -ExtraArgs '-cor','0.7' works too.
 
-.PARAMETER Mode
-    Auto (default): exact when the run and the golden are CPU runs on the same processor, OS
-    and thread count, else statistical. Exact or Statistical forces one, for example to see
-    what the statistical checks make of a CPU run.
 
 .PARAMETER CompareRun
     Compare an existing run folder instead of running CarafeSharp, for example after
@@ -70,7 +69,7 @@
     TestResults/regression beside this script.
 
 .PARAMETER RunName
-    A label added to the run folder's name, such as the mutation it checks.
+    A label added to the run folder's name, such as the sensitivity check it makes.
 
 .PARAMETER CarafeSharpExe
     Run this executable instead of this checkout's build (a snapshot of the build output, so
@@ -95,7 +94,6 @@ param(
     [switch]$CreateGolden,
     [switch]$Force,
     [string[]]$ExtraArgs = @(),
-    [ValidateSet('Auto', 'Exact', 'Statistical')] [string]$Mode = 'Auto',
     [string]$CompareRun,
     [string]$WorkDir,
     [string]$RunName,
@@ -115,8 +113,10 @@ $scriptRoot = Split-Path -Parent $PSCommandPath
 $buildScript = Join-Path $scriptRoot 'build.ps1'
 $goldenRoot = Join-Path $scriptRoot 'regression.data'
 
-# Every 50th FASTA record, as LibraryParityTest.SUBSET_STRIDE.
-$subsetStride = 50
+# The subset keeps the pair groups whose peptide_pair_index is a multiple of this, as
+# LibraryParityTest.SUBSET_STRIDE keeps every 50th record, but whole groups, so the library
+# still pairs its targets and decoys.
+$subsetModulus = 50
 
 # The datasets. Package paths are '/'-separated, relative to the package's top folder.
 $datasets = @{
@@ -215,31 +215,73 @@ function Get-Sha256([string]$Path) {
     return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
 }
 
-# The records LibraryParityTest's subset keeps: every $subsetStride-th, counting from the
-# first, written as '>' + header + '\n' + sequence + '\n' (FastaReader's header is the
-# trimmed line after '>', its sequence every non-whitespace character up to the next '>').
-function Write-SubsetFasta([string]$Source, [string]$Target) {
+# The pair groups the subset keeps: the manifest's header and the rows whose peptide_pair_index
+# is a multiple of $subsetModulus. Returns the kept rows' sequences and the counts.
+function Write-SubsetPairing([string]$Source, [string]$Target) {
     $sequences = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
-    $whitespace = [char[]]@(' ', "`t", "`f", "`v")
+    $groups = [System.Collections.Generic.HashSet[int]]::new()
     $utf8 = [System.Text.UTF8Encoding]::new($false)
     $reader = [IO.StreamReader]::new($Source, $utf8, $false, 1 -shl 16)
     $writer = [IO.StreamWriter]::new($Target, $false, $utf8)
     try {
-        $index = -1
+        $headerLine = $reader.ReadLine()
+        $names = @($headerLine -split "`t" | ForEach-Object { $_.Trim().ToLowerInvariant() })
+        $sequenceColumn = [Array]::IndexOf($names, 'sequence')
+        $pairColumn = [Array]::IndexOf($names, 'peptide_pair_index')
+        if ($sequenceColumn -lt 0 -or $pairColumn -lt 0) {
+            throw "$Source has no 'sequence' or 'peptide_pair_index' column"
+        }
+        $writer.Write("$headerLine`n")
+        $rows = 0
+        $invariant = [Globalization.CultureInfo]::InvariantCulture
+        while ($null -ne ($line = $reader.ReadLine())) {
+            if ($line.Length -eq 0) {
+                continue
+            }
+            $cells = $line.Split("`t")
+            $pairIndex = 0
+            if (-not [int]::TryParse($cells[$pairColumn].Trim(), [Globalization.NumberStyles]::AllowLeadingSign, $invariant, [ref]$pairIndex)) {
+                throw "$Source has a non-integer peptide_pair_index: $line"
+            }
+            if ($pairIndex % $subsetModulus -eq 0) {
+                $writer.Write("$line`n")
+                [void]$sequences.Add($cells[$sequenceColumn].Trim())
+                [void]$groups.Add($pairIndex)
+                $rows++
+            }
+        }
+    } finally {
+        $reader.Dispose()
+        $writer.Dispose()
+    }
+    return [PSCustomObject]@{ Sequences = $sequences; Groups = $groups.Count; Rows = $rows }
+}
+
+# The FASTA records of the kept groups' peptides, written as '>' + header + '\n' + sequence +
+# '\n' as LibraryParityTest writes its subset (FastaReader's header is the trimmed line after
+# '>', its sequence every non-whitespace character up to the next '>'). Returns the count.
+function Write-SubsetFasta([string]$Source, [string]$Target, $Sequences) {
+    $whitespace = [char[]]@(' ', "`t", "`f", "`v")
+    $utf8 = [System.Text.UTF8Encoding]::new($false)
+    $reader = [IO.StreamReader]::new($Source, $utf8, $false, 1 -shl 16)
+    $writer = [IO.StreamWriter]::new($Target, $false, $utf8)
+    $records = 0
+    try {
         $header = $null
         $sequence = [System.Text.StringBuilder]::new()
         $flush = {
-            if ($null -ne $header -and ($index % $subsetStride) -eq 0) {
+            if ($null -ne $header) {
                 $text = $sequence.ToString()
-                $writer.Write(">$header`n$text`n")
-                [void]$sequences.Add($text)
+                if ($Sequences.Contains($text)) {
+                    $writer.Write(">$header`n$text`n")
+                    $records++
+                }
             }
         }
         while ($null -ne ($line = $reader.ReadLine())) {
             $trimmed = $line.Trim()
             if ($trimmed.StartsWith('>')) {
                 . $flush
-                $index++
                 $header = $trimmed.Substring(1)
                 [void]$sequence.Clear()
             } elseif ($trimmed.IndexOfAny($whitespace) -lt 0) {
@@ -253,35 +295,7 @@ function Write-SubsetFasta([string]$Source, [string]$Target) {
         $reader.Dispose()
         $writer.Dispose()
     }
-    # The comma keeps the set whole; PowerShell would otherwise unroll it into an array.
-    return , $sequences
-}
-
-# The pairing-manifest rows (and header) of the peptides the subset keeps.
-function Write-SubsetPairing([string]$Source, [string]$Target, $Sequences) {
-    $utf8 = [System.Text.UTF8Encoding]::new($false)
-    $reader = [IO.StreamReader]::new($Source, $utf8, $false, 1 -shl 16)
-    $writer = [IO.StreamWriter]::new($Target, $false, $utf8)
-    try {
-        $headerLine = $reader.ReadLine()
-        $column = [Array]::IndexOf(($headerLine -split "`t" | ForEach-Object { $_.Trim().ToLowerInvariant() }), 'sequence')
-        if ($column -lt 0) {
-            throw "$Source has no 'sequence' column"
-        }
-        $writer.Write("$headerLine`n")
-        $rows = 0
-        while ($null -ne ($line = $reader.ReadLine())) {
-            $cells = $line.Split("`t")
-            if ($cells.Count -gt $column -and $Sequences.Contains($cells[$column].Trim())) {
-                $writer.Write("$line`n")
-                $rows++
-            }
-        }
-        return $rows
-    } finally {
-        $reader.Dispose()
-        $writer.Dispose()
-    }
+    return $records
 }
 
 # Splits arguments into options, each with the value that follows it when the next token is
@@ -354,13 +368,13 @@ function Invoke-Comparator([string]$RunFolder, [string]$CreateFolder, [string]$L
         CARAFESHARP_REGRESSION_RUN    = $env:CARAFESHARP_REGRESSION_RUN
         CARAFESHARP_REGRESSION_CREATE = $env:CARAFESHARP_REGRESSION_CREATE
         CARAFESHARP_REGRESSION_DATA   = $env:CARAFESHARP_REGRESSION_DATA
-        CARAFESHARP_REGRESSION_MODE   = $env:CARAFESHARP_REGRESSION_MODE
+
     }
     try {
         $env:CARAFESHARP_REGRESSION_RUN = $RunFolder
         $env:CARAFESHARP_REGRESSION_CREATE = $CreateFolder
         $env:CARAFESHARP_REGRESSION_DATA = Join-Path $goldenRoot $config.Folder
-        $env:CARAFESHARP_REGRESSION_MODE = $Mode
+
         $log = Join-Path $RunFolder $LogName
         & pwsh -NoProfile -File $buildScript -NoBuild -Torch $Torch -TestName 'RegressionTest' -RequireData *>&1 |
             Tee-Object -FilePath $log | Out-Host
@@ -416,9 +430,6 @@ if ($CreateGolden -and $ExtraArgs.Count -gt 0) {
 if ($CreateGolden -and $CarafeSharpExe) {
     throw '-CreateGolden with -CarafeSharpExe: a golden is made with this checkout''s build, whose commit it records.'
 }
-if ($CreateGolden -and $Mode -ne 'Auto') {
-    throw '-CreateGolden with -Mode: the mode applies to comparisons only.'
-}
 $git = Get-GitState
 if ($CreateGolden -and $git.Dirty) {
     throw ("-CreateGolden needs a clean working tree, because the golden records the commit it came from. Changes:`n  " +
@@ -465,12 +476,15 @@ if (-not $CompareRun) {
     $outFolder = Join-Path $runFolder 'out'
     New-Item -ItemType Directory -Force -Path $inputFolder | Out-Null
 
-    Write-Step "Subset of $($libraryFasta.Relative): every ${subsetStride}th record"
+    Write-Step "Subset of $($libraryFasta.Relative): the pair groups whose peptide_pair_index is a multiple of $subsetModulus"
     $subsetFasta = Join-Path $inputFolder 'library_subset_peptides.fasta'
     $subsetPairing = Join-Path $inputFolder 'library_subset_pairing.tsv'
-    $sequences = Write-SubsetFasta $libraryFasta.Path $subsetFasta
-    $pairingRows = Write-SubsetPairing $pairing.Path $subsetPairing $sequences
-    Write-Host ("  {0} records, {1} pairing rows" -f $sequences.Count, $pairingRows)
+    $subset = Write-SubsetPairing $pairing.Path $subsetPairing
+    $subsetRecords = Write-SubsetFasta $libraryFasta.Path $subsetFasta $subset.Sequences
+    Write-Host ("  {0} pair groups: {1} pairing rows, {2} FASTA records" -f $subset.Groups, $subset.Rows, $subsetRecords)
+    if ($subsetRecords -lt $subset.Sequences.Count) {
+        throw "$($libraryFasta.Relative) has no record for $($subset.Sequences.Count - $subsetRecords) of the subset's peptides."
+    }
 
     $exportFolder = Split-Path -Parent $export.Path
     $runFile = Join-Path $exportFolder $config.RunFile
@@ -498,9 +512,10 @@ if (-not $CompareRun) {
         custom_exe        = [bool]$CarafeSharpExe
         extra_args        = @($ExtraArgs)
         arguments         = @($arguments)
-        subset_stride     = $subsetStride
-        subset_records    = $sequences.Count
-        subset_pairing_rows = $pairingRows
+        subset_rule       = "the pair groups whose peptide_pair_index is a multiple of $subsetModulus, with all their members"
+        subset_groups     = $subset.Groups
+        subset_records    = $subsetRecords
+        subset_pairing_rows = $subset.Rows
         export_note       = $config.ExportNote
         inputs            = [ordered]@{
             export          = [ordered]@{ path = $export.Relative; sha256 = Get-Sha256 $export.Path }
@@ -574,17 +589,17 @@ if (-not $CreateGolden) {
     if (-not (Test-Path -LiteralPath $goldenPath)) {
         throw "No golden at $goldenPath. Make one with -CreateGolden."
     }
-    Write-Step "Comparing with $goldenPath (mode $Mode)"
+    Write-Step "Comparing with $goldenPath"
     $code = Invoke-Comparator $runFolder '' 'comparator.log'
     $report = Join-Path $runFolder 'regression-report.txt'
     if (Test-Path -LiteralPath $report) {
         Get-Content -LiteralPath $report | Out-Host
     }
     if ($code -ne 0) {
-        Write-Host "REGRESSION FAILED: $runFolder differs from the golden (report: $report)" -ForegroundColor Red
+        Write-Host "REGRESSION FAILED: $runFolder is outside the golden's tolerances (report: $report)" -ForegroundColor Red
         exit 1
     }
-    Write-Host "REGRESSION PASSED: $runFolder matches the golden (report: $report)" -ForegroundColor Green
+    Write-Host "REGRESSION PASSED: $runFolder is within the golden's tolerances (report: $report)" -ForegroundColor Green
     exit 0
 }
 

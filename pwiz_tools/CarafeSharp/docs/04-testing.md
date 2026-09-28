@@ -128,79 +128,64 @@ library, so it depends on CarafeSharp alone.
 
 ```
 pwsh -File regression.ps1                                   # CPU run, compared with the golden
-pwsh -File regression.ps1 -NoBuild -ExtraArgs "-cor 0.7"    # a mutation, which must fail
+pwsh -File regression.ps1 -NoBuild -ExtraArgs "-cor 0.7"    # a sensitivity check, which must fail
 pwsh -File regression.ps1 -CompareRun <run folder>          # compare an existing run again
 pwsh -File regression.ps1 -CreateGolden                     # from a clean tree; -Force to replace
 ```
 
 **The run.** The inputs come from the test data packages, by the rules the tests use: the training
 export from `carafesharp-export`, and the library FASTA and pairing manifest from `carafesharp-testfiles`
-(`stellar/carafe-osprey-entrapment`). To keep a CPU run short, the library is predicted from every 50th
-FASTA record, as `LibraryParityTest` subsets it, with the pairing rows of the peptides kept: 17,510
-records instead of 875,000. CarafeSharp runs once, `-tf all` with the library arguments of the
-workflow's stage 4-5, so fine-tuning and prediction happen in one call. The library is not rebuilt with
-`-model_dir`, because `meta.json` carries Carafe's default `lf_frag_mz_max` of 1800 while the workflow
-predicts with 1960. A CPU run takes 20 to 35 minutes; each gets its own folder under
+(`stellar/carafe-osprey-entrapment`). To keep a CPU run short, the library is predicted from a subset of
+whole pair groups: the groups whose `peptide_pair_index` is a multiple of 50, each with its target,
+entrapment target, decoy and entrapment decoy. The subset manifest is exactly those groups' rows and the
+subset FASTA those peptides' records: 4,378 groups and 17,512 records of the 875,484, so the library
+has a DecoyPairs table as a full one does. CarafeSharp runs once, `-tf all` with the library arguments
+of the workflow's stage 4-5, so fine-tuning and prediction happen in one call. The library is not
+rebuilt with `-model_dir`, because `meta.json` carries Carafe's default `lf_frag_mz_max` of 1800 while
+the workflow predicts with 1960. A CPU run takes 20 to 35 minutes; each gets its own folder under
 `CARAFESHARP_REGRESSION_WORKDIR` (default `TestResults/regression`), holding `out/`, the log, the subset,
 `regression-run.json` and the comparator's `regression-report.txt`.
 
 **The comparator** is `RegressionTest` (category `Regression`, left out of the default pass). It reads
 the run folder from `CARAFESHARP_REGRESSION_RUN`, which `regression.ps1` sets, and is Inconclusive
-without it. It checks:
+without it. The calibrated tolerances decide pass or fail, on every machine and device. They are each at
+least three times the largest spread seen across GPU repeats, CPU against GPU and Windows against Linux:
 
-| Check | When | Rule |
-|---|---|---|
-| Input SHA-256 (export, FASTA, pairing, subset) | always | identical; otherwise the golden is of other inputs |
-| The four training tables' SHA-256 | always | identical: the training set does not depend on the device |
-| `use_finetuned_for_prediction` | always | identical |
-| `ms2.safetensors`, `rt.safetensors` SHA-256 | exact mode | identical |
-| Every held-out metric in `model_evaluation_metrics.json` | exact mode | identical |
-| Library precursors, peaks and content hash | exact mode | identical |
-| Pretrained metrics | statistical mode | within 1e-5 |
-| Fine-tuned metrics | statistical mode | COS and PCC 1.5e-3, SA 6e-3, SPC 5e-3, RT R2 1e-4, RT MAE 5e-4 |
-| Library precursor count | statistical mode | within 1e-4 (at least 2) |
-| Library peak count | statistical mode | within 1% |
-| Sampled precursors | statistical mode | one-sided only with at most 3 fragments; same precursor m/z |
-| Sampled spectral cosine | statistical mode | median 0.99925, p5 0.991, p1 0.975 or more |
-| Sampled RT difference (minutes) | statistical mode | median 0.03, p95 0.10, p99 0.16 or less |
+| Check | Pass when |
+|---|---|
+| Input SHA-256 (export, FASTA, pairing, subset) | identical; otherwise the golden is of other inputs |
+| `use_finetuned_for_prediction` | identical |
+| Pretrained held-out metrics | within 1e-5 |
+| Fine-tuned held-out metrics | COS and PCC within 1.5e-3, SA 6e-3, SPC 5e-3, RT R2 1e-4, RT MAE 5e-4 |
+| Library precursor count, DecoyPairs row count | within 1e-4 of the golden's (at least 2) |
+| Library peak count | within 1% |
+| DecoyPairs pairs | each is a target and the decoy of its pair group (or the entrapment target and entrapment decoy), of one charge |
+| DecoyPairs targets | every target whose decoy was written is paired |
+| Sampled precursors | one-sided only with at most 3 fragments; the same precursor m/z |
+| Sampled spectral cosine | median 0.99925, p5 0.991, p1 0.975 or more |
+| Sampled RT difference (minutes) | median 0.03, p95 0.10, p99 0.16 or less |
 
-- **Exact mode** applies to a CPU run on the golden's processor, operating system and libtorch thread
-  count: two identical CPU fine-tunes are byte-identical. Anything else, a GPU run or another machine, is
-  compared in statistical mode, with the tolerances calibrated across GPU repeats, CPU against GPU and
-  Windows against Linux (each at least three times the largest spread seen). An exact-mode report also
-  lists the statistical results, for information. `-Mode Statistical` forces the statistical checks.
+- **Exact comparisons, reported and never gated:** the SHA-256 of the four training tables and of
+  `ms2.safetensors` and `rt.safetensors`, the held-out metrics as numbers, and the library's content
+  hash and counts. The report marks each SAME or DIFFERS. A CPU fine-tune is byte-reproducible on one
+  machine, so there they are all SAME; on another device or machine they need not be.
 - **The library content hash** is over one line per precursor, sorted: modified sequence, charge,
   precursor m/z, RT, and the fragments in m/z order, with fragment m/z, intensity and RT rounded to 1e-6.
   It is read from the .blib with SQLite, never the file's bytes, which change with `createTime` on every
   write.
+- **The DecoyPairs checks** place each precursor in its pair group by its I/L-normalized sequence, apart
+  from `DecoyPairPlanner`. A peptide whose I/L twin is another member of its group (a shuffle that only
+  swaps I and L) has more than one place in the manifest; the planner pairs such twins with themselves
+  and skips them, and the check leaves them out and counts them.
 - **The sample** is the precursors whose FNV-1a key hash falls in one tenth, stored with their spectra
   as `library_sample.tsv.gz` beside `golden.json`.
 
-**`-CreateGolden`** refuses a working tree with changes, a GPU request that fell back to the CPU, and a
+**`-CreateGolden`** refuses a working tree with changes, a GPU request that fell back to the CPU, a
 fine-tuned MS2 model that does not beat the pretrained one on COS, PCC, SA and SPC or is not used for
-prediction. With a golden already there it compares the run with it, lists the `golden.json` values that
-change, and replaces it only with `-Force`. The golden records its commit, device, processor, OS,
-libtorch thread count and the inputs' SHA-256.
-
-**The Stellar golden** is a CPU run (Intel i9-9900K, Windows, 8 libtorch threads, 33 minutes under load):
-19,401 precursors and 336,403 peaks, and a 1,955-precursor sample of 429 KB. It was made from the
-development export, which Osprey wrote from mzML in June; it is recreated when the export package is
-regenerated from .raw. Two other CPU runs, made independently under other machine loads (one of them
-with `-nce 25`, which has no effect), matched it in exact mode on every check.
-
-**Mutation checks.** Each run changes one thing and must fail the golden:
-
-| Mutation | Exact mode | Statistical mode |
-|---|---|---|
-| `-cor 0.7` | fails: 3 training tables, `ms2.safetensors`, the 8 MS2 metrics, peaks (+2.3%), content hash | fails: training tables, MS2 metrics, peaks |
-| `-lf_top_n_frag 19` | fails: peaks (-2.8%) and content hash; the models, metrics and training tables are identical | fails: peaks |
-| `-nce 25` | passes: identical on every check | passes |
-
-`-nce` has no effect here, so that mutation does not fail the golden: as in Carafe, a training run uses
-the export's own collision energy (`osprey.collision_energies`, 30) and the library predicted after it
-uses the training run's. Checking NCE off by 5 needs an export whose footer records another energy;
-`regression.ps1` has no switch for that yet. `-cor` and `-lf_top_n_frag` are caught in both modes,
-`-lf_top_n_frag` in statistical mode by the peak count alone (the sampled cosine stays above its bounds).
+prediction, and a DecoyPairs table that leaves out a target whose decoy was written. With a golden
+already there it compares the run with it, lists the `golden.json` values that change, and replaces it
+only with `-Force`. The golden records its commit, device, processor, OS, libtorch thread count and the
+inputs' SHA-256.
 
 ## Coverage
 

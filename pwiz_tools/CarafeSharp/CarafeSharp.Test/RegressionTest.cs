@@ -31,6 +31,7 @@ using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
+using pwiz.CarafeSharp.Proteome;
 using pwiz.CarafeSharp.Training;
 
 namespace pwiz.CarafeSharp.Test
@@ -38,7 +39,7 @@ namespace pwiz.CarafeSharp.Test
     /// <summary>
     /// The comparator of the golden regression, which <c>regression.ps1</c> runs on a run folder
     /// it made: the RT and MS2 models fine-tuned on a packaged Osprey training export, and the
-    /// library predicted from a subset of the library FASTA.
+    /// library predicted from a subset of the library FASTA's pair groups.
     /// <para>
     /// It reads the run folder from <c>CARAFESHARP_REGRESSION_RUN</c>, and is inconclusive
     /// without it, so the normal test passes skip it. The golden is
@@ -46,16 +47,16 @@ namespace pwiz.CarafeSharp.Test
     /// <c>CARAFESHARP_REGRESSION_DATA</c> or above the test assembly.
     /// </para>
     /// <para>
-    /// Exact mode, for a CPU run on the processor, operating system and thread count the golden
-    /// was made with, where a fine-tune is byte-reproducible: the model weights, every held-out
-    /// metric and the library content must be identical. Statistical mode, for anything else
-    /// (a GPU run, another machine): the metrics and a sample of the library's spectra must
-    /// agree within the tolerances calibrated across runs. In both, the inputs and the four
-    /// training tables must be identical, since the training set does not depend on the device.
+    /// The tolerances calibrated across GPU repeats, CPU against GPU and Windows against Linux
+    /// decide pass or fail, on every machine: the held-out metrics, the library's precursor, peak
+    /// and DecoyPairs counts, the DecoyPairs table's pairing, and a sample of the library's spectra.
+    /// The exact hashes (training tables, model weights, library content) are compared too, and
+    /// reported, but never fail the test.
     /// </para>
     /// <para>
     /// With <c>CARAFESHARP_REGRESSION_CREATE</c> set to a folder, it writes a golden of the run
-    /// there instead, after checking that the fine-tuned MS2 model beats the pretrained one.
+    /// there instead, after checking that the fine-tuned MS2 model beats the pretrained one and
+    /// that the library's DecoyPairs table pairs every target whose decoy was written.
     /// </para>
     /// </summary>
     [TestClass]
@@ -66,7 +67,6 @@ namespace pwiz.CarafeSharp.Test
         public const string RUN_VARIABLE = @"CARAFESHARP_REGRESSION_RUN";
         public const string CREATE_VARIABLE = @"CARAFESHARP_REGRESSION_CREATE";
         public const string DATA_VARIABLE = @"CARAFESHARP_REGRESSION_DATA";
-        public const string MODE_VARIABLE = @"CARAFESHARP_REGRESSION_MODE";
 
         public const string GOLDEN_FILE = @"golden.json";
         public const string SAMPLE_FILE = @"library_sample.tsv.gz";
@@ -74,12 +74,8 @@ namespace pwiz.CarafeSharp.Test
         public const string REPORT_FILE = @"regression-report.txt";
         public const string DATA_FOLDER = @"regression.data";
 
-        private const string GOLDEN_FORMAT = @"carafesharp-regression-golden-1";
+        private const string GOLDEN_FORMAT = @"carafesharp-regression-golden-2";
         private const string OUTPUT_FOLDER = @"out";
-        private const string MODE_AUTO = @"Auto";
-        private const string MODE_EXACT = @"Exact";
-        private const string MODE_STATISTICAL = @"Statistical";
-        private const string DEVICE_CPU = @"cpu";
 
         /// <summary>The sample keeps the precursors whose key hash is 0 modulo this.</summary>
         private const int SAMPLE_MODULUS = 10;
@@ -99,6 +95,8 @@ namespace pwiz.CarafeSharp.Test
             { @"cos", 1.5e-3 }, { @"pcc", 1.5e-3 }, { @"sa", 6e-3 }, { @"spc", 5e-3 }, { @"r2", 1e-4 }, { @"mae_normalized", 5e-4 },
         };
         private const double PEAK_COUNT_TOLERANCE = 0.01;
+        // The written precursor set, and with it the DecoyPairs rows, may lose a few precursors
+        // near the -lf_min_n_frag cutoff on another device (Astral GPU vs GPU: 1.7e-5).
         private const double PRECURSOR_COUNT_TOLERANCE = 1e-4;
         private const int PRECURSOR_COUNT_MIN_ALLOWED = 2;
         private const double COSINE_MEDIAN_MIN = 0.99925;
@@ -118,8 +116,8 @@ namespace pwiz.CarafeSharp.Test
         private static readonly string[] PROVENANCE_KEYS =
         {
             @"dataset", @"leg", @"torch", @"device_used", @"commit", @"branch", @"os", @"os_platform", @"processor",
-            @"logical_processors", @"omp_num_threads", @"minutes", @"subset_stride", @"subset_records", @"subset_pairing_rows",
-            @"export_note",
+            @"logical_processors", @"omp_num_threads", @"minutes", @"subset_rule", @"subset_groups", @"subset_records",
+            @"subset_pairing_rows", @"export_note",
         };
 
         private static readonly string[] TRAINING_TABLES =
@@ -159,8 +157,8 @@ namespace pwiz.CarafeSharp.Test
             File.WriteAllLines(report, _report);
             foreach (string line in _report)
                 TestContext.WriteLine(@"{0}", line);
-            Assert.AreEqual(0, _failures.Count, @"The run differs from the golden {0}:{1}{2}", goldenFolder, Environment.NewLine,
-                string.Join(Environment.NewLine, _failures));
+            Assert.AreEqual(0, _failures.Count, @"The run is outside the calibrated tolerances of the golden {0}:{1}{2}", goldenFolder,
+                Environment.NewLine, string.Join(Environment.NewLine, _failures));
         }
 
         private void CreateGolden(RunMeasurement run, string folder)
@@ -172,107 +170,143 @@ namespace pwiz.CarafeSharp.Test
                 double pretrained = run.Metrics[MetricKey(ModelFiles.METRICS_MS2, ModelFiles.METRICS_PRETRAINED, metric)];
                 double finetuned = run.Metrics[MetricKey(ModelFiles.METRICS_MS2, ModelFiles.METRICS_FINETUNED, metric)];
                 Assert.IsTrue(finetuned > pretrained, @"The fine-tuned MS2 model does not beat the pretrained one on {0}: {1} vs {2}.",
-                    metric, finetuned.ToString(@"R", CultureInfo.InvariantCulture), pretrained.ToString(@"R", CultureInfo.InvariantCulture));
+                    metric, Format(finetuned), Format(pretrained));
             }
+            var pairs = run.Pairs;
+            Assert.IsTrue(pairs.Rows > 0, @"The library has no DecoyPairs rows.");
+            Assert.AreEqual(0, pairs.MalformedPairs, @"DecoyPairs has pairs that are not one pair group's target and decoy of one charge.");
+            Assert.AreEqual(0, pairs.UnpairedTargetsWithDecoy, @"DecoyPairs leaves out targets whose decoy the library has.");
+
             Directory.CreateDirectory(folder);
             string samplePath = Path.Combine(folder, SAMPLE_FILE);
             LibrarySample.Write(samplePath, run.Library.Sample);
             long sampleBytes = new FileInfo(samplePath).Length;
             Assert.IsTrue(sampleBytes <= MAX_SAMPLE_BYTES, @"The library sample is {0} bytes, more than {1}.", sampleBytes, MAX_SAMPLE_BYTES);
             Golden.Write(Path.Combine(folder, GOLDEN_FILE), run);
-            TestContext.WriteLine(@"Golden written to {0}: {1} precursors, {2} peaks, {3} sampled ({4} bytes).", folder,
-                run.Library.Precursors, run.Library.Peaks, run.Library.Sample.Count, sampleBytes);
+            TestContext.WriteLine(@"Golden written to {0}: {1} precursors, {2} peaks, {3} DecoyPairs rows, {4} sampled ({5} bytes).",
+                folder, run.Library.Precursors, run.Library.Peaks, pairs.Rows, run.Library.Sample.Count, sampleBytes);
         }
 
         private void Compare(Golden golden, RunMeasurement run)
         {
-            string mode = ChooseMode(golden, run, out string why);
             Report(@"Run {0} against the golden {1}", run.Folder, golden.Folder);
-            Report(@"Mode: {0} ({1})", mode, why);
             Report(@"Golden: commit {0}, {1} on {2}, {3}; run: commit {4}, {5} on {6}, {7}", golden.Commit, golden.Device, golden.Processor,
                 golden.OsPlatform, run.Commit, run.Device, run.Processor, run.OsPlatform);
             if (!golden.Arguments.SequenceEqual(run.Arguments))
                 Report(@"INFO arguments differ from the golden's: {0}", DescribeArgumentChange(golden.Arguments, run.Arguments));
 
-            // Whatever the device: the inputs, the training tables and the model choice.
-            CheckEqualMaps(@"input", golden.Inputs, run.Inputs, @"the golden is of other inputs; recreate it for these");
-            CheckEqualMaps(@"training table", golden.TrainingTables, run.TrainingTables, null);
-            Check(golden.UseFineTuned == run.UseFineTuned, true, @"{0}: golden {1}, run {2}", ModelFiles.METRICS_USE_FINETUNED,
-                golden.UseFineTuned, run.UseFineTuned);
-
-            bool exact = mode == MODE_EXACT;
-            if (exact)
+            Report(@"Gate: the calibrated tolerances decide pass or fail.");
+            foreach (var pair in golden.Inputs)
             {
-                CheckEqualMaps(@"model", golden.Models, run.Models, null);
-                foreach (var pair in golden.Metrics)
-                {
-                    bool found = run.Metrics.TryGetValue(pair.Key, out double value);
-                    Check(found && value.Equals(pair.Value), true, @"metric {0}: golden {1}, run {2}", pair.Key, Format(pair.Value),
-                        found ? Format(value) : @"missing");
-                }
-                Check(golden.Library.Precursors == run.Library.Precursors, true, @"library precursors: golden {0}, run {1}",
-                    golden.Library.Precursors, run.Library.Precursors);
-                Check(golden.Library.Peaks == run.Library.Peaks, true, @"library peaks: golden {0}, run {1}", golden.Library.Peaks,
-                    run.Library.Peaks);
-                Check(golden.Library.ContentSha256 == run.Library.ContentSha256, true, @"library content SHA-256: golden {0}, run {1}",
-                    golden.Library.ContentSha256, run.Library.ContentSha256);
-                Report(@"Statistical checks, for information (DIFF: outside the tolerance):");
+                run.Inputs.TryGetValue(pair.Key, out string value);
+                Check(value == pair.Value, @"input {0}: golden {1}, run {2}{3}", pair.Key, pair.Value, value ?? @"missing",
+                    value == pair.Value ? string.Empty : @" (the golden is of other inputs; recreate it for these)");
             }
-            CompareStatistically(golden, run, !exact);
+            Check(golden.UseFineTuned == run.UseFineTuned, @"{0}: golden {1}, run {2}", ModelFiles.METRICS_USE_FINETUNED,
+                golden.UseFineTuned, run.UseFineTuned);
+            CheckMetrics(golden, run);
+            CheckLibrary(golden, run);
+            CheckDecoyPairs(golden, run);
+            CheckSample(golden, run);
+            ReportExactComparisons(golden, run);
         }
 
-        /// <summary>The metric and library checks for a run on another device; failures count only when <paramref name="gate"/>.</summary>
-        private void CompareStatistically(Golden golden, RunMeasurement run, bool gate)
+        private void CheckMetrics(Golden golden, RunMeasurement run)
         {
             foreach (var pair in golden.Metrics)
             {
                 if (!run.Metrics.TryGetValue(pair.Key, out double value))
                 {
-                    Check(false, gate, @"metric {0}: missing from the run", pair.Key);
+                    Check(false, @"metric {0}: missing from the run", pair.Key);
                     continue;
                 }
                 double tolerance = GetMetricTolerance(pair.Key);
                 double difference = value - pair.Value;
-                Check(Math.Abs(difference) <= tolerance, gate, @"metric {0}: golden {1}, run {2}, difference {3} (tolerance {4})", pair.Key,
+                Check(Math.Abs(difference) <= tolerance, @"metric {0}: golden {1}, run {2}, difference {3} (tolerance {4})", pair.Key,
                     Format(pair.Value), Format(value), difference.ToString(@"E2", CultureInfo.InvariantCulture),
                     tolerance.ToString(@"G3", CultureInfo.InvariantCulture));
             }
+        }
 
-            long precursorDifference = Math.Abs(run.Library.Precursors - golden.Library.Precursors);
-            long allowed = Math.Max(PRECURSOR_COUNT_MIN_ALLOWED, (long)(PRECURSOR_COUNT_TOLERANCE * golden.Library.Precursors));
-            Check(precursorDifference <= allowed, gate, @"library precursors: golden {0}, run {1} (at most {2} may differ)",
-                golden.Library.Precursors, run.Library.Precursors, allowed);
+        private void CheckLibrary(Golden golden, RunMeasurement run)
+        {
+            CheckCount(@"library precursors", golden.Library.Precursors, run.Library.Precursors);
             double peakChange = golden.Library.Peaks > 0 ? (double)(run.Library.Peaks - golden.Library.Peaks) / golden.Library.Peaks : 0;
-            Check(Math.Abs(peakChange) <= PEAK_COUNT_TOLERANCE, gate, @"library peaks: golden {0}, run {1}, change {2:P2} (tolerance {3:P0})",
+            Check(Math.Abs(peakChange) <= PEAK_COUNT_TOLERANCE, @"library peaks: golden {0}, run {1}, change {2:P2} (tolerance {3:P0})",
                 golden.Library.Peaks, run.Library.Peaks, peakChange, PEAK_COUNT_TOLERANCE);
+        }
 
+        /// <summary>
+        /// The DecoyPairs rows, within the precursor-count tolerance of the golden's; and the table
+        /// itself, as in a full library: each pair a target and the decoy of its pair group, of one
+        /// charge, and every target paired whose decoy the library has.
+        /// </summary>
+        private void CheckDecoyPairs(Golden golden, RunMeasurement run)
+        {
+            var pairs = run.Pairs;
+            CheckCount(@"DecoyPairs rows", golden.DecoyPairRows, pairs.Rows);
+            Check(pairs.MalformedPairs == 0,
+                @"DecoyPairs pairs: {0} of {1} are not a target and the decoy of its pair group with one charge ({2} entrapment pairs)",
+                pairs.MalformedPairs, pairs.Pairs, pairs.EntrapmentPairs);
+            Check(pairs.UnpairedTargetsWithDecoy == 0,
+                @"DecoyPairs targets: {0} of {1} paired; {2} unpaired although their decoy was written, {3} unpaired because it was not",
+                pairs.PairedTargets, pairs.Targets, pairs.UnpairedTargetsWithDecoy, pairs.UnpairedTargetsWithoutDecoy);
+            if (pairs.AmbiguousPrecursors > 0 || pairs.UnlistedPrecursors > 0)
+            {
+                Report(@"INFO DecoyPairs: {0} precursors left out of the pairing check (an I/L twin: their I/L-normalized sequence has more than one place in the manifest), {1} not in the manifest",
+                    pairs.AmbiguousPrecursors, pairs.UnlistedPrecursors);
+            }
+        }
+
+        private void CheckSample(Golden golden, RunMeasurement run)
+        {
             var comparison = SampleComparison.Compare(golden.Sample, run.Library.Sample);
-            Check(comparison.MissingWithManyFragments == 0 && comparison.ExtraWithManyFragments == 0, gate,
+            Check(comparison.MissingWithManyFragments == 0 && comparison.ExtraWithManyFragments == 0,
                 @"sampled precursors: {0} of the golden's {1} missing from the run ({2} with more than {3} fragments), {4} only in the run ({5} with more)",
                 comparison.Missing, golden.Sample.Count, comparison.MissingWithManyFragments, FEW_FRAGMENTS, comparison.Extra,
                 comparison.ExtraWithManyFragments);
-            Check(comparison.PrecursorMzDiffers == 0, gate, @"sampled precursor m/z: {0} of {1} differ", comparison.PrecursorMzDiffers,
+            Check(comparison.PrecursorMzDiffers == 0, @"sampled precursor m/z: {0} of {1} differ", comparison.PrecursorMzDiffers,
                 comparison.Shared);
             if (comparison.Shared == 0)
             {
-                Check(false, gate, @"sampled precursors: none shared with the golden");
+                Check(false, @"sampled precursors: none shared with the golden");
                 return;
             }
             double cosineMedian = comparison.CosinePercentile(0.5);
             double cosineP5 = comparison.CosinePercentile(0.05);
             double cosineP1 = comparison.CosinePercentile(0.01);
-            Check(cosineMedian >= COSINE_MEDIAN_MIN && cosineP5 >= COSINE_P5_MIN && cosineP1 >= COSINE_P1_MIN, gate,
+            Check(cosineMedian >= COSINE_MEDIAN_MIN && cosineP5 >= COSINE_P5_MIN && cosineP1 >= COSINE_P1_MIN,
                 @"sampled spectral cosine over {0} precursors: median {1:F6} (min {2}), p5 {3:F6} (min {4}), p1 {5:F6} (min {6}), lowest {7:F6}",
                 comparison.Shared, cosineMedian, COSINE_MEDIAN_MIN, cosineP5, COSINE_P5_MIN, cosineP1, COSINE_P1_MIN,
                 comparison.CosinePercentile(0));
             double rtMedian = comparison.RetentionTimePercentile(0.5);
             double rtP95 = comparison.RetentionTimePercentile(0.95);
             double rtP99 = comparison.RetentionTimePercentile(0.99);
-            Check(rtMedian <= RT_MEDIAN_MAX && rtP95 <= RT_P95_MAX && rtP99 <= RT_P99_MAX, gate,
+            Check(rtMedian <= RT_MEDIAN_MAX && rtP95 <= RT_P95_MAX && rtP99 <= RT_P99_MAX,
                 @"sampled |RT difference| (min): median {0:F4} (max {1}), p95 {2:F4} (max {3}), p99 {4:F4} (max {5}), largest {6:F4}",
                 rtMedian, RT_MEDIAN_MAX, rtP95, RT_P95_MAX, rtP99, RT_P99_MAX, comparison.RetentionTimePercentile(1));
             Report(@"INFO sampled precursors with the golden's fragment m/z set: {0} of {1} ({2:P1})", comparison.SameFragmentSet,
                 comparison.Shared, (double)comparison.SameFragmentSet / comparison.Shared);
+        }
+
+        /// <summary>
+        /// The exact comparisons, reported and never gated: a CPU fine-tune repeats byte for byte on
+        /// one machine, so on the golden's machine these are all SAME, and anywhere else they need not be.
+        /// </summary>
+        private void ReportExactComparisons(Golden golden, RunMeasurement run)
+        {
+            Report(@"Information: exact comparisons, not gated (SAME is expected only on the golden's machine and device).");
+            ReportSameMaps(@"training table", golden.TrainingTables, run.TrainingTables);
+            ReportSameMaps(@"model", golden.Models, run.Models);
+            var differing = golden.Metrics.Where(p => !run.Metrics.TryGetValue(p.Key, out double v) || !v.Equals(p.Value)).Select(p => p.Key).ToList();
+            Inform(differing.Count == 0, @"held-out metrics: {0} of {1} identical{2}", golden.Metrics.Count - differing.Count, golden.Metrics.Count,
+                differing.Count == 0 ? string.Empty : @" (" + string.Join(@", ", differing) + @" differ)");
+            Inform(golden.Library.ContentSha256 == run.Library.ContentSha256, @"library content SHA-256: golden {0}, run {1}",
+                golden.Library.ContentSha256, run.Library.ContentSha256);
+            Inform(golden.Library.Precursors == run.Library.Precursors && golden.Library.Peaks == run.Library.Peaks &&
+                   golden.DecoyPairRows == run.Pairs.Rows,
+                @"library precursors, peaks, DecoyPairs rows: golden {0}, {1}, {2}; run {3}, {4}, {5}", golden.Library.Precursors,
+                golden.Library.Peaks, golden.DecoyPairRows, run.Library.Precursors, run.Library.Peaks, run.Pairs.Rows);
         }
 
         /// <summary>The tolerance of a metric key such as "ms2.finetuned.cos": tight for the pretrained model, calibrated for the fine-tuned one.</summary>
@@ -283,37 +317,6 @@ namespace pwiz.CarafeSharp.Test
             if (!FINETUNED_METRIC_TOLERANCES.TryGetValue(key.Substring(key.LastIndexOf('.') + 1), out double tolerance))
                 Assert.Fail(@"No tolerance is calibrated for the metric {0}", key);
             return tolerance;
-        }
-
-        /// <summary>Exact for CPU runs on the golden's processor, OS and thread count, unless <c>CARAFESHARP_REGRESSION_MODE</c> says otherwise.</summary>
-        private static string ChooseMode(Golden golden, RunMeasurement run, out string why)
-        {
-            string requested = Environment.GetEnvironmentVariable(MODE_VARIABLE);
-            if (string.Equals(requested, MODE_EXACT, StringComparison.OrdinalIgnoreCase))
-            {
-                why = MODE_VARIABLE + @" asks for it";
-                return MODE_EXACT;
-            }
-            if (string.Equals(requested, MODE_STATISTICAL, StringComparison.OrdinalIgnoreCase))
-            {
-                why = MODE_VARIABLE + @" asks for it";
-                return MODE_STATISTICAL;
-            }
-            if (!string.IsNullOrEmpty(requested) && !string.Equals(requested, MODE_AUTO, StringComparison.OrdinalIgnoreCase))
-                Assert.Fail(@"{0} must be {1}, {2} or {3}, not {4}", MODE_VARIABLE, MODE_AUTO, MODE_EXACT, MODE_STATISTICAL, requested);
-            var differences = new List<string>();
-            if (golden.Device != DEVICE_CPU || run.Device != DEVICE_CPU)
-                differences.Add(@"not both CPU runs");
-            if (golden.OsPlatform != run.OsPlatform)
-                differences.Add(@"another OS");
-            if (golden.Processor != run.Processor)
-                differences.Add(@"another processor");
-            if (golden.TorchThreads != run.TorchThreads)
-                differences.Add(string.Format(CultureInfo.InvariantCulture, @"{0} libtorch threads, not {1}", run.TorchThreads, golden.TorchThreads));
-            why = differences.Count == 0
-                ? @"a CPU run on the golden's processor, OS and thread count, where a fine-tune is byte-reproducible"
-                : string.Join(@", ", differences);
-            return differences.Count == 0 ? MODE_EXACT : MODE_STATISTICAL;
         }
 
         private static string GetGoldenFolder(string dataset)
@@ -336,24 +339,35 @@ namespace pwiz.CarafeSharp.Test
             return folder;
         }
 
-        private void CheckEqualMaps(string what, IReadOnlyDictionary<string, string> golden, IReadOnlyDictionary<string, string> run, string hint)
+        /// <summary>A count within the precursor-count tolerance of the golden's.</summary>
+        private void CheckCount(string what, long golden, long run)
+        {
+            long allowed = Math.Max(PRECURSOR_COUNT_MIN_ALLOWED, (long)(PRECURSOR_COUNT_TOLERANCE * golden));
+            Check(Math.Abs(run - golden) <= allowed, @"{0}: golden {1}, run {2} (at most {3} may differ)", what, golden, run, allowed);
+        }
+
+        private void ReportSameMaps(string what, IReadOnlyDictionary<string, string> golden, IReadOnlyDictionary<string, string> run)
         {
             foreach (var pair in golden)
             {
                 run.TryGetValue(pair.Key, out string value);
-                Check(value == pair.Value, true, @"{0} {1}: golden {2}, run {3}{4}", what, pair.Key, pair.Value, value ?? @"missing",
-                    value != pair.Value && hint != null ? @" (" + hint + @")" : string.Empty);
+                Inform(value == pair.Value, @"{0} {1}: golden {2}, run {3}", what, pair.Key, pair.Value, value ?? @"missing");
             }
         }
 
-        /// <summary>Reports one check; a failed one fails the test only when <paramref name="gate"/>.</summary>
-        private void Check(bool passed, bool gate, string format, params object[] args)
+        /// <summary>Reports one gated check; a failed one fails the test.</summary>
+        private void Check(bool passed, string format, params object[] args)
         {
             string message = string.Format(CultureInfo.InvariantCulture, format, args);
-            string status = passed ? @"PASS" : gate ? @"FAIL" : @"DIFF";
-            Report(@"{0} {1}", status, message);
-            if (!passed && gate)
+            Report(@"{0} {1}", passed ? @"PASS" : @"FAIL", message);
+            if (!passed)
                 _failures.Add(message);
+        }
+
+        /// <summary>Reports one exact comparison, which never fails the test.</summary>
+        private void Inform(bool same, string format, params object[] args)
+        {
+            Report(@"{0} {1}", same ? @"SAME" : @"DIFFERS", string.Format(CultureInfo.InvariantCulture, format, args));
         }
 
         private void Report(string format, params object[] args)
@@ -401,6 +415,13 @@ namespace pwiz.CarafeSharp.Test
             return (hash >> 32) % SAMPLE_MODULUS == 0;
         }
 
+        private static SQLiteConnection OpenLibrary(string path)
+        {
+            var connection = new SQLiteConnection(@"Data Source=" + path + @";Read Only=True;");
+            connection.Open();
+            return connection;
+        }
+
         /// <summary>What a run folder holds: its provenance, training tables, models, metrics and library.</summary>
         private sealed class RunMeasurement
         {
@@ -409,6 +430,7 @@ namespace pwiz.CarafeSharp.Test
                 string infoPath = TestData.RequireFile(Path.Combine(folder, RUN_INFO_FILE));
                 string output = Path.Combine(folder, OUTPUT_FOLDER);
                 var run = new RunMeasurement { Folder = folder, TorchThreads = torchThreads };
+                string pairingPath;
                 using (var info = JsonDocument.Parse(File.ReadAllText(infoPath)))
                 {
                     var root = info.RootElement;
@@ -421,15 +443,22 @@ namespace pwiz.CarafeSharp.Test
                     run.Processor = root.GetProperty(@"processor").GetString();
                     run.Arguments = root.GetProperty(@"arguments").EnumerateArray().Select(a => a.GetString()).ToList();
                     Assert.AreEqual(0, root.GetProperty(@"exit_code").GetInt32(), @"CarafeSharp failed in {0}", folder);
-                    foreach (var input in root.GetProperty(@"inputs").EnumerateObject())
+                    var inputs = root.GetProperty(@"inputs");
+                    foreach (var input in inputs.EnumerateObject())
                         run.Inputs[input.Name] = input.Value.GetProperty(@"sha256").GetString();
+                    // The subset manifest is in the run folder, at a '/'-separated relative path.
+                    string relative = inputs.GetProperty(@"subset_pairing").GetProperty(@"path").GetString() ?? string.Empty;
+                    pairingPath = Path.Combine(new[] { folder }.Concat(relative.Split('/')).ToArray());
                 }
                 foreach (string table in TRAINING_TABLES)
                     run.TrainingTables[table] = Sha256(Path.Combine(output, table));
                 foreach (string model in MODEL_FILES)
                     run.Models[model] = Sha256(Path.Combine(output, model));
                 run.ReadMetrics(TestData.RequireFile(Path.Combine(output, ModelFiles.METRICS)));
-                run.Library = LibraryContent.Read(TestData.RequireFile(Path.Combine(output, BlibLibraryWriter.FILE_NAME)));
+                string blib = TestData.RequireFile(Path.Combine(output, BlibLibraryWriter.FILE_NAME));
+                run.Library = LibraryContent.Read(blib);
+                run.Pairs = DecoyPairSummary.Read(blib, TestData.RequireFile(pairingPath));
+                SQLiteConnection.ClearAllPools();
                 return run;
             }
 
@@ -449,6 +478,7 @@ namespace pwiz.CarafeSharp.Test
             public SortedDictionary<string, double> Metrics { get; } = new SortedDictionary<string, double>(StringComparer.Ordinal);
             public bool UseFineTuned { get; private set; }
             public LibraryContent Library { get; private set; }
+            public DecoyPairSummary Pairs { get; private set; }
 
             /// <summary>model_evaluation_metrics.json as "ms2.finetuned.cos" and the like, and the MS2 model choice.</summary>
             private void ReadMetrics(string path)
@@ -481,9 +511,8 @@ namespace pwiz.CarafeSharp.Test
                 var lines = new List<string>();
                 var sample = new List<SampledSpectrum>();
                 long peaks = 0;
-                using (var connection = new SQLiteConnection(@"Data Source=" + path + @";Read Only=True;"))
+                using (var connection = OpenLibrary(path))
                 {
-                    connection.Open();
                     const string sql = @"SELECT r.peptideModSeq, r.precursorCharge, r.precursorMZ, r.retentionTime, r.numPeaks, p.peakMZ, p.peakIntensity " +
                                        @"FROM RefSpectra r JOIN RefSpectraPeaks p ON p.RefSpectraID = r.id";
                     using (var command = new SQLiteCommand(sql, connection))
@@ -513,7 +542,6 @@ namespace pwiz.CarafeSharp.Test
                         }
                     }
                 }
-                SQLiteConnection.ClearAllPools();
                 lines.Sort(StringComparer.Ordinal);
                 using (var sha = SHA256.Create())
                 {
@@ -546,6 +574,199 @@ namespace pwiz.CarafeSharp.Test
                 return string.Join("\t", sequence, charge.ToString(CultureInfo.InvariantCulture),
                     precursorMz.ToString(@"R", CultureInfo.InvariantCulture), retentionTime.ToString(@"F6", CultureInfo.InvariantCulture),
                     string.Join(@";", fragments));
+            }
+        }
+
+        /// <summary>
+        /// A library's DecoyPairs table checked against the pairing manifest it was written from,
+        /// independently of <see cref="DecoyPairPlanner"/>: each precursor is placed in its pair group
+        /// by its I/L-normalized stripped sequence, and each target's partner is the precursor of
+        /// the group's decoy (or, for an entrapment target, entrapment decoy) with the same charge
+        /// and modifications.
+        /// </summary>
+        private sealed class DecoyPairSummary
+        {
+            private const string TARGET = @"target";
+            private const string DECOY = @"decoy";
+            private const string ENTRAPMENT_TARGET = @"p_target";
+            private const string ENTRAPMENT_DECOY = @"p_decoy";
+
+            public static DecoyPairSummary Read(string blibPath, string manifestPath)
+            {
+                var summary = new DecoyPairSummary();
+                // The manifest: each group's members by type, and each sequence's group and type.
+                var groups = new Dictionary<int, Dictionary<string, string>>();
+                var membership = new Dictionary<string, (int PairIndex, string Type)>(StringComparer.Ordinal);
+                var ambiguous = new HashSet<string>(StringComparer.Ordinal);
+                foreach (var entry in DecoyPairPlanner.ReadManifest(manifestPath))
+                {
+                    string sequence = PairingManifestReconciler.Normalize(entry.Sequence);
+                    string type = (entry.PeptideType ?? string.Empty).Trim().ToLowerInvariant();
+                    if (!groups.TryGetValue(entry.PairIndex, out var members))
+                        groups.Add(entry.PairIndex, members = new Dictionary<string, string>(StringComparer.Ordinal));
+                    members[type] = sequence;
+                    if (membership.TryGetValue(sequence, out var existing) && (existing.PairIndex != entry.PairIndex || existing.Type != type))
+                        ambiguous.Add(sequence);
+                    else
+                        membership[sequence] = (entry.PairIndex, type);
+                }
+
+                var precursors = ReadPrecursors(blibPath, out var pairRows);
+                var written = new HashSet<string>(precursors.Values.Select(p => p.Key), StringComparer.Ordinal);
+                summary.Rows = pairRows.Count;
+
+                // Each pair: a target and the decoy of its group, of one charge.
+                foreach (var pair in pairRows.GroupBy(r => r.PairId))
+                {
+                    summary.Pairs++;
+                    var rows = pair.ToList();
+                    bool entrapment = rows.Any(r => r.IsEntrapment);
+                    if (entrapment)
+                        summary.EntrapmentPairs++;
+                    var target = rows.Where(r => !r.IsDecoy).Select(r => precursors.TryGetValue(r.RefSpectraId, out var p) ? p : null).ToList();
+                    var decoy = rows.Where(r => r.IsDecoy).Select(r => precursors.TryGetValue(r.RefSpectraId, out var p) ? p : null).ToList();
+                    if (rows.Count != 2 || target.Count != 1 || decoy.Count != 1 || target[0] == null || decoy[0] == null ||
+                        rows.Any(r => r.IsEntrapment != entrapment) || target[0].Charge != decoy[0].Charge)
+                    {
+                        summary.MalformedPairs++;
+                        continue;
+                    }
+                    if (ambiguous.Contains(target[0].Sequence) || ambiguous.Contains(decoy[0].Sequence))
+                        continue;
+                    bool knownTarget = membership.TryGetValue(target[0].Sequence, out var targetGroup);
+                    bool knownDecoy = membership.TryGetValue(decoy[0].Sequence, out var decoyGroup);
+                    if (!knownTarget || !knownDecoy || targetGroup.PairIndex != decoyGroup.PairIndex ||
+                        targetGroup.Type != (entrapment ? ENTRAPMENT_TARGET : TARGET) || decoyGroup.Type != (entrapment ? ENTRAPMENT_DECOY : DECOY))
+                    {
+                        summary.MalformedPairs++;
+                    }
+                }
+
+                // Every target is paired whose decoy was written.
+                var pairedIds = new HashSet<long>(pairRows.Select(r => r.RefSpectraId));
+                foreach (var precursor in precursors.Values)
+                {
+                    if (ambiguous.Contains(precursor.Sequence))
+                    {
+                        summary.AmbiguousPrecursors++;
+                        continue;
+                    }
+                    if (!membership.TryGetValue(precursor.Sequence, out var group))
+                    {
+                        summary.UnlistedPrecursors++;
+                        continue;
+                    }
+                    if (group.Type != TARGET && group.Type != ENTRAPMENT_TARGET)
+                        continue;
+                    summary.Targets++;
+                    if (pairedIds.Contains(precursor.Id))
+                    {
+                        summary.PairedTargets++;
+                        continue;
+                    }
+                    groups[group.PairIndex].TryGetValue(group.Type == TARGET ? DECOY : ENTRAPMENT_DECOY, out string partner);
+                    if (partner != null && written.Contains(Precursor.MakeKey(partner, precursor.Charge, precursor.ModificationKey)))
+                        summary.UnpairedTargetsWithDecoy++;
+                    else
+                        summary.UnpairedTargetsWithoutDecoy++;
+                }
+                return summary;
+            }
+
+            public int Rows { get; private set; }
+            public int Pairs { get; private set; }
+            public int EntrapmentPairs { get; private set; }
+            public int MalformedPairs { get; private set; }
+            public int Targets { get; private set; }
+            public int PairedTargets { get; private set; }
+            public int UnpairedTargetsWithDecoy { get; private set; }
+            public int UnpairedTargetsWithoutDecoy { get; private set; }
+            public int AmbiguousPrecursors { get; private set; }
+            public int UnlistedPrecursors { get; private set; }
+
+            /// <summary>The library's precursors by RefSpectra id, and its DecoyPairs rows (none when it has no such table).</summary>
+            private static Dictionary<long, Precursor> ReadPrecursors(string path, out List<PairRow> pairRows)
+            {
+                var modifications = new Dictionary<long, List<double>>();
+                var precursors = new Dictionary<long, Precursor>();
+                pairRows = new List<PairRow>();
+                using (var connection = OpenLibrary(path))
+                {
+                    using (var command = new SQLiteCommand(@"SELECT RefSpectraID, mass FROM Modifications", connection))
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            if (!modifications.TryGetValue(reader.GetInt64(0), out var masses))
+                                modifications.Add(reader.GetInt64(0), masses = new List<double>());
+                            masses.Add(reader.GetDouble(1));
+                        }
+                    }
+                    using (var command = new SQLiteCommand(@"SELECT id, peptideSeq, precursorCharge FROM RefSpectra", connection))
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            long id = reader.GetInt64(0);
+                            modifications.TryGetValue(id, out var masses);
+                            precursors.Add(id, new Precursor(id, PairingManifestReconciler.Normalize(reader.GetString(1)), reader.GetInt64(2),
+                                masses));
+                        }
+                    }
+                    using (var command = new SQLiteCommand(@"SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'DecoyPairs'", connection))
+                    {
+                        if (Convert.ToInt64(command.ExecuteScalar(), CultureInfo.InvariantCulture) == 0)
+                            return precursors;
+                    }
+                    using (var command = new SQLiteCommand(@"SELECT RefSpectraID, IsDecoy, IsEntrapment, PairID FROM DecoyPairs", connection))
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                            pairRows.Add(new PairRow(reader.GetInt64(0), reader.GetInt64(1) != 0, reader.GetInt64(2) != 0, reader.GetInt64(3)));
+                    }
+                }
+                return precursors;
+            }
+
+            private sealed class Precursor
+            {
+                public Precursor(long id, string sequence, long charge, IEnumerable<double> modificationMasses)
+                {
+                    Id = id;
+                    Sequence = sequence;
+                    Charge = charge;
+                    // Positions left out, as the planner's key leaves them out: a decoy's are elsewhere.
+                    ModificationKey = string.Join(@";", (modificationMasses ?? Enumerable.Empty<double>()).OrderBy(m => m)
+                        .Select(m => m.ToString(@"R", CultureInfo.InvariantCulture)));
+                    Key = MakeKey(sequence, charge, ModificationKey);
+                }
+
+                public static string MakeKey(string sequence, long charge, string modificationKey)
+                {
+                    return sequence + @"|" + charge.ToString(CultureInfo.InvariantCulture) + @"|" + modificationKey;
+                }
+
+                public long Id { get; }
+                public string Sequence { get; }
+                public long Charge { get; }
+                public string ModificationKey { get; }
+                public string Key { get; }
+            }
+
+            private sealed class PairRow
+            {
+                public PairRow(long refSpectraId, bool isDecoy, bool isEntrapment, long pairId)
+                {
+                    RefSpectraId = refSpectraId;
+                    IsDecoy = isDecoy;
+                    IsEntrapment = isEntrapment;
+                    PairId = pairId;
+                }
+
+                public long RefSpectraId { get; }
+                public bool IsDecoy { get; }
+                public bool IsEntrapment { get; }
+                public long PairId { get; }
             }
         }
 
@@ -720,26 +941,26 @@ namespace pwiz.CarafeSharp.Test
                 using (var json = JsonDocument.Parse(File.ReadAllText(path)))
                 {
                     var root = json.RootElement;
-                    Assert.AreEqual(GOLDEN_FORMAT, root.GetProperty(@"format").GetString(), path);
+                    Assert.AreEqual(GOLDEN_FORMAT, root.GetProperty(@"format").GetString(), @"{0}: recreate it with regression.ps1 -CreateGolden", path);
                     var provenance = root.GetProperty(@"provenance");
                     golden.Commit = provenance.GetProperty(@"commit").GetString();
                     golden.Device = provenance.GetProperty(@"device_used").GetString();
                     golden.OsPlatform = provenance.GetProperty(@"os_platform").GetString();
                     golden.Processor = provenance.GetProperty(@"processor").GetString();
-                    golden.TorchThreads = provenance.GetProperty(@"torch_cpu_threads").GetInt32();
                     golden.Arguments = (provenance.GetProperty(@"arguments").GetString() ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     foreach (var input in root.GetProperty(@"inputs").EnumerateObject())
                         golden.Inputs[input.Name] = input.Value.GetProperty(@"sha256").GetString();
+                    foreach (var metric in root.GetProperty(@"metrics").EnumerateObject())
+                        golden.Metrics[metric.Name] = metric.Value.GetDouble();
+                    golden.UseFineTuned = root.GetProperty(ModelFiles.METRICS_USE_FINETUNED).GetBoolean();
+                    var library = root.GetProperty(@"library");
+                    golden.DecoyPairRows = library.GetProperty(@"decoy_pair_rows").GetInt32();
                     var exact = root.GetProperty(@"exact");
                     ReadMap(exact.GetProperty(@"training_tables"), golden.TrainingTables);
                     ReadMap(exact.GetProperty(@"models"), golden.Models);
-                    foreach (var metric in exact.GetProperty(@"metrics").EnumerateObject())
-                        golden.Metrics[metric.Name] = metric.Value.GetDouble();
-                    golden.UseFineTuned = exact.GetProperty(ModelFiles.METRICS_USE_FINETUNED).GetBoolean();
-                    var library = exact.GetProperty(@"library");
                     golden.Library = new LibrarySummary(library.GetProperty(@"precursors").GetInt64(), library.GetProperty(@"peaks").GetInt64(),
-                        library.GetProperty(@"content_sha256").GetString());
-                    var sample = root.GetProperty(@"statistical").GetProperty(@"sample");
+                        exact.GetProperty(@"library_content_sha256").GetString());
+                    var sample = root.GetProperty(@"sample");
                     Assert.AreEqual(SAMPLE_MODULUS, sample.GetProperty(@"modulus").GetInt32(), @"{0} was sampled with another modulus", path);
                     golden.Sample = LibrarySample.Read(Path.Combine(folder, sample.GetProperty(@"file").GetString() ?? SAMPLE_FILE));
                 }
@@ -771,9 +992,7 @@ namespace pwiz.CarafeSharp.Test
                     json.WritePropertyName(@"inputs");
                     run.InfoJson.GetProperty(@"inputs").WriteTo(json);
 
-                    json.WriteStartObject(@"exact");
-                    WriteMap(json, @"training_tables", run.TrainingTables);
-                    WriteMap(json, @"models", run.Models);
+                    // Gated, within the tolerances below.
                     json.WriteStartObject(@"metrics");
                     foreach (var pair in run.Metrics)
                         json.WriteNumber(pair.Key, pair.Value);
@@ -782,13 +1001,13 @@ namespace pwiz.CarafeSharp.Test
                     json.WriteStartObject(@"library");
                     json.WriteNumber(@"precursors", run.Library.Precursors);
                     json.WriteNumber(@"peaks", run.Library.Peaks);
-                    json.WriteString(@"content_sha256", run.Library.ContentSha256);
-                    json.WriteString(@"content", @"SHA-256 of one line per precursor, sorted: Skyline modified sequence, charge, precursor m/z, " +
-                                                 @"RT rounded to 1e-6, then the fragments in m/z order as m/z:intensity, each rounded to 1e-6");
+                    json.WriteNumber(@"decoy_pair_rows", run.Pairs.Rows);
+                    json.WriteNumber(@"decoy_pairs", run.Pairs.Pairs);
+                    json.WriteNumber(@"entrapment_pairs", run.Pairs.EntrapmentPairs);
+                    json.WriteNumber(@"targets", run.Pairs.Targets);
+                    json.WriteNumber(@"paired_targets", run.Pairs.PairedTargets);
+                    json.WriteNumber(@"unpaired_targets_decoy_not_written", run.Pairs.UnpairedTargetsWithoutDecoy);
                     json.WriteEndObject();
-                    json.WriteEndObject();
-
-                    json.WriteStartObject(@"statistical");
                     json.WriteStartObject(@"sample");
                     json.WriteString(@"file", SAMPLE_FILE);
                     json.WriteNumber(@"modulus", SAMPLE_MODULUS);
@@ -801,7 +1020,7 @@ namespace pwiz.CarafeSharp.Test
                     foreach (var pair in FINETUNED_METRIC_TOLERANCES)
                         json.WriteNumber(pair.Key, pair.Value);
                     json.WriteEndObject();
-                    json.WriteNumber(@"precursor_count_fraction", PRECURSOR_COUNT_TOLERANCE);
+                    json.WriteNumber(@"precursor_and_decoy_pair_count_fraction", PRECURSOR_COUNT_TOLERANCE);
                     json.WriteNumber(@"peak_count_fraction", PEAK_COUNT_TOLERANCE);
                     json.WriteNumber(@"cosine_median_min", COSINE_MEDIAN_MIN);
                     json.WriteNumber(@"cosine_p5_min", COSINE_P5_MIN);
@@ -810,6 +1029,15 @@ namespace pwiz.CarafeSharp.Test
                     json.WriteNumber(@"rt_minutes_p95_max", RT_P95_MAX);
                     json.WriteNumber(@"rt_minutes_p99_max", RT_P99_MAX);
                     json.WriteEndObject();
+
+                    // Reported, never gated.
+                    json.WriteStartObject(@"exact");
+                    json.WriteString(@"use", @"information only: reported as SAME or DIFFERS, never failing a run");
+                    WriteMap(json, @"training_tables", run.TrainingTables);
+                    WriteMap(json, @"models", run.Models);
+                    json.WriteString(@"library_content_sha256", run.Library.ContentSha256);
+                    json.WriteString(@"library_content", @"SHA-256 of one line per precursor, sorted: Skyline modified sequence, charge, " +
+                                                         @"precursor m/z, RT rounded to 1e-6, then the fragments in m/z order as m/z:intensity, each rounded to 1e-6");
                     json.WriteEndObject();
                     json.WriteEndObject();
                 }
@@ -820,13 +1048,13 @@ namespace pwiz.CarafeSharp.Test
             public string Device { get; private set; }
             public string OsPlatform { get; private set; }
             public string Processor { get; private set; }
-            public int TorchThreads { get; private set; }
             public IReadOnlyList<string> Arguments { get; private set; }
             public SortedDictionary<string, string> Inputs { get; } = new SortedDictionary<string, string>(StringComparer.Ordinal);
             public SortedDictionary<string, string> TrainingTables { get; } = new SortedDictionary<string, string>(StringComparer.Ordinal);
             public SortedDictionary<string, string> Models { get; } = new SortedDictionary<string, string>(StringComparer.Ordinal);
             public SortedDictionary<string, double> Metrics { get; } = new SortedDictionary<string, double>(StringComparer.Ordinal);
             public bool UseFineTuned { get; private set; }
+            public int DecoyPairRows { get; private set; }
             public LibrarySummary Library { get; private set; }
             public IReadOnlyList<SampledSpectrum> Sample { get; private set; }
 
