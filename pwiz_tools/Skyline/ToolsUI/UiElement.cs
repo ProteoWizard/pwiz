@@ -1647,6 +1647,10 @@ namespace pwiz.Skyline.ToolsUI
 
         public void SetSelectedIndexNow(int index) => ListItems.SetSelectedIndex(Control, index);
         public void SetItemSelectedNow(string item, bool isSelected) => ListItems.SetSelected(Control, item, isSelected);
+        // The selected items' text, one per line
+        public override object GetValueNow() => Control is ListBox listBox
+            ? string.Join(Environment.NewLine, listBox.SelectedItems.Cast<object>().Select(listBox.GetItemText))
+            : Control.Text;
         // Every choice the list offers (get_options), regardless of selection/checked state.
         public virtual IEnumerable<string> GetOptions() => ListItems.GetOptions(Control);
     }
@@ -1690,6 +1694,9 @@ namespace pwiz.Skyline.ToolsUI
     internal sealed class ListViewElement : ItemContainerElement<ListView>, IOptionsElement
     {
         public ListViewElement(ListView control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
+        // The selected items' text, one per line
+        public override object GetValueNow() =>
+            string.Join(Environment.NewLine, Control.SelectedItems.Cast<ListViewItem>().Select(item => item.Text));
         public IEnumerable<string> GetOptions() => ListItems.GetOptions(Control);
     }
 
