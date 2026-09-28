@@ -159,17 +159,36 @@ namespace pwiz.Skyline
             ANNOTATION_TARGET_LIST_VALUE
         });
 
-        private static void SetCulture(string cultureName)
+        private static void SetCulture(NameValuePair pair)
         {
-            LocalizationHelper.CurrentCulture = LocalizationHelper.CurrentUICulture = new CultureInfo(cultureName);
+            Assume.IsNotNull(pair.Match); // Must be matched before accessing this
+            var culture = GetKnownCulture(pair.Value);
+            if (culture == null)
+                throw new ValueInvalidException(pair.Match, pair.Value, pair.Match.ValuesForError);
+            LocalizationHelper.CurrentCulture = LocalizationHelper.CurrentUICulture = culture;
             LocalizationHelper.InitThread(Thread.CurrentThread);
         }
 
         /// <summary>
-        /// The names of the cultures the system knows. Windows makes up a culture for any well-formed name
-        /// (e.g. "not-a-culture") instead of failing, so --culture checks names against this list rather than
-        /// relying on the CultureInfo constructor.
+        /// Returns the culture a name resolves to, or null if it resolves to none the system knows. The resolved
+        /// name is checked rather than the text, so spellings the system maps to a known culture (e.g. "en_US" or
+        /// "zh-Hans-CN") are accepted. The check is needed because Windows makes up a culture for any well-formed
+        /// name (e.g. "not-a-culture") instead of failing.
         /// </summary>
+        private static CultureInfo GetKnownCulture(string name)
+        {
+            CultureInfo culture;
+            try
+            {
+                culture = new CultureInfo(name);
+            }
+            catch (CultureNotFoundException)
+            {
+                return null;
+            }
+            return GetKnownCultureNames().Contains(culture.Name) ? culture : null;
+        }
+
         private static string[] GetKnownCultureNames()
         {
             return CultureInfo.GetCultures(CultureTypes.AllCultures).Select(culture => culture.Name)
@@ -177,11 +196,11 @@ namespace pwiz.Skyline
         }
 
         /// <summary>
-        /// The languages Skyline has been localized to, as the culture names --culture accepts. Cached because
-        /// finding them probes every culture on the system for localized resources.
+        /// The languages Skyline has been localized to, as the culture names --culture lists. Found only when
+        /// needed and then cached, because finding them probes every culture on the system for localized resources.
         /// </summary>
-        private static readonly string[] DISPLAY_LANGUAGE_NAMES =
-            CultureUtil.AvailableDisplayLanguages().Select(culture => culture.Name).ToArray();
+        private static readonly Lazy<string[]> DISPLAY_LANGUAGE_NAMES = new Lazy<string[]>(() =>
+            CultureUtil.AvailableDisplayLanguages().Select(culture => culture.Name).ToArray());
         // Multi process import
         public static readonly Argument ARG_INTERNAL_IMPORT_FILE_CACHE = new DocArgument(@"import-file-cache", PATH_TO_FILE,
             (c, p) => Program.ReplicateCachePath = p.Value) {InternalUse = true};
@@ -293,9 +312,11 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_VERSION = new Argument(@"version", (c, p) => c.Version());
         public static readonly Argument ARG_VERBOSE_ERRORS =
             new Argument(@"verbose-errors", (c, p) => c._out.IsVerboseExceptions = true);
-        // Help lists the languages Skyline is localized to, but any culture the system knows is accepted (e.g. "en-US")
+        // Help lists the languages Skyline is localized to, but any culture the system knows is accepted (e.g. "en-US").
+        // Parsing checks the value in SetCulture, which also accepts other spellings of a known culture name.
         public static readonly Argument ARG_CULTURE = new Argument(@"culture",
-            () => DISPLAY_LANGUAGE_NAMES, (c, p) => SetCulture(p.Value)) { AcceptedValues = GetKnownCultureNames };
+            () => DISPLAY_LANGUAGE_NAMES.Value, (c, p) => SetCulture(p))
+            { HasValueChecking = true, AcceptedValues = GetKnownCultureNames };
 
         private static readonly ArgumentGroup GROUP_GENERAL_IO = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
             ARG_IN, ARG_OPEN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_SAVE_AS, ARG_SAVE_COMPACT_FORMAT, ARG_NEW, ARG_OVERWRITE,
@@ -1893,7 +1914,7 @@ namespace pwiz.Skyline
                         return keyAndDisplayName.Key;
                 }
             }
-            throw new ValueInvalidException(p.Match, p.Value, p.Match.Values);
+            throw new ValueInvalidException(p.Match, p.Value, p.Match.ValuesForError);
         }
 
         private static IonType[] ParseIonTypes(NameValuePair p)

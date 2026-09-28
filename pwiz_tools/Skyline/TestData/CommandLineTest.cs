@@ -475,12 +475,16 @@ namespace pwiz.SkylineTestData
             string fastaPath = TestFilesDirs[0].GetTestPath("sample.fasta");
             string protdbPath = TestFilesDirs[1].GetTestPath("AssociateProteinMatches.protdb");
 
+            // An enrichment other than the default, because a name that does not resolve falls back to the default
+            var testEnrichment = new IsotopeEnrichments("Test enrichment", IsotopeEnrichmentsList.DEFAULT.Enrichments);
+            Settings.Default.IsotopeEnrichmentsList.Add(testEnrichment);
+
             // arguments that would normally be quoted on the command-line shouldn't be quoted here
             var settings = new[]
             {
                 "--new=" + docPath,
                 "--full-scan-precursor-isotopes=Count",
-                "--full-scan-precursor-isotope-enrichment=" + IsotopeEnrichmentsList.DEFAULT.Name,
+                "--full-scan-precursor-isotope-enrichment=" + testEnrichment.Name,
                 "--full-scan-precursor-analyzer=centroided",
                 "--full-scan-precursor-res=5",
                 "--full-scan-acquisition-method=DIA",
@@ -525,7 +529,7 @@ namespace pwiz.SkylineTestData
 
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             Assert.AreEqual(FullScanPrecursorIsotopes.Count, doc.Settings.TransitionSettings.FullScan.PrecursorIsotopes);
-            AssertEx.AreEqual(IsotopeEnrichmentsList.DEFAULT.Name, doc.Settings.TransitionSettings.FullScan.IsotopeEnrichments?.Name);
+            AssertEx.AreEqual(testEnrichment.Name, doc.Settings.TransitionSettings.FullScan.IsotopeEnrichments?.Name);
             Assert.AreEqual(FullScanAcquisitionMethod.DIA, doc.Settings.TransitionSettings.FullScan.AcquisitionMethod);
             Assert.AreEqual("All Ions", doc.Settings.TransitionSettings.FullScan.IsolationScheme.Name);
             Assert.AreEqual(FullScanMassAnalyzerType.centroided, doc.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
@@ -639,8 +643,8 @@ namespace pwiz.SkylineTestData
                 "--full-scan-precursor-res=5",
                 "--full-scan-precursor-analyzer=centroided",
                 "--full-scan-precursor-isotopes=Count",
-                // Localized labels must also continue to work.
-                "--full-scan-precursor-isotope-enrichment=" + Settings.Default.IsotopeEnrichmentsList.GetDisplayName(IsotopeEnrichmentsList.DEFAULT),
+                // Localized labels and display names must also continue to work.
+                "--full-scan-precursor-isotope-enrichment=" + Settings.Default.IsotopeEnrichmentsList.GetDisplayName(testEnrichment),
                 "--tran-product-start-ion=" + TransitionFilter.StartFragmentFinder.ION_3.Label,
                 "--tran-product-end-ion=" + TransitionFilter.EndFragmentFinder.IONS_4.Label,
                 "--tran-product-clear-special-ions",
@@ -653,7 +657,7 @@ namespace pwiz.SkylineTestData
             doc = ResultsUtil.DeserializeDocument(docPath);
             AssertEx.AreEqual(TransitionFilter.StartFragmentFinder.ION_3.Name, doc.Settings.TransitionSettings.Filter.StartFragmentFinderLabel.Name);
             AssertEx.AreEqual(TransitionFilter.EndFragmentFinder.IONS_4.Name, doc.Settings.TransitionSettings.Filter.EndFragmentFinderLabel.Name);
-            AssertEx.AreEqual(IsotopeEnrichmentsList.DEFAULT.Name, doc.Settings.TransitionSettings.FullScan.IsotopeEnrichments?.Name);
+            AssertEx.AreEqual(testEnrichment.Name, doc.Settings.TransitionSettings.FullScan.IsotopeEnrichments?.Name);
             Assert.AreEqual(FullScanPrecursorIsotopes.Count, doc.Settings.TransitionSettings.FullScan.PrecursorIsotopes);
             Assert.AreEqual(FullScanMassAnalyzerType.centroided, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
             Assert.AreEqual(5, doc.Settings.TransitionSettings.FullScan.PrecursorRes);
@@ -4210,26 +4214,35 @@ namespace pwiz.SkylineTestData
         public void ConsoleCultureArgumentTest()
         {
             // --culture runs the command line in a chosen language, which the Tools > Options > Language
-            // setting cannot do. It does not restore the culture afterwards (see TestDetectError), so save it.
+            // setting cannot do. The culture is saved in case a failure leaves it changed.
             var currentCulture = LocalizationHelper.CurrentCulture;
             var currentUiCulture = LocalizationHelper.CurrentUICulture;
             try
             {
-                // An unsupported language is a usage error, not a crash. Checked before the language is
-                // changed below, so the message is compared in the culture the test is running under.
-                const string notALanguage = @"not-a-culture";
+                // An unsupported language is a usage error, not a crash, including a supported one with an
+                // invisible character pasted into it (a soft hyphen).
                 var argCulture = CommandArgs.ARG_CULTURE;
-                string output = RunCommand(false, argCulture.ArgumentText + '=' + notALanguage);
-                AssertEx.Contains(output, string.Format(
-                    CommandArgUsage.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
-                    notALanguage, argCulture.ArgumentText, string.Join(@", ", argCulture.Values)));
+                foreach (var notALanguage in new[] { @"not-a-culture", "j­a" })
+                {
+                    string errorOutput = RunCommand(false, argCulture.ArgumentText + '=' + notALanguage);
+                    AssertEx.Contains(errorOutput, string.Format(
+                        CommandArgUsage.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                        notALanguage, argCulture.ArgumentText, string.Join(@", ", argCulture.Values)));
+                }
 
                 // A specific culture is accepted, not only the languages listed in help. Callers pass names
                 // like "en-US" (see SkylineCmdTest.GetProcessStartInfo), which must not be rejected.
-                output = RunCommand(false, argCulture + CultureInfo.CurrentCulture.Name,
+                string output = RunCommand(false, argCulture + CultureInfo.CurrentCulture.Name,
                     CommandArgs.ARG_IN.ArgumentText);
                 AssertEx.Contains(output, string.Format(
                     Resources.ValueMissingException_ValueMissingException_, CommandArgs.ARG_IN.ArgumentText));
+
+                // Other spellings of a known culture name are accepted too.
+                string valueMissingEnglish = Resources.ResourceManager.GetString(
+                    @"ValueMissingException_ValueMissingException_", new CultureInfo(@"en-US"));
+                Assert.IsNotNull(valueMissingEnglish);
+                output = RunCommand(false, argCulture.ArgumentText + @"=en_US", CommandArgs.ARG_IN.ArgumentText);
+                AssertEx.Contains(output, string.Format(valueMissingEnglish, CommandArgs.ARG_IN.ArgumentText));
 
                 // The message for a following argument comes back in the requested language. Arguments are
                 // processed in order, so --culture only affects what comes after it.
@@ -4239,6 +4252,12 @@ namespace pwiz.SkylineTestData
                 Assert.IsNotNull(valueMissingJapanese);
                 output = RunCommand(false, argCulture.ArgumentText + @"=ja", CommandArgs.ARG_IN.ArgumentText);
                 AssertEx.Contains(output, string.Format(valueMissingJapanese, CommandArgs.ARG_IN.ArgumentText));
+
+                // The culture applies only to its own command, so the in-process Skyline MCP and Immediate
+                // Window do not leave later commands running in it.
+                AssertEx.AreEqual(currentCulture, LocalizationHelper.CurrentCulture);
+                AssertEx.AreEqual(currentUiCulture, LocalizationHelper.CurrentUICulture);
+                AssertEx.AreEqual(currentUiCulture, Thread.CurrentThread.CurrentUICulture);
             }
             finally
             {
@@ -4266,8 +4285,6 @@ namespace pwiz.SkylineTestData
 
         /// <summary>
         /// Tests that "IsErrorLine" works when the commandline is invoked in a particular culture.
-        /// Note that this code uses LocalizationHelper.CallWithCulture instead of the "--culture" commandline
-        /// argument because the latter does not set the culture back to its original value.
         /// </summary>
         private void TestDetectError(bool timestamp, bool memstamp, CultureInfo cultureInfo)
         {

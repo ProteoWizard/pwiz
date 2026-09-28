@@ -541,29 +541,42 @@ namespace pwiz.SkylineTestData
         /// <summary>
         /// Verifies that documented values and supplemental accepted values are both enforced, in every
         /// combination, by the argument text builder and by parsing. An argument that lists neither
-        /// accepts any value, and one that lists only accepted values still reports them when rejecting.
+        /// accepts any value, and one that lists only accepted values still reports them when rejecting,
+        /// while one that lists both reports only its documented values.
         /// </summary>
         private void ValidateValueSources()
         {
             const string good = @"alpha";
+            const string documentedOnly = @"beta";
             const string bad = @"omega";
             var documented = new Argument(@"test-documented", new[] { good }, (c, p) => true);
             var accepted = new Argument(@"test-accepted", () => good, (c, p) => true)
                 { AcceptedValues = () => new[] { good } };
-            var both = new Argument(@"test-both", new[] { @"beta" }, (c, p) => true)
+            var both = new Argument(@"test-both", new[] { documentedOnly }, (c, p) => true)
                 { AcceptedValues = () => new[] { good } };
             var neither = new Argument(@"test-neither", () => good, (c, p) => true);
 
-            foreach (var arg in new[] { documented, accepted, both })
+            // Each argument with the values it accepts and the values its error message must list
+            var cases = new[]
             {
-                AssertEx.AreEqual(arg.ArgumentText + '=' + good, arg.GetArgumentTextWithValue(good));
-                AssertEx.IsTrue(ArgumentBase.Parse(arg.ArgumentText + '=' + good).IsMatch(arg), arg.Name);
+                Tuple.Create(documented, new[] { good }, good),
+                Tuple.Create(accepted, new[] { good }, good),
+                Tuple.Create(both, new[] { good, documentedOnly }, documentedOnly)
+            };
+            foreach (var (arg, validValues, valuesForError) in cases)
+            {
+                foreach (var value in validValues)
+                {
+                    AssertEx.AreEqual(arg.ArgumentText + '=' + value, arg.GetArgumentTextWithValue(value));
+                    AssertEx.IsTrue(ArgumentBase.Parse(arg.ArgumentText + '=' + value).IsMatch(arg), arg.Name);
+                }
                 string expected = string.Format(
                     CommandArgUsage.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
-                    bad, arg.ArgumentText, string.Join(@", ", arg.ValuesForError));
-                AssertEx.ThrowsException<ValueInvalidException>(() => arg.GetArgumentTextWithValue(bad), expected);
-                AssertEx.ThrowsException<ValueInvalidException>(
-                    () => ArgumentBase.Parse(arg.ArgumentText + '=' + bad).IsMatch(arg), expected);
+                    bad, arg.ArgumentText, valuesForError);
+                AssertEx.ThrowsException<ValueInvalidException>(() => arg.GetArgumentTextWithValue(bad),
+                    ex => AssertEx.AreEqual(expected, ex.Message));
+                AssertEx.ThrowsException<ValueInvalidException>(() => ArgumentBase.Parse(arg.ArgumentText + '=' + bad).IsMatch(arg),
+                    ex => AssertEx.AreEqual(expected, ex.Message));
             }
 
             AssertEx.AreEqual(neither.ArgumentText + '=' + bad, neither.GetArgumentTextWithValue(bad));
