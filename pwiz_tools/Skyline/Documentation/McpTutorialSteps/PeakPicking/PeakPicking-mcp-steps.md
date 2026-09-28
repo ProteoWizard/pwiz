@@ -34,7 +34,7 @@ written `tool(arg=value)` with the `skyline_` prefix dropped. Here:
 | Tutorial step | What happened | Status |
 |---|---|---|
 | Closing Find Results after deleting peptides | Skyline showed an unexpected-error report: ArgumentOutOfRangeException in `FindResultsForm.ResizeListViewColumns` (index -1). A resize posted the column fit, and it ran after the list emptied | **Skyline bug, fixed** (a1cf68ce89): the posted method checks for an empty list. It depends on timing; not reproducible on demand |
-| The graph in Edit Peak Scoring Model | `get_graph_zoom` / `click_graph` / `get_graph_image` refuse the form ("Not a graph form") | Open: `perform_action(type="ZedGraphControl", action="get_graph_zoom" / "click_graph")` works, so the named verbs could do the same |
+| The graph in Edit Peak Scoring Model | `get_graph_zoom` / `click_graph` / `get_graph_image` refuse the form ("Not a graph form") | **Fixed**: the graph verbs also take a form showing exactly one visible graph. The run used `perform_action(type="ZedGraphControl", action="get_graph_zoom" / "click_graph")` |
 | Add Decoy Peptides | The method combo box has no label | Open (tab order) |
 
 ### Found in the tutorial (English corrected)

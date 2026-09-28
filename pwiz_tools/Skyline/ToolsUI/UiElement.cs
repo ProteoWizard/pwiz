@@ -1265,10 +1265,27 @@ namespace pwiz.Skyline.ToolsUI
         internal GraphElement FindGraph()
         {
             var zedGraph = Form is DockableFormEx dockable ? JsonUiService.TryGetZedGraphControl(dockable) : null;
-            if (zedGraph == null)
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Not a graph form: {0}. Use skyline_get_open_forms to find forms with HasGraph=True.", FormId));
-            return (GraphElement) ElementFor(zedGraph);
+            if (zedGraph != null)
+                return (GraphElement) ElementFor(zedGraph);
+            // A dialog showing one graph among its other controls (e.g. Edit Peak Scoring Model, the Spectral
+            // Library Explorer) -- the one currently visible
+            var graphs = VisibleControls(Form).OfType<ZedGraph.ZedGraphControl>().ToList();
+            if (graphs.Count == 1)
+                return (GraphElement) ElementFor(graphs[0]);
+            throw new ArgumentException(LlmInstruction.Format(
+                @"Not a graph form: {0}. Use skyline_get_open_forms to find forms with HasGraph=True.", FormId));
+        }
+
+        private static IEnumerable<Control> VisibleControls(Control parent)
+        {
+            foreach (Control control in parent.Controls)
+            {
+                if (!control.Visible)
+                    continue;
+                yield return control;
+                foreach (var inner in VisibleControls(control))
+                    yield return inner;
+            }
         }
 
         // Parses a grid-cell locator "name[column,row]" (the name is optional -> the form's single grid).
