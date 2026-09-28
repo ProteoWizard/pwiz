@@ -114,7 +114,7 @@ namespace pwiz.Skyline.ToolsUI
     }
 
     /// <summary>An element that offers a fixed list of choices whose visible text can be read (get_options) --
-    /// a combo box, a list box, or a checked list box. Unlike get_value (which reports the current
+    /// a combo box, a list box, a checked list box, or a list view. Unlike get_value (which reports the current
     /// selection / checked items), this returns EVERY choice regardless of state, so a caller can see the
     /// options that are available to select or check.</summary>
     public interface IOptionsElement { IEnumerable<string> GetOptions(); }
@@ -1189,7 +1189,7 @@ namespace pwiz.Skyline.ToolsUI
                 case TreeView treeView: return new TreeViewElement(treeView, token);
                 case ListView listView when listView.FindForm() is StatementCompletionForm:
                     return new StatementCompletionListElement(listView, token);
-                case ListView listView: return new ItemContainerElement<ListView>(listView, token);
+                case ListView listView: return new ListViewElement(listView, token);
                 // The grid itself -- the inner grid of a DataboundGridControl (a BoundDataGridView, driven
                 // through its rich copy/paste path) or a standalone DataGridView (direct cell access). The
                 // DataboundGridControl is a UserControl you walk into to reach this grid and its nav bar.
@@ -1573,6 +1573,9 @@ namespace pwiz.Skyline.ToolsUI
         {
             var text = value?.ToString();
             int index = _comboBox.FindStringExact(text);
+            // An item's text can carry whitespace the user never sees (e.g. Import Results "Many ")
+            if (index < 0 && text != null)
+                index = GetOptions().ToList().FindIndex(option => option.Trim() == text.Trim());
             if (index < 0)
                 throw new ArgumentException(LlmInstruction.Format(
                     @"No item '{0}' in combo box {1}.", text, _comboBox.Name));
@@ -1641,6 +1644,13 @@ namespace pwiz.Skyline.ToolsUI
         public void SetItemCheckedNow(string item, bool isChecked) => ListItems.SetChecked(Control, item, isChecked);
         public void SetItemSelectedNow(string item, bool isSelected) => ListItems.SetSelected(Control, item, isSelected);
         public void SetSelectedIndexNow(int index) => ListItems.SetSelectedIndex(Control, index);
+    }
+
+    /// <summary>A ListView -- its items' text is read with get_options (e.g. the files in Import Results Files).</summary>
+    internal sealed class ListViewElement : ItemContainerElement<ListView>, IOptionsElement
+    {
+        public ListViewElement(ListView control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
+        public IEnumerable<string> GetOptions() => ListItems.GetOptions(Control);
     }
 
     /// <summary>A TreeView. Besides checking/selecting a node by text, a node is expanded or collapsed
@@ -1972,7 +1982,7 @@ namespace pwiz.Skyline.ToolsUI
 
         // The display text of EVERY item a list control offers, regardless of which are selected or checked --
         // what get_options reads. A ComboBox and a ListBox (a CheckedListBox derives from ListBox) both expose
-        // their choices through Items + GetItemText.
+        // their choices through Items + GetItemText; a ListView through its items' Text.
         public static IEnumerable<string> GetOptions(Control control)
         {
             switch (control)
@@ -1981,9 +1991,11 @@ namespace pwiz.Skyline.ToolsUI
                     return comboBox.Items.Cast<object>().Select(comboBox.GetItemText).ToList();
                 case ListBox listBox: // CheckedListBox derives from ListBox
                     return listBox.Items.Cast<object>().Select(listBox.GetItemText).ToList();
+                case ListView listView:
+                    return listView.Items.Cast<ListViewItem>().Select(item => item.Text).ToList();
                 default:
                     throw new ArgumentException(LlmInstruction.Format(
-                        @"Listing options is supported for a ComboBox or ListBox, not {0}.", control.Name));
+                        @"Listing options is supported for a ComboBox, ListBox or ListView, not {0}.", control.Name));
             }
         }
 
