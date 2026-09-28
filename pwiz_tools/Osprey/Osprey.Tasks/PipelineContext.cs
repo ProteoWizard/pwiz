@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Tasks
@@ -557,7 +558,7 @@ namespace pwiz.Osprey.Tasks
     /// pipeline definition is missing the producer); fail fast and hard so it
     /// surfaces in testing rather than at runtime.
     /// </summary>
-    public sealed class UnknownTaskException : Exception
+    public sealed class UnknownTaskException : InvalidOperationException
     {
         public Type RequestedType { get; }
 
@@ -577,7 +578,7 @@ namespace pwiz.Osprey.Tasks
     /// that neglected to <see cref="PipelineContext.Publish{TInfo}"/> -- and are
     /// surfaced loudly rather than degrading to a silent default value.
     /// </summary>
-    public sealed class UnknownByproductException : Exception
+    public sealed class UnknownByproductException : InvalidOperationException
     {
         public Type RequestedType { get; }
 
@@ -599,13 +600,13 @@ namespace pwiz.Osprey.Tasks
     /// rather than letting the consumer proceed with default state. Carries the
     /// task type and the exit code the failing task requested.
     /// </summary>
-    public sealed class RehydrateFailedException : Exception
+    public sealed class RehydrateFailedException : UserMessageException
     {
         public Type TaskType { get; }
         public int ExitCode { get; }
 
         public RehydrateFailedException(Type taskType, string taskName, int exitCode)
-            : base(string.Format("The {0} step could not reload its results from the intermediate files (exit code {1}).",
+            : base(string.Format(OspreyTasksResources.RehydrateFailedException_The__0__step_could_not_reload_its_results_from_the_intermediate_files__exit_code__1___,
                 taskName, exitCode))
         {
             TaskType = taskType;

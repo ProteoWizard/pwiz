@@ -474,7 +474,15 @@ namespace pwiz.Osprey.Core
     {
         private static string[] LOCALIZED_VALUES
         {
-            get { return new[] { "reverse-sequence", "shuffled-sequence", "library-supplied" }; }
+            get
+            {
+                return new[]
+                {
+                    OspreyCoreResources.DecoyMethodExtension_LOCALIZED_VALUES_reverse_sequence,
+                    OspreyCoreResources.DecoyMethodExtension_LOCALIZED_VALUES_shuffled_sequence,
+                    OspreyCoreResources.DecoyMethodExtension_LOCALIZED_VALUES_library_supplied
+                };
+            }
         }
 
         public static string GetLocalizedString(this DecoyMethod val)
@@ -502,7 +510,15 @@ namespace pwiz.Osprey.Core
     {
         private static string[] LOCALIZED_VALUES
         {
-            get { return new[] { "precursor", "peptide", "precursor and peptide" }; }
+            get
+            {
+                return new[]
+                {
+                    OspreyCoreResources.FdrLevelExtension_LOCALIZED_VALUES_precursor,
+                    OspreyCoreResources.FdrLevelExtension_LOCALIZED_VALUES_peptide,
+                    OspreyCoreResources.FdrLevelExtension_LOCALIZED_VALUES_precursor_and_peptide
+                };
+            }
         }
 
         public static string GetLocalizedString(this FdrLevel val)
@@ -530,7 +546,16 @@ namespace pwiz.Osprey.Core
     {
         private static string[] LOCALIZED_VALUES
         {
-            get { return new[] { "Percolator", "Mokapot", "simple target-decoy", "gradient-boosted tree" }; }
+            get
+            {
+                return new[]
+                {
+                    OspreyCoreResources.FdrMethodExtensions_LOCALIZED_VALUES_Percolator,
+                    OspreyCoreResources.FdrMethodExtensions_LOCALIZED_VALUES_Mokapot,
+                    OspreyCoreResources.FdrMethodExtensions_LOCALIZED_VALUES_simple_target_decoy,
+                    OspreyCoreResources.FdrMethodExtensions_LOCALIZED_VALUES_gradient_boosted_tree
+                };
+            }
         }
 
         /// <summary>
@@ -587,7 +612,15 @@ namespace pwiz.Osprey.Core
     {
         private static string[] LOCALIZED_VALUES
         {
-            get { return new[] { "auto", "unit", "HRAM" }; }
+            get
+            {
+                return new[]
+                {
+                    OspreyCoreResources.ResolutionModeExtension_LOCALIZED_VALUES_auto,
+                    OspreyCoreResources.ResolutionModeExtension_LOCALIZED_VALUES_unit,
+                    OspreyCoreResources.ResolutionModeExtension_LOCALIZED_VALUES_HRAM
+                };
+            }
         }
 
         public static string GetLocalizedString(this ResolutionMode val)

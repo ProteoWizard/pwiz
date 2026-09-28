@@ -68,7 +68,7 @@ namespace pwiz.Osprey.Tasks
             if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath) ||
                 !File.Exists(parquetPath))
             {
-                invalid.Add(string.Format(@"{0} (scores parquet missing)", fileName));
+                invalid.Add(string.Format(OspreyTasksResources.CwtCandidateLoader_ValidateFileInRange__0____scores_parquet_file_missing_, fileName));
                 return;
             }
 
@@ -94,7 +94,7 @@ namespace pwiz.Osprey.Tasks
             uint maxIdx = MaxParquetIndex(entries);
             if (entries.Count > 0 && maxIdx >= effectiveRowCount)
                 invalid.Add(string.Format(
-                    @"{0} (max stub ParquetIndex {1} >= {2} parquet rows)",
+                    OspreyTasksResources.CwtCandidateLoader_ValidateFileInRange__0___a_CWT_candidate_refers_to_row__1___but_the__scores_parquet_file_has_only__2__rows_,
                     fileName, maxIdx, effectiveRowCount));
         }
 
@@ -108,9 +108,7 @@ namespace pwiz.Osprey.Tasks
             if (invalid.Count == 0)
                 return;
             throw new InvalidDataException(string.Format(
-                @"Reconciliation planning aborted: {0} of {1} file(s) have missing or corrupt CWT " +
-                @"candidates and cannot be reconciled: [{2}]. Delete the affected .scores.parquet " +
-                @"file(s) and re-run so they are regenerated.",
+                OspreyTasksResources.CwtCandidateLoader_ThrowIfAnyInvalid_Reconciliation_planning_stopped__CWT_candidates_are_missing_or_damaged_in__0__of__1__,
                 invalid.Count, fileCount, string.Join(@"; ", invalid)));
         }
 
@@ -131,8 +129,7 @@ namespace pwiz.Osprey.Tasks
             if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath) ||
                 !File.Exists(parquetPath))
                 throw new InvalidDataException(string.Format(
-                    @"Reconciliation planning aborted: scores parquet for {0} is missing. Delete any " +
-                    @"partial outputs and re-run so it is regenerated.", fileName));
+                    OspreyTasksResources.CwtCandidateLoader_LoadOneFile_Reconciliation_planning_stopped__the__scores_parquet_file_for__0__is_missing__Delete_any_, fileName));
 
             try
             {
@@ -145,8 +142,7 @@ namespace pwiz.Osprey.Tasks
             catch (Exception ex)
             {
                 throw new InvalidDataException(string.Format(
-                    @"Reconciliation planning aborted: failed to decode CWT candidates from {0}: {1}. " +
-                    @"The scores parquet is corrupt -- delete it and re-run to regenerate.",
+                    OspreyTasksResources.CwtCandidateLoader_LoadOneFile_Reconciliation_planning_stopped__the_CWT_candidates_in__0__could_not_be_read___1___The__,
                     parquetPath, ex.Message));
             }
         }
