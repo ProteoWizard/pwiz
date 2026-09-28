@@ -27,6 +27,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using pwiz.CarafeSharp.Core;
 
 namespace pwiz.CarafeSharp.Proteome
 {
@@ -92,9 +93,25 @@ namespace pwiz.CarafeSharp.Proteome
                 quartet.Sources.AddRange(sorted);
             }
 
-            WriteFasta(kept, result);
-            if (_settings.Manifest != null)
-                WriteManifest(kept);
+            // Both files are written under temporary names. The manifest is moved to its final name
+            // first and the FASTA last, so a FASTA at its final name means the whole build finished.
+            var fasta = new PartialFile(_settings.OutputFasta);
+            var manifest = _settings.Manifest != null ? new PartialFile(_settings.Manifest) : null;
+            try
+            {
+                WriteFasta(kept, result, fasta.PartialPath);
+                if (manifest != null)
+                {
+                    WriteManifest(kept, manifest.PartialPath);
+                    manifest.Commit();
+                }
+                fasta.Commit();
+            }
+            finally
+            {
+                fasta.Discard();
+                manifest?.Discard();
+            }
             return result;
         }
 
@@ -374,11 +391,11 @@ namespace pwiz.CarafeSharp.Proteome
         /// Step 4: one entry per peptide. The per-protein counter advances in lockstep across
         /// every source of a shared peptide, so a joined header carries coherent suffixes.
         /// </summary>
-        private void WriteFasta(List<EntrapmentQuartet> kept, EntrapmentFastaResult result)
+        private void WriteFasta(List<EntrapmentQuartet> kept, EntrapmentFastaResult result, string path)
         {
             Log(@"Writing FASTA: " + _settings.OutputFasta);
             var peptideCounters = new Dictionary<string, int>();
-            using (var writer = CreateWriter(_settings.OutputFasta))
+            using (var writer = CreateWriter(path))
             {
                 foreach (var quartet in kept)
                 {
@@ -424,12 +441,12 @@ namespace pwiz.CarafeSharp.Proteome
         /// Step 5: the manifest, refused (or, when allowed, only warned about) if it fails the
         /// pairing checks. Its proteins column carries no peptide counters.
         /// </summary>
-        private void WriteManifest(List<EntrapmentQuartet> kept)
+        private void WriteManifest(List<EntrapmentQuartet> kept, string path)
         {
             EntrapmentPairingValidator.Enforce(EntrapmentPairingValidator.ValidateQuartets(kept),
                 _settings.FailOnPairingViolation, _log);
             Log(@"Writing manifest: " + _settings.Manifest);
-            using (var writer = CreateWriter(_settings.Manifest))
+            using (var writer = CreateWriter(path))
             {
                 writer.Write(MANIFEST_HEADER + "\n");
                 int pairIndex = 0;

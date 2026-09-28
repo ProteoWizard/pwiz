@@ -198,8 +198,6 @@ namespace pwiz.CarafeSharp.Test
         }
 
         [TestMethod]
-        [Ignore("BUG: a stage-1 build whose manifest cannot be written exits 1 but leaves the entrapment FASTA at its final name; " +
-                "EntrapmentFastaBuilder writes the FASTA and the manifest directly, not through PartialFile.")]
         public void TestFailedBuildLeavesNoOutput()
         {
             string proteins = WriteText(@"proteins.fasta", PROTEINS);
@@ -210,6 +208,19 @@ namespace pwiz.CarafeSharp.Test
             var (code, _, error) = Run(@"-build_entrapment_fasta", built, @"-db", proteins, @"-manifest", manifest);
             Assert.AreEqual(1, code, error);
             Assert.IsFalse(File.Exists(built), @"The failed build left " + built);
+            Assert.IsFalse(File.Exists(built + PartialFile.SUFFIX));
+            Assert.IsFalse(File.Exists(manifest + PartialFile.SUFFIX));
+
+            // A reconciliation whose output cannot take its name leaves no partial manifest either.
+            string goodManifest = Path.Combine(_folder, @"good-manifest.tsv");
+            (code, _, error) = Run(@"-build_entrapment_fasta", built, @"-db", proteins, @"-manifest", goodManifest);
+            Assert.AreEqual(0, code, error);
+            string library = WriteText(@"library.tsv", PairingManifestReconciler.LIBRARY_SEQUENCE_COLUMN + "\nPEPTIDEK\nSAMPLER\n");
+            string reconciled = Path.Combine(_folder, @"reconciled-folder.tsv");
+            Directory.CreateDirectory(reconciled);
+            (code, _, error) = Run(@"-reconcile_manifest", reconciled, @"-manifest", goodManifest, @"-predicted_library", library);
+            Assert.AreEqual(1, code, error);
+            Assert.IsFalse(File.Exists(reconciled + PartialFile.SUFFIX));
         }
 
         private static void AssertDecoyPairs(string blib)

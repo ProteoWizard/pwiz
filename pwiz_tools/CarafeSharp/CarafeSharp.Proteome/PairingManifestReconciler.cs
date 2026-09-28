@@ -26,6 +26,7 @@ using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using pwiz.CarafeSharp.Core;
 
 namespace pwiz.CarafeSharp.Proteome
 {
@@ -69,7 +70,34 @@ namespace pwiz.CarafeSharp.Proteome
                     result.LibraryPeptidesNotInManifest++;
             }
 
-            using (var writer = EntrapmentFastaBuilder.CreateWriter(manifestOut))
+            // Written under a temporary name, so a failed run leaves no manifest that looks complete.
+            var output = new PartialFile(manifestOut);
+            try
+            {
+                WriteReconciled(groups, librarySequences, output.PartialPath, result);
+                output.Commit();
+            }
+            finally
+            {
+                output.Discard();
+            }
+
+            log?.WriteLine(string.Format(CultureInfo.InvariantCulture,
+                @"Reconciled manifest: {0}/{1} pair groups kept ({2} dropped), {3}/{4} rows kept ({5} dropped). Library peptides: {6}; not in manifest: {7}; kept targets missing a decoy: {8}",
+                result.GroupsKept, result.GroupsIn, result.GroupsDropped, result.RowsKept, result.RowsIn, result.RowsDropped,
+                result.LibraryPeptides, result.LibraryPeptidesNotInManifest, result.KeptTargetsWithoutDecoy));
+            if (result.LibraryPeptidesNotInManifest > 0)
+            {
+                log?.WriteLine(@"WARNING: " + result.LibraryPeptidesNotInManifest.ToString(CultureInfo.InvariantCulture) +
+                               @" library peptide(s) are absent from the pairing manifest; FDRBench will drop them. This is expected to be 0 when the peptide FASTA is built with the same rules as the library prediction.");
+            }
+            return result;
+        }
+
+        private static void WriteReconciled(List<List<ManifestRow>> groups, HashSet<string> librarySequences, string path,
+            PairingReconciliationResult result)
+        {
+            using (var writer = EntrapmentFastaBuilder.CreateWriter(path))
             {
                 writer.Write(EntrapmentFastaBuilder.MANIFEST_HEADER + "\n");
                 int newPairIndex = 0;
@@ -109,17 +137,6 @@ namespace pwiz.CarafeSharp.Proteome
                     newPairIndex++;
                 }
             }
-
-            log?.WriteLine(string.Format(CultureInfo.InvariantCulture,
-                @"Reconciled manifest: {0}/{1} pair groups kept ({2} dropped), {3}/{4} rows kept ({5} dropped). Library peptides: {6}; not in manifest: {7}; kept targets missing a decoy: {8}",
-                result.GroupsKept, result.GroupsIn, result.GroupsDropped, result.RowsKept, result.RowsIn, result.RowsDropped,
-                result.LibraryPeptides, result.LibraryPeptidesNotInManifest, result.KeptTargetsWithoutDecoy));
-            if (result.LibraryPeptidesNotInManifest > 0)
-            {
-                log?.WriteLine(@"WARNING: " + result.LibraryPeptidesNotInManifest.ToString(CultureInfo.InvariantCulture) +
-                               @" library peptide(s) are absent from the pairing manifest; FDRBench will drop them. This is expected to be 0 when the peptide FASTA is built with the same rules as the library prediction.");
-            }
-            return result;
         }
 
         /// <summary>Java-trimmed, upper-cased and I-to-L normalized; null becomes empty.</summary>

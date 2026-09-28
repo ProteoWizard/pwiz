@@ -20,7 +20,7 @@
 
 using System.IO;
 
-namespace pwiz.CarafeSharp.IO
+namespace pwiz.CarafeSharp.Core
 {
     /// <summary>
     /// An output file written under a sibling temporary name (<see cref="SUFFIX"/> appended)
