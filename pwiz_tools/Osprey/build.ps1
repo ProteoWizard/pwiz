@@ -248,19 +248,15 @@ foreach ($fw in $testFrameworks) {
             if ($s -match '\s') { return '"' + $s + '"' }
             return $s
         }
-        # Cover everything the test run loads except the test assembly itself and
-        # the third-party dependencies, which leaves the Osprey.* assemblies we
-        # care about.  Stated as exclusions rather than a +:module=Osprey*
-        # allowlist so the shared pwiz.CommonUtil code Osprey builds against is
-        # measured too.
-        $excludeAssemblies = @(
-            'Osprey.Test',
-            'Apache.Arrow', 'ProDotNetZip', 'IronCompress',
-            'JetBrains.*', 'MathNet.*', 'Microsoft.*', 'Newtonsoft.*',
-            'Parquet', 'Snappier', 'System.*', 'ZstdSharp',
-            'MSTest.*', 'testhost*', 'vstest.*'
-        )
-        $filters = ($excludeAssemblies | ForEach-Object { "-:module=$_" }) -join ';'
+        # Cover the Osprey.* production assemblies and nothing else: the number is
+        # meant to track Osprey's own code against an 80% statement goal. An
+        # exclusion list let every dependency with symbols into the denominator -
+        # CommonUtil (replacing master's small PortableUtil), ProteowizardWrapper
+        # and the pwiz-sharp Pwiz.* assemblies - and took the port branch from
+        # ~58% to ~29% with no change to Osprey's tests. Those libraries have
+        # their own tests. The same filter as Build-Osprey.ps1 -Coverage, so
+        # TeamCity and local runs report the same number.
+        $filters = '+:module=Osprey*;-:module=Osprey.Test'
         $dcArgs = @(
             'cover',
             "/TargetExecutable=$(Quote-IfNeeded $vstest)",
