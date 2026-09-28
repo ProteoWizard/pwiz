@@ -1511,6 +1511,25 @@ namespace pwiz.Skyline.ToolsUI
     {
         public ButtonElement(Control control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
         public override string Label => Control.Text;
+
+        // A button's menu is the one its click drops down beside it (e.g. Copy on Manage Reports, Add on
+        // Configure Tools), once that click has opened it. It is found among the open menus rather than opened
+        // here, since clicking a button only to look for a menu could do anything that button does.
+        public override ContextMenuStrip BuildContextMenu()
+        {
+            if (Control.ContextMenuStrip != null)
+                return base.BuildContextMenu();
+            var droppedDown = User32.EnumThreadWindows((uint) Kernel32.GetCurrentThreadId())
+                .Select(Control.FromHandle).OfType<ContextMenuStrip>()
+                .FirstOrDefault(menu => menu.Visible &&
+                                        (ReferenceEquals(menu.SourceControl, Control) ||
+                                         ReferenceEquals(menu.SourceControl, Control.Parent)));
+            if (droppedDown == null)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"{0} has no menu open. Click it first (skyline_click_form_button) to drop its menu down.",
+                    Label ?? Name));
+            return droppedDown;
+        }
     }
 
     /// <summary>A checkbox or radio button. Neither is an IButtonControl, so neither can be clicked the way a
@@ -2050,11 +2069,18 @@ namespace pwiz.Skyline.ToolsUI
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Empty tree path: {0}. Expected '>'-separated node texts, e.g. 'Protein > Peptide > Precursor'.",
                     path ?? string.Empty));
-            var nodes = treeView.Nodes;
+            IList<TreeNode> nodes = treeView.Nodes.Cast<TreeNode>().ToList();
             TreeNode current = null;
             for (int i = 0; i < segments.Length; i++)
             {
                 int best = BestMatch(nodes.Count, j => nodes[j].Text, segments[i]);
+                if (best < 0 && i == 0)
+                {
+                    // A user clicks the node they see, however deep, so the path may start at any node that is
+                    // showing in the tree (every ancestor expanded), e.g. a peptide under its expanded protein
+                    nodes = ShownNodes(treeView.Nodes).ToList();
+                    best = BestMatch(nodes.Count, j => nodes[j].Text, segments[i]);
+                }
                 if (best < 0)
                     throw new ArgumentException(LlmInstruction.Format(
                         @"Tree node not found: {0} (no match for '{1}').", path, segments[i]));
@@ -2062,10 +2088,24 @@ namespace pwiz.Skyline.ToolsUI
                 if (i < segments.Length - 1)
                 {
                     current.Expand(); // populate lazily-built children before descending
-                    nodes = current.Nodes;
+                    nodes = current.Nodes.Cast<TreeNode>().ToList();
                 }
             }
             return current;
+        }
+
+        // The nodes showing in a tree, in display order: each node, then its children if it is expanded.
+        private static IEnumerable<TreeNode> ShownNodes(TreeNodeCollection nodes)
+        {
+            foreach (TreeNode node in nodes)
+            {
+                yield return node;
+                if (node.IsExpanded)
+                {
+                    foreach (var child in ShownNodes(node.Nodes))
+                        yield return child;
+                }
+            }
         }
 
         // The index of the best text match among count items (by the connector's label matching), or -1: the

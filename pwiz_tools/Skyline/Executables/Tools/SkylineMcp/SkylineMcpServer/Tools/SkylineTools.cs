@@ -576,7 +576,8 @@ public static class SkylineTools
         "(lists child elements as JSON UiElementPaths -- each already parented onto the element you listed, " +
         "so pass one straight back as 'path'); 'click'; 'set_value' (uses 'value'); 'get_value' " +
         "(returns the current value); 'check_item'/'uncheck_item'/'select_item'/'unselect_item' (a " +
-        "list/tree/list-view item by its text, value the item -- a TreeView node by a '>'-separated path); " +
+        "list/tree/list-view item by its text, value the item -- a TreeView node by a '>'-separated path, " +
+        "which may start at any node showing in the tree, e.g. a peptide under its expanded protein); " +
         "'set_selected_index' (a list, value the index); 'get_grid_text'/'set_grid_text' (a grid's text); " +
         "'set_current_cell_address' (value a [column, row] array, e.g. [0, 1]); 'select_tab' (a TabControl, value the tab text); " +
         "'expand'/'collapse' (a TreeView node, value a JSON array path whose segments are a child's text or " +
