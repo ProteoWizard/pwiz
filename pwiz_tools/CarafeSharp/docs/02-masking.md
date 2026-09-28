@@ -100,20 +100,21 @@ scored best, and one RT row per peptide form, the one with the lowest q.
 ### Known differences
 
 - **Peak matching.** Osprey takes the closest peak within its calibrated tolerance; Carafe takes
-  the closest within 0.4 Da. 4% of Carafe's valid matches lie 0.31-0.39 Th off and fall outside
-  Osprey's tolerance. An ion with no peak inside Osprey's window is missing, and CarafeSharp
-  trains its low or zero intensity (the developer's decision, 2026-09-27). Carafe usually masks
-  such an ion instead, because the peak it matched at the window's edge fails its correlation
-  rule. On Stellar, Osprey's calibrated window is -0.399 to +0.303 Th, so these peaks sit
-  +0.30 to +0.40 Th off, 95% of them on 2+ ions.
-  - For 1+ ions, that band holds a peak no more often than equally wide bands away from the
-    fragment do: those are unrelated neighbors.
-  - For 2+ ions it holds one 15-18 points more often than a band 1 Th away. Part of that is
-    probably the ion itself, its centroid pulled up by the unresolved M+1 isotope 0.5 Th away.
-  - Masking these ions instead (variant B of a masking A/B search, 2026-09-28) changes the library
-    but not the IDs. B writes more fragments per precursor: +27% 2+ fragments on Stellar, and on
-    Astral 14.84 against 13.78, Carafe's 14.86. Experiment-level precursors at 1% FDR, A minus B,
-    with 95% intervals over fine-tune seeds, were:
+  the closest within 0.4 Da.
+  - **The principle.** CarafeSharp predicts the intensity the instrument will measure and Osprey
+    will extract, because Osprey is what reads the library. So it trains on what Osprey extracted
+    within its calibrated tolerance, whatever the instrument did to the peak (merged 2+ isotopes
+    or centroiding at high m/z on a Stellar).
+  - **Missing ions.** An ion with no peak inside that window trains as low or zero: it is not an
+    m/z Osprey will use.
+  - **Interference.** Only interference is masked, by the shared-peak and co-elution checks.
+  - **Carafe's wider window** adds interference, and peaks Osprey never uses. 4% of Carafe's valid
+    matches lie 0.31-0.39 Th off, outside Osprey's calibrated window (-0.399 to +0.303 Th on
+    Stellar), and Carafe's correlation rule usually masks them.
+  - **An A/B search (2026-09-28)** masked those edge ions the Carafe way. It changed the library but
+    not the IDs: more weak fragments per precursor (+27% 2+ fragments on Stellar; 14.84 against
+    13.78 on Astral). Experiment-level precursors at 1% FDR, A minus B, with 95% intervals over
+    fine-tune seeds:
     - Stellar, 3 seeds each: -0.18% [-1.22%, +0.87%].
     - Astral, 2 and 3 seeds: -0.39% [-3.05%, +2.26%].
 
