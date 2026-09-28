@@ -22,7 +22,6 @@
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Globalization;
@@ -47,13 +46,14 @@ namespace pwiz.Osprey.IO
         private const double MOD_TOLERANCE = 0.01;
         private const double CYSTEINE_RESIDUE_MASS = 103.009185;
 
-        // The two reader-version probes, by file version (full path, size, mtime), so the
-        // validity keys and the library cache that ask on every task and load open the file
-        // once per process.
-        private static readonly ConcurrentDictionary<string, bool> _annotationProbes =
-            new ConcurrentDictionary<string, bool>(StringComparer.Ordinal);
-        private static readonly ConcurrentDictionary<string, bool> _modificationProbes =
-            new ConcurrentDictionary<string, bool>(StringComparer.Ordinal);
+        // The probes the validity keys and the library cache ask on every task and load, each
+        // answered once per version of the file.
+        private static readonly FileVersionProbe _annotationProbe = new FileVersionProbe(
+            path => WithReadOnlyConnection(path, conn => HasRows(conn, BlibPeakAnnotations.TABLE_NAME)));
+        private static readonly FileVersionProbe _modificationProbe = new FileVersionProbe(
+            path => WithReadOnlyConnection(path, HasPrecisionSensitiveModificationText));
+        private static readonly FileVersionProbe _stackedModificationProbe = new FileVersionProbe(
+            path => WithReadOnlyConnection(path, HasStackedModificationText));
 
         /// <summary>
         /// Whether the blib at <paramref name="path"/> has <c>RefSpectraPeakAnnotations</c>
@@ -63,7 +63,7 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static bool HasPeakAnnotations(string path)
         {
-            return ProbeOnce(_annotationProbes, path, conn => HasRows(conn, BlibPeakAnnotations.TABLE_NAME));
+            return _annotationProbe.Ask(path);
         }
 
         /// <summary>
@@ -76,7 +76,18 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static bool HasPrecisionSensitiveModifications(string path)
         {
-            return ProbeOnce(_modificationProbes, path, HasPrecisionSensitiveModificationText);
+            return _modificationProbe.Ask(path);
+        }
+
+        /// <summary>
+        /// Whether any modified sequence in the blib puts two modifications on one residue: an
+        /// N-terminal one before a modified first residue (<c>[+42.0]M[+16.0]</c>, both at
+        /// position 0 in <see cref="ParseBlibModifications"/>), or two brackets in a row. False
+        /// for a missing or unreadable file.
+        /// </summary>
+        public static bool HasStackedModifications(string path)
+        {
+            return _stackedModificationProbe.Ask(path);
         }
 
         /// <summary>
@@ -133,33 +144,14 @@ namespace pwiz.Osprey.IO
             }
         }
 
-        /// <summary>
-        /// <paramref name="probe"/> run once per version of the file, read-only; false for a
-        /// file that is missing or cannot be opened as a blib.
-        /// </summary>
-        private static bool ProbeOnce(ConcurrentDictionary<string, bool> cache, string path,
-            Func<SQLiteConnection, bool> probe)
+        /// <summary><paramref name="probe"/> over a read-only connection to the blib; throws for a file SQLite cannot open.</summary>
+        private static bool WithReadOnlyConnection(string path, Func<SQLiteConnection, bool> probe)
         {
-            if (string.IsNullOrEmpty(path) || !File.Exists(path))
-                return false;
-            var info = new FileInfo(path);
-            string key = string.Format(CultureInfo.InvariantCulture, @"{0}|{1}|{2}",
-                info.FullName, info.Length, info.LastWriteTimeUtc.Ticks);
-            return cache.GetOrAdd(key, _ =>
+            using (var conn = new SQLiteConnection(string.Format(@"Data Source={0};Read Only=True;", path)))
             {
-                try
-                {
-                    using (var conn = new SQLiteConnection(string.Format(@"Data Source={0};Read Only=True;", path)))
-                    {
-                        conn.Open();
-                        return probe(conn);
-                    }
-                }
-                catch (Exception ex) when (!(ex is OutOfMemoryException))
-                {
-                    return false;
-                }
-            });
+                conn.Open();
+                return probe(conn);
+            }
         }
 
         /// <summary>
@@ -179,6 +171,33 @@ namespace pwiz.Osprey.IO
                     {
                         if (!reader.IsDBNull(0) && IsPrecisionSensitive(reader.GetString(0)))
                             return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Streams the modified sequences that could stack two modifications on one residue -
+        /// those opening with a bracket, or holding two in a row - and stops at the first that
+        /// does.
+        /// </summary>
+        private static bool HasStackedModificationText(SQLiteConnection conn)
+        {
+            if (!TableExists(conn, @"RefSpectra"))
+                return false;
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = @"SELECT peptideModSeq FROM RefSpectra WHERE substr(peptideModSeq, 1, 1) = '[' OR instr(peptideModSeq, '][') > 0";
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        if (!reader.IsDBNull(0) &&
+                            PeptideFragmentMass.HasStackedModifications(ParseBlibModifications(reader.GetString(0))))
+                        {
+                            return true;
+                        }
                     }
                 }
             }
@@ -692,11 +711,15 @@ namespace pwiz.Osprey.IO
 
             public AnnotationCursor(SQLiteConnection conn)
             {
+                // RefSpectraID, id - not peakIndex as well: BiblioSpec's index on RefSpectraID
+                // (id is the rowid) serves this order with no sort, where adding peakIndex made
+                // SQLite sort each spectrum's rows. Apply picks per peak and breaks ties by the
+                // first row, which id order still gives.
                 _command = conn.CreateCommand();
                 _command.CommandText = @"
                     SELECT RefSpectraID, peakIndex, name, charge
                     FROM RefSpectraPeakAnnotations
-                    ORDER BY RefSpectraID, peakIndex, id";
+                    ORDER BY RefSpectraID, id";
                 _reader = _command.ExecuteReader();
                 _hasRow = _reader.Read();
             }

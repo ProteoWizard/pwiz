@@ -712,19 +712,11 @@ namespace pwiz.Osprey.Scoring
         {
             int seqLen = target.Sequence.Length;
 
-            // Build modification mass map for decoy (by new position)
-            var modMasses = new Dictionary<int, double>();
-            foreach (var m in target.Modifications)
-            {
-                for (int newPos = 0; newPos < positionMapping.Length; newPos++)
-                {
-                    if (positionMapping[newPos] == m.Position)
-                    {
-                        modMasses[newPos] = m.MassDelta;
-                        break;
-                    }
-                }
-            }
+            // Modification mass by decoy position. Modifications that land on one residue add -
+            // an N-terminal acetyl and an oxidized first methionine both sit at position 0 - so
+            // every decoy ion spanning it carries both, as the target's ions do.
+            var modMasses = PeptideFragmentMass.ModMassesByPosition(
+                RemapModifications(target.Modifications, positionMapping));
 
             var result = new List<LibraryFragment>();
             foreach (var frag in target.Fragments)

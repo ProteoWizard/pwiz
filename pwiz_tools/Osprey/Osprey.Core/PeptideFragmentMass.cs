@@ -77,6 +77,23 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
+        /// Whether two of <paramref name="modifications"/> sit on one residue, the case
+        /// <see cref="ModMassesByPosition"/> adds.
+        /// </summary>
+        public static bool HasStackedModifications(IReadOnlyList<Modification> modifications)
+        {
+            if (modifications == null || modifications.Count < 2)
+                return false;
+            var positions = new HashSet<int>();
+            foreach (var m in modifications)
+            {
+                if (!positions.Add(m.Position))
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// m/z of the b or y ion of <paramref name="ordinal"/> residues at
         /// <paramref name="charge"/>, or null for another ion type, an ordinal past the end of
         /// the sequence, or an ion spanning a residue with no standard mass.

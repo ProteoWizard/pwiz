@@ -629,6 +629,27 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// Whether any entry of <paramref name="source"/> carries two modifications on one
+        /// residue (<see cref="DiannTsvLoader.HasStackedModifications"/>,
+        /// <see cref="BlibLoader.HasStackedModifications"/>). Answered once per version of the
+        /// file, so the validity keys can ask it without loading the library.
+        /// </summary>
+        public static bool HasStackedModifications(LibrarySource source)
+        {
+            if (source == null)
+                return false;
+            switch (source.Format)
+            {
+                case LibraryFormat.DiannTsv:
+                    return DiannTsvLoader.HasStackedModifications(source.Path);
+                case LibraryFormat.Blib:
+                    return BlibLoader.HasStackedModifications(source.Path);
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
         /// The composition terms that name a reader version: empty for every library the
         /// current reader parses as the one before it did, so only a library whose parse
         /// changed is re-read after an upgrade.

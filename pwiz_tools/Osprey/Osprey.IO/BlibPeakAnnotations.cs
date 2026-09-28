@@ -44,6 +44,9 @@ namespace pwiz.Osprey.IO
         public int NPeaksUnannotated;
         public int NRejectedName;
 
+        /// <summary>Well-formed a, c, x or z annotations, which cannot be checked against the peak.</summary>
+        public int NUncheckedIonType;
+
         /// <summary>Annotations naming a peak the spectrum lacks, or an ion as long as the peptide.</summary>
         public int NRejectedRange;
 
@@ -51,11 +54,8 @@ namespace pwiz.Osprey.IO
 
         public string Summary()
         {
-            return string.Format(
-                @"Library fragment annotations: {0} spectra, {1} peaks typed, {2} peaks without an annotation, " +
-                @"{3} annotations with an unreadable name, {4} annotations naming a peak or an ion the spectrum does not have, " +
-                @"{5} annotations whose m/z disagrees with the peak",
-                NSpectraAnnotated, NPeaksAnnotated, NPeaksUnannotated, NRejectedName, NRejectedRange, NRejectedMz);
+            return string.Format(OspreyIOResources.BlibAnnotationStats_Summary_Library_fragment_annotations___0_N0__spectra___1_N0__peaks_typed,
+                NSpectraAnnotated, NPeaksAnnotated, NPeaksUnannotated, NRejectedName, NUncheckedIonType, NRejectedRange, NRejectedMz);
         }
     }
 
@@ -75,7 +75,7 @@ namespace pwiz.Osprey.IO
     /// <para>Every annotation is checked against the m/z recomputed from the sequence and
     /// modifications (<see cref="PeptideFragmentMass"/>); one that misses the peak by more
     /// than max(0.02 Th, 20 ppm) is ignored and counted. Only b and y ions can be checked, so
-    /// other ion types are ignored as well.</para>
+    /// a, c, x and z ions are ignored as well, and counted apart from unreadable names.</para>
     /// </summary>
     internal static class BlibPeakAnnotations
     {
@@ -105,6 +105,11 @@ namespace pwiz.Osprey.IO
                 if (!TryParseName(row.Name, row.Charge, out var annotation))
                 {
                     stats.NRejectedName++;
+                    continue;
+                }
+                if (annotation.IonType != IonType.B && annotation.IonType != IonType.Y)
+                {
+                    stats.NUncheckedIonType++;
                     continue;
                 }
                 if (annotation.Ordinal >= sequence.Length)
@@ -147,8 +152,9 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Parses an annotation name; see the class summary for the grammar. Only b and y ions
-        /// are accepted, because only they can be checked against the peak m/z.
+        /// Parses an annotation name; see the class summary for the grammar. Any of the six
+        /// ion types is read; <see cref="Apply"/> types only b and y ions, the ones it can check
+        /// against the peak m/z.
         /// </summary>
         public static bool TryParseName(string name, int chargeColumn, out FragmentAnnotation annotation)
         {
@@ -167,7 +173,7 @@ namespace pwiz.Osprey.IO
                 return false;
 
             var ionType = IonTypeExtensions.FromChar(text[0]);
-            if (ionType != IonType.B && ionType != IonType.Y)
+            if (ionType == IonType.Unknown)
                 return false;
 
             int pos = 1;

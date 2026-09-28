@@ -42,6 +42,9 @@ namespace pwiz.Osprey.IO
 
         private readonly int _minFragments;
 
+        private static readonly FileVersionProbe _stackedModificationProbe =
+            new FileVersionProbe(HasStackedModificationText);
+
         public DiannTsvLoader() : this(DEFAULT_MIN_FRAGMENTS)
         {
         }
@@ -49,6 +52,18 @@ namespace pwiz.Osprey.IO
         public DiannTsvLoader(int minFragments)
         {
             _minFragments = minFragments;
+        }
+
+        /// <summary>
+        /// Whether any modified sequence in the TSV at <paramref name="path"/> puts two
+        /// modifications on one residue in <see cref="ParseModifications"/>: an N-terminal one
+        /// before a modified first residue (<c>_[UniMod:1]M[UniMod:35]PEPTIDEK_</c>,
+        /// <c>(UniMod:1)M(UniMod:35)PEPTIDEK</c>), or two in a row. Answered once per version of
+        /// the file; false for a missing or unreadable file.
+        /// </summary>
+        public static bool HasStackedModifications(string path)
+        {
+            return _stackedModificationProbe.Ask(path);
         }
 
         /// <summary>
@@ -567,6 +582,82 @@ namespace pwiz.Osprey.IO
         }
 
         #region Private helpers
+
+        /// <summary>
+        /// One pass over the bytes of the file, in whole lines, without splitting a row: two
+        /// modifications can share a residue only where one opens at the start of a field or
+        /// right after another closes, so only a field holding such a bracket is parsed.
+        /// </summary>
+        private static bool HasStackedModificationText(string path)
+        {
+            var buffer = new byte[1 << 20];
+            int carry = 0;
+            byte[] lastField = null;
+            // bufferSize 1: the chunks below are the only buffer, as in Load.
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 1,
+                FileOptions.SequentialScan))
+            {
+                while (true)
+                {
+                    int read = stream.Read(buffer, carry, buffer.Length - carry);
+                    int length = carry + read;
+                    int end = read == 0 ? length : Array.LastIndexOf(buffer, (byte)'\n', length - 1) + 1;
+                    if (end == 0 && read > 0)
+                    {
+                        // No line ends in the buffer yet: read on, growing it for a line longer than it.
+                        if (length == buffer.Length)
+                            Array.Resize(ref buffer, buffer.Length * 2);
+                        carry = length;
+                        continue;
+                    }
+                    if (HasStackedModificationText(new ReadOnlySpan<byte>(buffer, 0, end), ref lastField))
+                        return true;
+                    if (read == 0)
+                        return false;
+                    carry = length - end;
+                    Buffer.BlockCopy(buffer, end, buffer, 0, carry);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Whether the whole lines in <paramref name="lines"/> hold a stacked modification. A
+        /// field equal to the last one parsed - the rows of one precursor - is not parsed again.
+        /// </summary>
+        private static bool HasStackedModificationText(ReadOnlySpan<byte> lines, ref byte[] lastField)
+        {
+            int i = 0;
+            while (i < lines.Length)
+            {
+                int found = lines.Slice(i).IndexOfAny((byte)'[', (byte)'(');
+                if (found < 0)
+                    return false;
+                int open = i + found;
+                byte before = open == 0 ? (byte)'\n' : lines[open - 1];
+                if (before != '\n' && before != '\t' && before != '_' && before != ']' && before != ')')
+                {
+                    i = open + 1;
+                    continue;
+                }
+                int start = open;
+                while (start > 0 && lines[start - 1] != '\t' && lines[start - 1] != '\n')
+                    start--;
+                int stop = open;
+                while (stop < lines.Length && lines[stop] != '\t' && lines[stop] != '\n' && lines[stop] != '\r')
+                    stop++;
+                var field = lines.Slice(start, stop - start);
+                if (lastField == null || !field.SequenceEqual(lastField))
+                {
+                    lastField = field.ToArray();
+                    var modifications = ParseModifications(StripFlankingChars(Encoding.UTF8.GetString(field)));
+                    if (PeptideFragmentMass.HasStackedModifications(modifications))
+                        return true;
+                }
+                // The whole field is decided.
+                i = stop;
+            }
+            return false;
+        }
 
         private static string GetField(string[] fields, int index, string name, int rowNum)
         {

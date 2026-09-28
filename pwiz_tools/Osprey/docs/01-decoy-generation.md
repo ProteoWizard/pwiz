@@ -188,16 +188,20 @@ entrapment FDP unchanged within noise. It is kept for robustness at SMALL librar
 scale, where palindromes, low-complexity runs and isobaric I/L permutations are a far
 larger fraction.
 
-`CalculateFragmentMz` (`DecoyGenerator.cs`) computes masses from first
-principles against the `STANDARD_AA_MASSES` monoisotopic table
-(`DecoyGenerator.cs`) with `PROTON_MASS = 1.007276` and `H2O_MASS = 18.010565`
-(`DecoyGenerator.cs`):
+`CalculateFragmentMz` (`Osprey.Core/PeptideFragmentMass.cs`) computes masses from first
+principles against the `STANDARD_AA_MASSES` monoisotopic table with
+`PROTON_MASS = 1.007276` and `H2O_MASS = 18.010565`, all in the same file, which
+`DecoyGenerator` and the blib annotation reader share:
 
-- b-ion: sum of residues `[0, ordinal)` + proton (`DecoyGenerator.cs`).
-- y-ion: sum of residues `[seqLen-ordinal, seqLen)` + H2O + proton
-  (`DecoyGenerator.cs`).
+- b-ion: sum of residues `[0, ordinal)` + proton.
+- y-ion: sum of residues `[seqLen-ordinal, seqLen)` + H2O + proton.
 - Per-residue modification mass deltas are added by new position via `modMasses`
-  (`DecoyGenerator.cs`).
+  (`PeptideFragmentMass.ModMassesByPosition`). Modifications that land on one residue ADD: an
+  N-terminal acetyl and an oxidized first methionine both sit at position 0 in both library
+  loaders, so every decoy ion spanning that residue carries both, as the target's ions do.
+  Until this was fixed the map kept only the last of the two, putting those decoy ions 42 Da
+  off; a search that generates decoys from a library with such an entry keys on
+  `;decoymods=2` so a directory scored before the fix is not adopted.
 - Neutral loss is subtracted when present (`DecoyGenerator.cs`).
 - Final m/z: `(mass + (charge-1)*proton) / charge` (`DecoyGenerator.cs`).
 

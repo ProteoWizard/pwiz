@@ -66,9 +66,11 @@ namespace pwiz.Osprey.Tasks
         /// it must not be adopted after. A TSV library or a blib without annotation rows reads
         /// exactly as it did, so it gets no term and every such key is unchanged. The same
         /// shape as <c>SecondPassFdrTask</c>'s <c>;pass2proteinq=2</c>: a meaning changed
-        /// without anything the key already follows moving.
+        /// without anything the key already follows moving. Versioned with the reader, as the
+        /// <c>.libcache</c> composition term <c>blib_reader:2</c> is, so a later change to how
+        /// annotations are read moves it to <c>ann3</c>.
         /// </summary>
-        public const string LIBRARY_READER_TERM = @";libext=ann";
+        public const string LIBRARY_READER_TERM = @";libext=ann2";
 
         /// <summary>
         /// The base-key term of a blib library whose modification text the residue- and
@@ -79,6 +81,16 @@ namespace pwiz.Osprey.Tasks
         /// after it. Every other library keys exactly as before.
         /// </summary>
         public const string LIBRARY_MODS_TERM = @";libmods=2";
+
+        /// <summary>
+        /// The base-key term of a search that generates its decoys from a library some of whose
+        /// entries carry two modifications on one residue - an N-terminal acetyl before an
+        /// oxidized methionine, <c>(UniMod:1)M(UniMod:35)</c>. Decoy fragments kept only the last
+        /// of the two until they added, so a directory scored before that holds decoys 42 Da off
+        /// on every ion spanning the residue and must not be adopted after it. Every other
+        /// library, and every search whose decoys come from the library, keys exactly as before.
+        /// </summary>
+        public const string DECOY_MODS_TERM = @";decoymods=2";
 
         /// <summary>
         /// Short identifier used in pipeline log lines, the <c>--task</c> selector and the
@@ -231,15 +243,16 @@ namespace pwiz.Osprey.Tasks
         /// everything downstream inherits that choice. Putting it here also
         /// means a task added later carries it without having to know.
         ///
-        /// The library-reader term is here for the same reason: it changes what every task
-        /// reads from the library (see <see cref="LIBRARY_READER_TERM"/>).
+        /// The library terms are here for the same reason: they change what every task reads
+        /// from the library, or the decoys it generates from it (see
+        /// <see cref="LIBRARY_READER_TERM"/>, <see cref="DECOY_MODS_TERM"/>).
         /// </summary>
         public virtual string ValidityKey(PipelineContext ctx) => string.Format(
             @"search={0};library={1}{2}{3}",
             ctx.Config.Identity.SearchParameterHash(),
             ctx.Config.Identity.LibraryIdentityHash(),
             OspreyEnvironment.PickValidityKeySuffix(),
-            LibraryReaderValidityKeySuffix(ctx.Config));
+            LibraryValidityKeySuffix(ctx.Config));
 
         /// <summary>
         /// A <see cref="ValidateSelection"/> error naming this task and what it is missing,
@@ -266,18 +279,27 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// <see cref="LIBRARY_READER_TERM"/> for a blib library with annotation rows and
+        /// <see cref="LIBRARY_READER_TERM"/> for a blib library with annotation rows,
         /// <see cref="LIBRARY_MODS_TERM"/> for one with precision-sensitive modification text,
-        /// else empty. Both probes are cached per file version.
+        /// and <see cref="DECOY_MODS_TERM"/> for generated decoys of a library with stacked
+        /// modifications; else empty. Every probe is answered once per version of the file.
         /// </summary>
-        private static string LibraryReaderValidityKeySuffix(OspreyConfig config)
+        private static string LibraryValidityKeySuffix(OspreyConfig config)
         {
             var source = config.LibrarySource;
-            if (source == null || source.Format != LibraryFormat.Blib)
+            if (source == null)
                 return string.Empty;
-            string suffix = BlibLoader.HasPeakAnnotations(source.Path) ? LIBRARY_READER_TERM : string.Empty;
-            if (BlibLoader.HasPrecisionSensitiveModifications(source.Path))
-                suffix += LIBRARY_MODS_TERM;
+            string suffix = string.Empty;
+            if (source.Format == LibraryFormat.Blib)
+            {
+                if (BlibLoader.HasPeakAnnotations(source.Path))
+                    suffix += LIBRARY_READER_TERM;
+                if (BlibLoader.HasPrecisionSensitiveModifications(source.Path))
+                    suffix += LIBRARY_MODS_TERM;
+            }
+            bool librarySuppliesDecoys = config.DecoysInLibrary || config.DecoyMethod == DecoyMethod.FromLibrary;
+            if (!librarySuppliesDecoys && LibraryLoader.HasStackedModifications(source))
+                suffix += DECOY_MODS_TERM;
             return suffix;
         }
     }

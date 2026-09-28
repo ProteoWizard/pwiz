@@ -129,14 +129,19 @@ without annotation rows is read exactly as before.
 - **One annotation per peak:** of several annotations on one peak, one without a neutral loss
   wins, then the lowest charge.
 - **Counted, never fatal:** one log line reports the spectra and peaks typed, and the
-  annotations rejected for an unreadable name, for naming a peak or ion the spectrum does not
-  have, and for an m/z that disagrees with the peak.
-- **What typing changes:** the consecutive-ion feature, generated decoys (`DecoyGenerator`
-  recomputes typed fragments' m/z for the permuted sequence), and the training export's
-  library flags ([22](22-training-export.md)).
-- **Resume and cache safety:** an annotated blib adds `;libext=ann` to every task validity key
+  annotations set aside for an unreadable name, for an a, c, x or z ion (read, but not
+  checkable against the peak), for naming a peak or ion the spectrum does not have, and for an
+  m/z that disagrees with the peak.
+- **What typing changes:** the consecutive-ion feature and generated decoys (`DecoyGenerator`
+  recomputes typed fragments' m/z for the permuted sequence).
+- **Resume and cache safety:** an annotated blib adds `;libext=ann2` to every task validity key
   and `blib_reader:2` to the `.libcache` composition hash, so directories and caches written
-  before the reader change are not adopted ([14](14-intermediate-files.md)).
+  before the reader change are not adopted ([14](14-intermediate-files.md)). The term carries
+  the reader version, so a later change to how annotations are read moves it to `ann3`.
+- **Stacked modifications:** an N-terminal modification and one on the first residue both sit
+  at position 0, and every fragment spanning it, target or decoy, carries both. A search that
+  generates decoys from a library holding such an entry adds `;decoymods=2` to every key,
+  because decoys before that kept only the last of the two.
 
 ### Modification masses from `peptideModSeq`
 

@@ -49,7 +49,7 @@ namespace pwiz.Osprey.Test
     public class TaskValidityKeyTest
     {
         /// <summary>The base key term an annotated blib library adds (<c>OspreyTask.ValidityKey</c>).</summary>
-        private const string LIBEXT_TERM = @";libext=ann";
+        private const string LIBEXT_TERM = @";libext=ann2";
 
         [TestMethod]
         public void TestFlippedDefaultsParticipateInTheValidityKey()
@@ -61,6 +61,61 @@ namespace pwiz.Osprey.Test
             AssertLibraryFragmentArmIsPinnedToThePipeline();
             AssertDiagnosticsReportIsADeclaredOutputOnlyWhenAsked();
             AssertOnlyAnnotatedBlibsCarryTheReaderTerm();
+            AssertOnlyStackedLibrariesCarryTheDecoyTerm();
+        }
+
+        /// <summary>
+        /// Decoys of an entry with two modifications on one residue changed when decoy fragments
+        /// started adding them, so a search that generates its decoys from a library holding such
+        /// an entry keys on <see cref="OspreyTask.DECOY_MODS_TERM"/>. The same library with its
+        /// decoys supplied, and a library whose modifications only sit side by side, key exactly
+        /// as before.
+        /// </summary>
+        private static void AssertOnlyStackedLibrariesCarryTheDecoyTerm()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), @"osprey_decoymods_" + Path.GetRandomFileName());
+            Directory.CreateDirectory(dir);
+            try
+            {
+                const string header = "ModifiedPeptide\tStrippedPeptide\tPrecursorMz\n";
+                string stackedTsv = Path.Combine(dir, @"stacked.tsv");
+                File.WriteAllText(stackedTsv, header +
+                    "_C[UniMod:4]PEPTIDEK_\tCPEPTIDEK\t500.0\n" +
+                    "_[UniMod:1]M[UniMod:35]PEPTIDEK_\tMPEPTIDEK\t520.0\n");
+                string sideBySideTsv = Path.Combine(dir, @"side-by-side.tsv");
+                File.WriteAllText(sideBySideTsv, header +
+                    "_[UniMod:1]APEPTIDEK_\tAPEPTIDEK\t500.0\n" +
+                    "_C[UniMod:4]M[UniMod:35]PEPTIDEK_\tCMPEPTIDEK\t520.0\n");
+                string stackedBlib = BlibLibraryInputTest.CreateBlib(Path.Combine(dir, @"stacked.blib"),
+                    @"[+42.010565]M[+15.994915]PEPTIDEK", new[] { 300.0, 400.0 }, new (int, string, int)[0]);
+
+                foreach (string library in new[] { stackedTsv, stackedBlib })
+                {
+                    string name = Path.GetFileName(library);
+                    var generated = new OspreyConfig { LibrarySource = LibrarySource.FromPath(library) };
+                    Assert.AreEqual(PreUpgradeBaseKey(generated) + OspreyTask.DECOY_MODS_TERM, BaseKey(generated), name);
+                    var inLibrary = new OspreyConfig { LibrarySource = LibrarySource.FromPath(library), DecoysInLibrary = true };
+                    Assert.AreEqual(PreUpgradeBaseKey(inLibrary), BaseKey(inLibrary), name + @" with library decoys");
+                    var fromLibrary = new OspreyConfig { LibrarySource = LibrarySource.FromPath(library), DecoyMethod = DecoyMethod.FromLibrary };
+                    Assert.AreEqual(PreUpgradeBaseKey(fromLibrary), BaseKey(fromLibrary), name + @" with DecoyMethod.FromLibrary");
+                }
+                var sideBySide = new OspreyConfig { LibrarySource = LibrarySource.FromPath(sideBySideTsv) };
+                Assert.AreEqual(PreUpgradeBaseKey(sideBySide), BaseKey(sideBySide), @"modifications side by side do not stack");
+            }
+            finally
+            {
+                foreach (string file in Directory.GetFiles(dir))
+                    BlibLibraryInputTest.TryDeleteFile(file);
+                Directory.Delete(dir, true);
+            }
+        }
+
+        /// <summary>PerFileScoring's key, which every task's key starts with.</summary>
+        private static string BaseKey(OspreyConfig config)
+        {
+            var tasks = OspreyTasks.Create().Pipeline;
+            var ctx = new PipelineContext(config, tasks, null, null, null);
+            return tasks.OfType<PerFileScoringTask>().Single().ValidityKey(ctx);
         }
 
         /// <summary>
