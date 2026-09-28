@@ -30,6 +30,7 @@ using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
@@ -74,6 +75,9 @@ namespace pwiz.Osprey.Test
         private const int MIN_LIBDECOY_PRECURSORS = 100;
         // The Astral subset reports about 164.
         private const int MIN_ASTRAL_PRECURSORS = 120;
+        // The Astral subset recovers about 164 of the 203 its full run detected (81%), so the
+        // Stellar floor would leave one precursor of headroom.
+        private const double MIN_ASTRAL_RECOVERED_FRACTION = 0.7;
 
         private static readonly string[] RUN_NAMES =
         {
@@ -289,7 +293,10 @@ namespace pwiz.Osprey.Test
         public void TestSubsetOptionVariants()
         {
             string baseDir = CreateDir(@"sequential");
-            RunAnalysis(baseDir, DataInputs(), Verifier(false));
+            // Explicitly one file at a time: OSPREY_MAX_PARALLEL_FILES is read at class load, so an
+            // exported value would otherwise make this baseline parallel too.
+            string baseLog = RunAnalysis(baseDir, DataInputs(), Verifier(false),
+                OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText, @"1");
             string baseBlib = Path.Combine(baseDir, BLIB_FILE);
 
             // Files scored and re-scored concurrently must give the sequential answer. The subset's
@@ -302,7 +309,10 @@ namespace pwiz.Osprey.Test
 
             // --diagnostics writes its dumps to the current directory.
             string diagnosticsDir = CreateDir(@"diagnostics");
+            // It also sets every OSPREY_DUMP_* variable in the process environment, which would turn
+            // the dumps on for every later command line in this test host, so restore them.
             string savedDirectory = Directory.GetCurrentDirectory();
+            var savedVariables = SnapshotOspreyVariables();
             try
             {
                 Directory.SetCurrentDirectory(diagnosticsDir);
@@ -311,6 +321,7 @@ namespace pwiz.Osprey.Test
             finally
             {
                 Directory.SetCurrentDirectory(savedDirectory);
+                RestoreOspreyVariables(savedVariables);
             }
             Assert.AreNotEqual(0, Directory.GetFiles(diagnosticsDir, @"cs_*").Length, @"no diagnostic dumps written");
             AssertBlibsEqual(baseBlib, Path.Combine(diagnosticsDir, BLIB_FILE));
@@ -359,23 +370,37 @@ namespace pwiz.Osprey.Test
             // The non-default second-pass arms the regression's mode 10 runs: first-pass q-values
             // transferred, and the experiment score as the mean of each precursor's best two runs.
             string transferDir = CreateDir(@"pass2-transfer");
-            RunAnalysis(transferDir, DataInputs(), new Dictionary<string, string>
+            int savedMeanBestN = OspreyEnvironment.MeanBestN;
+            try
             {
-                { @"OSPREY_PASS2_VERIFY_WORKER", string.Empty },
-                { @"OSPREY_PASS2_QVALUE", @"transfer" },
-                { @"OSPREY_EXPERIMENT_AGG", @"mean-best-2" }
-            });
+                // OSPREY_EXPERIMENT_AGG is parsed once at class load, so an override cannot reach
+                // it; set the value it parses to, as MeanBestNAggregationTest does.
+                OspreyEnvironment.MeanBestN = 2;
+                string transferLog = RunAnalysis(transferDir, DataInputs(), new Dictionary<string, string>
+                {
+                    { @"OSPREY_PASS2_VERIFY_WORKER", string.Empty },
+                    { @"OSPREY_PASS2_QVALUE", @"transfer" }
+                });
+                AssertHasLine(transferLog, PathLine(LogKey.ROUTE_PASS2_QVALUE, @"transfer"));
+                AssertHasLine(transferLog, PathLine(LogKey.ROUTE_EXPERIMENT_AGG, OspreyEnvironment.ExperimentAgg));
+            }
+            finally
+            {
+                OspreyEnvironment.MeanBestN = savedMeanBestN;
+            }
             Assert.IsTrue(BlibComparer.CountRows(Path.Combine(transferDir, BLIB_FILE), @"RefSpectra") > 0,
                 @"the transfer arm reported no precursors");
 
             // Calibration from a sample of the library, as on a full-size library: sampled
             // below the 178 detected precursors, so the ladder must widen the sample to fit.
             string sampledDir = CreateDir(@"calibration-sample");
-            RunAnalysis(sampledDir, DataInputs(), new Dictionary<string, string>
+            string sampledLog = RunAnalysis(sampledDir, DataInputs(), new Dictionary<string, string>
             {
                 { @"OSPREY_PASS2_VERIFY_WORKER", string.Empty },
                 { @"OSPREY_CAL_SAMPLE_SIZE", @"100" }
             });
+            Assert.IsTrue(CalibrationMatchesScored(sampledLog) < CalibrationMatchesScored(baseLog),
+                @"the calibration sample was not smaller than the whole library");
             Assert.IsTrue(BlibComparer.CountRows(Path.Combine(sampledDir, BLIB_FILE), @"RefSpectra") > 0,
                 @"sampled calibration reported no precursors");
 
@@ -421,7 +446,7 @@ namespace pwiz.Osprey.Test
             int precursors = BlibComparer.CountRows(blib, @"RefSpectra");
             Assert.IsTrue(precursors >= MIN_ASTRAL_PRECURSORS, string.Format(@"{0} precursors reported", precursors));
             Assert.AreEqual(precursors * ASTRAL_RUN_NAMES.Length, BlibComparer.CountRows(blib, @"RetentionTimes"));
-            AssertRecoversFullRun(Path.Combine(dataDir, MANIFEST_FILE), blib);
+            AssertRecoversFullRun(Path.Combine(dataDir, MANIFEST_FILE), blib, MIN_ASTRAL_RECOVERED_FRACTION);
 
             string parallelDir = CreateDir(@"astral-parallel");
             RunOsprey(AstralArgs(parallelDir, OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText,
@@ -430,39 +455,61 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// A search Stage 6 has nothing to re-score in, under both second-pass modes: one run has
-        /// no other run to reconcile with, and its single 4 m/z window holds no two charge states
-        /// of one peptide. The second pass then carries the first-pass values and must still
-        /// write every artifact it declares - it once stopped, with no experiment-scope records
-        /// to write. Then an Osprey output .blib searched as the library: its peaks carry no b/y
-        /// annotations, so generated decoys would copy their targets exactly, and the search must
-        /// stop with one plain error rather than an exception from the calibration discriminant.
+        /// Libraries whose generated decoys have no fragments of their own. A decoy is built by
+        /// recomputing the target's b/y fragments on the reversed sequence, so a fragment of unknown
+        /// type is copied verbatim and one with no fragment number is dropped. An Osprey output
+        /// .blib (no fragment annotations) and a library whose fragment numbers are all missing
+        /// must each stop with one plain error; a library with a few such entries must warn and
+        /// still finish.
         /// </summary>
         [TestMethod, DoNotParallelize]
-        public void TestSubsetNothingRescoredAndBlibLibrary()
+        public void TestSubsetUnusableDecoys()
         {
-            var singleRun = DataInputs().Take(1).ToArray();
-            string singleBlib = null;
-            foreach (string pass2Mode in new[] { string.Empty, @"transfer" })
-            {
-                string workDir = CreateDir(@"single-file" + pass2Mode);
-                RunAnalysis(workDir, singleRun, new Dictionary<string, string>
-                {
-                    { @"OSPREY_PASS2_VERIFY_WORKER", string.Empty },
-                    { @"OSPREY_PASS2_QVALUE", pass2Mode }
-                });
-                Assert.AreEqual(1, Directory.GetFiles(workDir, @"*.2nd-pass.fdr_scores.bin").Length);
-                Assert.IsTrue(new FileInfo(Path.Combine(workDir, @"output.2nd-pass.fdr_experiment.bin")).Length > 0);
-                singleBlib = singleBlib ?? Path.Combine(workDir, BLIB_FILE);
-                Assert.IsTrue(BlibComparer.CountRows(Path.Combine(workDir, BLIB_FILE), @"RefSpectra") >= MIN_PRECURSORS / 2);
-            }
+            string straightDir = CreateDir(@"straight");
+            RunAnalysis(straightDir, DataInputs(), Verifier(false));
 
-            string blibDir = CreateDir(@"blib-library");
-            var args = InputArgs(singleRun).Concat(new[]
+            // Every decoy a copy of its target.
+            string blib = Path.Combine(straightDir, BLIB_FILE);
+            int blibPrecursors = BlibComparer.CountRows(blib, @"RefSpectra");
+            string output = RunExpectingRefusal(@"blib-library", blib);
+            StringAssert.Contains(output, RefusalText(blib, blibPrecursors));
+
+            // Every fragment number missing, so every decoy fragment is dropped.
+            string noNumbers = WriteLibraryWithoutFragmentNumbers(@"no-fragment-numbers.tsv", _ => true);
+            int libraryPrecursors = CountLibraryPrecursors(Path.Combine(_dataDir, LIBRARY_FILE));
+            output = RunExpectingRefusal(@"no-fragment-numbers", noNumbers);
+            StringAssert.Contains(output, RefusalText(noNumbers, libraryPrecursors));
+
+            // Two precursors without fragment numbers: a warning naming the count, and a search.
+            var strayPeptides = new HashSet<string>(File.ReadLines(Path.Combine(_dataDir, LIBRARY_FILE))
+                .Skip(1).Select(line => line.Split('\t')[0]).Distinct().Take(2));
+            string strays = WriteLibraryWithoutFragmentNumbers(@"two-stray.tsv", strayPeptides.Contains);
+            string strayDir = CreateDir(@"two-stray");
+            string log = RunOsprey(InputArgs(DataInputs()).Concat(new[]
             {
-                OspreyCommandArgs.ARG_LIBRARY.ArgumentText, singleBlib,
-                OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(blibDir, BLIB_FILE),
-                OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, blibDir
+                OspreyCommandArgs.ARG_LIBRARY.ArgumentText, strays,
+                OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(strayDir, BLIB_FILE),
+                OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, strayDir
+            }).Concat(CommonArgs()).ToArray(), Verifier(false));
+            StringAssert.Contains(log, string.Format(
+                OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_Decoys_with_no_fragment_distinct_from_their_target___0__of__1____2____generated_,
+                strayPeptides.Count, libraryPrecursors, strayPeptides.Count / (double)libraryPrecursors, strays));
+            Assert.IsTrue(BlibComparer.CountRows(Path.Combine(strayDir, BLIB_FILE), @"RefSpectra") >= MIN_PRECURSORS);
+        }
+
+        /// <summary>
+        /// Search the subset with <paramref name="library"/>, which must be refused before any work:
+        /// the exit code for a failure to start, exactly one error line, no exception type, and no
+        /// line saying the exit code had to be reconciled with the log.
+        /// </summary>
+        private string RunExpectingRefusal(string dirName, string library)
+        {
+            string workDir = CreateDir(dirName);
+            var args = InputArgs(DataInputs().Take(1)).Concat(new[]
+            {
+                OspreyCommandArgs.ARG_LIBRARY.ArgumentText, library,
+                OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(workDir, BLIB_FILE),
+                OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, workDir
             }).Concat(CommonArgs()).ToArray();
             string output;
             int exitCode;
@@ -470,12 +517,87 @@ namespace pwiz.Osprey.Test
             {
                 exitCode = InProcessOsprey.Run(args, out output);
             }
-            Assert.AreNotEqual(Program.EXIT_CODE_SUCCESS, exitCode, output);
+            Assert.AreEqual(Program.EXIT_CODE_FAILURE_TO_START, exitCode, output);
             Assert.AreEqual(1, SplitLines(output).Count(CommandStatusWriter.IsErrorLine), output);
-            StringAssert.Contains(output, string.Format(
-                OspreyTasksResources.PerFileScoringTask_LoadLibraryAndDecoys_The_library__0__has_no_b_or_y_fragment_ion_annotations__so_Osprey_cannot_,
-                singleBlib, OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY.ArgumentText));
             Assert.IsFalse(output.Contains(typeof(Exception).Namespace + @"."), output);
+            Assert.IsFalse(HasLine(output, PathLine(LogKey.ROUTE_EXIT_RECONCILED, string.Empty)), output);
+            return output;
+        }
+
+        /// <summary>
+        /// The refusal for a library none of whose <paramref name="decoyCount"/> generated decoys
+        /// has a fragment of its own.
+        /// </summary>
+        private static string RefusalText(string library, int decoyCount)
+        {
+            return string.Format(
+                OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_The_library__3__is_missing_b_or_y_fragment_ion_annotations_or_fragment_numbers___0__of__,
+                decoyCount, decoyCount, 1.0, library, PerFileScoringTask.MAX_UNUSABLE_DECOY_FRACTION,
+                OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY));
+        }
+
+        /// <summary>
+        /// The distinct precursors (modified peptide, charge) in a DIA-NN style .tsv library.
+        /// </summary>
+        private static int CountLibraryPrecursors(string library)
+        {
+            var lines = File.ReadLines(library).ToList();
+            int charge = Array.IndexOf(lines[0].Split('\t'), @"PrecursorCharge");
+            return lines.Skip(1).Select(line => line.Split('\t'))
+                .Select(fields => fields[0] + @"|" + fields[charge]).Distinct().Count();
+        }
+
+        /// <summary>
+        /// A copy of the subset library with the fragment number set to 0 on every row of the
+        /// precursors <paramref name="blank"/> selects by modified peptide.
+        /// </summary>
+        private string WriteLibraryWithoutFragmentNumbers(string fileName, Func<string, bool> blank)
+        {
+            var lines = File.ReadAllLines(Path.Combine(_dataDir, LIBRARY_FILE));
+            int column = Array.IndexOf(lines[0].Split('\t'), @"FragmentNumber");
+            Assert.AreNotEqual(-1, column);
+            for (int i = 1; i < lines.Length; i++)
+            {
+                var fields = lines[i].Split('\t');
+                if (blank(fields[0]))
+                {
+                    fields[column] = @"0";
+                    lines[i] = string.Join('\t', fields);
+                }
+            }
+            string path = Path.Combine(_testDir, fileName);
+            File.WriteAllLines(path, lines);
+            return path;
+        }
+
+        /// <summary>
+        /// The calibration matches scored in the first run's first calibration pass, from the
+        /// [COUNT] line --perf-stats writes.
+        /// </summary>
+        private static int CalibrationMatchesScored(string log)
+        {
+            var match = Regex.Match(log, @"Calibration pass 1 matches scored \[[^\]]*\]: (\d+)");
+            Assert.IsTrue(match.Success, @"no calibration match count in the log");
+            return int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
+        /// Every OSPREY_* variable in the process environment, to restore after a command line that
+        /// sets some.
+        /// </summary>
+        private static Dictionary<string, string> SnapshotOspreyVariables()
+        {
+            return Environment.GetEnvironmentVariables().Keys.Cast<string>()
+                .Where(name => name.StartsWith(@"OSPREY_", StringComparison.OrdinalIgnoreCase))
+                .ToDictionary(name => name, Environment.GetEnvironmentVariable);
+        }
+
+        private static void RestoreOspreyVariables(Dictionary<string, string> saved)
+        {
+            foreach (string name in SnapshotOspreyVariables().Keys.Where(name => !saved.ContainsKey(name)))
+                Environment.SetEnvironmentVariable(name, null);
+            foreach (var pair in saved)
+                Environment.SetEnvironmentVariable(pair.Key, pair.Value);
         }
 
         private void ValidateStraightThrough(string workDir, string log)
@@ -503,21 +625,21 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(BlibComparer.CountRows(blib, @"OspreyPeakBoundaries") >= precursors);
             Assert.IsTrue(BlibComparer.CountRows(blib, @"Proteins") > 0);
 
-            AssertRecoversFullRun(Path.Combine(_dataDir, MANIFEST_FILE), blib);
+            AssertRecoversFullRun(Path.Combine(_dataDir, MANIFEST_FILE), blib, MIN_RECOVERED_FRACTION);
         }
 
         /// <summary>
         /// The reported precursors are mostly the ones the full 3-file regression run detected in
         /// this rectangle, and few of the ones it did not.
         /// </summary>
-        private static void AssertRecoversFullRun(string manifestPath, string blib)
+        private static void AssertRecoversFullRun(string manifestPath, string blib, double minRecoveredFraction)
         {
             var manifest = ReadManifest(manifestPath);
             var reported = new HashSet<string>(ReadPrecursorKeys(blib));
             int detected = manifest.Count(p => p.Value);
             int recovered = manifest.Count(p => p.Value && reported.Contains(p.Key));
             int newlyDetected = manifest.Count(p => !p.Value && reported.Contains(p.Key));
-            Assert.IsTrue(recovered >= MIN_RECOVERED_FRACTION * detected,
+            Assert.IsTrue(recovered >= minRecoveredFraction * detected,
                 string.Format(@"recovered {0} of {1} full-run detections", recovered, detected));
             Assert.IsTrue(newlyDetected <= MAX_NEWLY_DETECTED_FRACTION * (manifest.Count - detected),
                 string.Format(@"{0} precursors the full run did not detect were reported", newlyDetected));
@@ -739,7 +861,7 @@ namespace pwiz.Osprey.Test
             foreach (string line in File.ReadLines(manifestPath).Skip(1))
             {
                 var fields = line.Split('\t');
-                manifest[PrecursorKey(StripModifications(fields[0]), fields[1])] = fields[2] == @"1";
+                manifest[PrecursorKey(DiannTsvLoader.StripModifications(fields[0]), fields[1])] = fields[2] == @"1";
             }
             return manifest;
         }
@@ -763,11 +885,6 @@ namespace pwiz.Osprey.Test
                     return keys;
                 }
             }
-        }
-
-        private static string StripModifications(string modifiedPeptide)
-        {
-            return Regex.Replace(modifiedPeptide, @"\[[^\]]*\]", string.Empty).Trim('_');
         }
 
         private static string PrecursorKey(string sequence, string charge)

@@ -42,7 +42,7 @@ namespace pwiz.Osprey.Test
         private static readonly Projection[] PROJECTIONS =
         {
             new Projection(@"RefSpectra", 2,
-                @"SELECT peptideModSeq, precursorCharge, precursorMZ, retentionTime, startTime, endTime, score, " +
+                @"SELECT peptideModSeq, precursorCharge, precursorMZ, retentionTime, startTime, endTime, score, ionMobility, " +
                 @"peptideSeq, prevAA, nextAA, copies, numPeaks, scoreType FROM RefSpectra"),
             new Projection(@"RetentionTimes", 3,
                 @"SELECT r.peptideModSeq, r.precursorCharge, s.fileName, t.retentionTime, t.startTime, t.endTime, " +

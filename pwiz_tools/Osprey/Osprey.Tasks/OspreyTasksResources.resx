@@ -811,9 +811,6 @@
   <data name="Pass2FdrSidecar_RestorePass1Scalars_Restoring_first_pass_scores_for__0__files" xml:space="preserve">
     <value>Restoring first-pass scores for {0:N0} files</value>
   </data>
-  <data name="Pass2FdrSidecar_WritePass2ExperimentSidecar_1_precursor_candidate_has_no_experiment_level_FDR_values_to_carry_int" xml:space="preserve">
-    <value>1 precursor candidate has no experiment-level FDR values to carry into the second pass: the experiment-level intermediate file beside the output library is missing or belongs to a different analysis. Run the analysis again from the first pass.</value>
-  </data>
   <data name="Pass2FdrSidecar_WritePass2ExperimentSidecar_Could_not_read_the_re_scored_results_for__0____1_" xml:space="preserve">
     <value>Could not read the re-scored results for {0}: {1}</value>
   </data>
@@ -840,9 +837,6 @@
   </data>
   <data name="Pass2FdrSidecar_WritePass2ExperimentSidecar_Wrote_experiment_level_FDR_results_for__1__precursor_candidates_to__0_" xml:space="preserve">
     <value>Wrote experiment-level FDR results for {1:N0} precursor candidates to {0}</value>
-  </data>
-  <data name="Pass2FdrSidecar_WritePass2ExperimentSidecar__0__precursor_candidates_have_no_experiment_level_FDR_values_to_carry_" xml:space="preserve">
-    <value>{0:N0} precursor candidates have no experiment-level FDR values to carry into the second pass: the experiment-level intermediate file beside the output library is missing or belongs to a different analysis. Run the analysis again from the first pass.</value>
   </data>
   <data name="Pass2SidecarWriter_Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_" xml:space="preserve">
     <value>Failed to record that --task {0} completed {1}: {2}. A resume will redo this step.</value>
@@ -1048,6 +1042,12 @@
   <data name="PerFileResumeDriver_Stamp___Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_" xml:space="preserve">
     <value>Failed to record that --task {0} completed {1}: {2}. A resume will redo this step.</value>
   </data>
+  <data name="PerFileScoringTask_CheckDecoysUsable_Decoys_with_no_fragment_distinct_from_their_target___0__of__1____2____generated_" xml:space="preserve">
+    <value>Decoys with no fragment distinct from their target: {0:N0} of {1:N0} ({2:P1}), generated from the library {3}. Those targets have no real decoy competition; check that the library has b and y fragment annotations with fragment numbers.</value>
+  </data>
+  <data name="PerFileScoringTask_CheckDecoysUsable_The_library__3__is_missing_b_or_y_fragment_ion_annotations_or_fragment_numbers___0__of__" xml:space="preserve">
+    <value>The library {3} is missing b or y fragment ion annotations or fragment numbers: {0:N0} of {1:N0} generated decoys ({2:P1}, more than {4:P0}) have no fragment distinct from their target, so Osprey cannot generate usable decoys from it. Use a library with annotated fragments, such as a DIA-NN or Carafe library, or one that already contains decoys, with {5}.</value>
+  </data>
   <data name="PerFileScoringTask_EmitCalibrationSummary_Calibration_summary___0___" xml:space="preserve">
     <value>Calibration summary [{0}]:</value>
   </data>
@@ -1152,9 +1152,6 @@
   </data>
   <data name="PerFileScoringTask_LoadLibraryAndDecoys_Full_library___0__target_precursor_candidates__second_pass_FDR_does_not_need_the_decoys_" xml:space="preserve">
     <value>Full library: {0:N0} target precursor candidates; second-pass FDR does not need the decoys.</value>
-  </data>
-  <data name="PerFileScoringTask_LoadLibraryAndDecoys_The_library__0__has_no_b_or_y_fragment_ion_annotations__so_Osprey_cannot_" xml:space="preserve">
-    <value>The library {0} has no b or y fragment ion annotations, so Osprey cannot generate decoys from it. Use a library with annotated fragments, such as a DIA-NN or Carafe library, or one that already contains decoys, with {1}.</value>
   </data>
   <data name="PerFileScoringTask_LoadLibraryAndDecoys_The_spectral_library_is_empty_after_loading_" xml:space="preserve">
     <value>The spectral library is empty after loading.</value>
