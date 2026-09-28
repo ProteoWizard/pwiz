@@ -25,6 +25,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
@@ -2103,11 +2104,16 @@ namespace pwiz.Skyline.ToolsUI
 
         // The node whose text matches the key, or failing that whose text does without a trailing parenthetical --
         // the results a Targets node shows after its name, e.g. "513.7951++ (rdotp 0.91, total ratio 0.02)",
-        // which change with the data. -1 if none.
+        // which change with the data -- or, for a Targets peptide shown with its flanking residues and position
+        // ("K.IHGFDLAAINLQR.C [545, 557]"), whose sequence does. -1 if none.
         private static int BestTreeNodeMatch(IList<TreeNode> nodes, string key)
         {
             int best = BestMatch(nodes.Count, j => nodes[j].Text, key);
-            return best >= 0 ? best : BestMatch(nodes.Count, j => WithoutTrailingParenthetical(nodes[j].Text), key);
+            if (best < 0)
+                best = BestMatch(nodes.Count, j => WithoutTrailingParenthetical(nodes[j].Text), key);
+            if (best < 0)
+                best = BestMatch(nodes.Count, j => (nodes[j] as PeptideTreeNode)?.DocNode.Peptide.Sequence, key);
+            return best;
         }
 
         private static string WithoutTrailingParenthetical(string text)

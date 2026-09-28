@@ -28,14 +28,13 @@ are written `tool(arg=value)` with the `skyline_` prefix dropped. Here:
 
 ## Gaps
 
-| Tutorial step | What happened | Stand-in used here |
-|---|---|---|
-| Select IHGFDLAAINLQR, EGIHAQQK, IDALNENK, LICDNTHITK | In this document a peptide node reads "K.IHGFDLAAINLQR.C [545, 557]" (flanking residues and positions), which `select_item` does not match to the bare sequence | `set_selection` with `Molecule:/<protein>/<sequence>` (the protein from `get_report_from_definition`) |
+None left.
 
 ### Fixed during this work
 
 | Tutorial step | What happened | Fix |
 |---|---|---|
+| Select IHGFDLAAINLQR, EGIHAQQK, IDALNENK, LICDNTHITK | In this document a peptide node reads "K.IHGFDLAAINLQR.C [545, 557]" (flanking residues and positions), which `select_item` did not match to the bare sequence; the run used `set_selection` with `Molecule:/<protein>/<sequence>` | A Targets peptide node also matches its sequence. Checked afterwards: `select_item(value="LICDNTHITK")` selects `LIC[+57.021464]DNTHITK` |
 | In the Collision Energy Regression list, select "Thermo" | `get_form_value` on a list box returned nothing, so the selection could only be checked in a screenshot | A ListBox's value, and a ListView's, is the selected items' text, one per line |
 
 ### Found in the tutorial
