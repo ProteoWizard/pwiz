@@ -595,7 +595,7 @@ namespace SkylineTool
         /// verified enabled first.
         ///
         /// <para>The key goes through everything a real press does: keyboard shortcuts and dialog keys first
-        /// (the control's PreProcessMessage), then the key-down message - seen by any form around it that
+        /// (the control's PreProcessControlMessage: PreviewKeyDown, then shortcuts and dialog keys), then the key-down message - seen by any form around it that
         /// previews keys, by KeyDown handlers, and by the control's own window procedure (an arrow moving a
         /// list's selection) - then the character the key types (Backspace editing a text box), unless a
         /// handler suppressed it, then the key-up. The modifiers are in the thread's keyboard state while the

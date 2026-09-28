@@ -2303,11 +2303,12 @@ namespace pwiz.Skyline.ToolsUI
             cell.Value = value;
         }
 
-        // A grid carries no caption, so it is addressed by its control Name -- the one place the connector
-        // matches on a name rather than on visible text (an empty name picks the form's single grid, handled
-        // by FindElement). The name match is the same whether strict or loose.
+        // A grid carries no caption of its own, so it is addressed by the label before it -- the one
+        // skyline_get_controls reports, e.g. "Input Files" -- or by its control Name, the one place the connector
+        // matches on a name rather than on visible text (an empty name picks the form's single grid, handled by
+        // FindElement). The name match is the same whether strict or loose.
         public override bool MatchesText(string text, bool strict) =>
-            string.Equals(Control.Name, text, StringComparison.OrdinalIgnoreCase);
+            string.Equals(Control.Name, text, StringComparison.OrdinalIgnoreCase) || base.MatchesText(text, strict);
 
         // A grid is a leaf in the walk (not a ContainerElement): its content is read/written through the
         // grid actions, not by walking into child controls. The plain path reads/writes cells directly.

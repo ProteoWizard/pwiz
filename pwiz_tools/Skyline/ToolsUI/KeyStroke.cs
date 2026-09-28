@@ -27,7 +27,7 @@ namespace pwiz.Skyline.ToolsUI
 {
     /// <summary>
     /// Presses one key on a control the way the keyboard does, whether or not the control has the focus, so
-    /// every step a real key press goes through runs: the control's pre-processing (ProcessCmdKey up the parent
+    /// every step a real key press goes through runs: the control's pre-processing (PreviewKeyDown, ProcessCmdKey up the parent
     /// chain for menu shortcuts, then ProcessDialogKey for Enter, Esc and Tab), then the key-down message, which
     /// WinForms shows first to any form that previews keys, then to KeyDown handlers, and then to the control's
     /// own window procedure (an arrow moving a list's selection, Home moving a tree's); then the character the
@@ -100,13 +100,13 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        // Control.PreProcessMessage is the message loop's step before a key message is dispatched: shortcuts
-        // (ProcessCmdKey) and dialog keys (ProcessDialogKey) for a key-down, mnemonics for a character. Returns
-        // true when it used the message, which then goes no further.
+        // Control.PreProcessControlMessage is the message loop's step before a key message is dispatched: the
+        // PreviewKeyDown event, then shortcuts (ProcessCmdKey) and dialog keys (ProcessDialogKey) for a key-down,
+        // mnemonics for a character. Returns true when it used the message, which then goes no further.
         private static bool PreProcess(Control control, User32.WinMessageType messageType, IntPtr wParam, long lParam)
         {
             var message = Message.Create(control.Handle, (int) messageType, wParam, (IntPtr) lParam);
-            return control.PreProcessMessage(ref message);
+            return control.PreProcessControlMessage(ref message) == PreProcessControlState.MessageProcessed;
         }
 
         // The character the key types with this keyboard state, if it types exactly one.

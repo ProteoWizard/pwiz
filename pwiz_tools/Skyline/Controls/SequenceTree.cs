@@ -1106,7 +1106,13 @@ namespace pwiz.Skyline.Controls
             switch(e.KeyCode)
             {
                 case Keys.Space:
-                    ShowPickList();
+                    // When Space opens a pick-list it is used up: its character would otherwise start editing an
+                    // editable node's label (OnKeyPress), which takes the focus and so closes the pick-list.
+                    if (GetPicker(SelectedNode) != null)
+                    {
+                        ShowPickList();
+                        e.Handled = e.SuppressKeyPress = true;
+                    }
                     break;
 
                 case Keys.End:
