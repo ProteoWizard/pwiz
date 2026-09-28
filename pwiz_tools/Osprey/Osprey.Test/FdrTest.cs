@@ -410,7 +410,7 @@ namespace pwiz.Osprey.Test
         {
             var grid = new[] { 0.001, 0.01, 0.1, 1.0, 10.0, 100.0 };
             var stellar = new[] { 4670, 4925, 5025, 5037, 5002, 4971 };
-            // Strict maximum (tolerance 0, the Rust behavior): C = 1 wins by 12 of 5,037.
+            // Strict maximum (tolerance 0, the pre-#4703 rule): C = 1 wins by 12 of 5,037.
             Assert.AreEqual(1.0, PercolatorTrainer.SelectC(grid, stellar, 0));
             // Within 1% (>= 4,986.6): 0.1, 1 and 10 qualify and the most regularized is 0.1; 0.01's 4,925 does not.
             Assert.AreEqual(0.1, PercolatorTrainer.SelectC(grid, stellar, 0.01));

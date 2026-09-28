@@ -501,7 +501,7 @@ if (-not [string]::IsNullOrWhiteSpace($env:OSPREY_ALLOW_UNFIXED_RESIDENT)) {
 }
 
 # The goldens are captured under the shipped first-pass SVM C selection, so an inherited
-# OSPREY_SVM_C_TOLERANCE (the cross-implementation scripts set it to 0) would train every leg
+# OSPREY_SVM_C_TOLERANCE (for example a 0 left over from an A/B shell) would train every leg
 # under another rule and fail every dataset - or, under -CreateGolden, bless that rule as the
 # golden. Cleared, announced, and restored in the finally block like the allowance above.
 $script:priorSvmCTolerance = $env:OSPREY_SVM_C_TOLERANCE

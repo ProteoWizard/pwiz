@@ -398,8 +398,8 @@ namespace pwiz.Osprey.FDR
                 // default); OSPREY_MAX_TRAIN_SIZE raises it to feed the model more rows.
                 MaxTrainSize = OspreyEnvironment.MaxTrainSizeOverride ?? 300000,
                 // The most regularized C within this fraction of the best inner-CV count
-                // (OSPREY_SVM_C_TOLERANCE, range-checked at startup; 0 is the strict maximum
-                // Rust uses).
+                // (OSPREY_SVM_C_TOLERANCE, range-checked at startup; 0 is the strict maximum,
+                // the pre-#4703 rule).
                 CSelectionTolerance = OspreyEnvironment.SvmCSelectionTolerance,
                 // Honors --threads; drives only the tree score pass (see NThreads).
                 NThreads = config.NThreads,

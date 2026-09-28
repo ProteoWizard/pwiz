@@ -1175,8 +1175,8 @@ namespace pwiz.Osprey.FDR
             // c_values.par_iter() in osprey-ml/src/svm.rs::grid_search_c.
             // Each C is independent (no shared mutable state during
             // training); the per-C totalPassing is stored by index so
-            // SelectC is deterministic. Rust keeps the strict maximum;
-            // SelectC does so only with a tolerance of 0. OspreyParallel.For
+            // SelectC is deterministic; Rust's svm::select_c applies the same
+            // rule (maccoss/osprey#69). OspreyParallel.For
             // (explicit threads) replaces TPL Parallel.For for the same
             // reason as the outer loop above.
             var totalPassingByC = new int[cValues.Length];
@@ -1250,7 +1250,7 @@ namespace pwiz.Osprey.FDR
         /// The C a grid search keeps: the smallest (most regularized) C whose inner-CV
         /// passing count is within <paramref name="tolerance"/> (a fraction) of the best
         /// count. With a tolerance of 0 this is the strict maximum, the first C in grid order
-        /// winning a tie, which is what the Rust implementation does.
+        /// winning a tie (the pre-#4703 rule). Rust's svm::select_c is the same function.
         /// </summary>
         internal static double SelectC(double[] cValues, int[] totalPassingByC, double tolerance)
         {
