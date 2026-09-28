@@ -57,7 +57,7 @@ namespace pwiz.Osprey.Tasks
         /// This task's name, as a constant so the CLI selector, the tests and the report
         /// spell it from here.
         /// </summary>
-        public const string TASK_NAME = @"ModelDiagnostics";
+        public const string TASK_NAME = OspreyTaskNames.MODEL_DIAGNOSTICS;
 
         public override string Name => TASK_NAME;
 

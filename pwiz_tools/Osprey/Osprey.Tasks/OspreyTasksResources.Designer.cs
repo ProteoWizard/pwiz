@@ -479,7 +479,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Reconciliation planning stopped: the .scores.parquet file for {0} is missing. Delete any partial outputs and run again so it is written again..
+        ///   Looks up a localized string similar to Reconciliation planning stopped: the {1} file for {0} is missing. Delete any partial outputs and run again so it is written again..
         /// </summary>
         public static string CwtCandidateLoader_LoadOneFile_Reconciliation_planning_stopped__the__scores_parquet_file_for__0__is_missing__Delete_any_ {
             get {
@@ -489,7 +489,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Reconciliation planning stopped: the CWT candidates in {0} could not be read: {1}. The .scores.parquet file is damaged. Delete it and run again so it is written again..
+        ///   Looks up a localized string similar to Reconciliation planning stopped: the CWT candidates in {0} could not be read: {1}. The {2} file is damaged. Delete it and run again so it is written again..
         /// </summary>
         public static string CwtCandidateLoader_LoadOneFile_Reconciliation_planning_stopped__the_CWT_candidates_in__0__could_not_be_read___1___The__ {
             get {
@@ -499,7 +499,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Reconciliation planning stopped: CWT candidates are missing or damaged in {0:N0} of {1:N0} files: [{2}]. Delete the .scores.parquet files of those inputs and run again so they are written again..
+        ///   Looks up a localized string similar to Reconciliation planning stopped: CWT candidates are missing or damaged in {0:N0} of {1:N0} files: [{2}]. Delete the {3} files of those inputs and run again so they are written again..
         /// </summary>
         public static string CwtCandidateLoader_ThrowIfAnyInvalid_Reconciliation_planning_stopped__CWT_candidates_are_missing_or_damaged_in__0__of__1__ {
             get {
@@ -509,7 +509,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} (.scores.parquet file missing).
+        ///   Looks up a localized string similar to {0} ({1} file missing).
         /// </summary>
         public static string CwtCandidateLoader_ValidateFileInRange__0____scores_parquet_file_missing_ {
             get {
@@ -518,7 +518,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} (a CWT candidate refers to row {1:N0}, but the .scores.parquet file has only {2:N0} rows).
+        ///   Looks up a localized string similar to {0} (a CWT candidate refers to row {1:N0}, but the {3} file has only {2:N0} rows).
         /// </summary>
         public static string CwtCandidateLoader_ValidateFileInRange__0___a_CWT_candidate_refers_to_row__1___but_the__scores_parquet_file_has_only__2__rows_ {
             get {
@@ -688,7 +688,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to first-pass intermediate files next to each input&apos;s .scores.parquet file, and the analysis-wide ones beside {0} (which is not written).
+        ///   Looks up a localized string similar to first-pass intermediate files next to each input&apos;s {1} file, and the analysis-wide ones beside {0} (which is not written).
         /// </summary>
         public static string FirstPassFdrTask_DescribeOutput_first_pass_intermediate_files_next_to_each_input_s__scores_parquet_file__and_the_analysis_ {
             get {
@@ -708,7 +708,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0:N0} FDRBench rows had very long protein ID lists, which were truncated with &apos;;...+N_more&apos;..
+        ///   Looks up a localized string similar to {0:N0} FDRBench rows had very long protein ID lists, which were truncated with &apos;{1}&apos;..
         /// </summary>
         public static string FirstPassFdrTask_EmitFdrBenchPass1__0__FDRBench_rows_had_very_long_protein_ID_lists__which_were_truncated_with_______N_more__ {
             get {
@@ -738,7 +738,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to --task ModelDiagnostics: could not prepare the report: {0}.
+        ///   Looks up a localized string similar to {1}: could not prepare the report: {0}.
         /// </summary>
         public static string FirstPassFdrTask_FoldDiagnosticsOnly___task_ModelDiagnostics__could_not_prepare_the_report___0_ {
             get {
@@ -748,7 +748,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to --task ModelDiagnostics: no .scores.parquet file is known for {0}..
+        ///   Looks up a localized string similar to {1}: no {2} file is known for {0}..
         /// </summary>
         public static string FirstPassFdrTask_FoldDiagnosticsOnly___task_ModelDiagnostics__no__scores_parquet_file_is_known_for__0__ {
             get {
@@ -768,7 +768,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There is no output .blib, so there is no whole-experiment first-pass intermediate file to read protein q-values from..
+        ///   Looks up a localized string similar to There is no output {0}, so there is no whole-experiment first-pass intermediate file to read protein q-values from..
         /// </summary>
         public static string FirstPassFdrTask_LoadFirstPassExperimentRecords_There_is_no_output__blib__so_there_is_no_whole_experiment_first_pass_intermediate_file_to_ {
             get {
@@ -778,7 +778,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot resume: no .scores.parquet file is known for {0}..
+        ///   Looks up a localized string similar to Cannot resume: no {1} file is known for {0}..
         /// </summary>
         public static string FirstPassFdrTask_LoadOwnReconciliationBundle_Cannot_resume__no__scores_parquet_file_is_known_for__0__ {
             get {
@@ -836,7 +836,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to --task FirstPassFDR: {0:N0} of {1:N0} first-pass intermediate files could not be written, so the next task cannot run. See the warnings above for each file..
+        ///   Looks up a localized string similar to {2}: {0:N0} of {1:N0} first-pass intermediate files could not be written, so the next task cannot run. See the warnings above for each file..
         /// </summary>
         public static string FirstPassFdrTask_LogIntermediateWriteFailures___task_FirstPassFDR___0__of__1__first_pass_intermediate_files_could_not_be_written__so_ {
             get {
@@ -915,7 +915,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to --task FirstPassFDR complete: first-pass FDR and reconciliation planning done for {0:N0} files. The next task, PerFileRescoring, reads this output directory: the files written for each input and the analysis-wide first-pass files..
+        ///   Looks up a localized string similar to {1} complete: first-pass FDR and reconciliation planning done for {0:N0} files. The next task, {2}, reads this output directory: the files written for each input and the analysis-wide first-pass files..
         /// </summary>
         public static string FirstPassFdrTask_PlanStage6___task_FirstPassFDR_complete__first_pass_FDR_and_reconciliation_planning_done_for__0__ {
             get {
@@ -925,7 +925,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to --task FirstPassFDR complete: first-pass FDR and reconciliation planning done for 1 file. The next task, PerFileRescoring, reads this output directory: the files written for the input and the analysis-wide first-pass files..
+        ///   Looks up a localized string similar to {1} complete: first-pass FDR and reconciliation planning done for 1 file. The next task, {2}, reads this output directory: the files written for the input and the analysis-wide first-pass files..
         /// </summary>
         public static string FirstPassFdrTask_PlanStage6___task_FirstPassFDR_complete__first_pass_FDR_and_reconciliation_planning_done_for_1_file__ {
             get {
@@ -1003,7 +1003,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This analysis cannot resume from its completed first pass with {0}. Delete this analysis&apos;s *.FirstPassFDR.osprey.task files and run again to repeat the first pass..
+        ///   Looks up a localized string similar to This analysis cannot resume from its completed first pass with {0}. Delete this analysis&apos;s {1} files and run again to repeat the first pass..
         /// </summary>
         public static string FirstPassFdrTask_RehydrateForPerRunRescore_This_analysis_cannot_resume_from_its_completed_first_pass_with__0_ {
             get {
@@ -1121,7 +1121,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to no list of precursors from proteins with 2 or more first-pass peptides ({0}) was found beside the inputs&apos; .scores.parquet files.
+        ///   Looks up a localized string similar to no list of precursors from proteins with 2 or more first-pass peptides ({0}) was found beside the inputs&apos; {1} files.
         /// </summary>
         public static string FirstPassFdrTask_RunFirstPassProjection_no_list_of_precursors_from_proteins_with_2_or_more_first_pass_peptides___0___was_found {
             get {
@@ -1131,7 +1131,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to no readable first-pass model file (.1st-pass.model.json) was found beside the inputs&apos; .scores.parquet files.
+        ///   Looks up a localized string similar to no readable first-pass model file ({0}) was found beside the inputs&apos; {1} files.
         /// </summary>
         public static string FirstPassFdrTask_RunFirstPassProjection_no_readable_first_pass_model_file___1st_pass_model_json__was_found_beside_the_inputs___ {
             get {
@@ -1221,7 +1221,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to the first-pass model file (.1st-pass.model.json) holds no model.
+        ///   Looks up a localized string similar to the first-pass model file ({0}) holds no model.
         /// </summary>
         public static string FirstPassFdrTask_RunFirstPassProjection_the_first_pass_model_file___1st_pass_model_json__holds_no_model {
             get {
@@ -1241,7 +1241,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to there is no output .blib to name the whole-experiment first-pass intermediate file after.
+        ///   Looks up a localized string similar to there is no output {0} to name the whole-experiment first-pass intermediate file after.
         /// </summary>
         public static string FirstPassFdrTask_RunFirstPassProjection_there_is_no_output__blib_to_name_the_whole_experiment_first_pass_intermediate_file_after {
             get {
@@ -1331,7 +1331,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to --model-diagnostics: could not prepare the report on this resume, so no report will be written. The search is unaffected. {0}.
+        ///   Looks up a localized string similar to {1}: could not prepare the report on this resume, so no report will be written. The search is unaffected. {0}.
         /// </summary>
         public static string FirstPassFdrTask_StreamOwnReconciliationBundle___model_diagnostics__could_not_prepare_the_report_on_this_resume__so_no_report_will_be_ {
             get {
@@ -1361,7 +1361,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot resume: no .scores.parquet file is known for {0}, so its first-pass precursor candidates cannot be reloaded for re-scoring..
+        ///   Looks up a localized string similar to Cannot resume: no {1} file is known for {0}, so its first-pass precursor candidates cannot be reloaded for re-scoring..
         /// </summary>
         public static string FirstPassFdrTask_TryBuildResumeSurvivorLoader_Cannot_resume__no__scores_parquet_file_is_known_for__0___so_its_first_pass_precursor_ {
             get {
@@ -1371,7 +1371,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot resume: the first-pass intermediate files for {0:N0} files are missing the list of precursor candidates kept for cross-run reconciliation. Delete the .1st-pass.* files for those inputs and re-run..
+        ///   Looks up a localized string similar to Cannot resume: the first-pass intermediate files for {0:N0} files are missing the list of precursor candidates kept for cross-run reconciliation. Delete the {1} files for those inputs and re-run..
         /// </summary>
         public static string FirstPassFdrTask_TryBuildResumeSurvivorLoader_Cannot_resume__the_first_pass_intermediate_files_for__0__files_are_missing_the_list_of_ {
             get {
@@ -1381,7 +1381,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to --task {0} requires at least 2 input files (--input), but {1:N0} were given. The intermediate files it writes for {2} are only useful when there are other runs to reconcile against..
+        ///   Looks up a localized string similar to {0} requires at least 2 input files ({3}), but {1:N0} were given. The intermediate files it writes for {2} are only useful when there are other runs to reconcile against..
         /// </summary>
         public static string FirstPassFdrTask_ValidateSelection___task__0__requires_at_least_2_input_files____input___but__1__were_given__The_ {
             get {
@@ -1391,7 +1391,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to --task {0} requires cross-run reconciliation, which the configuration turns off. The intermediate files it writes for {1} are only useful when cross-run reconciliation runs..
+        ///   Looks up a localized string similar to {0} requires cross-run reconciliation, which the configuration turns off. The intermediate files it writes for {1} are only useful when cross-run reconciliation runs..
         /// </summary>
         public static string FirstPassFdrTask_ValidateSelection___task__0__requires_cross_run_reconciliation__which_the_configuration_turns_off__The_ {
             get {
@@ -1410,7 +1410,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There is no output .blib to name the whole-experiment first-pass intermediate file after, so it is not written. Cross-run reconciliation will not have the protein q-values it needs..
+        ///   Looks up a localized string similar to There is no output {0} to name the whole-experiment first-pass intermediate file after, so it is not written. Cross-run reconciliation will not have the protein q-values it needs..
         /// </summary>
         public static string FirstPassFdrTask_WriteExperimentSidecar_There_is_no_output__blib_to_name_the_whole_experiment_first_pass_intermediate_file_after__ {
             get {
@@ -1500,7 +1500,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to write the analysis-wide list of kept precursor candidates {0}: {1}. The next task, PerFileRescoring, needs this file..
+        ///   Looks up a localized string similar to Failed to write the analysis-wide list of kept precursor candidates {0}: {1}. The next task, {2}, needs this file..
         /// </summary>
         public static string FirstPassFdrTask_WriteRetainedBaseIdSummary_Failed_to_write_the_analysis_wide_list_of_kept_precursor_candidates__0____1___The_next_ {
             get {
@@ -1530,7 +1530,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} was written by an older Osprey build and cannot be matched to its .scores.parquet. The intermediate files beside it are from the same older build: delete this analysis&apos;s *.FirstPassFDR.osprey.task files and run the first pass again..
+        ///   Looks up a localized string similar to {0} was written by an older Osprey build and cannot be matched to its {1}. The intermediate files beside it are from the same older build: delete this analysis&apos;s {2} files and run the first pass again..
         /// </summary>
         public static string FirstPassSurvivorLoader_Load__0__was_written_by_an_older_Osprey_build_and_cannot_be_matched_to_its__scores_parquet__ {
             get {
@@ -1560,7 +1560,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No .scores.parquet file is known for {0}, so its kept precursor candidates cannot be loaded..
+        ///   Looks up a localized string similar to No {1} file is known for {0}, so its kept precursor candidates cannot be loaded..
         /// </summary>
         public static string FirstPassSurvivorLoader_Load_No__scores_parquet_file_is_known_for__0___so_its_kept_precursor_candidates_cannot_be_ {
             get {
@@ -1600,7 +1600,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The first-pass model was not retrained on this run (it resumed from saved first-pass results), so the Model tab has no feature table or per-feature distributions. Delete the .1st-pass.* intermediate files to retrain it..
+        ///   Looks up a localized string similar to The first-pass model was not retrained on this run (it resumed from saved first-pass results), so the Model tab has no feature table or per-feature distributions. Delete the {0} intermediate files to retrain it..
         /// </summary>
         public static string ModelDiagnosticsReport_LogModelNotRetrained_The_first_pass_model_was_not_retrained_on_this_run__it_resumed_from_saved_first_pass_ {
             get {
@@ -1689,7 +1689,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Skipped the first-pass model diagnostics data: this task holds one file, and --task FirstPassFDR writes it for the whole experiment..
+        ///   Looks up a localized string similar to Skipped the first-pass model diagnostics data: this task holds one file, and {0} writes it for the whole experiment..
         /// </summary>
         public static string ModelDiagnosticsReport_WritePass1Sidecar_Skipped_the_first_pass_model_diagnostics_data__this_task_holds_one_file__and___task_ {
             get {
@@ -1766,7 +1766,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Skipping reports: no output path (-o) to derive report file names from..
+        ///   Looks up a localized string similar to Skipping reports: no output path ({0}) to derive report file names from..
         /// </summary>
         public static string OspreyReportWriter_WriteReports_Skipping_reports__no_output_path___o__to_derive_report_file_names_from_ {
             get {
@@ -1830,7 +1830,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to --task {0} requires {1}..
+        ///   Looks up a localized string similar to {0} requires {1}..
         /// </summary>
         public static string OspreyTask_RequiresError___task__0__requires__1__ {
             get {
@@ -1859,7 +1859,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The first-pass intermediate file (.1st-pass.fdr_scores.bin) is missing or unreadable for 1 file: {1}. Treat the protein-level results of this run as unreliable..
+        ///   Looks up a localized string similar to The first-pass intermediate file ({2}) is missing or unreadable for 1 file: {1}. Treat the protein-level results of this run as unreliable..
         /// </summary>
         public static string Pass1ScalarSeeder_The_first_pass_intermediate_file___1st_pass_fdr_scores_bin__is_missing_or_unreadable_for_ {
             get {
@@ -1869,7 +1869,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The first-pass intermediate files (.1st-pass.fdr_scores.bin) are missing or unreadable for {0:N0} files: {1}. Treat the protein-level results of this run as unreliable..
+        ///   Looks up a localized string similar to The first-pass intermediate files ({2}) are missing or unreadable for {0:N0} files: {1}. Treat the protein-level results of this run as unreliable..
         /// </summary>
         public static string Pass1ScalarSeeder_The_first_pass_intermediate_files___1st_pass_fdr_scores_bin__are_missing_or_unreadable_ {
             get {
@@ -1879,7 +1879,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to --task SecondPassFDR: {0:N0} files from the first pass are not among the inputs of this run and will be skipped: [{1}]. This usually means an input was renamed or moved between the first-pass and second-pass tasks..
+        ///   Looks up a localized string similar to {2}: {0:N0} files from the first pass are not among the inputs of this run and will be skipped: [{1}]. This usually means an input was renamed or moved between the first-pass and second-pass tasks..
         /// </summary>
         public static string Pass2FdrSidecar_ComputeAndPersist___task_SecondPassFDR___0__files_from_the_first_pass_are_not_among_the_inputs_of_this_run_ {
             get {
@@ -1938,7 +1938,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Left the second-pass FDR scores file of 1 file untouched (--task ModelDiagnostics writes only the report).
+        ///   Looks up a localized string similar to Left the second-pass FDR scores file of 1 file untouched ({1} writes only the report).
         /// </summary>
         public static string Pass2FdrSidecar_ComputeAndPersist_Left_the_second_pass_FDR_scores_file_of_1_file_untouched____task_ModelDiagnostics_writes_ {
             get {
@@ -1948,7 +1948,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Left the second-pass FDR scores files of {0:N0} files untouched (--task ModelDiagnostics writes only the report).
+        ///   Looks up a localized string similar to Left the second-pass FDR scores files of {0:N0} files untouched ({1} writes only the report).
         /// </summary>
         public static string Pass2FdrSidecar_ComputeAndPersist_Left_the_second_pass_FDR_scores_files_of__0__files_untouched____task_ModelDiagnostics_ {
             get {
@@ -1994,7 +1994,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Second-pass FDR cannot run: the saved first-pass model, a first-pass intermediate file, or the list of precursor candidates from proteins with 2 or more detections is missing or unreadable (a warning above names the file when one is at fault). Run the analysis straight through without --task..
+        ///   Looks up a localized string similar to Second-pass FDR cannot run: the saved first-pass model, a first-pass intermediate file, or the list of precursor candidates from proteins with 2 or more detections is missing or unreadable (a warning above names the file when one is at fault). Run the analysis straight through without {0}..
         /// </summary>
         public static string Pass2FdrSidecar_ComputePass2FrozenCompetition_Second_pass_FDR_cannot_run__the_saved_first_pass_model__a_first_pass_intermediate_file__ {
             get {
@@ -2034,7 +2034,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Second-pass FDR: no .scores.parquet file is known for &apos;{0}&apos;, so {1:N0} precursor candidates will be scored without features..
+        ///   Looks up a localized string similar to Second-pass FDR: no {2} file is known for &apos;{0}&apos;, so {1:N0} precursor candidates will be scored without features..
         /// </summary>
         public static string Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR__no__scores_parquet_file_is_known_for___0____so__1__precursor_candidates_ {
             get {
@@ -2164,7 +2164,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Second-pass FDR: no .scores.parquet file is known for &apos;{0}&apos;, so its first-pass intermediate file cannot be found..
+        ///   Looks up a localized string similar to Second-pass FDR: no {1} file is known for &apos;{0}&apos;, so its first-pass intermediate file cannot be found..
         /// </summary>
         public static string Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR__no__scores_parquet_file_is_known_for___0____so_its_first_pass_ {
             get {
@@ -2421,7 +2421,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No output .blib was given, so the second-pass experiment-level q-values are not saved to an intermediate file..
+        ///   Looks up a localized string similar to No output {0} was given, so the second-pass experiment-level q-values are not saved to an intermediate file..
         /// </summary>
         public static string Pass2FdrSidecar_WritePass2ExperimentSidecar_No_output__blib_was_given__so_the_second_pass_experiment_level_q_values_are_not_saved_to_ {
             get {
@@ -2490,7 +2490,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to record that --task {0} completed {1}: {2}. A resume will redo this step..
+        ///   Looks up a localized string similar to Failed to record that {0} completed {1}: {2}. A resume will redo this step..
         /// </summary>
         public static string Pass2SidecarWriter_Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_ {
             get {
@@ -2519,7 +2519,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to no .1st-pass.fdr_scores.bin file for {0}.
+        ///   Looks up a localized string similar to no {1} file for {0}.
         /// </summary>
         public static string PeakCoAssignmentSource_AddFile_no__1st_pass_fdr_scores_bin_file_for__0_ {
             get {
@@ -2796,7 +2796,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot find the folder of the calibration file for input &apos;{0}&apos;. Re-scoring needs the calibration that PerFileScoring saved for this input..
+        ///   Looks up a localized string similar to Cannot find the folder of the calibration file for input &apos;{0}&apos;. Re-scoring needs the calibration that {1} saved for this input..
         /// </summary>
         public static string PerFileRescoreTask_LoadMassCalibrations_Cannot_find_the_folder_of_the_calibration_file_for_input___0____Re_scoring_needs_the_ {
             get {
@@ -2816,7 +2816,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The calibration file {0} for input {1} was not found. Re-scoring needs the calibration that PerFileScoring saved for this input. Run --task PerFileScoring for it first, or check the output folder..
+        ///   Looks up a localized string similar to The calibration file {0} for input {1} was not found. Re-scoring needs the calibration that {2} saved for this input. Run {3} for it first, or check the output folder..
         /// </summary>
         public static string PerFileRescoreTask_LoadMassCalibrations_The_calibration_file__0__for_input__1__was_not_found__Re_scoring_needs_the_calibration_ {
             get {
@@ -2836,7 +2836,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Re-scoring needs the spectra cache &apos;{0}&apos; that PerFileScoring writes, but {1}. {2}.
+        ///   Looks up a localized string similar to Re-scoring needs the spectra cache &apos;{0}&apos; that {3} writes, but {1}. {2}.
         /// </summary>
         public static string PerFileRescoreTask_LoadSpectraForRescore_Re_scoring_needs_the_spectra_cache___0___that_PerFileScoring_writes__but__1____2_ {
             get {
@@ -2846,7 +2846,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Re-scoring needs the spectra cache &apos;{0}&apos; that PerFileScoring writes, but it could not be read: {1}.
+        ///   Looks up a localized string similar to Re-scoring needs the spectra cache &apos;{0}&apos; that {2} writes, but it could not be read: {1}.
         /// </summary>
         public static string PerFileRescoreTask_LoadSpectraForRescore_Re_scoring_needs_the_spectra_cache___0___that_PerFileScoring_writes__but_it_could_not_be_ {
             get {
@@ -2856,7 +2856,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Run --task PerFileScoring for &apos;{0}&apos; again to rebuild it..
+        ///   Looks up a localized string similar to Run {1} for &apos;{0}&apos; again to rebuild it..
         /// </summary>
         public static string PerFileRescoreTask_LoadSpectraForRescore_Run___task_PerFileScoring_for___0___again_to_rebuild_it_ {
             get {
@@ -2866,7 +2866,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The cache is written beside its source data, so a --task worker whose --output-dir differs from the data folder must be pointed at it with --cache-dir. Pass --cache-dir &lt;folder holding {0}.spectra.bin&gt;, or run --task PerFileScoring for &apos;{0}&apos; again if no cache was ever written..
+        ///   Looks up a localized string similar to The cache is written beside its source data, so a {1} worker whose {2} differs from the data folder must be pointed at it with {3}. Pass {3} &lt;folder holding {0}{4}&gt;, or run {5} for &apos;{0}&apos; again if no cache was ever written..
         /// </summary>
         public static string PerFileRescoreTask_LoadSpectraForRescore_The_cache_is_written_beside_its_source_data__so_a___task_worker_whose___output_dir_ {
             get {
@@ -2984,7 +2984,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Second-pass FDR: run &apos;{0}&apos; has no current re-scored results file (.scores-reconciled.parquet), which PerFileRescoring writes for every run. Its .scores.parquet file cannot be used instead, because it holds only first-pass peaks. Run --task PerFileRescoring for it..
+        ///   Looks up a localized string similar to Second-pass FDR: run &apos;{0}&apos; has no current re-scored results file ({1}), which {2} writes for every run. Its {3} file cannot be used instead, because it holds only first-pass peaks. Run {4} for it..
         /// </summary>
         public static string PerFileRescoreTask_ReconciledPathOrFail_Second_pass_FDR__run___0___has_no_current_re_scored_results_file___scores_reconciled_ {
             get {
@@ -3022,7 +3022,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to --task ModelDiagnostics only builds the report for a completed analysis. Finish the analysis first; the report can be built afterwards..
+        ///   Looks up a localized string similar to {0} only builds the report for a completed analysis. Finish the analysis first; the report can be built afterwards..
         /// </summary>
         public static string PerFileRescoreTask_Run___task_ModelDiagnostics_only_builds_the_report_for_a_completed_analysis__Finish_the_ {
             get {
@@ -3071,7 +3071,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to the cross-run reconciliation data they need is not available to this run. To rebuild it, delete this analysis&apos;s *.FirstPassFDR.osprey.task files and run the first pass again. Stopping, because continuing would write output missing those runs..
+        ///   Looks up a localized string similar to the cross-run reconciliation data they need is not available to this run. To rebuild it, delete this analysis&apos;s {0} files and run the first pass again. Stopping, because continuing would write output missing those runs..
         /// </summary>
         public static string PerFileRescoreTask_Run_the_cross_run_reconciliation_data_they_need_is_not_available_to_this_run__To_rebuild_it__ {
             get {
@@ -3110,7 +3110,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No readable saved first-pass model, so the per-file part of second-pass FDR runs in SecondPassFDR for this run..
+        ///   Looks up a localized string similar to No readable saved first-pass model, so the per-file part of second-pass FDR runs in {0} for this run..
         /// </summary>
         public static string PerFileRescoreTask_TryCreatePass2Worker_No_readable_saved_first_pass_model__so_the_per_file_part_of_second_pass_FDR_runs_in_ {
             get {
@@ -3120,7 +3120,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The saved first-pass model cannot be used, so the per-file part of second-pass FDR runs in SecondPassFDR for this run..
+        ///   Looks up a localized string similar to The saved first-pass model cannot be used, so the per-file part of second-pass FDR runs in {0} for this run..
         /// </summary>
         public static string PerFileRescoreTask_TryCreatePass2Worker_The_saved_first_pass_model_cannot_be_used__so_the_per_file_part_of_second_pass_FDR_runs_ {
             get {
@@ -3150,7 +3150,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to record that --task {0} completed {1}: {2}. A resume will redo this step..
+        ///   Looks up a localized string similar to Failed to record that {0} completed {1}: {2}. A resume will redo this step..
         /// </summary>
         public static string PerFileResumeDriver_Stamp___Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_ {
             get {
@@ -3266,7 +3266,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to --task {0} complete. FDR and the .blib are left to the next task ({1})..
+        ///   Looks up a localized string similar to {0} complete. FDR and the {2} are left to the next task ({1})..
         /// </summary>
         public static string PerFileScoringTask_FinalizeAndCheck___task__0__complete__FDR_and_the__blib_are_left_to_the_next_task___1___ {
             get {
@@ -3345,7 +3345,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to --input-scores: {0} has {1:N0} precursor candidate peaks but {2:N0} feature rows..
+        ///   Looks up a localized string similar to {0} has {1:N0} precursor candidate peaks but {2:N0} feature rows..
         /// </summary>
         public static string PerFileScoringTask_LoadJoinOnlyScores___input_scores___0__has__1__precursor_candidate_peaks_but__2__feature_rows_ {
             get {
@@ -3355,7 +3355,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to --input-scores: {0} is missing the feature columns, so it is not a valid Osprey scores file. Delete it and run again so it is written again..
+        ///   Looks up a localized string similar to {0} is missing the feature columns, so it is not a valid Osprey scores file. Delete it and run again so it is written again..
         /// </summary>
         public static string PerFileScoringTask_LoadJoinOnlyScores___input_scores___0__is_missing_the_feature_columns__so_it_is_not_a_valid_Osprey_scores_ {
             get {
@@ -3470,7 +3470,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} is missing the feature columns of an Osprey .scores.parquet file. Delete it and re-run so it is regenerated..
+        ///   Looks up a localized string similar to {0} is missing the feature columns of an Osprey {1} file. Delete it and re-run so it is regenerated..
         /// </summary>
         public static string PerFileScoringTask_LoadJoinOnlyScoresForFile__0__is_missing_the_feature_columns_of_an_Osprey__scores_parquet_file__Delete_it_and_re_ {
             get {
@@ -3579,7 +3579,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to ({0:N0} spectra had unsorted peaks and were sorted; use --verbose for detail).
+        ///   Looks up a localized string similar to ({0:N0} spectra had unsorted peaks and were sorted; use {1} for detail).
         /// </summary>
         public static string PerFileScoringTask_ProcessFile____0__spectra_had_unsorted_peaks_and_were_sorted__use___verbose_for_detail_ {
             get {
@@ -3907,7 +3907,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} was written for a different library or search settings than the other reconciliation files of this analysis (library {1} vs {2}, search {3} vs {4}). Delete this analysis&apos;s *.FirstPassFDR.osprey.task files and run the first pass again..
+        ///   Looks up a localized string similar to {0} was written for a different library or search settings than the other reconciliation files of this analysis (library {1} vs {2}, search {3} vs {4}). Delete this analysis&apos;s {5} files and run the first pass again..
         /// </summary>
         public static string RescoreHydration_Check__0__was_written_for_a_different_library_or_search_settings_than_the_other_reconciliation_files_of_this_analysis_ {
             get {
@@ -3917,7 +3917,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} was written for a different set of input files than the other reconciliation files of this analysis. Expected: {1}. Found: {2}. Delete this analysis&apos;s *.FirstPassFDR.osprey.task files and run the first pass again..
+        ///   Looks up a localized string similar to {0} was written for a different set of input files than the other reconciliation files of this analysis. Expected: {1}. Found: {2}. Delete this analysis&apos;s {3} files and run the first pass again..
         /// </summary>
         public static string RescoreHydration_Check__0__was_written_for_a_different_set_of_input_files_than_the_other_reconciliation_files_of_this_analysis_ {
             get {
@@ -3986,7 +3986,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} refers to precursor candidate {1}, which is not in the scores file for that run. The scores file changed after the first pass: delete this analysis&apos;s *.FirstPassFDR.osprey.task files and run the first pass again..
+        ///   Looks up a localized string similar to {0} refers to precursor candidate {1}, which is not in the scores file for that run. The scores file changed after the first pass: delete this analysis&apos;s {2} files and run the first pass again..
         /// </summary>
         public static string RescoreHydration_MapPlannedActions__0__refers_to_precursor_candidate__1___which_is_not_in_the_scores_file_for_that_run_ {
             get {
@@ -4016,7 +4016,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not index the spectra cache for &apos;{0}&apos;. Per-file scoring reads MS/MS spectra from &apos;{1}&apos;; make sure that folder is writable (the .scores.parquet and .calibration.json files are written to the same place)..
+        ///   Looks up a localized string similar to Could not index the spectra cache for &apos;{0}&apos;. Per-file scoring reads MS/MS spectra from &apos;{1}&apos;; make sure that folder is writable (the {2} and {3} files are written to the same place)..
         /// </summary>
         public static string ScoringTaskShared_EnsureSpectraCache_Could_not_index_the_spectra_cache_for___0____Per_file_scoring_reads_MS_MS_spectra_from___ {
             get {
@@ -4123,7 +4123,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No output .blib was given, so the list of precursor candidates kept for cross-run reconciliation cannot be found: it is named after the output .blib..
+        ///   Looks up a localized string similar to No output {0} was given, so the list of precursor candidates kept for cross-run reconciliation cannot be found: it is named after the output {0}..
         /// </summary>
         public static string ScoringTaskShared_ReadRetainedBaseIds_No_output__blib_was_given__so_the_list_of_precursor_candidates_kept_for_cross_run_ {
             get {
@@ -4133,7 +4133,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The list of precursor candidates kept for cross-run reconciliation is missing or unreadable: {0}. To rebuild it, delete this analysis&apos;s *.FirstPassFDR.osprey.task files and run the first pass again..
+        ///   Looks up a localized string similar to The list of precursor candidates kept for cross-run reconciliation is missing or unreadable: {0}. To rebuild it, delete this analysis&apos;s {1} files and run the first pass again..
         /// </summary>
         public static string ScoringTaskShared_ReadRetainedBaseIds_The_list_of_precursor_candidates_kept_for_cross_run_reconciliation_is_missing_or_ {
             get {
@@ -4273,7 +4273,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to --task ModelDiagnostics: skipping the .blib write (report only)..
+        ///   Looks up a localized string similar to {0}: skipping the {1} write (report only)..
         /// </summary>
         public static string SecondPassFdrTask_Run___task_ModelDiagnostics__skipping_the__blib_write__report_only__ {
             get {
@@ -4303,7 +4303,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0:N0} FDRBench rows had very long protein ID lists, which were truncated with &apos;;...+N_more&apos;..
+        ///   Looks up a localized string similar to {0:N0} FDRBench rows had very long protein ID lists, which were truncated with &apos;{1}&apos;..
         /// </summary>
         public static string SecondPassFdrTask_Run__0__FDRBench_rows_had_very_long_protein_ID_lists__which_were_truncated_with_______N_more__ {
             get {
@@ -4313,7 +4313,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0:N0} of {1:N0} re-scored intermediate files were written by an older Osprey build and cannot be read by second-pass FDR, nor can the intermediate files beside them. Delete this analysis&apos;s *.FirstPassFDR.osprey.task files and run the first pass again. Older files: {2}..
+        ///   Looks up a localized string similar to {0:N0} of {1:N0} re-scored intermediate files were written by an older Osprey build and cannot be read by second-pass FDR, nor can the intermediate files beside them. Delete this analysis&apos;s {3} files and run the first pass again. Older files: {2}..
         /// </summary>
         public static string SecondPassFdrTask_Run__0__of__1__re_scored_intermediate_files_were_written_by_an_older_Osprey_build_and_cannot_ {
             get {
@@ -4323,7 +4323,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0:N0} of {1:N0} runs have no re-scored results file (.scores-reconciled.parquet), which PerFileRescoring writes for every run. Their .scores.parquet files cannot be used instead, because they hold only first-pass peaks. Run --task PerFileRescoring for them. Missing: [{2}]..
+        ///   Looks up a localized string similar to {0:N0} of {1:N0} runs have no re-scored results file ({3}), which {4} writes for every run. Their {5} files cannot be used instead, because they hold only first-pass peaks. Run {6} for them. Missing: [{2}]..
         /// </summary>
         public static string SecondPassFdrTask_Run__0__of__1__runs_have_no_re_scored_results_file___scores_reconciled_parquet___which_ {
             get {
@@ -4333,7 +4333,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 1 of {1:N0} re-scored intermediate files was written by an older Osprey build and cannot be read by second-pass FDR, nor can the intermediate files beside it. Delete this analysis&apos;s *.FirstPassFDR.osprey.task files and run the first pass again. Older file: {2}..
+        ///   Looks up a localized string similar to 1 of {1:N0} re-scored intermediate files was written by an older Osprey build and cannot be read by second-pass FDR, nor can the intermediate files beside it. Delete this analysis&apos;s {3} files and run the first pass again. Older file: {2}..
         /// </summary>
         public static string SecondPassFdrTask_Run_1_of__1__re_scored_intermediate_files_was_written_by_an_older_Osprey_build_and_cannot_be_ {
             get {
@@ -4419,7 +4419,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No precursors pass the FDR threshold. Writing an empty .blib..
+        ///   Looks up a localized string similar to No precursors pass the FDR threshold. Writing an empty {0}..
         /// </summary>
         public static string SecondPassFdrTask_WriteBlibOutput_No_precursors_pass_the_FDR_threshold__Writing_an_empty__blib_ {
             get {
@@ -4499,7 +4499,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} (--output and --library are not used).
+        ///   Looks up a localized string similar to {0} ({1} and {2} are not used).
         /// </summary>
         public static string SpectraCacheTask_DescribeOutput__0_____output_and___library_are_not_used_ {
             get {
@@ -4508,7 +4508,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to a .spectra.bin file next to each input, or in {0} where the input folder is read-only.
+        ///   Looks up a localized string similar to a {1} file next to each input, or in {0} where the input folder is read-only.
         /// </summary>
         public static string SpectraCacheTask_DescribeOutput_a__spectra_bin_file_next_to_each_input__or_in__0__where_the_input_folder_is_read_only {
             get {

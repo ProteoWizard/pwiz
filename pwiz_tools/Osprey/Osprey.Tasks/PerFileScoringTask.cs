@@ -78,7 +78,7 @@ namespace pwiz.Osprey.Tasks
         /// This task's name, as a constant so the CLI selector, the validity stamp another
         /// task looks for, and the tests all spell it from here rather than duplicating it.
         /// </summary>
-        public const string TASK_NAME = @"PerFileScoring";
+        public const string TASK_NAME = OspreyTaskNames.PER_FILE_SCORING;
 
         public override string Name => TASK_NAME;
 
@@ -269,7 +269,7 @@ namespace pwiz.Osprey.Tasks
                 { @"osprey.version", OspreyVersion.Current },
                 { @"osprey.search_hash", config.Identity.SearchParameterHash() },
                 { @"osprey.library_hash", config.Identity.LibraryIdentityHash() },
-                { @"osprey.reconciled", @"false" },
+                { ParquetScoreCache.META_RECONCILED, @"false" },
             };
 
             // Resolve how many input files run concurrently for this invocation
@@ -1048,7 +1048,7 @@ namespace pwiz.Osprey.Tasks
                 {
                     ctx.LogInfo(string.Format(
                         OspreyTasksResources.PerFileScoringTask_FinalizeAndCheck___task__0__complete__FDR_and_the__blib_are_left_to_the_next_task___1___,
-                        Name, FirstPassFdrTask.TASK_NAME));
+                        OspreyArgNames.TaskText(Name), FirstPassFdrTask.TASK_NAME, LibrarySource.EXT_BLIB));
                 }
                 ctx.ExitCode = 0;
                 return false;
@@ -1779,7 +1779,7 @@ namespace pwiz.Osprey.Tasks
             {
                 throw new InvalidDataException(string.Format(
                     OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScoresForFile__0__is_missing_the_feature_columns_of_an_Osprey__scores_parquet_file__Delete_it_and_re_,
-                    parquetPath));
+                    parquetPath, ParquetScoreCache.EXT_SCORES));
             }
             ctx.LogVerbose(TextUtil.GetIndentation(3) + string.Format(
                 OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScoresForFile_______Loaded__0__first_pass_precursor_candidate_peaks__features_not_needed_here_, stubs.Count));
@@ -2621,7 +2621,8 @@ namespace pwiz.Osprey.Tasks
                 OspreyTasksResources.PerFileScoringTask_ProcessFile_Loaded__0__MS1_and__1__MS_MS_spectra_with__2__unique_isolation_windows_3_,
                 ms1Spectra.Count, windowIndex.Ms2Count, isolationWindows.Count,
                 unsortedCount > 0
-                    ? @" " + string.Format(OspreyTasksResources.PerFileScoringTask_ProcessFile____0__spectra_had_unsorted_peaks_and_were_sorted__use___verbose_for_detail_, unsortedCount)
+                    ? @" " + string.Format(OspreyTasksResources.PerFileScoringTask_ProcessFile____0__spectra_had_unsorted_peaks_and_were_sorted__use___verbose_for_detail_, unsortedCount,
+                        OspreyArgNames.Text(OspreyArgNames.VERBOSE))
                     : string.Empty));
             ctx.LogInfo(LogTag.COUNT, @"mzML spectra loaded [{0}]: {1} MS2 + {2} MS1",
                 fileName, windowIndex.Ms2Count, ms1Spectra.Count);

@@ -1660,7 +1660,7 @@ namespace pwiz.Osprey.Test
             // from importance/weight wording (issue #4364).
             StringAssert.Contains(report, OspreyFDRResources.FeatureContributions_ToReportLines_Model_sanity_check___feature_share_of_target_decoy_separation__trained_linear_model__coefficients_standardized__);
             Assert.IsFalse(defaultReport.Contains(OspreyFDRResources.FeatureContributions_ToReportLines_Model_sanity_check___feature_share_of_target_decoy_separation__trained_linear_model__coefficients_standardized__),
-                "the feature share table must be gated behind --verbose");
+                "the feature share table must be gated behind " + OspreyCommandArgs.ARG_VERBOSE.ArgumentText);
 
             // Parse the percent column from the three feature rows. The table rows
             // are "<4 spaces><label><coefficient F4><percent F1>%"; match on the

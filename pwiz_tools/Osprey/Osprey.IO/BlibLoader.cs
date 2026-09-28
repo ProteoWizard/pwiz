@@ -44,6 +44,7 @@ namespace pwiz.Osprey.IO
         private const double DEAMIDATION_MASS = 0.984016;
         private const double TMT6PLEX_MASS = 229.162932;
         private const double MOD_TOLERANCE = 0.01;
+        private const string TABLE_REF_SPECTRA = @"RefSpectra";
 
         /// <summary>
         /// Load library entries from a blib file.
@@ -55,8 +56,11 @@ namespace pwiz.Osprey.IO
             {
                 conn.Open();
 
-                if (!TableExists(conn, @"RefSpectra"))
-                    throw new InvalidOperationException(OspreyIOResources.BlibLoader_Load_Invalid_BiblioSpec_library__the_RefSpectra_table_was_not_found_);
+                if (!TableExists(conn, TABLE_REF_SPECTRA))
+                {
+                    throw new InvalidOperationException(string.Format(
+                        OspreyIOResources.BlibLoader_Load_Invalid_BiblioSpec_library__the_RefSpectra_table_was_not_found_, TABLE_REF_SPECTRA));
+                }
 
                 // Intern the repeated strings (sequences, modification names,
                 // protein accessions) as the interned arrays are filled, so no

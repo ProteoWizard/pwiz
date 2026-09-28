@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.ModelDiagnostics;
@@ -243,8 +244,11 @@ namespace pwiz.Osprey.Tasks
                 indexError = ex;
             }
             if (index == null)
+            {
                 throw new IOException(string.Format(
-                    OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Could_not_index_the_spectra_cache_for___0____Per_file_scoring_reads_MS_MS_spectra_from___, inputFile, cachePath), indexError);
+                    OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Could_not_index_the_spectra_cache_for___0____Per_file_scoring_reads_MS_MS_spectra_from___, inputFile, cachePath,
+                    ParquetScoreCache.EXT_SCORES, CalibrationIO.EXT), indexError);
+            }
             return index;
         }
 
@@ -918,7 +922,8 @@ namespace pwiz.Osprey.Tasks
             if (string.IsNullOrEmpty(path))
             {
                 error =
-                    OspreyTasksResources.ScoringTaskShared_ReadRetainedBaseIds_No_output__blib_was_given__so_the_list_of_precursor_candidates_kept_for_cross_run_;
+                    string.Format(OspreyTasksResources.ScoringTaskShared_ReadRetainedBaseIds_No_output__blib_was_given__so_the_list_of_precursor_candidates_kept_for_cross_run_,
+                        LibrarySource.EXT_BLIB);
                 return null;
             }
             var retained = RetainedBaseIdSidecar.Read(path);
@@ -930,7 +935,7 @@ namespace pwiz.Osprey.Tasks
                 // a complete analysis reports its outputs valid and writes nothing.
                 error = string.Format(
                     OspreyTasksResources.ScoringTaskShared_ReadRetainedBaseIds_The_list_of_precursor_candidates_kept_for_cross_run_reconciliation_is_missing_or_,
-                    path);
+                    path, OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME));
                 return null;
             }
             return retained;

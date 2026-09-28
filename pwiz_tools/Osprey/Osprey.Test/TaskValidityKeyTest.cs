@@ -98,8 +98,8 @@ namespace pwiz.Osprey.Test
                         declared = true;
                 }
                 Assert.AreEqual(wanted, declared, wanted
-                    ? @"the report must be a declared output when --model-diagnostics is on, or a deleted report cannot be regenerated"
-                    : @"the report must NOT be declared when --model-diagnostics is off, or every plain run is permanently invalid");
+                    ? string.Format(@"the report must be a declared output when {0} is on, or a deleted report cannot be regenerated", OspreyCommandArgs.ARG_MODEL_DIAGNOSTICS.ArgumentText)
+                    : string.Format(@"the report must NOT be declared when {0} is off, or every plain run is permanently invalid", OspreyCommandArgs.ARG_MODEL_DIAGNOSTICS.ArgumentText));
             }
         }
 

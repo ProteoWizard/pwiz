@@ -161,6 +161,10 @@ namespace pwiz.Osprey.IO
         /// <summary>File-name token of every second-pass artifact.</summary>
         public const string LABEL_SECOND_PASS = @"2nd-pass";
         public const string EXT = @".fdr_scores.bin";
+        /// <summary>File-name ending of the first-pass FDR scores file: <c>.1st-pass.fdr_scores.bin</c>.</summary>
+        public const string EXT_FIRST_PASS = @"." + LABEL_FIRST_PASS + EXT;
+        /// <summary>File pattern of every first-pass artifact, for a message that tells the user to delete them.</summary>
+        public const string FIRST_PASS_FILE_PATTERN = @"*." + LABEL_FIRST_PASS + @".*";
 
         // 8-byte magic. ASCII "OSPRYFDR" — same as Rust.
         private static readonly byte[] Magic =

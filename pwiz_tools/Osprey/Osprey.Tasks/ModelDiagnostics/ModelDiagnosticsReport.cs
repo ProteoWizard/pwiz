@@ -356,8 +356,9 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// </summary>
         private static void LogModelNotRetrained(IOspreyLog log)
         {
-            log.LogInfo(LogTag.MODEL_DIAGNOSTICS,
-                OspreyTasksResources.ModelDiagnosticsReport_LogModelNotRetrained_The_first_pass_model_was_not_retrained_on_this_run__it_resumed_from_saved_first_pass_);
+            log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
+                OspreyTasksResources.ModelDiagnosticsReport_LogModelNotRetrained_The_first_pass_model_was_not_retrained_on_this_run__it_resumed_from_saved_first_pass_,
+                FdrScoresSidecar.FIRST_PASS_FILE_PATTERN));
         }
 
         /// <summary>
@@ -602,8 +603,9 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             // guard earned its place here rather than in the relay.
             if (config.SelectedTask?.IsPerFileWorker == true)
             {
-                OspreyLog.Write(logWarning, LogTag.MODEL_DIAGNOSTICS,
-                    OspreyTasksResources.ModelDiagnosticsReport_WritePass1Sidecar_Skipped_the_first_pass_model_diagnostics_data__this_task_holds_one_file__and___task_);
+                OspreyLog.Write(logWarning, LogTag.MODEL_DIAGNOSTICS, string.Format(
+                    OspreyTasksResources.ModelDiagnosticsReport_WritePass1Sidecar_Skipped_the_first_pass_model_diagnostics_data__this_task_holds_one_file__and___task_,
+                    OspreyArgNames.TaskText(FirstPassFdrTask.TASK_NAME)));
                 return;
             }
             // Serialized without the pass-2 bundle even if one is attached to the in-memory

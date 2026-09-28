@@ -109,7 +109,8 @@ namespace pwiz.Osprey.Test
                     SpectraCacheTask.TASK_NAME, PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME,
                     PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME, ModelDiagnosticsTask.TASK_NAME
                 },
-                set.All.Select(t => t.Name).ToArray(), @"the --task values, in --help order");
+                set.All.Select(t => t.Name).ToArray(),
+                string.Format(@"the {0} values, in {1} order", OspreyCommandArgs.ARG_TASK.ArgumentText, OspreyCommandArgs.ARG_HELP.ArgumentText));
             CollectionAssert.AreEqual(
                 new[]
                 {
@@ -228,14 +229,14 @@ namespace pwiz.Osprey.Test
                 bool expected = admitted.Contains(task.Name);
                 var config = TaskConfigs.ForTask(task.Name);
                 Assert.AreEqual(expected, ScoringTaskShared.RunsStage7Join(config),
-                    string.Format(@"--task {0}: RunsStage7Join must be {1}", task.Name, expected));
+                    string.Format(@"{0}: RunsStage7Join must be {1}", OspreyCommandArgs.ARG_TASK + task.Name, expected));
                 // A task that does not run the join must be refused BEFORE any disk term,
                 // which is what makes the refusal free and unconditional.
                 if (!expected)
                 {
                     Assert.IsFalse(
                         ScoringTaskShared.Stage7StreamAdmittedBeforeRescore(config),
-                        string.Format(@"--task {0} must not be admitted to the streamed join", task.Name));
+                        string.Format(@"{0} must not be admitted to the streamed join", OspreyCommandArgs.ARG_TASK + task.Name));
                 }
             }
             // The straight-through pipeline runs every stage, so it is admitted.

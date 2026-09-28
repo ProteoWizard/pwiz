@@ -124,7 +124,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Write an FDRBench-compatible input TSV to this path. The level is taken from {0} (peptide; precursor and both emit precursor-level). Includes every reported target, i.e. the peptides actually written to the output, regardless of q-value, with the raw SVM discriminant as &apos;score&apos;, so FDRBench can compute true FDR via entrapment counting without truncation at Osprey&apos;s threshold..
+        ///   Looks up a localized string similar to Write an FDRBench-compatible input TSV to this path. The level is taken from {0} ({2}; {3} and {4} emit precursor-level). Includes every reported target, i.e. the peptides actually written to the output, regardless of q-value, with the raw SVM discriminant as &apos;{1}&apos;, so FDRBench can compute true FDR via entrapment counting without truncation at Osprey&apos;s threshold..
         /// </summary>
         public static string _fdrbench {
             get {
@@ -133,7 +133,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to With {0}: which FDR pass to emit. 2 (default) = the second-pass results written to the blib (the FDR of what Osprey reports). 1 = the full first-pass pool, before it is filtered for the second pass (every scored target, regardless of q), with first-pass q-values, matching the FDRBench input of the original Rust Osprey (the assumption the second-pass output rests on). both = emit both in one run, writing the {0} path with .pass1 / .pass2 stem suffixes..
+        ///   Looks up a localized string similar to With {0}: which FDR pass to emit. 2 (default) = the second-pass results written to the blib (the FDR of what Osprey reports). 1 = the full first-pass pool, before it is filtered for the second pass (every scored target, regardless of q), with first-pass q-values, matching the FDRBench input of the original Rust Osprey (the assumption the second-pass output rests on). {3} = emit both in one run, writing the {0} path with {1} / {2} stem suffixes..
         /// </summary>
         public static string _fdrbench_pass {
             get {
@@ -142,7 +142,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to With {0}: emit one row per (precursor, run) using run-level q-values (adds a &apos;run&apos; column). Default is one row per precursor using experiment-level q-values..
+        ///   Looks up a localized string similar to With {0}: emit one row per (precursor, run) using run-level q-values (adds a &apos;{1}&apos; column). Default is one row per precursor using experiment-level q-values..
         /// </summary>
         public static string _fdrbench_per_run {
             get {
@@ -196,7 +196,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Spectral library (.tsv, .blib).
+        ///   Looks up a localized string similar to Spectral library ({0}, {1}).
         /// </summary>
         public static string _library {
             get {

@@ -24,9 +24,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Test
 {
@@ -375,6 +377,83 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// A command-line argument is written from its declaration, never retyped. Two checks:
+        /// <list type="bullet">
+        /// <item>No string literal in any Osprey .cs file - product or test - names an argument
+        /// OspreyCommandArgs declares (<c>"--task X"</c>, <c>@"--fdrbench-pass 1"</c>). Use the
+        /// typed instance (<c>OspreyCommandArgs.ARG_TASK + name</c>, <c>ARG_X.ArgumentText</c>)
+        /// or, below the executable, <c>OspreyArgNames.Text</c>, so a renamed argument cannot
+        /// leave a stale spelling behind. A flag the parser does NOT declare (a retired or bogus
+        /// one a test feeds in to see it refused) is not matched.</item>
+        /// <item>No English .resx value contains a flag or a file extension. A translator could
+        /// translate or drop either, and the user has to type or match it exactly, so it goes in
+        /// as a <c>{N}</c> argument (docs/21-user-facing-text.md).</item>
+        /// </list>
+        /// For a genuine exception add an inline comment beginning <c>// Arg literal OK:</c>.
+        /// </summary>
+        [TestMethod]
+        public void TestArgumentTextComesFromArguments()
+        {
+            string sourceRoot = FindOspreySourceRoot();
+            const string exemptionTag = "// Arg literal OK:";
+            var names = OspreyCommandArgs.AllArguments.Select(a => Regex.Escape(a.Name)).ToList();
+            Assert.IsTrue(names.Count > 0, "OspreyCommandArgs declares no arguments");
+            var knownArg = new Regex(@"(?<![\w-])" + Regex.Escape(OspreyArgNames.PREFIX) +
+                                     "(" + string.Join("|", names) + @")(?![\w-])");
+            var violations = new List<string>();
+            foreach (var file in Directory.EnumerateFiles(sourceRoot, "*.cs", SearchOption.AllDirectories))
+            {
+                string rel = RelativePath(sourceRoot, file).Replace('\\', '/');
+                if (rel.Contains("/bin/") || rel.Contains("/obj/"))
+                    continue;
+                string[] lines = File.ReadAllLines(file);
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    string line = lines[i];
+                    int commentIdx = IndexOfLineComment(line);
+                    string codePart = commentIdx >= 0 ? line.Substring(0, commentIdx) : line;
+                    if (line.Contains(exemptionTag))
+                        continue;
+                    foreach (string literal in StringLiterals(codePart))
+                    {
+                        var match = knownArg.Match(literal);
+                        if (match.Success)
+                        {
+                            violations.Add(string.Format("{0}:{1}: '{2}' in {3}", rel, i + 1, match.Value, line.Trim()));
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Flags (long or short) and file extensions, the tokens a user types or matches. A
+            // hyphen after a format hole is a compound word ("{0}-fold"), not a flag.
+            var resxToken = new Regex(@"(?<![\w}-])--?[a-z][a-z0-9-]*|(?<![\w{}])\.(?:[\w-]+\.)*" +
+                                      @"(?:blib|elib|tsv|csv|parquet|bin|json|task|mzML|sky|libcache|html|sln)\b");
+            foreach (var file in EnumerateEnglishResxFiles(sourceRoot))
+            {
+                var resxRoot = XDocument.Load(file).Root;
+                Assert.IsNotNull(resxRoot, file);
+                foreach (var data in resxRoot.Elements("data"))
+                {
+                    string value = (string) data.Element("value") ?? string.Empty;
+                    var match = resxToken.Match(value);
+                    if (match.Success)
+                    {
+                        violations.Add(string.Format("{0} {1}: '{2}' in \"{3}\"",
+                            Path.GetFileName(file), (string) data.Attribute("name"), match.Value, value));
+                    }
+                }
+            }
+
+            Assert.AreEqual(0, violations.Count,
+                "Command-line argument or file-name text typed by hand. In code, use the typed " +
+                "OspreyCommandArgs.ARG_* instance (or OspreyArgNames below the executable); in a " +
+                "resource, make the flag or extension a {N} argument supplied from its constant:\n" +
+                string.Join("\n", violations));
+        }
+
+        /// <summary>
         /// Find the Osprey source root by walking up from the test
         /// assembly location until we see an Osprey.sln-bearing dir.
         /// </summary>
@@ -465,6 +544,61 @@ namespace pwiz.Osprey.Test
                 if (c == '/' && i + 1 < line.Length && line[i + 1] == '/') return i;
             }
             return -1;
+        }
+
+        /// <summary>
+        /// The contents of the string literals on one line of code (comments already removed):
+        /// regular, verbatim and interpolated. A literal left open at the end of the line (a
+        /// multi-line verbatim string) yields what the line holds of it. Character literals are
+        /// skipped so a <c>'"'</c> does not open a string.
+        /// </summary>
+        private static IEnumerable<string> StringLiterals(string code)
+        {
+            int i = 0;
+            while (i < code.Length)
+            {
+                char c = code[i];
+                if (c == '\'')
+                {
+                    // Character literal: skip to its closing quote, honoring one escape.
+                    i++;
+                    if (i < code.Length && code[i] == '\\')
+                        i++;
+                    int close = code.IndexOf('\'', Math.Min(i + 1, code.Length));
+                    i = close < 0 ? code.Length : close + 1;
+                    continue;
+                }
+                if (c != '"')
+                {
+                    i++;
+                    continue;
+                }
+                bool verbatim = (i > 0 && code[i - 1] == '@') || (i > 1 && code[i - 1] == '$' && code[i - 2] == '@');
+                var sb = new System.Text.StringBuilder();
+                i++;
+                while (i < code.Length)
+                {
+                    char s = code[i];
+                    if (verbatim && s == '"' && i + 1 < code.Length && code[i + 1] == '"')
+                    {
+                        sb.Append('"');
+                        i += 2;
+                        continue;
+                    }
+                    if (!verbatim && s == '\\' && i + 1 < code.Length)
+                    {
+                        sb.Append(s).Append(code[i + 1]);
+                        i += 2;
+                        continue;
+                    }
+                    if (s == '"')
+                        break;
+                    sb.Append(s);
+                    i++;
+                }
+                i++;
+                yield return sb.ToString();
+            }
         }
 
         private static IEnumerable<string> EnumerateEnglishResxFiles(string root)

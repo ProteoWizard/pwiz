@@ -4816,7 +4816,7 @@ namespace pwiz.Osprey.Test
                 {
                     Assert.AreEqual(string.Format(
                         OspreyTasksResources.RescoreHydration_MapPlannedActions__0__refers_to_precursor_candidate__1___which_is_not_in_the_scores_file_for_that_run_,
-                        reconPath, 999), ex.Message);
+                        reconPath, 999, OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME)), ex.Message);
                 }
             }
             finally

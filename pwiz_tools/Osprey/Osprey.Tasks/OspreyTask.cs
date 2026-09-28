@@ -220,7 +220,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         protected string RequiresError(string requirement)
         {
-            return string.Format(OspreyTasksResources.OspreyTask_RequiresError___task__0__requires__1__, Name, requirement);
+            return string.Format(OspreyTasksResources.OspreyTask_RequiresError___task__0__requires__1__, OspreyArgNames.TaskText(Name), requirement);
         }
 
         /// <summary>
