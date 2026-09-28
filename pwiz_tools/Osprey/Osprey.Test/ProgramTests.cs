@@ -264,7 +264,7 @@ namespace pwiz.Osprey.Test
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + PerFileRescoreTask.TASK_NAME);
-            StringAssert.Contains(err, OspreyTasksResources.OspreyTask_ValidateSelection___library_and___output);
+            StringAssert.Contains(err, OspreyTask.LibraryAndOutputText);
         }
 
         // - FirstPassFDR (2+ runs in, reconciliation on) --
@@ -299,7 +299,7 @@ namespace pwiz.Osprey.Test
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME);
-            StringAssert.Contains(err, OspreyTasksResources.OspreyTask_ValidateSelection___library_and___output);
+            StringAssert.Contains(err, OspreyTask.LibraryAndOutputText);
         }
 
         [TestMethod]
@@ -369,7 +369,7 @@ namespace pwiz.Osprey.Test
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + SecondPassFdrTask.TASK_NAME);
-            StringAssert.Contains(err, OspreyTasksResources.OspreyTask_ValidateSelection___library_and___output);
+            StringAssert.Contains(err, OspreyTask.LibraryAndOutputText);
         }
 
         // - ModelDiagnostics (the completed run's own command line, replayed) --
@@ -627,7 +627,7 @@ namespace pwiz.Osprey.Test
         {
             // --task and ordinary flags must NOT throw.
             Parse(OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME, OspreyCommandArgs.ARG_LIBRARY + @"ref.blib", OspreyCommandArgs.ARG_OUTPUT + @"out.blib");
-            // --task=Name is the one joined form Program.Main pre-scans, so it is spelled here.
+            // The joined --task=Name form too (see OspreyCommandArgsTests.TestNameEqualsValueForm).
             Parse(OspreyCommandArgs.ARG_TASK.ArgumentText + @"=" + SecondPassFdrTask.TASK_NAME, OspreyCommandArgs.ARG_LIBRARY + @"ref.blib", OspreyCommandArgs.ARG_OUTPUT + @"out.blib");
         }
 

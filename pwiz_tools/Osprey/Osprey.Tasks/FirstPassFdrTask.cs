@@ -372,10 +372,11 @@ namespace pwiz.Osprey.Tasks
             if (coAssignOnly)
             {
                 ctx.LogInfo(string.Format(
-                    @"--task ModelDiagnostics: OSPREY_MDIAG_COASSIGN_ONLY is set - SKIPPING the " +
-                    @"per-run fold over {0} run(s). The report will carry the peak co-assignment " +
+                    @"{0}: OSPREY_MDIAG_COASSIGN_ONLY is set - SKIPPING the " +
+                    @"per-run fold over {1} run(s). The report will carry the peak co-assignment " +
                     @"panel and NOTHING else, and it will be written unstamped so nothing can " +
-                    @"adopt it. This is a measurement harness, not a product.", parquetPaths.Count));
+                    @"adopt it. This is a measurement harness, not a product.",
+                    OspreyArgNames.TaskText(ModelDiagnosticsTask.TASK_NAME), parquetPaths.Count));
             }
             else
             {
@@ -432,8 +433,9 @@ namespace pwiz.Osprey.Tasks
                     File.Delete(aside);
                 File.Move(declared, aside);
                 ctx.LogInfo(string.Format(
-                    @"--task ModelDiagnostics: harness report moved to {0}. The declared product " +
-                    @"path is left EMPTY on purpose, so nothing stamps or adopts it.", aside));
+                    @"{0}: harness report moved to {1}. The declared product " +
+                    @"path is left EMPTY on purpose, so nothing stamps or adopts it.",
+                    OspreyArgNames.TaskText(ModelDiagnosticsTask.TASK_NAME), aside));
             }
             catch (Exception ex)
             {
@@ -441,9 +443,9 @@ namespace pwiz.Osprey.Tasks
                 // partial report sitting at the declared path, about to be stamped as if it
                 // described the cohort.
                 ctx.LogWarning(string.Format(
-                    @"--task ModelDiagnostics: could not move the harness report off the declared " +
-                    @"output path ({0}). DELETE {1} by hand before trusting this directory.",
-                    ex.Message, declared));
+                    @"{0}: could not move the harness report off the declared " +
+                    @"output path ({1}). DELETE {2} by hand before trusting this directory.",
+                    OspreyArgNames.TaskText(ModelDiagnosticsTask.TASK_NAME), ex.Message, declared));
             }
         }
 
@@ -1256,7 +1258,7 @@ namespace pwiz.Osprey.Tasks
                 {
                     ctx.LogError(string.Format(
                         OspreyTasksResources.FirstPassFdrTask_RehydrateForPerRunRescore_This_analysis_cannot_resume_from_its_completed_first_pass_with__0_,
-                        @"--fdr-method " + ctx.Config.FdrMethod.ToString().ToLowerInvariant()));
+                        OspreyArgNames.Text(OspreyArgNames.FDR_METHOD, ctx.Config.FdrMethod.ToString().ToLowerInvariant())));
                 }
                 ctx.ExitCode = 1;
                 return false;

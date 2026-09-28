@@ -95,9 +95,9 @@ namespace pwiz.Osprey.Tasks
         public override string ValidateSelection(OspreyConfig config)
         {
             if (!config.HasInputFiles)
-                return RequiresError(@"--input <mzML...>");
+                return RequiresError(OspreyArgNames.Text(OspreyArgNames.INPUT, @"<mzML...>"));
             if (config.LibrarySource == null)
-                return RequiresError(@"--library");
+                return RequiresError(OspreyArgNames.Text(OspreyArgNames.LIBRARY));
             return null;
         }
 

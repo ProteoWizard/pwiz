@@ -355,7 +355,8 @@ namespace pwiz.Osprey.Tasks
                     ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_MODEL_DIAGNOSTICS, @"refused-no-pass1"));
                     ctx.LogError(string.Format(
                         OspreyTasksResources.SecondPassFdrTask_Run__0___1___2__adds_the_second_pass_to_the_first_pass_model_diagnostics_report__and_that_,
-                        @"--task", Name, @"--model-diagnostics", pass1Path, FirstPassFdrTask.TASK_NAME));
+                        OspreyArgNames.Text(OspreyArgNames.TASK), Name, OspreyArgNames.Text(OspreyArgNames.MODEL_DIAGNOSTICS),
+                        pass1Path, FirstPassFdrTask.TASK_NAME));
                     ctx.ExitCode = 1;
                     return false;
                 }

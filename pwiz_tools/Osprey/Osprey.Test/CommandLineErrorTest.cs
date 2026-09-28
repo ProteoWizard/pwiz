@@ -192,7 +192,7 @@ namespace pwiz.Osprey.Test
         /// </summary>
         private static void AssertErrorMessage(string output, string expected)
         {
-            string errorLine = SplitLines(output).Single(CommandStatusWriter.IsErrorLine);
+            string errorLine = output.ReadLines().Single(CommandStatusWriter.IsErrorLine);
             Assert.AreEqual(Program.ErrorPrefix + @" " + expected, errorLine);
         }
 
@@ -203,11 +203,6 @@ namespace pwiz.Osprey.Test
         private static string GetOpenErrorMessage(string path)
         {
             return Assert.ThrowsException<DirectoryNotFoundException>(() => new StreamWriter(path).Dispose()).Message;
-        }
-
-        private static string[] SplitLines(string output)
-        {
-            return output.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
         }
 
         /// <summary>
@@ -244,7 +239,7 @@ namespace pwiz.Osprey.Test
 
             Assert.AreEqual(Program.EXIT_CODE_FAILURE_TO_START, exitCode, message);
             Assert.IsTrue(writer.IsErrorReported, message);
-            var lines = SplitLines(output);
+            var lines = output.ReadLines();
             Assert.AreEqual(1, lines.Count(CommandStatusWriter.IsErrorLine),
                 @"exactly one error line. " + message);
             // A usage error is a message, never an exception type and stack.

@@ -100,7 +100,7 @@ namespace pwiz.Osprey.Tasks
                     @"cross-run reconciliation get a new run-level q-value.",
                     OspreyEnvironment.PASS2_QVALUE_TRANSFER));
             }
-            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_PASS2_QVALUE, @"{0}", OspreyEnvironment.Pass2QValue));
+            ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_PASS2_QVALUE, OspreyEnvironment.Pass2QValue));
 
             EnsureFrozenFirstPassPublished(ctx, perFileParquetPaths);
 
@@ -2564,10 +2564,11 @@ namespace pwiz.Osprey.Tasks
                     // that declined it - an absent or unusable frozen model, no input-file
                     // list, an unreadable 1st-pass experiment sidecar - so this states the
                     // consequence and the remedy rather than re-deriving the cause.
-                    throw new InvalidOperationException(
+                    throw new InvalidOperationException(string.Format(
                         @"Second-pass FDR in transfer mode cannot run without the first-pass model " +
                         @"and experiment-level intermediate file (see the warning above). Re-run " +
-                        @"--task FirstPassFDR, then --task SecondPassFDR.");
+                        @"{0}, then {1}.",
+                        OspreyArgNames.TaskText(FirstPassFdrTask.TASK_NAME), OspreyArgNames.TaskText(SecondPassFdrTask.TASK_NAME)));
                 // Simple / Mokapot 2nd-pass paths intentionally
                 // not implemented yet -- the in-process pipeline's
                 // FirstPassFdrTask.RunFdr already covers Simple, and

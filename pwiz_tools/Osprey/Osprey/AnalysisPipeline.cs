@@ -191,10 +191,16 @@ namespace pwiz.Osprey
             if (OspreyEnvironment.DropBetweenTasks)
                 ctx.DropAllButLibrary();
 
-            // [STAGE-WALL] one line per task->stage with parseable format
-            // for Measure-Pipeline.ps1 / Osprey-workflow.html perf tables.
-            // SecondPassFdrTask emits its own stage7 + blib lines internally
-            // (one task -> two pipeline stages).
+            // [STAGE-WALL] one line per task, labelled with the Rust Osprey stage it
+            // covers, for the perf tooling that compares the two implementations
+            // (Measure-Pipeline.ps1, Test-PerfGate.ps1, Get-MemoryReport.ps1). Machine text
+            // only: the tag prints under --perf-stats and nowhere else. SecondPassFDR has no
+            // entry on purpose, because its wall is NOT one Rust stage: it covers Rust's
+            // stage 7 (second-pass FDR + protein FDR) and the blib write, so the task emits
+            // those walls itself around the steps that match - second-pass-fdr (from
+            // Pass2FdrSidecar), stage7 (protein FDR only) and blib - and Measure-Pipeline.ps1
+            // adds second-pass-fdr into stage7. A whole-task stage7 line here would count the
+            // second-pass FDR twice. SpectraCache and ModelDiagnostics are not Rust stages.
             string stageName = task.Name switch
             {
                 PerFileScoringTask.TASK_NAME => @"stage1to4",

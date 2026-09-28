@@ -307,6 +307,16 @@ namespace pwiz.Osprey.Core
         public const string SCOPE_RETAINED_SUMMARY = @"retained-summary";
 
         /// <summary>
+        /// The text after the tag for a keyed line whose value is already text:
+        /// <c>key: value</c>. A number is passed as <c>ToString(CultureInfo.InvariantCulture)</c>,
+        /// or through the format overload below.
+        /// </summary>
+        public static string Format(string key, string value)
+        {
+            return key + @": " + value;
+        }
+
+        /// <summary>
         /// The text after the tag for a keyed line: <c>key: value</c>, with
         /// <paramref name="valueFormat"/> formatted in the invariant culture.
         /// </summary>

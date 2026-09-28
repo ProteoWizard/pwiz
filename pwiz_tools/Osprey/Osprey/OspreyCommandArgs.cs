@@ -44,8 +44,10 @@ namespace pwiz.Osprey
     /// Osprey keeps its own <see cref="TokenizeAndDispatch"/> rather than adopting the
     /// framework's strict <c>--name=value</c> grammar: it needs short aliases (<c>-i</c>),
     /// space-separated values (<c>--name value</c>), variadic consumption (<c>-i a b c</c>),
-    /// and a positional-file fallback. The framework is reused for argument declaration,
-    /// grouping, ascii/unicode/HTML help rendering, and building tokens from the declared
+    /// and a positional-file fallback. It also accepts the framework's <c>--name=value</c> for
+    /// any argument that takes a value (see <see cref="MatchToken"/>). The framework is
+    /// reused for argument declaration, grouping, ascii/unicode/HTML help rendering, and
+    /// building tokens from the declared
     /// instances (<c>ARG_THREADS + 8</c>, which the tests use). Value coercion and the exact
     /// warning strings stay in the per-argument ProcessValue handlers so the parsed
     /// <see cref="OspreyConfig"/> stays byte-identical with the former switch.
@@ -62,9 +64,9 @@ namespace pwiz.Osprey
         static OspreyCommandArgs()
         {
             ArgUsage.Provider = new OspreyArgUsageProvider();
-            // Osprey's grammar is space-separated (--name value), not --name=value, so the
-            // generated help must render "--name <value>" to match what the tokenizer accepts,
-            // and a token built from an instance is "--name value" for the same reason.
+            // Osprey's grammar is space-separated (--name value); --name=value is accepted too, but
+            // the generated help renders "--name <value>", the form every example uses, and a
+            // token built from an instance is "--name value" for the same reason.
             ArgUsage.ArgumentValueSeparator = @" ";
             // ParseInt / ParseDouble read numbers in the invariant culture, so a number a
             // test joins to an argument must render that way too. When Osprey's locale
@@ -86,7 +88,7 @@ namespace pwiz.Osprey
         private readonly OspreyConfig _config = new OspreyConfig();
 
         // --- General I/O ------------------------------------------------------------------
-        public static readonly OspreyArgument ARG_INPUT = new OspreyArgument(@"input",
+        public static readonly OspreyArgument ARG_INPUT = new OspreyArgument(OspreyArgNames.INPUT,
             () => @"<file1.mzML ...>", (c, p) => true) { ShortName = @"i", Variadic = true,
             ProcessVariadic = (c, toks) => { c._inputFiles.AddRange(toks); return true; } };
         // The command line is a BOUNDED resource and -i consumes it at O(files). Measured on the
@@ -101,17 +103,17 @@ namespace pwiz.Osprey
         // One path per line, blank lines and #-comments ignored, composable with -i and with
         // itself (both append, exactly as repeated -i does).
         public static readonly OspreyArgument ARG_INPUT_LIST = new OspreyArgument(@"input-list",
-            () => @"<list.txt>", (c, p) => c._inputListPaths.Add(p.Value));
-        public static readonly OspreyArgument ARG_LIBRARY = new OspreyArgument(@"library",
+            () => @"<list.txt>", (c, p) => c._inputListPaths.Add(p.Value)) { DescriptionArgs = () => new object[] { ARG_INPUT.ShortArgumentText } };
+        public static readonly OspreyArgument ARG_LIBRARY = new OspreyArgument(OspreyArgNames.LIBRARY,
             () => @"<library.tsv|.blib>", (c, p) => c._libraryPath = p.Value) { ShortName = @"l" };
-        public static readonly OspreyArgument ARG_OUTPUT = new OspreyArgument(@"output",
+        public static readonly OspreyArgument ARG_OUTPUT = new OspreyArgument(OspreyArgNames.OUTPUT,
             () => @"<output.blib>", (c, p) => c._outputPath = p.Value) { ShortName = @"o" };
         public static readonly OspreyArgument ARG_WORK_DIR = new OspreyArgument(@"work-dir",
             () => @"<dir>", (c, p) => c._workDir = p.Value);
         public static readonly OspreyArgument ARG_OUTPUT_DIR = new OspreyArgument(@"output-dir",
-            () => @"<dir>", (c, p) => c._outputDir = p.Value);
+            () => @"<dir>", (c, p) => c._outputDir = p.Value) { DescriptionArgs = () => new object[] { ARG_WORK_DIR.ArgumentText } };
         public static readonly OspreyArgument ARG_CACHE_DIR = new OspreyArgument(@"cache-dir",
-            () => @"<dir>", (c, p) => c._cacheDir = p.Value);
+            () => @"<dir>", (c, p) => c._cacheDir = p.Value) { DescriptionArgs = () => new object[] { SpectraCache.EXT, ARG_WORK_DIR.ArgumentText } };
         public static readonly OspreyArgument ARG_REPORT = new OspreyArgument(@"report",
             () => @"<report.tsv>", (c, p) => c._config.OutputReport = p.Value);
 
@@ -121,11 +123,11 @@ namespace pwiz.Osprey
 
         // --- Scoring & Tolerance ----------------------------------------------------------
         public static readonly OspreyArgument ARG_RESOLUTION = new OspreyArgument(@"resolution",
-            new[] { @"unit", @"hram", @"auto" }, (c, p) => c._resolution = p.Value.ToLowerInvariant());
+            new[] { @"unit", @"hram", @"auto" }, (c, p) => c._resolution = p.Value.ToLowerInvariant()) { DescriptionArgs = () => new object[] { @"auto" } };
         public static readonly OspreyArgument ARG_FRAGMENT_TOLERANCE = new OspreyArgument(@"fragment-tolerance",
             () => @"<value>", (c, p) => c._fragmentTolerance = ParseDouble(p));
         public static readonly OspreyArgument ARG_FRAGMENT_UNIT = new OspreyArgument(@"fragment-unit",
-            new[] { @"ppm", @"mz" }, (c, p) => c._fragmentUnit = p.Value.ToLowerInvariant());
+            new[] { @"ppm", @"mz" }, (c, p) => c._fragmentUnit = p.Value.ToLowerInvariant()) { DescriptionArgs = () => new object[] { @"ppm" } };
         public static readonly OspreyArgument ARG_NO_PREFILTER = new OspreyArgument(@"no-prefilter",
             (c, p) => c._config.PrefilterEnabled = false);
 
@@ -139,10 +141,10 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_EXPERIMENT_FDR = new OspreyArgument(@"experiment-fdr",
             () => @"<threshold>", (c, p) => c._config.ExperimentFdr = ParseDouble(p));
         public static readonly OspreyArgument ARG_RECONCILIATION_COMPACTION_FDR = new OspreyArgument(@"reconciliation-compaction-fdr",
-            () => @"<threshold>", (c, p) => c._config.ReconciliationCompactionFdr = ParseDouble(p));
+            () => @"<threshold>", (c, p) => c._config.ReconciliationCompactionFdr = ParseDouble(p)) { DescriptionArgs = () => new object[] { ARG_RUN_FDR.ArgumentText } };
         public static readonly OspreyArgument ARG_PROTEIN_FDR = new OspreyArgument(@"protein-fdr",
             () => @"<threshold>", (c, p) => c._config.ProteinFdr = ParseDouble(p));
-        public static readonly OspreyArgument ARG_FDR_METHOD = new OspreyArgument(@"fdr-method",
+        public static readonly OspreyArgument ARG_FDR_METHOD = new OspreyArgument(OspreyArgNames.FDR_METHOD,
             new[] { @"percolator", @"gbdt", @"simple" }, (c, p) =>
             {
                 switch (p.Value.ToLowerInvariant())
@@ -163,7 +165,7 @@ namespace pwiz.Osprey
                         c._config.FdrMethod = FdrMethod.Percolator;
                         break;
                 }
-            });
+            }) { DescriptionArgs = () => new object[] { @"percolator" } };
         public static readonly OspreyArgument ARG_FDR_LEVEL = new OspreyArgument(@"fdr-level",
             new[] { @"precursor", @"peptide", @"both" }, (c, p) =>
             {
@@ -183,7 +185,7 @@ namespace pwiz.Osprey
                             OspreyResources.OspreyCommandArgs_Unknown_FDR_level___0____defaulting_to__1_, p.Value, @"precursor"));
                         break;
                 }
-            });
+            }) { DescriptionArgs = () => new object[] { @"precursor" } };
         public static readonly OspreyArgument ARG_SHARED_PEPTIDES = new OspreyArgument(@"shared-peptides",
             new[] { @"all", @"razor", @"unique" }, (c, p) =>
             {
@@ -203,14 +205,14 @@ namespace pwiz.Osprey
                             OspreyResources.OspreyCommandArgs_Unknown_shared_peptides_mode___0____defaulting_to__1_, p.Value, @"all"));
                         break;
                 }
-            });
+            }) { DescriptionArgs = () => new object[] { @"all" } };
 
         public static readonly OspreyArgument ARG_FDRBENCH = new OspreyArgument(@"fdrbench",
-            () => @"<input.tsv>", (c, p) => c._config.OutputFdrBench = p.Value);
+            () => @"<input.tsv>", (c, p) => c._config.OutputFdrBench = p.Value) { DescriptionArgs = () => new object[] { ARG_FDR_LEVEL.ArgumentText } };
         public static readonly OspreyArgument ARG_FDRBENCH_PER_RUN = new OspreyArgument(@"fdrbench-per-run",
-            (c, p) => c._config.FdrBenchPerRun = true);
+            (c, p) => c._config.FdrBenchPerRun = true) { DescriptionArgs = () => new object[] { ARG_FDRBENCH.ArgumentText } };
         public static readonly OspreyArgument ARG_FDRBENCH_PASS = new OspreyArgument(@"fdrbench-pass",
-            new[] { @"1", @"2", @"both" }, (c, p) => c._config.FdrBenchPass = ParseFdrBenchPass(p));
+            new[] { @"1", @"2", @"both" }, (c, p) => c._config.FdrBenchPass = ParseFdrBenchPass(p)) { DescriptionArgs = () => new object[] { ARG_FDRBENCH.ArgumentText } };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_FDR =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_FDR_Protein_Inference, true,
@@ -218,10 +220,10 @@ namespace pwiz.Osprey
                 ARG_FDRBENCH, ARG_FDRBENCH_PER_RUN, ARG_FDRBENCH_PASS);
 
         // --- Decoys -----------------------------------------------------------------------
-        public static readonly OspreyArgument ARG_DECOYS_IN_LIBRARY = new OspreyArgument(@"decoys-in-library",
+        public static readonly OspreyArgument ARG_DECOYS_IN_LIBRARY = new OspreyArgument(OspreyArgNames.DECOYS_IN_LIBRARY,
             (c, p) => c._config.DecoysInLibrary = true);
-        public static readonly OspreyArgument ARG_DECOY_PAIRING_MANIFEST = new OspreyArgument(@"decoy-pairing-manifest",
-            () => @"<manifest.tsv>", (c, p) => c._config.DecoyPairingManifestPath = p.Value);
+        public static readonly OspreyArgument ARG_DECOY_PAIRING_MANIFEST = new OspreyArgument(OspreyArgNames.DECOY_PAIRING_MANIFEST,
+            () => @"<manifest.tsv>", (c, p) => c._config.DecoyPairingManifestPath = p.Value) { DescriptionArgs = () => new object[] { ARG_DECOYS_IN_LIBRARY.ArgumentText } };
         public static readonly OspreyArgument ARG_WRITE_PIN = new OspreyArgument(@"write-pin",
             (c, p) => c._config.WritePin = true);
 
@@ -230,12 +232,13 @@ namespace pwiz.Osprey
                 ARG_DECOYS_IN_LIBRARY, ARG_DECOY_PAIRING_MANIFEST, ARG_WRITE_PIN);
 
         // --- Distributed / HPC ------------------------------------------------------------
-        // --task is resolved + validated in Program.Main's pre-scan; the tokenizer here only
-        // consumes its value (and rejects a missing one). Declared so it appears in help.
+        // --task is resolved + validated by Program, which reads it with FindValue before the
+        // full parse; the tokenizer here only consumes its value (and rejects a missing one).
+        // Declared so it appears in help.
         // The value list IS the task list, in its --help order, so the help and the
         // resolution cannot disagree; six trivial constructions, once, at type init.
-        public static readonly OspreyArgument ARG_TASK = new OspreyArgument(@"task",
-            OspreyTasks.Create().All.Select(t => t.Name).ToArray(), (c, p) => true);
+        public static readonly OspreyArgument ARG_TASK = new OspreyArgument(OspreyArgNames.TASK,
+            OspreyTasks.Create().All.Select(t => t.Name).ToArray(), (c, p) => true) { DescriptionArgs = () => new object[] { SpectraCacheTask.TASK_NAME, SpectraCache.EXT, ModelDiagnosticsTask.TASK_NAME, ARG_MODEL_DIAGNOSTICS.ArgumentText } };
         // --input-scores is GONE. It named an input KIND - "you handed me parquets" - which is
         // how the Rust pipeline said "Stage 1-4 is already done"; the C# port says that with
         // --task plus the per-run validity sidecars, and two seams answering one question is
@@ -272,9 +275,9 @@ namespace pwiz.Osprey
                         ? FileParallelism.Sequential
                         : FileParallelism.Explicit(n);
                 }
-            });
+            }) { DescriptionArgs = () => new object[] { ARG_THREADS.ArgumentText } };
         public static readonly OspreyArgument ARG_THREADS = new OspreyArgument(@"threads",
-            () => @"<count>", (c, p) => c._config.NThreads = ParseInt(p));
+            () => @"<count>", (c, p) => c._config.NThreads = ParseInt(p)) { DescriptionArgs = () => new object[] { ARG_PARALLEL_FILES.ArgumentText } };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_PERFORMANCE =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Performance, true,
@@ -286,13 +289,13 @@ namespace pwiz.Osprey
         // that writer to a file. The "[date]\t{managed}\t{total}\t{msg}" stamp format is
         // consumed by ai/scripts/Osprey/perfviz.html.
         public static readonly OspreyArgument ARG_TIMESTAMP = new OspreyArgument(@"timestamp",
-            (c, p) => c._config.IsTimeStamped = true);
+            (c, p) => c._config.IsTimeStamped = true) { DescriptionArgs = () => new object[] { @"[yyyy/MM/dd HH:mm:ss]" } };
         public static readonly OspreyArgument ARG_MEMSTAMP = new OspreyArgument(@"memstamp",
-            (c, p) => c._config.IsMemStamped = true);
+            (c, p) => c._config.IsMemStamped = true) { DescriptionArgs = () => new object[] { ARG_TIMESTAMP.ArgumentText } };
         public static readonly OspreyArgument ARG_LOG_FILE = new OspreyArgument(@"log-file",
             () => @"<path>", (c, p) => c._config.LogFilePath = p.Value);
         public static readonly OspreyArgument ARG_PERF_STATS = new OspreyArgument(@"perf-stats",
-            (c, p) => c._config.PerfStats = true);
+            (c, p) => c._config.PerfStats = true) { DescriptionArgs = () => new object[] { @"[COUNT], [TIMING], [BENCH], [STAGE-WALL], [PATH], [TRAIN]" } }; // Log tag OK: help text naming the tags
         public static readonly OspreyArgument ARG_VERBOSE = new OspreyArgument(@"verbose",
             (c, p) => c._config.Verbose = true);
 
@@ -313,10 +316,10 @@ namespace pwiz.Osprey
         // about which ones they can afford - and a panel behind a token nobody remembers is a
         // panel nobody sees, which defeats a diagnostic whose whole purpose is surfacing an effect
         // users do not know to look for.
-        public static readonly OspreyArgument ARG_MODEL_DIAGNOSTICS = new OspreyArgument(@"model-diagnostics",
+        public static readonly OspreyArgument ARG_MODEL_DIAGNOSTICS = new OspreyArgument(OspreyArgNames.MODEL_DIAGNOSTICS,
             (c, p) => c._config.ModelDiagnostics = true);
         public static readonly OspreyArgument ARG_HELP = new OspreyArgument(@"help",
-            (c, p) => true) { ShortName = @"h" };
+            (c, p) => true) { ShortName = @"h", DescriptionArgs = () => new object[] { @"[ascii|unicode|sections|html|<Section>]" } };
         public static readonly OspreyArgument ARG_VERSION = new OspreyArgument(@"version",
             (c, p) => true) { ShortName = @"v" };
         // Skyline's internal --culture: run under a named culture instead of the OS one, for
@@ -376,6 +379,63 @@ namespace pwiz.Osprey
             return parser.ToConfig();
         }
 
+        /// <summary>
+        /// The value given to <paramref name="arg"/> on the command line (the last one, if it is
+        /// repeated), or null when the argument is absent. Found the way
+        /// <see cref="TokenizeAndDispatch"/> finds it - both value forms, and the same
+        /// missing-value error - so Program can read <see cref="ARG_TASK"/> and
+        /// <see cref="ARG_INTERNAL_CULTURE"/> before the full parse without a second grammar.
+        /// </summary>
+        internal static string FindValue(string[] args, OspreyArgument arg)
+        {
+            string value = null;
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (ReferenceEquals(MatchToken(args[i], out string flag, out string inlineValue), arg))
+                    value = TakeValue(args, ref i, arg, flag, inlineValue);
+            }
+            return value;
+        }
+
+        /// <summary>
+        /// The argument <paramref name="token"/> names, or null. Osprey's own grammar is
+        /// <c>--name value</c>; Skyline's <c>--name=value</c> is accepted too, for every argument
+        /// that takes a value, and then <paramref name="inlineValue"/> is the text after the
+        /// first '=' (possibly empty) - an explicit value, which the caller hands to the
+        /// argument and never re-reads as a token of its own. Otherwise it is null.
+        /// <paramref name="flag"/> is the argument as typed (<c>-o</c>, <c>--output</c>), for
+        /// messages. A flag written with a value (<c>--verbose=1</c>) matches nothing, so it is
+        /// reported as an unknown argument.
+        /// </summary>
+        private static OspreyArgument MatchToken(string token, out string flag, out string inlineValue)
+        {
+            flag = token;
+            inlineValue = null;
+            var arg = FindByToken(token);
+            if (arg != null)
+                return arg;
+            int separator = token.StartsWith(ArgumentBase.ARG_PREFIX, StringComparison.Ordinal)
+                ? token.IndexOf('=')
+                : -1;
+            if (separator <= 0)
+                return null;
+            arg = FindByToken(token.Substring(0, separator));
+            if (arg == null || !TakesValue(arg))
+                return null;
+            flag = token.Substring(0, separator);
+            inlineValue = token.Substring(separator + 1);
+            return arg;
+        }
+
+        /// <summary>
+        /// True for an argument the tokenizer reads a value for: every declared value, plus the
+        /// optional help format (<c>--help ascii</c>).
+        /// </summary>
+        private static bool TakesValue(OspreyArgument arg)
+        {
+            return arg.ValueExample != null || ReferenceEquals(arg, ARG_HELP);
+        }
+
         private void TokenizeAndDispatch(string[] args)
         {
             int i = 0;
@@ -383,14 +443,7 @@ namespace pwiz.Osprey
             {
                 string arg = args[i];
 
-                // The single-token `--task=Name` form is resolved in Program.Main's pre-scan.
-                if (arg.StartsWith(@"--task=", StringComparison.Ordinal))
-                {
-                    i++;
-                    continue;
-                }
-
-                OspreyArgument matched = FindByToken(arg);
+                OspreyArgument matched = MatchToken(arg, out string flag, out string inlineValue);
                 if (matched == null)
                 {
                     // A non-flag token that exists on disk is a positional input file. Anything
@@ -417,7 +470,11 @@ namespace pwiz.Osprey
                 if (ReferenceEquals(matched, ARG_HELP))
                 {
                     i++;
-                    string fmt = i < args.Length && !args[i].StartsWith(@"-") ? args[i] : null;
+                    string fmt;
+                    if (inlineValue != null)
+                        fmt = inlineValue.Length > 0 ? inlineValue : null;
+                    else
+                        fmt = i < args.Length && !args[i].StartsWith(@"-") ? args[i] : null;
                     PrintUsage(fmt);
                     Environment.Exit(0);
                     return;
@@ -430,13 +487,9 @@ namespace pwiz.Osprey
                 }
                 if (ReferenceEquals(matched, ARG_TASK))
                 {
-                    // Consume + require the value; the selector itself is resolved in Main.
-                    i++;
-                    if (i >= args.Length || args[i].StartsWith(@"-"))
-                    {
-                        throw new ArgumentException(string.Format(OspreyResources.Program_Run__0__requires_a_task_name___1___,
-                            ARG_TASK.ArgumentText, string.Join(@", ", ARG_TASK.Values)));
-                    }
+                    // Consume + require the value; the selector itself is resolved in Program
+                    // (through FindValue, which reads it with this same TakeValue).
+                    TakeValue(args, ref i, matched, flag, inlineValue);
                     i++;
                     continue;
                 }
@@ -446,10 +499,17 @@ namespace pwiz.Osprey
                     // it is a non-flag non-negative integer (0 = sequential, N = N
                     // files); otherwise this is auto mode and the token is left for
                     // normal processing (e.g. a trailing positional mzML). Mirrors
-                    // the --help [fmt] lookahead.
+                    // the --help [fmt] lookahead. A value given inline (--parallel-files=N) is
+                    // explicit, so it must BE a count: anything else is an invalid value.
                     i++;
                     string parallelValue = null;
-                    if (i < args.Length && IsNonNegativeInteger(args[i]))
+                    if (inlineValue != null)
+                    {
+                        parallelValue = RequireInlineValue(matched, flag, inlineValue);
+                        if (!IsNonNegativeInteger(parallelValue))
+                            throw new ArgumentException(InvalidValueMessage(new NameValuePair(matched.Name, parallelValue)));
+                    }
+                    else if (i < args.Length && IsNonNegativeInteger(args[i]))
                     {
                         parallelValue = args[i];
                         i++;
@@ -461,6 +521,8 @@ namespace pwiz.Osprey
                 {
                     i++;
                     var toks = new List<string>();
+                    if (inlineValue != null)
+                        toks.Add(RequireInlineValue(matched, flag, inlineValue));
                     while (i < args.Length && !args[i].StartsWith(@"-"))
                     {
                         toks.Add(args[i]);
@@ -472,7 +534,7 @@ namespace pwiz.Osprey
 
                 if (matched.ValueExample != null)
                 {
-                    string value = RequireValue(args, ref i, arg);
+                    string value = TakeValue(args, ref i, matched, flag, inlineValue);
                     i++;
                     matched.ProcessValue(this, new NameValuePair(matched.Name, value));
                     continue;
@@ -649,16 +711,39 @@ namespace pwiz.Osprey
         }
 
         /// <summary>
-        /// Consumes the value token following a single-value option flag. Advances
-        /// <paramref name="i"/> to the value and returns it; throws if the value is missing or
-        /// looks like the next option (starts with '-'), so e.g. <c>-o -l x</c> fails fast.
+        /// The value of a single-value option: <paramref name="inlineValue"/> when it was given
+        /// as <c>--name=value</c>, else the next token. For the next token, advances
+        /// <paramref name="i"/> to it, and throws if it is missing or looks like the next option
+        /// (starts with '-'), so e.g. <c>-o -l x</c> fails fast.
         /// </summary>
-        private static string RequireValue(string[] args, ref int i, string flag)
+        private static string TakeValue(string[] args, ref int i, OspreyArgument arg, string flag, string inlineValue)
         {
+            if (inlineValue != null)
+                return RequireInlineValue(arg, flag, inlineValue);
             i++;
-            if (i >= args.Length || args[i].StartsWith(@"-"))
-                throw new ArgumentException(ArgUsage.Provider.ValueMissingMessage(flag));
+            if (i >= args.Length || args[i].StartsWith(@"-", StringComparison.Ordinal))
+                throw new ArgumentException(ValueMissingMessage(arg, flag));
             return args[i];
+        }
+
+        /// <summary>An inline value, which must not be empty (<c>--output=</c>).</summary>
+        private static string RequireInlineValue(OspreyArgument arg, string flag, string inlineValue)
+        {
+            if (inlineValue.Length == 0)
+                throw new ArgumentException(ValueMissingMessage(arg, flag));
+            return inlineValue;
+        }
+
+        /// <summary>
+        /// The missing-value error, naming <paramref name="flag"/> as typed (<c>-o</c> or
+        /// <c>--output</c>); a missing <see cref="ARG_TASK"/> value also lists the tasks.
+        /// </summary>
+        private static string ValueMissingMessage(OspreyArgument arg, string flag)
+        {
+            return ReferenceEquals(arg, ARG_TASK)
+                ? string.Format(OspreyResources.Program_Run__0__requires_a_task_name___1___,
+                    ARG_TASK.ArgumentText, string.Join(@", ", ARG_TASK.Values))
+                : ArgUsage.Provider.ValueMissingMessage(flag);
         }
 
         /// <summary>
@@ -738,6 +823,16 @@ namespace pwiz.Osprey
         }
 
         // --- Help rendering (generated from the declarations; cannot drift) ---------------
+
+        /// <summary>
+        /// The <see cref="OspreyCommandArgUsage"/> key holding an argument's usage text, derived
+        /// from its name the way Skyline's CommandArgUsage keys are: <c>input-list</c> -&gt;
+        /// <c>_input_list</c>.
+        /// </summary>
+        internal static string UsageKey(string argName)
+        {
+            return @"_" + argName.Replace('-', '_');
+        }
 
         /// <summary>
         /// Writes generated usage help to <paramref name="writer"/> (default stdout, so an explicit
@@ -878,117 +973,29 @@ namespace pwiz.Osprey
         }
 
         /// <summary>
-        /// Description + header provider for Osprey, reading OspreyResources. Osprey's tokenizer raises its own value errors, but it
-        /// formats them through <see cref="ValueInvalidMessage"/> (see
+        /// Description + header provider for Osprey: argument descriptions from
+        /// <see cref="OspreyCommandArgUsage"/>, headers and value errors from OspreyResources.
+        /// Osprey's tokenizer raises its own value errors, but it formats them through <see cref="ValueInvalidMessage"/> (see
         /// <see cref="OspreyCommandArgs.InvalidValueMessage"/>), and the token builder
         /// <c>ArgumentBase.operator +</c> raises the framework's ValueUnexpected /
         /// ValueInvalid exceptions, so these message members are live text.
         /// </summary>
         private class OspreyArgUsageProvider : IArgUsageProvider
         {
-            // A switch rather than a static table: a static would hold the text of the first
-            // culture that read it, and tests switch culture in process.
+            /// <summary>
+            /// The usage text for <paramref name="argName"/>, looked up at call time (so it follows
+            /// the current UI culture) in <see cref="OspreyCommandArgUsage"/> under the key Skyline's
+            /// CommandArgUsage uses (see <see cref="UsageKey"/>). An argument whose text names another
+            /// argument, a default value or a file extension supplies those through
+            /// <see cref="OspreyArgument.DescriptionArgs"/>, so no argument text is translated.
+            /// </summary>
             public string GetDescription(string argName)
             {
-                switch (argName)
-                {
-                    case @"input":
-                        return OspreyResources.OspreyArgUsageProvider_GetDescription_input;
-                    case @"input-list":
-                        return string.Format(OspreyResources.OspreyArgUsageProvider_GetDescription_input_list,
-                            ARG_INPUT.ShortArgumentText);
-                    case @"library":
-                        return OspreyResources.OspreyArgUsageProvider_GetDescription_library;
-                    case @"output":
-                        return OspreyResources.OspreyArgUsageProvider_GetDescription_output;
-                    case @"work-dir":
-                        return OspreyResources.OspreyArgUsageProvider_GetDescription_work_dir;
-                    case @"output-dir":
-                        return string.Format(OspreyResources.OspreyArgUsageProvider_GetDescription_output_dir,
-                            ARG_WORK_DIR.ArgumentText);
-                    case @"cache-dir":
-                        return string.Format(OspreyResources.OspreyArgUsageProvider_GetDescription_cache_dir,
-                            SpectraCache.EXT, ARG_WORK_DIR.ArgumentText);
-                    case @"report":
-                        return OspreyResources.OspreyArgUsageProvider_GetDescription_report;
-                    case @"resolution":
-                        return string.Format(OspreyResources.OspreyArgUsageProvider_GetDescription_resolution,
-                            @"auto");
-                    case @"fragment-tolerance":
-                        return OspreyResources.OspreyArgUsageProvider_GetDescription_fragment_tolerance;
-                    case @"fragment-unit":
-                        return string.Format(OspreyResources.OspreyArgUsageProvider_GetDescription_fragment_unit,
-                            @"ppm");
-                    case @"no-prefilter":
-                        return OspreyResources.OspreyArgUsageProvider_GetDescription_no_prefilter;
-                    case @"run-fdr":
-                        return OspreyResources.OspreyArgUsageProvider_GetDescription_run_fdr;
-                    case @"experiment-fdr":
-                        return OspreyResources.OspreyArgUsageProvider_GetDescription_experiment_fdr;
-                    case @"reconciliation-compaction-fdr":
-                        return string.Format(OspreyResources.OspreyArgUsageProvider_GetDescription_reconciliation_compaction_fdr,
-                            ARG_RUN_FDR.ArgumentText);
-                    case @"protein-fdr":
-                        return OspreyResources.OspreyArgUsageProvider_GetDescription_protein_fdr;
-                    case @"fdr-method":
-                        return string.Format(OspreyResources.OspreyArgUsageProvider_GetDescription_fdr_method,
-                            @"percolator");
-                    case @"fdr-level":
-                        return string.Format(OspreyResources.OspreyArgUsageProvider_GetDescription_fdr_level,
-                            @"precursor");
-                    case @"shared-peptides":
-                        return string.Format(OspreyResources.OspreyArgUsageProvider_GetDescription_shared_peptides,
-                            @"all");
-                    case @"fdrbench":
-                        return string.Format(OspreyResources.OspreyArgUsageProvider_GetDescription_fdrbench,
-                            ARG_FDR_LEVEL.ArgumentText);
-                    case @"fdrbench-per-run":
-                        return string.Format(OspreyResources.OspreyArgUsageProvider_GetDescription_fdrbench_per_run,
-                            ARG_FDRBENCH.ArgumentText);
-                    case @"fdrbench-pass":
-                        return string.Format(OspreyResources.OspreyArgUsageProvider_GetDescription_fdrbench_pass,
-                            ARG_FDRBENCH.ArgumentText);
-                    case @"decoys-in-library":
-                        return OspreyResources.OspreyArgUsageProvider_GetDescription_decoys_in_library;
-                    case @"decoy-pairing-manifest":
-                        return string.Format(OspreyResources.OspreyArgUsageProvider_GetDescription_decoy_pairing_manifest,
-                            ARG_DECOYS_IN_LIBRARY.ArgumentText);
-                    case @"write-pin":
-                        return OspreyResources.OspreyArgUsageProvider_GetDescription_write_pin;
-                    case @"task":
-                        return string.Format(OspreyResources.OspreyArgUsageProvider_GetDescription_task,
-                            SpectraCacheTask.TASK_NAME, SpectraCache.EXT, ModelDiagnosticsTask.TASK_NAME, ARG_MODEL_DIAGNOSTICS.ArgumentText);
-                    case @"parallel-files":
-                        return string.Format(OspreyResources.OspreyArgUsageProvider_GetDescription_parallel_files,
-                            ARG_THREADS.ArgumentText);
-                    case @"threads":
-                        return string.Format(OspreyResources.OspreyArgUsageProvider_GetDescription_threads,
-                            ARG_PARALLEL_FILES.ArgumentText);
-                    case @"timestamp":
-                        return string.Format(OspreyResources.OspreyArgUsageProvider_GetDescription_timestamp,
-                            @"[yyyy/MM/dd HH:mm:ss]");
-                    case @"memstamp":
-                        return string.Format(OspreyResources.OspreyArgUsageProvider_GetDescription_memstamp,
-                            ARG_TIMESTAMP.ArgumentText);
-                    case @"log-file":
-                        return OspreyResources.OspreyArgUsageProvider_GetDescription_log_file;
-                    case @"perf-stats":
-                        return string.Format(OspreyResources.OspreyArgUsageProvider_GetDescription_perf_stats,
-                            @"[COUNT], [TIMING], [BENCH], [STAGE-WALL], [PATH], [TRAIN]"); // Log tag OK: help text naming the tags
-                    case @"verbose":
-                        return OspreyResources.OspreyArgUsageProvider_GetDescription_verbose;
-                    case @"diagnostics":
-                        return OspreyResources.OspreyArgUsageProvider_GetDescription_diagnostics;
-                    case @"model-diagnostics":
-                        return OspreyResources.OspreyArgUsageProvider_GetDescription_model_diagnostics;
-                    case @"help":
-                        return string.Format(OspreyResources.OspreyArgUsageProvider_GetDescription_help,
-                            @"[ascii|unicode|sections|html|<Section>]");
-                    case @"version":
-                        return OspreyResources.OspreyArgUsageProvider_GetDescription_version;
-                    default:
-                        return null;
-                }
+                string description = OspreyCommandArgUsage.ResourceManager.GetString(UsageKey(argName));
+                if (description == null)
+                    return null;
+                var formatArgs = AllArguments.FirstOrDefault(a => a.Name == argName)?.DescriptionArgs?.Invoke();
+                return formatArgs == null ? description : string.Format(description, formatArgs);
             }
 
             public string AppliesToHeader { get { return OspreyResources.OspreyArgUsageProvider_AppliesToHeader_Applies_To; } }
@@ -1052,6 +1059,13 @@ namespace pwiz.Osprey
             : base(name, values, processValue)
         {
         }
+
+        /// <summary>
+        /// Values for the <c>{N}</c> placeholders in this argument's usage text in
+        /// <see cref="OspreyCommandArgUsage"/>: other arguments' text, default values, file
+        /// extensions - anything that must not be translated. Null when the text has none.
+        /// </summary>
+        public Func<object[]> DescriptionArgs { get; set; }
 
         public bool Variadic { get; set; }
         public Func<OspreyCommandArgs, IReadOnlyList<string>, bool> ProcessVariadic { get; set; }

@@ -87,10 +87,23 @@ namespace pwiz.Osprey.Tasks
         public virtual string ValidateSelection(OspreyConfig config)
         {
             if (!config.HasInputFiles)
-                return RequiresError(@"--input <file...>");
+                return RequiresError(OspreyArgNames.Text(OspreyArgNames.INPUT, @"<file...>"));
             if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
-                return RequiresError(OspreyTasksResources.OspreyTask_ValidateSelection___library_and___output);
+                return RequiresError(LibraryAndOutputText);
             return null;
+        }
+
+        /// <summary>
+        /// The two arguments <see cref="ValidateSelection"/> requires together, as one phrase
+        /// ("--library and --output"): the argument text is passed in, never translated.
+        /// </summary>
+        public static string LibraryAndOutputText
+        {
+            get
+            {
+                return string.Format(OspreyTasksResources.OspreyTask_LibraryAndOutputText__0__and__1_,
+                    OspreyArgNames.Text(OspreyArgNames.LIBRARY), OspreyArgNames.Text(OspreyArgNames.OUTPUT));
+            }
         }
 
         public virtual string DescribeOutput(OspreyConfig config) => null;

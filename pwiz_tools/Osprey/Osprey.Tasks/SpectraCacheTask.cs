@@ -68,7 +68,7 @@ namespace pwiz.Osprey.Tasks
         public override string ValidateSelection(OspreyConfig config)
         {
             if (!config.HasInputFiles)
-                return RequiresError(@"--input <file...>");
+                return RequiresError(OspreyArgNames.Text(OspreyArgNames.INPUT, @"<file...>"));
             return null;
         }
 

@@ -571,9 +571,10 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // run completed before the diagnostics products were retained looks like. Saying
                 // "the second pass has not completed" here would be a confident wrong answer
                 // about a finished analysis.
-                reasons.Add(@"The second pass completed but left no diagnostics product, so this " +
-                            @"page shows first-pass views only; re-run SecondPassFDR with " +
-                            @"--model-diagnostics to add the pass-2 views");
+                reasons.Add(string.Format(
+                    @"The second pass completed but left no diagnostics product, so this " +
+                    @"page shows first-pass views only; re-run {0} with {1} to add the pass-2 views",
+                    SecondPassFdrTask.TASK_NAME, OspreyArgNames.Text(OspreyArgNames.MODEL_DIAGNOSTICS)));
             }
             if (contributed < data.FileCount)
             {

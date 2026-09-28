@@ -19,6 +19,7 @@
  */
 
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace pwiz.Osprey.Core
@@ -97,6 +98,23 @@ namespace pwiz.Osprey.Core
                 return s;
 
             return GetIndentation(indentLevel, tabSize) + s;
+        }
+
+        /// <summary>
+        /// Utility function for <see cref="string"/> like <see cref="File"/> ReadLines(): the
+        /// lines of <paramref name="text"/> without their endings (CRLF, LF or CR), and no empty
+        /// last line for text that ends with a line ending.
+        /// </summary>
+        public static IEnumerable<string> ReadLines(this string text)
+        {
+            var lines = new List<string>();
+            using (var reader = new StringReader(text))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                    lines.Add(line);
+            }
+            return lines;
         }
     }
 }

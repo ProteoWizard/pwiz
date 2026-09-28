@@ -447,9 +447,9 @@ namespace pwiz.Osprey.IO
                     OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Only__0___of_the_library_decoys_could_be_paired_with_a_target__at_least__1___is_needed___,
                     pairingStats.PairedFraction * 100.0,
                     config.DecoyPairMinFraction * 100.0,
-                    @"--decoy-pairing-manifest",
+                    OspreyArgNames.Text(OspreyArgNames.DECOY_PAIRING_MANIFEST),
                     FormatPrefixList(config.DecoyPrefixes),
-                    @"--decoys-in-library");
+                    OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY));
                 return false;
             }
             return true;

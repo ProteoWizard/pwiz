@@ -22,10 +22,12 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.CommandLine;
 using pwiz.Osprey.Core;
@@ -195,7 +197,7 @@ namespace pwiz.Osprey.Test
             // Diagnostics. --task is resolved in Main, so ParseArgs alone leaves SelectedTask null
             // but must accept both --task forms without throwing.
             Assert.IsTrue(Parse(OspreyCommandArgs.ARG_DIAGNOSTICS).Diagnostics);
-            // --task=Name is the one joined form Program.Main pre-scans, so it is spelled here.
+            // The joined --task=Name form too (see OspreyCommandArgsTests.TestNameEqualsValueForm).
             Assert.IsNull(Parse(OspreyCommandArgs.ARG_TASK.ArgumentText + @"=" + SecondPassFdrTask.TASK_NAME, OspreyCommandArgs.ARG_LIBRARY + @"ref.blib", OspreyCommandArgs.ARG_OUTPUT + @"out.blib").SelectedTask);
 
             // Logging: --timestamp / --memstamp are value-less flags (default off);
@@ -308,6 +310,71 @@ namespace pwiz.Osprey.Test
             Assert.ThrowsException<ArgumentNullException>(() => OspreyCommandArgs.ARG_LIBRARY + null);
         }
 
+        /// <summary>
+        /// Osprey's grammar is <c>--name value</c>, and it also takes Skyline's
+        /// <c>--name=value</c> for every argument with a value. Both forms parse to the same
+        /// config, and Program's early reads of --task and --culture (FindValue) go through the
+        /// same splitting, so they cannot disagree with the parser about either form.
+        /// </summary>
+        [TestMethod]
+        public void TestNameEqualsValueForm()
+        {
+            var argThreads = OspreyCommandArgs.ARG_THREADS;
+            Assert.AreEqual(Parse(argThreads + 8).NThreads, ParseInline(argThreads, 8).NThreads);
+            Assert.AreEqual(Parse(OspreyCommandArgs.ARG_FDR_METHOD + @"gbdt").FdrMethod,
+                ParseInline(OspreyCommandArgs.ARG_FDR_METHOD, @"gbdt").FdrMethod);
+            var argParallelFiles = OspreyCommandArgs.ARG_PARALLEL_FILES;
+            Assert.AreEqual(4, ParseInline(argParallelFiles, 4).FileParallelism.Count);
+            Assert.AreEqual(FileParallelismMode.Sequential, ParseInline(argParallelFiles, 0).FileParallelism.Mode);
+            // An inline value is explicit, so it is that argument's value or an error - never
+            // auto mode with the value left over as a positional token, which is what the
+            // optional-value lookahead does with a spaced "--parallel-files bad".
+            foreach (var badValue in new[] { @"bad", @"-3", @"1.5" })
+            {
+                var invalid = Assert.ThrowsException<ArgumentException>(() => ParseInline(argParallelFiles, badValue));
+                Assert.AreEqual(ArgUsage.Provider.ValueInvalidMessage(argParallelFiles.ArgumentText, badValue, null),
+                    invalid.Message);
+            }
+            CollectionAssert.AreEqual(new[] { @"a.mzML" }, ParseInline(OspreyCommandArgs.ARG_INPUT, @"a.mzML").InputFiles.ToArray());
+            // Only the first '=' separates; the rest belongs to the value.
+            Assert.AreEqual(@"a=b.blib", ParseInline(OspreyCommandArgs.ARG_OUTPUT, @"a=b.blib").OutputBlib);
+
+            // An empty value is a missing value, reported as it is for the spaced form.
+            var argOutput = OspreyCommandArgs.ARG_OUTPUT;
+            var missing = Assert.ThrowsException<ArgumentException>(() => ParseInline(argOutput, string.Empty));
+            Assert.AreEqual(ArgUsage.Provider.ValueMissingMessage(argOutput.ArgumentText), missing.Message);
+            // A flag takes no value in either form.
+            Assert.ThrowsException<ArgumentException>(() => ParseInline(OspreyCommandArgs.ARG_VERBOSE, 1));
+
+            // --task: the tokenizer consumes both forms, and FindValue reads both the same way.
+            var argTask = OspreyCommandArgs.ARG_TASK;
+            string taskName = FirstPassFdrTask.TASK_NAME;
+            ParseInline(argTask, taskName);
+            Parse(argTask + taskName);
+            Assert.AreEqual(taskName, OspreyCommandArgs.FindValue(ArgTokens.Split(argTask + taskName), argTask));
+            Assert.AreEqual(taskName, OspreyCommandArgs.FindValue(new[] { InlineToken(argTask, taskName) }, argTask));
+            Assert.IsNull(OspreyCommandArgs.FindValue(ArgTokens.Split(argThreads + 8), argTask));
+            string noTaskName = string.Format(OspreyResources.Program_Run__0__requires_a_task_name___1___,
+                argTask.ArgumentText, string.Join(@", ", argTask.Values));
+            Assert.AreEqual(noTaskName, Assert.ThrowsException<ArgumentException>(
+                () => OspreyCommandArgs.FindValue(new[] { InlineToken(argTask, string.Empty) }, argTask)).Message);
+            Assert.AreEqual(noTaskName, Assert.ThrowsException<ArgumentException>(
+                () => OspreyCommandArgs.FindValue(new[] { argTask.ArgumentText }, argTask)).Message);
+            Assert.AreEqual(noTaskName, Assert.ThrowsException<ArgumentException>(
+                () => Parse(argTask)).Message);
+        }
+
+        private static OspreyConfig ParseInline(OspreyArgument arg, object value)
+        {
+            return OspreyCommandArgs.ParseArgs(new[] { InlineToken(arg, value) });
+        }
+
+        /// <summary>The single-token <c>--name=value</c> spelling of an argument and its value.</summary>
+        private static string InlineToken(OspreyArgument arg, object value)
+        {
+            return string.Format(CultureInfo.InvariantCulture, @"{0}={1}", arg.ArgumentText, value);
+        }
+
         [TestMethod]
         public void TestVariadicInputAccumulates()
         {
@@ -337,8 +404,11 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestEveryArgIsGroupedAndDescribed()
         {
-            // Drift killer: every declared argument belongs to exactly one group AND resolves a
-            // non-empty description. Adding an arg without grouping/documenting it fails here.
+            // Drift killer: every argument DECLARED on OspreyCommandArgs (every static
+            // OspreyArgument field, whether or not anything lists it) belongs to exactly one help
+            // group, and every non-internal one has usage text in OspreyCommandArgUsage.resx under
+            // the key derived from its name. AllArguments is built FROM the groups, so it cannot
+            // see an argument that was declared and never grouped - hence the reflection.
             var groups = OspreyCommandArgs.UsageBlocks.OfType<ArgumentGroup<OspreyCommandArgs>>().ToList();
 
             var seen = new Dictionary<string, int>();
@@ -349,15 +419,43 @@ namespace pwiz.Osprey.Test
                     seen[arg.Name] = count + 1;
                 }
 
-            foreach (var arg in OspreyCommandArgs.AllArguments)
+            var declared = typeof(OspreyCommandArgs)
+                .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+                .Where(f => typeof(OspreyArgument).IsAssignableFrom(f.FieldType))
+                .Select(f => (OspreyArgument) f.GetValue(null))
+                .ToList();
+            Assert.AreEqual(OspreyCommandArgs.AllArguments.Count(), declared.Count,
+                @"Every declared argument must be in a help group");
+
+            var usageKeys = new HashSet<string>();
+            foreach (var arg in declared)
             {
-                Assert.AreEqual(1, seen[arg.Name], string.Format(@"Argument {0} must be in exactly one group", arg.Name));
+                seen.TryGetValue(arg.Name, out int groupCount);
+                Assert.AreEqual(1, groupCount, string.Format(@"Argument {0} must be in exactly one group", arg.Name));
                 // An internal argument (--culture) is never shown in help, so it has no text to drift.
                 if (arg.InternalUse)
                     continue;
+                string key = OspreyCommandArgs.UsageKey(arg.Name);
+                usageKeys.Add(key);
+                Assert.IsFalse(string.IsNullOrEmpty(OspreyCommandArgUsage.ResourceManager.GetString(key)),
+                    string.Format(@"Argument {0} has no usage text {1} in OspreyCommandArgUsage.resx", arg.Name, key));
+                // Formats with the argument's DescriptionArgs, so a placeholder with no value throws here.
                 string description = ArgUsage.Provider.GetDescription(arg.Name);
                 Assert.IsFalse(string.IsNullOrEmpty(description),
                     string.Format(@"Argument {0} has no description", arg.Name));
+            }
+
+            // Code below the executable spells argument text from OspreyArgNames, whose names the
+            // declarations use; the prefix is the one thing that could still differ.
+            Assert.AreEqual(OspreyCommandArgs.ARG_TASK.ArgumentText, OspreyArgNames.Text(OspreyArgNames.TASK));
+
+            // And no orphans: every usage string belongs to a declared, non-internal argument.
+            var resourceSet = OspreyCommandArgUsage.ResourceManager.GetResourceSet(CultureInfo.InvariantCulture, true, true);
+            Assert.IsNotNull(resourceSet);
+            foreach (DictionaryEntry entry in resourceSet)
+            {
+                Assert.IsTrue(usageKeys.Contains((string) entry.Key),
+                    string.Format(@"OspreyCommandArgUsage.resx key {0} matches no argument", entry.Key));
             }
         }
 

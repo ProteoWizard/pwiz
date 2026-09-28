@@ -116,28 +116,24 @@ namespace pwiz.Osprey
 
         /// <summary>
         /// A scope for the culture named by <c>--culture</c>, or null when there is none. A name
-        /// .NET does not know also gives null, with <paramref name="error"/> set to .NET's own
-        /// (already localized) message, and the run stops there.
+        /// .NET does not know, or no name at all, also gives null, with <paramref name="error"/>
+        /// set to the message (.NET's own, already localized, for an unknown name), and the run
+        /// stops there.
         /// </summary>
         internal static CultureScope CreateCultureScope(string[] args, out string error)
         {
             error = null;
-            string argText = OspreyCommandArgs.ARG_INTERNAL_CULTURE.ArgumentText;
-            for (int i = 0; i + 1 < args.Length; i++)
+            try
             {
-                if (!string.Equals(args[i], argText, StringComparison.Ordinal))
-                    continue;
-                try
-                {
-                    return new CultureScope(CultureInfo.GetCultureInfo(args[i + 1]));
-                }
-                catch (CultureNotFoundException ex)
-                {
-                    error = ex.Message;
-                    return null;
-                }
+                string cultureName = OspreyCommandArgs.FindValue(args, OspreyCommandArgs.ARG_INTERNAL_CULTURE);
+                return cultureName == null ? null : new CultureScope(CultureInfo.GetCultureInfo(cultureName));
             }
-            return null;
+            catch (ArgumentException ex)
+            {
+                // A CultureNotFoundException (a name .NET does not know), or --culture with no value.
+                error = ex.Message;
+                return null;
+            }
         }
 
         /// <summary>
@@ -152,7 +148,7 @@ namespace pwiz.Osprey
             bool errorReported = _consoleOut.IsErrorReported || _out.IsErrorReported;
             var agreement = GetExitAgreement(exitCode, errorReported);
             if (agreement.Mismatch != null)
-                LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_EXIT_RECONCILED, @"{0}", agreement.Mismatch));
+                LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_EXIT_RECONCILED, agreement.Mismatch));
             if (agreement.NeedsErrorLine)
                 LogError(OspreyResources.Program_ReconcileExitCode_Failure_occurred__Exiting___);
             return agreement.ExitCode;
@@ -200,27 +196,17 @@ namespace pwiz.Osprey
                 // flag its selection implies. Default (no --task) runs the full
                 // straight-through pipeline. Any unrecognized flag (including
                 // the retired --no-join / --join-only / --join-at-pass) fails
-                // fast in ParseArgs.
-                string taskName = null;
-                for (int i = 0; i < args.Length; i++)
+                // fast in ParseArgs. FindValue reads the argument the way the parser does,
+                // so the two cannot disagree about what selected the task.
+                string taskName;
+                try
                 {
-                    string a = args[i];
-                    if (a == @"--task")
-                    {
-                        if (i + 1 >= args.Length || args[i + 1].StartsWith(@"-", StringComparison.Ordinal))
-                        {
-                            LogError(string.Format(OspreyResources.Program_Run__0__requires_a_task_name___1___,
-                                OspreyCommandArgs.ARG_TASK.ArgumentText,
-                                string.Join(@", ", OspreyCommandArgs.ARG_TASK.Values)));
-                            return EXIT_CODE_FAILURE_TO_START;
-                        }
-                        taskName = args[i + 1];
-                        i++; // consume value
-                    }
-                    else if (a.StartsWith(@"--task=", StringComparison.Ordinal))
-                    {
-                        taskName = a.Substring(@"--task=".Length);
-                    }
+                    taskName = OspreyCommandArgs.FindValue(args, OspreyCommandArgs.ARG_TASK);
+                }
+                catch (ArgumentException ex)
+                {
+                    LogError(ex.Message);
+                    return EXIT_CODE_FAILURE_TO_START;
                 }
 
                 // The one task set for this run. The selection is looked up in it and the
@@ -540,7 +526,7 @@ namespace pwiz.Osprey
                 // Machine twins of the banner: the liveness anchor a route assertion needs
                 // before it can trust an absence, and the aggregation arm, which the prose
                 // above states for a person.
-                LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_EXPERIMENT_AGG, @"{0}", OspreyEnvironment.ExperimentAgg));
+                LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_EXPERIMENT_AGG, OspreyEnvironment.ExperimentAgg));
                 LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_STARTUP, @"threads={0}", config.NThreads));
                 LogInfo(string.Empty);
 
