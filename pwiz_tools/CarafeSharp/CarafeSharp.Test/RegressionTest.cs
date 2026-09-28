@@ -119,7 +119,7 @@ namespace pwiz.CarafeSharp.Test
         {
             @"dataset", @"leg", @"torch", @"device_used", @"commit", @"branch", @"os", @"os_platform", @"processor",
             @"logical_processors", @"omp_num_threads", @"minutes", @"subset_stride", @"subset_records", @"subset_pairing_rows",
-            @"arguments", @"export_note",
+            @"export_note",
         };
 
         private static readonly string[] TRAINING_TABLES =
@@ -727,7 +727,7 @@ namespace pwiz.CarafeSharp.Test
                     golden.OsPlatform = provenance.GetProperty(@"os_platform").GetString();
                     golden.Processor = provenance.GetProperty(@"processor").GetString();
                     golden.TorchThreads = provenance.GetProperty(@"torch_cpu_threads").GetInt32();
-                    golden.Arguments = provenance.GetProperty(@"arguments").EnumerateArray().Select(a => a.GetString()).ToList();
+                    golden.Arguments = (provenance.GetProperty(@"arguments").GetString() ?? string.Empty).Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     foreach (var input in root.GetProperty(@"inputs").EnumerateObject())
                         golden.Inputs[input.Name] = input.Value.GetProperty(@"sha256").GetString();
                     var exact = root.GetProperty(@"exact");
@@ -765,6 +765,8 @@ namespace pwiz.CarafeSharp.Test
                         }
                     }
                     json.WriteNumber(@"torch_cpu_threads", run.TorchThreads);
+                    // One line, not one argument per line.
+                    json.WriteString(@"arguments", string.Join(@" ", run.Arguments));
                     json.WriteEndObject();
                     json.WritePropertyName(@"inputs");
                     run.InfoJson.GetProperty(@"inputs").WriteTo(json);
