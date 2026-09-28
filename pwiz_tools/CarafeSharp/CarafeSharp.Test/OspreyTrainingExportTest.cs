@@ -23,7 +23,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Training;
@@ -419,73 +418,8 @@ namespace pwiz.CarafeSharp.Test
             foreach (var record in records)
                 record.FileName = stem;
             string path = Path.Combine(_folder, stem + OspreyTrainingExport.FILE_SUFFIX);
-            ParquetColumns.Write(path, Columns(records), footer, rowsPerGroup);
+            OspreyTestRecords.WriteExport(path, records, footer, rowsPerGroup);
             return path;
-        }
-
-        /// <summary>
-        /// The export's columns with the types Osprey writes: scalars as their own types, per-ion
-        /// and per-modification arrays as little-endian blobs, an empty array as NULL.
-        /// </summary>
-        private static List<KeyValuePair<string, Array>> Columns(IReadOnlyList<OspreyTrainingRecord> r)
-        {
-            return new List<KeyValuePair<string, Array>>
-            {
-                Column(@"entry_id", r.Select(x => x.EntryId).ToArray()),
-                Column(@"is_entrapment", r.Select(x => x.IsEntrapment).ToArray()),
-                Column(@"sequence", r.Select(x => x.Sequence).ToArray()),
-                Column(@"modified_sequence", r.Select(x => x.ModifiedSequence).ToArray()),
-                Column(@"mod_positions", r.Select(x => Blob(x.ModPositions)).ToArray()),
-                Column(@"mod_masses", r.Select(x => Blob(x.ModMasses)).ToArray()),
-                Column(@"mod_unimod_ids", r.Select(x => Blob(x.ModUnimodIds)).ToArray()),
-                Column(@"charge", r.Select(x => (byte)x.Charge).ToArray()),
-                Column(@"precursor_mz", r.Select(x => x.PrecursorMz).ToArray()),
-                Column(@"protein_ids", r.Select(x => x.ProteinIds).ToArray()),
-                Column(@"file_name", r.Select(x => x.FileName).ToArray()),
-                Column(@"apex_rt", r.Select(x => x.ApexRt).ToArray()),
-                Column(@"start_rt", r.Select(x => x.StartRt).ToArray()),
-                Column(@"end_rt", r.Select(x => x.EndRt).ToArray()),
-                Column(@"n_peak_scans", r.Select(x => x.PeakScanCount).ToArray()),
-                Column(@"score", r.Select(x => x.Score).ToArray()),
-                Column(@"run_precursor_q", r.Select(x => x.RunPrecursorQ).ToArray()),
-                Column(@"experiment_precursor_q", r.Select(x => x.ExperimentPrecursorQ).ToArray()),
-                Column(@"pep", r.Select(x => x.Pep).ToArray()),
-                Column(@"mp_fitted", r.Select(x => x.MedianPolishFitted).ToArray()),
-                Column(@"mp_residual_mad", r.Select(x => x.MedianPolishResidualMad).ToArray()),
-                Column(@"n_same_apex_claimants", r.Select(x => x.SameApexClaimantCount).ToArray()),
-                Column(@"n_coeluting_claimants", r.Select(x => x.CoelutingClaimantCount).ToArray()),
-                Column(@"ion_mz", r.Select(x => Blob(x.IonMz)).ToArray()),
-                Column(@"ion_flags", r.Select(x => Blob(x.IonFlags)).ToArray()),
-                Column(@"apex_intensity", r.Select(x => Blob(x.ApexIntensity)).ToArray()),
-                Column(@"apex_mz_error", r.Select(x => Blob(x.ApexMzError)).ToArray()),
-                Column(@"library_rel_intensity", r.Select(x => Blob(x.LibraryRelIntensity)).ToArray()),
-                Column(@"n_finite_scans", r.Select(x => Blob(x.FiniteScanCount)).ToArray()),
-                Column(@"xic_start", r.Select(x => Blob(x.XicStart)).ToArray()),
-                Column(@"xic_end", r.Select(x => Blob(x.XicEnd)).ToArray()),
-                Column(@"xic_max", r.Select(x => Blob(x.XicMax)).ToArray()),
-                Column(@"corr_polish", r.Select(x => Blob(x.CorrPolish)).ToArray()),
-                Column(@"corr_reference", r.Select(x => Blob(x.CorrReference)).ToArray()),
-                Column(@"polish_row_effect", r.Select(x => Blob(x.PolishRowEffect)).ToArray()),
-                Column(@"polish_r2", r.Select(x => Blob(x.PolishR2)).ToArray()),
-                Column(@"polish_pos_resid_max", r.Select(x => Blob(x.PolishPositiveResidualMax)).ToArray()),
-                Column(@"polish_apex_residual", r.Select(x => Blob(x.PolishApexResidual)).ToArray()),
-                Column(@"polish_outlier_z", r.Select(x => Blob(x.PolishOutlierZ)).ToArray()),
-                Column(@"polish_apex_ratio", r.Select(x => Blob(x.PolishApexRatio)).ToArray()),
-                Column(@"polish_rel_intensity", r.Select(x => Blob(x.PolishRelIntensity)).ToArray()),
-                Column(@"shared_apex_n", r.Select(x => Blob(x.SharedApexCount)).ToArray()),
-                Column(@"shared_coelute_n", r.Select(x => Blob(x.SharedCoeluteCount)).ToArray()),
-                Column(@"min_claimant_q", r.Select(x => Blob(x.MinClaimantQ)).ToArray()),
-            };
-        }
-
-        private static KeyValuePair<string, Array> Column(string name, Array values)
-        {
-            return new KeyValuePair<string, Array>(name, values);
-        }
-
-        private static byte[] Blob<T>(T[] values) where T : struct
-        {
-            return values.Length == 0 ? null : MemoryMarshal.AsBytes(values.AsSpan()).ToArray();
         }
 
         /// <summary>Every property read back equal, arrays element by element (NaN equal to NaN).</summary>

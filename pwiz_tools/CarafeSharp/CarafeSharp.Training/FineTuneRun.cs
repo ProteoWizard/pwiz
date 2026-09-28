@@ -51,6 +51,9 @@ namespace pwiz.CarafeSharp.Training
         /// </summary>
         public string Ms2Model { get; set; }
 
+        /// <summary>A safetensors RT model to fine-tune instead of the pretrained one; for tests, which have no pretrained models.</summary>
+        internal string RtModel { get; set; }
+
         public Device Device { get; set; } = CPU;
     }
 
@@ -142,7 +145,9 @@ namespace pwiz.CarafeSharp.Training
             log(string.Format(@"RT: {0} rows, {1} peptide forms, {2} training rows, {3} test rows, batch {4}",
                 rows.Count, forms.Count, train.Length, test.Length, batchSize));
 
-            using (var model = RtModel.FromPretrained(pretrained, options.Device))
+            using (var model = options.RtModel != null
+                       ? RtModel.FromSafetensors(options.RtModel, options.Device)
+                       : RtModel.FromPretrained(pretrained, options.Device))
             {
                 result.RtPretrained = RtMetrics.Evaluate(model, test);
                 log(@"RT pretrained: " + result.RtPretrained);

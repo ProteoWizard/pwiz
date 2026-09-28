@@ -43,11 +43,19 @@ namespace pwiz.CarafeSharp
     {
         private readonly TrainingSettings _settings;
         private readonly TextWriter _log;
+        private readonly Func<string, PretrainedModels> _openPretrained;
 
         public ModelTrainer(TrainingSettings settings, TextWriter log)
+            : this(settings, log, PretrainedModels.Open)
+        {
+        }
+
+        /// <summary>A trainer whose pretrained models come from <paramref name="openPretrained"/>, given <c>-pretrained</c>; for tests.</summary>
+        internal ModelTrainer(TrainingSettings settings, TextWriter log, Func<string, PretrainedModels> openPretrained)
         {
             _settings = settings;
             _log = log ?? TextWriter.Null;
+            _openPretrained = openPretrained;
         }
 
         public FineTuneResult Result { get; private set; }
@@ -65,7 +73,7 @@ namespace pwiz.CarafeSharp
             var device = TorchDevice.Resolve(_settings.Device, out string fallback);
             if (fallback != null)
                 Log(fallback);
-            var pretrained = PretrainedModels.Open(_settings.PretrainedModels);
+            var pretrained = _openPretrained(_settings.PretrainedModels);
             Directory.CreateDirectory(_settings.OutputDirectory);
 
             var selection = TrainingExportLocator.Find(_settings.Identifications, _settings.MsFiles);
