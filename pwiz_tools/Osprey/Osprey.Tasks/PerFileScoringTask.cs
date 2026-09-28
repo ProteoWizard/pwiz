@@ -1220,6 +1220,23 @@ namespace pwiz.Osprey.Tasks
             }
             else
             {
+                // A decoy's fragments are recomputed from the target's b/y ion annotations.
+                // A fragment with no annotation - every peak of a .blib, whose loader reads
+                // only m/z and intensity - is copied verbatim, and a reversed sequence has the
+                // same precursor m/z, so each decoy would be an exact copy of its target:
+                // measured on the subset, 177 of 177 calibration pairs had bit-identical
+                // features, and the search reports nothing. Refuse rather than run an FDR
+                // with no discriminating power.
+                if (!omitFragments && !AnyTargetHasSequenceIons(library))
+                {
+                    ctx.LogError(string.Format(
+                        "The library {0} has no b or y fragment ion annotations, so Osprey cannot " +
+                        "generate decoys from it. Use a library with annotated fragments (such as a " +
+                        "DIA-NN or Carafe .tsv library), or one that already contains decoys with {1}.",
+                        config.LibrarySource?.Path, @"--decoys-in-library"));
+                    ctx.ExitCode = 1;
+                    return false;
+                }
                 // GenerateAllWithCollisionDetection interns the freshly-minted
                 // decoy strings ("DECOY_"+accession / modified sequence) through
                 // its own pool and logs the collapse summary; no post-pass
@@ -1311,6 +1328,25 @@ namespace pwiz.Osprey.Tasks
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// True when at least one target carries a b or y fragment - the only annotations
+        /// <see cref="DecoyGenerator"/> can recompute for a permuted sequence.
+        /// </summary>
+        private static bool AnyTargetHasSequenceIons(List<LibraryEntry> library)
+        {
+            foreach (var entry in library)
+            {
+                if (entry.IsDecoy || entry.Fragments == null)
+                    continue;
+                foreach (var fragment in entry.Fragments)
+                {
+                    if (fragment.Annotation.IonType == IonType.B || fragment.Annotation.IonType == IonType.Y)
+                        return true;
+                }
+            }
+            return false;
         }
 
 

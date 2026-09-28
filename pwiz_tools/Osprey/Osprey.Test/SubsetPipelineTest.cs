@@ -429,6 +429,53 @@ namespace pwiz.Osprey.Test
             AssertBlibsEqual(blib, Path.Combine(parallelDir, BLIB_FILE));
         }
 
+        /// <summary>
+        /// A search Stage 6 has nothing to re-score in, under both second-pass modes: one run has
+        /// no other run to reconcile with, and its single 4 m/z window holds no two charge states
+        /// of one peptide. The second pass then carries the first-pass values and must still
+        /// write every artifact it declares - it once stopped, with no experiment-scope records
+        /// to write. Then an Osprey output .blib searched as the library: its peaks carry no b/y
+        /// annotations, so generated decoys would copy their targets exactly, and the search must
+        /// stop with one plain error rather than an exception from the calibration discriminant.
+        /// </summary>
+        [TestMethod, DoNotParallelize]
+        public void TestSubsetNothingRescoredAndBlibLibrary()
+        {
+            var singleRun = DataInputs().Take(1).ToArray();
+            string singleBlib = null;
+            foreach (string pass2Mode in new[] { string.Empty, @"transfer" })
+            {
+                string workDir = CreateDir(@"single-file" + pass2Mode);
+                RunAnalysis(workDir, singleRun, new Dictionary<string, string>
+                {
+                    { @"OSPREY_PASS2_VERIFY_WORKER", string.Empty },
+                    { @"OSPREY_PASS2_QVALUE", pass2Mode }
+                });
+                Assert.AreEqual(1, Directory.GetFiles(workDir, @"*.2nd-pass.fdr_scores.bin").Length);
+                Assert.IsTrue(new FileInfo(Path.Combine(workDir, @"output.2nd-pass.fdr_experiment.bin")).Length > 0);
+                singleBlib = singleBlib ?? Path.Combine(workDir, BLIB_FILE);
+                Assert.IsTrue(BlibComparer.CountRows(Path.Combine(workDir, BLIB_FILE), @"RefSpectra") >= MIN_PRECURSORS / 2);
+            }
+
+            string blibDir = CreateDir(@"blib-library");
+            var args = InputArgs(singleRun).Concat(new[]
+            {
+                OspreyCommandArgs.ARG_LIBRARY.ArgumentText, singleBlib,
+                OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(blibDir, BLIB_FILE),
+                OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, blibDir
+            }).Concat(CommonArgs()).ToArray();
+            string output;
+            int exitCode;
+            using (OspreyEnvironment.OverrideVariables(Verifier(false)))
+            {
+                exitCode = InProcessOsprey.Run(args, out output);
+            }
+            Assert.AreNotEqual(Program.EXIT_CODE_SUCCESS, exitCode, output);
+            Assert.AreEqual(1, SplitLines(output).Count(CommandStatusWriter.IsErrorLine), output);
+            StringAssert.Contains(output, singleBlib);
+            Assert.IsFalse(output.Contains(typeof(Exception).Namespace + @"."), output);
+        }
+
         private void ValidateStraightThrough(string workDir, string log)
         {
             AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
