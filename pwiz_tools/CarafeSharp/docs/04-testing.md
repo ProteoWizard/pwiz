@@ -187,6 +187,24 @@ already there it compares the run with it, lists the `golden.json` values that c
 only with `-Force`. The golden records its commit, device, processor, OS, libtorch thread count and the
 inputs' SHA-256.
 
+**The Stellar golden** is a CPU run (Intel i9-9900K, Windows, 8 libtorch threads, 17 minutes): 19,344
+precursors, 335,195 peaks and 19,340 DecoyPairs rows (9,670 pairs, 4,833 of them entrapment pairs;
+all 9,666 targets paired, and 12 I/L twins left out of the check), with a 1,923-precursor sample of
+421 KB. It was made from the development export, which Osprey wrote from mzML in June; it is
+recreated when the export package is regenerated from .raw. A second CPU run made independently
+passed, and its exact comparisons were all SAME.
+
+**Sensitivity checks.** Each run changes one setting and must fail the golden's tolerances:
+
+| Setting | Gated checks that fail | Exact comparisons (information) |
+|---|---|---|
+| `-cor 0.7` | the 8 MS2 held-out metrics (fine-tuned COS -6.1e-3 against a tolerance of 1.5e-3); library peaks +2.28% | 3 training tables, `ms2.safetensors` and the library content differ; the RT model and metrics are SAME |
+| `-lf_top_n_frag 19` | library peaks -2.76% (tolerance 1%), the only gated check that fails | the library content differs; the models, metrics and training tables are SAME |
+
+`-lf_top_n_frag 19` is caught by the peak count alone: every fragment it drops is a precursor's
+weakest, so the sampled cosine stays inside its bounds (median 1.000000, p1 0.99598), and so do the
+DecoyPairs checks. Its margin is the peak change against the 1% tolerance, 2.8 times over.
+
 ## Coverage
 
 With no test data (the pretrained archive is bundled, so its tests run), statement coverage from
