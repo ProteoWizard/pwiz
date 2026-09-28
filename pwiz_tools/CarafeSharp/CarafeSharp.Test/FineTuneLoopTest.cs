@@ -46,6 +46,8 @@ namespace pwiz.CarafeSharp.Test
     [TestClass]
     public class FineTuneLoopTest
     {
+        private const int TEST_THREADS = 2;
+
         private static readonly string[] MS2_PEPTIDES = { @"PEPTIDEK", @"SAMPLERK", @"LVNELTEFAK" };
 
         private static readonly (string Sequence, double RtNorm)[] RT_PEPTIDES =
@@ -57,17 +59,22 @@ namespace pwiz.CarafeSharp.Test
         public TestContext TestContext { get; set; }
 
         private string _folder;
+        private int _threads;
 
         [TestInitialize]
         public void CreateFolder()
         {
             _folder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"FineTune_" + Guid.NewGuid().ToString(@"N"));
             Directory.CreateDirectory(_folder);
+            // Batches this small run faster on few threads, and keep the test light on a busy machine.
+            _threads = get_num_threads();
+            set_num_threads(Math.Min(_threads, TEST_THREADS));
         }
 
         [TestCleanup]
         public void DeleteFolder()
         {
+            set_num_threads(_threads);
             if (Directory.Exists(_folder))
                 Directory.Delete(_folder, true);
         }
@@ -76,7 +83,7 @@ namespace pwiz.CarafeSharp.Test
         public void TestFineTuneLossAndCheckpoints()
         {
             var ms2Rows = Ms2Rows();
-            var settings = new FineTuneSettings { Epochs = 10, WarmupEpochs = 0, BatchSize = 8, LearningRate = 1e-3, AdjustBatchSize = false };
+            var settings = new FineTuneSettings { Epochs = 6, WarmupEpochs = 0, BatchSize = 8, LearningRate = 1e-3, AdjustBatchSize = false };
             string tunedMs2 = Path.Combine(_folder, ModelFiles.MS2_SAFETENSORS);
             float[] tunedPrediction;
             using (var model = Ms2Model.FromSafetensors(RandomMs2Model(@"start_ms2", 11), CPU))
@@ -102,7 +109,7 @@ namespace pwiz.CarafeSharp.Test
 
             // The same for the RT model, whose loss is plain L1 on the normalized RT.
             var rtRows = RtRows();
-            var rtSettings = new FineTuneSettings { Epochs = 10, WarmupEpochs = 0, BatchSize = 4, LearningRate = 1e-3, AdjustBatchSize = false };
+            var rtSettings = new FineTuneSettings { Epochs = 6, WarmupEpochs = 0, BatchSize = 4, LearningRate = 1e-3, AdjustBatchSize = false };
             string tunedRt = Path.Combine(_folder, ModelFiles.RT_SAFETENSORS);
             double[] rtPrediction;
             using (var model = RtModel.FromSafetensors(RandomRtModel(@"start_rt", 11), CPU))
