@@ -1597,7 +1597,12 @@ namespace pwiz.Skyline.ToolsUI
     {
         private readonly ComboBox _comboBox;
         public ComboBoxElement(ComboBox comboBox, CancellationToken cancellationToken) : base(comboBox, cancellationToken) { _comboBox = comboBox; }
-        public override object GetValueNow() => _comboBox.GetItemText(_comboBox.SelectedItem);
+        // A combo box a user can type into (e.g. Amino acid "S, T") holds text no item matches
+        private bool IsEditable => _comboBox.DropDownStyle != ComboBoxStyle.DropDownList;
+
+        public override object GetValueNow() => IsEditable
+            ? _comboBox.Text
+            : _comboBox.GetItemText(_comboBox.SelectedItem);
         public IEnumerable<string> GetOptions() => ListItems.GetOptions(_comboBox);
         public void SetValueNow(object value)
         {
@@ -1606,6 +1611,11 @@ namespace pwiz.Skyline.ToolsUI
             // An item's text can carry whitespace the user never sees (e.g. Import Results "Many ")
             if (index < 0 && text != null)
                 index = GetOptions().ToList().FindIndex(option => option.Trim() == text.Trim());
+            if (index < 0 && IsEditable)
+            {
+                _comboBox.Text = text;
+                return;
+            }
             if (index < 0)
                 throw new ArgumentException(LlmInstruction.Format(
                     @"No item '{0}' in combo box {1}.", text, _comboBox.Name));
@@ -2267,8 +2277,9 @@ namespace pwiz.Skyline.ToolsUI
         // Splits a menu/toolbar path into its segments (separators '>', '|', '/'). Throws if empty.
         private static string[] ParseMenuSegments(string menuPath)
         {
+            // Only '>' separates levels: an item's own text can hold a '/' or '|' (e.g. "Observed m/z Values")
             var segments = (menuPath ?? string.Empty)
-                .Split(new[] { '>', '|', '/' }, StringSplitOptions.RemoveEmptyEntries)
+                .Split(new[] { '>' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();
             if (segments.Length == 0)
                 throw new ArgumentException(LlmInstruction.Format(
