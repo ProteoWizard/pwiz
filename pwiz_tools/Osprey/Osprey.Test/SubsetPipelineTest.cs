@@ -368,6 +368,17 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(BlibComparer.CountRows(Path.Combine(transferDir, BLIB_FILE), @"RefSpectra") > 0,
                 @"the transfer arm reported no precursors");
 
+            // Calibration from a sample of the library, as on a full-size library: sampled
+            // below the 178 detected precursors, so the ladder must widen the sample to fit.
+            string sampledDir = CreateDir(@"calibration-sample");
+            RunAnalysis(sampledDir, DataInputs(), new Dictionary<string, string>
+            {
+                { @"OSPREY_PASS2_VERIFY_WORKER", string.Empty },
+                { @"OSPREY_CAL_SAMPLE_SIZE", @"100" }
+            });
+            Assert.IsTrue(BlibComparer.CountRows(Path.Combine(sampledDir, BLIB_FILE), @"RefSpectra") > 0,
+                @"sampled calibration reported no precursors");
+
             // The spectra-cache task alone writes one cache per run and nothing downstream.
             string cacheDir = CreateDir(@"spectra-cache");
             RunAnalysis(cacheDir, DataInputs(), Verifier(false), OspreyCommandArgs.ARG_TASK.ArgumentText,

@@ -177,9 +177,11 @@ namespace pwiz.Osprey.Core
         /// OSPREY_CAL_SAMPLE_SIZE: override the calibration library sample size (targets
         /// sampled per attempt). Default 0 = use the configured CalibrationSampleSize
         /// (100K). Experimental lever for testing whether a larger sample surfaces
-        /// proportionally more near-zero-FDR calibration anchors on rich files.
+        /// proportionally more near-zero-FDR calibration anchors on rich files. Re-read on
+        /// each access (once per file), so an in-process test can drive the sampling path on
+        /// a library smaller than the default sample.
         /// </summary>
-        public static readonly int CalSampleSizeOverride = ParseIntOrZero(@"OSPREY_CAL_SAMPLE_SIZE");
+        public static int CalSampleSizeOverride => ParseIntOrZero(@"OSPREY_CAL_SAMPLE_SIZE");
 
         // Note: the OSPREY_EXIT_AFTER_SCORING env var that used to live here
         // was retired in favor of the --task PerFileScoring CLI flag. See the HPC
