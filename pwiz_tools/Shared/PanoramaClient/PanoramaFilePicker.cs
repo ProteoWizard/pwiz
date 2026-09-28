@@ -455,10 +455,10 @@ namespace pwiz.PanoramaClient
 
         public void ClickOpen()
         {
-            if (listView.SelectedItems.Count != 0 && listView.SelectedItems[0] != null)
+            if (listView.SelectedItems.Count != 0)
             {
                 var downloadName = listView.SelectedItems[0].Name;
-                if (listView.SelectedItems[0].SubItems[1] != null)
+                if (listView.SelectedItems[0].SubItems.Count > 1)
                 {
                     FileSize = (long)listView.SelectedItems[0].Tag;
                 }
