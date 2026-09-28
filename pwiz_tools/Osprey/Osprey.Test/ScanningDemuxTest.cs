@@ -339,7 +339,8 @@ namespace pwiz.Osprey.Test
         /// The per-sweep lasso: noiseless, the penalty keeps each source's own bin but shrinks it,
         /// and the relaxed refit returns every source exactly. Under counting noise the lasso writes
         /// fewer positions than the plain solve, and with the refit the three bins centered on each
-        /// precursor still hold its intensity. The z-scaled lasso does the same.
+        /// precursor still hold its intensity. The z-scaled lasso does the same, and so does choosing
+        /// the positions once per block.
         /// </summary>
         private static void AssertSweepLasso(double[,] a, (int Bin, double Mz, double Amount)[] sources,
             ScanningUnitResult exact, ScanningUnitResult noisy)
@@ -394,6 +395,30 @@ namespace pwiz.Osprey.Test
                 double expected = s.Amount * TotalElution();
                 double found = Enumerable.Range(s.Bin - 1, 3).Sum(bin => Sum(zNoisy.Demultiplexed, bin, s.Mz));
                 Assert.AreEqual(expected, found, 0.15 * expected, string.Format(@"z lasso, m/z {0}, 3 bins", s.Mz));
+            }
+
+            // Positions chosen once per block: the same exact recovery without noise, and with it
+            // fewer positions than the plain solve, at the same three-bin intensities.
+            var blockParams = new ScanningDemuxParams { BlockSupportZ = 3 };
+            var blockExact = ScanningDemultiplexer.DemuxUnit(Simulate(a, sources, null), blockParams);
+            foreach (var s in sources.GroupBy(s => s.Mz))
+            {
+                for (int bin = 10; bin < 50; bin++)
+                {
+                    double expected = s.Where(t => t.Bin == bin).Sum(t => t.Amount) * TotalElution();
+                    Assert.AreEqual(expected, Sum(blockExact.Demultiplexed, bin, s.Key), 1e-6 * s.Max(t => t.Amount),
+                        string.Format(@"block support, m/z {0}, bin {1}", s.Key, bin));
+                }
+            }
+            var blockNoisy = ScanningDemultiplexer.DemuxUnit(Simulate(a, sources, new Random(11)), blockParams);
+            Assert.IsTrue(blockNoisy.Demultiplexed.Count < noisy.Demultiplexed.Count,
+                string.Format(@"{0} positions written with block support, {1} without", blockNoisy.Demultiplexed.Count,
+                    noisy.Demultiplexed.Count));
+            foreach (var s in sources.Where(t => t.Mz != 701.5678))
+            {
+                double expected = s.Amount * TotalElution();
+                double found = Enumerable.Range(s.Bin - 1, 3).Sum(bin => Sum(blockNoisy.Demultiplexed, bin, s.Mz));
+                Assert.AreEqual(expected, found, 0.15 * expected, string.Format(@"block support, m/z {0}, 3 bins", s.Mz));
             }
         }
 

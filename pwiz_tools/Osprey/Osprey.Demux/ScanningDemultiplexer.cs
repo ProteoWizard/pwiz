@@ -91,6 +91,16 @@ namespace pwiz.Osprey.Demux
         public bool SweepL1Refit { get; set; }
 
         /// <summary>
+        /// Scanning data: choose each channel's positions once per block instead of per sweep (0: off).
+        /// The channel's counts summed over the block's sweeps are fitted with the z-scaled lasso of
+        /// <see cref="SweepL1Z"/> at this many standard deviations; each sweep is then solved without
+        /// a penalty over only the positions that fit kept. Per-sweep selection lets a weak position
+        /// pass in one sweep and fail in the next, which jitters the fragment's chromatogram; one
+        /// selection per block does not, and it is made on the block's summed evidence.
+        /// </summary>
+        public double BlockSupportZ { get; set; }
+
+        /// <summary>
         /// Scanning data: place each channel's sources once from the whole block instead of per
         /// sweep on fixed positions. The channel's profile summed over the block's sweeps is fitted
         /// on the bin columns; runs of adjacent solved columns are sources, merged when closer than
@@ -312,6 +322,9 @@ namespace pwiz.Osprey.Demux
         /// </summary>
         public const double SHARE_FLOOR = 1e-6;
 
+        /// <summary>The one time of a solve over counts summed across a block's sweeps.</summary>
+        private static readonly bool[] ONE_TIME = { true };
+
         /// <summary>
         /// The transmission matrix for a block: A[i, j] is the transmission of a precursor spread
         /// uniformly over source bin j into the spectrum of bin i, averaged over the source bin
@@ -399,6 +412,8 @@ namespace pwiz.Osprey.Demux
                 solver.L1Z = parameters.SweepL1Z;
                 solver.RefitSupport = (parameters.SweepL1 > 0 || parameters.SweepL1Z > 0) && parameters.SweepL1Refit;
             }
+            var blockTotal = parameters.BlockSupportZ > 0 && sourceFitter == null ? new double[rows] : null;
+            var blockSupport = blockTotal != null ? new bool[columns] : null;
             int k = 0;
             while (k < peaks)
             {
@@ -467,6 +482,8 @@ namespace pwiz.Osprey.Demux
                 else
                 {
                     double mz = weightedMz / ions;
+                    if (blockTotal != null)
+                        SelectBlockSupport(solver, y, cycles, blockTotal, blockSupport, parameters.BlockSupportZ);
                     solver.Solve(y, cycles, coreCycle, (c, nc, x, cols) =>
                     {
                         if (positionMz != null)
@@ -484,6 +501,7 @@ namespace pwiz.Osprey.Demux
                             }
                         }
                     });
+                    solver.ColumnMask = null;
                     result.ChannelsSolved++;
                 }
                 foreach (int cell in touched)
@@ -650,6 +668,42 @@ namespace pwiz.Osprey.Demux
                 k = end;
             }
             return result;
+        }
+
+        /// <summary>
+        /// The positions a channel may use in every sweep of its block: those the z-scaled lasso keeps
+        /// in a fit of the channel's counts summed over the block's sweeps. Leaves them as the
+        /// solver's column mask for the per-sweep solves, which carry no penalty.
+        /// </summary>
+        private static void SelectBlockSupport(ChannelSolver solver, double[] y, int cycles, double[] total,
+            bool[] support, double z)
+        {
+            for (int r = 0; r < total.Length; r++)
+            {
+                double sum = 0;
+                for (int c = 0; c < cycles; c++)
+                    sum += y[r * cycles + c];
+                total[r] = sum;
+            }
+            Array.Clear(support, 0, support.Length);
+            solver.ColumnMask = null;
+            double l1 = solver.L1, l1Z = solver.L1Z;
+            bool refit = solver.RefitSupport;
+            solver.L1 = 0;
+            solver.L1Z = z;
+            solver.RefitSupport = false;
+            solver.Solve(total, 1, ONE_TIME, (c, nc, x, cols) =>
+            {
+                for (int jj = 0; jj < nc; jj++)
+                {
+                    if (x[jj] > 0)
+                        support[cols[jj]] = true;
+                }
+            });
+            solver.L1 = l1;
+            solver.L1Z = l1Z;
+            solver.RefitSupport = refit;
+            solver.ColumnMask = support;
         }
 
         /// <summary>
@@ -1142,6 +1196,8 @@ namespace pwiz.Osprey.Demux
                 int nc = 0;
                 for (int j = 0; j < _columns; j++)
                 {
+                    if (ColumnMask != null && !ColumnMask[j])
+                        continue;
                     for (int r = 0; r < _rows; r++)
                     {
                         if (_rowSignal[r] && _a[r, j] > 0)
@@ -1239,6 +1295,9 @@ namespace pwiz.Osprey.Demux
             /// same row weights (a relaxed lasso).
             /// </summary>
             public bool RefitSupport { get; set; }
+
+            /// <summary>The columns the next solves may use (null: every column).</summary>
+            public bool[] ColumnMask { get; set; }
 
             private void Penalize(int nc)
             {
