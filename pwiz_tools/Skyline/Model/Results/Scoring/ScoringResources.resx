@@ -188,6 +188,9 @@
   <data name="MProphetPeakScoringModel_Train_Training_scoring_model__iteration__0__of__1_____2______peaks_at__3_0_____FDR_" xml:space="preserve">
     <value>Training scoring model (iteration {0} of {1} - {2:#,#} peaks at {3:0.##%} FDR)</value>
   </data>
+  <data name="DefaultSumCoelutionScoreCalc_Name_Default_sum_coelution_score" xml:space="preserve">
+    <value>Default sum coelution score</value>
+  </data>
   <data name="MQuestCoElutionCalc_MQuestCoElutionCalc_Coelution" xml:space="preserve">
     <value>Co-elution</value>
   </data>
@@ -271,6 +274,9 @@
   </data>
   <data name="NextGenStandardSignalNoiseCalc_Name_Standard_signal_to_noise" xml:space="preserve">
     <value>Standard signal to noise</value>
+  </data>
+  <data name="SumCoelutionScoreCalc_Name_Sum_coelution_score" xml:space="preserve">
+    <value>Sum coelution score</value>
   </data>
   <data name="PeakFeatureEnumerator_GetPeakFeatures_Calculating_peak_group_scores" xml:space="preserve">
     <value>Calculating peak group scores</value>

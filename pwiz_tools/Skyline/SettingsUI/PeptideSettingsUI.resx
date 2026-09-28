@@ -1131,7 +1131,7 @@ the lower limit of quantification (LOQ)</value>
     <value>6</value>
   </data>
   <data name="tbxQuantUnits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 239</value>
+    <value>28, 246</value>
   </data>
   <data name="tbxQuantUnits.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
@@ -1164,7 +1164,7 @@ the lower limit of quantification (LOQ)</value>
     <value>2</value>
   </data>
   <data name="comboQuantMsLevel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 192</value>
+    <value>28, 205</value>
   </data>
   <data name="comboQuantMsLevel.Size" type="System.Drawing.Size, System.Drawing">
     <value>127, 21</value>
@@ -1188,7 +1188,7 @@ the lower limit of quantification (LOQ)</value>
     <value>7</value>
   </data>
   <data name="comboNormalizationMethod.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 83</value>
+    <value>28, 62</value>
   </data>
   <data name="comboNormalizationMethod.Size" type="System.Drawing.Size, System.Drawing">
     <value>239, 21</value>
@@ -1211,8 +1211,29 @@ the lower limit of quantification (LOQ)</value>
   <data name="&gt;&gt;comboNormalizationMethod.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
+  <data name="comboSummarizationMethod.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 103</value>
+  </data>
+  <data name="comboSummarizationMethod.Size" type="System.Drawing.Size, System.Drawing">
+    <value>329, 21</value>
+  </data>
+  <data name="comboSummarizationMethod.TabIndex" type="System.Int32, mscorlib">
+    <value>31</value>
+  </data>
+  <data name="&gt;&gt;comboSummarizationMethod.Name" xml:space="preserve">
+    <value>comboSummarizationMethod</value>
+  </data>
+  <data name="&gt;&gt;comboSummarizationMethod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboSummarizationMethod.Parent" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;comboSummarizationMethod.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="comboRegressionFit.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 36</value>
+    <value>28, 21</value>
   </data>
   <data name="comboRegressionFit.Size" type="System.Drawing.Size, System.Drawing">
     <value>127, 21</value>
@@ -1236,7 +1257,7 @@ the lower limit of quantification (LOQ)</value>
     <value>11</value>
   </data>
   <data name="comboWeighting.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 145</value>
+    <value>28, 164</value>
   </data>
   <data name="comboWeighting.Size" type="System.Drawing.Size, System.Drawing">
     <value>127, 21</value>
@@ -1260,7 +1281,7 @@ the lower limit of quantification (LOQ)</value>
     <value>13</value>
   </data>
   <data name="tbxIonRatioThreshold.Location" type="System.Drawing.Point, System.Drawing">
-    <value>29, 408</value>
+    <value>29, 410</value>
   </data>
   <data name="tbxIonRatioThreshold.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
@@ -1289,7 +1310,7 @@ The Target Qualitative Ion Ratio is the average of the Qualitative Ion Ratios ac
     <value>True</value>
   </data>
   <data name="cbxSimpleRatios.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 110</value>
+    <value>28, 129</value>
   </data>
   <data name="cbxSimpleRatios.Size" type="System.Drawing.Size, System.Drawing">
     <value>132, 17</value>
@@ -2551,7 +2572,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>NoControl</value>
   </data>
   <data name="label20.Location" type="System.Drawing.Point, System.Drawing">
-    <value>131, 415</value>
+    <value>131, 417</value>
   </data>
   <data name="label20.Size" type="System.Drawing.Size, System.Drawing">
     <value>15, 13</value>
@@ -2716,7 +2737,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>7</value>
   </data>
   <data name="groupBoxFiguresOfMerit.Location" type="System.Drawing.Point, System.Drawing">
-    <value>22, 270</value>
+    <value>22, 272</value>
   </data>
   <data name="groupBoxFiguresOfMerit.Size" type="System.Drawing.Size, System.Drawing">
     <value>288, 118</value>
@@ -2743,7 +2764,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>True</value>
   </data>
   <data name="lblIonRatioThreshold.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 392</value>
+    <value>26, 394</value>
   </data>
   <data name="lblIonRatioThreshold.Size" type="System.Drawing.Size, System.Drawing">
     <value>146, 13</value>
@@ -2773,7 +2794,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>NoControl</value>
   </data>
   <data name="lblQuantUnits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 224</value>
+    <value>25, 231</value>
   </data>
   <data name="lblQuantUnits.Size" type="System.Drawing.Size, System.Drawing">
     <value>31, 13</value>
@@ -2800,7 +2821,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>True</value>
   </data>
   <data name="lblMsLevel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 177</value>
+    <value>25, 190</value>
   </data>
   <data name="lblMsLevel.Size" type="System.Drawing.Size, System.Drawing">
     <value>48, 13</value>
@@ -2827,7 +2848,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>True</value>
   </data>
   <data name="lblNormalizationMethod.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 67</value>
+    <value>25, 47</value>
   </data>
   <data name="lblNormalizationMethod.Size" type="System.Drawing.Size, System.Drawing">
     <value>111, 13</value>
@@ -2850,11 +2871,38 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;lblNormalizationMethod.ZOrder" xml:space="preserve">
     <value>10</value>
   </data>
+  <data name="lblSummarizationMethod.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblSummarizationMethod.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 88</value>
+  </data>
+  <data name="lblSummarizationMethod.Size" type="System.Drawing.Size, System.Drawing">
+    <value>119, 13</value>
+  </data>
+  <data name="lblSummarizationMethod.TabIndex" type="System.Int32, mscorlib">
+    <value>30</value>
+  </data>
+  <data name="lblSummarizationMethod.Text" xml:space="preserve">
+    <value>S&amp;ummarization method:</value>
+  </data>
+  <data name="&gt;&gt;lblSummarizationMethod.Name" xml:space="preserve">
+    <value>lblSummarizationMethod</value>
+  </data>
+  <data name="&gt;&gt;lblSummarizationMethod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblSummarizationMethod.Parent" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;lblSummarizationMethod.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="lblRegressionFit.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblRegressionFit.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 20</value>
+    <value>25, 6</value>
   </data>
   <data name="lblRegressionFit.Size" type="System.Drawing.Size, System.Drawing">
     <value>74, 13</value>
@@ -2881,7 +2929,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>True</value>
   </data>
   <data name="lblRegressionWeighting.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 130</value>
+    <value>25, 149</value>
   </data>
   <data name="lblRegressionWeighting.Size" type="System.Drawing.Size, System.Drawing">
     <value>111, 13</value>

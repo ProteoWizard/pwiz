@@ -77,6 +77,8 @@ namespace pwiz.Skyline.SettingsUI
             this.comboWeighting = new System.Windows.Forms.ComboBox();
             this.tbxIonRatioThreshold = new System.Windows.Forms.TextBox();
             this.cbxSimpleRatios = new System.Windows.Forms.CheckBox();
+            this.lblSummarizationMethod = new System.Windows.Forms.Label();
+            this.comboSummarizationMethod = new System.Windows.Forms.ComboBox();
             this.groupBoxPeakImputation = new System.Windows.Forms.GroupBox();
             this.lblPeakWidthVariationPercent = new System.Windows.Forms.Label();
             this.tbxMaxPeakWidthVariation = new System.Windows.Forms.TextBox();
@@ -520,7 +522,19 @@ namespace pwiz.Skyline.SettingsUI
             this.cbxSimpleRatios.Name = "cbxSimpleRatios";
             this.helpTip.SetToolTip(this.cbxSimpleRatios, resources.GetString("cbxSimpleRatios.ToolTip"));
             this.cbxSimpleRatios.UseVisualStyleBackColor = true;
-            // 
+            //
+            // lblSummarizationMethod
+            //
+            resources.ApplyResources(this.lblSummarizationMethod, "lblSummarizationMethod");
+            this.lblSummarizationMethod.Name = "lblSummarizationMethod";
+            //
+            // comboSummarizationMethod
+            //
+            this.comboSummarizationMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboSummarizationMethod.FormattingEnabled = true;
+            resources.ApplyResources(this.comboSummarizationMethod, "comboSummarizationMethod");
+            this.comboSummarizationMethod.Name = "comboSummarizationMethod";
+            //
             // groupBoxPeakImputation
             // 
             resources.ApplyResources(this.groupBoxPeakImputation, "groupBoxPeakImputation");
@@ -881,6 +895,8 @@ namespace pwiz.Skyline.SettingsUI
             this.tabQuantification.Controls.Add(this.lblQuantUnits);
             this.tabQuantification.Controls.Add(this.comboQuantMsLevel);
             this.tabQuantification.Controls.Add(this.lblMsLevel);
+            this.tabQuantification.Controls.Add(this.comboSummarizationMethod);
+            this.tabQuantification.Controls.Add(this.lblSummarizationMethod);
             this.tabQuantification.Controls.Add(this.comboNormalizationMethod);
             this.tabQuantification.Controls.Add(this.lblNormalizationMethod);
             this.tabQuantification.Controls.Add(this.comboRegressionFit);
@@ -1136,6 +1152,8 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.TextBox tbxIonRatioThreshold;
         private System.Windows.Forms.Label lblIonRatioThreshold;
         private System.Windows.Forms.CheckBox cbxSimpleRatios;
+        private System.Windows.Forms.Label lblSummarizationMethod;
+        private System.Windows.Forms.ComboBox comboSummarizationMethod;
         private System.Windows.Forms.GroupBox groupBoxPeakImputation;
         private System.Windows.Forms.TextBox tbxMaxRtShift;
         private System.Windows.Forms.Label lblMaxRtShift;

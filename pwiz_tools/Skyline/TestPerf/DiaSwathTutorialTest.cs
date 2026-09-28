@@ -1328,7 +1328,7 @@ namespace TestPerf
                 }
 
                 RunUI(() => changeGroupComparisonSettings.ComboSummaryMethod.SelectedItem =
-                    SummarizationMethod.MEDIANPOLISH);
+                    SummarizationMethod.LEGACY_MEDIANPOLISH);
 
                 if (IsDiaNN && _analysisValues.IsWholeProteome)
                 {

@@ -633,6 +633,7 @@ namespace pwiz.Skyline.Menus
             transformChromInterpolatedMenuItem.Checked = (transform == TransformChrom.interpolated);
             secondDerivativeMenuItem.Checked = (transform == TransformChrom.craw2d);
             smoothSGChromMenuItem.Checked = (transform == TransformChrom.savitzky_golay);
+            cwtMenuItem.Checked = (transform == TransformChrom.cwt);
         }
 
         private void transformChromNoneMenuItem_Click(object sender, EventArgs e)
@@ -655,6 +656,11 @@ namespace pwiz.Skyline.Menus
         private void smoothSGChromMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.SetTransformChrom(TransformChrom.savitzky_golay);
+        }
+
+        private void cwtMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.SetTransformChrom(TransformChrom.cwt);
         }
         #endregion
 
@@ -756,6 +762,7 @@ namespace pwiz.Skyline.Menus
             areaAbundanceComparisonMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.abundance_comparison);
             areaCVHistogramMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.histogram);
             areaCVHistogram2DMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.histogram2d);
+            areaRtLoessMenuItem.Checked = SkylineWindow.GraphChecked(list, types, GraphTypeSummary.rt_loess);
         }
         private void areaReplicateComparisonMenuItem_Click(object sender, EventArgs e)
         {
@@ -780,6 +787,10 @@ namespace pwiz.Skyline.Menus
         private void areaCVHistogram2DToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             SkylineWindow.ShowPeakAreaCVHistogram2D();
+        }
+        private void areaRtLoessMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.ShowPeakAreaRtLoessGraph();
         }
         #endregion
         #region Detections
@@ -978,6 +989,7 @@ namespace pwiz.Skyline.Menus
                 areaRelativeAbundanceMenuItem.Enabled = enable;
                 areaCVHistogramMenuItem.Enabled = enable;
                 areaCVHistogram2DMenuItem.Enabled = enable;
+                areaRtLoessMenuItem.Enabled = enable;
 
                 if (!deserialized)
                 {

@@ -2625,7 +2625,55 @@ namespace pwiz.Skyline.Properties {
                 this["AreaCVLogScale"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Median")]
+        public string RtLoessShowValue {
+            get {
+                return ((string)(this["RtLoessShowValue"]));
+            }
+            set {
+                this["RtLoessShowValue"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool RtLoessShowLegend {
+            get {
+                return ((bool)(this["RtLoessShowLegend"]));
+            }
+            set {
+                this["RtLoessShowLegend"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool RtLoessShowPeptides {
+            get {
+                return ((bool)(this["RtLoessShowPeptides"]));
+            }
+            set {
+                this["RtLoessShowPeptides"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool RtLoessAdaptiveAlpha {
+            get {
+                return ((bool)(this["RtLoessAdaptiveAlpha"]));
+            }
+            set {
+                this["RtLoessAdaptiveAlpha"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("NaN")]
@@ -2769,7 +2817,19 @@ namespace pwiz.Skyline.Properties {
                 this["AreaGraphDisplayType"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Line")]
+        public string AreaGraphMultiPeptideDisplay {
+            get {
+                return ((string)(this["AreaGraphMultiPeptideDisplay"]));
+            }
+            set {
+                this["AreaGraphMultiPeptideDisplay"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]

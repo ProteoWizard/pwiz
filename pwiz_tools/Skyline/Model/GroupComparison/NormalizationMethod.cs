@@ -80,7 +80,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return ratioToSurrogate;
             }
-            foreach (var normalizationMethod in new[] {EQUALIZE_MEDIANS, GLOBAL_STANDARDS, TIC})
+            foreach (var normalizationMethod in new[] {EQUALIZE_MEDIANS, GLOBAL_STANDARDS, TIC, RT_LOESS})
             {
                 if (Equals(normalizationMethod.Name, name))
                 {
@@ -115,6 +115,10 @@ namespace pwiz.Skyline.Model.GroupComparison
             = new SingletonNormalizationMethod(@"tic",
                 () => GroupComparisonStrings.NormalizationMethod_TIC_Total_Ion_Current,
                 value=>string.Format(GroupComparisonStrings.NormalizationMethod_TIC_TIC_Normalized__0_, value));
+        public static readonly NormalizationMethod RT_LOESS
+            = new SingletonNormalizationMethod(@"rt_loess",
+                () => GroupComparisonStrings.NormalizationMethod_RT_LOESS_RT_Loess,
+                value => string.Format(GroupComparisonStrings.NormalizationMethod_RT_LOESS_RT_Loess_Normalized__0_, value));
 
         public static RatioToLabel GetNormalizationMethod(IsotopeLabelType isotopeLabelType)
         {
@@ -161,6 +165,11 @@ namespace pwiz.Skyline.Model.GroupComparison
             if (document.Settings.HasTicArea)
             {
                 result.Add(TIC);
+            }
+
+            if (document.Settings.HasResults)
+            {
+                result.Add(RT_LOESS);
             }
 
             if (document.Settings.PeptideSettings.Modifications.HasHeavyModifications)
