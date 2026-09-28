@@ -21,6 +21,7 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using pwiz.CarafeSharp.Proteome;
 
 namespace pwiz.CarafeSharp
@@ -35,6 +36,12 @@ namespace pwiz.CarafeSharp
     {
         private static int Main(string[] args)
         {
+            return Run(args, Console.Out, Console.Error);
+        }
+
+        /// <summary>The command line's work, with progress to <paramref name="output"/> and errors to <paramref name="error"/>; the exit code.</summary>
+        internal static int Run(string[] args, TextWriter output, TextWriter error)
+        {
             CarafeCommandLine commandLine;
             try
             {
@@ -42,12 +49,12 @@ namespace pwiz.CarafeSharp
             }
             catch (Exception e) when (e is ArgumentException || e is NotSupportedException)
             {
-                Console.Error.WriteLine(e.Message);
-                Console.Error.WriteLine(CarafeCommandLine.Usage);
+                error.WriteLine(e.Message);
+                error.WriteLine(CarafeCommandLine.Usage);
                 return 1;
             }
             foreach (string warning in commandLine.Warnings)
-                Console.Error.WriteLine(warning);
+                error.WriteLine(warning);
 
             var stopwatch = Stopwatch.StartNew();
             try
@@ -55,33 +62,33 @@ namespace pwiz.CarafeSharp
                 switch (commandLine.Mode)
                 {
                     case CarafeCommandMode.build_entrapment_fasta:
-                        new EntrapmentFastaBuilder(commandLine.BuildSettings, Console.Out).Run();
-                        Console.Out.WriteLine(@"Entrapment FASTA build finished in " + Seconds(stopwatch) + @" s.");
+                        new EntrapmentFastaBuilder(commandLine.BuildSettings, output).Run();
+                        output.WriteLine(@"Entrapment FASTA build finished in " + Seconds(stopwatch) + @" s.");
                         return 0;
                     case CarafeCommandMode.reconcile_manifest:
                         PairingManifestReconciler.Run(commandLine.ReconcileManifestIn, commandLine.ReconcileLibrary,
-                            commandLine.ReconcileManifestOut, Console.Out);
-                        Console.Out.WriteLine(@"Manifest reconciliation finished in " + Seconds(stopwatch) + @" s.");
+                            commandLine.ReconcileManifestOut, output);
+                        output.WriteLine(@"Manifest reconciliation finished in " + Seconds(stopwatch) + @" s.");
                         return 0;
                     case CarafeCommandMode.train:
-                        new ModelTrainer(commandLine.TrainingSettings, Console.Out).Run();
-                        Console.Out.WriteLine(@"Time used for training and spectral library generation: " + Seconds(stopwatch) + @" s.");
+                        new ModelTrainer(commandLine.TrainingSettings, output).Run();
+                        output.WriteLine(@"Time used for training and spectral library generation: " + Seconds(stopwatch) + @" s.");
                         return 0;
                     case CarafeCommandMode.predict_library:
-                        new LibraryGenerator(commandLine.LibrarySettings, Console.Out).Run();
-                        Console.Out.WriteLine(@"Time used for spectral library generation: " + Seconds(stopwatch) + @" s.");
+                        new LibraryGenerator(commandLine.LibrarySettings, output).Run();
+                        output.WriteLine(@"Time used for spectral library generation: " + Seconds(stopwatch) + @" s.");
                         return 0;
                     default:
-                        Console.Out.WriteLine(CarafeCommandLine.Usage);
+                        output.WriteLine(CarafeCommandLine.Usage);
                         return 0;
                 }
             }
             catch (Exception e)
             {
-                Console.Error.WriteLine(@"ERROR: " + e.Message);
+                error.WriteLine(@"ERROR: " + e.Message);
                 var cause = e.GetBaseException();
                 if (!ReferenceEquals(cause, e))
-                    Console.Error.WriteLine(@"Caused by: " + cause.Message);
+                    error.WriteLine(@"Caused by: " + cause.Message);
                 return 1;
             }
         }

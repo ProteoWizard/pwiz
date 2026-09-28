@@ -123,6 +123,109 @@ namespace pwiz.CarafeSharp.Test
             }
         }
 
+        [TestMethod]
+        public void TestBlibAnnotationsAndDecoyPairs()
+        {
+            // Annotation names: ion type and ordinal, and "-loss" only with a loss.
+            Assert.AreEqual(@"b3", BlibLibraryWriter.AnnotationName(Fragment('b', 3, 1, 300, 1)));
+            Assert.AreEqual(@"y12-NH3", BlibLibraryWriter.AnnotationName(new LibraryFragment('y', 12, 2, @"NH3", 700.1, 700.1f, 0.5f)));
+            // A blob of the decoded length is raw, whatever its bytes.
+            var raw = new byte[] { 0x78, 0x9c, 1, 2, 3, 4, 5, 6 };
+            Assert.AreSame(raw, BlibLibraryWriter.DecodeBlob(raw, raw.Length));
+
+            string folder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"BlibPairs_" + Guid.NewGuid().ToString(@"N"));
+            Directory.CreateDirectory(folder);
+            string path = Path.Combine(folder, BlibLibraryWriter.FILE_NAME);
+            try
+            {
+                // A stale partial file from a run that died is replaced, not appended to.
+                File.WriteAllText(path + PartialFile.SUFFIX, @"left by a crashed run");
+                var target = Spectrum(@"PEPTIDEK", 2, @"sp|P1|A;;sp|P2|B;", Fragment('y', 6, 1, 700.35, 1.0f),
+                    new LibraryFragment('y', 7, 2, @"H2O", 402.2, 402.2f, 0.6f), Fragment('b', 2, 1, 227.1, 0.2f));
+                var decoy = Spectrum(@"EDITPEPK", 2, @"decoy_sp|P1|A", Fragment('y', 5, 1, 573.3, 1.0f));
+                var pTarget = Spectrum(@"SAMPLERK", 3, @"sp|P2|B", Fragment('y', 4, 1, 516.3, 1.0f));
+                var pDecoy = Spectrum(@"LPMSAERK", 3, @"decoy_sp|P2|B", Fragment('y', 4, 1, 488.3, 1.0f));
+                var unmapped = Spectrum(@"ELVISK", 2, LibrarySpectrum.NO_PROTEIN);
+                using (var writer = new BlibLibraryWriter(path, @"carafe_spectral_library"))
+                {
+                    Assert.AreEqual(0, writer.SpectrumCount);
+                    Assert.AreEqual(1, writer.WriteBatch(new[] { target, decoy, pTarget, pDecoy, unmapped }));
+                    Assert.AreEqual(5, writer.SpectrumCount);
+                    // An empty batch writes nothing and returns the id the next spectrum would get.
+                    Assert.AreEqual(6, writer.WriteBatch(Array.Empty<LibrarySpectrum>()));
+                    writer.WriteDecoyPairs(new[]
+                    {
+                        new DecoyPairRow(1, false, false, 1, null),
+                        new DecoyPairRow(2, true, false, 1, @"reverse"),
+                        new DecoyPairRow(3, false, true, 2, null),
+                        new DecoyPairRow(4, true, true, 2, @"cycle"),
+                    });
+                    writer.Complete();
+                }
+                CollectionAssert.AreEqual(new[] { path }, Directory.GetFiles(folder));
+                using (var connection = new SQLiteConnection(new SQLiteConnectionStringBuilder { DataSource = path, ReadOnly = true }.ToString()))
+                {
+                    connection.Open();
+                    Assert.AreEqual(5L, Scalar(connection, @"SELECT numSpecs FROM LibInfo"));
+                    // Every peak annotated, with its charge and loss, in library order.
+                    CollectionAssert.AreEqual(new[] { @"y6", @"y7-H2O", @"b2" },
+                        Column<string>(connection, @"SELECT name FROM RefSpectraPeakAnnotations WHERE RefSpectraID = 1 ORDER BY peakIndex").ToArray());
+                    CollectionAssert.AreEqual(new[] { 1L, 2L, 1L },
+                        Column<long>(connection, @"SELECT charge FROM RefSpectraPeakAnnotations WHERE RefSpectraID = 1 ORDER BY peakIndex").ToArray());
+                    // A spectrum without peaks keeps empty blobs and no annotations.
+                    var blobs = Row(connection, @"SELECT peakMZ, peakIntensity, (SELECT numPeaks FROM RefSpectra WHERE id = 5) FROM RefSpectraPeaks WHERE RefSpectraID = 5");
+                    Assert.AreEqual(0, ((byte[])blobs[0]).Length);
+                    Assert.AreEqual(0, ((byte[])blobs[1]).Length);
+                    Assert.AreEqual(0L, blobs[2]);
+                    Assert.AreEqual(0L, Scalar(connection, @"SELECT COUNT(*) FROM RefSpectraPeakAnnotations WHERE RefSpectraID = 5"));
+                    // Proteins: each accession once however many spectra carry it, empty entries
+                    // skipped, and none for an unmapped peptide.
+                    CollectionAssert.AreEqual(new[] { @"sp|P1|A", @"sp|P2|B", @"decoy_sp|P1|A", @"decoy_sp|P2|B" },
+                        Column<string>(connection, @"SELECT accession FROM Proteins ORDER BY id").ToArray());
+                    CollectionAssert.AreEqual(new[] { @"1:1", @"1:2", @"2:3", @"3:2", @"4:4" },
+                        Column<string>(connection, @"SELECT RefSpectraId || ':' || ProteinId FROM RefSpectraProteins ORDER BY RefSpectraId, ProteinId").ToArray());
+                    // The decoy pairs join back to their spectra: each PairID has one target and
+                    // one decoy of the same charge, the decoy's proteins carry the decoy prefix, and
+                    // the entrapment pair is flagged.
+                    var pairs = Rows(connection, @"SELECT d.PairID, d.IsDecoy, d.IsEntrapment, d.Method, r.precursorCharge, p.accession " +
+                                                 @"FROM DecoyPairs d JOIN RefSpectra r ON r.id = d.RefSpectraID " +
+                                                 @"JOIN RefSpectraProteins rp ON rp.RefSpectraId = r.id JOIN Proteins p ON p.id = rp.ProteinId " +
+                                                 @"WHERE rp.ProteinId = (SELECT MIN(ProteinId) FROM RefSpectraProteins WHERE RefSpectraId = r.id) " +
+                                                 @"ORDER BY d.PairID, d.IsDecoy");
+                    Assert.AreEqual(4, pairs.Count);
+                    foreach (var pair in pairs.GroupBy(p => (long)p[0]))
+                    {
+                        var members = pair.ToArray();
+                        CollectionAssert.AreEqual(new[] { 0L, 1L }, members.Select(m => (long)m[1]).ToArray());
+                        Assert.AreEqual(members[0][4], members[1][4]);
+                        Assert.IsTrue(((string)members[1][5]).StartsWith(@"decoy_", StringComparison.Ordinal));
+                        Assert.IsTrue(members[0][3] is DBNull);
+                        Assert.AreEqual(pair.Key == 2 ? 1L : 0L, (long)members[0][2]);
+                    }
+                    Assert.AreEqual(@"cycle", pairs[3][3]);
+                    CollectionAssert.Contains(Column<string>(connection, @"SELECT name FROM sqlite_master WHERE type='index'"), @"idx_DecoyPairs_PairID");
+                }
+
+                // A library that cannot be created fails at once and leaves nothing behind.
+                string missingFolder = Path.Combine(folder, @"missing", BlibLibraryWriter.FILE_NAME);
+                Assert.ThrowsException<SQLiteException>(() => new BlibLibraryWriter(missingFolder, @"x"));
+                Assert.IsFalse(Directory.Exists(Path.GetDirectoryName(missingFolder)));
+            }
+            finally
+            {
+                SQLiteConnection.ClearAllPools();
+                Directory.Delete(folder, true);
+            }
+        }
+
+        private static LibrarySpectrum Spectrum(string sequence, int charge, string proteins, params LibraryFragment[] fragments)
+        {
+            return new LibrarySpectrum(Precursor(sequence, string.Empty, string.Empty, charge), 400 + sequence.Length, 10, proteins, 0, fragments)
+            {
+                SkylineModifiedSequence = sequence,
+            };
+        }
+
         private static List<LibrarySpectrum> CreateSpectra()
         {
             var target = new LibrarySpectrum(Precursor(@"PEPTCK", @"Carbamidomethyl@C", @"5", 2), 360.6578, -35.214714,
