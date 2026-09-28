@@ -39,10 +39,16 @@ namespace pwiz.Osprey.IO
     /// <summary>What <see cref="BlibPeakAnnotations.Apply"/> did across a whole library.</summary>
     internal sealed class BlibAnnotationStats
     {
+        /// <summary>Every spectrum read while annotations were being applied, with rows or without.</summary>
+        public int NSpectra;
+
         public int NSpectraAnnotated;
         public int NPeaksAnnotated;
         public int NPeaksUnannotated;
         public int NRejectedName;
+
+        /// <summary>Well-formed a, c, x or z annotations, which cannot be checked against the peak.</summary>
+        public int NUncheckedIonType;
 
         /// <summary>Annotations naming a peak the spectrum lacks, or an ion as long as the peptide.</summary>
         public int NRejectedRange;
@@ -51,11 +57,8 @@ namespace pwiz.Osprey.IO
 
         public string Summary()
         {
-            return string.Format(
-                @"Library fragment annotations: {0} spectra, {1} peaks typed, {2} peaks without an annotation, " +
-                @"{3} annotations with an unreadable name, {4} annotations naming a peak or an ion the spectrum does not have, " +
-                @"{5} annotations whose m/z disagrees with the peak",
-                NSpectraAnnotated, NPeaksAnnotated, NPeaksUnannotated, NRejectedName, NRejectedRange, NRejectedMz);
+            return string.Format(OspreyIOResources.BlibAnnotationStats_Summary_Library_fragment_annotations___0_N0__of__1_N0__spectra_typed,
+                NSpectraAnnotated, NSpectra, NPeaksAnnotated, NPeaksUnannotated, NRejectedName, NUncheckedIonType, NRejectedRange, NRejectedMz);
         }
     }
 
@@ -70,12 +73,14 @@ namespace pwiz.Osprey.IO
     /// (for example <c>y7</c>, <c>b3</c>, <c>y7-H2O</c>, <c>y5-97.9769</c>). The fragment charge
     /// comes from the <c>charge</c> column; when that is 0 or missing a <c>^2</c>, <c>++</c> or
     /// <c>+2</c> suffix is accepted. A NIST-style <c>/</c> tail and anything after whitespace are
-    /// ignored. Other names (<c>p</c>, <c>?</c>, empty) leave the peak Unknown.</para>
+    /// ignored. Other names (<c>p</c>, <c>?</c>, empty) leave the peak Unknown. A decimal loss
+    /// snaps to water, ammonia or phosphoric acid within half its last printed digit (at least
+    /// 0.005), so <c>y7-18.0</c> is a water loss; an integer loss snaps by nominal mass.</para>
     ///
     /// <para>Every annotation is checked against the m/z recomputed from the sequence and
     /// modifications (<see cref="PeptideFragmentMass"/>); one that misses the peak by more
     /// than max(0.02 Th, 20 ppm) is ignored and counted. Only b and y ions can be checked, so
-    /// other ion types are ignored as well.</para>
+    /// a, c, x and z ions are ignored as well, and counted apart from unreadable names.</para>
     /// </summary>
     internal static class BlibPeakAnnotations
     {
@@ -84,6 +89,8 @@ namespace pwiz.Osprey.IO
         private const double MZ_TOLERANCE_TH = 0.02;
         private const double MZ_TOLERANCE_PPM = 20.0;
         private const double LOSS_SNAP_TOLERANCE = 0.005;
+
+        private static readonly char[] NAME_TERMINATORS = { ' ', '\t', '/' };
 
         /// <summary>
         /// Types <paramref name="fragments"/> (in blib peak order) from the annotation rows of
@@ -107,6 +114,11 @@ namespace pwiz.Osprey.IO
                     stats.NRejectedName++;
                     continue;
                 }
+                if (annotation.IonType != IonType.B && annotation.IonType != IonType.Y)
+                {
+                    stats.NUncheckedIonType++;
+                    continue;
+                }
                 if (annotation.Ordinal >= sequence.Length)
                 {
                     stats.NRejectedRange++;
@@ -117,8 +129,10 @@ namespace pwiz.Osprey.IO
                     annotation.Charge, sequence, modMasses,
                     annotation.HasNeutralLoss ? annotation.NeutralLossMass : null);
                 double peakMz = fragments[row.PeakIndex].Mz;
-                // Written so that a NaN on either side fails the check rather than passing it.
-                if (!mz.HasValue || !(Math.Abs(mz.Value - peakMz) <= Math.Max(MZ_TOLERANCE_TH, peakMz * MZ_TOLERANCE_PPM * 1e-6)))
+                // A peak m/z that is not finite matches nothing: an infinite one would widen the
+                // ppm tolerance to infinity and pass any annotation.
+                if (!mz.HasValue || !double.IsFinite(peakMz) ||
+                    !(Math.Abs(mz.Value - peakMz) <= Math.Max(MZ_TOLERANCE_TH, peakMz * MZ_TOLERANCE_PPM * 1e-6)))
                 {
                     stats.NRejectedMz++;
                     continue;
@@ -147,8 +161,9 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Parses an annotation name; see the class summary for the grammar. Only b and y ions
-        /// are accepted, because only they can be checked against the peak m/z.
+        /// Parses an annotation name; see the class summary for the grammar. Any of the six
+        /// ion types is read; <see cref="Apply"/> types only b and y ions, the ones it can check
+        /// against the peak m/z.
         /// </summary>
         public static bool TryParseName(string name, int chargeColumn, out FragmentAnnotation annotation)
         {
@@ -156,7 +171,7 @@ namespace pwiz.Osprey.IO
             if (string.IsNullOrWhiteSpace(name))
                 return false;
             string text = name.Trim();
-            int cut = text.IndexOfAny(new[] { ' ', '\t', '/' });
+            int cut = text.IndexOfAny(NAME_TERMINATORS);
             if (cut >= 0)
                 text = text.Substring(0, cut);
 
@@ -167,7 +182,7 @@ namespace pwiz.Osprey.IO
                 return false;
 
             var ionType = IonTypeExtensions.FromChar(text[0]);
-            if (ionType != IonType.B && ionType != IonType.Y)
+            if (ionType == IonType.Unknown)
                 return false;
 
             int pos = 1;
@@ -189,12 +204,14 @@ namespace pwiz.Osprey.IO
                 (lossCode, customLoss) = NeutralLoss.Parse(lossText);
                 if (lossCode == NeutralLossCode.None)
                     return false;
-                // "NaN" and "Infinity" parse as numbers, and a NaN m/z would pass any
-                // comparison written the wrong way round; no fragment loses either.
-                if (lossCode == NeutralLossCode.Custom && !double.IsFinite(customLoss))
-                    return false;
                 if (lossCode == NeutralLossCode.Custom)
-                    lossCode = SnapToKnownLoss(customLoss, lossText.IndexOf('.') < 0, ref customLoss);
+                {
+                    // "NaN" and "Infinity" parse as numbers, and a NaN m/z would pass any
+                    // comparison written the wrong way round; no fragment loses either.
+                    if (!double.IsFinite(customLoss))
+                        return false;
+                    lossCode = SnapToKnownLoss(customLoss, lossText);
+                }
             }
 
             annotation = new FragmentAnnotation
@@ -238,29 +255,38 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// A decimal loss within 0.005 Th of water, ammonia or phosphoric acid is that loss; so is
-        /// an integer one equal to its nominal mass (NIST-style <c>-18</c>, <c>-17</c>, <c>-98</c>).
+        /// A decimal loss within half its last printed digit (at least 0.005) of water, ammonia or
+        /// phosphoric acid is that loss, the rule the modification reader applies to one-decimal
+        /// text; an integer one equal to its nominal mass is too (NIST-style <c>-18</c>,
+        /// <c>-17</c>, <c>-98</c>). Anything else stays a custom loss of the mass as written.
         /// </summary>
-        private static NeutralLossCode SnapToKnownLoss(double mass, bool isNominal, ref double customLoss)
+        private static NeutralLossCode SnapToKnownLoss(double mass, string lossText)
         {
-            if (IsLoss(mass, NeutralLoss.H2OMass, isNominal))
+            int point = lossText.IndexOf('.');
+            bool isNominal = point < 0;
+            double tolerance = isNominal ? 0 : Math.Max(LOSS_SNAP_TOLERANCE, 0.5 * Math.Pow(10, -(lossText.Length - point - 1)));
+            if (IsLoss(mass, NeutralLoss.H2OMass, isNominal, tolerance))
                 return NeutralLossCode.H2O;
-            if (IsLoss(mass, NeutralLoss.NH3Mass, isNominal))
+            if (IsLoss(mass, NeutralLoss.NH3Mass, isNominal, tolerance))
                 return NeutralLossCode.NH3;
-            if (IsLoss(mass, NeutralLoss.H3PO4Mass, isNominal))
+            if (IsLoss(mass, NeutralLoss.H3PO4Mass, isNominal, tolerance))
                 return NeutralLossCode.H3PO4;
-            customLoss = mass;
             return NeutralLossCode.Custom;
         }
 
-        private static bool IsLoss(double mass, double knownMass, bool isNominal)
+        private static bool IsLoss(double mass, double knownMass, bool isNominal, double tolerance)
         {
             return isNominal
                 ? mass == Math.Round(knownMass)
-                : Math.Abs(mass - knownMass) <= LOSS_SNAP_TOLERANCE;
+                : Math.Abs(mass - knownMass) <= tolerance;
         }
 
-        private static bool IsPreferred(FragmentAnnotation candidate, FragmentAnnotation current)
+        /// <summary>
+        /// Whether <paramref name="candidate"/> replaces <paramref name="current"/> as a peak's
+        /// annotation: an ion without a neutral loss beats one with a loss, then the lower
+        /// charge wins, and on a tie the earlier row stays.
+        /// </summary>
+        internal static bool IsPreferred(FragmentAnnotation candidate, FragmentAnnotation current)
         {
             if (candidate.HasNeutralLoss != current.HasNeutralLoss)
                 return !candidate.HasNeutralLoss;

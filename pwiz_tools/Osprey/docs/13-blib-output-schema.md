@@ -105,7 +105,79 @@ The C# adds a **fallback the Rust doc does not describe**: if *no* run passes ru
 
 ## Reading back (`BlibLoader.cs`)
 
-`BlibLoader.Load` (BlibLoader.cs:51) reads `RefSpectra` + `RefSpectraPeaks` (`LoadSpectra`) and `RefSpectraProteins`/`Proteins` (`LoadProteinMappings`). Peak blobs are decoded by `DecodeBlibPeaks` / `DecompressPeakBlobs` (BlibLoader.cs:320, 389), which try raw-first then zlib (`TryZlibDecompress` skips the 2-byte zlib header and inflates with `DeflateStream`, BlibLoader.cs:293), tolerate f32 or f64 intensities, and normalize intensity to the max. Modifications are re-parsed from the `peptideModSeq` string (not the `Modifications` table) by `ParseBlibModifications` + `IdentifyModification` (BlibLoader.cs:181, 238), which recognizes common mods by mass within `MOD_TOLERANCE = 0.01` and handles both mass-shift (`[+57.0]`) and absolute-mass (`[160.0]`) notation.
+`BlibLoader.Load` (BlibLoader.cs:51) reads `RefSpectra` + `RefSpectraPeaks` (`LoadSpectra`) and `RefSpectraProteins`/`Proteins` (`LoadProteinMappings`). Peak blobs are decoded by `DecodeBlibPeaks` / `DecompressPeakBlobs` (BlibLoader.cs:320, 389), which try raw-first then zlib (`TryZlibDecompress` skips the 2-byte zlib header and inflates with `DeflateStream`, BlibLoader.cs:293), tolerate f32 or f64 intensities, and normalize intensity to the max. Modifications are re-parsed from the `peptideModSeq` string (not the `Modifications` table) by `ParseBlibModifications` + `IdentifyModification`, which recognize common mods by mass within half the last printed digit (at least `MOD_TOLERANCE = 0.01`) and handle both mass-shift (`[+57.0]`) and absolute-mass (`C[160.0]`) notation; see "Modification masses from `peptideModSeq`" below.
+
+### Fragment annotations (`RefSpectraPeakAnnotations`)
+
+When a blib library's `RefSpectraPeakAnnotations` table has rows, `LoadSpectra` merge-joins it
+with the spectra cursor (both ordered by `RefSpectraID`; annotation rows then by `rowid`, so a
+table written without the `id` column reads the same) and types each peak from its annotation
+(`Osprey.IO/BlibPeakAnnotations.cs`). Without annotations every blib fragment is
+`IonType.Unknown`, which leaves the consecutive-ion feature at 0 and gives generated decoys the
+target's fragment m/z; with them, a blib searches like the DIA-NN TSV it was built from. A blib
+without annotation rows is read exactly as before.
+
+- **Grammar of `name`:** `<ion><ordinal>[-<loss>]`, ion `a/b/c/x/y/z` in any case, loss `H2O`,
+  `NH3`, `H3PO4` or a finite decimal mass (`y7`, `b3`, `y7-H2O`, `y5-97.9769`). A decimal loss
+  within half its last printed digit of a known loss (at least 0.005 Da, so `y7-18.0` is a water
+  loss), or an integer loss equal to its nominal mass (`y7-18`), snaps to it. A NIST-style `/`
+  tail and anything after whitespace are ignored. Other names (`p`, `?`, empty) leave the peak
+  Unknown.
+- **Charge:** the `charge` column. When it is 0 or NULL, a `^2`, `++` or `+2` suffix on the name
+  is accepted; a suffix that does not parse (`y7^bad`) rejects the annotation.
+- **Checked against the peak:** the m/z recomputed from the sequence and modifications
+  (`PeptideFragmentMass.CalculateFragmentMz`) must fall within max(0.02 Th, 20 ppm) of the
+  annotated peak. Only b and y ions can be checked, so other ion types stay Unknown. A
+  non-finite loss (`y7-NaN`) or peak m/z is rejected.
+- **One annotation per peak:** of several annotations on one peak, one without a neutral loss
+  wins, then the lowest charge.
+- **Counted, never fatal:** one log line reports how many of the library's spectra and how many
+  peaks were typed, and the annotations set aside for an unreadable name, for an a, c, x or z ion
+  (read, but not checkable against the peak), for naming a peak or ion the spectrum does not
+  have, and for an m/z that disagrees with the peak. A row whose `RefSpectraID` is not an
+  integer is passed over; a `peakIndex` or `charge` that is not an integer counts as a
+  rejection or as no charge.
+- **What typing changes:** the consecutive-ion feature and generated decoys (`DecoyGenerator`
+  recomputes typed fragments' m/z for the permuted sequence).
+- **Resume and cache safety:** an annotated blib adds `;libext=ann2` to every task validity key
+  and `blib_reader:2` to the `.libcache` composition hash, so directories and caches written
+  before the reader change are not adopted ([14](14-intermediate-files.md)). Both carry
+  `BlibLoader.ANNOTATION_READER_VERSION`, so a later change to how annotations are read moves
+  both. A blib that cannot be read when the key is computed counts as annotated, so a
+  transient failure re-runs rather than adopting old outputs.
+- **Stacked modifications:** an N-terminal modification and one on the first residue both sit
+  at position 0, and every fragment spanning it, target or decoy, carries both. Decoys before
+  that kept only the last of the two, so every search that generates its decoys adds
+  `;decoymods=2` to every key.
+
+### Modification masses from `peptideModSeq`
+
+`ParseBlibModifications` reads the bracket values of `peptideModSeq` (`PEPC[+57.021464]TIDE`)
+and snaps each to a known modification (carbamidomethyl, oxidation, N-terminal acetyl,
+phospho, deamidation, TMT6plex):
+
+- A value snaps within half its last printed digit, and never within less than 0.01 Da, so
+  BiblioSpec's one-decimal text (`C[+57.0]`, `[+42.0]`, `S[+80.0]`) gets the exact known mass.
+- An unsigned value between 100 and 200 is read as an absolute residue mass only on C
+  (`C[160.03]` becomes carbamidomethyl); on any other residue, or signed, it is a mass shift,
+  so `K[+114.042927]` (GlyGly) keeps 114.043.
+- An N-terminal modification and a modification of the first residue both sit at position 0,
+  and their masses add in every b ion.
+
+A blib whose modification text this parsing reads differently from the earlier reader (low
+precision, or a 100-200 value off C) adds `blib_mods:2` to the `.libcache` hash and `;libmods=2`
+to the SecondPassFDR key only: the masses reach no score unless the fragments are typed (an
+annotated blib already carries `;libext=ann2` everywhere), but SecondPassFDR writes them to the
+output blib's `Modifications` table. Both carry `BlibLoader.MODIFICATION_READER_VERSION`.
+
+### For a blib writer that targets Osprey (and Skyline)
+
+Skyline reads `RefSpectraPeakAnnotations` from every blib it opens
+(`BiblioSpecLite.ReadPeakAnnotations`): it asserts that `mzObserved` equals the peak's m/z
+(within 1e-7) and reads every text column as a string, so a NULL text column throws. A writer
+should therefore write `mzObserved` as the peak's m/z exactly, write empty strings rather than
+NULL, and name peptide fragments with the grammar above. Osprey's own `BlibWriter` creates the
+table empty.
 
 ### Fragment annotations (`RefSpectraPeakAnnotations`)
 

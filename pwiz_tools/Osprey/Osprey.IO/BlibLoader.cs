@@ -22,7 +22,6 @@
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Globalization;
@@ -47,23 +46,35 @@ namespace pwiz.Osprey.IO
         private const double MOD_TOLERANCE = 0.01;
         private const double CYSTEINE_RESIDUE_MASS = 103.009185;
 
-        // The two reader-version probes, by file version (full path, size, mtime), so the
-        // validity keys and the library cache that ask on every task and load open the file
-        // once per process.
-        private static readonly ConcurrentDictionary<string, bool> _annotationProbes =
-            new ConcurrentDictionary<string, bool>(StringComparer.Ordinal);
-        private static readonly ConcurrentDictionary<string, bool> _modificationProbes =
-            new ConcurrentDictionary<string, bool>(StringComparer.Ordinal);
+        /// <summary>
+        /// Version of the reader that types fragments from <c>RefSpectraPeakAnnotations</c>. The
+        /// <c>.libcache</c> composition term and the task-key term are both built from it, so a
+        /// change to how annotations are read moves both by editing this one value.
+        /// </summary>
+        public const string ANNOTATION_READER_VERSION = @"2";
+
+        /// <summary>
+        /// Version of the residue- and precision-aware modification reader
+        /// (<see cref="IdentifyModification"/>); the cache and key terms are built from it too.
+        /// </summary>
+        public const string MODIFICATION_READER_VERSION = @"2";
+
+        // The probes the validity keys and the library cache ask on every task and load, each
+        // answered once per version of the file.
+        private static readonly FileVersionProbe _annotationProbe = new FileVersionProbe(
+            path => WithReadOnlyConnection(path, conn => HasRows(conn, BlibPeakAnnotations.TABLE_NAME)));
+        private static readonly FileVersionProbe _modificationProbe = new FileVersionProbe(
+            path => WithReadOnlyConnection(path, HasPrecisionSensitiveModificationText));
 
         /// <summary>
         /// Whether the blib at <paramref name="path"/> has <c>RefSpectraPeakAnnotations</c>
         /// rows, which this reader types fragments from (<see cref="BlibPeakAnnotations"/>).
         /// A blib without them is read exactly as it was before the reader did. False for a
-        /// missing or unreadable file.
+        /// missing file; true for one that cannot be read, so the keys fail toward re-running.
         /// </summary>
         public static bool HasPeakAnnotations(string path)
         {
-            return ProbeOnce(_annotationProbes, path, conn => HasRows(conn, BlibPeakAnnotations.TABLE_NAME));
+            return _annotationProbe.Ask(path);
         }
 
         /// <summary>
@@ -71,12 +82,12 @@ namespace pwiz.Osprey.IO
         /// <see cref="IdentifyModification"/> became residue- and precision-aware: a value
         /// printed with fewer than two decimals, or one between 100 and 200 Da. A superset of
         /// the libraries whose masses moved - BiblioSpec's one-decimal text is always in it -
-        /// so a blib outside it is read exactly as before. False for a missing or unreadable
-        /// file.
+        /// so a blib outside it is read exactly as before. False for a missing file; true for
+        /// one that cannot be read.
         /// </summary>
         public static bool HasPrecisionSensitiveModifications(string path)
         {
-            return ProbeOnce(_modificationProbes, path, HasPrecisionSensitiveModificationText);
+            return _modificationProbe.Ask(path);
         }
 
         /// <summary>
@@ -133,33 +144,14 @@ namespace pwiz.Osprey.IO
             }
         }
 
-        /// <summary>
-        /// <paramref name="probe"/> run once per version of the file, read-only; false for a
-        /// file that is missing or cannot be opened as a blib.
-        /// </summary>
-        private static bool ProbeOnce(ConcurrentDictionary<string, bool> cache, string path,
-            Func<SQLiteConnection, bool> probe)
+        /// <summary><paramref name="probe"/> over a read-only connection to the blib; throws for a file SQLite cannot open.</summary>
+        private static bool WithReadOnlyConnection(string path, Func<SQLiteConnection, bool> probe)
         {
-            if (string.IsNullOrEmpty(path) || !File.Exists(path))
-                return false;
-            var info = new FileInfo(path);
-            string key = string.Format(CultureInfo.InvariantCulture, @"{0}|{1}|{2}",
-                info.FullName, info.Length, info.LastWriteTimeUtc.Ticks);
-            return cache.GetOrAdd(key, _ =>
+            using (var conn = new SQLiteConnection(string.Format(@"Data Source={0};Read Only=True;", path)))
             {
-                try
-                {
-                    using (var conn = new SQLiteConnection(string.Format(@"Data Source={0};Read Only=True;", path)))
-                    {
-                        conn.Open();
-                        return probe(conn);
-                    }
-                }
-                catch (Exception ex) when (!(ex is OutOfMemoryException))
-                {
-                    return false;
-                }
-            });
+                conn.Open();
+                return probe(conn);
+            }
         }
 
         /// <summary>
@@ -266,9 +258,13 @@ namespace pwiz.Osprey.IO
                             fragments = DecodeBlibPeaks(peakMzBlob, peakIntBlob, numPeaks).ToArray();
                         else
                             fragments = Array.Empty<LibraryFragment>();
-                        var rows = annotations?.RowsFor(id);
-                        if (rows != null && rows.Count > 0)
-                            BlibPeakAnnotations.Apply(peptideSeq, modifications, fragments, rows, annotationStats);
+                        if (annotations != null)
+                        {
+                            annotationStats.NSpectra++;
+                            var rows = annotations.RowsFor(id);
+                            if (rows.Count > 0)
+                                BlibPeakAnnotations.Apply(peptideSeq, modifications, fragments, rows, annotationStats);
+                        }
 
                         var entry = new LibraryEntry((uint)id,
                             interner.Intern(peptideSeq), interner.Intern(peptideModSeq),
@@ -692,13 +688,34 @@ namespace pwiz.Osprey.IO
 
             public AnnotationCursor(SQLiteConnection conn)
             {
+                // Ordered by RefSpectraID, rowid - not peakIndex as well: BiblioSpec's index on
+                // RefSpectraID serves this order with no sort, where adding peakIndex made SQLite
+                // sort each spectrum's rows. Apply picks per peak and breaks ties by the first
+                // row, which rowid order still gives; rowid rather than id, because a table
+                // written without the id column (Skyline's schema comment shows none) reads the
+                // same. The CASE columns hand back only integers, so a malformed row - a NULL or
+                // text RefSpectraID, a text peakIndex or charge - is passed over or counted as
+                // rejected instead of failing the load.
                 _command = conn.CreateCommand();
-                _command.CommandText = @"
-                    SELECT RefSpectraID, peakIndex, name, charge
-                    FROM RefSpectraPeakAnnotations
-                    ORDER BY RefSpectraID, peakIndex, id";
-                _reader = _command.ExecuteReader();
-                _hasRow = _reader.Read();
+                try
+                {
+                    _command.CommandText = @"
+                        SELECT RefSpectraID,
+                               CASE typeof(peakIndex) WHEN 'integer' THEN peakIndex ELSE -1 END,
+                               CAST(name AS TEXT),
+                               CASE typeof(charge) WHEN 'integer' THEN charge ELSE 0 END
+                        FROM RefSpectraPeakAnnotations
+                        WHERE typeof(RefSpectraID) = 'integer'
+                        ORDER BY RefSpectraID, rowid";
+                    _reader = _command.ExecuteReader();
+                    _hasRow = _reader.Read();
+                }
+                catch (Exception)
+                {
+                    _reader?.Dispose();
+                    _command.Dispose();
+                    throw;
+                }
             }
 
             /// <summary>
@@ -714,9 +731,9 @@ namespace pwiz.Osprey.IO
                 {
                     _rows.Add(new BlibAnnotationRow
                     {
-                        PeakIndex = _reader.IsDBNull(1) ? -1 : _reader.GetInt32(1),
+                        PeakIndex = ReadInt(1, -1),
                         Name = _reader.IsDBNull(2) ? null : _reader.GetString(2),
-                        Charge = _reader.IsDBNull(3) ? 0 : _reader.GetInt32(3),
+                        Charge = ReadInt(3, 0),
                     });
                     _hasRow = _reader.Read();
                 }
@@ -727,6 +744,16 @@ namespace pwiz.Osprey.IO
             {
                 _reader.Dispose();
                 _command.Dispose();
+            }
+
+            /// <summary>
+            /// An integer column of the current row, or <paramref name="fallback"/> for a value
+            /// outside the int range, which no peak index or charge can take.
+            /// </summary>
+            private int ReadInt(int ordinal, int fallback)
+            {
+                long value = _reader.GetInt64(ordinal);
+                return value >= int.MinValue && value <= int.MaxValue ? (int)value : fallback;
             }
         }
 

@@ -61,6 +61,15 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Library fragment annotations: {0:N0} of {1:N0} spectra typed, {2:N0} peaks typed, {3:N0} peaks without an annotation, {4:N0} annotations with an unreadable name, {5:N0} annotations of an a, c, x or z ion, which cannot be checked against its peak, {6:N0} annotations naming a peak or an ion the spectrum does not have, {7:N0} annotations whose m/z disagrees with the peak.
+        /// </summary>
+        public static string BlibAnnotationStats_Summary_Library_fragment_annotations___0_N0__of__1_N0__spectra_typed {
+            get {
+                return ResourceManager.GetString("BlibAnnotationStats_Summary_Library_fragment_annotations___0_N0__of__1_N0__spectra_typed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid peak intensity blob size: expected {0} or {1} bytes, got {2}.
         /// </summary>
         public static string BlibLoader_DecodeBlibPeaks_Invalid_peak_intensity_blob_size__expected__0__or__1__bytes__got__2_ {

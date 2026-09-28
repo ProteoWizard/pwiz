@@ -27,14 +27,15 @@ namespace pwiz.Osprey.Core
 {
     /// <summary>
     /// b and y fragment m/z from a stripped sequence plus per-residue modification masses.
-    /// Moved out of <c>DecoyGenerator</c> unchanged, so decoy fragments and anything that
-    /// checks a library's fragment annotations share one set of residue masses and one
-    /// order of floating-point additions.
+    /// Moved out of <c>DecoyGenerator</c> with its arithmetic unchanged, so decoy fragments and
+    /// anything that checks a library's fragment annotations share one set of residue masses
+    /// and one order of floating-point additions. The one addition is that an ordinal the
+    /// sequence cannot hold returns null instead of indexing past either end.
     /// </summary>
     public static class PeptideFragmentMass
     {
         public const double PROTON_MASS = 1.007276;
-        public const double H2O_MASS = 18.010565;
+        public const double H2O_MASS = NeutralLoss.H2OMass;
 
         private static readonly Dictionary<char, double> STANDARD_AA_MASSES = new Dictionary<char, double>
         {
@@ -78,14 +79,16 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// m/z of the b or y ion of <paramref name="ordinal"/> residues at
-        /// <paramref name="charge"/>, or null for another ion type, an ordinal past the end of
-        /// the sequence, or an ion spanning a residue with no standard mass.
+        /// <paramref name="charge"/>, or null for another ion type, an ordinal below 1 or past
+        /// the end of the sequence, or an ion spanning a residue with no standard mass.
         /// </summary>
         public static double? CalculateFragmentMz(
             IonType ionType, int ordinal, byte charge,
             string sequence, IReadOnlyDictionary<int, double> modMasses,
             double? neutralLoss)
         {
+            if (ordinal < 1)
+                return null;
             int seqLen = sequence.Length;
             int start, end;
 

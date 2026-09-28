@@ -97,6 +97,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="BlibAnnotationStats_Summary_Library_fragment_annotations___0_N0__of__1_N0__spectra_typed" xml:space="preserve">
+    <value>Library fragment annotations: {0:N0} of {1:N0} spectra typed, {2:N0} peaks typed, {3:N0} peaks without an annotation, {4:N0} annotations with an unreadable name, {5:N0} annotations of an a, c, x or z ion, which cannot be checked against its peak, {6:N0} annotations naming a peak or an ion the spectrum does not have, {7:N0} annotations whose m/z disagrees with the peak</value>
+  </data>
   <data name="BlibLoader_DecodeBlibPeaks_Invalid_peak_intensity_blob_size__expected__0__or__1__bytes__got__2_" xml:space="preserve">
     <value>Invalid peak intensity blob size: expected {0} or {1} bytes, got {2}</value>
   </data>

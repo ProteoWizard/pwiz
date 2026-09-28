@@ -310,6 +310,19 @@ namespace pwiz.Osprey.IO
 
             return entries;
         }
+
+        /// <summary>
+        /// Whether the library supplies its own decoys, so the load must mark and pair them and
+        /// Osprey generates none. <c>DecoyMethod.FromLibrary</c> is a synonym for
+        /// <c>DecoysInLibrary</c>, and treating it as one is what fixed library-decoy mode
+        /// silently falling through to Reverse generation. The one definition: scoring and the
+        /// validity keys ask it here, so they cannot disagree about which searches generate.
+        /// </summary>
+        public static bool LibrarySuppliesDecoys(OspreyConfig config)
+        {
+            return config.DecoysInLibrary || config.DecoyMethod == DecoyMethod.FromLibrary;
+        }
+
         /// <summary>
         /// Finish a supplied-decoy library: mark the decoys, then pair each to its target.
         /// Returns false with <paramref name="error"/> set on the faults that make the library
@@ -631,7 +644,10 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// The composition terms that name a reader version: empty for every library the
         /// current reader parses as the one before it did, so only a library whose parse
-        /// changed is re-read after an upgrade.
+        /// changed is re-read after an upgrade. The versions are
+        /// <see cref="BlibLoader.ANNOTATION_READER_VERSION"/> and
+        /// <see cref="BlibLoader.MODIFICATION_READER_VERSION"/>, which the task-key terms carry
+        /// as well.
         /// </summary>
         internal static string LibraryReaderTerms(OspreyConfig config)
         {
@@ -639,14 +655,14 @@ namespace pwiz.Osprey.IO
             if (source == null || source.Format != LibraryFormat.Blib)
                 return string.Empty;
             var sb = new StringBuilder();
-            // Version 2 of the blib reader types fragments from RefSpectraPeakAnnotations; a
-            // blib with no rows there reads exactly as before.
+            // The annotation reader types fragments from RefSpectraPeakAnnotations; a blib
+            // with no rows there reads exactly as before.
             if (BlibLoader.HasPeakAnnotations(source.Path))
-                sb.Append("blib_reader:2\n");
-            // Version 2 of the modification reader is residue- and precision-aware; a blib
-            // whose modification text it cannot read differently reads exactly as before.
+                sb.Append("blib_reader:" + BlibLoader.ANNOTATION_READER_VERSION + "\n");
+            // The modification reader is residue- and precision-aware; a blib whose
+            // modification text it cannot read differently reads exactly as before.
             if (BlibLoader.HasPrecisionSensitiveModifications(source.Path))
-                sb.Append("blib_mods:2\n");
+                sb.Append("blib_mods:" + BlibLoader.MODIFICATION_READER_VERSION + "\n");
             return sb.ToString();
         }
 
@@ -667,17 +683,6 @@ namespace pwiz.Osprey.IO
                 - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
             sb.AppendFormat(CultureInfo.InvariantCulture, "{0}_mtime:{1}\n", label, mtimeSecs);
             // ReSharper restore LocalizableElement
-        }
-
-        /// <summary>
-        /// Whether the library supplies its own decoys, so the load must mark and pair them.
-        /// The same predicate the caller used to apply - <c>DecoyMethod.FromLibrary</c> is a
-        /// synonym for <c>DecoysInLibrary</c>, and treating it as one is what fixed library-decoy
-        /// mode silently falling through to Reverse generation.
-        /// </summary>
-        private static bool LibrarySuppliesDecoys(OspreyConfig config)
-        {
-            return config.DecoysInLibrary || config.DecoyMethod == DecoyMethod.FromLibrary;
         }
 
         /// <summary>
