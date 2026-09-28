@@ -883,20 +883,11 @@
 
 このまま続行しますか？</value>
   </data>
-  <data name="AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Failed_to_generate_settings_yaml_file_by_executing_the_peptdeep_export_settings_command_" xml:space="preserve">
-    <value>AlphaPeptDeep export-settingsコマンドを実行しましたが、settings.yamlファイルの生成に失敗しました。</value>
-  </data>
-  <data name="AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Failed_to_build_library_by_executing_the_peptdeep_cmd_flow_command_" xml:space="preserve">
-    <value>AlphaPeptDeep cmd-flowコマンドを実行しましたが、ライブラリの構築に失敗しました。</value>
-  </data>
   <data name="LibraryHelper_PreparePrecursorInputFile_Preparing_prediction_input_file" xml:space="preserve">
     <value>予測入力ファイルを準備中</value>
   </data>
   <data name="LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file" xml:space="preserve">
     <value>トレーニング入力ファイルを準備中</value>
-  </data>
-  <data name="AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file" xml:space="preserve">
-    <value>設定ファイルを準備中</value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep" xml:space="preserve">
     <value>AlphaPeptDeepを実行中</value>

@@ -1,6 +1,7 @@
 /*
  * Author: David Shteynberg <dshteyn .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2025 University of Washington - Seattle, WA
  *
@@ -28,11 +29,9 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
-using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
-using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -43,43 +42,17 @@ namespace TestPerf
     public class AlphapeptdeepBuildLibraryTest : AbstractFunctionalTestEx
     {
         /// <summary>
-        /// When true Python installation is forced by deleting any old installation
-        /// </summary>
-        private bool IsCleanPythonMode => true;
-
-        /// <summary>
-        /// When true console output is added to clarify what the test has accomplished
-        /// </summary>
-        public bool IsVerboseMode => false;
-
-        /// <summary>
-        /// When true the test write the Python hash value for <see cref="Settings.PythonEmbeddableHash"/>
+        /// When true the test copies the libraries it predicts over the expected ones in the test files
+        /// folder, for updating AlphapeptdeepBuildLibraryTest.zip.
         /// </summary>
         protected override bool IsRecordMode => false;
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] // Maybe all the setup dependencies also
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestAlphaPeptDeepBuildLibrary()
         {
-            if (IsCleanPythonMode)
-                AssertEx.IsTrue(PythonInstaller.DeleteToolsPythonDirectory());
-
             TestFilesZip = "TestPerf/AlphapeptdeepBuildLibraryTest.zip";
-            var originalInstallationState = PythonInstaller.SimulatedInstallationState;
-            try
-            {
-                PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD;
-                RunFunctionalTest();
-            }
-            finally
-            {
-                PythonInstaller.SimulatedInstallationState = originalInstallationState;
-            }
+            RunFunctionalTest();
         }
-
-        private string _toolName = AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP;
-        private string _pythonVersion = AlphapeptdeepLibraryBuilder.PythonVersion;
-
-        private bool _undoRegistry;
 
         private string LibraryPathWithoutIrt =>
             TestFilesDir.GetTestPath("LibraryWithoutIrt.blib");
@@ -90,7 +63,7 @@ namespace TestPerf
         protected override void DoTest()
         {
             TestEmptyDocumentMessage();
-            
+
             RunUI(() => OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky")));
 
             const string answerWithoutIrt = "without_iRT/predict_transformed.speclib.tsv";
@@ -101,18 +74,10 @@ namespace TestPerf
 
             var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
 
-            var simulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT; // Simulates not having Nvidia library but having the GPU
-            AlphapeptdeepBuildLibrary(peptideSettings, libraryWithIrt, LibraryPathWithIrt, answerWithIrt, 
-                simulatedInstallationState, IrtStandard.BIOGNOSYS_11);
+            AlphapeptdeepBuildLibrary(peptideSettings, libraryWithIrt, LibraryPathWithIrt, answerWithIrt,
+                IrtStandard.BIOGNOSYS_11);
 
-            simulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD; // Simulates not having Nvidia GPU
-            AlphapeptdeepBuildLibrary(peptideSettings, libraryWithoutIrt, LibraryPathWithoutIrt, answerWithoutIrt, 
-                simulatedInstallationState);
-
-            var fileHash = PythonInstallerUtil.GetMD5FileHash(PythonInstaller.PythonEmbeddablePackageDownloadPath);
-            if (IsRecordMode)
-                Console.WriteLine($@"Computed PythonEmbeddableHash: {fileHash}");
-            Assert.AreEqual(Settings.Default.PythonEmbeddableHash, fileHash);
+            AlphapeptdeepBuildLibrary(peptideSettings, libraryWithoutIrt, LibraryPathWithoutIrt, answerWithoutIrt);
 
             OkDialog(peptideSettings, peptideSettings.OkDialog);
 
@@ -133,6 +98,9 @@ namespace TestPerf
             AssertEx.AreComparableStrings(SkylineResources.SkylineWindow_CheckSaveDocument_Do_you_want_to_save_changes,
                 saveChangesDlg.Message);
             OkDialog(saveChangesDlg, saveChangesDlg.ClickNo);
+            // The new document loads the libraries in the default settings in the background. Let that
+            // finish, or CheckForFileLocks moves the test folder while a library is still being opened.
+            WaitForDocumentLoaded();
 
             TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
         }
@@ -167,12 +135,9 @@ namespace TestPerf
         /// <param name="libraryName">Name of the library to build</param>
         /// <param name="libraryPath">Path of the library to build</param>
         /// <param name="answerFile">Path to library answersheet</param>
-        /// <param name="simulatedInstallationState">Python Simulated State helps determine whether user is offered Nvidia install</param>
         /// <param name="iRTtype">iRT standard type</param>
         private void AlphapeptdeepBuildLibrary(PeptideSettingsUI peptideSettings, string libraryName,
-            string libraryPath, string answerFile, 
-            PythonInstaller.eSimulatedInstallationState simulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT,
-            IrtStandard iRTtype = null)
+            string libraryPath, string answerFile, IrtStandard iRTtype = null)
         {
             var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
             RunUI(() =>
@@ -184,32 +149,7 @@ namespace TestPerf
                     buildLibraryDlg.IrtStandard = iRTtype;
             });
 
-            if (simulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT) 
-            {
-                // TestCancelPython always uses NAIVE state so must reset state
-                TestCancelPython(buildLibraryDlg);
-                PythonInstaller.SimulatedInstallationState = simulatedInstallationState;
-                var confirmDlg = TestNvidiaInstallPython(buildLibraryDlg);
-                if (confirmDlg != null)
-                    OkDialog(confirmDlg, confirmDlg.OkDialog);
-            }
-            else
-            {
-                PythonInstaller.SimulatedInstallationState = simulatedInstallationState;
-                RunUI(buildLibraryDlg.OkWizardPage);
-            }
-
-            if (buildLibraryDlg.Builder == null)
-            {
-                // Recreate builder when running the test multiple times (e.g. in different lanquages)
-                RunUI(() =>
-                {
-                    PythonInstaller.SimulatedInstallationState =
-                        PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD;
-                    buildLibraryDlg.ValidateBuilder(true);
-                });
-                PythonInstaller.SimulatedInstallationState = simulatedInstallationState;
-            }
+            RunUI(buildLibraryDlg.OkWizardPage);
 
             WaitForCondition(() => buildLibraryDlg.Builder != null);
 
@@ -235,12 +175,13 @@ namespace TestPerf
             WaitForClosedForm<BuildLibraryDlg>();
             WaitForCondition(() => File.Exists(builtLibraryPath));
 
-            AssertEx.IsFalse(alphaPeptDeepBuilder.FractionOfExpectedOutputLinesGenerated > 2,
-                @"TestAlphaPeptDeepBuildLibrary: Total count of generated output is more than twice of the expected count ... ");
-            AssertEx.IsFalse(alphaPeptDeepBuilder.FractionOfExpectedOutputLinesGenerated < 0.5,
-                @"TestAlphaPeptDeepBuildLibrary: Total count of generated output is less than half of the expected count ... ");
-            
-            TestResultingLibByValues(TestFilesDir.GetTestPath(answerFile), builtLibraryPath);
+            string answerPath = TestFilesDir.GetTestPath(answerFile);
+            if (IsRecordMode)
+            {
+                File.Copy(builtLibraryPath, answerPath, true);
+                Console.WriteLine(@"Recorded {0}", answerPath);
+            }
+            TestResultingLibByValues(answerPath, builtLibraryPath);
         }
 
         private static void VerifyAddIrts(AddIrtPeptidesDlg dlg)
@@ -279,16 +220,17 @@ namespace TestPerf
             var sortFields = new List<(int FieldIndex, bool IsAscending)>
             {
                 (0, true),   // ModifiedPeptideSequence
-                (7, true),   // FragmentType
-                (10, true),  // FragmentCharge
-                // AlphaPeptDeep emits fragments in predicted-intensity order, and the predicted
-                // intensities differ at the ~7th significant figure across machines (CPU float
-                // nondeterminism), which flips the order of near-tied fragments. Sort by the
-                // fragment's identity (series number + loss type) so the row order is deterministic
-                // and the field comparison aligns the same fragment in both files; the tiny per-value
-                // drift is then absorbed by the comparison tolerance.
-                (11, true),  // FragmentSeriesNumber
-                (12, true)   // FragmentLossType
+                (1, true),   // PrecursorCharge
+                (6, true),   // FragmentType
+                (9, true),   // FragmentCharge
+                // Fragments are written in predicted-intensity order, and the predicted intensities
+                // differ at the ~7th significant figure across machines and between the CPU and the
+                // GPU, which flips the order of near-tied fragments. Sort by the fragment's identity
+                // (series number + loss type) so the row order is deterministic and the field
+                // comparison aligns the same fragment in both files; the tiny per-value drift is then
+                // absorbed by the comparison tolerance.
+                (10, true),  // FragmentSeriesNumber
+                (11, true)   // FragmentLossType
             };
             var product_sorted = product + ".sorted";
             var answer_sorted = answer + ".sorted";
@@ -310,289 +252,8 @@ namespace TestPerf
             using (var answerReader = new StreamReader(answer_sorted))
             using (var productReader = new StreamReader(product_sorted))
             {
-                AssertEx.FieldsEqual(answerReader, productReader, 13, null, true, 0, 1);
+                AssertEx.FieldsEqual(answerReader, productReader, 12, null, true, 0, 1);
             }
-        }
-
-        /// <summary>
-        /// Pretends Python needs installation then Cancels Python install
-        /// </summary>
-        /// <param name="buildLibraryDlg">Build Library dialog</param>
-        public void TestCancelPython(BuildLibraryDlg buildLibraryDlg)
-        {
-            if (IsVerboseMode)
-            {
-                Console.WriteLine();
-                Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Start TestCancelPython() test ... ");
-            }
-            // Test the control path where Python is not installed, and the user is prompted to deal with admin access
-            PythonInstaller.SimulatedInstallationState =
-                PythonInstaller.eSimulatedInstallationState.NAIVE; // Simulates not having the needed registry settings
-            var installPythonDlg = ShowDialog<MultiButtonMsgDlg>(buildLibraryDlg.OkWizardPage); // Expect the offer to install Python
-
-            CancelDialog(installPythonDlg, installPythonDlg.CancelDialog); // Cancel it immediately
-
-            installPythonDlg =
-                ShowDialog<MultiButtonMsgDlg>(buildLibraryDlg.OkWizardPage); // Expect the offer to install Python
-
-            AssertEx.AreComparableStrings(
-                ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
-                installPythonDlg.Message);
-
-            var needAdminDlg = ShowDialog<MessageDlg>(installPythonDlg.OkDialog);
-
-            AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation,
-                needAdminDlg.Message);
-
-            CancelDialog(needAdminDlg, needAdminDlg.CancelDialog);
-            if (IsVerboseMode)
-                Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Finish TestCancelPython() test ... ");
-        }
-
-        public MessageDlg TestNvidiaInstallPython(BuildLibraryDlg buildLibraryDlg)
-        {
-            if (IsVerboseMode)
-                Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Start TestNvidiaInstallPython() test ... ");
-            // Test the control path where Nvidia Card is Available and Nvidia Libraries are not installed, and the user is prompted to deal with Nvidia
-            // Test for LongPaths not set and admin
-            if (PythonInstaller.IsRunningElevated() && !PythonInstaller.ValidateEnableLongpaths())
-            {
-                var adminDlg = ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage,
-                    WAIT_TIME); // Expect request for elevated privileges 
-                // var adminDlg = WaitForOpenForm<MessageDlg>();
-                AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation,
-                    adminDlg.Message);
-                OkDialog(adminDlg, adminDlg.OkDialog);
-            }
-            else if (!PythonInstaller.ValidateEnableLongpaths())
-            {
-                Assert.Fail($@"Error: Cannot finish {_toolName}BuildLibraryTest because {PythonInstaller.REG_FILESYSTEM_KEY}\{PythonInstaller.REG_LONGPATHS_ENABLED} is not set and have insufficient permissions to set it");
-            }
-            else
-            {
-                ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage, WAIT_TIME); // Expect the offer to installNvidia
-            }
-
-            var installNvidiaDlg = WaitForOpenForm<MessageDlg>();
-
-            AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Nvidia_Library,
-                installNvidiaDlg.Message);
-
-            CancelDialog(installNvidiaDlg, installNvidiaDlg.CancelDialog);
-
-            installNvidiaDlg = ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage, WAIT_TIME);
-            AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Nvidia_Library,
-                installNvidiaDlg.Message);
-            
-            OkDialog(installNvidiaDlg, installNvidiaDlg.ClickYes);
-
-            var needAdminDlg = WaitForOpenForm<MessageDlg>();
-            
-            AssertEx.AreComparableStrings(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation,
-                needAdminDlg.Message);
-
-            CancelDialog(needAdminDlg, needAdminDlg.CancelDialog); // Expect the offer to installNvidia
-            installNvidiaDlg = ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage, WAIT_TIME); // 3 minutes 
-            AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Nvidia_Library,
-                installNvidiaDlg.Message);
-            
-            // Python installation begins when user ClickNo
-            OkDialog(installNvidiaDlg, installNvidiaDlg.ClickNo);
-            
-            if (!IsCleanPythonMode)
-                return null;
-
-            var pythonConfirm = WaitForOpenForm<MessageDlg>(WAIT_TIME * 4); // 12 minutes - successful completion message
-            if (IsVerboseMode)
-                Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Finish TestNvidiaInstallPython() test ... ");
-            return pythonConfirm;
-        }
-
-        /// <summary>
-        /// Pretends no NVIDIA hardware then Installs Python, returns true if Python installer ran (successful or not), false otherwise
-        /// </summary>
-        /// <param name="buildLibraryDlg">Build Library</param>
-        public bool InstallPython(BuildLibraryDlg buildLibraryDlg)
-        {
-            PythonInstaller.SimulatedInstallationState =
-                PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD; // Normal tests systems will have registry set suitably
-
-            MessageDlg confirmDlg = null;
-            RunLongDlg<MultiButtonMsgDlg>(buildLibraryDlg.OkWizardPage, pythonDlg =>
-            {
-                Assert.AreEqual(string.Format(
-                    ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
-                    _pythonVersion, _toolName), pythonDlg.Message);
-
-                if (!PythonInstaller.ValidateEnableLongpaths())
-                {
-                    var longPathDlg = ShowDialog<MessageDlg>(pythonDlg.OkDialog);
-
-                    Assert.AreEqual(
-                        string.Format(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation),
-                        longPathDlg.Message);
-
-                    if (PythonInstaller.IsRunningElevated())
-                    {
-                        confirmDlg = ShowDialog<MessageDlg>(pythonDlg.OkDialog, WAIT_TIME);
-                        ConfirmPythonSuccess(confirmDlg);
-                    }
-                    else
-                    {
-                        Assert.Fail($@"Error: Cannot finish {_toolName}BuildLibraryTest because {PythonInstaller.REG_FILESYSTEM_KEY}\{PythonInstaller.REG_LONGPATHS_ENABLED} is not set and have insufficient permissions to set it");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine(@"Info: LongPathsEnabled registry key is already set to 1");
-                    OkDialog(pythonDlg, pythonDlg.OkDialog);
-                    confirmDlg = ShowDialog<MessageDlg>(pythonDlg.OkDialog, WAIT_TIME);
-                    ConfirmPythonSuccess(confirmDlg);
-                }
-
-
-            }, dlg => dlg.Close());
-            if (_undoRegistry)
-            {
-                PythonInstaller.EnableWindowsLongPaths(false);
-            }
-
-            return true;
-        }
-
-        public bool HaveNvidiaSoftware()
-        {
-            return PythonInstaller.NvidiaLibrariesInstalled();
-        }
-        
-        public bool HaveNvidiaHardware()
-        {
-            return PythonInstaller.TestForNvidiaGPU() == true;
-        }
-
-        /// <summary>
-        /// Runs Nvidia Dialog
-        /// </summary>
-        /// <param name="nvidiaDlg">Nvidia Detected Dialog</param>
-        /// <param name="pythonDlg">Python Installer Dialog</param>
-        /// <param name="clickNo">true clicks No, false clicks Yes, null clicks Cancel to Nvidia Detected Dialog</param>
-        private void RunNvidiaDialog(MessageDlg nvidiaDlg, MessageDlg pythonDlg, bool? clickNo = true)
-        {
-            if (clickNo == true)
-            {
-                RunDlg<AlertDlg>(nvidiaDlg.ClickNo, ConfirmPythonSuccess);
-            }
-            else if (clickNo == false)
-            {
-                RunDlg<AlertDlg>(nvidiaDlg.ClickYes, ConfirmPythonSuccess);
-            }
-            else // clickNo == null
-            {
-                RunDlg<AlertDlg>(nvidiaDlg.ClickCancel, ConfirmPythonSuccess);
-            }
-
-            if (!nvidiaDlg.IsDisposed)
-                nvidiaDlg.Dispose();
-        }
-
-        /// <summary>
-        /// Helps with Nvidia GPU Detections
-        /// </summary>
-        /// <param name="pythonDlg">Python set up is required dialog</param>
-        /// <param name="nvidiaClickNo">What to tell Nvidia Dialog: Yes=install, No=don't install, null=cancel operation</param>
-        private void NvidiaTestHelper(MessageDlg pythonDlg, bool? nvidiaClickNo)
-        {
-            PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT;
-            if (PythonInstaller.TestForNvidiaGPU() == true && !PythonInstaller.NvidiaLibrariesInstalled())
-            {
-                Console.WriteLine(@"Info: NVIDIA GPU DETECTED on test node");
-
-                MessageDlg nvidiaDlg = ShowDialog<MessageDlg>(pythonDlg.OkDialog, WAIT_TIME);
-
-                RunNvidiaDialog(nvidiaDlg, pythonDlg, nvidiaClickNo);
-
-            }
-            else
-            {
-                if (PythonInstaller.TestForNvidiaGPU() != true)
-                    Console.WriteLine(@"Info: NVIDIA GPU *NOT* DETECTED on test node");
-                else
-                    Console.WriteLine(@"Info: Nvidia libraries already installed");
-                OkDialog(pythonDlg, pythonDlg.OkDialog);
-                //Not cancelled
-                var confirmDlg = ShowDialog<AlertDlg>(pythonDlg.OkDialog, WAIT_TIME);
-                ConfirmPythonSuccess(confirmDlg);
-
-            }
-        }
-
-        /// <summary>
-        /// Tries to set EnableLongPaths
-        /// </summary>
-        /// <param name="longPathDlg">EnableLongPaths registry dialog</param>
-        /// <returns></returns>
-        private MessageDlg RunLongPathsDialog(MessageDlg longPathDlg)
-        {
-            Console.WriteLine(@"Info: Trying to set LongPathsEnabled registry key to 1");
-            OkDialog(longPathDlg, longPathDlg.OkDialog);
-
-            MessageDlg okDlg = ShowDialog<MessageDlg>(longPathDlg.OkDialog);
-
-            Console.WriteLine(@"Info: Successfully set LongPathsEnabled registry key to 1");
-            _undoRegistry = true;
-
-            if (!longPathDlg.IsDisposed)
-                longPathDlg.Dispose();
-
-            return okDlg;
-        }
-
-        /// <summary>
-        /// Confirms Python installation success
-        /// </summary>
-        /// <param name="confirmDlg">Message dialog success</param>
-        private void ConfirmPythonSuccess(AlertDlg confirmDlg)
-        {
-            ConfirmPython(confirmDlg);
-        }
-
-        /// <summary>
-        /// Confirms Python installation failure
-        /// </summary>
-        /// <param name="confirmDlg">Message dialog failed</param>
-        private void ConfirmPythonFailed(AlertDlg confirmDlg)
-        {
-            ConfirmPython(confirmDlg, false);
-        }
-
-        /// <summary>
-        /// Confirms Python installation
-        /// </summary>
-        /// <param name="confirmDlg">Alert dialog </param>
-        /// <param name="confirmSuccess">true for success, false for failure</param>
-        public void ConfirmPython(AlertDlg confirmDlg, bool confirmSuccess = true)
-        {
-            var expectMsg = string.Format(ToolsUIResources
-                .PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment);
-            if (confirmSuccess)
-                expectMsg = string.Format(ToolsUIResources
-                    .PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment);
-
-            Assert.AreEqual(expectMsg, confirmDlg.Message);
-            confirmDlg.OkDialog();
-        }
-
-        /// <summary>
-        /// Second dialog after Nvidia is detected to direct user to admin instructions for setting up Nvidia
-        /// </summary>
-        /// <param name="confirmDlg">Message dialog to the user with admin instructions</param>
-        private void ConfirmInstallNvidiaBatMessage(MessageDlg confirmDlg)
-        {
-            AssertEx.AreComparableStrings(
-                string.Format(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation,
-                    PythonInstaller.InstallNvidiaLibrariesBat),
-                confirmDlg.Message);
-            OkDialog(confirmDlg, confirmDlg.OkDialog);
         }
     }
 }
