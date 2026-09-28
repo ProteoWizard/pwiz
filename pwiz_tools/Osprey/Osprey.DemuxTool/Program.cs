@@ -183,9 +183,12 @@ namespace pwiz.Osprey.DemuxTool
             Console.WriteLine(@"Opened {0} spectra in {1:F0} s", spectra.Count, stopwatch.Elapsed.TotalSeconds);
             if (eventCentroids)
             {
-                // The profile as acquired, centroided with each run of adjacent points one peak.
-                spectra = new SpectrumList_PeakPicker(spectra, new EventPeakDetector(), false, @"1-");
-                Console.WriteLine(@"Event centroiding: {0}", input);
+                // MS2 from the profile as acquired, each run of adjacent points one peak. MS1 keeps the
+                // vendor's centroids: dense survey scans need a peak model, which this grouping lacks.
+                if (SpectrumList_PeakPicker.SupportsVendorPeakPicking(input))
+                    spectra = new SpectrumList_PeakPicker(spectra, null, true, @"1");
+                spectra = new SpectrumList_PeakPicker(spectra, new EventPeakDetector(), false, @"2-");
+                Console.WriteLine(@"Event centroiding (MS2; MS1 vendor): {0}", input);
             }
             else if (!profile && SpectrumList_PeakPicker.SupportsVendorPeakPicking(input))
             {

@@ -272,6 +272,13 @@ Osprey.DemuxTool --in run.raw --out run.demux.mzML --scheme staggered
 | `--position-mz` | off | ZT Scan: write each solved value at the m/z of the peaks it was solved from, in its own sweep (see [Output](#output-zt-scan-and-layouts)) |
 | `--source-positions` | off | ZT Scan: place each channel's sources once per block, then solve each sweep over them (see [Source positions](#source-positions)) |
 | `--source-l1 L` | 0 | ZT Scan, with `--source-positions`: a non-negative lasso weight on the fit that finds the sources |
+| `--min-source-fraction F` | 0.05 | ZT Scan, with `--source-positions`: sources under this fraction of their channel's total are dropped |
+| `--sweep-l1 L` | 0 | ZT Scan: a non-negative lasso weight on every per-sweep solve (see [Sparsity](#sparsity-the-lasso)) |
+| `--sweep-l1-z Z` | 0 | ZT Scan: a per-position lasso weight of Z standard deviations of the position's score under Poisson noise |
+| `--sweep-l1-refit` | off | with a lasso: refit each sweep without the penalty on the positions the lasso kept |
+| `--block-support-z Z` | 0 | ZT Scan: choose each channel's positions once per block (z-scaled lasso on its summed counts), then solve each sweep over them unpenalized |
+| `--centroid events` | vendor | ZT Scan: centroid the MS2 profile ourselves, one centroid per run of adjacent digitizer samples, single ion events kept (MS1 keeps the vendor's centroids) |
+| `--profile` | off | read a vendor file without centroiding (with `--raw`, a profile dump for inspection) |
 | `--apportion H` | off | ZT Scan: apportion observed peaks instead of writing solved values |
 | `--counts-per-ion` | 100 | the detector counts of one ion, for the weights and the ion thresholds |
 | `--ppm` | 10 | the channel tolerance |
@@ -529,6 +536,88 @@ near the apex that lands in their own bin went from 0.52 (the per-sweep solve) t
 bin it was 0.85 and 0.86. Grouping fragments across a precursor, to place weak fragments by their
 group, over-merged co-eluting precursors and is not implemented.
 
+On the slice with DIA-NN's settings pinned, `--source-positions` with `--min-source-fraction 0` found
+2,593 / 2,818 / 2,543 targets against the per-sweep solve's 2,909 / 3,067 / 3,094, with a worse CV: the
+drop rule is not what costs it.
+
+### Sparsity: the lasso
+
+Each form below was tested on the slice (centered:7, `--position-mz`, DIA-NN pinned at `--window 6
+--mass-acc 14 --mass-acc-ms1 17`), CV compared precursor by precursor on those every arm finds in all
+three runs:
+
+| Arm | Targets (A1 / D1 / G1) | Median paired change in CV | Precursors improved |
+|---|---|---|---|
+| no lasso (the per-sweep solve) | 2,909 / 3,067 / 3,094 | - | - |
+| `--sweep-l1 2 --sweep-l1-refit` | 2,900 / 3,012 / 3,130 | +0.0060 | 33% |
+| `--sweep-l1 6 --sweep-l1-refit` | 2,923 / 3,150 / 3,026 | +0.0040 | 40% |
+| `--sweep-l1-z 2 --sweep-l1-refit` | 2,931 / 2,991 / 3,029 | +0.0003 | 49% |
+| `--sweep-l1-z 3 --sweep-l1-refit` | 2,941 / 3,082 / 3,036 | +0.0099 | 36% |
+| `--block-support-z 2` | 2,616 / 2,749 / 2,798 | +0.0113 | 38% |
+| `--block-support-z 3` | 2,441 / 2,908 / 2,864 | +0.0011 | 49% |
+
+None improves on the unpenalized solve. Changing DIA-NN's settings alone, on the same files, moves the
+median paired CV by +0.0015 with 46.5% improved, so the losses above are the lasso's, not DIA-NN's.
+- **A fixed weight is the wrong scale.** In the Poisson-weighted fit a position stays at zero while
+  its score is within L/2; the score's noise is about sqrt(sum t^2 / mu), so a fixed L is a z threshold
+  that loosens where the background is low (about 0.8 sigma at the weight floor for L = 6) and tightens
+  where it is high. At L = 2 and 6 the output barely changes (5,839 peaks per spectrum against 5,860 and
+  6,012). The z-scaled form, `--sweep-l1-z`, penalizes each position by its own noise: at z = 2 it
+  writes 30% fewer peaks, at z = 3 66% fewer, removing nearly every sub-ion value.
+- **Selecting per sweep makes chromatograms flicker.** A weak position passes in one sweep and fails in
+  the next, which jitters its fragment's chromatogram: with the z-scaled weight, CV is unchanged at
+  z = 2 and rises at z = 3. A fixed weight also acts in the unweighted fit, in ions, so it lowers the
+  expected counts that set the Poisson weights, and the refit inherits the distorted weights.
+- **Selecting per block removes the flicker but smears.** `--block-support-z 3` is CV-neutral, but
+  constraining every sweep to the block's positions pushes the signal of the positions left out onto
+  their neighbors (the files gain peaks and ions), and about 10% of identifications are lost.
+
+`--counts-per-ion 50`, closer to the vendor centroids' scale (below), was neutral: 2,988 / 3,103 /
+3,031 targets, paired CV +0.0022.
+
+### Centroiding and the TOF grid
+
+DIA-NN's advantage on quantities comes largely from reading the `.wiff` itself. Over the three whole runs
+(19,656 precursors every arm finds in every run), its scanning mode gives a median CV of 0.090 on the
+`.wiff`, 0.103 on msconvert's vendor-centroided mzML, and plain mode 0.113 on the mzML: of the 0.023
+between plain and `.wiff`, the scanning algorithm accounts for 0.010 and the data path for 0.013, in
+every RT and m/z cell and in every abundance quartile (0.011 to 0.014). The `.wiff` path also takes six
+times longer to load, and DIA-NN measures wider peaks on it (3.00 scans against 2.81) at a looser mass
+accuracy (24 ppm against 17).
+
+Our reader and msconvert both use SCIEX's vendor centroids (`peakPicking vendor`). Compared with the
+profile the SDK returns for the same spectra (A1 sweep 300, 169 spectra over 500-700 m/z):
+- The elementary profile event is one digitizer sample of 100 counts. Every one-sample event is
+  dropped by the vendor centroiding: 358,819 in the sweep, with the other peaks it leaves out 19.5% of
+  the profile intensity. On their own m/z, 21.7% of those single events lie within 10 ppm of a kept
+  centroid in the spectra 8 bins either side, against 14.0% at m/z shifted 0.37 Th: part of them are
+  fragment ions.
+- A kept centroid carries a median 0.25 of its profile peak's summed counts. Small centroids come in
+  steps of about 50 per event (100, 150, 200, ...), never below 100.
+- The vendor m/z agree with the profile's within 0.3 ppm in every run: the calibration is the same.
+
+**The profile is one exact grid.** Every MS2 profile spectrum is sampled at m/z = (r0 + k x 9.786595e-5)^2,
+uniform in sqrt(m/z), that is in flight time: 9.8 ppm per sample at 400 m/z, 7.4 at 700, 5.7 at 1200. The
+step, and the samples, are identical to float precision across the spectra of a sweep, across sweeps
+(A1 sweep 300 and 600) and across runs (A1 and D1). The TOF peak is close to Gaussian with a sigma of 1.2
+samples at 150-400 m/z rising to 1.5 above 1000 (FWHM about 3 samples), with slightly heavier tails.
+This is the condition that makes profile-domain demultiplexing and the joint solve of spec §5.4c-d
+possible on ZT Scan without resampling or linking.
+
+**Centroiding it ourselves, crudely.** `--centroid events` (`EventCentroider`) makes one centroid per run
+of adjacent samples, split at deep valleys, keeping single events. Without demultiplexing, on the slice,
+it lowered DIA-NN's CV (0.093 against 0.097 for the vendor centroids, 53.5% of precursors improved) but
+lost identifications (2,534 / 2,129 / 2,417 against 2,659 / 2,694 / 2,627), and demultiplexed it lost
+both. Part of that loss came from also centroiding MS1 this way (DIA-NN then recommended 31-38 ppm
+MS1 tolerances, against 18-19), which `--centroid events` no longer does. The grouping has no peak
+model: a sparse peak whose ions land on non-adjacent samples becomes several centroids.
+
+**A first joint prototype** (pwiz-ai `joint_prototype.py`: Poisson-weighted NNLS over A kron B, B a
+Gaussian TOF peak, no L1) scored by placement on 341 identified precursors: own bin / within one bin
+0.48 / 0.84, against 0.51 / 0.87 for the per-sweep channel solve on vendor centroids and 0.43 / 0.81 for
+per-sample profile demultiplexing (§5.4c). The per-sample solve is clearly worst, as §5.4d argues; the
+joint solve without its L1 does not yet beat the channel solve.
+
 ### Determinism
 
 - The rules are the overlap demultiplexer's: index order everywhere, ties to the lowest index, and
@@ -676,7 +765,12 @@ The scripts behind these ZT Scan tables are in pwiz-ai, under `ai/scripts/Osprey
 - **Open questions for ZT Scan:**
   - quantitation: over whole runs the per-sweep solve's quantities are noisier than the acquired
     data's (CV 0.135 against 0.112), and DIA-NN's scanning mode reaches 0.089;
-  - whether `--source-positions` closes that gap, first on the slice, then on whole runs;
+  - `--source-positions` does not close it on the slice, and no form of the lasso does
+    ([Sparsity](#sparsity-the-lasso));
+  - most of DIA-NN's advantage in quantities is the data it reads from the `.wiff`, which the vendor
+    centroids do not carry ([Centroiding and the TOF grid](#centroiding-and-the-tof-grid)): the next
+    step is solving centroids and demultiplexing together on the profile grid (spec §5.4d), with a
+    TOF peak model and a Poisson-scaled L1;
   - how to recover the early-gradient losses, for instance by scoring a precursor against both the
     acquired and the demultiplexed spectra;
   - whether the counts-per-ion scale, which sets the weights, should be calibrated rather than
