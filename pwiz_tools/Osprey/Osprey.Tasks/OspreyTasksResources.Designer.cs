@@ -2402,6 +2402,15 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 1 precursor candidate has no experiment-level FDR values to carry into the second pass: the experiment-level intermediate file beside the output library is missing or belongs to a different analysis. Run the analysis again from the first pass..
+        /// </summary>
+        public static string Pass2FdrSidecar_WritePass2ExperimentSidecar_1_precursor_candidate_has_no_experiment_level_FDR_values_to_carry_int {
+            get {
+                return ResourceManager.GetString("Pass2FdrSidecar_WritePass2ExperimentSidecar_1_precursor_candidate_has_no_experiment_level_FDR_values_to_carry_int", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not read the re-scored results for {0}: {1}.
         /// </summary>
         public static string Pass2FdrSidecar_WritePass2ExperimentSidecar_Could_not_read_the_re_scored_results_for__0____1_ {
@@ -2486,6 +2495,15 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("Pass2FdrSidecar_WritePass2ExperimentSidecar_Wrote_experiment_level_FDR_results_fo" +
                         "r__1__precursor_candidates_to__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0:N0} precursor candidates have no experiment-level FDR values to carry into the second pass: the experiment-level intermediate file beside the output library is missing or belongs to a different analysis. Run the analysis again from the first pass..
+        /// </summary>
+        public static string Pass2FdrSidecar_WritePass2ExperimentSidecar__0__precursor_candidates_have_no_experiment_level_FDR_values_to_carry_ {
+            get {
+                return ResourceManager.GetString("Pass2FdrSidecar_WritePass2ExperimentSidecar__0__precursor_candidates_have_no_experiment_level_FDR_values_to_carry_", resourceCulture);
             }
         }
         
@@ -3496,6 +3514,15 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("PerFileScoringTask_LoadLibraryAndDecoys_Full_library___0__target_precursor_candid" +
                         "ates__second_pass_FDR_does_not_need_the_decoys_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The library {0} has no b or y fragment ion annotations, so Osprey cannot generate decoys from it. Use a library with annotated fragments, such as a DIA-NN or Carafe library, or one that already contains decoys, with {1}..
+        /// </summary>
+        public static string PerFileScoringTask_LoadLibraryAndDecoys_The_library__0__has_no_b_or_y_fragment_ion_annotations__so_Osprey_cannot_ {
+            get {
+                return ResourceManager.GetString("PerFileScoringTask_LoadLibraryAndDecoys_The_library__0__has_no_b_or_y_fragment_ion_annotations__so_Osprey_cannot_", resourceCulture);
             }
         }
         

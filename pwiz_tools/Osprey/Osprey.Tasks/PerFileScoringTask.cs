@@ -1230,9 +1230,7 @@ namespace pwiz.Osprey.Tasks
                 if (!omitFragments && !AnyTargetHasSequenceIons(library))
                 {
                     ctx.LogError(string.Format(
-                        "The library {0} has no b or y fragment ion annotations, so Osprey cannot " +
-                        "generate decoys from it. Use a library with annotated fragments (such as a " +
-                        "DIA-NN or Carafe .tsv library), or one that already contains decoys with {1}.",
+                        OspreyTasksResources.PerFileScoringTask_LoadLibraryAndDecoys_The_library__0__has_no_b_or_y_fragment_ion_annotations__so_Osprey_cannot_,
                         config.LibrarySource?.Path, @"--decoys-in-library"));
                     ctx.ExitCode = 1;
                     return false;

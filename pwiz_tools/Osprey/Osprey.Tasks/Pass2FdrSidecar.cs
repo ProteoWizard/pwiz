@@ -1626,10 +1626,9 @@ namespace pwiz.Osprey.Tasks
             // documents. It means the standing sidecar is missing or from another analysis.
             if (nStandingMissing > 0)
             {
-                throw new InvalidOperationException(string.Format(
-                    @"{0:N0} precursor candidates have no experiment-level FDR record to carry " +
-                    @"into the second pass. The experiment-level FDR file beside the output " +
-                    @"library is missing or belongs to a different analysis.", nStandingMissing));
+                throw new InvalidOperationException(CountText.Format(nStandingMissing,
+                    OspreyTasksResources.Pass2FdrSidecar_WritePass2ExperimentSidecar_1_precursor_candidate_has_no_experiment_level_FDR_values_to_carry_int,
+                    OspreyTasksResources.Pass2FdrSidecar_WritePass2ExperimentSidecar__0__precursor_candidates_have_no_experiment_level_FDR_values_to_carry_));
             }
 
             // Reported, not thrown on: nothing in this process reads the 2nd-pass sidecar's

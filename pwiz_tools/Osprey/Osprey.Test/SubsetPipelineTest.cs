@@ -472,7 +472,9 @@ namespace pwiz.Osprey.Test
             }
             Assert.AreNotEqual(Program.EXIT_CODE_SUCCESS, exitCode, output);
             Assert.AreEqual(1, SplitLines(output).Count(CommandStatusWriter.IsErrorLine), output);
-            StringAssert.Contains(output, singleBlib);
+            StringAssert.Contains(output, string.Format(
+                OspreyTasksResources.PerFileScoringTask_LoadLibraryAndDecoys_The_library__0__has_no_b_or_y_fragment_ion_annotations__so_Osprey_cannot_,
+                singleBlib, OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY.ArgumentText));
             Assert.IsFalse(output.Contains(typeof(Exception).Namespace + @"."), output);
         }
 
