@@ -1,19 +1,18 @@
 # Targeted Method Editing, driven through the Skyline MCP
 
 Every step of the **Targeted Method Editing** tutorial (`Tutorials/MethodEdit/en/index.html`), with the MCP
-calls that performed it and a screenshot of the result. Driven live on 2026-09-24 against the Release x64
-build of branch `Skyline/work/20260921_typing_in_sequence_tree` at commit `3bf5a5bb9e`, from a blank document
-through to the exported SCIEX transition lists.
+calls that performed it and a screenshot of the result. Driven live on 2026-09-27 against the Release x64
+build of branch `Skyline/work/20260921_typing_in_sequence_tree` at commit `b5ae10c784`, from the Start Page
+through to the exported SCIEX transition lists. Where the tutorial says to press a key (Ctrl-V, Ctrl-Z, Ctrl-F,
+Delete, Enter, the down arrow) that is what was done.
 
-- **Data:** a fresh extraction of `MethodEdit.zip` to `D:\Downloads\Tutorials\MethodEdit_20260924b\MethodEdit`
+- **Data:** a fresh extraction of `MethodEdit.zip` to `E:\Users\nicksh\SkylineDownloadPath2\Tutorials\MethodEdit_20260927\MethodEdit`
 - **Outcome:** 36 proteins, 71 peptides, 71 precursors, **355 transitions** (the tutorial's count), saved as
   `MethodEditTutorial.sky` and exported as `Yeast_list_0001..0005.csv` (75 + 75 + 75 + 75 + 55 = 355 rows).
   Every intermediate count the tutorial implies matched.
 - **Screenshots:** `images/s-NN.png` correspond to the tutorial's own `s-NN.png`; `images/NN-*.png` are
   extra captures of steps the tutorial describes but does not picture. The main window was sized to the
-  tutorial test's 1035 x 511 and its panes arranged with the test's own window layouts, so s-04, s-05 and s-11
-  come out at the tutorial's size, layout and content (0.7% of s-04's pixels and 2.8% of s-11's differ from
-  the tutorial's images).
+  tutorial test's 1035 x 511 and its panes arranged with the test's own window layouts.
 
 ## How to read the calls
 
@@ -21,22 +20,28 @@ Calls are written `tool(arg=value)` with the `skyline_` prefix dropped. A few co
 
 - **A verb that opens a dialog says it "did not complete" and names the form it left open.** That is how a
   dialog's id is discovered, not an error.
+- **A key is pressed the way the keyboard presses it** (`send_key_stroke`): the control's pre-processing
+  (PreviewKeyDown, the window's shortcuts, dialog keys), then the key-down (forms that preview keys, KeyDown
+  handlers, the control's own behavior), then the character it types, with the modifiers held for the
+  duration. With an empty `controlId` the key goes to the form's focused control, so Ctrl-V, Ctrl-Z and
+  Ctrl-F on the main window work as the menu shortcuts they are, and Enter on a pick-list reaches its list.
+- **While a label in the Targets tree is being edited, keys go to its edit box** and its completion pop-up:
+  Down and Up move through the pop-up, Enter accepts, Escape cancels.
 - **A control with no visible label is addressed by its type** (`TabControl`, `SequenceTree`,
-  `CheckedListBox`, `ListView`, `TextBox`); a labelled one by its label. `get_controls(formId)` lists both.
+  `CheckedListBox`, `TextBox`); a labelled one by its label, a grid included. `get_controls(formId)` lists both.
 - **A native file dialog takes the whole path as its value** (`controlId` ignored) and is committed with
   `dismiss_with_accept_button`.
 - **Copying a file in Notepad** is done by putting the file on the real clipboard
-  (`Get-Content -Raw <file> | Set-Clipboard`), then using Skyline's own paste, just as a reader does.
-- **The keyboard works on the Targets tree as it does for a reader.** Arrows move the selection (Left and
-  Right collapse and expand), Ctrl+Home and Ctrl+End jump to the ends, Space opens the pick-list, and while
-  a label is being edited the keys go to the edit box and its completion pop-up.
-- **Anything asynchronous is polled.** The completion pop-up, a tooltip and a background settings change
-  all take effect a moment after the call returns; the next read (`get_open_forms`,
-  `get_document_status`) is how the caller finds out. That is deliberate: a reader has to watch for the
-  same things.
-- **Screen capture needs Skyline in front.** Windows lets a background program take the foreground only
-  when the user has been idle for its foreground-lock timeout (200 s here); otherwise the capture redacts
-  whatever covers Skyline in cyan. This run was made with nothing over Skyline.
+  (`Get-Content -Raw <file> | Set-Clipboard`), then pressing Ctrl-V in Skyline, just as a reader does.
+- **Anything asynchronous is polled.** The completion pop-up, a node tip, a settings change applied in the
+  background and a newly shown spectrum all appear a moment after the call returns; the next read
+  (`get_open_forms`, `get_document_status`, a second capture) is how the caller finds out.
+- **Captures move the focus.** A form capture brings that window to the front. While a label is being
+  edited, capturing the completion pop-up gives its list the focus (a list with no focused row then focuses
+  row 0, so a bare Enter picks it and Down skips it), and capturing the main window after that takes the
+  focus from the edit box, which closes the pop-up and commits the typed text. So: press the tutorial's keys
+  first, capture the main window before the pop-up, and never capture the main window after the pop-up
+  while the edit is still open (see Gaps).
 
 ## Window sizes and layouts
 
@@ -47,32 +52,40 @@ Calls are written `tool(arg=value)` with the `skyline_` prefix dropped. A few co
 | s-04 | `SkylineWindow.Size = 1035 x 511` | `resize_window(formId="SkylineWindow:Skyline", width=1035, height=511)` |
 | s-04 | `RestoreViewOnScreen(07)` | File > Import > Window Layout, `TestTutorial\MethodEditViews.data\p07.view` |
 | s-12 | Insert Peptides `Height = 437` | `resize_window(formId="PasteDlg:Insert", width=821, height=437)` |
-| s-15 | Unique Peptides `SplitHeight = 58`, `Height = 292` | Not reproduced (see below) |
+| s-15 | Unique Peptides `SplitHeight = 58`, `Height = 292` | `set_form_value(controlId="SplitContainer", value="100")`, `resize_window(..., 719, 335)` |
 | s-18 | `RestoreViewOnScreen(21)` | File > Import > Window Layout, `p21.view` |
 
-`resize_window` takes the outer size, border included; a capture is 14 px narrower and 7 px shorter than
-that. The width passed for a dialog is its current width, read off a capture, because the test changes only
-the height. The two `.view` files come with the test, not with `MethodEdit.zip`, so a reader does not have
-them; they set the docked panes' widths and which tree nodes are expanded.
+`resize_window` takes the outer size, border included. The Unique Peptides column headers now carry
+accession, preferred name and gene (four lines each) where the tutorial's carry only the gene, so the
+test's splitter position of 58 leaves no room for the peptide row; 100 does, with the dialog made 43 px taller
+to match. The `.view` files come with the test, not with `MethodEdit.zip`, so a reader does not have them.
 
-## What did not work, and what stood in for it
+## Gaps
 
 | Tutorial step | What happened | Stand-in used here |
 |---|---|---|
-| Switch to the Proteomics interface | Works, but the main window's three tool strips have no labels, and `type="ToolStrip"` matches the menu bar first | `path` with `"index": 2` |
-| View > Libraries > Ion Types > B (s-05) | Worked in this run only because the same Skyline process had earlier opened a document whose ion types include b; in a fresh Skyline the submenu is empty until the ion types change (#4671 item 3) | None needed here |
-| Graph right-click menu | "msGraphExtension has no context menu" | Not needed |
-| Address the Build Library grid by its label "Input Files" | "No control matching 'Input Files'" although `get_controls` prints that label (the error also names `set_grid_text` for a `get_grid_text` call) | `type="BuildLibraryGridView"`; cell locator `[2,0]` for Score Threshold |
-| "Peptides" count box beside Limit peptides per protein | The trailing label is not the box's label on this build | `controlId="TextBox"` (the only one on the tab) |
-| Hide the Files pane before s-08 (test only) | Not a tutorial step | The Targets pane is captured on its own |
-| Resize the Insert grid's columns by dragging header dividers (s-10) | No verb | None; s-10 at default widths |
-| Unique Peptides splitter (s-15) | No verb for a splitter; at the test's 292 px height without it, the protein details and the OK/Cancel buttons are cut off | The dialog kept at its own height |
-| Delete key on the Targets tree | No effect: only the arrow keys reach the tree's own key handling | `click_main_menu_item("Edit > Delete")` |
-| s-16: "Press the Enter key" to accept YBL087C | Enter with no row chosen accepts the **typed** text (an empty list named `ybl087`, seen in the first run) | `Down` then `Enter`. The tutorial test chooses row 0 itself before its screenshot |
+| "Peptides" count beside Limit peptides per protein | The box's only label follows it ("[3] Peptides"); a field is labelled by the label before it, so it has none | `controlId="TextBox"` (the only one on the tab) |
+| Resize the Insert grid's columns by dragging header dividers (s-10) | No verb for a column divider | None; s-10 at default widths |
 | Hover a node, click its drop-arrow | No hover-and-click verb | `Space` on the selected node opens the same pick-list |
-| The pick-list funnel | A toggle whose state persists between pick-lists and runs | Read the list with `get_options` before clicking it |
 | Drag and drop proteins | No drag verb for the tree | Skipped; the tutorial only asks the reader to try it |
+| Capturing the completion pop-up (s-16, s-17) | A capture brings the captured window to the front, so capturing the pop-up moves the focus into its list, and capturing the main window afterwards takes it from the label's edit box, which closes the pop-up and commits the typed text (it added an empty "eft2" list twice in this run, removed again) | Capture order: keys, then the main window, then the pop-up; commit the step before any further capture |
+| Switch to the Proteomics interface | Works, but the main window's three tool strips have no labels, and `type="ToolStrip"` matches the menu bar first | `path` with `"index": 2` |
+| File > Exit while a call is waiting | The MCP call reports a raw "input does not contain any JSON tokens" error because Skyline closed the connection | None needed; a clearer "Skyline closed" message would help |
 | File Explorer and spreadsheet views of the output | Outside Skyline | Row counts and first lines read from the files |
+
+### Fixed during this work
+
+The first run (2026-09-24) needed stand-ins for these; all work now:
+
+| Tutorial step | What happened then | Fix |
+|---|---|---|
+| View > Libraries > Ion Types > B (s-05) | Worked only because the Skyline process had earlier opened a document with b ions; empty in a fresh Skyline (#4671 item 3) | The submenu follows the current document |
+| Delete key on the Targets tree | No effect | Keys go through the window's shortcuts (Edit > Delete) |
+| s-16: "Press the Enter key" to accept YBL087C | A bare Enter kept the typed text | Keys arrive as real key messages; the pop-up takes Enter |
+| Unique Peptides splitter (s-15) | No verb for a splitter | `SplitContainer` takes its position as a value |
+| Address the Build Library grid by its label "Input Files" | "No control matching" | A grid matches the label before it as well as its name |
+| Space on a protein to open its pick-list | With real key messages, Space's character started editing the protein's name, which took the focus and closed the pick-list. **A Skyline bug**, since 2010, that a keyboard user hits too | Space that opens a pick-list is suppressed |
+| Enter in the pick-list's Find box | Handled in `PreviewKeyDown`, which the connector's key path skipped | The key path uses `PreProcessControlMessage` |
 
 ---
 
@@ -81,16 +94,6 @@ them; they set the docked panes' widths and which tree nodes are expanded.
 ```
 get_form_image(formId="StartPage:Start Page")
 click_form_button(formId="StartPage:Start Page", button="Blank Document")
-```
-
-![Start page](images/00-start-page.png)
-
-The first `get_form_image` of a session opens a screen-capture consent dialog in Skyline, which a person
-has to answer once. Libraries and background proteomes from an earlier run stay in Skyline's lists
-(Settings > Default resets the document, not the lists), so they were removed first through each list's
-**Edit list** dialog (select, Remove, OK); that is preparation, not a tutorial step.
-
-```
 click_main_menu_item(menuPath="Settings > Default")
   -> did not complete; left 'MultiButtonMsgDlg:Skyline' open ("save your current settings?")
 dismiss_with_button(formId="MultiButtonMsgDlg:Skyline", button="No")
@@ -102,7 +105,11 @@ perform_action(form="SkylineWindow:Skyline", action="click",
 resize_window(formId="SkylineWindow:Skyline", width=1035, height=511)
 ```
 
-![Blank document at 1035 x 511](images/00-blank-document.png)
+![Start page](images/00-start-page.png)
+
+The first `get_form_image` of a session opens a screen-capture consent dialog in Skyline, which a person
+has to answer once. As preparation, the Peptide Settings Library and Background proteome lists were checked
+for entries left by an earlier run (there were none this time).
 
 ## 2. Creating a MS/MS spectral library
 
@@ -126,8 +133,8 @@ dismiss_with_accept_button(formId="Dialog:Add Input Files")
 set_form_value(formId="BuildLibraryDlg:Build Library", controlId="[2,0]", value="0.95")
 ```
 
-"In the Score Threshold field, enter 0.95" is a cell of the input-file grid, set by column index because
-the grid cannot be named by its label (see the table above). The default is already 0.95.
+"In the Score Threshold field, enter 0.95" is a cell of the input-file grid (the default is already 0.95).
+The grid can now also be named: `perform_action(..., action="get_grid_text", label="Input Files")`.
 
 ![Build Library input files](images/02-build-library-input-files.png)
 
@@ -156,7 +163,7 @@ dismiss_with_accept_button(formId="Dialog:Add FASTA File")
   -> did not complete; left 'MessageDlg:Skyline' open, quoting its text
 ```
 
-The accept reports the message box it raised, with its text. The tutorial does not mention this box.
+The tutorial does not mention this message box:
 
 ![61 repeated sequences](images/03-repeated-sequences.png)
 
@@ -182,12 +189,14 @@ dismiss_with_accept_button(formId="PeptideSettingsUI:Peptide Settings")
 
 ## 4. Pasting FASTA sequences
 
+"On the Edit menu, click Paste (ctrl-V)":
+
 ```powershell
 Get-Content -Raw '...\FASTA\Fasta.txt' | Set-Clipboard
 ```
 
 ```
-click_main_menu_item(menuPath="Edit > Paste")
+send_key_stroke(formId="SkylineWindow:Skyline", controlId="", keyStroke="Ctrl+V")
   -> did not complete; left 'EmptyProteinsDlg:Skyline' open
 ```
 
@@ -205,17 +214,19 @@ get_selection()         -> /Insert   (the blank element at the end)
 Ctrl+Home first (the tree's own shortcut for the first node), then Down:
 
 ```
-send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Ctrl+Home")   -> YAL001C
-send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Down")        # x4
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Ctrl+Home")
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Down")   # x4
 get_selection()   -> Molecule:/YAL005C/VDIIANDQGNR
 click_main_menu_item(menuPath="File > Import > Window Layout")   -> 'Dialog:Import Window Layout'
 set_form_value(formId="Dialog:Import Window Layout", controlId="",
                value="\"...\pwiz_tools\Skyline\TestTutorial\MethodEditViews.data\p07.view\"")
 dismiss_with_accept_button(formId="Dialog:Import Window Layout")
+get_graph_image(formId="GraphSpectrum:Library Match")   # waited for the spectrum to load
+get_form_image(formId="SkylineWindow:Skyline")
 ```
 
 **s-04**: the tutorial's size, panes, tree and spectrum, down to the status bar
-`4/35 prot  1/25 pep  1/25 prec  1/75 tran`; 0.7% of the pixels differ from the tutorial's image.
+`4/35 prot  1/25 pep  1/25 prec  1/75 tran`. (The first capture caught the spectrum still loading.)
 
 ![s-04](images/s-04.png)
 
@@ -226,9 +237,10 @@ send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", key
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Down")    # y8
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Down")    # y7 (rank 1)
 get_selection()   -> Transition:/YAL005C/VDIIANDQGNR/light++/y7+
+get_form_image(formId="SkylineWindow:Skyline")   # twice: the first caught y7 before it turned red
 ```
 
-**s-05**: y7 (rank 1) in red, b-ions in purple.
+**s-05**: y7 (rank 1) in red, b-ions in purple, in a fresh Skyline.
 
 ![s-05](images/s-05.png)
 
@@ -287,7 +299,7 @@ perform_action(form="PeptideSettingsUI:Peptide Settings", action="check_item", l
 
 ```
 dismiss_with_accept_button(formId="PeptideSettingsUI:Peptide Settings")
-get_document_status()   -> 35 / 182 / 219 / 1058
+get_document_status()   -> 35 / 28 / 31 / 155 (still applying), then 35 / 182 / 219 / 1058
 ```
 
 ## 7. Limiting peptides per protein
@@ -297,7 +309,7 @@ click_main_menu_item(menuPath="Settings > Peptide Settings")
 perform_action(form="PeptideSettingsUI:Peptide Settings", action="uncheck_item", label="Libraries", value="Yeast (Atlas)")
 set_form_value(formId=..., controlId="Rank peptides by", value="Expect")
 set_form_value(formId=..., controlId="Limit peptides per protein", value="true")
-set_form_value(formId=..., controlId="TextBox", value="3")      # "Peptides" is not its label on this build
+set_form_value(formId=..., controlId="TextBox", value="3")      # the "Peptides" box (see Gaps)
 ```
 
 ![Limit peptides per protein](images/05-limit-peptides-per-protein.png)
@@ -305,11 +317,8 @@ set_form_value(formId=..., controlId="TextBox", value="3")      # "Peptides" is 
 ```
 dismiss_with_accept_button(formId="PeptideSettingsUI:Peptide Settings")
 click_main_menu_item(menuPath="Refine > Remove Empty Proteins")
-get_document_status()   -> 19 / 47 / 47 / 223
+get_document_status()   -> 19 / 182 / ... (still applying), then 19 / 47 / 47 / 223
 ```
-
-A settings change finishes in the background, so a status read straight after it can still show the old
-counts; read again.
 
 ## 8. Inserting a protein list
 
@@ -323,8 +332,7 @@ click_main_menu_item(menuPath="Edit > Insert > Proteins")   -> 'PasteDlg:Insert'
 send_key_stroke(formId="PasteDlg:Insert", controlId="DataGridViewEx", keyStroke="Ctrl+V")
 ```
 
-A real `Ctrl+V` matters: the grid resolves each ID against the background proteome in its own paste
-handler.
+A real `Ctrl+V` matters: the grid resolves each ID against the background proteome in its own paste handler.
 
 **s-10**: the Accession, Preferred Name, Gene and Species columns, which the tutorial says will be empty, are
 now filled; the columns are at their default widths.
@@ -345,31 +353,34 @@ Get-Content -Raw '...\FASTA\Peptide List.txt' | Set-Clipboard
 
 ```
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Ctrl+Home")   # first protein
-click_main_menu_item(menuPath="Edit > Paste")
+send_key_stroke(formId="SkylineWindow:Skyline", controlId="", keyStroke="Ctrl+V")
 get_selection()   -> MoleculeGroup:/peptides1
 send_text(formId="SequenceTreeForm:Targets", controlId="SequenceTree", text="Primary Peptides")
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Enter")
 get_selection()   -> MoleculeGroup:/Primary Peptides
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Down")   # x6
 get_selection()   -> Molecule:/Primary Peptides/TLTAQSMQNSTQSAPNK
+get_form_image(formId="SkylineWindow:Skyline")   # twice: the spectrum lags the selection
 ```
 
-"Type 'Primary Peptides' and press Enter" is typed into the tree, as a reader types it; the peptides are
-then reviewed with the down arrow, stopping on the one the tutorial pictures.
+The main window's id carries its title: while the document has never been saved it is `SkylineWindow:Skyline`
+with no dirty marker.
 
 **s-11**: `1/25 prot  6/70 pep  6/70 prec  26/338 tran`, matching the tutorial's.
 
 ![s-11](images/s-11.png)
 
+"First click the Undo button in the toolbar twice (ctrl-Z, ctrl-Z)":
+
 ```
-click_main_menu_item(menuPath="Edit > Undo")    # twice
-click_main_menu_item(menuPath="Edit > Undo")
+send_key_stroke(formId="SkylineWindow:Skyline", controlId="", keyStroke="Ctrl+Z")   # twice
+get_document_status()   -> 24 / 58 / 58 / 278
 click_main_menu_item(menuPath="Edit > Insert > Peptides")
 send_key_stroke(formId="PasteDlg:Insert", controlId="DataGridViewEx", keyStroke="Ctrl+V")
-resize_window(formId="PasteDlg:Insert", width=821, height=437)   -> 821 x 437
+resize_window(formId="PasteDlg:Insert", width=821, height=437)
 ```
 
-**s-12**: Protein Name and Protein Description resolved for all 12 peptides, at the tutorial's 807 x 430.
+**s-12**: Protein Name and Protein Description resolved for all 12 peptides.
 
 ![s-12](images/s-12.png)
 
@@ -380,8 +391,10 @@ get_document_status()   -> 35 / 70 / 70 / 338
 
 ## 10. Simple refinement
 
+"On the Edit menu, click Find (ctrl-F)":
+
 ```
-click_main_menu_item(menuPath="Edit > Find")    # modeless: the verb completes and the form stays open
+send_key_stroke(formId="SkylineWindow:Skyline", controlId="", keyStroke="Ctrl+F")   -> 'FindNodeDlg:Find' (modeless)
 set_form_value(formId="FindNodeDlg:Find", controlId="Find what", value="IPEE")
 click_form_button(formId="FindNodeDlg:Find", button="Find Next")
 dismiss_with_cancel_button(formId="FindNodeDlg:Find")
@@ -389,7 +402,7 @@ get_selection()   -> Molecule:/YAL034W-A/IPEEYLDANVFR
 get_graph_image(formId="GraphSpectrum:Library Match")
 ```
 
-**s-13**: one matching y-ion and one matching b-ion, rendered straight from the graph.
+**s-13**: one matching y-ion and one matching b-ion.
 
 ![s-13](images/s-13.png)
 
@@ -403,6 +416,7 @@ set_form_value(formId="RefineDlg:Refine", controlId="Min transitions per precurs
 ```
 dismiss_with_accept_button(formId="RefineDlg:Refine")
 get_document_status()   -> 35 / 64 / 64 / 320
+get_form_image(formId="SkylineWindow:Skyline")
 ```
 
 **s-14**: 70 peptides reduced to 64, in the status bar.
@@ -417,18 +431,19 @@ send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", key
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Left")       # up to the protein
 get_selection()   -> MoleculeGroup:/YDL245C
 click_main_menu_item(menuPath="Edit > Unique Peptides")   -> 'UniquePeptidesDlg:Unique Peptides'
+set_form_value(formId="UniquePeptidesDlg:Unique Peptides", controlId="SplitContainer", value="100")
+resize_window(formId="UniquePeptidesDlg:Unique Peptides", width=719, height=335)
 ```
 
-**s-15**: SASWVPPSR is shared with five other hexose transporters. The test shrinks this dialog to 292 px
-after dragging its splitter up; without a splitter verb, the height alone cut off the details and the
-buttons, so the dialog was put back to its own size (`resize_window(..., width=719, height=562)`).
+**s-15**: SASWVPPSR is shared with five other hexose transporters (see "Window sizes" for the splitter).
 
 ![s-15](images/s-15.png)
 
+"Close the Unique Peptides form, and press the Delete key":
+
 ```
 dismiss_with_cancel_button(formId="UniquePeptidesDlg:Unique Peptides")
-send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Delete")   # no effect
-click_main_menu_item(menuPath="Edit > Delete")
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Delete")
 get_document_status()   -> 34 / 63 / 63 / 315
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Up")
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Left")
@@ -446,12 +461,12 @@ dismiss_with_cancel_button(formId="UniquePeptidesDlg:Unique Peptides")
 
 ### Protein name
 
+"Type ybl087 ... Press the Enter key to add the protein to your document":
+
 ```
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Ctrl+End")
 send_text(formId="SequenceTreeForm:Targets", controlId="SequenceTree", text="ybl087")
-get_open_forms()   -> no pop-up yet
-get_open_forms()   -> StatementCompletionForm:StatementCompletionForm
-send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Down")
+get_open_forms()   -> no pop-up yet, then StatementCompletionForm:StatementCompletionForm
 get_form_image(formId="SkylineWindow:Skyline")
 get_form_image(formId="StatementCompletionForm:StatementCompletionForm")
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Enter")
@@ -459,8 +474,8 @@ get_document_status()   -> 35 / 66 / 66 / 330
 ```
 
 The matches are looked up in the background, so the pop-up shows up on a later read, not by the time
-`send_text` returns. While the label is being edited, Down goes to the pop-up and Enter accepts the chosen
-row. A bare Enter, as the tutorial says, accepts the text as typed instead.
+`send_text` returns. Here the pop-up capture had already focused its first row, so Enter took YBL087C, the
+protein the tutorial means (see "Captures move the focus").
 
 **s-16**: the main window clips the pop-up at its right edge; the pop-up captured on its own is complete.
 
@@ -470,12 +485,23 @@ row. A bare Enter, as the tutorial says, accepts the text as typed instead.
 
 ### Protein description
 
+"Type eft2 ... Press the down-arrow key once to select the first protein listed ... Press the Enter key":
+
 ```
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Ctrl+End")
 send_text(formId="SequenceTreeForm:Targets", controlId="SequenceTree", text="eft2")
-get_open_forms()   -> no pop-up yet
-get_open_forms()   -> StatementCompletionForm:StatementCompletionForm
-send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Down")
+get_open_forms()   -> no pop-up yet, then StatementCompletionForm:StatementCompletionForm
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Down")   # YDR385W
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Enter")
+get_document_status()   -> 36 / 69 / 69 / 345
 ```
+
+Without a capture first, Down selects the first row, as the tutorial says. Two earlier attempts, with the
+pop-up captured before Down, went wrong (the capture had focused row 0, so Down chose the second; a
+main-window capture then closed the pop-up and committed "eft2" as an empty list, removed with
+`set_selection("MoleculeGroup:/eft2")` and Delete). The s-17 pictures were taken afterwards, in the right
+order (keys, main window, pop-up) on a repeat of the step that was then cancelled with Escape, so
+YDR385W already shows in the tree above the pop-up.
 
 **s-17**
 
@@ -483,39 +509,32 @@ send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", key
 
 ![s-17 pop-up](images/s-17-popup.png)
 
-```
-send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Enter")
-get_document_status()   -> 36 / 69 / 69 / 345
-```
-
 ### Peptide sequence
 
-The tutorial presses Caps-Lock; `send_text` types the characters as given, so the text is written in
-upper case.
+The tutorial presses Caps-Lock; `send_text` types the characters as given, so the text is written in upper
+case.
 
 ```
+send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Ctrl+End")
 send_text(formId="SequenceTreeForm:Targets", controlId="SequenceTree", text="IQGP")
-get_open_forms()   -> no pop-up yet
-get_open_forms()   -> StatementCompletionForm:StatementCompletionForm
+get_open_forms()   -> no pop-up yet, then StatementCompletionForm:StatementCompletionForm
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Down")
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Enter")
 get_document_status()   -> 36 / 70 / 70 / 350
-click_main_menu_item(menuPath="File > Import > Window Layout")
-set_form_value(formId="Dialog:Import Window Layout", controlId="",
-               value="\"...\pwiz_tools\Skyline\TestTutorial\MethodEditViews.data\p21.view\"")
-dismiss_with_accept_button(formId="Dialog:Import Window Layout")
+click_main_menu_item(menuPath="File > Import > Window Layout")   # p21.view
 get_form_image(formId="SequenceTreeForm:Targets")
 ```
 
-**s-18**: IQGPNYVPGK went into the existing YDR385W, as the tutorial says. (The tutorial's image is a tighter
-crop of the same pane.)
+**s-18**: IQGPNYVPGK went into the existing YDR385W, as the tutorial says.
 
 ![s-18](images/s-18.png)
 
 ## 13. Pop-up pick-lists
 
 The tutorial hovers a node until a drop-arrow appears and clicks it. `Space` on the selected node opens the
-same pick-list.
+same pick-list. (At this point Skyline was restarted for the Space fix: the document was saved with Ctrl-S
+as `MethodEditTutorial.sky` and reopened with `--opendoc`; a Skyline that was killed rather than closed has
+not saved its library list, so reopening asked for Yeast (GPM) once, answered with Browse.)
 
 ```
 perform_action(form="SequenceTreeForm:Targets", action="select_item", type="SequenceTree", value="YBL087C")
@@ -528,16 +547,17 @@ perform_action(form="PopupPickList:PopupPickList", action="click",
 perform_action(form=..., action="check_item", type="CheckedListBox", value="K.VMPAIVVR.Q [73, 80] (rank 6)")
 ```
 
-The funnel is a toggle whose state carries over from one pick-list to the next. The first attempt clicked
-it without looking, found the list filtered afterwards, and committed nothing; reading the list first with
-`get_options` tells which way a click will go.
+The funnel is a toggle whose state carries over from one pick-list of the same kind to the next; reading
+the list first with `get_options` tells which way a click will go.
 
 **s-19**
 
 ![s-19](images/s-19.png)
 
+"Press the Enter key or click the button with the green check":
+
 ```
-perform_action(form="PopupPickList:PopupPickList", action="click", path=<ToolStrip > "OK">)   # green check
+send_key_stroke(formId="PopupPickList:PopupPickList", controlId="", keyStroke="Enter")
 get_document_status()   -> 36 / 71 / 71 / 355
 ```
 
@@ -549,10 +569,10 @@ send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", key
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Down")    # 672.6716+++
 send_key_stroke(formId="SequenceTreeForm:Targets", controlId="SequenceTree", keyStroke="Space")
 perform_action(form="PopupPickList:PopupPickList", action="get_options", type="CheckedListBox")
-  -> already unfiltered (the funnel state carried over), so no funnel click
+  -> filtered (5 ions), so the funnel is clicked
 perform_action(form=..., action="uncheck_item", type="CheckedListBox", value="N [y9] - 964.3901+ (rank 4)")
 perform_action(form=..., action="uncheck_item", type="CheckedListBox", value="D [y6] - 619.2794+ (rank 5)")
-perform_action(form=..., action="click", path=<ToolStrip > "Find (Ctrl + F)">)     # binoculars
+send_key_stroke(formId="PopupPickList:PopupPickList", controlId="", keyStroke="Ctrl+F")   # the binoculars
 send_text(formId="PopupPickList:PopupPickList", controlId="TextBox", text="b ++")
 perform_action(form=..., action="check_item", type="CheckedListBox", value="L [b5] - 242.6601++")
 perform_action(form=..., action="check_item", type="CheckedListBox", value="V [b7] - 340.7207++")
@@ -563,23 +583,24 @@ perform_action(form=..., action="check_item", type="CheckedListBox", value="V [b
 ![s-20](images/s-20.png)
 
 ```
-perform_action(form="PopupPickList:PopupPickList", action="click", path=<ToolStrip > "OK">)
+perform_action(form="PopupPickList:PopupPickList", action="click", path=<ToolStrip > "OK">)   # green check
 get_locations(level="transition", rootLocator="Precursor:/YBL087C/ISLGLPVGAIMNC[+57.021464]ADNSGAR/light+++")
   -> b5+, b9+, b10+, b5++, b7++
-get_document_status()   -> 36 / 71 / 71 / 355
 ```
+
+After the search a reader clicks the items, which moves the focus to the list, so their Enter reaches the
+list; `check_item` leaves the focus in the search box, where Enter only finishes the search. Pressing Enter
+twice (search, then list) works since the fix; this run used the green check.
 
 ## 14. Bigger picture: node tips
 
-`show_tooltip` rests the mouse on the selected node, as a reader hovering does. Skyline comes to the front
-and the tree takes the focus, which the tip needs. The tip is a window of its own, listed as `NodeTip:` about
-half a second later, and captured whole.
+`show_tooltip` rests the mouse on the selected node, as a reader hovering does. The tip is a window of its
+own, listed as `NodeTip:` about half a second later, and captured whole.
 
 ```
 perform_action(form="SequenceTreeForm:Targets", action="select_item", type="SequenceTree", value="YBL087C")
 perform_action(form="SequenceTreeForm:Targets", action="show_tooltip", type="SequenceTree")
-get_open_forms()   -> no tip yet
-get_open_forms()   -> NodeTip:
+get_open_forms()   -> no tip yet (twice), then NodeTip:
 get_form_image(formId="NodeTip:")
 ```
 
@@ -590,8 +611,7 @@ get_form_image(formId="NodeTip:")
 ```
 set_selection(elementLocator="Precursor:/YBL087C/ISLGLPVGAIMNC[+57.021464]ADNSGAR/light+++")
 perform_action(form="SequenceTreeForm:Targets", action="show_tooltip", type="SequenceTree")
-get_open_forms()   -> no tip yet
-get_open_forms()   -> NodeTip:
+get_open_forms()   -> NodeTip: after a few reads
 get_form_image(formId="NodeTip:")
 ```
 
@@ -618,10 +638,8 @@ set_form_value(formId=..., controlId="Declustering potential", value="SCIEX")
 perform_action(form=..., action="select_tab", type="TabControl", value="Instrument")
 set_form_value(formId=..., controlId="Max m/z", value="1800")
 dismiss_with_accept_button(formId="TransitionSettingsUI:Transition Settings")
-click_main_menu_item(menuPath="File > Save")   -> 'Dialog:Save As'
-set_form_value(formId="Dialog:Save As", controlId="", value="...\MethodEdit\MethodEditTutorial.sky")
-dismiss_with_accept_button(formId="Dialog:Save As")
-get_document_status()   -> 36 / 71 / 71 / 355, no unsaved changes
+send_key_stroke(formId="SkylineWindow:Skyline - MethodEditTutorial.sky *", controlId="", keyStroke="Ctrl+S")
+get_document_status()   -> 36 / 71 / 71 / 355, no unsaved changes (saved as MethodEditTutorial.sky earlier)
 click_main_menu_item(menuPath="File > Export > Transition List")   -> 'ExportMethodDlg:Export Transition List'
 click_form_button(formId="ExportMethodDlg:Export Transition List", button="Multiple methods")
 set_form_value(formId=..., controlId="Ignore proteins", value="true")
