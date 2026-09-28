@@ -110,8 +110,14 @@ scored best, and one RT row per peptide form, the one with the lowest q.
     fragment do: those are unrelated neighbors.
   - For 2+ ions it holds one 15-18 points more often than a band 1 Th away. Part of that is
     probably the ion itself, its centroid pulled up by the unresolved M+1 isotope 0.5 Th away.
-  - Masking these ions instead (variant B of the masking A/B search) made no difference beyond
-    fine-tune noise on Stellar: experiment-level IDs 0.12% apart, within the seed-to-seed spread.
+  - Masking these ions instead (variant B of a masking A/B search, 2026-09-28) changes the library
+    but not the IDs. B writes more fragments per precursor: +27% 2+ fragments on Stellar, and on
+    Astral 14.84 against 13.78, Carafe's 14.86. Experiment-level precursors at 1% FDR, A minus B,
+    with 95% intervals over fine-tune seeds, were:
+    - Stellar, 3 seeds each: -0.18% [-1.22%, +0.87%].
+    - Astral, 2 and 3 seeds: -0.39% [-3.05%, +2.26%].
+
+    Entrapment FDP stayed at 0.41-0.68% in every arm.
 - **XICs.** Osprey's XICs are unsmoothed and closest-peak, over Osprey's own boundaries. Carafe
   smooths with 3 points over boundaries it refines itself. Carafe's smoothing lifts the
   correlation of weak ions, so where Carafe keeps an ion that CarafeSharp masks, the ion is
