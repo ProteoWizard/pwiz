@@ -3874,8 +3874,9 @@ namespace pwiz.Osprey.Test
             };
             int raised = accumulator.ApplyRunQFloors(id => floors[id]);
 
-            // 1 raises both, 3 raises one. Nothing else moves.
-            Assert.AreEqual(3, raised);
+            // 1 raises both, 3 raises one. Nothing else moves. The count is of RECORDS, so entry
+            // 1 counts once although both of its q-values moved.
+            Assert.AreEqual(2, raised);
             AssertBitEqual(0.010, accumulator.Records[1].ExperimentPrecursorQvalue);
             AssertBitEqual(0.020, accumulator.Records[1].ExperimentPeptideQvalue);
             // A floor EQUAL to the value is not a raise, and one below it is not a ceiling.

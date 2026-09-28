@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
@@ -66,6 +67,36 @@ namespace pwiz.Osprey.Test
         public void RestoreExperimentAgg()
         {
             OspreyEnvironment.MeanBestN = _savedMeanBestN;
+        }
+
+        /// <summary>
+        /// The error-line and exit-code contract Osprey shares with Skyline's command line: the
+        /// detector recognizes "Error:" in every shipped language, at the start of a line or after
+        /// the --timestamp / --memstamp columns, and the exit code is reconciled with it in both
+        /// directions.
+        /// </summary>
+        [TestMethod]
+        public void TestErrorLinesAndExitCodeAgree()
+        {
+            foreach (var prefix in CommandStatusWriter.ERROR_PREFIXES)
+            {
+                Assert.IsTrue(CommandStatusWriter.IsErrorLine(prefix + " message"), prefix);
+                Assert.IsTrue(CommandStatusWriter.IsErrorLine("[2026/09/24 14:00:34]\t2498\t5895\t" + prefix + " message"),
+                    prefix + " after the stamp columns");
+                Assert.IsTrue(CommandStatusWriter.DefaultIsErrorMessage(prefix + " message"), prefix);
+            }
+            Assert.IsFalse(CommandStatusWriter.IsErrorLine("Warning: message"));
+            Assert.IsFalse(CommandStatusWriter.IsErrorLine("Reported Error: in mid-line prose"));
+            Assert.IsFalse(CommandStatusWriter.IsErrorLine(null));
+
+            Assert.AreEqual((Program.EXIT_CODE_SUCCESS, false, (string)null),
+                Program.GetExitAgreement(Program.EXIT_CODE_SUCCESS, false));
+            Assert.AreEqual((Program.EXIT_CODE_FAILURE_TO_START, false, (string)null),
+                Program.GetExitAgreement(Program.EXIT_CODE_FAILURE_TO_START, true));
+            Assert.AreEqual((Program.EXIT_CODE_RAN_WITH_ERRORS, false, "error-with-success"),
+                Program.GetExitAgreement(Program.EXIT_CODE_SUCCESS, true));
+            Assert.AreEqual((Program.EXIT_CODE_FAILURE_TO_START, true, "failure-without-error"),
+                Program.GetExitAgreement(Program.EXIT_CODE_FAILURE_TO_START, false));
         }
 
         /// <summary>

@@ -138,7 +138,7 @@ namespace pwiz.Osprey.IO
             // the console sat at 100% through the whole materialization pass. Constructed rather
             // than `using`d so the loop needs no re-indent and so an exception here does not print
             // a completed-looking 100% while unwinding.
-            var progress = new ProgressReporter(@"Building library entries", precursorMap.Count,
+            var progress = new ProgressReporter("Building library precursors", precursorMap.Count,
                     string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             long nBuilt = 0;
 

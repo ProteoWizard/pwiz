@@ -48,13 +48,45 @@ Every count gets a thousands separator (`{0:N0}`). Counts of five or more digits
 (1448698, 2110341) cannot be read for magnitude without one; at the 2026-09-09 review only
 3 of 582 call sites used it.
 
+A count states its denominator where the reader needs scale: "kept 996,439 of 1,448,698
+precursor candidates". Never print two counts that look like the same quantity on
+neighbouring lines.
+
+## Grammar
+
+No possessive on an inanimate noun; use the noun attributively or rephrase. "precursor
+candidate q-values", "the best charge state of the same peptide", "the inputs of this run",
+not "the peptide's best charge state" or "this run's inputs".
+
+## Outcomes, not mechanisms
+
+A noun swap does not fix a data-structure word. Say the outcome in the reader's terms:
+which candidates get new q-values, what was kept, what will be imputed. A line does not
+have to report an action; a plain outcome ("Unique library strings: 1,433,253 / 5,241,881
+total (72.7% reduced)") is often the clearer form, where "Interned library strings ...
+collapsed" named the code's operation. A warning keeps the one sentence the user needs and
+the remedy they can apply; the mechanism, issue numbers and measured costs go in a code
+comment beside the call.
+
+## Files written
+
+A line reporting a saved file names the file ("Saved the trained first-pass model to
+<path>"), and does not explain what the file enables later. When the same file is written
+once per input, name the first and count the rest.
+
+## Peaks, candidates, library
+
+- **Library precursors**: rows of the spectral library as loaded (targets).
+- **Precursor candidates**: targets + decoys searched ("Full library: N precursor candidates").
+- **Precursor candidate peaks**: one candidate's scored peak in one run. Per-run counts,
+  scored rows, training rows and blib retention times are peaks, never "entries".
+
 ## Enums
 
-Osprey has no enum display-string helper yet. When one is needed, adopt Skyline's pattern
-rather than inventing another: a `GetLocalizedString(this Enum)` extension over a
-`LOCALIZED_VALUES` array of resource strings (see `Skyline/Model/Export.cs` — nothing
-under `pwiz_tools/Osprey` implements it today), so the text can move to RESX and be translated after the
-first release without touching the call sites.
+Use Skyline's pattern: a `GetLocalizedString(this Enum)` extension over a
+`LOCALIZED_VALUES` array (see `Skyline/Model/Export.cs`), so the text can move to RESX
+without touching the call sites. `DecoyMethod`, `ResolutionMode`, `FdrMethod` and
+`LibraryFormat` have one; never print an enum's `ToString()` in user text.
 
 ## Tiers
 

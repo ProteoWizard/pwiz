@@ -4,6 +4,8 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>pwiz.Osprey</RootNamespace>
     <AssemblyName>Osprey</AssemblyName>
+    <!-- Declares longPathAware for native code in the process; see the file's comment. -->
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>

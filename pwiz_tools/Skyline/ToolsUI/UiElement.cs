@@ -2015,7 +2015,7 @@ namespace pwiz.Skyline.ToolsUI
         private List<UiElement> BuildChildren()
         {
             var children = new List<UiElement>();
-            if (_item is ToolStripControlHost host && host.Control != null)
+            if (_item is ToolStripControlHost host)
             {
                 var hosted = FormElement.ElementFor(host.Control);
                 if (hosted != null)

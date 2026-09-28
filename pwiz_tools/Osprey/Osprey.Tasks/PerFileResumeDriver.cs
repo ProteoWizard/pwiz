@@ -84,7 +84,7 @@ namespace pwiz.Osprey.Tasks
             catch (Exception ex)
             {
                 logWarning(string.Format(
-                    @"  Failed to write {0} sidecar for {1}: {2}",
+                    "  Failed to record that --task {0} completed {1}: {2}. A resume will redo this step.",
                     taskName, outputPath, ex.Message));
             }
         }

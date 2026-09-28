@@ -183,7 +183,7 @@ namespace pwiz.Osprey.Tasks
         ///   gc_heap_last_gc       - heap size, including fragmentation.
         ///   gc_fragmented_last_gc - free bytes stranded between live objects.
         /// </summary>
-        public static void LogMemoryStats(Action<string> log, string label)
+        public static void LogMemoryStats(IOspreyLog log, string label)
         {
             if (log == null)
                 return;
@@ -204,9 +204,8 @@ namespace pwiz.Osprey.Tasks
                 gcInfo.FragmentedBytes / gb);
 #endif
 
-            log(string.Format(CultureInfo.InvariantCulture,
-                "[MEM {0}] working_set={1:F2} GB (peak={2:F2} GB), managed_heap={3:F2} GB, peak_paged={4:F2} GB, gen2_count={5}, loh_count={6}{7}",
-                label,
+            log.LogInfo(LogTag.Mem(label), string.Format(CultureInfo.InvariantCulture,
+                "working_set={0:F2} GB (peak={1:F2} GB), managed_heap={2:F2} GB, peak_paged={3:F2} GB, gen2_count={4}, loh_count={5}{6}",
                 curWs / gb,
                 peakWs / gb,
                 managed / gb,
@@ -230,7 +229,7 @@ namespace pwiz.Osprey.Tasks
         /// <see cref="LogMemoryStats"/> guarded by <see cref="MemoryLoggingEnabled"/> so
         /// stage-boundary probes can stay in the pipeline at zero cost when disabled.
         /// </summary>
-        public static void LogMemoryStatsIfEnabled(Action<string> log, string label)
+        public static void LogMemoryStatsIfEnabled(IOspreyLog log, string label)
         {
             if (MemoryLoggingEnabled)
                 LogMemoryStats(log, label);
@@ -252,16 +251,16 @@ namespace pwiz.Osprey.Tasks
         /// capture is a no-op when no profiler is attached, so the batch path is
         /// unchanged.
         /// </summary>
-        public static void LogManagedHeapAfterGcIfEnabled(Action<string> log, string label, string detail)
+        public static void LogManagedHeapAfterGcIfEnabled(IOspreyLog log, string label, string detail)
         {
             if (!MemoryLoggingEnabled || log == null)
                 return;
             GC.Collect();
             GC.WaitForPendingFinalizers();
             GC.Collect();
-            log(string.Format(CultureInfo.InvariantCulture,
-                "[MEM {0}] managed_heap={1:F2} GB {2}",
-                label, GC.GetTotalMemory(false) / (1024.0 * 1024.0 * 1024.0), detail));
+            log.LogInfo(LogTag.Mem(label), string.Format(CultureInfo.InvariantCulture,
+                "managed_heap={0:F2} GB {1}",
+                GC.GetTotalMemory(false) / (1024.0 * 1024.0 * 1024.0), detail));
             CaptureRetentionSnapshot(label);
         }
     }

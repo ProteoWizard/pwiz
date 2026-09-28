@@ -121,10 +121,10 @@ namespace pwiz.Osprey.Tasks
             LibraryStringInterner interner;
             lock (_seedLock)
                 interner = _interner;
-            if (interner == null)
+            if (interner == null || !OspreyOutput.Verbose)
                 return;
             logInfo(string.Format(
-                "Sequence pool: {0} distinct seeded from the library, {1} sidecar lookup(s) missed it",
+                "Unique peptide sequences: {0:N0} from the library; {1:N0} read from intermediate files were not among them",
                 SeedCount, interner.FrozenMisses));
         }
 
@@ -691,7 +691,7 @@ namespace pwiz.Osprey.Tasks
             // reporter rather than leaving the heading as the last line in the log.
             using (var progress = label == null
                        ? null
-                       : new ProgressReporter(string.Format(@"{0} over {1} run(s)", label, FileCount),
+                       : new ProgressReporter(CountText.Format(FileCount, "{1} (1 file)", "{1} ({0:N0} files)", label),
                            FileCount, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 int done = 0;

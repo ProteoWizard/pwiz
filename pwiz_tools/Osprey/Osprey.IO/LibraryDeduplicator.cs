@@ -50,7 +50,7 @@ namespace pwiz.Osprey.IO
             // Silent between the parse and "Loaded N library entries" - a full group-by over
             // every entry (6.3M on the entrapment library). Not `using`d: no re-indent, and no
             // completed-looking 100% if this throws.
-            var progress = new ProgressReporter(@"Deduplicating library entries", entries.Count,
+            var progress = new ProgressReporter("Merging duplicate library precursors", entries.Count,
                     string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             long nGrouped = 0;
 

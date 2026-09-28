@@ -26,7 +26,7 @@ using System.Collections.Generic;
 namespace pwiz.Osprey.IO
 {
     /// <summary>
-    /// Optional knobs for <see cref="LibraryLoader.Load(pwiz.Osprey.Core.OspreyConfig,LibraryLoadOptions,System.Action{string},System.Action{string})"/>.
+    /// Optional knobs for <see cref="LibraryLoader.Load(pwiz.Osprey.Core.OspreyConfig,LibraryLoadOptions,pwiz.Osprey.Core.IOspreyLog,System.Action{string})"/>.
     /// A carrier so callers with different needs (full pipeline vs. an
     /// FDR-only worker) can shape the load without a growing parameter list.
     /// </summary>

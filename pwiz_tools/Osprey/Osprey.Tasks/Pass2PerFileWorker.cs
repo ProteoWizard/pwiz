@@ -351,19 +351,7 @@ namespace pwiz.Osprey.Tasks
             // the wrong tool to reach for in the one method whose entire purpose is to stop this
             // output varying between runs - even though equal file names make the tie moot here.
             unreadable = unreadable.OrderBy(s => s, StringComparer.Ordinal).ToList();
-            if (unreadable.Count > 0)
-            {
-                ctx.LogWarning(string.Format(
-                    "1st-pass Score/Pep/ExperimentAggregateScore could not be " +
-                    "restored for {0} file(s) (no readable 1st-pass sidecar): [{1}]. Peaks Stage 6 " +
-                    "changed in those files keep reset defaults, so their 2nd-pass sidecars are " +
-                    "wrong AND a Score of 0 enters the second-pass protein FDR null unfiltered. " +
-                    "Treat this run's protein-level numbers as unreliable.",
-                    unreadable.Count, string.Join(", ", unreadable)));
-            }
-            ctx.LogVerbose(string.Format(
-                "Restored 1st-pass Score/Pep/ExperimentAggregateScore onto {0} survivor(s) across {1} file(s).",
-                restored, filesRead));
+            Pass2FdrSidecar.Pass1ScalarSeeder.LogSeedSummary(ctx, unreadable, restored, filesRead);
         }
 
         public void Dispose()

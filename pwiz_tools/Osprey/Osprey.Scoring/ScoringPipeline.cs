@@ -47,12 +47,12 @@ namespace pwiz.Osprey.Scoring
     /// </summary>
     public class ScoringPipeline
     {
-        private readonly Action<string> _logInfo;
+        private readonly IOspreyLog _log;
         private readonly IScoringDiagnostics _diagnostics;   // nullable by contract; invoked null-conditionally
 
-        public ScoringPipeline(Action<string> logInfo, IScoringDiagnostics diagnostics)
+        public ScoringPipeline(IOspreyLog log, IScoringDiagnostics diagnostics)
         {
-            _logInfo = logInfo ?? (_ => { });
+            _log = log ?? OspreyLog.None;
             _diagnostics = diagnostics;
         }
 
@@ -65,6 +65,11 @@ namespace pwiz.Osprey.Scoring
         /// or streaming), already MS2-calibrated; <paramref name="ms2Calibration"/> is
         /// still consulted here for the calibrated fragment tolerance (the provider
         /// owns the per-spectrum m/z calibration).
+        ///
+        /// <para><paramref name="logSearchSettings"/> says whether this call reports the RT and
+        /// fragment tolerances under <c>--verbose</c>. A file re-scored in several passes shares
+        /// one calibration, so only its first pass reports them; otherwise the same three lines
+        /// repeat inside every file's block.</para>
         /// </summary>
         public List<FdrEntry> RunCoelutionScoring(
             List<LibraryEntry> fullLibrary,
@@ -75,8 +80,12 @@ namespace pwiz.Osprey.Scoring
             MzCalibrationResult ms2Calibration,
             MzCalibrationResult ms1Calibration,
             ScoringContext context,
-            string passLabel = null)
+            string passLabel = null,
+            bool logSearchSettings = true)
         {
+            // A labeled pass runs inside a per-file block that is indented under its heading.
+            string settingsIndent = passLabel == null ? string.Empty : @"  ";
+            bool logSettings = OspreyOutput.Verbose && logSearchSettings;
             var config = context.Config;
             var allEntries = new List<FdrEntry>();
             var scorer = context.Resolution.CreateScorer();
@@ -137,10 +146,13 @@ namespace pwiz.Osprey.Scoring
                     config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance,
                     config.RtCalibration.MinCalibrationPoints);
                 rtSigmaGlobal = Math.Max(robustSd * 5.0, 0.1);
-                if (OspreyOutput.Verbose) _logInfo(string.Format(
-                    "Coelution search RT tolerance: {0:F2} min (3*MAD*1.4826, MAD={1:F3}{2})",
-                    rtToleranceGlobal, mad,
-                    context.OriginalRtMad.HasValue ? " from .calibration.json" : " from cal stats"));
+                if (logSettings)
+                {
+                    _log.LogInfo(settingsIndent + string.Format(
+                        "Coelution search RT tolerance: {0:F2} min (3*MAD*1.4826, MAD={1:F3}{2})",
+                        rtToleranceGlobal, mad,
+                        context.OriginalRtMad.HasValue ? " from .calibration.json" : " from cal stats"));
+                }
             }
             else
             {
@@ -165,18 +177,24 @@ namespace pwiz.Osprey.Scoring
                     Unit = calUnit
                 };
                 string unitStr = calUnit == ToleranceUnit.Ppm ? "ppm" : "Th";
-                if (OspreyOutput.Verbose) _logInfo(string.Format(
-                    "Coelution search using calibrated fragment tolerance: {0:F4} {1}",
-                    calTol, unitStr));
+                if (logSettings)
+                {
+                    _log.LogInfo(settingsIndent + string.Format(
+                        "Coelution search using calibrated fragment tolerance: {0:F4} {1}",
+                        calTol, unitStr));
+                }
 
                 // Use calibrated tolerance for all downstream scoring. (The
                 // provider already applied the per-spectrum m/z calibration, so
                 // only this fragment-tolerance value is set here.)
                 config.FragmentTolerance = searchFragTol;
 
-                if (OspreyOutput.Verbose) _logInfo(string.Format(
-                    "Applying MS2 calibration: mean error = {0:F4} {1} -> correcting by {2:+F4;-F4;0} {1}",
-                    ms2Calibration.Mean, ms2Calibration.Unit, -ms2Calibration.Mean));
+                if (logSettings)
+                {
+                    _log.LogInfo(settingsIndent + string.Format(
+                        "Applying MS2 calibration: mean error = {0:F4} {1} -> correcting by {2:+0.0000;-0.0000;0} {1}",
+                        ms2Calibration.Mean, ms2Calibration.Unit, -ms2Calibration.Mean));
+                }
             }
 
             // Per-entry search XIC diagnostic: log the intent once at start.
@@ -185,8 +203,8 @@ namespace pwiz.Osprey.Scoring
             var diagSearchIds = _diagnostics?.DiagSearchEntryIds;
             if (diagSearchIds != null)
             {
-                _logInfo(string.Format(
-                    "[BISECT] OSPREY_DIAG_SEARCH_ENTRY_IDS: will dump {0} entries",
+                _log.LogInfo(LogTag.BISECT, string.Format(
+                    "OSPREY_DIAG_SEARCH_ENTRY_IDS: will dump {0} entries",
                     diagSearchIds.Count));
             }
 
@@ -202,8 +220,8 @@ namespace pwiz.Osprey.Scoring
             if (maxWindows > 0 && maxWindows < isolationWindows.Count)
             {
                 windowsToScore = isolationWindows.Take(maxWindows).ToList();
-                _logInfo(string.Format(
-                    "[BENCH] OSPREY_MAX_SCORING_WINDOWS={0} - capping {1} windows to first {0}",
+                _log.LogInfo(LogTag.BENCH, string.Format(
+                    "OSPREY_MAX_SCORING_WINDOWS={0} - capping {1} windows to first {0}",
                     maxWindows, isolationWindows.Count));
             }
 
@@ -482,9 +500,9 @@ namespace pwiz.Osprey.Scoring
             int removedDecoys = removedCount - removedTargets;
             if (removedCount > 0)
             {
-                _logInfo(string.Format(
-                    "Double-counting deduplication: removed {0} entries " +
-                    "({1} targets, {2} decoys; {3} remaining)",
+                _log.LogInfo(string.Format(
+                    "Removed {0:N0} precursor candidate peaks ({1:N0} targets, {2:N0} decoys) already " +
+                    "claimed by a stronger candidate in the same isolation window; {3:N0} remain.",
                     removedCount, removedTargets, removedDecoys,
                     originalCount - removedCount));
             }
@@ -554,7 +572,7 @@ namespace pwiz.Osprey.Scoring
             int removed = entries.Count - deduped.Count;
             if (removed > 0)
             {
-                _logInfo(string.Format("Deduplicated: {0} -> {1} entries ({2} removed)",
+                _log.LogInfo(string.Format("Deduplicated: {0} -> {1} entries ({2} removed)",
                     entries.Count, deduped.Count, removed));
             }
 
@@ -587,8 +605,8 @@ namespace pwiz.Osprey.Scoring
             double maxS = sorted[n - 1].Seconds;
             double medS = sorted[n / 2].Seconds;
             var slowest = sorted[n - 1];
-            _logInfo(string.Format(
-                "[TIMING] Per-window: min={0:F2}s, median={1:F2}s, max={2:F2}s (slowest m/z={3:F1} had {4} candidates)",
+            _log.LogInfo(LogTag.TIMING, string.Format(
+                "Per-window: min={0:F2}s, median={1:F2}s, max={2:F2}s (slowest m/z={3:F1} had {4} candidates)",
                 minS, medS, maxS, slowest.CenterMz, slowest.CandidateCount));
         }
     }

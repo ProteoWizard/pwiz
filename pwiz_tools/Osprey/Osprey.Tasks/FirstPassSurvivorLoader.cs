@@ -164,11 +164,11 @@ namespace pwiz.Osprey.Tasks
                 if (ParquetScoreCache.IsSubsetWithoutScoreIndex(parquetPathOverride))
                 {
                     error = string.Format(
-                        @"First-pass survivor load: {0} holds the survivor subset but carries no " +
-                        @"score_index column, so its rows cannot be matched back to " +
-                        @".scores.parquet. Re-run the analysis from Stage 5 over this directory - " +
-                        @"the FDR sidecars beside it are from the same older build, so there is no " +
-                        @"self-consistent set to convert toward.", parquetPathOverride);
+                        "{0} was written by an older Osprey build and cannot be matched to its " +
+                        ".scores.parquet. The intermediate files beside it are from the same older " +
+                        "build: delete this analysis's *.FirstPassFDR.osprey.task files and run the " +
+                        "first pass again.",
+                        parquetPathOverride);
                     return null;
                 }
                 parquetPath = parquetPathOverride;

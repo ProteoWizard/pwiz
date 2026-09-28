@@ -335,7 +335,7 @@ namespace pwiz.Osprey.IO
                 long len = fs.Length;
                 if (len < HeaderLength)
                     throw new IOException(string.Format(
-                        "FdrScoresSidecar too short ({0} bytes): {1}", len, path));
+                        "The intermediate file is damaged (only {0:N0} bytes): {1}", len, path));
                 // Reject a payload that is not a whole number of records instead of flooring.
                 // Flooring silently drops a trailing partial record, so a truncated sidecar
                 // returns fewer scalars than it has entries and reads as a short file rather
@@ -344,7 +344,7 @@ namespace pwiz.Osprey.IO
                 if (payload % RecordLength != 0)
                 {
                     throw new IOException(string.Format(
-                        "FdrScoresSidecar payload {0} bytes is not a multiple of the {1}-byte record: {2}",
+                        "The intermediate file is damaged ({0:N0} bytes of records is not a whole number of {1}-byte records): {2}",
                         payload, RecordLength, path));
                 }
                 int n = (int)(payload / RecordLength);
@@ -352,16 +352,16 @@ namespace pwiz.Osprey.IO
                 scores = new double[n];
                 var header = new byte[HeaderLength];
                 if (!ReadFully(fs, header, HeaderLength))
-                    throw new IOException("FdrScoresSidecar header truncated: " + path);
+                    throw new IOException("The intermediate file is damaged (its header is cut short): " + path);
                 for (int i = 0; i < Magic.Length; i++)
                 {
                     if (header[i] != Magic[i])
-                        throw new IOException("FdrScoresSidecar bad magic: " + path);
+                        throw new IOException("The file is not an Osprey intermediate file: " + path);
                 }
                 if (header[8] != FormatVersion)
                 {
                     throw new IOException(string.Format(
-                        "FdrScoresSidecar version {0}, expected {1}: {2}",
+                        "The intermediate file was written by a different Osprey version (format {0}, expected {1}): {2}",
                         header[8], FormatVersion, path));
                 }
                 // Every other reader here checks the pass byte; this one did not, so a 2nd-pass
@@ -371,7 +371,7 @@ namespace pwiz.Osprey.IO
                 if (header[9] != (byte)expectedPass)
                 {
                     throw new IOException(string.Format(
-                        "FdrScoresSidecar pass {0}, expected {1}: {2}",
+                        "The intermediate file belongs to the other FDR pass (pass {0}, expected {1}): {2}",
                         header[9], (byte)expectedPass, path));
                 }
                 var rec = new byte[RecordLength];
@@ -379,7 +379,7 @@ namespace pwiz.Osprey.IO
                 {
                     if (!ReadFully(fs, rec, RecordLength))
                         throw new IOException(string.Format(
-                            "FdrScoresSidecar truncated at record {0}: {1}", i, path));
+                            "The intermediate file is damaged (cut short at record {0:N0}): {1}", i, path));
                     entryIds[i] = BitConverter.ToUInt32(rec, 0);
                     scores[i] = BitConverter.ToDouble(rec, 4);
                     // Decoded only for the selected subset. The other ~82% of a file's records
@@ -879,10 +879,8 @@ namespace pwiz.Osprey.IO
         private static bool ThrowPartialWalk(string path, long delivered, Exception inner = null)
         {
             string message = string.Format(
-                @"Reading the FDR sidecar '{0}' failed after {1} record(s) had already been " +
-                @"applied. Those entries now hold this file's values and the rest do not, which " +
-                @"no caller can detect or undo, so the run stops here rather than continuing " +
-                @"with a partly-overlaid pool.",
+                "Reading the intermediate file '{0}' failed partway, after {1:N0} records were " +
+                "read. The run stops here rather than continue with part of the file's values.",
                 path, delivered);
             if (inner != null)
                 throw new IOException(message, inner);

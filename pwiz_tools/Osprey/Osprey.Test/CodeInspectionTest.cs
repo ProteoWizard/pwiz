@@ -194,6 +194,58 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Every <c>[TAG]</c> log prefix comes from <c>LogTag</c>, never from a string literal.
+        /// <c>OspreyLog.Write</c> is the one place that decides whether a tagged line is written;
+        /// a hand-typed <c>"[COUNT] ..."</c> skips that decision and lands in the default log
+        /// whatever <c>--perf-stats</c> says, which is how <c>[PATH]</c> and <c>[TRAIN]</c> once
+        /// leaked into every run. It also makes the line invisible to anyone looking for the
+        /// tag's uses. Write <c>log.LogInfo(LogTag.COUNT, "...")</c> instead.
+        ///
+        /// A literal is flagged when its text starts with a bracketed upper-case word followed
+        /// by <c>]</c> or a space (<c>"[COUNT] "</c>, <c>"[MEM "</c>), after any leading spaces
+        /// or format holes (<c>"  [COUNT] "</c>, <c>"{0}[TIMING] "</c>, <c>$"{indent}[BENCH] "</c>):
+        /// the runtime filter that once caught those shapes is gone, so this test is the only
+        /// guard. Comments are ignored. For
+        /// a genuine exception - a literal that is not a log line - add an inline comment
+        /// beginning <c>// Log tag OK:</c> on the same line.
+        /// </summary>
+        [TestMethod]
+        public void TestLogTagsComeFromLogTag()
+        {
+            string sourceRoot = FindOspreySourceRoot();
+            var violations = new List<string>();
+            var pattern = new Regex("@?\\$?\"(?:\\s|\\{[^{}\"]*\\})*\\[[A-Z][A-Z0-9-]*[\\] ]");
+            const string exemptionTag = "// Log tag OK:";
+
+            foreach (var file in EnumerateProductionCsFiles(sourceRoot))
+            {
+                string[] lines;
+                try { lines = File.ReadAllLines(file); }
+                catch (IOException) { continue; }
+
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    string line = lines[i];
+                    int commentIdx = IndexOfLineComment(line);
+                    string codePart = commentIdx >= 0 ? line.Substring(0, commentIdx) : line;
+                    if (!pattern.IsMatch(codePart))
+                        continue;
+                    if (line.Contains(exemptionTag))
+                        continue;
+                    string rel = RelativePath(sourceRoot, file).Replace('\\', '/');
+                    violations.Add(string.Format("{0}:{1}: {2}", rel, i + 1, line.TrimEnd()));
+                }
+            }
+
+            Assert.AreEqual(0, violations.Count,
+                "Log tag written as a string literal. Use the LogTag constant with an IOspreyLog " +
+                "sink - log.LogInfo(LogTag.COUNT, \"...\") - so OspreyLog.Write decides whether the " +
+                "line is emitted. If the literal is not a log line, add an inline '// Log tag OK: " +
+                "<reason>' on the same line.\n" +
+                string.Join("\n", violations));
+        }
+
+        /// <summary>
         /// Find the Osprey source root by walking up from the test
         /// assembly location until we see an Osprey.sln-bearing dir.
         /// </summary>

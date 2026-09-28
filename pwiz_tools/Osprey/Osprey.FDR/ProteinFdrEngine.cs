@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.FDR
@@ -54,7 +55,7 @@ namespace pwiz.Osprey.FDR
         /// lives in <c>ProteinFdr.RunFirstPassProteinFdr</c>; this adds the
         /// summary logging and returns the artifacts so the Tasks facade can emit the
         /// Stage-6 diagnostic dump + <c>ProteinFdrOnly</c> early-exit WITHOUT
-        /// recomputing them. <paramref name="logInfo"/> may be null for the
+        /// recomputing them. <paramref name="log"/> may be null for the
         /// <c>--task SecondPassFDR</c> rehydration path (<c>PerFileRescoreTask</c>), which
         /// runs the recompute silently before compaction.
         /// </summary>
@@ -62,11 +63,11 @@ namespace pwiz.Osprey.FDR
             IList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IList<LibraryEntry> fullLibrary,
             OspreyConfig config,
-            Action<string> logInfo)
+            IOspreyLog log)
         {
             var result = ProteinFdr.RunFirstPassProteinFdr(
                 perFileEntries, fullLibrary, config);
-            LogFirstPassSummary(result, config, logInfo);
+            LogFirstPassSummary(result, config, log);
             return result;
         }
 
@@ -76,16 +77,16 @@ namespace pwiz.Osprey.FDR
         /// facade above and the projection path's streaming reducer
         /// (<c>FirstPassFdrTask.RunFirstPassProteinFdrStreaming</c>, which assembles the same
         /// <see cref="FirstPassProteinFdrResult"/> off the sidecar + parquet scalars rather
-        /// than the resident buffer). <paramref name="logInfo"/> may be null (silent runs).
+        /// than the resident buffer). <paramref name="log"/> may be null (silent runs).
         /// </summary>
         public static void LogFirstPassSummary(
-            FirstPassProteinFdrResult result, OspreyConfig config, Action<string> logInfo)
+            FirstPassProteinFdrResult result, OspreyConfig config, IOspreyLog log)
         {
-            if (logInfo == null)
+            if (log == null)
                 return;
 
-            logInfo(string.Format(
-                "[COUNT] First-pass detected peptides for protein FDR: {0} unique",
+            log.LogInfo(LogTag.COUNT, string.Format(
+                "First-pass detected peptides for protein FDR: {0} unique",
                 result.DetectedPeptides.Count));
 
             int nAtRunFdr = 0;
@@ -94,8 +95,8 @@ namespace pwiz.Osprey.FDR
                 if (qv <= config.RunFdr)
                     nAtRunFdr++;
             }
-            logInfo(string.Format(
-                "First-pass protein FDR: {0} target groups at {1:P1} FDR",
+            log.LogInfo(string.Format(
+                "First-pass protein FDR: {0:N0} target groups at {1:P1} FDR",
                 nAtRunFdr, config.RunFdr));
         }
 
@@ -107,7 +108,7 @@ namespace pwiz.Osprey.FDR
         /// consumers through the caller's per-file sidecar patch, NOT the pool:
         /// <see cref="FdrEntry.ExperimentProteinQvalue"/> on the stubs keeps its
         /// first-pass value after this runs. Logs
-        /// summary counts via <paramref name="logInfo"/> (which may be null for a
+        /// summary counts via <paramref name="log"/> (which may be null for a
         /// silent run, like <c>RunFirstPass</c>) and returns the parsimony /
         /// FDR artifacts so the Tasks facade can emit the Stage-7 detected-peptides
         /// and protein-FDR diagnostic dumps + the <c>Stage7ProteinFdrOnly</c>
@@ -126,7 +127,7 @@ namespace pwiz.Osprey.FDR
             IEnumerable<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IList<LibraryEntry> fullLibrary,
             OspreyConfig config,
-            Action<string> logInfo)
+            IOspreyLog log)
         {
             var accumulator = new ProteinFdr.SecondPassProteinFdrAccumulator(
                 config.FdrLevel, config.ExperimentFdr);
@@ -136,7 +137,6 @@ namespace pwiz.Osprey.FDR
                     accumulator.Add(entry);
             }
             var bestScores = accumulator.FinishBestScores();
-            logInfo?.Invoke(string.Format("Collected scores for {0} unique peptides", bestScores.Count));
 
             // Get detected peptide set: targets passing experiment-level
             // q-value at the configured fdr_level (matches Rust pipeline.rs
@@ -157,19 +157,24 @@ namespace pwiz.Osprey.FDR
             var peptideGateLevel = config.FdrLevel;
             var detectedPeptides = accumulator.DetectedPeptides;
 
-            logInfo?.Invoke(string.Format("Detected {0} unique peptides at {1:P1} experiment FDR ({2})",
-                detectedPeptides.Count, config.ExperimentFdr, peptideGateLevel));
-            logInfo?.Invoke(string.Format(
-                "[COUNT] Detected peptides for protein FDR: {0} unique",
+            // Targets over targets: bestScores holds decoy peptides too, and only targets can be
+            // detected, so the whole pool as the denominator would understate the fraction.
+            int scoredTargetPeptides = bestScores.Values.Count(ps => !ps.IsDecoy);
+            log?.LogInfo(string.Format(
+                "{0:N0} of {1:N0} scored target peptides detected at {2:P1} experiment-level {3} FDR.",
+                detectedPeptides.Count, scoredTargetPeptides, config.ExperimentFdr,
+                peptideGateLevel.GetLocalizedString()));
+            log?.LogInfo(LogTag.COUNT, string.Format(
+                "Detected peptides for protein FDR: {0} unique",
                 detectedPeptides.Count));
 
             // Build protein parsimony
             var parsimony = ProteinFdr.BuildProteinParsimony(
                 fullLibrary, config.SharedPeptides, detectedPeptides);
 
-            logInfo?.Invoke(string.Format("Protein parsimony: {0} groups", parsimony.Groups.Count));
-            logInfo?.Invoke(string.Format(
-                "[COUNT] Protein parsimony groups: {0}", parsimony.Groups.Count));
+            log?.LogInfo(string.Format("Protein parsimony: {0:N0} groups", parsimony.Groups.Count));
+            log?.LogInfo(LogTag.COUNT, string.Format(
+                "Protein parsimony groups: {0}", parsimony.Groups.Count));
 
             // Compute protein FDR. Gate is config.RunFdr (1x) per Savitski's
             // convention, matching Rust pipeline.rs:4389
@@ -185,10 +190,10 @@ namespace pwiz.Osprey.FDR
                     passingProteins++;
             }
 
-            logInfo?.Invoke(string.Format("{0} protein groups pass {1:P1} protein FDR",
+            log?.LogInfo(string.Format("{0:N0} protein groups pass {1:P1} protein FDR",
                 passingProteins, config.EffectiveProteinFdr));
-            logInfo?.Invoke(string.Format(
-                "[COUNT] Protein groups passing FDR: {0} at {1:P0}",
+            log?.LogInfo(LogTag.COUNT, string.Format(
+                "Protein groups passing FDR: {0} at {1:P0}",
                 passingProteins, config.EffectiveProteinFdr));
 
             // No propagation onto the stubs. The protein q-value's only consumer past this

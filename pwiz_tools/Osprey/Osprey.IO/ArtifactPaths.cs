@@ -104,9 +104,16 @@ namespace pwiz.Osprey.IO
             return IsDirectoryWritable(inputDir) ? inputDir : OutputDir;
         }
 
+        /// <summary>
+        /// The input's directory, absolute and with the platform separator, so an input typed
+        /// as D:/data/run.mzML yields D:\data\run.spectra.bin rather than D:/data\run.spectra.bin.
+        /// Empty for a bare file name, which keeps the artifact relative to the working
+        /// directory exactly as before.
+        /// </summary>
         private static string InputDir(string inputPath)
         {
-            return Path.GetDirectoryName(inputPath) ?? string.Empty;
+            string dir = Path.GetDirectoryName(inputPath);
+            return string.IsNullOrEmpty(dir) ? string.Empty : Path.GetFullPath(dir);
         }
 
         private static bool IsDirectoryWritable(string dir)

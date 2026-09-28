@@ -358,7 +358,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 result.RootHash = Hash.FromBase64(rootHashString);
             }
             result.VerifyHashValues();
-            if (loggedSkylineDocumentHash != null)
+            if (!string.IsNullOrEmpty(loggedSkylineDocumentHash))
             {
                 result.DocumentHash = Hash.FromBase64(loggedSkylineDocumentHash);
             }

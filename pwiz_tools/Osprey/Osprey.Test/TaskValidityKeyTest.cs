@@ -22,6 +22,7 @@
  */
 
 using System;
+using System.Globalization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.Tasks;
@@ -130,33 +131,49 @@ namespace pwiz.Osprey.Test
         /// setting's numbers. That is indistinguishable from a change with no effect, which is the
         /// most expensive way for an A/B to fail.</para>
         ///
-        /// <para>The two halves are asserted differently on purpose. The run-vs-maximum selection
-        /// is a FLIPPED DEFAULT, so it must key for BOTH arms - an empty new default would equal
-        /// every directory written before the flip and let a resume adopt maximum-trained scores.
-        /// The training cap's default never moved, so it must stay silent when unset, exactly
-        /// like the aggregation suffix.</para>
+        /// <para>The levers are asserted differently on purpose. The run-vs-maximum selection and
+        /// the C-selection tolerance are FLIPPED DEFAULTS, so they must key for EVERY arm - an
+        /// empty new default would equal every directory written before the flip and let a
+        /// resume adopt the old rule's scores. The training cap's default never moved, so it must
+        /// stay silent when unset, exactly like the aggregation suffix.</para>
         /// </summary>
         private static void AssertTrainingSampleLeversKeyDifferently()
         {
-            Assert.AreNotEqual(string.Empty, OspreyEnvironment.TrainSampleValidityKeySuffix(true, null),
+            const double tol = OspreyEnvironment.DEFAULT_SVM_C_SELECTION_TOLERANCE;
+            Assert.AreEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(OspreyEnvironment.TrainPickRun,
+                    OspreyEnvironment.MaxTrainSizeOverride, OspreyEnvironment.SvmCSelectionTolerance),
+                OspreyEnvironment.TrainSampleValidityKeySuffix(),
+                @"the key the tasks use must be built from every lever the environment read");
+            Assert.AreNotEqual(string.Empty, OspreyEnvironment.TrainSampleValidityKeySuffix(true, null, tol),
                 @"the shipped reservoir arm must key, or a pre-flip directory is adopted as though it had been trained on it");
-            Assert.AreNotEqual(string.Empty, OspreyEnvironment.TrainSampleValidityKeySuffix(false, null),
+            Assert.AreNotEqual(string.Empty, OspreyEnvironment.TrainSampleValidityKeySuffix(false, null, tol),
                 @"the forced-maximum arm must key too");
-            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(false, null),
-                OspreyEnvironment.TrainSampleValidityKeySuffix(true, null),
+            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(false, null, tol),
+                OspreyEnvironment.TrainSampleValidityKeySuffix(true, null, tol),
                 @"per-run picking trains on different rows than the cross-run maximum");
-            Assert.AreEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(true, null),
-                OspreyEnvironment.TrainSampleValidityKeySuffix(true, null),
+            Assert.AreEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(true, null, tol),
+                OspreyEnvironment.TrainSampleValidityKeySuffix(true, null, tol),
                 @"the suffix must be a pure function of its arms");
-            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(true, null),
-                OspreyEnvironment.TrainSampleValidityKeySuffix(true, 3000000),
+            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(true, null, tol),
+                OspreyEnvironment.TrainSampleValidityKeySuffix(true, 3000000, tol),
                 @"a raised training cap covers more precursors, so it must key differently");
-            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(true, 3000000),
-                OspreyEnvironment.TrainSampleValidityKeySuffix(true, 600000),
+            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(true, 3000000, tol),
+                OspreyEnvironment.TrainSampleValidityKeySuffix(true, 600000, tol),
                 @"two different caps must key differently, not merely differ from the default");
-            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(false, 3000000),
-                OspreyEnvironment.TrainSampleValidityKeySuffix(true, 3000000),
+            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(false, 3000000, tol),
+                OspreyEnvironment.TrainSampleValidityKeySuffix(true, 3000000, tol),
                 @"the two settings are independent, so their combination is a fourth arm");
+            // The SVM C-selection tolerance is a flipped default (the grid search used to keep the
+            // strict maximum), so it keys for every arm, and each tolerance keys differently.
+            StringAssert.Contains(OspreyEnvironment.TrainSampleValidityKeySuffix(true, null, tol),
+                @";csel=" + tol.ToString(@"R", CultureInfo.InvariantCulture),
+                @"the default C-selection tolerance must key, or a directory trained under the strict maximum is adopted");
+            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(true, null, 0),
+                OspreyEnvironment.TrainSampleValidityKeySuffix(true, null, tol),
+                @"the strict maximum (OSPREY_SVM_C_TOLERANCE=0) trains a different model than the default tolerance");
+            Assert.AreNotEqual(OspreyEnvironment.TrainSampleValidityKeySuffix(true, null, 0.01),
+                OspreyEnvironment.TrainSampleValidityKeySuffix(true, null, 0.02),
+                @"two tolerances must key differently");
         }
 
         /// <summary>

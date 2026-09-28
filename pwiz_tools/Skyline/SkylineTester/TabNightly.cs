@@ -444,7 +444,7 @@ namespace SkylineTester
                 DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss.ffffff", CultureInfo.InvariantCulture),
                 message));
             var frames = stackTrace.GetFrames();
-            if (frames == null || frames.Length == 0)
+            if (frames.Length == 0)
                 lines.Add("    !!no stack!!");
             else
                 lines.AddRange(frames.Select(f => "    " + f.ToString().Trim()));

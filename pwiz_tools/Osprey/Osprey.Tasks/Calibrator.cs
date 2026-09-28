@@ -276,7 +276,7 @@ namespace pwiz.Osprey.Tasks
                 long realTargets = _libTargetSideCount - _libEntrapmentCount;
                 double rLib = realTargets > 0 ? (double)_libEntrapmentCount / realTargets : 0.0;
                 _ctx.LogVerbose(string.Format(
-                    "Calibration entrapment library: {0} target-side entries = {1} real targets + {2} entrapment (FDRBench r = {3:F3})",
+                    "Calibration entrapment library: {0:N0} target-side precursors = {1:N0} real targets + {2:N0} entrapment (FDRBench r = {3:F3})",
                     _libTargetSideCount, realTargets, _libEntrapmentCount, rLib));
             }
 
@@ -354,13 +354,13 @@ namespace pwiz.Osprey.Tasks
             int maxAttempts = ComputeMaxAttempts(sampleSize, retryFactor, nTotalTargets);
             int currentSampleSize = sampleSize;
 
-            _ctx.LogVerbose(string.Format(
-                "Calibration: library has {0} targets, requesting {1} per attempt ({2} attempt(s) max)",
+            _ctx.LogVerbose(CountText.Format(maxAttempts,
+                "Calibration: library has {1:N0} targets, requesting {2} (1 attempt at most)",
+                "Calibration: library has {1:N0} targets, requesting {2} per attempt (up to {0:N0} attempts)",
                 nTotalTargets,
                 currentSampleSize == 0 || nTotalTargets <= currentSampleSize
                     ? "all"
-                    : string.Format("{0}", currentSampleSize),
-                maxAttempts));
+                    : string.Format("{0:N0}", currentSampleSize)));
 
             // Best match per library entry, accumulated across attempts. Mirrors
             // Rust's accumulated_matches (pipeline.rs:730).
@@ -395,8 +395,8 @@ namespace pwiz.Osprey.Tasks
                         nSampledDecoys++;
                     else nSampledTargets++;
                 }
-                _ctx.LogInfo(string.Format(
-                    "[TIMING] Calibration sampling (attempt {0}/{1}): {2:F2}s ({3} targets + {4} decoys)",
+                _ctx.LogInfo(LogTag.TIMING, string.Format(
+                    "Calibration sampling (attempt {0}/{1}): {2:F2}s ({3} targets + {4} decoys)",
                     attempt, maxAttempts, swSample.Elapsed.TotalSeconds, nSampledTargets, nSampledDecoys));
 
                 if (nSampledTargets == 0)
@@ -448,10 +448,10 @@ namespace pwiz.Osprey.Tasks
                 if (decision.Action == CalibrationLadderAction.Retry)
                 {
                     currentSampleSize = decision.NextSampleSize;
-                    _ctx.LogWarning(string.Format(
-                        "Calibration attempt {0} found only {1} confident peptides (need {2}). Retrying with {3} targets...",
-                        attempt, nConfident, config.RtCalibration.MinCalibrationPoints,
-                        currentSampleSize == 0 ? "ALL" : string.Format("{0}", currentSampleSize)));
+                    _ctx.LogWarning(string.Format(currentSampleSize == 0
+                            ? "Calibration attempt {0} found only {1:N0} confident peptides (need {2:N0}). Retrying with all targets..."
+                            : "Calibration attempt {0} found only {1:N0} confident peptides (need {2:N0}). Retrying with {3:N0} targets...",
+                        attempt, nConfident, config.RtCalibration.MinCalibrationPoints, currentSampleSize));
                     continue;
                 }
 
@@ -567,7 +567,7 @@ namespace pwiz.Osprey.Tasks
                     Math.Min(config.RtCalibration.MaxRtTolerance, madTolerance));
 
                 _ctx.LogVerbose(string.Format(
-                    "First-pass RT tolerance: {0:F2} min (MAD={1:F3}, robust_SD={2:F3}, residual_SD={3:F3}, {4} points, R^2={5:F4}, min tolerance {6:F2})",
+                    "First-pass RT tolerance: {0:F2} min (MAD={1:F3}, robust_SD={2:F3}, residual_SD={3:F3}, {4:N0} points, R^2={5:F4}, min tolerance {6:F2})",
                     pass1Tolerance,
                     pass1.Stats.MAD,
                     pass1.Stats.MAD * 1.4826,
@@ -584,8 +584,8 @@ namespace pwiz.Osprey.Tasks
                 if (pass1.Calibration.Method == RTCalibrationMethod.Linear)
                 {
                     _ctx.LogInfo(string.Format(
-                        "Refinement pass skipped: pass 1 used a linear fit ({0} points); " +
-                        "narrowing the window from it would be self-confirming.",
+                        "RT calibration refinement skipped: the first pass was a linear fit over {0:N0} " +
+                        "points, so a narrower window would only re-find the same points.",
                         pass1.Stats.NPoints));
                 }
                 else if (pass1Tolerance < initialTolerance * 0.5)
@@ -611,7 +611,7 @@ namespace pwiz.Osprey.Tasks
                             Math.Min(config.RtCalibration.MaxRtTolerance, refinedMadTolerance));
 
                         _ctx.LogVerbose(string.Format(
-                            "Refined RT tolerance: {0:F2} min (MAD={1:F3}, robust_SD={2:F3}, residual_SD={3:F3}, {4} points, R^2={5:F4})",
+                            "Refined RT tolerance: {0:F2} min (MAD={1:F3}, robust_SD={2:F3}, residual_SD={3:F3}, {4:N0} points, R^2={5:F4})",
                             refinedTolerance,
                             pass2.Stats.MAD,
                             pass2.Stats.MAD * 1.4826,
@@ -634,8 +634,9 @@ namespace pwiz.Osprey.Tasks
                         if (!refinedLinearOk)
                         {
                             _ctx.LogInfo(string.Format(
-                                "Refined calibration is a linear fit over {0} points that fails the " +
-                                "span/plausibility guards, keeping original calibration",
+                                "Refined RT calibration rejected: its linear fit over {0:N0} points covers " +
+                                "too little of the gradient or predicts retention times outside the run. " +
+                                "Keeping the first calibration.",
                                 pass2.Stats.NPoints));
                         }
 
@@ -1127,11 +1128,11 @@ namespace pwiz.Osprey.Tasks
                     else nTargetWins++;
                 }
             }
-            _ctx.LogInfo(string.Format(
-                "[TIMING] Calibration pass {0} LDA: {1:F2}s ({2} target wins, {3} decoy wins at 1% FDR)",
+            _ctx.LogInfo(LogTag.TIMING, string.Format(
+                "Calibration pass {0} LDA: {1:F2}s ({2} target wins, {3} decoy wins at 1% FDR)",
                 passNumber, swLda.Elapsed.TotalSeconds, nTargetWins, nDecoyWins));
-            _ctx.LogInfo(string.Format(
-                "[COUNT] Calibration pass {0} LDA winners [{1}]: {2} target wins, {3} decoy wins at 1% FDR",
+            _ctx.LogInfo(LogTag.COUNT, string.Format(
+                "Calibration pass {0} LDA winners [{1}]: {2} target wins, {3} decoy wins at 1% FDR",
                 passNumber, fileName, nTargetWins, nDecoyWins));
 
             // --verbose anchor-purity (entrapment-FDP) diagnostic: of the target-side
@@ -1163,7 +1164,7 @@ namespace pwiz.Osprey.Tasks
             var (libRts, measuredRts) = CollectCalibrationPoints(
                 matchArray, accumulated, passNumber, fileName, nTargetWins);
             _ctx.LogInfo(string.Format(
-                "Calibration pass {0}: {1} RT calibration points (from {2} peptides at 1% FDR)",
+                "Calibration pass {0}: {1:N0} RT calibration points (from {2:N0} peptides at 1% FDR)",
                 passNumber, libRts.Count, nPassing));
 
             libRtsDetected = libRts;
@@ -1347,10 +1348,10 @@ namespace pwiz.Osprey.Tasks
                 swLoess.Stop();
 
                 var stats = rtCal.Stats();
-                _ctx.LogInfo(string.Format("[TIMING] Calibration pass {0} LOESS fit: {1:F2}s",
+                _ctx.LogInfo(LogTag.TIMING, string.Format("Calibration pass {0} LOESS fit: {1:F2}s",
                     passNumber, swLoess.Elapsed.TotalSeconds));
                 _ctx.LogVerbose(string.Format(
-                    "RT calibration pass {0}: {1} points, R2={2:F4}, residual SD={3:F3} min, MAD={4:F3}",
+                    "RT calibration pass {0}: {1:N0} points, R2={2:F4}, residual SD={3:F3} min, MAD={4:F3}",
                     passNumber, stats.NPoints, stats.RSquared, stats.ResidualSD, stats.MAD));
 
                 return new CalibrationPassResult
@@ -1562,8 +1563,8 @@ namespace pwiz.Osprey.Tasks
             var matchRts = new ConcurrentDictionary<uint, KeyValuePair<double, double>>();
 
             // Calibration scoring is the one long determinate loop that still ran silent: the
-            // surrounding [TIMING]/[COUNT] lines are filtered out of normal output
-            // (OspreyOutput.IsMachineParseable), so a normal run showed nothing between
+            // surrounding [TIMING]/[COUNT] lines are gated behind --perf-stats
+            // (LogTag), so a normal run showed nothing between
             // "Running RT calibration..." and the pass summary -- ~40 s per file, ~50 min
             // across an 82-file run.
             int windowsDone = 0;
@@ -1608,11 +1609,11 @@ namespace pwiz.Osprey.Tasks
                     localScorer => { });
             }
             swScoring.Stop();
-            _ctx.LogInfo(string.Format(
-                "[TIMING] Calibration pass {0} scoring: {1:F2}s ({2} matches)",
+            _ctx.LogInfo(LogTag.TIMING, string.Format(
+                "Calibration pass {0} scoring: {1:F2}s ({2} matches)",
                 passNumber, swScoring.Elapsed.TotalSeconds, matches.Count));
-            _ctx.LogInfo(string.Format(
-                "[COUNT] Calibration pass {0} matches scored [{1}]: {2}",
+            _ctx.LogInfo(LogTag.COUNT, string.Format(
+                "Calibration pass {0} matches scored [{1}]: {2}",
                 passNumber, fileName, matches.Count));
             return (matches, snrByEntryId, matchRts);
         }
@@ -1704,12 +1705,12 @@ namespace pwiz.Osprey.Tasks
             if (nSnrFiltered > 0)
             {
                 _ctx.LogVerbose(string.Format(
-                    "  RT quality filter (pass {0}): {1} -> {2} peptides (removed {3} with S/N < {4:F1})",
+                    "  RT quality filter (pass {0}): {1:N0} -> {2:N0} peptides (removed {3:N0} with S/N < {4:F1})",
                     passNumber, nTargetWins, libRtsDetected.Count, nSnrFiltered, MIN_SNR_FOR_RT_CAL));
             }
 
-            _ctx.LogInfo(string.Format(
-                "[COUNT] Calibration pass {0} high-quality (S/N>=5) [{1}]: {2}",
+            _ctx.LogInfo(LogTag.COUNT, string.Format(
+                "Calibration pass {0} high-quality (S/N>=5) [{1}]: {2}",
                 passNumber, fileName, libRtsDetected.Count));
 
             return (libRtsDetected, measuredRtsDetected);
@@ -1757,10 +1758,10 @@ namespace pwiz.Osprey.Tasks
             ms1Calibration = MzCalibration.CalculateSingleLevel(allMs1Errors.ToArray(), unitStr);
             ms2Calibration = MzCalibration.CalculateSingleLevel(allMs2Errors.ToArray(), unitStr);
             _ctx.LogVerbose(string.Format(
-                "MS1 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} (n={5} precursor matches)",
+                "MS1 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} (n={5:N0} precursor matches)",
                 passNumber, ms1Calibration.Mean, unitStr, ms1Calibration.SD, 3.0 * ms1Calibration.SD, allMs1Errors.Count));
             _ctx.LogVerbose(string.Format(
-                "MS2 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} (n={5} fragment matches)",
+                "MS2 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} (n={5:N0} fragment matches)",
                 passNumber, ms2Calibration.Mean, unitStr, ms2Calibration.SD, 3.0 * ms2Calibration.SD, allMs2Errors.Count));
         }
 

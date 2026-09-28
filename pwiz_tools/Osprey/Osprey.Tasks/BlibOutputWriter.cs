@@ -174,12 +174,11 @@ namespace pwiz.Osprey.Tasks
             // ending at "Wrote 51597 library spectra". They are not all of it - Commit,
             // WriteMetadata and FinalizeDatabase run after the emission scope closes and are
             // still uninstrumented. The surrounding [COUNT] lines cannot serve here:
-            // OspreyOutput.IsStatLine filters them out of normal output, so they appear only
-            // under --perf-stats (the same trap Calibrator.cs:1564 records, where the API is
-            // misnamed IsMachineParseable).
+            // LogTag.COUNT is gated behind --perf-stats, so they appear only
+            // under that flag (the same trap the calibration scoring loop records).
             int precompressed = 0;
             using (var progress = new ProgressReporter(
-                       string.Format(@"Compressing {0} library spectra for the blib", blibN),
+                       string.Format(@"Compressing {0:N0} library spectra for the blib", blibN),
                        blibN, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 Parallel.For(0, blibN,
@@ -230,7 +229,7 @@ namespace pwiz.Osprey.Tasks
             // Reported for the same reason as the pre-compress pass above: this emits five row
             // families per spectrum into SQLite and ran silent inside the same 47 s gap.
             using (var progress = new ProgressReporter(
-                       string.Format(@"Writing {0} spectra to the blib", blibEntries.Count),
+                       string.Format(@"Writing {0:N0} spectra to the blib", blibEntries.Count),
                        blibEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 for (int blibIdx = 0; blibIdx < blibEntries.Count; blibIdx++)
@@ -370,7 +369,7 @@ namespace pwiz.Osprey.Tasks
             double fdrThreshold)
         {
             using (var progress = new ProgressReporter(
-                       string.Format(@"Writing {0} retention-time rows to the blib",
+                       string.Format("Writing {0:N0} peak retention times to the blib",
                                      passingEntries.Count),
                        passingEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {

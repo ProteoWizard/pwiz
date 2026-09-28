@@ -63,13 +63,13 @@ namespace pwiz.Osprey.Tasks
             RescoredEntries rescored,
             IList<LibraryEntry> fullLibrary,
             OspreyConfig config,
-            Action<string> logInfo,
+            IOspreyLog log,
             Action<string> logWarning)
         {
             string stem = ReportStem(config);
             if (stem == null)
             {
-                logInfo?.Invoke(
+                log?.LogInfo(
                     "Skipping reports: no output path (-o) to derive report file names from.");
                 return;
             }
@@ -77,14 +77,14 @@ namespace pwiz.Osprey.Tasks
             if (config.WriteProteinReport)
             {
                 string path = stem + @".protein_groups.tsv";
-                TryWriteReport("protein-group", path, logInfo, logWarning,
+                TryWriteReport("protein-group", path, log, logWarning,
                     () => WriteProteinGroups(path, experimentResult, fullLibrary, config));
             }
 
             if (config.WriteSummaryReport)
             {
                 string path = stem + @".stats.tsv";
-                TryWriteReport("summary", path, logInfo, logWarning,
+                TryWriteReport("summary", path, log, logWarning,
                     () => WriteSummary(path, experimentResult, rescored, fullLibrary, config));
             }
         }
@@ -95,12 +95,12 @@ namespace pwiz.Osprey.Tasks
         // which makes FileSaver.Commit throw IOException on the replace; Commit deliberately
         // lets that propagate so the caller can log it. FileSaver's disposal drops the temp.
         private static void TryWriteReport(string label, string path,
-            Action<string> logInfo, Action<string> logWarning, Action write)
+            IOspreyLog log, Action<string> logWarning, Action write)
         {
             try
             {
                 write();
-                logInfo?.Invoke(string.Format("[COUNT] Wrote {0} report: {1}", label, path));
+                log?.LogInfo(LogTag.COUNT, string.Format("Wrote {0} report: {1}", label, path));
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
             {
@@ -142,13 +142,14 @@ namespace pwiz.Osprey.Tasks
 
             // Reported for the same reason as the per-replicate FDR below (#4571). This half of
             // the report writer ran silent: it scans the whole library above and then walks every
-            // group here, and its only bracketing line is a [COUNT] that OspreyOutput.IsStatLine
-            // drops unless --perf-stats. A run with the protein report on but the summary
+            // group here, and its only bracketing line is a [COUNT] that LogTag.COUNT
+            // writes only under --perf-stats. A run with the protein report on but the summary
             // report off therefore produced no visible output for the entire report step.
             int groupIdx = 0;
             var rows = new List<string[]>(groups.Count);
             using (var progress = new ProgressReporter(
-                       string.Format(@"Building the protein-group report over {0} group(s)", groups.Count),
+                       CountText.Format(groups.Count, "Building the protein-group report for 1 group",
+                           "Building the protein-group report for {0:N0} groups"),
                        groups.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 foreach (var g in groups)
@@ -273,7 +274,9 @@ namespace pwiz.Osprey.Tasks
             // the caller's heading in front of it (#4571).
             int runIdx = 0;
             using (var progress = new ProgressReporter(
-                       string.Format(@"Per-replicate protein FDR over {0} run(s)", nFiles),
+                       nFiles == 1
+                           ? "Per-replicate protein FDR for 1 file"
+                           : string.Format("Per-replicate protein FDR for {0:N0} files", nFiles),
                        nFiles, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 foreach (var kvp in rescored.StreamFiles())
