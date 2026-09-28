@@ -1091,17 +1091,38 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetGraphData(string formId, string filePath = null)
         {
+            WaitForGraphs();
             return CallOnForm<StandaloneForm, string>(formId, form => form.FindGraph().GetData(filePath));
         }
 
         public string GetGraphImage(string formId, string filePath = null)
         {
+            WaitForGraphs();
             return CallOnForm<StandaloneForm, string>(formId, form => form.FindGraph().GetImage(filePath));
         }
 
         public ImageBytesMetadata GetGraphImageBytes(string formId)
         {
+            WaitForGraphs();
             return CallOnForm<StandaloneForm, ImageBytesMetadata>(formId, form => form.FindGraph().GetImageBytes());
+        }
+
+        private const int GRAPH_POLL_MILLIS = 50;
+        private const int GRAPH_WAIT_MAX_MILLIS = 10000;
+
+        // The graphs redraw a moment after the selection or the view changes -- on a timer, and then with their
+        // data calculated in the background -- so a graph read at once can still show what was there before
+        // (e.g. the previous peptide's peak areas across 40 replicates). Wait for them first, as a test's
+        // WaitForGraphs does. Called off the UI thread, which is released between polls.
+        private static void WaitForGraphs()
+        {
+            var mainWindow = Program.MainWindow;
+            if (mainWindow == null)
+                return;
+            for (int waited = 0;
+                 waited < GRAPH_WAIT_MAX_MILLIS && (bool) mainWindow.Invoke((Func<bool>) (() => mainWindow.IsGraphUpdatePending));
+                 waited += GRAPH_POLL_MILLIS)
+                Thread.Sleep(GRAPH_POLL_MILLIS);
         }
 
         // The geometry verbs go through the graph's UiActions, so what each one MEANS lives in one place and is
@@ -1148,11 +1169,13 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetFormImage(string formId, string filePath = null)
         {
+            WaitForGraphs();
             return JsonUiService.GetFormImage(formId, filePath, RequestCancellation);
         }
 
         public ImageBytesMetadata GetFormImageBytes(string formId)
         {
+            WaitForGraphs();
             return JsonUiService.GetFormImageBytes(formId, RequestCancellation);
         }
 

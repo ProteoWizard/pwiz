@@ -913,10 +913,11 @@ namespace pwiz.Skyline.ToolsUI
             {
                 if (Control is IButtonControl && !string.IsNullOrEmpty(Control.Text))
                     return Control.Text;
-                var previous = Control.FindForm()?.GetNextControl(Control, false);
-                return (previous as Label)?.Text;
+                return PrecedingLabel;
             }
         }
+
+        protected string PrecedingLabel => (Control.FindForm()?.GetNextControl(Control, false) as Label)?.Text;
 
         public override UiElement GetChild(UiElementPath path)
         {
@@ -1612,6 +1613,8 @@ namespace pwiz.Skyline.ToolsUI
     internal sealed class DropDownListElement : ControlElement<LiteDropDownList>, IValueElement, IOptionsElement
     {
         public DropDownListElement(LiteDropDownList dropDownList, CancellationToken cancellationToken) : base(dropDownList, cancellationToken) { }
+        // Its Text is the chosen value, not a caption: like a combo box, it is named by the label before it
+        public override string Label => PrecedingLabel;
         public override object GetValueNow() => Control.Text;
         public IEnumerable<string> GetOptions() => Control.Items.Select(item => item.ToString()).ToList();
         public void SetValueNow(object value)
