@@ -2440,10 +2440,13 @@ namespace pwiz.Skyline.ToolsUI
             if (row < 0 || row >= _dataGridView.Rows.Count)
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Row {0} is out of range; the grid has {1} rows.", row, _dataGridView.Rows.Count));
-            // Clicking a cell gives the grid the focus, and a focused grid puts a checkbox cell straight into
-            // edit mode, which is what lets Space then toggle it
-            _dataGridView.Focus();
-            _dataGridView.CurrentCell = _dataGridView.Rows[row].Cells[visibleColumns[column].Index];
+            var cell = _dataGridView.Rows[row].Cells[visibleColumns[column].Index];
+            // Clicking a cell gives the grid the focus, and a focused grid puts a cell with no editing control (a
+            // checkbox) straight into edit mode, which is what lets Space then toggle it. A text cell is not
+            // focused: in edit mode its editing control would overwrite text then entered through the grid.
+            if (cell.EditType == null)
+                _dataGridView.Focus();
+            _dataGridView.CurrentCell = cell;
         }
 
         // A grid's menu is the one for its current cell (move there first with SetCurrentCellAddress), built
