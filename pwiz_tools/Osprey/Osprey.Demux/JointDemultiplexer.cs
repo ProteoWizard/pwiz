@@ -47,6 +47,12 @@ namespace pwiz.Osprey.Demux
         /// <summary>Refit the coefficients the lasso kept without the penalty.</summary>
         public bool Relaxed { get; set; }
 
+        /// <summary>
+        /// Solve a second time with Poisson weights from the first solution's expected counts. The first
+        /// solve's weights come from the data itself, each row's profile smoothed by the TOF peak.
+        /// </summary>
+        public bool Reweight { get; set; } = true;
+
         /// <summary>The expected count below which a sample's Poisson weight stops growing, in ions.</summary>
         public double WeightFloorIons { get; set; } = 0.5;
 
@@ -57,13 +63,21 @@ namespace pwiz.Osprey.Demux
         public int ChunkSamples { get; set; } = 2048;
 
         /// <summary>Coordinate-descent passes over the active set in one round.</summary>
-        public int MaxPasses { get; set; } = 50;
+        public int MaxPasses { get; set; } = 20;
 
         /// <summary>Rounds of adding the coefficients the full gradient says should be active.</summary>
-        public int MaxRounds { get; set; } = 10;
+        public int MaxRounds { get; set; } = 5;
 
         /// <summary>A round stops when no coefficient moves by more than this many ions.</summary>
         public double ToleranceIons { get; set; } = 1e-3;
+
+        /// <summary>
+        /// A round also stops when a pass lowers the objective by less than this fraction of it. Along m/z
+        /// the coefficients of neighbouring grid points are nearly interchangeable (the TOF peak is about
+        /// three samples wide), so single coefficients keep moving long after the fit, each position's peak
+        /// totals and their m/z have settled.
+        /// </summary>
+        public double RelativeTolerance { get; set; } = 1e-4;
 
         /// <summary>The TOF peak's sigma at an m/z.</summary>
         public double SigmaAt(double mz)
@@ -98,10 +112,12 @@ namespace pwiz.Osprey.Demux
     /// <para>The solve: coordinate descent on the active set, the active set grown from the full gradient
     /// until no coefficient violates the optimality conditions. The gradient is factored as the spec
     /// describes: each row's weighted residual convolved with B once, then combined across rows by A.
-    /// Three passes: unweighted, to set the expected counts mu; Poisson-weighted, 1 / max(mu, floor), with
-    /// the z-scaled lasso; and, when <see cref="JointDemuxParams.Relaxed"/>, the kept coefficients
-    /// refitted without the penalty. A sweep's grid is solved in overlapping chunks; each chunk keeps
-    /// only the coefficients it owns.</para>
+    /// Each grid point's active positions are solved together exactly (their transmission columns are
+    /// nearly collinear). The weights are Poisson, 1 / max(mu, floor): mu first from the data smoothed by B,
+    /// then, with <see cref="JointDemuxParams.Reweight"/>, from the first solution; the z-scaled lasso keeps
+    /// the active set sparse from the start. With <see cref="JointDemuxParams.Relaxed"/>, the kept
+    /// coefficients are refitted without the penalty. A sweep's grid is solved in overlapping chunks;
+    /// each chunk keeps only the coefficients it owns.</para>
     /// <para>Determinism: a fixed coordinate order, chunks in grid order, no state shared across
     /// units.</para>
     /// </remarks>
@@ -300,12 +316,15 @@ namespace pwiz.Osprey.Demux
 
                 Array.Clear(_beta, 0, _columns * _points);
                 Array.Copy(_y, _residual, _rows * _samples);
-                // 1. Unweighted, unpenalized: the expected counts for the weights.
+                // 1. Poisson weights from the data smoothed by the peak, with the z-scaled lasso.
                 FillWeights(false);
-                Descend(0);
-                // 2. Poisson-weighted, with the z-scaled lasso, from the unweighted solution.
-                FillWeights(true);
                 Descend(_parameters.L1Z);
+                // 2. Poisson weights from that solution's expected counts.
+                if (_parameters.Reweight)
+                {
+                    FillWeights(true);
+                    Descend(_parameters.L1Z);
+                }
                 // 3. Relaxed: the kept coefficients without the penalty.
                 if (_parameters.Relaxed && _parameters.L1Z > 0)
                     Descend(0, false);
@@ -368,17 +387,35 @@ namespace pwiz.Osprey.Demux
             }
 
             /// <summary>
-            /// Unit weights, or Poisson weights 1 / max(mu, floor) with mu = y - residual from the solution
-            /// so far; then each coefficient's curvature for the weights.
+            /// Poisson weights 1 / max(mu, floor), with mu the model's expected counts, y - residual, or before
+            /// there is a model each row's counts smoothed by the peak; then each coefficient's curvature for
+            /// the weights.
             /// </summary>
-            private void FillWeights(bool poisson)
+            private void FillWeights(bool fromModel)
             {
                 double floor = _parameters.WeightFloorIons;
                 for (int r = 0; r < _rows; r++)
                 {
                     int o = r * _samples;
                     for (int s = 0; s < _samples; s++)
-                        _weight[o + s] = poisson ? 1 / Math.Max(_y[o + s] - _residual[o + s], floor) : 1;
+                    {
+                        double mu;
+                        if (fromModel)
+                        {
+                            mu = _y[o + s] - _residual[o + s];
+                        }
+                        else
+                        {
+                            mu = 0;
+                            for (int d = -_half; d <= _half; d++)
+                            {
+                                int t = s + d;
+                                if (t >= 0 && t < _samples)
+                                    mu += _b[d + _half] * _y[o + t];
+                            }
+                        }
+                        _weight[o + s] = 1 / Math.Max(mu, floor);
+                    }
                 }
                 // v[r, q] = sum_d B[d]^2 w[r, q + d]; curvature[j, q] = sum_r A_rj^2 v[r, q].
                 Array.Clear(_v, 0, _rows * _points);
@@ -436,14 +473,41 @@ namespace pwiz.Osprey.Demux
                 {
                     if (grow && AddViolators() == 0 && round > 0)
                         break;
+                    double previous = Objective();
                     for (int pass = 0; pass < _parameters.MaxPasses; pass++)
                     {
-                        if (Pass() < _parameters.ToleranceIons)
+                        double largest = Pass();
+                        double current = Objective();
+                        if (largest < _parameters.ToleranceIons || previous - current <= _parameters.RelativeTolerance * current)
                             break;
+                        previous = current;
                     }
                     if (!grow)
                         break;
                 }
+            }
+
+            /// <summary>The objective: half the weighted squared residual plus the lasso term.</summary>
+            private double Objective()
+            {
+                double sum = 0;
+                for (int r = 0; r < _rows; r++)
+                {
+                    if (!_rowUsed[r])
+                        continue;
+                    int o = r * _samples;
+                    for (int s = 0; s < _samples; s++)
+                        sum += 0.5 * _weight[o + s] * _residual[o + s] * _residual[o + s];
+                }
+                for (int j = 0; j < _columns; j++)
+                {
+                    if (!_columnUsed[j])
+                        continue;
+                    int oj = j * _points;
+                    for (int q = 0; q < _points; q++)
+                        sum += _lambda[oj + q] * _beta[oj + q];
+                }
+                return sum;
             }
 
             /// <summary>
