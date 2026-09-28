@@ -270,16 +270,6 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to build library by running the AlphaPeptDeep cmd-flow command..
-        /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Failed_to_build_library_by_executing_the_peptdeep_cmd_flow_command_ {
-            get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Failed_to_build_library_by_executing_" +
-                        "the_peptdeep_cmd_flow_command_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Importing spectral library.
         /// </summary>
         public static string AlphapeptdeepLibraryBuilder_Importing_spectral_library {
@@ -308,21 +298,29 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to generate settings.yaml file by running the AlphaPeptDeep export-settings command..
+        ///   Looks up a localized string similar to Failed to predict the library with AlphaPeptDeep..
         /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Failed_to_generate_settings_yaml_file_by_executing_the_peptdeep_export_settings_command_ {
+        public static string AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_with_AlphaPeptDeep_ {
             get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Failed_to_generate_settings_yaml_" +
-                        "file_by_executing_the_peptdeep_export_settings_command_", resourceCulture);
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_with_AlphaPeptDeep_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Preparing settings file.
+        ///   Looks up a localized string similar to Predicting with AlphaPeptDeep on the CPU..
         /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file {
+        public static string AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_CPU {
             get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file", resourceCulture);
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_CPU", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Predicting with AlphaPeptDeep on the GPU..
+        /// </summary>
+        public static string AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_GPU {
+            get {
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_GPU", resourceCulture);
             }
         }
         

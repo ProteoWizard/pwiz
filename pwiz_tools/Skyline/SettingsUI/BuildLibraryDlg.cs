@@ -36,7 +36,6 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using File = System.IO.File;
 
@@ -319,11 +318,6 @@ namespace pwiz.Skyline.SettingsUI
                 return false;
             }
 
-            if (!SetupPythonEnvironmentForAlpha())
-            {
-                return false;
-            }
-
             Builder = new AlphapeptdeepLibraryBuilder(name, outputPath, doc, IrtStandard);
 
             return true;
@@ -369,62 +363,6 @@ namespace pwiz.Skyline.SettingsUI
                 return false;
             }
 
-            return true;
-        }
-
-        private bool SetupPythonEnvironmentForAlpha()
-        {
-            var pythonInstaller = AlphapeptdeepLibraryBuilder.CreatePythonInstaller(new TextBoxStreamWriterHelper());
-
-            btnNext.Enabled = false;
-
-            bool setupSuccess = false;
-            try
-            {
-                setupSuccess = SetupPythonEnvironmentInternal(pythonInstaller);
-            }
-            finally
-            {
-                // If not a successful installation, try to clean-up before leaving
-                if (!setupSuccess)
-                    pythonInstaller.CleanUpPythonEnvironment(AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP);
-
-                btnNext.Enabled = true;
-            }
-
-            return setupSuccess;
-        }
-
-        private bool SetupPythonEnvironmentInternal(PythonInstaller pythonInstaller)
-        {
-            if (pythonInstaller.IsPythonVirtualEnvironmentReady() && pythonInstaller.IsNvidiaEnvironmentReady())
-            {
-                return true;
-            }
-
-            if (!pythonInstaller.IsPythonVirtualEnvironmentReady())
-            {
-                using var pythonDlg = new MultiButtonMsgDlg(
-                    string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
-                        AlphapeptdeepLibraryBuilder.PythonVersion, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP), 
-                    Resources.OK);
-                
-                if (pythonDlg.ShowDialog(this) == DialogResult.Cancel)
-                {
-                    return false;
-                }
-                if (!PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
-                {
-                    return false;
-                }
-            }
-            else if (!pythonInstaller.IsNvidiaEnvironmentReady())
-            {
-                if (!PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
-                {
-                    return false;
-                }
-            }
             return true;
         }
 

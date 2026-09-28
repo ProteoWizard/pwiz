@@ -309,6 +309,33 @@
     </ItemGroup>
   </Target>
 
+  <!-- AlphaPeptDeep library prediction runs in process through CarafeSharp's TorchSharp port of the
+       peptdeep MS2 and RT models (pwiz_tools\CarafeSharp). Skyline chooses the libtorch native runtime,
+       as the CarafeSharp executable does: SkylineTorch=cuda (default) or cpu. The CUDA runtime (about
+       4 GB of native files) also runs on machines without a usable NVIDIA GPU, falling back to the CPU;
+       cpu builds a smaller Skyline that never uses a GPU. The libtorch version must match the one
+       CarafeSharp's Directory.Build.props pairs with its TorchSharp version. -->
+  <PropertyGroup>
+    <SkylineTorch Condition="'$(SkylineTorch)' == ''">cuda</SkylineTorch>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CarafeSharp\CarafeSharp.Models\CarafeSharp.Models.csproj" />
+    <PackageReference Include="libtorch-cpu-win-x64" Version="2.10.0" Condition="'$(SkylineTorch)' == 'cpu'" />
+    <PackageReference Include="libtorch-cuda-12.8-win-x64" Version="2.10.0" Condition="'$(SkylineTorch)' == 'cuda'" />
+    <!-- The pinned AlphaPeptDeep v1 pretrained models, beside the executable where
+         AlphapeptdeepLibraryBuilder looks for them. -->
+    <Content Include="..\CarafeSharp\models\alphapeptdeep-v1\pretrained_models.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>models\alphapeptdeep-v1\pretrained_models.zip</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="..\CarafeSharp\models\alphapeptdeep-v1\LICENSE.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>models\alphapeptdeep-v1\LICENSE.txt</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
   <!-- msconvert (managed pwiz-sharp port). Skyline shells out to msconvert for DIA-Umpire and
        EncyclopeDIA demultiplexing conversions, expecting msconvert.exe next to Skyline in the bin
        dir (resolved via PathEx.ResolveBundledExe). Reference the project so it builds first; the

@@ -893,20 +893,20 @@ Would you like to continue building this predicted library?</value>
 Would you like to continue?
     </value>
   </data>
-  <data name="AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Failed_to_generate_settings_yaml_file_by_executing_the_peptdeep_export_settings_command_" xml:space="preserve">
-    <value>Failed to generate settings.yaml file by running the AlphaPeptDeep export-settings command.</value>
-  </data>
-  <data name="AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Failed_to_build_library_by_executing_the_peptdeep_cmd_flow_command_" xml:space="preserve">
-    <value>Failed to build library by running the AlphaPeptDeep cmd-flow command.</value>
-  </data>
   <data name="LibraryHelper_PreparePrecursorInputFile_Preparing_prediction_input_file" xml:space="preserve">
     <value>Preparing prediction input file</value>
   </data>
   <data name="LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file" xml:space="preserve">
     <value>Preparing training input file</value>
   </data>
-  <data name="AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file" xml:space="preserve">
-    <value>Preparing settings file</value>
+  <data name="AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_with_AlphaPeptDeep_" xml:space="preserve">
+    <value>Failed to predict the library with AlphaPeptDeep.</value>
+  </data>
+  <data name="AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_CPU" xml:space="preserve">
+    <value>Predicting with AlphaPeptDeep on the CPU.</value>
+  </data>
+  <data name="AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_GPU" xml:space="preserve">
+    <value>Predicting with AlphaPeptDeep on the GPU.</value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep" xml:space="preserve">
     <value>Running AlphaPeptDeep</value>
