@@ -305,18 +305,6 @@ namespace pwiz.Osprey.Tasks
                     LazyPass2ExperimentRecords(ctx));
             }
 
-            // Not recomputed, so no pass-2 path published a Pass2ExperimentScope - yet the
-            // analysis-wide 2nd-pass experiment sidecar is still this task's output, and its
-            // answer is the standing experiment-scope values: the first pass's when there was no
-            // rescore work anywhere (Rust's total_rescored == 0), else the 2nd-pass values an
-            // earlier run left on disk. Handed to WritePass2ExperimentSidecar, which restricts
-            // them to this run's survivors in the per-file walk it already makes.
-            if (!recomputed && !ctx.TryGet<Pass2ExperimentScope>(out _))
-            {
-                ctx.Publish(new Pass2StandingExperimentValues(LoadExperimentRecords(config,
-                    anyRescoreWork ? FdrScoresSidecar.Pass.SecondPass : FdrScoresSidecar.Pass.FirstPass)));
-            }
-
             // Persist post-Stage-6 per-file 2nd-pass FDR scores
             // BEFORE RunProteinFdr. The sidecar holds Score +
             // run/experiment precursor/peptide q-values + Pep +
@@ -387,15 +375,7 @@ namespace pwiz.Osprey.Tasks
                 // so - and "not recomputed" means every one of them is already current on
                 // disk. P13's never-conditionally-write rule binds the artifact's OWNER, and
                 // that is not this task here.
-                // EXCEPT a cohort with no rescore work at all. The rescore worker competes only
-                // the files it re-scored, so with nothing re-scored anywhere it wrote no sidecar,
-                // and "not recomputed" there does not mean "already current on disk" - it means
-                // no one has written them. The standing values are the answer (Rust's
-                // total_rescored == 0), and a streamed run WITHOUT a worker answer is rebuilt
-                // with the 1st-pass overlay, so its entries carry exactly those values.
-                bool writeStandingStreamed = rescored.Streams && !anyRescoreWork &&
-                                             (workerWroteFiles == null || workerWroteFiles.Count == 0);
-                if (!pass2SidecarsWritten && (!rescored.Streams || writeStandingStreamed))
+                if (!pass2SidecarsWritten && !rescored.Streams)
                 {
                     // Per-file progress: this writes one .2nd-pass.fdr_scores.bin per file
                     // (~4.8 GB across 82) and was silent, which with the reload loop below is
@@ -407,7 +387,7 @@ namespace pwiz.Osprey.Tasks
                         rescored.FileCount, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
                     {
                         long nWrittenReported = 0;
-                        foreach (var kvp in rescored.Streams ? rescored.StreamFiles() : Pool())
+                        foreach (var kvp in Pool())
                         {
                             writeProgress.Report(++nWrittenReported);
                             pass2Writer.Write(kvp.Key, kvp.Value);
@@ -1494,21 +1474,7 @@ namespace pwiz.Osprey.Tasks
             // The three EXPERIMENT-scope columns the second pass already computed, handed over
             // by the pass that computed them. Absent only when no pass-2 path ran, in which case
             // there is nothing to write.
-            FdrExperimentAccumulator experiment;
-            IReadOnlyDictionary<uint, FdrExperimentRecord> standing = null;
-            if (ctx.TryGet<Pass2ExperimentScope>(out var scope))
-            {
-                experiment = scope.Accumulator;
-            }
-            else if (ctx.TryGet<Pass2StandingExperimentValues>(out var standingValues))
-            {
-                // No pass-2 path ran because nothing was re-scored: the standing values ARE the
-                // second-pass answer. Built per file below, over the same survivor entry_ids the
-                // recomputing modes write, so the file has the same shape either way.
-                experiment = new FdrExperimentAccumulator();
-                standing = standingValues.Records;
-            }
-            else
+            if (!ctx.TryGet<Pass2ExperimentScope>(out var scope))
             {
                 // ABSENCE IS A STOP, on every mode that computes a second pass. This used to
                 // log-and-return, which is how OSPREY_PASS2_QVALUE=transfer silently produced no
@@ -1526,7 +1492,7 @@ namespace pwiz.Osprey.Tasks
                     @"pass must publish this - the competition modes from the fold, and " +
                     @"OSPREY_PASS2_QVALUE=transfer from the carried pass-1 values. See issue #4486.");
             }
-            long nStandingMissing = 0;
+            var experiment = scope.Accumulator;
 
             int filesPatched = 0;
             long nPatched = 0;
@@ -1596,39 +1562,11 @@ namespace pwiz.Osprey.Tasks
                         continue;
                     }
 
-                    if (standing != null)
-                    {
-                        foreach (uint entryId in byEntryId.Keys)
-                        {
-                            // First sighting only: a later file must not re-add the unpatched
-                            // protein q over the value SetProteinQvalue has already applied.
-                            if (experiment.Records.ContainsKey(entryId))
-                                continue;
-                            if (!standing.TryGetValue(entryId, out var r))
-                            {
-                                nStandingMissing++;
-                                continue;
-                            }
-                            experiment.Add(r.EntryId, r.ExperimentPrecursorQvalue,
-                                r.ExperimentPeptideQvalue, r.ExperimentProteinQvalue,
-                                r.ExperimentAggregateScore, r.Pep);
-                        }
-                    }
                     foreach (var kvp in byEntryId)
                         experiment.SetProteinQvalue(kvp.Key, kvp.Value);
                     filesPatched++;
                     nPatched += byEntryId.Count;
                 }
-            }
-
-            // A survivor with no standing experiment record would be left out of the file with
-            // nothing to say so - the absent-looks-like-empty ambiguity LoadExperimentRecords
-            // documents. It means the standing sidecar is missing or from another analysis.
-            if (nStandingMissing > 0)
-            {
-                throw new InvalidOperationException(CountText.Format(nStandingMissing,
-                    OspreyTasksResources.Pass2FdrSidecar_WritePass2ExperimentSidecar_1_precursor_candidate_has_no_experiment_level_FDR_values_to_carry_int,
-                    OspreyTasksResources.Pass2FdrSidecar_WritePass2ExperimentSidecar__0__precursor_candidates_have_no_experiment_level_FDR_values_to_carry_));
             }
 
             // Reported, not thrown on: nothing in this process reads the 2nd-pass sidecar's
@@ -1693,22 +1631,6 @@ namespace pwiz.Osprey.Tasks
             }
 
             public FdrExperimentAccumulator Accumulator { get; }
-        }
-
-        /// <summary>
-        /// The standing EXPERIMENT-scope records a run carries into the second pass when no
-        /// pass-2 path recomputed anything, published by <see cref="ComputeAndPersist"/> so
-        /// <see cref="WritePass2ExperimentSidecar"/> can still write the analysis-wide
-        /// 2nd-pass sidecar - whose answer, with nothing re-scored, is these values.
-        /// </summary>
-        internal sealed class Pass2StandingExperimentValues
-        {
-            public Pass2StandingExperimentValues(IReadOnlyDictionary<uint, FdrExperimentRecord> records)
-            {
-                Records = records;
-            }
-
-            public IReadOnlyDictionary<uint, FdrExperimentRecord> Records { get; }
         }
 
         /// <summary>
