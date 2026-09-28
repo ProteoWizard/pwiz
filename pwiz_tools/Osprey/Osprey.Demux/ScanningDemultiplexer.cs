@@ -65,6 +65,22 @@ namespace pwiz.Osprey.Demux
         public bool PositionMz { get; set; }
 
         /// <summary>
+        /// Scanning data: a non-negative L1 (lasso) weight on every per-sweep solve, in the weighted
+        /// fit's units (0: off). With x &gt;= 0 the penalty is linear, so each solve is NNLS on
+        /// A^T y - SweepL1 / 2: a position stays at zero unless it lowers the fit's residual faster
+        /// than SweepL1 per ion, and the positions kept are shrunk by it. Not used with
+        /// <see cref="SourcePositions"/>, whose source-finding fit has <see cref="SourceL1"/>.
+        /// </summary>
+        public double SweepL1 { get; set; }
+
+        /// <summary>
+        /// With <see cref="SweepL1"/>: refit each sweep without the penalty over the positions the
+        /// lasso kept (a relaxed lasso), so the lasso chooses the support and the quantities are not
+        /// shrunk.
+        /// </summary>
+        public bool SweepL1Refit { get; set; }
+
+        /// <summary>
         /// Scanning data: place each channel's sources once from the whole block instead of per
         /// sweep on fixed positions. The channel's profile summed over the block's sweeps is fitted
         /// on the bin columns; runs of adjacent solved columns are sources, merged when closer than
@@ -366,6 +382,12 @@ namespace pwiz.Osprey.Demux
             var mzNumerator = parameters.PositionMz ? new double[columns] : null;
             var mzDenominator = parameters.PositionMz ? new double[columns] : null;
             var sourceFitter = parameters.SourcePositions ? new SourceFitter(unit, parameters, solver) : null;
+            if (sourceFitter == null)
+            {
+                // Source positions set the solver's penalty themselves, for their summed fit only.
+                solver.L1 = parameters.SweepL1;
+                solver.RefitSupport = parameters.SweepL1 > 0 && parameters.SweepL1Refit;
+            }
             int k = 0;
             while (k < peaks)
             {
@@ -1063,6 +1085,11 @@ namespace pwiz.Osprey.Demux
             private readonly int[] _nzColumn;      // an entry's column, as an index into the channel's columns
             private readonly double[] _nzValue;
             private readonly NnlsSolver.Workspace _workspace;
+            private readonly int[] _support;       // the refit's columns, as indices into the channel's columns
+            private readonly double[] _supportGram;
+            private readonly double[] _supportAtb;
+            private readonly double[] _supportX;
+            private readonly double[] _supportStart;
 
             public ChannelSolver(double[,] a, ScanningDemuxParams parameters)
             {
@@ -1083,6 +1110,11 @@ namespace pwiz.Osprey.Demux
                 _nzColumn = new int[_rows * _columns];
                 _nzValue = new double[_rows * _columns];
                 _workspace = new NnlsSolver.Workspace(_columns);
+                _support = new int[_columns];
+                _supportGram = new double[_columns * _columns];
+                _supportAtb = new double[_columns];
+                _supportX = new double[_columns];
+                _supportStart = new double[_columns];
             }
 
             /// <summary>
@@ -1145,6 +1177,8 @@ namespace pwiz.Osprey.Demux
                     NnlsSolver.SolveNormal(_gram, _atb, nc, _x, _workspace);
                     if (_parameters.PoissonWeights)
                         SolveWeighted(y, c, cycles, nr, nc);
+                    if (RefitSupport)
+                        Refit(y, c, cycles, nr, nc);
                     solved(c, nc, _x, _columnIndex);
                 }
             }
@@ -1182,12 +1216,49 @@ namespace pwiz.Osprey.Demux
             /// </summary>
             public double L1 { get; set; }
 
+            /// <summary>
+            /// Refit each penalized solve without the penalty over the columns it kept, with the
+            /// same row weights (a relaxed lasso).
+            /// </summary>
+            public bool RefitSupport { get; set; }
+
             private void Penalize(int nc)
             {
                 if (L1 <= 0)
                     return;
                 for (int jj = 0; jj < nc; jj++)
                     _atb[jj] -= 0.5 * L1;
+            }
+
+            /// <summary>
+            /// The relaxed lasso's second step: the last solve's positive columns refitted without the
+            /// penalty, with the weights of <see cref="SolveWeighted"/> (none when Poisson weights are
+            /// off), starting from the penalized solution.
+            /// </summary>
+            private void Refit(double[] y, int c, int cycles, int nr, int nc)
+            {
+                int ns = 0;
+                for (int jj = 0; jj < nc; jj++)
+                {
+                    if (_x[jj] > 0)
+                        _support[ns++] = jj;
+                }
+                if (ns == 0)
+                    return;
+                bool weighted = _parameters.PoissonWeights;
+                ComputeAtb(y, c, cycles, nr, nc, weighted ? _mu : null);
+                var gram = weighted ? _weighted : _gram;
+                for (int s = 0; s < ns; s++)
+                {
+                    _supportAtb[s] = _atb[_support[s]];
+                    _supportStart[s] = _x[_support[s]];
+                    for (int t = 0; t < ns; t++)
+                        _supportGram[s * ns + t] = gram[_support[s] * nc + _support[t]];
+                }
+                NnlsSolver.SolveNormal(_supportGram, _supportAtb, ns, _supportX, _workspace, 0, _supportStart);
+                Array.Clear(_x, 0, nc);
+                for (int s = 0; s < ns; s++)
+                    _x[_support[s]] = _supportX[s];
             }
 
             /// <summary>A^T y for one sweep, or A^T W y with weights 1 / max(mu, floor) when mu is given.</summary>

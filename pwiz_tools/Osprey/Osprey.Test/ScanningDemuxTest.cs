@@ -92,7 +92,8 @@ namespace pwiz.Osprey.Test
         /// fragment returns exactly to its precursor's bin, including a fragment two precursors
         /// share; with position m/z, a drifting fragment keeps each sweep's own m/z; with counting
         /// noise, the three bins centered on each precursor hold its intensity; a lone weak peak
-        /// passes through; and the result is the same twice.
+        /// passes through; the result is the same twice; and the per-sweep lasso, relaxed or not,
+        /// behaves as <see cref="AssertSweepLasso"/> describes.
         /// </summary>
         [TestMethod]
         public void TestScanningDemuxRecovers()
@@ -189,6 +190,8 @@ namespace pwiz.Osprey.Test
             var second = ScanningDemultiplexer.DemuxUnit(Simulate(a, sources, new Random(11)), parameters);
             CollectionAssert.AreEqual(first.Demultiplexed, second.Demultiplexed);
             CollectionAssert.AreEqual(first.PassedThrough, second.PassedThrough);
+
+            AssertSweepLasso(a, sources, exact, first);
         }
 
         /// <summary>
@@ -330,6 +333,44 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(600.0, mz[0], 1e-12);
             Assert.AreEqual((600.0 * 40 + 600.0012 * 10) / 50, mz[1], 1e-9);
             Assert.AreEqual(650.0, mz[2], 1e-12);
+        }
+
+        /// <summary>
+        /// The per-sweep lasso: noiseless, the penalty keeps each source's own bin but shrinks it,
+        /// and the relaxed refit returns every source exactly. Under counting noise the lasso writes
+        /// fewer positions than the plain solve, and with the refit the three bins centered on each
+        /// precursor still hold its intensity.
+        /// </summary>
+        private static void AssertSweepLasso(double[,] a, (int Bin, double Mz, double Amount)[] sources,
+            ScanningUnitResult exact, ScanningUnitResult noisy)
+        {
+            var lassoParams = new ScanningDemuxParams { SweepL1 = 2 };
+            var relaxedParams = new ScanningDemuxParams { SweepL1 = 2, SweepL1Refit = true };
+            var relaxed = ScanningDemultiplexer.DemuxUnit(Simulate(a, sources, null), relaxedParams);
+            foreach (var s in sources.GroupBy(s => s.Mz))
+            {
+                for (int bin = 10; bin < 50; bin++)
+                {
+                    double expected = s.Where(t => t.Bin == bin).Sum(t => t.Amount) * TotalElution();
+                    Assert.AreEqual(expected, Sum(relaxed.Demultiplexed, bin, s.Key), 1e-6 * s.Max(t => t.Amount),
+                        string.Format(@"relaxed lasso, m/z {0}, bin {1}", s.Key, bin));
+                }
+            }
+            var lasso = ScanningDemultiplexer.DemuxUnit(Simulate(a, sources, null), lassoParams);
+            double plain = Sum(exact.Demultiplexed, 20, 300.1234);
+            double shrunk = Sum(lasso.Demultiplexed, 20, 300.1234);
+            Assert.IsTrue(shrunk > 0 && shrunk < plain - 1, string.Format(@"lasso {0} against {1}", shrunk, plain));
+
+            var noisyRelaxed = ScanningDemultiplexer.DemuxUnit(Simulate(a, sources, new Random(11)), relaxedParams);
+            Assert.IsTrue(noisyRelaxed.Demultiplexed.Count < noisy.Demultiplexed.Count,
+                string.Format(@"{0} positions written with the lasso, {1} without", noisyRelaxed.Demultiplexed.Count,
+                    noisy.Demultiplexed.Count));
+            foreach (var s in sources.Where(t => t.Mz != 701.5678))
+            {
+                double expected = s.Amount * TotalElution();
+                double found = Enumerable.Range(s.Bin - 1, 3).Sum(bin => Sum(noisyRelaxed.Demultiplexed, bin, s.Mz));
+                Assert.AreEqual(expected, found, 0.15 * expected, string.Format(@"relaxed lasso, m/z {0}, 3 bins", s.Mz));
+            }
         }
 
         /// <summary>

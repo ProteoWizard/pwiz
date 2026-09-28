@@ -42,7 +42,7 @@ namespace pwiz.Osprey.DemuxTool
             @"Usage: Osprey.DemuxTool --in <run.wiff2|.raw|.mzML> --out <demux.mzML> [--scheme scanning|staggered]" +
             @" [--kernel <profile.tsv>] [--layout centered:k|tiled:k|framed:k:m] [--threads N] [--cycles first:last]" +
             @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--position-mz] [--unweighted]" +
-            @" [--source-positions] [--source-l1 L] [--raw]";
+            @" [--sweep-l1 L] [--sweep-l1-refit] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw]";
 
         private static int Main(string[] args)
         {
@@ -54,7 +54,7 @@ namespace pwiz.Osprey.DemuxTool
                 // Every option but the switches takes a value.
                 string option = args[i];
                 bool isSwitch = option == @"--raw" || option == @"--unweighted" || option == @"--position-mz" ||
-                    option == @"--source-positions";
+                    option == @"--source-positions" || option == @"--sweep-l1-refit";
                 if (!isSwitch && i + 1 >= args.Length)
                 {
                     Console.Error.WriteLine(USAGE);
@@ -114,12 +114,24 @@ namespace pwiz.Osprey.DemuxTool
                         // Each solved value at the m/z of the peaks it was solved from, in its sweep.
                         options.Parameters.PositionMz = true;
                         break;
+                    case @"--sweep-l1":
+                        // A lasso weight on each per-sweep solve.
+                        options.Parameters.SweepL1 = double.Parse(value, CultureInfo.InvariantCulture);
+                        break;
+                    case @"--sweep-l1-refit":
+                        // Each lasso solve refitted without the penalty on the positions it kept.
+                        options.Parameters.SweepL1Refit = true;
+                        break;
                     case @"--source-positions":
                         // Each channel's sources placed once per block, then solved per sweep.
                         options.Parameters.SourcePositions = true;
                         break;
                     case @"--source-l1":
                         options.Parameters.SourceL1 = double.Parse(value, CultureInfo.InvariantCulture);
+                        break;
+                    case @"--min-source-fraction":
+                        // Sources under this fraction of their channel's total are dropped.
+                        options.Parameters.MinSourceFraction = double.Parse(value, CultureInfo.InvariantCulture);
                         break;
                     case @"--raw":
                         // The selected spectra as acquired, zeros dropped: the control arm.
@@ -142,6 +154,7 @@ namespace pwiz.Osprey.DemuxTool
                 Console.WriteLine(@"Kernel: {0}", kernel.Descriptor);
             Console.WriteLine(@"Layout: {0}{1}", staggered ? @"staggered bins" : options.Raw ? @"raw" : options.Layout.Name,
                 options.Parameters.PoissonWeights ? string.Empty : @", unweighted");
+            Console.WriteLine(@"Solve: {0}", SolveSettings(options.Parameters));
 
             // pwiz-sharp's default reader list holds only the open formats; vendor readers are
             // appended, as Osprey's own reader does on load.
@@ -192,6 +205,24 @@ namespace pwiz.Osprey.DemuxTool
             Console.WriteLine(@"Wrote {0} in {1:F0} s: {2:N0} channels, {3:N0} solved; {4:P2} of {5:E3} ions passed through",
                 output, stopwatch.Elapsed.TotalSeconds, channels, solved, passed / Math.Max(ionsIn, 1e-30), ionsIn);
             return 0;
+        }
+
+        /// <summary>The solve's settings, so each run's log records what produced its file.</summary>
+        private static string SolveSettings(ScanningDemuxParams parameters)
+        {
+            var settings = string.Format(CultureInfo.InvariantCulture, @"min-out {0}{1}", parameters.MinOutputIons,
+                parameters.PositionMz ? @", position m/z" : string.Empty);
+            if (parameters.SourcePositions)
+            {
+                settings += string.Format(CultureInfo.InvariantCulture, @", source positions (L1 {0}, min fraction {1})",
+                    parameters.SourceL1, parameters.MinSourceFraction);
+            }
+            else if (parameters.SweepL1 > 0)
+            {
+                settings += string.Format(CultureInfo.InvariantCulture, @", sweep L1 {0}{1}", parameters.SweepL1,
+                    parameters.SweepL1Refit ? @" refit" : string.Empty);
+            }
+            return settings;
         }
     }
 }
