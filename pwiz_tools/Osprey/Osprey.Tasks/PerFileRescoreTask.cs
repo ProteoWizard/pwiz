@@ -1169,8 +1169,10 @@ namespace pwiz.Osprey.Tasks
             /// behaves exactly as it always did.
             ///
             /// <para>Built ONCE for the pass and shared across the parallel file loop. It is
-            /// safe to share: the scorer and the stratum are read-only, and the only mutable
-            /// state it owns is thread-local. See <see cref="Pass2PerFileWorker"/>.</para>
+            /// safe to share: the stratum is read-only, and the rest of its mutable state - the
+            /// seeders and the frozen scorer's standardization buffer - is per thread. The
+            /// scorer was once called read-only while its Score wrote a shared buffer (#4706).
+            /// See <see cref="Pass2PerFileWorker"/>.</para>
             /// </summary>
             public Pass2PerFileWorker Pass2Worker;
 
