@@ -47,9 +47,11 @@ namespace pwiz.CarafeSharp.Test
 
         /// <summary>
         /// Reads the precursors whose stripped sequence passes <paramref name="keep"/> (all
-        /// when null) and, when given, whose key is in <paramref name="keys"/>.
+        /// when null) and, when given, whose key is in <paramref name="keys"/>. Without
+        /// <paramref name="fragments"/> only the rows are kept, which is all a text comparison needs
+        /// and halves the memory of a large library.
         /// </summary>
-        public static CarafeLibraryTsv Read(string path, Func<string, bool> keep = null, ISet<string> keys = null)
+        public static CarafeLibraryTsv Read(string path, Func<string, bool> keep = null, ISet<string> keys = null, bool fragments = true)
         {
             var library = new CarafeLibraryTsv();
             using (var reader = new StreamReader(path, new UTF8Encoding(false), false, 1 << 20))
@@ -79,7 +81,8 @@ namespace pwiz.CarafeSharp.Test
                     if (!library.Precursors.TryGetValue(key, out var precursor))
                         library.Precursors.Add(key, precursor = new Precursor(cells));
                     precursor.Rows.Add(line);
-                    precursor.Fragments.Add(cells.Skip(FRAGMENT_MZ).ToArray());
+                    if (fragments)
+                        precursor.Fragments.Add(cells.Skip(FRAGMENT_MZ).ToArray());
                 }
             }
             return library;

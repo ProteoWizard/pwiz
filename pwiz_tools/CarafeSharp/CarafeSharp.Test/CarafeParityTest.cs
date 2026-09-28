@@ -36,17 +36,20 @@ namespace pwiz.CarafeSharp.Test
     /// frame (sequence, mods, charge, NCE, instrument, fragment row range) and the
     /// <c>0_ms2_pred</c> and <c>0_rt_pred</c> outputs of Carafe's Python.
     ///
-    /// Two folders, each optional (the test is inconclusive when neither is set):
-    /// <c>CARAFESHARP_CARAFE_REFERENCE</c>, a library predicted with the generic pretrained
-    /// models (Carafe's <c>osprey_initial_library</c>), and <c>CARAFESHARP_CARAFE_FINETUNED</c>,
-    /// a library predicted after fine-tuning (<c>osprey_new_library</c>, which also holds the
-    /// fine-tuned <c>ms2_model.pt</c> and <c>rt_model.pt</c>).
+    /// Two kinds of folder (<see cref="TestData"/> finds them): libraries predicted with the
+    /// generic pretrained models (Carafe's <c>osprey_initial_library</c>,
+    /// <c>CARAFESHARP_CARAFE_REFERENCE</c>), and libraries predicted after fine-tuning
+    /// (<c>osprey_new_library</c>, which also holds the fine-tuned <c>ms2_model.pt</c> and
+    /// <c>rt_model.pt</c>, <c>CARAFESHARP_CARAFE_FINETUNED</c>).
     /// </summary>
     [TestClass]
     public class CarafeParityTest
     {
-        public const string PRETRAINED_REFERENCE_VARIABLE = @"CARAFESHARP_CARAFE_REFERENCE";
-        public const string FINETUNED_REFERENCE_VARIABLE = @"CARAFESHARP_CARAFE_FINETUNED";
+        private const string MS2_FRAME_FILE = @"0_ms2_df.parquet";
+        private const string MS2_PREDICTION_FILE = @"0_ms2_pred.parquet";
+        private const string RT_PREDICTION_FILE = @"0_rt_pred.parquet";
+        private const string MS2_MODEL_FILE = @"ms2_model.pt";
+        private const string RT_MODEL_FILE = @"rt_model.pt";
 
         /// <summary>Precursors compared per folder, spread evenly over the file.</summary>
         private const int SAMPLE_SIZE = 4000;
@@ -63,38 +66,53 @@ namespace pwiz.CarafeSharp.Test
         [TestMethod]
         public void TestPredictionsMatchCarafe()
         {
-            string pretrainedDir = ReferenceDir(PRETRAINED_REFERENCE_VARIABLE);
-            string finetunedDir = ReferenceDir(FINETUNED_REFERENCE_VARIABLE);
-            if (pretrainedDir == null && finetunedDir == null)
-                Assert.Inconclusive(@"Neither {0} nor {1} names a Carafe library output folder.", PRETRAINED_REFERENCE_VARIABLE, FINETUNED_REFERENCE_VARIABLE);
+            ComparePredictions(TestData.PretrainedLibraries, TestData.FineTunedLibraries);
+        }
 
-            if (pretrainedDir != null)
+        [TestMethod, TestCategory(TestData.ASTRAL_CATEGORY)]
+        public void TestAstralPredictionsMatchCarafe()
+        {
+            ComparePredictions(TestData.AstralPretrainedLibraries, TestData.AstralFineTunedLibraries);
+        }
+
+        private void ComparePredictions(TestData.Item pretrainedItem, TestData.Item finetunedItem)
+        {
+            TestData.InconclusiveUnlessAvailable(pretrainedItem, finetunedItem);
+            var pretrainedDirs = pretrainedItem.Resolve();
+            var finetunedDirs = finetunedItem.Resolve();
+            foreach (string folder in pretrainedDirs)
+                TestData.RequireFiles(folder, MS2_FRAME_FILE, MS2_PREDICTION_FILE, RT_PREDICTION_FILE);
+            foreach (string folder in finetunedDirs)
+                TestData.RequireFiles(folder, MS2_FRAME_FILE, MS2_PREDICTION_FILE, RT_PREDICTION_FILE, MS2_MODEL_FILE, RT_MODEL_FILE);
+
+            if (pretrainedDirs.Count > 0)
             {
-                if (!File.Exists(PretrainedModels.DefaultPath))
-                    Assert.Inconclusive(@"No pretrained_models.zip at " + PretrainedModels.DefaultPath);
                 var pretrained = PretrainedModels.Open();
                 using (var ms2 = Ms2Model.FromPretrained(pretrained, CPU))
                 using (var rt = RtModel.FromPretrained(pretrained, CPU))
-                    CompareFolder(@"pretrained", pretrainedDir, ms2, rt, true);
+                {
+                    foreach (string folder in pretrainedDirs)
+                        CompareFolder(@"pretrained " + folder, folder, ms2, rt, true);
+                }
             }
-            if (finetunedDir != null)
+            foreach (string folder in finetunedDirs)
             {
                 // Carafe uses its fine-tuned MS2 model only when it beats the pretrained one on
-                // all four test metrics; this reference folder records that it did.
-                using (var ms2 = Ms2Model.FromPthFile(Path.Combine(finetunedDir, @"ms2_model.pt"), CPU))
-                using (var rt = RtModel.FromPthFile(Path.Combine(finetunedDir, @"rt_model.pt"), CPU))
-                    CompareFolder(@"fine-tuned", finetunedDir, ms2, rt, false);
+                // all four test metrics; these reference folders record that it did.
+                using (var ms2 = Ms2Model.FromPthFile(Path.Combine(folder, MS2_MODEL_FILE), CPU))
+                using (var rt = RtModel.FromPthFile(Path.Combine(folder, RT_MODEL_FILE), CPU))
+                    CompareFolder(@"fine-tuned " + folder, folder, ms2, rt, false);
             }
         }
 
         private void CompareFolder(string label, string folder, Ms2Model ms2, RtModel rt, bool compareIrt)
         {
-            var frame = ParquetColumns.Read(Path.Combine(folder, @"0_ms2_df.parquet"),
+            var frame = ParquetColumns.Read(Path.Combine(folder, MS2_FRAME_FILE),
                 @"sequence", @"charge", @"mods", @"mod_sites", @"instrument", @"nce", @"frag_start_idx");
-            var predicted = ParquetColumns.Read(Path.Combine(folder, @"0_ms2_pred.parquet"),
+            var predicted = ParquetColumns.Read(Path.Combine(folder, MS2_PREDICTION_FILE),
                 @"b_z1", @"b_z2", @"y_z1", @"y_z2");
             CompareMs2(label, ms2, frame, predicted);
-            CompareRt(label, rt, Path.Combine(folder, @"0_rt_pred.parquet"), compareIrt);
+            CompareRt(label, rt, Path.Combine(folder, RT_PREDICTION_FILE), compareIrt);
         }
 
         private void CompareMs2(string label, Ms2Model model, ParquetColumns frame, ParquetColumns predicted)
@@ -167,12 +185,6 @@ namespace pwiz.CarafeSharp.Test
             Assert.IsTrue(maxRt < RT_MAX_DIFF, label + @" RT max |diff| " + maxRt);
             if (compareIrt)
                 Assert.IsTrue(maxIrt < IRT_MAX_DIFF, label + @" iRT max |diff| " + maxIrt);
-        }
-
-        private static string ReferenceDir(string variable)
-        {
-            string dir = Environment.GetEnvironmentVariable(variable);
-            return !string.IsNullOrEmpty(dir) && File.Exists(Path.Combine(dir, @"0_ms2_df.parquet")) ? dir : null;
         }
 
         private static int[] SampleRows(int count)

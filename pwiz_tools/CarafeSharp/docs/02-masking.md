@@ -101,7 +101,17 @@ scored best, and one RT row per peptide form, the one with the lowest q.
 
 - **Peak matching.** Osprey takes the closest peak within its calibrated tolerance; Carafe takes
   the closest within 0.4 Da. 4% of Carafe's valid matches lie 0.31-0.39 Th off and fall outside
-  Osprey's tolerance.
+  Osprey's tolerance. An ion with no peak inside Osprey's window is missing, and CarafeSharp
+  trains its low or zero intensity (the developer's decision, 2026-09-27). Carafe usually masks
+  such an ion instead, because the peak it matched at the window's edge fails its correlation
+  rule. On Stellar, Osprey's calibrated window is -0.399 to +0.303 Th, so these peaks sit
+  +0.30 to +0.40 Th off, 95% of them on 2+ ions.
+  - For 1+ ions, that band holds a peak no more often than equally wide bands away from the
+    fragment do: those are unrelated neighbors.
+  - For 2+ ions it holds one 15-18 points more often than a band 1 Th away. Part of that is
+    probably the ion itself, its centroid pulled up by the unresolved M+1 isotope 0.5 Th away.
+  - Masking these ions instead (variant B of the masking A/B search) made no difference beyond
+    fine-tune noise on Stellar: experiment-level IDs 0.12% apart, within the seed-to-seed spread.
 - **XICs.** Osprey's XICs are unsmoothed and closest-peak, over Osprey's own boundaries. Carafe
   smooths with 3 points over boundaries it refines itself. Carafe's smoothing lifts the
   correlation of weak ions, so where Carafe keeps an ion that CarafeSharp masks, the ion is
@@ -126,9 +136,9 @@ library, `--decoys-in-library`, unit resolution) with Carafe's own `fragment_int
 | Correlation threshold 0.75 / 0.8 / 0.85 | 85.1% / 85.0% / 84.5% |
 | Skew rule off | 85.1%, with 17,128 spectra kept |
 
-Carafe's thresholds are therefore the defaults. The opt-in `OspreyMaskingParityTest` checks that
-agreement stays at or above 83%, using `CARAFESHARP_OSPREY_TRAINING_EXPORT` and
-`CARAFESHARP_CARAFE_FINETUNED`.
+Carafe's thresholds are therefore the defaults. `OspreyMaskingParityTest` checks that agreement
+stays at or above 83%. It reads the export and Carafe reference packages (see 04-testing.md) or
+`CARAFESHARP_OSPREY_TRAINING_EXPORT` and `CARAFESHARP_CARAFE_FINETUNED`.
 
 ---
 

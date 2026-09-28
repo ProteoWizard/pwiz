@@ -41,4 +41,18 @@
     <CarafeSharpTargetIsWindows Condition="'$(CarafeSharpTargetIsWindows)' == ''">false</CarafeSharpTargetIsWindows>
   </PropertyGroup>
 
+  <!-- Each backend builds into its own folders. Their native files have the same names and
+       they restore different packages, so sharing bin/ and obj/ forced a clean rebuild and a
+       4 GB recopy on every switch. The CPU build keeps the default folders, so IDE builds are
+       unchanged. Both pairs are excluded from the default item globs: the SDK excludes only the
+       current build's folders, and the other backend's generated sources would otherwise
+       compile a second time. -->
+  <PropertyGroup Condition="'$(CarafeSharpTorch)' == 'cuda'">
+    <BaseOutputPath>bin-cuda\</BaseOutputPath>
+    <BaseIntermediateOutputPath>obj-cuda\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DefaultItemExcludes>$(DefaultItemExcludes);bin\**;obj\**;bin-cuda\**;obj-cuda\**</DefaultItemExcludes>
+  </PropertyGroup>
+
 </Project>

@@ -122,11 +122,48 @@ namespace pwiz.CarafeSharp.Test
                 Directory.Delete(folder, true);
             }
         }
+
+        /// <summary>
+        /// Where the pretrained archive is found: a set environment variable wins even when it names a
+        /// missing file, then the committed copy beside the executable, then peptdeep's folder. The build
+        /// must put the committed copy in this test's output, and it must match the pin.
+        /// </summary>
+        [TestMethod]
+        public void TestPretrainedArchiveLocation()
+        {
+            string bundled = Path.Combine(AppContext.BaseDirectory, PretrainedModels.BUNDLED_RELATIVE_PATH);
+            Assert.IsTrue(File.Exists(bundled), @"The build did not copy the committed archive to " + bundled);
+            Assert.AreEqual(PretrainedModels.PINNED_SHA256, PretrainedModels.Open(bundled).Sha256);
+
+            string folder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"Pretrained_" + Guid.NewGuid().ToString(@"N"));
+            string baseDirectory = Path.Combine(folder, @"bin");
+            string profile = Path.Combine(folder, @"home");
+            Directory.CreateDirectory(baseDirectory);
+            try
+            {
+                string peptdeep = Path.Combine(profile, @"peptdeep", @"pretrained_models", @"pretrained_models.zip");
+                Assert.AreEqual(peptdeep, PretrainedModels.ResolveDefaultPath(null, baseDirectory, profile));
+
+                string beside = Path.Combine(baseDirectory, PretrainedModels.BUNDLED_RELATIVE_PATH);
+                Directory.CreateDirectory(Path.GetDirectoryName(beside) ?? baseDirectory);
+                File.WriteAllBytes(beside, new byte[] { 0 });
+                Assert.AreEqual(beside, PretrainedModels.ResolveDefaultPath(string.Empty, baseDirectory, profile));
+                // Any other archive is refused, wherever it was found.
+                Assert.ThrowsException<InvalidDataException>(() => PretrainedModels.Open(beside));
+
+                string missing = Path.Combine(folder, @"missing.zip");
+                Assert.AreEqual(missing, PretrainedModels.ResolveDefaultPath(missing, baseDirectory, profile));
+                Assert.ThrowsException<FileNotFoundException>(() => PretrainedModels.Open(missing));
+            }
+            finally
+            {
+                Directory.Delete(folder, true);
+            }
+        }
+
         [TestMethod]
         public void TestPretrainedModelsPredict()
         {
-            if (!File.Exists(PretrainedModels.DefaultPath))
-                Assert.Inconclusive(@"No pretrained_models.zip at " + PretrainedModels.DefaultPath);
             var pretrained = PretrainedModels.Open();
 
             using (var rt = RtModel.FromPretrained(pretrained, CPU))

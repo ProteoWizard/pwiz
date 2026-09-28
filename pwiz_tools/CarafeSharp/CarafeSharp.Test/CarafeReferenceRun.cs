@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Proteome;
 
@@ -33,22 +34,40 @@ namespace pwiz.CarafeSharp.Test
     /// <c>k_ms2_df</c> / <c>k_ms2_mz_df</c> / <c>k_ms2_pred</c> / <c>k_rt_pred</c> files of its
     /// Python, and the library it wrote. A folder from a training run (<c>-ms</c>) is read as
     /// the library prediction that followed training: its models, and the settings the
-    /// training left (<see cref="CarafeModelDirectory.ApplyTrainingRunOverrides"/>).
+    /// training left (<see cref="CarafeModelDirectory.ApplyTrainingRunOverrides"/>), which are
+    /// also the NCE, instrument and rt_max its models were trained with.
     /// </summary>
     public sealed class CarafeReferenceRun
     {
+        public const string PARAMETERS_FILE = @"parameter.txt";
+
         private const string COMMAND_LINE_PREFIX = @"Command line: ";
 
-        /// <summary>The run in <paramref name="folder"/>, or null when it has no parameter.txt.</summary>
+        /// <summary>The run in <paramref name="folder"/>; the test fails when it has no parameter.txt command line.</summary>
         public static CarafeReferenceRun Open(string folder)
         {
-            string parameters = Path.Combine(folder, @"parameter.txt");
-            if (!File.Exists(parameters))
-                return null;
+            string parameters = TestData.RequireFile(Path.Combine(folder, PARAMETERS_FILE));
             string line = File.ReadLines(parameters).FirstOrDefault(l => l.StartsWith(COMMAND_LINE_PREFIX, StringComparison.Ordinal));
             if (line == null)
-                return null;
+                Assert.Fail(@"No command line in " + parameters);
             return new CarafeReferenceRun(folder, line.Substring(COMMAND_LINE_PREFIX.Length).Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList());
+        }
+
+        /// <summary>
+        /// The runs in <paramref name="folder"/>: the folder itself when it holds a parameter.txt,
+        /// else every folder below it that does. The test fails when there are none.
+        /// </summary>
+        public static IReadOnlyList<string> FindRuns(string folder)
+        {
+            if (File.Exists(Path.Combine(folder, PARAMETERS_FILE)))
+                return new[] { folder };
+            var runs = Directory.GetDirectories(folder, @"*", SearchOption.AllDirectories)
+                .Where(d => File.Exists(Path.Combine(d, PARAMETERS_FILE)))
+                .OrderBy(d => d, StringComparer.Ordinal)
+                .ToArray();
+            if (runs.Length == 0)
+                Assert.Fail(@"No Carafe run (a folder with a parameter.txt) in " + folder);
+            return runs;
         }
 
         private CarafeReferenceRun(string folder, List<string> args)
@@ -61,8 +80,11 @@ namespace pwiz.CarafeSharp.Test
             RemoveOption(args, @"-i");
             RemoveOption(args, @"-tf");
             Settings = CarafeCommandLine.Parse(args).LibrarySettings;
-            if (!File.Exists(Settings.Database))
-                Settings.Database = Path.Combine(Path.GetDirectoryName(folder) ?? string.Empty, Path.GetFileName(Settings.Database) ?? string.Empty);
+            // The paths are the ones Carafe ran with; find the files where this copy of the run keeps them.
+            string parent = Path.GetDirectoryName(folder);
+            Settings.Database = TestData.Relocate(Settings.Database, parent);
+            if (!string.IsNullOrEmpty(Settings.PairingManifest))
+                Settings.PairingManifest = TestData.Relocate(Settings.PairingManifest, parent);
             FastaPath = Settings.Database;
             if (IsTraining)
             {
