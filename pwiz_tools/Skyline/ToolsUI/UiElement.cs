@@ -2297,10 +2297,21 @@ namespace pwiz.Skyline.ToolsUI
         public override string Label => _item is ToolStripControlHost ? null
             : string.IsNullOrEmpty(_item.Text) ? _item.ToolTipText : _item.Text;
         public override bool IsEnabled => _item.Enabled;
-        // A menu command's check mark (e.g. a graph's Legend, or which of Transitions > All / Total is on),
-        // so a caller can see a toggle's state before clicking it
-        public override object GetValueNow() =>
-            _item is ToolStripMenuItem { HasDropDownItems: false } menuItem ? menuItem.Checked : (object) null;
+        // A menu command's check mark (e.g. a graph's Legend, or which of Transitions > All / Total is on), or a
+        // toolbar button's pushed state (e.g. the B-ions button of a spectrum), so a caller can see a toggle's
+        // state before clicking it
+        public override object GetValueNow()
+        {
+            switch (_item)
+            {
+                case ToolStripMenuItem { HasDropDownItems: false } menuItem:
+                    return menuItem.Checked;
+                case ToolStripButton button:
+                    return button.Checked;
+                default:
+                    return null;
+            }
+        }
         private List<UiElement> _children;
 
         // A ToolStripControlHost hosts a real control: a single control the form recognizes (e.g. the Audit

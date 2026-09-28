@@ -652,7 +652,8 @@ public static class SkylineTools
     }
 
     [McpServerTool(Name = "skyline_click_form_button"),
-     Description("Click a control on an open form, matching it by control name or visible text: a " +
+     Description("Click a control on an open form, matching it by its visible text (or, for a caption-less " +
+        "control, its type as skyline_get_controls reports it -- not its internal Name): a " +
         "button, a checkbox or radio button, a toolbar/menu item, an item in a checked-list box (its " +
         "check is toggled), or any other control. To dismiss a dialog instead, use " +
         "skyline_dismiss_with_accept_button / skyline_dismiss_with_cancel_button / skyline_dismiss_with_button, " +
@@ -660,7 +661,7 @@ public static class SkylineTools
         "dialog returns immediately; call skyline_get_open_forms to find the resulting form.")]
     public static string ClickFormButton(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
-        [Description("Control name or visible label, e.g. 'Add Files', 'OK', or a checkbox label")] string button)
+        [Description("Visible label, e.g. 'Add Files', 'OK', or a checkbox label")] string button)
     {
         return Invoke(connection =>
         {
@@ -743,7 +744,7 @@ public static class SkylineTools
         "may also be a grid cell locator 'grid[column,row]' (grid name optional) to set that cell.")]
     public static string SetFormValue(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
-        [Description("Control name, a grid cell locator 'grid[column,row]', or ignored for a native file dialog")] string controlId,
+        [Description("The control's visible label (not its internal Name), a grid cell locator 'grid[column,row]', or ignored for a native file dialog")] string controlId,
         [Description("Value to set: text, 'true'/'false' for a checkbox, item text for a combo box, " +
             "or space-separated quoted file paths for a native file dialog")] string value)
     {
