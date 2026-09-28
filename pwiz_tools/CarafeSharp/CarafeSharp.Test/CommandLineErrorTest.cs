@@ -253,8 +253,18 @@ namespace pwiz.CarafeSharp.Test
 
         private static void AssertUsageError(params string[] args)
         {
-            var (code, output, error) = Run(args);
             string commandLine = string.Join(@" ", args);
+            // Checked before running it, so a command line that parses after all does no work here.
+            try
+            {
+                CarafeCommandLine.Parse(args);
+                Assert.Fail(commandLine);
+            }
+            catch (Exception e) when (e is ArgumentException || e is NotSupportedException)
+            {
+                // The error the run below must report.
+            }
+            var (code, output, error) = Run(args);
             Assert.AreEqual(1, code, commandLine);
             Assert.AreEqual(string.Empty, output, commandLine);
             Assert.IsTrue(error.EndsWith(CarafeCommandLine.Usage + Environment.NewLine, StringComparison.Ordinal), commandLine);

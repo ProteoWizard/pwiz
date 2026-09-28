@@ -86,7 +86,7 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(3, export.Records.Count);
             for (int i = 0; i < records.Length; i++)
                 AssertSameRecord(records[i], export.Records[i]);
-            Assert.AreEqual(ParquetColumnsFooterCount(path), export.Metadata.Count);
+            CollectionAssert.AreEquivalent(Footer(@"a").ToArray(), export.Metadata.ToArray());
 
             // The footer keys, as present, empty, malformed or missing.
             Assert.AreEqual(10.0, export.RtMax);
@@ -380,7 +380,7 @@ namespace pwiz.CarafeSharp.Test
             return record;
         }
 
-        /// <summary>The records with entry ids 1, 2, ... and the sequence as protein and file name placeholders.</summary>
+        /// <summary>The records numbered 1, 2, ... as entries, each with its own protein, precursor m/z, peak bounds and scan count.</summary>
         private static OspreyTrainingRecord[] Number(params OspreyTrainingRecord[] records)
         {
             for (int i = 0; i < records.Length; i++)
@@ -452,11 +452,6 @@ namespace pwiz.CarafeSharp.Test
             var e = Assert.ThrowsException<InvalidDataException>(() => OspreyTrainingExport.Read(path));
             if (expectedText != null)
                 StringAssert.Contains(e.Message, expectedText);
-        }
-
-        private static int ParquetColumnsFooterCount(string path)
-        {
-            return ParquetColumns.ReadMetadata(path).Count;
         }
     }
 }
