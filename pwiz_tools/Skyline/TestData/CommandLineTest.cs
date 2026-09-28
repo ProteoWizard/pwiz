@@ -4226,7 +4226,7 @@ namespace pwiz.SkylineTestData
 
                 // A specific culture is accepted, not only the languages listed in help. Callers pass names
                 // like "en-US" (see SkylineCmdTest.GetProcessStartInfo), which must not be rejected.
-                output = RunCommand(false, argCulture.ArgumentText + '=' + CultureInfo.CurrentCulture.Name,
+                output = RunCommand(false, argCulture + CultureInfo.CurrentCulture.Name,
                     CommandArgs.ARG_IN.ArgumentText);
                 AssertEx.Contains(output, string.Format(
                     Resources.ValueMissingException_ValueMissingException_, CommandArgs.ARG_IN.ArgumentText));

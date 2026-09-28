@@ -159,27 +159,21 @@ namespace pwiz.Skyline
             ANNOTATION_TARGET_LIST_VALUE
         });
 
-        private static void SetCulture(NameValuePair pair)
+        private static void SetCulture(string cultureName)
         {
-            Assume.IsNotNull(pair.Match); // Must be matched before accessing this
-            // Windows makes up a culture for any well-formed name (e.g. "not-a-culture") instead of failing,
-            // so check the name against the cultures it knows rather than relying on the exception alone.
-            CultureInfo culture;
-            try
-            {
-                culture = new CultureInfo(pair.Value);
-                if (!CultureInfo.GetCultures(CultureTypes.AllCultures)
-                        .Any(known => string.Equals(known.Name, pair.Value, StringComparison.OrdinalIgnoreCase)))
-                {
-                    throw new CultureNotFoundException();
-                }
-            }
-            catch (CultureNotFoundException)
-            {
-                throw new ValueInvalidException(pair.Match, pair.Value, DISPLAY_LANGUAGE_NAMES);
-            }
-            LocalizationHelper.CurrentCulture = LocalizationHelper.CurrentUICulture = culture;
+            LocalizationHelper.CurrentCulture = LocalizationHelper.CurrentUICulture = new CultureInfo(cultureName);
             LocalizationHelper.InitThread(Thread.CurrentThread);
+        }
+
+        /// <summary>
+        /// The names of the cultures the system knows. Windows makes up a culture for any well-formed name
+        /// (e.g. "not-a-culture") instead of failing, so --culture checks names against this list rather than
+        /// relying on the CultureInfo constructor.
+        /// </summary>
+        private static string[] GetKnownCultureNames()
+        {
+            return CultureInfo.GetCultures(CultureTypes.AllCultures).Select(culture => culture.Name)
+                .Where(name => !string.IsNullOrEmpty(name)).ToArray();
         }
 
         /// <summary>
@@ -299,10 +293,9 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_VERSION = new Argument(@"version", (c, p) => c.Version());
         public static readonly Argument ARG_VERBOSE_ERRORS =
             new Argument(@"verbose-errors", (c, p) => c._out.IsVerboseExceptions = true);
-        // The listed values are the languages Skyline is localized to, but any culture name is accepted
-        // (e.g. "en-US"), so the value is checked in SetCulture rather than against the list.
+        // Help lists the languages Skyline is localized to, but any culture the system knows is accepted (e.g. "en-US")
         public static readonly Argument ARG_CULTURE = new Argument(@"culture",
-            () => DISPLAY_LANGUAGE_NAMES, (c, p) => SetCulture(p)) { HasValueChecking = true };
+            () => DISPLAY_LANGUAGE_NAMES, (c, p) => SetCulture(p.Value)) { AcceptedValues = GetKnownCultureNames };
 
         private static readonly ArgumentGroup GROUP_GENERAL_IO = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
             ARG_IN, ARG_OPEN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_SAVE_AS, ARG_SAVE_COMPACT_FORMAT, ARG_NEW, ARG_OVERWRITE,
