@@ -51,9 +51,11 @@ namespace pwiz.Osprey.Test
     /// the [TASK] / [PATH] / [COUNT] lines --perf-stats writes.</para>
     /// </summary>
     [TestClass]
-    public class StellarSubsetPipelineTest
+    public class SubsetPipelineTest
     {
         private const string DATA_ZIP = @"StellarSubset.zip";
+        private const string ASTRAL_ZIP = @"AstralSubset.zip";
+        private const string ASTRAL_LIBRARY_FILE = @"astral-subset-library.tsv";
         private const string LIBRARY_FILE = @"stellar-subset-library.tsv";
         private const string MANIFEST_FILE = @"manifest.tsv";
         private const string LIBDECOY_FILE = @"stellar-subset-libdecoy.tsv";
@@ -70,12 +72,20 @@ namespace pwiz.Osprey.Test
         private const double MAX_NEWLY_DETECTED_FRACTION = 0.15;
         // The library-decoy variant reports about 150.
         private const int MIN_LIBDECOY_PRECURSORS = 100;
+        // The Astral subset reports about 164.
+        private const int MIN_ASTRAL_PRECURSORS = 120;
 
         private static readonly string[] RUN_NAMES =
         {
             @"Ste-2024-12-02_HeLa_4mz_sDIA_400-900_20",
             @"Ste-2024-12-02_HeLa_4mz_sDIA_400-900_21",
             @"Ste-2024-12-02_HeLa_4mz_sDIA_400-900_22"
+        };
+
+        private static readonly string[] ASTRAL_RUN_NAMES =
+        {
+            @"Ast-2024-12-05_HeLa_3mzDIA_6mIIT_400-900_49",
+            @"Ast-2024-12-05_HeLa_3mzDIA_6mIIT_400-900_55"
         };
 
         private static readonly string[] ALL_TASKS =
@@ -282,6 +292,14 @@ namespace pwiz.Osprey.Test
             RunAnalysis(baseDir, DataInputs(), Verifier(false));
             string baseBlib = Path.Combine(baseDir, BLIB_FILE);
 
+            // Files scored and re-scored concurrently must give the sequential answer. The subset's
+            // three runs reach the second-pass worker together, so a race there shows every time
+            // (a shared FrozenModelScorer scratch buffer mixed the files' features).
+            string parallelDir = CreateDir(@"parallel-files");
+            RunAnalysis(parallelDir, DataInputs(), Verifier(false),
+                OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText, RUN_NAMES.Length.ToString(CultureInfo.InvariantCulture));
+            AssertBlibsEqual(baseBlib, Path.Combine(parallelDir, BLIB_FILE));
+
             // --diagnostics writes its dumps to the current directory.
             string diagnosticsDir = CreateDir(@"diagnostics");
             string savedDirectory = Directory.GetCurrentDirectory();
@@ -329,6 +347,48 @@ namespace pwiz.Osprey.Test
             }
         }
 
+        /// <summary>
+        /// The Astral leg: high-resolution data (<c>TestData\AstralSubset.zip</c>, one 3 m/z
+        /// window x 3 min of two runs), which runs the HRAM paths - MS1 isotope scoring, ppm
+        /// tolerances - that unit-resolution data never reaches. Straight-through, then the same
+        /// search with the two files scored concurrently, which must give the same library.
+        /// </summary>
+        [TestMethod, DoNotParallelize]
+        public void TestAstralSubsetHram()
+        {
+            string dataDir = Path.Combine(_testDir, @"astral-data");
+            ZipFile.ExtractToDirectory(Path.Combine(AppContext.BaseDirectory, @"TestData", ASTRAL_ZIP), dataDir);
+            var inputs = ASTRAL_RUN_NAMES.Select(run => Path.Combine(dataDir, run + MZML_EXTENSION)).ToArray();
+
+            string[] AstralArgs(string workDir, params string[] extraArgs)
+            {
+                return InputArgs(inputs).Concat(new[]
+                {
+                    OspreyCommandArgs.ARG_LIBRARY.ArgumentText, Path.Combine(dataDir, ASTRAL_LIBRARY_FILE),
+                    OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(workDir, BLIB_FILE),
+                    OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, workDir,
+                    OspreyCommandArgs.ARG_RESOLUTION.ArgumentText, @"hram",
+                    OspreyCommandArgs.ARG_PROTEIN_FDR.ArgumentText, @"0.01",
+                    OspreyCommandArgs.ARG_THREADS.ArgumentText, @"4",
+                    OspreyCommandArgs.ARG_PERF_STATS.ArgumentText
+                }).Concat(extraArgs).ToArray();
+            }
+
+            string straightDir = CreateDir(@"astral");
+            string log = RunOsprey(AstralArgs(straightDir), Verifier(false));
+            AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
+            string blib = Path.Combine(straightDir, BLIB_FILE);
+            int precursors = BlibComparer.CountRows(blib, @"RefSpectra");
+            Assert.IsTrue(precursors >= MIN_ASTRAL_PRECURSORS, string.Format(@"{0} precursors reported", precursors));
+            Assert.AreEqual(precursors * ASTRAL_RUN_NAMES.Length, BlibComparer.CountRows(blib, @"RetentionTimes"));
+            AssertRecoversFullRun(Path.Combine(dataDir, MANIFEST_FILE), blib);
+
+            string parallelDir = CreateDir(@"astral-parallel");
+            RunOsprey(AstralArgs(parallelDir, OspreyCommandArgs.ARG_PARALLEL_FILES.ArgumentText,
+                ASTRAL_RUN_NAMES.Length.ToString(CultureInfo.InvariantCulture)), Verifier(false));
+            AssertBlibsEqual(blib, Path.Combine(parallelDir, BLIB_FILE));
+        }
+
         private void ValidateStraightThrough(string workDir, string log)
         {
             AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
@@ -354,8 +414,16 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(BlibComparer.CountRows(blib, @"OspreyPeakBoundaries") >= precursors);
             Assert.IsTrue(BlibComparer.CountRows(blib, @"Proteins") > 0);
 
-            // The reported precursors are mostly the ones the full 3-file run detected here.
-            var manifest = ReadManifest();
+            AssertRecoversFullRun(Path.Combine(_dataDir, MANIFEST_FILE), blib);
+        }
+
+        /// <summary>
+        /// The reported precursors are mostly the ones the full 3-file regression run detected in
+        /// this rectangle, and few of the ones it did not.
+        /// </summary>
+        private static void AssertRecoversFullRun(string manifestPath, string blib)
+        {
+            var manifest = ReadManifest(manifestPath);
             var reported = new HashSet<string>(ReadPrecursorKeys(blib));
             int detected = manifest.Count(p => p.Value);
             int recovered = manifest.Count(p => p.Value && reported.Contains(p.Key));
@@ -576,10 +644,10 @@ namespace pwiz.Osprey.Test
         /// The library's precursors as "SEQUENCE|charge" keys, with whether the full 3-file run
         /// detected each one.
         /// </summary>
-        private Dictionary<string, bool> ReadManifest()
+        private static Dictionary<string, bool> ReadManifest(string manifestPath)
         {
             var manifest = new Dictionary<string, bool>();
-            foreach (string line in File.ReadLines(Path.Combine(_dataDir, MANIFEST_FILE)).Skip(1))
+            foreach (string line in File.ReadLines(manifestPath).Skip(1))
             {
                 var fields = line.Split('\t');
                 manifest[PrecursorKey(StripModifications(fields[0]), fields[1])] = fields[2] == @"1";
