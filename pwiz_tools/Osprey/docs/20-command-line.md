@@ -148,7 +148,7 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 | `--timestamp` | Prefix each output line with `[yyyy/MM/dd HH:mm:ss]`. |
 | `--memstamp` | Prefix each line with managed + private memory in MB (pair with `--timestamp` for perf visualization). |
 | `--log-file <path>` | Write all output to a file instead of stderr. |
-| `--perf-stats` | Emit machine-parseable `[COUNT]`/`[TIMING]`/`[STAGE-WALL]` lines. |
+| `--perf-stats` | Emit the machine-channel lines (`[COUNT]`, `[TIMING]`, `[BENCH]`, `[STAGE-WALL]`, `[PATH]`, `[TRAIN]`); see [Log format](#log-format). |
 | `--verbose` | Show implementer-grade detail (e.g. per-fold Percolator iterations). |
 
 ### Diagnostics & Info
@@ -159,6 +159,59 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 | `--model-diagnostics` | Write a self-contained interactive HTML report of the trained scoring model and FDR calibration. |
 | `-h`, `--help` | Show help. Accepts a format: `[ascii\|unicode\|sections\|html\|<Section>]`. |
 | `-v`, `--version` | Show version. |
+
+### Log format
+
+The log carries two kinds of line.
+
+**Prose** is written for the person watching the run. It may be reworded in any change and
+will be translated, so no script or test may key off it.
+
+**Tagged lines** start with `[TAG]` and are the machine channel. Their text is ASCII, never
+translated, and it is the only part of the log a script or test may read.
+
+| Tag | Written when | Carries |
+|-----|--------------|---------|
+| `[TASK]` | always | a task's start, skip and finish: `[TASK] <Name>:starting` / `:skipping (outputs valid)` / `:done (<s>s)`. The names are the `--task` values. |
+| `[COUNT]` | `--perf-stats` | a count, e.g. `[COUNT] library-fragments-released: released=N entries=M retained=K scope=rescore-gap-fill` |
+| `[PATH]` | `--perf-stats` | which code route the run took, e.g. `[PATH] second-pass-join: per-run runs=3` |
+| `[TIMING]`, `[STAGE-WALL]`, `[BENCH]` | `--perf-stats` | timings the perf tools read |
+| `[TRAIN]` | `--perf-stats` | which population a model trained on |
+| `[MEM <label>]` | `OSPREY_LOG_MEMORY` | a memory probe |
+
+Prose that the user asked for with an option (`--model-diagnostics`, `-d`, an `OSPREY_*`
+setting) may carry a category tag (`[MODEL-DIAGNOSTICS]`, `[BISECT]`, ...). The tag labels
+the line and stays ASCII; the text after it is prose. In a plain default run `[TASK]` is the
+only tag.
+
+**Warnings and errors are prose, not tags.** They start with `Warning:` and `Error:`, as in
+Skyline's command line, and are translated with the rest of the text. The exit code and the
+error lines always agree, as they do in Skyline:
+
+| Exit code | Meaning |
+|-----------|---------|
+| 0 | success; no `Error:` line was written |
+| 1 | failure; at least one `Error:` line says why |
+| 2 | an `Error:` line was written but the run otherwise completed |
+
+A script deciding whether a run failed reads the exit code. A script scanning a log for
+errors matches `Error:` in every shipped language (`Error:`, `エラー：`, `错误：`) at the
+start of the message, after any `--timestamp`/`--memstamp` columns - the shared
+`CommandStatusWriter.IsErrorLine` does exactly that. If Osprey ever finds the two
+disagreeing it repairs them and writes a `[PATH] exit-reconciled` line, which
+`regression.ps1` treats as a failure.
+
+Rules for code and for consumers:
+
+- **Read tagged lines only.** A script or test that matches prose is a defect in the consumer,
+  not a reason to freeze the prose.
+- **Keyed lines are `[TAG] key: value` or `[TAG] key: name=value ...`.** Numbers use the
+  invariant culture with no group separators. Adding a key is free; renaming one means updating
+  its consumers (`regression.ps1`, the `ai/scripts/Osprey` tools) in the same change.
+- **Every tag comes from `LogTag`** (`Osprey.Core/LogTag.cs`), and the route and count keys
+  come from `LogKey` in the same file. Code writes `log.LogInfo(LogTag.COUNT, text)` through an
+  `IOspreyLog`; `OspreyLog.Write` is the one place that decides whether the line is emitted.
+  `CodeInspectionTest.TestLogTagsComeFromLogTag` fails on a tag written as a string literal.
 
 ---
 
@@ -219,6 +272,7 @@ CLI; they are read once at process start. The ones most likely to matter:
 | `OSPREY_PICK_DUMP_CANDIDATES` | Dump per-candidate pick terms for offline model training | [peak-model-training.md](peak-model-training.md) |
 | `OSPREY_TRAIN_PICK_RUN` | First-pass training selection, **on by default**: each precursor is represented by one uniformly drawn run's best candidate peak. `OSPREY_TRAIN_PICK_RUN=0` restores the pre-26.1 cross-run maximum. C#-only — Rust still takes the maximum | [07](07-fdr-control.md) |
 | `OSPREY_MAX_TRAIN_SIZE` | Cap on training rows (default 300000). Unchanged by the 26.1 selection flip: at matched FDP, 300K and 1M are indistinguishable | [07](07-fdr-control.md) |
+| `OSPREY_SVM_C_TOLERANCE` | First-pass SVM C selection: keep the most regularized C within this fraction of the best inner-CV count (default 0.01, in [0, 1); anything else is a startup ERROR). 0 is the strict maximum, the pre-#4703 rule; Rust uses the 1% default with no opt-out, so leave it unset for cross-implementation comparisons. Set the same value on every node of a relay chain | [07](07-fdr-control.md) |
 | `OSPREY_PASS2_QVALUE` | Second-pass q-value mode: `protein-compact` (**default**) / `transfer`. An unrecognized value is a startup ERROR - `percolator` and `transfer-compete` were removed | [12](12-second-pass-fdr.md) |
 | `OSPREY_GBT_*` | GBDT hyperparameters (with `--fdr-method gbdt`) | [07](07-fdr-control.md) |
 | `OSPREY_EXPERIMENT_AGG` | Experimental first-pass experiment-wide aggregation (`max` / `mean-best-<N>`) | [07](07-fdr-control.md) |

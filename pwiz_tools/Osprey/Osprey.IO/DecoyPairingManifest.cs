@@ -63,6 +63,15 @@ namespace pwiz.Osprey.IO
         /// authoritative source of protein info when present.
         /// </summary>
         public int NProteinsReplaced { get; set; }
+
+        /// <summary>
+        /// Library indices of entries that are decoys (by the protein-prefix rule) whose
+        /// sequence the manifest lists as a target. Nothing legitimate produces this - Carafe
+        /// merging a decoy with an identical real target into one "decoy_"-prefixed row did -
+        /// so the library and its manifest disagree. They are left out of pairing, and the
+        /// loader refuses the library, listing every one.
+        /// </summary>
+        public List<int> DecoysListedAsTargets { get; } = new List<int>();
     }
 
     /// <summary>
@@ -296,6 +305,15 @@ namespace pwiz.Osprey.IO
                 if (!_seqToInfo.TryGetValue(entry.Sequence, out var info))
                     continue;
                 bool isTargetSide = IsTargetSideOf(info.Kind);
+                // A decoy is never a pairing target, even where the manifest calls its
+                // sequence one (Carafe merges a decoy with an identical real target into one
+                // "decoy_"-prefixed row). Its id already carries the decoy bit, so a decoy
+                // paired to it would copy that id and two decoys would share an entry_id.
+                if (isTargetSide && entry.IsDecoy)
+                {
+                    stats.DecoysListedAsTargets.Add(idx);
+                    continue;
+                }
                 var key = new BucketKey(info.PairIndex, PartitionOf(info.Kind),
                     entry.Charge, isTargetSide);
                 if (!buckets.TryGetValue(key, out var list))
@@ -349,17 +367,7 @@ namespace pwiz.Osprey.IO
                 var interner = new LibraryStringInterner();
                 foreach (var kv in proteinOverride)
                     library[kv.Key].ProteinIds = interner.InternToArray(kv.Value);
-                if (logInfo != null)
-                {
-                    long total = interner.TotalReferences;
-                    double pct = total > 0
-                        ? 100.0 * (total - interner.DistinctCount) / total
-                        : 0.0;
-                    logInfo(string.Format(
-                        @"Library-decoy mode: interned manifest protein accessions " +
-                        @"({0} distinct / {1} total, {2:F1}% collapsed)",
-                        interner.DistinctCount, total, pct));
-                }
+                interner.LogPairingManifestSummary(logInfo);
             }
 
             // Walk every target-side bucket; pair with the matching

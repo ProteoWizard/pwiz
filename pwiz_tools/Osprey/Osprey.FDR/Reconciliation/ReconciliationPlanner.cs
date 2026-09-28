@@ -129,7 +129,8 @@ namespace pwiz.Osprey.FDR.Reconciliation
             // Per-file progress: planning reconciliation actions across all files ran
             // ~5 min silent on the 82-file join. Console-only, never affects the plan.
             var planProgress = new ProgressReporter(
-                string.Format(@"Planning reconciliation across {0} file(s)", perFileEntries.Count),
+                CountText.Format(perFileEntries.Count, "Planning cross-run reconciliation for 1 file",
+                    "Planning cross-run reconciliation across {0:N0} files"),
                 perFileEntries.Count);
             int planIdx = 0;
             foreach (var fileKvp in perFileEntries)

@@ -58,7 +58,9 @@ param(
     # per DATASET here: the default keeps the previous full run, whatever its size.
     [int]$KeepRunDirs = -1,
     [switch]$KeepOutput,
-    [switch]$CleanOutput
+    [switch]$CleanOutput,
+    # Forwarded to every regression.ps1 invocation; see its -ExtraOspreyFlags.
+    [string]$ExtraOspreyFlags
 )
 
 $ErrorActionPreference = 'Stop'
@@ -83,6 +85,8 @@ $retention = @{ KeepRunDirs = $KeepRunDirs }
 if ($KeepOutput)  { $retention['KeepOutput']  = $true }
 if ($CleanOutput) { $retention['CleanOutput'] = $true }
 $retentionArgs = " -KeepRunDirs $KeepRunDirs" + $(if ($KeepOutput) { ' -KeepOutput' } else { '' }) + $(if ($CleanOutput) { ' -CleanOutput' } else { '' })
+# Not part of $retention: staging runs no Osprey, so only the lanes and the serial path get it.
+$extraFlagsArg = if ($ExtraOspreyFlags) { " -ExtraOspreyFlags '$ExtraOspreyFlags'" } else { '' }
 
 # Astral leads one lane and takes StellarGenDecoyEntrap, the cheapest dataset under the
 # sparse matrix, as its partner; Stellar and StellarLibDecoy make the other. Derived from
@@ -134,6 +138,7 @@ if ($lanes.Count -lt 2) {
     # as a POSITIONAL argument rather than as -TeamCity.
     $serial = @{ Dataset = $selected; Threads = $Threads; NoBuild = $true } + $retention
     if ($TeamCity) { $serial['TeamCity'] = $true }
+    if ($ExtraOspreyFlags) { $serial['ExtraOspreyFlags'] = $ExtraOspreyFlags }
     & $regression @serial
     exit $LASTEXITCODE
 }
@@ -160,7 +165,7 @@ foreach ($lane in $lanes) {
     $tcArg = if ($TeamCity) { " -TeamCity" } else { "" }
     $body = @("`$worst = 0")
     foreach ($ds in $lane) {
-        $body += "& `"$regression`" -Dataset $ds -Threads $Threads -NoBuild$tcArg$retentionArgs"
+        $body += "& `"$regression`" -Dataset $ds -Threads $Threads -NoBuild$tcArg$retentionArgs$extraFlagsArg"
         $body += "if (`$LASTEXITCODE -ne 0) { `$worst = `$LASTEXITCODE }"
     }
     $body += "exit `$worst"
