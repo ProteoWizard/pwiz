@@ -328,6 +328,53 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Skyline's rule (<c>CommonExceptionUtil.IsProgrammingDefect</c>): an exception type that
+        /// is NOT a programming defect - InvalidDataException, every IOException, access denied,
+        /// cancellation, UserMessageException and Osprey's subclasses of them - is shown to the
+        /// user as its message, so that message must come from a resource. A parse error is one of
+        /// these: it means a damaged file the user can correct or delete. Only defect types
+        /// (InvalidOperationException, ArgumentException, ...) may carry a string literal. For a
+        /// genuine exception add an inline comment beginning <c>// User exception literal OK:</c>.
+        /// </summary>
+        [TestMethod]
+        public void TestUserExceptionsUseResources()
+        {
+            string sourceRoot = FindOspreySourceRoot();
+            var pattern = new Regex(@"new\s+(InvalidDataException|IOException|FileNotFoundException|" +
+                @"DirectoryNotFoundException|EndOfStreamException|UnauthorizedAccessException|" +
+                @"OperationCanceledException|UserMessageException|SpectraCacheException|BlibOutputException)" +
+                @"\s*\(\s*(string\.Format\(\s*(CultureInfo\.\w+\s*,\s*)?)?[@$]*""");
+            const string exemptionTag = "// User exception literal OK:";
+            var violations = new List<string>();
+            foreach (var file in EnumerateProductionCsFiles(sourceRoot))
+            {
+                string[] lines = File.ReadAllLines(file);
+                var code = new System.Text.StringBuilder();
+                var lineStarts = new List<int>();
+                foreach (string line in lines)
+                {
+                    lineStarts.Add(code.Length);
+                    int commentIdx = IndexOfLineComment(line);
+                    code.Append(commentIdx >= 0 ? line.Substring(0, commentIdx) : line).Append('\n');
+                }
+                foreach (Match m in pattern.Matches(code.ToString()))
+                {
+                    int lineIndex = lineStarts.BinarySearch(m.Index);
+                    if (lineIndex < 0)
+                        lineIndex = ~lineIndex - 1;
+                    if (lines[lineIndex].Contains(exemptionTag))
+                        continue;
+                    violations.Add(string.Format("{0}:{1}: {2}", RelativePath(sourceRoot, file).Replace('\\', '/'),
+                        lineIndex + 1, lines[lineIndex].Trim()));
+                }
+            }
+            Assert.AreEqual(0, violations.Count,
+                "A user-facing exception (not a programming defect) has a string-literal message. " +
+                "Put the message in the project's .resx, or throw a defect type such as " +
+                "InvalidOperationException if the user cannot act on it:\n" + string.Join("\n", violations));
+        }
+
+        /// <summary>
         /// Find the Osprey source root by walking up from the test
         /// assembly location until we see an Osprey.sln-bearing dir.
         /// </summary>

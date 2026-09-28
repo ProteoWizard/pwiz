@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
@@ -95,6 +96,20 @@ namespace pwiz.Osprey.Test
                     Assert.IsFalse(CommandStatusWriter.IsErrorLine(Program.WarningPrefix + " message"), language);
                 }
             }
+            // Skyline's split at the top-level sinks: a user-actionable exception is its message;
+            // a programming defect is the whole exception (type and stack) so it can be fixed.
+            const string defectFormat = @"defect: {0}";
+            Assert.AreEqual(@"cannot open x", Program.DescribeFailure(new IOException(@"cannot open x"), defectFormat));
+            Assert.AreEqual(@"bad row", Program.DescribeFailure(new InvalidDataException(@"bad row"), defectFormat));
+            Assert.AreEqual(@"denied", Program.DescribeFailure(new UnauthorizedAccessException(@"denied"), defectFormat));
+            Assert.AreEqual(@"cannot open x", Program.DescribeFailure(
+                new AggregateException(new FileNotFoundException(@"cannot open x")), defectFormat));
+            var defect = new InvalidOperationException(@"invariant broken");
+            Assert.AreEqual(string.Format(defectFormat, defect), Program.DescribeFailure(defect, defectFormat));
+            var mixed = new AggregateException(new IOException(@"io"), new NullReferenceException());
+            Assert.AreEqual(string.Format(defectFormat, mixed), Program.DescribeFailure(mixed, defectFormat));
+            var empty = new IOException(string.Empty);
+            Assert.AreEqual(string.Format(defectFormat, empty), Program.DescribeFailure(empty, defectFormat));
             Assert.IsFalse(CommandStatusWriter.IsErrorLine("Warning: message"));
             Assert.IsFalse(CommandStatusWriter.IsErrorLine("Reported Error: in mid-line prose"));
             Assert.IsFalse(CommandStatusWriter.IsErrorLine(null));

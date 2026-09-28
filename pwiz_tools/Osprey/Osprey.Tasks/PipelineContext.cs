@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Tasks
@@ -599,7 +600,7 @@ namespace pwiz.Osprey.Tasks
     /// rather than letting the consumer proceed with default state. Carries the
     /// task type and the exit code the failing task requested.
     /// </summary>
-    public sealed class RehydrateFailedException : Exception
+    public sealed class RehydrateFailedException : UserMessageException
     {
         public Type TaskType { get; }
         public int ExitCode { get; }

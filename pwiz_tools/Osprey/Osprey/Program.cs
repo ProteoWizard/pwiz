@@ -563,15 +563,29 @@ namespace pwiz.Osprey
             }
             catch (Exception ex)
             {
-                // As in AnalysisPipeline.Run: the whole exception, so an empty message or a
-                // wrapper's InnerException cannot hide the cause. This sink had no stack
-                // trace at all, so a failure before the pipeline started - creating the
-                // output directories, the input checks, the model-diagnostics render -
-                // reported one line and no frames. Usage errors do not reach here; the
+                // As in AnalysisPipeline.Run: a user-actionable failure is its message, and a
+                // defect is the whole exception, so an empty message or a wrapper's
+                // InnerException cannot hide the cause. Usage errors do not reach here; the
                 // parser's catch above reports them as the one-line messages they are.
-                LogError(string.Format(OspreyResources.Program_Run_Fatal_error___0_, ex));
+                LogError(DescribeFailure(ex, OspreyResources.Program_Run_Fatal_error___0_));
                 return EXIT_CODE_FAILURE_TO_START;
             }
+        }
+
+        /// <summary>
+        /// The Error: text for an exception that reached a top-level sink, following Skyline:
+        /// an exception whose message is written for the user (file not found, access denied,
+        /// a damaged or incompatible file - see <see cref="CommonExceptionUtil.IsProgrammingDefect"/>)
+        /// is reported as that message alone; a programming defect is reported whole, type and
+        /// stack included, through <paramref name="defectFormat"/>, so it can be fixed. A user
+        /// exception with no message is treated as a defect: there is nothing else to show.
+        /// </summary>
+        internal static string DescribeFailure(Exception ex, string defectFormat)
+        {
+            var reported = CommonExceptionUtil.UnwrapUserException(ex);
+            if (!CommonExceptionUtil.IsProgrammingDefect(reported) && !string.IsNullOrEmpty(reported.Message))
+                return reported.Message;
+            return string.Format(defectFormat, ex);
         }
 
         /// <summary>

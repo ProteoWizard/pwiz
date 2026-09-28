@@ -134,14 +134,15 @@ namespace pwiz.Osprey
             }
             catch (Exception ex)
             {
-                // The whole exception, not ex.Message plus ex.StackTrace. Message can be
-                // empty and a wrapper carries its real cause only in InnerException, so the
-                // pair could name the throwing frame while saying nothing about why: a
-                // 17-hour 163-file run ended in "Pipeline failed: " and a bare BlibWriter
-                // constructor frame, which leaves a file lock, a full disk and a missing
-                // native library indistinguishable. ToString() prints the type, the message,
-                // every inner exception and the stack.
-                LogError(string.Format(OspreyResources.AnalysisPipeline_Run_Pipeline_failed___0_, ex));
+                // Skyline's line (CommonExceptionUtil.IsProgrammingDefect): a file or data
+                // problem the user can act on is reported as its message; anything else is a
+                // defect and is reported whole, not ex.Message plus ex.StackTrace. Message can
+                // be empty and a wrapper carries its real cause only in InnerException, so the
+                // pair could name the throwing frame while saying nothing about why: a 17-hour
+                // 163-file run ended in "Pipeline failed: " and a bare BlibWriter constructor
+                // frame. ToString() prints the type, the message, every inner exception and
+                // the stack.
+                LogError(Program.DescribeFailure(ex, OspreyResources.AnalysisPipeline_Run_Pipeline_failed___0_));
                 return 1;
             }
         }

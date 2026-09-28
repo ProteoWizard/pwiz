@@ -22,7 +22,8 @@
  */
 
 using System;
-using System.IO;
+using System.IO;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Osprey.IO
 {
@@ -83,7 +84,7 @@ namespace pwiz.Osprey.IO
     /// <see cref="Exception"/> - so the reporting is unchanged. A future caller that wants to
     /// recover should catch THIS type and branch on <see cref="Reason"/>.</para>
     /// </summary>
-    public class SpectraCacheException : Exception
+    public class SpectraCacheException : UserMessageException
     {
         public SpectraCacheException(string message, SpectraCacheRejection reason, string cachePath)
             : base(message)
