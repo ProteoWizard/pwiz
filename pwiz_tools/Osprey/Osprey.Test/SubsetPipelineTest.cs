@@ -337,7 +337,10 @@ namespace pwiz.Osprey.Test
                      {
                          new[] { OspreyCommandArgs.ARG_FDR_METHOD.ArgumentText, @"gbdt" },
                          new[] { OspreyCommandArgs.ARG_FDR_LEVEL.ArgumentText, @"peptide" },
-                         new[] { OspreyCommandArgs.ARG_FDR_LEVEL.ArgumentText, @"protein" }
+                         new[] { OspreyCommandArgs.ARG_FDR_LEVEL.ArgumentText, @"protein" },
+                         new[] { OspreyCommandArgs.ARG_SHARED_PEPTIDES.ArgumentText, @"razor" },
+                         new[] { OspreyCommandArgs.ARG_SHARED_PEPTIDES.ArgumentText, @"unique" },
+                         new[] { OspreyCommandArgs.ARG_NO_PREFILTER.ArgumentText }
                      })
             {
                 string variantDir = CreateDir(string.Join(@"-", variant).TrimStart('-'));
@@ -345,6 +348,32 @@ namespace pwiz.Osprey.Test
                 Assert.IsTrue(BlibComparer.CountRows(Path.Combine(variantDir, BLIB_FILE), @"RefSpectra") > 0,
                     string.Join(@" ", variant) + @" reported no precursors");
             }
+
+            // FDRBench input with one row per precursor and run.
+            string benchDir = CreateDir(@"fdrbench-per-run");
+            string bench = Path.Combine(benchDir, @"bench.tsv");
+            RunAnalysis(benchDir, DataInputs(), Verifier(false), OspreyCommandArgs.ARG_FDRBENCH.ArgumentText, bench,
+                OspreyCommandArgs.ARG_FDRBENCH_PER_RUN.ArgumentText);
+            AssertHasRows(bench);
+
+            // The non-default second-pass arms the regression's mode 10 runs: first-pass q-values
+            // transferred, and the experiment score as the mean of each precursor's best two runs.
+            string transferDir = CreateDir(@"pass2-transfer");
+            RunAnalysis(transferDir, DataInputs(), new Dictionary<string, string>
+            {
+                { @"OSPREY_PASS2_VERIFY_WORKER", string.Empty },
+                { @"OSPREY_PASS2_QVALUE", @"transfer" },
+                { @"OSPREY_EXPERIMENT_AGG", @"mean-best-2" }
+            });
+            Assert.IsTrue(BlibComparer.CountRows(Path.Combine(transferDir, BLIB_FILE), @"RefSpectra") > 0,
+                @"the transfer arm reported no precursors");
+
+            // The spectra-cache task alone writes one cache per run and nothing downstream.
+            string cacheDir = CreateDir(@"spectra-cache");
+            RunAnalysis(cacheDir, DataInputs(), Verifier(false), OspreyCommandArgs.ARG_TASK.ArgumentText,
+                SpectraCacheTask.TASK_NAME);
+            Assert.AreEqual(RUN_NAMES.Length, Directory.GetFiles(cacheDir, @"*" + SPECTRA_CACHE_EXTENSION).Length);
+            Assert.IsFalse(File.Exists(Path.Combine(cacheDir, BLIB_FILE)));
         }
 
         /// <summary>
