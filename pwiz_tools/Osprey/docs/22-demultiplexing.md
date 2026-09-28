@@ -269,6 +269,9 @@ Osprey.DemuxTool --in run.raw --out run.demux.mzML --scheme staggered
 | `--kernel` | - | the measured transmission profile (see [below](#the-transmission-zt-scan)) |
 | `--layout` | `centered:5` | ZT Scan output layout: `centered:k`, `tiled:k` or `framed:k:m` |
 | `--min-out` | 0.2 | ZT Scan: solved intensities below this many ions are not written |
+| `--position-mz` | off | ZT Scan: write each solved value at the m/z of the peaks it was solved from, in its own sweep (see [Output](#output-zt-scan-and-layouts)) |
+| `--source-positions` | off | ZT Scan: place each channel's sources once per block, then solve each sweep over them (see [Source positions](#source-positions)) |
+| `--source-l1 L` | 0 | ZT Scan, with `--source-positions`: a non-negative lasso weight on the fit that finds the sources |
 | `--apportion H` | off | ZT Scan: apportion observed peaks instead of writing solved values |
 | `--counts-per-ion` | 100 | the detector counts of one ion, for the weights and the ion thresholds |
 | `--ppm` | 10 | the channel tolerance |
@@ -445,9 +448,12 @@ cannot reveal a biased solve.
 
 ### Output: ZT Scan, and layouts
 
-The solved intensity of each source position is written when it reaches `--min-out` ions. It is
-written at the channel's intensity-weighted mean m/z over the block. The *layout* decides which
-positions each output spectrum carries, and what isolation window it reports:
+The solved intensity of each source position is written when it reaches `--min-out` ions. By default
+it is written at the channel's intensity-weighted mean m/z over the whole block. With `--position-mz`,
+each value is written at the m/z of the observed peaks it was solved from, in its own sweep: each
+row's peaks count by the share of the row's modeled signal that position explains. That added about
+4% identifications on the slice (below). The *layout* decides which positions each output spectrum
+carries, and what isolation window it reports:
 
 | Layout | Spectra per sweep | Isolation window written | Positions carried |
 |---|---|---|---|
@@ -467,18 +473,19 @@ positions each output spectrum carries, and what isolation window it reports:
     noise.
   - Under counting noise, the split between neighbors flips from sweep to sweep.
   - On real data, one position per spectrum halved the identifications.
-- **Three or five positions recover it.** A spectrum that carries the positions around a
-  precursor collects the signal wherever the split put it.
+- **Several positions recover it.** A spectrum that carries the positions around a precursor
+  collects the signal wherever the split put it. Of 5, 7 and 9, centered:7 did best on the slice.
+  The window each spectrum reports is still its own 1.18 Th bin, so DIA-NN selects candidates at
+  that width while the content carries 8.3 Th of demultiplexed signal.
 - **Tiled windows lose precursors near their edges.** The signal that placement noise moved into
   the next position lands in the next tile. On the slice, tiled:5 lost about 9% against
   centered:5, and tiled:4 lost more.
 - **framed:k:m keeps a margin but still tiles.** On the slice, framed:3:1 (3.5 Th windows, each
   carrying 5.9 Th of demultiplexed signal) matched centered:5's identifications and precision,
   with a third of its spectra and 2.8 times smaller files.
-  - Over the whole A1 run, with the output floor, it fell 1.2% below the acquired data, where
-    centered:5 without the floor gained 1.7% (below).
-  - Which layout to use is therefore still open. The whole-run arm without the floor, which would
-    separate the layout from the floor, has not been run.
+  - Over the whole A1 run it fell below the acquired data, with the output floor (27,009) and
+    without it (26,991), where centered:5 gained 1.7% (below). The loss is the layout's, and it
+    comes above 600 m/z.
 
 **The output floor.** `--min-out 1` stops the tool writing solved values under one ion.
 - On the slice it added 3-7% identifications, presumably because sub-ion values act as noise in
@@ -493,6 +500,34 @@ share of that spectrum's modeled signal from positions within ±H. It does worse
 (below). An observed ZT Scan peak mixes about 16 positions and is often a few ions, so one peak
 times a small share is a noisy estimate. The solved value pools every spectrum that saw the
 source.
+
+### Source positions
+
+`--source-positions` changes what the columns of A are for each channel. By default every 1.18 Th
+position within reach is a column, about 40 of them, and each sweep is solved separately. Counting
+noise then spreads one precursor's signal over its neighboring positions. With source positions:
+1. **The block's summed profile finds the sources.** The channel's counts summed over the block's
+   sweeps are fitted on the bin columns, with the same Poisson-weighted refit. Each run of adjacent
+   solved columns is one source, at its intensity-weighted center.
+   - Sources closer than 0.8 Th merge.
+   - Sources under 2 ions, or under 5% of the channel's total, are dropped.
+   - At most 12 are kept, the largest.
+   - `--source-l1 L` adds a non-negative lasso weight to this fit. With x >= 0 the L1 norm is
+     linear, so it enters the normal equations as Aᵀy - L/2. As in the spec's §5.4d, its scale
+     comes from the Poisson weights, so it is in the weighted fit's units.
+2. **Each position is refined.** A 1-D search per source, ±0.6 Th in 0.1 Th steps and two passes,
+   picks the position whose weighted fit of the summed profile has the smallest residual, with the
+   kernel evaluated at the exact positions (in the matrix's scale, `KernelScale`).
+3. **Each sweep is solved over just those sources**, typically two or three columns, then refitted
+   with Poisson weights. The quantities carry no penalty.
+4. **Each source is written to the encoded bin nearest its position**, at its own m/z with
+   `--position-mz`.
+
+The placement it gives was measured with the Python prototypes (`kernelpos.py`, `kernelpos2.py` in
+pwiz-ai). For precursors DIA-NN identified in a sub-slice, the share of their top fragments' signal
+near the apex that lands in their own bin went from 0.52 (the per-sweep solve) to 0.69. Within ±1
+bin it was 0.85 and 0.86. Grouping fragments across a precursor, to place weak fragments by their
+group, over-merged co-eluting precursors and is not implemented.
 
 ### Determinism
 
@@ -559,6 +594,15 @@ every arm found in all three runs):
 | framed:3:1, `--min-out 1` | 2,778 / 2,892 / 2,907 | 0.112 | 0.23 GB |
 | tiled:5 (Python prototype) | 2,508-2,590 | 0.127 | 0.30 GB |
 | apportioned, ±2 positions | 2,592 / 2,773 / 2,828 | 0.136 | - |
+| centered:7 | 2,738 / 2,856 / 2,994 | 0.094* | 1.84 GB |
+| centered:9 | 2,617 / 2,766 / 2,991 | - | 2.26 GB |
+| centered:5, `--position-mz` | 2,891 / 2,831 / 2,841 | 0.097* | - |
+| **centered:7, `--position-mz`** | **2,770 / 2,950 / 2,959** | 0.095* | - |
+
+\* On the 1,613 precursors those arms, the acquired data (0.099) and DIA-NN's scanning mode on the
+acquired mzML (2,768 / 2,807 / 2,958; 0.097) all found in all three runs. centered:7 with
+`--position-mz` identifies 1.7% more than DIA-NN's scanning mode on the slice, at lower FDP
+(0.29-0.61%).
 
 - Entrapment FDP was 0.2-1.2% in every arm. These counts are small, so a single run's FDP moves
   with a few hits.
@@ -574,8 +618,20 @@ targets only):
 |---|---|---|---|
 | as acquired | 27,341 | 0.72% | 24,459 |
 | as acquired, DIA-NN `--scanning-swath` | 29,373 | 0.84% | 26,273 |
+| the vendor `.wiff`, DIA-NN `--scanning-swath` | 29,552 | 0.96% | 26,475 |
 | centered:5 | 27,794 (+1.7%) | 0.88% | 24,973 |
+| **centered:5, DIA-NN settings pinned** | **29,133 (+6.6%)** | **0.85%** | - |
+| framed:3:1 | 26,991 (-1.3%) | 0.71% | - |
 | framed:3:1, `--min-out 1` | 27,009 (-1.2%) | 0.90% | 24,163 |
+
+- **Pin DIA-NN's settings on a demultiplexed file.** Left to choose, DIA-NN measured narrower peaks
+  on the centered:5 file than on the acquired data (2.66 against 2.81 scans), so it picked a scan
+  window radius of 5 instead of 6 and a 20 ppm fragment tolerance instead of 17. With
+  `--window 6 --mass-acc 17 --mass-acc-ms1 19`, the acquired run's own choices, the same file gives
+  29,133 targets: 1.4% short of DIA-NN's scanning mode on the vendor file, at lower FDP.
+- **DIA-NN reads ZT Scan from `.wiff`, not `.wiff2`,** through SCIEX's Clearcore libraries. Its README
+  says Scanning SWATH and ZT Scan should be read directly rather than from mzML; here the two gave
+  nearly the same identifications.
 
 - Over the whole run the gain of centered:5 shrinks to +1.7%, against about +5% on the slice.
 - It is +3.8% in the slice's own region, and larger where the run is densest: 4-8 min at 500-700
@@ -588,9 +644,23 @@ targets only):
   (+170 to +280 per 2-minute, 100 m/z cell). It loses above 600 m/z at nearly every retention
   time, by up to 189 per cell. The slice (500-700 m/z) straddles that boundary and nets a gain.
   The cause of the loss is not yet known.
-- DIA-NN's own scanning mode, given the acquired spectra as an mzML, finds 5% more than any
-  demultiplexed file so far. It uses the sweep's quadrupole dimension directly rather than
-  searching narrowed windows.
+- Of the precursors DIA-NN's scanning mode finds and the centered:5 file misses, 56% are in the
+  lowest abundance quartile: the remaining identification gap is in weak precursors.
+
+**Three replicates, whole runs** (DIA-NN's own settings; CV of `Precursor.Quantity` on the 18,227
+precursors all three arms found in all three runs):
+
+| Arm | Targets (A1 / D1 / G1) | CV |
+|---|---|---|
+| as acquired | 27,341 / 27,952 / 28,470 | 0.112 |
+| the vendor `.wiff`, DIA-NN `--scanning-swath` | 29,552 / 30,285 / 30,882 | 0.089 |
+| centered:5 | 27,794 / 28,144 / 28,843 | 0.135 |
+
+- **Over whole runs the demultiplexed quantities are noisier than the acquired ones**, and DIA-NN's
+  scanning mode is better than both. On the slice the demultiplexed CV matched the acquired data's,
+  so the slice did not show this.
+- This is the gap `--source-positions` addresses: two or three columns per sweep instead of about
+  40 should add less noise to each quantity.
 
 The scripts behind these ZT Scan tables are in pwiz-ai, under `ai/scripts/Osprey/Demux`.
 
@@ -604,10 +674,9 @@ The scripts behind these ZT Scan tables are in pwiz-ai, under `ai/scripts/Osprey
   - the transmission calibrated per file, in C#;
   - its descriptor in the demultiplexed cache.
 - **Open questions for ZT Scan:**
-  - the layout and floor, since framed:3:1 with the floor loses precursors above 600 m/z over a
-    whole run;
-  - whether writing each channel at its block-mean m/z costs identifications, as it did on the
-    Orbitrap;
+  - quantitation: over whole runs the per-sweep solve's quantities are noisier than the acquired
+    data's (CV 0.135 against 0.112), and DIA-NN's scanning mode reaches 0.089;
+  - whether `--source-positions` closes that gap, first on the slice, then on whole runs;
   - how to recover the early-gradient losses, for instance by scoring a precursor against both the
     acquired and the demultiplexed spectra;
   - whether the counts-per-ion scale, which sets the weights, should be calibrated rather than
