@@ -251,7 +251,7 @@ namespace pwiz.Common.DataBinding.Internal
             get
             {
                 var sortDescriptions = SortDescriptions;
-                return sortDescriptions != null && sortDescriptions.Count > 0;
+                return sortDescriptions.Count > 0;
             }
         }
 
@@ -264,7 +264,7 @@ namespace pwiz.Common.DataBinding.Internal
         {
             get 
             { 
-                if (SortDescriptions == null || SortDescriptions.Count == 0)
+                if (SortDescriptions.Count == 0)
                 {
                     return ListSortDirection.Ascending;
                 }
@@ -275,7 +275,7 @@ namespace pwiz.Common.DataBinding.Internal
         protected override PropertyDescriptor SortPropertyCore
         {
             get { 
-                if (SortDescriptions == null || SortDescriptions.Count == 0)
+                if (SortDescriptions.Count == 0)
                 {
                     return null;
                 }
