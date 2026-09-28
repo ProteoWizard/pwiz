@@ -760,7 +760,9 @@ found in all three runs):
 
 - **Identifications: the demultiplexed runs lead.** centered:7 with `--position-mz`, searched with
   `--window 6 --mass-acc 17 --mass-acc-ms1 19`, finds 4.0-6.6% more targets than DIA-NN's scanning mode
-  on the vendor file, at lower FDP, and 24,600 precursors in all three runs against 23,589.
+  on the vendor file and 13-15% more than the acquired data, at lower FDP, and 24,600 precursors in all
+  three runs against 23,589. In peptides: 28,171 / 28,188 / 28,729 against 26,475 / 27,174 / 27,635 for
+  the `.wiff` (+3.7-6.4%), at 0.89-1.00% FDP against 1.01-1.07%.
 - **Quantities: still behind.** Pinning and the layout moved the CV from 0.134 to 0.119, but the
   acquired data gives 0.112 and the `.wiff` 0.088. By abundance quartile the demultiplexed CV equals
   the acquired data's at the top (0.093) and exceeds it by 0.010 at the bottom (0.148 against 0.138),
@@ -769,6 +771,9 @@ found in all three runs):
   grid](#centroiding-and-the-tof-grid)), which the demultiplexer, starting from the same vendor
   centroids, inherits.
 - On the slice the demultiplexed CV matched the acquired data's, so the slice does not show either.
+- `--source-positions` was built for the quantitation gap (two or three columns per sweep instead of
+  about 40). On the slice it loses both identifications and precision, with its drop rule removed and
+  DIA-NN pinned too ([Source positions](#source-positions)). It stays off by default.
 
 The scripts behind these ZT Scan tables are in pwiz-ai, under `ai/scripts/Osprey/Demux`.
 
