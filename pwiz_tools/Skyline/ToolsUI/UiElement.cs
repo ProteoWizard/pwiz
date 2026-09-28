@@ -2073,13 +2073,13 @@ namespace pwiz.Skyline.ToolsUI
             TreeNode current = null;
             for (int i = 0; i < segments.Length; i++)
             {
-                int best = BestMatch(nodes.Count, j => nodes[j].Text, segments[i]);
+                int best = BestTreeNodeMatch(nodes, segments[i]);
                 if (best < 0 && i == 0)
                 {
                     // A user clicks the node they see, however deep, so the path may start at any node that is
                     // showing in the tree (every ancestor expanded), e.g. a peptide under its expanded protein
                     nodes = ShownNodes(treeView.Nodes).ToList();
-                    best = BestMatch(nodes.Count, j => nodes[j].Text, segments[i]);
+                    best = BestTreeNodeMatch(nodes, segments[i]);
                 }
                 if (best < 0)
                     throw new ArgumentException(LlmInstruction.Format(
@@ -2092,6 +2092,21 @@ namespace pwiz.Skyline.ToolsUI
                 }
             }
             return current;
+        }
+
+        // The node whose text matches the key, or failing that whose text does without a trailing parenthetical --
+        // the results a Targets node shows after its name, e.g. "513.7951++ (rdotp 0.91, total ratio 0.02)",
+        // which change with the data. -1 if none.
+        private static int BestTreeNodeMatch(IList<TreeNode> nodes, string key)
+        {
+            int best = BestMatch(nodes.Count, j => nodes[j].Text, key);
+            return best >= 0 ? best : BestMatch(nodes.Count, j => WithoutTrailingParenthetical(nodes[j].Text), key);
+        }
+
+        private static string WithoutTrailingParenthetical(string text)
+        {
+            int start = text.LastIndexOf(@" (", StringComparison.Ordinal);
+            return start > 0 && text.EndsWith(@")") ? text.Substring(0, start) : text;
         }
 
         // The nodes showing in a tree, in display order: each node, then its children if it is expanded.
