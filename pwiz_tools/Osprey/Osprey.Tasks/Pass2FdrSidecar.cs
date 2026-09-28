@@ -1889,7 +1889,7 @@ namespace pwiz.Osprey.Tasks
                 }
                 string sidecarPath = Path.Combine(
                     Path.GetDirectoryName(parquetPath) ?? string.Empty,
-                    fileName + @".1st-pass.fdr_scores.bin");
+                    fileName + @"." + FdrScoresSidecar.LABEL_FIRST_PASS + FdrScoresSidecar.EXT);
                 if (!File.Exists(sidecarPath))
                 {
                     ctx.LogWarning(string.Format(
@@ -2513,7 +2513,7 @@ namespace pwiz.Osprey.Tasks
             }
             reloadProgress.Dispose();
             swReloadFeats.Stop();
-            ctx.LogInfo(LogTag.TIMING, @"Reloaded PIN features for {0} entries: {1:F1}s",
+            ctx.LogInfo(LogTag.TIMING, @"Reloaded PIN features for {0} peaks: {1:F1}s",
                 nReloaded, swReloadFeats.Elapsed.TotalSeconds);
 
             switch (config.FdrMethod)

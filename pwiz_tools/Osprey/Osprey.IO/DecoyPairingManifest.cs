@@ -161,7 +161,7 @@ namespace pwiz.Osprey.IO
                 string header = reader.ReadLine();
                 if (header == null)
                     throw new InvalidDataException(OspreyIOResources.DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_empty_);
-                var cols = header.Split('\t');
+                var cols = header.Split(TextUtil.SEPARATOR_TSV);
                 int iSeq = -1, iType = -1, iPair = -1, iProteins = -1;
                 for (int i = 0; i < cols.Length; i++)
                 {
@@ -202,7 +202,7 @@ namespace pwiz.Osprey.IO
                 {
                     if (line.Length == 0)
                         continue;
-                    var fields = line.Split('\t');
+                    var fields = line.Split(TextUtil.SEPARATOR_TSV);
                     if (fields.Length < minRequiredCols)
                     {
                         nSkipped++;

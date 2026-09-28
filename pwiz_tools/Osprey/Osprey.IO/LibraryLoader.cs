@@ -113,7 +113,7 @@ namespace pwiz.Osprey.IO
             // ("<library-leaf>.libcache"); only the directory is redirected.
             string cachePath = Path.Combine(
                 ArtifactPaths.ResolveCacheDir(path),
-                Path.GetFileName(path) + @".libcache");
+                Path.GetFileName(path) + LibraryCache.EXT);
 
             // Reuse the binary cache only when it was built from the SAME
             // version of the source library. The library's identity hash
@@ -174,7 +174,7 @@ namespace pwiz.Osprey.IO
                                 if (entry.IsSpectrumReleased)
                                     skipped++;
                             }
-                            log.LogInfo(LogTag.Mem(@"library-fragments"), @"Skipped library fragments for {0} of {1} entries at load " +
+                            log.LogInfo(LogTag.Mem(@"library-fragments"), @"Skipped library fragments for {0} of {1} library precursors at load " +
                                 @"({2} base_ids retained for the 1st-pass retained set)",
                                 skipped, cached.Count, options.RetainFragmentsFor.Count);
                             log.LogInfo(LogTag.COUNT, LogKey.Format(LogKey.COUNT_LIBRARY_FRAGMENTS_SKIPPED,
@@ -252,10 +252,10 @@ namespace pwiz.Osprey.IO
             // silently exclude it), or a lean OmitFragments load (which would retain a phantom and
             // diverge the FirstPassFDR reconciliation bytes).
             foreach (var entry in entries)
+            {
                 if (entry.Fragments.Count == 0)
-                    throw new InvalidDataException(string.Format(
-                        OspreyIOResources.LibraryLoader_Load_Library_entry__0____1___has_no_fragment_peaks__peak_less_entries_support_BiblioSpec_MS1_,
-                        entry.Id, entry.ModifiedSequence));
+                    throw PeaklessPrecursorException(entry.Id, entry.ModifiedSequence);
+            }
 
             // FINISH the library before it is cached. Marking and pairing used to run at the
             // caller, after this method returned, so the cache stored a half-built library and
@@ -655,6 +655,17 @@ namespace pwiz.Osprey.IO
         private static bool LibrarySuppliesDecoys(OspreyConfig config)
         {
             return config.DecoysInLibrary || config.DecoyMethod == DecoyMethod.FromLibrary;
+        }
+
+        /// <summary>
+        /// The load failure for a library precursor with no fragment peaks, shared by the source
+        /// loaders and <see cref="LibraryCache"/> so both report it in the same words.
+        /// </summary>
+        internal static InvalidDataException PeaklessPrecursorException(uint id, string modifiedSequence)
+        {
+            return new InvalidDataException(string.Format(
+                OspreyIOResources.LibraryLoader_PeaklessPrecursorException_Library_precursor__0____1___has_no_fragment_peaks_,
+                id, modifiedSequence));
         }
     }
 }

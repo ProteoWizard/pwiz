@@ -288,6 +288,33 @@ namespace pwiz.Osprey.Core {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}h{1:00}m.
+        /// </summary>
+        public static string ProgressReporter_FormatElapsed__0_h_1_00_m {
+            get {
+                return ResourceManager.GetString("ProgressReporter_FormatElapsed__0_h_1_00_m", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}m{1:00}s.
+        /// </summary>
+        public static string ProgressReporter_FormatElapsed__0_m_1_00_s {
+            get {
+                return ResourceManager.GetString("ProgressReporter_FormatElapsed__0_m_1_00_s", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}s.
+        /// </summary>
+        public static string ProgressReporter_FormatElapsed__0_s {
+            get {
+                return ResourceManager.GetString("ProgressReporter_FormatElapsed__0_s", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}  {1:0.00}% ({2:N0}/{3:N0}, {4} elapsed).
         /// </summary>
         public static string ProgressReporter_Report__0____1_____2___3____4__elapsed_ {
@@ -320,6 +347,24 @@ namespace pwiz.Osprey.Core {
         public static string ResolutionModeExtension_LOCALIZED_VALUES_unit {
             get {
                 return ResourceManager.GetString("ResolutionModeExtension_LOCALIZED_VALUES_unit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to m/z.
+        /// </summary>
+        public static string ToleranceUnitExtension_LOCALIZED_VALUES_mz {
+            get {
+                return ResourceManager.GetString("ToleranceUnitExtension_LOCALIZED_VALUES_mz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ppm.
+        /// </summary>
+        public static string ToleranceUnitExtension_LOCALIZED_VALUES_ppm {
+            get {
+                return ResourceManager.GetString("ToleranceUnitExtension_LOCALIZED_VALUES_ppm", resourceCulture);
             }
         }
     }

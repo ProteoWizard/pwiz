@@ -398,14 +398,14 @@ namespace pwiz.Osprey.FDR
             // investigate the library / calibration -- the analog of Skyline's mProphet
             // model view. The raw standardized coefficient is kept alongside for the
             // Compare-Peaks-style read of how the composite score was built.
-            yield return @"  " + OspreyFDRResources.FeatureContributions_ToReportLines_Model_sanity_check___feature_share_of_target_decoy_separation__trained_linear_model__coefficients_standardized__;
-            yield return string.Format(@"    {0,-36} {1,12} {2,9}", OspreyFDRResources.FeatureContributions_ToReportLines_feature,
+            yield return TextUtil.GetIndentation(1) + OspreyFDRResources.FeatureContributions_ToReportLines_Model_sanity_check___feature_share_of_target_decoy_separation__trained_linear_model__coefficients_standardized__;
+            yield return TextUtil.GetIndentation(2) + string.Format(@"{0,-36} {1,12} {2,9}", OspreyFDRResources.FeatureContributions_ToReportLines_feature,
                 OspreyFDRResources.FeatureContributions_ToReportLines_coefficient, OspreyFDRResources.FeatureContributions_ToReportLines_share____);
             foreach (var f in Features
                 .OrderByDescending(f => IsDegenerate ? 0.0 : Math.Abs(f.Percent))
                 .ThenBy(f => f.Index))
             {
-                yield return string.Format(@"    {0,-36} {1,12:F4} {2,8:F1}%{3}",
+                yield return TextUtil.GetIndentation(2) + string.Format(@"{0,-36} {1,12:F4} {2,8:F1}%{3}",
                     f.Label, f.Coefficient, f.Percent,
                     f.IsUnexpectedDirection ? @"  " + OspreyFDRResources.FeatureContributions_ToReportLines__unexpected_direction_ : string.Empty);
             }

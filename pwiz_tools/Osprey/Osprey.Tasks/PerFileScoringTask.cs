@@ -106,7 +106,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public override string DescribeOutput(OspreyConfig config)
         {
-            return DescribePerInputOutput(config, ParquetScoreCache.GetScoresPath, @".scores.parquet",
+            return DescribePerInputOutput(config, ParquetScoreCache.GetScoresPath, ParquetScoreCache.EXT_SCORES,
                 config.OutputDir);
         }
 
@@ -345,7 +345,7 @@ namespace pwiz.Osprey.Tasks
                 // file each [i] is. Uses the same [i] token as the aggregate line.
                 ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_Run_Scoring__0__files_in_parallel_, config.InputFiles.Count));
                 for (int legendIdx = 0; legendIdx < config.InputFiles.Count; legendIdx++)
-                    ctx.LogInfo(string.Format(@"  {0}. {1}", legendIdx + 1, config.InputFiles[legendIdx]));
+                    ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(@"{0}. {1}", legendIdx + 1, config.InputFiles[legendIdx]));
 
                 // Collapse the concurrent per-file progress onto a single throttled
                 // "[i] p%" aggregate line, and buffer each file's narrative so its
@@ -814,7 +814,7 @@ namespace pwiz.Osprey.Tasks
                             var probe = ParquetScoreCache.ProbeResumeSchemaAndRows(scoresPath);
                             if (!probe.HasPinFeatures)
                             {
-                                ctx.LogError(@"  " + string.Format(
+                                ctx.LogError(TextUtil.GetIndentation(1) + string.Format(
                                     OspreyTasksResources.PerFileScoringTask_RehydrateFromOwnOutputs___Resuming___0__has_no_feature_columns__so_it_is_not_a_valid_Osprey_scores_file__Delete_,
                                     scoresPath));
                                 ctx.ExitCode = 1;
@@ -1150,7 +1150,7 @@ namespace pwiz.Osprey.Tasks
             if (OspreyEnvironment.LibraryLoadOnly)
             {
                 ctx.LogInfo(LogTag.LIB_LOAD, string.Format(
-                    @"{0} entries in {1:F2}s (task={2}, omitFragments={3}, retainSet={4})",
+                    @"{0} library precursors in {1:F2}s (task={2}, omitFragments={3}, retainSet={4})",
                     library.Count, swLibrary.Elapsed.TotalSeconds, config.SelectedTask?.Name,
                     loadOptions.OmitFragments,
                     loadOptions.RetainFragmentsFor == null
@@ -1306,7 +1306,7 @@ namespace pwiz.Osprey.Tasks
                 GC.WaitForPendingFinalizers();
                 GC.Collect();
                 long managedBytes = GC.GetTotalMemory(false);
-                ctx.LogInfo(LogTag.Mem(@"library-resident"), @"managed_heap={0:F2} GB ({1} entries)",
+                ctx.LogInfo(LogTag.Mem(@"library-resident"), @"managed_heap={0:F2} GB ({1} library precursors)",
                     managedBytes / (1024.0 * 1024.0 * 1024.0), fullLibrary.Count);
             }
 
@@ -1575,7 +1575,7 @@ namespace pwiz.Osprey.Tasks
                     }
                     for (int j = 0; j < stubs.Count; j++)
                         stubs[j].Features = features[j];
-                    ctx.LogVerbose(@"  " + string.Format(OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores___Loaded__0__first_pass_precursor_candidate_peaks_with_their_features, stubs.Count));
+                    ctx.LogVerbose(TextUtil.GetIndentation(1) + string.Format(OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores___Loaded__0__first_pass_precursor_candidate_peaks_with_their_features, stubs.Count));
                     perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
                 }
                 else
@@ -1608,7 +1608,7 @@ namespace pwiz.Osprey.Tasks
                             OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores___input_scores___0__is_missing_the_feature_columns__so_it_is_not_a_valid_Osprey_scores_,
                             parquetPath));
                     }
-                    ctx.LogVerbose(@"  " + string.Format(
+                    ctx.LogVerbose(TextUtil.GetIndentation(1) + string.Format(
                         OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores___Loaded__0__first_pass_precursor_candidate_peaks__features_not_needed_here_, stubs.Count));
                     perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
                 }
@@ -1769,7 +1769,7 @@ namespace pwiz.Osprey.Tasks
             // of that heading and its percentages read as theirs - the parent printed as a child
             // of its own child. The counter here is this file within the bundle; the percentage
             // above it is the bundle's own.
-            ctx.LogVerbose(@"    " + string.Format(OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScoresForFile_____Loading_file__0___1____2___from__3__,
+            ctx.LogVerbose(TextUtil.GetIndentation(2) + string.Format(OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScoresForFile_____Loading_file__0___1____2___from__3__,
                 fileIdx + 1, config.InputFiles.Count, fileName, parquetPath));
             var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath, null, sequencePool);
             // Keep the fail-fast the feature load used to provide: a foreign or truncated
@@ -1781,7 +1781,7 @@ namespace pwiz.Osprey.Tasks
                     OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScoresForFile__0__is_missing_the_feature_columns_of_an_Osprey__scores_parquet_file__Delete_it_and_re_,
                     parquetPath));
             }
-            ctx.LogVerbose(@"      " + string.Format(
+            ctx.LogVerbose(TextUtil.GetIndentation(3) + string.Format(
                 OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScoresForFile_______Loaded__0__first_pass_precursor_candidate_peaks__features_not_needed_here_, stubs.Count));
             perFileParquetPaths[fileName] = parquetPath;
             LoadJoinOnlyCalibration(fileName, parquetPath, perFileCalibrations,
@@ -1907,7 +1907,7 @@ namespace pwiz.Osprey.Tasks
             }
             catch (Exception ex)
             {
-                ctx.LogWarning(@"  " + string.Format(OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyCalibration___Failed_to_load_calibration_for__0____1_, fileName, ex.Message));
+                ctx.LogWarning(TextUtil.GetIndentation(1) + string.Format(OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyCalibration___Failed_to_load_calibration_for__0____1_, fileName, ex.Message));
             }
         }
 
@@ -2405,9 +2405,7 @@ namespace pwiz.Osprey.Tasks
             if (rowCount < 0 || rowCount > int.MaxValue)
             {
                 throw new InvalidDataException(string.Format(
-                    @"'{0}' declares {1} rows, which this build cannot represent (limit {2}). " +
-                    @"The per-file projection count is an int; a run this large needs that " +
-                    @"widened rather than truncated.",
+                    OspreyTasksResources.PerFileScoringTask_RowCountAsInt__0__holds__1__rows__more_than_this_version_of_Osprey_can_process___2___,
                     scoresPath, rowCount, int.MaxValue));
             }
             return (int)rowCount;
@@ -2460,7 +2458,7 @@ namespace pwiz.Osprey.Tasks
             }
             catch (Exception ex)
             {
-                ctx.LogWarning(@"  " + string.Format(OspreyTasksResources.PerFileScoringTask_LoadCalibrationAndIsolation___Failed_to_load_calibration_for__0____1_, fileName, ex.Message));
+                ctx.LogWarning(TextUtil.GetIndentation(1) + string.Format(OspreyTasksResources.PerFileScoringTask_LoadCalibrationAndIsolation___Failed_to_load_calibration_for__0____1_, fileName, ex.Message));
             }
         }
 
@@ -2501,11 +2499,11 @@ namespace pwiz.Osprey.Tasks
                 if (features.Count != stubs.Count)
                 {
                     if (resumeStrict)
-                        ctx.LogError(@"  " + string.Format(
+                        ctx.LogError(TextUtil.GetIndentation(1) + string.Format(
                             OspreyTasksResources.PerFileScoringTask_TryLoadStubsAndCalibration___Resuming___0__has__1__precursor_candidate_peaks_but__2__feature_rows__so_its_saved_,
                             scoresPath, stubs.Count, features.Count));
                     else
-                        ctx.LogWarning(@"  " + string.Format(
+                        ctx.LogWarning(TextUtil.GetIndentation(1) + string.Format(
                             OspreyTasksResources.PerFileScoringTask_TryLoadStubsAndCalibration___Resuming___0__has__1__precursor_candidate_peaks_but__2__feature_rows__scoring_it_again_,
                             scoresPath, stubs.Count, features.Count));
                     return null;
@@ -2516,11 +2514,11 @@ namespace pwiz.Osprey.Tasks
             catch (Exception ex)
             {
                 if (resumeStrict)
-                    ctx.LogError(@"  " + string.Format(
+                    ctx.LogError(TextUtil.GetIndentation(1) + string.Format(
                         OspreyTasksResources.PerFileScoringTask_TryLoadStubsAndCalibration___Resuming__failed_to_load_the_saved_scores_from__0____1_,
                         scoresPath, ex.Message));
                 else
-                    ctx.LogWarning(@"  " + string.Format(
+                    ctx.LogWarning(TextUtil.GetIndentation(1) + string.Format(
                         OspreyTasksResources.PerFileScoringTask_TryLoadStubsAndCalibration___Resuming__failed_to_load__0____1___scoring_it_again_,
                         scoresPath, ex.Message));
                 return null;
@@ -2860,7 +2858,7 @@ namespace pwiz.Osprey.Tasks
                 isolationWindows, config);
             nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
             nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
-            ctx.LogInfo(LogTag.COUNT, @"Coelution scored [{0}]: {1} entries ({2} targets, {3} decoys)",
+            ctx.LogInfo(LogTag.COUNT, @"Coelution scored [{0}]: {1} peaks ({2} targets, {3} decoys)",
                 fileName, scoredEntries.Count, nScoredTargets, nScoredDecoys);
 
             // Deduplicate: keep best target and best decoy per base_id
@@ -2938,7 +2936,7 @@ namespace pwiz.Osprey.Tasks
                         Calibrated = true
                     };
                     ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_ResolveCalibration_Loaded_MS2_calibration__mean__0___1___SD__2_,
-                        ms2Cal.Mean, ms2Cal.Unit, ms2Cal.SD));
+                        ms2Cal.Mean, MzCalibration.GetUnitText(ms2Cal.Unit), ms2Cal.SD));
                 }
                 if (calParams.Ms1Calibration != null && calParams.Ms1Calibration.Calibrated)
                 {
@@ -2953,7 +2951,7 @@ namespace pwiz.Osprey.Tasks
                         Calibrated = true
                     };
                     ctx.LogInfo(string.Format(OspreyTasksResources.PerFileScoringTask_ResolveCalibration_Loaded_MS1_calibration__mean__0___1___SD__2_,
-                        ms1Cal.Mean, ms1Cal.Unit, ms1Cal.SD));
+                        ms1Cal.Mean, MzCalibration.GetUnitText(ms1Cal.Unit), ms1Cal.SD));
                 }
             }
             else if (config.RtCalibration.Enabled)
@@ -3103,7 +3101,7 @@ namespace pwiz.Osprey.Tasks
 
             if (rtCalibration == null)
             {
-                ctx.LogInfo(@"  " + OspreyTasksResources.PerFileScoringTask_EmitCalibrationSummary___RT__calibration_failed___using_fallback_RT_tolerance);
+                ctx.LogInfo(TextUtil.GetIndentation(1) + OspreyTasksResources.PerFileScoringTask_EmitCalibrationSummary___RT__calibration_failed___using_fallback_RT_tolerance);
             }
             else
             {
@@ -3120,7 +3118,7 @@ namespace pwiz.Osprey.Tasks
                 if (double.IsNaN(finalTolerance))
                 {
                     // Degenerate calibration (e.g. NaN MAD): no usable spread to report.
-                    rtToleranceLine = @"  " + string.Format(
+                    rtToleranceLine = TextUtil.GetIndentation(1) + string.Format(
                         OspreyTasksResources.PerFileScoringTask_EmitCalibrationSummary___RT_tolerance______0__min_before____undetermined_after_calibration__no_usable_RT_spread_,
                         beforeStr);
                 }
@@ -3128,7 +3126,7 @@ namespace pwiz.Osprey.Tasks
                 {
                     // In range, or a clamp too small to show at this precision: a single
                     // value is unambiguous, so skip the computed-vs-clamp call-out.
-                    rtToleranceLine = @"  " + string.Format(
+                    rtToleranceLine = TextUtil.GetIndentation(1) + string.Format(
                         OspreyTasksResources.PerFileScoringTask_EmitCalibrationSummary___RT_tolerance______0__min_before________1__min_after_calibration,
                         beforeStr, finalStr);
                 }
@@ -3136,7 +3134,7 @@ namespace pwiz.Osprey.Tasks
                 {
                     // The computed 3*MAD*1.4826 was tighter than the floor: show the
                     // computed tolerance and the floor actually in use.
-                    rtToleranceLine = @"  " + string.Format(
+                    rtToleranceLine = TextUtil.GetIndentation(1) + string.Format(
                         OspreyTasksResources.PerFileScoringTask_EmitCalibrationSummary___RT_tolerance______0__min_before________1__min_computed__3_MAD_1_4826___using_____2__min_,
                         beforeStr, rawStr, finalStr);
                 }
@@ -3144,12 +3142,12 @@ namespace pwiz.Osprey.Tasks
                 {
                     // finalTolerance < rawTolerance: the computed value exceeded the
                     // ceiling, so show the computed tolerance and the cap in use.
-                    rtToleranceLine = @"  " + string.Format(
+                    rtToleranceLine = TextUtil.GetIndentation(1) + string.Format(
                         OspreyTasksResources.PerFileScoringTask_EmitCalibrationSummary___RT_tolerance______0__min_before________1__min_computed__3_MAD_1_4826___capped_at_____2__,
                         beforeStr, rawStr, finalStr);
                 }
                 ctx.LogInfo(rtToleranceLine);
-                ctx.LogInfo(@"  " + string.Format(
+                ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(
                     OspreyTasksResources.PerFileScoringTask_EmitCalibrationSummary___RT_fit__MAD__0__min__residual_SD__1__min__R_2__2___n__3__points,
                     stats.MAD, stats.ResidualSD, stats.RSquared, stats.NPoints));
             }
@@ -3169,13 +3167,13 @@ namespace pwiz.Osprey.Tasks
         {
             if (cal == null || !cal.Calibrated)
             {
-                ctx.LogInfo(@"  " + string.Format(OspreyTasksResources.PerFileScoringTask_EmitMassCalibrationLine____0__mass__not_calibrated, level));
+                ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(OspreyTasksResources.PerFileScoringTask_EmitMassCalibrationLine____0__mass__not_calibrated, level));
                 return;
             }
             double tolerance = cal.AdjustedTolerance ?? (Math.Abs(cal.Mean) + 3.0 * cal.SD);
-            ctx.LogInfo(@"  " + string.Format(
+            ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(
                 OspreyTasksResources.PerFileScoringTask_EmitMassCalibrationLine____0__mass__correction__1___2___SD__3___2___tolerance_____4___2___n__5___6__matches_,
-                level, cal.Mean, cal.Unit, cal.SD, tolerance, cal.Count, matchNoun));
+                level, cal.Mean, MzCalibration.GetUnitText(cal.Unit), cal.SD, tolerance, cal.Count, matchNoun));
         }
 
         /// <summary>
@@ -3222,9 +3220,8 @@ namespace pwiz.Osprey.Tasks
                     // Linux for cross-impl diffing against Rust's PIN output;
                     // matches the convention used by OspreyDiagnosticsLog.
                     var inv = CultureInfo.InvariantCulture;
-                    // ReSharper disable LocalizableElement
-                    writer.NewLine = "\n";
-                    writer.WriteLine(string.Join("\t", header));
+                    writer.NewLine = TextUtil.LF;
+                    writer.WriteLine(header.ToDsvLine(TextUtil.SEPARATOR_TSV));
                     foreach (var e in sorted)
                     {
                         string psmId = string.Format(inv, @"{0}_{1}_{2}_{3}",
@@ -3239,15 +3236,14 @@ namespace pwiz.Osprey.Tasks
                         };
                         for (int i = 0; i < ScoringTaskShared.NUM_PIN_FEATURES; i++)
                             cols.Add(e.Features[i].ToString(@"G17", inv));
-                        cols.Add(e.ModifiedSequence ?? @"");
-                        writer.WriteLine(string.Join("\t", cols));
+                        cols.Add(e.ModifiedSequence ?? string.Empty);
+                        writer.WriteLine(cols.ToDsvLine(TextUtil.SEPARATOR_TSV));
                     }
-                    // ReSharper restore LocalizableElement
                 }
                 saver.Commit();
             }
 
-            ctx.LogInfo(LogTag.COUNT, @"Wrote feature dump: {0} ({1} entries)",
+            ctx.LogInfo(LogTag.COUNT, @"Wrote feature dump: {0} ({1} peaks)",
                 dumpPath, sorted.Count);
         }
 

@@ -1192,7 +1192,7 @@ namespace pwiz.Osprey.Tasks
                 string.Format(
                     OspreyTasksResources.Calibrator_BuildAnchorPurityReport_____Calibration_anchor_purity___0__pass__1____FDRBench_r__2______,
                     fileName, passNumber, rLib),
-                @"  " + string.Format(
+                TextUtil.GetIndentation(1) + string.Format(
                     OspreyTasksResources.Calibrator_BuildAnchorPurityReport___scored_pool___0__target_side____1__target____2__entrapment__peaks_entered_LDA_,
                     poolT + poolE, poolT, poolE),
             };
@@ -1262,7 +1262,7 @@ namespace pwiz.Osprey.Tasks
             CalibrationMatch[] matchArray, double qThreshold, double rLib, string label)
         {
             var s = ComputeAnchorPurity(matchArray, qThreshold, rLib);
-            return @"  " + string.Format(
+            return TextUtil.GetIndentation(1) + string.Format(
                 OspreyTasksResources.Calibrator_AnchorPurityLine____0____1__anchors____2__target____3__entrapment___entrapment_frac__4____FDP_lower__5__,
                 label, s.Total, s.NTarget, s.NEntrapment, s.RawFraction, s.FdpLower, s.FdpCombined);
         }
@@ -1424,7 +1424,7 @@ namespace pwiz.Osprey.Tasks
             var ms2Cal = accepted.Ms2Calibration;
             var stats = accepted.Stats;
 
-            // Mass-error unit shared by both channels ("ppm" or "Th"); ms1 is authoritative,
+            // Mass-error unit token shared by both channels ("ppm" or "Th"); ms1 is authoritative,
             // ms2 covers an uncalibrated ms1 that defaulted its unit.
             string massUnit = !string.IsNullOrEmpty(ms1Cal?.Unit) ? ms1Cal.Unit : ms2Cal?.Unit;
 
@@ -1694,7 +1694,7 @@ namespace pwiz.Osprey.Tasks
 
             if (nSnrFiltered > 0)
             {
-                _ctx.LogVerbose(@"  " + string.Format(
+                _ctx.LogVerbose(TextUtil.GetIndentation(1) + string.Format(
                     OspreyTasksResources.Calibrator_private___RT_quality_filter__pass__0_____1______2__peptides__removed__3__with_S_N____4__,
                     passNumber, nTargetWins, libRtsDetected.Count, nSnrFiltered, MIN_SNR_FOR_RT_CAL));
             }
@@ -1743,15 +1743,16 @@ namespace pwiz.Osprey.Tasks
                 if (_ctx.Diagnostics?.Ms2CalErrorsOnly ?? false)
                     OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_MS2_CAL_ERRORS_ONLY");
             }
-            string unitStr = config.FragmentTolerance.Unit == ToleranceUnit.Ppm ? @"ppm" : @"Th";
+            string unitStr = MzCalibration.GetUnitToken(config.FragmentTolerance.Unit);
+            string unitText = config.FragmentTolerance.Unit.GetLocalizedString();
             ms1Calibration = MzCalibration.CalculateSingleLevel(allMs1Errors.ToArray(), unitStr);
             ms2Calibration = MzCalibration.CalculateSingleLevel(allMs2Errors.ToArray(), unitStr);
             _ctx.LogVerbose(string.Format(
                 OspreyTasksResources.Calibrator_AggregateMassCalibrations_MS1_calibration__pass__0____mean__1___2___SD__3___2___3_SD__4___2___n__5__precursor_,
-                passNumber, ms1Calibration.Mean, unitStr, ms1Calibration.SD, 3.0 * ms1Calibration.SD, allMs1Errors.Count));
+                passNumber, ms1Calibration.Mean, unitText, ms1Calibration.SD, 3.0 * ms1Calibration.SD, allMs1Errors.Count));
             _ctx.LogVerbose(string.Format(
                 OspreyTasksResources.Calibrator_AggregateMassCalibrations_MS2_calibration__pass__0____mean__1___2___SD__3___2___3_SD__4___2___n__5__fragment_,
-                passNumber, ms2Calibration.Mean, unitStr, ms2Calibration.SD, 3.0 * ms2Calibration.SD, allMs2Errors.Count));
+                passNumber, ms2Calibration.Mean, unitText, ms2Calibration.SD, 3.0 * ms2Calibration.SD, allMs2Errors.Count));
         }
 
         /// <summary>

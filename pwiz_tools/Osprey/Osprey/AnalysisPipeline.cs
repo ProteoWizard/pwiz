@@ -126,7 +126,7 @@ namespace pwiz.Osprey
                 }
 
                 stopwatch.Stop();
-                LogInfo(@"");
+                LogInfo(string.Empty);
                 ctx.LogInfo(LogTag.TIMING, @"Total pipeline: {0:F1}s",
                     stopwatch.Elapsed.TotalSeconds);
                 LogInfo(string.Format(OspreyResources.AnalysisPipeline_Run_Analysis_complete_in__0_, FormatDuration(stopwatch.Elapsed)));

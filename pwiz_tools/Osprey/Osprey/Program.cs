@@ -439,7 +439,7 @@ namespace pwiz.Osprey
                 LogInfo(string.Format(OspreyResources.Program_Run_Resolution___0_, config.ResolutionMode.GetLocalizedString()));
                 LogInfo(string.Format(OspreyResources.Program_Run_Fragment_tolerance___0___1_,
                     config.FragmentTolerance.Tolerance,
-                    config.FragmentTolerance.Unit == ToleranceUnit.Ppm ? @"ppm" : @"Th"));
+                    config.FragmentTolerance.Unit.GetLocalizedString()));
                 LogInfo(string.Format(OspreyResources.Program_Run_Run_FDR___0_, config.RunFdr));
                 LogInfo(string.Format(OspreyResources.Program_Run_Experiment_FDR___0_, config.ExperimentFdr));
                 // Always print which experiment-wide aggregation is in force, active or not.
@@ -542,7 +542,7 @@ namespace pwiz.Osprey
                 // above states for a person.
                 LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_EXPERIMENT_AGG, @"{0}", OspreyEnvironment.ExperimentAgg));
                 LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_STARTUP, @"threads={0}", config.NThreads));
-                LogInfo(@"");
+                LogInfo(string.Empty);
 
                 // --task ModelDiagnostics is a RENDER over completed analysis state, not a run.
                 // Settled before the pipeline is built, because the whole point is that most

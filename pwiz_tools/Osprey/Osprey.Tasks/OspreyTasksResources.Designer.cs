@@ -3693,6 +3693,16 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} holds {1:N0} rows, more than this version of Osprey can process ({2:N0})..
+        /// </summary>
+        public static string PerFileScoringTask_RowCountAsInt__0__holds__1__rows__more_than_this_version_of_Osprey_can_process___2___ {
+            get {
+                return ResourceManager.GetString("PerFileScoringTask_RowCountAsInt__0__holds__1__rows__more_than_this_version_of_Os" +
+                        "prey_can_process___2___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Loading first-pass precursor candidate peaks from {0:N0} files.
         /// </summary>
         public static string PerFileScoringTask_Run_Loading_first_pass_precursor_candidate_peaks_from__0__files {
@@ -3887,6 +3897,36 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot tell which input file the scores file {0} belongs to from its name..
+        /// </summary>
+        public static string RescoreHydration_Cannot_tell_which_input_file_the_scores_file__0__belongs_to_from_its_name_ {
+            get {
+                return ResourceManager.GetString("RescoreHydration_Cannot_tell_which_input_file_the_scores_file__0__belongs_to_from" +
+                        "_its_name_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} was written for a different library or search settings than the other reconciliation files of this analysis (library {1} vs {2}, search {3} vs {4}). Delete this analysis&apos;s *.FirstPassFDR.osprey.task files and run the first pass again..
+        /// </summary>
+        public static string RescoreHydration_Check__0__was_written_for_a_different_library_or_search_settings_than_the_other_reconciliation_files_of_this_analysis_ {
+            get {
+                return ResourceManager.GetString("RescoreHydration_Check__0__was_written_for_a_different_library_or_search_settings" +
+                        "_than_the_other_reconciliation_files_of_this_analysis_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} was written for a different set of input files than the other reconciliation files of this analysis. Expected: {1}. Found: {2}. Delete this analysis&apos;s *.FirstPassFDR.osprey.task files and run the first pass again..
+        /// </summary>
+        public static string RescoreHydration_Check__0__was_written_for_a_different_set_of_input_files_than_the_other_reconciliation_files_of_this_analysis_ {
+            get {
+                return ResourceManager.GetString("RescoreHydration_Check__0__was_written_for_a_different_set_of_input_files_than_th" +
+                        "e_other_reconciliation_files_of_this_analysis_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Reading first-pass results for the model diagnostics report.
         /// </summary>
         public static string RescoreHydration_FoldPreCompactionPerRun_Reading_first_pass_results_for_the_model_diagnostics_report {
@@ -3942,6 +3982,16 @@ namespace pwiz.Osprey.Tasks {
         public static string RescoreHydration_LoadEnvelope_Failed_to_read__0____1_ {
             get {
                 return ResourceManager.GetString("RescoreHydration_LoadEnvelope_Failed_to_read__0____1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} refers to precursor candidate {1}, which is not in the scores file for that run. The scores file changed after the first pass: delete this analysis&apos;s *.FirstPassFDR.osprey.task files and run the first pass again..
+        /// </summary>
+        public static string RescoreHydration_MapPlannedActions__0__refers_to_precursor_candidate__1___which_is_not_in_the_scores_file_for_that_run_ {
+            get {
+                return ResourceManager.GetString("RescoreHydration_MapPlannedActions__0__refers_to_precursor_candidate__1___which_i" +
+                        "s_not_in_the_scores_file_for_that_run_", resourceCulture);
             }
         }
         

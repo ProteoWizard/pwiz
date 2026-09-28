@@ -41,7 +41,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
     /// </summary>
     public static class ModelDiagnosticsReport
     {
-        public const string HtmlSuffix = @".model-diagnostics.html";
+        public const string EXT_HTML = @".model-diagnostics.html";
 
         /// <summary>
         /// The pass-1 <see cref="ModelDiagnosticsData"/>, written by FirstPassFdrTask when its
@@ -58,17 +58,17 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// <para>A JSON round-trip (Newtonsoft, camelCase, NaN/Infinity as literals) so it
         /// reloads into the same object graph the HTML embeds.</para>
         /// </summary>
-        private const string Pass1SidecarSuffix = @".1st-pass.model-diagnostics.json";
+        private const string EXT_PASS1 = @"." + FdrScoresSidecar.LABEL_FIRST_PASS + @".model-diagnostics.json";
 
         /// <summary>
         /// The pass-2 (final reported pool) bundle alone - <see cref="ModelDiagnosticsData.Pass2"/>
         /// and nothing else - written by SecondPassFdrTask when pass 2 ends. A separate file
-        /// rather than a revisit of <see cref="Pass1SidecarSuffix"/>, which is P12 for this
+        /// rather than a revisit of <see cref="EXT_PASS1"/>, which is P12 for this
         /// feature: a column lives in the file written by the phase that computes it, and the
         /// pass-2 views are computed by pass 2. Absence therefore means "pass 2 has not run",
         /// never "pass 2 had nothing to say" (P13).
         /// </summary>
-        private const string Pass2SidecarSuffix = @".2nd-pass.model-diagnostics.json";
+        private const string EXT_PASS2 = @"." + FdrScoresSidecar.LABEL_SECOND_PASS + @".model-diagnostics.json";
 
         private static readonly JsonSerializerSettings SidecarSettings = new JsonSerializerSettings
         {
@@ -795,7 +795,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
 
         private static string ResolveReportPath(OspreyConfig config)
         {
-            return Path.Combine(ResolveOutputDir(config), OutputStem(config) + HtmlSuffix);
+            return Path.Combine(ResolveOutputDir(config), OutputStem(config) + EXT_HTML);
         }
 
         /// <summary>
@@ -816,12 +816,12 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
 
         private static string ResolvePass1SidecarPath(OspreyConfig config)
         {
-            return Path.Combine(ResolveOutputDir(config), OutputStem(config) + Pass1SidecarSuffix);
+            return Path.Combine(ResolveOutputDir(config), OutputStem(config) + EXT_PASS1);
         }
 
         private static string ResolvePass2SidecarPath(OspreyConfig config)
         {
-            return Path.Combine(ResolveOutputDir(config), OutputStem(config) + Pass2SidecarSuffix);
+            return Path.Combine(ResolveOutputDir(config), OutputStem(config) + EXT_PASS2);
         }
 
         private static string ResolveOutputDir(OspreyConfig config)

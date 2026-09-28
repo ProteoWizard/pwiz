@@ -427,10 +427,11 @@ namespace pwiz.Osprey.Scoring
                     for (int di = 0; di < n && dumped < 20; di++)
                         if (preprocessed[di] != 0.0)
                         {
-                            // ReSharper disable LocalizableElement
-                            dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                                "pre\t{0}\t{1:G17}", di, preprocessed[di]));
-                            // ReSharper restore LocalizableElement
+                            var inv = System.Globalization.CultureInfo.InvariantCulture;
+                            dw.WriteLine(new[]
+                            {
+                                @"pre", di.ToString(inv), preprocessed[di].ToString(@"G17", inv)
+                            }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                             dumped++;
                         }
                     // Fragment bin lookups
@@ -442,13 +443,15 @@ namespace pwiz.Osprey.Scoring
                         bool dup = (fb >= 0 && fb < n) && visited2[fb];
                         if (fb >= 0 && fb < n)
                             visited2[fb] = true;
-                        // ReSharper disable LocalizableElement
-                        dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                            "frag\t{0}\tmz={1:G17}\tbin={2}\tval={3}\tdup={4}",
-                            f, entry.Fragments[f].Mz, fb,
-                            (fb >= 0 && fb < n) ? preprocessed[fb].ToString(@"G17", System.Globalization.CultureInfo.InvariantCulture) : @"OOB",
-                            dup));
-                        // ReSharper restore LocalizableElement
+                        var inv = System.Globalization.CultureInfo.InvariantCulture;
+                        dw.WriteLine(new[]
+                        {
+                            @"frag", f.ToString(inv),
+                            @"mz=" + entry.Fragments[f].Mz.ToString(@"G17", inv),
+                            @"bin=" + fb.ToString(inv),
+                            @"val=" + ((fb >= 0 && fb < n) ? preprocessed[fb].ToString(@"G17", inv) : @"OOB"),
+                            @"dup=" + dup.ToString(inv)
+                        }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                     }
                 }
             }

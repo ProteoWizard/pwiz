@@ -411,9 +411,7 @@ namespace pwiz.Osprey.Scoring
                                 dw.Write(existing);
                             dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
                                 @"# CWT PEAKS: {0} candidates", peaks.Count));
-                            // ReSharper disable LocalizableElement
-                            dw.WriteLine("peak\tidx\tstart\tapex\tend\tcorr_score");
-                            // ReSharper restore LocalizableElement
+                            dw.WriteLine(new[] { @"peak", @"idx", @"start", @"apex", @"end", @"corr_score" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                             for (int pi = 0; pi < peaks.Count; pi++)
                             {
                                 var p = peaks[pi];
@@ -431,11 +429,12 @@ namespace pwiz.Osprey.Scoring
                                         }
                                     corrScore = pcnt > 0 ? psum / pcnt : 0.0;
                                 }
-                                // ReSharper disable LocalizableElement
-                                dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                                    "peak\t{0}\t{1}\t{2}\t{3}\t{4:F10}",
-                                    pi, p.StartIndex, p.ApexIndex, p.EndIndex, corrScore));
-                                // ReSharper restore LocalizableElement
+                                var inv = System.Globalization.CultureInfo.InvariantCulture;
+                                dw.WriteLine(new[]
+                                {
+                                    @"peak", pi.ToString(inv), p.StartIndex.ToString(inv), p.ApexIndex.ToString(inv),
+                                    p.EndIndex.ToString(inv), corrScore.ToString(@"F10", inv)
+                                }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                             }
                             dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
                                 @"# BEST PEAK: idx={0} start={1} apex={2} end={3}",
@@ -876,7 +875,7 @@ namespace pwiz.Osprey.Scoring
                 // calibrated_tolerance_ppm: max(3*SD, 1.0) ppm
                 ms1TolPpm = Math.Max(3.0 * ms1Calibration.SD, 1.0);
                 // reverse_calibrate_mz: observed ~ theoretical + offset
-                if (ms1Calibration.Unit == @"Th")
+                if (ms1Calibration.Unit == MzCalibration.UNIT_TH)
                     searchMz = candidate.PrecursorMz + ms1Calibration.Mean;
                 else
                     searchMz = candidate.PrecursorMz * (1.0 + ms1Calibration.Mean / 1e6);

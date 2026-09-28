@@ -78,7 +78,7 @@ namespace pwiz.Osprey.Core
             using (var sha256 = SHA256.Create())
             {
                 var ic = System.Globalization.CultureInfo.InvariantCulture;
-                Func<bool, string> b = v => v ? @"true" : @"false";
+                Func<bool, string> b = v => v.ToLowerText();
                 var sb = new StringBuilder();
                 sb.AppendFormat(ic, "resolution_mode:{0}\n", _config.ResolutionMode);
                 sb.AppendFormat(ic, "fragment_tolerance:{0},{1}\n", _config.FragmentTolerance.Tolerance, _config.FragmentTolerance.Unit);
@@ -266,7 +266,7 @@ namespace pwiz.Osprey.Core
                 var sb = new StringBuilder();
                 sb.Append(SearchParameterHash());
                 sb.AppendFormat(ic, "reconciliation.enabled:{0}\n",
-                    _config.Reconciliation.Enabled ? @"true" : @"false");
+                    _config.Reconciliation.Enabled.ToLowerText());
                 sb.AppendFormat(ic, "reconciliation.consensus_fdr:{0}\n",
                     _config.Reconciliation.ConsensusFdr);
                 sb.AppendFormat(ic, "run_fdr:{0}\n", _config.RunFdr);

@@ -51,6 +51,8 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public class ReconciliationFile
     {
+        public const string EXT = @".reconciliation.json";
+
         /// <summary>
         /// Current schema version. Bump on incompatible changes.
         ///
@@ -176,22 +178,8 @@ namespace pwiz.Osprey.IO
             if (!string.IsNullOrEmpty(parent))
                 Directory.CreateDirectory(parent);
 
-            var settings = new JsonSerializerSettings
-            {
-                Converters = { new RoundtripDoubleConverter() },
-            };
-            string json = JsonConvert.SerializeObject(file, Formatting.Indented, settings);
-            // Newtonsoft's Formatting.Indented emits CRLF on Windows by
-            // default; normalize to LF so cross-impl byte parity with the
-            // Rust side (which always emits LF via serde_json) holds. Also
-            // emit a trailing newline so the file ends with `}\n`,
-            // matching the explicit newline Rust appends after the
-            // serializer.
-            // ReSharper disable LocalizableElement
-            json = json.Replace("\r\n", "\n");
-            if (!json.EndsWith("\n", StringComparison.Ordinal))
-                json += "\n";
-            // ReSharper restore LocalizableElement
+            // LF line endings and a trailing newline, for byte parity with the Rust side.
+            string json = RoundtripDoubleConverter.SerializeIndented(file);
 
             // Atomic write via FileSaver: a sibling temp file is
             // promoted to the destination on Commit; on exception, the
@@ -218,7 +206,7 @@ namespace pwiz.Osprey.IO
             // scores parquet into --output-dir (default = the input's own dir),
             // shared by the straight-through writer and the resume reader.
             string parent = ArtifactPaths.ResolveOutputDir(inputPath);
-            string filename = stem + @".reconciliation.json";
+            string filename = stem + EXT;
             return string.IsNullOrEmpty(parent) ? filename : Path.Combine(parent, filename);
         }
     }

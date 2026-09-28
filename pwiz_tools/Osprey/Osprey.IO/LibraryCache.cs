@@ -35,6 +35,8 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public static class LibraryCache
     {
+        public const string EXT = @".libcache";
+
         // ReSharper disable LocalizableElement
         /// <summary>Magic bytes at the start of every cache file.</summary>
         private static readonly byte[] MAGIC = Encoding.ASCII.GetBytes("OSPRLBR\0");
@@ -320,9 +322,7 @@ namespace pwiz.Osprey.IO
                         // or a lean OmitFragments load (issue #4355 / PR #4434 review). A stale cache
                         // built before this guard rebuilds from source, which fails fast there too.
                         if (nFrags == 0)
-                            throw new InvalidDataException(string.Format(
-                                OspreyIOResources.LibraryCacheStatus_LoadCache_Library_entry__0____1___has_no_fragment_peaks__peak_less_entries_support_BiblioSpec_MS1_,
-                                id, modifiedSequence));
+                            throw LibraryLoader.PeaklessPrecursorException(id, modifiedSequence);
                         // Per ENTRY, not per load. `omitFragments` drops every entry's peaks;
                         // `retainFragmentsFor` keeps them only for the base_ids a later stage will
                         // actually score, and skips the rest at the same cost SkipFragment already

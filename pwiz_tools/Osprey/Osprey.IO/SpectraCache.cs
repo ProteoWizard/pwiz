@@ -64,6 +64,8 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public static class SpectraCache
     {
+        public const string EXT = @".spectra.bin";
+
         private static readonly byte[] MAGIC = new byte[] {
             (byte)'O', (byte)'S', (byte)'P', (byte)'R',
             (byte)'S', (byte)'P', (byte)'C', 0
@@ -284,7 +286,7 @@ namespace pwiz.Osprey.IO
             // result Path.ChangeExtension produced); only the directory is
             // redirected by ArtifactPaths (beside the data file by default, else
             // the configured cache/output dir).
-            string fileName = Path.GetFileNameWithoutExtension(inputFile) + @".spectra.bin";
+            string fileName = Path.GetFileNameWithoutExtension(inputFile) + EXT;
             return Path.Combine(ArtifactPaths.ResolveCacheDir(inputFile), fileName);
         }
 

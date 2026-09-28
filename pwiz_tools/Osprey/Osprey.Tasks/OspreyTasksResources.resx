@@ -1207,6 +1207,9 @@
   <data name="PerFileScoringTask_ResolveCalibration_Saved_calibration_to__0_" xml:space="preserve">
     <value>Saved calibration to {0}</value>
   </data>
+  <data name="PerFileScoringTask_RowCountAsInt__0__holds__1__rows__more_than_this_version_of_Osprey_can_process___2___" xml:space="preserve">
+    <value>{0} holds {1:N0} rows, more than this version of Osprey can process ({2:N0}).</value>
+  </data>
   <data name="PerFileScoringTask_Run_Loading_first_pass_precursor_candidate_peaks_from_1_file" xml:space="preserve">
     <value>Loading first-pass precursor candidate peaks from 1 file</value>
   </data>
@@ -1261,6 +1264,15 @@
   <data name="RescoreCompaction_Apply_Trimming_the_file_to_the_precursor_candidates_kept_for_re_scoring_and_second_pass_FDR" xml:space="preserve">
     <value>Trimming the file to the precursor candidates kept for re-scoring and second-pass FDR</value>
   </data>
+  <data name="RescoreHydration_Cannot_tell_which_input_file_the_scores_file__0__belongs_to_from_its_name_" xml:space="preserve">
+    <value>Cannot tell which input file the scores file {0} belongs to from its name.</value>
+  </data>
+  <data name="RescoreHydration_Check__0__was_written_for_a_different_library_or_search_settings_than_the_other_reconciliation_files_of_this_analysis_" xml:space="preserve">
+    <value>{0} was written for a different library or search settings than the other reconciliation files of this analysis (library {1} vs {2}, search {3} vs {4}). Delete this analysis's *.FirstPassFDR.osprey.task files and run the first pass again.</value>
+  </data>
+  <data name="RescoreHydration_Check__0__was_written_for_a_different_set_of_input_files_than_the_other_reconciliation_files_of_this_analysis_" xml:space="preserve">
+    <value>{0} was written for a different set of input files than the other reconciliation files of this analysis. Expected: {1}. Found: {2}. Delete this analysis's *.FirstPassFDR.osprey.task files and run the first pass again.</value>
+  </data>
   <data name="RescoreHydration_FoldPreCompactionPerRun_Reading_first_pass_results_for_the_model_diagnostics_report" xml:space="preserve">
     <value>Reading first-pass results for the model diagnostics report</value>
   </data>
@@ -1278,6 +1290,9 @@
   </data>
   <data name="RescoreHydration_LoadEnvelope_Failed_to_read__0____1_" xml:space="preserve">
     <value>Failed to read {0}: {1}</value>
+  </data>
+  <data name="RescoreHydration_MapPlannedActions__0__refers_to_precursor_candidate__1___which_is_not_in_the_scores_file_for_that_run_" xml:space="preserve">
+    <value>{0} refers to precursor candidate {1}, which is not in the scores file for that run. The scores file changed after the first pass: delete this analysis's *.FirstPassFDR.osprey.task files and run the first pass again.</value>
   </data>
   <data name="RescoreHydration_OverlayFirstPassSidecar_Failed_to_read_the_first_pass_intermediate_file_for__0___expected_at__1___" xml:space="preserve">
     <value>Failed to read the first-pass intermediate file for {0} (expected at {1}).</value>

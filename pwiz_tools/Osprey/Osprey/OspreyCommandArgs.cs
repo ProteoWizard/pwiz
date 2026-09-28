@@ -29,6 +29,7 @@ using System.Linq;
 using System.Text;
 using pwiz.Common.CommandLine;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey
@@ -559,7 +560,7 @@ namespace pwiz.Osprey
             {
                 Program.LogWarning(string.Format(
                     OspreyResources.OspreyCommandArgs_ToConfig__0__is_set_without__1___so_the_manifest_will_not_be_used,
-                    ARG_DECOY_PAIRING_MANIFEST.ArgumentText, ARG_DECOYS_IN_LIBRARY.ArgumentText, @".scores.parquet"));
+                    ARG_DECOY_PAIRING_MANIFEST.ArgumentText, ARG_DECOYS_IN_LIBRARY.ArgumentText, ParquetScoreCache.EXT_SCORES));
             }
 
             if (_config.FdrBenchPerRun && string.IsNullOrEmpty(_config.OutputFdrBench))
@@ -907,7 +908,7 @@ namespace pwiz.Osprey
                             ARG_WORK_DIR.ArgumentText);
                     case @"cache-dir":
                         return string.Format(OspreyResources.OspreyArgUsageProvider_GetDescription_cache_dir,
-                            @".spectra.bin", ARG_WORK_DIR.ArgumentText);
+                            SpectraCache.EXT, ARG_WORK_DIR.ArgumentText);
                     case @"report":
                         return OspreyResources.OspreyArgUsageProvider_GetDescription_report;
                     case @"resolution":
@@ -956,7 +957,7 @@ namespace pwiz.Osprey
                         return OspreyResources.OspreyArgUsageProvider_GetDescription_write_pin;
                     case @"task":
                         return string.Format(OspreyResources.OspreyArgUsageProvider_GetDescription_task,
-                            SpectraCacheTask.TASK_NAME, @".spectra.bin", ModelDiagnosticsTask.TASK_NAME, ARG_MODEL_DIAGNOSTICS.ArgumentText);
+                            SpectraCacheTask.TASK_NAME, SpectraCache.EXT, ModelDiagnosticsTask.TASK_NAME, ARG_MODEL_DIAGNOSTICS.ArgumentText);
                     case @"parallel-files":
                         return string.Format(OspreyResources.OspreyArgUsageProvider_GetDescription_parallel_files,
                             ARG_THREADS.ArgumentText);

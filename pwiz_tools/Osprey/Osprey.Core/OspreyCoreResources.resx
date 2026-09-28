@@ -169,6 +169,15 @@
   <data name="OspreyEnvironment_DescribeExperimentAgg_Experiment_aggregation___0___default___best_observation_per_unit_" xml:space="preserve">
     <value>Experiment aggregation: {0} (default - best observation per unit)</value>
   </data>
+  <data name="ProgressReporter_FormatElapsed__0_h_1_00_m" xml:space="preserve">
+    <value>{0}h{1:00}m</value>
+  </data>
+  <data name="ProgressReporter_FormatElapsed__0_m_1_00_s" xml:space="preserve">
+    <value>{0}m{1:00}s</value>
+  </data>
+  <data name="ProgressReporter_FormatElapsed__0_s" xml:space="preserve">
+    <value>{0}s</value>
+  </data>
   <data name="ProgressReporter_Report__0____1_____2___3____4__elapsed_" xml:space="preserve">
     <value>{0}  {1:0.00}% ({2:N0}/{3:N0}, {4} elapsed)</value>
   </data>
@@ -180,5 +189,11 @@
   </data>
   <data name="ResolutionModeExtension_LOCALIZED_VALUES_unit" xml:space="preserve">
     <value>unit</value>
+  </data>
+  <data name="ToleranceUnitExtension_LOCALIZED_VALUES_mz" xml:space="preserve">
+    <value>m/z</value>
+  </data>
+  <data name="ToleranceUnitExtension_LOCALIZED_VALUES_ppm" xml:space="preserve">
+    <value>ppm</value>
   </data>
 </root>

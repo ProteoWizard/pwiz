@@ -100,47 +100,11 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Missing required column: FragmentMz.
+        ///   Looks up a localized string similar to Missing required column: {0}.
         /// </summary>
-        public static string ColumnIndices_Missing_required_column__FragmentMz {
+        public static string ColumnIndices_RequireColumn_Missing_required_column___0_ {
             get {
-                return ResourceManager.GetString("ColumnIndices_Missing_required_column__FragmentMz", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Missing required column: ModifiedPeptide.
-        /// </summary>
-        public static string ColumnIndices_Missing_required_column__ModifiedPeptide {
-            get {
-                return ResourceManager.GetString("ColumnIndices_Missing_required_column__ModifiedPeptide", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Missing required column: PrecursorCharge.
-        /// </summary>
-        public static string ColumnIndices_Missing_required_column__PrecursorCharge {
-            get {
-                return ResourceManager.GetString("ColumnIndices_Missing_required_column__PrecursorCharge", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Missing required column: PrecursorMz.
-        /// </summary>
-        public static string ColumnIndices_Missing_required_column__PrecursorMz {
-            get {
-                return ResourceManager.GetString("ColumnIndices_Missing_required_column__PrecursorMz", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Missing required column: RelativeIntensity.
-        /// </summary>
-        public static string ColumnIndices_Missing_required_column__RelativeIntensity {
-            get {
-                return ResourceManager.GetString("ColumnIndices_Missing_required_column__RelativeIntensity", resourceCulture);
+                return ResourceManager.GetString("ColumnIndices_RequireColumn_Missing_required_column___0_", resourceCulture);
             }
         }
         
@@ -182,33 +146,6 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid {0} &apos;{1}&apos; at row {2}.
-        /// </summary>
-        public static string DiannTsvLoader_ParseByte_Invalid__0____1___at_row__2_ {
-            get {
-                return ResourceManager.GetString("DiannTsvLoader_ParseByte_Invalid__0____1___at_row__2_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Invalid {0} &apos;{1}&apos; at row {2}.
-        /// </summary>
-        public static string DiannTsvLoader_ParseDouble_Invalid__0____1___at_row__2_ {
-            get {
-                return ResourceManager.GetString("DiannTsvLoader_ParseDouble_Invalid__0____1___at_row__2_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Invalid {0} &apos;{1}&apos; at row {2}.
-        /// </summary>
-        public static string DiannTsvLoader_ParseFloat_Invalid__0____1___at_row__2_ {
-            get {
-                return ResourceManager.GetString("DiannTsvLoader_ParseFloat_Invalid__0____1___at_row__2_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Building library precursors.
         /// </summary>
         public static string DiannTsvLoader_ParseReader_Building_library_precursors {
@@ -227,12 +164,11 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Library precursor {0} ({1}) has no fragment peaks. Precursors without fragments are for BiblioSpec MS1 feature finding and cannot be used in a DIA search..
+        ///   Looks up a localized string similar to Invalid {0} &apos;{1}&apos; at row {2}.
         /// </summary>
-        public static string LibraryCacheStatus_LoadCache_Library_entry__0____1___has_no_fragment_peaks__peak_less_entries_support_BiblioSpec_MS1_ {
+        public static string DiannTsvLoader_ParseValue_Invalid__0____1___at_row__2_ {
             get {
-                return ResourceManager.GetString("LibraryCacheStatus_LoadCache_Library_entry__0____1___has_no_fragment_peaks__peak_" +
-                        "less_entries_support_BiblioSpec_MS1_", resourceCulture);
+                return ResourceManager.GetString("DiannTsvLoader_ParseValue_Invalid__0____1___at_row__2_", resourceCulture);
             }
         }
         
@@ -332,16 +268,6 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Library precursor {0} ({1}) has no fragment peaks. Precursors without fragments are for BiblioSpec MS1 feature finding and cannot be used in a DIA search..
-        /// </summary>
-        public static string LibraryLoader_Load_Library_entry__0____1___has_no_fragment_peaks__peak_less_entries_support_BiblioSpec_MS1_ {
-            get {
-                return ResourceManager.GetString("LibraryLoader_Load_Library_entry__0____1___has_no_fragment_peaks__peak_less_entri" +
-                        "es_support_BiblioSpec_MS1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Loaded {0:N0} library precursors.
         /// </summary>
         public static string LibraryLoader_Load_Loaded__0__library_precursors {
@@ -403,6 +329,16 @@ namespace pwiz.Osprey.IO {
             get {
                 return ResourceManager.GetString("LibraryLoader_LogPairingSummary_Paired__0__of__1__library_decoys_with_their_targe" +
                         "ts___2______3__from_the_pairing_manifest_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library precursor {0} ({1}) has no fragment peaks. Precursors without fragments are for BiblioSpec MS1 feature finding and cannot be used in a DIA search..
+        /// </summary>
+        public static string LibraryLoader_PeaklessPrecursorException_Library_precursor__0____1___has_no_fragment_peaks_ {
+            get {
+                return ResourceManager.GetString("LibraryLoader_PeaklessPrecursorException_Library_precursor__0____1___has_no_fragm" +
+                        "ent_peaks_", resourceCulture);
             }
         }
         
@@ -576,6 +512,27 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The scores file is damaged: a stored list of values is {0:N0} bytes long, which is not a multiple of {1}..
+        /// </summary>
+        public static string ParquetScoreCache_DecodeBlob_The_scores_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__ {
+            get {
+                return ResourceManager.GetString("ParquetScoreCache_DecodeBlob_The_scores_file_is_damaged__a_stored_list_of_values_" +
+                        "is__0__bytes_long__which_is_not_a_multiple_of__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: the stored peak candidates in row group {1} have an unexpected type ({2}). The file is damaged or was written by a different version of Osprey..
+        /// </summary>
+        public static string ParquetScoreCache_LoadCwtCandidatesFromParquet__0___the_stored_peak_candidates_in_row_group__1__have_an_unexpected_type___2____The_file_is_damaged_or_was_written_by_a_different_version_of_Osprey_ {
+            get {
+                return ResourceManager.GetString("ParquetScoreCache_LoadCwtCandidatesFromParquet__0___the_stored_peak_candidates_in" +
+                        "_row_group__1__have_an_unexpected_type___2____The_file_is_damaged_or_was_written" +
+                        "_by_a_different_version_of_Osprey_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} is corrupt: row {1} (entry_id {2}) has a charge of 0, which is not a possible precursor charge. The charge column is either unreadable or was written corrupt, and because charge is part of the row&apos;s identity, using the file would silently drop precursors rather than report a wrong number. Delete this file and re-run the stage that produced it. Parquet written before 2026-09-17 may carry this from a write race in the parallel column writer, fixed in that release..
         /// </summary>
         public static string ParquetScoreCache_RequireCharge__0__is_corrupt__row__1___entry_id__2___has_a_charge_of_0__which_is_not_a_possible_ {
@@ -601,6 +558,17 @@ namespace pwiz.Osprey.IO {
             get {
                 return ResourceManager.GetString("ParquetScoreCache_StreamEntryIds_The_scores_file___0___is_damaged__row_group__1__" +
                         "has_no_readable_entry_id_column__so_its_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: a re-scored precursor candidate peak refers to row {1:N0}, past the end of the scores file ({2:N0} rows), and was not written..
+        /// </summary>
+        public static string ParquetScoreCache_StreamReconciledScoresParquet__0___a_re_scored_precursor_candidate_peak_refers_to_row__1__past_the_end_of_the_scores_file___2__rows___and_was_not_written_ {
+            get {
+                return ResourceManager.GetString("ParquetScoreCache_StreamReconciledScoresParquet__0___a_re_scored_precursor_candid" +
+                        "ate_peak_refers_to_row__1__past_the_end_of_the_scores_file___2__rows___and_was_n" +
+                        "ot_written_", resourceCulture);
             }
         }
         
@@ -754,6 +722,35 @@ namespace pwiz.Osprey.IO {
         public static string ReconciliationFile_Load_Reconciliation_file_parsed_as_null__ {
             get {
                 return ResourceManager.GetString("ReconciliationFile_Load_Reconciliation_file_parsed_as_null__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A number in the JSON file has no value..
+        /// </summary>
+        public static string RoundtripDoubleConverter_ReadJson_A_number_in_the_JSON_file_has_no_value_ {
+            get {
+                return ResourceManager.GetString("RoundtripDoubleConverter_ReadJson_A_number_in_the_JSON_file_has_no_value_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected a number in the JSON file, but found {0}..
+        /// </summary>
+        public static string RoundtripDoubleConverter_ReadJson_Expected_a_number_in_the_JSON_file__but_found__0__ {
+            get {
+                return ResourceManager.GetString("RoundtripDoubleConverter_ReadJson_Expected_a_number_in_the_JSON_file__but_found__" +
+                        "0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot write {0} to a JSON file: only finite numbers can be stored..
+        /// </summary>
+        public static string RoundtripDoubleConverter_WriteJson_Cannot_write__0__to_a_JSON_file__only_finite_numbers_can_be_stored_ {
+            get {
+                return ResourceManager.GetString("RoundtripDoubleConverter_WriteJson_Cannot_write__0__to_a_JSON_file__only_finite_n" +
+                        "umbers_can_be_stored_", resourceCulture);
             }
         }
         

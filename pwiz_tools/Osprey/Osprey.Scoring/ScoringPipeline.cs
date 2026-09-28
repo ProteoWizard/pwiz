@@ -155,7 +155,7 @@ namespace pwiz.Osprey.Scoring
                         OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Coelution_search_RT_tolerance___0__min__3_MAD_1_4826__MAD__1___2__,
                         rtToleranceGlobal, mad,
                         context.OriginalRtMad.HasValue
-                            ? string.Format(OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_from_the__0__file, @".calibration.json")
+                            ? string.Format(OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_from_the__0__file, CalibrationIO.EXT)
                             : OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_from_the_calibration_statistics));
                 }
             }
@@ -181,12 +181,11 @@ namespace pwiz.Osprey.Scoring
                     Tolerance = calTol,
                     Unit = calUnit
                 };
-                string unitStr = calUnit == ToleranceUnit.Ppm ? @"ppm" : @"Th";
                 if (logSettings)
                 {
                     _log.LogInfo(settingsIndent + string.Format(
                         OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Coelution_search_using_calibrated_fragment_tolerance___0___1_,
-                        calTol, unitStr));
+                        calTol, calUnit.GetLocalizedString()));
                 }
 
                 // Use calibrated tolerance for all downstream scoring. (The
@@ -198,7 +197,7 @@ namespace pwiz.Osprey.Scoring
                 {
                     _log.LogInfo(settingsIndent + string.Format(
                         OspreyScoringResources.ScoringPipeline_RunCoelutionScoring_Applying_MS2_calibration__mean_error____0___1_____correcting_by__2___1_,
-                        ms2Calibration.Mean, ms2Calibration.Unit, -ms2Calibration.Mean));
+                        ms2Calibration.Mean, MzCalibration.GetUnitText(ms2Calibration.Unit), -ms2Calibration.Mean));
                 }
             }
 
@@ -337,7 +336,7 @@ namespace pwiz.Osprey.Scoring
             if (ms2Cal != null && ms2Cal.Calibrated)
             {
                 double tol3sd = 3.0 * ms2Cal.SD;
-                fragTolUnit = string.Equals(ms2Cal.Unit, @"Th", StringComparison.OrdinalIgnoreCase)
+                fragTolUnit = string.Equals(ms2Cal.Unit, MzCalibration.UNIT_TH, StringComparison.OrdinalIgnoreCase)
                     ? ToleranceUnit.Mz : ToleranceUnit.Ppm;
                 double minTol = fragTolUnit == ToleranceUnit.Mz ? 0.05 : 1.0;
                 fragTolValue = Math.Max(tol3sd, minTol);

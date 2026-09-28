@@ -80,7 +80,7 @@ namespace pwiz.Osprey.Tasks
                               string.IsNullOrEmpty(config.CacheDir) && !string.IsNullOrEmpty(config.OutputDir)
                 ? string.Format(OspreyTasksResources.SpectraCacheTask_DescribeOutput_a__spectra_bin_file_next_to_each_input__or_in__0__where_the_input_folder_is_read_only,
                     config.OutputDir)
-                : DescribePerInputOutput(config, SpectraCache.GetCachePath, @".spectra.bin", config.CacheDir);
+                : DescribePerInputOutput(config, SpectraCache.GetCachePath, SpectraCache.EXT, config.CacheDir);
             return string.Format(OspreyTasksResources.SpectraCacheTask_DescribeOutput__0_____output_and___library_are_not_used_, perInput);
         }
 

@@ -81,7 +81,7 @@ namespace pwiz.Osprey.FDR
             Matrix stdFeatures;
             var standardizer = FeatureStandardizer.FitTransform(features, out stdFeatures);
             swSetup.Stop();
-            OspreyLog.Out.LogInfo(LogTag.TIMING, @"  Percolator setup + standardize: {0:F1}s ({1} entries x {2} features)",
+            OspreyLog.Out.LogInfo(LogTag.TIMING, @"  Percolator setup + standardize: {0:F1}s ({1} peaks x {2} features)",
                 swSetup.Elapsed.TotalSeconds, n, nFeatures);
 
             // Stage 5 standardizer dump. Gated by the injected diagnostics config
@@ -136,7 +136,7 @@ namespace pwiz.Osprey.FDR
                     dedupDecoys++;
                 else dedupTargets++;
             }
-            OspreyLog.Out.LogInfo(LogTag.COUNT, @"  Percolator best-per-precursor: {0} entries ({1} targets, {2} decoys) from {3} total",
+            OspreyLog.Out.LogInfo(LogTag.COUNT, @"  Percolator best-per-precursor: {0} precursors ({1} targets, {2} decoys) from {3} peaks",
                 bestPerPrecursor.Length, dedupTargets, dedupDecoys, n);
 
             int subN = trainSubset.Length;
@@ -147,7 +147,7 @@ namespace pwiz.Osprey.FDR
                     subDecoys++;
                 else subTargets++;
             }
-            OspreyLog.Out.LogInfo(LogTag.COUNT, @"  Percolator subsample: {0} entries ({1} targets, {2} decoys) from {3} dedup",
+            OspreyLog.Out.LogInfo(LogTag.COUNT, @"  Percolator subsample: {0} precursors ({1} targets, {2} decoys) from {3} dedup",
                 subN, subTargets, subDecoys, bestPerPrecursor.Length);
 
             // Build subset-local arrays.
@@ -556,7 +556,7 @@ namespace pwiz.Osprey.FDR
             // Section sub-header (default human log): the actual (possibly subsampled)
             // training-set size the per-iteration percent lines below are computed against.
             // subN / subTargets are the post-subsample counts computed above.
-            OspreyOutput.Out.WriteLine(@"  " + string.Format(
+            OspreyOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
                 OspreyFDRResources.PercolatorTrainer_TrainFoldModels__0__fold_cross_validation_on__1__training_peaks___2__targets_,
                 config.NFolds, subN, subTargets));
 
@@ -606,7 +606,7 @@ namespace pwiz.Osprey.FDR
                 // The tree counterpart of the C report below: the knobs that actually
                 // bound this model's capacity, so the fold scores above have context.
                 var gp = config.GbtParams;
-                OspreyOutput.Out.WriteLine(@"  " + string.Format(
+                OspreyOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
                     OspreyFDRResources.PercolatorTrainer_TrainFoldModels_Gradient_boosted_trees___0__trees__max_depth__1__learning_rate__2__subsample__3__colsample__4_,
                     gp.NTrees, gp.MaxDepth, gp.LearningRate, gp.Subsample, gp.ColSample,
                     gp.RegLambda, gp.RegAlpha, gp.Gamma, gp.MinChildWeight));
@@ -619,12 +619,12 @@ namespace pwiz.Osprey.FDR
                 // from a log-scale sweep grid; report the grid, the selection rule (it is part
                 // of the validity key, so a resumed run was trained under the same one) and
                 // each fold's pick.
-                OspreyOutput.Out.WriteLine(@"  " + string.Format(
+                OspreyOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
                     OspreyFDRResources.PercolatorTrainer_TrainFoldModels_SVM_regularization_C__swept_over__0___chosen_by_cross_validation_per_fold__,
                     FormatCGrid(config.CValues), DescribeCSelection(config.CSelectionTolerance)));
                 for (int fold = 0; fold < config.NFolds; fold++)
                 {
-                    OspreyOutput.Out.WriteLine(@"    " + string.Format(
+                    OspreyOutput.Out.WriteLine(TextUtil.GetIndentation(2) + string.Format(
                         OspreyFDRResources.PercolatorTrainer_TrainFoldModels_fold__0___1___C____2_,
                         fold + 1, config.NFolds, FormatC(foldBestC[fold])));
                 }
@@ -696,7 +696,7 @@ namespace pwiz.Osprey.FDR
                         foreach (var r in reports)
                         {
                             double foldPct = r.Targets > 0 ? 100.0 * r.Passing / r.Targets : 0.0;
-                            OspreyOutput.Out.WriteLine(@"  " + string.Format(
+                            OspreyOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
                                 OspreyFDRResources.PercolatorTrainer_TrainProgressReporter_ReportIteration_Percolator_fold__0___1___iteration__2__of__3____4__of__5__targets___6____at__7__FDR_,
                                 r.Fold + 1, _nFolds, iteration + 1, _maxIterations,
                                 r.Passing, r.Targets, foldPct, _trainFdr));
@@ -711,7 +711,7 @@ namespace pwiz.Osprey.FDR
                         sumTargets += r.Targets;
                     }
                     double pct = sumTargets > 0 ? 100.0 * sumPassing / sumTargets : 0.0;
-                    OspreyOutput.Out.WriteLine(@"  " + string.Format(
+                    OspreyOutput.Out.WriteLine(TextUtil.GetIndentation(1) + string.Format(
                         OspreyFDRResources.PercolatorTrainer_TrainProgressReporter_ReportIteration_Percolator_iteration__0__of__1____2____of_training_targets_at__3__FDR_,
                         iteration + 1, _maxIterations, pct, _trainFdr));
                 }
@@ -1079,7 +1079,7 @@ namespace pwiz.Osprey.FDR
                 // silently produce meaningless q-values that still look like a result.
                 throw new InvalidOperationException(string.Format(
                     @"TrainFoldGbt: fold {0} selected no positive training targets at any " +
-                    @"FDR threshold ({1} training entries, {2} targets); cannot train a model.",
+                    @"FDR threshold ({1} training peaks, {2} targets); cannot train a model.",
                     foldIndex, trainIndices.Length, nTrainTargets));
             }
 
@@ -1369,13 +1369,13 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Format a single SVM cost C for the console using the invariant culture
-        /// (a numeric value, not localizable text), with the general "R" round-trip
-        /// so grid values like 0.001 / 100 print exactly rather than as 1E-03.
+        /// Format a single SVM cost C for the console in the current culture, with the
+        /// general "R" round-trip so grid values like 0.001 / 100 print exactly rather
+        /// than as 1E-03.
         /// </summary>
         private static string FormatC(double c)
         {
-            return c.ToString(@"R", CultureInfo.InvariantCulture);
+            return c.ToString(@"R", CultureInfo.CurrentCulture);
         }
 
         /// <summary>
@@ -1391,7 +1391,9 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Format the log-scale C sweep grid as "{a, b, c}" for the console header.
+        /// Format the log-scale C sweep grid as "{a, b, c}" for the console header. The values
+        /// are separated by the current culture's list separator, as Skyline's command line
+        /// does, so a comma decimal separator (fr-FR "0,1; 1; 10") stays unambiguous.
         /// </summary>
         private static string FormatCGrid(double[] cValues)
         {
@@ -1400,7 +1402,8 @@ namespace pwiz.Osprey.FDR
             var parts = new string[cValues.Length];
             for (int i = 0; i < cValues.Length; i++)
                 parts[i] = FormatC(cValues[i]);
-            return @"{" + string.Join(@", ", parts) + @"}";
+            string separator = CultureInfo.CurrentCulture.TextInfo.ListSeparator + @" ";
+            return @"{" + string.Join(separator, parts) + @"}";
         }
     }
 }

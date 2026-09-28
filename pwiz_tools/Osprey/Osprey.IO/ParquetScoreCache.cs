@@ -948,7 +948,8 @@ namespace pwiz.Osprey.IO
                 return Array.Empty<double>();
             if (blob.Length % 8 != 0)
                 throw new InvalidDataException(string.Format(
-                    @"f64 blob length {0} is not a multiple of 8", blob.Length));
+                    OspreyIOResources.ParquetScoreCache_DecodeBlob_The_scores_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__,
+                    blob.Length, 8));
             int n = blob.Length / 8;
             var values = new double[n];
             for (int i = 0; i < n; i++)
@@ -971,7 +972,8 @@ namespace pwiz.Osprey.IO
                 return Array.Empty<float>();
             if (blob.Length % 4 != 0)
                 throw new InvalidDataException(string.Format(
-                    @"f32 blob length {0} is not a multiple of 4", blob.Length));
+                    OspreyIOResources.ParquetScoreCache_DecodeBlob_The_scores_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__,
+                    blob.Length, 4));
             int n = blob.Length / 4;
             var values = new float[n];
             Buffer.BlockCopy(blob, 0, values, 0, blob.Length);
@@ -1304,8 +1306,7 @@ namespace pwiz.Osprey.IO
                         {
                             // Parquet.Net 4.x types col.Data as non-null IArray.
                             throw new InvalidDataException(string.Format(
-                                @"{0}: cwt_candidates column in row group {1} " +
-                                @"decoded as {2}, expected byte[][] -- parquet schema mismatch",
+                                OspreyIOResources.ParquetScoreCache_LoadCwtCandidatesFromParquet__0___the_stored_peak_candidates_in_row_group__1__have_an_unexpected_type___2____The_file_is_damaged_or_was_written_by_a_different_version_of_Osprey_,
                                 Path.GetFileName(path), g, col.Data.GetType().Name));
                         }
                         for (int row = 0; row < blobs.Length; row++)
@@ -1508,6 +1509,9 @@ namespace pwiz.Osprey.IO
         /// Stage 4 parquet, which is how Stage 4 became a required Stage 7 input (#4486).
         /// Gap-fill rows are always emitted; they are survivors by construction.
         ///
+        /// <paramref name="taskName"/> is the <c>--task</c> name of the step doing the write,
+        /// for the message of the canonical-order guard.
+        ///
         /// <paramref name="progressIndent"/> is the leading whitespace for the write's own
         /// progress heading, or null to run the write SILENTLY. Silence is what a caller that
         /// already reports per file wants: two reporters at one indent emit bare "N%" lines
@@ -1527,7 +1531,7 @@ namespace pwiz.Osprey.IO
             IReadOnlyList<FdrEntry> gapFill,
             Dictionary<string, string> metadata,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById, string fileName,
-            ISet<(uint, byte, uint)> keepIdentities, string progressIndent,
+            ISet<(uint, byte, uint)> keepIdentities, string taskName, string progressIndent,
             Action<string> logWarning)
         {
             if (originalPath == null)
@@ -1627,11 +1631,11 @@ namespace pwiz.Osprey.IO
                     {
                         if (lastEmitted != null && KeyLess(e, lastEmitted))
                             throw new InvalidOperationException(string.Format(
-                                @"Stage 6 reconciled transfer for {0}: rows out of canonical " +
-                                @"(entry_id, charge, scan_number) order at output row {1} -- the " +
+                                @"{0} reconciled transfer for {1}: rows out of canonical " +
+                                @"(entry_id, charge, scan_number) order at output row {2} - the " +
                                 @"original parquet is not sorted, or a re-scored overlay changed its " +
                                 @"scan across a same-(entry_id,charge) sibling. Refusing to write a " +
-                                @"mis-ordered reconciled parquet.", fileName, written + buffer.Count));
+                                @"mis-ordered reconciled parquet.", taskName, fileName, written + buffer.Count));
                         lastEmitted = e;
                         buffer.Add(e);
                         if (buffer.Count == rowsPerGroup)
@@ -1708,8 +1712,8 @@ namespace pwiz.Osprey.IO
                 {
                     if (kv.Key >= (uint)origRowCount)
                         logWarning(string.Format(
-                            @"Stage 6 write-back: ParquetIndex {0} out of range for {1} ({2} rows)",
-                            kv.Key, fileName, origRowCount));
+                            OspreyIOResources.ParquetScoreCache_StreamReconciledScoresParquet__0___a_re_scored_precursor_candidate_peak_refers_to_row__1__past_the_end_of_the_scores_file___2__rows___and_was_not_written_,
+                            fileName, kv.Key, origRowCount));
                 }
             }
 
@@ -1892,7 +1896,7 @@ namespace pwiz.Osprey.IO
         {
             string dir = ArtifactPaths.ResolveOutputDir(mzmlPath);
             string stem = Path.GetFileNameWithoutExtension(mzmlPath);
-            return Path.Combine(dir, stem + @".scores.parquet");
+            return Path.Combine(dir, stem + EXT_SCORES);
         }
 
         // The reconciled-output marker is appended AFTER the ".scores" token
@@ -1902,8 +1906,8 @@ namespace pwiz.Osprey.IO
         // even when the input stem itself ends in ".reconciled". That makes the
         // suffix an UNAMBIGUOUS "this is a Stage 6 reconciled output" signal --
         // no parquet-metadata read needed to tell the two apart.
-        public const string ScoresParquetSuffix = @".scores.parquet";
-        public const string ReconciledScoresParquetSuffix = @".scores-reconciled.parquet";
+        public const string EXT_SCORES = @".scores.parquet";
+        public const string EXT_SCORES_RECONCILED = @".scores-reconciled.parquet";
 
         /// <summary>
         /// Returns the reconciled scores Parquet path for a given mzML path:
@@ -1918,18 +1922,18 @@ namespace pwiz.Osprey.IO
         {
             string dir = ArtifactPaths.ResolveOutputDir(mzmlPath);
             string stem = Path.GetFileNameWithoutExtension(mzmlPath);
-            return Path.Combine(dir, stem + ReconciledScoresParquetSuffix);
+            return Path.Combine(dir, stem + EXT_SCORES_RECONCILED);
         }
 
         /// <summary>
         /// True if <paramref name="path"/> is a Stage 6 reconciled-scores parquet
         /// (ends in <c>.scores-reconciled.parquet</c>). Unambiguous: see the note
-        /// on <see cref="ReconciledScoresParquetSuffix"/>.
+        /// on <see cref="EXT_SCORES_RECONCILED"/>.
         /// </summary>
         public static bool IsReconciledScoresPath(string path)
         {
             return !string.IsNullOrEmpty(path)
-                && path.EndsWith(ReconciledScoresParquetSuffix, StringComparison.Ordinal);
+                && path.EndsWith(EXT_SCORES_RECONCILED, StringComparison.Ordinal);
         }
 
         /// <summary>
@@ -1942,11 +1946,11 @@ namespace pwiz.Osprey.IO
         {
             if (string.IsNullOrEmpty(scoresPath))
                 return scoresPath;
-            if (scoresPath.EndsWith(ReconciledScoresParquetSuffix, StringComparison.Ordinal))
+            if (scoresPath.EndsWith(EXT_SCORES_RECONCILED, StringComparison.Ordinal))
                 return scoresPath;
-            if (scoresPath.EndsWith(ScoresParquetSuffix, StringComparison.Ordinal))
-                return scoresPath.Substring(0, scoresPath.Length - ScoresParquetSuffix.Length)
-                    + ReconciledScoresParquetSuffix;
+            if (scoresPath.EndsWith(EXT_SCORES, StringComparison.Ordinal))
+                return scoresPath.Substring(0, scoresPath.Length - EXT_SCORES.Length)
+                    + EXT_SCORES_RECONCILED;
             return scoresPath;
         }
 

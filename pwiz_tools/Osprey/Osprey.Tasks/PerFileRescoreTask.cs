@@ -170,7 +170,7 @@ namespace pwiz.Osprey.Tasks
         public override string DescribeOutput(OspreyConfig config)
         {
             return DescribePerInputOutput(config, ParquetScoreCache.GetReconciledScoresPath,
-                @".scores-reconciled.parquet", config.OutputDir);
+                ParquetScoreCache.EXT_SCORES_RECONCILED, config.OutputDir);
         }
 
         // The final milestone of the shared mutable entry buffer: this task
@@ -974,7 +974,7 @@ namespace pwiz.Osprey.Tasks
                         && inputIdx < inputs.Config.InputFiles.Count
                             ? inputs.Config.InputFiles[inputIdx]
                             : key;
-                    ctx.LogInfo(string.Format(@"  {0}. {1}", i + 1, label));
+                    ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(@"{0}. {1}", i + 1, label));
                 }
                 var multi = new MultiProgressReporter();
                 var parallelOpts = new ParallelOptions { MaxDegreeOfParallelism = parallelism };
@@ -1498,12 +1498,12 @@ namespace pwiz.Osprey.Tasks
             totalRescored += nOverlay;
             if (nNoPeak > 0)
             {
-                ctx.LogInfo(@"  " + string.Format(
+                ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(
                     OspreyTasksResources.PerFileRescoreTask_private____0__targets_had_no_signal_within_their_new_peak_boundaries__their_scores_were_reset_,
                     nNoPeak));
             }
 
-            ctx.LogInfo(@"  " + string.Format(
+            ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(
                 OspreyTasksResources.PerFileRescoreTask_private___Re_scored__0__of__1__peaks___2_s_,
                 nOverlay, combinedTargets.Count, swRescore.Elapsed.TotalSeconds));
 
@@ -1861,7 +1861,7 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(string.Format(
                 OspreyTasksResources.PerFileRescoreTask_TryAssembleRescoreTargets_Re_scoring_file__0___1____2_, fileNum + 1, nTotalFiles, fileName));
             ctx.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_RESCORE_FILE, @"{0}/{1}", fileNum + 1, nTotalFiles));
-            ctx.LogInfo(@"  " + string.Format(
+            ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(
                 OspreyTasksResources.PerFileRescoreTask_TryAssembleRescoreTargets____0__peaks_to_re_score_at_new_boundaries___1__missing_peaks,
                 combinedTargets.Count,
                 gapFillTargets.Count));
@@ -1925,7 +1925,7 @@ namespace pwiz.Osprey.Tasks
             }
             catch (Exception ex)
             {
-                ctx.LogWarning(@"  " + string.Format(
+                ctx.LogWarning(TextUtil.GetIndentation(1) + string.Format(
                     OspreyTasksResources.PerFileRescoreTask_WriteReconciledAndStamp___Failed_to_remove_the_incomplete_re_scored_results_file__0__after_a_failed_write___1_,
                     reconciledOutPath, ex.Message));
             }
@@ -2067,7 +2067,7 @@ namespace pwiz.Osprey.Tasks
             {
                 if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
                 {
-                    throw new InvalidDataException(string.Format(
+                    throw new InvalidOperationException(string.Format(
                         @"Per-run rescore hydrate: no scores parquet path published for {0}",
                         fileName));
                 }
@@ -2256,7 +2256,7 @@ namespace pwiz.Osprey.Tasks
             {
                 if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
                 {
-                    throw new InvalidDataException(string.Format(
+                    throw new InvalidOperationException(string.Format(
                         @"Second-pass join hydrate: no scores parquet path published for {0}",
                         fileName));
                 }
@@ -2271,12 +2271,12 @@ namespace pwiz.Osprey.Tasks
                 // prevent, and it would not have caught it: both arms would be self-consistent.
                 if (!ParquetScoreCache.IsReconciledScoresPath(parquetPath))
                 {
-                    throw new InvalidDataException(string.Format(
+                    throw new InvalidOperationException(string.Format(
                         @"Second-pass join hydrate: run '{0}' published '{1}', which is not a " +
-                        @".scores-reconciled.parquet. The join rebuilds every run from its " +
-                        @"reconciled artifact; a Stage 4 path here would silently produce " +
-                        @"1st-pass boundaries with no gap-fill rows.",
-                        fileName, parquetPath));
+                        @"{2} file. The join rebuilds every run from its reconciled artifact; a " +
+                        @"{3} output here would silently produce first-pass boundaries with no " +
+                        @"gap-fill rows.",
+                        fileName, parquetPath, ParquetScoreCache.EXT_SCORES_RECONCILED, PerFileScoringTask.TASK_NAME));
                 }
                 bool overlayFirstPass = !haveSecondPass.Contains(fileName);
                 RescoreHydration.RefillOneRunSurvivors(fileName, parquetPath, survivors,
@@ -3178,10 +3178,10 @@ namespace pwiz.Osprey.Tasks
             // impossible. Neither is a case to guess at.
             if (reset != resetIds.Count)
             {
-                throw new InvalidDataException(string.Format(
-                    @"Stage 6 rebuild: reset {0} entries for {1} but the rescore reset {2}. " +
+                throw new InvalidOperationException(string.Format(
+                    @"{0} rebuild: reset {1} peaks for {2} but the rescore reset {3}. " +
                     @"The rebuilt survivor list does not match the one the rescore produced.",
-                    reset, fileName, resetIds.Count));
+                    TASK_NAME, reset, fileName, resetIds.Count));
             }
         }
 
@@ -3361,7 +3361,7 @@ namespace pwiz.Osprey.Tasks
                     gapFillAppended.Add(entry);
                 }
 
-                ctx.LogInfo(@"  " + string.Format(
+                ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(
                     OspreyTasksResources.PerFileRescoreTask_private___Missing_peaks_found_by_peak_detection___0____1_s_,
                     nGapCwt, swCwt.Elapsed.TotalSeconds));
             }
@@ -3416,7 +3416,7 @@ namespace pwiz.Osprey.Tasks
                     gapFillAppended.Add(entry);
                 }
 
-                ctx.LogInfo(@"  " + string.Format(
+                ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(
                     OspreyTasksResources.PerFileRescoreTask_private___Missing_peaks_integrated_at_imputed_boundaries___0____1_s_,
                     nGapForced, swForced.Elapsed.TotalSeconds));
             }
@@ -3498,7 +3498,7 @@ namespace pwiz.Osprey.Tasks
                     reason, cachePath);
             }
 
-            ctx.LogInfo(@"  " + string.Format(
+            ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(
                 OspreyTasksResources.PerFileRescoreTask_LoadSpectraForRescore___Streaming__1__MS1_and__0__MS_MS_spectra_from_cache_for__2_,
                 index.Ms2Count, index.Ms1Spectra.Count, fileName));
             return index;

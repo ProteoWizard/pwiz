@@ -299,7 +299,7 @@ namespace pwiz.Osprey.Tasks
                 && perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
             {
                 string parent = Path.GetDirectoryName(parquetPath) ?? @".";
-                return Path.Combine(parent, fileName + @".mzML");
+                return Path.Combine(parent, fileName + SpectrumFileReader.EXT_MZML);
             }
             return null;
         }
@@ -977,9 +977,9 @@ namespace pwiz.Osprey.Tasks
                     : OspreyTasksResources.ScoringTaskShared_LogCompaction_Kept__0__of__1__precursor_candidates_for_cross_run_reconciliation_,
                 after, before));
             ctx.LogVerbose(droppedActions.HasValue
-                ? @"  " + string.Format(OspreyTasksResources.ScoringTaskShared_LogCompaction____0__passing_target_decoy_pairs___1__planned_peak_re_picks_and_boundary_imputations_,
+                ? TextUtil.GetIndentation(1) + string.Format(OspreyTasksResources.ScoringTaskShared_LogCompaction____0__passing_target_decoy_pairs___1__planned_peak_re_picks_and_boundary_imputations_,
                     passingBaseIds, droppedActions.Value)
-                : @"  " + string.Format(OspreyTasksResources.ScoringTaskShared_LogCompaction____0__passing_target_decoy_pairs, passingBaseIds));
+                : TextUtil.GetIndentation(1) + string.Format(OspreyTasksResources.ScoringTaskShared_LogCompaction____0__passing_target_decoy_pairs, passingBaseIds));
         }
 
         /// <summary>

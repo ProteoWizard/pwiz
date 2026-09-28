@@ -38,6 +38,7 @@ namespace pwiz.Osprey.IO
     public class DiannTsvLoader
     {
         private const int DEFAULT_MIN_FRAGMENTS = 3;
+        private const string UNIMOD_PREFIX = @"UniMod:";
 
         private readonly int _minFragments;
 
@@ -106,7 +107,7 @@ namespace pwiz.Osprey.IO
             if (headerLine == null)
                 throw new InvalidDataException(OspreyIOResources.DiannTsvLoader_ParseReader_The_library_file_is_empty__it_has_no_header_row_);
 
-            string[] headers = headerLine.Split('\t');
+            string[] headers = headerLine.Split(TextUtil.SEPARATOR_TSV);
             var cols = ColumnIndices.FromHeaders(headers);
 
             var precursorMap = new Dictionary<string, PrecursorData>();
@@ -119,7 +120,7 @@ namespace pwiz.Osprey.IO
                 if (string.IsNullOrWhiteSpace(line))
                     continue;
 
-                string[] fields = line.Split('\t');
+                string[] fields = line.Split(TextUtil.SEPARATOR_TSV);
                 ParseRow(fields, cols, rowNum, precursorMap);
             }
             // Stream exhausted: the byte progress is complete and must say so HERE.
@@ -451,22 +452,13 @@ namespace pwiz.Osprey.IO
                     return s[0] == '-' ? -mass : mass;
             }
 
-            // Try UniMod notation (e.g. "UniMod:4" or "UNIMOD:4")
-            string idStr = null;
-            if (s.StartsWith(@"UniMod:", StringComparison.OrdinalIgnoreCase))
-                idStr = s.Substring(7);
-            else if (s.StartsWith(@"UNIMOD:", StringComparison.OrdinalIgnoreCase))
-                idStr = s.Substring(7);
-
-            if (idStr != null)
+            // Try UniMod notation (e.g. "UniMod:4" or "UNIMOD:4" - the prefix match ignores case)
+            if (s.StartsWith(UNIMOD_PREFIX, StringComparison.OrdinalIgnoreCase) &&
+                int.TryParse(s.Substring(UNIMOD_PREFIX.Length), out int unimodId))
             {
-                int unimodId;
-                if (int.TryParse(idStr, out unimodId))
-                {
-                    double? unimodMass = UnimodIdToMass(unimodId);
-                    if (unimodMass.HasValue)
-                        return unimodMass;
-                }
+                double? unimodMass = UnimodIdToMass(unimodId);
+                if (unimodMass.HasValue)
+                    return unimodMass;
             }
 
             // Known modifications by name
@@ -491,11 +483,11 @@ namespace pwiz.Osprey.IO
             if (string.IsNullOrEmpty(s))
                 return null;
 
-            int idx = s.IndexOf(@"UniMod:", StringComparison.OrdinalIgnoreCase);
+            int idx = s.IndexOf(UNIMOD_PREFIX, StringComparison.OrdinalIgnoreCase);
             if (idx < 0)
                 return null;
 
-            string rest = s.Substring(idx + 7);
+            string rest = s.Substring(idx + UNIMOD_PREFIX.Length);
             int end = 0;
             while (end < rest.Length && char.IsDigit(rest[end]))
                 end++;
@@ -600,43 +592,46 @@ namespace pwiz.Osprey.IO
             // producing cross-impl drift in mz_min/mz_max and downstream bin
             // widths. Rust's `str::parse::<f64>` is IEEE-correct, so using
             // XmlConvert brings the two parsers into bit-for-bit agreement.
-            try
-            {
-                return XmlConvert.ToDouble(s);
-            }
-            catch (FormatException)
-            {
-                throw new InvalidDataException(string.Format(OspreyIOResources.DiannTsvLoader_ParseDouble_Invalid__0____1___at_row__2_, name, s, rowNum));
-            }
-            catch (OverflowException)
-            {
-                throw new InvalidDataException(string.Format(OspreyIOResources.DiannTsvLoader_ParseDouble_Invalid__0____1___at_row__2_, name, s, rowNum));
-            }
+            return ParseValue(s, name, rowNum, XmlConvert.ToDouble);
         }
 
         private static float ParseFloat(string s, string name, int rowNum)
         {
             // XmlConvert for IEEE-754 correct parsing - see ParseDouble note.
-            try
-            {
-                return XmlConvert.ToSingle(s);
-            }
-            catch (FormatException)
-            {
-                throw new InvalidDataException(string.Format(OspreyIOResources.DiannTsvLoader_ParseFloat_Invalid__0____1___at_row__2_, name, s, rowNum));
-            }
-            catch (OverflowException)
-            {
-                throw new InvalidDataException(string.Format(OspreyIOResources.DiannTsvLoader_ParseFloat_Invalid__0____1___at_row__2_, name, s, rowNum));
-            }
+            return ParseValue(s, name, rowNum, XmlConvert.ToSingle);
         }
 
         private static byte ParseByte(string s, string name, int rowNum)
         {
-            byte value;
-            if (!byte.TryParse(s, out value))
-                throw new InvalidDataException(string.Format(OspreyIOResources.DiannTsvLoader_ParseByte_Invalid__0____1___at_row__2_, name, s, rowNum));
+            if (!byte.TryParse(s, out byte value))
+                throw InvalidValue(s, name, rowNum);
             return value;
+        }
+
+        /// <summary>
+        /// <paramref name="parse"/> applied to <paramref name="s"/>, with its format and overflow
+        /// failures reported as the invalid value in column <paramref name="name"/> at
+        /// <paramref name="rowNum"/>.
+        /// </summary>
+        private static T ParseValue<T>(string s, string name, int rowNum, Func<string, T> parse)
+        {
+            try
+            {
+                return parse(s);
+            }
+            catch (FormatException)
+            {
+                throw InvalidValue(s, name, rowNum);
+            }
+            catch (OverflowException)
+            {
+                throw InvalidValue(s, name, rowNum);
+            }
+        }
+
+        private static InvalidDataException InvalidValue(string s, string name, int rowNum)
+        {
+            return new InvalidDataException(string.Format(OspreyIOResources.DiannTsvLoader_ParseValue_Invalid__0____1___at_row__2_, name, s, rowNum));
         }
 
         private static double ParseDoubleOrDefault(string s, double defaultValue)
@@ -706,19 +701,20 @@ namespace pwiz.Osprey.IO
                 indices.GeneName = FindColumn(headers, @"GeneName", @"Gene.Name", @"Genes", @"Protein.Names");
                 indices.Decoy = FindColumn(headers, @"Decoy", @"IsDecoy", @"Is.Decoy");
 
-                // Validate required columns
-                if (indices.PrecursorMz < 0)
-                    throw new InvalidDataException(OspreyIOResources.ColumnIndices_Missing_required_column__PrecursorMz);
-                if (indices.PrecursorCharge < 0)
-                    throw new InvalidDataException(OspreyIOResources.ColumnIndices_Missing_required_column__PrecursorCharge);
-                if (indices.ModifiedPeptide < 0)
-                    throw new InvalidDataException(OspreyIOResources.ColumnIndices_Missing_required_column__ModifiedPeptide);
-                if (indices.FragmentMz < 0)
-                    throw new InvalidDataException(OspreyIOResources.ColumnIndices_Missing_required_column__FragmentMz);
-                if (indices.RelativeIntensity < 0)
-                    throw new InvalidDataException(OspreyIOResources.ColumnIndices_Missing_required_column__RelativeIntensity);
+                // Validate required columns, named by the first spelling each lookup accepts.
+                RequireColumn(indices.PrecursorMz, @"PrecursorMz");
+                RequireColumn(indices.PrecursorCharge, @"PrecursorCharge");
+                RequireColumn(indices.ModifiedPeptide, @"ModifiedPeptide");
+                RequireColumn(indices.FragmentMz, @"FragmentMz");
+                RequireColumn(indices.RelativeIntensity, @"RelativeIntensity");
 
                 return indices;
+            }
+
+            private static void RequireColumn(int index, string columnName)
+            {
+                if (index < 0)
+                    throw new InvalidDataException(string.Format(OspreyIOResources.ColumnIndices_RequireColumn_Missing_required_column___0_, columnName));
             }
 
             private static int FindColumn(string[] headers, params string[] names)

@@ -587,7 +587,7 @@ namespace pwiz.Osprey.Tasks
                     config.FdrBenchPerRun, pairing.ExcludedEntrapment);
                 // Emit the corrected pairing manifest from the same library so FDRBench
                 // classifies every reported peptide and drops nothing (feed FDRBench -pep with this).
-                string manifestPath = benchPath + @".pairing.tsv";
+                string manifestPath = benchPath + FdrBenchInputWriter.EXT_PAIRING;
                 int manifestRows = FdrBenchInputWriter.WritePairingManifest(manifestPath, libraryById, pairing);
                 swFdrBench.Stop();
                 ctx.LogInfo(string.Format(OspreyTasksResources.SecondPassFdrTask_Run_Wrote_second_pass_FDRBench_input___0___to__1____2__rows,
@@ -1049,7 +1049,7 @@ namespace pwiz.Osprey.Tasks
 
             var retained = ScoringTaskShared.ReadRetainedBaseIdsOrFail(ctx.Config);
             int released = LibraryFragmentRelease.ReleaseFragments(fullLibrary, retained);
-            ctx.LogInfo(LogTag.Mem(@"library-fragments"), @"Released library fragments for {0} of {1} entries ({2} base_ids retained for the 1st-pass retained set)",
+            ctx.LogInfo(LogTag.Mem(@"library-fragments"), @"Released library fragments for {0} of {1} library precursors ({2} base_ids retained for the 1st-pass retained set)",
                 released, fullLibrary.Count, retained.Count);
             LibraryFragmentRelease.LogRelease(ctx, released, fullLibrary.Count, retained.Count,
                 LogKey.SCOPE_RETAINED_SUMMARY);

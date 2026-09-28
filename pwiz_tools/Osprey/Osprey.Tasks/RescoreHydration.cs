@@ -328,7 +328,7 @@ namespace pwiz.Osprey.Tasks
             if (parquetPaths == null) throw new ArgumentNullException(nameof(parquetPaths));
             if (perFileEntries.Count != parquetPaths.Count)
             {
-                throw new InvalidDataException(string.Format(
+                throw new InvalidOperationException(string.Format(
                     @"HydrateReconciliationOverlay: perFileEntries.Count ({0}) != parquetPaths.Count ({1})",
                     perFileEntries.Count, parquetPaths.Count));
             }
@@ -383,7 +383,7 @@ namespace pwiz.Osprey.Tasks
 
                     string reconPath = ReconciliationFile.PathForInput(syntheticInput);
                     var envelope = LoadEnvelope(reconPath);
-                    consistency.Check(envelope, reconPath, nameof(HydrateReconciliationOverlay));
+                    consistency.Check(envelope, reconPath);
 
                     // Build entry_id -> vec_idx map from the loaded stubs so the
                     // planner's entry_id-keyed actions can be rehomed onto
@@ -393,7 +393,7 @@ namespace pwiz.Osprey.Tasks
                         idToIdx[stubs[idx].EntryId] = idx;
 
                     MapPlannedActions(PlanActions(envelope), fileName, reconPath, idToIdx,
-                        reconciliationActions, nameof(HydrateReconciliationOverlay));
+                        reconciliationActions);
                     CaptureCalibrationAndGapFill(envelope, fileName, refinedCalibrations, perFileGapFill,
                         sequencePool);
                 }
@@ -458,14 +458,14 @@ namespace pwiz.Osprey.Tasks
                     if (string.IsNullOrEmpty(fileName))
                     {
                         throw new InvalidDataException(string.Format(
-                            @"FoldPreCompactionPerRun: could not derive file_name from parquet path {0}",
+                            OspreyTasksResources.RescoreHydration_Cannot_tell_which_input_file_the_scores_file__0__belongs_to_from_its_name_,
                             parquetPaths[i]));
                     }
 
                     var stubs = loadStubs(i, fileName, parquetPaths[i]);
                     if (stubs == null)
                     {
-                        throw new InvalidDataException(string.Format(
+                        throw new InvalidOperationException(string.Format(
                             @"FoldPreCompactionPerRun: no stubs loaded for {0}", fileName));
                     }
 
@@ -565,12 +565,12 @@ namespace pwiz.Osprey.Tasks
                 throw new ArgumentNullException(nameof(retainedBaseIds));
             if (perFileEntries.Count != 0)
             {
-                throw new InvalidDataException(string.Format(
+                throw new InvalidOperationException(string.Format(
                     @"HydrateCompactedStreaming: perFileEntries must be empty on entry (got {0})",
                     perFileEntries.Count));
             }
             if (parquetPaths.Count == 0)
-                throw new InvalidDataException(@"HydrateCompactedStreaming: parquetPaths is empty");
+                throw new InvalidOperationException(@"HydrateCompactedStreaming: parquetPaths is empty");
 
             int nFiles = parquetPaths.Count;
             var refinedCalibrations = new Dictionary<string, RTCalibration>();
@@ -623,12 +623,12 @@ namespace pwiz.Osprey.Tasks
                     if (string.IsNullOrEmpty(fileName))
                     {
                         throw new InvalidDataException(string.Format(
-                            @"HydrateCompactedStreaming: could not derive file_name from parquet path {0}",
+                            OspreyTasksResources.RescoreHydration_Cannot_tell_which_input_file_the_scores_file__0__belongs_to_from_its_name_,
                             parquetPaths[i]));
                     }
                     string reconPath = ReconciliationFile.PathForInput(syntheticInput);
                     var envelope = LoadEnvelope(reconPath);
-                    consistency.Check(envelope, reconPath, nameof(HydrateCompactedStreaming));
+                    consistency.Check(envelope, reconPath);
 
                     var planned = PlanActions(envelope);
                     CaptureCalibrationAndGapFill(envelope, fileName, refinedCalibrations, perFileGapFill,
@@ -643,7 +643,7 @@ namespace pwiz.Osprey.Tasks
                     // enforced by the type rather than by discipline.
                     if (stubs == null)
                     {
-                        throw new InvalidDataException(string.Format(
+                        throw new InvalidOperationException(string.Format(
                             @"HydrateCompactedStreaming: no stubs loaded for {0}", fileName));
                     }
                     // The 1st-pass sidecar is written over the WHOLE pre-compaction row set,
@@ -682,7 +682,7 @@ namespace pwiz.Osprey.Tasks
                     for (int idx = 0; idx < stubs.Count; idx++)
                         idToIdx[stubs[idx].EntryId] = idx;
                     MapPlannedActions(planned, fileName, reconPath, idToIdx,
-                        reconciliationActions, nameof(HydrateCompactedStreaming));
+                        reconciliationActions);
 
                     perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
                 }
@@ -793,7 +793,8 @@ namespace pwiz.Osprey.Tasks
             if (string.IsNullOrEmpty(fileName))
             {
                 throw new InvalidDataException(string.Format(
-                    @"HydrateOneRun: could not derive file_name from parquet path {0}", parquetPath));
+                    OspreyTasksResources.RescoreHydration_Cannot_tell_which_input_file_the_scores_file__0__belongs_to_from_its_name_,
+                    parquetPath));
             }
 
             string reconPath = ReconciliationFile.PathForInput(syntheticInput);
@@ -808,7 +809,7 @@ namespace pwiz.Osprey.Tasks
             var stubs = loadStubs(fileName, parquetPath);
             if (stubs == null)
             {
-                throw new InvalidDataException(string.Format(
+                throw new InvalidOperationException(string.Format(
                     @"HydrateOneRun: no stubs loaded for {0}", fileName));
             }
 
@@ -830,7 +831,7 @@ namespace pwiz.Osprey.Tasks
             for (int idx = 0; idx < stubs.Count; idx++)
                 idToIdx[stubs[idx].EntryId] = idx;
             var actions = new Dictionary<(string, int), ReconcileAction>();
-            MapPlannedActions(planned, fileName, reconPath, idToIdx, actions, nameof(HydrateOneRun));
+            MapPlannedActions(planned, fileName, reconPath, idToIdx, actions);
 
             perFileGapFill.TryGetValue(fileName, out var gapFill);
             refinedCalibrations.TryGetValue(fileName, out var refinedCalibration);
@@ -896,7 +897,7 @@ namespace pwiz.Osprey.Tasks
             var stubs = loadStubs(fileName, parquetPath);
             if (stubs == null)
             {
-                throw new InvalidDataException(string.Format(
+                throw new InvalidOperationException(string.Format(
                     @"RefillOneRunSurvivors: no stubs loaded for {0}", fileName));
             }
             if (overlayFirstPass)
@@ -1027,16 +1028,15 @@ namespace pwiz.Osprey.Tasks
             string fileName,
             string reconPath,
             Dictionary<uint, int> idToIdx,
-            Dictionary<(string, int), ReconcileAction> reconciliationActions,
-            string context)
+            Dictionary<(string, int), ReconcileAction> reconciliationActions)
         {
             foreach (var action in planned)
             {
                 if (!idToIdx.TryGetValue(action.EntryId, out int vecIdx))
                 {
                     throw new InvalidDataException(string.Format(
-                        @"{0}: {1} entry_id {2} in {3} not found in stubs (parquet drift?)",
-                        context, action.Kind, action.EntryId, reconPath));
+                        OspreyTasksResources.RescoreHydration_MapPlannedActions__0__refers_to_precursor_candidate__1___which_is_not_in_the_scores_file_for_that_run_,
+                        reconPath, action.EntryId));
                 }
                 reconciliationActions[(fileName, vecIdx)] = action.Action;
             }
@@ -1138,7 +1138,7 @@ namespace pwiz.Osprey.Tasks
             private string LibraryHash { get; set; }
             private string SearchHash { get; set; }
 
-            public void Check(ReconciliationFile envelope, string reconPath, string context)
+            public void Check(ReconciliationFile envelope, string reconPath)
             {
                 // Materialize the join-wide set from the FIRST envelope only, and do not compare
                 // the siblings' copies against it. The comparison used to be this class's main
@@ -1164,11 +1164,8 @@ namespace pwiz.Osprey.Tasks
                          !string.Equals(SearchHash, envelope.SearchHash, StringComparison.Ordinal))
                 {
                     throw new InvalidDataException(string.Format(
-                        @"{0}: reconciliation.json {1} was written against a different library or " +
-                        @"search configuration than its siblings (planner inconsistency): " +
-                        @"library {2} vs {3}, search {4} vs {5}.",
-                        context, reconPath, LibraryHash, envelope.LibraryHash,
-                        SearchHash, envelope.SearchHash));
+                        OspreyTasksResources.RescoreHydration_Check__0__was_written_for_a_different_library_or_search_settings_than_the_other_reconciliation_files_of_this_analysis_,
+                        reconPath, LibraryHash, envelope.LibraryHash, SearchHash, envelope.SearchHash));
                 }
 
                 // ReconciliationFile.Load already rejects any envelope whose format_version
@@ -1184,9 +1181,8 @@ namespace pwiz.Osprey.Tasks
                 else if (!StemsEqual(JoinFileStems, envelopeStems))
                 {
                     throw new InvalidDataException(string.Format(
-                        @"{0}: reconciliation.json {1} carries a different file_stems set than " +
-                        @"its siblings (planner inconsistency). Expected: [{2}]; got: [{3}]",
-                        context, reconPath,
+                        OspreyTasksResources.RescoreHydration_Check__0__was_written_for_a_different_set_of_input_files_than_the_other_reconciliation_files_of_this_analysis_,
+                        reconPath,
                         string.Join(@", ", JoinFileStems),
                         string.Join(@", ", envelopeStems)));
                 }
@@ -1270,14 +1266,14 @@ namespace pwiz.Osprey.Tasks
             // (so the only way a name ends in ".scores-reconciled" is Stage 6).
             // GetFileNameWithoutExtension of "x.scores-reconciled.parquet" is
             // "x.scores-reconciled"; check the longer token first.
-            const string ReconciledScoresSuffix = @".scores-reconciled";
-            const string ScoresSuffix = @".scores";
-            if (stem.EndsWith(ReconciledScoresSuffix, StringComparison.Ordinal))
-                stem = stem.Substring(0, stem.Length - ReconciledScoresSuffix.Length);
-            else if (stem.EndsWith(ScoresSuffix, StringComparison.Ordinal))
-                stem = stem.Substring(0, stem.Length - ScoresSuffix.Length);
+            string reconciledScoresSuffix = Path.GetFileNameWithoutExtension(ParquetScoreCache.EXT_SCORES_RECONCILED);
+            string scoresSuffix = Path.GetFileNameWithoutExtension(ParquetScoreCache.EXT_SCORES);
+            if (stem.EndsWith(reconciledScoresSuffix, StringComparison.Ordinal))
+                stem = stem.Substring(0, stem.Length - reconciledScoresSuffix.Length);
+            else if (stem.EndsWith(scoresSuffix, StringComparison.Ordinal))
+                stem = stem.Substring(0, stem.Length - scoresSuffix.Length);
             string parent = Path.GetDirectoryName(parquetPath);
-            string filename = stem + @".mzML";
+            string filename = stem + SpectrumFileReader.EXT_MZML;
             return string.IsNullOrEmpty(parent) ? filename : Path.Combine(parent, filename);
         }
     }

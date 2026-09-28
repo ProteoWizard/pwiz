@@ -798,7 +798,7 @@ namespace pwiz.Osprey.FDR
             ingestProgress.Dispose();
             int n = g;
             log.LogInfo(LogTag.PATH, @"{0} streaming ingest (RunStreamingFirstPass): {1} rows", passLabel, n);
-            log.LogInfo(LogTag.COUNT, @"{0} Percolator input: {1} entries ({2} targets, {3} decoys, {4} features)",
+            log.LogInfo(LogTag.COUNT, @"{0} Percolator input: {1} peaks ({2} targets, {3} decoys, {4} features)",
                 passLabel, n, nInputTargets, nInputDecoys, nFeatures);
 
             // Dedup rows in ascending global ordinal == SelectBestPerPrecursor's Array.Sort of the
@@ -811,7 +811,7 @@ namespace pwiz.Osprey.FDR
             int dedupTargets = 0;
             foreach (var d in dedup)
                 if (!d.IsDecoy) dedupTargets++;
-            log.LogInfo(LogTag.COUNT, @"{0} Percolator streaming best-per-precursor: {1} entries ({2} targets, {3} decoys) from {4} total",
+            log.LogInfo(LogTag.COUNT, @"{0} Percolator streaming best-per-precursor: {1} precursors ({2} targets, {3} decoys) from {4} peaks",
                 passLabel, m, dedupTargets, m - dedupTargets, n);
 
             // Peptide-grouped subsample when the dedup count exceeds MaxTrainSize (mirrors
@@ -857,7 +857,7 @@ namespace pwiz.Osprey.FDR
                     Features = null
                 });
             }
-            log.LogInfo(LogTag.COUNT, @"{0} Percolator streaming subsample: {1} entries ({2} targets, {3} decoys)",
+            log.LogInfo(LogTag.COUNT, @"{0} Percolator streaming subsample: {1} precursors ({2} targets, {3} decoys)",
                 passLabel, subsetEntries.Count, subTargets, subsetEntries.Count - subTargets);
 
             // A persisted model is only usable if it was trained on THIS run's feature set, and

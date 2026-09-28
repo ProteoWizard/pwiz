@@ -50,6 +50,9 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     public static class OspreyReportWriter
     {
+        public const string EXT_PROTEIN_GROUPS = @".protein_groups.tsv";
+        public const string EXT_STATS = @".stats.tsv";
+
         /// <summary>
         /// Write both default reports next to <paramref name="config"/>'s output blib.
         /// A no-op (with a warning) when no output path is known. Called once, from the
@@ -76,7 +79,7 @@ namespace pwiz.Osprey.Tasks
 
             if (config.WriteProteinReport)
             {
-                string path = stem + @".protein_groups.tsv";
+                string path = stem + EXT_PROTEIN_GROUPS;
                 TryWriteReport(@"protein-group",
                     OspreyTasksResources.OspreyReportWriter_WriteReports_protein_group_report, path, log, logWarning,
                     () => WriteProteinGroups(path, experimentResult, fullLibrary, config));
@@ -84,7 +87,7 @@ namespace pwiz.Osprey.Tasks
 
             if (config.WriteSummaryReport)
             {
-                string path = stem + @".stats.tsv";
+                string path = stem + EXT_STATS;
                 TryWriteReport(@"summary",
                     OspreyTasksResources.OspreyReportWriter_WriteReports_summary_report, path, log, logWarning,
                     () => WriteSummary(path, experimentResult, rescored, fullLibrary, config));
@@ -378,12 +381,10 @@ namespace pwiz.Osprey.Tasks
             {
                 using (var w = new StreamWriter(saver.SafeName, false))
                 {
-                    // ReSharper disable LocalizableElement
-                    w.NewLine = "\n";
-                    w.WriteLine(string.Join("\t", header));
+                    w.NewLine = TextUtil.LF;
+                    w.WriteLine(header.ToDsvLine(TextUtil.SEPARATOR_TSV));
                     foreach (var r in rows)
-                        w.WriteLine(string.Join("\t", r));
-                    // ReSharper restore LocalizableElement
+                        w.WriteLine(r.ToDsvLine(TextUtil.SEPARATOR_TSV));
                 }
                 saver.Commit();
             }

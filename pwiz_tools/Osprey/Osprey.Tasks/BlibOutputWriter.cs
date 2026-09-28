@@ -206,7 +206,7 @@ namespace pwiz.Osprey.Tasks
                 // the bare name the writer always used to record rather than
                 // fail the whole blib over it.
                 if (!sourcePathByName.TryGetValue(fileName, out string sourcePath))
-                    sourcePath = fileName + @".mzML";
+                    sourcePath = fileName + SpectrumFileReader.EXT_MZML;
                 sourceFileIds[fileName] = writer.AddSourceFile(
                     sourcePath, libraryIdName, fdrThreshold);
             }

@@ -156,6 +156,12 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public static class FdrScoresSidecar
     {
+        /// <summary>File-name token of every first-pass artifact.</summary>
+        public const string LABEL_FIRST_PASS = @"1st-pass";
+        /// <summary>File-name token of every second-pass artifact.</summary>
+        public const string LABEL_SECOND_PASS = @"2nd-pass";
+        public const string EXT = @".fdr_scores.bin";
+
         // 8-byte magic. ASCII "OSPRYFDR" — same as Rust.
         private static readonly byte[] Magic =
             { (byte)'O', (byte)'S', (byte)'P', (byte)'R', (byte)'Y', (byte)'F', (byte)'D', (byte)'R' };
@@ -214,13 +220,13 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static string Pass1Path(string inputPath)
         {
-            return ScoresPath(inputPath, @"1st-pass");
+            return ScoresPath(inputPath, LABEL_FIRST_PASS);
         }
 
         /// <summary>Path for the second-pass FDR scores sidecar.</summary>
         public static string Pass2Path(string inputPath)
         {
-            return ScoresPath(inputPath, @"2nd-pass");
+            return ScoresPath(inputPath, LABEL_SECOND_PASS);
         }
 
         /// <summary>
@@ -285,6 +291,14 @@ namespace pwiz.Osprey.IO
             }
         }
 
+        /// <summary>
+        /// <see cref="LABEL_FIRST_PASS"/> or <see cref="LABEL_SECOND_PASS"/>.
+        /// </summary>
+        public static string PassLabel(Pass pass)
+        {
+            return pass == Pass.FirstPass ? LABEL_FIRST_PASS : LABEL_SECOND_PASS;
+        }
+
         private static string ScoresPath(string inputPath, string passLabel)
         {
             string stem = Path.GetFileNameWithoutExtension(inputPath) ?? @"unknown";
@@ -293,7 +307,7 @@ namespace pwiz.Osprey.IO
             // Every caller -- straight-through writes, resume reads, and the
             // resume-check iterators -- shares this, so they stay consistent.
             string parent = ArtifactPaths.ResolveOutputDir(inputPath);
-            string filename = string.Format(@"{0}.{1}.fdr_scores.bin", stem, passLabel);
+            string filename = string.Format(@"{0}.{1}{2}", stem, passLabel, EXT);
             return string.IsNullOrEmpty(parent) ? filename : Path.Combine(parent, filename);
         }
 

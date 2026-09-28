@@ -64,6 +64,8 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public static class SpectrumFileReader
     {
+        public const string EXT_MZML = @".mzML";
+
         private static int _vendorFailuresReported;
 
         /// <summary>
@@ -212,7 +214,7 @@ namespace pwiz.Osprey.IO
             string ext = Path.GetExtension(path);
             if (string.Equals(ext, @".gz", StringComparison.OrdinalIgnoreCase))
                 ext = Path.GetExtension(Path.GetFileNameWithoutExtension(path));
-            return string.Equals(ext, @".mzml", StringComparison.OrdinalIgnoreCase);
+            return string.Equals(ext, EXT_MZML, StringComparison.OrdinalIgnoreCase);
         }
 
         private static void AddSpectrum(MsDataSpectrum spectrum, int spectrumIndex,

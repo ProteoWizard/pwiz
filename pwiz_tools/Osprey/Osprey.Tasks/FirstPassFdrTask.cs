@@ -1577,7 +1577,7 @@ namespace pwiz.Osprey.Tasks
             {
                 if (!string.Equals(hydrated[i].Key, fileNames[i], StringComparison.Ordinal))
                 {
-                    throw new InvalidDataException(string.Format(
+                    throw new InvalidOperationException(string.Format(
                         @"Resume rehydrate: file {0} is keyed '{1}' by the loaded scores but " +
                         @"'{2}' by its parquet stem. The rescore looks parquet paths up by " +
                         @"the loaded key, so proceeding would silently leave this file " +
@@ -1812,7 +1812,7 @@ namespace pwiz.Osprey.Tasks
                 HasEntrapment = hasEntrapment,
                 // Per-run unit stashed on the byproduct at capture (the row does not carry
                 // it); default "ppm" if a run somehow recorded none.
-                MassUnit = !string.IsNullOrEmpty(massUnit) ? massUnit : @"ppm",
+                MassUnit = !string.IsNullOrEmpty(massUnit) ? massUnit : MzCalibration.UNIT_PPM,
                 FileCount = files.Count,
             };
         }
@@ -1907,7 +1907,7 @@ namespace pwiz.Osprey.Tasks
                         }
                     }
                 }
-                ctx.LogInfo(@"  " + string.Format(OspreyTasksResources.FirstPassFdrTask_LogFirstPassResults____0____1__precursors_at__2__run_level_FDR,
+                ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(OspreyTasksResources.FirstPassFdrTask_LogFirstPassResults____0____1__precursors_at__2__run_level_FDR,
                     kvp.Key, fileTargets, config.RunFdr));
                 passingTargets += fileTargets;
             }
@@ -2046,7 +2046,7 @@ namespace pwiz.Osprey.Tasks
                     return false;
                 benchResult = sink.Commit();
             }
-            string manifestPath = benchPath + @".pairing.tsv";
+            string manifestPath = benchPath + FdrBenchInputWriter.EXT_PAIRING;
             int manifestRows = FdrBenchInputWriter.WritePairingManifest(manifestPath, libraryById, pairing);
             swFdrBench.Stop();
             ctx.LogInfo(string.Format(OspreyTasksResources.FirstPassFdrTask_EmitFdrBenchPass1_Wrote_first_pass_FDRBench_input___0___to__1____2__rows,
@@ -3060,7 +3060,7 @@ namespace pwiz.Osprey.Tasks
             var retained = LibraryFragmentRelease.BuildRetainedBaseIds(
                 _firstPassBaseIds, _perFileGapFillForRescore);
             int released = LibraryFragmentRelease.ReleaseFragments(fullLibrary, retained);
-            ctx.LogInfo(LogTag.Mem(@"library-fragments"), @"Released library fragments for {0} of {1} entries ({2} base_ids retained for rescore + gap-fill)",
+            ctx.LogInfo(LogTag.Mem(@"library-fragments"), @"Released library fragments for {0} of {1} library precursors ({2} base_ids retained for rescore + gap-fill)",
                 released, fullLibrary.Count, retained.Count);
             LibraryFragmentRelease.LogRelease(ctx, released, fullLibrary.Count, retained.Count,
                 LogKey.SCOPE_RESCORE_GAP_FILL);
@@ -3365,7 +3365,7 @@ namespace pwiz.Osprey.Tasks
                 foreach (var kv in projections.PerFile)
                 {
                     if (resumableFiles.Contains(kv.Key))
-                        ctx.LogInfo(@"  " + string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection___up_to_date___0_, kv.Key));
+                        ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection___up_to_date___0_, kv.Key));
                 }
             }
 
@@ -3408,7 +3408,7 @@ namespace pwiz.Osprey.Tasks
                     refusals.Add(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_the_first_pass_model_file___1st_pass_model_json__holds_no_model);
                 else if (OspreyEnvironment.Pass2ProteinCompact && probe.StratumBaseIds == null)
                     refusals.Add(string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_no_list_of_precursors_from_proteins_with_2_or_more_first_pass_peptides___0___was_found,
-                        @".1st-pass.stratum.json"));
+                        FirstPassModelIO.EXT_STRATUM));
                 if (refusals.Count > 0)
                 {
                     ctx.LogInfo(string.Format(
@@ -3973,7 +3973,7 @@ namespace pwiz.Osprey.Tasks
             for (int f = 0; f < projections.PerFile.Count; f++)
             {
                 int fileTargets = filePassingTargets[f];
-                ctx.LogInfo(@"  " + string.Format(OspreyTasksResources.FirstPassFdrTask_LogFirstPassResultsProjection____0____1__precursors_at__2__run_level_FDR,
+                ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(OspreyTasksResources.FirstPassFdrTask_LogFirstPassResultsProjection____0____1__precursors_at__2__run_level_FDR,
                     projections.PerFile[f].Key, fileTargets, config.RunFdr));
                 passingTargets += fileTargets;
             }

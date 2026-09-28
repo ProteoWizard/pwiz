@@ -1019,7 +1019,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             IReadOnlyDictionary<uint, uint> pairByBaseId,
             bool haveManifest,
             out int nWithClass, out int nWithoutClass,
-            string indent = @"")
+            string indent = null)
         {
             var best = new Dictionary<string, Prec>(StringComparer.Ordinal);
             int wc = 0, woc = 0;
