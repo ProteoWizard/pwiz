@@ -69,9 +69,9 @@ are written `tool(arg=value)` with the `skyline_` prefix dropped. Here:
 ### Found in the tutorial, not changed
 
 - "Press the Delete key to delete **the peptide you deleted in the other document**" (NSAQGNVYVK): no earlier
-  step deletes it, and `TestIrtTutorial` deletes it only here.
+  step deletes it, and `TestIrtTutorial` deletes it only here. Now reads "delete the NSAQGNVYVK peptide" (corrected).
 - The text says to save as **"iRT-C18 Calibration.sky"**; the tutorial's screenshots show "iRT-C18
-  Calibrate.sky".
+  Calibrate.sky", as the test does (corrected).
 - The test pastes the Biognosys-11 definition where the tutorial picks it from the iRT standards dropdown (the
   same result).
 - s-29's equations differ from the tutorial's in the last digit (-69.751 vs -69.750), from mzML vs raw.

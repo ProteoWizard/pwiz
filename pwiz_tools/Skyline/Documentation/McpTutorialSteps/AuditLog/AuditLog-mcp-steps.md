@@ -31,12 +31,13 @@ written `tool(arg=value)` with the `skyline_` prefix dropped. Here:
 | File > Exit | The call returned a raw JSON parse error, because Skyline exited before replying | Open |
 | `get_grid_text(gridId="null")` | The error named `set_grid_text` | Open |
 
-### Found in the tutorial (not yet corrected)
+### Found in the tutorial (English corrected, except the last)
 
 - "The next five messages under the Undo-Redo message" - the transition settings entry has two.
 - "exactly where we navigated earlier to select the collision energy" - it was the product ion selection.
 - "(e.g. 20.65 to 20.15)" - `AuditLogTutorialTest` drags 20.65 to 21.15.
 - "a single audit log messages" - message.
+- "The “greater than” symbols indicate that a menu item" - indicate a menu item.
 - The four Reason cells are to be filled with Fill Down; the test says the Reason column does not support fill down
   and sets each row (to check live).
 

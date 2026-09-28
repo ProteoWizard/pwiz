@@ -59,7 +59,8 @@ written `tool(arg=value)` with the `skyline_` prefix dropped. Here:
 ### Found in the tutorial, not changed
 
 - The 15N library now also lists an ISD_z+2_ion (Q[-15.0]) form of each Q peptide, so QVLFSADDR++ appears four
-  times, not "twice"; the Add Modifications form offers it too.
+  times (QVLFSADDRVK+++ three), not "twice", as the tutorial's own s-04 shows (corrected); the Add Modifications
+  form offers it too.
 - The mouse-wheel zoom, Ctrl-drag pan and "Undo All Zoom/Pan" were not done: no verb scrolls the wheel
   (`zoom_graph_to` sets a range instead).
 

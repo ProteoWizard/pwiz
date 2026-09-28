@@ -69,7 +69,7 @@ written `tool(arg=value)` with the `skyline_` prefix dropped. Here:
   and the rest of it is shifted the same way. The current Skyline plots it per group (0.49 at 0, 0.96-0.99 for the
   rest; 9 above the cutoff, 1 below, where the screenshot says 6 and 4). The bars match; the screenshots need
   regenerating.
-- The text names the document "Study 7.sky"; the test and screenshots use "Study7.sky".
+- The text named the document "Study 7.sky"; the test and screenshots use "Study7.sky" (corrected).
 - **Settings left over from earlier tutorials** appeared in this run, and were set back where they changed a
   picture:
   - the Peak Areas dot-product display was "None", so s-23 at first had no rdotp line (Properties > Line);
