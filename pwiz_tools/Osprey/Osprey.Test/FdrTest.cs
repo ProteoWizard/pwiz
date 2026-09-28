@@ -30,6 +30,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
@@ -573,6 +574,29 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// One scorer serves every per-file second-pass worker of a --parallel-files run, so
+        /// concurrent <see cref="FrozenModelScorer.Score"/> calls must each score their own
+        /// features. A shared standardization buffer once let one file's entries be scored with
+        /// another's features, silently changing the second-pass answer.
+        /// </summary>
+        [TestMethod]
+        public void TestFrozenModelScorerIsThreadSafe()
+        {
+            var entries = MakeNonMonotoneEntries();
+            var model = PercolatorTrainer.RunPercolator(entries,
+                new PercolatorConfig { MaxIterations = 3, TrainOnly = true });
+            var scorer = FrozenModelScorer.TryCreate(model);
+            var expected = entries.Select(e => scorer.Score(e.Features)).ToArray();
+            var actual = new double[expected.Length];
+            for (int round = 0; round < 50; round++)
+            {
+                Parallel.For(0, expected.Length, new ParallelOptions { MaxDegreeOfParallelism = 8 },
+                    i => actual[i] = scorer.Score(entries[i].Features));
+                CollectionAssert.AreEqual(expected, actual, "concurrent scores differ from serial, round " + round);
+            }
+        }
+
+        /// <summary>
         /// The gradient-boosted-trees path must be deterministic to the same standard as
         /// the linear SVM: identical input -> BIT-identical scores, every run. The model
         /// subsamples rows and columns, so this is a real property, not a formality --
@@ -633,7 +657,7 @@ namespace pwiz.Osprey.Test
             var serial = rows.Select(r => model.ScoreSingle(r)).ToArray();
 
             var parallel = new double[rows.Count];
-            System.Threading.Tasks.Parallel.For(0, rows.Count, i =>
+            Parallel.For(0, rows.Count, i =>
             {
                 parallel[i] = model.ScoreSingle(rows[i]);
             });

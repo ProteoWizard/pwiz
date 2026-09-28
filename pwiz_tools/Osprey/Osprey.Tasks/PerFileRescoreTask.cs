@@ -944,9 +944,10 @@ namespace pwiz.Osprey.Tasks
             // and it reuses the same RunCoelutionScoring the Stage 1-4 fan-out already
             // runs concurrently. So run files in parallel under the SAME
             // EffectiveFileParallelism the scoring phase resolved (set on RunPlan by
-            // PerFileScoringTask). Output is byte-identical to the sequential loop --
-            // gated by regression.ps1 -- because the per-file work shares no mutable
-            // state. Per-file results land by index so the accumulation is order-free.
+            // PerFileScoringTask). Output is byte-identical to the sequential loop because
+            // the per-file work shares no mutable state - which regression.ps1 cannot see, as
+            // it never passes --parallel-files; SubsetPipelineTest compares the two.
+            // Per-file results land by index so the accumulation is order-free.
             int parallelism = Math.Max(1, ctx.RunPlan.EffectiveFileParallelism);
             var counts = new (int Rescored, int GapCwt, int GapForced, bool Scored)[nTotalFiles];
             // Per-file survivor-refill failures, collected rather than thrown from inside the

@@ -22,6 +22,7 @@
  */
 
 using System.Collections.Generic;
+using System.Threading;
 using pwiz.Osprey.ML;
 
 namespace pwiz.Osprey.FDR
@@ -44,10 +45,12 @@ namespace pwiz.Osprey.FDR
     /// passes use (<see cref="PercolatorScorer.ScoreStandardizedRow"/>), so the linear and
     /// tree models are applied identically no matter which pass applies them.
     ///
-    /// NOT thread-safe: <see cref="Score"/> reuses one standardization buffer to avoid a
-    /// per-entry allocation in the score loops. Every caller is serial by design -- the
-    /// score passes are deliberately single-threaded so float accumulation order stays
-    /// deterministic for cross-impl parity.
+    /// Thread-safe: <see cref="Score"/> reuses a standardization buffer to avoid a per-entry
+    /// allocation in the score loops, one per thread. It once reused a single buffer on the
+    /// claim that every caller was serial, but the Stage 6 per-file second-pass workers of a
+    /// --parallel-files run share one scorer, so concurrent calls scored one file's entries
+    /// with another's features. Each call's arithmetic is unchanged, so scores stay
+    /// deterministic whatever the thread.
     /// </summary>
     public sealed class FrozenModelScorer
     {
@@ -55,7 +58,7 @@ namespace pwiz.Osprey.FDR
         private readonly double[] _avgWeights;
         private readonly double _avgBias;
         private readonly FeatureStandardizer _standardizer;
-        private readonly double[] _scratch;
+        private readonly ThreadLocal<double[]> _scratch;
 
         private FrozenModelScorer(
             IReadOnlyList<GradientBoostedTrees> gbtModels,
@@ -66,7 +69,7 @@ namespace pwiz.Osprey.FDR
             _avgWeights = avgWeights;
             _avgBias = avgBias;
             _standardizer = standardizer;
-            _scratch = new double[numFeatures];
+            _scratch = new ThreadLocal<double[]>(() => new double[numFeatures]);
             NumFeatures = numFeatures;
         }
 
@@ -133,9 +136,10 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         public double Score(double[] rawFeatures)
         {
-            System.Array.Copy(rawFeatures, 0, _scratch, 0, rawFeatures.Length);
-            _standardizer.TransformSlice(_scratch);
-            return PercolatorScorer.ScoreStandardizedRow(_gbtModels, _avgWeights, _avgBias, _scratch);
+            double[] scratch = _scratch.Value;
+            System.Array.Copy(rawFeatures, 0, scratch, 0, rawFeatures.Length);
+            _standardizer.TransformSlice(scratch);
+            return PercolatorScorer.ScoreStandardizedRow(_gbtModels, _avgWeights, _avgBias, scratch);
         }
     }
 }
