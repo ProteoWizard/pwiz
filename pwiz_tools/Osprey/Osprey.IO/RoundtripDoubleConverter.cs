@@ -46,6 +46,30 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public class RoundtripDoubleConverter : JsonConverter<double>
     {
+        /// <summary>
+        /// <paramref name="value"/> as indented JSON with every double written through this
+        /// converter, in the canonical form of <see cref="NormalizeJson"/>.
+        /// </summary>
+        public static string SerializeIndented(object value)
+        {
+            var settings = new JsonSerializerSettings { Converters = { new RoundtripDoubleConverter() } };
+            return NormalizeJson(JsonConvert.SerializeObject(value, Formatting.Indented, settings));
+        }
+
+        /// <summary>
+        /// Newtonsoft's <see cref="Formatting.Indented"/> emits CRLF on Windows; normalize to LF
+        /// so the bytes match the Rust original (serde_json always writes LF), and end with a
+        /// newline, matching the one Rust appends after the serializer - so the file ends with
+        /// a closing brace and LF on every platform.
+        /// </summary>
+        public static string NormalizeJson(string json)
+        {
+            json = json.Replace(TextUtil.CRLF, TextUtil.LF);
+            if (!json.EndsWith(TextUtil.LF, StringComparison.Ordinal))
+                json += TextUtil.LF;
+            return json;
+        }
+
         public override void WriteJson(JsonWriter writer, double value, JsonSerializer serializer)
         {
             // Diagnostics.FormatF64Roundtrip returns "NaN" / "inf" / "-inf"
@@ -55,8 +79,8 @@ namespace pwiz.Osprey.IO
             // produced.
             if (double.IsNaN(value) || double.IsInfinity(value))
             {
-                throw new JsonWriterException(string.Format(CultureInfo.InvariantCulture,
-                    "Non-finite f64 in JSON output: {0}", value));
+                throw new JsonWriterException(string.Format(
+                    OspreyIOResources.RoundtripDoubleConverter_WriteJson_Cannot_write__0__to_a_JSON_file__only_finite_numbers_can_be_stored_, value));
             }
             writer.WriteRawValue(Diagnostics.FormatF64Roundtrip(value));
         }
@@ -72,11 +96,11 @@ namespace pwiz.Osprey.IO
             // future schema drift produces a parse error instead of zeros.
             if (reader.TokenType != JsonToken.Integer && reader.TokenType != JsonToken.Float)
             {
-                throw new JsonSerializationException(string.Format(CultureInfo.InvariantCulture,
-                    "Expected number token for double, got {0}", reader.TokenType));
+                throw new JsonSerializationException(string.Format(
+                    OspreyIOResources.RoundtripDoubleConverter_ReadJson_Expected_a_number_in_the_JSON_file__but_found__0__, reader.TokenType));
             }
             if (reader.Value == null)
-                throw new JsonSerializationException("Null value for numeric token");
+                throw new JsonSerializationException(OspreyIOResources.RoundtripDoubleConverter_ReadJson_A_number_in_the_JSON_file_has_no_value_);
             return Convert.ToDouble(reader.Value, CultureInfo.InvariantCulture);
         }
     }

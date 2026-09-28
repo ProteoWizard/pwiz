@@ -834,7 +834,7 @@ namespace pwiz.Osprey.Core
         {
             if (!ExperimentAggMeanBest)
             {
-                return string.Format(@"Experiment aggregation: {0} (default - best observation per unit)",
+                return string.Format(OspreyCoreResources.OspreyEnvironment_DescribeExperimentAgg_Experiment_aggregation___0___default___best_observation_per_unit_,
                     EXPERIMENT_AGG_MAX);
             }
             return string.Format(
