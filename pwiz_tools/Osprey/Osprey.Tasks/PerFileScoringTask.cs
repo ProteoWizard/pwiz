@@ -80,6 +80,14 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public const string TASK_NAME = @"PerFileScoring";
 
+        /// <summary>
+        /// The largest share of generated decoys that may have no fragment of their own before
+        /// the library is refused. A well-annotated library has essentially none; a share this
+        /// large means the annotations or fragment numbers are missing, and even 1% of a
+        /// million-precursor library is 10,000 targets with no real decoy competition.
+        /// </summary>
+        public const double MAX_UNUSABLE_DECOY_FRACTION = 0.01;
+
         public override string Name => TASK_NAME;
 
         /// <summary>
@@ -1227,6 +1235,19 @@ namespace pwiz.Osprey.Tasks
                 decoys = DecoyGenerator.GenerateAllWithCollisionDetection(
                     library, config, ctx.LogInfo, omitFragments, out List<LibraryEntry> validTargets);
                 library = validTargets;
+                // A decoy's fragments are recomputed from the target's b/y ion annotations; a
+                // fragment of unknown type is copied verbatim and one with no usable fragment
+                // number is dropped. A decoy left with no fragment of its own - every peak of an
+                // unannotated .blib, or a TSV whose fragment numbers are missing - scores exactly
+                // like its target or not at all, so its target has no real decoy competition.
+                // Only checkable where fragments were loaded; the first task of every run loads
+                // them, so a bad library stops before any work.
+                if (!omitFragments && loadOptions.RetainFragmentsFor == null &&
+                    !CheckDecoysUsable(library, decoys, config, ctx))
+                {
+                    ctx.ExitCode = 1;
+                    return false;
+                }
             }
             swLibrary.Stop();
             double totalSec = swLibrary.Elapsed.TotalSeconds;
@@ -1311,6 +1332,62 @@ namespace pwiz.Osprey.Tasks
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// True when at least one target carries a b or y fragment - the only annotations
+        /// <see cref="DecoyGenerator"/> can recompute for a permuted sequence.
+        /// </summary>
+        /// <summary>
+        /// Warn when any generated decoy has no fragment of its own - none, or only m/z values
+        /// copied from its target - and refuse the library when more than
+        /// <see cref="MAX_UNUSABLE_DECOY_FRACTION"/> of them do: that many means the library
+        /// itself is missing b/y annotations or fragment numbers, not a few stray entries.
+        /// </summary>
+        private static bool CheckDecoysUsable(List<LibraryEntry> targets, List<LibraryEntry> decoys,
+            OspreyConfig config, PipelineContext ctx)
+        {
+            if (decoys.Count == 0)
+                return true;
+            var targetById = new Dictionary<uint, LibraryEntry>(targets.Count);
+            foreach (var target in targets)
+                targetById[target.Id] = target;
+            int nUnusable = 0;
+            foreach (var decoy in decoys)
+            {
+                targetById.TryGetValue(decoy.Id & ~LibraryEntry.DECOY_ID_BIT, out var target);
+                if (!HasOwnFragment(decoy, target))
+                    nUnusable++;
+            }
+            if (nUnusable == 0)
+                return true;
+            double fraction = nUnusable / (double)decoys.Count;
+            string library = config.LibrarySource?.Path;
+            if (fraction > MAX_UNUSABLE_DECOY_FRACTION)
+            {
+                ctx.LogError(string.Format(
+                    OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_The_library__3__is_missing_b_or_y_fragment_ion_annotations_or_fragment_numbers___0__of__,
+                    nUnusable, decoys.Count, fraction, library, MAX_UNUSABLE_DECOY_FRACTION,
+                    OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY)));
+                return false;
+            }
+            ctx.LogWarning(string.Format(
+                OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_Decoys_with_no_fragment_distinct_from_their_target___0__of__1____2____generated_,
+                nUnusable, decoys.Count, fraction, library));
+            return true;
+        }
+
+        /// <summary>
+        /// Whether <paramref name="decoy"/> has at least one fragment m/z its target does not.
+        /// </summary>
+        private static bool HasOwnFragment(LibraryEntry decoy, LibraryEntry target)
+        {
+            if (decoy.Fragments == null || decoy.Fragments.Count == 0)
+                return false;
+            if (target?.Fragments == null)
+                return true;
+            var targetMzs = new HashSet<double>(target.Fragments.Select(f => f.Mz));
+            return decoy.Fragments.Any(f => !targetMzs.Contains(f.Mz));
         }
 
 
