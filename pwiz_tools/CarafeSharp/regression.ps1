@@ -1,0 +1,615 @@
+<#
+.SYNOPSIS
+    CarafeSharp's golden regression: fine-tune on a packaged Osprey training export, predict
+    the final library, and compare the run with the golden in regression.data.
+
+.DESCRIPTION
+    The isolated leg. It depends only on CarafeSharp and the test data packages:
+      1. Builds CarafeSharp with build.ps1 (unless -NoBuild).
+      2. Finds the inputs in the test data packages (testdata.json; the root is
+         CARAFESHARP_TESTDATA, else <Downloads>/Perftests): the training export from the
+         'export' package, and the library FASTA and pairing manifest from 'testfiles'.
+      3. Writes a subset of the library FASTA, every 50th record as LibraryParityTest's subset
+         takes them, and the pairing-manifest rows of the peptides it keeps, so a CPU run
+         predicts about 20,000 precursors instead of a million.
+      4. Runs CarafeSharp once: -tf all fine-tunes the RT and MS2 models on the export and
+         predicts the library from the subset, with the library arguments of the CarafeSharp
+         workflow's stage 4-5. The library is not rebuilt from the model folder with
+         -model_dir, because meta.json carries Carafe's default lf_frag_mz_max of 1800.
+      5. Runs the comparator, RegressionTest in CarafeSharp.Test (TestCategory Regression),
+         through build.ps1 on the run folder.
+
+    The comparator's checks, and which ones apply to which run, are in docs/04-testing.md
+    ("Regression"). In short: on the CPU of the machine that made the golden a run must be
+    identical (training tables, model weights, metrics, library content); anywhere else it
+    is compared within the calibrated tolerances. The training tables are exact everywhere.
+
+    Each run gets its own folder under -WorkDir, holding the CarafeSharp output (out/), its
+    log, the subset inputs, regression-run.json (what was run, on what) and the comparator's
+    regression-report.txt.
+
+.PARAMETER Dataset
+    Stellar. Each dataset is an entry of $datasets below and a folder of regression.data;
+    Astral follows when its training export is packaged.
+
+.PARAMETER Torch
+    cpu (default) or cuda: the libtorch build to use and the device CarafeSharp runs on.
+    A cuda run that falls back to the CPU is reported, and -CreateGolden refuses it.
+
+.PARAMETER NoBuild
+    Use the existing build.
+
+.PARAMETER CreateGolden
+    Make this run the dataset's golden, in regression.data/<dataset>. It refuses a working
+    tree with changes (the golden records the commit it came from), a cuda run that fell
+    back to the CPU, a run with -ExtraArgs, and a fine-tuned model that does not beat the
+    pretrained one on all four MS2 metrics. With a golden already there, it shows the
+    differences and replaces it only with -Force.
+
+.PARAMETER Force
+    With -CreateGolden, replace an existing golden.
+
+.PARAMETER ExtraArgs
+    CarafeSharp arguments added to the run, for mutation checks: an option given here
+    replaces the default's value (CarafeSharp takes the first occurrence of an option, so
+    they are merged, not appended). Items are split at whitespace, so from pwsh -File write
+    -ExtraArgs "-cor 0.7"; from PowerShell, -ExtraArgs '-cor','0.7' works too.
+
+.PARAMETER Mode
+    Auto (default): exact when the run and the golden are CPU runs on the same processor, OS
+    and thread count, else statistical. Exact or Statistical forces one, for example to see
+    what the statistical checks make of a CPU run.
+
+.PARAMETER CompareRun
+    Compare an existing run folder instead of running CarafeSharp, for example after
+    changing the comparator. With -CreateGolden the folder must come from a clean tree and
+    have no -ExtraArgs.
+
+.PARAMETER WorkDir
+    Where the run folders go. Default CARAFESHARP_REGRESSION_WORKDIR, else
+    TestResults/regression beside this script.
+
+.PARAMETER RunName
+    A label added to the run folder's name, such as the mutation it checks.
+
+.PARAMETER CarafeSharpExe
+    Run this executable instead of this checkout's build (a snapshot of the build output, so
+    the checkout can be rebuilt during a long run). Not allowed with -CreateGolden.
+
+.PARAMETER Preflight
+    Find the inputs and write the subset, print the CarafeSharp command, and stop.
+
+.EXAMPLE
+    pwsh -File pwiz_tools/CarafeSharp/regression.ps1                       # CPU run against the golden
+.EXAMPLE
+    pwsh -File pwiz_tools/CarafeSharp/regression.ps1 -NoBuild -ExtraArgs "-lf_top_n_frag 19" -RunName top19
+.EXAMPLE
+    pwsh -File pwiz_tools/CarafeSharp/regression.ps1 -CreateGolden         # from a clean tree
+#>
+#requires -Version 7
+[CmdletBinding()]
+param(
+    [ValidateSet('Stellar')] [string]$Dataset = 'Stellar',
+    [ValidateSet('cpu', 'cuda')] [string]$Torch = 'cpu',
+    [switch]$NoBuild,
+    [switch]$CreateGolden,
+    [switch]$Force,
+    [string[]]$ExtraArgs = @(),
+    [ValidateSet('Auto', 'Exact', 'Statistical')] [string]$Mode = 'Auto',
+    [string]$CompareRun,
+    [string]$WorkDir,
+    [string]$RunName,
+    [string]$CarafeSharpExe,
+    [switch]$Preflight
+)
+
+$ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $false
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+# pwsh -File passes -ExtraArgs "-cor 0.7" as one string, and cannot pass a value that starts
+# with '-' on its own, so each item is split at whitespace.
+$ExtraArgs = @($ExtraArgs | ForEach-Object { $_ -split '\s+' } | Where-Object { $_ })
+
+$scriptRoot = Split-Path -Parent $PSCommandPath
+$buildScript = Join-Path $scriptRoot 'build.ps1'
+$goldenRoot = Join-Path $scriptRoot 'regression.data'
+
+# Every 50th FASTA record, as LibraryParityTest.SUBSET_STRIDE.
+$subsetStride = 50
+
+# The datasets. Package paths are '/'-separated, relative to the package's top folder.
+$datasets = @{
+    Stellar = @{
+        Folder        = 'stellar'
+        Export        = @{ Package = 'export'; Path = 'stellar/Ste-2024-12-02_HeLa_4mz_sDIA_400-900_21.training.parquet' }
+        LibraryFasta  = @{ Package = 'testfiles'; Path = 'stellar/carafe-osprey-entrapment/osprey_library_db_peptides.fasta' }
+        Pairing       = @{ Package = 'testfiles'; Path = 'stellar/carafe-osprey-entrapment/osprey_library_db_pairing.tsv' }
+        # -ms names the run the export belongs to; CarafeSharp keys the export by its stem and
+        # never opens the run itself.
+        RunFile       = 'Ste-2024-12-02_HeLa_4mz_sDIA_400-900_21.raw'
+        Itol          = '0.4'
+        ItolUnit      = 'Da'
+        MinPeptideMz  = '400'
+        MaxPeptideMz  = '900'
+        ExportNote    = 'Development export: the June 2026 Stellar _21 export Osprey wrote from mzML. The published ' +
+                        'carafesharp-export package will be regenerated from .raw with the landed #4708 Osprey, and this ' +
+                        'golden recreated from it.'
+    }
+}
+$config = $datasets[$Dataset]
+$device = if ($Torch -eq 'cuda') { 'gpu' } else { 'cpu' }
+
+# The library arguments of the CarafeSharp workflow's stage 4-5 (ai/scripts/CarafeSharp/
+# Run-CarafeSharpWorkflow.ps1), with this dataset's tolerances and m/z window. CarafeSharp
+# reports the XIC options (-itol, -rf, ...) as ignored: Osprey's export decides them.
+function Get-LibraryArguments {
+    return @(
+        '-fdr', '0.01', '-itol', $config.Itol, '-itolu', $config.ItolUnit,
+        '-rf', '-rf_rt_win', 'auto', '-cor', '0.8', '-min_mz', '200',
+        '-n_ion_min', '2', '-c_ion_min', '2', '-mode', 'general', '-device', $device,
+        '-enzyme', 'NoCut', '-miss_c', '1', '-fixMod', '1', '-varMod', '0', '-maxVar', '1', '-clip_n_m',
+        '-minLength', '7', '-maxLength', '35',
+        '-min_pep_mz', $config.MinPeptideMz, '-max_pep_mz', $config.MaxPeptideMz,
+        '-min_pep_charge', '2', '-max_pep_charge', '3',
+        '-lf_frag_mz_min', '200', '-lf_frag_mz_max', '1960', '-lf_top_n_frag', '20',
+        '-lf_min_n_frag', '2', '-lf_frag_n_min', '2', '-lf_type', 'blib',
+        '-se', 'Osprey', '-decoy_prefix', 'decoy_', '-nm', '-nf', '4', '-min_n', '4',
+        '-valid', '-na', '0', '-fast')
+}
+
+function Write-Step([string]$Message) {
+    Write-Host "==> $Message" -ForegroundColor Cyan
+}
+
+# ---------------------------------------------------------------------------
+# Test data packages (the rules of CarafeSharp.Test/TestData.cs)
+# ---------------------------------------------------------------------------
+function Get-DownloadsPath {
+    if ($env:SKYLINE_DOWNLOAD_PATH) {
+        return $env:SKYLINE_DOWNLOAD_PATH
+    }
+    if ($IsWindows) {
+        $key = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders'
+        $value = (Get-ItemProperty -Path $key -ErrorAction SilentlyContinue).'{374DE290-123F-4565-9164-39C4925E467B}'
+        if ($value) {
+            return [Environment]::ExpandEnvironmentVariables($value)
+        }
+    }
+    return Join-Path ([Environment]::GetFolderPath('UserProfile')) 'Downloads'
+}
+
+function Get-TestDataRoot {
+    if ($env:CARAFESHARP_TESTDATA) {
+        if (-not (Test-Path -LiteralPath $env:CARAFESHARP_TESTDATA -PathType Container)) {
+            throw "CARAFESHARP_TESTDATA names a folder that does not exist: $env:CARAFESHARP_TESTDATA"
+        }
+        return (Resolve-Path -LiteralPath $env:CARAFESHARP_TESTDATA).Path
+    }
+    return Join-Path (Get-DownloadsPath) 'Perftests'
+}
+
+function Resolve-PackageFile([hashtable]$Entry) {
+    $package = $packages | Where-Object { $_.id -eq $Entry.Package }
+    if (-not $package) {
+        throw "testdata.json lists no package '$($Entry.Package)'"
+    }
+    $folder = Join-Path $testDataRoot $package.folder
+    if (-not (Test-Path -LiteralPath $folder -PathType Container)) {
+        throw "Missing test data: extract $($package.zip) into $testDataRoot (or set CARAFESHARP_TESTDATA)."
+    }
+    if (-not (Test-Path -LiteralPath (Join-Path $folder 'MANIFEST.sha256'))) {
+        throw "$folder has no MANIFEST.sha256, so it is not a complete copy of $($package.zip). Delete the folder and extract the zip again."
+    }
+    $path = Join-Path $folder ($Entry.Path -replace '/', [IO.Path]::DirectorySeparatorChar)
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+        throw "The test data package $folder has no $($Entry.Path)"
+    }
+    return [PSCustomObject]@{ Path = $path; Relative = "$($package.folder)/$($Entry.Path)" }
+}
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+function Get-Sha256([string]$Path) {
+    return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+}
+
+# The records LibraryParityTest's subset keeps: every $subsetStride-th, counting from the
+# first, written as '>' + header + '\n' + sequence + '\n' (FastaReader's header is the
+# trimmed line after '>', its sequence every non-whitespace character up to the next '>').
+function Write-SubsetFasta([string]$Source, [string]$Target) {
+    $sequences = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    $whitespace = [char[]]@(' ', "`t", "`f", "`v")
+    $utf8 = [System.Text.UTF8Encoding]::new($false)
+    $reader = [IO.StreamReader]::new($Source, $utf8, $false, 1 -shl 16)
+    $writer = [IO.StreamWriter]::new($Target, $false, $utf8)
+    try {
+        $index = -1
+        $header = $null
+        $sequence = [System.Text.StringBuilder]::new()
+        $flush = {
+            if ($null -ne $header -and ($index % $subsetStride) -eq 0) {
+                $text = $sequence.ToString()
+                $writer.Write(">$header`n$text`n")
+                [void]$sequences.Add($text)
+            }
+        }
+        while ($null -ne ($line = $reader.ReadLine())) {
+            $trimmed = $line.Trim()
+            if ($trimmed.StartsWith('>')) {
+                . $flush
+                $index++
+                $header = $trimmed.Substring(1)
+                [void]$sequence.Clear()
+            } elseif ($trimmed.IndexOfAny($whitespace) -lt 0) {
+                [void]$sequence.Append($trimmed)
+            } else {
+                [void]$sequence.Append(($trimmed -replace '\s', ''))
+            }
+        }
+        . $flush
+    } finally {
+        $reader.Dispose()
+        $writer.Dispose()
+    }
+    # The comma keeps the set whole; PowerShell would otherwise unroll it into an array.
+    return , $sequences
+}
+
+# The pairing-manifest rows (and header) of the peptides the subset keeps.
+function Write-SubsetPairing([string]$Source, [string]$Target, $Sequences) {
+    $utf8 = [System.Text.UTF8Encoding]::new($false)
+    $reader = [IO.StreamReader]::new($Source, $utf8, $false, 1 -shl 16)
+    $writer = [IO.StreamWriter]::new($Target, $false, $utf8)
+    try {
+        $headerLine = $reader.ReadLine()
+        $column = [Array]::IndexOf(($headerLine -split "`t" | ForEach-Object { $_.Trim().ToLowerInvariant() }), 'sequence')
+        if ($column -lt 0) {
+            throw "$Source has no 'sequence' column"
+        }
+        $writer.Write("$headerLine`n")
+        $rows = 0
+        while ($null -ne ($line = $reader.ReadLine())) {
+            $cells = $line.Split("`t")
+            if ($cells.Count -gt $column -and $Sequences.Contains($cells[$column].Trim())) {
+                $writer.Write("$line`n")
+                $rows++
+            }
+        }
+        return $rows
+    } finally {
+        $reader.Dispose()
+        $writer.Dispose()
+    }
+}
+
+# Splits arguments into options, each with the value that follows it when the next token is
+# not itself an option.
+function Split-Options([string[]]$Tokens) {
+    $options = [System.Collections.Generic.List[object]]::new()
+    for ($i = 0; $i -lt $Tokens.Count; $i++) {
+        if (-not $Tokens[$i].StartsWith('-')) {
+            throw "Expected an option at '$($Tokens[$i])' in: $($Tokens -join ' ')"
+        }
+        $group = @($Tokens[$i])
+        if ($i + 1 -lt $Tokens.Count -and -not $Tokens[$i + 1].StartsWith('-')) {
+            $group += $Tokens[++$i]
+        }
+        $options.Add($group)
+    }
+    return , $options
+}
+
+# The default arguments with each option -ExtraArgs names replaced by its -ExtraArgs form,
+# and the other -ExtraArgs options appended.
+function Merge-Arguments([string[]]$Base, [string[]]$Extra) {
+    if ($Extra.Count -eq 0) {
+        return $Base
+    }
+    $extraOptions = Split-Options $Extra
+    $names = @($extraOptions | ForEach-Object { $_[0] })
+    $merged = @()
+    foreach ($group in (Split-Options $Base)) {
+        $index = [Array]::IndexOf($names, $group[0])
+        if ($index -ge 0) {
+            $merged += $extraOptions[$index]
+            $names[$index] = $null
+        } else {
+            $merged += $group
+        }
+    }
+    for ($i = 0; $i -lt $names.Count; $i++) {
+        if ($null -ne $names[$i]) {
+            $merged += $extraOptions[$i]
+        }
+    }
+    return $merged
+}
+
+function Get-GitState {
+    $commit = (& git -C $scriptRoot rev-parse HEAD 2>$null)
+    if ($LASTEXITCODE -ne 0) {
+        return [PSCustomObject]@{ Commit = 'unknown'; Branch = 'unknown'; Dirty = $true; Changes = @('not a git checkout') }
+    }
+    $branch = (& git -C $scriptRoot rev-parse --abbrev-ref HEAD 2>$null)
+    $changes = @(& git -C $scriptRoot status --porcelain 2>$null)
+    return [PSCustomObject]@{ Commit = "$commit".Trim(); Branch = "$branch".Trim(); Dirty = $changes.Count -gt 0; Changes = $changes }
+}
+
+function Get-ProcessorName {
+    if ($IsWindows) {
+        return (Get-CimInstance Win32_Processor | Select-Object -First 1).Name.Trim()
+    }
+    $model = Select-String -Path '/proc/cpuinfo' -Pattern '^model name\s*:\s*(.*)$' -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($model) {
+        return $model.Matches[0].Groups[1].Value.Trim()
+    }
+    return [Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture.ToString()
+}
+
+# Runs the comparator (RegressionTest) on $RunFolder through build.ps1 -NoBuild; returns its exit code.
+function Invoke-Comparator([string]$RunFolder, [string]$CreateFolder, [string]$LogName) {
+    $saved = @{
+        CARAFESHARP_REGRESSION_RUN    = $env:CARAFESHARP_REGRESSION_RUN
+        CARAFESHARP_REGRESSION_CREATE = $env:CARAFESHARP_REGRESSION_CREATE
+        CARAFESHARP_REGRESSION_DATA   = $env:CARAFESHARP_REGRESSION_DATA
+        CARAFESHARP_REGRESSION_MODE   = $env:CARAFESHARP_REGRESSION_MODE
+    }
+    try {
+        $env:CARAFESHARP_REGRESSION_RUN = $RunFolder
+        $env:CARAFESHARP_REGRESSION_CREATE = $CreateFolder
+        $env:CARAFESHARP_REGRESSION_DATA = Join-Path $goldenRoot $config.Folder
+        $env:CARAFESHARP_REGRESSION_MODE = $Mode
+        $log = Join-Path $RunFolder $LogName
+        & pwsh -NoProfile -File $buildScript -NoBuild -Torch $Torch -TestName 'RegressionTest' -RequireData *>&1 |
+            Tee-Object -FilePath $log | Out-Host
+        return $LASTEXITCODE
+    } finally {
+        foreach ($name in $saved.Keys) {
+            [Environment]::SetEnvironmentVariable($name, $saved[$name])
+        }
+    }
+}
+
+# The values of a JSON document by path, for showing how two goldens differ.
+function Get-JsonLeaves($Node, [string]$Prefix, [hashtable]$Leaves) {
+    if ($Node -is [System.Management.Automation.PSCustomObject]) {
+        foreach ($property in $Node.PSObject.Properties) {
+            Get-JsonLeaves $property.Value "$Prefix/$($property.Name)" $Leaves
+        }
+    } elseif ($Node -is [System.Collections.IList] -and -not ($Node -is [string])) {
+        for ($i = 0; $i -lt $Node.Count; $i++) {
+            Get-JsonLeaves $Node[$i] "$Prefix[$i]" $Leaves
+        }
+    } else {
+        $Leaves[$Prefix] = if ($null -eq $Node) { 'null' } else { [string]::Format([Globalization.CultureInfo]::InvariantCulture, '{0}', $Node) }
+    }
+}
+
+function Show-GoldenDifferences([string]$OldPath, [string]$NewPath) {
+    $old = @{}
+    $new = @{}
+    Get-JsonLeaves (Get-Content -Raw -LiteralPath $OldPath | ConvertFrom-Json) '' $old
+    Get-JsonLeaves (Get-Content -Raw -LiteralPath $NewPath | ConvertFrom-Json) '' $new
+    $keys = @($old.Keys) + @($new.Keys) | Sort-Object -Unique
+    $count = 0
+    foreach ($key in $keys) {
+        $a = $old[$key]
+        $b = $new[$key]
+        if ($a -cne $b) {
+            Write-Host ("  {0}: {1} -> {2}" -f $key, $(if ($null -eq $a) { '(none)' } else { $a }), $(if ($null -eq $b) { '(none)' } else { $b }))
+            $count++
+        }
+    }
+    if ($count -eq 0) {
+        Write-Host '  (no differences)'
+    }
+}
+
+# ---------------------------------------------------------------------------
+# Preflight
+# ---------------------------------------------------------------------------
+if ($CreateGolden -and $ExtraArgs.Count -gt 0) {
+    throw '-CreateGolden with -ExtraArgs: a golden is made with the default arguments only.'
+}
+if ($CreateGolden -and $CarafeSharpExe) {
+    throw '-CreateGolden with -CarafeSharpExe: a golden is made with this checkout''s build, whose commit it records.'
+}
+if ($CreateGolden -and $Mode -ne 'Auto') {
+    throw '-CreateGolden with -Mode: the mode applies to comparisons only.'
+}
+$git = Get-GitState
+if ($CreateGolden -and $git.Dirty) {
+    throw ("-CreateGolden needs a clean working tree, because the golden records the commit it came from. Changes:`n  " +
+           ($git.Changes -join "`n  "))
+}
+
+$packageList = Join-Path $scriptRoot 'testdata.json'
+$packages = (Get-Content -Raw -LiteralPath $packageList | ConvertFrom-Json).packages
+$testDataRoot = Get-TestDataRoot
+
+if (-not $CompareRun) {
+    $export = Resolve-PackageFile $config.Export
+    $libraryFasta = Resolve-PackageFile $config.LibraryFasta
+    $pairing = Resolve-PackageFile $config.Pairing
+
+    $binFolder = if ($Torch -eq 'cuda') { 'bin-cuda' } else { 'bin' }
+    $exeName = if ($IsWindows) { 'CarafeSharp.exe' } else { 'CarafeSharp' }
+    $exe = if ($CarafeSharpExe) { $CarafeSharpExe } else { Join-Path $scriptRoot "CarafeSharp/$binFolder/x64/Release/net10.0/$exeName" }
+
+    if (-not $NoBuild -and -not $CarafeSharpExe) {
+        Write-Step "Building CarafeSharp (libtorch $Torch)"
+        & pwsh -NoProfile -File $buildScript -Torch $Torch -NoTests
+        if ($LASTEXITCODE -ne 0) {
+            throw "build.ps1 failed (exit $LASTEXITCODE)"
+        }
+    }
+    if (-not (Test-Path -LiteralPath $exe)) {
+        throw "CarafeSharp not found at $exe. Build it with build.ps1$(if ($Torch -eq 'cuda') { ' -Torch cuda' }), or drop -NoBuild."
+    }
+
+    # ---------------------------------------------------------------------------
+    # Run
+    # ---------------------------------------------------------------------------
+    if (-not $WorkDir) {
+        $WorkDir = if ($env:CARAFESHARP_REGRESSION_WORKDIR) { $env:CARAFESHARP_REGRESSION_WORKDIR } else { Join-Path $scriptRoot 'TestResults/regression' }
+    }
+    $stamp = (Get-Date).ToString('yyyyMMdd-HHmmss')
+    $name = "$($Dataset.ToLowerInvariant())-isolated-$Torch-$stamp" + $(if ($RunName) { "-$RunName" } else { '' })
+    $runFolder = Join-Path $WorkDir $name
+    if (Test-Path -LiteralPath $runFolder) {
+        throw "Run folder already exists: $runFolder"
+    }
+    $inputFolder = Join-Path $runFolder 'inputs'
+    $outFolder = Join-Path $runFolder 'out'
+    New-Item -ItemType Directory -Force -Path $inputFolder | Out-Null
+
+    Write-Step "Subset of $($libraryFasta.Relative): every ${subsetStride}th record"
+    $subsetFasta = Join-Path $inputFolder 'library_subset_peptides.fasta'
+    $subsetPairing = Join-Path $inputFolder 'library_subset_pairing.tsv'
+    $sequences = Write-SubsetFasta $libraryFasta.Path $subsetFasta
+    $pairingRows = Write-SubsetPairing $pairing.Path $subsetPairing $sequences
+    Write-Host ("  {0} records, {1} pairing rows" -f $sequences.Count, $pairingRows)
+
+    $exportFolder = Split-Path -Parent $export.Path
+    $runFile = Join-Path $exportFolder $config.RunFile
+    $arguments = Merge-Arguments (Get-LibraryArguments) $ExtraArgs
+    $cliArgs = @('-db', $subsetFasta, '-i', $exportFolder, '-ms', $runFile, '-o', $outFolder,
+        '-pairing_manifest', $subsetPairing) + $arguments + @('-tf', 'all')
+
+    $info = [ordered]@{
+        format            = 'carafesharp-regression-run-1'
+        dataset           = $Dataset
+        leg               = 'isolated'
+        torch             = $Torch
+        device_requested  = $device
+        device_used       = $null
+        commit            = $git.Commit
+        branch            = $git.Branch
+        dirty             = $git.Dirty
+        changes           = @($git.Changes)
+        os                = [Runtime.InteropServices.RuntimeInformation]::OSDescription
+        os_platform       = if ($IsWindows) { 'Windows' } elseif ($IsLinux) { 'Linux' } else { 'other' }
+        processor         = Get-ProcessorName
+        logical_processors = [Environment]::ProcessorCount
+        omp_num_threads   = $env:OMP_NUM_THREADS
+        carafesharp_exe   = $exe
+        custom_exe        = [bool]$CarafeSharpExe
+        extra_args        = @($ExtraArgs)
+        arguments         = @($arguments)
+        subset_stride     = $subsetStride
+        subset_records    = $sequences.Count
+        subset_pairing_rows = $pairingRows
+        export_note       = $config.ExportNote
+        inputs            = [ordered]@{
+            export          = [ordered]@{ path = $export.Relative; sha256 = Get-Sha256 $export.Path }
+            library_fasta   = [ordered]@{ path = $libraryFasta.Relative; sha256 = Get-Sha256 $libraryFasta.Path }
+            library_pairing = [ordered]@{ path = $pairing.Relative; sha256 = Get-Sha256 $pairing.Path }
+            subset_fasta    = [ordered]@{ path = 'inputs/library_subset_peptides.fasta'; sha256 = Get-Sha256 $subsetFasta }
+            subset_pairing  = [ordered]@{ path = 'inputs/library_subset_pairing.tsv'; sha256 = Get-Sha256 $subsetPairing }
+        }
+        started           = (Get-Date).ToString('o')
+        finished          = $null
+        minutes           = $null
+        exit_code         = $null
+    }
+    $infoPath = Join-Path $runFolder 'regression-run.json'
+    $info | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $infoPath -Encoding utf8
+
+    Write-Step "CarafeSharp: fine-tune and library ($runFolder)"
+    Write-Host "$exe $($cliArgs -join ' ')" -ForegroundColor DarkGray
+    if ($Preflight) {
+        Write-Host 'Preflight only: stopping before CarafeSharp runs.' -ForegroundColor Yellow
+        exit 0
+    }
+    $log = Join-Path $runFolder 'carafesharp.log'
+    $clock = [Diagnostics.Stopwatch]::StartNew()
+    & $exe @cliArgs *>&1 | Tee-Object -FilePath $log | Out-Host
+    $exitCode = $LASTEXITCODE
+    $clock.Stop()
+
+    $fellBack = Select-String -LiteralPath $log -SimpleMatch 'running on the CPU' -Quiet
+    $info.device_used = if ($device -eq 'gpu' -and -not $fellBack) { 'cuda' } else { 'cpu' }
+    $info.finished = (Get-Date).ToString('o')
+    $info.minutes = [math]::Round($clock.Elapsed.TotalMinutes, 2)
+    $info.exit_code = $exitCode
+    $info | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $infoPath -Encoding utf8
+    if ($exitCode -ne 0) {
+        throw "CarafeSharp failed (exit $exitCode); log: $log"
+    }
+    Write-Host ("CarafeSharp finished in {0:F1} min on {1}" -f $clock.Elapsed.TotalMinutes, $info.device_used) -ForegroundColor Green
+    if ($Torch -eq 'cuda' -and $fellBack) {
+        $message = "CarafeSharp was asked for the GPU and fell back to the CPU (see $log)."
+        if ($CreateGolden) {
+            throw "$message -CreateGolden refuses a CPU fallback on a GPU request."
+        }
+        Write-Warning "$message The run is compared as a CPU run."
+    }
+} else {
+    $runFolder = (Resolve-Path -LiteralPath $CompareRun).Path
+    $infoPath = Join-Path $runFolder 'regression-run.json'
+    if (-not (Test-Path -LiteralPath $infoPath)) {
+        throw "$runFolder has no regression-run.json: it is not a regression.ps1 run folder."
+    }
+    $recorded = Get-Content -Raw -LiteralPath $infoPath | ConvertFrom-Json
+    if ($recorded.dataset -ne $Dataset) {
+        throw "$runFolder is a $($recorded.dataset) run, not $Dataset."
+    }
+    if ($CreateGolden -and ($recorded.dirty -or @($recorded.extra_args).Count -gt 0 -or $recorded.custom_exe -or $recorded.exit_code -ne 0)) {
+        throw "-CreateGolden -CompareRun needs a completed run made from a clean tree with this checkout's build and no -ExtraArgs; $runFolder is not one."
+    }
+    if ($CreateGolden -and $Torch -eq 'cuda' -and $recorded.device_used -ne 'cuda') {
+        throw "-CreateGolden refuses a CPU fallback on a GPU request: $runFolder ran on $($recorded.device_used)."
+    }
+    Write-Step "Comparing the existing run $runFolder"
+}
+
+# ---------------------------------------------------------------------------
+# Compare, or make the golden
+# ---------------------------------------------------------------------------
+$goldenFolder = Join-Path $goldenRoot $config.Folder
+$goldenPath = Join-Path $goldenFolder 'golden.json'
+if (-not $CreateGolden) {
+    if (-not (Test-Path -LiteralPath $goldenPath)) {
+        throw "No golden at $goldenPath. Make one with -CreateGolden."
+    }
+    Write-Step "Comparing with $goldenPath (mode $Mode)"
+    $code = Invoke-Comparator $runFolder '' 'comparator.log'
+    $report = Join-Path $runFolder 'regression-report.txt'
+    if (Test-Path -LiteralPath $report) {
+        Get-Content -LiteralPath $report | Out-Host
+    }
+    if ($code -ne 0) {
+        Write-Host "REGRESSION FAILED: $runFolder differs from the golden (report: $report)" -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "REGRESSION PASSED: $runFolder matches the golden (report: $report)" -ForegroundColor Green
+    exit 0
+}
+
+Write-Step 'Making the golden candidate'
+$candidate = Join-Path $runFolder 'golden'
+$code = Invoke-Comparator $runFolder $candidate 'golden-create.log'
+if ($code -ne 0) {
+    throw "The comparator refused the run as a golden (log: $(Join-Path $runFolder 'golden-create.log'))."
+}
+if (Test-Path -LiteralPath $goldenPath) {
+    Write-Step "A golden exists; this run compared with it:"
+    Invoke-Comparator $runFolder '' 'comparator.log' | Out-Null
+    $report = Join-Path $runFolder 'regression-report.txt'
+    if (Test-Path -LiteralPath $report) {
+        Get-Content -LiteralPath $report | Out-Host
+    }
+    Write-Step 'golden.json values that change:'
+    Show-GoldenDifferences $goldenPath (Join-Path $candidate 'golden.json')
+    if (-not $Force) {
+        Write-Host "A golden already exists at $goldenPath. Review the differences above and rerun with -Force to replace it." -ForegroundColor Yellow
+        Write-Host "(The candidate is in $candidate; -CompareRun $runFolder -CreateGolden -Force installs it without a new run.)" -ForegroundColor Yellow
+        exit 1
+    }
+}
+New-Item -ItemType Directory -Force -Path $goldenFolder | Out-Null
+Get-ChildItem -LiteralPath $candidate -File | Copy-Item -Destination $goldenFolder -Force
+Write-Host "Golden written to $goldenFolder from $runFolder. Commit regression.data/$($config.Folder)." -ForegroundColor Green
+exit 0
