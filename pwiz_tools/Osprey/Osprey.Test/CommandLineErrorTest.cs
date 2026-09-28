@@ -27,7 +27,6 @@ using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
-using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
@@ -231,7 +230,7 @@ namespace pwiz.Osprey.Test
                 isolated[pair.Key] = pair.Value;
             using (OspreyEnvironment.OverrideVariables(isolated))
             {
-                exitCode = RunCommandInProcess(args, writer);
+                exitCode = InProcessOsprey.Run(args, writer);
             }
             string output = buffer.ToString();
             string message = string.Format(@"Command line: {0}{1}Output:{1}{2}",
@@ -245,33 +244,6 @@ namespace pwiz.Osprey.Test
             // A usage error is a message, never an exception type and stack.
             Assert.IsFalse(output.Contains(typeof(Exception).Namespace + @"."), message);
             return output;
-        }
-
-        /// <summary>
-        /// <see cref="Program.RunCommand"/> with the process-wide state it sets restored after,
-        /// so one command line cannot leak its writer or directories into the next test.
-        /// </summary>
-        private static int RunCommandInProcess(string[] args, CommandStatusWriter writer)
-        {
-            var savedOut = OspreyOutput.Out;
-            bool savedPerfStats = OspreyOutput.PerfStats;
-            bool savedVerbose = OspreyOutput.Verbose;
-            var savedDiagnosticsLog = OspreyDiagnosticsLog.Log;
-            string savedOutputDir = ArtifactPaths.OutputDir;
-            string savedCacheDir = ArtifactPaths.CacheDir;
-            try
-            {
-                return Program.RunCommand(args, writer);
-            }
-            finally
-            {
-                OspreyOutput.Out = savedOut;
-                OspreyOutput.PerfStats = savedPerfStats;
-                OspreyOutput.Verbose = savedVerbose;
-                OspreyDiagnosticsLog.Log = savedDiagnosticsLog;
-                ArtifactPaths.OutputDir = savedOutputDir;
-                ArtifactPaths.CacheDir = savedCacheDir;
-            }
         }
 
         private static IReadOnlyDictionary<string, string> Variable(string name, string value)

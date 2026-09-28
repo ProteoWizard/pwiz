@@ -1042,6 +1042,12 @@
   <data name="PerFileResumeDriver_Stamp___Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_" xml:space="preserve">
     <value>Failed to record that --task {0} completed {1}: {2}. A resume will redo this step.</value>
   </data>
+  <data name="PerFileScoringTask_CheckDecoysUsable_Decoys_with_no_fragment_distinct_from_their_target___0__of__1____2____generated_" xml:space="preserve">
+    <value>Decoys with no fragment distinct from their target: {0:N0} of {1:N0} ({2:P1}), generated from the library {3}. Those targets have no real decoy competition; check that the library has b and y fragment annotations with fragment numbers.</value>
+  </data>
+  <data name="PerFileScoringTask_CheckDecoysUsable_The_library__3__is_missing_b_or_y_fragment_ion_annotations_or_fragment_numbers___0__of__" xml:space="preserve">
+    <value>The library {3} is missing b or y fragment ion annotations or fragment numbers: {0:N0} of {1:N0} generated decoys ({2:P1}, more than {4:P0}) have no fragment distinct from their target, so Osprey cannot generate usable decoys from it. Use a library with annotated fragments, such as a DIA-NN or Carafe library, or one that already contains decoys, with {5}.</value>
+  </data>
   <data name="PerFileScoringTask_EmitCalibrationSummary_Calibration_summary___0___" xml:space="preserve">
     <value>Calibration summary [{0}]:</value>
   </data>

@@ -34,6 +34,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- A small rectangle of real Stellar DIA data (TestData\StellarSubset.zip, see its
+         README.txt) so tests can run the whole pipeline in-process. -->
+    <None Include="TestData\*.zip" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
     <ProjectReference Include="..\Osprey.ML\Osprey.ML.csproj" />
     <ProjectReference Include="..\Osprey.IO\Osprey.IO.csproj" />
