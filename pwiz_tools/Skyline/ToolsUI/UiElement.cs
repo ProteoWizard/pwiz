@@ -19,6 +19,7 @@
  */
 using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
+using pwiz.Common.Controls;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
@@ -1174,6 +1175,8 @@ namespace pwiz.Skyline.ToolsUI
                 // a checkbox and a radio button are handled above, each with the click it actually has). Anything
                 // else deriving from ButtonBase is a control we would not know how to click, so it falls through
                 // to the default: not an element at all, rather than one whose click cannot work.
+                // A LiteDropDownList is a Button that acts as a drop-down list, so its case must win.
+                case LiteDropDownList dropDownList: return new DropDownListElement(dropDownList, token);
                 case ButtonBase button when button is IButtonControl: return new ButtonElement(button, token);
                 case ComboBox comboBox: return new ComboBoxElement(comboBox, token);
                 case TextBoxBase textBox: return new TextBoxElement(textBox, token);
@@ -1580,6 +1583,24 @@ namespace pwiz.Skyline.ToolsUI
                 throw new ArgumentException(LlmInstruction.Format(
                     @"No item '{0}' in combo box {1}.", text, _comboBox.Name));
             _comboBox.SelectedIndex = index;
+        }
+    }
+
+    /// <summary>A button that drops down a list to choose from (<see cref="LiteDropDownList"/>, e.g. each column's
+    /// type in Import Transition List: Identify Columns) -- set and read like a combo box.</summary>
+    internal sealed class DropDownListElement : ControlElement<LiteDropDownList>, IValueElement, IOptionsElement
+    {
+        public DropDownListElement(LiteDropDownList dropDownList, CancellationToken cancellationToken) : base(dropDownList, cancellationToken) { }
+        public override object GetValueNow() => Control.Text;
+        public IEnumerable<string> GetOptions() => Control.Items.Select(item => item.ToString()).ToList();
+        public void SetValueNow(object value)
+        {
+            var text = value?.ToString();
+            int index = Control.FindStringExact(text);
+            if (index < 0)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"No item '{0}' in drop-down list {1}.", text, Control.Name));
+            Control.SelectedIndex = index;
         }
     }
 
@@ -2199,6 +2220,10 @@ namespace pwiz.Skyline.ToolsUI
         public override string Label => _item is ToolStripControlHost ? null
             : string.IsNullOrEmpty(_item.Text) ? _item.ToolTipText : _item.Text;
         public override bool IsEnabled => _item.Enabled;
+        // A menu command's check mark (e.g. a graph's Legend, or which of Transitions > All / Total is on),
+        // so a caller can see a toggle's state before clicking it
+        public override object GetValueNow() =>
+            _item is ToolStripMenuItem { HasDropDownItems: false } menuItem ? menuItem.Checked : (object) null;
         private List<UiElement> _children;
 
         // A ToolStripControlHost hosts a real control: a single control the form recognizes (e.g. the Audit
@@ -2301,7 +2326,12 @@ namespace pwiz.Skyline.ToolsUI
         // the connector at the point it is exposed (get_value, ControlInfo), not here.
         public override object GetValueNow() => _dataGridView.CurrentCell?.Value;
 
-        public void SetValueNow(object value)
+        public virtual void SetValueNow(object value)
+        {
+            WritableCurrentCell().Value = value;
+        }
+
+        protected DataGridViewCell WritableCurrentCell()
         {
             var cell = _dataGridView.CurrentCell;
             if (cell == null)
@@ -2312,7 +2342,7 @@ namespace pwiz.Skyline.ToolsUI
             if (cell.ReadOnly || _dataGridView.ReadOnly)
                 throw new ArgumentException(new LlmInstruction(
                     @"The current cell is read-only, so its value cannot be set."));
-            cell.Value = value;
+            return cell;
         }
 
         // A grid carries no caption of its own, so it is addressed by the label before it -- the one
@@ -2370,6 +2400,9 @@ namespace pwiz.Skyline.ToolsUI
             if (row < 0 || row >= _dataGridView.Rows.Count)
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Row {0} is out of range; the grid has {1} rows.", row, _dataGridView.Rows.Count));
+            // Clicking a cell gives the grid the focus, and a focused grid puts a checkbox cell straight into
+            // edit mode, which is what lets Space then toggle it
+            _dataGridView.Focus();
             _dataGridView.CurrentCell = _dataGridView.Rows[row].Cells[visibleColumns[column].Index];
         }
 
@@ -2428,6 +2461,20 @@ namespace pwiz.Skyline.ToolsUI
                 // Pastes at the current cell exactly as Ctrl-V would, keeping the bound document in sync
                 // (one undoable batch-modify -- see BoundDataGridViewPasteHandler).
                 BoundDataGridViewPasteHandler.PasteText(DataGridView, bindingListSource, text);
+        }
+
+        // A bound cell holds a typed value (e.g. a Sample Type), which a raw string cannot be assigned to, so
+        // the value is entered the way a user types it: as text pasted into the current cell, converted to the
+        // column's type and committed to the document.
+        public override void SetValueNow(object value)
+        {
+            if (BindingListSource == null)
+            {
+                base.SetValueNow(value);
+                return;
+            }
+            WritableCurrentCell();
+            SetGridTextCore(value?.ToString() ?? string.Empty);
         }
     }
 
