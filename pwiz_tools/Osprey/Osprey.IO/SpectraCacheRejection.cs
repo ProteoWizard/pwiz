@@ -22,8 +22,7 @@
  */
 
 using System;
-using System.IO;
-using pwiz.Common.SystemUtil;
+using System.IO;
 
 namespace pwiz.Osprey.IO
 {
@@ -77,14 +76,14 @@ namespace pwiz.Osprey.IO
     /// <see cref="CachePath"/> alongside the message, so a caller can branch on the cause
     /// instead of matching on prose.
     ///
-    /// <para>Derives from <see cref="Exception"/> rather than the
-    /// <see cref="InvalidDataException"/> this replaces, because that type is sealed. Safe on
-    /// this path: nothing between the throw site and the pipeline's top-level handler catches
-    /// <see cref="InvalidDataException"/> specifically - every intervening handler catches
-    /// <see cref="Exception"/> - so the reporting is unchanged. A future caller that wants to
-    /// recover should catch THIS type and branch on <see cref="Reason"/>.</para>
+    /// <para>An <see cref="IOException"/>: every refusal is a problem with a file - absent,
+    /// unreadable, too short, or stale against its source - and the message is written for the
+    /// user, so it is reported as a message rather than a defect (Skyline's
+    /// <c>IsProgrammingDefect</c>). It replaced an <see cref="InvalidDataException"/>, which is
+    /// sealed. A caller that wants to recover should catch THIS type and branch on
+    /// <see cref="Reason"/>.</para>
     /// </summary>
-    public class SpectraCacheException : UserMessageException
+    public class SpectraCacheException : IOException
     {
         public SpectraCacheException(string message, SpectraCacheRejection reason, string cachePath)
             : base(message)

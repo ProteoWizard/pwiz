@@ -558,7 +558,7 @@ namespace pwiz.Osprey.Tasks
     /// pipeline definition is missing the producer); fail fast and hard so it
     /// surfaces in testing rather than at runtime.
     /// </summary>
-    public sealed class UnknownTaskException : Exception
+    public sealed class UnknownTaskException : InvalidOperationException
     {
         public Type RequestedType { get; }
 
@@ -578,7 +578,7 @@ namespace pwiz.Osprey.Tasks
     /// that neglected to <see cref="PipelineContext.Publish{TInfo}"/> -- and are
     /// surfaced loudly rather than degrading to a silent default value.
     /// </summary>
-    public sealed class UnknownByproductException : Exception
+    public sealed class UnknownByproductException : InvalidOperationException
     {
         public Type RequestedType { get; }
 
