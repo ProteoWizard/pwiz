@@ -171,9 +171,9 @@ namespace pwiz.Skyline
 
         /// <summary>
         /// Returns the culture a name resolves to, or null if it resolves to none the system knows. The resolved
-        /// name is checked rather than the text, so spellings the system maps to a known culture (e.g. "en_US" or
-        /// "zh-Hans-CN") are accepted. The check is needed because Windows makes up a culture for any well-formed
-        /// name (e.g. "not-a-culture") instead of failing.
+        /// name is checked rather than the text, so any spelling the system maps to a known culture is accepted
+        /// (e.g. "EN-us", or "en_US" on versions of Windows that resolve it). The check is needed because Windows
+        /// makes up a culture for any well-formed name (e.g. "not-a-culture") instead of failing.
         /// </summary>
         private static CultureInfo GetKnownCulture(string name)
         {

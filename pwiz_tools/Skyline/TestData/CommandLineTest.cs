@@ -4237,11 +4237,12 @@ namespace pwiz.SkylineTestData
                 AssertEx.Contains(output, string.Format(
                     Resources.ValueMissingException_ValueMissingException_, CommandArgs.ARG_IN.ArgumentText));
 
-                // Other spellings of a known culture name are accepted too.
+                // Other spellings of a known culture name are accepted too. Which spellings resolve depends on the
+                // version of Windows (e.g. "en_US" does not resolve on all of them), but a change of case always does.
                 string valueMissingEnglish = Resources.ResourceManager.GetString(
                     @"ValueMissingException_ValueMissingException_", new CultureInfo(@"en-US"));
                 Assert.IsNotNull(valueMissingEnglish);
-                output = RunCommand(false, argCulture.ArgumentText + @"=en_US", CommandArgs.ARG_IN.ArgumentText);
+                output = RunCommand(false, argCulture.ArgumentText + @"=EN-us", CommandArgs.ARG_IN.ArgumentText);
                 AssertEx.Contains(output, string.Format(valueMissingEnglish, CommandArgs.ARG_IN.ArgumentText));
 
                 // The message for a following argument comes back in the requested language. Arguments are
