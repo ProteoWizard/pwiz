@@ -736,20 +736,28 @@ targets only):
 - Of the precursors DIA-NN's scanning mode finds and the centered:5 file misses, 56% are in the
   lowest abundance quartile: the remaining identification gap is in weak precursors.
 
-**Three replicates, whole runs** (DIA-NN's own settings; CV of `Precursor.Quantity` on the 18,227
-precursors all three arms found in all three runs):
+**Three replicates, whole runs** (CV of `Precursor.Quantity` on the 17,948 precursors all five arms
+found in all three runs):
 
-| Arm | Targets (A1 / D1 / G1) | CV |
-|---|---|---|
-| as acquired | 27,341 / 27,952 / 28,470 | 0.112 |
-| the vendor `.wiff`, DIA-NN `--scanning-swath` | 29,552 / 30,285 / 30,882 | 0.089 |
-| centered:5 | 27,794 / 28,144 / 28,843 | 0.135 |
+| Arm | Targets (A1 / D1 / G1) | Entrapment FDP | CV |
+|---|---|---|---|
+| as acquired, DIA-NN's own settings | 27,341 / 27,952 / 28,470 | 0.72-0.88% | 0.112 |
+| as acquired, DIA-NN `--scanning-swath` | 29,373 / 29,872 / 30,485 | 0.81-0.84% | 0.102 |
+| the vendor `.wiff`, DIA-NN `--scanning-swath` | 29,552 / 30,285 / 30,882 | 0.90-0.96% | 0.088 |
+| centered:5, DIA-NN's own settings | 27,794 / 28,144 / 28,843 | 0.88-0.90% | 0.134 |
+| **centered:7, `--position-mz`, DIA-NN pinned** | **31,512 / 31,506 / 32,117** | 0.79-0.89% | 0.119 |
 
-- **Over whole runs the demultiplexed quantities are noisier than the acquired ones**, and DIA-NN's
-  scanning mode is better than both. On the slice the demultiplexed CV matched the acquired data's,
-  so the slice did not show this.
-- This is the gap `--source-positions` addresses: two or three columns per sweep instead of about
-  40 should add less noise to each quantity.
+- **Identifications: the demultiplexed runs lead.** centered:7 with `--position-mz`, searched with
+  `--window 6 --mass-acc 17 --mass-acc-ms1 19`, finds 4.0-6.6% more targets than DIA-NN's scanning mode
+  on the vendor file, at lower FDP, and 24,600 precursors in all three runs against 23,589.
+- **Quantities: still behind.** Pinning and the layout moved the CV from 0.134 to 0.119, but the
+  acquired data gives 0.112 and the `.wiff` 0.088. By abundance quartile the demultiplexed CV equals
+  the acquired data's at the top (0.093) and exceeds it by 0.010 at the bottom (0.148 against 0.138),
+  and the excess grows with m/z: the solve adds counting noise to weak signal. The `.wiff`'s lead over
+  the acquired data (0.013-0.018 in every quartile) is the data path ([Centroiding and the TOF
+  grid](#centroiding-and-the-tof-grid)), which the demultiplexer, starting from the same vendor
+  centroids, inherits.
+- On the slice the demultiplexed CV matched the acquired data's, so the slice does not show either.
 
 The scripts behind these ZT Scan tables are in pwiz-ai, under `ai/scripts/Osprey/Demux`.
 
@@ -764,7 +772,8 @@ The scripts behind these ZT Scan tables are in pwiz-ai, under `ai/scripts/Osprey
   - its descriptor in the demultiplexed cache.
 - **Open questions for ZT Scan:**
   - quantitation: over whole runs the per-sweep solve's quantities are noisier than the acquired
-    data's (CV 0.135 against 0.112), and DIA-NN's scanning mode reaches 0.089;
+    data's (CV 0.119 against 0.112, with DIA-NN pinned), and DIA-NN's scanning mode on the `.wiff`
+    reaches 0.088 (identifications are no longer the gap: the demultiplexed runs find 4-7% more);
   - `--source-positions` does not close it on the slice, and no form of the lasso does
     ([Sparsity](#sparsity-the-lasso));
   - most of DIA-NN's advantage in quantities is the data it reads from the `.wiff`, which the vendor
