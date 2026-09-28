@@ -40,6 +40,7 @@ namespace pwiz.SkylineTestConnected
         private string[] _dataPath;
         private string[] _filenames;
         private string _selectItem;
+        private int _curvesPerReplicate;
         private PointF? _chromatogramPoint;
 
         [TestMethod]
@@ -55,6 +56,7 @@ namespace pwiz.SkylineTestConnected
             _dataPath = new[] { "Company", "Demo Department", "Peptides",  };
             _filenames = new[] { "Hi3_ClpB_MSe_01" };
             _selectItem = "Molecule:/sp|P0A6A8|ACP_ECOLI/ITTVQAAIDYINGHQA";
+            _curvesPerReplicate = 1;
             _chromatogramPoint = new PointF(4.0f, 3.25f);
             RunFunctionalTest();
         }
@@ -72,6 +74,7 @@ namespace pwiz.SkylineTestConnected
             _dataPath = new[] { "Company", "Skyline", "SmallMolOptimization", "Scheduled",  };
             _filenames = new[] { "ID33140_03a_WAA253_4814_092017", "ID33141_03a_WAA253_4814_092017" };
             _selectItem = "Molecule:/Nucleotide metabolism/UDP";
+            _curvesPerReplicate = 2;
             _chromatogramPoint = null;
             RunFunctionalTest();
 
@@ -107,25 +110,50 @@ namespace pwiz.SkylineTestConnected
             RunUI(() => editAccountDlg.SetRemoteAccount(_testAccount.ChangeServerUrl("https://asdfdsafads.local"))); // non-resolving hostname
             AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), "The remote name could not be resolved");
 
-            // Test invalid client id, scope, and secret
-            RunUI(() => editAccountDlg.SetRemoteAccount((_testAccount as WatersConnectAccount)!.ChangeClientId("foobar")));
-            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), ToolsUIResources.EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret);
-            RunUI(() => editAccountDlg.SetRemoteAccount((_testAccount as WatersConnectAccount)!.ChangeClientSecret("foobar")));
-            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), ToolsUIResources.EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret);
-            RunUI(() => editAccountDlg.SetRemoteAccount((_testAccount as WatersConnectAccount)!.ChangeClientScope("foobar")));
-            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), "invalid_scope"); // not L10N
+            // waters_connect only below this point: hard-cast client id/scope/secret manipulation,
+            // and the invalid-password message text, which is the wire text from the Waters server
+            // and not something Unifi's server necessarily matches. Added in d1c5c45927 (#3386) for
+            // waters_connect and never guarded, so it null-referenced TestUnifi the first time these
+            // ran against a real Unifi account (_testAccount as WatersConnectAccount is null there).
+            if (_testAccount is WatersConnectAccount)
+            {
+                // Test invalid client id, scope, and secret
+                RunUI(() => editAccountDlg.SetRemoteAccount((_testAccount as WatersConnectAccount)!.ChangeClientId("foobar")));
+                AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), ToolsUIResources.EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret);
+                RunUI(() => editAccountDlg.SetRemoteAccount((_testAccount as WatersConnectAccount)!.ChangeClientSecret("foobar")));
+                AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), ToolsUIResources.EditRemoteAccountDlg_TestWatersConnectAccount_invalid_client_id_or_secret);
+                RunUI(() => editAccountDlg.SetRemoteAccount((_testAccount as WatersConnectAccount)!.ChangeClientScope("foobar")));
+                AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), "invalid_scope"); // not L10N
 
-            // Test invalid password, the error message tested is a non-L10N string from Waters server
-            RunUI(() => editAccountDlg.SetRemoteAccount(_testAccount.ChangePassword("wrongpassword")));
-            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), "password entered for this user is incorrect");
+                // Test invalid password, the error message tested is a non-L10N string from Waters server
+                RunUI(() => editAccountDlg.SetRemoteAccount(_testAccount.ChangePassword("wrongpassword")));
+                AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), "password entered for this user is incorrect");
+            }
 
             RunUI(() => editAccountDlg.SetRemoteAccount(_testAccount));
             OkDialog(editAccountDlg, editAccountDlg.OkDialog);
 
-            RunUI(() =>
+            if (_testAccount is WatersConnectAccount)
             {
-                openDataSourceDialog.SetCurrentDirectory((openDataSourceDialog.CurrentDirectory as RemoteUrl)!.ChangePathParts(_dataPath));
-            });
+                // waters_connect's ListContents resolves a full, multi-level ChangePathParts jump
+                // directly.
+                RunUI(() =>
+                {
+                    openDataSourceDialog.SetCurrentDirectory((openDataSourceDialog.CurrentDirectory as RemoteUrl)!.ChangePathParts(_dataPath));
+                });
+            }
+            else
+            {
+                // Unifi's UnifiSession.ListContents matches children only by the parent folder's
+                // real Id (a GUID assigned incrementally as each level is opened - see
+                // UnifiUrl.Id/ChangeId), so jumping straight to a multi-level ChangePathParts path
+                // never resolves: Id stays empty and ListContents(navUrl) returns nothing, which
+                // left openDataSourceDialog.ListItemNames permanently empty and hung the later
+                // WaitForConditionUI in OpenFile for the full 720-second timeout. Navigate one
+                // level at a time instead, exactly as clicking through the tree would.
+                foreach (var pathSegment in _dataPath)
+                    OpenFile(openDataSourceDialog, pathSegment);
+            }
             foreach (var filename in _filenames)
                 OpenFile(openDataSourceDialog, filename, false);
             RunUI(openDataSourceDialog.Open);
@@ -141,11 +169,27 @@ namespace pwiz.SkylineTestConnected
             if (_selectItem == null)
                 return;
 
+            // Multiple replicates dock their chromatogram graphs as tabs, and a GraphChromatogram
+            // that is not showing draws nothing, so tile them to make every replicate's graph
+            // visible before counting curves.
+            RunUI(SkylineWindow.ArrangeGraphsTiled);
             RunUI(() => SkylineWindow.SelectElement(ElementRefs.FromObjectReference(ElementLocator.Parse(_selectItem))));
 
-            var chromGraph = FindOpenForm<GraphChromatogram>();
-            WaitForConditionUI(5000, () => chromGraph.CurveCount == _filenames.Length);
-            Assert.AreEqual(_filenames.Length, chromGraph.CurveCount);
+            // Skyline creates one GraphChromatogram per replicate (SkylineWindow.GraphChromatograms),
+            // so FindOpenForm, which asserts the form is unique, only works while a single file is
+            // imported. Look up each replicate's own graph by the name the document ended up with:
+            // ImportResultsNameDlg above removes the common prefix and suffix, which leaves names
+            // that are nothing like _filenames (ID33140_03a_... and ID33141_03a_... become 0 and 1).
+            var replicateNames = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms
+                .Select(chromatogramSet => chromatogramSet.Name).ToArray();
+            Assert.AreEqual(_filenames.Length, replicateNames.Length);
+            foreach (var replicateName in replicateNames)
+            {
+                var chromGraph = SkylineWindow.GetGraphChrom(replicateName);
+                Assert.IsNotNull(chromGraph, replicateName);
+                WaitForConditionUI(5000, () => chromGraph.CurveCount == _curvesPerReplicate);
+                RunUI(() => Assert.AreEqual(_curvesPerReplicate, chromGraph.CurveCount, replicateName));
+            }
 
             if (_chromatogramPoint != null)
             {

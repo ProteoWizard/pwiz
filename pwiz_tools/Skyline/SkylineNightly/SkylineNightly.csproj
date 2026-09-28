@@ -101,6 +101,7 @@
       <DependentUpon>SkylineNightly.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
+    <Compile Include="RunSpec.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Xml.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">

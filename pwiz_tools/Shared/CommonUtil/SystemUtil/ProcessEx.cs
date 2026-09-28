@@ -59,7 +59,10 @@ namespace pwiz.Common.SystemUtil
         }
         private static bool CanConvertUnicodePathsInDirectory(string baseDir)
         {
-            var volume = Path.GetPathRoot(baseDir);
+            // GetPathRoot returns null only for a null path and empty for a relative one. Either
+            // way there is no volume to key the cache by, and a null key would throw here and
+            // again at the store below.
+            var volume = Path.GetPathRoot(baseDir) ?? string.Empty;
             if (_volumesTested.TryGetValue(volume, out var result))
             {
                 return result; // Already tested this volume

@@ -177,7 +177,6 @@ namespace pwiz.Osprey.Test
             var modes = new[]
             {
                 OspreyEnvironment.PASS2_QVALUE_TRANSFER,
-                OspreyEnvironment.PASS2_QVALUE_TRANSFER_COMPETE,
                 OspreyEnvironment.PASS2_QVALUE_PROTEIN_COMPACT
             };
             for (int i = 0; i < modes.Length; i++)

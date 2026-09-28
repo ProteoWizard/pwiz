@@ -227,6 +227,7 @@
     <Compile Include="ArdiaFileUploadTest.cs" />
     <Compile Include="Results\RemoteApi\RemoteApiTest.cs" />
     <Compile Include="UnifiFunctionalTest.cs" />
+    <Compile Include="WatersConnectCommandLineTest.cs" />
     <Compile Include="KoinaBuildLibraryFromCsvTest.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

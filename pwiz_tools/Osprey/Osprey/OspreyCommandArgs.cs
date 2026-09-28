@@ -63,6 +63,7 @@ namespace pwiz.Osprey
 
         // --- Raw parse sinks (applied to the config in ToConfig) ---------------------------
         private readonly List<string> _inputFiles = new List<string>();
+        private readonly List<string> _inputListPaths = new List<string>();
         private string _libraryPath;
         private string _outputPath;
         private string _workDir;
@@ -77,6 +78,19 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_INPUT = new OspreyArgument(@"input",
             () => @"<file1.mzML ...>", (c, p) => true) { ShortName = @"i", Variadic = true,
             ProcessVariadic = (c, toks) => { c._inputFiles.AddRange(toks); return true; } };
+        // The command line is a BOUNDED resource and -i consumes it at O(files). Measured on the
+        // 446-run CHS cohort: 28,621 characters of the 32,767 a Windows CreateProcess accepts -
+        // 87% of the limit, at ~62 characters per input path with a deliberately SHORT raw
+        // directory. That leaves room for about 66 more files, so the wall is near 512 and a
+        // deeper path tree reaches it sooner. Past it the failure is a CreateProcess error or a
+        // truncated argument list, neither of which says "too many inputs".
+        //
+        // --input-list is the answer, and since --input-scores retired it is the ONLY one:
+        // that flag used to accept a directory, which is how the HPC tasks avoided the wall.
+        // One path per line, blank lines and #-comments ignored, composable with -i and with
+        // itself (both append, exactly as repeated -i does).
+        public static readonly OspreyArgument ARG_INPUT_LIST = new OspreyArgument(@"input-list",
+            () => @"<list.txt>", (c, p) => c._inputListPaths.Add(p.Value));
         public static readonly OspreyArgument ARG_LIBRARY = new OspreyArgument(@"library",
             () => @"<library.tsv|.blib>", (c, p) => c._libraryPath = p.Value) { ShortName = @"l" };
         public static readonly OspreyArgument ARG_OUTPUT = new OspreyArgument(@"output",
@@ -92,7 +106,7 @@ namespace pwiz.Osprey
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_GENERAL_IO =
             new ArgumentGroup<OspreyCommandArgs>(() => @"General I/O", true,
-                ARG_INPUT, ARG_LIBRARY, ARG_OUTPUT, ARG_WORK_DIR, ARG_OUTPUT_DIR, ARG_CACHE_DIR, ARG_REPORT);
+                ARG_INPUT, ARG_INPUT_LIST, ARG_LIBRARY, ARG_OUTPUT, ARG_WORK_DIR, ARG_OUTPUT_DIR, ARG_CACHE_DIR, ARG_REPORT);
 
         // --- Scoring & Tolerance ----------------------------------------------------------
         public static readonly OspreyArgument ARG_RESOLUTION = new OspreyArgument(@"resolution",
@@ -210,22 +224,15 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_TASK = new OspreyArgument(@"task",
             new[] { @"SpectraCache", @"PerFileScoring", @"FirstPassFDR", @"PerFileRescoring", @"SecondPassFDR", @"ModelDiagnostics" },
             (c, p) => true);
-        public static readonly OspreyArgument ARG_INPUT_SCORES = new OspreyArgument(@"input-scores",
-            () => @"<paths|dir>", (c, p) => true) { Variadic = true, ProcessVariadic = (c, toks) =>
-            {
-                // Accumulate across repeated --input-scores flags and re-resolve, matching the
-                // former switch exactly (Rust clap Vec<PathBuf>). ResolveInputScores expands a
-                // single directory and validates explicit paths.
-                var scorePaths = new List<string>();
-                if (c._config.InputScores != null)
-                    scorePaths.AddRange(c._config.InputScores);
-                scorePaths.AddRange(toks);
-                c._config.InputScores = Program.ResolveInputScores(scorePaths);
-                return true;
-            } };
+        // --input-scores is GONE. It named an input KIND - "you handed me parquets" - which is
+        // how the Rust pipeline said "Stage 1-4 is already done"; the C# port says that with
+        // --task plus the per-run validity sidecars, and two seams answering one question is
+        // what let --task ModelDiagnostics join the pipeline and demand state a diagnostics
+        // fold never publishes. Every task now takes -i and derives its parquets from the
+        // input stem, which is the direction every other sidecar already derives in.
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_HPC =
             new ArgumentGroup<OspreyCommandArgs>(() => @"Distributed / HPC", true,
-                ARG_TASK, ARG_INPUT_SCORES);
+                ARG_TASK);
 
         // --- Performance ------------------------------------------------------------------
         // OUTER vs INNER parallelism, kept deliberately separate. --parallel-files is the
@@ -324,7 +331,7 @@ namespace pwiz.Osprey
                     new ParaUsageBlock(@"EXAMPLES:"),
                     new ParaUsageBlock(@"  osprey -i sample.mzML -l library.tsv -o results.blib"),
                     new ParaUsageBlock(@"  osprey -i *.mzML -l library.tsv -o results.blib --resolution hram"),
-                    new ParaUsageBlock(@"HPC SPLIT (one node = one --task): see --task / --input-scores above."),
+                    new ParaUsageBlock(@"HPC SPLIT (one node = one --task): see --task above."),
                 };
             }
         }
@@ -456,6 +463,13 @@ namespace pwiz.Osprey
 
         private OspreyConfig ToConfig()
         {
+            // Expand --input-list BEFORE normalization, so a listed path is indistinguishable
+            // from one given with -i from here on. Appended in the order the lists were given,
+            // after any -i, because input ORDER is not decorative: FirstJoin is order-sensitive
+            // and the run's file indices follow this list.
+            foreach (string listPath in _inputListPaths)
+                _inputFiles.AddRange(ReadInputList(listPath));
+
             for (int i = 0; i < _inputFiles.Count; i++)
                 _inputFiles[i] = NormalizeInputPath(_inputFiles[i]);
             _config.InputFiles = _inputFiles;
@@ -556,6 +570,39 @@ namespace pwiz.Osprey
         /// then counts toward the bundle's own fingerprint, so the cache never matches
         /// the source it was built from and every run re-parses.
         /// </summary>
+        /// <summary>
+        /// Read one input path per line from <paramref name="listPath"/>, ignoring blank lines
+        /// and <c>#</c> comments. The bounded-command-line alternative to a 446-element
+        /// <c>-i</c>; see <see cref="ARG_INPUT_LIST"/>.
+        ///
+        /// <para>A missing or empty list is FATAL rather than an empty input set. Silently
+        /// searching zero files would look like a fast successful run and produce an empty
+        /// blib - the shape this codebase refuses everywhere else, and worse here because the
+        /// operator's whole cohort is named in the file that was not read.</para>
+        /// </summary>
+        private static IEnumerable<string> ReadInputList(string listPath)
+        {
+            if (string.IsNullOrEmpty(listPath) || !File.Exists(listPath))
+            {
+                throw new FileNotFoundException(string.Format(
+                    @"--input-list file not found: {0}", listPath), listPath);
+            }
+            var paths = new List<string>();
+            foreach (string rawLine in File.ReadAllLines(listPath))
+            {
+                string line = rawLine.Trim();
+                if (line.Length == 0 || line[0] == '#')
+                    continue;
+                paths.Add(line);
+            }
+            if (paths.Count == 0)
+            {
+                throw new InvalidDataException(string.Format(
+                    @"--input-list file names no inputs: {0}", listPath));
+            }
+            return paths;
+        }
+
         private static string NormalizeInputPath(string path)
         {
             if (string.IsNullOrEmpty(path))
@@ -752,23 +799,27 @@ namespace pwiz.Osprey
             sb.AppendLine(@"# split 1 - one process per mzML (writes &lt;stem&gt;.scores.parquet, &lt;stem&gt;.calibration.json beside each input)");
             sb.AppendLine(@"Osprey --task PerFileScoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
             sb.AppendLine();
-            sb.AppendLine(@"# join 1 - one process over ALL parquets (pass a directory so the order is deterministic)");
-            sb.AppendLine(@"Osprey --task FirstPassFDR --input-scores ./scores_dir -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
+            sb.AppendLine(@"# join 1 - one process over ALL runs (pass a sorted list so the order is deterministic)");
+            sb.AppendLine(@"Osprey --task FirstPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
             sb.AppendLine(@"#   writes beside each parquet: &lt;stem&gt;.1st-pass.fdr_scores.bin, &lt;stem&gt;.reconciliation.json");
             sb.AppendLine();
             sb.AppendLine(@"# split 2 - one process per file (parquet + its two sidecars co-located)");
-            sb.AppendLine(@"Osprey --task PerFileRescoring --input-scores s1.scores.parquet -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
+            sb.AppendLine(@"Osprey --task PerFileRescoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
             sb.AppendLine(@"#   writes: &lt;stem&gt;.scores-reconciled.parquet");
             sb.AppendLine();
-            sb.AppendLine(@"# join 2 - one process over ALL reconciled parquets (writes out.blib)");
-            sb.AppendLine(@"Osprey --task SecondPassFDR --input-scores ./reconciled_dir -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
+            sb.AppendLine(@"# join 2 - one process over ALL runs, reading their reconciled parquets (writes out.blib)");
+            sb.AppendLine(@"Osprey --task SecondPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
             sb.AppendLine(@"</pre>");
-            sb.AppendLine(@"<p><code>--input-scores</code> takes a directory (globbed and sorted internally) " +
-                @"or an explicit file list (used in the order given). FirstPassFDR reconciliation is " +
-                @"order-sensitive, so for <code>FirstPassFDR</code> and <code>SecondPassFDR</code> pass a directory or a deterministically sorted " +
-                @"list. The rehydration sidecars must travel with their parquet into each worker's " +
-                @"working directory. Let the scheduler do the fan-out (one file per split process) rather " +
-                @"than <code>--parallel-files</code>, which is the single-node multi-file mode.</p>");
+            sb.AppendLine(@"<p>EVERY task takes <code>-i</code>, naming the DATA files - the same names " +
+                @"the first split was given. A join task derives each run's parquet and sidecars from " +
+                @"the input stem, so the data file itself need not still exist: what has to be in the " +
+                @"worker's working directory (or under <code>--output-dir</code>) is that run's " +
+                @"artifacts. FirstPassFDR reconciliation is order-sensitive, so pass a " +
+                @"deterministically sorted list - <code>--input-list</code> takes one path per line and " +
+                @"is what a cohort past a few hundred runs needs, since <code>-i</code> spends the " +
+                @"command line at O(files). Let the scheduler do the fan-out (one file per split " +
+                @"process) rather than <code>--parallel-files</code>, which is the single-node " +
+                @"multi-file mode.</p>");
         }
 
         /// <summary>
@@ -782,6 +833,7 @@ namespace pwiz.Osprey
             private static readonly Dictionary<string, string> DESCRIPTIONS = new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 { @"input", @"Input mzML file(s)" },
+                { @"input-list", @"File of input paths, one per line (# comments ignored). Bounded alternative to a long -i list." },
                 { @"library", @"Spectral library (.tsv, .blib)" },
                 { @"output", @"Output blib file" },
                 { @"work-dir", @"Write derived artifacts AND the spectra cache here (so input data can be read-only); default: beside input" },
@@ -806,7 +858,6 @@ namespace pwiz.Osprey
                 { @"decoy-pairing-manifest", @"FDRBench 5-column pairing manifest (TSV), used with --decoys-in-library" },
                 { @"write-pin", @"Write PIN files for external tools" },
                 { @"task", @"HPC: run exactly one pipeline task (one node = one task). Omit for the full pipeline. SpectraCache stages the .spectra.bin caches; ModelDiagnostics regenerates only the --model-diagnostics report for a COMPLETED run, writing no other artifact." },
-                { @"input-scores", @"HPC: one or more .scores.parquet files, or a single directory (non-recursive). Mutex with --input." },
                 { @"parallel-files", @"Input files scored concurrently (OUTER). Absent: one at a time (default). No value: auto from free RAM and cores. <N>: exactly N regardless of RAM/cores. Distinct from --threads." },
                 { @"threads", @"Per-file main-search threads (INNER; default: all cores), divided across files run concurrently by --parallel-files" },
                 { @"timestamp", @"Prefix each output line with [yyyy/MM/dd HH:mm:ss]" },

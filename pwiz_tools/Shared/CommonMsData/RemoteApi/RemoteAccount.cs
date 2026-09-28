@@ -53,6 +53,10 @@ namespace pwiz.CommonMsData.RemoteApi
             }
         } 
         public bool HasAlias => !string.IsNullOrEmpty(_accountAlias);
+        public RemoteAccount ChangeAccountAlias(string accountAlias)
+        {
+            return ChangeProp(ImClone(this), im => im.AccountAlias = accountAlias);
+        }
         public bool CanHandleUrl(RemoteUrl remoteUrl)
         {
             if (remoteUrl.AccountType != AccountType)

@@ -67,7 +67,7 @@ namespace pwiz.Osprey.FDR
         /// cross-impl byte parity the winners must be reordered to the same base_id-sorted
         /// order Rust's compute_fdr_from_stubs uses before the fit.
         /// </summary>
-        internal static Dictionary<int, double> ComputePepWinnerMap(
+        internal static Dictionary<uint, double> ComputePepWinnerMap(
             double[] finalScores, bool[] labels, uint[] entryIds)
         {
             int n = finalScores.Length;
@@ -99,10 +99,14 @@ namespace pwiz.Osprey.FDR
             }
 
             var pepEstimator = PepEstimator.FitDefault(pepScores, pepIsDecoy);
-            var pepByWinnerIdx = new Dictionary<int, double>(nWinners);
+            // Keyed by the WINNER's entry_id, not by its row ordinal. PEP is one value per
+            // base_id, so the entry that won carries it and every observation of that entry
+            // reports it; keying by row made it a per-observation value that was real on one row
+            // and 1.0 on the rest, which is the materialized left-outer-join issue #4486 removed.
+            var pepByEntryId = new Dictionary<uint, double>(nWinners);
             foreach (int idx in winnerIndices)
-                pepByWinnerIdx[idx] = pepEstimator.PosteriorError(finalScores[idx]);
-            return pepByWinnerIdx;
+                pepByEntryId[entryIds[idx]] = pepEstimator.PosteriorError(finalScores[idx]);
+            return pepByEntryId;
         }
 
         /// <summary>

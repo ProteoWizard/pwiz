@@ -53,7 +53,7 @@ namespace pwiz.SkylineTestFunctional
             StartToolService();
 
             // No TestFilesZip is set for this test, so there is no TestFilesDir; use the (writable) test results
-            // folder for the document, the same way PrmMcpConnectorTest does.
+            // folder for the document.
             var savePath = TestContext.GetTestResultsPath(@"MyDocument.sky");
             // Start from a clean slate so the FIRST save has no file to replace (a leftover from an earlier run
             // would otherwise raise the replace-confirm box on the first save, before the test expects it).
@@ -63,7 +63,7 @@ namespace pwiz.SkylineTestFunctional
 
             // 1) First Save As: save to a name that does not exist yet -- no confirmation.
             McpConnector.ClickMainMenuItem(saveAsMenu);
-            var fileDialogId = WaitForNativeFileDialog();
+            var fileDialogId = WaitForNativeDlg<NativeFileDialog>().FormId;
             AssertComplete(McpConnector.SetFormValue(fileDialogId, @"FileName", savePath));
             AssertComplete(McpConnector.DismissWithAcceptButton(fileDialogId));
             WaitForCondition(() => !McpConnector.GetOpenForms().Any(form => form.IsNative));
@@ -81,9 +81,9 @@ namespace pwiz.SkylineTestFunctional
             fileDialogId = actionResult.FormId;
             Assert.IsNotNull(fileDialogId);
             Assert.AreEqual(modalNestingCount, GetModalNestingCount(fileDialogId));
-            // The id is reported as soon as the window exists, which is before the shell has shown the file-name
-            // field; typing into it in that window throws "The file dialog is still opening".
-            WaitForNativeFileDialogReady(fileDialogId);
+            // Set straight away, with no readiness wait of the test's own: a file dialog is not named in an
+            // ActionResult (nor listed by GetOpenForms) until the shell has brought it up (see NativeDialog.Create),
+            // and the set waits for the file-name field to be shown (see NativeFileDialog.EnterPath).
             AssertComplete(McpConnector.SetFormValue(fileDialogId, @"FileName", savePath));
             actionResult = McpConnector.DismissWithAcceptButton(fileDialogId);
             Assert.IsFalse(actionResult.Completed);

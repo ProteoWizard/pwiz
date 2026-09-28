@@ -149,7 +149,9 @@ namespace pwiz.Skyline.Model.Results
                 // All the chromatogram sets are loaded, and the cache has not been modified
                 if (Chromatograms.Contains(c => !c.IsLoaded))
                 {
-                    return @"Not all chromatogram sets are loaded - " + string.Join(@";", Chromatograms.Where(c => !c.IsLoaded).Select(i => i.IsLoadedExplained()));
+                    return @"Not all chromatogram sets are loaded - " +
+                           string.Join(@";", Chromatograms.Where(c => !c.IsLoaded).Select(i => i.IsLoadedExplained())) +
+                           ExplainUnloadedAgainstCache();
                 }
                 if (!IsJoiningDisabled)
                 {
@@ -160,6 +162,29 @@ namespace pwiz.Skyline.Model.Results
                 }
                 return null;
             }
+        }
+
+        /// <summary>
+        /// What the cache knows about the files that have no write time, for the explanation above.
+        /// Which file is missing a write time says WHAT is wrong; whether the cache holds that file
+        /// says WHY, and the two point at different halves of the import. A write time is filled in
+        /// from the cache, so "cached, no write time" is a document that never picked up what the
+        /// cache already had, while "not cached" is an import that never delivered the file.
+        /// <para>Worth carrying at the point of failure rather than reconstructing later: this
+        /// state has been seen about once in 6,000 executions, so a second occurrence is expensive
+        /// to wait for.</para>
+        /// </summary>
+        private string ExplainUnloadedAgainstCache()
+        {
+            var missingWriteTimes = Chromatograms.Where(c => !c.IsLoaded)
+                .SelectMany(c => c.MSDataFileInfos)
+                .Where(info => !info.FileWriteTime.HasValue)
+                // File name only - the full paths are already in the explanation this appends to
+                .Select(info => string.Format(@"{0} cached={1}", info.FilePath.GetFileName(), IsCachedFile(info.FilePath)));
+
+            return string.Format(@" [unloaded={0}, finalCache={1}, joiningDisabled={2}, {3}]",
+                _countUnloaded, _cacheFinal == null ? @"none" : _cacheFinal.CachePath,
+                IsJoiningDisabled, string.Join(@" ", missingWriteTimes));
         }
 
         public bool IsJoiningDisabled { get; private set; }

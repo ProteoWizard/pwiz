@@ -1227,7 +1227,10 @@ namespace pwiz.Skyline.Alerts
                 {
                     Address = tokenEndpoint,
                     ClientId = @"ardia.device.client.registration", // Hard coded for initial connection to get device registration
-                    DeviceCode = deviceAuthorizationResponse.DeviceCode
+                    // IdentityModel 7 annotates DeviceCode as nullable; a successful device
+                    // authorization always carries one, and passing it on unchanged keeps the
+                    // server's own error the one the user sees if it somehow did not.
+                    DeviceCode = deviceAuthorizationResponse.DeviceCode!
                 });
 
             if (!response.IsError)

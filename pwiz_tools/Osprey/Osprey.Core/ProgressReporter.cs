@@ -73,8 +73,18 @@ namespace pwiz.Osprey.Core
         /// the percent within the report interval and never reach the idle window, so no
         /// extra lines appear on them. Wider than <see cref="IO_INTERVAL_SECONDS"/> so it
         /// only trips on genuinely stalled-looking phases.
+        ///
+        /// <para>Held BELOW the 30 s gap that ai/scripts/perfviz.py flags as a reporting
+        /// stall, and deliberately not equal to it. At 30 s the two coincided, so any phase
+        /// slow enough to be heartbeat-driven rather than percent-driven parked exactly on
+        /// the diagnostic threshold: a 257-file CHS Stage 7 produced 34 gaps of 30-49 s, all
+        /// of them healthy work. That matters beyond tidiness - silence is how a hung run and
+        /// an OOM-killed one both look, so the heartbeat has to stay clear of the line that
+        /// says "this went quiet". Cohort size sets which regime a phase is in: the same
+        /// phase at 86 files advanced a whole percent every ~7 s and never reached the idle
+        /// window at all.</para>
         /// </summary>
-        public const double HEARTBEAT_SECONDS = 30.0;
+        public const double HEARTBEAT_SECONDS = 15.0;
 
         /// <summary>
         /// How long an operation must run before the reporter prints ANYTHING, heading included.

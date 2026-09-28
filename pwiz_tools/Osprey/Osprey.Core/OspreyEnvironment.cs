@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
  *
  * Copyright 2026 University of Washington - Seattle, WA
  *
@@ -79,6 +79,65 @@ namespace pwiz.Osprey.Core
         /// Used for calibration-only benchmarking and bisection.
         /// </summary>
         public static readonly bool ExitAfterCalibration = IsSet(@"OSPREY_EXIT_AFTER_CALIBRATION");
+
+        /// <summary>
+        /// Attribute the model-diagnostics co-assignment fold's allocation by call site and
+        /// report the totals when it finishes. Diagnostic only; it changes nothing the run
+        /// produces.
+        /// </summary>
+        public static readonly bool LogCoAssignmentAllocation = IsSet(@"OSPREY_LOG_COASSIGN_ALLOC");
+
+        /// <summary>
+        /// OSPREY_MDIAG_COASSIGN_ONLY=1: on <c>--task ModelDiagnostics</c>, skip the per-run fold
+        /// and build ONLY the peak co-assignment panel.
+        ///
+        /// <para>A measurement harness, not a product. On the 446-run CHS cohort the task takes
+        /// 63 minutes, of which the per-run fold is 54 and this panel is 8; skipping the fold
+        /// turns a one-hour iteration into about ten minutes, which is what makes questions
+        /// about the panel's memory answerable in a morning rather than a night.</para>
+        ///
+        /// <para>The report it leaves has every OTHER section empty, so it is written with no
+        /// validity key. An unstamped diagnostics product is refused by the render rather than
+        /// trusted, and the next real run regenerates it - which is what keeps a harness run
+        /// from being mistaken for, or overwriting, an answer.</para>
+        /// </summary>
+        public static readonly bool CoAssignmentPanelOnly = IsSet(@"OSPREY_MDIAG_COASSIGN_ONLY");
+
+        /// <summary>
+        /// OSPREY_LIBRARY_LOAD_ONLY=1: load the spectral library, report what that cost, and
+        /// exit 0 before decoys, scoring or anything else.
+        ///
+        /// <para>A measurement harness, like <see cref="CoAssignmentPanelOnly"/>. The library
+        /// load is the one phase every <c>--task</c> leg performs and each performs
+        /// DIFFERENTLY - <c>PerFileScoring</c> reads every fragment, <c>FirstPassFDR</c> reads
+        /// none (<c>OmitFragments</c>), <c>SecondPassFDR</c> reads only the retained set
+        /// (issue #4650) - so it is the one phase where the three can be compared directly.
+        /// Without this the comparison means running the legs themselves, which is hours on a
+        /// 446-run cohort and swamps a 10-second difference in noise.</para>
+        ///
+        /// <para>Exits BEFORE decoy handling deliberately. Decoy generation is its own cost
+        /// (~45 s on Astral at one file) and belongs to a different question; including it
+        /// would report the load as whatever the decoy arm happens to do on that leg.</para>
+        ///
+        /// <para>Writes NOTHING, so it cannot be mistaken for a run or overwrite one.</para>
+        /// </summary>
+        public static readonly bool LibraryLoadOnly = IsSet(@"OSPREY_LIBRARY_LOAD_ONLY");
+
+        /// <summary>
+        /// OSPREY_LOG_MEMORY=1: emit the post-GC <c>[MEM ...]</c> probes. Each one forces a
+        /// blocking <c>GC.Collect()/WaitForPendingFinalizers()/GC.Collect()</c> so the number it
+        /// reports is a true live set rather than a heap with uncollected garbage in it.
+        ///
+        /// <para><see cref="IsSetAndNotZero"/>, NOT <see cref="IsSet"/>, and the difference was
+        /// not academic. The dataset runners write <c>OSPREY_LOG_MEMORY=0</c> to mean OFF
+        /// (<c>OspreyDatasetRun.psm1</c>), and the previous <c>!IsNullOrEmpty</c> test read
+        /// <c>"0"</c> as SET - so every run through a runner had the probes on while its banner
+        /// said "memprobe : off ... no forced GCs". On the 446-run CHS cohort that is one forced
+        /// gen2 collection per file in the diagnostics fold, which flattens the very allocation
+        /// curve the fold is measured by: the measurement was changing what it measured, in the
+        /// phase whose flatness is the claim. Timings taken through a runner include that cost.</para>
+        /// </summary>
+        public static readonly bool LogMemory = IsSetAndNotZero(@"OSPREY_LOG_MEMORY");
 
         /// <summary>
         /// OSPREY_MZML_VIA_MZMLREADER=1: read mzML with the hand-written
@@ -167,12 +226,22 @@ namespace pwiz.Osprey.Core
         /// the legacy resident path OOMs -- so streaming is the production default and
         /// byte-identical to the legacy path (Stellar regression mode1/2/3). Set
         /// OSPREY_FDR_PROJECTION=0 ONLY to force the legacy <see cref="FdrEntry"/>-buffer
-        /// path as a transitional A/B / byte-identity oracle; that path (and this flag)
-        /// are slated for removal once model-diagnostics + FDRBench stream from the
-        /// persisted per-file scores. A settable property (not a readonly field) so
-        /// unit tests can A/B both paths.
+        /// path as a transitional A/B / byte-identity oracle. Model-diagnostics (#4505)
+        /// and FDRBench pass 1 (#4507) both stream from the persisted per-file scores
+        /// now, so no Percolator-framework run needs the legacy path; it still serves the
+        /// non-Percolator FdrMethods (Simple / Mokapot), which is what stands between it
+        /// and removal. A settable property (not a readonly field) so unit tests can A/B
+        /// both paths.
         /// </summary>
         public static bool UseFdrProjection { get; set; } = IsNotZero(@"OSPREY_FDR_PROJECTION");
+
+        /// <summary>
+        /// DIAGNOSTIC. <c>OSPREY_DROP_BETWEEN_TASKS=1</c> makes each task release every byproduct
+        /// but the library when it finishes, so the next task reloads what it needs from disk -
+        /// the dataflow an HPC chain gets for free from process boundaries. Default OFF; the
+        /// experiment reverts as a unit. See <c>PipelineContext.DropAllButLibrary</c>.
+        /// </summary>
+        public static bool DropBetweenTasks { get; set; } = IsSetAndNotZero(@"OSPREY_DROP_BETWEEN_TASKS");
 
         /// <summary>
         /// Stage 6 rebuilds each file's post-compaction survivors from that file's
@@ -189,6 +258,25 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static bool Stage6StreamSurvivors { get; set; } =
             IsNotZero(@"OSPREY_STAGE6_STREAM_SURVIVORS");
+
+        // OSPREY_STAGE7_STREAM was removed here on 2026-09-10 and the streamed join is the ONLY
+        // arm. It kept the resident Stage-7 join as an A/B byte-identity oracle - the role
+        // OSPREY_STAGE6_STREAM_SURVIVORS=0 still plays for the Stage 6 handoff - and went once
+        // that A/B was banked: the resident arm passed the whole regression against the
+        // committed golden at 1e-9, and the diagnostics HTML matched the streamed arm byte for
+        // byte apart from generatedUtc. A second arm kept alive only to keep it matching is a
+        // standing test cost against a report that is expected to keep moving. The measurement
+        // that argues for the streamed join moved with the decision, to
+        // ScoringTaskShared.CanStreamStage7Join, rather than being deleted along with the
+        // switch that no longer makes it.
+        //
+        // The NAME is still read, once, for the only thing a removed spelling owes: a caller who
+        // still sets it is refused at startup (Program.cs) rather than handed the streamed arm's
+        // numbers under the resident arm's name. That is the "reporting one arm's numbers as
+        // another's" case the env-var doctrine makes strict. IsSet, not a null test: an EMPTY
+        // value (a cleared `export`, a blanked CI parameter) reads as unset everywhere else in
+        // this class, and refusing it here would be the one predicate that disagrees.
+        public static readonly bool Stage7StreamRetiredSet = IsSet(@"OSPREY_STAGE7_STREAM");
 
         /// <summary>
         /// At the Stage 5 -> 6 boundary, drop <c>LibraryEntry.Fragments</c> for every library
@@ -394,16 +482,9 @@ namespace pwiz.Osprey.Core
         /// and map it to a q via the full pre-compaction 1st-pass score-&gt;q table.</summary>
         public const string PASS2_QVALUE_TRANSFER = @"transfer";
 
-        /// <summary>The <see cref="Pass2QValue"/> transfer-with-competition mode: score the
-        /// reconciled targets+decoys with the FROZEN 1st-pass model (no retrain), then
-        /// recompute q + PEP by a fresh target-decoy competition over that full reconciled
-        /// population (a non-depleted null) -- i.e. the frozen weights feed the standard
-        /// competition q/PEP math instead of a co-monotone score->q table lookup.</summary>
-        public const string PASS2_QVALUE_TRANSFER_COMPETE = @"transfer-compete";
-
-        /// <summary>The <see cref="Pass2QValue"/> protein-anchored constrained mode: like
-        /// <see cref="PASS2_QVALUE_TRANSFER_COMPETE"/> (frozen 1st-pass model, no retrain),
-        /// but the target-decoy competition is CONSTRAINED to the peptides of proteins
+        /// <summary>The <see cref="Pass2QValue"/> protein-anchored constrained mode: the FROZEN
+        /// 1st-pass model (no retrain), with the target-decoy competition CONSTRAINED to the
+        /// peptides of proteins
         /// detected in the 1st pass -- included as target+decoy PAIRS so the stratum's null
         /// stays fair. Removing off-stratum decoys from the null lowers q for stratum
         /// members (reduced multiple testing / independent filtering; Bourgon 2010), which
@@ -465,14 +546,26 @@ namespace pwiz.Osprey.Core
         /// Unset normalizes to the default; an unrecognized value is a startup ERROR (see
         /// <see cref="Pass2QValueUnrecognized"/>). Read once at process start.
         ///
-        /// The former default <c>percolator</c> - retrain the 2nd-pass Percolator SVM and
-        /// recompute a target/decoy null on the reconciled + COMPACTED pool - was REMOVED, not
-        /// merely demoted. Compaction strips most decoys from that pool, so the retrained null
-        /// is thin and the reported q anti-conservative: 1.57% true FDP at a nominal 1% on
-        /// Stellar libdecoy entrapment (vs 0.92% for the 1st-pass q), and ~9% on an 82-file
-        /// SEA-AD set. The linear model trained by the 1st-pass SVM is now the model for pass 2
-        /// in every mode; only the <see cref="Pass2ProteinCompactRetrain"/> diagnostic A/B still
-        /// retrains. See ai/todos/active/TODO-20260710_osprey_pass2_recalibration_fix.md.
+        /// SECOND-PASS RETRAINING IS GONE, and these two modes are what remain. The former
+        /// default <c>percolator</c> - retrain the 2nd-pass Percolator SVM and recompute a
+        /// target/decoy null on the reconciled + COMPACTED pool - was REMOVED, not merely
+        /// demoted. Compaction strips most decoys from that pool, so the retrained null is thin
+        /// and the reported q anti-conservative: 1.57% true FDP at a nominal 1% on Stellar
+        /// libdecoy entrapment (vs 0.92% for the 1st-pass q), and ~9% on an 82-file SEA-AD set.
+        /// The <c>OSPREY_PROTEIN_COMPACT_RETRAIN</c> A/B toggle that reached it followed. So did
+        /// <c>transfer-compete</c>, for a related but distinct reason: its competition ran over a
+        /// TARGET-CONDITIONED subset - survivors chosen by target per-run q, decoys admitted only
+        /// by base_id pairing - which strips decoys that WON the 1st-pass competition and so
+        /// improves pass-2 q with no added evidence. Measured 1.96% true FDP at a nominal 1% on
+        /// 82-file SEA-AD against 1.53% for the default, with fewer ids: dominated on both axes.
+        /// See issues #4484 (closed) and #4581 (open, the same bias in the surviving default), and
+        /// docs/12-second-pass-fdr.md, "Why a second-pass null is a problem".
+        ///
+        /// The consequence worth naming, because it simplifies everything downstream: THERE IS
+        /// NO SECOND-PASS MODEL. The linear model the 1st-pass SVM trained is the model for
+        /// pass 2, unchanged - only the score DISTRIBUTIONS differ, because pass 2 runs on a
+        /// subset. Anything that used to ask a retrained pass-2 model for its weights can read
+        /// the frozen ones instead.
         ///
         /// Switching modes within one output directory is now SAFE: the mode participates in
         /// the resume validity key through <see cref="Pass2QValueValidityKeySuffix()"/>, so a
@@ -498,28 +591,41 @@ namespace pwiz.Osprey.Core
         public static readonly bool Pass2TransferQ =
             string.Equals(Pass2QValue, PASS2_QVALUE_TRANSFER, StringComparison.Ordinal);
 
-        /// <summary>True when <see cref="Pass2QValue"/> selects the frozen-model +
-        /// target-decoy competition path (OSPREY_PASS2_QVALUE=transfer-compete).</summary>
-        public static readonly bool Pass2TransferCompete =
-            string.Equals(Pass2QValue, PASS2_QVALUE_TRANSFER_COMPETE, StringComparison.Ordinal);
-
         /// <summary>True when <see cref="Pass2QValue"/> selects the protein-anchored
         /// constrained competition (OSPREY_PASS2_QVALUE=protein-compact).</summary>
         public static readonly bool Pass2ProteinCompact =
             string.Equals(Pass2QValue, PASS2_QVALUE_PROTEIN_COMPACT, StringComparison.Ordinal);
 
-        /// <summary>Diagnostic A/B toggle (OSPREY_PROTEIN_COMPACT_RETRAIN): when set with
-        /// OSPREY_PASS2_QVALUE=protein-compact, SKIP the frozen 1st-pass model + stratum
-        /// competition and instead RETRAIN the 2nd-pass Percolator over the same
-        /// stratum-expanded compacted pool. Isolates the frozen-vs-retrain FDR-calibration
-        /// difference (same reported set, only the 2nd-pass scoring changes) for the
-        /// FDRBench/entrapment oracle. Off (frozen) by default.</summary>
-        public static readonly bool Pass2ProteinCompactRetrain =
-            IsSetAndNotZero(@"OSPREY_PROTEIN_COMPACT_RETRAIN");
+        /// <summary>
+        /// OSPREY_PASS2_VERIFY_WORKER: re-run the per-file second-pass competition inside Stage 7
+        /// and assert it against the answer the rescore worker wrote (issue #4486). A TEST
+        /// INSTRUMENT, off by default.
+        ///
+        /// <para><b>Why it is not always on.</b> The recompute re-reads each file's 1st-pass
+        /// sidecar and re-runs the frozen rescore - measured at 82 files as 9.2 GB of re-reads
+        /// against the 2.8 GB the join actually needs, inside an 860.8 s Stage 7. That is
+        /// precisely the cost #4486 exists to remove, so leaving it on would hide the whole gain
+        /// behind a check of the code that produces it.</para>
+        ///
+        /// <para><b>What it is and is not.</b> Both sides call the SAME
+        /// <c>StreamingFdr.CompeteOneFile</c>, so this verifies that the worker's inputs and the
+        /// transmission of its answer agree - it cannot see a defect INSIDE that function, where
+        /// both sides would be wrong together. It is also blind to the artifact's POPULATION: a
+        /// gap-fill never competes, so dropping one changes no competition map, which is why 594
+        /// dropped records once passed this check and surfaced only in a diagnostics golden. The
+        /// population and order are covered instead by
+        /// <c>Pass2FdrSidecar.AssertSidecarDescribesPool</c>, which is cheap and always on.</para>
+        ///
+        /// <para>Deliberately NOT in any validity key: it changes no output, so including it
+        /// would invalidate every cached artifact the moment it was flipped, turning a
+        /// diagnostic into a re-run.</para>
+        /// </summary>
+        public static readonly bool Pass2VerifyWorker =
+            IsSetAndNotZero(@"OSPREY_PASS2_VERIFY_WORKER");
 
         /// <summary>
         /// OSPREY_ALLOW_UNFIXED_RESIDENT: name the known-unfixed resident path(s) this run may
-        /// take, e.g. <c>OSPREY_ALLOW_UNFIXED_RESIDENT=fdrbench-pass1</c>. Legal values are
+        /// take, e.g. <c>OSPREY_ALLOW_UNFIXED_RESIDENT=projection-off</c>. Legal values are
         /// exactly <see cref="ResidentPaths.KNOWN_UNFIXED"/>; anything else, and any resident path
         /// that is not on that list, is refused no matter what this is set to.
         ///
@@ -948,8 +1054,6 @@ namespace pwiz.Osprey.Core
             string v = raw.Trim().ToLowerInvariant();
             if (v == PASS2_QVALUE_TRANSFER)
                 return PASS2_QVALUE_TRANSFER;
-            if (v == PASS2_QVALUE_TRANSFER_COMPETE)
-                return PASS2_QVALUE_TRANSFER_COMPETE;
             if (v == PASS2_QVALUE_PROTEIN_COMPACT)
                 return PASS2_QVALUE_PROTEIN_COMPACT;
             // An unrecognized token normalizes to the default only so the other statics are
@@ -963,8 +1067,7 @@ namespace pwiz.Osprey.Core
             if (string.IsNullOrWhiteSpace(raw))
                 return false;
             string v = raw.Trim().ToLowerInvariant();
-            return v != PASS2_QVALUE_TRANSFER &&
-                   v != PASS2_QVALUE_TRANSFER_COMPETE && v != PASS2_QVALUE_PROTEIN_COMPACT;
+            return v != PASS2_QVALUE_TRANSFER && v != PASS2_QVALUE_PROTEIN_COMPACT;
         }
 
         private static int ParseIntOrZero(string name)
@@ -1008,7 +1111,12 @@ namespace pwiz.Osprey.Core
             return Environment.GetEnvironmentVariable(name) != @"0";
         }
 
-        private static bool IsSetAndNotZero(string name)
+        /// <summary>
+        /// Set to anything but <c>0</c>. Internal rather than private so a test can pin the
+        /// distinction from <see cref="IsSet"/>: the runners write <c>=0</c> to mean off, and a
+        /// flag that reaches for <see cref="IsSet"/> turns ON for it (issue #4673).
+        /// </summary>
+        internal static bool IsSetAndNotZero(string name)
         {
             string v = Environment.GetEnvironmentVariable(name);
             return !string.IsNullOrEmpty(v) && v != @"0";

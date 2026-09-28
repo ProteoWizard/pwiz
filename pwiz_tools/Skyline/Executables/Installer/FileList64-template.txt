@@ -292,7 +292,7 @@ System.Reflection.Emit.Lightweight.dll
 System.Runtime.Caching.Generic.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 System.Runtime.CompilerServices.Unsafe.dll
 System.Text.Encodings.Web.dll
-System.Text.Json.dll
+System.Text.Json.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 ThermoFisher.CommonCore.Data.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 ThermoFisher.CommonCore.RawFileReader.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 timsdata.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)

@@ -86,7 +86,7 @@ namespace pwiz.Osprey.Tasks
 
         public void Accept(int fileIdx, int rowIdx, uint entryId, bool isDecoy,
             byte charge, string peptide, double score, double experimentAggregateScore,
-            in FdrQValues q)
+            double apexRt, in FdrQValues q)
         {
             // Tail [COUNT] tally, identical to the retired inline block: passing =
             // EffectiveRunQvalue <= RunFdr, split target/decoy; best-q-per-precursor
@@ -115,7 +115,8 @@ namespace pwiz.Osprey.Tasks
             if (_mdiagAccumulator != null)
                 _mdiagAccumulator.Add(fileIdx, peptide, charge, entryId, isDecoy, score, in q);
 
-            AcceptOutput(fileIdx, rowIdx, entryId, isDecoy, score, experimentAggregateScore, in q);
+            AcceptOutput(fileIdx, rowIdx, entryId, isDecoy, score, experimentAggregateScore,
+                apexRt, in q);
         }
 
         public void Finish(Action<string> logInfo)
@@ -148,9 +149,10 @@ namespace pwiz.Osprey.Tasks
                 _passLabel, _bestQByPrecursor.Count));
         }
 
-        /// <summary>Handle one row's q-value output (park it, or stream it to the sidecar).</summary>
+        /// <summary>Handle one row's persisted output (park it, or stream it to the sidecar).</summary>
         protected abstract void AcceptOutput(int fileIdx, int rowIdx, uint entryId,
-            bool isDecoy, double score, double experimentAggregateScore, in FdrQValues q);
+            bool isDecoy, double score, double experimentAggregateScore, double apexRt,
+            in FdrQValues q);
 
         /// <summary>Flush any deferred per-file output before the [COUNT] tally is logged.</summary>
         protected virtual void OnFinish()
@@ -159,39 +161,63 @@ namespace pwiz.Osprey.Tasks
     }
 
     /// <summary>
-    /// 1st-pass sink (issue #4355 struct-shrink S2, two-phase sidecar): streams ALL of the
-    /// score pass's per-row output straight to disk -- it keeps NO resident q-value array.
-    /// During the score pass (phase 1) it buffers each file's 60-byte
-    /// <see cref="FdrScoreRecord"/>s in projection order -- with the
-    /// <c>experiment_protein_qvalue</c> field held at its 1.0 placeholder -- and flushes the
+    /// 1st-pass sink (issue #4355 struct-shrink S2): streams ALL of the score pass's per-row
+    /// output straight to disk -- it keeps NO resident q-value array. It buffers each file's
+    /// 36-byte RUN-scope <see cref="FdrScoreRecord"/>s in projection order and flushes the
     /// per-file <c>.1st-pass.fdr_scores.bin</c> via the caller's <c>flushPartial</c>
     /// callback at the file's last row, so a full pass's worth of q-values is never held
     /// resident (one file's buffer at a time). Empty survivor files are flushed with a
-    /// 0-record sidecar in <see cref="OnFinish"/>. First-pass protein FDR + compaction now
-    /// stream <c>run_peptide_qvalue</c> / <c>experiment_protein_qvalue</c> back off this sidecar
+    /// 0-record sidecar in <see cref="OnFinish"/>. First-pass protein FDR + compaction
+    /// stream <c>run_peptide_qvalue</c> back off this sidecar
     /// (see <c>FirstPassFdrTask.RunFirstPassProteinFdrStreaming</c>), so the resident
-    /// <c>FdrProjectionOutputs</c> array the pre-S2 sink kept is gone; protein FDR patches
-    /// each record's <c>[52..60]</c> straight onto the sidecar. The byte layout is
-    /// single-sourced through <c>FdrScoresSidecar.WriteRecord</c>, so the phase-1 file is
-    /// byte-identical to the pre-S1 single-phase write except for the placeholder column the
-    /// patch overwrites.
+    /// <c>FdrProjectionOutputs</c> array the pre-S2 sink kept is gone.
+    ///
+    /// <para>The row's EXPERIMENT-scope values go to the <c>experiment</c> accumulator instead
+    /// of into the per-file record (format v5, issue #4486): they are one value per distinct
+    /// entry_id for the whole analysis, so the accumulator collapses them and the caller writes
+    /// them once to <see cref="FdrExperimentSidecar"/>. That is what makes THIS file immutable -
+    /// there is no longer a value in it that the score pass cannot know, so the two-phase
+    /// write-then-patch it used to need for <c>experiment_protein_qvalue</c> is gone.</para>
     /// </summary>
     internal sealed class FdrStoringSink : FdrProjectionSinkBase
     {
         private readonly Func<string, IReadOnlyList<FdrScoreRecord>, int> _flushPartial;
+        private readonly FdrExperimentAccumulator _experiment;
         private readonly bool[] _flushed;
+        private readonly bool[] _writtenElsewhere;
         private readonly List<FdrScoreRecord> _buffer;
         private int _partialWriteFailures;
 
         public FdrStoringSink(
             FdrProjectionSet projections, OspreyConfig config, string passLabel,
             Func<string, IReadOnlyList<FdrScoreRecord>, int> flushPartial,
+            FdrExperimentAccumulator experiment,
             ModelDiagnosticsData.Accumulator mdiagAccumulator = null)
             : base(projections, config, passLabel, mdiagAccumulator)
         {
             _flushPartial = flushPartial;
+            _experiment = experiment;
             _flushed = new bool[projections.PerFile.Count];
+            _writtenElsewhere = new bool[projections.PerFile.Count];
             _buffer = new List<FdrScoreRecord>();
+        }
+
+        /// <summary>
+        /// Record that this file's <c>.1st-pass.fdr_scores.bin</c> is already on disk, so this
+        /// sink neither buffers its records nor writes it. Two callers, one meaning:
+        /// pass 1 as it flushes each file it scored, and the resume gate for a file adopted
+        /// from an earlier run.
+        ///
+        /// <para>Not an optimization - a correctness requirement. These sidecars are write-once
+        /// (<c>FdrScoresSidecar</c> fails hard on a second write in one run), because a file
+        /// rewritten after it was stamped no longer matches the validity marker attesting it.
+        /// The rows still flow through <see cref="AcceptOutput"/>, which is what keeps the
+        /// experiment accumulator, the [COUNT] tally and the diagnostics report covering every
+        /// row whether its score was computed here or read back.</para>
+        /// </summary>
+        public void MarkSidecarWritten(int fileIdx)
+        {
+            _writtenElsewhere[fileIdx] = true;
         }
 
         /// <summary>
@@ -203,27 +229,39 @@ namespace pwiz.Osprey.Tasks
         public int PartialWriteFailures => _partialWriteFailures;
 
         protected override void AcceptOutput(int fileIdx, int rowIdx, uint entryId,
-            bool isDecoy, double score, double experimentAggregateScore, in FdrQValues q)
+            bool isDecoy, double score, double experimentAggregateScore, double apexRt,
+            in FdrQValues q)
         {
-            // Phase 1 of the two-phase sidecar: buffer this row's PARTIAL record
-            // (experiment_protein_qvalue = 1.0 placeholder) in projection order and flush the
-            // per-file .1st-pass.fdr_scores.bin at the file's last row. All five score-pass
-            // q-values (incl. run_peptide_qvalue) go straight to disk here and are never
-            // kept resident; first-pass protein FDR streams them back + patches [52..60].
-            // experiment_aggregate_score [60..68] is final at write time - unlike
-            // experiment_protein_qvalue it comes from the score pass, so it needs no patch phase.
-            _buffer.Add(new FdrScoreRecord(
-                entryId, score,
-                q.RunPrecursorQvalue, q.RunPeptideQvalue,
+            // Buffer this row's RUN-scope record in projection order and flush the per-file
+            // .1st-pass.fdr_scores.bin at the file's last row. Every column of it is final
+            // here, so the file is written once and never revisited. Skipped entirely for a
+            // file whose sidecar is already on disk - written by pass 1 or by an earlier run -
+            // which is the streaming path's normal case; the resident path still writes here.
+            bool ownsWrite = !_writtenElsewhere[fileIdx];
+            if (ownsWrite)
+            {
+                _buffer.Add(new FdrScoreRecord(
+                    entryId, score,
+                    q.RunPrecursorQvalue, q.RunPeptideQvalue, apexRt));
+            }
+
+            // The EXPERIMENT-scope values collapse to one record per distinct entry_id. The
+            // protein q is the one that is not known yet - it needs the pooled parsimony +
+            // picked-protein FDR that runs after this pass - so it goes in at its 1.0 default
+            // and RunFirstPassProteinFdrStreaming replaces it before the file is written. That
+            // is a single 0.44 GB map being finished in memory, not 52.3 GB of sidecars being
+            // rewritten on disk, which is what the placeholder-plus-patch used to cost.
+            _experiment.Add(entryId,
                 q.ExperimentPrecursorQvalue, q.ExperimentPeptideQvalue,
-                q.Pep, 1.0, experimentAggregateScore));
+                1.0, experimentAggregateScore, q.Pep);
 
             // RowCount, not PerFile[fileIdx].Value.Count: on the 1st-pass streaming path the
             // projection carries per-file counts but NO resident rows (issue #4355 struct-shrink
             // S3 Stage B), so the last-row flush must key on the count, not an empty row list.
             if (rowIdx == Projections.RowCount(fileIdx) - 1)
             {
-                _partialWriteFailures += _flushPartial(Projections.PerFile[fileIdx].Key, _buffer);
+                if (ownsWrite)
+                    _partialWriteFailures += _flushPartial(Projections.PerFile[fileIdx].Key, _buffer);
                 _flushed[fileIdx] = true;
                 _buffer.Clear();
             }
@@ -239,38 +277,50 @@ namespace pwiz.Osprey.Tasks
             var empty = Array.Empty<FdrScoreRecord>();
             for (int f = 0; f < perFile.Count; f++)
             {
-                if (!_flushed[f])
-                {
-                    // A file with recorded rows that never reached its last-row flush means the
-                    // 1st-pass streaming score pass emitted fewer rows than the counts-only producer
-                    // recorded (the two independent parquet reads disagreed). Writing a 0-record
-                    // sidecar here would silently corrupt .1st-pass.fdr_scores.bin, so fail loud.
-                    if (Projections.RowCount(f) > 0)
-                        throw new InvalidOperationException(string.Format(
-                            @"First-pass sidecar flush for '{0}' never fired: {1} rows were recorded but " +
-                            @"the score pass emitted fewer -- the parquet row count is inconsistent.",
-                            perFile[f].Key, Projections.RowCount(f)));
-                    _partialWriteFailures += _flushPartial(perFile[f].Key, empty);
-                    _flushed[f] = true;
-                }
+                if (_flushed[f])
+                    continue;
+                // A file with recorded rows that never reached its last-row flush means the
+                // 1st-pass streaming score pass emitted fewer rows than the counts-only producer
+                // recorded (the two independent parquet reads disagreed). Writing a 0-record
+                // sidecar here would silently corrupt .1st-pass.fdr_scores.bin, so fail loud.
+                // Checked whoever owns the write: an emitted-row shortfall is a corrupt sidecar
+                // either way, and the row walk that detects it runs on every path.
+                if (Projections.RowCount(f) > 0)
+                    throw new InvalidOperationException(string.Format(
+                        @"First-pass sidecar flush for '{0}' never fired: {1} rows were recorded but " +
+                        @"the score pass emitted fewer -- the parquet row count is inconsistent.",
+                        perFile[f].Key, Projections.RowCount(f)));
+                // A 0-row file produces no Accept call at all, so pass 1 is the only thing that
+                // could have written its empty sidecar. Where it did, writing again would be the
+                // forbidden second write.
+                if (_writtenElsewhere[f])
+                    continue;
+                _partialWriteFailures += _flushPartial(perFile[f].Key, empty);
+                _flushed[f] = true;
             }
         }
     }
 
     /// <summary>
     /// 2nd-pass sink (issue #4355 struct-shrink S0, delivers C1): assembles each
-    /// <see cref="FdrScoreRecord"/> during the score pass from the streamed q-values +
-    /// the survivor's <c>ExperimentProteinQvalue</c> looked up by entry_id (it is no longer
-    /// carried on the lean struct), buffers one file at a time in projection order, and
-    /// flushes the per-file <c>.2nd-pass.fdr_scores.bin</c> directly via the caller's
-    /// <c>flushFile</c> callback -- so the q-values are NEVER stored on the projection
-    /// (2nd-pass peak 80 -> 32 B). Empty survivor files are flushed with a 0-record
-    /// sidecar in <see cref="OnFinish"/>, matching the resident write block.
+    /// <see cref="FdrScoreRecord"/> during the score pass from the streamed q-values,
+    /// buffers one file at a time in projection order, and flushes the per-file
+    /// <c>.2nd-pass.fdr_scores.bin</c> directly via the caller's <c>flushFile</c> callback --
+    /// so the q-values are NEVER stored on the projection (2nd-pass peak 80 -> 32 B). Empty
+    /// survivor files are flushed with a 0-record sidecar in <see cref="OnFinish"/>, matching
+    /// the resident write block.
+    ///
+    /// <para>The row's EXPERIMENT-scope values go to the <c>experiment</c> accumulator rather
+    /// than into the per-file record (format v5, issue #4486), including the survivor's
+    /// <c>ExperimentProteinQvalue</c> that <c>resolveProteinQ</c> supplies per file - it is
+    /// still looked up by entry_id here, because the lean struct does not carry it, but it now
+    /// lands in the analysis-wide record instead of once per run.</para>
     /// </summary>
     internal sealed class FdrStreamingSink : FdrProjectionSinkBase
     {
         private readonly Func<string, IReadOnlyDictionary<uint, double>> _resolveProteinQ;
         private readonly Action<string, IReadOnlyList<FdrScoreRecord>> _flushFile;
+        private readonly FdrExperimentAccumulator _experiment;
         private readonly bool[] _flushed;
         private readonly List<FdrScoreRecord> _buffer;
         private int _curFileIdx;
@@ -279,18 +329,21 @@ namespace pwiz.Osprey.Tasks
         public FdrStreamingSink(
             FdrProjectionSet projections, OspreyConfig config, string passLabel,
             Func<string, IReadOnlyDictionary<uint, double>> resolveProteinQ,
-            Action<string, IReadOnlyList<FdrScoreRecord>> flushFile)
+            Action<string, IReadOnlyList<FdrScoreRecord>> flushFile,
+            FdrExperimentAccumulator experiment)
             : base(projections, config, passLabel)
         {
             _resolveProteinQ = resolveProteinQ;
             _flushFile = flushFile;
+            _experiment = experiment;
             _flushed = new bool[projections.PerFile.Count];
             _buffer = new List<FdrScoreRecord>();
             _curFileIdx = -1;
         }
 
         protected override void AcceptOutput(int fileIdx, int rowIdx, uint entryId,
-            bool isDecoy, double score, double experimentAggregateScore, in FdrQValues q)
+            bool isDecoy, double score, double experimentAggregateScore, double apexRt,
+            in FdrQValues q)
         {
             // Resolve this file's entry_id -> ExperimentProteinQvalue map once, at its first
             // row (rows are contiguous per file in Accept order). This is the value
@@ -307,9 +360,10 @@ namespace pwiz.Osprey.Tasks
 
             _buffer.Add(new FdrScoreRecord(
                 entryId, score,
-                q.RunPrecursorQvalue, q.RunPeptideQvalue,
+                q.RunPrecursorQvalue, q.RunPeptideQvalue, apexRt));
+            _experiment.Add(entryId,
                 q.ExperimentPrecursorQvalue, q.ExperimentPeptideQvalue,
-                q.Pep, experimentProteinQvalue, experimentAggregateScore));
+                experimentProteinQvalue, experimentAggregateScore, q.Pep);
 
             // Last row of this file: flush its sidecar and release the buffer. RowCount
             // (not the row list) so the 2nd-pass resident projection and the 1st-pass

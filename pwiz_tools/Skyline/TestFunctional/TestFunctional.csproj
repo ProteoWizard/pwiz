@@ -288,6 +288,7 @@
     <Compile Include="SpectrumFilterImportErrorTest.cs" />
     <Compile Include="SpectrumFilterTransitionListTest.cs" />
     <Compile Include="SpectrumRetentionTimeAlignmentTest.cs" />
+    <Compile Include="SpectrumSequenceRulerTest.cs" />
     <Compile Include="SurrogateCalibrationCurveTest.cs" />
     <Compile Include="TestPanoramaClient.cs" />
     <Compile Include="SkydFileModifiedTest.cs" />
@@ -296,7 +297,9 @@
     <Compile Include="EditSpectrumFilterTest.cs" />
     <Compile Include="DiannSearchTest.cs" />
     <Compile Include="EncyclopeDiaSearchTest.cs" />
+    <Compile Include="FileProgressStaleStatusTest.cs" />
     <Compile Include="UnalignedRetentionTimesTest.cs" />
+    <Compile Include="UnattendedDialogTimeoutTest.cs" />
     <Compile Include="UnreadableBlibTest.cs" />
     <Compile Include="RemoveSmallMoleculeLabelTypeTest.cs" />
     <Compile Include="StartPageInsertTransitionListTest.cs" />
@@ -483,7 +486,6 @@
     <Compile Include="SetFormValueMcpConnectorTest.cs" />
     <Compile Include="SetGridTextMcpConnectorTest.cs" />
     <Compile Include="SetItemMcpConnectorTest.cs" />
-    <Compile Include="PrmMcpConnectorTest.cs" />
     <Compile Include="RunCommandMcpConnectorTest.cs" />
     <Compile Include="ProteinMetadataFunctionalTest.cs" />
     <Compile Include="ProteinMetadataBackgroundLoaderTest.cs" />
@@ -559,6 +561,7 @@
     <Compile Include="UpdateGlobalStandardTest.cs" />
     <Compile Include="UpgradeTest.cs" />
     <Compile Include="VolcanoPlotFormattingTest.cs" />
+    <Compile Include="ZeroLengthSpectraTest.cs" />
     <Compile Include="ZeroLengthSrmChromatogramTest.cs" />
   </ItemGroup>
   <ItemGroup>

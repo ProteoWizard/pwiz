@@ -30,7 +30,7 @@ namespace pwiz.Osprey.Core
     /// An entry in the FDR results table with q-values at multiple levels.
     /// Maps to osprey-core/src/types.rs FdrEntry.
     /// </summary>
-    public class FdrEntry
+    public class FdrEntry : IFdrRow
     {
         /// <summary>
         /// The canonical survivor order - (EntryId, Charge, ScanNumber, ParquetIndex) - that
@@ -55,11 +55,77 @@ namespace pwiz.Osprey.Core
             c = a.ScanNumber.CompareTo(b.ScanNumber);
             if (c != 0)
                 return c;
-            return a.ParquetIndex.CompareTo(b.ParquetIndex);
+            // Unresolved (null) sorts LAST, matching what the uint.MaxValue sentinel did
+            // before this field became nullable. Nullable<uint>'s DEFAULT ordering puts null
+            // first, so taking it would silently reverse the position of exactly the rows this
+            // change touches - gap-fill awaiting its score_index. Stating it here keeps the
+            // conversion output-neutral by construction, so the golden gate tests the change
+            // rather than an ordering artifact.
+            return CompareParquetIndex(a.ParquetIndex, b.ParquetIndex);
         };
 
+        /// <summary>
+        /// <see cref="CANONICAL_ORDER"/> as an <see cref="IComparer{T}"/>, for the stable
+        /// <c>OrderBy</c> that callers must use wherever ties are expected. Held as a static so
+        /// a sort in a per-file loop does not allocate a comparer per call.
+        /// </summary>
+        public static readonly IComparer<FdrEntry> CANONICAL_COMPARER =
+            Comparer<FdrEntry>.Create(CANONICAL_ORDER);
+
+        /// <summary>
+        /// Order two <see cref="ParquetIndex"/> values with UNRESOLVED (null) LAST.
+        ///
+        /// <para>Nullable&lt;uint&gt;'s default ordering puts null FIRST, while the
+        /// <c>uint.MaxValue</c> sentinel this replaced sorted last. Every comparator that
+        /// tie-breaks on this field routes through here so the rule is stated once and the
+        /// conversion stays output-neutral.</para>
+        /// </summary>
+        public static int CompareParquetIndex(uint? a, uint? b)
+        {
+            if (!a.HasValue)
+                return b.HasValue ? 1 : 0;
+            if (!b.HasValue)
+                return -1;
+            return a.Value.CompareTo(b.Value);
+        }
+
+        /// <summary>
+        /// Sort one file's list by <see cref="CANONICAL_ORDER"/>, first verifying that every
+        /// row's <see cref="ParquetIndex"/> is resolved. The unstable <c>List.Sort</c> is only
+        /// safe here because the terminal key is unique per file, and an unresolved row is
+        /// exactly the state that silently broke that claim while the field was a sentinel
+        /// (#4486) - so after the readers were fixed to resolve every row, a null here is a
+        /// coding defect and fails loudly rather than sorting into an order that depends on
+        /// tie handling.
+        /// </summary>
+        public static void SortCanonicalResolved(List<FdrEntry> entries, string fileName)
+        {
+            foreach (var entry in entries)
+            {
+                if (!entry.ParquetIndex.HasValue)
+                {
+                    throw new InvalidOperationException(string.Format(
+                        @"Canonical sort for '{0}': entry_id {1} has no resolved ParquetIndex, " +
+                        @"so the sort's per-file uniqueness invariant does not hold.",
+                        fileName, entry.EntryId));
+                }
+            }
+            entries.Sort(CANONICAL_ORDER); // Array.Sort OK: the loop above verified every ParquetIndex resolved, so the terminal key is unique per file and the comparison never ties
+        }
+
         public uint EntryId { get; set; }
-        public uint ParquetIndex { get; set; }
+        /// <summary>
+        /// Row ordinal in the file's Stage 4 <c>.scores.parquet</c>, or <c>null</c> for a row
+        /// that has none - a gap-fill row synthesized during reconciliation, before the
+        /// reconciled-parquet writer numbers it past the source row count.
+        ///
+        /// <para>Nullable rather than a <c>uint.MaxValue</c> sentinel so "no Stage 4 row" is a
+        /// state the compiler can see. The sentinel made three different things look like the
+        /// same number: an ordinal, an absence, and a sort key - and the sorts in
+        /// <c>PerFileRescoreTask</c> documented a uniqueness invariant the sentinel silently
+        /// broke, since every gap-fill row carried the identical value (#4486).</para>
+        /// </summary>
+        public uint? ParquetIndex { get; set; }
         public bool IsDecoy { get; set; }
         public byte Charge { get; set; }
         public uint ScanNumber { get; set; }
@@ -202,42 +268,6 @@ namespace pwiz.Osprey.Core
             ExperimentPeptideQvalue = 1.0;
             ExperimentProteinQvalue = 1.0;
             Pep = 1.0;
-        }
-
-        /// <summary>
-        /// Returns the effective run-level q-value based on the FDR control level.
-        /// </summary>
-        public double EffectiveRunQvalue(FdrLevel level)
-        {
-            switch (level)
-            {
-                case FdrLevel.Precursor:
-                    return RunPrecursorQvalue;
-                case FdrLevel.Peptide:
-                    return RunPeptideQvalue;
-                case FdrLevel.Both:
-                    return Math.Max(RunPrecursorQvalue, RunPeptideQvalue);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(level));
-            }
-        }
-
-        /// <summary>
-        /// Returns the effective experiment-level q-value based on the FDR control level.
-        /// </summary>
-        public double EffectiveExperimentQvalue(FdrLevel level)
-        {
-            switch (level)
-            {
-                case FdrLevel.Precursor:
-                    return ExperimentPrecursorQvalue;
-                case FdrLevel.Peptide:
-                    return ExperimentPeptideQvalue;
-                case FdrLevel.Both:
-                    return Math.Max(ExperimentPrecursorQvalue, ExperimentPeptideQvalue);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(level));
-            }
         }
     }
 }

@@ -42,7 +42,7 @@ namespace SkylineNightly
         private readonly string _oldLog;
         private readonly string _logDir;
         private readonly string _nightlyLog;
-        private readonly Nightly.RunMode _runMode;
+        private readonly RunSpec _runSpec;
         private readonly object _lock;
 
         private string _testerLog;
@@ -59,12 +59,12 @@ namespace SkylineNightly
 
         private readonly Timer _logChecker;
 
-        public LogFileMonitor(string logDir, string nightlyLog, Nightly.RunMode runMode)
+        public LogFileMonitor(string logDir, string nightlyLog, RunSpec runSpec)
         {
             _oldLog = Nightly.GetLatestLog(logDir);
             _logDir = logDir;
             _nightlyLog = nightlyLog;
-            _runMode = runMode;
+            _runSpec = runSpec;
             _testerLog = null;
             _lock = new object();
             _fileStream = null;
@@ -105,8 +105,8 @@ namespace SkylineNightly
             }
         }
 
-        private int HangThreshold => _runMode != Nightly.RunMode.perf && _runMode != Nightly.RunMode.release_perf && _runMode != Nightly.RunMode.integration_perf ? 60 : 90;
-        private string RunModeName => Enum.GetName(typeof(Nightly.RunMode), _runMode);
+        private int HangThreshold => _runSpec.IsPerf ? 90 : 60;
+        private string RunModeName => _runSpec.ToString();
 
         public bool IsHang
         {

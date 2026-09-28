@@ -25,6 +25,7 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -218,12 +219,12 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// True when the OSPREY_LOG_MEMORY environment variable is set (any non-empty
-        /// value). Gates the per-stage [MEM ...] snapshots so ordinary runs stay quiet;
-        /// set it for a memory-profiling run (issue #4355).
+        /// True when OSPREY_LOG_MEMORY is set to anything but <c>0</c>. Gates the per-stage
+        /// [MEM ...] snapshots so ordinary runs stay quiet; set it for a memory-profiling run
+        /// (issue #4355). See <see cref="OspreyEnvironment.LogMemory"/> for why <c>0</c> has to
+        /// count as off here.
         /// </summary>
-        public static readonly bool MemoryLoggingEnabled =
-            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"OSPREY_LOG_MEMORY"));
+        public static readonly bool MemoryLoggingEnabled = OspreyEnvironment.LogMemory;
 
         /// <summary>
         /// <see cref="LogMemoryStats"/> guarded by <see cref="MemoryLoggingEnabled"/> so

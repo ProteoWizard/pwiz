@@ -511,6 +511,10 @@ namespace pwiz.SkylineTestUtil
         {
             // Report any pooled streams left open, then stop tracking and clean up
             string poolReport = FileStreamManager.Default.ReportPooledStreams();
+            // A FileSaver holds its temporary file open with a plain FileStream that never
+            // enters the pool, so a leaked one is invisible above and surfaces only as the
+            // directory failing to delete, naming a "~SK*.tmp" locked by this process.
+            string fileSaverReport = FileSaver.ReportUndisposed();
             FileStreamManager.Default.EndTrackingHistory();
             FileStreamManager.Default.CloseAllStreams();
 
@@ -524,6 +528,8 @@ namespace pwiz.SkylineTestUtil
                 cleanupException = ex;
             }
 
+            // The FileSaver report explains a failure; it never causes one on its own. A saver
+            // for a load still in flight is undisposed for a moment without anything being wrong.
             if (poolReport != null || cleanupException != null)
             {
                 var errors = new List<string>();
@@ -531,6 +537,8 @@ namespace pwiz.SkylineTestUtil
                     errors.AddRange(new[] {"Streams left open:", string.Empty, poolReport});
                 if (cleanupException != null)
                     errors.AddRange(new[] {"CleanupFiles failed:", string.Empty, cleanupException.Message});
+                if (fileSaverReport != null)
+                    errors.AddRange(new[] {"Temporary files left open:", string.Empty, fileSaverReport});
                 Assert.Fail(TextUtil.LineSeparate(errors));
             }
         }

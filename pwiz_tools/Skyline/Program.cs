@@ -1,6 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Fable 5) <noreply .at. anthropic.com>
  *
  * Copyright 2009 University of Washington - Seattle, WA
  * 
@@ -24,7 +25,8 @@ using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
-using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -33,7 +35,6 @@ using Microsoft.Win32;
 using pwiz.Common;
 using pwiz.ProteowizardWrapper;
 using pwiz.Common.Collections;
-using pwiz.Common.Mock;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -89,11 +90,6 @@ namespace pwiz.Skyline
             {
                 CommonApplicationSettings.FunctionalTest = value;
             }
-        }
-
-        public static HttpMessageHandlerFactory HttpMessageHandlerFactory
-        {
-            get { return CommonApplicationSettings.HttpMessageHandlerFactory; }
         }
 
         // TODO(nicksh): Remove this once intermittent failures in these tests are fixed
@@ -473,7 +469,6 @@ namespace pwiz.Skyline
                 {
                     try
                     {
-                        SendAnalyticsHit();
                         SendGa4AnalyticsHit();
                     }
                     catch (Exception ex)
@@ -482,39 +477,6 @@ namespace pwiz.Skyline
                     }
                 });
             }
-        }
-
-        private static void SendAnalyticsHit()
-        {
-            // ReSharper disable LocalizableElement
-            var postData = "v=1"; // Version 
-            postData += "&t=event"; // Event hit type
-            postData += "&tid=UA-9194399-1"; // Tracking Id 
-            postData += "&cid=" + Settings.Default.InstallationId; // Anonymous Client Id
-            postData += "&ec=Instance"; // Event Category
-            postData += "&ea=" + Uri.EscapeDataString(Install.Version + "-" +
-                                                      (Install.Is64Bit ? "64bit" : "32bit")); // Event Action
-            postData += "&el=" + Install.Type; // Event Label
-            postData += "&p=" + "Instance"; // Page
-
-            var data = Encoding.UTF8.GetBytes(postData);
-            var request = (HttpWebRequest) WebRequest.Create("http://www.google-analytics.com/collect");
-            request.UserAgent = Install.GetUserAgentString();
-            request.Method = "POST";
-            request.ContentType = "application/x-www-form-urlencoded";
-            request.ContentLength = data.Length;
-            using (Stream stream = request.GetRequestStream())
-            {
-                stream.Write(data, 0, data.Length);
-            }
-
-            var response = (HttpWebResponse) request.GetResponse();
-            var responseStream = response.GetResponseStream();
-            if (null != responseStream)
-            {
-                new StreamReader(responseStream).ReadToEnd();
-            }
-            // ReSharper restore LocalizableElement
         }
 
         /// <summary>
@@ -553,22 +515,14 @@ namespace pwiz.Skyline
             if (useDebugUrl)
                 postData += "&_dbg=true";
 
-            var request = (HttpWebRequest)WebRequest.Create("https://www.google-analytics.com/g/collect?" + postData);
-            request.UserAgent = Install.GetUserAgentString();
-            request.Method = "POST";
-            request.ContentType = "application/x-www-form-urlencoded";
-            request.ContentLength = 0;
+            using var httpClient = new HttpClientWithProgress();
+            using var request = new HttpRequestMessage(HttpMethod.Post, "https://www.google-analytics.com/g/collect?" + postData);
+            request.Headers.TryAddWithoutValidation("User-Agent", Install.GetUserAgentString());
+            request.Content = new ByteArrayContent(Array.Empty<byte>());
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
 
-            var response = (HttpWebResponse)request.GetResponse();
-            var responseStream = response.GetResponseStream();
-            if (null != responseStream)
-            {
-                var responseReader = new StreamReader(responseStream);
-                responseStr = responseReader.ReadToEnd();
-            }
-            else
-                responseStr = string.Empty;
-
+            using var response = httpClient.SendRequest(request);
+            responseStr = response.Content.ReadAsStringAsync().Result;
             return (int) response.StatusCode;
             // ReSharper restore LocalizableElement
         }

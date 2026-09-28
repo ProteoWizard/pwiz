@@ -308,27 +308,125 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// <c>.1st-pass.fdr_scores.bin</c> sidecar joined to its <c>.scores.parquet</c> apex RT,
         /// pass 2 from the resident reported pool.
         /// </summary>
-        public readonly struct CoAssignmentRow
+        /// <summary>
+        /// Precursor identity for the co-assignment panel: modified sequence, charge, and whether
+        /// the row is a decoy.
+        ///
+        /// <para>Decoys MUST key separately from their targets. A decoy carries its target's
+        /// modified sequence, so without <see cref="IsDecoy"/> the precursor registry keeps the
+        /// first arrival and absorbs the other - measured at 396 of 468 admitted decoys never
+        /// counted, and a reported decoy rate 30x too low.</para>
+        ///
+        /// <para><see cref="CompareTo"/> is the ONE total order over precursors. There were two
+        /// before: an ordinal compare of the composite string, and a by-sequence-then-charge
+        /// compare elsewhere in this file. They disagree wherever one sequence is a prefix of
+        /// another - "ABC" vs "ABCD" puts the separator against a residue - so which rows tied on
+        /// m/z came first depended on which comparer the caller happened to use.</para>
+        /// </summary>
+        public readonly struct PrecursorKey : IEquatable<PrecursorKey>, IComparable<PrecursorKey>
         {
-            /// <summary>Precursor identity, <c>modified sequence + "|" + charge</c>.</summary>
-            public readonly string Key;
-            /// <summary>Full library entry id (decoy bit included) - the score-aggregation key.</summary>
-            public readonly uint EntryId;
+            /// <summary>Separated sequence from charge in the composite string this key replaced.
+            /// Still named because <see cref="CompareTo"/> reproduces that string's order.</summary>
+            private const char SEPARATOR = '|';
+
             public readonly string ModifiedSequence;
             public readonly byte Charge;
+            public readonly bool IsDecoy;
+
+            public PrecursorKey(string modifiedSequence, byte charge, bool isDecoy)
+            {
+                ModifiedSequence = modifiedSequence;
+                Charge = charge;
+                IsDecoy = isDecoy;
+            }
+
+            public bool Equals(PrecursorKey other)
+            {
+                return Charge == other.Charge && IsDecoy == other.IsDecoy &&
+                       string.Equals(ModifiedSequence, other.ModifiedSequence, StringComparison.Ordinal);
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is PrecursorKey other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int hash = ModifiedSequence == null
+                        ? 0
+                        : StringComparer.Ordinal.GetHashCode(ModifiedSequence);
+                    hash = (hash * 397) ^ Charge;
+                    return (hash * 397) ^ (IsDecoy ? 1 : 0);
+                }
+            }
+
+            /// <summary>
+            /// Tie-break order for the m/z scan. Arbitrary - it exists only to make the scan
+            /// reproducible - but it reproduces the order of the composite string this key
+            /// replaced, so no committed golden moves for a change that is otherwise pure
+            /// performance.
+            ///
+            /// <para>The prefix case is the one to get right: where one sequence is a prefix of
+            /// another the shorter key's string continued with the separator and the longer's with
+            /// a residue, so <c>ABCD|2</c> sorts before <c>ABC|2</c>. Comparing against
+            /// <see cref="SEPARATOR"/> rather than assuming which side wins keeps that true for
+            /// any residue alphabet. Charge compares numerically where the string compared decimal
+            /// text, which differs only at charge 10 and above - no precursor here carries one.</para>
+            /// </summary>
+            public int CompareTo(PrecursorKey other)
+            {
+                string seq = ModifiedSequence ?? string.Empty;
+                string otherSeq = other.ModifiedSequence ?? string.Empty;
+                int shared = Math.Min(seq.Length, otherSeq.Length);
+                for (int i = 0; i < shared; i++)
+                {
+                    if (seq[i] != otherSeq[i])
+                        return seq[i] - otherSeq[i];
+                }
+                if (seq.Length != otherSeq.Length)
+                {
+                    return seq.Length < otherSeq.Length
+                        ? SEPARATOR - otherSeq[shared]
+                        : seq[shared] - SEPARATOR;
+                }
+                int c = Charge.CompareTo(other.Charge);
+                if (c != 0)
+                    return c;
+                return IsDecoy.CompareTo(other.IsDecoy);
+            }
+
+            // Text for debugging only.
+            public override string ToString()
+            {
+                return $@"{ModifiedSequence}|{Charge}{(IsDecoy ? @"|decoy" : string.Empty)}";
+            }
+        }
+
+        public readonly struct CoAssignmentRow
+        {
+            /// <summary>Precursor identity - sequence, charge and decoy flag in one value.</summary>
+            public readonly PrecursorKey Key;
+            /// <summary>Full library entry id (decoy bit included) - the score-aggregation key.</summary>
+            public readonly uint EntryId;
             /// <summary>Library precursor m/z - exact, so no residue-mass table is involved.</summary>
             public readonly double PrecursorMz;
             public readonly double ApexRt;
             public readonly double Score;
             public readonly EntrapmentClass Class;
 
-            public CoAssignmentRow(string key, uint entryId, string modifiedSequence, byte charge,
+            /// <summary>The identity's own fields, so readers that want one need not go through
+            /// the key. They are stored ONCE, on the key.</summary>
+            public string ModifiedSequence => Key.ModifiedSequence;
+            public byte Charge => Key.Charge;
+
+            public CoAssignmentRow(PrecursorKey key, uint entryId,
                 double precursorMz, double apexRt, double score, EntrapmentClass entrapmentClass)
             {
                 Key = key;
                 EntryId = entryId;
-                ModifiedSequence = modifiedSequence;
-                Charge = charge;
                 PrecursorMz = precursorMz;
                 ApexRt = apexRt;
                 Score = score;
@@ -388,29 +486,117 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         {
             if (perFileEntries == null || precursorMzByEntryId == null)
                 return null;
-            bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
             var runNames = new string[perFileEntries.Count];
             for (int f = 0; f < perFileEntries.Count; f++)
                 runNames[f] = perFileEntries[f].Key;
+            return BuildCoAssignmentCore(runNames, () => perFileEntries, classByBaseId,
+                precursorMzByEntryId, runFdr, fdrLevel, pass, postReconciliation, stratumBaseIds);
+        }
 
+        private static CoAssignmentData BuildCoAssignmentCore(
+            string[] runNames,
+            Func<IEnumerable<KeyValuePair<string, List<FdrEntry>>>> openStream,
+            IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
+            Func<uint, double> precursorMzByEntryId,
+            double runFdr,
+            FdrLevel fdrLevel,
+            int pass,
+            bool postReconciliation,
+            HashSet<uint> stratumBaseIds)
+        {
             var builder = new CoAssignmentPassBuilder(runNames, pass, postReconciliation, stratumBaseIds);
+            builder.ReserveRunScope(MaxBaseId(classByBaseId));
 
             // Phase 1: the decoy score cutoffs, over every row at every file. Cheap - no identity
             // string, no library lookup - so it can walk the whole pool.
-            for (int f = 0; f < perFileEntries.Count; f++)
+            int f1 = 0;
+            foreach (var kvp in openStream())
             {
-                foreach (var e in perFileEntries[f].Value)
-                {
-                    int wc0 = 0, woc0 = 0;
-                    builder.ObserveCutoff(f,
-                        Classify(e.IsDecoy, e.EntryId & BASE_ID_MASK, classByBaseId, haveManifest, ref wc0, ref woc0),
-                        e.EntryId, e.Score, e.ExperimentAggregateScore, e.EffectiveRunQvalue(fdrLevel),
-                        e.EffectiveExperimentQvalue(fdrLevel), runFdr);
-                }
-                // Reduce this file's bests to its cutoff before reading the next, so the
-                // builder never holds more than one file's worth.
-                builder.SealRunCutoff(f);
+                VerifyRunOrder(runNames, f1, kvp.Key);
+                ObserveCoAssignmentRun(builder, f1, kvp.Value, classByBaseId, runFdr, fdrLevel);
+                f1++;
             }
+            VerifyRunCount(runNames, f1);
+            return BuildCoAssignmentDetection(builder, runNames, openStream(), classByBaseId,
+                precursorMzByEntryId, runFdr, fdrLevel);
+        }
+
+        /// <summary>
+        /// Phase 1 of the co-assignment panel for ONE run: fold its rows into the acceptance
+        /// boundary and seal that run's cutoff. Public so a caller already streaming the pool for
+        /// another reason can fold this into the pass it is making rather than opening a third -
+        /// which is what the streamed second-pass join does, sharing this phase with the
+        /// diagnostics accumulator's fold.
+        ///
+        /// <para>Sealing per run is what keeps the builder holding one run's bests rather than
+        /// the pool's, and it is why the caller must present runs in input order and present all
+        /// of them: the boundary phase 2 compares against is indexed by run position.</para>
+        /// </summary>
+        /// <summary>
+        /// The largest BASE id in a classification map, or 0 for none - the bound
+        /// <see cref="CoAssignmentPassBuilder.ReserveRunScope"/> wants. Every builder that folds a
+        /// pool should reserve: growth is geometric, so an unreserved builder is correct, but it
+        /// climbs the whole doubling ladder per panel and holds the top step's copy while it does.
+        /// </summary>
+        public static uint MaxBaseId(IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId)
+        {
+            uint max = 0;
+            if (classByBaseId == null)
+                return max;
+            foreach (uint id in classByBaseId.Keys)
+                max = Math.Max(max, id & BASE_ID_MASK);
+            return max;
+        }
+
+        public static void ObserveCoAssignmentRun(
+            CoAssignmentPassBuilder builder,
+            int fileIdx,
+            IEnumerable<FdrEntry> rows,
+            IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
+            double runFdr,
+            FdrLevel fdrLevel)
+        {
+            bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
+            foreach (var e in rows)
+            {
+                int wc0 = 0, woc0 = 0;
+                builder.ObserveCutoff(fileIdx,
+                    Classify(e.IsDecoy, e.EntryId & BASE_ID_MASK, classByBaseId, haveManifest, ref wc0, ref woc0),
+                    e.EntryId, e.Score, e.ExperimentAggregateScore, e.EffectiveRunQvalue(fdrLevel),
+                    e.EffectiveExperimentQvalue(fdrLevel), runFdr);
+            }
+            // Reduce this file's bests to its cutoff before reading the next, so the
+            // builder never holds more than one file's worth.
+            builder.SealRunCutoff(fileIdx);
+        }
+
+        /// <summary>
+        /// Phase 2 of the co-assignment panel: seal the boundary phase 1 folded, walk the pool a
+        /// second time judging each row against it, and build the panel. Public for the same
+        /// reason <see cref="ObserveCoAssignmentRun"/> is - the streamed second-pass join drives
+        /// the two phases from its own reads.
+        ///
+        /// <para>Two reads and not one because the boundary is a reduction over every row that
+        /// every row is then compared against; there is no fold that yields both in one walk.
+        /// That is what makes this the one pass-2 card the diagnostics accumulator cannot absorb.
+        /// The alternative - reconstructing the reported pool from the per-file sidecars, as the
+        /// pass-1 panel does - would put the definition of "the reported pool" in a second place,
+        /// and that pool is defined by the rebuild the stream performs: retained base_ids, the
+        /// pass-2 sidecar overlay and the experiment-q floors. One definition, two reads.</para>
+        /// </summary>
+        public static CoAssignmentData BuildCoAssignmentDetection(
+            CoAssignmentPassBuilder builder,
+            string[] runNames,
+            IEnumerable<KeyValuePair<string, List<FdrEntry>>> rows,
+            IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
+            Func<uint, double> precursorMzByEntryId,
+            double runFdr,
+            FdrLevel fdrLevel)
+        {
+            if (precursorMzByEntryId == null)
+                return null;
+            bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
+            int pass = builder.Pass;
             builder.SealCutoffs();
 
             // Phase 2: the detected rows.
@@ -427,47 +613,116 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // users actually receive.
             bool anyDistinctApexRt = false;
             double firstApexRt = double.NaN;
-            for (int f = 0; f < perFileEntries.Count; f++)
+            // OSPREY_DUMP_COASSIGN_ROWS (unset in every ordinary run): the panel's own input,
+            // one row per pool observation, written from inside the walk that consumes it. The
+            // counts this panel reports are a reduction over exactly these rows, so an A/B that
+            // moves a count is answered here and nowhere upstream.
+            using (var rowDump = FdrDiagnostics.CreateCoAssignRowDump(pass))
             {
-                foreach (var e in perFileEntries[f].Value)
+                int f = 0;
+                foreach (var kvp in rows)
                 {
-                    double runQ = e.EffectiveRunQvalue(fdrLevel);
-                    double expQ = e.EffectiveExperimentQvalue(fdrLevel);
-                    int wc = 0, woc = 0;
-                    var cls = Classify(e.IsDecoy, e.EntryId & BASE_ID_MASK, classByBaseId,
-                        haveManifest, ref wc, ref woc);
-                    // Gate BEFORE building the row: the key is a fresh string per row, and pass 1
-                    // hands this method the whole pre-compaction pool.
-                    if (!builder.Includes(f, cls, e.EntryId, runQ, expQ, runFdr))
-                        continue;
-                    double mz = precursorMzByEntryId(e.EntryId);
-                    if (double.IsNaN(mz) || mz <= 0)
-                        continue;
-                    anyMz = true;
-                    if (!anyDistinctApexRt)
+                    VerifyRunOrder(runNames, f, kvp.Key);
+                    foreach (var e in kvp.Value)
                     {
-                        if (double.IsNaN(firstApexRt))
-                            firstApexRt = e.ApexRt;
-                        else if (e.ApexRt != firstApexRt)
-                            anyDistinctApexRt = true;
+                        double runQ = e.EffectiveRunQvalue(fdrLevel);
+                        double expQ = e.EffectiveExperimentQvalue(fdrLevel);
+                        int wc = 0, woc = 0;
+                        var cls = Classify(e.IsDecoy, e.EntryId & BASE_ID_MASK, classByBaseId,
+                            haveManifest, ref wc, ref woc);
+                        // Gate BEFORE building the row: the key is a fresh string per row, and pass 1
+                        // hands this method the whole pre-compaction pool.
+                        bool included = builder.Includes(f, cls, e.EntryId, runQ, expQ, runFdr);
+                        // Dumped for EVERY row, including the excluded ones. An entry that stopped
+                        // being counted and one that never was are the same absence in the panel's
+                        // output and different rows here, which is the distinction the A/B needs.
+                        rowDump?.WriteRow(f, kvp.Key, e.EntryId, e.EntryId & BASE_ID_MASK,
+                            e.IsDecoy, cls.ToString(), e.Score, e.ExperimentAggregateScore,
+                            runQ, expQ, e.ApexRt, e.Charge, included, e.ModifiedSequence);
+                        if (!included)
+                            continue;
+                        double mz = precursorMzByEntryId(e.EntryId);
+                        if (double.IsNaN(mz) || mz <= 0)
+                            continue;
+                        anyMz = true;
+                        if (!anyDistinctApexRt)
+                        {
+                            if (double.IsNaN(firstApexRt))
+                                firstApexRt = e.ApexRt;
+                            else if (e.ApexRt != firstApexRt)
+                                anyDistinctApexRt = true;
+                        }
+                        // The decoy flag is part of the identity, for the reason PrecursorKey
+                        // documents: a decoy carries its target's modified sequence, so without it
+                        // the registry merges the two and drops the decoy.
+                        builder.AddRow(f,
+                            new CoAssignmentRow(
+                                new PrecursorKey(e.ModifiedSequence, e.Charge, e.IsDecoy),
+                                e.EntryId, mz, e.ApexRt, e.Score, cls),
+                            runQ, expQ, runFdr);
                     }
-                    // Tag decoy keys. A decoy carries its target's modified sequence, so an
-                    // untagged decoy key equals its target's and the precursor registry merges
-                    // the two, dropping the decoy. Same rule as the pass-1 source builds.
-                    string key = e.IsDecoy
-                        ? e.ModifiedSequence + "|" + e.Charge + "|decoy"
-                        : e.ModifiedSequence + "|" + e.Charge;
-                    builder.AddRow(f,
-                        new CoAssignmentRow(key, e.EntryId,
-                            e.ModifiedSequence, e.Charge, mz, e.ApexRt, e.Score, cls),
-                        runQ, expQ, runFdr);
+                    builder.FlushFile();
+                    f++;
                 }
-                builder.FlushFile();
+                VerifyRunCount(runNames, f);
+                // The boundaries every per-row verdict above was compared against. Written from
+                // the builder rather than recomputed, for the same reason the verdict is.
+                rowDump?.WriteCutoffs(builder.RunCutoff, runNames, builder.ExperimentCutoff,
+                    builder.ExperimentCutoffInStratum, builder.ExperimentCutoffOffStratum,
+                    builder.AcceptedInStratum, builder.AcceptedOffStratum);
             }
             // Refuse rather than report. A single apex RT shared by every row means the column
             // was absent or unreadable, and the panel would otherwise publish ~100% co-assignment
             // for every class as though it were a finding.
             return anyMz && anyDistinctApexRt ? builder.Build() : null;
+        }
+
+        /// <summary>
+        /// Assert that the run arriving at index <paramref name="index"/> is the run the panel
+        /// believes sits there. The two phases index the SAME builder state by position - phase 2
+        /// compares each row against the per-run cutoff phase 1 sealed at that index - so a source
+        /// that yielded runs in a different order on the second pass would judge every row against
+        /// another run's boundary and still produce a complete, plausible panel. Nothing
+        /// downstream could detect it, which is why this throws rather than logs.
+        /// </summary>
+        /// <summary>
+        /// <see cref="VerifyRunOrder"/> for a caller driving the phases itself. Public because
+        /// the streamed second-pass join indexes MORE than the panel by that position - the
+        /// diagnostics accumulator's per-file counts and cross-run streams share it - so the
+        /// same assertion has to be available outside this file.
+        /// </summary>
+        public static void VerifyStreamedRun(string[] runNames, int index, string runName)
+        {
+            VerifyRunOrder(runNames, index, runName);
+        }
+
+        /// <summary><see cref="VerifyRunCount"/> for the same caller, for the same reason.</summary>
+        public static void VerifyStreamedRunCount(string[] runNames, int seen)
+        {
+            VerifyRunCount(runNames, seen);
+        }
+
+        private static void VerifyRunOrder(string[] runNames, int index, string runName)
+        {
+            if (index < runNames.Length && Equals(runNames[index], runName))
+                return;
+            throw new InvalidOperationException(string.Format(
+                @"Peak co-assignment read run '{0}' at index {1}, where '{2}' was expected. The two phases index the acceptance boundary by run position, so the source must yield the same runs in the same order on both passes.",
+                runName, index, index < runNames.Length ? runNames[index] : @"(past the end)"));
+        }
+
+        /// <summary>
+        /// Assert that a phase saw every run. A stream that ended early leaves the trailing runs
+        /// with no cutoff and no rows, which reads as "those runs identified nothing" rather than
+        /// as a truncated read - the same silent-shrink failure the pass-1 sidecar walk refuses.
+        /// </summary>
+        private static void VerifyRunCount(string[] runNames, int seen)
+        {
+            if (seen == runNames.Length)
+                return;
+            throw new InvalidOperationException(string.Format(
+                @"Peak co-assignment walked {0} run(s) where {1} were expected. A short read would report the missing runs as having identified nothing.",
+                seen, runNames.Length));
         }
 
         /// <summary>
@@ -507,6 +762,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 _stratumBaseIds = stratumBaseIds;
             }
 
+            /// <summary>1 = pre-compaction first-pass detection, 2 = final reported pool. Read by
+            /// the phase-2 driver, which tags the row dump with it.</summary>
+            public int Pass => _pass;
+
             private readonly HashSet<uint> _stratumBaseIds;
 
             // Score at or above which a DECOY counts as detected: the worst score among the
@@ -531,7 +790,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             private int _acceptedInStratum;
             private int _acceptedOffStratum;
 
-            // The score each scope's competition actually ranks on, per precursor (entry id).
+            // The score each scope's competition actually ranks on, per precursor - run scope by
+            // base id and side (the two arrays below), experiment scope by full entry id.
             // RUN scope: the precursor's best score WITHIN a file, reduced here from the per-row
             // scores. EXPERIMENT scope: the PERSISTED experiment aggregate (sidecar v4, issue
             // #4522) - the value the experiment-wide competition ranked the entry on, handed to
@@ -551,15 +811,35 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // reduced away by SealRunCutoff before the next file is read. These two are the
             // current file's only; they are cleared at each seal.
             //
-            // They were previously Dictionary<int, ...> keyed by file index, i.e.
-            // O(files x distinct entry ids) held live from phase 1 through the whole panel
-            // build. Measured on the full target+decoy+entrapment library that is 4.18M
-            // entries per file: 12 GB at 82 files and ~79 GB at 500 - against a stated goal of
-            // 500 files on a 64 GB machine, so the panel alone exceeded the entire budget.
-            // Nothing about the answer needed it: the per-file bests are read exactly twice,
-            // both times for this file, and never again once the cutoff is known.
-            private Dictionary<uint, double> _fileBest = new Dictionary<uint, double>();
-            private HashSet<uint> _fileAccepted = new HashSet<uint>();
+            // Two shapes preceded this one, and both were O(the cohort) where the answer is
+            // O(one file): first Dictionary<int, ...> keyed by FILE INDEX, held live from phase 1
+            // through the whole panel build (12 GB at 82 files, ~79 GB at 500, against a 64 GB
+            // machine), then one Dictionary<uint, double> rebuilt per file. The per-file bests are
+            // read exactly twice, both times for this file, and never again once the cutoff is
+            // known, so neither ever needed to outlive a seal.
+            //
+            // The run-scope bests are two flat double[] indexed by BASE id - target and decoy
+            // sides, selected by the entry id's decoy bit - not a Dictionary<uint, double> keyed
+            // by entry id (issue #4657). The dictionary was allocated fresh per file and grew
+            // from empty to ~4.18 M entries through ~22 prime-doubling resizes, each a new bucket
+            // and entry array on the large-object heap: ~230 MB of garbage per file, 446 times in
+            // 3.5 minutes, ~30 GB/min that Server GC answered by committing another 25 GB. The
+            // live information was one number per file. The arrays are allocated ONCE, sized by
+            // the largest base id the caller declares (ReserveRunScope), and reset by the seal's
+            // own sweep - ~100 MB for the 6.2 M-entry library, no per-file allocation, and O(1)
+            // per record without hashing. NaN means "not seen this file"; the dictionary's
+            // missing key meant the same, so the reduction rules below are unchanged.
+            //
+            // DENSE only because every row writes one: a score arrives for each row of each file.
+            // The ACCEPTED set is the ~1% FDR population - thousands per file, not millions - so
+            // it stays a HashSet of FULL entry ids for the same reason _admittedRunDecoys below
+            // does, and the seal's minimum walks it rather than the capacity. Keeping the full id
+            // also keeps the old keying exactly: the score of an accepted entry is read from the
+            // side its OWN id selects, so a row whose class and decoy bit disagree reduces the
+            // way the dictionary did instead of reading a NaN off the other side.
+            private double[] _fileBestTarget = Array.Empty<double>();
+            private double[] _fileBestDecoy = Array.Empty<double>();
+            private readonly HashSet<uint> _fileAccepted = new HashSet<uint>();
             private int _fileIdx = -1;
 
             // What survives a seal, per file: the boundary itself, and the DECOY entry ids that
@@ -590,6 +870,16 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 double experimentAggregateScore,
                 double runQvalue, double experimentQvalue, double runFdr)
             {
+                // The forward misuse (judging before sealing) has always thrown; this is the
+                // REVERSE, which the public phase split newly admits. Observing after the seal
+                // mutates _experimentBest and lets SealRunCutoff overwrite a run's cutoff, moving
+                // the boundary that already-emitted verdicts were compared against - so the panel
+                // would mix two boundaries and still look complete.
+                if (_sealed)
+                {
+                    throw new InvalidOperationException(
+                        @"CoAssignmentPassBuilder.ObserveCutoff was called after SealCutoffs. The acceptance boundary is fixed once sealed, and moving it would leave verdicts already emitted against the old one.");
+                }
                 if (fileIdx != _fileIdx)
                 {
                     if (_fileIdx >= 0)
@@ -618,10 +908,18 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 // experiment reduction below and both acceptance-set additions, so a NaN row
                 // would silently remove its precursor from the accepted counts that set the
                 // experiment boundary - a worse fault than the one being guarded against.
-                if (!double.IsNaN(score) &&
-                    (!_fileBest.TryGetValue(entryId, out double cur) || double.IsNaN(cur) || cur == 0.0 ||
-                     (score != 0.0 && score > cur)))
-                    _fileBest[entryId] = score;
+                // Sized HERE, under the NaN test, and not before it: the capacity is the high-water
+                // mark of the ids that actually write a best, so one stub row carrying a wild base
+                // id cannot make every later file carry arrays it never uses.
+                if (!double.IsNaN(score))
+                {
+                    uint baseId = entryId & BASE_ID_MASK;
+                    EnsureRunScopeCapacity(baseId);
+                    double[] fileBest = IsDecoyId(entryId) ? _fileBestDecoy : _fileBestTarget;
+                    double cur = fileBest[baseId];
+                    if (double.IsNaN(cur) || cur == 0.0 || (score != 0.0 && score > cur))
+                        fileBest[baseId] = score;
+                }
                 // Every row of an entry carries the same persisted aggregate, so this is a read,
                 // not a reduction. The only real decision is which row wins when one of them never
                 // went through an experiment competition and still holds the 0.0 default left by
@@ -642,6 +940,11 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     _experimentBest[entryId] = experimentAggregateScore;
                 if (IsDecoyClass(cls))
                     return;   // decoys define the boundary; they do not set it
+                // The FULL entry id, so the seal reads this entry's best off the side its own id
+                // selects. A non-decoy class normally carries no decoy bit and the two agree, but
+                // the class comes from a persisted is_decoy column on the pass-2 path while the
+                // side comes from the id, and storing the base id here would read the wrong side's
+                // NaN if they ever disagreed - silently dropping the entry from the minimum.
                 if (runQvalue <= runFdr)
                     _fileAccepted.Add(entryId);
                 if (experimentQvalue <= runFdr)
@@ -671,19 +974,55 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// </summary>
             public void SealRunCutoff(int fileIdx)
             {
+                // Same reason as ObserveCutoff: this OVERWRITES _runCutoff[fileIdx] and
+                // _admittedRunDecoys[fileIdx] unconditionally, so after the seal it would move a
+                // per-run boundary out from under verdicts already compared against it.
+                if (_sealed)
+                {
+                    throw new InvalidOperationException(
+                        @"CoAssignmentPassBuilder.SealRunCutoff was called after SealCutoffs. A run's boundary cannot move once the detection phase has begun judging rows against it.");
+                }
+                // O(accepted), not O(capacity): the accepted set is this file's ~1% population.
                 double min = double.NaN;
                 foreach (uint id in _fileAccepted)
                 {
-                    if (_fileBest.TryGetValue(id, out double v) && (double.IsNaN(min) || v < min))
+                    double[] fileBest = IsDecoyId(id) ? _fileBestDecoy : _fileBestTarget;
+                    uint baseId = id & BASE_ID_MASK;
+                    // Bounds-checked, because acceptance and SIZING are recorded under different
+                    // conditions by design: ObserveCutoff sizes the run scope inside its
+                    // !IsNaN(score) block - deliberately, so one stub row with a wild base id
+                    // cannot make every later file carry arrays it never uses - while it adds to
+                    // _fileAccepted outside that block, so a passing q is never silently dropped.
+                    // An entry that is accepted without ever having written a best therefore has
+                    // no slot, and indexing raw would throw here rather than in the code that
+                    // created the asymmetry. Skipping is also the RIGHT answer, not just a safe
+                    // one: an id with no slot wrote no best, so it contributes nothing to a
+                    // minimum over bests - exactly as a NaN slot already does below.
+                    if (baseId >= (uint)fileBest.Length)
+                        continue;
+                    double v = fileBest[baseId];
+                    if (!double.IsNaN(v) && (double.IsNaN(min) || v < min))
                         min = v;
                 }
-                if (!double.IsNaN(min))
-                {
+                // ONE sweep of the dense arrays per file: it admits the decoys AND resets the
+                // scope for the next file. The decoy side has to be enumerated to find what clears
+                // the boundary, so a separate reset pass would read the same ~100 MB again for
+                // nothing. It runs even when there is no boundary - nothing can be admitted then,
+                // but the reset is not optional: skipping it would carry this file's bests into
+                // the next one, which no assertion downstream could see.
+                bool admitting = !double.IsNaN(min);
+                var admitted = admitting ? new HashSet<uint>() : null;
+                if (admitting)
                     _runCutoff[fileIdx] = min;
-                    var admitted = new HashSet<uint>();
-                    foreach (var kv in _fileBest)
+                int n = _fileBestTarget.Length;
+                {
+                    for (int i = 0; i < n; i++)
                     {
-                        if ((kv.Key & ~BASE_ID_MASK) == 0 || kv.Value < min)
+                        double d = _fileBestDecoy[i];
+                        double tgt0 = _fileBestTarget[i];
+                        _fileBestDecoy[i] = double.NaN;
+                        _fileBestTarget[i] = double.NaN;
+                        if (!admitting || double.IsNaN(d) || d < min)
                             continue;
                         // Only decoys that WON their own target/decoy competition. TDC ranks
                         // the winner of each pair and discards the loser, so q counts decoy
@@ -697,16 +1036,83 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         // decoy IS inside the q estimate that set this bar. Excluding it here
                         // would drop it from the row the bar is meant to admit, which is the
                         // under-reporting this rule exists to prevent, in the other direction.
-                        if (_fileBest.TryGetValue(kv.Key & BASE_ID_MASK, out double tgt) &&
-                            tgt > kv.Value)
+                        if (!double.IsNaN(tgt0) && tgt0 > d)
                             continue;
-                        admitted.Add(kv.Key);
+                        admitted.Add((uint)i | ~BASE_ID_MASK);
                     }
-                    _admittedRunDecoys[fileIdx] = admitted;
                 }
-                _fileBest = new Dictionary<uint, double>();
-                _fileAccepted = new HashSet<uint>();
+                if (admitting)
+                    _admittedRunDecoys[fileIdx] = admitted;
+                _fileAccepted.Clear();
                 _fileIdx = -1;
+            }
+
+            /// <summary>
+            /// Size the run-scope working set for base ids up to <paramref name="maxBaseId"/>
+            /// before phase 1, so no file grows it. The caller knows the range - every entry
+            /// that reaches <see cref="ObserveCutoff"/> has an experiment-scope record, and the
+            /// largest base id in that map is the bound - while this class deliberately does
+            /// not hold the library. Optional: an unreserved or under-reserved builder grows on
+            /// demand in <see cref="ObserveCutoff"/>, which costs a handful of copies rather
+            /// than a wrong answer, but a reserve makes the whole panel allocate these once.
+            /// </summary>
+            public void ReserveRunScope(uint maxBaseId)
+            {
+                EnsureRunScopeCapacity(maxBaseId);
+            }
+
+            /// <summary>The run-scope arrays' length, and how many times they have been (re)allocated. For the test that pins the growth policy.</summary>
+            internal int RunScopeCapacity { get { return _fileBestTarget.Length; } }
+            internal int RunScopeGrowths { get; private set; }
+
+            /// <summary>The decoy side of a base id, by the one bit that says so.</summary>
+            private static bool IsDecoyId(uint entryId)
+            {
+                return (entryId & LibraryEntry.DECOY_ID_BIT) != 0;
+            }
+
+            /// <summary>
+            /// Grow the run-scope arrays to hold <paramref name="baseId"/>, preserving the current
+            /// file's state. GEOMETRIC, never to the id itself: rows reach <see cref="ObserveCutoff"/>
+            /// in parquet row order, which is ascending entry id, so an unreserved builder that
+            /// grew to exactly baseId + 1 copied all three arrays once per distinct base id -
+            /// O(n^2) over the file, and the whole pass-2 fold with it. Measured on StellarLibDecoy
+            /// before this doubled: the pay-later diagnostics fold went from 15.7 s to 492 s and
+            /// every leg with a pass-2 report gained 4-8 minutes; the 446-run cohort would have
+            /// spent hours here. Doubling bounds the copying at twice the final size in any order.
+            /// A reserve from empty still lands exactly on maxBaseId + 1.
+            /// </summary>
+            private void EnsureRunScopeCapacity(uint baseId)
+            {
+                if (baseId < (uint)_fileBestTarget.Length)
+                    return;
+                int oldLength = _fileBestTarget.Length;
+                int newLength = (int)Math.Min(int.MaxValue, Math.Max((long)baseId + 1, 2L * oldLength));
+                Array.Resize(ref _fileBestTarget, newLength);
+                Array.Resize(ref _fileBestDecoy, newLength);
+                FillNaN(_fileBestTarget, oldLength);
+                FillNaN(_fileBestDecoy, oldLength);
+                RunScopeGrowths++;
+            }
+
+            /// <summary>
+            /// Drop the run-scope arrays once the boundary is sealed. Both writers throw after the
+            /// seal, so they are provably dead here - and the phase that follows is the one this
+            /// class exists to keep small, holding the panel, the join and the report at once.
+            /// </summary>
+            private void ReleaseRunScope()
+            {
+                _fileBestTarget = Array.Empty<double>();
+                _fileBestDecoy = Array.Empty<double>();
+                _fileAccepted.Clear();
+            }
+
+            // Array.Fill is not in .NET Framework 4.7.2, which Osprey still targets; Span.Fill is
+            // (System.Memory, referenced by Osprey.Core) and vectorises, which is worth having on
+            // a ~50 MB array.
+            private static void FillNaN(double[] values, int from)
+            {
+                values.AsSpan(from).Fill(double.NaN);
             }
 
             /// <summary>
@@ -715,6 +1121,17 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// </summary>
             public void SealCutoffs()
             {
+                // Sealing twice is not idempotent and fails SILENTLY: the tail of this method
+                // records _acceptedForCutoff from _experimentAccepted and then CLEARS it, so a
+                // second call sets that count to 0 while _experimentCutoff keeps the boundary it
+                // already drew - and every row is then judged, added and flushed a second time,
+                // doubling the panel. Unreachable while both phases lived behind one private
+                // builder; reachable the moment they became a two-call public sequence.
+                if (_sealed)
+                {
+                    throw new InvalidOperationException(
+                        @"CoAssignmentPassBuilder.SealCutoffs was called twice. The detection phase seals the boundary itself, so driving it a second time would re-count the whole pool against a boundary already drawn.");
+                }
                 foreach (uint id in _experimentAccepted)
                 {
                     if (!_experimentBest.TryGetValue(id, out double v))
@@ -744,6 +1161,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 }
                 _acceptedForCutoff = _experimentAccepted.Count;
                 _experimentAccepted.Clear();
+                ReleaseRunScope();
                 ComputeExperimentFdrCrossing(_runFdr);
                 _sealed = true;
             }
@@ -849,6 +1267,17 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
             /// <summary>Accepted precursor count behind <see cref="ExperimentCutoff"/>.</summary>
             public int AcceptedForCutoff => _acceptedForCutoff;
+
+            /// <summary>
+            /// How many decoys one file's boundary admitted. Internal because nothing in the
+            /// product asks - the panel probes the set by id - but the per-file RESET has no other
+            /// witness: a scope carried over from the previous file, or zero-filled instead of
+            /// NaN-filled, changes this count and nothing in the report.
+            /// </summary>
+            internal int AdmittedRunDecoyCount(int fileIdx)
+            {
+                return _admittedRunDecoys.TryGetValue(fileIdx, out var admitted) ? admitted.Count : 0;
+            }
 
             /// <summary>The run-scope acceptance boundary for one file, or NaN if it has none.</summary>
             public double RunCutoff(int fileIdx)
@@ -1103,15 +1532,6 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             private const int DELTA_RT_BINS = 50;
             private const int MAX_OFFENDERS = 50;
 
-            /// <summary>
-            /// Joins the two precursor keys of an offender pair. Must be a character that cannot
-            /// occur in a key: a key is <c>modseq|charge|decoy</c>, so '|' would make
-            /// <c>a|2</c> + <c>b|3</c> and <c>a</c> + <c>2|b|3</c> collide. Written as an escape
-            /// rather than the raw U+0001 byte it replaced - that byte was invisible in the
-            /// source, in diffs and in review, and any editor or formatter that normalized it
-            /// would have silently merged unrelated pairs.
-            /// </summary>
-            private const string PAIR_KEY_SEPARATOR = "\u0001";
 
             /// <summary>
             /// Fewest detected precursors a class needs before its enrichment ratio is reported.
@@ -1128,14 +1548,14 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // Current run's detected rows, reduced to one per precursor (max score). Cleared at
             // every FlushFile, so only a single run is ever resident.
             private readonly List<CoAssignmentRow> _fileRows = new List<CoAssignmentRow>();
-            private readonly Dictionary<string, int> _fileRowByKey =
-                new Dictionary<string, int>(StringComparer.Ordinal);
+            private readonly Dictionary<PrecursorKey, int> _fileRowByKey =
+                new Dictionary<PrecursorKey, int>();
             private int _fileIdx = -1;
 
             // Per-precursor result carried across runs: class, and the minimum |dRT| to a
             // same-m/z partner (any / better-scoring). NaN means "never matched".
-            private readonly Dictionary<string, PrecursorCoAssignment> _byPrecursor =
-                new Dictionary<string, PrecursorCoAssignment>(StringComparer.Ordinal);
+            private readonly Dictionary<PrecursorKey, PrecursorCoAssignment> _byPrecursor =
+                new Dictionary<PrecursorKey, PrecursorCoAssignment>();
 
             private readonly int[] _deltaRtTarget = new int[DELTA_RT_BINS];
             private readonly int[] _deltaRtEntrapment = new int[DELTA_RT_BINS];
@@ -1146,8 +1566,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // one row carrying a run count. Bounded by the number of DISTINCT co-assigned pairs
             // (thousands at Astral scale, not the tens of thousands of observations), so it needs
             // no mid-accumulation trimming - which also keeps the run counts exact.
-            private readonly Dictionary<string, CoAssignedPair> _offendersByPair =
-                new Dictionary<string, CoAssignedPair>(StringComparer.Ordinal);
+            private readonly Dictionary<(PrecursorKey, PrecursorKey), CoAssignedPair> _offendersByPair =
+                new Dictionary<(PrecursorKey, PrecursorKey), CoAssignedPair>();
 
             /// <param name="runNames">Input-file names in input order; indexes <see cref="AddDetectedRow"/>.</param>
             public CoAssignmentAccumulator(string[] runNames)
@@ -1366,7 +1786,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         // A precursor cannot be its own peak partner. Charge states of one peptide
                         // are excluded by m/z, not by sequence, so no sequence-level exclusion is
                         // needed or wanted here.
-                        if (string.Equals(partner.Key, row.Key, StringComparison.Ordinal))
+                        if (partner.Key.Equals(row.Key))
                             continue;
                         if (partner.Class != EntrapmentClass.Target)
                             continue;
@@ -1435,7 +1855,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     // One entry per PRECURSOR PAIR across all runs, not one per observation. The
                     // same pair co-assigning in 31 of 40 runs is one finding, and printing it 31
                     // times would crowd every other pair out of the listing.
-                    string pairKey = row.Key + PAIR_KEY_SEPARATOR + partner.Key;
+                    var pairKey = (row.Key, partner.Key);
                     if (_offendersByPair.TryGetValue(pairKey, out var seen))
                     {
                         seen.Runs++;
@@ -1581,7 +2001,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 if (c != 0)
                     return c;
                 // Total order so the scan is reproducible: distinct precursors can tie on m/z.
-                c = string.CompareOrdinal(a.Key, b.Key);
+                c = a.Key.CompareTo(b.Key);
                 if (c != 0)
                     return c;
                 return a.ApexRt.CompareTo(b.ApexRt);
