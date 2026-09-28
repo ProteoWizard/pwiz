@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Parquet;
+using Parquet.Data;
 using Parquet.Schema;
 
 namespace pwiz.CarafeSharp.IO
@@ -73,6 +74,36 @@ namespace pwiz.CarafeSharp.IO
             using (var stream = File.OpenRead(path))
             using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
                 return new Dictionary<string, string>(reader.CustomMetadata);
+        }
+
+        /// <summary>
+        /// Writes whole columns as a parquet file, <paramref name="rowsPerGroup"/> rows to a row
+        /// group, for tests that build their input in code. A column's type is its array's
+        /// element type; a reference or <see cref="Nullable{T}"/> element type is nullable.
+        /// </summary>
+        internal static void Write(string path, IReadOnlyList<KeyValuePair<string, Array>> columns,
+            IReadOnlyDictionary<string, string> metadata, int rowsPerGroup)
+        {
+            var fields = columns.Select(c => new DataField(c.Key, c.Value.GetType().GetElementType())).ToArray();
+            int rowCount = columns.Count == 0 ? 0 : columns[0].Value.Length;
+            using (var stream = File.Create(path))
+            using (var writer = RunSync(ParquetWriter.CreateAsync(new ParquetSchema(fields), stream)))
+            {
+                writer.CustomMetadata = metadata.ToDictionary(p => p.Key, p => p.Value, StringComparer.Ordinal);
+                for (int start = 0; start < rowCount; start += Math.Max(1, rowsPerGroup))
+                {
+                    int count = Math.Min(Math.Max(1, rowsPerGroup), rowCount - start);
+                    using (var group = writer.CreateRowGroup())
+                    {
+                        for (int i = 0; i < fields.Length; i++)
+                        {
+                            var slice = Array.CreateInstance(columns[i].Value.GetType().GetElementType() ?? typeof(object), count);
+                            Array.Copy(columns[i].Value, start, slice, 0, count);
+                            RunSync(group.WriteColumnAsync(new DataColumn(fields[i], slice)));
+                        }
+                    }
+                }
+            }
         }
 
         private readonly Dictionary<string, Array> _columns;
@@ -131,6 +162,11 @@ namespace pwiz.CarafeSharp.IO
         private static T RunSync<T>(Task<T> task)
         {
             return task.GetAwaiter().GetResult();
+        }
+
+        private static void RunSync(Task task)
+        {
+            task.GetAwaiter().GetResult();
         }
     }
 }
