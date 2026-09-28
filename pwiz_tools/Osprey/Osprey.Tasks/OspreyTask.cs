@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -57,6 +58,28 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     public abstract class OspreyTask : ISelectableTask
     {
+        /// <summary>
+        /// The base-key term of a blib library whose <c>RefSpectraPeakAnnotations</c> table has
+        /// rows. Since the reader started typing fragments from that table, such a library's
+        /// entries carry ion types they did not before - which reach the scores, the generated
+        /// decoys and every stage after them - so a directory scored before the change against
+        /// it must not be adopted after. A TSV library or a blib without annotation rows reads
+        /// exactly as it did, so it gets no term and every such key is unchanged. The same
+        /// shape as <c>SecondPassFdrTask</c>'s <c>;pass2proteinq=2</c>: a meaning changed
+        /// without anything the key already follows moving.
+        /// </summary>
+        public const string LIBRARY_READER_TERM = @";libext=ann";
+
+        /// <summary>
+        /// The base-key term of a blib library whose modification text the residue- and
+        /// precision-aware reader parses differently: one-decimal BiblioSpec masses, or a
+        /// 100-200 value on a residue other than C. Its modification masses reach no score
+        /// unless its fragments are typed, but they are written to the output blib's
+        /// Modifications table, so a directory written before the change must not be adopted
+        /// after it. Every other library keys exactly as before.
+        /// </summary>
+        public const string LIBRARY_MODS_TERM = @";libmods=2";
+
         /// <summary>
         /// Short identifier used in pipeline log lines, the <c>--task</c> selector and the
         /// validity sidecar. Each task returns its own <c>TASK_NAME</c> constant, the one
@@ -207,12 +230,16 @@ namespace pwiz.Osprey.Tasks
         /// selects which peak a precursor's row describes, in Stage 4, and
         /// everything downstream inherits that choice. Putting it here also
         /// means a task added later carries it without having to know.
+        ///
+        /// The library-reader term is here for the same reason: it changes what every task
+        /// reads from the library (see <see cref="LIBRARY_READER_TERM"/>).
         /// </summary>
         public virtual string ValidityKey(PipelineContext ctx) => string.Format(
-            @"search={0};library={1}{2}",
+            @"search={0};library={1}{2}{3}",
             ctx.Config.Identity.SearchParameterHash(),
             ctx.Config.Identity.LibraryIdentityHash(),
-            OspreyEnvironment.PickValidityKeySuffix());
+            OspreyEnvironment.PickValidityKeySuffix(),
+            LibraryReaderValidityKeySuffix(ctx.Config));
 
         /// <summary>
         /// A <see cref="ValidateSelection"/> error naming this task and what it is missing,
@@ -236,6 +263,22 @@ namespace pwiz.Osprey.Tasks
             return string.IsNullOrEmpty(directory)
                 ? string.Format(OspreyTasksResources.OspreyTask_DescribePerInputOutput_a__0__file_next_to_each_input, extension)
                 : string.Format(OspreyTasksResources.OspreyTask_DescribePerInputOutput_a__0__file_for_each_input__in__1_, extension, directory);
+        }
+
+        /// <summary>
+        /// <see cref="LIBRARY_READER_TERM"/> for a blib library with annotation rows and
+        /// <see cref="LIBRARY_MODS_TERM"/> for one with precision-sensitive modification text,
+        /// else empty. Both probes are cached per file version.
+        /// </summary>
+        private static string LibraryReaderValidityKeySuffix(OspreyConfig config)
+        {
+            var source = config.LibrarySource;
+            if (source == null || source.Format != LibraryFormat.Blib)
+                return string.Empty;
+            string suffix = BlibLoader.HasPeakAnnotations(source.Path) ? LIBRARY_READER_TERM : string.Empty;
+            if (BlibLoader.HasPrecisionSensitiveModifications(source.Path))
+                suffix += LIBRARY_MODS_TERM;
+            return suffix;
         }
     }
 }

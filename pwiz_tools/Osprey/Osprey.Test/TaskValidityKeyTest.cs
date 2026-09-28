@@ -23,8 +23,11 @@
 
 using System;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 using pwiz.Osprey.Tasks.ModelDiagnostics;
 
@@ -45,6 +48,9 @@ namespace pwiz.Osprey.Test
     [TestClass]
     public class TaskValidityKeyTest
     {
+        /// <summary>The base key term an annotated blib library adds (<c>OspreyTask.ValidityKey</c>).</summary>
+        private const string LIBEXT_TERM = @";libext=ann";
+
         [TestMethod]
         public void TestFlippedDefaultsParticipateInTheValidityKey()
         {
@@ -54,6 +60,92 @@ namespace pwiz.Osprey.Test
             AssertEveryTaskCarriesTheSuffixesItNeeds();
             AssertLibraryFragmentArmIsPinnedToThePipeline();
             AssertDiagnosticsReportIsADeclaredOutputOnlyWhenAsked();
+            AssertOnlyAnnotatedBlibsCarryTheReaderTerm();
+        }
+
+        /// <summary>
+        /// A blib whose <c>RefSpectraPeakAnnotations</c> table has rows is read differently since
+        /// the reader started typing fragments from it, so every task keys on that: a directory
+        /// scored before the upgrade against an annotated blib must not be adopted after it. A
+        /// TSV library and a blib with no annotation rows are read exactly as before, so their
+        /// keys - and the <c>.libcache</c> composition terms - must not move at all.
+        /// </summary>
+        private static void AssertOnlyAnnotatedBlibsCarryTheReaderTerm()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), @"osprey_libext_" + Path.GetRandomFileName());
+            Directory.CreateDirectory(dir);
+            try
+            {
+                double[] peaks = { 300.0, 400.0, 500.0 };
+                string tsv = Path.Combine(dir, @"library.tsv");
+                File.WriteAllText(tsv, @"not read");
+                string plain = BlibLibraryInputTest.CreateBlib(Path.Combine(dir, @"plain.blib"),
+                    @"PEPC[+57.021464]TIDEK", peaks, new (int, string, int)[0]);
+                string annotated = BlibLibraryInputTest.CreateBlib(Path.Combine(dir, @"annotated.blib"),
+                    @"PEPC[+57.021464]TIDEK", peaks, new[] { (0, @"y3", 1) });
+
+                // BiblioSpec's one-decimal text: the residue- and precision-aware modification
+                // reader gives it exact masses now. They reach no score for an unannotated blib,
+                // but they reach the output blib's Modifications table, so its .libcache is
+                // re-read once and its task keys gain LIBRARY_MODS_TERM.
+                string oneDecimal = BlibLibraryInputTest.CreateBlib(Path.Combine(dir, @"bibliospec.blib"),
+                    @"PEPC[+57.0]TIDEK", peaks, new (int, string, int)[0]);
+
+                foreach (var (unchanged, readerTerms) in new[]
+                         {
+                             (tsv, string.Empty), (plain, string.Empty),
+                         })
+                {
+                    var config = new OspreyConfig { LibrarySource = LibrarySource.FromPath(unchanged) };
+                    var tasks = OspreyTasks.Create().Pipeline;
+                    var ctx = new PipelineContext(config, tasks, null, null, null);
+                    Assert.AreEqual(PreUpgradeBaseKey(config), tasks.OfType<PerFileScoringTask>().Single().ValidityKey(ctx),
+                        Path.GetFileName(unchanged) + @" must key exactly as before the reader change");
+                    foreach (var task in tasks)
+                        Assert.IsFalse(task.ValidityKey(ctx).Contains(LIBEXT_TERM), task.Name);
+                    Assert.AreEqual(readerTerms, LibraryLoader.LibraryReaderTerms(config),
+                        Path.GetFileName(unchanged) + @" .libcache reader terms");
+                }
+
+                var oneDecimalConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(oneDecimal) };
+                var oneDecimalTasks = OspreyTasks.Create().Pipeline;
+                var oneDecimalCtx = new PipelineContext(oneDecimalConfig, oneDecimalTasks, null, null, null);
+                Assert.AreEqual(PreUpgradeBaseKey(oneDecimalConfig) + OspreyTask.LIBRARY_MODS_TERM,
+                    oneDecimalTasks.OfType<PerFileScoringTask>().Single().ValidityKey(oneDecimalCtx),
+                    @"a blib whose modification text reads differently must not adopt a directory written before");
+                foreach (var task in oneDecimalTasks)
+                {
+                    StringAssert.Contains(task.ValidityKey(oneDecimalCtx), OspreyTask.LIBRARY_MODS_TERM, task.Name);
+                    Assert.IsFalse(task.ValidityKey(oneDecimalCtx).Contains(LIBEXT_TERM), task.Name);
+                }
+                Assert.AreEqual("blib_mods:2\n", LibraryLoader.LibraryReaderTerms(oneDecimalConfig));
+
+                var annotatedConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(annotated) };
+                var annotatedTasks = OspreyTasks.Create().Pipeline;
+                var annotatedCtx = new PipelineContext(annotatedConfig, annotatedTasks, null, null, null);
+                Assert.AreEqual(LIBEXT_TERM, OspreyTask.LIBRARY_READER_TERM);
+                Assert.AreEqual(PreUpgradeBaseKey(annotatedConfig) + LIBEXT_TERM,
+                    annotatedTasks.OfType<PerFileScoringTask>().Single().ValidityKey(annotatedCtx));
+                foreach (var task in annotatedTasks)
+                {
+                    StringAssert.Contains(task.ValidityKey(annotatedCtx), LIBEXT_TERM,
+                        task.Name + @" must key on the annotated blib's reader");
+                }
+                Assert.AreEqual("blib_reader:2\n", LibraryLoader.LibraryReaderTerms(annotatedConfig));
+            }
+            finally
+            {
+                foreach (string file in Directory.GetFiles(dir))
+                    BlibLibraryInputTest.TryDeleteFile(file);
+                Directory.Delete(dir, true);
+            }
+        }
+
+        /// <summary>The base task key as every build before the blib reader change wrote it.</summary>
+        private static string PreUpgradeBaseKey(OspreyConfig config)
+        {
+            return string.Format(@"search={0};library={1}{2}", config.Identity.SearchParameterHash(),
+                config.Identity.LibraryIdentityHash(), OspreyEnvironment.PickValidityKeySuffix());
         }
 
         /// <summary>
