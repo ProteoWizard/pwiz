@@ -1266,7 +1266,7 @@ the lower limit of quantification (LOQ)</value>
     <value>100, 20</value>
   </data>
   <data name="tbxIonRatioThreshold.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>13</value>
   </data>
   <data name="tbxIonRatioThreshold.ToolTip" xml:space="preserve">
     <value>Percentage deviation allowed for the observed Qualitative Ion Ratio to be from the Target Qualitative Ion Ratio to still be considered "Pass".
@@ -2557,7 +2557,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>15, 13</value>
   </data>
   <data name="label20.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>14</value>
   </data>
   <data name="label20.Text" xml:space="preserve">
     <value>%</value>
@@ -2749,7 +2749,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>146, 13</value>
   </data>
   <data name="lblIonRatioThreshold.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>12</value>
   </data>
   <data name="lblIonRatioThreshold.Text" xml:space="preserve">
     <value>Qu&amp;alitative ion ratio threshold:</value>
