@@ -410,6 +410,18 @@ namespace pwiz.CarafeSharp.Test
                 return Convert.ToHexString(sha.ComputeHash(stream)).ToLowerInvariant();
         }
 
+        /// <summary>
+        /// The SHA-256 of a text file's lines, whatever their line ending. CarafeSharp writes the
+        /// training tables with the platform's line ending, so a Linux run's tables would otherwise
+        /// never match a Windows golden's even when every value does.
+        /// </summary>
+        private static string TextSha256(string path)
+        {
+            string text = string.Join('\n', File.ReadLines(TestData.RequireFile(path)));
+            using (var sha = SHA256.Create())
+                return Convert.ToHexString(sha.ComputeHash(Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
+        }
+
         /// <summary>The key of a precursor in the sample: its Skyline modified sequence and charge.</summary>
         private static string PrecursorKey(string modifiedSequence, long charge)
         {
@@ -462,7 +474,7 @@ namespace pwiz.CarafeSharp.Test
                     pairingPath = Path.Combine(new[] { folder }.Concat(relative.Split('/')).ToArray());
                 }
                 foreach (string table in TRAINING_TABLES)
-                    run.TrainingTables[table] = Sha256(Path.Combine(output, table));
+                    run.TrainingTables[table] = TextSha256(Path.Combine(output, table));
                 foreach (string model in MODEL_FILES)
                     run.Models[model] = Sha256(Path.Combine(output, model));
                 run.ReadMetrics(TestData.RequireFile(Path.Combine(output, ModelFiles.METRICS)));
