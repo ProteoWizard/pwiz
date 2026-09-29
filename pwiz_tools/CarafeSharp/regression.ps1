@@ -75,6 +75,11 @@
     Run this executable instead of this checkout's build (a snapshot of the build output, so
     the checkout can be rebuilt during a long run). Not allowed with -CreateGolden.
 
+.PARAMETER Export
+    Fine-tune on this training export instead of the packaged one, for example one Osprey has just
+    written from the .raw on this machine. Its folder must hold no other training export. The
+    golden records its export's SHA-256, so the run passes only with a byte-identical export: the
+    check that another platform's Osprey reproduces the packaged one. Not allowed with -CreateGolden.
 .PARAMETER Preflight
     Find the inputs and write the subset, print the CarafeSharp command, and stop.
 
@@ -98,6 +103,7 @@ param(
     [string]$WorkDir,
     [string]$RunName,
     [string]$CarafeSharpExe,
+    [string]$Export,
     [switch]$Preflight
 )
 
@@ -426,6 +432,9 @@ function Show-GoldenDifferences([string]$OldPath, [string]$NewPath) {
 if ($CreateGolden -and $ExtraArgs.Count -gt 0) {
     throw '-CreateGolden with -ExtraArgs: a golden is made with the default arguments only.'
 }
+if ($CreateGolden -and $Export) {
+    throw '-CreateGolden with -Export: a golden is made from the packaged export.'
+}
 if ($CreateGolden -and $CarafeSharpExe) {
     throw '-CreateGolden with -CarafeSharpExe: a golden is made with this checkout''s build, whose commit it records.'
 }
@@ -440,7 +449,21 @@ $packages = (Get-Content -Raw -LiteralPath $packageList | ConvertFrom-Json).pack
 $testDataRoot = Get-TestDataRoot
 
 if (-not $CompareRun) {
-    $export = Resolve-PackageFile $config.Export
+    if ($Export) {
+        if (-not (Test-Path -LiteralPath $Export -PathType Leaf)) {
+            throw "-Export names a file that does not exist: $Export"
+        }
+        $exportPath = (Resolve-Path -LiteralPath $Export).Path
+        # CarafeSharp is given the export's folder (-i), and reads every export in it.
+        $others = @(Get-ChildItem -LiteralPath (Split-Path -Parent $exportPath) -Filter '*.training.parquet' |
+            Where-Object { $_.FullName -ne $exportPath })
+        if ($others.Count -gt 0) {
+            throw "-Export: $(Split-Path -Parent $exportPath) holds other training exports ($($others[0].Name)); CarafeSharp would train on all of them."
+        }
+        $exportFile = [PSCustomObject]@{ Path = $exportPath; Relative = $exportPath }
+    } else {
+        $exportFile = Resolve-PackageFile $config.Export
+    }
     $libraryFasta = Resolve-PackageFile $config.LibraryFasta
     $pairing = Resolve-PackageFile $config.Pairing
 
@@ -485,7 +508,7 @@ if (-not $CompareRun) {
         throw "$($libraryFasta.Relative) has no record for $($subset.Sequences.Count - $subsetRecords) of the subset's peptides."
     }
 
-    $exportFolder = Split-Path -Parent $export.Path
+    $exportFolder = Split-Path -Parent $exportFile.Path
     $runFile = Join-Path $exportFolder $config.RunFile
     $arguments = Merge-Arguments (Get-LibraryArguments) $ExtraArgs
     $cliArgs = @('-db', $subsetFasta, '-i', $exportFolder, '-ms', $runFile, '-o', $outFolder,
@@ -517,7 +540,7 @@ if (-not $CompareRun) {
         subset_pairing_rows = $subset.Rows
         export_note       = $config.ExportNote
         inputs            = [ordered]@{
-            export          = [ordered]@{ path = $export.Relative; sha256 = Get-Sha256 $export.Path }
+            export          = [ordered]@{ path = $exportFile.Relative; sha256 = Get-Sha256 $exportFile.Path }
             library_fasta   = [ordered]@{ path = $libraryFasta.Relative; sha256 = Get-Sha256 $libraryFasta.Path }
             library_pairing = [ordered]@{ path = $pairing.Relative; sha256 = Get-Sha256 $pairing.Path }
             subset_fasta    = [ordered]@{ path = 'inputs/library_subset_peptides.fasta'; sha256 = Get-Sha256 $subsetFasta }
