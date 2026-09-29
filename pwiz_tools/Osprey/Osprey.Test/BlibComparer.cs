@@ -29,8 +29,10 @@ using System.Text;
 namespace pwiz.Osprey.Test
 {
     /// <summary>
-    /// Compares the Osprey-written tables of two .blib files row by row, the C# counterpart of
-    /// <c>Compare-BlibFull</c> in the regression's <c>Regression\BlibGolden.ps1</c>. Rows are
+    /// Compares the Osprey-written tables of two .blib files row by row, for these tests and for
+    /// <c>Compare-BlibFull</c> in the regression's <c>Regression\BlibGolden.ps1</c>, which compiles
+    /// this file with <c>Add-Type</c>. Keep it to the BCL and System.Data.SQLite, which is all that
+    /// compile references; nothing else in this assembly is there. Rows are
     /// keyed by precursor (peptideModSeq, charge) and run, never by database id, so two libraries
     /// written in a different order still compare; doubles compare at an absolute tolerance and
     /// every other value exactly. Source files are keyed by file name without directory or
