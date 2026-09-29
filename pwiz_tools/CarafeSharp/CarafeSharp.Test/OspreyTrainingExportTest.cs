@@ -95,6 +95,8 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual((200.25, 1800.0), export.Ms2ScanWindow);
             Assert.AreEqual(30.0, export.DominantCollisionEnergy);
             AssertFooter(@"osprey.instrument_model", string.Empty, e => Assert.IsNull(e.InstrumentModel));
+            AssertFooter(@"osprey.training_export.run_q_pass", @"1", e => Assert.AreEqual(@"1", e.RunQPass));
+            AssertFooter(@"osprey.training_export.run_q_pass", null, e => Assert.IsNull(e.RunQPass));
             AssertFooter(@"osprey.ms2_scan_window", @"200", e => Assert.IsNull(e.Ms2ScanWindow));
             AssertFooter(@"osprey.ms2_scan_window", @"200,high", e => Assert.IsNull(e.Ms2ScanWindow));
             AssertFooter(@"osprey.ms2_scan_window", null, e => Assert.IsNull(e.Ms2ScanWindow));

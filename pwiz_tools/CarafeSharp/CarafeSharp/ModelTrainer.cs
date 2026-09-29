@@ -83,9 +83,11 @@ namespace pwiz.CarafeSharp
             foreach (string path in selection.Exports)
             {
                 var export = OspreyTrainingExport.Read(path);
-                Log(string.Format(CultureInfo.InvariantCulture, @"Training export {0}: {1} precursors, rt_max {2}, NCE {3}, instrument {4}",
+                Log(string.Format(CultureInfo.InvariantCulture, @"Training export {0}: {1} precursors, rt_max {2}, NCE {3}, instrument {4}, run q from pass {5}",
                     path, export.Records.Count, export.RtMax, export.DominantCollisionEnergy?.ToString(CultureInfo.InvariantCulture) ?? @"unknown",
-                    export.InstrumentModel ?? @"unknown"));
+                    export.InstrumentModel ?? @"unknown", export.RunQPass ?? @"unknown"));
+                if (export.RunQPass == @"1")
+                    Log(string.Format(@"WARNING: {0} took its run q-values from Osprey's first pass; the run had no second pass.", path));
                 exports.Add(export);
             }
 
