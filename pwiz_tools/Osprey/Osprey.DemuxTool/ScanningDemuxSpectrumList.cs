@@ -85,6 +85,13 @@ namespace pwiz.Osprey.DemuxTool
         /// centroids each position on its own, so the same fragment's centroids can lie a grid sample apart.
         /// </summary>
         public double MergePpm { get; set; } = ScanningLayout.MERGE_PPM;
+
+        /// <summary>
+        /// For the joint solve: neighbouring positions' centroids closer than this many TOF peak sigmas (at their
+        /// m/z, <see cref="JointDemuxParams.SigmaAt"/>) are summed into one, in place of <see cref="MergePpm"/>;
+        /// 0 uses <see cref="MergePpm"/>. Two Gaussians closer than sigma are not resolved (Centrix's merge).
+        /// </summary>
+        public double JointMergeSigmas { get; set; } = 1;
     }
 
     /// <summary>
@@ -429,6 +436,16 @@ namespace pwiz.Osprey.DemuxTool
                 Bucket(result.Demultiplexed, demuxed);
             }
             var none = new List<ScanningPeak>();
+            // The joint solve centroids each position on its own, so one fragment's centroids from neighbouring
+            // positions can lie a grid sample apart: merged when closer than the TOF peak's sigma, in m/z
+            // (dm/dk = 2 sqrt(m/z) step on the grid).
+            Func<double, double> mergeWithin = null;
+            if (grid != null && _options.JointMergeSigmas > 0)
+            {
+                var joint = _options.JointParameters;
+                double sigmas = _options.JointMergeSigmas, step = grid.Step;
+                mergeWithin = m => sigmas * joint.SigmaAt(m) * 2 * Math.Sqrt(m) * step;
+            }
             for (int c = firstCycle; c <= lastCycle; c++)
             {
                 int cycle = c;
@@ -440,7 +457,7 @@ namespace pwiz.Osprey.DemuxTool
                         .SelectMany(b => through.TryGetValue((cycle, b), out var list) ? list : none);
                     var sources = Enumerable.Range(planned.FirstSourceBin, planned.LastSourceBin - planned.FirstSourceBin + 1)
                         .SelectMany(b => demuxed.TryGetValue((cycle, b), out var list) ? list : none);
-                    ScanningLayout.Assemble(own, sources, out double[] mz, out double[] ions, _options.MergePpm);
+                    ScanningLayout.Assemble(own, sources, out double[] mz, out double[] ions, _options.MergePpm, mergeWithin);
                     spectra[s] = (mz, ions);
                 }
                 _built[cycle] = spectra;

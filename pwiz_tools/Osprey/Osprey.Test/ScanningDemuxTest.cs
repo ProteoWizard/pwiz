@@ -333,6 +333,22 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(600.0, mz[0], 1e-12);
             Assert.AreEqual((600.0 * 40 + 600.0012 * 10) / 50, mz[1], 1e-9);
             Assert.AreEqual(650.0, mz[2], 1e-12);
+
+            // Within a distance of the merged peak so far (the joint solve's sigma rule): the second peak joins
+            // the first, the third is too far from their centre although it is as close to the second.
+            var spaced = new[]
+            {
+                new ScanningPeak(100, 7, 600.000, 10),
+                new ScanningPeak(101, 7, 600.005, 10),
+                new ScanningPeak(102, 7, 600.010, 10),
+            };
+            ScanningLayout.Assemble(Array.Empty<ScanningPeak>(), spaced, out mz, out ions, mergeWithin: m => 0.006);
+            CollectionAssert.AreEqual(new[] { 20.0, 10.0 }, ions);
+            Assert.AreEqual(600.0025, mz[0], 1e-9);
+            Assert.AreEqual(600.010, mz[1], 1e-12);
+            // The chained rule at the same distance takes all three.
+            ScanningLayout.Assemble(Array.Empty<ScanningPeak>(), spaced, out mz, out ions, 0.006 / 600.005 * 1e6);
+            CollectionAssert.AreEqual(new[] { 30.0 }, ions);
         }
 
         /// <summary>

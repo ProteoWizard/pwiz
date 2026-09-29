@@ -163,8 +163,18 @@ namespace pwiz.Osprey.Demux
         /// neighboring positions (closer than <paramref name="mergePpm"/>, by default <see cref="MERGE_PPM"/>)
         /// summed at their intensity-weighted m/z. Sorted by m/z.
         /// </summary>
+        /// <param name="passedThrough">Peaks kept as acquired.</param>
+        /// <param name="demultiplexed">The source positions' demultiplexed peaks.</param>
+        /// <param name="mz">The spectrum's m/z.</param>
+        /// <param name="ions">The spectrum's intensities.</param>
+        /// <param name="mergePpm">Consecutive peaks this close (ppm) are chained into one.</param>
+        /// <param name="mergeWithin">
+        /// When given, replaces <paramref name="mergePpm"/>: a peak joins the one being built when it lies within
+        /// this distance (m/z, a function of m/z) of that one's intensity-weighted m/z so far, as Centrix merges
+        /// centroids closer than the peak's sigma.
+        /// </param>
         public static void Assemble(IEnumerable<ScanningPeak> passedThrough, IEnumerable<ScanningPeak> demultiplexed,
-            out double[] mz, out double[] ions, double mergePpm = MERGE_PPM)
+            out double[] mz, out double[] ions, double mergePpm = MERGE_PPM, Func<double, double> mergeWithin = null)
         {
             var dem = new List<ScanningPeak>(demultiplexed);
             dem.Sort(CompareMz); // Array.Sort OK: ties broken by bin and intensity in CompareMz
@@ -174,7 +184,9 @@ namespace pwiz.Osprey.Demux
             {
                 double sum = dem[i].Ions, weighted = dem[i].Ions * dem[i].Mz;
                 int j = i + 1;
-                while (j < dem.Count && dem[j].Mz - dem[j - 1].Mz <= dem[j].Mz * mergePpm * 1e-6)
+                while (j < dem.Count && (mergeWithin != null
+                           ? dem[j].Mz - weighted / sum < mergeWithin(weighted / sum)
+                           : dem[j].Mz - dem[j - 1].Mz <= dem[j].Mz * mergePpm * 1e-6))
                 {
                     sum += dem[j].Ions;
                     weighted += dem[j].Ions * dem[j].Mz;

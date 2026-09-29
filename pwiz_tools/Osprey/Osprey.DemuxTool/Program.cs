@@ -43,7 +43,7 @@ namespace pwiz.Osprey.DemuxTool
             @" [--kernel <profile.tsv>] [--layout centered:k|tiled:k|framed:k:m] [--threads N] [--cycles first:last]" +
             @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--position-mz] [--unweighted]" +
             @" [--sweep-l1 L] [--sweep-l1-z Z] [--sweep-l1-refit] [--block-support-z Z] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw] [--profile] [--centroid vendor|events]" +
-            @" [--joint] [--joint-z Z] [--joint-relaxed] [--joint-keep-active] [--joint-param Name=Value] [--group-bins N] [--read-threads N] [--merge-ppm P] [--solve-profile]";
+            @" [--joint] [--joint-z Z] [--joint-relaxed] [--joint-keep-active] [--joint-param Name=Value] [--group-bins N] [--read-threads N] [--merge-ppm P] [--merge-sigmas F] [--solve-profile]";
 
         private static int Main(string[] args)
         {
@@ -165,8 +165,14 @@ namespace pwiz.Osprey.DemuxTool
                         options.JointParameters.Relaxed = true;
                         break;
                     case @"--merge-ppm":
-                        // Neighbouring positions' demultiplexed peaks closer than this are summed into one.
+                        // Neighbouring positions' demultiplexed peaks closer than this are summed into one; for
+                        // the joint solve this replaces its sigma rule.
                         options.MergePpm = double.Parse(value, CultureInfo.InvariantCulture);
+                        options.JointMergeSigmas = 0;
+                        break;
+                    case @"--merge-sigmas":
+                        // Joint solve: neighbouring positions' centroids closer than this many TOF peak sigmas merge.
+                        options.JointMergeSigmas = double.Parse(value, CultureInfo.InvariantCulture);
                         break;
                     case @"--read-threads":
                         // Threads reading a sweep's spectra; a vendor file defaults to 4, any other source to 1.
