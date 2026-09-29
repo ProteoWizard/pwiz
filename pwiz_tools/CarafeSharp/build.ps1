@@ -37,8 +37,8 @@
 
 .PARAMETER TestCategory
     Run only this test category (for example Astral or Cuda). By default the CPU build runs
-    every test except the Cuda and Astral categories, and the CUDA build runs the Cuda
-    category with a GPU required.
+    every test except the Cuda, Astral and Regression categories, and the CUDA build runs the
+    Cuda category with a GPU required. Regression is the golden comparator regression.ps1 runs.
 
 .PARAMETER RequireData
     Fail when any test did not run to a pass or fail (NotExecuted or Inconclusive), which is
@@ -195,7 +195,8 @@ if ($TestCategory) {
 } elseif ($Torch -eq 'cuda') {
     $filters += 'TestCategory=Cuda'
 } else {
-    $filters += 'TestCategory!=Cuda', 'TestCategory!=Astral'
+    # Regression is the golden comparator, which regression.ps1 runs on a run folder.
+    $filters += 'TestCategory!=Cuda', 'TestCategory!=Astral', 'TestCategory!=Regression'
 }
 if ($TestName) {
     $filters += "FullyQualifiedName~$TestName"
