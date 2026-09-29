@@ -137,8 +137,10 @@ namespace pwiz.CarafeSharp
         /// records (AIGear, the training data loop): the run's path as <paramref name="runPaths"/>
         /// keys it (its stem without <c>-ms</c>), the instrument detected in the run (empty when
         /// Carafe recognizes none; not <c>-ms_instrument</c>), the run's collision energy, its
-        /// rt_max (at least <c>-rt_max</c>), MS2 scan window and isolation range. The library
-        /// fragment range and count, which Carafe never sets, keep JMeta's defaults.
+        /// rt_max (at least <c>-rt_max</c>), MS2 scan window and isolation range. The scan window is
+        /// the export's measured m/z range, so it can differ from the declared one Carafe records
+        /// by a fraction of a Th; prediction does not read it. The library fragment range and
+        /// count, which Carafe never sets, keep JMeta's defaults.
         /// </summary>
         internal static IReadOnlyList<CarafeRunMeta> BuildRunMeta(IReadOnlyList<OspreyTrainingExport> exports,
             IReadOnlyDictionary<string, string> runPaths, OspreyTrainingSetOptions options)

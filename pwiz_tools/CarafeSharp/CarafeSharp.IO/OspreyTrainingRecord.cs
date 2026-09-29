@@ -67,8 +67,6 @@ namespace pwiz.CarafeSharp.IO
         public int PeakScanCount { get; set; }
         public double Score { get; set; }
         public double RunPrecursorQ { get; set; }
-        public double ExperimentPrecursorQ { get; set; }
-        public double Pep { get; set; }
 
         public bool MedianPolishFitted { get; set; }
 

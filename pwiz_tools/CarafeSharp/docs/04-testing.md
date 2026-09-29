@@ -58,9 +58,14 @@ repository. They come as zips with one top folder each:
 
 | Package | Holds | Extracted | Tests |
 |---|---|---|---|
-| `carafesharp-testfiles-v1` | Stellar Carafe runs (libraries, predictions, digests, fine-tuned models), 12 stage-1 builds, small library references | 5.6 GB | the default pass |
-| `carafesharp-testfiles-astral-v1` | the Astral Carafe run | 22 GB | category `Astral` |
+| `carafesharp-testfiles-v1` | Stellar Carafe runs (libraries, predictions, digests, fine-tuned models), 12 stage-1 builds, small library references | 1.5 GB zip, 5.6 GB extracted | the default pass |
+| `carafesharp-testfiles-astral-v1` | the Astral Carafe run | 4.8 GB zip, 22 GB extracted | category `Astral` |
 | `carafesharp-export-v1` | Osprey's training export of the Stellar run | 50 MB | masking parity |
+
+The zips are in the PanoramaWeb perftests folder beside the Osprey test files,
+<https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/>, and anyone can download them.
+`testdata.json` has each one's URL, size and SHA-256. The export package is published once it has been
+regenerated from .raw with the Osprey that writes it; until then its entry reads `PLACEHOLDER`.
 
 Extract a zip into `<Downloads>/Perftests/`, where the Skyline and Osprey perf tests keep theirs:
 - `<Downloads>` is `SKYLINE_DOWNLOAD_PATH` when it is set, else the user's Downloads folder.

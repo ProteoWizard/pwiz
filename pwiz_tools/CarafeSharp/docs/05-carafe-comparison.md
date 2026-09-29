@@ -86,8 +86,11 @@ CarafeSharp applies Carafe's rules to Osprey's exported evidence.
 
 - **The largest systematic difference is peak matching.** Carafe matches within 0.4 Th (Stellar) or
   20 ppm (Astral) and usually masks a peak it finds at the window's edge. Osprey's calibrated window
-  is tighter, so those ions are unmatched and CarafeSharp trains them as absent. That is intended: an
-  ion with no peak in Osprey's window is missing (see 02-masking.md, which also has the evidence).
+  is tighter, so those ions are unmatched, and CarafeSharp trains them as absent.
+  - **Intended:** CarafeSharp predicts the intensity Osprey will extract, and a peak outside Osprey's
+    calibrated window is not an m/z Osprey uses. The wider window mostly adds interference.
+  - **Evidence:** masking those ions the Carafe way changed the library but not the IDs
+    (02-masking.md).
 - **Astral kept fewer MS2 spectra** (39,296 against 53,741) because Osprey's unsmoothed correlation
   runs lower on Astral, so more spectra fail the correlation rule.
 
@@ -105,7 +108,8 @@ its own pretrained baseline. They do not rank the two tools.
 | Mean fragments per precursor, Carafe / CarafeSharp | 18.7 / 17.4 | 14.9 / 13.8 |
 
 - **Fewer fragments:** the fragments only Carafe writes are weak (median relative intensity 0.03 and
-  0.013). On Stellar, 81% of them are 2+ ions. This follows from the training difference above.
+  0.013). On Stellar, 81% of them are 2+ ions. They follow from the training difference above and
+  are expected: mostly ions for which Osprey found no peak within its tolerance in the training run.
 - **Nondeterminism:** GPU fine-tuning is nondeterministic in both tools. Two CarafeSharp GPU
   fine-tunes of the same data differ by a median cosine of 0.9997. A CPU fine-tune is
   bit-reproducible.
