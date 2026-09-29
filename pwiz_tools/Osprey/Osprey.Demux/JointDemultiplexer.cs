@@ -20,6 +20,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading;
 
 namespace pwiz.Osprey.Demux
 {
@@ -62,6 +64,21 @@ namespace pwiz.Osprey.Demux
         /// <summary>Grid samples whose coefficients one chunk owns; chunks overlap by a margin.</summary>
         public int ChunkSamples { get; set; } = 2048;
 
+        /// <summary>
+        /// After each pass, drop the coefficients at zero from the active set; the next round's gradient check
+        /// brings back any that should not be. The first check activates every position that transmits into a
+        /// strong peak's bins, most of which the block solves then set to zero.
+        /// </summary>
+        public bool PruneActive { get; set; } = true;
+
+        /// <summary>
+        /// Over-relaxation of each block step (1: none, below 2): the step from the block's old coefficients to
+        /// its optimum is lengthened by this factor, or less where a coefficient would go negative. Along m/z
+        /// neighbouring coefficients are nearly interchangeable, and plain coordinate descent moves peak mass
+        /// between them only slowly.
+        /// </summary>
+        public double Relaxation { get; set; } = 1.7;
+
         /// <summary>Coordinate-descent passes over the active set in one round.</summary>
         public int MaxPasses { get; set; } = 20;
 
@@ -92,6 +109,44 @@ namespace pwiz.Osprey.Demux
                     return sigma[i - 1] + (sigma[i] - sigma[i - 1]) * (mz - at[i - 1]) / (at[i] - at[i - 1]);
             }
             return sigma[sigma.Length - 1];
+        }
+    }
+
+    /// <summary>
+    /// Where the joint solve's time goes, summed across threads when <see cref="Enabled"/> (Stopwatch ticks and
+    /// counts): for tuning the solver, off by default.
+    /// </summary>
+    public static class JointDemuxProfile
+    {
+        public static bool Enabled { get; set; }
+        public static long SetupTicks;
+        public static long WeightTicks;
+        public static long GradientTicks;
+        public static long PassTicks;
+        public static long ObjectiveTicks;
+        public static long Chunks;
+        public static long Rounds;
+        public static long Passes;
+        public static long ActiveCoefficients;
+        public static long BlockSolves;
+        public static long BlockColumns;
+        public static long DataPoints;
+        public static long GridPoints;
+        public static long CandidatePoints;
+        /// <summary>The totals, one line.</summary>
+        public static string Summary()
+        {
+            double f = 1.0 / Stopwatch.Frequency;
+            return string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                @"joint profile: setup {0:F1} s, weights {1:F1} s, gradient {2:F1} s, passes {3:F1} s, objective {4:F1} s; " +
+                @"{5} chunks, {6:F1} rounds and {7:F1} passes per chunk, {8:F0} active coefficients per chunk, " +
+                @"{9:F1} positions per block solve, {10:F0} block solves per pass; " +
+                @"per chunk {11:F0} data points, {12:F0} grid points, {13:F0} with data in reach",
+                SetupTicks * f, WeightTicks * f, GradientTicks * f, PassTicks * f, ObjectiveTicks * f, Chunks,
+                Rounds / (double)Math.Max(Chunks, 1), Passes / (double)Math.Max(Chunks, 1),
+                ActiveCoefficients / (double)Math.Max(Chunks, 1), BlockColumns / (double)Math.Max(BlockSolves, 1),
+                BlockSolves / (double)Math.Max(Passes, 1), DataPoints / (double)Math.Max(Chunks, 1),
+                GridPoints / (double)Math.Max(Chunks, 1), CandidatePoints / (double)Math.Max(Chunks, 1));
         }
     }
 
@@ -218,27 +273,44 @@ namespace pwiz.Osprey.Demux
         /// The solve of one chunk of one sweep's grid, reusing its buffers from chunk to chunk within a
         /// block (one per block, so not shared across threads).
         /// </summary>
+        /// <remarks>
+        /// Coefficients are stored grid point by grid point, a point's positions together, the order the
+        /// block solves visit them in. Only the grid points with data within a peak's reach are visited: a
+        /// coefficient whose peak covers no data can only add to the misfit, so it is zero.
+        /// A coefficient's gradient depends only on the residual under its peak, which the coefficients within
+        /// two peak half-widths share. So a grid point is solved again only when a coefficient within that
+        /// reach has moved by more than the tolerance since it was last solved, and after a round's first full
+        /// gradient check only the grid points near a change are checked again.
+        /// </remarks>
         private sealed class ChunkSolver
         {
-            private readonly double[,] _a;
             private readonly int _rows;
             private readonly int _columns;
             private readonly JointDemuxParams _parameters;
-            private readonly double[] _b;          // the peak, offsets -h..h, unit area
+            private readonly double[] _aT;                   // columns x rows: the transmission, transposed
+            private readonly int[] _columnStart;             // per column, its span of _columnRow and _columnA
+            private readonly int[] _columnRow;               // the rows each column transmits into, ascending
+            private readonly double[] _columnA;              // the transmission into each of them
+            private readonly double[] _b;                    // the peak, offsets -h..h, unit area
             private readonly double[] _b2;
             private readonly int _half;
-            private int _samples;                  // samples in the chunk: [lo - h, hi + h]
-            private int _points;                   // grid points with coefficients: [lo, hi]
+            private int _samples;                            // samples in the chunk: [lo - h, hi + h]
+            private int _points;                             // grid points with coefficients: [lo, hi]
             private long _lo;
             private double[] _y = Array.Empty<double>();     // rows x samples
             private double[] _residual = Array.Empty<double>();
             private double[] _weight = Array.Empty<double>();
-            private double[] _beta = Array.Empty<double>();  // columns x points
+            private double[] _beta = Array.Empty<double>();  // points x columns
             private double[] _curvature = Array.Empty<double>();
             private double[] _lambda = Array.Empty<double>();
-            private double[] _z = Array.Empty<double>();     // rows x points: B convolved with the weighted residual
-            private double[] _v = Array.Empty<double>();     // rows x points: B^2 convolved with the weights
             private bool[] _active = Array.Empty<bool>();
+            private double[] _z = Array.Empty<double>();     // points x rows: B convolved with the weighted residual
+            private double[] _v = Array.Empty<double>();     // points x rows: B^2 convolved with the weights
+            private bool[] _sampleData = Array.Empty<bool>(); // per sample: data in some row
+            private int[] _reach = Array.Empty<int>();       // the grid points with data in reach, ascending
+            private int _reachCount;
+            private bool[] _dirty = Array.Empty<bool>();      // per grid point: to solve in the next pass
+            private bool[] _changed = Array.Empty<bool>();    // per grid point: gradient changed since the last check
             private readonly int[] _blockColumns;            // one grid point's active columns
             private readonly double[] _blockGradient;
             private readonly double[] _blockOld;
@@ -249,23 +321,50 @@ namespace pwiz.Osprey.Demux
             private readonly bool[] _rowSignal;
             private readonly bool[] _rowUsed;
             private readonly bool[] _columnUsed;
-            private readonly List<int>[] _columnRows;        // per column: the used rows it transmits into
+            private long _weightTicks, _gradientTicks, _passTicks, _objectiveTicks, _rounds, _passes, _blockSolves, _blockColumnCount;
+            private long _dataPoints;
+            private double _decrease;                        // the objective's decrease over the current pass
 
             public ChunkSolver(double[,] a, JointDemuxParams parameters)
             {
-                _a = a;
                 _rows = a.GetLength(0);
                 _columns = a.GetLength(1);
                 _parameters = parameters;
                 _half = parameters.PeakHalfWidth;
                 _b = new double[2 * _half + 1];
                 _b2 = new double[2 * _half + 1];
+                _aT = new double[_columns * _rows];
+                _columnStart = new int[_columns + 1];
+                int entries = 0;
+                for (int j = 0; j < _columns; j++)
+                {
+                    for (int r = 0; r < _rows; r++)
+                    {
+                        _aT[j * _rows + r] = a[r, j];
+                        if (a[r, j] > 0)
+                            entries++;
+                    }
+                }
+                _columnRow = new int[entries];
+                _columnA = new double[entries];
+                int k = 0;
+                for (int j = 0; j < _columns; j++)
+                {
+                    _columnStart[j] = k;
+                    for (int r = 0; r < _rows; r++)
+                    {
+                        if (a[r, j] > 0)
+                        {
+                            _columnRow[k] = r;
+                            _columnA[k] = a[r, j];
+                            k++;
+                        }
+                    }
+                }
+                _columnStart[_columns] = k;
                 _rowSignal = new bool[_rows];
                 _rowUsed = new bool[_rows];
                 _columnUsed = new bool[_columns];
-                _columnRows = new List<int>[_columns];
-                for (int j = 0; j < _columns; j++)
-                    _columnRows[j] = new List<int>();
                 _blockColumns = new int[_columns];
                 _blockGradient = new double[_columns];
                 _blockOld = new double[_columns];
@@ -279,6 +378,7 @@ namespace pwiz.Osprey.Demux
             public void Solve(List<(long Sample, int Row, double Ions)> points, int start, int end, long lo, long hi,
                 double sigma)
             {
+                long t0 = Now();
                 _lo = lo;
                 _points = (int)(hi - lo + 1);
                 _samples = _points + 2 * _half;
@@ -287,35 +387,53 @@ namespace pwiz.Osprey.Demux
 
                 Array.Clear(_y, 0, _rows * _samples);
                 Array.Clear(_rowSignal, 0, _rows);
+                Array.Clear(_sampleData, 0, _samples);
                 long baseSample = lo - _half;
+                _dataPoints = end - start;
                 for (int p = start; p < end; p++)
                 {
                     int s = (int)(points[p].Sample - baseSample);
                     _y[points[p].Row * _samples + s] += points[p].Ions;
                     _rowSignal[points[p].Row] = true;
+                    _sampleData[s] = true;
+                }
+                // The grid points whose peak, samples [q, q + 2h], covers some data.
+                _reachCount = 0;
+                int width = 2 * _half, inWindow = 0;
+                for (int s = 0; s < width; s++)
+                {
+                    if (_sampleData[s])
+                        inWindow++;
+                }
+                for (int q = 0; q < _points; q++)
+                {
+                    if (_sampleData[q + width])
+                        inWindow++;
+                    if (inWindow > 0)
+                        _reach[_reachCount++] = q;
+                    if (_sampleData[q])
+                        inWindow--;
                 }
                 // The positions any signal-bearing row could come from, and the rows that see them.
                 Array.Clear(_rowUsed, 0, _rows);
                 for (int j = 0; j < _columns; j++)
                 {
                     _columnUsed[j] = false;
-                    for (int r = 0; r < _rows && !_columnUsed[j]; r++)
-                        _columnUsed[j] = _rowSignal[r] && _a[r, j] > 0;
-                    _columnRows[j].Clear();
+                    for (int k = _columnStart[j]; k < _columnStart[j + 1] && !_columnUsed[j]; k++)
+                        _columnUsed[j] = _rowSignal[_columnRow[k]];
                     if (!_columnUsed[j])
                         continue;
-                    for (int r = 0; r < _rows; r++)
-                    {
-                        if (_a[r, j] > 0)
-                        {
-                            _columnRows[j].Add(r);
-                            _rowUsed[r] = true;
-                        }
-                    }
+                    for (int k = _columnStart[j]; k < _columnStart[j + 1]; k++)
+                        _rowUsed[_columnRow[k]] = true;
                 }
 
-                Array.Clear(_beta, 0, _columns * _points);
+                int cp = _points * _columns;
+                Array.Clear(_beta, 0, cp);
+                Array.Clear(_curvature, 0, cp);
+                Array.Clear(_lambda, 0, cp);
+                Array.Clear(_active, 0, cp);
                 Array.Copy(_y, _residual, _rows * _samples);
+                long t1 = Now();
                 // 1. Poisson weights from the data smoothed by the peak, with the z-scaled lasso.
                 FillWeights(false);
                 Descend(_parameters.L1Z);
@@ -328,6 +446,8 @@ namespace pwiz.Osprey.Demux
                 // 3. Relaxed: the kept coefficients without the penalty.
                 if (_parameters.Relaxed && _parameters.L1Z > 0)
                     Descend(0, false);
+                if (JointDemuxProfile.Enabled)
+                    Flush(t1 - t0);
             }
 
             /// <summary>Adds the positive coefficients of the core grid points [core0, core1], core columns only.</summary>
@@ -340,11 +460,41 @@ namespace pwiz.Osprey.Demux
                         continue;
                     for (int q = q0; q <= q1; q++)
                     {
-                        double beta = _beta[j * _points + q];
+                        double beta = _beta[q * _columns + j];
                         if (beta > 0)
                             kept.Add((j, _lo + q, beta));
                     }
                 }
+            }
+
+            private static long Now()
+            {
+                return JointDemuxProfile.Enabled ? Stopwatch.GetTimestamp() : 0;
+            }
+
+            private void Flush(long setupTicks)
+            {
+                long active = 0;
+                for (int i = 0; i < _columns * _points; i++)
+                {
+                    if (_beta[i] > 0)
+                        active++;
+                }
+                Interlocked.Add(ref JointDemuxProfile.SetupTicks, setupTicks);
+                Interlocked.Add(ref JointDemuxProfile.WeightTicks, _weightTicks);
+                Interlocked.Add(ref JointDemuxProfile.GradientTicks, _gradientTicks);
+                Interlocked.Add(ref JointDemuxProfile.PassTicks, _passTicks);
+                Interlocked.Add(ref JointDemuxProfile.ObjectiveTicks, _objectiveTicks);
+                Interlocked.Increment(ref JointDemuxProfile.Chunks);
+                Interlocked.Add(ref JointDemuxProfile.Rounds, _rounds);
+                Interlocked.Add(ref JointDemuxProfile.Passes, _passes);
+                Interlocked.Add(ref JointDemuxProfile.ActiveCoefficients, active);
+                Interlocked.Add(ref JointDemuxProfile.BlockSolves, _blockSolves);
+                Interlocked.Add(ref JointDemuxProfile.BlockColumns, _blockColumnCount);
+                Interlocked.Add(ref JointDemuxProfile.DataPoints, _dataPoints);
+                Interlocked.Add(ref JointDemuxProfile.GridPoints, _points);
+                Interlocked.Add(ref JointDemuxProfile.CandidatePoints, _reachCount);
+                _weightTicks = _gradientTicks = _passTicks = _objectiveTicks = _rounds = _passes = _blockSolves = _blockColumnCount = 0;
             }
 
             private void Allocate()
@@ -367,6 +517,13 @@ namespace pwiz.Osprey.Demux
                 {
                     _z = new double[rp];
                     _v = new double[rp];
+                }
+                if (_sampleData.Length < _samples)
+                {
+                    _sampleData = new bool[_samples];
+                    _reach = new int[_samples];
+                    _dirty = new bool[_samples];
+                    _changed = new bool[_samples];
                 }
             }
 
@@ -393,9 +550,12 @@ namespace pwiz.Osprey.Demux
             /// </summary>
             private void FillWeights(bool fromModel)
             {
+                long t0 = Now();
                 double floor = _parameters.WeightFloorIons;
                 for (int r = 0; r < _rows; r++)
                 {
+                    if (!_rowUsed[r])
+                        continue;
                     int o = r * _samples;
                     for (int s = 0; s < _samples; s++)
                     {
@@ -407,46 +567,39 @@ namespace pwiz.Osprey.Demux
                         else
                         {
                             mu = 0;
-                            for (int d = -_half; d <= _half; d++)
-                            {
-                                int t = s + d;
-                                if (t >= 0 && t < _samples)
-                                    mu += _b[d + _half] * _y[o + t];
-                            }
+                            int d0 = Math.Max(-_half, -s), d1 = Math.Min(_half, _samples - 1 - s);
+                            for (int d = d0; d <= d1; d++)
+                                mu += _b[d + _half] * _y[o + s + d];
                         }
                         _weight[o + s] = 1 / Math.Max(mu, floor);
                     }
                 }
-                // v[r, q] = sum_d B[d]^2 w[r, q + d]; curvature[j, q] = sum_r A_rj^2 v[r, q].
-                Array.Clear(_v, 0, _rows * _points);
-                for (int r = 0; r < _rows; r++)
+                // v[q, r] = sum_d B[d]^2 w[r, q + d]; curvature[q, j] = sum_r A_rj^2 v[q, r].
+                for (int i = 0; i < _reachCount; i++)
                 {
-                    if (!_rowUsed[r])
-                        continue;
-                    int o = r * _samples, ov = r * _points;
-                    for (int q = 0; q < _points; q++)
+                    int q = _reach[i], oq = q * _rows;
+                    for (int r = 0; r < _rows; r++)
                     {
+                        if (!_rowUsed[r])
+                            continue;
+                        int o = r * _samples + q;
                         double v = 0;
                         for (int d = 0; d < _b2.Length; d++)
-                            v += _b2[d] * _weight[o + q + d];
-                        _v[ov + q] = v;
+                            v += _b2[d] * _weight[o + d];
+                        _v[oq + r] = v;
                     }
-                }
-                for (int j = 0; j < _columns; j++)
-                {
-                    if (!_columnUsed[j])
-                        continue;
-                    int oj = j * _points;
-                    for (int q = 0; q < _points; q++)
-                        _curvature[oj + q] = 0;
-                    foreach (int r in _columnRows[j])
+                    int oc = q * _columns;
+                    for (int j = 0; j < _columns; j++)
                     {
-                        double a2 = _a[r, j] * _a[r, j];
-                        int ov = r * _points;
-                        for (int q = 0; q < _points; q++)
-                            _curvature[oj + q] += a2 * _v[ov + q];
+                        if (!_columnUsed[j])
+                            continue;
+                        double c = 0;
+                        for (int k = _columnStart[j]; k < _columnStart[j + 1]; k++)
+                            c += _columnA[k] * _columnA[k] * _v[oq + _columnRow[k]];
+                        _curvature[oc + j] = c;
                     }
                 }
+                _weightTicks += Now() - t0;
             }
 
             /// <summary>
@@ -456,34 +609,77 @@ namespace pwiz.Osprey.Demux
             /// </summary>
             private void Descend(double z, bool grow = true)
             {
-                int cp = _columns * _points;
-                for (int i = 0; i < cp; i++)
-                    _lambda[i] = z > 0 ? z * Math.Sqrt(_curvature[i]) : 0;
-                for (int j = 0; j < _columns; j++)
+                for (int i = 0; i < _reachCount; i++)
                 {
-                    if (!_columnUsed[j])
-                        continue;
-                    int oj = j * _points;
-                    for (int q = 0; q < _points; q++)
+                    int q = _reach[i], oc = q * _columns;
+                    for (int j = 0; j < _columns; j++)
                     {
-                        _active[oj + q] = _beta[oj + q] > 0;
+                        _lambda[oc + j] = z > 0 ? z * Math.Sqrt(_curvature[oc + j]) : 0;
+                        _active[oc + j] = _beta[oc + j] > 0;
                     }
+                    _dirty[q] = _changed[q] = true;
                 }
+                long o0 = Now();
+                double objective = Objective();
+                _objectiveTicks += Now() - o0;
                 for (int round = 0; round < _parameters.MaxRounds; round++)
                 {
-                    if (grow && AddViolators() == 0 && round > 0)
+                    long t0 = Now();
+                    int added = grow ? AddViolators() : 0;
+                    long t1 = Now();
+                    _gradientTicks += t1 - t0;
+                    if (grow && added == 0 && round > 0)
                         break;
-                    double previous = Objective();
+                    _rounds++;
                     for (int pass = 0; pass < _parameters.MaxPasses; pass++)
                     {
+                        long t2 = Now();
                         double largest = Pass();
-                        double current = Objective();
-                        if (largest < _parameters.ToleranceIons || previous - current <= _parameters.RelativeTolerance * current)
+                        if (grow && _parameters.PruneActive)
+                            Prune();
+                        _passTicks += Now() - t2;
+                        _passes++;
+                        // Each block step's decrease is exact, so the objective is tracked, not recomputed.
+                        objective -= _decrease;
+                        if (largest < _parameters.ToleranceIons || _decrease <= _parameters.RelativeTolerance * objective)
                             break;
-                        previous = current;
                     }
                     if (!grow)
                         break;
+                }
+            }
+
+            /// <summary>
+            /// Lengthens the block step from _blockOld to its optimum _blockNew by the relaxation factor, or to the
+            /// point where the first coefficient reaches zero, and returns the factor used. The objective along
+            /// the step is a parabola with its minimum at the optimum, so any length up to twice that does not
+            /// raise it.
+            /// </summary>
+            private double Relax(int n)
+            {
+                double omega = _parameters.Relaxation;
+                if (omega == 1)
+                    return 1;
+                double t = omega;
+                for (int u = 0; u < n; u++)
+                {
+                    double du = _blockNew[u] - _blockOld[u];
+                    if (du < 0)
+                        t = Math.Min(t, _blockOld[u] / -du);
+                }
+                for (int u = 0; u < n; u++)
+                    _blockNew[u] = Math.Max(0, _blockOld[u] + t * (_blockNew[u] - _blockOld[u]));
+                return t;
+            }
+
+            /// <summary>Makes the active set the positive coefficients.</summary>
+            private void Prune()
+            {
+                for (int i = 0; i < _reachCount; i++)
+                {
+                    int oc = _reach[i] * _columns;
+                    for (int j = 0; j < _columns; j++)
+                        _active[oc + j] = _beta[oc + j] > 0;
                 }
             }
 
@@ -503,9 +699,11 @@ namespace pwiz.Osprey.Demux
                 {
                     if (!_columnUsed[j])
                         continue;
-                    int oj = j * _points;
-                    for (int q = 0; q < _points; q++)
-                        sum += _lambda[oj + q] * _beta[oj + q];
+                    for (int i = 0; i < _reachCount; i++)
+                    {
+                        int index = _reach[i] * _columns + j;
+                        sum += _lambda[index] * _beta[index];
+                    }
                 }
                 return sum;
             }
@@ -513,7 +711,8 @@ namespace pwiz.Osprey.Demux
             /// <summary>
             /// The full gradient, factored: per row, B convolved with the weighted residual; per coefficient,
             /// those combined across rows by A. Adds every inactive coefficient whose gradient exceeds its
-            /// lambda to the active set, in (column, grid point) order; returns how many.
+            /// lambda to the active set; returns how many. Only the grid points whose gradient has changed since the
+            /// last check are checked.
             /// </summary>
             private int AddViolators()
             {
@@ -521,31 +720,38 @@ namespace pwiz.Osprey.Demux
                 {
                     if (!_rowUsed[r])
                         continue;
-                    int o = r * _samples, oz = r * _points;
-                    for (int q = 0; q < _points; q++)
+                    int o = r * _samples;
+                    for (int i = 0; i < _reachCount; i++)
                     {
+                        int q = _reach[i];
+                        if (!_changed[q])
+                            continue;
                         double g = 0;
                         for (int d = 0; d < _b.Length; d++)
                             g += _b[d] * _weight[o + q + d] * _residual[o + q + d];
-                        _z[oz + q] = g;
+                        _z[q * _rows + r] = g;
                     }
                 }
                 int added = 0;
-                for (int j = 0; j < _columns; j++)
+                for (int i = 0; i < _reachCount; i++)
                 {
-                    if (!_columnUsed[j])
+                    int q = _reach[i], oq = q * _rows, oc = q * _columns;
+                    if (!_changed[q])
                         continue;
-                    int oj = j * _points;
-                    for (int q = 0; q < _points; q++)
+                    _changed[q] = false;
+                    for (int j = 0; j < _columns; j++)
                     {
-                        if (_active[oj + q] || _curvature[oj + q] <= 0)
+                        int index = oc + j;
+                        if (!_columnUsed[j] || _active[index] || _curvature[index] <= 0)
                             continue;
                         double g = 0;
-                        foreach (int r in _columnRows[j])
-                            g += _a[r, j] * _z[r * _points + q];
-                        if (g > _lambda[oj + q] * (1 + 1e-9) + 1e-12)
+                        for (int k = _columnStart[j]; k < _columnStart[j + 1]; k++)
+                            g += _columnA[k] * _z[oq + _columnRow[k]];
+                        // Worth a round only if the coefficient would move by more than a pass's tolerance.
+                        if (g - _lambda[index] > Math.Max(_lambda[index] * 1e-9 + 1e-12, _parameters.ToleranceIons * _curvature[index]))
                         {
-                            _active[oj + q] = true;
+                            _active[index] = true;
+                            _dirty[q] = true;
                             added++;
                         }
                     }
@@ -562,52 +768,65 @@ namespace pwiz.Osprey.Demux
             private double Pass()
             {
                 double largest = 0;
-                for (int q = 0; q < _points; q++)
+                _decrease = 0;
+                for (int i = 0; i < _reachCount; i++)
                 {
+                    int q = _reach[i], oc = q * _columns, oq = q * _rows;
+                    if (!_dirty[q])
+                        continue;
+                    _dirty[q] = false;
                     int n = 0;
                     for (int j = 0; j < _columns; j++)
                     {
-                        if (_columnUsed[j] && _active[j * _points + q] && _curvature[j * _points + q] > 0)
+                        if (_active[oc + j] && _curvature[oc + j] > 0)
                             _blockColumns[n++] = j;
                     }
                     if (n == 0)
                         continue;
+                    _blockSolves++;
+                    _blockColumnCount += n;
+                    double stretch;
                     for (int u = 0; u < n; u++)
                     {
                         int j = _blockColumns[u];
                         double g = 0;
-                        foreach (int r in _columnRows[j])
+                        for (int k = _columnStart[j]; k < _columnStart[j + 1]; k++)
                         {
-                            int o = r * _samples + q;
+                            int o = _columnRow[k] * _samples + q;
                             double s = 0;
                             for (int d = 0; d < _b.Length; d++)
                                 s += _b[d] * _weight[o + d] * _residual[o + d];
-                            g += _a[r, j] * s;
+                            g += _columnA[k] * s;
                         }
                         _blockGradient[u] = g;
-                        _blockOld[u] = _beta[j * _points + q];
+                        _blockOld[u] = _beta[oc + j];
                     }
                     if (n == 1)
                     {
-                        int index = _blockColumns[0] * _points + q;
-                        _blockNew[0] = Math.Max(0, _blockOld[0] + (_blockGradient[0] - _lambda[index]) / _curvature[index]);
+                        int index = oc + _blockColumns[0];
+                        double c = _curvature[index];
+                        _blockNew[0] = Math.Max(0, _blockOld[0] + (_blockGradient[0] - _lambda[index]) / c);
+                        stretch = Relax(1);
+                        double step = _blockNew[0] - _blockOld[0];
+                        _decrease += (_blockGradient[0] - _lambda[index]) * step - 0.5 * c * step * step;
                     }
                     else
                     {
-                        // Block Hessian H[u, v] = sum_r A_r,ju A_r,jv v[r, q]; minimize over the block
+                        // Block Hessian H[u, v] = sum_r A_r,ju A_r,jv v[q, r]; minimize over the block
                         // 1/2 x^T H x - (g + H x_old - lambda)^T x, x >= 0.
                         for (int u = 0; u < n; u++)
                         {
                             int ju = _blockColumns[u];
                             for (int w = u; w < n; w++)
                             {
-                                int jw = _blockColumns[w];
+                                int ow = _blockColumns[w] * _rows;
                                 double h = 0;
-                                foreach (int r in _columnRows[ju])
+                                for (int k = _columnStart[ju]; k < _columnStart[ju + 1]; k++)
                                 {
-                                    double aw = _a[r, jw];
+                                    int r = _columnRow[k];
+                                    double aw = _aT[ow + r];
                                     if (aw > 0)
-                                        h += _a[r, ju] * aw * _v[r * _points + q];
+                                        h += _columnA[k] * aw * _v[oq + r];
                                 }
                                 _blockGram[u * n + w] = h;
                                 _blockGram[w * n + u] = h;
@@ -615,28 +834,55 @@ namespace pwiz.Osprey.Demux
                         }
                         for (int u = 0; u < n; u++)
                         {
-                            double rhs = _blockGradient[u] - _lambda[_blockColumns[u] * _points + q];
+                            double rhs = _blockGradient[u] - _lambda[oc + _blockColumns[u]];
                             for (int w = 0; w < n; w++)
                                 rhs += _blockGram[u * n + w] * _blockOld[w];
                             _blockRhs[u] = rhs;
                         }
                         NnlsSolver.SolveNormal(_blockGram, _blockRhs, n, _blockNew, _workspace, 0, _blockOld);
+                        stretch = Relax(n);
+                        // The decrease (g - lambda)^T d - d^T H d / 2 of the step d.
+                        for (int u = 0; u < n; u++)
+                        {
+                            double du = _blockNew[u] - _blockOld[u];
+                            if (du == 0)
+                                continue;
+                            double hd = 0;
+                            for (int w = 0; w < n; w++)
+                                hd += _blockGram[u * n + w] * (_blockNew[w] - _blockOld[w]);
+                            _decrease += (_blockGradient[u] - _lambda[oc + _blockColumns[u]]) * du - 0.5 * du * hd;
+                        }
                     }
+                    double moved = 0;
                     for (int u = 0; u < n; u++)
                     {
                         double delta = _blockNew[u] - _blockOld[u];
                         if (delta == 0)
                             continue;
                         int j = _blockColumns[u];
-                        _beta[j * _points + q] = _blockNew[u];
-                        foreach (int r in _columnRows[j])
+                        _beta[oc + j] = _blockNew[u];
+                        for (int k = _columnStart[j]; k < _columnStart[j + 1]; k++)
                         {
-                            double ad = _a[r, j] * delta;
-                            int o = r * _samples + q;
+                            double ad = _columnA[k] * delta;
+                            int o = _columnRow[k] * _samples + q;
                             for (int d = 0; d < _b.Length; d++)
                                 _residual[o + d] -= ad * _b[d];
                         }
-                        largest = Math.Max(largest, Math.Abs(delta));
+                        moved = Math.Max(moved, Math.Abs(delta));
+                    }
+                    largest = Math.Max(largest, moved);
+                    // The grid points sharing this one's residual: their gradients changed by about as much
+                    // as this step, so below the tolerance none can have come to violate by more. This point
+                    // itself is at its optimum unless the step was lengthened past it.
+                    if (moved <= _parameters.ToleranceIons)
+                        continue;
+                    bool overshot = (stretch - 1) / stretch * moved > _parameters.ToleranceIons;
+                    int reach0 = Math.Max(0, q - 2 * _half), reach1 = Math.Min(_points - 1, q + 2 * _half);
+                    for (int t = reach0; t <= reach1; t++)
+                    {
+                        _changed[t] = true;
+                        if (t != q || overshot)
+                            _dirty[t] = true;
                     }
                 }
                 return largest;

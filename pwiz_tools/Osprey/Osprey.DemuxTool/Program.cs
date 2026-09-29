@@ -43,12 +43,12 @@ namespace pwiz.Osprey.DemuxTool
             @" [--kernel <profile.tsv>] [--layout centered:k|tiled:k|framed:k:m] [--threads N] [--cycles first:last]" +
             @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--position-mz] [--unweighted]" +
             @" [--sweep-l1 L] [--sweep-l1-z Z] [--sweep-l1-refit] [--block-support-z Z] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw] [--profile] [--centroid vendor|events]" +
-            @" [--joint] [--joint-z Z] [--joint-relaxed]";
+            @" [--joint] [--joint-z Z] [--joint-relaxed] [--joint-keep-active] [--joint-param Name=Value] [--group-bins N] [--solve-profile]";
 
         private static int Main(string[] args)
         {
             string input = null, output = null, kernelPath = null;
-            bool staggered = false, profile = false, eventCentroids = false;
+            bool staggered = false, profile = false, eventCentroids = false, groupBinsSet = false;
             var options = new ScanningDemuxOptions();
             for (int i = 0; i < args.Length; i++)
             {
@@ -56,7 +56,8 @@ namespace pwiz.Osprey.DemuxTool
                 string option = args[i];
                 bool isSwitch = option == @"--raw" || option == @"--unweighted" || option == @"--position-mz" ||
                     option == @"--source-positions" || option == @"--sweep-l1-refit" || option == @"--profile" ||
-                    option == @"--joint" || option == @"--joint-relaxed";
+                    option == @"--joint" || option == @"--joint-relaxed" || option == @"--solve-profile" ||
+                    option == @"--joint-keep-active";
                 if (!isSwitch && i + 1 >= args.Length)
                 {
                     Console.Error.WriteLine(USAGE);
@@ -163,6 +164,27 @@ namespace pwiz.Osprey.DemuxTool
                     case @"--joint-relaxed":
                         options.JointParameters.Relaxed = true;
                         break;
+                    case @"--group-bins":
+                        // Encoded bins whose output one block owns (each block also solves its context).
+                        options.GroupBins = int.Parse(value, CultureInfo.InvariantCulture);
+                        groupBinsSet = true;
+                        break;
+                    case @"--joint-param":
+                        // Any scalar setting of the joint solve by its property name, for tuning.
+                        if (!SetJointParameter(options.JointParameters, value))
+                        {
+                            Console.Error.WriteLine(@"Unknown joint setting: {0}", value);
+                            return 1;
+                        }
+                        break;
+                    case @"--joint-keep-active":
+                        // Keep coefficients that reach zero in the active set for the rest of the round.
+                        options.JointParameters.PruneActive = false;
+                        break;
+                    case @"--solve-profile":
+                        // Where the joint solve's time goes, summed over threads, logged at the end.
+                        JointDemuxProfile.Enabled = true;
+                        break;
                     case @"--centroid":
                         // events: the profile centroided keeping every single ion event; vendor: the
                         // vendor library's centroids (the default for a vendor file).
@@ -173,6 +195,11 @@ namespace pwiz.Osprey.DemuxTool
                         return 1;
                 }
             }
+            // The joint solve's cost grows with the positions it solves, context included, and each position
+            // is local: larger blocks solve less context per bin kept (48 bins keep 48 of 68 positions, 16
+            // keep 16 of 36) and leave fewer block edges.
+            if (options.Joint && !groupBinsSet)
+                options.GroupBins = 48;
             if (input == null || output == null || (kernelPath == null && !staggered))
             {
                 Console.Error.WriteLine(USAGE);
@@ -248,7 +275,24 @@ namespace pwiz.Osprey.DemuxTool
             double passed = stepped?.IonsPassedThrough ?? scanning.IonsPassedThrough;
             Console.WriteLine(@"Wrote {0} in {1:F0} s: {2:N0} channels, {3:N0} solved; {4:P2} of {5:E3} ions passed through",
                 output, stopwatch.Elapsed.TotalSeconds, channels, solved, passed / Math.Max(ionsIn, 1e-30), ionsIn);
+            if (JointDemuxProfile.Enabled)
+                Console.WriteLine(JointDemuxProfile.Summary());
             return 0;
+        }
+
+        /// <summary>Sets a scalar property of the joint solve's settings from Name=Value.</summary>
+        private static bool SetJointParameter(JointDemuxParams parameters, string assignment)
+        {
+            int equals = assignment.IndexOf('=');
+            if (equals <= 0)
+                return false;
+            var property = typeof(JointDemuxParams).GetProperty(assignment.Substring(0, equals));
+            if (property == null || !property.CanWrite || property.PropertyType.IsArray)
+                return false;
+            property.SetValue(parameters, Convert.ChangeType(assignment.Substring(equals + 1), property.PropertyType,
+                CultureInfo.InvariantCulture));
+            Console.WriteLine(@"Joint setting: {0}", assignment);
+            return true;
         }
 
         /// <summary>The solve's settings, so each run's log records what produced its file.</summary>
