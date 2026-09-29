@@ -66,8 +66,9 @@ through CarafeSharp, stage by stage, and why each difference is there.
 | Shared precursors, Jaccard | 0.977 | 0.896 |
 | Shared IDs on the same apex scan | 99.1% | 94.6% |
 
-- **Spectra:** Osprey's spectra cache from the .raw is byte-identical to the one from the
-  vendor-centroided mzML, so the spectra are the same.
+- **Spectra:** Osprey's spectra cache from the .raw is identical to the one from the
+  vendor-centroided mzML apart from its header's source file size and time, so the spectra are the
+  same.
 - **Why the IDs differ:** the libraries differ by the redrawn decoys and by the TSV rounding. Osprey's
   scoring-model choice is known to move IDs on small input changes.
 - **Joining the two arms:** normalize the modification mass first. Carafe's blib writes Cys as
@@ -131,8 +132,10 @@ its own pretrained baseline. They do not rank the two tools.
 | Fine-tune and final library | 8.6 / 6.5 | 41.3 / 25.8 |
 | Total, end to end | 17.3 / 12.9 | 79.5 / 53.1 |
 
-The totals include the digests (under 0.6 min). Osprey reads a .raw more slowly than the mzML: 44 s
-more on the Stellar file and 319 s more on the Astral file. Skipping msconvert more than repays it.
+The totals include the digests (under 0.6 min). The Osprey search took 44 s longer on Stellar and
+319 s longer on Astral in the CarafeSharp arm, which reads the .raw; reading a .raw is slower than
+reading the mzML, and the two arms also searched slightly different libraries. Skipping msconvert more
+than repays it.
 
 ## The full workflow on three runs
 

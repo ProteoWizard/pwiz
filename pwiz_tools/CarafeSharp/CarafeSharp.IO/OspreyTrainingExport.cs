@@ -203,6 +203,15 @@ namespace pwiz.CarafeSharp.IO
         }
 
         /// <summary>The instrument model the run info reports, or null.</summary>
+        /// <summary>
+        /// Which Osprey pass the run q-values came from (<c>osprey.training_export.run_q_pass</c>,
+        /// format 2): <c>2</c> normally, <c>1</c> when the run had no second pass; null in format 1.
+        /// </summary>
+        public string RunQPass
+        {
+            get { return Metadata.TryGetValue(@"osprey.training_export.run_q_pass", out string pass) && pass.Length > 0 ? pass : null; }
+        }
+
         public string InstrumentModel
         {
             get { return Metadata.TryGetValue(@"osprey.instrument_model", out string model) && model.Length > 0 ? model : null; }
