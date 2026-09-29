@@ -90,7 +90,7 @@ namespace pwiz.Common.CommandLine
         /// <see cref="ArgUsage.ArgumentValueSeparator"/> - the same process-wide setting the
         /// usage text renders with, so a token built here always has the shape the host's
         /// own documentation shows (Skyline: <c>--in=path</c>; Osprey: <c>--threads 8</c>).
-        /// A fixed value list is always enforced here, <see cref="HasValueChecking"/> or not:
+        /// A value list (<see cref="Values"/> and <see cref="AcceptedValues"/>) is always enforced here, <see cref="HasValueChecking"/> or not:
         /// Skyline's ConsoleArgumentInvalidValuesTest pins that every listed argument refuses
         /// an unlisted value at build time. A host whose parser accepts an unlisted alias
         /// passes that value as its own token instead of through this builder.

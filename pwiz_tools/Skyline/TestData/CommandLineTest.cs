@@ -4230,7 +4230,7 @@ namespace pwiz.SkylineTestData
                 // An unsupported language is a usage error, not a crash, including a supported one with an
                 // invisible character pasted into it (a soft hyphen).
                 var argCulture = CommandArgs.ARG_CULTURE;
-                foreach (var notALanguage in new[] { @"not-a-culture", "j­a" })
+                foreach (var notALanguage in new[] { @"not-a-culture", "j\u00ADa" })
                 {
                     string errorOutput = RunCommand(false, argCulture.ArgumentText + '=' + notALanguage);
                     AssertEx.Contains(errorOutput, string.Format(
@@ -4261,6 +4261,16 @@ namespace pwiz.SkylineTestData
                 Assert.IsNotNull(valueMissingJapanese);
                 output = RunCommand(false, argCulture.ArgumentText + @"=ja", CommandArgs.ARG_IN.ArgumentText);
                 AssertEx.Contains(output, string.Format(valueMissingJapanese, CommandArgs.ARG_IN.ArgumentText));
+
+                // The deprecated name for Simplified Chinese, which scripts written for .NET Framework pass, is still
+                // accepted where .NET no longer lists it, because its parent culture is known.
+                const string deprecatedChinese = @"zh-CHS";
+                string valueMissingChinese = Resources.ResourceManager.GetString(
+                    @"ValueMissingException_ValueMissingException_", new CultureInfo(deprecatedChinese));
+                Assert.IsNotNull(valueMissingChinese);
+                AssertEx.AreNotEqual(valueMissingEnglish, valueMissingChinese, "Test requires a translated message");
+                output = RunCommand(false, argCulture.ArgumentText + '=' + deprecatedChinese, CommandArgs.ARG_IN.ArgumentText);
+                AssertEx.Contains(output, string.Format(valueMissingChinese, CommandArgs.ARG_IN.ArgumentText));
 
                 // The culture applies only to its own command, so the in-process Skyline MCP and Immediate
                 // Window do not leave later commands running in it.
