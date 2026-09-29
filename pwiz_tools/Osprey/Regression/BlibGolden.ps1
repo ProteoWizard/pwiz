@@ -36,8 +36,8 @@
     caller (it is produced by the run via OSPREY_DUMP_STAGE7_PROTEIN_FDR, not
     read from the blib).
 
-    The self-consistency checks (Compare-BlibFull: resume, chain, rehydrate and
-    rescore-resume legs) compare two .blib files row+column at 1e-9 with no
+    The self-consistency checks (Compare-BlibFull: the resume and HPC chain legs)
+    compare two .blib files row+column at 1e-9 with no
     committed baseline (the resume run is its own oracle). They do not use this
     schema: they compile Osprey.Test\BlibComparer.cs, the comparer
     SubsetPipelineTest uses, into this session (Initialize-Sqlite), which takes
@@ -249,12 +249,14 @@ function Initialize-Sqlite {
     Add-Type -Path $dll
 
     # Compare-BlibFull's comparer: the same source file the subset tests compile, so the
-    # two cannot drift. Guarded because Add-Type cannot redefine a type in one session.
+    # two cannot drift. Referenced against every pwsh reference assembly, not a hand-kept
+    # list: naming any list replaces Add-Type's defaults, and a BCL type the test build
+    # accepts would then fail here, only in the nightly. Guarded because Add-Type cannot
+    # redefine a type in one session - after editing BlibComparer.cs, start a fresh pwsh.
     if (-not ('pwiz.Osprey.Test.BlibComparer' -as [type])) {
         $comparer = Join-Path (Split-Path -Parent $PSScriptRoot) 'Osprey.Test\BlibComparer.cs'
-        Add-Type -Path $comparer -ReferencedAssemblies $dll, 'netstandard', 'System.Runtime',
-            'System.Collections', 'System.Linq', 'System.Data.Common',
-            'System.ComponentModel', 'System.ComponentModel.Primitives'
+        $references = @(Get-ChildItem (Join-Path $PSHOME 'ref\*.dll')).FullName + $dll
+        Add-Type -Path $comparer -ReferencedAssemblies $references
     }
 }
 
@@ -749,12 +751,15 @@ function Compare-BlibFull {
     )
     $differences = [pwiz.Osprey.Test.BlibComparer]::Compare($BlibExpected, $BlibActual, $Tolerance)
     $issues = [System.Collections.Generic.List[string]]::new()
-    foreach ($d in ($differences | Select-Object -First $MaxRows)) { $issues.Add($d) }
     if ($differences.Count -gt $MaxRows) {
-        # Every line starts with its table name, so the count per table says where the rest are.
+        # The per-table counts FIRST: callers print the first 15 issues, and which tables
+        # differ, by how much, is what a red leg needs before any single row. Every line
+        # starts with its table name.
         foreach ($g in ($differences | Group-Object { ($_ -split '[ :]', 2)[0] })) {
             $issues.Add(("{0}: {1:N0} differing row(s) in all" -f $g.Name, $g.Count))
         }
     }
-    return [pscustomobject]@{ Pass = ($differences.Count -eq 0); Issues = $issues }
+    foreach ($d in ($differences | Select-Object -First $MaxRows)) { $issues.Add($d) }
+    return [pscustomobject]@{ Pass = ($differences.Count -eq 0); Issues = $issues;
+                              Differences = $differences.Count }
 }

@@ -49,7 +49,7 @@ namespace pwiz.Osprey.Test
     /// straight-through (mode 1), warm re-run with every task cached (mode 4), resume after
     /// invalidating the join (mode 2), second-pass rehydrate (mode 5), and the four-task HPC
     /// chain across process-like boundaries (mode 3, on both subsets), each re-run compared to
-    /// the straight-through library and FDR sidecars at 1e-9. The data is not a scientific
+    /// the straight-through library at 1e-9 and the chain's FDR sidecars too. The data is not a scientific
     /// gate - the regression stays that - so the counts asserted are loose floors that catch a
     /// pipeline stopping early or detecting nothing.</para>
     ///
@@ -151,7 +151,7 @@ namespace pwiz.Osprey.Test
             // alone - the inputs are named in the work directory, where no mzML exists.
             DeleteFiles(straightDir, Path.GetFileName(TaskValiditySidecar.PathFor(@"*", FirstPassFdrTask.TASK_NAME)));
             DeleteSecondPassOutputs(blib);
-            log = RunAnalysis(straightDir, RunNames(straightDir, MZML_EXTENSION), Verifier(false));
+            log = RunAnalysis(straightDir, RunNames(straightDir, MZML_EXTENSION), Verifier(true));
             AssertTasks(log, new[] { PerFileScoringTask.TASK_NAME, PerFileRescoreTask.TASK_NAME },
                 new[] { FirstPassFdrTask.TASK_NAME, SecondPassFdrTask.TASK_NAME });
             AssertNoRecompute(log);
@@ -161,7 +161,7 @@ namespace pwiz.Osprey.Test
             // Mode 5: invalidate only the second pass, so its bundle is rebuilt from the first
             // pass's own sidecars.
             DeleteSecondPassOutputs(blib);
-            log = RunAnalysis(straightDir, DataInputs(), Verifier(false));
+            log = RunAnalysis(straightDir, DataInputs(), Verifier(true));
             AssertTasks(log,
                 new[] { PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME, PerFileRescoreTask.TASK_NAME },
                 new[] { SecondPassFdrTask.TASK_NAME });
@@ -249,13 +249,8 @@ namespace pwiz.Osprey.Test
         public void TestSubsetRescoreResume()
         {
             string workDir = CreateDir(@"rescore-resume");
-            var args = new[]
-            {
-                OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY.ArgumentText,
-                OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText, Path.Combine(_dataDir, LIBDECOY_PAIRING_FILE),
-                OspreyCommandArgs.ARG_MODEL_DIAGNOSTICS.ArgumentText
-            };
-            RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, Verifier(false), args);
+            var args = LibDecoyDiagnosticsArgs();
+            RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, Verifier(true), args);
             string blib = Path.Combine(workDir, BLIB_FILE);
             string uninterruptedBlib = Path.Combine(workDir, @"output_uninterrupted.blib");
             File.Copy(blib, uninterruptedBlib);
@@ -266,7 +261,7 @@ namespace pwiz.Osprey.Test
             // remaining runs carried first-pass q-values into the library.
             CutRescore(workDir, cutRun, true);
             DeleteSecondPassOutputs(blib);
-            string log = RunAnalysis(workDir, RunNames(workDir, MZML_EXTENSION), LIBDECOY_FILE, Verifier(false), args);
+            string log = RunAnalysis(workDir, RunNames(workDir, MZML_EXTENSION), LIBDECOY_FILE, Verifier(true), args);
             Assert.AreEqual(RUN_NAMES.Length, Directory.GetFiles(workDir, @"*.scores-reconciled.parquet").Length,
                 @"the rescore did not finish the cohort" + Environment.NewLine + log);
             AssertHasLine(log, PathLine(LogKey.ROUTE_RESCORE_RESUME, string.Empty));
@@ -278,7 +273,7 @@ namespace pwiz.Osprey.Test
             // while a per-file check would call it done; it must be re-scored.
             CutRescore(workDir, cutRun, false);
             DeleteSecondPassOutputs(blib);
-            log = RunAnalysis(workDir, RunNames(workDir, MZML_EXTENSION), LIBDECOY_FILE, Verifier(false), args);
+            log = RunAnalysis(workDir, RunNames(workDir, MZML_EXTENSION), LIBDECOY_FILE, Verifier(true), args);
             AssertRescoredOnly(log, 1);
             AssertBlibsEqual(uninterruptedBlib, blib);
         }
@@ -294,12 +289,7 @@ namespace pwiz.Osprey.Test
         public void TestSubsetDiagnosticsWithoutReanalysis()
         {
             string workDir = CreateDir(@"diagnostics");
-            var args = new[]
-            {
-                OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY.ArgumentText,
-                OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText, Path.Combine(_dataDir, LIBDECOY_PAIRING_FILE),
-                OspreyCommandArgs.ARG_MODEL_DIAGNOSTICS.ArgumentText
-            };
+            var args = LibDecoyDiagnosticsArgs();
             string RunDiagnostics(string taskName, int exitCode = Program.EXIT_CODE_SUCCESS)
             {
                 var taskArgs = taskName == null ? args : args.Concat(new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, taskName });
@@ -308,7 +298,7 @@ namespace pwiz.Osprey.Test
                     OspreyCommandArgs.ARG_LIBRARY.ArgumentText, Path.Combine(_dataDir, LIBDECOY_FILE),
                     OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(workDir, BLIB_FILE),
                     OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, workDir
-                }).Concat(CommonArgs()).Concat(taskArgs).ToArray(), Verifier(false), exitCode);
+                }).Concat(CommonArgs()).Concat(taskArgs).ToArray(), Verifier(true), exitCode);
             }
 
             RunDiagnostics(null);
@@ -324,8 +314,11 @@ namespace pwiz.Osprey.Test
             }
             string ReferenceOf(string product) => Path.Combine(referenceDir, Path.GetFileName(product));
 
-            // Mode 5: the rehydrated second pass re-emits the pass-2 product unchanged.
+            // Mode 5: the rehydrated second pass re-emits the pass-2 product and the report,
+            // unchanged. Deleted first: a product left in place would be restamped as current and
+            // compared against itself.
             DeleteSecondPassOutputs(blib);
+            DeleteDiagnosticsProducts(workDir, pass2, report);
             string log = RunDiagnostics(null);
             AssertNoRecompute(log);
             CollectionAssert.AreEqual(File.ReadAllBytes(ReferenceOf(pass2)), File.ReadAllBytes(pass2),
@@ -337,6 +330,8 @@ namespace pwiz.Osprey.Test
             Assert.IsFalse(HasLine(log, PathLine(LogKey.ROUTE_ALL_RUNS_BUNDLE, string.Empty)), log);
             CollectionAssert.AreEqual(new[] { Path.GetFileName(report) }, ChangedFiles(before, workDir),
                 @"regeneration changed something other than the report" + Environment.NewLine + log);
+            CollectionAssert.AreEqual(File.ReadAllBytes(ReferenceOf(report)), File.ReadAllBytes(report),
+                @"the regenerated report differs from the one the analysis wrote");
 
             // Mode 11: with both products deleted, asking for the report folds it from the
             // sidecars. Re-running the analysis would produce the right report too, which is
@@ -723,7 +718,7 @@ namespace pwiz.Osprey.Test
             AssertTasks(log, Array.Empty<string>(), ALL_TASKS);
             AssertHasLine(log, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
             AssertHasLine(log, PathLine(LogKey.ROUTE_SECOND_PASS_FOLD, @"verify=on"));
-            Assert.IsFalse(HasLine(log, PathLine(LogKey.ROUTE_SURVIVOR_POOL, @"materialized")),
+            Assert.IsFalse(HasLine(log, PathLine(LogKey.ROUTE_SURVIVOR_POOL, string.Empty)),
                 @"the second pass materialized an all-runs survivor pool");
             // The library-fragment release ran at both of its points (issue #4532).
             foreach (string scope in new[] { LogKey.SCOPE_RESCORE_GAP_FILL, LogKey.SCOPE_RETAINED_SUMMARY })
@@ -930,8 +925,11 @@ namespace pwiz.Osprey.Test
             string message = string.Format(@"Command line: {0}{1}Output:{1}{2}",
                 string.Join(@" ", args), Environment.NewLine, output);
             Assert.AreEqual(expectedExitCode, exitCode, message);
-            if (expectedExitCode == Program.EXIT_CODE_SUCCESS)
-                Assert.IsFalse(SplitLines(output).Any(CommandStatusWriter.IsErrorLine), message);
+            // Success has no Error: line; a designed refusal has exactly one and no exception,
+            // which is what distinguishes it from a crash with the same exit code.
+            int expectedErrors = expectedExitCode == Program.EXIT_CODE_SUCCESS ? 0 : 1;
+            Assert.AreEqual(expectedErrors, SplitLines(output).Count(CommandStatusWriter.IsErrorLine), message);
+            Assert.IsFalse(output.Contains(typeof(Exception).Namespace + @"."), message);
             Assert.IsFalse(HasLine(output, PathLine(LogKey.ROUTE_EXIT_RECONCILED, string.Empty)), message);
             return output;
         }
@@ -958,12 +956,29 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The second-pass worker verifier, set or blanked so a value exported in the developer's
-        /// shell cannot change what a leg runs.
+        /// The second-pass worker verifier, set or blanked, with the switches that change which
+        /// route a run takes blanked too, so a value exported in the developer's shell cannot
+        /// change what a leg runs. A resident-pool allowance in particular would admit, silently,
+        /// the O(files) paths these legs exist to keep out.
         /// </summary>
         private static IReadOnlyDictionary<string, string> Verifier(bool on)
         {
-            return new Dictionary<string, string> { { @"OSPREY_PASS2_VERIFY_WORKER", on ? @"1" : string.Empty } };
+            return new Dictionary<string, string>
+            {
+                { @"OSPREY_PASS2_VERIFY_WORKER", on ? @"1" : string.Empty },
+                { @"OSPREY_ALLOW_UNFIXED_RESIDENT", string.Empty },
+                { @"OSPREY_PASS2_QVALUE", string.Empty }
+            };
+        }
+
+        private string[] LibDecoyDiagnosticsArgs()
+        {
+            return new[]
+            {
+                OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY.ArgumentText,
+                OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText, Path.Combine(_dataDir, LIBDECOY_PAIRING_FILE),
+                OspreyCommandArgs.ARG_MODEL_DIAGNOSTICS.ArgumentText
+            };
         }
 
         private IEnumerable<string> DataInputs()
@@ -1036,7 +1051,7 @@ namespace pwiz.Osprey.Test
         private static void AssertStreamedJoin(string log)
         {
             AssertHasLine(log, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
-            Assert.IsFalse(HasLine(log, PathLine(LogKey.ROUTE_SURVIVOR_POOL, @"materialized")),
+            Assert.IsFalse(HasLine(log, PathLine(LogKey.ROUTE_SURVIVOR_POOL, string.Empty)),
                 @"a consumer pulled the whole survivor pool through the per-run source" + Environment.NewLine + log);
         }
 

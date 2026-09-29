@@ -174,11 +174,12 @@ unexplained failure go green; a red mode-1 means the output moved.
 ## Local use
 
 ```powershell
-# Stellar only, against the committed golden (mode 1 + mode 2)
+# Stellar only, against the committed golden: modes 1, 1c, 4 and 6. Resume, rehydrate and
+# the HPC chain are in the unit tests (SubsetPipelineTest); run those first.
 pwsh -File ./pwiz_tools/Osprey/regression.ps1 -Dataset Stellar
 
-# Mode 1 only (skip the resume leg)
-pwsh -File ./pwiz_tools/Osprey/regression.ps1 -Dataset Stellar -SkipResume
+# Resume and the HPC chain at full size
+pwsh -File ./pwiz_tools/Osprey/regression.ps1 -Dataset StellarLibDecoy
 
 # Reuse an existing Release build (skip the build step)
 pwsh -File ./pwiz_tools/Osprey/regression.ps1 -Dataset Stellar -NoBuild

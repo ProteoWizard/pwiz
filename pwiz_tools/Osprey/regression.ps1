@@ -227,7 +227,8 @@
     mode 1b or the golden summary's separate relative tolerance (1e-6 in BlibGolden.ps1).
 
 .EXAMPLE
-    # Local: run Stellar straight-through + resume against the committed golden
+    # Local: Stellar straight-through against the committed golden, after the unit tests
+    # (SubsetPipelineTest carries resume, rehydrate and the HPC chain)
     .\regression.ps1 -Dataset Stellar
 
 .EXAMPLE
@@ -415,7 +416,7 @@ $knownResidentGaps = @(
         # its per-file half in Stage 7, over the whole pool. Moving TransferOneFile into
         # Pass2PerFileWorker is what empties this row - and then the guard's
         # streamingAvailable exemption has no subject either, so the two go together.
-        Legs  = 'ONLY a pass-2 mode with no per-file worker (OSPREY_PASS2_QVALUE=transfer, exercised per commit by SubsetPipelineTest''s transfer arm since #4728; no leg of this gate runs it). Every default leg - cold straight-through, both resumes, and mode 3''s SecondPassFDR phase - folds run by run. ~4.4 GB library + 0.197 GB/file live post-GC where it is still taken: ~20 GB at 82 files, and 92.3 GB predicted vs 91.1 GB measured at 446.'
+        Legs  = 'ONLY a pass-2 mode with no per-file worker (OSPREY_PASS2_QVALUE=transfer, exercised per commit by SubsetPipelineTest''s transfer arm since #4728; no leg of this gate runs it). Every default leg - cold straight-through, the resume, and mode 3''s SecondPassFDR phase - folds run by run. ~4.4 GB library + 0.197 GB/file live post-GC where it is still taken: ~20 GB at 82 files, and 92.3 GB predicted vs 91.1 GB measured at 446.'
     }
 )
 # Reachable only outside this gate, tokened, each with an open issue: NONE. The last one,
@@ -2960,7 +2961,8 @@ foreach ($name in $selected) {
         # Invoke-ResumeInvalidation deletes the FirstPassFDR stamp, and mode 2 asserts
         # -ExpectRan @('FirstPassFDR', ...) on this very log to prove it. Worth checking
         # anyway - it is a second, independently-invalidated Run - but it is NOT rehydrate
-        # coverage. The rehydrate arms are covered below and on the phase-3 workers.
+        # coverage. The phase-3 workers' rehydrate is covered below; the own-sidecar rehydrate's
+        # release is asserted by SubsetPipelineTest (#4728).
         $releaseChecks.Add(@{
             Label = 'resume (FirstPassFDR re-runs)'; Log = (Join-Path $straightDir 'resume.log')
             Scopes = @($releaseScopeRescore, $releaseScopeSummary)

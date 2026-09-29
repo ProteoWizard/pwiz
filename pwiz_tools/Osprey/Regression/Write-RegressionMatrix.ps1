@@ -55,7 +55,7 @@
     .\Regression\Write-RegressionMatrix.ps1 -CostsFrom TestResults\regression-lane-*.log
     .\Regression\Write-RegressionMatrix.ps1 -VerifyAgainst TestResults\regression-lane-*.log
     .\Regression\Write-RegressionMatrix.ps1 -OutPath regression-proposal.html -Title 'PROPOSAL' `
-        -SkipModesOverride @{ StellarGenDecoyEntrap = @(2,3,5,7,11); Astral = @(2,5,7,11); Stellar = @(2,3,5) } `
+        -SkipModesOverride @{ StellarGenDecoyEntrap = @(2,3); Astral = @(2,3); Stellar = @(2,3) } `
         -Lanes 'Astral,StellarGenDecoyEntrap', 'Stellar,StellarLibDecoy'
 #>
 param(
