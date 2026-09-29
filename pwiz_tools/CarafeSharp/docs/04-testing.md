@@ -207,6 +207,17 @@ evidence CarafeSharp's masking reads is identical. Five columns differ in the la
 further. The footer's `library_hash` and `search_hash` also differ, because they cover each input
 file's mtime.
 
+**On Linux, from the .raw (2026-09-29).** Under WSL2 (Ubuntu 22.04, 10 CPUs), Osprey #4708 built with
+the Thermo reader searched the Stellar `_21` .raw in 332 s, with the command that wrote the packaged
+export; its export differs from the packaged one only as described above. CarafeSharp's regression then
+ran on Linux's CPU twice, once on that export (`-Export`) and once on the packaged one, and both passed
+against the Windows golden (fine-tuned COS +1.4e-4, sampled spectral cosine median 0.99995):
+- the four training tables of both runs have the same content as the golden run's; they differ only
+  in line endings, which the training-table hashes ignore;
+- the two Linux runs' models and held-out metrics are byte-identical to each other, so the export's
+  last-digit differences do not reach the fine-tune;
+- the models differ from the Windows golden's as a CPU fine-tune on Linux and on Windows does.
+
 **Sensitivity checks.** Each run changes one setting and must fail the golden's tolerances:
 
 | Setting | Gated checks that fail | Exact comparisons (information) |
