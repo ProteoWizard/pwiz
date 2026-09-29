@@ -79,8 +79,11 @@ namespace pwiz.Osprey.ML
                 if (hasDecoy && hasTarget)
                     break;
             }
+            // One class only is a data outcome, not a caller error: calibration's training
+            // set is the targets passing a q-value cut, which can be empty. Return null like
+            // Rust's fit (linear_discriminant.rs), so the caller skips the fold.
             if (!hasDecoy || !hasTarget)
-                throw new ArgumentException(@"Labels must contain at least one decoy and one target");
+                return null;
 
             // Calculate overall mean
             var xBar = features.Mean();
