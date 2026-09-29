@@ -77,9 +77,10 @@
 
 .PARAMETER Export
     Fine-tune on this training export instead of the packaged one, for example one Osprey has just
-    written from the .raw on this machine. Its folder must hold no other training export. The
-    golden records its export's SHA-256, so the run passes only with a byte-identical export: the
-    check that another platform's Osprey reproduces the packaged one. Not allowed with -CreateGolden.
+    written from the .raw on another platform. Its folder must hold no other training export. The
+    comparator reports the export's SHA-256 against the golden's as information and gates on the
+    calibrated tolerances: Osprey's scores differ in the last digit between platforms, so another
+    platform's export is never byte-identical. Not allowed with -CreateGolden.
 .PARAMETER Preflight
     Find the inputs and write the subset, print the CarafeSharp command, and stop.
 
@@ -539,6 +540,7 @@ if (-not $CompareRun) {
         subset_records    = $subsetRecords
         subset_pairing_rows = $subset.Rows
         export_note       = $config.ExportNote
+        other_export      = [bool]$Export
         inputs            = [ordered]@{
             export          = [ordered]@{ path = $exportFile.Relative; sha256 = Get-Sha256 $exportFile.Path }
             library_fasta   = [ordered]@{ path = $libraryFasta.Relative; sha256 = Get-Sha256 $libraryFasta.Path }

@@ -75,6 +75,8 @@ namespace pwiz.CarafeSharp.Test
         public const string DATA_FOLDER = @"regression.data";
 
         private const string GOLDEN_FORMAT = @"carafesharp-regression-golden-2";
+        /// <summary>The training export's key under a run's and a golden's <c>inputs</c>.</summary>
+        private const string INPUT_EXPORT = @"export";
         private const string OUTPUT_FOLDER = @"out";
 
         /// <summary>The sample keeps the precursors whose key hash is 0 modulo this.</summary>
@@ -199,6 +201,14 @@ namespace pwiz.CarafeSharp.Test
             foreach (var pair in golden.Inputs)
             {
                 run.Inputs.TryGetValue(pair.Key, out string value);
+                // regression.ps1 -Export: the run trained on another export, typically one another
+                // platform's Osprey wrote from the same .raw, whose scores differ in the last digit.
+                if (run.OtherExport && pair.Key == INPUT_EXPORT)
+                {
+                    Report(@"INFO input {0}: golden {1}, run {2} (-Export: another export, so the tolerances decide)",
+                        pair.Key, pair.Value, value ?? @"missing");
+                    continue;
+                }
                 Check(value == pair.Value, @"input {0}: golden {1}, run {2}{3}", pair.Key, pair.Value, value ?? @"missing",
                     value == pair.Value ? string.Empty : @" (the golden is of other inputs; recreate it for these)");
             }
@@ -442,6 +452,7 @@ namespace pwiz.CarafeSharp.Test
                     run.OsPlatform = root.GetProperty(@"os_platform").GetString();
                     run.Processor = root.GetProperty(@"processor").GetString();
                     run.Arguments = root.GetProperty(@"arguments").EnumerateArray().Select(a => a.GetString()).ToList();
+                    run.OtherExport = root.TryGetProperty(@"other_export", out var otherExport) && otherExport.GetBoolean();
                     Assert.AreEqual(0, root.GetProperty(@"exit_code").GetInt32(), @"CarafeSharp failed in {0}", folder);
                     var inputs = root.GetProperty(@"inputs");
                     foreach (var input in inputs.EnumerateObject())
@@ -468,6 +479,8 @@ namespace pwiz.CarafeSharp.Test
             public string Device { get; private set; }
             public string Commit { get; private set; }
             public bool Dirty { get; private set; }
+            /// <summary>The run trained on an export given with regression.ps1 -Export.</summary>
+            public bool OtherExport { get; private set; }
             public string OsPlatform { get; private set; }
             public string Processor { get; private set; }
             public int TorchThreads { get; private set; }

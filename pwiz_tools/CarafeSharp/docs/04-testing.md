@@ -130,6 +130,7 @@ library, so it depends on CarafeSharp alone.
 pwsh -File regression.ps1                                   # CPU run, compared with the golden
 pwsh -File regression.ps1 -NoBuild -ExtraArgs "-cor 0.7"    # a sensitivity check, which must fail
 pwsh -File regression.ps1 -CompareRun <run folder>          # compare an existing run again
+pwsh -File regression.ps1 -Export <x.training.parquet>      # fine-tune on another export instead
 pwsh -File regression.ps1 -CreateGolden                     # from a clean tree; -Force to replace
 ```
 
@@ -187,12 +188,24 @@ already there it compares the run with it, lists the `golden.json` values that c
 only with `-Force`. The golden records its commit, device, processor, OS, libtorch thread count and the
 inputs' SHA-256.
 
-**The Stellar golden** is a CPU run (Intel i9-9900K, Windows, 8 libtorch threads, 17 minutes): 19,344
-precursors, 335,195 peaks and 19,340 DecoyPairs rows (9,670 pairs, 4,833 of them entrapment pairs;
+**The Stellar golden** is a CPU run (Intel i9-9900K, Windows, 8 libtorch threads, 12 minutes): 19,344
+precursors, 334,744 peaks and 19,340 DecoyPairs rows (9,670 pairs, 4,833 of them entrapment pairs;
 all 9,666 targets paired, and 12 I/L twins left out of the check), with a 1,923-precursor sample of
-421 KB. It was made from the development export, which Osprey wrote from mzML in June; it is
-recreated when the export package is regenerated from .raw. A second CPU run made independently
-passed, and its exact comparisons were all SAME.
+420 KB. It was made from `carafesharp-export-v1`, the format 2 export that Osprey (#4708) wrote from
+the .raw. The golden it replaced was made from the June export, which an earlier Osprey wrote from
+mzML. Against it, every fine-tuned metric and library check was within tolerance (sampled cosine
+median 0.99963, RT difference median 0.016 min); only the export's hash and the pretrained metrics
+differed, as they must with another export, because the held-out set comes from it.
+
+**Another export: `-Export`.** The run fine-tunes on the given file instead of the packaged export,
+for example one Osprey wrote from the .raw on another platform. The export's SHA-256 is then reported
+as information, and the calibrated tolerances decide. Osprey on Linux does not write a byte-identical
+export. On the Stellar `_21` .raw its rows are the same 22,761 precursors in the same order, and the
+evidence CarafeSharp's masking reads is identical. Five columns differ in the last digit: `score`
+(17,998 rows), `mp_cosine`, `mp_overall`, `mp_residual_mad`, and the per-ion `polish_pos_resid_max`
+(2 rows). That is consistent with the platforms' math libraries rounding differently; it was not traced
+further. The footer's `library_hash` and `search_hash` also differ, because they cover each input
+file's mtime.
 
 **Sensitivity checks.** Each run changes one setting and must fail the golden's tolerances:
 
