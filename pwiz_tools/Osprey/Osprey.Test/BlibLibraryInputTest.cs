@@ -184,6 +184,10 @@ namespace pwiz.Osprey.Test
                 Annotation(IonType.Y, 5, 2, NeutralLossCode.None, 0),
                 Annotation(IonType.Y, 4, 1, NeutralLossCode.H2O, 0),
                 Annotation(IonType.B, 4, 1, NeutralLossCode.Custom, 44.9977),
+                // A whole-number custom loss stays custom: printed "17" it would read as ammonia.
+                Annotation(IonType.Y, 6, 1, NeutralLossCode.Custom, 17.0),
+                // As long as the peptide: not a fragment, so the reader would reject it.
+                Annotation(IonType.Y, 10, 1, NeutralLossCode.None, 0),
             };
             var fragments = typed.Select((a, i) => new LibraryFragment
             {
@@ -196,7 +200,7 @@ namespace pwiz.Osprey.Test
                 new LibraryFragment { Mz = 650.5, RelativeIntensity = 5f, Annotation = Annotation(IonType.A, 2, 1, NeutralLossCode.None, 0) },
                 new LibraryFragment { Mz = 700.25, RelativeIntensity = 3f, Annotation = Annotation(IonType.Unknown, 0, 1, NeutralLossCode.None, 0) },
             }).ToArray();
-            var entry = new LibraryEntry(7, sequence, @"_(UniMod:1)M(UniMod:35)PEPC(UniMod:4)TIDEK_", 2, 624.28, 12.5)
+            var entry = new LibraryEntry(7, sequence, @"_(UniMod:1)M(UniMod:35)PEPC(UniMod:4)TIDEK[+14.0157]_", 2, 624.28, 12.5)
             {
                 Modifications = modifications,
                 Fragments = fragments,
@@ -207,8 +211,16 @@ namespace pwiz.Osprey.Test
             try
             {
                 Assert.AreEqual(1, LibraryBlibWriter.Write(path, new[] { entry }, @"library.tsv"));
-                Assert.AreEqual(typed.Length, BlibComparer.CountWhere(path, BlibPeakAnnotations.TABLE_NAME, @"mzTheoretical > 0"));
+                Assert.AreEqual(typed.Count(a => a.Ordinal < sequence.Length),
+                    BlibComparer.CountWhere(path, BlibPeakAnnotations.TABLE_NAME, @"mzTheoretical > 0"));
+                // The library retention time, where Skyline reads library retention times from, with
+                // no peak boundaries.
+                Assert.AreEqual(1, BlibComparer.CountWhere(path, @"RetentionTimes",
+                    @"retentionTime = 12.5 AND startTime IS NULL AND endTime IS NULL AND bestSpectrum = 1"));
                 var read = new BlibLoader().Load(path).Single();
+                // Skyline asserts each annotation's mzObserved is its peak's m/z (to 1e-7).
+                foreach (var (peakIndex, mzObserved) in ReadAnnotationMzObserved(path))
+                    Assert.AreEqual(read.Fragments[peakIndex].Mz, mzObserved);
                 Assert.AreEqual(@"M[+58.0055]PEPC[+57.0215]TIDEK[+14.0157]", read.ModifiedSequence);
                 Assert.AreEqual(entry.PrecursorMz, read.PrecursorMz);
                 Assert.AreEqual(entry.Charge, read.Charge);
@@ -231,7 +243,7 @@ namespace pwiz.Osprey.Test
                 {
                     var expected = sorted[i].Annotation;
                     var actual = read.Fragments[i].Annotation;
-                    if (expected.IonType == IonType.B || expected.IonType == IonType.Y)
+                    if ((expected.IonType == IonType.B || expected.IonType == IonType.Y) && expected.Ordinal < sequence.Length)
                     {
                         AssertAnnotation(actual, expected.IonType, expected.Ordinal, expected.Charge, expected.NeutralLoss);
                         Assert.AreEqual(expected.CustomLossMass, actual.CustomLossMass);
@@ -244,11 +256,63 @@ namespace pwiz.Osprey.Test
 
                 LibraryBlibWriter.Write(path, new[] { entry }, @"library.tsv", false);
                 Assert.AreEqual(0, BlibComparer.CountWhere(path, BlibPeakAnnotations.TABLE_NAME, @"1"));
+
+                AssertLibraryTextAndDecoys(path);
             }
             finally
             {
                 TryDeleteFile(path);
             }
+        }
+
+        /// <summary>
+        /// The text and accessions a library precursor keeps in the blib: a modification its
+        /// loader could not resolve keeps the library's own text, so two precursors never share a
+        /// key; a mass known only to one decimal keeps that precision, the precision Skyline
+        /// matches at; and a decoy flagged only by the library's Decoy column gets the decoy
+        /// prefix on its accessions, so <c>--decoys-in-library</c> still finds it.
+        /// </summary>
+        private static void AssertLibraryTextAndDecoys(string path)
+        {
+            var fragment = new[] { new LibraryFragment { Mz = 300.0, RelativeIntensity = 1f } };
+            var unresolved = new LibraryEntry(1, @"PEPTIDEK", @"_PEPTIDEK(UniMod:259)_", 2, 470.0, 10.0) { Fragments = fragment };
+            var plain = new LibraryEntry(2, @"PEPTIDEK", @"_PEPTIDEK_", 2, 466.0, 10.0) { Fragments = fragment };
+            var oneDecimal = new LibraryEntry(3, @"LIFAGKQLEDGR", @"LIFAGK[+114.0]QLEDGR", 2, 717.9, 20.0)
+            {
+                Modifications = new[] { new Modification { Position = 5, MassDelta = 114.0 } },
+                Fragments = fragment
+            };
+            var columnDecoy = new LibraryEntry(4, @"KEDITPEP", @"KEDITPEP", 2, 464.7, 15.0)
+            {
+                Fragments = fragment, ProteinIds = new[] { @"P12345" }, IsDecoy = true
+            };
+            var prefixedDecoy = new LibraryEntry(5, @"KEDITPEPR", @"KEDITPEPR", 2, 542.8, 15.0)
+            {
+                Fragments = fragment, ProteinIds = new[] { @"rev_P12345" }, IsDecoy = true
+            };
+            LibraryBlibWriter.Write(path, new[] { unresolved, plain, oneDecimal, columnDecoy, prefixedDecoy }, @"library.tsv");
+            Assert.AreEqual(1, BlibComparer.CountWhere(path, @"RefSpectra", @"peptideModSeq = 'PEPTIDEK(UniMod:259)'"));
+            Assert.AreEqual(1, BlibComparer.CountWhere(path, @"RefSpectra", @"peptideModSeq = 'PEPTIDEK'"));
+            Assert.AreEqual(1, BlibComparer.CountWhere(path, @"RefSpectra", @"peptideModSeq = 'LIFAGK[+114.0]QLEDGR'"));
+            Assert.AreEqual(1, BlibComparer.CountWhere(path, @"Proteins", @"accession = 'DECOY_P12345'"));
+            Assert.AreEqual(1, BlibComparer.CountWhere(path, @"Proteins", @"accession = 'rev_P12345'"));
+            Assert.AreEqual(0, BlibComparer.CountWhere(path, @"Proteins", @"accession = 'P12345'"));
+        }
+
+        private static List<(int PeakIndex, double MzObserved)> ReadAnnotationMzObserved(string path)
+        {
+            var rows = new List<(int, double)>();
+            using (var conn = new SQLiteConnection(@"Data Source=" + path + @";Version=3;Read Only=True;Pooling=False;"))
+            {
+                conn.Open();
+                using (var cmd = new SQLiteCommand(@"SELECT peakIndex, mzObserved FROM " + BlibPeakAnnotations.TABLE_NAME, conn))
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                        rows.Add((reader.GetInt32(0), reader.GetDouble(1)));
+                }
+            }
+            return rows;
         }
 
         /// <summary>

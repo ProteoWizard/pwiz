@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using pwiz.Osprey.Core;
@@ -474,18 +475,19 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Add a retention time entry for per-run peak boundaries.
-        /// Pass null for retentionTime when the precursor did not pass run-level FDR.
+        /// Pass null for retentionTime when the precursor did not pass run-level FDR, and null
+        /// start and end times for a library retention time, which has no peak boundaries.
         /// </summary>
         public void AddRetentionTime(long refId, long sourceFileId,
-            double? retentionTime, double startTime, double endTime,
+            double? retentionTime, double? startTime, double? endTime,
             double score, bool bestSpectrum)
         {
             _cmdInsertRetentionTime.Parameters[@"@refId"].Value = refId;
             _cmdInsertRetentionTime.Parameters[@"@srcId"].Value = sourceFileId;
             _cmdInsertRetentionTime.Parameters[@"@rt"].Value =
                 retentionTime.HasValue ? retentionTime.Value : DBNull.Value;
-            _cmdInsertRetentionTime.Parameters[@"@start"].Value = startTime;
-            _cmdInsertRetentionTime.Parameters[@"@end"].Value = endTime;
+            _cmdInsertRetentionTime.Parameters[@"@start"].Value = startTime.HasValue ? startTime.Value : DBNull.Value;
+            _cmdInsertRetentionTime.Parameters[@"@end"].Value = endTime.HasValue ? endTime.Value : DBNull.Value;
             _cmdInsertRetentionTime.Parameters[@"@score"].Value = score;
             _cmdInsertRetentionTime.Parameters[@"@best"].Value = bestSpectrum ? 1 : 0;
             _cmdInsertRetentionTime.ExecuteNonQuery();
@@ -723,7 +725,7 @@ namespace pwiz.Osprey.IO
                             double mass;
                             if (TryGetUnimodMass(unimodId, out mass))
                             {
-                                result.Append(BlibSpectrum.FormatMassDelta(mass));
+                                result.AppendFormat(CultureInfo.InvariantCulture, mass >= 0.0 ? @"[+{0:F4}]" : @"[{0:F4}]", mass);
                                 i = close + 1;
                                 continue;
                             }

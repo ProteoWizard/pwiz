@@ -119,6 +119,9 @@ namespace pwiz.Osprey.Test
                     {
                         Assert.AreEqual(PreUpgradeBaseKey(supplied), TaskKeys(supplied)[PerFileScoringTask.TASK_NAME],
                             name + @" with decoys from the library keys exactly as before");
+                        // Except the output blib, whose rows changed for every library.
+                        StringAssert.Contains(TaskKeys(supplied)[SecondPassFdrTask.TASK_NAME],
+                            @";blibout=" + BlibSpectrum.FORMAT_VERSION);
                     }
                 }
 

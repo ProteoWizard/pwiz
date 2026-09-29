@@ -280,6 +280,11 @@ namespace pwiz.Osprey.Tasks
                 // The output blib's Modifications table carries the library's modification
                 // masses, which the precision-aware blib reader can read differently.
                 + LibraryModsValidityKeySuffix(ctx.Config)
+                // How a library precursor becomes blib rows (peak order, modified-sequence text,
+                // annotation rows). Unconditional: every library's output blib changed with it,
+                // and the task stamp compares only this key, so without the term a resume keeps
+                // a blib the current build would not write.
+                + @";blibout=" + BlibSpectrum.FORMAT_VERSION
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()
