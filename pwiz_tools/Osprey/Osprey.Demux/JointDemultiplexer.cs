@@ -72,6 +72,14 @@ namespace pwiz.Osprey.Demux
         public bool PruneActive { get; set; } = true;
 
         /// <summary>
+        /// After reweighting, a grid point is solved again only where some position's lambda moved by more than
+        /// this fraction (0: every point), as Centrix refits only the regions whose lambda moved by more than
+        /// 20%; elsewhere the first solution stands, and a refitted point's moves still reach its neighbours.
+        /// Where the counts are below the weight floor both weightings agree.
+        /// </summary>
+        public double RefitLambdaChange { get; set; } = 0.2;
+
+        /// <summary>
         /// Over-relaxation of each block step (1: none, below 2): the step from the block's old coefficients to
         /// its optimum is lengthened by this factor, or less where a coefficient would go negative. Along m/z
         /// neighbouring coefficients are nearly interchangeable, and plain coordinate descent moves peak mass
@@ -133,6 +141,7 @@ namespace pwiz.Osprey.Demux
         public static long DataPoints;
         public static long GridPoints;
         public static long CandidatePoints;
+        public static long RefitPoints;
         /// <summary>The totals, one line.</summary>
         public static string Summary()
         {
@@ -141,12 +150,13 @@ namespace pwiz.Osprey.Demux
                 @"joint profile: setup {0:F1} s, weights {1:F1} s, gradient {2:F1} s, passes {3:F1} s, objective {4:F1} s; " +
                 @"{5} chunks, {6:F1} rounds and {7:F1} passes per chunk, {8:F0} active coefficients per chunk, " +
                 @"{9:F1} positions per block solve, {10:F0} block solves per pass; " +
-                @"per chunk {11:F0} data points, {12:F0} grid points, {13:F0} with data in reach",
+                @"per chunk {11:F0} data points, {12:F0} grid points, {13:F0} with data in reach, {14:F0} refit after reweighting",
                 SetupTicks * f, WeightTicks * f, GradientTicks * f, PassTicks * f, ObjectiveTicks * f, Chunks,
                 Rounds / (double)Math.Max(Chunks, 1), Passes / (double)Math.Max(Chunks, 1),
                 ActiveCoefficients / (double)Math.Max(Chunks, 1), BlockColumns / (double)Math.Max(BlockSolves, 1),
                 BlockSolves / (double)Math.Max(Passes, 1), DataPoints / (double)Math.Max(Chunks, 1),
-                GridPoints / (double)Math.Max(Chunks, 1), CandidatePoints / (double)Math.Max(Chunks, 1));
+                GridPoints / (double)Math.Max(Chunks, 1), CandidatePoints / (double)Math.Max(Chunks, 1),
+                RefitPoints / (double)Math.Max(Chunks, 1));
         }
     }
 
@@ -323,6 +333,7 @@ namespace pwiz.Osprey.Demux
             private readonly bool[] _columnUsed;
             private long _weightTicks, _gradientTicks, _passTicks, _objectiveTicks, _rounds, _passes, _blockSolves, _blockColumnCount;
             private long _dataPoints;
+            private long _refitPoints;
             private double _decrease;                        // the objective's decrease over the current pass
 
             public ChunkSolver(double[,] a, JointDemuxParams parameters)
@@ -441,7 +452,7 @@ namespace pwiz.Osprey.Demux
                 if (_parameters.Reweight)
                 {
                     FillWeights(true);
-                    Descend(_parameters.L1Z);
+                    Descend(_parameters.L1Z, true, _parameters.RefitLambdaChange > 0);
                 }
                 // 3. Relaxed: the kept coefficients without the penalty.
                 if (_parameters.Relaxed && _parameters.L1Z > 0)
@@ -494,6 +505,8 @@ namespace pwiz.Osprey.Demux
                 Interlocked.Add(ref JointDemuxProfile.DataPoints, _dataPoints);
                 Interlocked.Add(ref JointDemuxProfile.GridPoints, _points);
                 Interlocked.Add(ref JointDemuxProfile.CandidatePoints, _reachCount);
+                Interlocked.Add(ref JointDemuxProfile.RefitPoints, _refitPoints);
+                _refitPoints = 0;
                 _weightTicks = _gradientTicks = _passTicks = _objectiveTicks = _rounds = _passes = _blockSolves = _blockColumnCount = 0;
             }
 
@@ -606,18 +619,28 @@ namespace pwiz.Osprey.Demux
             /// Coordinate descent with a lasso of z standard deviations per coefficient (lambda = z sqrt of its
             /// curvature), on an active set grown from the full gradient until nothing violates the
             /// optimality conditions; or, when <paramref name="grow"/> is false, on the current support only.
+            /// With <paramref name="selective"/>, only the grid points where some lambda moved by more than
+            /// <see cref="JointDemuxParams.RefitLambdaChange"/> since the last descent start out to be solved.
             /// </summary>
-            private void Descend(double z, bool grow = true)
+            private void Descend(double z, bool grow = true, bool selective = false)
             {
+                double change = _parameters.RefitLambdaChange;
                 for (int i = 0; i < _reachCount; i++)
                 {
                     int q = _reach[i], oc = q * _columns;
+                    bool refit = !selective;
                     for (int j = 0; j < _columns; j++)
                     {
-                        _lambda[oc + j] = z > 0 ? z * Math.Sqrt(_curvature[oc + j]) : 0;
+                        double lambda = z > 0 ? z * Math.Sqrt(_curvature[oc + j]) : 0;
+                        double before = _lambda[oc + j];
+                        if (!refit && before > 0 && Math.Abs(lambda / before - 1) > change)
+                            refit = true;
+                        _lambda[oc + j] = lambda;
                         _active[oc + j] = _beta[oc + j] > 0;
                     }
-                    _dirty[q] = _changed[q] = true;
+                    _dirty[q] = _changed[q] = refit;
+                    if (selective && refit)
+                        _refitPoints++;
                 }
                 long o0 = Now();
                 double objective = Objective();
