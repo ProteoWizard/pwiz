@@ -214,7 +214,11 @@ namespace pwiz.CarafeSharp.IO
             get { return (GetDouble(@"osprey.isolation_mz_min"), GetDouble(@"osprey.isolation_mz_max")); }
         }
 
-        /// <summary>The run's MS2 scan window (<c>osprey.ms2_scan_window</c>), or null when unknown.</summary>
+        /// <summary>
+        /// The run's MS2 m/z range (<c>osprey.ms2_scan_window</c>), or null when unknown. Format 1
+        /// carried the declared scan window (200-1500 on Stellar); format 2 carries the lowest and
+        /// highest calibrated peak m/z the run's spectra measured (200.17-1500.17 on the same run).
+        /// </summary>
         public (double Lower, double Upper)? Ms2ScanWindow
         {
             get
