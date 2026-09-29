@@ -347,7 +347,10 @@ namespace pwiz.Osprey.DemuxTool
             Console.WriteLine(@"Wrote {0} in {1:F0} s: {2:N0} channels, {3:N0} solved; {4:P2} of {5:E3} ions passed through",
                 output, stopwatch.Elapsed.TotalSeconds, channels, solved, passed / Math.Max(ionsIn, 1e-30), ionsIn);
             if (JointDemuxProfile.Enabled)
+            {
                 Console.WriteLine(JointDemuxProfile.Summary());
+                Console.WriteLine(JointDemuxProfile.PassSummary());
+            }
             return 0;
         }
 

@@ -217,6 +217,24 @@ namespace pwiz.Osprey.Demux
         public static long GridPoints;
         public static long CandidatePoints;
         public static long RefitPoints;
+        public static long PassGradientTicks;
+        public static long PassGramTicks;
+        public static long PassNnlsTicks;
+        public static long PassUpdateTicks;
+        public static long SingleSolves;
+        public static long MovedSolves;
+        public static long EmptyVisits;
+        /// <summary>The pass's parts, one line.</summary>
+        public static string PassSummary()
+        {
+            double f = 1.0 / Stopwatch.Frequency;
+            return string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                @"pass parts: block gradients {0:F1} s, Gram {1:F1} s, NNLS {2:F1} s, update {3:F1} s; " +
+                @"{4} block solves, {5:P0} single, {6:P0} moved past the tolerance, {7} dirty points with no active position",
+                PassGradientTicks * f, PassGramTicks * f, PassNnlsTicks * f, PassUpdateTicks * f, BlockSolves,
+                SingleSolves / (double)Math.Max(BlockSolves, 1), MovedSolves / (double)Math.Max(BlockSolves, 1), EmptyVisits);
+        }
+
         /// <summary>The totals, one line.</summary>
         public static string Summary()
         {
@@ -407,6 +425,9 @@ namespace pwiz.Osprey.Demux
             private int _reachCount;
             private bool[] _dirty = Array.Empty<bool>();      // per grid point: to solve in the next pass
             private bool[] _changed = Array.Empty<bool>();    // per grid point: gradient changed since the last check
+            private readonly double[] _rowGradient;          // per row: the peak times its weighted residual at a block's point
+            private readonly int[] _rowStamp;                // per row: the block solve _rowGradient was computed for
+            private int _stamp;
             private readonly int[] _blockColumns;            // one grid point's active columns
             private readonly double[] _blockGradient;
             private readonly double[] _blockOld;
@@ -420,6 +441,7 @@ namespace pwiz.Osprey.Demux
             private long _weightTicks, _gradientTicks, _passTicks, _objectiveTicks, _rounds, _passes, _blockSolves, _blockColumnCount;
             private long _dataPoints;
             private long _refitPoints;
+            private long _tGrad, _tGram, _tNnls, _tUpdate, _singles, _moves, _empty;
             private double _decrease;                        // the objective's decrease over the current pass
 
             public ChunkSolver(double[,] a, JointDemuxParams parameters)
@@ -466,6 +488,8 @@ namespace pwiz.Osprey.Demux
                 _columnStart[_columns] = k;
                 _rowSignal = new bool[_rows];
                 _rowUsed = new bool[_rows];
+                _rowGradient = new double[_rows];
+                _rowStamp = new int[_rows];
                 _columnUsed = new bool[_columns];
                 _blockColumns = new int[_columns];
                 _blockGradient = new double[_columns];
@@ -489,6 +513,8 @@ namespace pwiz.Osprey.Demux
 
                 Array.Clear(_y, 0, _rows * _samples);
                 Array.Clear(_rowSignal, 0, _rows);
+                Array.Clear(_rowStamp, 0, _rows);
+                _stamp = 0;
                 Array.Clear(_sampleData, 0, _samples);
                 long baseSample = lo - _half;
                 _dataPoints = end - start;
@@ -597,6 +623,14 @@ namespace pwiz.Osprey.Demux
                 Interlocked.Add(ref JointDemuxProfile.GridPoints, _points);
                 Interlocked.Add(ref JointDemuxProfile.CandidatePoints, _reachCount);
                 Interlocked.Add(ref JointDemuxProfile.RefitPoints, _refitPoints);
+                Interlocked.Add(ref JointDemuxProfile.PassGradientTicks, _tGrad);
+                Interlocked.Add(ref JointDemuxProfile.PassGramTicks, _tGram);
+                Interlocked.Add(ref JointDemuxProfile.PassNnlsTicks, _tNnls);
+                Interlocked.Add(ref JointDemuxProfile.PassUpdateTicks, _tUpdate);
+                Interlocked.Add(ref JointDemuxProfile.SingleSolves, _singles);
+                Interlocked.Add(ref JointDemuxProfile.MovedSolves, _moves);
+                Interlocked.Add(ref JointDemuxProfile.EmptyVisits, _empty);
+                _tGrad = _tGram = _tNnls = _tUpdate = _singles = _moves = _empty = 0;
                 _refitPoints = 0;
                 _weightTicks = _gradientTicks = _passTicks = _objectiveTicks = _rounds = _passes = _blockSolves = _blockColumnCount = 0;
             }
@@ -952,23 +986,39 @@ namespace pwiz.Osprey.Demux
                             _blockColumns[n++] = j;
                     }
                     if (n == 0)
+                    {
+                        _empty++;
                         continue;
+                    }
                     _blockSolves++;
                     _blockColumnCount += n;
                     double stretch;
+                    long p0 = Now();
+                    // A block's positions share about half their rows: each row's term once per block.
+                    _stamp++;
                     for (int u = 0; u < n; u++)
                     {
                         int j = _blockColumns[u];
                         double g = 0;
                         for (int k = _columnStart[j]; k < _columnStart[j + 1]; k++)
                         {
-                            g += _columnA[k] * PeakGradient(_columnRow[k] * _samples + q);
+                            int r = _columnRow[k];
+                            if (_rowStamp[r] != _stamp)
+                            {
+                                _rowGradient[r] = PeakGradient(r * _samples + q);
+                                _rowStamp[r] = _stamp;
+                            }
+                            g += _columnA[k] * _rowGradient[r];
                         }
                         _blockGradient[u] = g;
                         _blockOld[u] = _beta[oc + j];
                     }
+                    long p1 = Now();
+                    _tGrad += p1 - p0;
+                    long p2 = p1;
                     if (n == 1)
                     {
+                        _singles++;
                         int index = oc + _blockColumns[0];
                         double c = _curvature[index];
                         _blockNew[0] = Math.Max(0, _blockOld[0] + (_blockGradient[0] - _lambda[index]) / c);
@@ -1005,6 +1055,8 @@ namespace pwiz.Osprey.Demux
                                 rhs += _blockGram[u * n + w] * _blockOld[w];
                             _blockRhs[u] = rhs;
                         }
+                        p2 = Now();
+                        _tGram += p2 - p1;
                         NnlsSolver.SolveNormal(_blockGram, _blockRhs, n, _blockNew, _workspace, 0, _blockOld);
                         stretch = Relax(n);
                         // The decrease (g - lambda)^T d - d^T H d / 2 of the step d.
@@ -1019,6 +1071,8 @@ namespace pwiz.Osprey.Demux
                             _decrease += (_blockGradient[u] - _lambda[oc + _blockColumns[u]]) * du - 0.5 * du * hd;
                         }
                     }
+                    long p3 = Now();
+                    _tNnls += p3 - p2;
                     double moved = 0;
                     for (int u = 0; u < n; u++)
                     {
@@ -1032,6 +1086,9 @@ namespace pwiz.Osprey.Demux
                         moved = Math.Max(moved, Math.Abs(delta));
                     }
                     largest = Math.Max(largest, moved);
+                    _tUpdate += Now() - p3;
+                    if (moved > _parameters.ToleranceIons)
+                        _moves++;
                     // The grid points sharing this one's residual: their gradients changed by about as much
                     // as this step, so below the tolerance none can have come to violate by more. This point
                     // itself is at its optimum unless the step was lengthened past it.
