@@ -50,13 +50,13 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public List<LibraryEntry> Load(string path, Action<string> logInfo = null)
         {
-            string connStr = string.Format("Data Source={0};Read Only=True;", path);
+            string connStr = string.Format(@"Data Source={0};Read Only=True;", path);
             using (var conn = new SQLiteConnection(connStr))
             {
                 conn.Open();
 
-                if (!TableExists(conn, "RefSpectra"))
-                    throw new InvalidOperationException("Invalid blib file: RefSpectra table not found");
+                if (!TableExists(conn, @"RefSpectra"))
+                    throw new InvalidOperationException(OspreyIOResources.BlibLoader_Load_Invalid_BiblioSpec_library__the_RefSpectra_table_was_not_found_);
 
                 // Intern the repeated strings (sequences, modification names,
                 // protein accessions) as the interned arrays are filled, so no
@@ -77,8 +77,8 @@ namespace pwiz.Osprey.IO
         {
             using (var cmd = conn.CreateCommand())
             {
-                cmd.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=@name";
-                cmd.Parameters.AddWithValue("@name", tableName);
+                cmd.CommandText = @"SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=@name";
+                cmd.Parameters.AddWithValue(@"@name", tableName);
                 long count = (long)(cmd.ExecuteScalar() ?? 0L);
                 return count > 0;
             }
@@ -151,7 +151,7 @@ namespace pwiz.Osprey.IO
         private void LoadProteinMappings(SQLiteConnection conn, List<LibraryEntry> entries,
             LibraryStringInterner interner)
         {
-            if (!TableExists(conn, "RefSpectraProteins") || !TableExists(conn, "Proteins"))
+            if (!TableExists(conn, @"RefSpectraProteins") || !TableExists(conn, @"Proteins"))
                 return;
 
             var proteinMap = new Dictionary<uint, List<string>>();
@@ -288,37 +288,37 @@ namespace pwiz.Osprey.IO
             {
                 massDelta = CARBAMIDOMETHYL_MASS;
                 unimodId = 4;
-                name = "Carbamidomethyl";
+                name = @"Carbamidomethyl";
             }
             else if (Math.Abs(delta - OXIDATION_MASS) < MOD_TOLERANCE)
             {
                 massDelta = OXIDATION_MASS;
                 unimodId = 35;
-                name = "Oxidation";
+                name = @"Oxidation";
             }
             else if (Math.Abs(delta - ACETYL_MASS) < MOD_TOLERANCE && isNterm)
             {
                 massDelta = ACETYL_MASS;
                 unimodId = 1;
-                name = "Acetyl";
+                name = @"Acetyl";
             }
             else if (Math.Abs(delta - PHOSPHO_MASS) < MOD_TOLERANCE)
             {
                 massDelta = PHOSPHO_MASS;
                 unimodId = 21;
-                name = "Phospho";
+                name = @"Phospho";
             }
             else if (Math.Abs(delta - DEAMIDATION_MASS) < MOD_TOLERANCE)
             {
                 massDelta = DEAMIDATION_MASS;
                 unimodId = 7;
-                name = "Deamidated";
+                name = @"Deamidated";
             }
             else if (Math.Abs(delta - TMT6PLEX_MASS) < MOD_TOLERANCE)
             {
                 massDelta = TMT6PLEX_MASS;
                 unimodId = 737;
-                name = "TMT6plex";
+                name = @"TMT6plex";
             }
             else
             {
@@ -366,7 +366,7 @@ namespace pwiz.Osprey.IO
 
             if (mzData.Length % 8 != 0)
                 throw new InvalidOperationException(string.Format(
-                    "Invalid peak m/z blob size: {0} bytes (not a multiple of 8)", mzData.Length));
+                    OspreyIOResources.BlibLoader_DecodeBlibPeaks_Invalid_peak_m_z_blob_size___0__bytes__not_a_multiple_of_8_, mzData.Length));
 
             int nPeaks = mzData.Length / 8;
 
@@ -378,7 +378,7 @@ namespace pwiz.Osprey.IO
                 intensitySize = 8;
             else
                 throw new InvalidOperationException(string.Format(
-                    "Invalid peak intensity blob size: expected {0} or {1} bytes, got {2}",
+                    OspreyIOResources.BlibLoader_DecodeBlibPeaks_Invalid_peak_intensity_blob_size__expected__0__or__1__bytes__got__2_,
                     nPeaks * 4, nPeaks * 8, intData.Length));
 
             var fragments = new List<LibraryFragment>(nPeaks);

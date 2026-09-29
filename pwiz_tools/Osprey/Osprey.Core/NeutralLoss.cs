@@ -82,16 +82,16 @@ namespace pwiz.Osprey.Core
 
             switch (s.ToUpperInvariant())
             {
-                case "H2O":
-                case "WATER":
+                case @"H2O":
+                case @"WATER":
                     return (NeutralLossCode.H2O, 0.0);
-                case "NH3":
-                case "AMMONIA":
+                case @"NH3":
+                case @"AMMONIA":
                     return (NeutralLossCode.NH3, 0.0);
-                case "H3PO4":
-                case "PHOSPHO":
+                case @"H3PO4":
+                case @"PHOSPHO":
                     return (NeutralLossCode.H3PO4, 0.0);
-                case "NOLOSS":
+                case @"NOLOSS":
                     return (NeutralLossCode.None, 0.0);
                 default:
                     double mass;

@@ -257,9 +257,10 @@ namespace pwiz.Osprey.Core
         public string LogFilePath { get; set; }
 
         /// <summary>
-        /// --perf-stats: emit the machine-parseable [COUNT]/[TIMING]/[STAGE-WALL] lines for
-        /// the perf tools (Test-PerfGate.ps1, Measure-Pipeline.ps1). Off by default so the
-        /// human log stays clean. Runtime-only.
+        /// --perf-stats: emit the gated machine-channel lines (every LogTag gated by
+        /// IsPerfStats: [COUNT], [TIMING], [BENCH], [STAGE-WALL], [PATH], [TRAIN]) that the perf
+        /// tools and regression.ps1 read. Off by default so the human log stays clean.
+        /// Runtime-only.
         /// </summary>
         public bool PerfStats { get; set; }
 
@@ -466,6 +467,31 @@ namespace pwiz.Osprey.Core
     }
 
     /// <summary>
+    /// The user-facing name of a <see cref="DecoyMethod"/>, as it reads in "Generating {0}
+    /// decoys". Skyline's <c>GetLocalizedString</c> pattern.
+    /// </summary>
+    public static class DecoyMethodExtension
+    {
+        private static string[] LOCALIZED_VALUES
+        {
+            get
+            {
+                return new[]
+                {
+                    OspreyCoreResources.DecoyMethodExtension_LOCALIZED_VALUES_reverse_sequence,
+                    OspreyCoreResources.DecoyMethodExtension_LOCALIZED_VALUES_shuffled_sequence,
+                    OspreyCoreResources.DecoyMethodExtension_LOCALIZED_VALUES_library_supplied
+                };
+            }
+        }
+
+        public static string GetLocalizedString(this DecoyMethod val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
+    }
+
+    /// <summary>
     /// Level at which FDR is controlled.
     /// Maps to osprey-core/src/types.rs FdrLevel.
     /// </summary>
@@ -474,6 +500,31 @@ namespace pwiz.Osprey.Core
         Precursor,
         Peptide,
         Both
+    }
+
+    /// <summary>
+    /// The user-facing name of an <see cref="FdrLevel"/>, as it reads in "at 1.0% experiment-level
+    /// {0} FDR". Skyline's <c>GetLocalizedString</c> pattern.
+    /// </summary>
+    public static class FdrLevelExtension
+    {
+        private static string[] LOCALIZED_VALUES
+        {
+            get
+            {
+                return new[]
+                {
+                    OspreyCoreResources.FdrLevelExtension_LOCALIZED_VALUES_precursor,
+                    OspreyCoreResources.FdrLevelExtension_LOCALIZED_VALUES_peptide,
+                    OspreyCoreResources.FdrLevelExtension_LOCALIZED_VALUES_precursor_and_peptide
+                };
+            }
+        }
+
+        public static string GetLocalizedString(this FdrLevel val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
     }
 
     /// <summary>
@@ -493,6 +544,29 @@ namespace pwiz.Osprey.Core
 
     public static class FdrMethodExtensions
     {
+        private static string[] LOCALIZED_VALUES
+        {
+            get
+            {
+                return new[]
+                {
+                    OspreyCoreResources.FdrMethodExtensions_LOCALIZED_VALUES_Percolator,
+                    OspreyCoreResources.FdrMethodExtensions_LOCALIZED_VALUES_Mokapot,
+                    OspreyCoreResources.FdrMethodExtensions_LOCALIZED_VALUES_simple_target_decoy,
+                    OspreyCoreResources.FdrMethodExtensions_LOCALIZED_VALUES_gradient_boosted_tree
+                };
+            }
+        }
+
+        /// <summary>
+        /// The user-facing name of an <see cref="FdrMethod"/>, as it reads in "Running {0} FDR
+        /// control". Skyline's <c>GetLocalizedString</c> pattern.
+        /// </summary>
+        public static string GetLocalizedString(this FdrMethod val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
+
         /// <summary>
         /// True for the methods driven by the shared semi-supervised target-decoy
         /// framework: <see cref="FdrMethod.Percolator"/> (linear SVM) and
@@ -527,6 +601,32 @@ namespace pwiz.Osprey.Core
         Auto,
         UnitResolution,
         HRAM
+    }
+
+    /// <summary>
+    /// The user-facing name of a <see cref="ResolutionMode"/>, echoing the <c>--resolution</c>
+    /// values rather than the enum identifier. Skyline's <c>GetLocalizedString</c> pattern, so the
+    /// move to resource strings replaces only the array contents.
+    /// </summary>
+    public static class ResolutionModeExtension
+    {
+        private static string[] LOCALIZED_VALUES
+        {
+            get
+            {
+                return new[]
+                {
+                    OspreyCoreResources.ResolutionModeExtension_LOCALIZED_VALUES_auto,
+                    OspreyCoreResources.ResolutionModeExtension_LOCALIZED_VALUES_unit,
+                    OspreyCoreResources.ResolutionModeExtension_LOCALIZED_VALUES_HRAM
+                };
+            }
+        }
+
+        public static string GetLocalizedString(this ResolutionMode val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
     }
 
     /// <summary>

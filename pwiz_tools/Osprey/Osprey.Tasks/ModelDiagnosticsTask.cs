@@ -88,7 +88,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         public override string DescribeOutput(OspreyConfig config)
         {
-            return string.Format(@"{0} (report only; no other artifact is written)",
+            return string.Format(OspreyTasksResources.ModelDiagnosticsTask_DescribeOutput__0___report_only__no_other_file_is_written_,
                 ModelDiagnosticsReport.ReportPath(config));
         }
 

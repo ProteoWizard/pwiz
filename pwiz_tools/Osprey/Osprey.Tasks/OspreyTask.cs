@@ -87,10 +87,23 @@ namespace pwiz.Osprey.Tasks
         public virtual string ValidateSelection(OspreyConfig config)
         {
             if (!config.HasInputFiles)
-                return RequiresError(@"--input <file...>");
+                return RequiresError(OspreyArgNames.Text(OspreyArgNames.INPUT, @"<file...>"));
             if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
-                return RequiresError(@"--library and --output");
+                return RequiresError(LibraryAndOutputText);
             return null;
+        }
+
+        /// <summary>
+        /// The two arguments <see cref="ValidateSelection"/> requires together, as one phrase
+        /// ("--library and --output"): the argument text is passed in, never translated.
+        /// </summary>
+        public static string LibraryAndOutputText
+        {
+            get
+            {
+                return string.Format(OspreyTasksResources.OspreyTask_LibraryAndOutputText__0__and__1_,
+                    OspreyArgNames.Text(OspreyArgNames.LIBRARY), OspreyArgNames.Text(OspreyArgNames.OUTPUT));
+            }
         }
 
         public virtual string DescribeOutput(OspreyConfig config) => null;
@@ -207,7 +220,22 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         protected string RequiresError(string requirement)
         {
-            return string.Format(@"--task {0} requires {1}.", Name, requirement);
+            return string.Format(OspreyTasksResources.OspreyTask_RequiresError___task__0__requires__1__, Name, requirement);
+        }
+
+        /// <summary>
+        /// A <see cref="DescribeOutput"/> for a task that writes one file per input: the file
+        /// itself when there is one input (every HPC worker), else the extension and where the
+        /// files go - <paramref name="directory"/>, or beside each input when that is empty.
+        /// </summary>
+        protected static string DescribePerInputOutput(OspreyConfig config, Func<string, string> pathFor,
+            string extension, string directory)
+        {
+            if (config.InputFiles != null && config.InputFiles.Count == 1)
+                return pathFor(config.InputFiles[0]);
+            return string.IsNullOrEmpty(directory)
+                ? string.Format(OspreyTasksResources.OspreyTask_DescribePerInputOutput_a__0__file_next_to_each_input, extension)
+                : string.Format(OspreyTasksResources.OspreyTask_DescribePerInputOutput_a__0__file_for_each_input__in__1_, extension, directory);
         }
     }
 }

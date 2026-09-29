@@ -1159,7 +1159,7 @@ namespace pwiz.Osprey.Test
             };
 
             string tempPath = Path.Combine(Path.GetTempPath(),
-                "osprey_test_" + Guid.NewGuid().ToString("N") + ".libcache");
+                "osprey_test_" + Guid.NewGuid().ToString("N") + LibraryCache.EXT);
 
             try
             {
@@ -1260,7 +1260,7 @@ namespace pwiz.Osprey.Test
             var retained = new HashSet<uint> { 10u };
 
             string tempPath = Path.Combine(Path.GetTempPath(),
-                "osprey_test_retain_" + Guid.NewGuid().ToString("N") + ".libcache");
+                "osprey_test_retain_" + Guid.NewGuid().ToString("N") + LibraryCache.EXT);
 
             try
             {
@@ -1360,7 +1360,7 @@ namespace pwiz.Osprey.Test
             };
 
             string tempPath = Path.Combine(Path.GetTempPath(),
-                "osprey_test_omit_" + Guid.NewGuid().ToString("N") + ".libcache");
+                "osprey_test_omit_" + Guid.NewGuid().ToString("N") + LibraryCache.EXT);
 
             try
             {
@@ -1427,7 +1427,7 @@ namespace pwiz.Osprey.Test
             };
 
             string tempPath = Path.Combine(Path.GetTempPath(),
-                "osprey_test_peakless_" + Guid.NewGuid().ToString("N") + ".libcache");
+                "osprey_test_peakless_" + Guid.NewGuid().ToString("N") + LibraryCache.EXT);
             try
             {
                 LibraryCache.SaveCache(tempPath, entries, "peakless-hash");
@@ -1462,7 +1462,7 @@ namespace pwiz.Osprey.Test
             };
 
             string tempPath = Path.Combine(Path.GetTempPath(),
-                "osprey_test_identity_" + Guid.NewGuid().ToString("N") + ".libcache");
+                "osprey_test_identity_" + Guid.NewGuid().ToString("N") + LibraryCache.EXT);
 
             try
             {
@@ -1555,7 +1555,7 @@ namespace pwiz.Osprey.Test
             // misparsing the body.
             var entries = new List<LibraryEntry> { MakeTestEntry(0) };
             string tempPath = Path.Combine(Path.GetTempPath(),
-                "osprey_test_version_" + Guid.NewGuid().ToString("N") + ".libcache");
+                "osprey_test_version_" + Guid.NewGuid().ToString("N") + LibraryCache.EXT);
             try
             {
                 LibraryCache.SaveCache(tempPath, entries, "hash-A");
@@ -1586,7 +1586,7 @@ namespace pwiz.Osprey.Test
             var entries = new List<LibraryEntry>();
 
             string tempPath = Path.Combine(Path.GetTempPath(),
-                "osprey_test_empty_" + Guid.NewGuid().ToString("N") + ".libcache");
+                "osprey_test_empty_" + Guid.NewGuid().ToString("N") + LibraryCache.EXT);
 
             try
             {
@@ -1607,7 +1607,7 @@ namespace pwiz.Osprey.Test
         public void TestLibraryCacheInvalidMagic()
         {
             string tempPath = Path.Combine(Path.GetTempPath(),
-                "osprey_test_bad_" + Guid.NewGuid().ToString("N") + ".libcache");
+                "osprey_test_bad_" + Guid.NewGuid().ToString("N") + LibraryCache.EXT);
 
             try
             {
@@ -1649,7 +1649,7 @@ namespace pwiz.Osprey.Test
             };
 
             string tempPath = Path.Combine(Path.GetTempPath(),
-                "osprey_nl_" + Guid.NewGuid().ToString("N") + ".libcache");
+                "osprey_nl_" + Guid.NewGuid().ToString("N") + LibraryCache.EXT);
             try
             {
                 LibraryCache.SaveCache(tempPath, new List<LibraryEntry> { entry }, "hash");
@@ -3145,7 +3145,7 @@ namespace pwiz.Osprey.Test
                     metadata["osprey.reconciled"]);
                 ParquetScoreCache.StreamReconciledScoresParquet(
                     originalPath, reconciledPath, null, null, metadata, null, "f.mzML", null,
-                    null, null);
+                    PerFileRescoreTask.TASK_NAME, null, null);
                 Assert.IsTrue(ParquetScoreCache.IsCurrentReconciledSurvivorSubset(reconciledPath));
 
                 // And it is the POSITIVE form of the interim-shape refusal, not a second
@@ -3231,7 +3231,7 @@ namespace pwiz.Osprey.Test
                 var warnings = new List<string>();
                 var result = ParquetScoreCache.StreamReconciledScoresParquet(
                     originalPath, streamPath, overlayByIndex, gapFill, null, null, "f.mzML", null,
-                    null, warnings.Add);
+                    PerFileRescoreTask.TASK_NAME, null, warnings.Add);
                 ParquetScoreCache.RowGroupRowCapForTest = null;
 
                 // Counts: two in-range overlays replaced, two gap-fill appended, 7 originals.
@@ -3320,7 +3320,7 @@ namespace pwiz.Osprey.Test
 
                 var result = ParquetScoreCache.StreamReconciledScoresParquet(
                     originalPath, subsetPath, new Dictionary<uint, FdrEntry>(), gapFill,
-                    null, null, "f.mzML", keep, null, s => { });
+                    null, null, "f.mzML", keep, PerFileRescoreTask.TASK_NAME, null, s => { });
 
                 Assert.AreEqual(1, result.NAppended);
                 // Rows READ, not emitted - the count still describes the input.
@@ -3442,7 +3442,7 @@ namespace pwiz.Osprey.Test
                 string firstBad = null;
                 for (int i = 0; i < iters; i++)
                 {
-                    string path = Path.Combine(dir, @"stress" + i + @".scores.parquet");
+                    string path = Path.Combine(dir, @"stress" + i + ParquetScoreCache.EXT_SCORES);
                     ParquetScoreCache.WriteScoresParquet(path, entries, null, null, @"f.mzML");
                     var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(path);
                     string bad = null;
@@ -3874,8 +3874,9 @@ namespace pwiz.Osprey.Test
             };
             int raised = accumulator.ApplyRunQFloors(id => floors[id]);
 
-            // 1 raises both, 3 raises one. Nothing else moves.
-            Assert.AreEqual(3, raised);
+            // 1 raises both, 3 raises one. Nothing else moves. The count is of RECORDS, so entry
+            // 1 counts once although both of its q-values moved.
+            Assert.AreEqual(2, raised);
             AssertBitEqual(0.010, accumulator.Records[1].ExperimentPrecursorQvalue);
             AssertBitEqual(0.020, accumulator.Records[1].ExperimentPeptideQvalue);
             // A floor EQUAL to the value is not a raise, and one below it is not a ceiling.
@@ -4562,7 +4563,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 const string stem = "sample1";
-                string parquetPath = Path.Combine(dir, stem + ".scores.parquet");
+                string parquetPath = Path.Combine(dir, stem + ParquetScoreCache.EXT_SCORES);
                 string mzmlSynthetic = Path.Combine(dir, stem + ".mzML");
                 string sidecarPath = FdrScoresSidecar.Pass1Path(mzmlSynthetic);
                 string reconPath = ReconciliationFile.PathForInput(mzmlSynthetic);
@@ -4757,7 +4758,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 const string stem = "sample1";
-                string parquetPath = Path.Combine(dir, stem + ".scores.parquet");
+                string parquetPath = Path.Combine(dir, stem + ParquetScoreCache.EXT_SCORES);
                 string mzmlSynthetic = Path.Combine(dir, stem + ".mzML");
                 string sidecarPath = FdrScoresSidecar.Pass1Path(mzmlSynthetic);
                 string reconPath = ReconciliationFile.PathForInput(mzmlSynthetic);
@@ -4813,8 +4814,9 @@ namespace pwiz.Osprey.Test
                 }
                 catch (InvalidDataException ex)
                 {
-                    StringAssert.Contains(ex.Message, "999");
-                    StringAssert.Contains(ex.Message, "not found in stubs");
+                    Assert.AreEqual(string.Format(
+                        OspreyTasksResources.RescoreHydration_MapPlannedActions__0__refers_to_precursor_candidate__1___which_is_not_in_the_scores_file_for_that_run_,
+                        reconPath, 999), ex.Message);
                 }
             }
             finally
@@ -5002,7 +5004,7 @@ namespace pwiz.Osprey.Test
         private static string WriteStreamingBoundaryTrio(string dir, string stem, string[] stems)
         {
             var entryIds = new[] { 100u, 101u, 102u, 0x80000064u, 0x80000065u };
-            string parquetPath = Path.Combine(dir, stem + ".scores.parquet");
+            string parquetPath = Path.Combine(dir, stem + ParquetScoreCache.EXT_SCORES);
             string mzmlSynthetic = Path.Combine(dir, stem + ".mzML");
 
             var scored = new List<CoelutionScoredEntry>();

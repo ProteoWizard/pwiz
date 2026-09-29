@@ -410,7 +410,7 @@ namespace pwiz.Osprey.Scoring
                             PositivePoolSize = positivePool,
                             AllFoldsFailed = true
                         });
-                        report.StopReason = @"all cross-validation folds were singular";
+                        report.StopReason = OspreyScoringResources.CalibrationScorer_TrainLdaWithNonNegativeCv_all_cross_validation_folds_were_singular;
                     }
                     break;
                 }
@@ -481,7 +481,7 @@ namespace pwiz.Osprey.Scoring
                 if (consecutiveNoImprove >= 2)
                 {
                     if (report != null)
-                        report.StopReason = @"converged (2 consecutive non-improving iterations)";
+                        report.StopReason = OspreyScoringResources.CalibrationScorer_TrainLdaWithNonNegativeCv_converged__2_consecutive_non_improving_iterations_;
                     break;
                 }
             }
@@ -489,7 +489,7 @@ namespace pwiz.Osprey.Scoring
             if (report != null)
             {
                 if (report.StopReason == null)
-                    report.StopReason = string.Format(@"reached iteration cap ({0})", MAX_ITERATIONS);
+                    report.StopReason = string.Format(OspreyScoringResources.CalibrationScorer_TrainLdaWithNonNegativeCv_reached_iteration_cap___0__, MAX_ITERATIONS);
                 report.FinalWeights = bestWeights;
             }
 
@@ -842,42 +842,43 @@ namespace pwiz.Osprey.Scoring
         /// </summary>
         public IEnumerable<string> ToReportLines(string label)
         {
-            yield return string.Format(
-                @"  Calibration LDA model [{0}]: {1} matches ({2} target / {3} decoy)",
+            yield return TextUtil.GetIndentation(1) + string.Format(
+                OspreyScoringResources.CalibrationTrainingReport_ToReportLines_Calibration_LDA_model___0_____1__matches___2__target____3__decoy_,
                 label, NTotal, NTargets, NDecoys);
-            yield return string.Format(
-                @"    seed feature: {0} @ {1:F1}% FDR ({2} targets passing)",
+            yield return TextUtil.GetIndentation(2) + string.Format(
+                OspreyScoringResources.CalibrationTrainingReport_ToReportLines_seed_feature___0_____1___FDR___2__targets_passing_,
                 FeatureName(SeedFeatureIndex), SeedFdr * 100.0, SeedPassing);
 
             if (Iterations.Count == 0)
             {
-                yield return @"    refinement: none (baseline single feature kept)";
+                yield return TextUtil.GetIndentation(2) + OspreyScoringResources.CalibrationTrainingReport_ToReportLines_refinement__none__baseline_single_feature_kept_;
             }
             else
             {
-                yield return @"    refinement iterations:";
+                yield return TextUtil.GetIndentation(2) + OspreyScoringResources.CalibrationTrainingReport_ToReportLines_refinement_iterations_;
                 foreach (var it in Iterations)
                 {
                     if (it.AllFoldsFailed)
                     {
-                        yield return string.Format(
-                            @"      iter {0}: cutoff {1:F1}%, positive pool {2} -> all folds singular",
+                        yield return TextUtil.GetIndentation(3) + string.Format(
+                            OspreyScoringResources.CalibrationTrainingReport_ToReportLines_iter__0___cutoff__1____positive_pool__2_____all_folds_singular,
                             it.Iteration, it.Fdr * 100.0, it.PositivePoolSize);
                     }
                     else
                     {
-                        yield return string.Format(
-                            @"      iter {0}: cutoff {1:F1}%, positive pool {2}, passing {3}{4}",
+                        yield return TextUtil.GetIndentation(3) + string.Format(
+                            OspreyScoringResources.CalibrationTrainingReport_ToReportLines_iter__0___cutoff__1____positive_pool__2___passing__3__4_,
                             it.Iteration, it.Fdr * 100.0, it.PositivePoolSize, it.Passing,
-                            it.Improved ? @"  (new best)" : string.Empty);
+                            it.Improved ? @"  " + OspreyScoringResources.CalibrationTrainingReport_ToReportLines__new_best_ : string.Empty);
                     }
                 }
             }
-            yield return string.Format(
-                @"    stopped: {0} ({1} iteration(s) run)",
-                StopReason ?? @"(unknown)", Iterations.Count);
-            yield return string.Format(
-                @"    calibrator yield: {0} targets @ q<=1%, {1} @ q<=0.1%",
+            yield return TextUtil.GetIndentation(2) + CountText.Format(Iterations.Count,
+                OspreyScoringResources.CalibrationTrainingReport_ToReportLines_stopped___1___1_iteration_run_,
+                OspreyScoringResources.CalibrationTrainingReport_ToReportLines_stopped___1____0__iterations_run_,
+                StopReason ?? OspreyScoringResources.CalibrationTrainingReport_ToReportLines__unknown_);
+            yield return TextUtil.GetIndentation(2) + string.Format(
+                OspreyScoringResources.CalibrationTrainingReport_ToReportLines_calibrator_yield___0__targets___q__1____1_____q__0_1_,
                 NTargetsAt1Pct, NTargetsAtTenthPct);
 
             foreach (string line in ContributionLines())
@@ -905,8 +906,9 @@ namespace pwiz.Osprey.Scoring
             }
             bool degenerate = Math.Abs(composite) <= 1e-12;
 
-            yield return @"    Model sanity check -- feature share of target-decoy separation (calibration LDA, coefficients in normalized feature space):";
-            yield return string.Format(@"      {0,-24} {1,12} {2,9}", @"feature", @"coefficient", @"share (%)");
+            yield return TextUtil.GetIndentation(2) + OspreyScoringResources.CalibrationTrainingReport_ContributionLines_Model_sanity_check___feature_share_of_target_decoy_separation__calibration_LDA__coefficients_in_normalized_feature_space__;
+            yield return TextUtil.GetIndentation(3) + string.Format(@"{0,-24} {1,12} {2,9}", OspreyScoringResources.CalibrationTrainingReport_ContributionLines_feature,
+                OspreyScoringResources.CalibrationTrainingReport_ContributionLines_coefficient, OspreyScoringResources.CalibrationTrainingReport_ContributionLines_share____);
 
             var order = new int[p];
             for (int j = 0; j < p; j++)
@@ -924,7 +926,7 @@ namespace pwiz.Osprey.Scoring
             foreach (int j in order)
             {
                 double pct = degenerate ? double.NaN : 100.0 * weighted[j] / composite;
-                yield return string.Format(@"      {0,-24} {1,12:F4} {2,8:F1}%",
+                yield return TextUtil.GetIndentation(3) + string.Format(@"{0,-24} {1,12:F4} {2,8:F1}%",
                     FeatureName(j), FinalWeights[j], pct);
             }
         }

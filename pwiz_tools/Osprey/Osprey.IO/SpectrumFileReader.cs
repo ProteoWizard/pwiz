@@ -64,6 +64,8 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public static class SpectrumFileReader
     {
+        public const string EXT_MZML = @".mzML";
+
         private static int _vendorFailuresReported;
 
         /// <summary>
@@ -128,7 +130,7 @@ namespace pwiz.Osprey.IO
                     // no byte position), on the same throttled interval the mzML read used
                     // - a large file is minutes of otherwise silent work.
                     using (var progress = new ProgressReporter(
-                               string.Format("Reading {0}", Path.GetFileName(path)), count,
+                               string.Format(OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Reading__0_, Path.GetFileName(path)), count,
                                string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
                     {
                         for (int i = 0; i < count; i++)
@@ -157,10 +159,7 @@ namespace pwiz.Osprey.IO
                 // SupportsVendorPeakPicking cannot be used to pre-empt this: it answers
                 // "is this a vendor reader" (true for Agilent), not "does it centroid".
                 throw new NotSupportedException(string.Format(
-                    "Cannot read '{0}': ProteoWizard has no vendor peak picking for this " +
-                    "format, and Osprey scores centroided peaks. Convert the file to mzML " +
-                    "with msconvert --filter \"peakPicking vendor msLevel=1-\" and read that " +
-                    "instead.", path), ex);
+                    OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Cannot_read___0____ProteoWizard_has_no_vendor_peak_picking_for_this_format__and_Osprey_, path), ex);
             }
             catch (VendorSupportNotEnabledException ex)
             {
@@ -170,11 +169,7 @@ namespace pwiz.Osprey.IO
                 // project's build flag rather than how Osprey is built. Restate it in
                 // terms the reader can act on, and keep the original as InnerException.
                 throw new NotSupportedException(string.Format(
-                    "Cannot read '{0}': this build of Osprey has no vendor instrument " +
-                    "support. Rebuild with /p:IAgreeToVendorLicenses=true on Osprey.sln, " +
-                    "or with 'bjam pwiz_tools/Osprey//Osprey " +
-                    "--i-agree-to-the-vendor-licenses'. Otherwise convert the file to " +
-                    "mzML with msconvert and read that instead.", path), ex);
+                    OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_build_of_Osprey_has_no_vendor_instrument_support__Rebuild_with__p_, path), ex);
             }
 
             return new SpectrumFileResult(ms2Spectra, ms1Spectra, unsortedCount);
@@ -219,7 +214,7 @@ namespace pwiz.Osprey.IO
             string ext = Path.GetExtension(path);
             if (string.Equals(ext, @".gz", StringComparison.OrdinalIgnoreCase))
                 ext = Path.GetExtension(Path.GetFileNameWithoutExtension(path));
-            return string.Equals(ext, @".mzml", StringComparison.OrdinalIgnoreCase);
+            return string.Equals(ext, EXT_MZML, StringComparison.OrdinalIgnoreCase);
         }
 
         private static void AddSpectrum(MsDataSpectrum spectrum, int spectrumIndex,

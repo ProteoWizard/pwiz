@@ -134,7 +134,7 @@ namespace pwiz.Osprey.Scoring
             var decoy = new LibraryEntry(
                 target.Id | 0x80000000,
                 decoySequence,
-                "DECOY_" + target.ModifiedSequence,
+                @"DECOY_" + target.ModifiedSequence,
                 target.Charge,
                 target.PrecursorMz,
                 target.RetentionTime);
@@ -167,7 +167,7 @@ namespace pwiz.Osprey.Scoring
             var pids = new string[targetProteinIds.Count];
             for (int i = 0; i < targetProteinIds.Count; i++)
             {
-                string decoyAcc = "DECOY_" + targetProteinIds[i];
+                string decoyAcc = @"DECOY_" + targetProteinIds[i];
                 pids[i] = interner != null ? interner.Intern(decoyAcc) : decoyAcc;
             }
             return pids;
@@ -226,7 +226,7 @@ namespace pwiz.Osprey.Scoring
         {
             // Public API: tolerate a missing logger as a no-op rather than throwing.
             logInfo = logInfo ?? (_ => { });
-            logInfo(string.Format("Generating decoys using {0} method...", config.DecoyMethod));
+            logInfo(string.Format(OspreyScoringResources.DecoyGenerator_GenerateAllWithCollisionDetection_Generating__0__decoys___, config.DecoyMethod.GetLocalizedString()));
 
             // Build set of all target (stripped) sequences for collision detection, I->L
             // normalized so isobaric collisions are visible (see NormalizeIsoleucine).
@@ -318,9 +318,9 @@ namespace pwiz.Osprey.Scoring
                 }
             }
 
-            interner.LogSummary(logInfo);
+            interner.LogDecoySummary(logInfo);
             logInfo(string.Format(
-                "Generated {0} decoys from {1} targets ({2} excluded due to collisions)",
+                OspreyScoringResources.DecoyGenerator_GenerateAllWithCollisionDetection_Generated__0__decoys_from__1__targets___2__excluded_due_to_collisions_,
                 decoys.Count, targets.Count, nExcluded));
             return decoys;
         }
@@ -545,7 +545,7 @@ namespace pwiz.Osprey.Scoring
             var decoy = new LibraryEntry(
                 target.Id | 0x80000000u,
                 decoySequence,
-                "DECOY_" + target.ModifiedSequence,
+                @"DECOY_" + target.ModifiedSequence,
                 target.Charge,
                 target.PrecursorMz,
                 target.RetentionTime);

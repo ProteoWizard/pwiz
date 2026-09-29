@@ -38,6 +38,7 @@ namespace pwiz.Osprey.IO
     public class DiannTsvLoader
     {
         private const int DEFAULT_MIN_FRAGMENTS = 3;
+        private const string UNIMOD_PREFIX = @"UniMod:";
 
         private readonly int _minFragments;
 
@@ -74,7 +75,7 @@ namespace pwiz.Osprey.IO
                 // and after the interning summary - a completion line for a phase that ended
                 // minutes earlier. ParseReader disposes it when the stream is exhausted.
                 var readProgress = new ProgressReporter(
-                    string.Format("Parsing {0}", Path.GetFileName(path)), stream.Length,
+                    string.Format(OspreyIOResources.DiannTsvLoader_Load_Parsing__0_, Path.GetFileName(path)), stream.Length,
                     string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
                 using (var progressStream = new ProgressStream(stream, readProgress))
                 // leaveOpen so ownership of progressStream is explicit rather than resting on
@@ -104,9 +105,9 @@ namespace pwiz.Osprey.IO
         {
             string headerLine = reader.ReadLine();
             if (headerLine == null)
-                throw new InvalidDataException("Empty library file: no header row");
+                throw new InvalidDataException(OspreyIOResources.DiannTsvLoader_ParseReader_The_library_file_is_empty__it_has_no_header_row_);
 
-            string[] headers = headerLine.Split('\t');
+            string[] headers = headerLine.Split(TextUtil.SEPARATOR_TSV);
             var cols = ColumnIndices.FromHeaders(headers);
 
             var precursorMap = new Dictionary<string, PrecursorData>();
@@ -119,7 +120,7 @@ namespace pwiz.Osprey.IO
                 if (string.IsNullOrWhiteSpace(line))
                     continue;
 
-                string[] fields = line.Split('\t');
+                string[] fields = line.Split(TextUtil.SEPARATOR_TSV);
                 ParseRow(fields, cols, rowNum, precursorMap);
             }
             // Stream exhausted: the byte progress is complete and must say so HERE.
@@ -138,7 +139,7 @@ namespace pwiz.Osprey.IO
             // the console sat at 100% through the whole materialization pass. Constructed rather
             // than `using`d so the loop needs no re-indent and so an exception here does not print
             // a completed-looking 100% while unwinding.
-            var progress = new ProgressReporter(@"Building library entries", precursorMap.Count,
+            var progress = new ProgressReporter(OspreyIOResources.DiannTsvLoader_ParseReader_Building_library_precursors, precursorMap.Count,
                     string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
             long nBuilt = 0;
 
@@ -197,11 +198,11 @@ namespace pwiz.Osprey.IO
         private void ParseRow(string[] fields, ColumnIndices cols, int rowNum,
             Dictionary<string, PrecursorData> precursorMap)
         {
-            double precursorMz = ParseDouble(GetField(fields, cols.PrecursorMz, "PrecursorMz", rowNum), "PrecursorMz", rowNum);
-            byte charge = ParseByte(GetField(fields, cols.PrecursorCharge, "PrecursorCharge", rowNum), "PrecursorCharge", rowNum);
-            string modifiedSequence = StripFlankingChars(GetField(fields, cols.ModifiedPeptide, "ModifiedPeptide", rowNum));
-            double fragmentMz = ParseDouble(GetField(fields, cols.FragmentMz, "FragmentMz", rowNum), "FragmentMz", rowNum);
-            float relativeIntensity = ParseFloat(GetField(fields, cols.RelativeIntensity, "RelativeIntensity", rowNum), "RelativeIntensity", rowNum);
+            double precursorMz = ParseDouble(GetField(fields, cols.PrecursorMz, @"PrecursorMz", rowNum), @"PrecursorMz", rowNum);
+            byte charge = ParseByte(GetField(fields, cols.PrecursorCharge, @"PrecursorCharge", rowNum), @"PrecursorCharge", rowNum);
+            string modifiedSequence = StripFlankingChars(GetField(fields, cols.ModifiedPeptide, @"ModifiedPeptide", rowNum));
+            double fragmentMz = ParseDouble(GetField(fields, cols.FragmentMz, @"FragmentMz", rowNum), @"FragmentMz", rowNum);
+            float relativeIntensity = ParseFloat(GetField(fields, cols.RelativeIntensity, @"RelativeIntensity", rowNum), @"RelativeIntensity", rowNum);
 
             // Retention time from multiple possible columns
             double retentionTime = 0.0;
@@ -264,7 +265,7 @@ namespace pwiz.Osprey.IO
                 ParseDecoyFlag(GetFieldOrNull(fields, cols.Decoy));
 
             // Group by precursor key
-            string key = modifiedSequence + "_" + charge;
+            string key = modifiedSequence + @"_" + charge;
 
             PrecursorData precursor;
             if (!precursorMap.TryGetValue(key, out precursor))
@@ -451,34 +452,25 @@ namespace pwiz.Osprey.IO
                     return s[0] == '-' ? -mass : mass;
             }
 
-            // Try UniMod notation (e.g. "UniMod:4" or "UNIMOD:4")
-            string idStr = null;
-            if (s.StartsWith("UniMod:", StringComparison.OrdinalIgnoreCase))
-                idStr = s.Substring(7);
-            else if (s.StartsWith("UNIMOD:", StringComparison.OrdinalIgnoreCase))
-                idStr = s.Substring(7);
-
-            if (idStr != null)
+            // Try UniMod notation (e.g. "UniMod:4" or "UNIMOD:4" - the prefix match ignores case)
+            if (s.StartsWith(UNIMOD_PREFIX, StringComparison.OrdinalIgnoreCase) &&
+                int.TryParse(s.Substring(UNIMOD_PREFIX.Length), out int unimodId))
             {
-                int unimodId;
-                if (int.TryParse(idStr, out unimodId))
-                {
-                    double? unimodMass = UnimodIdToMass(unimodId);
-                    if (unimodMass.HasValue)
-                        return unimodMass;
-                }
+                double? unimodMass = UnimodIdToMass(unimodId);
+                if (unimodMass.HasValue)
+                    return unimodMass;
             }
 
             // Known modifications by name
             switch (s.ToUpperInvariant())
             {
-                case "OXIDATION": return 15.9949;
-                case "CARBAMIDOMETHYL":
-                case "CAM": return 57.0215;
-                case "PHOSPHO": return 79.9663;
-                case "ACETYL": return 42.0106;
-                case "DEAMIDATED":
-                case "DEAMIDATION": return 0.9840;
+                case @"OXIDATION": return 15.9949;
+                case @"CARBAMIDOMETHYL":
+                case @"CAM": return 57.0215;
+                case @"PHOSPHO": return 79.9663;
+                case @"ACETYL": return 42.0106;
+                case @"DEAMIDATED":
+                case @"DEAMIDATION": return 0.9840;
                 default: return null;
             }
         }
@@ -491,11 +483,11 @@ namespace pwiz.Osprey.IO
             if (string.IsNullOrEmpty(s))
                 return null;
 
-            int idx = s.IndexOf("UniMod:", StringComparison.OrdinalIgnoreCase);
+            int idx = s.IndexOf(UNIMOD_PREFIX, StringComparison.OrdinalIgnoreCase);
             if (idx < 0)
                 return null;
 
-            string rest = s.Substring(idx + 7);
+            string rest = s.Substring(idx + UNIMOD_PREFIX.Length);
             int end = 0;
             while (end < rest.Length && char.IsDigit(rest[end]))
                 end++;
@@ -579,7 +571,7 @@ namespace pwiz.Osprey.IO
         private static string GetField(string[] fields, int index, string name, int rowNum)
         {
             if (index < 0 || index >= fields.Length)
-                throw new InvalidDataException(string.Format("Missing {0} at row {1}", name, rowNum));
+                throw new InvalidDataException(string.Format(OspreyIOResources.DiannTsvLoader_GetField_Missing__0__at_row__1_, name, rowNum));
             return fields[index];
         }
 
@@ -600,43 +592,46 @@ namespace pwiz.Osprey.IO
             // producing cross-impl drift in mz_min/mz_max and downstream bin
             // widths. Rust's `str::parse::<f64>` is IEEE-correct, so using
             // XmlConvert brings the two parsers into bit-for-bit agreement.
-            try
-            {
-                return XmlConvert.ToDouble(s);
-            }
-            catch (FormatException)
-            {
-                throw new InvalidDataException(string.Format("Invalid {0} '{1}' at row {2}", name, s, rowNum));
-            }
-            catch (OverflowException)
-            {
-                throw new InvalidDataException(string.Format("Invalid {0} '{1}' at row {2}", name, s, rowNum));
-            }
+            return ParseValue(s, name, rowNum, XmlConvert.ToDouble);
         }
 
         private static float ParseFloat(string s, string name, int rowNum)
         {
             // XmlConvert for IEEE-754 correct parsing - see ParseDouble note.
-            try
-            {
-                return XmlConvert.ToSingle(s);
-            }
-            catch (FormatException)
-            {
-                throw new InvalidDataException(string.Format("Invalid {0} '{1}' at row {2}", name, s, rowNum));
-            }
-            catch (OverflowException)
-            {
-                throw new InvalidDataException(string.Format("Invalid {0} '{1}' at row {2}", name, s, rowNum));
-            }
+            return ParseValue(s, name, rowNum, XmlConvert.ToSingle);
         }
 
         private static byte ParseByte(string s, string name, int rowNum)
         {
-            byte value;
-            if (!byte.TryParse(s, out value))
-                throw new InvalidDataException(string.Format("Invalid {0} '{1}' at row {2}", name, s, rowNum));
+            if (!byte.TryParse(s, out byte value))
+                throw InvalidValue(s, name, rowNum);
             return value;
+        }
+
+        /// <summary>
+        /// <paramref name="parse"/> applied to <paramref name="s"/>, with its format and overflow
+        /// failures reported as the invalid value in column <paramref name="name"/> at
+        /// <paramref name="rowNum"/>.
+        /// </summary>
+        private static T ParseValue<T>(string s, string name, int rowNum, Func<string, T> parse)
+        {
+            try
+            {
+                return parse(s);
+            }
+            catch (FormatException)
+            {
+                throw InvalidValue(s, name, rowNum);
+            }
+            catch (OverflowException)
+            {
+                throw InvalidValue(s, name, rowNum);
+            }
+        }
+
+        private static InvalidDataException InvalidValue(string s, string name, int rowNum)
+        {
+            return new InvalidDataException(string.Format(OspreyIOResources.DiannTsvLoader_ParseValue_Invalid__0____1___at_row__2_, name, s, rowNum));
         }
 
         private static double ParseDoubleOrDefault(string s, double defaultValue)
@@ -690,35 +685,36 @@ namespace pwiz.Osprey.IO
             {
                 var indices = new ColumnIndices();
 
-                indices.PrecursorMz = FindColumn(headers, "PrecursorMz", "Precursor.Mz", "Q1");
-                indices.PrecursorCharge = FindColumn(headers, "PrecursorCharge", "Precursor.Charge");
-                indices.ModifiedPeptide = FindColumn(headers, "ModifiedPeptide", "Modified.Peptide", "FullPeptideName");
-                indices.StrippedPeptide = FindColumn(headers, "StrippedPeptide", "Stripped.Peptide", "PeptideSequence");
-                indices.FragmentMz = FindColumn(headers, "FragmentMz", "Fragment.Mz", "ProductMz", "Q3");
-                indices.RelativeIntensity = FindColumn(headers, "RelativeIntensity", "Relative.Intensity", "LibraryIntensity");
-                indices.FragmentType = FindColumn(headers, "FragmentType", "Fragment.Type", "IonType");
-                indices.FragmentSeriesNumber = FindColumn(headers, "FragmentSeriesNumber", "FragmentNumber", "IonNumber");
-                indices.FragmentCharge = FindColumn(headers, "FragmentCharge", "Fragment.Charge", "ProductCharge");
-                indices.FragmentLossType = FindColumn(headers, "FragmentLossType", "LossType", "NeutralLoss");
-                indices.IRT = FindColumn(headers, "iRT", "iRt");
-                indices.NormalizedRT = FindColumn(headers, "NormalizedRetentionTime", "Tr_recalibrated", "RT");
-                indices.ProteinId = FindColumn(headers, "ProteinId", "Protein.Id", "ProteinName", "Protein", "ProteinIds", "Protein.Ids");
-                indices.GeneName = FindColumn(headers, "GeneName", "Gene.Name", "Genes", "Protein.Names");
-                indices.Decoy = FindColumn(headers, "Decoy", "IsDecoy", "Is.Decoy");
+                indices.PrecursorMz = FindColumn(headers, @"PrecursorMz", @"Precursor.Mz", @"Q1");
+                indices.PrecursorCharge = FindColumn(headers, @"PrecursorCharge", @"Precursor.Charge");
+                indices.ModifiedPeptide = FindColumn(headers, @"ModifiedPeptide", @"Modified.Peptide", @"FullPeptideName");
+                indices.StrippedPeptide = FindColumn(headers, @"StrippedPeptide", @"Stripped.Peptide", @"PeptideSequence");
+                indices.FragmentMz = FindColumn(headers, @"FragmentMz", @"Fragment.Mz", @"ProductMz", @"Q3");
+                indices.RelativeIntensity = FindColumn(headers, @"RelativeIntensity", @"Relative.Intensity", @"LibraryIntensity");
+                indices.FragmentType = FindColumn(headers, @"FragmentType", @"Fragment.Type", @"IonType");
+                indices.FragmentSeriesNumber = FindColumn(headers, @"FragmentSeriesNumber", @"FragmentNumber", @"IonNumber");
+                indices.FragmentCharge = FindColumn(headers, @"FragmentCharge", @"Fragment.Charge", @"ProductCharge");
+                indices.FragmentLossType = FindColumn(headers, @"FragmentLossType", @"LossType", @"NeutralLoss");
+                indices.IRT = FindColumn(headers, @"iRT", @"iRt");
+                indices.NormalizedRT = FindColumn(headers, @"NormalizedRetentionTime", @"Tr_recalibrated", @"RT");
+                indices.ProteinId = FindColumn(headers, @"ProteinId", @"Protein.Id", @"ProteinName", @"Protein", @"ProteinIds", @"Protein.Ids");
+                indices.GeneName = FindColumn(headers, @"GeneName", @"Gene.Name", @"Genes", @"Protein.Names");
+                indices.Decoy = FindColumn(headers, @"Decoy", @"IsDecoy", @"Is.Decoy");
 
-                // Validate required columns
-                if (indices.PrecursorMz < 0)
-                    throw new InvalidDataException("Missing required column: PrecursorMz");
-                if (indices.PrecursorCharge < 0)
-                    throw new InvalidDataException("Missing required column: PrecursorCharge");
-                if (indices.ModifiedPeptide < 0)
-                    throw new InvalidDataException("Missing required column: ModifiedPeptide");
-                if (indices.FragmentMz < 0)
-                    throw new InvalidDataException("Missing required column: FragmentMz");
-                if (indices.RelativeIntensity < 0)
-                    throw new InvalidDataException("Missing required column: RelativeIntensity");
+                // Validate required columns, named by the first spelling each lookup accepts.
+                RequireColumn(indices.PrecursorMz, @"PrecursorMz");
+                RequireColumn(indices.PrecursorCharge, @"PrecursorCharge");
+                RequireColumn(indices.ModifiedPeptide, @"ModifiedPeptide");
+                RequireColumn(indices.FragmentMz, @"FragmentMz");
+                RequireColumn(indices.RelativeIntensity, @"RelativeIntensity");
 
                 return indices;
+            }
+
+            private static void RequireColumn(int index, string columnName)
+            {
+                if (index < 0)
+                    throw new InvalidDataException(string.Format(OspreyIOResources.ColumnIndices_RequireColumn_Missing_required_column___0_, columnName));
             }
 
             private static int FindColumn(string[] headers, params string[] names)
