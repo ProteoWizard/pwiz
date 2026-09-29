@@ -158,7 +158,7 @@ namespace pwiz.Osprey.Tasks
             // it. Task validity requires every declared output to exist, so a deleted or
             // renamed report invalidates this task alone - Stages 1-5 stay cached and the
             // pass-1 panel is rebuilt by rehydrating the 1st-pass sidecars, the same path
-            // regression mode 5 already covers.
+            // SubsetPipelineTest's diagnostics rehydrate already covers.
             //
             // CONDITIONAL ON THE FLAG, deliberately. Declaring it unconditionally would make
             // every run that never asked for diagnostics permanently invalid, re-running
