@@ -27,9 +27,10 @@ using pwiz.Osprey.Demux;
 namespace pwiz.Osprey.Test
 {
     /// <summary>
-    /// Tests for <see cref="TofGrid"/> and <see cref="JointDemultiplexer"/> against profile sweeps simulated
-    /// through the solve's own model: the trapezoid transmission of <see cref="ScanningDemuxTest"/> over 60
-    /// encoded bins 1.18 Th apart, and a Gaussian TOF peak on a ZenoTOF-like grid.
+    /// Tests for <see cref="TofGrid"/>, <see cref="IonCalibration"/> and <see cref="JointDemultiplexer"/>, the
+    /// last against profile sweeps simulated through the solve's own model: the trapezoid transmission of
+    /// <see cref="ScanningDemuxTest"/> over 60 encoded bins 1.18 Th apart, and a Gaussian TOF peak on a
+    /// ZenoTOF-like grid.
     /// </summary>
     [TestClass]
     public class JointDemuxTest
@@ -64,6 +65,35 @@ namespace pwiz.Osprey.Test
             }
             var shifted = sparse.Select((mz, i) => i == 100 ? truth.Mz(100.3) : mz).ToList();
             Assert.IsNull(TofGrid.Detect(shifted));
+        }
+
+        /// <summary>
+        /// Counts per ion from a profile spectrum's lowest levels: whole numbers of ions of q counts, rounded to
+        /// integers, give q back at an MS2-like and an MS1-like scale, with every low point on a multiple;
+        /// centroid-like continuous intensities do not fit; too few points give no estimate.
+        /// </summary>
+        [TestMethod]
+        public void TestIonCalibration()
+        {
+            var random = new Random(3);
+            foreach (double q in new[] { 99.665, 7.27 })
+            {
+                // Mostly one or two ions, a few strong peaks, and zeros between them.
+                var intensities = Enumerable.Range(0, 5000).Select(i =>
+                {
+                    int ions = i % 7 == 0 ? 0 : 1 + (int)Math.Floor(-Math.Log(1 - random.NextDouble()) * 2);
+                    if (i % 97 == 0)
+                        ions += 500;
+                    return Math.Round(ions * q);
+                }).ToList();
+                double found = IonCalibration.CountsPerIon(intensities, out double fit);
+                Assert.AreEqual(q, found, 0.002 * q, string.Format(@"counts per ion {0}", q));
+                Assert.AreEqual(1.0, fit, 1e-12, string.Format(@"fit at {0}", q));
+            }
+            var continuous = Enumerable.Range(0, 5000).Select(i => 1 + 10000 * random.NextDouble()).ToList();
+            IonCalibration.CountsPerIon(continuous, out double continuousFit);
+            Assert.IsTrue(continuousFit < IonCalibration.MIN_FIT, @"continuous intensities fit");
+            Assert.IsTrue(double.IsNaN(IonCalibration.CountsPerIon(new[] { 100.0, 200.0 }, out _)));
         }
 
         /// <summary>

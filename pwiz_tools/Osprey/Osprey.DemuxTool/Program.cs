@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -49,6 +50,7 @@ namespace pwiz.Osprey.DemuxTool
         {
             string input = null, output = null, kernelPath = null;
             bool staggered = false, profile = false, eventCentroids = false, groupBinsSet = false, readThreadsSet = false;
+            bool countsPerIonSet = false;
             var options = new ScanningDemuxOptions();
             for (int i = 0; i < args.Length; i++)
             {
@@ -89,7 +91,9 @@ namespace pwiz.Osprey.DemuxTool
                         options.Parameters.ChannelTolerancePpm = double.Parse(value, CultureInfo.InvariantCulture);
                         break;
                     case @"--counts-per-ion":
+                        // The intensity of one ion; otherwise estimated from the file's MS2 profile spectra.
                         options.CountsPerIon = double.Parse(value, CultureInfo.InvariantCulture);
+                        countsPerIonSet = true;
                         break;
                     case @"--min-out":
                         options.Parameters.MinOutputIons = double.Parse(value, CultureInfo.InvariantCulture);
@@ -245,6 +249,23 @@ namespace pwiz.Osprey.DemuxTool
             ReaderList.Default.Read(input, msd);
             var spectra = msd.Run.SpectrumList;
             Console.WriteLine(@"Opened {0} spectra in {1:F0} s", spectra.Count, stopwatch.Elapsed.TotalSeconds);
+            if (!countsPerIonSet)
+            {
+                // SCIEX reports rates, so an ion's worth of counts depends on the accumulation time: taken from the
+                // file's own profile MS2 spectra, whose lowest levels are whole numbers of ions. The same in every
+                // MS2 spectrum of a run; a centroided file has no such levels and keeps the default.
+                double q = MS2CountsPerIon(spectra, out double fit, out int used);
+                if (fit >= IonCalibration.MIN_FIT)
+                {
+                    options.CountsPerIon = q;
+                    Console.WriteLine(@"Counts per ion (MS2): {0:F3}, from the lowest levels of {1} spectra (fit {2:F2})", q, used, fit);
+                }
+                else
+                {
+                    Console.WriteLine(@"Counts per ion (MS2): {0} by default; the spectra are centroided or have no single-ion levels (fit {1:F2})",
+                        options.CountsPerIon, fit);
+                }
+            }
             if (eventCentroids)
             {
                 // MS2 from the profile as acquired, each run of adjacent points one peak. MS1 keeps the
@@ -311,6 +332,34 @@ namespace pwiz.Osprey.DemuxTool
         }
 
         /// <summary>Sets a scalar property of the joint solve's settings from Name=Value.</summary>
+        /// <summary>
+        /// The counts per ion of the source's MS2 spectra, estimated from the lowest levels of up to 50 of them from
+        /// the middle of the run on, read as they come from the source (profile for a vendor file). NaN, with a fit
+        /// of 0, for centroided spectra.
+        /// </summary>
+        private static double MS2CountsPerIon(Pwiz.Data.MsData.Spectra.ISpectrumList spectra, out double fit, out int used)
+        {
+            var intensities = new List<double>();
+            used = 0;
+            fit = 0;
+            for (int i = spectra.Count / 2; i < spectra.Count && used < 50; i++)
+            {
+                var spectrum = spectra.GetSpectrum(i, true);
+                if (spectrum.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0) != 2)
+                    continue;
+                // Centroids are no sums of single-ion events: SCIEX's have quantized low levels of their own
+                // (102.75 on the ZT Scan data), which are not an ion.
+                if (spectrum.Params.HasCVParam(CVID.MS_centroid_spectrum))
+                    return double.NaN;
+                var values = spectrum.GetIntensityArray();
+                if (values == null)
+                    continue;
+                intensities.AddRange(values.Data);
+                used++;
+            }
+            return IonCalibration.CountsPerIon(intensities, out fit);
+        }
+
         private static bool SetJointParameter(JointDemuxParams parameters, string assignment)
         {
             int equals = assignment.IndexOf('=');
