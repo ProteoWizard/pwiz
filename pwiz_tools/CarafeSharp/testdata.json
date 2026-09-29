@@ -84,11 +84,11 @@
       "id": "export",
       "zip": "carafesharp-export-v1.zip",
       "folder": "carafesharp-export-v1",
-      "url": "PLACEHOLDER",
-      "sha256": "PLACEHOLDER",
-      "size": 0,
+      "url": "https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/carafesharp-export-v1.zip",
+      "sha256": "1e2071d453c6fe963b93ea70ea803c06d138f0452358ccb8baeb5f0714d76fb2",
+      "size": 67127081,
       "testCategory": "",
-      "description": "Osprey's CarafeSharp training export of the Stellar _21 search. It changes whenever Osprey does, so it is packaged apart.",
+      "description": "Osprey's CarafeSharp training export (format 2) of the Stellar _21 search, written by #4708 from the .raw. It changes whenever Osprey does, so it is packaged apart.",
       "exclude": [],
       "contents": [
         { "path": "stellar/Ste-2024-12-02_HeLa_4mz_sDIA_400-900_21.training.parquet" }
