@@ -94,10 +94,12 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// Both library loaders put an N-terminal modification on residue 0, where a
-        /// modification of the first residue also sits (<c>(UniMod:1)M(UniMod:35)</c>). The
-        /// two travel with that residue into the decoy, and every decoy fragment spanning it
-        /// must carry both mass deltas, as the target's fragments do. Keeping only the last one
-        /// put those decoy ions 42 Da off the peptide they claim to be.
+        /// modification of the first residue also sits (<c>(UniMod:1)M(UniMod:35)</c>). Every
+        /// decoy fragment spanning that residue must carry both mass deltas, as every target
+        /// fragment spanning it does; keeping only the last one put those decoy ions 42 Da off
+        /// the peptide they claim to be. What this pins is the SUM. Where the two land - with
+        /// the residue, so the N-terminal modification ends up on an internal decoy residue,
+        /// the same in Rust - is current behavior, not a claim that it is right.
         /// </summary>
         [TestMethod]
         public void DecoyFragmentCarriesStackedModifications()

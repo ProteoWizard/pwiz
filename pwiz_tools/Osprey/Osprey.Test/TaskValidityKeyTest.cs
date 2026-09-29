@@ -60,19 +60,17 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// Decoy fragments now add two modifications on one residue, so every task of a search
-        /// that generates its decoys keys on <see cref="OspreyTask.DECOY_MODS_TERM"/>; a search
-        /// whose decoys come from the library (<c>DecoysInLibrary</c>, or its synonym
+        /// Decoy fragments now add two modifications on one residue, so a search that generates
+        /// its decoys appends exactly <see cref="OspreyTask.DECOY_MODS_TERM"/> to the base key
+        /// (every task carrying it is checked with the other base-key suffixes); a search whose
+        /// decoys come from the library (<c>DecoysInLibrary</c>, or its synonym
         /// <c>DecoyMethod.FromLibrary</c>) keys exactly as before.
         /// </summary>
         private static void AssertGeneratedDecoysKeyOnTheStackedModFix()
         {
             var generated = new OspreyConfig();
-            var generatedKeys = TaskKeys(generated);
             Assert.AreEqual(PreFixBaseKey(generated) + OspreyTask.DECOY_MODS_TERM,
-                generatedKeys[PerFileScoringTask.TASK_NAME]);
-            foreach (var key in generatedKeys)
-                StringAssert.Contains(key.Value, OspreyTask.DECOY_MODS_TERM, key.Key + @" must key on the decoy fix");
+                TaskKeys(generated)[PerFileScoringTask.TASK_NAME]);
 
             var inLibrary = new OspreyConfig { DecoysInLibrary = true };
             var fromLibrary = new OspreyConfig { DecoyMethod = DecoyMethod.FromLibrary };
@@ -281,6 +279,9 @@ namespace pwiz.Osprey.Test
                 string key = task.ValidityKey(ctx);
                 StringAssert.Contains(key, pick, string.Format(
                     @"{0} must key on the peak-pick arm", task.Name));
+                // The default config generates its decoys.
+                StringAssert.Contains(key, OspreyTask.DECOY_MODS_TERM, string.Format(
+                    @"{0} must key on the stacked-modification decoy fix", task.Name));
                 bool expectPass2 = task.Name != PerFileScoringTask.TASK_NAME;
                 Assert.AreEqual(expectPass2, key.Contains(pass2), string.Format(
                     @"{0} must {1} key on the 2nd-pass q-value mode",

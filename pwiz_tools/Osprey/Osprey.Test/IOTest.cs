@@ -1806,8 +1806,8 @@ namespace pwiz.Osprey.Test
         {
             string tsv = "PrecursorMz\tPrecursorCharge\tModifiedPeptide\tProductMz\tLibraryIntensity\tFragmentType\tFragmentSeriesNumber\tFragmentCharge\tRT\n" +
                           "500.0\t2\tPEPTIDEK\t200.0\t1000\ty\t1\t1\t10.5\n" +
-                          "500.0\t2\tPEPTIDEK\t300.0\t800\ty\t2\t1\t10.5\n" +
-                          "500.0\t2\tPEPTIDEK\t400.0\t600\ty\t3\t1\t10.5\n";
+                          "500.0\t2\tPEPTIDEK\t300.0\t800\ty\t2\t1.0\t10.5\n" +
+                          "500.0\t2\tPEPTIDEK\t400.0\t600\ty\t3\t2\t10.5\n";
 
             var loader = new DiannTsvLoader();
             List<LibraryEntry> entries;
@@ -1819,6 +1819,9 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(1, entries.Count);
             Assert.AreEqual("PEPTIDEK", entries[0].Sequence);
             Assert.AreEqual(3, entries[0].Fragments.Count);
+            // An unparseable fragment charge ("1.0") reads as 1, as in Rust, not as 0.
+            var charges = entries[0].Fragments.Select(f => (int)f.Annotation.Charge).OrderBy(c => c).ToArray();
+            CollectionAssert.AreEqual(new[] { 1, 1, 2 }, charges);
             Assert.AreEqual(2, entries[0].Charge);
             Assert.AreEqual(500.0, entries[0].PrecursorMz, 1e-4);
             Assert.AreEqual(10.5, entries[0].RetentionTime, 1e-4);

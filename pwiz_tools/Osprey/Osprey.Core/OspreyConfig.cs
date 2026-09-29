@@ -153,6 +153,16 @@ namespace pwiz.Osprey.Core
         public bool DecoysInLibrary { get; set; }
 
         /// <summary>
+        /// Whether the library supplies its own decoys, so the load must mark and pair them and
+        /// Osprey generates none: <see cref="DecoysInLibrary"/>, or its synonym
+        /// <see cref="DecoyMethod.FromLibrary"/>. Treating the two as one is what fixed
+        /// library-decoy mode silently falling through to Reverse generation. The one
+        /// definition: the load, scoring, argument checks and validity keys all ask it here,
+        /// so they cannot disagree about which searches generate.
+        /// </summary>
+        public bool LibrarySuppliesDecoys => DecoysInLibrary || DecoyMethod == DecoyMethod.FromLibrary;
+
+        /// <summary>
         /// Protein-accession prefixes that identify decoys when the
         /// library already contains them (case-insensitive). Default
         /// covers the three common conventions: Osprey's own

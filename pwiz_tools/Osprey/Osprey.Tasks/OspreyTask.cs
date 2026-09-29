@@ -24,7 +24,6 @@
 using System;
 using System.Collections.Generic;
 using pwiz.Osprey.Core;
-using pwiz.Osprey.IO;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -63,11 +62,12 @@ namespace pwiz.Osprey.Tasks
         /// entry with two modifications on one residue - an N-terminal acetyl before an oxidized
         /// methionine, <c>(UniMod:1)M(UniMod:35)</c> - kept only the last of the two until they
         /// added, so a directory scored before that could hold decoys 42 Da off on every ion
-        /// spanning the residue. Only libraries holding such an entry changed, but telling them
-        /// apart would mean reading the library before any skip decision; the build-version
-        /// stamp already makes every upgrade re-score, so this term costs a re-run only where
-        /// <c>OSPREY_VERSION_OVERRIDE</c> adopts another build's outputs. A search whose decoys
-        /// come from the library keys exactly as before.
+        /// spanning the residue. Task sidecars compare the validity key and nothing else - no
+        /// resume check reads the build version - so without this term a resume would adopt
+        /// those decoys. Only libraries holding such an entry changed, but telling them apart
+        /// would mean reading the library before any skip decision, so every directory from an
+        /// earlier build re-runs in full on its next resume. A search whose decoys come from
+        /// the library keys exactly as before.
         /// </summary>
         public const string DECOY_MODS_TERM = @";decoymods=2";
 
@@ -230,7 +230,7 @@ namespace pwiz.Osprey.Tasks
             ctx.Config.Identity.SearchParameterHash(),
             ctx.Config.Identity.LibraryIdentityHash(),
             OspreyEnvironment.PickValidityKeySuffix(),
-            LibraryLoader.LibrarySuppliesDecoys(ctx.Config) ? string.Empty : DECOY_MODS_TERM);
+            ctx.Config.LibrarySuppliesDecoys ? string.Empty : DECOY_MODS_TERM);
 
         /// <summary>
         /// A <see cref="ValidateSelection"/> error naming this task and what it is missing,

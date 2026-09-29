@@ -79,15 +79,16 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// m/z of the b or y ion of <paramref name="ordinal"/> residues at
-        /// <paramref name="charge"/>, or null for another ion type, an ordinal below 1 or past
-        /// the end of the sequence, or an ion spanning a residue with no standard mass.
+        /// <paramref name="charge"/>, or null for another ion type, a charge of 0, an ordinal
+        /// below 1 or past the end of the sequence, or an ion spanning a residue with no
+        /// standard mass.
         /// </summary>
         public static double? CalculateFragmentMz(
             IonType ionType, int ordinal, byte charge,
             string sequence, IReadOnlyDictionary<int, double> modMasses,
             double? neutralLoss)
         {
-            if (ordinal < 1)
+            if (ordinal < 1 || charge == 0)
                 return null;
             int seqLen = sequence.Length;
             int start, end;

@@ -187,7 +187,7 @@ namespace pwiz.Osprey.IO
                         // already proven unchanged. The summary is still reported, recovered
                         // from the finished library, so a cached run is not silent about the
                         // pairing fraction (issue #4650).
-                        if (LibrarySuppliesDecoys(config))
+                        if (config.LibrarySuppliesDecoys)
                         {
                             LogCachedPairingSummary(RecoverPairingStats(cached), log);
                             error = DescribeSharedDecoyIds(cached);
@@ -264,7 +264,7 @@ namespace pwiz.Osprey.IO
             // rewritten from the manifest. Ordering against Normalize and Deduplicate above is
             // unchanged - both still run first, which is what the cross-impl byte parity rests
             // on.
-            if (LibrarySuppliesDecoys(config) &&
+            if (config.LibrarySuppliesDecoys &&
                 !TryFinishSuppliedDecoys(entries, config, log, out error))
             {
                 return null;
@@ -309,18 +309,6 @@ namespace pwiz.Osprey.IO
             // and the two paths converge on the state every later reader sees.
 
             return entries;
-        }
-
-        /// <summary>
-        /// Whether the library supplies its own decoys, so the load must mark and pair them and
-        /// Osprey generates none. <c>DecoyMethod.FromLibrary</c> is a synonym for
-        /// <c>DecoysInLibrary</c>, and treating it as one is what fixed library-decoy mode
-        /// silently falling through to Reverse generation. The one definition: scoring and the
-        /// validity keys ask it here, so they cannot disagree about which searches generate.
-        /// </summary>
-        public static bool LibrarySuppliesDecoys(OspreyConfig config)
-        {
-            return config.DecoysInLibrary || config.DecoyMethod == DecoyMethod.FromLibrary;
         }
 
         /// <summary>

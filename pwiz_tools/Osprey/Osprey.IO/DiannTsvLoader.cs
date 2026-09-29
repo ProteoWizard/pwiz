@@ -227,10 +227,12 @@ namespace pwiz.Osprey.IO
             if (!string.IsNullOrEmpty(ordinalStr))
                 byte.TryParse(ordinalStr, out ordinal);
 
-            byte fragmentCharge = 1;
+            // An unparseable cell ("1.0", "1+") falls back to 1, as in Rust, rather than the 0
+            // TryParse leaves behind.
+            byte fragmentCharge;
             string fragChargeStr = GetFieldOrNull(fields, cols.FragmentCharge);
-            if (!string.IsNullOrEmpty(fragChargeStr))
-                byte.TryParse(fragChargeStr, out fragmentCharge);
+            if (string.IsNullOrEmpty(fragChargeStr) || !byte.TryParse(fragChargeStr, out fragmentCharge))
+                fragmentCharge = 1;
 
             NeutralLossCode lossCode = NeutralLossCode.None;
             double lossMass = 0.0;
