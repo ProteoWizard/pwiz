@@ -19,7 +19,6 @@
 using System;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 
 namespace pwiz.Common.CommandLine
 {
@@ -161,8 +160,8 @@ namespace pwiz.Common.CommandLine
                 else
                 {
                     var val = Value;
-                    if (arg.Values != null && !arg.HasValueChecking && !arg.Values.Any(v => v.Equals(val, StringComparison.CurrentCultureIgnoreCase)))
-                        throw new ValueInvalidException(arg, Value, arg.Values);
+                    if (!arg.HasValueChecking && !arg.IsValidValue(val))
+                        throw new ValueInvalidException(arg, Value, arg.ValuesForError);
                 }
             }
 

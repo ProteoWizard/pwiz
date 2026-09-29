@@ -1497,8 +1497,6 @@ namespace pwiz.SkylineTestFunctional
             string formId = server.GetOpenForms()
                 .First(f => f.Type == nameof(SequenceTreeForm)).Id;
 
-            bool desktopAvailable = ScreenCapture.IsDesktopAvailable();
-
             // First call with no permission yet: returns Pending synchronously
             // and asynchronously opens the confirmation dialog. The previous
             // implementation blocked the pipe thread inside ShowDialog; the
@@ -1549,26 +1547,16 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(dlg.DoNotAskAgain);
             OkDialog(dlg);
 
-            // After Allow, the next call captures (or surfaces desktop-unavailable
-            // in CI environments without a desktop session).
-            string allowResult = server.GetFormImage(formId, allowPath);
-            if (desktopAvailable)
-            {
-                Assert.IsTrue(File.Exists(allowPath));
-                Assert.IsTrue(new FileInfo(allowPath).Length > 0);
-            }
-            else
-            {
-                AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE.Value, allowResult);
-            }
+            // After Allow, the next call captures. Without a desktop session (e.g. a
+            // disconnected Remote Desktop) the form is rendered off-screen instead.
+            server.GetFormImage(formId, allowPath);
+            Assert.IsTrue(File.Exists(allowPath));
+            Assert.IsTrue(new FileInfo(allowPath).Length > 0);
 
             // Session permission persists: subsequent calls capture without a dialog.
             string sessionPath = TestFilesDir.GetTestPath(@"session_test.png");
-            string sessionResult = server.GetFormImage(formId, sessionPath);
-            if (desktopAvailable)
-                Assert.IsTrue(File.Exists(sessionPath));
-            else
-                AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE.Value, sessionResult);
+            server.GetFormImage(formId, sessionPath);
+            Assert.IsTrue(File.Exists(sessionPath));
             Assert.IsFalse(FormUtil.OpenForms.OfType<ScreenCapturePermissionDlg>().Any());
 
             // Malformed formId is rejected on the pipe thread before any
@@ -1595,11 +1583,8 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(dlg);
             Assert.IsTrue(Settings.Default.AllowMcpScreenCapture);
 
-            string persistResult = server.GetFormImage(formId, persistPath);
-            if (desktopAvailable)
-                Assert.IsTrue(File.Exists(persistPath));
-            else
-                AssertEx.AreEqual(JsonUiService.LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE.Value, persistResult);
+            server.GetFormImage(formId, persistPath);
+            Assert.IsTrue(File.Exists(persistPath));
 
             // Clean up setting for other tests
             RunUI(() =>
@@ -1620,39 +1605,31 @@ namespace pwiz.SkylineTestFunctional
             string imageName = @"form_image_test.png";
             string imagePath = TestFilesDir.GetTestPath(imageName);
 
-            bool desktopAvailable = ScreenCapture.IsDesktopAvailable();
-
+            // Captured from the screen, or rendered off-screen when there is no desktop session.
             string result = server.GetFormImage(formId, imagePath);
-            if (desktopAvailable)
+            Assert.IsTrue(File.Exists(imagePath));
+            Assert.IsTrue(new FileInfo(imagePath).Length > 0);
+            // Result should be the file path (forward-slash format)
+            AssertEx.Contains(result, imageName);
+
+            // Verify the image is valid by loading it
+            using (var img = Image.FromFile(imagePath))
             {
-                Assert.IsTrue(File.Exists(imagePath));
-                Assert.IsTrue(new FileInfo(imagePath).Length > 0);
-                // Result should be the file path (forward-slash format)
-                AssertEx.Contains(result, imageName);
-
-                // Verify the image is valid by loading it
-                using (var img = Image.FromFile(imagePath))
-                {
-                    Assert.IsTrue(img.Width > 0);
-                    Assert.IsTrue(img.Height > 0);
-                }
-
-                // Auto-generated path (null filePath) - exercise default path logic
-                string autoImagePath = null;
-                try
-                {
-                    autoImagePath = server.GetFormImage(formId);
-                    Assert.IsTrue(File.Exists(autoImagePath));
-                }
-                finally
-                {
-                    if (autoImagePath != null)
-                        FileEx.SafeDelete(autoImagePath);
-                }
+                Assert.IsTrue(img.Width > 0);
+                Assert.IsTrue(img.Height > 0);
             }
-            else
+
+            // Auto-generated path (null filePath) - exercise default path logic
+            string autoImagePath = null;
+            try
             {
-                AssertEx.Contains(result, @"not available");
+                autoImagePath = server.GetFormImage(formId);
+                Assert.IsTrue(File.Exists(autoImagePath));
+            }
+            finally
+            {
+                if (autoImagePath != null)
+                    FileEx.SafeDelete(autoImagePath);
             }
 
             // Error: invalid form ID

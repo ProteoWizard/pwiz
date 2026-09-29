@@ -1,6 +1,7 @@
 /*
  * Original author: Yuval Boss <yuval .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2014 University of Washington - Seattle, WA
  * 
@@ -19,7 +20,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Net.Mail;
@@ -171,59 +171,22 @@ namespace pwiz.Skyline.Alerts
             return true;
         }
         
-        private static void DrawForms(Form topLevelForm, Bitmap bitmap, Control control)
-        {
-            if (!control.Visible || control.Width <= 0 || control.Height <= 0)
-            {
-                return;
-            }
-            if (control is Form || control is UserControl)
-            {
-                try
-                {
-                    var childForm = new Bitmap(control.Width, control.Height);
-                    control.DrawToBitmap(childForm, new Rectangle(0, 0, control.Width, control.Height));
-
-                    Point offset;
-                    if (control.Parent != null)
-                    {
-                        var myPosition = control.Parent.PointToScreen(control.Location);
-                        var topLevelPosition = topLevelForm.Location;
-                        offset = new Point(myPosition.X - topLevelPosition.X, myPosition.Y - topLevelPosition.Y);
-                    }
-                    else
-                    {
-                        offset = new Point(0, 0);
-                    }
-                    var g = Graphics.FromImage(bitmap);
-
-                    g.DrawImage(childForm, offset);
-                }
-                catch (Exception exception)
-                {
-                    Debug.WriteLine(@"Exception while generating screenshot {0}", exception);
-                }
-            }
-            foreach (Control child in control.Controls)
-            {
-                DrawForms(topLevelForm, bitmap, child);
-            }            
-        }
-
-        // Iterates through forms and takes screenshot of each indavidually.
+        // Renders each top-level form off-screen. Skyline may already be in a bad state here, so a form that
+        // cannot be rendered safely (see ScreenCapture.RenderControl) is left out rather than risk making it worse.
         private static List<Image> TakeScreenShots(IEnumerable<Form> forms)
-        {  
+        {
             var screenShots = new List<Image>();
             foreach (var form in forms)
             {
                 if (form.Parent == null || form is FloatingWindow)
                 {
-                    var bitmap = new Bitmap(form.Width, form.Height);
-                    DrawForms(form, bitmap, form);
-                    screenShots.Add(bitmap);
+                    var screenShot = ScreenCapture.RenderControl(form);
+                    if (screenShot == null)
+                        continue;
+                    screenShots.Add(screenShot);
                     if (screenShots.Count >= MAX_SCREENSHOTS)
                         break;
-                }                
+                }
             }
             return screenShots;
         }

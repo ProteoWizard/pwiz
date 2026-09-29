@@ -90,7 +90,7 @@ namespace pwiz.Skyline.ToolsUI
             return action.Invoke(element, value);
         }
         /// <summary>Captures the form's image to a bitmap the caller disposes (no permission/format checks --
-        /// the caller has done the screen-capture pre-flight).</summary>
+        /// the caller has done the screen-capture pre-flight), or returns null if no image can be made.</summary>
         public abstract System.Drawing.Bitmap CaptureImage();
 
         // ---- Window-state queries the modal-watch asks each window about itself ----

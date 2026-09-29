@@ -20,6 +20,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -53,10 +54,15 @@ namespace pwiz.Skyline.Util
 
     /// <summary>
     /// Production screen capture utility for Skyline forms.
-    /// Provides DPI-aware capture with redaction of non-Skyline windows.
+    /// Provides DPI-aware capture with redaction of non-Skyline windows, and off-screen
+    /// rendering for when the screen cannot supply the image.
     /// </summary>
     public static class ScreenCapture
     {
+        // Largest width or height rendered off-screen. A form in a bad state can report a nonsense size, and a
+        // bitmap that large would fail or exhaust memory rather than produce a useful image.
+        private const int MAX_RENDER_DIMENSION = 10000;
+
         private static volatile bool _sessionPermissionGranted;
         private static volatile bool _sessionDenied;
         // 0 = no prompt outstanding, 1 = prompt scheduled or open.
@@ -105,9 +111,8 @@ namespace pwiz.Skyline.Util
         {
             var snapshotBounds = Rectangle.Empty;
 
-            var dockedStates = new[] { DockState.DockBottom, DockState.DockLeft, DockState.DockRight, DockState.DockTop, DockState.Document };
             var dockableForm = ctrl as DockableForm;
-            if (dockableForm != null && dockedStates.Any(state => dockableForm.DockState == state))
+            if (dockableForm != null && IsDocked(dockableForm))
             {
                 snapshotBounds = GetDockedFormBounds(dockableForm);
             }
@@ -200,6 +205,68 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// Captures a Skyline form as it appears on the screen when the screen can supply it. Otherwise renders it
+        /// off-screen with <see cref="RenderControl"/>: when there is no desktop to copy from (e.g. a disconnected
+        /// Remote Desktop session), or when a window of another application covers it. If rendering fails and the
+        /// desktop is available, falls back to a screen copy with the covering windows redacted. Returns null if no
+        /// image could be made. Must be called on the form's thread.
+        /// </summary>
+        public static Bitmap CaptureOrRender(Control targetForm)
+        {
+            bool desktopAvailable = IsDesktopAvailable();
+            if (desktopAvailable)
+            {
+                var screenRect = GetWindowRectangle(targetForm);
+                if (GetForeignWindowRects(screenRect, GetTopLevelHandle(targetForm)).Count == 0)
+                    return CaptureScreen(screenRect);
+            }
+            var rendered = RenderControl(GetRenderedControl(targetForm));
+            if (rendered != null || !desktopAvailable)
+                return rendered;
+            return CaptureAndRedact(GetWindowRectangle(targetForm), targetForm);
+        }
+
+        /// <summary>
+        /// Renders a control, and the forms and user controls nested inside it, into a new bitmap without reading
+        /// the screen, so it works when the control is covered by other windows or there is no desktop at all.
+        /// Nested forms and user controls are rendered individually and drawn over their parent, because
+        /// <see cref="Control.DrawToBitmap"/> on the parent alone does not reliably include them (e.g. docked
+        /// panes).
+        /// <para>This also takes the screenshots attached to an error report, when Skyline may already be in a bad
+        /// state, so it must not make things worse: it never throws, skips anything it cannot safely draw (disposed,
+        /// hidden, without a handle, or owned by another thread whose message loop may be stuck), and returns null
+        /// if the control itself cannot be drawn. Must be called on the control's thread.</para>
+        /// </summary>
+        public static Bitmap RenderControl(Control control)
+        {
+            Bitmap bitmap = null;
+            try
+            {
+                if (!CanRender(control))
+                    return null;
+                bitmap = new Bitmap(control.Width, control.Height);
+                var origin = GetScreenLocation(control);
+                var bounds = new Rectangle(Point.Empty, control.Size);
+                using (var g = Graphics.FromImage(bitmap))
+                {
+                    if (!DrawOnto(g, control, origin, bounds))
+                    {
+                        bitmap.Dispose();
+                        return null;
+                    }
+                    DrawNestedControls(g, control, origin, bounds);
+                }
+                return bitmap;
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine($@"Exception rendering {control?.GetType().Name}: {e}");
+                bitmap?.Dispose();
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Captures a screen region and redacts pixels belonging to non-Skyline windows
         /// that are above the target form in z-order.
         /// </summary>
@@ -209,14 +276,8 @@ namespace pwiz.Skyline.Util
         {
             var bmp = CaptureScreen(screenRect);
 
-            // Find the top-level window handle for z-order comparison.
-            // For docked panels, this returns SkylineWindow.
-            // For floating panels, this returns the FloatingWindow.
-            var topLevelOwner = FormUtil.FindTopLevelOwner(targetForm) ?? targetForm;
-            var topLevelHandle = topLevelOwner.Handle;
-
             // Collect screen rects of non-Skyline windows above our target in z-order
-            var foreignRects = GetForeignWindowRects(screenRect, topLevelHandle);
+            var foreignRects = GetForeignWindowRects(screenRect, GetTopLevelHandle(targetForm));
             if (foreignRects.Count == 0)
                 return bmp;
 
@@ -377,6 +438,94 @@ namespace pwiz.Skyline.Util
         }
 
         // Private helpers
+
+        // Finds the top-level window handle for z-order comparison.
+        // For docked panels, this returns SkylineWindow.
+        // For floating panels, this returns the FloatingWindow.
+        private static IntPtr GetTopLevelHandle(Control targetForm)
+        {
+            return (FormUtil.FindTopLevelOwner(targetForm) ?? targetForm).Handle;
+        }
+
+        // Returns the control whose area GetWindowRectangle captures from the screen: the pane of a docked form
+        // (which includes its caption), the floating window holding a floating form, or else the control itself.
+        private static Control GetRenderedControl(Control ctrl)
+        {
+            if (ctrl is DockableForm dockableForm && IsDocked(dockableForm))
+                return dockableForm.Pane;
+            return FindParent<FloatingWindow>(ctrl) ?? ctrl;
+        }
+
+        private static bool IsDocked(DockableForm dockableForm)
+        {
+            var dockedStates = new[] { DockState.DockBottom, DockState.DockLeft, DockState.DockRight, DockState.DockTop, DockState.Document };
+            return dockedStates.Contains(dockableForm.DockState);
+        }
+
+        // Draws the forms and user controls nested inside a control, each at its position relative to the
+        // rendered control's origin. A child is clipped to its parent's client area so a child scrolled out of
+        // view does not draw over its surroundings. Controls are drawn from the bottom of the z-order up (the
+        // Controls collection lists the topmost first), so overlapping children end up stacked as on screen.
+        private static void DrawNestedControls(Graphics g, Control parent, Point origin, Rectangle clip)
+        {
+            var clientRect = parent.RectangleToScreen(parent.ClientRectangle);
+            clientRect.Offset(-origin.X, -origin.Y);
+            clip.Intersect(clientRect);
+            if (clip.IsEmpty)
+                return;
+            var children = parent.Controls.Cast<Control>().ToArray();
+            for (int i = children.Length - 1; i >= 0; i--)
+            {
+                var child = children[i];
+                if (!CanRender(child))
+                    continue;
+                if (child is Form || child is UserControl)
+                    DrawOnto(g, child, origin, clip);
+                DrawNestedControls(g, child, origin, clip);
+            }
+        }
+
+        // Renders a single control and draws it onto the bitmap at its position relative to the origin. Returns
+        // false, rather than throwing, if the control could not be drawn.
+        private static bool DrawOnto(Graphics g, Control control, Point origin, Rectangle clip)
+        {
+            try
+            {
+                var location = GetScreenLocation(control);
+                using (var image = new Bitmap(control.Width, control.Height))
+                {
+                    control.DrawToBitmap(image, new Rectangle(Point.Empty, control.Size));
+                    g.SetClip(clip);
+                    g.DrawImage(image, location.X - origin.X, location.Y - origin.Y);
+                }
+                return true;
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine($@"Exception rendering {control.GetType().Name}: {e}");
+                return false;
+            }
+        }
+
+        // Whether a control can be drawn without side effects or risk: DrawToBitmap would create a missing handle,
+        // and on a control owned by another thread it would wait on that thread, which may never respond.
+        private static bool CanRender(Control control)
+        {
+            if (control == null || control.IsDisposed || control.Disposing || !control.IsHandleCreated)
+                return false;
+            if (control.InvokeRequired || !control.Visible)
+                return false;
+            if (control is Form form && form.WindowState == FormWindowState.Minimized)
+                return false;
+            return control.Width > 0 && control.Height > 0 &&
+                   control.Width <= MAX_RENDER_DIMENSION && control.Height <= MAX_RENDER_DIMENSION;
+        }
+
+        // The screen location of the control's outer (window) bounds.
+        private static Point GetScreenLocation(Control control)
+        {
+            return control.Parent != null ? control.Parent.PointToScreen(control.Location) : control.Location;
+        }
 
         private static Rectangle GetDockedFormBoundsInternal(DockableForm dockedForm)
         {
