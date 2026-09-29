@@ -12,7 +12,14 @@ trim_trailing_whitespace = true
 [*.sh]
 end_of_line = lf
 
-[*.cs]
+# Scoped to the trees Skyline.sln inspects, plus the two ported WinForms apps that hit the same
+# WinForms and .NET 10 annotation noise for the same reasons: pwiz_tools/Shared is here because 11
+# of Skyline.sln's 28 projects live there (EditorConfig matches on file path, not on which project
+# compiles the file), and SeeMS and MSConvertGUI because the WFO1000 note below names them.
+# Deliberately NOT pwiz_tools/Osprey or pwiz_tools/Bumbershoot: separate products with their own
+# .sln.DotSettings. pwiz-sharp is unaffected either way - its own .editorconfig sets root = true,
+# so nothing in this file has ever reached it.
+[pwiz_tools/{Skyline,Shared,SeeMS,MSConvertGUI}/**.cs]
 
 # IDE0011: Add braces
 csharp_prefer_braces = true
