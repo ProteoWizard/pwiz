@@ -183,7 +183,7 @@ $modes = @(
        Lines = @('mode7 (diagnostics regeneration: report only, vs golden)'); When = { param($s) [bool]$s.ModelDiagnostics -and -not (Skipped $s 7) }; Gate = 'ModelDiagnostics, not in SkipModes' }
     @{ Id = '11'; Cost = '11'; Title = 'pay-later diagnostics: folded, no analysis, same report'
        Proves = 'With both diagnostics products deleted, asking for the report folds it from the sidecars, runs no analysis, and produces the byte-identical page.'
-       Lines = @('mode11 (pay-later diagnostics: folded, no analysis, same report)'); When = { param($s) [bool]$s.ModelDiagnostics -and -not (Skipped $s 11) }; Gate = 'ModelDiagnostics, not in SkipModes' }
+       Lines = @('mode11 (pay-later diagnostics: folded, no analysis, same report, from every entry point)'); When = { param($s) [bool]$s.ModelDiagnostics -and -not (Skipped $s 11) }; Gate = 'ModelDiagnostics, not in SkipModes' }
     @{ Id = '8';  Cost = '8'; Title = 'partial rescore resume'
        Proves = 'A rescore killed part-way resumes and finishes, re-scoring only the outstanding runs; on a ModelDiagnostics dataset the --model-diagnostics arm also reports its capability gap.'
        Lines = @('mode8 (partial rescore resume)'); When = { param($s) -not (Skipped $s 8) }; Gate = 'not in SkipModes' }
@@ -297,6 +297,7 @@ if ($isProposal) {
     [void]$sb.AppendLine("<div class=`"prop`"><b>PROPOSAL, not what the gate runs today.</b> Rendered with <code>-SkipModesOverride</code> on top of the script's specs - $ov. Struck-through cells run today and would stop; their seconds are what each cut saves. Nothing in <code>regression.ps1</code> has changed.</div>")
 }
 [void]$sb.AppendLine(@'
+<div class="rule"><b>First: does it belong in this gate at all?</b> Pipeline behavior - caching, resume, task boundaries, sidecar contracts, route markers, which files a run writes - is valid on any data and goes in <code>Osprey.Test\SubsetPipelineTest.cs</code>, which runs the whole pipeline in-process on committed subsets of this data on every commit. This gate is for results at real-data scale: the straight-through answer against its golden, the FDR sanity bounds, and comparisons whose value is scale fidelity (mode 3). A check on output a leg already produces is fine here; a new leg that exists to exercise pipeline behavior is not.</div>
 <div class="rule"><b>Before adding an assertion, pick its ONE dataset.</b> The four datasets are two acquisitions searched four ways, not four acquisitions. A new leg or check applied to every column inherits a 4x wall-time multiplier for no extra coverage unless the property genuinely differs by dataset. Gate it on a spec key (<code>ModelDiagnostics</code>, <code>AltPass2</code>, <code>FdrBench</code>, <code>SkipModes</code>, or a new one), give that key to the dataset that exercises every branch of the property, and emit no line on the others - a designed omission is not a SKIP. Then regenerate this page and run <code>-VerifyAgainst</code> on a green run.</div>
 '@)
 

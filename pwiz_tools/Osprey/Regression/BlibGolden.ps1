@@ -36,9 +36,12 @@
     caller (it is produced by the run via OSPREY_DUMP_STAGE7_PROTEIN_FDR, not
     read from the blib).
 
-    The same projection schema also powers the mode-2 self-consistency check
-    (Compare-BlibFull), which compares two .blib files row+column at 1e-9 with
-    no committed baseline (the resume run is its own oracle).
+    The self-consistency checks (Compare-BlibFull: resume, chain, rehydrate and
+    rescore-resume legs) compare two .blib files row+column at 1e-9 with no
+    committed baseline (the resume run is its own oracle). They do not use this
+    schema: they compile Osprey.Test\BlibComparer.cs, the comparer
+    SubsetPipelineTest uses, into this session (Initialize-Sqlite), which takes
+    ~2 s on a Stellar blib where the PowerShell row walk took ~90 s.
 #>
 
 $ErrorActionPreference = 'Stop'
@@ -244,6 +247,15 @@ function Initialize-Sqlite {
         }
     }
     Add-Type -Path $dll
+
+    # Compare-BlibFull's comparer: the same source file the subset tests compile, so the
+    # two cannot drift. Guarded because Add-Type cannot redefine a type in one session.
+    if (-not ('pwiz.Osprey.Test.BlibComparer' -as [type])) {
+        $comparer = Join-Path (Split-Path -Parent $PSScriptRoot) 'Osprey.Test\BlibComparer.cs'
+        Add-Type -Path $comparer -ReferencedAssemblies $dll, 'netstandard', 'System.Runtime',
+            'System.Collections', 'System.Linq', 'System.Data.Common',
+            'System.ComponentModel', 'System.ComponentModel.Primitives'
+    }
 }
 
 function Invoke-BlibQuery {
@@ -720,40 +732,29 @@ function Compare-Summary {
 # ----------------------------------------------------------------------
 function Compare-BlibFull {
     <#
-    Compare two .blib files row + column at Tolerance across the full schema (NO
-    subset filter): the resume run is its own oracle against the straight-through
-    run, so no committed golden is needed. Returns Pass + Issues.
+    Compare two .blib files row + column at Tolerance across every Osprey-written
+    table, peaks included (NO subset filter): the resume run is its own oracle
+    against the straight-through run, so no committed golden is needed. Returns
+    Pass + Issues.
+
+    Runs Osprey.Test\BlibComparer (compiled by Initialize-Sqlite), which reports one
+    line per differing row - 250K on a changed pass-2 arm - so the issues are capped
+    to the first few rows plus a per-table count.
     #>
     param(
         [Parameter(Mandatory = $true)][string]$BlibExpected,
         [Parameter(Mandatory = $true)][string]$BlibActual,
         [double]$Tolerance = 1e-9,
-        [switch]$IncludePeaks
+        [int]$MaxRows = 20
     )
+    $differences = [pwiz.Osprey.Test.BlibComparer]::Compare($BlibExpected, $BlibActual, $Tolerance)
     $issues = [System.Collections.Generic.List[string]]::new()
-    foreach ($t in $script:BlibTables) {
-        # -NoSort: the compare keys into a dictionary, so row order is
-        # irrelevant -- skip the (expensive on 180K-row tables) sort.
-        $a = Get-TableProjection -Blib $BlibExpected -Table $t -NoSort
-        $b = Get-TableProjection -Blib $BlibActual -Table $t -NoSort
-        $cmp = Compare-RowSets -Label $t.Name -Header $a.Header `
-            -RowsA $a.Rows -RowsB $b.Rows `
-            -KeyCols $t.Key -NumericCols $t.Numeric -ExactCols $t.Exact -Tolerance $Tolerance
-        foreach ($iss in $cmp.Issues) { $issues.Add($iss) }
+    foreach ($d in ($differences | Select-Object -First $MaxRows)) { $issues.Add($d) }
+    if ($differences.Count -gt $MaxRows) {
+        # Every line starts with its table name, so the count per table says where the rest are.
+        foreach ($g in ($differences | Group-Object { ($_ -split '[ :]', 2)[0] })) {
+            $issues.Add(("{0}: {1:N0} differing row(s) in all" -f $g.Name, $g.Count))
+        }
     }
-    # RefSpectraPeaks are copied verbatim from the spectral library and cannot
-    # differ between a straight-through run and its resume (same library, same
-    # reference spectra) -- the self-consistency check that motivates this
-    # comparison is about computed RT/area/score columns, not peaks. Skip the
-    # 60K-spectrum SHA digest by default; -IncludePeaks forces it.
-    if ($IncludePeaks) {
-        $ap = Get-PeakDigestProjection -Blib $BlibExpected
-        $bp = Get-PeakDigestProjection -Blib $BlibActual
-        $cmp = Compare-RowSets -Label 'PeakDigest' -Header $ap.Header `
-            -RowsA $ap.Rows -RowsB $bp.Rows `
-            -KeyCols @('peptideModSeq', 'precursorCharge') -ExactCols @('peakHash') -Tolerance $Tolerance
-        foreach ($iss in $cmp.Issues) { $issues.Add($iss) }
-    }
-
-    return [pscustomobject]@{ Pass = ($issues.Count -eq 0); Issues = $issues }
+    return [pscustomobject]@{ Pass = ($differences.Count -eq 0); Issues = $issues }
 }

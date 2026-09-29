@@ -5,6 +5,22 @@
     tctest.bat) and for local developer runs.
 
 .DESCRIPTION
+    WHERE A NEW CHECK BELONGS - read before adding a leg or an assertion here.
+
+      * Pipeline BEHAVIOR (caching, resume, task boundaries, sidecar contracts,
+        route markers, which files a run writes) is valid on any data, so it goes
+        in Osprey.Test\SubsetPipelineTest.cs: the whole pipeline in-process on
+        committed subsets of this data, in seconds, on every commit and in the
+        unit-test coverage. Pipeline-behavior legs that used to live here have
+        moved there (issue #4728).
+      * This script is for RESULTS AT REAL-DATA SCALE: the straight-through
+        answer against its golden, the FDR sanity bounds, and the comparisons
+        whose value is scale fidelity (mode 3, the HPC chain against
+        straight-through, at full size).
+      * A check that reads output a leg here already produces (a log line, a
+        cache hit) is fine. A new leg that exists to exercise pipeline behavior
+        is not: write it as a subset test.
+
     Acquires real DIA test data the way Skyline perf tests do (download a
     panorama zip into the shared <Downloads>\Perftests folder, extract,
     skip-if-present), then runs the full Osprey pipeline on each dataset
@@ -624,7 +640,7 @@ $datasets = [ordered]@{
     # against the decoy provenance they are actually used with, at Stellar speed. Not Astral,
     # which is the suite's critical path and pays for an extra straight-through run in wall
     # clock directly.
-    Stellar = @{ Folder = 'stellar'; Resolution = 'unit'; SkipModes = @(8, 9) }
+    Stellar = @{ Folder = 'stellar'; Resolution = 'unit'; SkipModes = @(2, 3, 5, 8, 9) }
     StellarLibDecoy = @{
         AltPass2         = $true
         Folder           = 'stellar'
@@ -684,9 +700,13 @@ $datasets = [ordered]@{
     # StellarLibDecoy runs everything: it is the recommended product path (library
     # decoys, entrapment, diagnostics, the alternate pass-2 arm) and the cheapest
     # full-coverage configuration. The other three keep the legs whose property varies:
-    #   Stellar (generated decoys, no diagnostics) keeps 1, 1c, 2, 3, 4, 5, 6: the
-    #     default product path end to end. The two rescore-resume shapes (8, 9) are
-    #     decoy-source-neutral, so StellarLibDecoy's instance covers them.
+    #   Stellar (generated decoys, no diagnostics) keeps 1, 1c, 4, 6: the default
+    #     product path's answer against its golden. The two rescore-resume shapes (8, 9)
+    #     are decoy-source-neutral, so StellarLibDecoy's instance covers them. Resume,
+    #     chain and rehydrate (2, 3, 5) went on 2026-09-28 (#4728, ~603 s): they are
+    #     pipeline mechanics, valid on any data, and SubsetPipelineTest runs all three
+    #     in-process on a Stellar subset on every commit; StellarLibDecoy still runs
+    #     each at full size.
     #   StellarGenDecoyEntrap (the decoy-construction oracle) keeps the straight run
     #     with its golden and FDP bound, mode 2 (which carries the resume half of mode
     #     12) and mode 4. The chain, rehydrate, regeneration, pay-later and rescore-resume
