@@ -121,6 +121,12 @@ its own pretrained baseline. They do not rank the two tools.
 - **Fewer fragments:** the fragments only Carafe writes are weak (median relative intensity 0.028 and
   0.013). On Stellar, 81% of them are 2+ ions. They follow from the training difference above and
   are expected: mostly ions for which Osprey found no peak within its tolerance in the training run.
+  A null test on 800 Stellar 2+ precursors backs this reading: at a 2+ fragment's m/z, Osprey's
+  calibrated window finds a peak at the apex no more often than a few Th away (56% against 60%), and
+  a peak that coelutes with the precursor (correlation 0.8 or more with its strongest 1+ ions) only
+  slightly more often (9.0% against 6.7%). 1+ fragments stand well clear of their null (93% against
+  67%, and 51% against 8%). So what matches at a 2+ fragment of a 2+ precursor on the Stellar is
+  mostly interference or noise.
 - **Nondeterminism:** GPU fine-tuning is nondeterministic in both tools. Two CarafeSharp GPU
   fine-tunes of the same data differ by a median cosine of 0.9997. A CPU fine-tune is
   bit-reproducible.
