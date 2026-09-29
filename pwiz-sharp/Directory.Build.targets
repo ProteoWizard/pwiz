@@ -3,6 +3,9 @@
   <!-- Post-build assertion that the native payload matches the target platform. -->
   <Import Project="$(MSBuildThisFileDirectory)..\pwiz_tools\Shared\Lib\PwizTargetPlatform.targets" />
 
+  <!-- Swaps the patched ParquetNet.dll in over the NuGet Parquet.dll after every build. -->
+  <Import Project="$(MSBuildThisFileDirectory)..\pwiz_tools\Shared\Lib\Parquet\ParquetNet.targets" />
+
   <!-- git-commit-date -> version pieces (Jam-free generate-version replacement). -->
   <Import Project="$(MSBuildThisFileDirectory)build\PwizVersion.targets" />
 
