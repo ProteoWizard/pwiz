@@ -382,6 +382,15 @@ namespace pwiz.Osprey.Test
             }
             Assert.IsTrue(BlibComparer.CountRows(Path.Combine(transferDir, BLIB_FILE), @"RefSpectra") > 0,
                 @"the transfer arm reported no precursors");
+            // And it leaves the files the default leaves: transfer once completed without writing
+            // the experiment-scope sidecar every other mode writes, unseen because no test ran it.
+            Assert.IsTrue(File.Exists(Path.Combine(transferDir, ExperimentSidecarName(FdrScoresSidecar.Pass.SecondPass))),
+                @"the transfer arm wrote no second-pass experiment sidecar");
+            foreach (string run in RUN_NAMES)
+            {
+                string sidecar = Path.Combine(transferDir, run + @"." + FdrScoresSidecar.LABEL_SECOND_PASS + FdrScoresSidecar.EXT);
+                Assert.IsTrue(File.Exists(sidecar), @"the transfer arm wrote no second-pass sidecar: " + sidecar);
+            }
 
             // Calibration from a sample of the library, as on a full-size library: sampled
             // below the 178 detected precursors, so the ladder must widen the sample to fit.

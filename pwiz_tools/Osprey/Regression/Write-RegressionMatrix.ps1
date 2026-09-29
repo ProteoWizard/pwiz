@@ -6,7 +6,7 @@
 
 .DESCRIPTION
     The gate has four datasets and a dozen modes, and the modes are gated on per-dataset spec
-    keys (ModelDiagnostics, AltPass2, FdrBench, SkipModes) scattered through regression.ps1.
+    keys (ModelDiagnostics, FdrBench, SkipModes) scattered through regression.ps1.
     Nothing showed the resulting matrix, and the recurring mistake was adding an assertion to
     every dataset when one covered its property - a 4x wall-time multiplier for no coverage.
 
@@ -149,9 +149,6 @@ $modes = @(
     @{ Id = '3+'; Title = 'chain report is two-pass'
        Proves = 'The HPC chain''s diagnostics report carries both passes.'
        Lines = @('mode3 (chain report is two-pass)'); When = { param($s) [bool]$s.ModelDiagnostics -and -not (Skipped $s 3) }; Gate = 'ModelDiagnostics and mode 3' }
-    @{ Id = '10'; Cost = '10'; Title = 'alternate pass-2 arm (mean-best-2) runs and produces'
-       Proves = 'The non-default pass-2 arm is reachable and writes output; ONE dataset carries it by design (see AltPass2 in the spec table).'
-       Lines = @('mode10 (meanbest2 arm runs and produces)'); When = { param($s) [bool]$s.AltPass2 }; Gate = 'AltPass2' }
     @{ Id = '4';  Cost = '4'; Title = 'warm re-run: every task reports a cache hit'
        Proves = 'An identical second invocation runs no task and rewrites nothing - the only leg that can see a cache-invalidation regression. Seconds.'
        Lines = @('mode4 (warm re-run all cached)'); When = { param($s) $true }; Gate = 'every dataset (-SkipWarmRerun)' }
@@ -292,7 +289,7 @@ if ($isProposal) {
 }
 [void]$sb.AppendLine(@'
 <div class="rule"><b>First: does it belong in this gate at all?</b> Pipeline behavior - caching, resume, task boundaries, sidecar contracts, route markers, which files a run writes - is valid on any data and goes in <code>Osprey.Test\SubsetPipelineTest.cs</code>, which runs the whole pipeline in-process on committed subsets of this data on every commit. This gate is for results at real-data scale: the straight-through answer against its golden, the FDR sanity bounds, and comparisons whose value is scale fidelity (mode 3). A check on output a leg already produces is fine here; a new leg that exists to exercise pipeline behavior is not.</div>
-<div class="rule"><b>Before adding an assertion, pick its ONE dataset.</b> The four datasets are two acquisitions searched four ways, not four acquisitions. A new leg or check applied to every column inherits a 4x wall-time multiplier for no extra coverage unless the property genuinely differs by dataset. Gate it on a spec key (<code>ModelDiagnostics</code>, <code>AltPass2</code>, <code>FdrBench</code>, <code>SkipModes</code>, or a new one), give that key to the dataset that exercises every branch of the property, and emit no line on the others - a designed omission is not a SKIP. Then regenerate this page and run <code>-VerifyAgainst</code> on a green run.</div>
+<div class="rule"><b>Before adding an assertion, pick its ONE dataset.</b> The four datasets are two acquisitions searched four ways, not four acquisitions. A new leg or check applied to every column inherits a 4x wall-time multiplier for no extra coverage unless the property genuinely differs by dataset. Gate it on a spec key (<code>ModelDiagnostics</code>, <code>FdrBench</code>, <code>SkipModes</code>, or a new one), give that key to the dataset that exercises every branch of the property, and emit no line on the others - a designed omission is not a SKIP. Then regenerate this page and run <code>-VerifyAgainst</code> on a green run.</div>
 '@)
 
 # Dataset properties
@@ -311,7 +308,7 @@ foreach ($k in $keys) {
     [void]$sb.AppendLine('</tr>')
 }
 [void]$sb.AppendLine('</table>')
-[void]$sb.AppendLine('<p class="muted">Blank = key not set, i.e. the default: generated decoys, no entrapment, no diagnostics report, no alternate pass-2 arm, no FDRBench files, every mode. <code>StripDecoys</code> takes the library-decoy file and removes its decoy rows, so Osprey generates decoys while the entrapment peptides stay - the only dataset that can measure a decoy-construction regression against a true-FDP oracle. What each dataset is FOR: Stellar = the default product path (generated decoys, unit resolution); StellarLibDecoy = library-supplied decoys and their pairing manifest (a different Stage-6 pairing path), plus the alternate pass-2 arm; StellarGenDecoyEntrap = the decoy-construction oracle; Astral = hram scoring and the gap-fill rows only hram produces.</p>')
+[void]$sb.AppendLine('<p class="muted">Blank = key not set, i.e. the default: generated decoys, no entrapment, no diagnostics report, no FDRBench files, every mode. <code>StripDecoys</code> takes the library-decoy file and removes its decoy rows, so Osprey generates decoys while the entrapment peptides stay - the only dataset that can measure a decoy-construction regression against a true-FDP oracle. What each dataset is FOR: Stellar = the default product path (generated decoys, unit resolution); StellarLibDecoy = library-supplied decoys and their pairing manifest (a different Stage-6 pairing path); StellarGenDecoyEntrap = the decoy-construction oracle; Astral = hram scoring and the gap-fill rows only hram produces.</p>')
 
 # Matrix
 [void]$sb.AppendLine('<h2>The matrix</h2><table><tr><th>mode</th><th>what it proves</th><th>gate</th>')
