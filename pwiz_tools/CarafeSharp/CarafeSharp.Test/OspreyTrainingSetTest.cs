@@ -111,6 +111,7 @@ namespace pwiz.CarafeSharp.Test
             phospho.ApexRt = 6;
             var plain = OspreyTestRecords.CleanRecord(@"PEPSIDEK", 2);
             plain.ApexRt = 5;
+            phospho.FileName = plain.FileName = @"a";
             var metadata = new Dictionary<string, string>
             {
                 { @"osprey.rt_max", @"20" },
