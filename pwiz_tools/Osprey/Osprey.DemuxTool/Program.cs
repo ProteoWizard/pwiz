@@ -235,6 +235,17 @@ namespace pwiz.Osprey.DemuxTool
                 spectra = new SpectrumList_PeakPicker(spectra, new EventPeakDetector(), false, @"2-");
                 Console.WriteLine(@"Event centroiding (MS2; MS1 vendor): {0}", input);
             }
+            else if (options.Joint && SpectrumList_PeakPicker.SupportsVendorPeakPicking(input))
+            {
+                // The joint solve centroids MS2 itself, from the profile; MS1 passes through, so it takes the
+                // vendor's centroids, as the channel solve's input has them.
+                spectra = new SpectrumList_PeakPicker(spectra, null, true, @"1");
+                Console.WriteLine(@"Vendor centroiding (MS1; MS2 profile for the joint solve): {0}", input);
+            }
+            else if (options.Joint)
+            {
+                Console.WriteLine(@"Warning: MS1 passes through as read (profile, for profile input); only a vendor file is centroided.");
+            }
             else if (!profile && SpectrumList_PeakPicker.SupportsVendorPeakPicking(input))
             {
                 // A vendor file (.wiff2) is read directly, centroided by the vendor library as

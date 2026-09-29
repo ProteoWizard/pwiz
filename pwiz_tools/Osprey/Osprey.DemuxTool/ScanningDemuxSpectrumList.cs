@@ -101,6 +101,8 @@ namespace pwiz.Osprey.DemuxTool
         private readonly Dictionary<int, List<(double[] Mz, double[] Ions)>> _peaks = new Dictionary<int, List<(double[], double[])>>();
         private readonly Dictionary<int, double[,]> _transmission = new Dictionary<int, double[,]>();
         private readonly object _lock = new object();
+        private readonly HashSet<int> _isLayoutBase = new HashSet<int>();                // acquired spectra layout spectra are built on
+        private readonly Dictionary<int, Spectrum> _headers = new Dictionary<int, Spectrum>(); // by acquired index, peaks dropped
         private TofGrid _grid;
 
         public ScanningDemuxSpectrumList(ISpectrumList inner, ScanningKernel kernel, ScanningDemuxOptions options,
@@ -158,6 +160,11 @@ namespace pwiz.Osprey.DemuxTool
             }
             FirstCycle = Math.Max(0, options.FirstCycle);
             LastCycle = lastCycle;
+            for (int i = 0; i < _output.Count; i++)
+            {
+                if (_output[i].Slot >= 0)
+                    _isLayoutBase.Add(InnerIndex(i));
+            }
         }
 
         public int CycleCount { get; }
@@ -188,11 +195,25 @@ namespace pwiz.Osprey.DemuxTool
         public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
         {
             var (cycle, slot) = _output[index];
-            // A layout spectrum's peaks are replaced, so only an MS1 reads the acquired peaks.
-            var spectrum = Inner.GetSpectrum(InnerIndex(index), getBinaryData && slot < 0);
-            spectrum.Index = index;
             if (slot < 0)
-                return spectrum;
+            {
+                var survey = Inner.GetSpectrum(InnerIndex(index), getBinaryData);
+                survey.Index = index;
+                return survey;
+            }
+
+            // A layout spectrum's peaks are replaced. Its header is the one kept when its bin was read for
+            // demultiplexing: asking the source again decodes the spectrum, and centroids it, a second time.
+            Spectrum spectrum = null;
+            (double[] Mz, double[] Ions) peaks = default;
+            if (getBinaryData)
+            {
+                peaks = Built(cycle)[slot];
+                spectrum = TakeHeader(InnerIndex(index));
+            }
+            spectrum ??= Inner.GetSpectrum(InnerIndex(index));
+            spectrum.Index = index;
+            MarkCentroid(spectrum);
 
             var planned = _plan[slot];
             var window = spectrum.Precursors[0].IsolationWindow;
@@ -203,12 +224,46 @@ namespace pwiz.Osprey.DemuxTool
             window.Set(CVID.MS_isolation_window_upper_offset, 0.5 * (hi - lo), CVID.MS_m_z);
             if (!getBinaryData)
                 return spectrum;
-            var (mz, ions) = Built(cycle)[slot];
-            var counts = new double[ions.Length];
-            for (int i = 0; i < ions.Length; i++)
-                counts[i] = ions[i] * _options.CountsPerIon;
-            spectrum.SetMZIntensityArrays(mz, counts, CVID.MS_number_of_detector_counts);
+            var counts = new double[peaks.Ions.Length];
+            for (int i = 0; i < peaks.Ions.Length; i++)
+                counts[i] = peaks.Ions[i] * _options.CountsPerIon;
+            spectrum.SetMZIntensityArrays(peaks.Mz, counts, CVID.MS_number_of_detector_counts);
             return spectrum;
+        }
+
+        /// <summary>
+        /// The header of an acquired spectrum read for demultiplexing, its peaks dropped; each is handed out
+        /// once, so no caller shares one. Null if it was not read, or was already taken.
+        /// </summary>
+        private Spectrum TakeHeader(int innerIndex)
+        {
+            lock (_lock)
+                return _headers.Remove(innerIndex, out var header) ? header : null;
+        }
+
+        /// <summary>
+        /// Labels a layout spectrum centroid: its peaks are the demultiplexed centroids, whether the source
+        /// was centroided or, for the joint solve, profile.
+        /// </summary>
+        private static void MarkCentroid(Spectrum spectrum)
+        {
+            var terms = spectrum.Params;
+            for (int i = terms.CVParams.Count - 1; i >= 0; i--)
+            {
+                if (terms.CVParams[i].Cvid == CVID.MS_profile_spectrum)
+                    terms.CVParams.RemoveAt(i);
+            }
+            foreach (var group in terms.ParamGroups.ToList())
+            {
+                if (group.CVParams.All(p => p.Cvid != CVID.MS_profile_spectrum))
+                    continue;
+                // The term comes from a shared group: copy the group's other terms onto the spectrum.
+                foreach (var p in group.CVParams.Where(p => p.Cvid != CVID.MS_profile_spectrum && !terms.HasCVParam(p.Cvid)))
+                    terms.CVParams.Add(p);
+                terms.UserParams.AddRange(group.UserParams);
+                terms.ParamGroups.Remove(group);
+            }
+            terms.Set(CVID.MS_centroid_spectrum);
         }
 
         /// <summary>The acquired spectrum an output spectrum is built on: the MS1, or its window's middle bin.</summary>
@@ -260,7 +315,7 @@ namespace pwiz.Osprey.DemuxTool
         private void BuildRaw(int firstCycle, int lastCycle)
         {
             foreach (int old in _peaks.Keys.Where(c => c < firstCycle).ToList())
-                _peaks.Remove(old);
+                DropSweep(old);
             for (int c = firstCycle; c <= lastCycle; c++)
             {
                 var peaks = SweepPeaks(c);
@@ -275,7 +330,7 @@ namespace pwiz.Osprey.DemuxTool
             int padLo = Math.Max(0, firstCycle - _options.CyclePad);
             int padHi = Math.Min(CycleCount - 1, lastCycle + _options.CyclePad);
             foreach (int old in _peaks.Keys.Where(c => c < padLo).ToList())
-                _peaks.Remove(old);
+                DropSweep(old);
             var clock = Stopwatch.StartNew();
             var sweeps = new Dictionary<int, List<(double[] Mz, double[] Ions)>>();
             for (int c = padLo; c <= padHi; c++)
@@ -472,6 +527,7 @@ namespace pwiz.Osprey.DemuxTool
                 var spectrum = Inner.GetSpectrum(indices[b], true);
                 var mzArray = spectrum.GetMZArray();
                 var intensityArray = spectrum.GetIntensityArray();
+                KeepHeader(indices[b], spectrum);
                 var mzs = new List<double>();
                 var values = new List<double>();
                 if (mzArray != null && intensityArray != null)
@@ -486,9 +542,31 @@ namespace pwiz.Osprey.DemuxTool
                     }
                 }
                 sweep.Add((mzs.ToArray(), values.ToArray()));
+                spectrum.BinaryDataArrays.Clear();
+                spectrum.IntegerDataArrays.Clear();
             }
             _peaks[cycle] = sweep;
             return sweep;
+        }
+
+        /// <summary>
+        /// Keeps the header of an acquired spectrum that is some layout spectrum's base, for
+        /// <see cref="TakeHeader"/>; the caller drops its peaks once read.
+        /// </summary>
+        private void KeepHeader(int innerIndex, Spectrum spectrum)
+        {
+            if (!_isLayoutBase.Contains(innerIndex))
+                return;
+            lock (_lock)
+                _headers[innerIndex] = spectrum;
+        }
+
+        /// <summary>Forgets a sweep no block needs any more: its peaks, and its headers not handed out.</summary>
+        private void DropSweep(int cycle)
+        {
+            _peaks.Remove(cycle);
+            foreach (int index in _ms2OfCycle[cycle])
+                _headers.Remove(index);
         }
 
         private static double TargetMz(Spectrum spectrum)
