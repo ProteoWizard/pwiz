@@ -330,8 +330,8 @@ namespace pwiz.Osprey.DemuxTool
         }
 
         /// <summary>
-        /// MS1's grid, from the first MS1 spectrum centroided, and its peak width, from the strong isolated peaks
-        /// of five MS1 spectra from the middle of the run (MS1 peaks are wider in samples than MS2's).
+        /// MS1's grid, from the first MS1 spectrum centroided, and its peak shape, from the strong isolated peaks of
+        /// 30 MS1 spectra from the middle of the run (MS1 peaks are wider in samples than MS2's).
         /// </summary>
         private void CalibrateSurvey(IList<double> mz, IList<double> counts, double countsPerIon)
         {
@@ -343,9 +343,10 @@ namespace pwiz.Osprey.DemuxTool
                 return;
             }
             // The kernel from strong peaks only (400 ions or more at the top): MS1 is dense, and the top samples of
-            // weaker ones are too noisy to centre and scale a peak by.
-            var shape = new TofPeakShape(Enumerable.Range(1, 20).Select(i => 100.0 * i).ToArray());
-            for (int c = 0; c < 5 && CycleCount / 2 + c < _ms1OfCycle.Count; c++)
+            // weaker ones are too noisy to centre and scale a peak by. So few MS1 peaks are strong and isolated (about
+            // 13 a spectrum on ZT Scan) that it takes 30 spectra and 200 m/z bins.
+            var shape = new TofPeakShape(Enumerable.Range(0, 11).Select(i => 200.0 * i).ToArray());
+            for (int c = 0; c < 30 && CycleCount / 2 + c < _ms1OfCycle.Count; c++)
             {
                 var spectrum = Inner.GetSpectrum(_ms1OfCycle[CycleCount / 2 + c], true);
                 var sm = spectrum.GetMZArray();
@@ -365,7 +366,8 @@ namespace pwiz.Osprey.DemuxTool
                 _surveyParameters.PeakShapes = kernels.Value.Kernels;
             }
             _log.WriteLine(@"MS1: own TOF grid, step {0:E6}; peak shape {1} ({2} isolated peaks); counts per ion from each spectrum",
-                _surveyGrid.Step, kernels.HasValue ? DescribeKernels(_surveyParameters) : @"as MS2 (too few peaks)", shape.Peaks);
+                _surveyGrid.Step, kernels.HasValue ? DescribeKernels(_surveyParameters) : @"the Gaussian of the sigma table (too few peaks)",
+                shape.Peaks);
         }
 
         /// <summary>
