@@ -178,10 +178,10 @@ namespace pwiz.CarafeSharp.Training
                 }
             }
 
-            // One spectrum per precursor: the run where it scored best.
+            // One spectrum per precursor: the run where it scored best, by run q and then score.
             var best = candidates
                 .GroupBy(c => c.Key, StringComparer.Ordinal)
-                .Select(g => g.OrderBy(c => c.Record.RunPrecursorQ).ThenBy(c => c.Record.Pep)
+                .Select(g => g.OrderBy(c => c.Record.RunPrecursorQ)
                     .ThenByDescending(c => c.Record.Score).ThenBy(c => c.Record.FileName, StringComparer.Ordinal).First())
                 .OrderBy(c => c.Record.FileName, StringComparer.Ordinal).ThenBy(c => c.Record.EntryId)
                 .ToArray();
@@ -190,7 +190,7 @@ namespace pwiz.CarafeSharp.Training
             // One RT row per peptide form, from its best precursor.
             var rt = best
                 .GroupBy(c => c.FormKey, StringComparer.Ordinal)
-                .Select(g => g.OrderBy(c => c.Record.RunPrecursorQ).ThenBy(c => c.Record.Pep)
+                .Select(g => g.OrderBy(c => c.Record.RunPrecursorQ)
                     .ThenByDescending(c => c.Record.Score).First())
                 .OrderBy(c => c.Record.FileName, StringComparer.Ordinal).ThenBy(c => c.Record.EntryId)
                 .Select(c => new RtTrainingExample(c.Peptide, c.Record.ApexRt / rtMax))
