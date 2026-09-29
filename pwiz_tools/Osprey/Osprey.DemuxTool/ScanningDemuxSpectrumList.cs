@@ -100,6 +100,13 @@ namespace pwiz.Osprey.DemuxTool
         /// intensities are rates over an accumulation time that varies from spectrum to spectrum).
         /// </summary>
         public bool JointMs1 { get; set; }
+
+        /// <summary>
+        /// Fit the joint solve's MS2 with the TOF peak kernels measured from the file's first batch of sweeps
+        /// (<see cref="TofPeakShape"/>) instead of the Gaussian of <see cref="JointDemuxParams.PeakSigmaSamples"/>.
+        /// MS1, with <see cref="JointMs1"/>, is always fitted with its own measured kernels.
+        /// </summary>
+        public bool MeasuredPeakShape { get; set; }
     }
 
     /// <summary>
@@ -335,7 +342,9 @@ namespace pwiz.Osprey.DemuxTool
                 _log.WriteLine(@"MS1: not on one TOF grid; passed through as read");
                 return;
             }
-            var peaks = new List<(double Mz, double Sigma)>();
+            // The kernel from strong peaks only (400 ions or more at the top): MS1 is dense, and the top samples of
+            // weaker ones are too noisy to centre and scale a peak by.
+            var shape = new TofPeakShape(Enumerable.Range(1, 20).Select(i => 100.0 * i).ToArray());
             for (int c = 0; c < 5 && CycleCount / 2 + c < _ms1OfCycle.Count; c++)
             {
                 var spectrum = Inner.GetSpectrum(_ms1OfCycle[CycleCount / 2 + c], true);
@@ -346,20 +355,17 @@ namespace pwiz.Osprey.DemuxTool
                 double q = IonCalibration.CountsPerIon(si.Data, out double fit);
                 if (fit < IonCalibration.MIN_FIT)
                     q = countsPerIon;
-                peaks.AddRange(TofPeakWidth.Measure(sm.Data, si.Data, _surveyGrid, 20 * q));
+                shape.Add(sm.Data, si.Data, _surveyGrid, 400 * q);
             }
-            var edges = Enumerable.Range(0, 20).Select(i => 100.0 * i).ToArray();
-            var table = TofPeakWidth.Calibrate(peaks, edges, 20);
             _surveyParameters = _options.JointParameters.Copy();
-            if (table.HasValue)
+            var kernels = shape.Kernels(_surveyParameters.PeakHalfWidth, 50);
+            if (kernels.HasValue)
             {
-                _surveyParameters.PeakSigmaMz = table.Value.Mz;
-                _surveyParameters.PeakSigmaSamples = table.Value.Sigma;
+                _surveyParameters.PeakShapeMz = kernels.Value.Mz;
+                _surveyParameters.PeakShapes = kernels.Value.Kernels;
             }
-            _log.WriteLine(@"MS1: own TOF grid, step {0:E6}; peak sigma {1} from {2} peaks; counts per ion from each spectrum",
-                _surveyGrid.Step, table.HasValue
-                    ? string.Join(@", ", table.Value.Mz.Select((m, i) => string.Format(CultureInfo.InvariantCulture, @"{0:F2} at {1:F0}", table.Value.Sigma[i], m)))
-                    : @"as MS2 (too few peaks)", peaks.Count);
+            _log.WriteLine(@"MS1: own TOF grid, step {0:E6}; peak shape {1} ({2} isolated peaks); counts per ion from each spectrum",
+                _surveyGrid.Step, kernels.HasValue ? DescribeKernels(_surveyParameters) : @"as MS2 (too few peaks)", shape.Peaks);
         }
 
         /// <summary>
@@ -627,10 +633,44 @@ namespace pwiz.Osprey.DemuxTool
                     if (_grid == null)
                         throw new InvalidOperationException(@"The joint solve needs profile spectra on one TOF grid.");
                     _log.WriteLine(@"TOF grid: step {0:E6} in sqrt(m/z)", _grid.Step);
+                    if (_options.MeasuredPeakShape)
+                        MeasurePeakShape(sweeps);
                     return _grid;
                 }
             }
             throw new InvalidOperationException(@"The joint solve found no profile spectrum to take the TOF grid from.");
+        }
+
+        /// <summary>
+        /// The MS2 kernels measured from the first batch's profile sweeps (their points in ions), strong isolated
+        /// peaks of 50 ions or more, for the joint settings every block of the run then solves with.
+        /// </summary>
+        private void MeasurePeakShape(Dictionary<int, List<(double[] Mz, double[] Ions)>> sweeps)
+        {
+            var shape = new TofPeakShape(new[] { 100.0, 300, 450, 600, 800, 1100, 2000 });
+            foreach (var sweep in sweeps.Values)
+            {
+                foreach (var (mz, ions) in sweep)
+                    shape.Add(mz, ions, _grid, 50);
+            }
+            var parameters = _options.JointParameters;
+            var kernels = shape.Kernels(parameters.PeakHalfWidth, 100);
+            if (!kernels.HasValue)
+            {
+                _log.WriteLine(@"TOF peak shape: {0} isolated peaks, too few in every m/z range; fitting with the Gaussian", shape.Peaks);
+                return;
+            }
+            parameters.PeakShapeMz = kernels.Value.Mz;
+            parameters.PeakShapes = kernels.Value.Kernels;
+            _log.WriteLine(@"TOF peak shape (MS2, {0} isolated peaks): {1}", shape.Peaks, DescribeKernels(parameters));
+        }
+
+        /// <summary>Each measured kernel as its m/z, its centre value and its second moment.</summary>
+        private static string DescribeKernels(JointDemuxParams parameters)
+        {
+            int half = parameters.PeakHalfWidth;
+            return string.Join(@"; ", parameters.PeakShapeMz.Select((mz, i) => string.Format(CultureInfo.InvariantCulture,
+                @"{0:F0} m/z B[0] {1:F3}, sigma {2:F2}", mz, parameters.PeakShapes[i][half], parameters.SigmaAt(mz))));
         }
 
         private static void Bucket(List<ScanningPeak> peaks, Dictionary<(int, int), List<ScanningPeak>> byCell)

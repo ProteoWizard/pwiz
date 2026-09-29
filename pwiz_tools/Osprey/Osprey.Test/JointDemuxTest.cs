@@ -97,42 +97,68 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The TOF peak's core width from a profile spectrum: exact Gaussian peaks of known sigma, their tops a
-        /// random fraction of a sample off the grid, give it back through the log-parabola of their top three
-        /// samples; a peak with a close neighbour is not isolated and is left out; the calibration takes each m/z
-        /// bin's median.
+        /// The TOF peak's measured kernel: isolated peaks of a known shape with heavier tails than a Gaussian,
+        /// their centres a random fraction of a sample off the grid, give back that shape at whole offsets for a
+        /// peak centred on a grid point; a close pair is not isolated and is left out; a bin with too few peaks
+        /// gives no kernel. The settings interpolate measured kernels by m/z and hold the nearest beyond them,
+        /// give their second moment as the width, and without them fit the Gaussian of the sigma table.
         /// </summary>
         [TestMethod]
-        public void TestTofPeakWidth()
+        public void TestTofPeakShape()
         {
             var grid = new TofGrid(Math.Sqrt(300.0), ROOT_STEP);
             var random = new Random(7);
+            double Shape(double x) => 0.9 * Math.Exp(-0.5 * x * x / 0.64) + 0.1 * Math.Exp(-0.5 * x * x / 4.0);
             var centers = new List<double>();
-            for (long k = 2000; k < 120000; k += 400)
+            for (long k = 2000; k < 120000; k += 100)
                 centers.Add(k + random.NextDouble() - 0.5);
             // A second peak 4 samples after one: the pair is not isolated.
             centers.Add(centers[10] + 4);
-            double SigmaOf(double mz) => mz < 600 ? 0.9 : 1.3;
             var points = new SortedDictionary<long, double>();
             foreach (double c in centers)
             {
-                double sigma = SigmaOf(grid.Mz(c));
-                for (long k = (long)Math.Round(c) - 7; k <= (long)Math.Round(c) + 7; k++)
+                for (long k = (long)Math.Round(c) - 8; k <= (long)Math.Round(c) + 8; k++)
                 {
                     points.TryGetValue(k, out double v);
-                    points[k] = v + 1000 * Math.Exp(-0.5 * (k - c) * (k - c) / (sigma * sigma));
+                    points[k] = v + 1000 * Shape(k - c);
                 }
             }
-            var mz = points.Keys.Select(k => grid.Mz(k)).ToList();
-            var intensity = points.Values.ToList();
-            var peaks = TofPeakWidth.Measure(mz, intensity, grid, 100);
-            Assert.AreEqual(centers.Count - 2, peaks.Count);
-            foreach (var peak in peaks)
-                Assert.AreEqual(SigmaOf(peak.Mz), peak.Sigma, 1e-6, string.Format(@"sigma at {0:F1}", peak.Mz));
-            var table = TofPeakWidth.Calibrate(peaks, new[] { 300.0, 600.0, 1000.0 }, 20);
-            Assert.IsTrue(table.HasValue);
-            CollectionAssert.AreEqual(new[] { 0.9, 1.3 }, table.Value.Sigma.Select(s => Math.Round(s, 6)).ToArray());
-            Assert.IsNull(TofPeakWidth.Calibrate(peaks, new[] { 300.0, 600.0, 1000.0 }, 1000));
+            var shape = new TofPeakShape(new[] { 300.0, 1000.0 });
+            shape.Add(points.Keys.Select(k => grid.Mz(k)).ToList(), points.Values.ToList(), grid, 100);
+            const int half = 5;
+            var kernels = shape.Kernels(half, 50);
+            Assert.IsTrue(kernels.HasValue);
+            var kernel = kernels.Value.Kernels[0];
+            // The truth: the shape at whole offsets, averaged over centres within a quarter sample of the grid.
+            var expected = new double[2 * half + 1];
+            for (int d = -half; d <= half; d++)
+            {
+                for (int i = 0; i <= 100; i++)
+                    expected[d + half] += Shape(d - 0.25 + 0.005 * i);
+            }
+            double total = expected.Sum();
+            for (int d = 0; d < expected.Length; d++)
+                Assert.AreEqual(expected[d] / total, kernel[d], 0.01, string.Format(@"B[{0}]", d - half));
+            Assert.IsNull(shape.Kernels(half, 100000));
+
+            var flat = Enumerable.Repeat(1.0 / (2 * half + 1), 2 * half + 1).ToArray();
+            var parameters = new JointDemuxParams { PeakShapeMz = new[] { 400.0, 800.0 }, PeakShapes = new[] { flat, kernel } };
+            var between = parameters.PeakAt(600);
+            var below = parameters.PeakAt(300);
+            var above = parameters.PeakAt(900);
+            double moment = 0;
+            for (int d = 0; d < kernel.Length; d++)
+            {
+                Assert.AreEqual(0.5 * (flat[d] + kernel[d]), between[d], 1e-12);
+                Assert.AreEqual(flat[d], below[d], 1e-12);
+                Assert.AreEqual(kernel[d], above[d], 1e-12);
+                moment += (d - half) * (d - half) * kernel[d];
+            }
+            Assert.AreEqual(Math.Sqrt(moment), parameters.SigmaAt(900), 1e-12);
+            var gaussian = new JointDemuxParams().PeakAt(550);
+            Assert.AreEqual(1.0, gaussian.Sum(), 1e-12);
+            Assert.AreEqual(Math.Exp(-0.5 / (1.35 * 1.35)), gaussian[half + 1] / gaussian[half], 1e-12);
+            Assert.AreEqual(1.35, new JointDemuxParams().SigmaAt(550), 1e-12);
         }
 
         /// <summary>

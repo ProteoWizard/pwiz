@@ -42,6 +42,18 @@ namespace pwiz.Osprey.Demux
         public int PeakHalfWidth { get; set; } = 5;
 
         /// <summary>
+        /// The m/z of each measured kernel in <see cref="PeakShapes"/> (<see cref="TofPeakShape"/>), ascending; null
+        /// to fit with the Gaussian of <see cref="PeakSigmaSamples"/>.
+        /// </summary>
+        public double[] PeakShapeMz { get; set; }
+
+        /// <summary>
+        /// Measured TOF peak kernels, one per <see cref="PeakShapeMz"/>: 2 <see cref="PeakHalfWidth"/> + 1 values
+        /// for the offsets -h..h of a peak centred on a grid point, summing to 1.
+        /// </summary>
+        public double[][] PeakShapes { get; set; }
+
+        /// <summary>
         /// The lasso weight on each coefficient, in standard deviations of its score under Poisson noise
         /// (0: none). A coefficient stays at zero unless the evidence for it exceeds this.
         /// </summary>
@@ -111,8 +123,64 @@ namespace pwiz.Osprey.Demux
             return (JointDemuxParams)MemberwiseClone();
         }
 
-        /// <summary>The TOF peak's sigma at an m/z.</summary>
+        /// <summary>
+        /// The kernel the solve fits with at an m/z, offsets -h..h, summing to 1: the measured kernels
+        /// interpolated linearly between their m/z (the nearest beyond them), else the Gaussian of
+        /// <see cref="GaussianSigmaAt"/>.
+        /// </summary>
+        public double[] PeakAt(double mz)
+        {
+            int half = PeakHalfWidth;
+            var kernel = new double[2 * half + 1];
+            if (PeakShapes == null || PeakShapes.Length == 0)
+            {
+                double sigma = GaussianSigmaAt(mz), sum = 0;
+                for (int d = -half; d <= half; d++)
+                {
+                    double v = Math.Exp(-0.5 * d * d / (sigma * sigma));
+                    kernel[d + half] = v;
+                    sum += v;
+                }
+                for (int d = 0; d < kernel.Length; d++)
+                    kernel[d] /= sum;
+                return kernel;
+            }
+            var at = PeakShapeMz;
+            int upper = 0;
+            while (upper < at.Length && at[upper] < mz)
+                upper++;
+            int lower = Math.Max(0, upper - 1);
+            upper = Math.Min(upper, at.Length - 1);
+            double t = upper == lower ? 0 : (mz - at[lower]) / (at[upper] - at[lower]);
+            double total = 0;
+            for (int d = 0; d < kernel.Length; d++)
+            {
+                kernel[d] = (1 - t) * PeakShapes[lower][d] + t * PeakShapes[upper][d];
+                total += kernel[d];
+            }
+            for (int d = 0; d < kernel.Length; d++)
+                kernel[d] /= total;
+            return kernel;
+        }
+
+        /// <summary>
+        /// The TOF peak's width at an m/z in samples: the second moment of the measured kernel when there is
+        /// one, else <see cref="GaussianSigmaAt"/>. What neighbouring positions' centroids are merged within.
+        /// </summary>
         public double SigmaAt(double mz)
+        {
+            if (PeakShapes == null || PeakShapes.Length == 0)
+                return GaussianSigmaAt(mz);
+            var kernel = PeakAt(mz);
+            int half = PeakHalfWidth;
+            double moment = 0;
+            for (int d = -half; d <= half; d++)
+                moment += d * d * kernel[d + half];
+            return Math.Sqrt(moment);
+        }
+
+        /// <summary>The sigma of the Gaussian kernel at an m/z, from <see cref="PeakSigmaSamples"/>.</summary>
+        public double GaussianSigmaAt(double mz)
         {
             var at = PeakSigmaMz;
             var sigma = PeakSigmaSamples;
@@ -251,7 +319,7 @@ namespace pwiz.Osprey.Demux
                     if (end == start)
                         continue;
                     double centerMz = grid.Mz(0.5 * (core0 + core1));
-                    solver.Solve(points, start, end, lo, hi, parameters.SigmaAt(centerMz));
+                    solver.Solve(points, start, end, lo, hi, parameters.PeakAt(centerMz));
                     solver.Keep(core0, core1, coreColumn, kept);
                     result.ChannelsSolved++;
                 }
@@ -410,14 +478,14 @@ namespace pwiz.Osprey.Demux
 
             /// <summary>Solves the coefficients of grid points [lo, hi] from points[start, end).</summary>
             public void Solve(List<(long Sample, int Row, double Ions)> points, int start, int end, long lo, long hi,
-                double sigma)
+                double[] kernel)
             {
                 long t0 = Now();
                 _lo = lo;
                 _points = (int)(hi - lo + 1);
                 _samples = _points + 2 * _half;
                 Allocate();
-                SetPeak(sigma);
+                SetPeak(kernel);
 
                 Array.Clear(_y, 0, _rows * _samples);
                 Array.Clear(_rowSignal, 0, _rows);
@@ -563,18 +631,11 @@ namespace pwiz.Osprey.Demux
                 }
             }
 
-            private void SetPeak(double sigma)
+            private void SetPeak(double[] kernel)
             {
-                double sum = 0;
-                for (int d = -_half; d <= _half; d++)
-                {
-                    double v = Math.Exp(-0.5 * d * d / (sigma * sigma));
-                    _b[d + _half] = v;
-                    sum += v;
-                }
                 for (int d = 0; d < _b.Length; d++)
                 {
-                    _b[d] /= sum;
+                    _b[d] = kernel[d];
                     _b2[d] = _b[d] * _b[d];
                 }
                 Array.Copy(_b, _bp, _b.Length);

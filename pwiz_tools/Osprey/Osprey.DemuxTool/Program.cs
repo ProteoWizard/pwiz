@@ -44,7 +44,7 @@ namespace pwiz.Osprey.DemuxTool
             @" [--kernel <profile.tsv>] [--layout centered:k|tiled:k|framed:k:m] [--threads N] [--cycles first:last]" +
             @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--position-mz] [--unweighted]" +
             @" [--sweep-l1 L] [--sweep-l1-z Z] [--sweep-l1-refit] [--block-support-z Z] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw] [--profile] [--centroid vendor|events]" +
-            @" [--joint] [--joint-z Z] [--joint-relaxed] [--joint-keep-active] [--joint-param Name=Value] [--group-bins N] [--read-threads N] [--merge-ppm P] [--merge-sigmas F] [--ms1 vendor|joint] [--solve-profile]";
+            @" [--joint] [--joint-z Z] [--joint-relaxed] [--joint-keep-active] [--joint-param Name=Value] [--group-bins N] [--read-threads N] [--merge-ppm P] [--merge-sigmas F] [--ms1 vendor|joint] [--peak-shape gaussian|measured] [--solve-profile]";
 
         private static int Main(string[] args)
         {
@@ -173,6 +173,11 @@ namespace pwiz.Osprey.DemuxTool
                         // the joint solve this replaces its sigma rule.
                         options.MergePpm = double.Parse(value, CultureInfo.InvariantCulture);
                         options.JointMergeSigmas = 0;
+                        break;
+                    case @"--peak-shape":
+                        // measured: the joint solve fits MS2 with the TOF peak kernels measured from the file;
+                        // gaussian (the default): with the Gaussian of the settings' sigma table.
+                        options.MeasuredPeakShape = value == @"measured";
                         break;
                     case @"--ms1":
                         // joint: MS1 read as profile and centroided by the joint solve; vendor (the default): the
