@@ -813,12 +813,12 @@
     <value>各入力の横に{0}ファイル</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="OspreyTask_RequiresError___task__0__requires__1__" xml:space="preserve">
-    <value>{0}には{1}が必要です。</value>
+  <data name="OspreyTask_RequiresError__0__requires__1__and__2__" xml:space="preserve">
+    <value>{0}には{1}と{2}が必要です。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="OspreyTask_LibraryAndOutputText__0__and__1_" xml:space="preserve">
-    <value>{0}と{1}</value>
+  <data name="OspreyTask_RequiresError___task__0__requires__1__" xml:space="preserve">
+    <value>{0}には{1}が必要です。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Pass1ScalarSeeder_Restored_the_first_pass_scores_of__1__kept_precursor_candidate_peaks_across__0__files_" xml:space="preserve">

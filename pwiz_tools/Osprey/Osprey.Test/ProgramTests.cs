@@ -263,8 +263,7 @@ namespace pwiz.Osprey.Test
             config.InputFiles = new List<string> { "a.mzML" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + PerFileRescoreTask.TASK_NAME);
-            StringAssert.Contains(err, OspreyTask.LibraryAndOutputText);
+            Assert.AreEqual(RequiresLibraryAndOutputError(PerFileRescoreTask.TASK_NAME), err);
         }
 
         // - FirstPassFDR (2+ runs in, reconciliation on) --
@@ -298,8 +297,7 @@ namespace pwiz.Osprey.Test
             config.InputFiles = new List<string> { "a.mzML", "b.mzML" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME);
-            StringAssert.Contains(err, OspreyTask.LibraryAndOutputText);
+            Assert.AreEqual(RequiresLibraryAndOutputError(FirstPassFdrTask.TASK_NAME), err);
         }
 
         [TestMethod]
@@ -369,8 +367,7 @@ namespace pwiz.Osprey.Test
             config.InputFiles = new List<string> { "a.mzML" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + SecondPassFdrTask.TASK_NAME);
-            StringAssert.Contains(err, OspreyTask.LibraryAndOutputText);
+            Assert.AreEqual(RequiresLibraryAndOutputError(SecondPassFdrTask.TASK_NAME), err);
         }
 
         // - ModelDiagnostics (the completed run's own command line, replayed) --
@@ -936,6 +933,16 @@ namespace pwiz.Osprey.Test
             };
             args.AddRange(tokens);
             return args.ToArray();
+        }
+
+        /// <summary>
+        /// The error a task gives when <c>--library</c> and <c>--output</c> are both missing, in the
+        /// current UI language.
+        /// </summary>
+        private static string RequiresLibraryAndOutputError(string taskName)
+        {
+            return string.Format(OspreyTasksResources.OspreyTask_RequiresError__0__requires__1__and__2__, OspreyArgNames.TaskText(taskName),
+                OspreyArgNames.Text(OspreyArgNames.LIBRARY), OspreyArgNames.Text(OspreyArgNames.OUTPUT));
         }
     }
 }

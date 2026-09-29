@@ -1821,20 +1821,20 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} and {1}.
-        /// </summary>
-        public static string OspreyTask_LibraryAndOutputText__0__and__1_ {
-            get {
-                return ResourceManager.GetString("OspreyTask_LibraryAndOutputText__0__and__1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to {0} requires {1}..
         /// </summary>
         public static string OspreyTask_RequiresError___task__0__requires__1__ {
             get {
                 return ResourceManager.GetString("OspreyTask_RequiresError___task__0__requires__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} requires {1} and {2}..
+        /// </summary>
+        public static string OspreyTask_RequiresError__0__requires__1__and__2__ {
+            get {
+                return ResourceManager.GetString("OspreyTask_RequiresError__0__requires__1__and__2__", resourceCulture);
             }
         }
         
