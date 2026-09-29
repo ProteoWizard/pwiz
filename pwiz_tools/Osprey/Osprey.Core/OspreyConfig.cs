@@ -275,8 +275,8 @@ namespace pwiz.Osprey.Core
         public ReconciliationConfig Reconciliation { get; set; } = new ReconciliationConfig();
 
         /// <summary>
-        /// The optional training export (<c>--training-export</c>). Off by default, and in no
-        /// identity hash: off, its task is not in the run at all.
+        /// The optional training export (<c>--training-export</c>), a PerFileRescoring output.
+        /// Off by default, and in no identity hash: off, it is not declared at all.
         /// </summary>
         public TrainingExportConfig TrainingExport { get; set; } = new TrainingExportConfig();
 

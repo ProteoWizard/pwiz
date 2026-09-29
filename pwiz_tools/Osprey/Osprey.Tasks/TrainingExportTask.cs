@@ -32,7 +32,10 @@ namespace pwiz.Osprey.Tasks
     /// rehydrates from its stamps and PerFileRescoring writes only the missing exports, from
     /// each run's own artifacts with no re-scoring; on an unfinished one the analysis runs with
     /// the export, exactly as if the flag had been given up front. It adds no node type to an
-    /// HPC chain: the export rides the per-file PerFileRescoring nodes (P16).
+    /// HPC chain: the export rides the per-file PerFileRescoring nodes (P17). It names no output
+    /// of its own either (the base <see cref="OspreyTask.DescribeOutput"/>), so the startup
+    /// lines read as they do for <c>--training-export</c> alone: the blib, and the training
+    /// export line that names the parquets.
     /// </summary>
     internal sealed class TrainingExportTask : OspreyTask
     {
@@ -57,11 +60,6 @@ namespace pwiz.Osprey.Tasks
         public override void ApplySelection(OspreyConfig config)
         {
             config.TrainingExport.Enabled = true;
-        }
-
-        public override string DescribeOutput(OspreyConfig config)
-        {
-            return OspreyTasksResources.TrainingExportTask_DescribeOutput_per_file__training_parquet__written_by_PerFileRescoring;
         }
 
         public override bool Run(PipelineContext ctx)

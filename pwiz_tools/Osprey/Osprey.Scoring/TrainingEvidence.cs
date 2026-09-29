@@ -79,7 +79,7 @@ namespace pwiz.Osprey.Scoring
             // does not bracket the apex (never written by Osprey) is widened to include it.
             if (!window.TryGetScanIndex(row.ScanNumber, out int apexIdx))
                 throw new ArgumentException(string.Format(@"Scan {0} is not in the isolation window.", row.ScanNumber), nameof(row));
-            int startIdx = Math.Min(LowerBound(window.Rts, row.StartRt), apexIdx);
+            int startIdx = Math.Min(ScoringMath.LowerBoundDouble(window.Rts, row.StartRt), apexIdx);
             int endIdx = Math.Max(LowerBoundAbove(window.Rts, row.EndRt) - 1, apexIdx);
             int nPeak = endIdx - startIdx + 1;
             int apexPos = apexIdx - startIdx;
@@ -577,21 +577,6 @@ namespace pwiz.Osprey.Scoring
             for (int i = 0; i < n; i++)
                 values[i] = float.NaN;
             return values;
-        }
-
-        /// <summary>First index whose value is at least <paramref name="value"/>.</summary>
-        private static int LowerBound(double[] sorted, double value)
-        {
-            int lo = 0, hi = sorted.Length;
-            while (lo < hi)
-            {
-                int m = (lo + hi) >> 1;
-                if (sorted[m] < value)
-                    lo = m + 1;
-                else
-                    hi = m;
-            }
-            return lo;
         }
 
         /// <summary>First index whose value is greater than <paramref name="value"/>.</summary>

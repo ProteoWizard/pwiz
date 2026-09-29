@@ -240,7 +240,7 @@ namespace pwiz.Osprey
                 try
                 {
                     TaskValiditySidecar.Write(output, task.Name, OspreyVersion.Current,
-                        task.OutputValidityKey(ctx, key, output), inputs);
+                        task.OutputValidityKey(ctx, key, output), task.OutputInputs(ctx, inputs, output));
                 }
                 catch (Exception ex)
                 {

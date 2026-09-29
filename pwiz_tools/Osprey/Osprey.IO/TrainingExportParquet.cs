@@ -52,84 +52,6 @@ namespace pwiz.Osprey.IO
         /// <summary>Rows per parquet row group; the per-ion blobs make rows wide.</summary>
         private const int ROWS_PER_GROUP = 20_000;
 
-        private static readonly ColumnSpec[] COLUMNS =
-        {
-            Scalar(@"entry_id", r => r.EntryId, (r, v) => r.EntryId = v),
-            Scalar(@"base_id", r => r.EntryId & 0x7FFFFFFFu, (r, v) => { }),
-            Scalar(@"is_decoy", r => r.IsDecoy, (r, v) => r.IsDecoy = v),
-            Scalar(@"is_entrapment", r => r.IsEntrapment, (r, v) => r.IsEntrapment = v),
-            Text(@"peptide_kind", r => r.PeptideKind, (r, v) => r.PeptideKind = v),
-            Text(@"sequence", r => r.Sequence, (r, v) => r.Sequence = v),
-            Text(@"modified_sequence", r => r.ModifiedSequence, (r, v) => r.ModifiedSequence = v),
-            Blob(@"mod_positions", r => ParquetBlobCodec.EncodeI32Blob(r.ModPositions), (r, b) => r.ModPositions = ParquetBlobCodec.DecodeI32Blob(b)),
-            Blob(@"mod_masses", r => ParquetBlobCodec.EncodeF64Blob(r.ModMasses), (r, b) => r.ModMasses = ParquetBlobCodec.DecodeF64Blob(b)),
-            Blob(@"mod_unimod_ids", r => ParquetBlobCodec.EncodeI32Blob(r.ModUnimodIds), (r, b) => r.ModUnimodIds = ParquetBlobCodec.DecodeI32Blob(b)),
-            Scalar(@"charge", r => r.Charge, (r, v) => r.Charge = v),
-            Scalar(@"precursor_mz", r => r.PrecursorMz, (r, v) => r.PrecursorMz = v),
-            Scalar(@"library_rt", r => r.LibraryRt, (r, v) => r.LibraryRt = v),
-            Text(@"protein_ids", r => r.ProteinIds, (r, v) => r.ProteinIds = v),
-            Text(@"file_name", r => r.FileName, (r, v) => r.FileName = v),
-            Scalar(@"scan_number", r => r.ScanNumber, (r, v) => r.ScanNumber = v),
-            Scalar(@"apex_rt", r => r.ApexRt, (r, v) => r.ApexRt = v),
-            Scalar(@"start_rt", r => r.StartRt, (r, v) => r.StartRt = v),
-            Scalar(@"end_rt", r => r.EndRt, (r, v) => r.EndRt = v),
-            Scalar(@"n_peak_scans", r => r.NPeakScans, (r, v) => r.NPeakScans = v),
-            Scalar(@"isolation_lower", r => r.IsolationLower, (r, v) => r.IsolationLower = v),
-            Scalar(@"isolation_upper", r => r.IsolationUpper, (r, v) => r.IsolationUpper = v),
-            Scalar(@"bounds_area", r => r.BoundsArea, (r, v) => r.BoundsArea = v),
-            Scalar(@"coelution_sum", r => r.CoelutionSum, (r, v) => r.CoelutionSum = v),
-            Scalar(@"score", r => r.Score, (r, v) => r.Score = v),
-            Scalar(@"run_precursor_q", r => r.RunPrecursorQ, (r, v) => r.RunPrecursorQ = v),
-            Scalar(@"run_peptide_q", r => r.RunPeptideQ, (r, v) => r.RunPeptideQ = v),
-            Scalar(@"apex_tic", r => r.ApexTic, (r, v) => r.ApexTic = v),
-            Scalar(@"explained_intensity", r => r.ExplainedIntensity, (r, v) => r.ExplainedIntensity = v),
-            Scalar(@"n_slots", r => r.NSlots, (r, v) => r.NSlots = v),
-            Scalar(@"n_ions_applicable", r => r.NIonsApplicable, (r, v) => r.NIonsApplicable = v),
-            Scalar(@"n_ions_observed", r => r.NIonsObserved, (r, v) => r.NIonsObserved = v),
-            Scalar(@"mp_fitted", r => r.MpFitted, (r, v) => r.MpFitted = v),
-            Scalar(@"mp_converged", r => r.MpConverged, (r, v) => r.MpConverged = v),
-            Scalar(@"mp_iterations", r => r.MpIterations, (r, v) => r.MpIterations = v),
-            Scalar(@"mp_overall", r => r.MpOverall, (r, v) => r.MpOverall = v),
-            Scalar(@"mp_cosine", r => r.MpCosine, (r, v) => r.MpCosine = v),
-            Scalar(@"mp_cosine_parity", r => r.MpCosineParity, (r, v) => r.MpCosineParity = v),
-            Scalar(@"mp_residual_mad", r => r.MpResidualMad, (r, v) => r.MpResidualMad = v),
-            Scalar(@"mp_n_core", r => r.MpNCore, (r, v) => r.MpNCore = v),
-            Scalar(@"mp_n_fragments_used", r => r.MpNFragmentsUsed, (r, v) => r.MpNFragmentsUsed = v),
-            Scalar(@"boundary_start_ratio_median", r => r.BoundaryStartRatioMedian, (r, v) => r.BoundaryStartRatioMedian = v),
-            Scalar(@"boundary_end_ratio_median", r => r.BoundaryEndRatioMedian, (r, v) => r.BoundaryEndRatioMedian = v),
-            Scalar(@"n_coeluting_claimants", r => r.NCoelutingClaimants, (r, v) => r.NCoelutingClaimants = v),
-            Scalar(@"n_same_apex_claimants", r => r.NSameApexClaimants, (r, v) => r.NSameApexClaimants = v),
-            Scalar(@"ddc_neighbor_n", r => r.DdcNeighborCount, (r, v) => r.DdcNeighborCount = v),
-            Blob(@"ion_mz", r => ParquetBlobCodec.EncodeF64Blob(r.IonMz), (r, b) => r.IonMz = ParquetBlobCodec.DecodeF64Blob(b)),
-            Blob(@"ion_flags", r => ParquetBlobCodec.EncodeU8Blob(r.IonFlags), (r, b) => r.IonFlags = ParquetBlobCodec.DecodeU8Blob(b)),
-            F32(@"apex_intensity", r => r.ApexIntensity, (r, v) => r.ApexIntensity = v),
-            F32(@"apex_mz_error", r => r.ApexMzError, (r, v) => r.ApexMzError = v),
-            F32(@"library_rel_intensity", r => r.LibraryRelIntensity, (r, v) => r.LibraryRelIntensity = v),
-            Blob(@"n_finite_scans", r => ParquetBlobCodec.EncodeU16Blob(r.NFiniteScans), (r, b) => r.NFiniteScans = ParquetBlobCodec.DecodeU16Blob(b)),
-            F32(@"xic_start", r => r.XicStart, (r, v) => r.XicStart = v),
-            F32(@"xic_end", r => r.XicEnd, (r, v) => r.XicEnd = v),
-            F32(@"xic_max", r => r.XicMax, (r, v) => r.XicMax = v),
-            F32(@"corr_polish", r => r.CorrPolish, (r, v) => r.CorrPolish = v),
-            F32(@"corr_reference", r => r.CorrReference, (r, v) => r.CorrReference = v),
-            F32(@"polish_row_effect", r => r.PolishRowEffect, (r, v) => r.PolishRowEffect = v),
-            F32(@"polish_r2", r => r.PolishR2, (r, v) => r.PolishR2 = v),
-            F32(@"polish_pos_resid_max", r => r.PolishPosResidMax, (r, v) => r.PolishPosResidMax = v),
-            F32(@"polish_apex_residual", r => r.PolishApexResidual, (r, v) => r.PolishApexResidual = v),
-            F32(@"polish_outlier_z", r => r.PolishOutlierZ, (r, v) => r.PolishOutlierZ = v),
-            F32(@"polish_apex_ratio", r => r.PolishApexRatio, (r, v) => r.PolishApexRatio = v),
-            F32(@"polish_rel_intensity", r => r.PolishRelIntensity, (r, v) => r.PolishRelIntensity = v),
-            Blob(@"shared_apex_n", r => ParquetBlobCodec.EncodeU8Blob(r.SharedApexN), (r, b) => r.SharedApexN = ParquetBlobCodec.DecodeU8Blob(b)),
-            Blob(@"shared_coelute_n", r => ParquetBlobCodec.EncodeU8Blob(r.SharedCoeluteN), (r, b) => r.SharedCoeluteN = ParquetBlobCodec.DecodeU8Blob(b)),
-            F32(@"min_claimant_q", r => r.MinClaimantQ, (r, v) => r.MinClaimantQ = v),
-        };
-
-        /// <summary>The optional XIC matrix columns (<c>--training-export-xics</c>).</summary>
-        private static readonly ColumnSpec[] XIC_COLUMNS =
-        {
-            Blob(@"xic_rts", r => ParquetBlobCodec.EncodeF64Blob(r.XicRts), (r, b) => r.XicRts = ParquetBlobCodec.DecodeF64Blob(b)),
-            F32(@"xic_intensities", r => r.XicIntensities, (r, v) => r.XicIntensities = v),
-        };
-
         /// <summary>
         /// <c>&lt;stem&gt;.training.parquet</c> in the run's output directory
         /// (<see cref="ArtifactPaths.ResolveOutputDir"/>), beside its other products.
@@ -224,7 +146,96 @@ namespace pwiz.Osprey.IO
 
         private static IEnumerable<ColumnSpec> Columns(bool withXics)
         {
-            return withXics ? COLUMNS.Concat(XIC_COLUMNS) : COLUMNS;
+            return withXics ? MainColumns().Concat(XicColumns()) : MainColumns();
+        }
+
+        /// <summary>
+        /// The scalar and per-ion columns, built fresh for each file: a ParquetSchema writes
+        /// levels onto the fields it is given, so two exports written at once must not share
+        /// them.
+        /// </summary>
+        private static ColumnSpec[] MainColumns()
+        {
+            return new[]
+            {
+                Scalar(@"entry_id", r => r.EntryId, (r, v) => r.EntryId = v),
+                Scalar(@"base_id", r => r.EntryId & 0x7FFFFFFFu, (r, v) => { }),
+                Scalar(@"is_decoy", r => r.IsDecoy, (r, v) => r.IsDecoy = v),
+                Scalar(@"is_entrapment", r => r.IsEntrapment, (r, v) => r.IsEntrapment = v),
+                Text(@"peptide_kind", r => r.PeptideKind, (r, v) => r.PeptideKind = v),
+                Text(@"sequence", r => r.Sequence, (r, v) => r.Sequence = v),
+                Text(@"modified_sequence", r => r.ModifiedSequence, (r, v) => r.ModifiedSequence = v),
+                Blob(@"mod_positions", r => ParquetBlobCodec.EncodeI32Blob(r.ModPositions), (r, b) => r.ModPositions = ParquetBlobCodec.DecodeI32Blob(b)),
+                Blob(@"mod_masses", r => ParquetBlobCodec.EncodeF64Blob(r.ModMasses), (r, b) => r.ModMasses = ParquetBlobCodec.DecodeF64Blob(b)),
+                Blob(@"mod_unimod_ids", r => ParquetBlobCodec.EncodeI32Blob(r.ModUnimodIds), (r, b) => r.ModUnimodIds = ParquetBlobCodec.DecodeI32Blob(b)),
+                Scalar(@"charge", r => r.Charge, (r, v) => r.Charge = v),
+                Scalar(@"precursor_mz", r => r.PrecursorMz, (r, v) => r.PrecursorMz = v),
+                Scalar(@"library_rt", r => r.LibraryRt, (r, v) => r.LibraryRt = v),
+                Text(@"protein_ids", r => r.ProteinIds, (r, v) => r.ProteinIds = v),
+                Text(@"file_name", r => r.FileName, (r, v) => r.FileName = v),
+                Scalar(@"scan_number", r => r.ScanNumber, (r, v) => r.ScanNumber = v),
+                Scalar(@"apex_rt", r => r.ApexRt, (r, v) => r.ApexRt = v),
+                Scalar(@"start_rt", r => r.StartRt, (r, v) => r.StartRt = v),
+                Scalar(@"end_rt", r => r.EndRt, (r, v) => r.EndRt = v),
+                Scalar(@"n_peak_scans", r => r.NPeakScans, (r, v) => r.NPeakScans = v),
+                Scalar(@"isolation_lower", r => r.IsolationLower, (r, v) => r.IsolationLower = v),
+                Scalar(@"isolation_upper", r => r.IsolationUpper, (r, v) => r.IsolationUpper = v),
+                Scalar(@"bounds_area", r => r.BoundsArea, (r, v) => r.BoundsArea = v),
+                Scalar(@"coelution_sum", r => r.CoelutionSum, (r, v) => r.CoelutionSum = v),
+                Scalar(@"score", r => r.Score, (r, v) => r.Score = v),
+                Scalar(@"run_precursor_q", r => r.RunPrecursorQ, (r, v) => r.RunPrecursorQ = v),
+                Scalar(@"run_peptide_q", r => r.RunPeptideQ, (r, v) => r.RunPeptideQ = v),
+                Scalar(@"apex_tic", r => r.ApexTic, (r, v) => r.ApexTic = v),
+                Scalar(@"explained_intensity", r => r.ExplainedIntensity, (r, v) => r.ExplainedIntensity = v),
+                Scalar(@"n_slots", r => r.NSlots, (r, v) => r.NSlots = v),
+                Scalar(@"n_ions_applicable", r => r.NIonsApplicable, (r, v) => r.NIonsApplicable = v),
+                Scalar(@"n_ions_observed", r => r.NIonsObserved, (r, v) => r.NIonsObserved = v),
+                Scalar(@"mp_fitted", r => r.MpFitted, (r, v) => r.MpFitted = v),
+                Scalar(@"mp_converged", r => r.MpConverged, (r, v) => r.MpConverged = v),
+                Scalar(@"mp_iterations", r => r.MpIterations, (r, v) => r.MpIterations = v),
+                Scalar(@"mp_overall", r => r.MpOverall, (r, v) => r.MpOverall = v),
+                Scalar(@"mp_cosine", r => r.MpCosine, (r, v) => r.MpCosine = v),
+                Scalar(@"mp_cosine_parity", r => r.MpCosineParity, (r, v) => r.MpCosineParity = v),
+                Scalar(@"mp_residual_mad", r => r.MpResidualMad, (r, v) => r.MpResidualMad = v),
+                Scalar(@"mp_n_core", r => r.MpNCore, (r, v) => r.MpNCore = v),
+                Scalar(@"mp_n_fragments_used", r => r.MpNFragmentsUsed, (r, v) => r.MpNFragmentsUsed = v),
+                Scalar(@"boundary_start_ratio_median", r => r.BoundaryStartRatioMedian, (r, v) => r.BoundaryStartRatioMedian = v),
+                Scalar(@"boundary_end_ratio_median", r => r.BoundaryEndRatioMedian, (r, v) => r.BoundaryEndRatioMedian = v),
+                Scalar(@"n_coeluting_claimants", r => r.NCoelutingClaimants, (r, v) => r.NCoelutingClaimants = v),
+                Scalar(@"n_same_apex_claimants", r => r.NSameApexClaimants, (r, v) => r.NSameApexClaimants = v),
+                Scalar(@"ddc_neighbor_n", r => r.DdcNeighborCount, (r, v) => r.DdcNeighborCount = v),
+                Blob(@"ion_mz", r => ParquetBlobCodec.EncodeF64Blob(r.IonMz), (r, b) => r.IonMz = ParquetBlobCodec.DecodeF64Blob(b)),
+                Blob(@"ion_flags", r => ParquetBlobCodec.EncodeU8Blob(r.IonFlags), (r, b) => r.IonFlags = ParquetBlobCodec.DecodeU8Blob(b)),
+                F32(@"apex_intensity", r => r.ApexIntensity, (r, v) => r.ApexIntensity = v),
+                F32(@"apex_mz_error", r => r.ApexMzError, (r, v) => r.ApexMzError = v),
+                F32(@"library_rel_intensity", r => r.LibraryRelIntensity, (r, v) => r.LibraryRelIntensity = v),
+                Blob(@"n_finite_scans", r => ParquetBlobCodec.EncodeU16Blob(r.NFiniteScans), (r, b) => r.NFiniteScans = ParquetBlobCodec.DecodeU16Blob(b)),
+                F32(@"xic_start", r => r.XicStart, (r, v) => r.XicStart = v),
+                F32(@"xic_end", r => r.XicEnd, (r, v) => r.XicEnd = v),
+                F32(@"xic_max", r => r.XicMax, (r, v) => r.XicMax = v),
+                F32(@"corr_polish", r => r.CorrPolish, (r, v) => r.CorrPolish = v),
+                F32(@"corr_reference", r => r.CorrReference, (r, v) => r.CorrReference = v),
+                F32(@"polish_row_effect", r => r.PolishRowEffect, (r, v) => r.PolishRowEffect = v),
+                F32(@"polish_r2", r => r.PolishR2, (r, v) => r.PolishR2 = v),
+                F32(@"polish_pos_resid_max", r => r.PolishPosResidMax, (r, v) => r.PolishPosResidMax = v),
+                F32(@"polish_apex_residual", r => r.PolishApexResidual, (r, v) => r.PolishApexResidual = v),
+                F32(@"polish_outlier_z", r => r.PolishOutlierZ, (r, v) => r.PolishOutlierZ = v),
+                F32(@"polish_apex_ratio", r => r.PolishApexRatio, (r, v) => r.PolishApexRatio = v),
+                F32(@"polish_rel_intensity", r => r.PolishRelIntensity, (r, v) => r.PolishRelIntensity = v),
+                Blob(@"shared_apex_n", r => ParquetBlobCodec.EncodeU8Blob(r.SharedApexN), (r, b) => r.SharedApexN = ParquetBlobCodec.DecodeU8Blob(b)),
+                Blob(@"shared_coelute_n", r => ParquetBlobCodec.EncodeU8Blob(r.SharedCoeluteN), (r, b) => r.SharedCoeluteN = ParquetBlobCodec.DecodeU8Blob(b)),
+                F32(@"min_claimant_q", r => r.MinClaimantQ, (r, v) => r.MinClaimantQ = v),
+            };
+        }
+
+        /// <summary>The optional XIC matrix columns (<c>--training-export-xics</c>), built fresh as above.</summary>
+        private static ColumnSpec[] XicColumns()
+        {
+            return new[]
+            {
+                Blob(@"xic_rts", r => ParquetBlobCodec.EncodeF64Blob(r.XicRts), (r, b) => r.XicRts = ParquetBlobCodec.DecodeF64Blob(b)),
+                F32(@"xic_intensities", r => r.XicIntensities, (r, v) => r.XicIntensities = v),
+            };
         }
 
         private static ColumnSpec Scalar<T>(string name, Func<TrainingRecord, T> get, Action<TrainingRecord, T> set)

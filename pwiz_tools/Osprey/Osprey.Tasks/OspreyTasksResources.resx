@@ -946,11 +946,11 @@
   <data name="ScoringTaskShared_LoadSpectraForRescore__0__needs_the_spectra_cache___1___that_PerFileScoring_writes__but_it_could_not_be_read" xml:space="preserve">
     <value>{0} needs the spectra cache '{1}' that PerFileScoring writes, but it could not be read: {2}</value>
   </data>
-  <data name="ScoringTaskShared_LoadSpectraForRescore_Run___task_PerFileScoring_for___0___again_to_rebuild_it_" xml:space="preserve">
-    <value>Run --task PerFileScoring for '{0}' again to rebuild it.</value>
+  <data name="ScoringTaskShared_LoadSpectraForRescore_Run__1__for___0___to_rebuild_it_from_its_source_data_" xml:space="preserve">
+    <value>Run {1} for '{0}' to rebuild it from its source data.</value>
   </data>
   <data name="ScoringTaskShared_LoadSpectraForRescore_The_cache_is_written_beside_its_source_data__so_a___task_worker_whose___output_dir_" xml:space="preserve">
-    <value>The cache is written beside its source data, so a --task worker whose --output-dir differs from the data folder must be pointed at it with --cache-dir. Pass --cache-dir &lt;folder holding {0}.spectra.bin&gt;, or run --task PerFileScoring for '{0}' again if no cache was ever written.</value>
+    <value>The cache is written beside its source data, so a --task worker whose --output-dir differs from the data folder must be pointed at it with --cache-dir. Pass --cache-dir &lt;folder holding {0}.spectra.bin&gt;, or run {1} for '{0}' if no cache was ever written.</value>
   </data>
   <data name="PerFileRescoreTask_LoadSpectraForRescore___Streaming__1__MS1_and__0__MS_MS_spectra_from_cache_for__2_" xml:space="preserve">
     <value>Streaming {1:N0} MS1 and {0:N0} MS/MS spectra from cache for {2}</value>
@@ -1522,26 +1522,17 @@
   <data name="Stage6Planner_ScanFiles_Reconciliation_planning__pass_1_of_2__for_1_file" xml:space="preserve">
     <value>Reconciliation planning (pass 1 of 2) for 1 file</value>
   </data>
-  <data name="TrainingExportTask_DescribeOutput_per_file__training_parquet__written_by_PerFileRescoring" xml:space="preserve">
-    <value>a .training.parquet file for each run, written by PerFileRescoring (on a finished analysis nothing else is re-run)</value>
-  </data>
-  <data name="TrainingExportTask_ExportRun_The_reconciled_scores_file___0___is_missing__The_training_export_" xml:space="preserve">
+  <data name="TrainingExportWriter_ExportRun_The_reconciled_scores_file___0___is_missing__The_training_export_" xml:space="preserve">
     <value>The reconciled scores file '{0}' is missing. The training export reads the final peak boundaries from it.</value>
   </data>
-  <data name="TrainingExportTask_PairTargets_The_reconciled_scores_file___0___holds_two_peaks_for_precursor_candidate__1__at_" xml:space="preserve">
+  <data name="TrainingExportWriter_PairTargets_The_reconciled_scores_file___0___holds_two_peaks_for_precursor_candidate__1__at_" xml:space="preserve">
     <value>The reconciled scores file '{0}' holds two peaks for precursor candidate {1} at apex RT {2}, so the training export cannot tell which one the record in '{3}' belongs to.</value>
   </data>
-  <data name="TrainingExportTask_PairTargets_The_reconciled_scores_file___0___names_precursor_candidate__1__as__2___3____" xml:space="preserve">
+  <data name="TrainingExportWriter_PairTargets_The_reconciled_scores_file___0___names_precursor_candidate__1__as__2___3____" xml:space="preserve">
     <value>The reconciled scores file '{0}' names precursor candidate {1} as {2} {3}+, but in the library precursor candidate {1} is {4} {5}+. The file was scored against another library, or by a build that numbered the library differently. Run the search again against this library before exporting.</value>
   </data>
   <data name="TrainingExportWriter_ExportRun__0____1_N0__of__2_N0__fitted_precursors_did_not_reproduce_the_scored_median_polish_cosine_" xml:space="preserve">
     <value>{0}: {1:N0} of {2:N0} fitted precursors did not reproduce the scored median polish cosine.</value>
-  </data>
-  <data name="TrainingExportWriter_ExportRun__0____1_N0__precursors_had_no_isolation_window_holding_their_apex_scan_and_were_not_exported_" xml:space="preserve">
-    <value>{0}: {1:N0} precursors had no isolation window holding their apex scan and were not exported.</value>
-  </data>
-  <data name="TrainingExportWriter_ExportRun__0____1_N0__reconciled_targets_have_no_library_spectrum_and_were_skipped_" xml:space="preserve">
-    <value>{0}: {1:N0} reconciled targets have no library spectrum and were skipped.</value>
   </data>
   <data name="TrainingExportWriter_ExportRun__0____1_N0__target_precursors_at_run_q____2___3_N0__entrapment__of__4_N0__reconciled_targets" xml:space="preserve">
     <value>{0}: {1:N0} target precursors at run q &lt;= {2} ({3:N0} entrapment) of {4:N0} reconciled targets, by the {5} run q, in {6:F1}s</value>
@@ -1566,5 +1557,32 @@
   </data>
   <data name="TrainingExportWriter_ResolveTargets_The_library_is_empty_after_loading_" xml:space="preserve">
     <value>The library is empty after loading.</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun__1___1_precursor_had_no_isolation_window_holding_its_apex_scan_and_was_not_exported_" xml:space="preserve">
+    <value>{1}: 1 precursor had no isolation window holding its apex scan and was not exported.</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun__1____0_N0__precursors_had_no_isolation_window_holding_their_apex_scan_and_were_not_exported_" xml:space="preserve">
+    <value>{1}: {0:N0} precursors had no isolation window holding their apex scan and were not exported.</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun__1___1_reconciled_target_has_no_library_spectrum_and_was_skipped_" xml:space="preserve">
+    <value>{1}: 1 reconciled target has no library spectrum and was skipped.</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun__1____0_N0__reconciled_targets_have_no_library_spectrum_and_were_skipped_" xml:space="preserve">
+    <value>{1}: {0:N0} reconciled targets have no library spectrum and were skipped.</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun__1___1_reconciled_target_has_no_run_q_value_at_its_final_apex_in___2___and_could_not_be_selected_" xml:space="preserve">
+    <value>{1}: 1 reconciled target has no run q-value at its final apex in '{2}' and could not be selected.</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun__1____0_N0__reconciled_targets_have_no_run_q_value_at_their_final_apex_in___2___and_could_not_be_selected_" xml:space="preserve">
+    <value>{1}: {0:N0} reconciled targets have no run q-value at their final apex in '{2}' and could not be selected.</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun__0___selected_by_the_first_pass_run_q_values__this_run_s_second_pass__if_the_analysis_computes_one__comes_from__1__" xml:space="preserve">
+    <value>{0}: selected by the first-pass run q-values; this run's second pass, if the analysis computes one, comes from {1} after the export, and its q-values can differ.</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun__0__was_written_by_Osprey__1___not_this_build___2____Add__3__with_the_build_that_ran_the_analysis_" xml:space="preserve">
+    <value>{0} was written by Osprey {1}, not this build ({2}). Add {3} with the build that ran the analysis, or run the analysis again with this build.</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun_The_training_export" xml:space="preserve">
+    <value>The training export</value>
   </data>
 </root>

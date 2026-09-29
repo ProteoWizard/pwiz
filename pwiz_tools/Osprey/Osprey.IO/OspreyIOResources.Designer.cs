@@ -441,6 +441,16 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The file is damaged: a stored list of values is {0:N0} bytes long, which is not a multiple of {1}..
+        /// </summary>
+        public static string ParquetBlobCodec_Decode_The_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__ {
+            get {
+                return ResourceManager.GetString("ParquetBlobCodec_Decode_The_file_is_damaged__a_stored_list_of_values_is__0__byte" +
+                        "s_long__which_is_not_a_multiple_of__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} does not record the search settings it was scored with, so it cannot be reused. Score the file again (--task PerFileScoring)..
         /// </summary>
         public static string ParquetScoreCache_CheckParquetMetadata__0__does_not_record_the_search_settings_it_was_scored_with__so_it_cannot_be_reused__Score_ {
@@ -517,16 +527,6 @@ namespace pwiz.Osprey.IO {
             get {
                 return ResourceManager.GetString("ParquetScoreCache_CheckParquetMetadata__0__was_written_by_an_Osprey_build_this_on" +
                         "e_does_not_recognize___1___this_is__2____so_it_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The file is damaged: a stored list of values is {0:N0} bytes long, which is not a multiple of {1}..
-        /// </summary>
-        public static string ParquetBlobCodec_Decode_The_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__ {
-            get {
-                return ResourceManager.GetString("ParquetBlobCodec_Decode_The_file_is_damaged__a_stored_list_of_values_is__0__byte" +
-                        "s_long__which_is_not_a_multiple_of__1__", resourceCulture);
             }
         }
         

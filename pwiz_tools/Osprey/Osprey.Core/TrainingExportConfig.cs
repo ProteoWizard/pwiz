@@ -26,10 +26,10 @@ namespace pwiz.Osprey.Core
     /// interference evidence behind it, for a consumer that trains a fragment-intensity or
     /// retention-time model on Osprey's identifications (docs/22-training-export.md).
     ///
-    /// <para>None of these settings is in any search identity hash. With
-    /// <see cref="Enabled"/> false the export task is not part of the run at all, so every
-    /// other artifact is byte-identical to a run that never heard of it; the task's own
-    /// validity key carries the values below.</para>
+    /// <para>None of these settings is in any search identity hash or task validity key. With
+    /// <see cref="Enabled"/> false the export is not a declared output of PerFileRescoring, so
+    /// every artifact is byte-identical to a run that never heard of it; on, each run's export
+    /// is keyed on the values below (PerFileRescoreTask.OutputValidityKey).</para>
     /// </summary>
     public class TrainingExportConfig
     {
@@ -40,8 +40,9 @@ namespace pwiz.Osprey.Core
         public bool Enabled { get; set; }
 
         /// <summary>
-        /// Export targets whose second-pass run precursor q-value is at most this, or
-        /// <c>--run-fdr</c> when unset (<see cref="EffectiveMaxQ"/>).
+        /// Export targets whose run precursor q-value is at most this, or <c>--run-fdr</c> when
+        /// unset (<see cref="EffectiveMaxQ"/>). The second-pass run q where PerFileRescoring
+        /// wrote one, else the first-pass run q (docs/22-training-export.md, Which rows).
         /// </summary>
         public double? MaxQ { get; set; }
 

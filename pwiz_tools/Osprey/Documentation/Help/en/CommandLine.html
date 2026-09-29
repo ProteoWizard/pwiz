@@ -62,7 +62,7 @@ a { color: #1565c0; }
 <table>
 <tr><th>Argument</th><th>Description</th></tr>
 <tr><td><nobr>--training-export</nobr></td><td>Write &lt;stem&gt;.training.parquet per run: every target precursor at run q &lt;= <nobr>--training-export-max-q</nobr> with the observed intensities of its full b/y ladder and <nobr>per-ion</nobr> interference evidence (for training CarafeSharp). Adding it to a finished run writes only the exports and <nobr>re-scores</nobr> nothing.</td></tr>
-<tr><td><nobr>--training-export-max-q</nobr>&nbsp;&lt;q&gt;</td><td>With <nobr>--training-export</nobr>: the <nobr>second-pass</nobr> run precursor <nobr>q-value</nobr> a target must reach to be exported (default: <nobr>--run-fdr</nobr>)</td></tr>
+<tr><td><nobr>--training-export-max-q</nobr>&nbsp;&lt;q&gt;</td><td>With <nobr>--training-export</nobr>: the run precursor <nobr>q-value</nobr> a target must reach to be exported (default: <nobr>--run-fdr</nobr>)</td></tr>
 <tr><td><nobr>--training-export-claimant-q</nobr>&nbsp;&lt;q&gt;</td><td>With <nobr>--training-export</nobr>: the run <nobr>q-value</nobr> at which another target counts as a claimant of a shared fragment peak (default: 0.01)</td></tr>
 <tr><td><nobr>--training-export-xics</nobr></td><td>With <nobr>--training-export</nobr>: also write each precursor&#39;s <nobr>per-ion</nobr> XIC matrix over its final peak boundaries</td></tr>
 </table>

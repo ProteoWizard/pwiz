@@ -203,7 +203,7 @@
     <value>With {0}: the run q-value at which another target counts as a claimant of a shared fragment peak (default: {1})</value>
   </data>
   <data name="_training_export_max_q" xml:space="preserve">
-    <value>With {0}: the second-pass run precursor q-value a target must reach to be exported (default: {1})</value>
+    <value>With {0}: the run precursor q-value a target must reach to be exported (default: {1})</value>
   </data>
   <data name="_training_export_xics" xml:space="preserve">
     <value>With {0}: also write each precursor's per-ion XIC matrix over its final peak boundaries</value>

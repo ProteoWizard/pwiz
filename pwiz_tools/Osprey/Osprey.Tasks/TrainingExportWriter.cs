@@ -53,9 +53,6 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     internal static class TrainingExportWriter
     {
-        /// <summary>The name the spectra-cache and calibration errors give the export.</summary>
-        private const string CONSUMER = @"Training export";
-
         /// <summary>The name the reconciled-parquet footer check gives the export.</summary>
         private const string RECONCILED_CONSUMER = @"--training-export";
 
@@ -83,12 +80,21 @@ namespace pwiz.Osprey.Tasks
             if (!File.Exists(reconciledPath))
             {
                 throw new FileNotFoundException(string.Format(
-                    OspreyTasksResources.TrainingExportTask_ExportRun_The_reconciled_scores_file___0___is_missing__The_training_export_,
+                    OspreyTasksResources.TrainingExportWriter_ExportRun_The_reconciled_scores_file___0___is_missing__The_training_export_,
                     reconciledPath), reconciledPath);
             }
-            // The footer check every other post-Stage-4 consumer makes - this build's version,
-            // this search and library, and a reconciled file - on every route, since an export
-            // written from disk has nothing else vouching for the file.
+            // The footer check --task SecondPassFDR makes - this build's version, this search and
+            // library, and a reconciled file - on every route, since an export written from disk
+            // has nothing else vouching for the file. Another build is named apart: every other
+            // stage skips by its validity key, which carries no build, so the generic "score the
+            // file again" remedy would only skip again.
+            string otherBuild = OtherBuild(reconciledPath);
+            if (otherBuild != null)
+            {
+                throw new InvalidDataException(string.Format(
+                    OspreyTasksResources.TrainingExportWriter_ExportRun__0__was_written_by_Osprey__1___not_this_build___2____Add__3__with_the_build_that_ran_the_analysis_,
+                    reconciledPath, otherBuild, OspreyVersion.Current, RECONCILED_CONSUMER));
+            }
             string footerError = ParquetScoreCache.ValidateScoresParquetGroup(new[] { reconciledPath }, config,
                 OspreyVersion.Current, RECONCILED_CONSUMER);
             if (footerError != null)
@@ -98,13 +104,13 @@ namespace pwiz.Osprey.Tasks
             var rows = ParquetScoreCache.LoadTrainingExportRows(reconciledPath);
             var runQ = ReadRunQ(input, out var runQPass, out string runQPath);
             if (ms2Cal == null)
-                ScoringTaskShared.LoadMassCalibrations(input, CONSUMER, out ms2Cal, out _, out _);
+                ScoringTaskShared.LoadMassCalibrations(input, OspreyTasksResources.TrainingExportWriter_ExportRun_The_training_export, out ms2Cal, out _, out _);
             MzCalibration.CalibratedTolerance(ms2Cal, config.FragmentTolerance.Tolerance, config.FragmentTolerance.Unit,
                 out double tolerance, out ToleranceUnit toleranceUnit);
             var searchConfig = config.ShallowClone();
             searchConfig.FragmentTolerance = new FragmentToleranceConfig { Tolerance = tolerance, Unit = toleranceUnit };
             ScoringPipeline.DoubleCountingTolerance(ms2Cal, config, out double ddcTolerance, out ToleranceUnit ddcUnit);
-            var index = spectra ?? ScoringTaskShared.LoadSpectraForRescore(input, stem, CONSUMER, false);
+            var index = spectra ?? ScoringTaskShared.LoadSpectraForRescore(input, stem, OspreyTasksResources.TrainingExportWriter_ExportRun_The_training_export, false);
             double rtNeighborhood = ScoringPipeline.DoubleCountingRtNeighborhood(index.AllMs2Rts);
             var evidenceSettings = new TrainingEvidenceSettings
             {
@@ -115,6 +121,7 @@ namespace pwiz.Osprey.Tasks
             // This run's targets that the library still describes; decoys are never exported.
             var targets = PairTargets(reconciledPath, rows, library, runQPath, runQ, out int nNoLibrary);
             int nToExport = targets.Count(t => t.RunQ <= maxQ);
+            int nNoRunQ = targets.Count(t => double.IsNaN(t.RunQ));
 
             // Evidence, one isolation window at a time: every target is placed in the window
             // whose spectra hold its apex scan - the window it was scored in. Each window's ions
@@ -160,17 +167,32 @@ namespace pwiz.Osprey.Tasks
                     OspreyTasksResources.TrainingExportWriter_ExportRun__0____1_N0__of__2_N0__fitted_precursors_did_not_reproduce_the_scored_median_polish_cosine_,
                     stem, nFitted - nFittedParity, nFitted));
             }
-            if (nUnplaced > 0)
+            if (runQPass == FdrScoresSidecar.Pass.FirstPass)
             {
                 ctx.LogWarning(string.Format(
-                    OspreyTasksResources.TrainingExportWriter_ExportRun__0____1_N0__precursors_had_no_isolation_window_holding_their_apex_scan_and_were_not_exported_,
-                    stem, nUnplaced));
+                    OspreyTasksResources.TrainingExportWriter_ExportRun__0___selected_by_the_first_pass_run_q_values__this_run_s_second_pass__if_the_analysis_computes_one__comes_from__1__,
+                    stem, SecondPassFdrTask.TASK_NAME));
+            }
+            if (nNoRunQ > 0)
+            {
+                ctx.LogWarning(CountText.Format(nNoRunQ,
+                    OspreyTasksResources.TrainingExportWriter_ExportRun__1___1_reconciled_target_has_no_run_q_value_at_its_final_apex_in___2___and_could_not_be_selected_,
+                    OspreyTasksResources.TrainingExportWriter_ExportRun__1____0_N0__reconciled_targets_have_no_run_q_value_at_their_final_apex_in___2___and_could_not_be_selected_,
+                    stem, runQPath));
+            }
+            if (nUnplaced > 0)
+            {
+                ctx.LogWarning(CountText.Format(nUnplaced,
+                    OspreyTasksResources.TrainingExportWriter_ExportRun__1___1_precursor_had_no_isolation_window_holding_its_apex_scan_and_was_not_exported_,
+                    OspreyTasksResources.TrainingExportWriter_ExportRun__1____0_N0__precursors_had_no_isolation_window_holding_their_apex_scan_and_were_not_exported_,
+                    stem));
             }
             if (nNoLibrary > 0)
             {
-                ctx.LogWarning(string.Format(
-                    OspreyTasksResources.TrainingExportWriter_ExportRun__0____1_N0__reconciled_targets_have_no_library_spectrum_and_were_skipped_,
-                    stem, nNoLibrary));
+                ctx.LogWarning(CountText.Format(nNoLibrary,
+                    OspreyTasksResources.TrainingExportWriter_ExportRun__1___1_reconciled_target_has_no_library_spectrum_and_was_skipped_,
+                    OspreyTasksResources.TrainingExportWriter_ExportRun__1____0_N0__reconciled_targets_have_no_library_spectrum_and_were_skipped_,
+                    stem));
             }
             if (source == null)
             {
@@ -178,6 +200,33 @@ namespace pwiz.Osprey.Tasks
                     OspreyTasksResources.TrainingExportWriter_ExportRun__0___the_source_file___1___is_not_here_or_cannot_be_read__so_the_instrument_,
                     stem, input));
             }
+        }
+
+        /// <summary>
+        /// The build that wrote <paramref name="reconciledPath"/> when it is not this one, else
+        /// null - including when the footer cannot be read or names no search or library, which
+        /// the full footer check reports in its own words.
+        /// </summary>
+        private static string OtherBuild(string reconciledPath)
+        {
+            Dictionary<string, string> footer;
+            try
+            {
+                footer = ParquetScoreCache.LoadFooterMetadata(reconciledPath);
+            }
+            catch (Exception ex) when (!(ex is OutOfMemoryException))
+            {
+                return null;
+            }
+            footer.TryGetValue(@"osprey.version", out string version);
+            footer.TryGetValue(@"osprey.search_hash", out string search);
+            footer.TryGetValue(@"osprey.library_hash", out string library);
+            if (version == null || search == null || library == null)
+                return null;
+            // The file's own search and library as the expected ones, so only the build can differ.
+            string error = ParquetScoreCache.CheckParquetMetadata(reconciledPath, version, search, library,
+                search, library, OspreyVersion.Current);
+            return error != null ? version : null;
         }
 
         /// <summary>
@@ -243,7 +292,7 @@ namespace pwiz.Osprey.Tasks
                     row.Charge != entry.Charge)
                 {
                     throw new InvalidDataException(string.Format(
-                        OspreyTasksResources.TrainingExportTask_PairTargets_The_reconciled_scores_file___0___names_precursor_candidate__1__as__2___3____,
+                        OspreyTasksResources.TrainingExportWriter_PairTargets_The_reconciled_scores_file___0___names_precursor_candidate__1__as__2___3____,
                         reconciledPath, row.EntryId, row.ModifiedSequence, row.Charge, entry.ModifiedSequence, entry.Charge));
                 }
                 if (entry.IsSpectrumReleased)
@@ -258,7 +307,7 @@ namespace pwiz.Osprey.Tasks
                     if (!paired.Add(key))
                     {
                         throw new InvalidDataException(string.Format(
-                            OspreyTasksResources.TrainingExportTask_PairTargets_The_reconciled_scores_file___0___holds_two_peaks_for_precursor_candidate__1__at_,
+                            OspreyTasksResources.TrainingExportWriter_PairTargets_The_reconciled_scores_file___0___holds_two_peaks_for_precursor_candidate__1__at_,
                             reconciledPath, row.EntryId, row.ApexRt.ToString(@"R", CultureInfo.InvariantCulture), runQPath));
                     }
                     record = found;
@@ -278,9 +327,15 @@ namespace pwiz.Osprey.Tasks
         /// reads is a reconciled survivor, so no row it exports or compares against loses its
         /// spectrum. Without a readable summary it loads everything. A load indexes the targets
         /// alone, since decoys are never exported; the in-process map is used as it stands.</para>
+        ///
+        /// <para><paramref name="demandPipelineLibrary"/> takes the pipeline's own library even
+        /// when nothing has loaded it yet - for an export-only arm followed by a SecondPassFDR
+        /// that will load it anyway, so the process loads the library once rather than twice.</para>
         /// </summary>
-        public static IReadOnlyDictionary<uint, LibraryEntry> ResolveTargets(PipelineContext ctx)
+        public static IReadOnlyDictionary<uint, LibraryEntry> ResolveTargets(PipelineContext ctx, bool demandPipelineLibrary)
         {
+            if (demandPipelineLibrary)
+                return ctx.Get<LibraryById>().Value;
             if (ctx.TryGet(out LibraryById loaded))
                 return loaded.Value;
             var options = new LibraryLoadOptions
@@ -307,10 +362,10 @@ namespace pwiz.Osprey.Tasks
         /// The identities of the per-run artifacts one run's export reads - its reconciled
         /// parquet, the q-value sidecar it selects on, calibration and spectra cache (name, size,
         /// mtime; <c>absent</c> for a missing file) - so a rewritten input redoes that run's
-        /// export and no other. Only the sidecar the export reads: when PerFileRescoring could
-        /// not build its per-run second pass (no readable saved first-pass model), SecondPassFDR
+        /// export and no other. Only the sidecar the export reads: for a run with no Stage 6
+        /// work, or when PerFileRescoring had no readable saved first-pass model, SecondPassFDR
         /// writes the second-pass sidecar after the export, and a key that followed it would
-        /// redo every export on the next resume for a file none of them read.
+        /// redo those exports on the next resume for a file none of them read.
         /// </summary>
         public static string RunInputIdentities(string input)
         {
@@ -332,20 +387,26 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// The q-value sidecar a run's export selects on, and which pass it is. The second-pass
-        /// sidecar when the per-run second pass in PerFileRescoring wrote it - a PerFileRescoring
-        /// stamp beside it, the test SecondPassFDR itself uses to know the worker's answer is
-        /// final (Pass2FdrSidecar.WorkerOwnedPass2Sidecars); otherwise the first-pass sidecar,
-        /// whose values are the final ones for a run nothing re-scored. Deciding by who wrote the
-        /// file, which never changes once it is written, makes an export written while
-        /// re-scoring and one written later from disk agree.
+        /// sidecar when the per-run second pass in PerFileRescoring wrote it; otherwise the
+        /// first-pass sidecar - a run with no Stage 6 work, or a PerFileRescoring with no
+        /// readable saved first-pass model, whose second pass SecondPassFDR computes after the
+        /// export. Deciding by who wrote the file, which never changes once it is written, makes
+        /// an export written while re-scoring and one written later from disk agree.
+        ///
+        /// <para>Who wrote it is the worker's stamp beside the sidecar (the test SecondPassFDR
+        /// folds by, <see cref="Pass2FdrSidecar.HasWorkerStamp"/>) AND the worker's decoys file,
+        /// which only the worker writes. The stamp alone is not proof: after a later
+        /// PerFileRescoring run the driver stamps every declared output that exists, including a
+        /// second-pass sidecar SecondPassFDR wrote, which would flip the export to that sidecar
+        /// on the next invocation of the same command. The driver stamps files; it never
+        /// creates one.</para>
         /// </summary>
         internal static string RunQPath(string input, out FdrScoresSidecar.Pass pass)
         {
-            string pass2Path = FdrScoresSidecar.Pass2Path(input);
-            bool workerOwned = File.Exists(pass2Path) &&
-                               File.Exists(TaskValiditySidecar.PathFor(pass2Path, PerFileRescoreTask.TASK_NAME));
+            bool workerOwned = Pass2FdrSidecar.HasWorkerStamp(input) &&
+                               File.Exists(Pass2CompetitionDecoys.PathFor(input));
             pass = workerOwned ? FdrScoresSidecar.Pass.SecondPass : FdrScoresSidecar.Pass.FirstPass;
-            return workerOwned ? pass2Path : FdrScoresSidecar.Pass1Path(input);
+            return workerOwned ? FdrScoresSidecar.Pass2Path(input) : FdrScoresSidecar.Pass1Path(input);
         }
 
         /// <summary>

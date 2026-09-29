@@ -180,10 +180,11 @@ namespace pwiz.Osprey.Test
         /// parquet, one q-value sidecar, calibration and spectra cache, so each one's identity
         /// keys that run's export - absent and present differ, and so do two versions of one file
         /// - while another run's export, the task key and the task's other outputs do not move.
-        /// The q-value sidecar is the second-pass one only when PerFileRescoring wrote it: one
-        /// SecondPassFDR writes after the export (PerFileRescoring had no readable first-pass
-        /// model to compete with) is not read and must not key it, or every export is redone on
-        /// the next resume.
+        /// The q-value sidecar is the second-pass one only when PerFileRescoring wrote it - its
+        /// stamp and its decoys file. One SecondPassFDR writes after the export (a run with no
+        /// Stage 6 work, or no readable first-pass model) is not read and must not key it, even
+        /// once the driver has stamped it under PerFileRescoring's name, or the export flips to
+        /// it on a later invocation of the same command.
         /// </summary>
         private static void AssertTrainingExportKeyFollowsEachRunsInputs()
         {
@@ -226,8 +227,14 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(current, RunKey(runA), @"a second-pass sidecar PerFileRescoring did not write is not read, so it must not key the export");
                 Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out var pass));
                 Assert.AreEqual(FdrScoresSidecar.Pass.FirstPass, pass);
+                // The driver stamps every declared output that exists after a PerFileRescoring
+                // run, so SecondPassFDR's sidecar can carry a PerFileRescoring stamp it did not
+                // earn. The worker's decoys file is what the driver cannot supply.
                 File.WriteAllText(TaskValiditySidecar.PathFor(pass2, PerFileRescoreTask.TASK_NAME), @"stamp");
-                Assert.AreEqual(pass2, TrainingExportWriter.RunQPath(runA, out pass), @"PerFileRescoring's stamp makes the second pass the one read");
+                Assert.AreEqual(current, RunKey(runA), @"a PerFileRescoring stamp without the worker's decoys must not flip the export to the second pass");
+                Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out pass));
+                File.WriteAllText(Pass2CompetitionDecoys.PathFor(runA), @"decoys");
+                Assert.AreEqual(pass2, TrainingExportWriter.RunQPath(runA, out pass), @"the worker's stamp and decoys make the second pass the one read");
                 Assert.AreEqual(FdrScoresSidecar.Pass.SecondPass, pass);
                 Assert.AreNotEqual(current, RunKey(runA), @"switching the sidecar read must invalidate the run's export");
                 current = AssertRewritesInvalidate(pass2, RunKey(runA), () => RunKey(runA));
@@ -267,7 +274,7 @@ namespace pwiz.Osprey.Test
         /// The training export is a declared output of PerFileRescoring only when asked for, and
         /// asking for it moves no other key: PerFileRescoring's own key is the same with the flag
         /// or without, so adding the flag to a finished analysis leaves every other output
-        /// valid and only the exports outstanding (P16). The export's key follows each export
+        /// valid and only the exports outstanding (P17). The export's key follows each export
         /// setting, and the straight-through run and a <c>--task TrainingExport</c> selector
         /// compute the same key, so a pay-later export is never redone.
         /// </summary>

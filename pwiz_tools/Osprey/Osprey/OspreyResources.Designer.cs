@@ -255,15 +255,6 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Training Export.
-        /// </summary>
-        public static string OspreyCommandArgs_Group_Training_Export {
-            get {
-                return ResourceManager.GetString("OspreyCommandArgs_Group_Training_Export", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Decoys.
         /// </summary>
         public static string OspreyCommandArgs_Group_Decoys {
@@ -332,6 +323,15 @@ namespace pwiz.Osprey {
         public static string OspreyCommandArgs_Group_Scoring_Tolerance {
             get {
                 return ResourceManager.GetString("OspreyCommandArgs_Group_Scoring_Tolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Training Export.
+        /// </summary>
+        public static string OspreyCommandArgs_Group_Training_Export {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_Group_Training_Export", resourceCulture);
             }
         }
         
@@ -452,6 +452,42 @@ namespace pwiz.Osprey {
         public static string OspreyCommandArgs_UsageBlocks_USAGE___0_ {
             get {
                 return ResourceManager.GetString("OspreyCommandArgs_UsageBlocks_USAGE___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to off.
+        /// </summary>
+        public static string Program_DescribeTrainingExport_off {
+            get {
+                return ResourceManager.GetString("Program_DescribeTrainingExport_off", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to on.
+        /// </summary>
+        public static string Program_DescribeTrainingExport_on {
+            get {
+                return ResourceManager.GetString("Program_DescribeTrainingExport_on", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Training export: {0} per run (run q &lt;= {1}, claimant q &lt;= {2}, XICs {3}).
+        /// </summary>
+        public static string Program_DescribeTrainingExport_Training_export___0__per_run__run_q_____1___claimant_q_____2___XICs__3__ {
+            get {
+                return ResourceManager.GetString("Program_DescribeTrainingExport_Training_export___0__per_run__run_q_____1___claimant_q_____2___XICs__3__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Training export: not written by this run; {0} writes it under {1} {2}, {1} {3} or a run without {1}..
+        /// </summary>
+        public static string Program_DescribeTrainingExport_Training_export__not_written_by_this_run___0__writes_it_under__1___2___1___3__or_a_run_without__1__ {
+            get {
+                return ResourceManager.GetString("Program_DescribeTrainingExport_Training_export__not_written_by_this_run___0__writes_it_under__1___2___1___3__or_a_run_without__1__", resourceCulture);
             }
         }
         
@@ -714,6 +750,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Task: {0} (runs every stage the analysis still needs).
+        /// </summary>
+        public static string Program_Run_Task___0___runs_every_stage_the_analysis_still_needs_ {
+            get {
+                return ResourceManager.GetString("Program_Run_Task___0___runs_every_stage_the_analysis_still_needs_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Task: {0} (single-task run).
         /// </summary>
         public static string Program_Run_Task___0___single_task_run_ {
@@ -782,6 +827,34 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}, {1} and {2} apply only with {3}..
+        /// </summary>
+        public static string Program_TrainingExportError__0____1__and__2__apply_only_with__3__ {
+            get {
+                return ResourceManager.GetString("Program_TrainingExportError__0____1__and__2__apply_only_with__3__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} cannot run with {1}: that mode computes the run q-values in {2}, after the per-run export is written. Leave out {0}, or run without {1}..
+        /// </summary>
+        public static string Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_the_run_q_values_in__2__after_the_per_run_export_ {
+            get {
+                return ResourceManager.GetString("Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_the_run_" +
+                        "q_values_in__2__after_the_per_run_export_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} must be in (0, 1]..
+        /// </summary>
+        public static string Program_TrainingExportError__0__must_be_in__0__1__ {
+            get {
+                return ResourceManager.GetString("Program_TrainingExportError__0__must_be_in__0__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No input files specified. Use {0}.
         /// </summary>
         public static string Program_ValidateArgs_No_input_files_specified__Use__0_ {
@@ -805,68 +878,6 @@ namespace pwiz.Osprey {
         public static string Program_ValidateArgs_No_spectral_library_specified__Use__0_ {
             get {
                 return ResourceManager.GetString("Program_ValidateArgs_No_spectral_library_specified__Use__0_", resourceCulture);
-            }
-        }
-        /// <summary>
-        ///   Looks up a localized string similar to Training export: {0} per run (run q &lt;= {1}, claimant q &lt;= {2}, XICs {3}).
-        /// </summary>
-        public static string Program_DescribeTrainingExport_Training_export___0__per_run__run_q_____1___claimant_q_____2___XICs__3__ {
-            get {
-                return ResourceManager.GetString("Program_DescribeTrainingExport_Training_export___0__per_run__run_q_____1___claimant_q_____2___XICs__3__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to on.
-        /// </summary>
-        public static string Program_DescribeTrainingExport_on {
-            get {
-                return ResourceManager.GetString("Program_DescribeTrainingExport_on", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to off.
-        /// </summary>
-        public static string Program_DescribeTrainingExport_off {
-            get {
-                return ResourceManager.GetString("Program_DescribeTrainingExport_off", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Training export: not written by this run; {0} writes it under {1} {2}, {1} {3} or a run without {1}..
-        /// </summary>
-        public static string Program_DescribeTrainingExport_Training_export__not_written_by_this_run___0__writes_it_under__1___2___1___3__or_a_run_without__1__ {
-            get {
-                return ResourceManager.GetString("Program_DescribeTrainingExport_Training_export__not_written_by_this_run___0__writes_it_under__1___2___1___3__or_a_run_without__1__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0}, {1} and {2} apply only with {3}..
-        /// </summary>
-        public static string Program_TrainingExportError__0____1__and__2__apply_only_with__3__ {
-            get {
-                return ResourceManager.GetString("Program_TrainingExportError__0____1__and__2__apply_only_with__3__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} cannot run with {1}: that mode computes the run q-values in SecondPassFDR, after the per-run export is written. Leave out {0}, or run without {1}..
-        /// </summary>
-        public static string Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_each_run_s_q_values_in_SecondPassFDR {
-            get {
-                return ResourceManager.GetString("Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_each_run_s_q_values_in_SecondPassFDR", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} must be in (0, 1]..
-        /// </summary>
-        public static string Program_TrainingExportError__0__must_be_in__0__1__ {
-            get {
-                return ResourceManager.GetString("Program_TrainingExportError__0__must_be_in__0__1__", resourceCulture);
             }
         }
     }

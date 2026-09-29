@@ -495,7 +495,8 @@ namespace pwiz.Osprey.Scoring
                     sortedRts[writeIdx++] = sortedRts[i];
                 }
             }
-            if (writeIdx < sortedRts.Count) sortedRts.RemoveRange(writeIdx, sortedRts.Count - writeIdx);
+            if (writeIdx < sortedRts.Count)
+                sortedRts.RemoveRange(writeIdx, sortedRts.Count - writeIdx);
             if (sortedRts.Count < 2)
                 return 0.25; // 5 * 0.05 fallback
             var intervals = new List<double>(sortedRts.Count - 1);

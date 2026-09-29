@@ -134,7 +134,7 @@ namespace pwiz.Osprey.Tasks
                     // TrainingExport asks for the export, a declared output of PerFileRescoring:
                     // on a finished analysis every other stage rehydrates and PerFileRescoring
                     // writes only the missing exports; on an unfinished one the analysis runs
-                    // with the export. A selector, never a stage (P16).
+                    // with the export. A selector, never a stage (P17).
                     { trainingExport, pipeline },
                 });
         }

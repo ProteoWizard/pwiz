@@ -376,7 +376,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to With {0}: the second-pass run precursor q-value a target must reach to be exported (default: {1}).
+        ///   Looks up a localized string similar to With {0}: the run precursor q-value a target must reach to be exported (default: {1}).
         /// </summary>
         public static string _training_export_max_q {
             get {

@@ -412,14 +412,23 @@ namespace pwiz.Osprey
                     config.LibrarySource?.Format.GetLocalizedString() ?? @"?"));
                 // A --task run executes one HPC stage rather than the full pipeline;
                 // name it so the log says which single task ran (no --task = full
-                // pipeline, no line). The Name is the canonical spelling, whatever
+                // pipeline, no line). A selector that is not a stage of the pipeline it
+                // runs (ModelDiagnostics, TrainingExport) runs every stage the analysis
+                // still needs, and says so. The Name is the canonical spelling, whatever
                 // case the operator typed.
                 if (config.SelectedTask != null)
-                    LogInfo(string.Format(OspreyResources.Program_Run_Task___0___single_task_run_, config.SelectedTask.Name));
+                {
+                    LogInfo(string.Format(config.Pipeline.Contains(config.SelectedTask)
+                        ? OspreyResources.Program_Run_Task___0___single_task_run_
+                        : OspreyResources.Program_Run_Task___0___runs_every_stage_the_analysis_still_needs_,
+                        config.SelectedTask.Name));
+                }
                 // A task that writes something other than the blib - per-file parquets,
                 // per-file spectra caches, the diagnostics report alone - names its real
                 // output, so the log does not read as if the --output blib were being
-                // rebuilt: every selectable task but SecondPassFDR describes its own output.
+                // rebuilt. SecondPassFDR writes the blib, and TrainingExport is the full run with
+                // the export on, whose parquets the training export line names; every other
+                // selectable task describes its own output.
                 LogInfo(string.Format(OspreyResources.Program_Run_Output___0_,
                     config.SelectedTask?.DescribeOutput(config) ?? config.OutputBlib));
                 LogInfo(string.Format(OspreyResources.Program_Run_Resolution___0_, config.ResolutionMode.GetLocalizedString()));
@@ -779,8 +788,9 @@ namespace pwiz.Osprey
             // values for any run to select on.
             if (export.Enabled && OspreyEnvironment.Pass2TransferQ)
             {
-                return string.Format(OspreyResources.Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_each_run_s_q_values_in_SecondPassFDR,
-                    OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText, @"OSPREY_PASS2_QVALUE=" + OspreyEnvironment.PASS2_QVALUE_TRANSFER);
+                return string.Format(OspreyResources.Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_the_run_q_values_in__2__after_the_per_run_export_,
+                    OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText, @"OSPREY_PASS2_QVALUE=" + OspreyEnvironment.PASS2_QVALUE_TRANSFER,
+                    SecondPassFdrTask.TASK_NAME);
             }
             return null;
         }

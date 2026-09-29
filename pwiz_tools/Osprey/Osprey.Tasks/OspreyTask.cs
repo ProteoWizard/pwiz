@@ -269,6 +269,14 @@ namespace pwiz.Osprey.Tasks
         public virtual string OutputValidityKey(PipelineContext ctx, string taskKey, string output) => taskKey;
 
         /// <summary>
+        /// The inputs one declared output's stamp records: <paramref name="taskInputs"/> (this
+        /// task's <see cref="Inputs"/>, listed once by the caller) for every output built from
+        /// all of them. An output whose <see cref="OutputValidityKey"/> follows its own run's
+        /// artifacts names those instead, so its stamp says what it was built from.
+        /// </summary>
+        public virtual IEnumerable<string> OutputInputs(PipelineContext ctx, IReadOnlyList<string> taskInputs, string output) => taskInputs;
+
+        /// <summary>
         /// A <see cref="ValidateSelection"/> error naming this task and what it is missing,
         /// in the one form every task's message takes.
         /// </summary>

@@ -34,8 +34,10 @@ without the feature. The option enters no other output's key.
 
 **Why PerFileRescoring.** The export reads each run's calibrated spectra, reconciled boundaries
 and run q-values, and `PerFileRescoring` is the task that streams exactly those for the run. An
-export written there costs no second pass over the spectra, no second round of HPC nodes, and
-no wait behind the final join; an appended stage cost all three (P17 lists why).
+export written there costs no second round of HPC nodes, no second staging and indexing of the
+run's `.spectra.bin`, and no wait behind the final join; an appended stage cost all three (P17
+lists why). It does decode each isolation window's spectra once more, one window per worker
+thread, since the rescore's windows are released as it goes.
 
 **Two routes, one file.** With the flag up front, each run's export is written as soon as that
 run's reconciled parquet and per-run second pass have landed, while its spectra are in hand.
@@ -50,10 +52,13 @@ library: when the process already holds it, the export uses it rather than loadi
 summary, as `--task SecondPassFDR` loads it: every row the export reads is a reconciled
 survivor, so none loses its spectrum.
 
-**What it checks before reading a run.** The reconciled parquet's footer, as every other
-post-Stage-4 consumer checks it (`ParquetScoreCache.ValidateScoresParquetGroup`): this build's
+**What it checks before reading a run.** The reconciled parquet's footer, as
+`--task SecondPassFDR` checks it (`ParquetScoreCache.ValidateScoresParquetGroup`): this build's
 version, this search and library, and `osprey.reconciled`. A mismatch fails the run with the
-file named.
+file named. A file written by another build of Osprey is named as such: adding the flag to an
+analysis a different build ran fails every export, because every other stage skips by its
+validity key, which carries no build, while the export reads the file. Add the flag with the
+build that ran the analysis, or run the analysis again with this one.
 
 **When one run's export fails.** The failure is recorded and the other runs still export. The
 task then reports each failed run with its reason, sets exit code 1 and fails, so the analysis
@@ -64,7 +69,10 @@ not written is a failed run, not a warning; a run that needs the blib regardless
 **Pay later.** `PerFileRescoring`'s key does not change with the option, and neither does any
 other task's, so adding `--training-export` to a finished run's command line reports
 `PerFileScoring`, `FirstPassFDR` and `SecondPassFDR` as `skipping (outputs valid)` and runs only
-the export-only arm. Measured on the 3-run Stellar set: the pay-later run took 15 s, 4-6 s per
+the export-only arm. (An analysis with a run that had no Stage 6 work is the exception:
+`PerFileRescoring` never counts as current there, because that run has no worker decoys file, so
+it takes its resume route instead - it reloads the first pass and re-scores nothing - and writes
+the exports at its end.) Measured on the 3-run Stellar set: the pay-later run took 15 s, 4-6 s per
 run for the export itself, against 6.5 minutes for the analysis. Each run's parquet was
 byte-identical to the one written with the flag up front, and every table of the blib but its
 `LibInfo` row (a fresh LSID and creation time on every write) was identical to the blib of the
@@ -77,7 +85,7 @@ run without the flag.
 | Flag | Default | Meaning |
 |---|---|---|
 | `--training-export` | off | Write `<stem>.training.parquet` for every run |
-| `--training-export-max-q <q>` | `--run-fdr` | Export targets whose second-pass run precursor q-value is at most `q` |
+| `--training-export-max-q <q>` | `--run-fdr` | Export targets whose run precursor q-value (see Which rows) is at most `q` |
 | `--training-export-claimant-q <q>` | 0.01 | The run q-value at or below which another target counts as a CLAIMANT of shared peaks |
 | `--training-export-xics` | off | Also write each precursor's full per-ion XIC matrix over its final peak |
 | `--task TrainingExport` | | The same request as `--training-export`, as a selector: the whole pipeline with the export on. It is not a stage, so on a finished analysis it writes only the missing exports |
@@ -94,14 +102,21 @@ One row per exported precursor per run, in ascending `entry_id` order:
 - **Targets only.** Decoys are never exported.
 - **Run q.** The precursor's run precursor q-value is at most `--training-export-max-q`. It is
   the second-pass run q when `PerFileRescoring`'s per-run second pass wrote
-  `<stem>.2nd-pass.fdr_scores.bin` - a `PerFileRescoring` stamp beside it, the test
-  `SecondPassFDR` itself uses to fold the worker's answer - and the first-pass run q from
-  `<stem>.1st-pass.fdr_scores.bin` otherwise (`TrainingExportWriter.RunQPath`). The footer's
-  `osprey.training_export.run_q_pass` says which. The first pass is the final answer for a run
-  nothing re-scored, as in a single-run analysis. The other case is a `PerFileRescoring` that
-  had no readable saved first-pass model to compete with and left the second pass to
-  `SecondPassFDR`: there the first-pass q is not the final one, and a row reconciliation moved
-  has no first-pass record at its new apex, so it is not exported.
+  `<stem>.2nd-pass.fdr_scores.bin`, and the first-pass run q from `<stem>.1st-pass.fdr_scores.bin`
+  otherwise (`TrainingExportWriter.RunQPath`); the footer's `osprey.training_export.run_q_pass`
+  says which. That is every run of an ordinary analysis, a single-run one included (measured on
+  Stellar: the worker wrote the second pass, and three runs of one command left the export
+  unchanged). "PerFileRescoring wrote it" means both its stamp beside the sidecar, the test
+  `SecondPassFDR` folds by, and the worker's `<stem>.2nd-pass.fdr_decoys.bin`, which only the
+  worker writes: the driver stamps every declared output that exists after a PerFileRescoring
+  run, a sidecar `SecondPassFDR` wrote included, so the stamp alone would flip the export on a
+  later invocation of the same command.
+  The first pass is used for two cases, and the export warns when it is. A run with no Stage 6
+  work never reaches the worker, and a `PerFileRescoring` with no readable saved first-pass model
+  has no worker at all; either way `SecondPassFDR` computes the run's second pass after the
+  export, so the q-values it reports can differ from the ones the export selected by. A row whose
+  apex reconciliation moved has no first-pass record at that apex; such rows are counted in a
+  warning and cannot be selected.
 - **No experiment-level values.** Experiment q-values and PEP exist only after `SecondPassFDR`,
   which runs after the export, and a per-run file is written once (P11). Join
   `<blib-stem>.2nd-pass.fdr_experiment.bin` by `entry_id` for them.
@@ -309,7 +324,8 @@ intensity (`TopFragmentExtractor.ExtractFragmentXics` over the peak scans) and t
 `SCORING_TOLERANCE` (10, 0.01) - the inputs and the one definition of the arguments
 `CoelutionScorer` uses. Its library cosine therefore reproduces the scored feature
 `median_polish_cosine` bit for bit. That is the export's built-in consistency check: the task
-logs `[TRAIN-EXPORT] mp_cosine parity: N/M` per run and warns on any mismatch, and a mismatch
+logs `[TRAIN-EXPORT] <stem>: median polish cosine reproduced for N of M fitted precursors` per
+run (the footer's `mp_cosine_parity_fitted`) and warns on any mismatch, and a mismatch
 means the export is not looking at the peak Osprey scored. `TrainingEvidenceTest` checks the
 parity against `CoelutionScorer` itself, scoring a synthetic window at fixed boundaries.
 
@@ -340,8 +356,8 @@ slot within the tolerance. The six core fragments carry `CORE` on their slots.
 
 ### Shared-peak evidence: two scopes
 
-A **claimant** is another TARGET in the same run and isolation window with a second-pass run
-q at most `--training-export-claimant-q`. The precursor itself, and other charge states of the
+A **claimant** is another TARGET in the same run and isolation window with a run q (the pass
+the rows were selected by) at most `--training-export-claimant-q`. The precursor itself, and other charge states of the
 same modified sequence (which share every fragment by construction and do not compete), are
 not claimants.
 

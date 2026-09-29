@@ -288,10 +288,12 @@ namespace pwiz.Osprey.Tasks
             {
                 // Absence is the one refusal that is usually a LOCATION problem rather than a
                 // damaged cache, so it names the flag that fixes it. The others are about the
-                // file that is there, and re-running the scoring stage is what rebuilds it.
+                // file that is there, and --task SpectraCache is what rebuilds it: PerFileScoring
+                // does not declare the cache, so over scoring that is current it only skips.
+                string spectraCacheTask = OspreyArgNames.TaskText(SpectraCacheTask.TASK_NAME);
                 string remedy = reason == SpectraCacheRejection.Absent
-                    ? string.Format(OspreyTasksResources.ScoringTaskShared_LoadSpectraForRescore_The_cache_is_written_beside_its_source_data__so_a___task_worker_whose___output_dir_, fileName)
-                    : string.Format(OspreyTasksResources.ScoringTaskShared_LoadSpectraForRescore_Run___task_PerFileScoring_for___0___again_to_rebuild_it_, fileName);
+                    ? string.Format(OspreyTasksResources.ScoringTaskShared_LoadSpectraForRescore_The_cache_is_written_beside_its_source_data__so_a___task_worker_whose___output_dir_, fileName, spectraCacheTask)
+                    : string.Format(OspreyTasksResources.ScoringTaskShared_LoadSpectraForRescore_Run__1__for___0___to_rebuild_it_from_its_source_data_, fileName, spectraCacheTask);
                 throw new SpectraCacheException(string.Format(OspreyTasksResources.ScoringTaskShared_LoadSpectraForRescore__0__needs_the_spectra_cache___1___that_PerFileScoring_writes__but__2____3_,
                     consumer, cachePath, SpectraCacheException.Describe(reason), remedy),
                     reason, cachePath);
@@ -617,20 +619,15 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Whether the stage of type <typeparamref name="T"/> is included in this run - the
         /// one membership rule, <see cref="OspreyConfig.Includes"/>, asked by stage type from
-        /// code that has the config and not the instance. With no selection, true for every
-        /// stage of the full pipeline whose option (if it has one) is on; false when the run's
-        /// pipeline has no such stage at all, so a standalone selection (SpectraCache) runs no
-        /// join.
+        /// code that has the config and not the instance. True with no selection (the full
+        /// pipeline); false when the run's pipeline has no such stage at all, so a standalone
+        /// selection (SpectraCache) runs no join.
         /// </summary>
         internal static bool Includes<T>(OspreyConfig config) where T : OspreyTask
         {
-            // A bare config that never selected knows no stage instances, so it asks the rule
-            // of the canonical pipeline's: every stage the pipeline always runs, and an
-            // optional stage only when its option is on. With a pipeline, the rule itself.
-            var pipeline = config.SelectedTask == null && config.Pipeline == null
-                ? OspreyTasks.Create().Pipeline
-                : config.Pipeline;
-            return pipeline.OfType<T>().Any(config.Includes);
+            if (config.SelectedTask == null)
+                return true;
+            return config.Pipeline.OfType<T>().Any(config.Includes);
         }
 
         /// <summary>
@@ -1129,14 +1126,17 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// A search of one input file with no <c>--task</c>: the only configuration with no other
-        /// run to reconcile against, so its log never mentions cross-run reconciliation. A
-        /// <c>--task PerFileRescoring</c> worker also holds one input, but it re-scores against
-        /// the cross-run plan a multi-file FirstPassFDR wrote, and says so.
+        /// A search of one input file that runs the whole pipeline - no <c>--task</c>, or a
+        /// selector such as <c>--task TrainingExport</c> that is not a stage of the pipeline it
+        /// runs: the only configuration with no other run to reconcile against, so its log never
+        /// mentions cross-run reconciliation. A <c>--task PerFileRescoring</c> worker also holds
+        /// one input, but it re-scores against the cross-run plan a multi-file FirstPassFDR
+        /// wrote, and says so.
         /// </summary>
         internal static bool IsSingleFileSearch(OspreyConfig config)
         {
-            return config.SelectedTask == null && config.InputFiles != null && config.InputFiles.Count == 1;
+            return (config.SelectedTask == null || !config.Pipeline.Contains(config.SelectedTask)) &&
+                   config.InputFiles != null && config.InputFiles.Count == 1;
         }
     }
 }

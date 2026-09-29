@@ -133,7 +133,7 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 | Option | Value | Default | Effect |
 |--------|-------|---------|--------|
 | `--training-export` | - | off | Write `<stem>.training.parquet` per run: every target at run q <= `--training-export-max-q` with its full b/y ladder's observed intensities and per-ion interference evidence. Written by `PerFileRescoring`; adding it to a finished run writes only the exports and re-scores nothing. See [22-training-export.md](22-training-export.md). |
-| `--training-export-max-q` | `<q>` | `--run-fdr` | With `--training-export`: the second-pass run precursor q-value a target must reach. |
+| `--training-export-max-q` | `<q>` | `--run-fdr` | With `--training-export`: the run precursor q-value a target must reach (second pass where `PerFileRescoring` wrote one, else first; [22](22-training-export.md)). |
 | `--training-export-claimant-q` | `<q>` | 0.01 | With `--training-export`: the run q-value at which another target counts as a claimant of a shared peak. |
 | `--training-export-xics` | - | off | With `--training-export`: also write each precursor's per-ion XIC matrix over its final peak. |
 
