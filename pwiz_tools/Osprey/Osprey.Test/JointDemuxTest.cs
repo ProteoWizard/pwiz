@@ -97,6 +97,83 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The TOF peak's core width from a profile spectrum: exact Gaussian peaks of known sigma, their tops a
+        /// random fraction of a sample off the grid, give it back through the log-parabola of their top three
+        /// samples; a peak with a close neighbour is not isolated and is left out; the calibration takes each m/z
+        /// bin's median.
+        /// </summary>
+        [TestMethod]
+        public void TestTofPeakWidth()
+        {
+            var grid = new TofGrid(Math.Sqrt(300.0), ROOT_STEP);
+            var random = new Random(7);
+            var centers = new List<double>();
+            for (long k = 2000; k < 120000; k += 400)
+                centers.Add(k + random.NextDouble() - 0.5);
+            // A second peak 4 samples after one: the pair is not isolated.
+            centers.Add(centers[10] + 4);
+            double SigmaOf(double mz) => mz < 600 ? 0.9 : 1.3;
+            var points = new SortedDictionary<long, double>();
+            foreach (double c in centers)
+            {
+                double sigma = SigmaOf(grid.Mz(c));
+                for (long k = (long)Math.Round(c) - 7; k <= (long)Math.Round(c) + 7; k++)
+                {
+                    points.TryGetValue(k, out double v);
+                    points[k] = v + 1000 * Math.Exp(-0.5 * (k - c) * (k - c) / (sigma * sigma));
+                }
+            }
+            var mz = points.Keys.Select(k => grid.Mz(k)).ToList();
+            var intensity = points.Values.ToList();
+            var peaks = TofPeakWidth.Measure(mz, intensity, grid, 100);
+            Assert.AreEqual(centers.Count - 2, peaks.Count);
+            foreach (var peak in peaks)
+                Assert.AreEqual(SigmaOf(peak.Mz), peak.Sigma, 1e-6, string.Format(@"sigma at {0:F1}", peak.Mz));
+            var table = TofPeakWidth.Calibrate(peaks, new[] { 300.0, 600.0, 1000.0 }, 20);
+            Assert.IsTrue(table.HasValue);
+            CollectionAssert.AreEqual(new[] { 0.9, 1.3 }, table.Value.Sigma.Select(s => Math.Round(s, 6)).ToArray());
+            Assert.IsNull(TofPeakWidth.Calibrate(peaks, new[] { 300.0, 600.0, 1000.0 }, 1000));
+        }
+
+        /// <summary>
+        /// The joint solve with one bin and one position, as it centroids MS1: noiseless peaks on the grid come
+        /// back one centroid each, at their own m/z and intensity.
+        /// </summary>
+        [TestMethod]
+        public void TestJointCentroidsOneBin()
+        {
+            var grid = new TofGrid(Math.Sqrt(400.0), ROOT_STEP);
+            var parameters = new JointDemuxParams { L1Z = 0, ChunkSamples = 256 };
+            int half = parameters.PeakHalfWidth;
+            var sources = new[] { (Sample: 5000L, Ions: 500.0), (Sample: 5030L, Ions: 80.0), (Sample: 9000L, Ions: 30.0) };
+            var mz = new List<double>();
+            var ions = new List<double>();
+            foreach (var s in sources)
+            {
+                for (int d = -half; d <= half; d++)
+                {
+                    mz.Add(grid.Mz(s.Sample + d));
+                    ions.Add(s.Ions * Peak(parameters.SigmaAt(grid.Mz(s.Sample)), d, half));
+                }
+            }
+            var unit = new ScanningUnit(new double[,] { { 1 } }, new[] { 0 }, new[] { 0 }, new[] { 0 }, 0, 0, 0, 0)
+            {
+                Mz = mz.ToArray(),
+                Ions = ions.ToArray(),
+                Row = new int[mz.Count],
+                Cycle = new int[mz.Count],
+            };
+            var result = JointDemultiplexer.DemuxUnit(unit, parameters, grid);
+            Assert.AreEqual(sources.Length, result.Demultiplexed.Count);
+            foreach (var s in sources)
+            {
+                var peak = result.Demultiplexed.Single(p => Math.Abs(grid.Position(p.Mz) - s.Sample) < 1);
+                Assert.AreEqual(s.Ions, peak.Ions, 0.005 * s.Ions, string.Format(@"ions at sample {0}", s.Sample));
+                Assert.AreEqual(s.Sample, grid.Position(peak.Mz), 0.05, string.Format(@"position of sample {0}", s.Sample));
+            }
+        }
+
+        /// <summary>
         /// Demultiplexing and centroiding profile sweeps in one solve: noiseless, every fragment returns to
         /// its precursor's position at its own m/z and intensity, with and without the relaxed lasso; two
         /// fragments of different precursors two samples apart, within one TOF peak, keep their own

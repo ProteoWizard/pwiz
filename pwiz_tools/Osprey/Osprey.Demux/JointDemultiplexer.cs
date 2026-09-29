@@ -105,6 +105,12 @@ namespace pwiz.Osprey.Demux
         /// </summary>
         public double RelativeTolerance { get; set; } = 1e-4;
 
+        /// <summary>A copy, to change without changing these (arrays are replaced, not changed, so shared).</summary>
+        public JointDemuxParams Copy()
+        {
+            return (JointDemuxParams)MemberwiseClone();
+        }
+
         /// <summary>The TOF peak's sigma at an m/z.</summary>
         public double SigmaAt(double mz)
         {

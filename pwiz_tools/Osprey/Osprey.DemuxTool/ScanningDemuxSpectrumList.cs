@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -92,6 +93,13 @@ namespace pwiz.Osprey.DemuxTool
         /// 0 uses <see cref="MergePpm"/>. Two Gaussians closer than sigma are not resolved (Centrix's merge).
         /// </summary>
         public double JointMergeSigmas { get; set; } = 1;
+
+        /// <summary>
+        /// Centroid MS1 with the joint solve (one bin, one position) instead of passing it through: needs profile
+        /// MS1, which is on a TOF grid of its own, and takes each spectrum's own counts per ion (SCIEX MS1
+        /// intensities are rates over an accumulation time that varies from spectrum to spectrum).
+        /// </summary>
+        public bool JointMs1 { get; set; }
     }
 
     /// <summary>
@@ -123,6 +131,10 @@ namespace pwiz.Osprey.DemuxTool
         private readonly object _lock = new object();
         private readonly HashSet<int> _isLayoutBase = new HashSet<int>();                // acquired spectra layout spectra are built on
         private readonly Dictionary<int, Spectrum> _headers = new Dictionary<int, Spectrum>(); // by acquired index, peaks dropped
+        private bool _surveyCalibrated;
+        private TofGrid _surveyGrid;                          // MS1's own grid: it is not the MS2 grid
+        private JointDemuxParams _surveyParameters;           // the joint settings with MS1's peak width
+        private double _surveyCountsPerIon = double.NaN;      // of the last MS1 spectrum whose low levels fitted
         private TofGrid _grid;
 
         public ScanningDemuxSpectrumList(ISpectrumList inner, ScanningKernel kernel, ScanningDemuxOptions options,
@@ -219,6 +231,8 @@ namespace pwiz.Osprey.DemuxTool
             {
                 var survey = Inner.GetSpectrum(InnerIndex(index), getBinaryData);
                 survey.Index = index;
+                if (getBinaryData && _options.JointMs1)
+                    CentroidSurvey(survey);
                 return survey;
             }
 
@@ -249,6 +263,103 @@ namespace pwiz.Osprey.DemuxTool
                 counts[i] = peaks.Ions[i] * _options.CountsPerIon;
             spectrum.SetMZIntensityArrays(peaks.Mz, counts, CVID.MS_number_of_detector_counts);
             return spectrum;
+        }
+
+        /// <summary>
+        /// Replaces a profile MS1 spectrum's points by its centroids from the joint solve with one bin and one
+        /// position, on MS1's grid and at the spectrum's own counts per ion, close centroids merged within the
+        /// peak's sigma. Left as read when MS1 is not on one TOF grid or has no ion scale to estimate.
+        /// </summary>
+        private void CentroidSurvey(Spectrum survey)
+        {
+            var mzArray = survey.GetMZArray();
+            var countArray = survey.GetIntensityArray();
+            if (mzArray == null || countArray == null || mzArray.Data.Count == 0)
+                return;
+            var mz = mzArray.Data;
+            var counts = countArray.Data;
+            double q = IonCalibration.CountsPerIon(counts, out double fit);
+            lock (_lock)
+            {
+                if (!_surveyCalibrated)
+                    CalibrateSurvey(mz, counts, q);
+                if (fit >= IonCalibration.MIN_FIT)
+                    _surveyCountsPerIon = q;
+                else if (!double.IsNaN(_surveyCountsPerIon))
+                    q = _surveyCountsPerIon;
+            }
+            var grid = _surveyGrid;
+            var parameters = _surveyParameters;
+            if (grid == null || double.IsNaN(q) || q <= 0)
+                return;
+            var pointMz = new List<double>();
+            var pointIons = new List<double>();
+            for (int i = 0; i < mz.Count; i++)
+            {
+                if (counts[i] <= 0)
+                    continue;
+                pointMz.Add(mz[i]);
+                pointIons.Add(counts[i] / q);
+            }
+            var unit = new ScanningUnit(new double[,] { { 1 } }, new[] { 0 }, new[] { 0 }, new[] { 0 }, 0, 0, 0, 0)
+            {
+                Mz = pointMz.ToArray(),
+                Ions = pointIons.ToArray(),
+                Row = new int[pointMz.Count],
+                Cycle = new int[pointMz.Count],
+            };
+            var result = JointDemultiplexer.DemuxUnit(unit, parameters, grid);
+            double sigmas = _options.JointMergeSigmas;
+            Func<double, double> mergeWithin = null;
+            if (sigmas > 0)
+                mergeWithin = m => sigmas * parameters.SigmaAt(m) * 2 * Math.Sqrt(m) * grid.Step;
+            ScanningLayout.Assemble(Array.Empty<ScanningPeak>(), result.Demultiplexed, out double[] centroidMz,
+                out double[] centroidIons, _options.MergePpm, mergeWithin);
+            var centroidCounts = new double[centroidIons.Length];
+            for (int i = 0; i < centroidIons.Length; i++)
+                centroidCounts[i] = centroidIons[i] * q;
+            survey.SetMZIntensityArrays(centroidMz, centroidCounts, CVID.MS_number_of_detector_counts);
+            MarkCentroid(survey);
+        }
+
+        /// <summary>
+        /// MS1's grid, from the first MS1 spectrum centroided, and its peak width, from the strong isolated peaks
+        /// of five MS1 spectra from the middle of the run (MS1 peaks are wider in samples than MS2's).
+        /// </summary>
+        private void CalibrateSurvey(IList<double> mz, IList<double> counts, double countsPerIon)
+        {
+            _surveyCalibrated = true;
+            _surveyGrid = TofGrid.Detect(mz.ToList());
+            if (_surveyGrid == null)
+            {
+                _log.WriteLine(@"MS1: not on one TOF grid; passed through as read");
+                return;
+            }
+            var peaks = new List<(double Mz, double Sigma)>();
+            for (int c = 0; c < 5 && CycleCount / 2 + c < _ms1OfCycle.Count; c++)
+            {
+                var spectrum = Inner.GetSpectrum(_ms1OfCycle[CycleCount / 2 + c], true);
+                var sm = spectrum.GetMZArray();
+                var si = spectrum.GetIntensityArray();
+                if (sm == null || si == null)
+                    continue;
+                double q = IonCalibration.CountsPerIon(si.Data, out double fit);
+                if (fit < IonCalibration.MIN_FIT)
+                    q = countsPerIon;
+                peaks.AddRange(TofPeakWidth.Measure(sm.Data, si.Data, _surveyGrid, 20 * q));
+            }
+            var edges = Enumerable.Range(0, 20).Select(i => 100.0 * i).ToArray();
+            var table = TofPeakWidth.Calibrate(peaks, edges, 20);
+            _surveyParameters = _options.JointParameters.Copy();
+            if (table.HasValue)
+            {
+                _surveyParameters.PeakSigmaMz = table.Value.Mz;
+                _surveyParameters.PeakSigmaSamples = table.Value.Sigma;
+            }
+            _log.WriteLine(@"MS1: own TOF grid, step {0:E6}; peak sigma {1} from {2} peaks; counts per ion from each spectrum",
+                _surveyGrid.Step, table.HasValue
+                    ? string.Join(@", ", table.Value.Mz.Select((m, i) => string.Format(CultureInfo.InvariantCulture, @"{0:F2} at {1:F0}", table.Value.Sigma[i], m)))
+                    : @"as MS2 (too few peaks)", peaks.Count);
         }
 
         /// <summary>

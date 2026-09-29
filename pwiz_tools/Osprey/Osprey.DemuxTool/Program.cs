@@ -44,7 +44,7 @@ namespace pwiz.Osprey.DemuxTool
             @" [--kernel <profile.tsv>] [--layout centered:k|tiled:k|framed:k:m] [--threads N] [--cycles first:last]" +
             @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--position-mz] [--unweighted]" +
             @" [--sweep-l1 L] [--sweep-l1-z Z] [--sweep-l1-refit] [--block-support-z Z] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw] [--profile] [--centroid vendor|events]" +
-            @" [--joint] [--joint-z Z] [--joint-relaxed] [--joint-keep-active] [--joint-param Name=Value] [--group-bins N] [--read-threads N] [--merge-ppm P] [--merge-sigmas F] [--solve-profile]";
+            @" [--joint] [--joint-z Z] [--joint-relaxed] [--joint-keep-active] [--joint-param Name=Value] [--group-bins N] [--read-threads N] [--merge-ppm P] [--merge-sigmas F] [--ms1 vendor|joint] [--solve-profile]";
 
         private static int Main(string[] args)
         {
@@ -174,6 +174,11 @@ namespace pwiz.Osprey.DemuxTool
                         options.MergePpm = double.Parse(value, CultureInfo.InvariantCulture);
                         options.JointMergeSigmas = 0;
                         break;
+                    case @"--ms1":
+                        // joint: MS1 read as profile and centroided by the joint solve; vendor (the default): the
+                        // vendor's centroids from a vendor file, else as read.
+                        options.JointMs1 = value == @"joint";
+                        break;
                     case @"--merge-sigmas":
                         // Joint solve: neighbouring positions' centroids closer than this many TOF peak sigmas merge.
                         options.JointMergeSigmas = double.Parse(value, CultureInfo.InvariantCulture);
@@ -275,6 +280,10 @@ namespace pwiz.Osprey.DemuxTool
                 spectra = new SpectrumList_PeakPicker(spectra, new EventPeakDetector(), false, @"2-");
                 Console.WriteLine(@"Event centroiding (MS2; MS1 vendor): {0}", input);
             }
+            else if (options.Joint && options.JointMs1)
+            {
+                Console.WriteLine(@"MS1 and MS2 as profile, both centroided by the joint solve: {0}", input);
+            }
             else if (options.Joint && SpectrumList_PeakPicker.SupportsVendorPeakPicking(input))
             {
                 // The joint solve centroids MS2 itself, from the profile; MS1 passes through, so it takes the
@@ -285,6 +294,12 @@ namespace pwiz.Osprey.DemuxTool
             else if (options.Joint)
             {
                 Console.WriteLine(@"Warning: MS1 passes through as read (profile, for profile input); only a vendor file is centroided.");
+            }
+            else if (!profile && options.JointMs1 && SpectrumList_PeakPicker.SupportsVendorPeakPicking(input))
+            {
+                // The channel solve on the vendor's MS2 centroids, MS1 centroided by the joint solve.
+                spectra = new SpectrumList_PeakPicker(spectra, null, true, @"2-");
+                Console.WriteLine(@"Vendor centroiding (MS2; MS1 profile for the joint solve): {0}", input);
             }
             else if (!profile && SpectrumList_PeakPicker.SupportsVendorPeakPicking(input))
             {
