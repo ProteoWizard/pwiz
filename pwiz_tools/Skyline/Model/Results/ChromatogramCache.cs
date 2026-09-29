@@ -774,7 +774,12 @@ namespace pwiz.Skyline.Model.Results
         {
             // Arguments for child Skyline process.
             string importProgressPipe = @"SkylineImportProgress-" + Guid.NewGuid();
-            var argsText =
+            // The child must write in the parent's language, which may have been set by --culture, because
+            // RunProcess recognizes errors by the localized error prefix.
+            var cultureArgText = Equals(LocalizationHelper.CurrentUICulture, LocalizationHelper.OriginalUICulture)
+                ? string.Empty
+                : @"--culture=" + LocalizationHelper.CurrentUICulture.Name + @" ";
+            var argsText = cultureArgText +
                 // ReSharper disable LocalizableElement
                 "--in=\"" + documentFilePath + "\" " +
                 "--import-file=\"" + msDataFileUri.GetFilePath() + "\" " +
