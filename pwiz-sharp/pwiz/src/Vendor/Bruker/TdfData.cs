@@ -530,7 +530,7 @@ internal sealed class TdfData : IBrukerData
         if (getBinaryData)
         {
             spec.SetMZIntensityArrays(mz, intensity, CVID.MS_number_of_detector_counts);
-            if (tag.Combined && meanMobility.Length == mz.Length && mz.Length > 0)
+            if (tag.Combined && meanMobility.Length == mz.Length)
             {
                 var mobArr = new BinaryDataArray();
                 // Non-centroid combine ref uses MS:1002816 ("mean ion mobility array");
@@ -824,7 +824,7 @@ internal sealed class TdfData : IBrukerData
         if (getBinaryData)
         {
             spec.SetMZIntensityArrays(mz, intensity, CVID.MS_number_of_detector_counts);
-            if (meanMobility.Length == mz.Length && mz.Length > 0)
+            if (meanMobility.Length == mz.Length)
             {
                 // Whole-frame is centroid, so use the inverse-reduced accession (pwiz C++
                 // SpectrumList_Bruker.cpp:438). This is also the accession Skyline recognizes.
@@ -833,7 +833,7 @@ internal sealed class TdfData : IBrukerData
                 mobArr.Data.AddRange(meanMobility);
                 spec.BinaryDataArrays.Add(mobArr);
             }
-            if (includeIsolationArrays && isoLowArr.Length == mz.Length && mz.Length > 0)
+            if (includeIsolationArrays && isoLowArr.Length == mz.Length)
             {
                 // Per-peak scanning-quadrupole isolation bounds (pwiz C++ SpectrumList_Bruker.cpp:445-457).
                 var lowArr = new BinaryDataArray();
