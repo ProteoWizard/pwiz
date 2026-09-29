@@ -89,7 +89,7 @@ Stellar, trains as Eclipse, which peptdeep groups with the Stellar's Lumos famil
 | Shared peak, same PSM | Two matched slots with the same observed m/z (`ion_mz + apex_mz_error`) |
 | Correlation to the best ion | `corr_polish`: Pearson correlation with the median polish's elution profile, over Osprey's final peak |
 | Skew inputs | `xic_start`, `xic_end` and `apex_intensity`, with Carafe's formula |
-| Scan window | `IN_SCAN_RANGE`, from the run's `.run-info.json` |
+| Scan window | `IN_SCAN_RANGE`: the m/z range the precursor's isolation window measured, lowest to highest calibrated peak (format 2; format 1 used the declared window from `.run-info.json`) |
 | `rt_max`, NCE, instrument, isolation range | Footer: `osprey.rt_max` + 0.1, the dominant `osprey.collision_energies`, `osprey.instrument_model` (its PSI-MS name), `osprey.isolation_mz_min/max` |
 | No m/z for a slot | A slot without the `APPLICABLE` flag: a charge 2 slot of a 1+ precursor whose charge 1 slot is applicable stays valid; any other (a non-standard residue) is masked (`not_applicable`) |
 
@@ -146,6 +146,26 @@ library, `--decoys-in-library`, unit resolution) with Carafe's own `fragment_int
 Carafe's thresholds are therefore the defaults. `OspreyMaskingParityTest` checks that agreement
 stays at or above 83%. It reads the export and Carafe reference packages (see 04-testing.md) or
 `CARAFESHARP_OSPREY_TRAINING_EXPORT` and `CARAFESHARP_CARAFE_FINETUNED`.
+
+On the format 2 export Osprey #4708 wrote from the same run's .raw (the published
+`carafesharp-export-v1`), agreement is 85.0% over the 14,109 spectra both have, with 12,378
+spectra kept by both.
+
+### Modified peptides
+
+A modified precursor trains like any other. Osprey's modifications map to alphabase names by
+UniMod id or mass (Phospho on S, T and Y becomes `Phospho@S/T/Y`), and the models featurize them
+by element composition (`TestPhosphoTrainingRows`). This is Carafe's `-mode general`, the only
+mode CarafeSharp ports. Carafe's `-mode phosphorylation` differs in three ways, none of them ported:
+
+- it starts from peptdeep's `phos` models instead of the generic ones;
+- it trains the neutral-loss (H3PO4) fragment channels of phosphopeptides (`mask_modloss=False`),
+  where general mode masks them;
+- it drops phosphopeptides whose site localization probability is below `-ptm_site_prob` (0.75)
+  or whose site q-value is above `-ptm_site_qvalue` (0.01), read from DIA-NN's PTM columns.
+
+The second and third need evidence Osprey does not export yet: neutral-loss ions in the fragment
+ladder, and site localization scores.
 
 ---
 
