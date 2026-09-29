@@ -131,6 +131,68 @@ namespace pwiz.CarafeSharp.Test
         }
 
         [TestMethod]
+        public void TestPyroGlu()
+        {
+            // Carafe ids 27 and 28, rows 27 and 28 of top_modifications.tsv, with the alphabase names
+            // Carafe 2.2.0 gets wrong (it passes Gln->pyro-Glu@Q and fails in its Python step).
+            var gln = CarafeModification.GetById(28);
+            Assert.AreEqual(@"Gln->pyro-Glu of Q", gln.Name);
+            Assert.AreEqual(CarafeModificationType.peptide_n_term_residue, gln.Type);
+            Assert.AreEqual('Q', gln.Target);
+            Assert.AreEqual(-17.026549, gln.Mass);
+            Assert.AreEqual(@"-17.02654910101", gln.PreferredMassText);
+            Assert.AreEqual(28, gln.UnimodAccession);
+            Assert.AreEqual(@"Gln->pyro-Glu@Q^Any_N-term", gln.AlphabaseName);
+            Assert.AreEqual(@"Gln->pyro-Glu", gln.UnimodTitle);
+            Assert.AreEqual(@"Glu->pyro-Glu@E^Any_N-term", CarafeModification.GetById(27).AlphabaseName);
+            Assert.ThrowsException<NotSupportedException>(() => CarafeModification.GetById(29));
+            // Only a peptide that starts with the residue has the site, and it is the N terminus.
+            CollectionAssert.AreEqual(new[] { 0 }, gln.GetPossibleSites(@"QPEPTIDEK").ToArray());
+            Assert.AreEqual(0, gln.GetPossibleSites(@"PEPTQDEK").Count());
+            Assert.AreEqual(0, gln.GetPossibleSites(@"NYHLENEVARQPEPTIDEK").Count());
+
+            // Precursor m/z to the bit against Carafe 2.2.0's peptide_forms_1.tsv for -varMod 28.
+            var generator = new PeptideIsoformGenerator(new ModificationSettings { FixedModifications = @"0", VariableModifications = @"28" },
+                new HashSet<string>());
+            var forms = generator.Enumerate(@"QPEPTIDEK").ToList();
+            Assert.AreEqual(2, forms.Count);
+            var pyro = forms[0];
+            Assert.AreEqual(@"Gln->pyro-Glu@Q^Any_N-term", pyro.ToAlphabase().ModsText);
+            Assert.AreEqual(@"0", pyro.ToAlphabase().ModSitesText);
+            Assert.AreEqual(520.2507542398071, pyro.GetMz(2));
+            Assert.AreEqual(347.1695949821421, pyro.GetMz(3));
+            Assert.AreEqual(627.306060778877, generator.Enumerate(@"QYSLLEEGGFK").First().GetMz(2));
+            Assert.AreEqual(637.853178147882, generator.Enumerate(@"QAGLTVLSLDFK").First().GetMz(2));
+
+            // Fragment m/z (float32) against Carafe's 0_ms2_mz_df.tsv, rows b1 to b8 of QPEPTIDEK 2+.
+            var mz = AlphabaseFragmentMz.ToFloat32(AlphabaseFragmentMz.Calculate(new PrecursorForm(pyro.ToAlphabase(), 2)));
+            float[] b1 = { 112.03931f, 209.09207f, 338.13467f, 435.18744f, 536.2351f, 649.31915f, 764.3461f, 893.38873f };
+            float[] y1 = { 928.4622f, 831.4094f, 702.3668f, 605.3141f, 504.26642f, 391.18234f, 276.1554f, 147.11281f };
+            for (int row = 0; row < b1.Length; row++)
+            {
+                Assert.AreEqual(b1[row], mz[row * AlphabaseFragmentMz.COLUMN_COUNT + AlphabaseFragmentMz.B_Z1], @"b row " + row);
+                Assert.AreEqual(y1[row], mz[row * AlphabaseFragmentMz.COLUMN_COUNT + AlphabaseFragmentMz.B_Z1 + 2], @"y row " + row);
+            }
+
+            // Skyline puts the N-terminal modification on its residue, where Carafe fails.
+            Assert.AreEqual(@"Q[-17.02654910101]PEPTIDEK", ModifiedPeptideNotation.FormatSkyline(pyro, out var skylineMods));
+            Assert.AreEqual(1, skylineMods.Single().Position);
+            Assert.AreEqual(-17.02654910101, skylineMods.Single().Mass);
+            // No TSV notation of Carafe's can write it.
+            Assert.ThrowsException<NotSupportedException>(() => ModifiedPeptideNotation.Format(pyro, ModifiedPeptideStyle.dia_nn));
+
+            // Site 0 holds one modification: a variable protein N-term acetyl displaces a fixed
+            // pyro-Glu, and a variable pair of them never combines.
+            var fixedPyro = new PeptideIsoformGenerator(new ModificationSettings { FixedModifications = @"28", VariableModifications = @"5" },
+                new HashSet<string> { @"QPEPTIDEK" });
+            CollectionAssert.AreEqual(new[] { @"Acetyl@Protein_N-term", @"Gln->pyro-Glu@Q^Any_N-term" },
+                fixedPyro.Enumerate(@"QPEPTIDEK").Select(f => f.ToAlphabase().ModsText).ToArray());
+            var bothVariable = new PeptideIsoformGenerator(new ModificationSettings
+                { FixedModifications = @"0", VariableModifications = @"5,28", MaxVariableModifications = 2 }, new HashSet<string> { @"QPEPTIDEK" });
+            Assert.IsTrue(bothVariable.Enumerate(@"QPEPTIDEK").All(f => f.Modifications.Count <= 1));
+        }
+
+        [TestMethod]
         public void TestModifiedPeptideNotation()
         {
             var settings = new ModificationSettings { FixedModifications = @"1", VariableModifications = @"2,3,5,10", MaxVariableModifications = 4 };

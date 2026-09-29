@@ -167,6 +167,17 @@ mode CarafeSharp ports. Carafe's `-mode phosphorylation` differs in three ways, 
 The second and third need evidence Osprey does not export yet: neutral-loss ions in the fragment
 ladder, and site localization scores.
 
+**pyro-Glu (Carafe ids 27 and 28)** is predicted and trained here, where Carafe 2.2.0 fails on it.
+Carafe accepts `-varMod 28`, then passes `Gln->pyro-Glu@Q` to its Python step, a name alphabase does
+not have (it raises KeyError); the same holds for `Glu->pyro-Glu@E`. CarafeSharp uses alphabase's names,
+`Gln->pyro-Glu@Q^Any_N-term` and `Glu->pyro-Glu@E^Any_N-term`, on a peptide that starts with the
+residue:
+- its precursor and fragment m/z match Carafe's to the bit, and its predictions match Carafe's own
+  Python given those names (`TestPyroGlu`, `TestPyroGluPrediction`);
+- a .blib writes it on residue 1 (`Q[-17.02654910101]PEPTIDEK`), as Skyline does. Carafe's TSV
+  notations have no place for it, so a TSV library with pyro-Glu is refused;
+- a training export's pyro-Glu on the first residue maps to the same name.
+
 ---
 
 ## Options beyond Carafe
