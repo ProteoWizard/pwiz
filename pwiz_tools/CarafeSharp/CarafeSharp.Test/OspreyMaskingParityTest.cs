@@ -43,7 +43,8 @@ namespace pwiz.CarafeSharp.Test
     public class OspreyMaskingParityTest
     {
         // Agreement measured when the policy was ported (Stellar _21, Osprey 0a0b74432a):
-        // 85.0% of slots, 12,404 spectra kept by both; the floors leave room for Osprey changes.
+        // 85.0% of slots, 12,404 spectra kept by both. On the format 2 export Osprey #4708 (a5d15e6a4f)
+        // wrote from the .raw: 85.0%, 12,378 of 14,109. The floors leave room for Osprey changes.
         private const double MIN_SLOT_AGREEMENT = 0.83;
         private const double MIN_SHARED_KEPT_FRACTION = 0.80;
 

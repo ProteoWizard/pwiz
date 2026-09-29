@@ -35,7 +35,16 @@ namespace pwiz.CarafeSharp.IO
     public sealed class OspreyTrainingExport
     {
         public const string FILE_SUFFIX = @".training.parquet";
-        public const string FORMAT_VERSION = @"1";
+
+        /// <summary>The format Osprey writes (<c>osprey.training_export.format_version</c>).</summary>
+        public const string FORMAT_VERSION = @"2";
+
+        /// <summary>
+        /// The formats this reader accepts. Format 1 also carried each precursor's experiment
+        /// q-value and PEP, which Osprey dropped in format 2 because a per-run file cannot know
+        /// them; CarafeSharp never trained on either, so both formats read the same.
+        /// </summary>
+        private static readonly string[] READABLE_FORMAT_VERSIONS = { @"1", FORMAT_VERSION };
 
         /// <summary>Footer keys identifying the Osprey search an export came from.</summary>
         public const string SEARCH_HASH_KEY = @"osprey.search_hash";
@@ -45,8 +54,7 @@ namespace pwiz.CarafeSharp.IO
         {
             @"entry_id", @"is_entrapment", @"sequence", @"modified_sequence", @"mod_positions", @"mod_masses",
             @"mod_unimod_ids", @"charge", @"precursor_mz", @"protein_ids", @"file_name", @"apex_rt", @"start_rt",
-            @"end_rt", @"n_peak_scans", @"score", @"run_precursor_q", @"experiment_precursor_q", @"pep",
-            @"mp_fitted", @"mp_residual_mad", @"n_same_apex_claimants", @"n_coeluting_claimants",
+            @"end_rt", @"n_peak_scans", @"score", @"run_precursor_q", @"mp_fitted", @"mp_residual_mad", @"n_same_apex_claimants", @"n_coeluting_claimants",
             @"ion_mz", @"ion_flags", @"apex_intensity", @"apex_mz_error", @"library_rel_intensity", @"n_finite_scans",
             @"xic_start", @"xic_end", @"xic_max", @"corr_polish", @"corr_reference", @"polish_row_effect", @"polish_r2",
             @"polish_pos_resid_max", @"polish_apex_residual", @"polish_outlier_z", @"polish_apex_ratio",
@@ -57,10 +65,10 @@ namespace pwiz.CarafeSharp.IO
         {
             var columns = ParquetColumns.Read(path, COLUMNS);
             string version = columns.Metadata.TryGetValue(@"osprey.training_export.format_version", out string v) ? v : null;
-            if (version != FORMAT_VERSION)
+            if (version == null || Array.IndexOf(READABLE_FORMAT_VERSIONS, version) < 0)
             {
-                throw new InvalidDataException(string.Format(@"{0} is training export format {1}; CarafeSharp reads format {2}.",
-                    path, version ?? @"(none)", FORMAT_VERSION));
+                throw new InvalidDataException(string.Format(@"{0} is training export format {1}; CarafeSharp reads formats {2}.",
+                    path, version ?? @"(none)", string.Join(@" and ", READABLE_FORMAT_VERSIONS)));
             }
             var records = new List<OspreyTrainingRecord>(columns.RowCount);
             var entryIds = columns.Get<uint>(@"entry_id");
@@ -80,8 +88,6 @@ namespace pwiz.CarafeSharp.IO
             var peakScans = columns.Get<int>(@"n_peak_scans");
             var scores = columns.Get<double>(@"score");
             var runQ = columns.Get<double>(@"run_precursor_q");
-            var experimentQ = columns.Get<double>(@"experiment_precursor_q");
-            var pep = columns.Get<double>(@"pep");
             var fitted = columns.Get<bool>(@"mp_fitted");
             var residualMad = columns.Get<double>(@"mp_residual_mad");
             var sameApexClaimants = columns.Get<int>(@"n_same_apex_claimants");
@@ -128,8 +134,6 @@ namespace pwiz.CarafeSharp.IO
                     PeakScanCount = peakScans[i],
                     Score = scores[i],
                     RunPrecursorQ = runQ[i],
-                    ExperimentPrecursorQ = experimentQ[i],
-                    Pep = pep[i],
                     MedianPolishFitted = fitted[i],
                     MedianPolishResidualMad = residualMad[i],
                     SameApexClaimantCount = sameApexClaimants[i],
@@ -210,7 +214,11 @@ namespace pwiz.CarafeSharp.IO
             get { return (GetDouble(@"osprey.isolation_mz_min"), GetDouble(@"osprey.isolation_mz_max")); }
         }
 
-        /// <summary>The run's MS2 scan window (<c>osprey.ms2_scan_window</c>), or null when unknown.</summary>
+        /// <summary>
+        /// The run's MS2 m/z range (<c>osprey.ms2_scan_window</c>), or null when unknown. Format 1
+        /// carried the declared scan window (200-1500 on Stellar); format 2 carries the lowest and
+        /// highest calibrated peak m/z the run's spectra measured (200.17-1500.17 on the same run).
+        /// </summary>
         public (double Lower, double Upper)? Ms2ScanWindow
         {
             get

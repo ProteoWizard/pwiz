@@ -51,8 +51,9 @@ namespace pwiz.CarafeSharp.Proteome
     public sealed class CarafeModification
     {
         /// <summary>
-        /// Carafe's top modifications, ids 1 to 27, which are also every modification its GUI
-        /// offers. Higher ids come from the full compomics and Unimod lists and are not ported.
+        /// Carafe's top modifications, ids 1 to 27; its GUI offers ids 1 to 26
+        /// (<c>get_top_mod_list(26)</c>). Higher ids come from the full compomics and Unimod lists
+        /// and are not ported.
         /// </summary>
         private static readonly CarafeModification[] TOP_MODIFICATIONS =
         {
