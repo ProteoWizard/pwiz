@@ -517,10 +517,12 @@ namespace pwiz.Skyline.ToolsUI
             string denial = CheckScreenCaptureAvailability();
             if (denial != null)
                 return denial;
-            // The form captures itself in its own thread context (a managed form on the UI thread with
-            // redaction; a native dialog by window handle on this thread).
+            // The form captures itself in its own thread context (a managed form on the UI thread, from the
+            // screen or rendered off-screen; a native dialog by window handle on this thread).
             using (var bitmap = form.CaptureImage())
             {
+                if (bitmap == null)
+                    return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
                 filePath = filePath ?? GetMcpTmpFilePath(FORM_FILE_PREFIX, form.Title, EXT_PNG);
                 DirectoryEx.CreateForFilePath(filePath);
                 bitmap.Save(filePath, ImageFormat.Png);
@@ -542,6 +544,8 @@ namespace pwiz.Skyline.ToolsUI
             }
             using (var bitmap = form.CaptureImage())
             {
+                if (bitmap == null)
+                    return new ImageBytesMetadata { Message = LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE };
                 return new ImageBytesMetadata
                 {
                     Data = BitmapToPngBytes(bitmap),
@@ -565,10 +569,12 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // Returns null when screen capture can proceed, or the LLM-facing
-        // denial / pending / desktop-unavailable message that the form-image
+        // denial / pending / unavailable message that the form-image
         // tools should return to the caller without attempting capture.
         // Called from the pipe thread (no Invoke marshal) so a Pending or
-        // Denied response does not pay the UI-thread round trip.
+        // Denied response does not pay the UI-thread round trip. A missing
+        // desktop is not checked here: a managed form is rendered off-screen
+        // instead, and CaptureImage returns null when there is no image.
         private static string CheckScreenCaptureAvailability()
         {
             switch (ScreenCapture.EnsurePermission())
@@ -579,10 +585,6 @@ namespace pwiz.Skyline.ToolsUI
                     return LLM_MSG_SCREEN_CAPTURE_PERMISSION_REQUIRED;
                 case PermissionResult.unavailable:
                     return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
-            }
-            if (!ScreenCapture.IsDesktopAvailable())
-            {
-                return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
             }
             return null;
         }
