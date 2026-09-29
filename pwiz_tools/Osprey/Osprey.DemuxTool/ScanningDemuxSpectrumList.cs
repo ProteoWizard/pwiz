@@ -78,6 +78,13 @@ namespace pwiz.Osprey.DemuxTool
         /// the vendor readers do (SCIEX .wiff2: 4x on four threads, peaks identical). 1 reads serially.
         /// </summary>
         public int ReadThreads { get; set; } = 1;
+
+        /// <summary>
+        /// Demultiplexed peaks of neighbouring positions closer than this are summed into one in an output
+        /// spectrum. The channel solve gives one fragment nearly the same m/z in every position; the joint solve
+        /// centroids each position on its own, so the same fragment's centroids can lie a grid sample apart.
+        /// </summary>
+        public double MergePpm { get; set; } = ScanningLayout.MERGE_PPM;
     }
 
     /// <summary>
@@ -433,7 +440,7 @@ namespace pwiz.Osprey.DemuxTool
                         .SelectMany(b => through.TryGetValue((cycle, b), out var list) ? list : none);
                     var sources = Enumerable.Range(planned.FirstSourceBin, planned.LastSourceBin - planned.FirstSourceBin + 1)
                         .SelectMany(b => demuxed.TryGetValue((cycle, b), out var list) ? list : none);
-                    ScanningLayout.Assemble(own, sources, out double[] mz, out double[] ions);
+                    ScanningLayout.Assemble(own, sources, out double[] mz, out double[] ions, _options.MergePpm);
                     spectra[s] = (mz, ions);
                 }
                 _built[cycle] = spectra;

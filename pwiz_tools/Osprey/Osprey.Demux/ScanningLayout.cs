@@ -160,11 +160,11 @@ namespace pwiz.Osprey.Demux
         /// <summary>
         /// The peaks of one output spectrum: the pass-through peaks of its own bins as acquired,
         /// and the demultiplexed peaks of its source positions, with one channel's peaks from
-        /// neighboring positions (closer than <see cref="MERGE_PPM"/>) summed at their
-        /// intensity-weighted m/z. Sorted by m/z.
+        /// neighboring positions (closer than <paramref name="mergePpm"/>, by default <see cref="MERGE_PPM"/>)
+        /// summed at their intensity-weighted m/z. Sorted by m/z.
         /// </summary>
         public static void Assemble(IEnumerable<ScanningPeak> passedThrough, IEnumerable<ScanningPeak> demultiplexed,
-            out double[] mz, out double[] ions)
+            out double[] mz, out double[] ions, double mergePpm = MERGE_PPM)
         {
             var dem = new List<ScanningPeak>(demultiplexed);
             dem.Sort(CompareMz); // Array.Sort OK: ties broken by bin and intensity in CompareMz
@@ -174,7 +174,7 @@ namespace pwiz.Osprey.Demux
             {
                 double sum = dem[i].Ions, weighted = dem[i].Ions * dem[i].Mz;
                 int j = i + 1;
-                while (j < dem.Count && dem[j].Mz - dem[j - 1].Mz <= dem[j].Mz * MERGE_PPM * 1e-6)
+                while (j < dem.Count && dem[j].Mz - dem[j - 1].Mz <= dem[j].Mz * mergePpm * 1e-6)
                 {
                     sum += dem[j].Ions;
                     weighted += dem[j].Ions * dem[j].Mz;
