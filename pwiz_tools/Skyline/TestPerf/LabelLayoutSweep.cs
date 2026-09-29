@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Rita Chupalov <ritach .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 5) <noreply .at. anthropic.com>
@@ -63,6 +63,7 @@ namespace TestPerf
     ///                                        tutorial document, downloaded like any tutorial test data
     ///   SKYLINE_LABEL_SWEEP_OUT=&lt;path.csv&gt;   where to write the matrix; defaults next to the document
     /// </summary>
+#if DEBUG
     [TestClass]
     public class LabelLayoutSweep : AbstractFunctionalTestEx
     {
@@ -106,18 +107,10 @@ namespace TestPerf
                 return;     // Diagnostic tool, off unless asked for
 
             _documentPath = Environment.GetEnvironmentVariable(ENV_DOCUMENT);
-#if DEBUG
             if (string.IsNullOrEmpty(_documentPath))
                 TestFilesZipPaths = new[] { "https://skyline.ms/tutorials/PeakBoundaryImputation-DIA.zip" };
 
             RunFunctionalTest();
-#else
-            // The sweep exists to separate the sampler's decisions from the pruner's, and the only way to
-            // see the sampler's own count is LabelLayout.SamplerReport, which is Debug only so it costs the
-            // shipped executable nothing. Without it every row would report the two stages merged.
-            Console.Out.WriteLine(@"TestLabelLayoutSweep needs a Debug build - LabelLayout.SamplerReport " +
-                                  @"is compiled out of Release. Rerun with -Configuration Debug.");
-#endif
         }
 
         protected override void DoTest()
@@ -148,10 +141,8 @@ namespace TestPerf
             // Pruned labels are dropped from the layout, so the sampler's own count has to come from the
             // runner itself to tell the two stages apart. The hook fires on the UI thread, and every read
             // of the list below goes through RunUI or TryWaitForConditionUI, so the list needs no lock.
-#if DEBUG
             LabelLayout.SamplerReport = (pane, candidates, kept) =>
                 _samplerReports.Add(new SamplerReport(pane, candidates, kept));
-#endif
             try
             {
                 // One plot at a time, and the volcano first because Relative Abundance is the plot the
@@ -161,9 +152,7 @@ namespace TestPerf
             }
             finally
             {
-#if DEBUG
                 LabelLayout.SamplerReport = null;
-#endif
             }
 
             WriteReport(documentPath);
@@ -198,7 +187,7 @@ namespace TestPerf
                             // failure partway through should still leave the rows before it readable
                             Console.Out.WriteLine(string.Format(CultureInfo.InvariantCulture,
                                 @"{0} {1} {2}x{3} zoom={4} created={5} sampled={6}/{7} labeled={8} laidOut={9}",
-                                row.Plot, row.RuleSet, windowSize.Width, windowSize.Height, zoom,
+                                row.Plot, row.RuleSetName, windowSize.Width, windowSize.Height, zoom,
                                 row.LabelObjects, row.SamplerKept, row.SamplerIn, row.Labeled, row.LaidOut));
                             VerifyLayoutInvariants(target, ruleSet.Name, windowSize, zoom);
                         }
@@ -444,7 +433,7 @@ namespace TestPerf
         private sealed class SweepRow
         {
             public string Plot;
-            public string RuleSet;
+            public string RuleSetName;
             public Size WindowSize;
             public double Zoom;
             public bool LaidOut;
@@ -467,7 +456,7 @@ namespace TestPerf
             var row = new SweepRow
             {
                 Plot = target.Name,
-                RuleSet = ruleSetName,
+                RuleSetName = ruleSetName,
                 WindowSize = windowSize,
                 Zoom = zoom,
                 LaidOut = laidOut,
@@ -565,13 +554,13 @@ namespace TestPerf
             {
                 csv.AppendLine(string.Format(CultureInfo.InvariantCulture,
                     @"{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11:F0},{12:F0},{13:F2},{14},{15},{16},{17}",
-                    row.Plot, row.RuleSet, row.WindowSize.Width, row.WindowSize.Height, row.Zoom, row.LaidOut,
+                    row.Plot, row.RuleSetName, row.WindowSize.Width, row.WindowSize.Height, row.Zoom, row.LaidOut,
                     row.RuleRows, row.LabeledRuleRows, row.MarkerPoints,
                     row.Candidates, row.Labeled, row.ChartArea, row.LabelArea, row.CoveragePercent,
                     row.SamplerIn, row.SamplerKept, row.LabelObjects, row.LabelTexts));
                 table.AppendLine(string.Format(CultureInfo.InvariantCulture,
                     @"{0,-18} {1,-18} {2,5}x{3,-5} {4,5:F1} {5,9:F0} {6,6}/{7,-5}/{8,-4} {9,8} {10,8:F2}%  {11}",
-                    row.Plot, row.RuleSet, row.WindowSize.Width, row.WindowSize.Height, row.Zoom, row.ChartArea,
+                    row.Plot, row.RuleSetName, row.WindowSize.Width, row.WindowSize.Height, row.Zoom, row.ChartArea,
                     row.LabelObjects, row.SamplerIn, row.SamplerKept, row.Labeled, row.CoveragePercent,
                     row.LabelTexts));
             }
@@ -863,4 +852,23 @@ namespace TestPerf
             }
         }
     }
+#else
+    /// <summary>
+    /// Release stand-in. The sweep reads the sampler's own kept count from LabelLayout.SamplerReport,
+    /// which is Debug only so it costs the shipped executable nothing, so the tool itself is Debug only.
+    /// </summary>
+    [TestClass]
+    public class LabelLayoutSweep
+    {
+        [TestMethod]
+        public void TestLabelLayoutSweep()
+        {
+            if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"SKYLINE_LABEL_SWEEP")))
+                return;     // Diagnostic tool, off unless asked for
+            Console.Out.WriteLine(@"TestLabelLayoutSweep needs a Debug build - LabelLayout.SamplerReport " +
+                                  @"is compiled out of Release. Rerun with -Configuration Debug.");
+        }
+    }
+#endif
+
 }
