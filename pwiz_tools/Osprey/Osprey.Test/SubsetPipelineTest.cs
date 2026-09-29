@@ -30,9 +30,11 @@ using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
+using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
+using pwiz.Osprey.Tasks.ModelDiagnostics;
 
 namespace pwiz.Osprey.Test
 {
@@ -67,8 +69,8 @@ namespace pwiz.Osprey.Test
         private const string LIBDECOY_FILE = @"stellar-subset-libdecoy.tsv";
         private const string LIBDECOY_PAIRING_FILE = @"stellar-subset-libdecoy-pairing.tsv";
         private const string BLIB_FILE = @"output.blib";
-        private const string MZML_EXTENSION = @".mzML";
-        private const string SPECTRA_CACHE_EXTENSION = @".spectra.bin";
+        private const string MZML_EXTENSION = SpectrumFileReader.EXT_MZML;
+        private const string SPECTRA_CACHE_EXTENSION = SpectraCache.EXT;
         private const double TOLERANCE = 1e-9;
 
         // Floors well under what the data gives (about 177 precursors reported, 169 of the 178
@@ -226,9 +228,9 @@ namespace pwiz.Osprey.Test
             foreach (string pass in new[] { @"pass1", @"pass2" })
                 AssertHasRows(Path.ChangeExtension(bench, pass + @".tsv"));
             // The protein-group and summary reports are named from the output library.
-            AssertHasRows(Path.Combine(workDir, @"output.protein_groups.tsv"));
-            AssertHasRows(Path.Combine(workDir, @"output.stats.tsv"));
-            string diagnosticsReport = Path.Combine(workDir, @"output.model-diagnostics.html");
+            AssertHasRows(Path.Combine(workDir, OutputArtifact(OspreyReportWriter.EXT_PROTEIN_GROUPS)));
+            AssertHasRows(Path.Combine(workDir, OutputArtifact(OspreyReportWriter.EXT_STATS)));
+            string diagnosticsReport = Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_HTML));
             AssertHasRows(diagnosticsReport);
 
             // The report alone, from what the analysis left: every analysis task is cached.
@@ -262,7 +264,7 @@ namespace pwiz.Osprey.Test
             CutRescore(workDir, cutRun, true);
             DeleteSecondPassOutputs(blib);
             string log = RunAnalysis(workDir, RunNames(workDir, MZML_EXTENSION), LIBDECOY_FILE, Verifier(true), args);
-            Assert.AreEqual(RUN_NAMES.Length, Directory.GetFiles(workDir, @"*.scores-reconciled.parquet").Length,
+            Assert.AreEqual(RUN_NAMES.Length, Directory.GetFiles(workDir, @"*" + ParquetScoreCache.EXT_SCORES_RECONCILED).Length,
                 @"the rescore did not finish the cohort" + Environment.NewLine + log);
             AssertHasLine(log, PathLine(LogKey.ROUTE_RESCORE_RESUME, string.Empty));
             AssertRescoredOnly(log, 1);
@@ -303,9 +305,9 @@ namespace pwiz.Osprey.Test
 
             RunDiagnostics(null);
             string blib = Path.Combine(workDir, BLIB_FILE);
-            string pass1 = Path.Combine(workDir, @"output.1st-pass.model-diagnostics.json");
-            string pass2 = Path.Combine(workDir, @"output.2nd-pass.model-diagnostics.json");
-            string report = Path.Combine(workDir, @"output.model-diagnostics.html");
+            string pass1 = Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_PASS1));
+            string pass2 = Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_PASS2));
+            string report = Path.Combine(workDir, OutputArtifact(ModelDiagnosticsReport.EXT_HTML));
             string referenceDir = CreateDir(@"diagnostics-reference");
             foreach (string product in new[] { pass1, pass2, report })
             {
@@ -501,7 +503,7 @@ namespace pwiz.Osprey.Test
                 @"the transfer arm wrote no second-pass experiment sidecar");
             foreach (string run in RUN_NAMES)
             {
-                string sidecar = Path.Combine(transferDir, run + @"." + FdrScoresSidecar.LABEL_SECOND_PASS + FdrScoresSidecar.EXT);
+                string sidecar = Path.Combine(transferDir, PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, FdrScoresSidecar.EXT));
                 Assert.IsTrue(File.Exists(sidecar), @"the transfer arm wrote no second-pass sidecar: " + sidecar);
             }
 
@@ -727,7 +729,7 @@ namespace pwiz.Osprey.Test
                               log.Contains(@"scope=" + scope), @"no library-fragment release for " + scope);
             }
             // Every run wrote its second-pass FDR sidecar.
-            Assert.AreEqual(RUN_NAMES.Length, Directory.GetFiles(workDir, @"*.2nd-pass.fdr_scores.bin").Length);
+            Assert.AreEqual(RUN_NAMES.Length, Directory.GetFiles(workDir, @"*." + FdrScoresSidecar.LABEL_SECOND_PASS + FdrScoresSidecar.EXT).Length);
 
             string blib = Path.Combine(workDir, BLIB_FILE);
             int precursors = BlibComparer.CountRows(blib, @"RefSpectra");
@@ -784,7 +786,7 @@ namespace pwiz.Osprey.Test
             string phase2Dir = CreateDir(@"phase2");
             foreach (string run in data.Runs)
             {
-                ShipFiles(@"phase1_" + run, phase2Dir, run + @".scores.parquet", run + @".calibration.json");
+                ShipFiles(@"phase1_" + run, phase2Dir, run + ParquetScoreCache.EXT_SCORES, run + CalibrationIO.EXT);
             }
             RunTask(data, phase2Dir, FirstPassFdrTask.TASK_NAME, data.Runs);
 
@@ -792,12 +794,12 @@ namespace pwiz.Osprey.Test
             foreach (string run in data.Runs)
             {
                 string phaseDir = CreateDir(@"phase3_" + run);
-                ShipFiles(@"phase1_" + run, phaseDir, run + SPECTRA_CACHE_EXTENSION, run + @".scores.parquet",
-                    run + @".calibration.json");
-                ShipFiles(@"phase2", phaseDir, run + @".1st-pass.fdr_scores.bin", run + @".reconciliation.json",
-                    @"output.1st-pass.retained_base_ids.bin");
-                ShipFilesIfPresent(@"phase2", phaseDir, run + @".1st-pass.model.json", run + @".1st-pass.stratum.json",
-                    @"output.1st-pass.fdr_experiment.bin", @"output.1st-pass.model-diagnostics.json");
+                ShipFiles(@"phase1_" + run, phaseDir, run + SPECTRA_CACHE_EXTENSION, run + ParquetScoreCache.EXT_SCORES,
+                    run + CalibrationIO.EXT);
+                ShipFiles(@"phase2", phaseDir, PassArtifact(run, FdrScoresSidecar.Pass.FirstPass, FdrScoresSidecar.EXT), run + ReconciliationFile.EXT,
+                    OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT));
+                ShipFilesIfPresent(@"phase2", phaseDir, run + FirstPassModelIO.EXT_MODEL, run + FirstPassModelIO.EXT_STRATUM,
+                    ExperimentSidecarName(FdrScoresSidecar.Pass.FirstPass), OutputArtifact(ModelDiagnosticsReport.EXT_PASS1));
                 string log = RunTask(data, phaseDir, PerFileRescoreTask.TASK_NAME, run);
                 AssertHasLine(log, PathLine(LogKey.ROUTE_RESCORE_HYDRATE, @"per-run"));
             }
@@ -807,11 +809,11 @@ namespace pwiz.Osprey.Test
             foreach (string run in data.Runs)
             {
                 string phase3 = @"phase3_" + run;
-                ShipFiles(phase3, phase4Dir, run + @".scores-reconciled.parquet", run + @".calibration.json",
-                    run + @".reconciliation.json");
-                ShipFilesIfPresent(phase3, phase4Dir, run + @".1st-pass.model.json", run + @".1st-pass.stratum.json");
-                string pass2Scores = run + @".2nd-pass.fdr_scores.bin";
-                string pass2Decoys = run + @".2nd-pass.fdr_decoys.bin";
+                ShipFiles(phase3, phase4Dir, run + ParquetScoreCache.EXT_SCORES_RECONCILED, run + CalibrationIO.EXT,
+                    run + ReconciliationFile.EXT);
+                ShipFilesIfPresent(phase3, phase4Dir, run + FirstPassModelIO.EXT_MODEL, run + FirstPassModelIO.EXT_STRATUM);
+                string pass2Scores = PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, FdrScoresSidecar.EXT);
+                string pass2Decoys = PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, Pass2CompetitionDecoys.EXT);
                 if (File.Exists(Path.Combine(_testDir, phase3, pass2Scores)))
                 {
                     ShipFiles(phase3, phase4Dir, pass2Scores, pass2Decoys,
@@ -820,12 +822,12 @@ namespace pwiz.Osprey.Test
                 }
                 else
                 {
-                    ShipFiles(phase3, phase4Dir, run + @".1st-pass.fdr_scores.bin");
+                    ShipFiles(phase3, phase4Dir, PassArtifact(run, FdrScoresSidecar.Pass.FirstPass, FdrScoresSidecar.EXT));
                 }
             }
-            ShipFiles(@"phase2", phase4Dir, @"output.1st-pass.retained_base_ids.bin");
-            ShipFilesIfPresent(@"phase2", phase4Dir, @"output.1st-pass.fdr_experiment.bin",
-                @"output.1st-pass.model-diagnostics.json");
+            ShipFiles(@"phase2", phase4Dir, OutputArtifact(@"." + FdrScoresSidecar.LABEL_FIRST_PASS + RetainedBaseIdSidecar.EXT));
+            ShipFilesIfPresent(@"phase2", phase4Dir, ExperimentSidecarName(FdrScoresSidecar.Pass.FirstPass),
+                OutputArtifact(ModelDiagnosticsReport.EXT_PASS1));
             string phase4Log = RunTask(data, phase4Dir, SecondPassFdrTask.TASK_NAME, data.Runs);
             AssertHasLine(phase4Log, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
             // Every run's per-file worker answer was folded, none recomputed here.
@@ -1031,10 +1033,10 @@ namespace pwiz.Osprey.Test
         {
             var products = new List<string>
             {
-                run + @".2nd-pass.fdr_scores.bin", run + @".2nd-pass.fdr_decoys.bin"
+                PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, FdrScoresSidecar.EXT), PassArtifact(run, FdrScoresSidecar.Pass.SecondPass, Pass2CompetitionDecoys.EXT)
             };
             if (withReconciledParquet)
-                products.Add(run + @".scores-reconciled.parquet");
+                products.Add(run + ParquetScoreCache.EXT_SCORES_RECONCILED);
             foreach (string product in products)
             {
                 string path = Path.Combine(workDir, product);
@@ -1205,7 +1207,7 @@ namespace pwiz.Osprey.Test
         {
             foreach (string run in runs)
             {
-                string fileName = run + @"." + FdrScoresSidecar.PassLabel(pass) + FdrScoresSidecar.EXT;
+                string fileName = PassArtifact(run, pass, FdrScoresSidecar.EXT);
                 var expected = ReadFdrSidecar(Path.Combine(expectedDir, fileName), pass);
                 var actual = ReadFdrSidecar(Path.Combine(actualDir, fileName), pass);
                 // Agreeing on no records is not agreement.
@@ -1246,8 +1248,23 @@ namespace pwiz.Osprey.Test
 
         private static string ExperimentSidecarName(FdrScoresSidecar.Pass pass)
         {
-            return Path.GetFileNameWithoutExtension(BLIB_FILE) + @"." + FdrScoresSidecar.PassLabel(pass) +
-                   FdrExperimentSidecar.EXT;
+            return OutputArtifact(@"." + FdrScoresSidecar.PassLabel(pass) + FdrExperimentSidecar.EXT);
+        }
+
+        /// <summary>
+        /// An analysis-wide artifact, named from the output library as the product names it.
+        /// </summary>
+        private static string OutputArtifact(string extension)
+        {
+            return Path.GetFileNameWithoutExtension(BLIB_FILE) + extension;
+        }
+
+        /// <summary>
+        /// A per-run artifact of one pass, e.g. the run's second-pass FDR scores.
+        /// </summary>
+        private static string PassArtifact(string run, FdrScoresSidecar.Pass pass, string extension)
+        {
+            return run + @"." + FdrScoresSidecar.PassLabel(pass) + extension;
         }
 
         private static void AssertFilesEqual(string expectedDir, string actualDir, string fileName)
