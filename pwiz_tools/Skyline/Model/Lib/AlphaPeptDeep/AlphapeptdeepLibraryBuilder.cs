@@ -212,7 +212,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         private void RunAlphapeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             // Note: Segments are distributed to balance the expected work of each task
-            var segmentEndPercentages = new[] { 5, 85, 90 };
+            // One end per step, including the last: NextSegment() never advances past the final end
+            var segmentEndPercentages = new[] { 5, 85, 90, 100 };
             progressStatus = progressStatus.ChangeSegments(0, ImmutableList<int>.ValueOf(segmentEndPercentages));
             PreparePrecursorInputFile(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
@@ -486,19 +487,24 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 }
             }
 
-            var blibFilter = new BlibFilter();
-            // Build the final filtered library
-            completed = completed && blibFilter.Filter(incompleteBlibPath, output, progress, ref progressStatus);
+            try
+            {
+                var blibFilter = new BlibFilter();
+                // Build the final filtered library
+                completed = completed && blibFilter.Filter(incompleteBlibPath, output, progress, ref progressStatus);
+            }
+            finally
+            {
+                File.Delete(incompleteBlibPath);
+            }
 
-            if (completed)
-            {
-                Messages.WriteAsyncUserMessage(ModelResources.AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_);
-            }
-            else
-            {
-                Messages.WriteAsyncUserMessage(ModelResources.AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_);
-            }
-            File.Delete(incompleteBlibPath);
+            // Throw rather than return, so the caller does not add a library that was never written
+            if (progress.IsCanceled)
+                throw new OperationCanceledException();
+            if (!completed)
+                throw new IOException(ModelResources.AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_);
+
+            Messages.WriteAsyncUserMessage(ModelResources.AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_);
         }
     }
 }
