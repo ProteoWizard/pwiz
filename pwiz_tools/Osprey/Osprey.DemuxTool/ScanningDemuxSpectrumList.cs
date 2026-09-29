@@ -72,6 +72,12 @@ namespace pwiz.Osprey.DemuxTool
 
         /// <summary>Encoded bins a precursor's transmission reaches on each side.</summary>
         public int ReachBins { get; set; } = 9;
+
+        /// <summary>
+        /// Threads reading one sweep's spectra from the source, for a source that serves concurrent requests:
+        /// the vendor readers do (SCIEX .wiff2: 4x on four threads, peaks identical). 1 reads serially.
+        /// </summary>
+        public int ReadThreads { get; set; } = 1;
     }
 
     /// <summary>
@@ -371,7 +377,7 @@ namespace pwiz.Osprey.DemuxTool
             double unitSeconds = clock.Elapsed.TotalSeconds - readSeconds;
 
             // Solve on worker threads while this thread reads the next batch's sweeps. The units
-            // hold copies of their peaks, and the source spectra are read from this thread only.
+            // hold copies of their peaks, and the source spectra are read from this thread and its read workers.
             var results = new ScanningUnitResult[units.Count];
             Exception solveException = null;
             var solver = new Thread(() =>
@@ -515,19 +521,20 @@ namespace pwiz.Osprey.DemuxTool
                 return cached;
             int readLo = Math.Max(0, _firstOutBin - _options.ContextBins - _options.ReachBins);
             int readHi = Math.Min(_centers.Length - 1, _lastOutBin + _options.ContextBins + _options.ReachBins);
-            var sweep = new List<(double[], double[])>();
             var indices = _ms2OfCycle[cycle];
-            for (int b = 0; b < _centers.Length; b++)
+            var bins = new (double[], double[])[_centers.Length];
+            var headers = new Spectrum[_centers.Length];
+            // The headers are kept after the reads, on this thread: it holds the list's lock.
+            Parallel.For(0, _centers.Length, new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, _options.ReadThreads) }, b =>
             {
                 if (b < readLo || b > readHi || b >= indices.Length)
                 {
-                    sweep.Add((Array.Empty<double>(), Array.Empty<double>()));
-                    continue;
+                    bins[b] = (Array.Empty<double>(), Array.Empty<double>());
+                    return;
                 }
                 var spectrum = Inner.GetSpectrum(indices[b], true);
                 var mzArray = spectrum.GetMZArray();
                 var intensityArray = spectrum.GetIntensityArray();
-                KeepHeader(indices[b], spectrum);
                 var mzs = new List<double>();
                 var values = new List<double>();
                 if (mzArray != null && intensityArray != null)
@@ -541,10 +548,17 @@ namespace pwiz.Osprey.DemuxTool
                         values.Add(intensityArray.Data[i] / _options.CountsPerIon);
                     }
                 }
-                sweep.Add((mzs.ToArray(), values.ToArray()));
+                bins[b] = (mzs.ToArray(), values.ToArray());
                 spectrum.BinaryDataArrays.Clear();
                 spectrum.IntegerDataArrays.Clear();
+                headers[b] = spectrum;
+            });
+            for (int b = 0; b < headers.Length; b++)
+            {
+                if (headers[b] != null)
+                    KeepHeader(indices[b], headers[b]);
             }
+            var sweep = bins.ToList();
             _peaks[cycle] = sweep;
             return sweep;
         }

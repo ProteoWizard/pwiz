@@ -43,12 +43,12 @@ namespace pwiz.Osprey.DemuxTool
             @" [--kernel <profile.tsv>] [--layout centered:k|tiled:k|framed:k:m] [--threads N] [--cycles first:last]" +
             @" [--mz low:high] [--ppm P] [--counts-per-ion C] [--min-out I] [--apportion H] [--position-mz] [--unweighted]" +
             @" [--sweep-l1 L] [--sweep-l1-z Z] [--sweep-l1-refit] [--block-support-z Z] [--source-positions] [--source-l1 L] [--min-source-fraction F] [--raw] [--profile] [--centroid vendor|events]" +
-            @" [--joint] [--joint-z Z] [--joint-relaxed] [--joint-keep-active] [--joint-param Name=Value] [--group-bins N] [--solve-profile]";
+            @" [--joint] [--joint-z Z] [--joint-relaxed] [--joint-keep-active] [--joint-param Name=Value] [--group-bins N] [--read-threads N] [--solve-profile]";
 
         private static int Main(string[] args)
         {
             string input = null, output = null, kernelPath = null;
-            bool staggered = false, profile = false, eventCentroids = false, groupBinsSet = false;
+            bool staggered = false, profile = false, eventCentroids = false, groupBinsSet = false, readThreadsSet = false;
             var options = new ScanningDemuxOptions();
             for (int i = 0; i < args.Length; i++)
             {
@@ -164,6 +164,11 @@ namespace pwiz.Osprey.DemuxTool
                     case @"--joint-relaxed":
                         options.JointParameters.Relaxed = true;
                         break;
+                    case @"--read-threads":
+                        // Threads reading a sweep's spectra; a vendor file defaults to 4, any other source to 1.
+                        options.ReadThreads = int.Parse(value, CultureInfo.InvariantCulture);
+                        readThreadsSet = true;
+                        break;
                     case @"--group-bins":
                         // Encoded bins whose output one block owns (each block also solves its context).
                         options.GroupBins = int.Parse(value, CultureInfo.InvariantCulture);
@@ -200,6 +205,10 @@ namespace pwiz.Osprey.DemuxTool
             // keep 16 of 36) and leave fewer block edges.
             if (options.Joint && !groupBinsSet)
                 options.GroupBins = 48;
+            // A vendor reader serves concurrent requests, and decoding and centroiding its spectra is the slowest
+            // step of a run read serially (about 2.6 s a sweep for a ZT Scan .wiff2).
+            if (!readThreadsSet && input != null && SpectrumList_PeakPicker.SupportsVendorPeakPicking(input))
+                options.ReadThreads = 4;
             if (input == null || output == null || (kernelPath == null && !staggered))
             {
                 Console.Error.WriteLine(USAGE);
