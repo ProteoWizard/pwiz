@@ -132,9 +132,8 @@ $datasets = @{
         ItolUnit      = 'Da'
         MinPeptideMz  = '400'
         MaxPeptideMz  = '900'
-        ExportNote    = 'Development export: the June 2026 Stellar _21 export Osprey wrote from mzML. The published ' +
-                        'carafesharp-export package will be regenerated from .raw with the landed #4708 Osprey, and this ' +
-                        'golden recreated from it.'
+        ExportNote    = 'carafesharp-export-v1: the format 2 export Osprey #4708 (a5d15e6a4f, vendor reader) wrote ' +
+                        'from the Stellar _21 .raw.'
     }
 }
 $config = $datasets[$Dataset]
