@@ -115,7 +115,12 @@ namespace pwiz.CarafeSharp.Test
             Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-fixMod", @"5", @"-lf_type", @"Skyline" }));
             CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-varMod", @"5", @"-lf_type", @"DIA-NN" });
             CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-varMod", @"5", @"-lf_type", @"Skyline", @"-fast" });
-            // Stage 1 reads ids 11 to 27 for its m/z filter, so its command line accepts them.
+            // pyro-Glu (27, 28) is predicted into a .blib; no TSV notation can write it.
+            CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-varMod", @"28", @"-lf_type", @"blib" });
+            CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-fixMod", @"27", @"-lf_type", @"Skyline", @"-fast" });
+            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-varMod", @"28" }));
+            Assert.ThrowsException<NotSupportedException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-varMod", @"28", @"-lf_type", @"blib,DIA-NN" }));
+            // Stage 1 reads ids 11 to 26 (no alphabase name) for its m/z filter, so its command line accepts them.
             Assert.AreEqual(CarafeCommandMode.build_entrapment_fasta, CarafeCommandLine.Parse(new[]
                 { @"-build_entrapment_fasta", @"out.fasta", @"-db", @"x.fasta", @"-varMod", @"11", @"-mz_filter" }).Mode);
         }

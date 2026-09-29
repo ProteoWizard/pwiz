@@ -146,8 +146,6 @@ namespace pwiz.CarafeSharp.Test
                 Column(@"n_peak_scans", r.Select(x => x.PeakScanCount).ToArray()),
                 Column(@"score", r.Select(x => x.Score).ToArray()),
                 Column(@"run_precursor_q", r.Select(x => x.RunPrecursorQ).ToArray()),
-                Column(@"experiment_precursor_q", r.Select(x => x.ExperimentPrecursorQ).ToArray()),
-                Column(@"pep", r.Select(x => x.Pep).ToArray()),
                 Column(@"mp_fitted", r.Select(x => x.MedianPolishFitted).ToArray()),
                 Column(@"mp_residual_mad", r.Select(x => x.MedianPolishResidualMad).ToArray()),
                 Column(@"n_same_apex_claimants", r.Select(x => x.SameApexClaimantCount).ToArray()),
@@ -176,7 +174,7 @@ namespace pwiz.CarafeSharp.Test
             };
         }
 
-        private static KeyValuePair<string, Array> Column(string name, Array values)
+        public static KeyValuePair<string, Array> Column(string name, Array values)
         {
             return new KeyValuePair<string, Array>(name, values);
         }

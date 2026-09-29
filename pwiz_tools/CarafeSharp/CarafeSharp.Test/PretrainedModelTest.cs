@@ -41,6 +41,12 @@ namespace pwiz.CarafeSharp.Test
     [TestClass]
     public class PretrainedModelTest
     {
+        /// <summary>
+        /// Against Carafe's Python run of the pyro-Glu peptide (on another device, printed to 8
+        /// digits); CarafeSharp matches Carafe 2.2.0's predictions to about 1e-5.
+        /// </summary>
+        private const double PYRO_GLU_TOLERANCE = 2e-5;
+
         public TestContext TestContext { get; set; }
 
         [TestMethod]
@@ -197,6 +203,35 @@ namespace pwiz.CarafeSharp.Test
                 float ySum = Enumerable.Range(0, prediction.RowCount).Sum(r => prediction.Get(r, 2));
                 float bSum = Enumerable.Range(0, prediction.RowCount).Sum(r => prediction.Get(r, 0));
                 Assert.IsTrue(ySum > bSum, string.Format(@"y {0} vs b {1}", ySum, bSum));
+            }
+        }
+
+        [TestMethod]
+        public void TestPyroGluPrediction()
+        {
+            // Carafe 2.2.0's own Python (peptdeep 1.1.0, generic models) given the alphabase name it
+            // fails to pass itself: QPEPTIDEK with pyro-Glu, 2+, Lumos, NCE 27.
+            var pretrained = PretrainedModels.Open();
+            var pyroGlu = new PeptideForm(@"QPEPTIDEK", new[] { @"Gln->pyro-Glu@Q^Any_N-term" }, new[] { 0 });
+            using (var rt = RtModel.FromPretrained(pretrained, CPU))
+            {
+                double[] predicted = rt.Predict(new[] { pyroGlu, new PeptideForm(@"QPEPTIDEK") });
+                Assert.AreEqual(0.13824185729026794, predicted[0], PYRO_GLU_TOLERANCE);
+                // The modification reaches the model: an all-zero feature would predict the unmodified RT.
+                Assert.AreEqual(0.14672058820724487, predicted[1], PYRO_GLU_TOLERANCE);
+            }
+            using (var ms2 = Ms2Model.FromPretrained(pretrained, CPU))
+            {
+                var prediction = ms2.Predict(new[] { new Ms2Request(new PrecursorForm(pyroGlu, 2), 27, @"Lumos") }).Single();
+                float[] bZ1 = { 0, 0.006442173f, 0.007982196f, 0, 0, 0, 0, 0.0028883736f };
+                float[] yZ1 = { 0.011913588f, 0.21940427f, 1f, 0.2522991f, 0.22718553f, 0.446979f, 0.56243664f, 0.23292564f };
+                for (int row = 0; row < prediction.RowCount; row++)
+                {
+                    Assert.AreEqual(bZ1[row], prediction.Get(row, 0), PYRO_GLU_TOLERANCE, @"b_z1 row " + row);
+                    Assert.AreEqual(yZ1[row], prediction.Get(row, 2), PYRO_GLU_TOLERANCE, @"y_z1 row " + row);
+                }
+                Assert.AreEqual(0.051533796f, prediction.Get(0, 3), PYRO_GLU_TOLERANCE);
+                Assert.AreEqual(0.6012333f, prediction.Get(2, 3), PYRO_GLU_TOLERANCE);
             }
         }
 

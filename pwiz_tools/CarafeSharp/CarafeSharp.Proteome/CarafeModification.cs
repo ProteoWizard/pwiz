@@ -51,8 +51,9 @@ namespace pwiz.CarafeSharp.Proteome
     public sealed class CarafeModification
     {
         /// <summary>
-        /// Carafe's top modifications, ids 1 to 27, which are also every modification its GUI
-        /// offers. Higher ids come from the full compomics and Unimod lists and are not ported.
+        /// Carafe's top modifications, ids 1 to 28 (the rows of <c>top_modifications.tsv</c>); its
+        /// GUI offers ids 1 to 26 (<c>get_top_mod_list(26)</c>). Higher ids come from the full
+        /// compomics and Unimod lists and are not ported.
         /// </summary>
         private static readonly CarafeModification[] TOP_MODIFICATIONS =
         {
@@ -109,16 +110,18 @@ namespace pwiz.CarafeSharp.Proteome
             new CarafeModification(26, @"iTRAQ 8-plex of Y", CarafeModificationType.residue, 'Y', 304.19903946116,
                 @"304.19903946116", 730, null),
             new CarafeModification(27, @"Glu->pyro-Glu of E", CarafeModificationType.peptide_n_term_residue, 'E', -18.010565,
-                @"-18.0105646837", 27, null),
+                @"-18.0105646837", 27, @"Glu->pyro-Glu@E^Any_N-term"),
+            new CarafeModification(28, @"Gln->pyro-Glu of Q", CarafeModificationType.peptide_n_term_residue, 'Q', -17.026549,
+                @"-17.02654910101", 28, @"Gln->pyro-Glu@Q^Any_N-term"),
         };
 
-        /// <summary>The modifications Carafe numbers 1 to 27.</summary>
+        /// <summary>The modifications Carafe numbers 1 to 28.</summary>
         public static IReadOnlyList<CarafeModification> TopModifications
         {
             get { return TOP_MODIFICATIONS; }
         }
 
-        /// <summary>The modification with a Carafe id; ids above 27 are not supported.</summary>
+        /// <summary>The modification with a Carafe id; ids above 28 are not supported.</summary>
         public static CarafeModification GetById(int id)
         {
             if (id < 1 || id > TOP_MODIFICATIONS.Length)
@@ -171,7 +174,10 @@ namespace pwiz.CarafeSharp.Proteome
         /// (<c>AIGear.mod_map</c>: the Unimod title, <c>@</c>, and the residue or
         /// <c>Protein_N-term</c>), or null when Carafe has no usable name for it: the TMT and
         /// iTRAQ names are compomics's rather than Unimod's, so Carafe stops with
-        /// "Unrecognized modification", and <c>Glu-&gt;pyro-Glu@E</c> is not an alphabase name.
+        /// "Unrecognized modification". The two pyro-Glu modifications (27, 28) use alphabase's
+        /// own names, <c>Glu-&gt;pyro-Glu@E^Any_N-term</c> and <c>Gln-&gt;pyro-Glu@Q^Any_N-term</c>.
+        /// Carafe 2.2.0 passes <c>Glu-&gt;pyro-Glu@E</c> and <c>Gln-&gt;pyro-Glu@Q</c>, which
+        /// alphabase does not know, and its prediction fails on them; CarafeSharp predicts them.
         /// </summary>
         public string AlphabaseName { get; }
 

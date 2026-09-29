@@ -95,6 +95,8 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual((200.25, 1800.0), export.Ms2ScanWindow);
             Assert.AreEqual(30.0, export.DominantCollisionEnergy);
             AssertFooter(@"osprey.instrument_model", string.Empty, e => Assert.IsNull(e.InstrumentModel));
+            AssertFooter(@"osprey.training_export.run_q_pass", @"1", e => Assert.AreEqual(@"1", e.RunQPass));
+            AssertFooter(@"osprey.training_export.run_q_pass", null, e => Assert.IsNull(e.RunQPass));
             AssertFooter(@"osprey.ms2_scan_window", @"200", e => Assert.IsNull(e.Ms2ScanWindow));
             AssertFooter(@"osprey.ms2_scan_window", @"200,high", e => Assert.IsNull(e.Ms2ScanWindow));
             AssertFooter(@"osprey.ms2_scan_window", null, e => Assert.IsNull(e.Ms2ScanWindow));
@@ -113,11 +115,23 @@ namespace pwiz.CarafeSharp.Test
             // A header-only export has no records.
             Assert.AreEqual(0, OspreyTrainingExport.Read(WriteExport(@"empty", Array.Empty<OspreyTrainingRecord>(), Footer(@"a"), 1)).Records.Count);
 
+            // Format 1, which also carried the experiment q-value and PEP, reads the same.
+            var footerV1 = Footer(@"a");
+            footerV1[FORMAT_VERSION_KEY] = @"1";
+            string v1 = Path.Combine(_folder, @"v1" + OspreyTrainingExport.FILE_SUFFIX);
+            ParquetColumns.Write(v1, Columns(records).Concat(new[]
+            {
+                Column(@"experiment_precursor_q", records.Select(x => x.RunPrecursorQ).ToArray()),
+                Column(@"pep", records.Select(x => 0.01).ToArray()),
+            }).ToArray(), footerV1, 2);
+            CollectionAssert.AreEqual(records.Select(x => x.ModifiedSequence).ToArray(),
+                OspreyTrainingExport.Read(v1).Records.Select(x => x.ModifiedSequence).ToArray());
+
             // What the reader refuses: another format version or none, a record whose ladder has
             // the wrong number of slots, and a missing column.
-            var footerV2 = Footer(@"a");
-            footerV2[FORMAT_VERSION_KEY] = @"2";
-            AssertInvalid(WriteExport(@"v2", records, footerV2, 2), null);
+            var footerV3 = Footer(@"a");
+            footerV3[FORMAT_VERSION_KEY] = @"3";
+            AssertInvalid(WriteExport(@"v3", records, footerV3, 2), null);
             var noVersion = Footer(@"a");
             noVersion.Remove(FORMAT_VERSION_KEY);
             AssertInvalid(WriteExport(@"v0", records, noVersion, 2), @"(none)");
@@ -166,7 +180,6 @@ namespace pwiz.CarafeSharp.Test
             var a1 = Clean(@"PEPTIDEK", 2, 0.001, 5.0);
             var a2 = Clean(@"PEPTIDEK", 3, 0.005, 5.1);
             var a3 = Clean(@"SAMPLERK", 2, 0.01, 6.0);
-            a3.Pep = 0.002;
             var a4 = Clean(@"ELVISLIVESK", 2, 0.0100001, 7.0);
             var a5 = Clean(@"DECQYPEPK", 2, 0.001, 7.5);
             a5.IsEntrapment = true;
@@ -184,7 +197,7 @@ namespace pwiz.CarafeSharp.Test
             a9.ModifiedSequence = @"AM(UniMod:35)C(UniMod:4)PEPTK";
             var b1 = Clean(@"PEPTIDEK", 2, 0.0005, 15.0);
             var b2 = Clean(@"SAMPLERK", 2, 0.01, 16.0);
-            b2.Pep = 0.001;
+            b2.Score = 2;
             var b3 = Clean(@"SAMPLERK", 3, 0.001, 16.5);
             for (int slot = 0; slot < b3.SlotCount; slot++)
                 b3.CorrPolish[slot] = 0.1f;
@@ -205,7 +218,7 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(2, stats.AboveQ);
             Assert.AreEqual(1, stats.Entrapment);
             Assert.AreEqual(1, stats.Unmapped);
-            // PEPTIDEK 2+ and SAMPLERK 2+ are in both runs: the better q, then the better PEP, wins.
+            // PEPTIDEK 2+ and SAMPLERK 2+ are in both runs: the better q, then the higher score, wins.
             Assert.AreEqual(2, stats.DuplicatePrecursors);
             Assert.AreEqual(6, stats.Ms2Candidates);
             // One spectrum per precursor, in file then entry order.
@@ -373,9 +386,7 @@ namespace pwiz.CarafeSharp.Test
         {
             var record = CleanRecord(sequence, charge);
             record.RunPrecursorQ = runQ;
-            record.ExperimentPrecursorQ = runQ;
             record.ApexRt = apexRt;
-            record.Pep = 0.01;
             record.Score = 1;
             return record;
         }

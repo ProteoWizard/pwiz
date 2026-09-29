@@ -364,7 +364,7 @@ namespace pwiz.CarafeSharp.Proteome
                 throw new NotSupportedException(@"-lf_format parquet is not supported by CarafeSharp");
             CheckAiVersion();
             // Parsed here, not only after the digest, so a bad id stops the run before any work.
-            // Stage 1 does not come here: its m/z filter reads ids 11 to 27 too.
+            // Stage 1 does not come here: its m/z filter reads ids 11 to 26 too.
             var fixedModifications = GetModifications(@"fixMod", modifications.FixedModifications, modifications.GetFixedModifications);
             var variableModifications = GetModifications(@"varMod", modifications.VariableModifications, modifications.GetVariableModifications);
 
@@ -433,6 +433,16 @@ namespace pwiz.CarafeSharp.Proteome
                 throw new NotSupportedException(string.Format(
                     @"-lf_type {0} writes a TSV in the {1} notation, which cannot write a protein N-term modification; " +
                     @"use -lf_type DIA-NN, or a .blib (-lf_type Skyline -fast)", settings.LibraryFormat, outputs.TsvStyle));
+            }
+            // Carafe's TSV notations have no place for an N-terminal modification of one residue
+            // (pyro-Glu); Carafe 2.2.0 fails on it at site -1.
+            var nTermResidue = fixedModifications.Concat(variableModifications)
+                .FirstOrDefault(m => m.Type == CarafeModificationType.peptide_n_term_residue);
+            if (outputs.WritesTsv && nTermResidue != null)
+            {
+                throw new NotSupportedException(string.Format(
+                    @"-lf_type {0} writes a TSV, and Carafe's TSV notations cannot write {1}; use a .blib (-lf_type blib, " +
+                    @"or -lf_type Skyline -fast)", settings.LibraryFormat, nTermResidue.Name));
             }
             return settings;
         }

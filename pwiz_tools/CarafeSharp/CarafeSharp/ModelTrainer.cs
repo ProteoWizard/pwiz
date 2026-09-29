@@ -83,9 +83,11 @@ namespace pwiz.CarafeSharp
             foreach (string path in selection.Exports)
             {
                 var export = OspreyTrainingExport.Read(path);
-                Log(string.Format(CultureInfo.InvariantCulture, @"Training export {0}: {1} precursors, rt_max {2}, NCE {3}, instrument {4}",
+                Log(string.Format(CultureInfo.InvariantCulture, @"Training export {0}: {1} precursors, rt_max {2}, NCE {3}, instrument {4}, run q from pass {5}",
                     path, export.Records.Count, export.RtMax, export.DominantCollisionEnergy?.ToString(CultureInfo.InvariantCulture) ?? @"unknown",
-                    export.InstrumentModel ?? @"unknown"));
+                    export.InstrumentModel ?? @"unknown", export.RunQPass ?? @"unknown"));
+                if (export.RunQPass == @"1")
+                    Log(string.Format(@"WARNING: {0} took its run q-values from Osprey's first pass; the run had no second pass.", path));
                 exports.Add(export);
             }
 
@@ -137,8 +139,10 @@ namespace pwiz.CarafeSharp
         /// records (AIGear, the training data loop): the run's path as <paramref name="runPaths"/>
         /// keys it (its stem without <c>-ms</c>), the instrument detected in the run (empty when
         /// Carafe recognizes none; not <c>-ms_instrument</c>), the run's collision energy, its
-        /// rt_max (at least <c>-rt_max</c>), MS2 scan window and isolation range. The library
-        /// fragment range and count, which Carafe never sets, keep JMeta's defaults.
+        /// rt_max (at least <c>-rt_max</c>), MS2 scan window and isolation range. The scan window is
+        /// the export's measured m/z range, so it can differ from the declared one Carafe records
+        /// by a fraction of a Th; prediction does not read it. The library fragment range and
+        /// count, which Carafe never sets, keep JMeta's defaults.
         /// </summary>
         internal static IReadOnlyList<CarafeRunMeta> BuildRunMeta(IReadOnlyList<OspreyTrainingExport> exports,
             IReadOnlyDictionary<string, string> runPaths, OspreyTrainingSetOptions options)
