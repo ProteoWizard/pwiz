@@ -28,6 +28,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
@@ -132,7 +133,8 @@ namespace pwiz.Osprey.Test
             string blib = Path.Combine(straightDir, BLIB_FILE);
 
             // Mode 1: straight-through, with the second-pass worker verifier on as the regression runs it.
-            string log = RunAnalysis(straightDir, DataInputs(), Verifier(true));
+            string straightLog = RunAnalysis(straightDir, DataInputs(), Verifier(true));
+            string log = straightLog;
             ValidateStraightThrough(straightDir, log);
             string coldBlib = Path.Combine(straightDir, @"output_cold.blib");
             File.Copy(blib, coldBlib);
@@ -168,6 +170,11 @@ namespace pwiz.Osprey.Test
                           HasLine(log, PathLine(LogKey.ROUTE_FIRST_PASS_FDR, @"survivor-loader-only")),
                 @"rehydrate did not enter the first pass's own-bundle loader" + Environment.NewLine + log);
             AssertBlibsEqual(coldBlib, blib);
+            // The rehydrate is the run an operator reaches for after running out of memory, so it
+            // must keep both savings: Stage 7 folds one run at a time, and the library fragments
+            // are released, against the summary the straight-through run wrote (#4650).
+            AssertStreamedJoin(log);
+            AssertFragmentRelease(log, straightLog);
         }
 
         /// <summary>
@@ -274,6 +281,117 @@ namespace pwiz.Osprey.Test
             log = RunAnalysis(workDir, RunNames(workDir, MZML_EXTENSION), LIBDECOY_FILE, Verifier(false), args);
             AssertRescoredOnly(log, 1);
             AssertBlibsEqual(uninterruptedBlib, blib);
+        }
+
+        /// <summary>
+        /// The model diagnostics report from a completed analysis without re-running it (the
+        /// regression's modes 5, 7 and 11 on its library-decoy dataset). A rehydrated second pass
+        /// re-emits the same report; <c>--task ModelDiagnostics</c> rewrites only the report; and
+        /// with its products deleted the report is folded from the sidecars - the same report,
+        /// with no analysis run - from every entry point that can produce it.
+        /// </summary>
+        [TestMethod, DoNotParallelize]
+        public void TestSubsetDiagnosticsWithoutReanalysis()
+        {
+            string workDir = CreateDir(@"diagnostics");
+            var args = new[]
+            {
+                OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY.ArgumentText,
+                OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText, Path.Combine(_dataDir, LIBDECOY_PAIRING_FILE),
+                OspreyCommandArgs.ARG_MODEL_DIAGNOSTICS.ArgumentText
+            };
+            string RunDiagnostics(string taskName, int exitCode = Program.EXIT_CODE_SUCCESS)
+            {
+                var taskArgs = taskName == null ? args : args.Concat(new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, taskName });
+                return RunOspreyExpecting(InputArgs(DataInputs()).Concat(new[]
+                {
+                    OspreyCommandArgs.ARG_LIBRARY.ArgumentText, Path.Combine(_dataDir, LIBDECOY_FILE),
+                    OspreyCommandArgs.ARG_OUTPUT.ArgumentText, Path.Combine(workDir, BLIB_FILE),
+                    OspreyCommandArgs.ARG_WORK_DIR.ArgumentText, workDir
+                }).Concat(CommonArgs()).Concat(taskArgs).ToArray(), Verifier(false), exitCode);
+            }
+
+            RunDiagnostics(null);
+            string blib = Path.Combine(workDir, BLIB_FILE);
+            string pass1 = Path.Combine(workDir, @"output.1st-pass.model-diagnostics.json");
+            string pass2 = Path.Combine(workDir, @"output.2nd-pass.model-diagnostics.json");
+            string report = Path.Combine(workDir, @"output.model-diagnostics.html");
+            string referenceDir = CreateDir(@"diagnostics-reference");
+            foreach (string product in new[] { pass1, pass2, report })
+            {
+                Assert.IsTrue(File.Exists(product), @"the analysis wrote no " + product);
+                File.Copy(product, Path.Combine(referenceDir, Path.GetFileName(product)));
+            }
+            string ReferenceOf(string product) => Path.Combine(referenceDir, Path.GetFileName(product));
+
+            // Mode 5: the rehydrated second pass re-emits the pass-2 product unchanged.
+            DeleteSecondPassOutputs(blib);
+            string log = RunDiagnostics(null);
+            AssertNoRecompute(log);
+            CollectionAssert.AreEqual(File.ReadAllBytes(ReferenceOf(pass2)), File.ReadAllBytes(pass2),
+                @"the rehydrated second pass wrote a different pass-2 diagnostics product");
+
+            // Mode 7: regenerating the report rewrites the report and nothing else.
+            var before = FingerprintDir(workDir);
+            log = RunDiagnostics(ModelDiagnosticsTask.TASK_NAME);
+            Assert.IsFalse(HasLine(log, PathLine(LogKey.ROUTE_ALL_RUNS_BUNDLE, string.Empty)), log);
+            CollectionAssert.AreEqual(new[] { Path.GetFileName(report) }, ChangedFiles(before, workDir),
+                @"regeneration changed something other than the report" + Environment.NewLine + log);
+
+            // Mode 11: with both products deleted, asking for the report folds it from the
+            // sidecars. Re-running the analysis would produce the right report too, which is
+            // why the fold markers and the absence of analysis are what is asserted.
+            string[] noAnalysis =
+            {
+                PathLine(LogKey.ROUTE_PRE_COMPACTION_POOL, @"resident"),
+                PathLine(LogKey.ROUTE_RESCORE_FILE, string.Empty),
+                PathLine(LogKey.ROUTE_SCORED_ENTRIES, @"resident"),
+                @"[" + LogTag.STAGE_WALL + @"] second-pass-fdr",
+                PathLine(LogKey.ROUTE_PROTEIN_FDR, string.Empty),
+                PathLine(LogKey.ROUTE_ALL_RUNS_BUNDLE, string.Empty)
+            };
+            string foldPass1 = PathLine(LogKey.ROUTE_MODEL_DIAGNOSTICS, @"fold-pass1");
+            string foldPass2 = PathLine(LogKey.ROUTE_MODEL_DIAGNOSTICS, @"fold-pass2");
+            DeleteDiagnosticsProducts(workDir, pass1, pass2);
+            before = FingerprintDir(workDir);
+            log = RunDiagnostics(ModelDiagnosticsTask.TASK_NAME);
+            AssertLogShape(log, new[] { foldPass1, foldPass2, PathLine(LogKey.ROUTE_FIRST_PASS_FDR, @"survivor-loader-only") },
+                noAnalysis);
+            CollectionAssert.AreEqual(File.ReadAllBytes(ReferenceOf(pass2)), File.ReadAllBytes(pass2),
+                @"the folded pass-2 product is not the same report");
+            AssertSameFirstPassProduct(ReferenceOf(pass1), pass1);
+            foreach (string changed in ChangedFiles(before, workDir))
+            {
+                Assert.IsTrue(changed == Path.GetFileName(pass1) || changed == Path.GetFileName(pass2) ||
+                              changed == Path.GetFileName(report) || changed.EndsWith(TaskValiditySidecar.EXT, StringComparison.Ordinal),
+                    @"the pay-later fold touched an artifact other than the report: " + changed);
+            }
+
+            // Every other entry point. The whole pipeline with the products present runs nothing.
+            log = RunDiagnostics(null);
+            AssertLogShape(log, Array.Empty<string>(), noAnalysis);
+            AssertTasks(log, ALL_TASKS, Array.Empty<string>());
+            // The whole pipeline with them absent folds both.
+            DeleteDiagnosticsProducts(workDir, pass1, pass2);
+            log = RunDiagnostics(null);
+            AssertLogShape(log, new[] { foldPass1, foldPass2 }, noAnalysis);
+            AssertTasks(log, new[] { PerFileScoringTask.TASK_NAME, PerFileRescoreTask.TASK_NAME }, Array.Empty<string>());
+            Assert.IsTrue(File.Exists(pass1) && File.Exists(pass2), @"the whole pipeline folded nothing");
+            // --task FirstPassFDR folds pass 1.
+            DeleteDiagnosticsProducts(workDir, pass1, pass2);
+            log = RunDiagnostics(FirstPassFdrTask.TASK_NAME);
+            AssertLogShape(log, new[] { foldPass1 }, noAnalysis);
+            Assert.IsTrue(File.Exists(pass1), @"--task FirstPassFDR folded nothing");
+            // --task SecondPassFDR with no pass-1 product refuses rather than half-producing.
+            DeleteDiagnosticsProducts(workDir, pass1, pass2);
+            log = RunDiagnostics(SecondPassFdrTask.TASK_NAME, Program.EXIT_CODE_FAILURE_TO_START);
+            AssertLogShape(log, new[] { PathLine(LogKey.ROUTE_MODEL_DIAGNOSTICS, @"refused-no-pass1") }, noAnalysis);
+            Assert.IsFalse(File.Exists(pass2), @"a pass-2 product exists after a refusal");
+            // --task SecondPassFDR with only the pass-2 product missing folds it.
+            File.Copy(ReferenceOf(pass1), pass1);
+            log = RunDiagnostics(SecondPassFdrTask.TASK_NAME);
+            AssertLogShape(log, new[] { foldPass2 }, noAnalysis);
+            Assert.IsTrue(File.Exists(pass2), @"--task SecondPassFDR folded nothing");
         }
 
         /// <summary>
@@ -793,6 +911,16 @@ namespace pwiz.Osprey.Test
         /// </summary>
         private static string RunOsprey(string[] args, IReadOnlyDictionary<string, string> variables)
         {
+            return RunOspreyExpecting(args, variables, Program.EXIT_CODE_SUCCESS);
+        }
+
+        /// <summary>
+        /// Run a command line that must exit with <paramref name="expectedExitCode"/>: on success
+        /// with no "Error:" line, and either way without reconciling the exit code with the log.
+        /// </summary>
+        private static string RunOspreyExpecting(string[] args, IReadOnlyDictionary<string, string> variables,
+            int expectedExitCode)
+        {
             string output;
             int exitCode;
             using (OspreyEnvironment.OverrideVariables(variables))
@@ -801,8 +929,9 @@ namespace pwiz.Osprey.Test
             }
             string message = string.Format(@"Command line: {0}{1}Output:{1}{2}",
                 string.Join(@" ", args), Environment.NewLine, output);
-            Assert.AreEqual(Program.EXIT_CODE_SUCCESS, exitCode, message);
-            Assert.IsFalse(SplitLines(output).Any(CommandStatusWriter.IsErrorLine), message);
+            Assert.AreEqual(expectedExitCode, exitCode, message);
+            if (expectedExitCode == Program.EXIT_CODE_SUCCESS)
+                Assert.IsFalse(SplitLines(output).Any(CommandStatusWriter.IsErrorLine), message);
             Assert.IsFalse(HasLine(output, PathLine(LogKey.ROUTE_EXIT_RECONCILED, string.Empty)), message);
             return output;
         }
@@ -898,6 +1027,109 @@ namespace pwiz.Osprey.Test
                 File.Delete(path);
                 File.Delete(TaskValiditySidecar.PathFor(path, PerFileRescoreTask.TASK_NAME));
             }
+        }
+
+        /// <summary>
+        /// Stage 7 folded the survivors run by run: the per-run source was published and nothing
+        /// then pulled the whole pool through it. The output is the same either way.
+        /// </summary>
+        private static void AssertStreamedJoin(string log)
+        {
+            AssertHasLine(log, PathLine(LogKey.ROUTE_SECOND_PASS_JOIN, @"per-run"));
+            Assert.IsFalse(HasLine(log, PathLine(LogKey.ROUTE_SURVIVOR_POOL, @"materialized")),
+                @"a consumer pulled the whole survivor pool through the per-run source" + Environment.NewLine + log);
+        }
+
+        /// <summary>
+        /// The library-fragment release ran and freed spectra when Stage 6 re-scored, and Stage 7's
+        /// release read the retained summary written in <paramref name="summaryLog"/> rather than
+        /// rebuilding it (#4650): the same count, Stage 6 retaining no more than it, and nothing
+        /// left for Stage 7 to release in the process where Stage 6 already did. The release does
+        /// not change the output, so only these counts can show it happened.
+        /// </summary>
+        private static void AssertFragmentRelease(string log, string summaryLog)
+        {
+            var rescore = ReadRelease(log, LogKey.SCOPE_RESCORE_GAP_FILL);
+            var summary = ReadRelease(log, LogKey.SCOPE_RETAINED_SUMMARY);
+            var written = Regex.Match(summaryLog, Regex.Escape(@"[" + LogTag.COUNT + @"] " + LogKey.COUNT_RETAINED_SUMMARY_WRITTEN + @": base-ids=") + @"(\d+)");
+            Assert.IsTrue(written.Success, @"no retained summary written" + Environment.NewLine + summaryLog);
+            int summaryCount = int.Parse(written.Groups[1].Value, CultureInfo.InvariantCulture);
+            Assert.IsTrue(rescore.Released > 0, @"the Stage 6 release freed nothing" + Environment.NewLine + log);
+            Assert.AreEqual(summaryCount, summary.Retained, @"Stage 7 did not retain the summary's base_ids");
+            Assert.IsTrue(rescore.Retained <= summaryCount, @"Stage 6 retained more than the summary");
+            Assert.AreEqual(0, summary.Released, @"Stage 7 released what Stage 6 already had");
+        }
+
+        private static (int Released, int Retained) ReadRelease(string log, string scope)
+        {
+            var match = Regex.Match(log, Regex.Escape(@"[" + LogTag.COUNT + @"] " + LogKey.COUNT_LIBRARY_FRAGMENTS_RELEASED + @": released=") +
+                                         @"(\d+) entries=\d+ retained=(\d+) scope=" + Regex.Escape(scope) + @"\b");
+            Assert.IsTrue(match.Success, @"no library-fragment release for scope " + scope + Environment.NewLine + log);
+            return (int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture),
+                int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture));
+        }
+
+        /// <summary>
+        /// Delete the diagnostics products and any sidecar written beside them.
+        /// </summary>
+        private static void DeleteDiagnosticsProducts(string dir, params string[] products)
+        {
+            foreach (string product in products)
+            {
+                foreach (string file in Directory.GetFiles(dir, Path.GetFileName(product) + @"*"))
+                    File.Delete(file);
+            }
+        }
+
+        /// <summary>
+        /// The pass-1 product folded later equals the one written with the analysis, except for
+        /// its generation time and the views no fold can rebuild today (each held privately by a
+        /// phase that has already exited).
+        /// </summary>
+        private static void AssertSameFirstPassProduct(string expectedPath, string actualPath)
+        {
+            string[] notComparable = { @"generatedUtc", @"cal", @"model", @"featureHistEdges", @"featureCount", @"modelComposite" };
+            JObject Comparable(string path)
+            {
+                var json = JObject.Parse(File.ReadAllText(path));
+                foreach (string key in notComparable)
+                    json.Remove(key);
+                return json;
+            }
+            Assert.IsTrue(JToken.DeepEquals(Comparable(expectedPath), Comparable(actualPath)),
+                @"the folded pass-1 product differs outside the views a fold cannot rebuild");
+        }
+
+        /// <summary>
+        /// Every line in <paramref name="required"/> appears in the log and none in
+        /// <paramref name="forbidden"/> does.
+        /// </summary>
+        private static void AssertLogShape(string log, IEnumerable<string> required, IEnumerable<string> forbidden)
+        {
+            foreach (string line in required)
+                AssertHasLine(log, line);
+            foreach (string line in forbidden)
+                Assert.IsFalse(HasLine(log, line), @"the analysis ran: " + line + Environment.NewLine + log);
+        }
+
+        /// <summary>
+        /// Size and last-write time of every file in <paramref name="dir"/>, by name.
+        /// </summary>
+        private static Dictionary<string, string> FingerprintDir(string dir)
+        {
+            return Directory.GetFiles(dir).Select(f => new FileInfo(f)).ToDictionary(f => f.Name,
+                f => f.Length.ToString(CultureInfo.InvariantCulture) + @":" + f.LastWriteTimeUtc.Ticks.ToString(CultureInfo.InvariantCulture));
+        }
+
+        /// <summary>
+        /// The names of files added, changed or removed since <paramref name="before"/>, sorted.
+        /// </summary>
+        private static string[] ChangedFiles(Dictionary<string, string> before, string dir)
+        {
+            var after = FingerprintDir(dir);
+            return after.Where(p => !before.TryGetValue(p.Key, out string value) || value != p.Value).Select(p => p.Key)
+                .Concat(before.Keys.Where(name => !after.ContainsKey(name)))
+                .OrderBy(name => name, StringComparer.Ordinal).ToArray();
         }
 
         /// <summary>

@@ -161,26 +161,14 @@ $modes = @(
     @{ Id = '12+'; Title = 'resume rewrites both FDRBench files identically'
        Proves = 'The second half of mode 12; rides the mode-2 resume.'
        Lines = @('mode12 (resume fdrbench==straight)'); When = { param($s) [bool]$s.FdrBench -and -not (Skipped $s 2) }; Gate = 'FdrBench and mode 2' }
-    @{ Id = '5';  Cost = '5'; Title = 'Stage-5 rehydrate (own-sidecar loader) == straight-through'
-       Proves = 'Invalidate only SecondPassFDR: the rehydrate arm builds its bundle from this run''s OWN sidecars (a marker from inside the loader proves it) and the blib still equals the straight-through one.'
-       Lines = @('mode5 (rehydrate entered + cache hits)', 'mode5 (rehydrate==straight)'); When = { param($s) -not (Skipped $s 5) }; Gate = 'not in SkipModes (-SkipRehydrate)' }
-    @{ Id = '5+'; Title = 'rehydrated diagnostics vs golden + FDR sanity bounds'
-       Proves = 'The report re-emitted from the rehydrated sidecars matches the golden and the bounds.'
-       Lines = @('mode5 (rehydrate diagnostics vs golden)', 'mode5 (rehydrate FDR sanity bounds)'); When = { param($s) [bool]$s.ModelDiagnostics -and -not (Skipped $s 5) }; Gate = 'ModelDiagnostics and mode 5' }
-    @{ Id = 'S7'; Title = 'streamed Stage-7 join on every leg (modes 1, 2, 5)'
+    @{ Id = 'S7'; Title = 'streamed Stage-7 join on every leg (modes 1, 2)'
        Proves = 'Each leg''s log shows the per-run fold and no all-runs survivor pool - the O(files) resident join must not come back silently. Free: log checks on legs that ran.'
-       Lines = @('mode1 (streamed join)'); When = { param($s) $true }; Gate = 'every dataset; the mode-2 and mode-5 lines follow those modes'
-       Extra = @{ 'mode2 (streamed join)' = { param($s) -not (Skipped $s 2) }
-                  'mode5 (streamed join)' = { param($s) -not (Skipped $s 5) } } }
+       Lines = @('mode1 (streamed join)'); When = { param($s) $true }; Gate = 'every dataset; the mode-2 line follows that mode'
+       Extra = @{ 'mode2 (streamed join)' = { param($s) -not (Skipped $s 2) } } }
     @{ Id = '6';  Title = 'library-fragment release engaged'
        Proves = 'The release RAN on every leg that holds the library and did NOT run on --task FirstPassFDR; output-neutral by design, so only the logs can see it. Free.'
        Lines = @('mode6 (library-fragment release engaged)'); When = { param($s) $true }; Gate = 'every dataset' }
-    @{ Id = '7';  Cost = '7'; Title = '--task ModelDiagnostics regeneration'
-       Proves = 'Re-entering a completed run changes exactly one artifact (the report) and it still matches the golden.'
-       Lines = @('mode7 (diagnostics regeneration: report only, vs golden)'); When = { param($s) [bool]$s.ModelDiagnostics -and -not (Skipped $s 7) }; Gate = 'ModelDiagnostics, not in SkipModes' }
-    @{ Id = '11'; Cost = '11'; Title = 'pay-later diagnostics: folded, no analysis, same report'
-       Proves = 'With both diagnostics products deleted, asking for the report folds it from the sidecars, runs no analysis, and produces the byte-identical page.'
-       Lines = @('mode11 (pay-later diagnostics: folded, no analysis, same report, from every entry point)'); When = { param($s) [bool]$s.ModelDiagnostics -and -not (Skipped $s 11) }; Gate = 'ModelDiagnostics, not in SkipModes' }
+
 )
 
 function Expected-Lines($m, $spec) {
