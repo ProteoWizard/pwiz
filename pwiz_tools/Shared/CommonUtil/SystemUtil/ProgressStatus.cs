@@ -217,6 +217,9 @@ namespace pwiz.Common.SystemUtil
                         s.PercentComplete = s.PercentZoomStart = segment*100/segmentCount;
                         s.PercentZoomEnd = (segment + 1)*100/segmentCount;
                     }
+                    // A new segment starts at 0% of itself. Otherwise 100% left over from the previous
+                    // segment makes ChangePercentComplete(100) look already applied, and this one never ends.
+                    s.ZoomedPercentComplete = 0;
                     s.SegmentCount = segmentCount;
                     s.Segment = segment;
                 });
@@ -258,6 +261,8 @@ namespace pwiz.Common.SystemUtil
                     s.PercentZoomEnd = segmentPercentageEnds[segment];
                 }
 
+                // See ChangeSegments(int, int)
+                s.ZoomedPercentComplete = 0;
                 s.SegmentPercentEnds = ImmutableList<int>.ValueOf(segmentPercentageEnds);
                 s.SegmentCount = segmentCount;
                 s.Segment = segment;
