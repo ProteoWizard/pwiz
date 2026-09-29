@@ -172,12 +172,64 @@
     <value>{0}は値を取りません。</value>
     <comment>Needs Review:New resource</comment>
   </data>
+  <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_Distributed_execution__HPC_" xml:space="preserve">
+    <value>分散実行（HPC）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_EVERY_task_takes__0___naming_the_DATA_files" xml:space="preserve">
+    <value>すべてのタスクに{0}でデータファイルを指定します。名前は最初の分割で指定したものと同じです。結合タスクは各ランのparquetと中間ファイルを入力のステムから導き出すため、データファイル自体が残っている必要はありません。ワーカーの作業ディレクトリ（または{1}の下）に必要なのは、そのランの成果物です。{4}の整合は順序に依存するため、決定的にソートされたリストを渡してください。{2}は1行に1つのパスを受け取ります。{0}ではコマンドラインの長さがファイル数に比例して増えるため、数百ランを超えるコホートにはこちらが必要です。ファンアウトは{3}（単一ノードでの複数ファイルモード）ではなく、スケジューラに任せてください（分割プロセスごとに1ファイル）。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_Run_with_no__0__for_the_whole_pipeline_in_one_process" xml:space="preserve">
+    <value>{0}を指定しない場合、パイプライン全体が1つのプロセスで実行されます。分散（HPC／ワークフローエンジン）実行では、パイプラインは結合／ファンアウトの境界で4つの単一タスクワーカーに分割されます（1ノード = 1つの{0}）：{2}（分割、ファイルごと）{6}{3}（結合、全ファイル）{6}{4}（分割、ファイルごと）{6}{5}（結合、全ファイル）。すべてのタスクに同じ{1}と検索オプションを渡してください。parquetの整合性チェックにより、検索／ライブラリのハッシュが一致しない入力は拒否されます。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_join_1___one_process_over_ALL_runs" xml:space="preserve">
+    <value>結合1 - 全ランに対して1プロセス（順序が決定的になるよう、ソート済みのリストを渡す）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_join_2___one_process_over_ALL_runs" xml:space="preserve">
+    <value>結合2 - 全ランに対して1プロセス、整合済みparquetを読み込み（{0}を書き込み）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_split_1___one_process_per_mzML" xml:space="preserve">
+    <value>分割1 - mzMLごとに1プロセス（各入力の横に{0}、{1}を書き込み）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_split_2___one_process_per_file" xml:space="preserve">
+    <value>分割2 - ファイルごとに1プロセス（スコアparquetとその中間ファイルをまとめて）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes___0_" xml:space="preserve">
+    <value>書き込み：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes_beside_each_parquet___0____1_" xml:space="preserve">
+    <value>各parquetの横に書き込み：{0}、{1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_AppendUsageHtmlIntro_For_the_pipeline_overview__per_stage_detail__and_how_the_four_distributed_HPC_" xml:space="preserve">
+    <value>パイプラインの概要、各段階の詳細、および4つの分散HPCタスクの分割と結合については、ワークフロー図{0}を参照してください。以下の引数表はコマンドラインの宣言から生成されるため、常にビルドと一致します。同じ内容をテキストで表示するには、{1}を実行してください。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_AppendUsageHtmlIntro_Osprey_is_a_peptide_centric_DIA_search_tool_from_the_MacCoss_lab" xml:space="preserve">
+    <value>Ospreyは、MacCossラボによるペプチド中心型のDIA検索ツールです。DIA mzMLファイルとスペクトルライブラリを読み込み、FDR制御された結果をBiblioSpecLite（{0}）ライブラリとして書き込みます。このライブラリはSkylineに直接インポートできます。WindowsとLinuxでスタンドアロンの実行ファイルとして動作します。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="OspreyCommandArgs_BuildUsage_No_help_section_matching___0___found__Use__1__to_list_available_sections_" xml:space="preserve">
     <value>「{0}」に一致するヘルプセクションが見つかりません。利用可能なセクションを一覧表示するには{1}を使用してください。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="OspreyCommandArgs_FdrBenchMissingMessage__0__is_set_without__1___no_FDRBench_input_will_be_written__Pass__1___2__to_enable_FDRBench_output_" xml:space="preserve">
     <value>{0}が{1}なしで設定されているため、FDRBench入力は書き込まれません。FDRBench出力を有効にするには{1} {2}を指定してください。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_GenerateUsageHtml_Command_line_usage_for_Osprey__the_peptide_centric_DIA_search_tool_from_the_MacCoss_lab" xml:space="preserve">
+    <value>MacCossラボのペプチド中心型DIA検索ツールOspreyのコマンドライン使用法：検索とFDRの引数、タンパク質推定、{0}ステージングタスク、{1}レポート専用タスク、および4つの分散HPC {2}ワーカー（{3}）。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_GenerateUsageHtml_Osprey_command_line_usage" xml:space="preserve">
+    <value>Ospreyコマンドラインの使用法</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="OspreyCommandArgs_Group_Decoys" xml:space="preserve">
@@ -257,7 +309,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="OspreyCommandArgs_UsageBlocks_Osprey___Peptide_centric_DIA_analysis__NET_port_of_Osprey_" xml:space="preserve">
-    <value>Osprey - ペプチド中心のDIA解析（Ospreyの.NET移植版）</value>
+    <value>Osprey - ペプチド中心のDIA解析</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="OspreyCommandArgs_UsageBlocks_USAGE___0_" xml:space="preserve">

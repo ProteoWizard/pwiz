@@ -374,11 +374,11 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_FoldDiagnosticsOnly___task_ModelDiagnostics__could_not_prepare_the_report___0_" xml:space="preserve">
-    <value>{1}：无法准备报告：{0}</value>
+    <value>“{1}”：无法准备报告：{0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_FoldDiagnosticsOnly___task_ModelDiagnostics__no__scores_parquet_file_is_known_for__0__" xml:space="preserve">
-    <value>{1}：没有已知的 {0} 的 {2} 文件。</value>
+    <value>“{1}”：没有已知的 {0} 的 {2} 文件。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_LoadFirstPassExperimentRecords_Failed_to_read_the_whole_experiment_first_pass_intermediate_file___0_" xml:space="preserve">
@@ -414,7 +414,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_LogIntermediateWriteFailures___task_FirstPassFDR___0__of__1__first_pass_intermediate_files_could_not_be_written__so_" xml:space="preserve">
-    <value>{2}：{1:N0} 个第一轮中间文件中有 {0:N0} 个无法写入，因此下一个任务无法运行。有关每个文件的信息，请参见上方警告。</value>
+    <value>“{2}”：{1:N0} 个第一轮中间文件中有 {0:N0} 个无法写入，因此下一个任务无法运行。有关每个文件的信息，请参见上方警告。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_LogRunLevelTotal_Total___0__precursors_pass_run_level_FDR_across__1__files" xml:space="preserve">
@@ -454,7 +454,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_PlanStage6___task_FirstPassFDR_complete__first_pass_FDR_and_reconciliation_planning_done_for_1_file__" xml:space="preserve">
-    <value>{1} 已完成：已为 1 个文件完成第一轮 FDR 和协调规划。下一个任务 {2} 将读取此输出目录：为该输入写入的文件以及整个分析范围的第一轮文件。</value>
+    <value>“{1}”已完成：已为 1 个文件完成第一轮 FDR 和协调规划。下一个任务 {2} 将读取此输出目录：为该输入写入的文件以及整个分析范围的第一轮文件。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_PlanStage6___task_FirstPassFDR_complete__first_pass_FDR_and_reconciliation_planning_done_for__0__" xml:space="preserve">
@@ -478,7 +478,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_RehydrateForPerRunRescore_This_analysis_cannot_resume_from_its_completed_first_pass_with__0_" xml:space="preserve">
-    <value>此分析无法使用 {0} 从已完成的第一轮恢复运行。请删除此分析的 {1} 文件并重新运行以重复第一轮。</value>
+    <value>此分析无法使用“{0}”从已完成的第一轮恢复运行。请删除此分析的 {1} 文件并重新运行以重复第一轮。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_Rehydrate_Using_the_first_pass_q_values_saved_in_the_intermediate_files__first_pass_Percolator_is_" xml:space="preserve">
@@ -622,7 +622,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_StreamOwnReconciliationBundle___model_diagnostics__could_not_prepare_the_report_on_this_resume__so_no_report_will_be_" xml:space="preserve">
-    <value>{1}：本次恢复运行时无法准备报告，因此不会写入报告。搜索不受影响。{0}</value>
+    <value>“{1}”：本次恢复运行时无法准备报告，因此不会写入报告。搜索不受影响。{0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_TryBuildResumeSurvivorLoader_Cannot_resume__no__scores_parquet_file_is_known_for__0___so_its_first_pass_precursor_" xml:space="preserve">
@@ -634,11 +634,11 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_ValidateSelection___task__0__requires_at_least_2_input_files____input___but__1__were_given__The_" xml:space="preserve">
-    <value>{0} 需要至少 2 个输入文件（{3}），但只提供了 {1:N0} 个。仅当有其他运行可供协调时，它为 {2} 写入的中间文件才有用。</value>
+    <value>“{0}”需要至少 2 个输入文件（“{3}”），但只提供了 {1:N0} 个。仅当有其他运行可供协调时，它为 {2} 写入的中间文件才有用。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_ValidateSelection___task__0__requires_cross_run_reconciliation__which_the_configuration_turns_off__The_" xml:space="preserve">
-    <value>{0} 需要跨运行协调，但配置已将其关闭。仅当运行跨运行协调时，它为 {1} 写入的中间文件才有用。</value>
+    <value>“{0}”需要跨运行协调，但配置已将其关闭。仅当运行跨运行协调时，它为 {1} 写入的中间文件才有用。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_WriteExperimentSidecar_Failed_to_write__0____1_" xml:space="preserve">
@@ -750,7 +750,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ModelDiagnosticsReport_WritePass1Sidecar_Skipped_the_first_pass_model_diagnostics_data__this_task_holds_one_file__and___task_" xml:space="preserve">
-    <value>已跳过第一轮模型诊断数据：此任务仅包含一个文件，而 {0} 会为整个实验写入该数据。</value>
+    <value>已跳过第一轮模型诊断数据：此任务仅包含一个文件，而“{0}”会为整个实验写入该数据。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ModelDiagnosticsReport_WritePass2AndFinalizeFromAccumulator_The_second_pass_results_could_not_be_added_to_the_model_diagnostics_report___0_" xml:space="preserve">
@@ -786,7 +786,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="OspreyReportWriter_WriteReports_Skipping_reports__no_output_path___o__to_derive_report_file_names_from_" xml:space="preserve">
-    <value>跳过报告：没有可用于派生报告文件名的输出路径（{0}）。</value>
+    <value>跳过报告：没有可用于派生报告文件名的输出路径（“{0}”）。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="OspreyReportWriter_WriteReports_protein_group_report" xml:space="preserve">
@@ -814,11 +814,11 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="OspreyTask_RequiresError___task__0__requires__1__" xml:space="preserve">
-    <value>{0} 需要 {1}。</value>
+    <value>“{0}”需要 {1}。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="OspreyTask_LibraryAndOutputText__0__and__1_" xml:space="preserve">
-    <value>{0} 和 {1}</value>
+    <value>“{0}”和“{1}”</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Pass1ScalarSeeder_Restored_the_first_pass_scores_of__1__kept_precursor_candidate_peaks_across__0__files_" xml:space="preserve">
@@ -846,7 +846,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Pass2FdrSidecar_ComputeAndPersist_Left_the_second_pass_FDR_scores_file_of_1_file_untouched____task_ModelDiagnostics_writes_" xml:space="preserve">
-    <value>未改动 1 个文件的第二轮 FDR 得分文件（{1} 只写入报告）</value>
+    <value>未改动 1 个文件的第二轮 FDR 得分文件（“{1}”只写入报告）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Pass2FdrSidecar_ComputeAndPersist_Left_the_second_pass_FDR_scores_files_of__0__files_untouched____task_ModelDiagnostics_" xml:space="preserve">
@@ -882,11 +882,11 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Pass2FdrSidecar_ComputeAndPersist___task_SecondPassFDR___0__files_from_the_first_pass_are_not_among_the_inputs_of_this_run_" xml:space="preserve">
-    <value>{2}：第一轮中有 {0:N0} 个文件不在本次运行的输入中，将被跳过：[{1}]。这通常意味着在第一轮和第二轮任务之间有输入被重命名或移动。</value>
+    <value>“{2}”：第一轮中有 {0:N0} 个文件不在本次运行的输入中，将被跳过：[{1}]。这通常意味着在第一轮和第二轮任务之间有输入被重命名或移动。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Pass2FdrSidecar_ComputePass2FrozenCompetition_Second_pass_FDR_cannot_run__the_saved_first_pass_model__a_first_pass_intermediate_file__" xml:space="preserve">
-    <value>无法运行第二轮 FDR：已保存的第一轮模型、某个第一轮中间文件，或来自检测数不少于 2 的蛋白质的母离子候选列表缺失或无法读取（如果是某个文件的问题，上方警告会指出该文件）。请不使用 {0} 从头到尾运行分析。</value>
+    <value>无法运行第二轮 FDR：已保存的第一轮模型、某个第一轮中间文件，或来自检测数不少于 2 的蛋白质的母离子候选列表缺失或无法读取（如果是某个文件的问题，上方警告会指出该文件）。请不使用“{0}”从头到尾运行分析。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Pass2FdrSidecar_ComputePass2Resident_Reloading_re_scored_peak_features_from_1_file" xml:space="preserve">
@@ -1086,7 +1086,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Pass2SidecarWriter_Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_" xml:space="preserve">
-    <value>无法记录 {0} 已完成 {1}：{2}。恢复运行时将重做此步骤。</value>
+    <value>无法记录“{0}”已完成 {1}：{2}。恢复运行时将重做此步骤。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Pass2SidecarWriter_Failed_to_write_the_second_pass_intermediate_file_for___0_____1_" xml:space="preserve">
@@ -1218,7 +1218,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileRescoreTask_LoadMassCalibrations_The_calibration_file__0__for_input__1__was_not_found__Re_scoring_needs_the_calibration_" xml:space="preserve">
-    <value>未找到输入 {1} 的校准文件 {0}。重新评分需要 {2} 为此输入保存的校准。请先为其运行 {3}，或检查输出文件夹。</value>
+    <value>未找到输入 {1} 的校准文件 {0}。重新评分需要 {2} 为此输入保存的校准。请先为其运行“{3}”，或检查输出文件夹。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileRescoreTask_LoadSpectraForRescore_Re_scoring_needs_the_spectra_cache___0___that_PerFileScoring_writes__but__1____2_" xml:space="preserve">
@@ -1230,11 +1230,11 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileRescoreTask_LoadSpectraForRescore_Run___task_PerFileScoring_for___0___again_to_rebuild_it_" xml:space="preserve">
-    <value>请为“{0}”再次运行 {1} 以重新构建缓存。</value>
+    <value>请为“{0}”再次运行“{1}”以重新构建缓存。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileRescoreTask_LoadSpectraForRescore_The_cache_is_written_beside_its_source_data__so_a___task_worker_whose___output_dir_" xml:space="preserve">
-    <value>缓存写在其源数据旁，因此 {2} 与数据文件夹不同的 {1} 工作进程必须用 {3} 指向该缓存。请传入 {3} &lt;包含 {0}{4} 的文件夹&gt;，如果从未写入过缓存，请为“{0}”再次运行 {5}。</value>
+    <value>缓存写在其源数据旁，因此“{2}”与数据文件夹不同的“{1}”工作进程必须用“{3}”指向该缓存。请传入“{3}”&lt;包含 {0}{4} 的文件夹&gt;，如果从未写入过缓存，请为“{0}”再次运行“{5}”。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileRescoreTask_LoadSpectraForRescore___Streaming__1__MS1_and__0__MS_MS_spectra_from_cache_for__2_" xml:space="preserve">
@@ -1270,7 +1270,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileRescoreTask_ReconciledPathOrFail_Second_pass_FDR__run___0___has_no_current_re_scored_results_file___scores_reconciled_" xml:space="preserve">
-    <value>第二轮 FDR：运行“{0}”没有最新的重新评分结果文件（{1}），{2} 会为每次运行写入该文件。不能改用其 {3} 文件，因为该文件只包含第一轮峰。请为其运行 {4}。</value>
+    <value>第二轮 FDR：运行“{0}”没有最新的重新评分结果文件（{1}），{2} 会为每次运行写入该文件。不能改用其 {3} 文件，因为该文件只包含第一轮峰。请为其运行“{4}”。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileRescoreTask_Rescore_Finding_missing_peaks_in_isolation_windows" xml:space="preserve">
@@ -1302,7 +1302,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileRescoreTask_Run___task_ModelDiagnostics_only_builds_the_report_for_a_completed_analysis__Finish_the_" xml:space="preserve">
-    <value>{0} 只为已完成的分析构建报告。请先完成分析；之后再构建报告。</value>
+    <value>“{0}”只为已完成的分析构建报告。请先完成分析；之后再构建报告。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileRescoreTask_Run_the_cross_run_reconciliation_data_they_need_is_not_available_to_this_run__To_rebuild_it__" xml:space="preserve">
@@ -1354,7 +1354,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileResumeDriver_Stamp___Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_" xml:space="preserve">
-    <value>无法记录 {0} 已完成 {1}：{2}。恢复运行时将重做此步骤。</value>
+    <value>无法记录“{0}”已完成 {1}：{2}。恢复运行时将重做此步骤。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileScoringTask_EmitCalibrationSummary_Calibration_summary___0___" xml:space="preserve">
@@ -1406,7 +1406,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileScoringTask_FinalizeAndCheck___task__0__complete__FDR_and_the__blib_are_left_to_the_next_task___1___" xml:space="preserve">
-    <value>{0} 已完成。FDR 和 {2} 留给下一个任务（{1}）。</value>
+    <value>“{0}”已完成。FDR 和 {2} 留给下一个任务（{1}）。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileScoringTask_HydrateRescoreBundleIfPresent_Loaded_cross_run_reconciliation_files_for__0__runs___1__peak_re_picks_and_boundary_" xml:space="preserve">
@@ -1542,7 +1542,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileScoringTask_ProcessFile____0__spectra_had_unsorted_peaks_and_were_sorted__use___verbose_for_detail_" xml:space="preserve">
-    <value>（{0:N0} 个谱图的峰未排序，已排序；详细信息请使用 {1}）</value>
+    <value>（{0:N0} 个谱图的峰未排序，已排序；详细信息请使用“{1}”）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileScoringTask_RehydrateFromOwnOutputs_Reading_first_pass_results_for_1_file" xml:space="preserve">
@@ -1850,7 +1850,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="SecondPassFdrTask_Run__0___1___2__adds_the_second_pass_to_the_first_pass_model_diagnostics_report__and_that_" xml:space="preserve">
-    <value>{0} {1} {2} 会将第二轮添加到第一轮模型诊断报告中，但该报告的结果（{3}）缺失。请先运行 {0} {4} {2}（或使用 {2} 运行整个分析），然后再次运行此任务。</value>
+    <value>“{0}”{1}“{2}”会将第二轮添加到第一轮模型诊断报告中，但该报告的结果（{3}）缺失。请先运行“{0}”{4}“{2}”（或使用“{2}”运行整个分析），然后再次运行此任务。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="SecondPassFdrTask_Run__0__of__1__re_scored_intermediate_files_were_written_by_an_older_Osprey_build_and_cannot_" xml:space="preserve">
@@ -1858,11 +1858,11 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="SecondPassFdrTask_Run__0__of__1__runs_have_no_re_scored_results_file___scores_reconciled_parquet___which_" xml:space="preserve">
-    <value>{1:N0} 次运行中有 {0:N0} 次没有重新评分结果文件（{3}），{4} 会为每次运行写入该文件。不能改用其 {5} 文件，因为这些文件只包含第一轮峰。请为这些运行运行 {6}。缺失：[{2}]。</value>
+    <value>{1:N0} 次运行中有 {0:N0} 次没有重新评分结果文件（{3}），{4} 会为每次运行写入该文件。不能改用其 {5} 文件，因为这些文件只包含第一轮峰。请为这些运行运行“{6}”。缺失：[{2}]。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="SecondPassFdrTask_Run___task_ModelDiagnostics__skipping_the__blib_write__report_only__" xml:space="preserve">
-    <value>{0}：跳过写入 {1}（仅报告）。</value>
+    <value>“{0}”：跳过写入 {1}（仅报告）。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="SecondPassFdrTask_WarnResidentStage7Join_Second_pass_FDR_will_hold_the_precursor_candidates_of_all__0__runs_in_memory_at_once__" xml:space="preserve">
@@ -1906,7 +1906,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="SpectraCacheTask_DescribeOutput__0_____output_and___library_are_not_used_" xml:space="preserve">
-    <value>{0}（不使用 {1} 和 {2}）</value>
+    <value>{0}（不使用“{1}”和“{2}”）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="SpectraCacheTask_DescribeOutput_a__spectra_bin_file_next_to_each_input__or_in__0__where_the_input_folder_is_read_only" xml:space="preserve">

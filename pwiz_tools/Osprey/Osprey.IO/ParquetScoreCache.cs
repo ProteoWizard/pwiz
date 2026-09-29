@@ -886,9 +886,15 @@ namespace pwiz.Osprey.IO
             byte charge = chargeCol == null ? (byte)0 : chargeCol[row];
             if (charge != 0)
                 return charge;
+            // Charge is part of the row's identity, so reading on would silently drop precursors
+            // rather than report a wrong number. Parquet written before 2026-09-17 can carry a zero
+            // charge from a write race in the parallel column writer, fixed in that release.
+            string rewriteTask = OspreyArgNames.TaskText(path.EndsWith(EXT_SCORES_RECONCILED, StringComparison.OrdinalIgnoreCase)
+                ? OspreyTaskNames.PER_FILE_RESCORING
+                : OspreyTaskNames.PER_FILE_SCORING);
             throw new InvalidDataException(string.Format(
                 OspreyIOResources.ParquetScoreCache_RequireCharge__0__is_corrupt__row__1___entry_id__2___has_a_charge_of_0__which_is_not_a_possible_,
-                path, row, entryId, COLUMN_ENTRY_ID));
+                path, row, entryId, COLUMN_ENTRY_ID, rewriteTask));
         }
 
         /// <summary>

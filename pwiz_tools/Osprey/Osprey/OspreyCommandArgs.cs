@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
@@ -26,8 +26,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using pwiz.Common.CommandLine;
+using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
@@ -887,9 +889,12 @@ namespace pwiz.Osprey
             var sb = new StringBuilder();
             sb.AppendLine(@"<html><head>");
             sb.AppendLine(@"<meta charset=""utf-8"">");
-            sb.AppendLine(@"<title>Osprey command-line usage</title>");
-            sb.AppendLine(string.Format(@"<meta name=""description"" content=""Command-line usage for Osprey, the C# (.NET 8) implementation of Mike MacCoss's peptide-centric DIA search tool: search and FDR arguments, protein inference, the SpectraCache staging task, the ModelDiagnostics report-only task, and the four distributed HPC {0} workers (PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR)."">",
-                ARG_TASK.ArgumentText));
+            sb.AppendLine(@"<title>" + WebUtility.HtmlEncode(OspreyResources.OspreyCommandArgs_GenerateUsageHtml_Osprey_command_line_usage) + @"</title>");
+            sb.AppendLine(@"<meta name=""description"" content=""" + WebUtility.HtmlEncode(string.Format(
+                OspreyResources.OspreyCommandArgs_GenerateUsageHtml_Command_line_usage_for_Osprey__the_peptide_centric_DIA_search_tool_from_the_MacCoss_lab,
+                SpectraCacheTask.TASK_NAME, ModelDiagnosticsTask.TASK_NAME, ARG_TASK.ArgumentText,
+                string.Join(@", ", PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME, PerFileRescoreTask.TASK_NAME,
+                    SecondPassFdrTask.TASK_NAME))) + @""">");
             // Self-contained stylesheet (Osprey does not reference Skyline, so it cannot call
             // DocumentationGenerator.GetStyleSheetHtml). The table rules are copied from that Skyline
             // stylesheet so Osprey's generated help matches Skyline's look (cell padding,
@@ -915,67 +920,75 @@ namespace pwiz.Osprey
             return sb.ToString();
         }
 
-        // Hand-written intro prose for the standalone web page (not part of the terminal --help text,
-        // which stays a terse flag reference). Locked against drift by TestCommandLineHelpDocumentation,
-        // which regenerates this whole document and diffs it against the committed Documentation copy.
+        // Intro prose for the standalone web page (not part of the terminal --help text, which stays a
+        // terse flag reference). As in Skyline's CommandLine.html, the prose comes from resources so the
+        // ja and zh-Hans pages are fully translated; markup, argument text and file names are passed in
+        // as arguments. Locked against drift by TestCommandLineHelpDocumentation, which regenerates each
+        // page and diffs it against the committed Documentation copy.
         private static void AppendUsageHtmlIntro(StringBuilder sb)
         {
-            sb.AppendLine(@"<h1>Osprey command-line usage</h1>");
-            sb.AppendLine(@"<p>Osprey is Mike MacCoss's peptide-centric DIA search tool, implemented in " +
-                @"C# (.NET 8). (The original Rust prototype is " +
-                @"<a href=""https://github.com/maccoss/osprey"">maccoss/osprey</a>.) It reads DIA mzML files " +
-                @"plus a spectral library and writes a " +
-                @"BiblioSpecLite (<code>.blib</code>) library of FDR-controlled results that imports " +
-                @"directly into Skyline. It runs as a standalone executable on Windows and Linux.</p>");
-            sb.AppendLine(string.Format(@"<p>For the pipeline overview, per-stage detail, and how the four distributed " +
-                @"HPC tasks split and join, see the workflow diagram: " +
-                @"<a href=""https://raw.githack.com/ProteoWizard/pwiz/master/pwiz_tools/Osprey/Osprey-workflow.html"">Osprey-workflow.html</a>. " +
-                @"The argument tables below are generated from the command-line declarations, so they " +
-                @"always match the build; run <code>Osprey {0}</code> for the same reference as text.</p>",
-                ARG_HELP.ArgumentText));
+            sb.AppendLine(@"<h1>" + WebUtility.HtmlEncode(OspreyResources.OspreyCommandArgs_GenerateUsageHtml_Osprey_command_line_usage) + @"</h1>");
+            sb.AppendLine(@"<p>" + string.Format(
+                OspreyResources.OspreyCommandArgs_AppendUsageHtmlIntro_Osprey_is_a_peptide_centric_DIA_search_tool_from_the_MacCoss_lab,
+                Code(LibrarySource.EXT_BLIB)) + @"</p>");
+            sb.AppendLine(@"<p>" + string.Format(
+                OspreyResources.OspreyCommandArgs_AppendUsageHtmlIntro_For_the_pipeline_overview__per_stage_detail__and_how_the_four_distributed_HPC_,
+                @"<a href=""https://raw.githack.com/ProteoWizard/pwiz/master/pwiz_tools/Osprey/Osprey-workflow.html"">Osprey-workflow.html</a>",
+                Code(@"Osprey " + ARG_HELP.ArgumentText)) + @"</p>");
         }
 
         // Worked distributed-execution example. Like the intro, this is web-page-only content held in
         // sync with the code by TestCommandLineHelpDocumentation.
         private static void AppendUsageHtmlHpcExamples(StringBuilder sb)
         {
-            sb.AppendLine(@"<div class=""RowType"">Distributed execution (HPC)</div>");
-            sb.AppendLine(string.Format(@"<p>Run with no <code>{0}</code> for the whole pipeline in one process. For " +
-                @"distributed (HPC / workflow-engine) execution the pipeline splits at its join / fan-out " +
-                @"boundaries into four single-task workers &mdash; one node = one <code>{0}</code>: " +
-                @"<code>PerFileScoring</code> (split, per file) &rarr; <code>FirstPassFDR</code> (join, all " +
-                @"files) &rarr; <code>PerFileRescoring</code> (split, per file) &rarr; " +
-                @"<code>SecondPassFDR</code> (join, all files). Pass the same <code>{1}</code> and search " +
-                @"options to every task; the parquet integrity check rejects inputs whose search/library " +
-                @"hash does not match.</p>",
-                ARG_TASK.ArgumentText, ARG_LIBRARY.ArgumentText));
+            sb.AppendLine(@"<div class=""RowType"">" + WebUtility.HtmlEncode(
+                OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_Distributed_execution__HPC_) + @"</div>");
+            sb.AppendLine(@"<p>" + string.Format(
+                OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_Run_with_no__0__for_the_whole_pipeline_in_one_process,
+                Code(ARG_TASK.ArgumentText), Code(ARG_LIBRARY.ArgumentText), Code(PerFileScoringTask.TASK_NAME),
+                Code(FirstPassFdrTask.TASK_NAME), Code(PerFileRescoreTask.TASK_NAME), Code(SecondPassFdrTask.TASK_NAME),
+                @"&rarr;") + @"</p>");
             sb.AppendLine(@"<pre>");
-            sb.AppendLine(@"# split 1 - one process per mzML (writes &lt;stem&gt;.scores.parquet, &lt;stem&gt;.calibration.json beside each input)");
+            AppendExampleComment(sb, string.Format(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_split_1___one_process_per_mzML,
+                StemFile(ParquetScoreCache.EXT_SCORES), StemFile(CalibrationIO.EXT)));
             sb.AppendLine(HpcExampleCommandLine(PerFileScoringTask.TASK_NAME, ARG_INPUT.ShortArgumentText, @"s1.mzML"));
             sb.AppendLine();
-            sb.AppendLine(@"# join 1 - one process over ALL runs (pass a sorted list so the order is deterministic)");
+            AppendExampleComment(sb, OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_join_1___one_process_over_ALL_runs);
             sb.AppendLine(HpcExampleCommandLine(FirstPassFdrTask.TASK_NAME, ARG_INPUT_LIST.ArgumentText, @"runs.txt"));
-            sb.AppendLine(@"#   writes beside each parquet: &lt;stem&gt;.1st-pass.fdr_scores.bin, &lt;stem&gt;.reconciliation.json");
+            AppendExampleComment(sb, @"  " + string.Format(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes_beside_each_parquet___0____1_,
+                StemFile(FdrScoresSidecar.EXT_FIRST_PASS), StemFile(ReconciliationFile.EXT)));
             sb.AppendLine();
-            sb.AppendLine(@"# split 2 - one process per file (the scores parquet and its intermediate files together)");
+            AppendExampleComment(sb, OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_split_2___one_process_per_file);
             sb.AppendLine(HpcExampleCommandLine(PerFileRescoreTask.TASK_NAME, ARG_INPUT.ShortArgumentText, @"s1.mzML"));
-            sb.AppendLine(@"#   writes: &lt;stem&gt;.scores-reconciled.parquet");
+            AppendExampleComment(sb, @"  " + string.Format(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes___0_,
+                StemFile(ParquetScoreCache.EXT_SCORES_RECONCILED)));
             sb.AppendLine();
-            sb.AppendLine(@"# join 2 - one process over ALL runs, reading their reconciled parquets (writes out.blib)");
+            AppendExampleComment(sb, string.Format(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_join_2___one_process_over_ALL_runs,
+                @"out" + LibrarySource.EXT_BLIB));
             sb.AppendLine(HpcExampleCommandLine(SecondPassFdrTask.TASK_NAME, ARG_INPUT_LIST.ArgumentText, @"runs.txt"));
             sb.AppendLine(@"</pre>");
-            sb.AppendLine(string.Format(@"<p>EVERY task takes <code>{0}</code>, naming the DATA files - the same names " +
-                @"the first split was given. A join task derives each run's parquet and intermediate files from " +
-                @"the input stem, so the data file itself need not still exist: what has to be in the " +
-                @"worker's working directory (or under <code>{1}</code>) is that run's " +
-                @"artifacts. FirstPassFDR reconciliation is order-sensitive, so pass a " +
-                @"deterministically sorted list - <code>{2}</code> takes one path per line and " +
-                @"is what a cohort past a few hundred runs needs, since <code>{0}</code> spends the " +
-                @"command line at O(files). Let the scheduler do the fan-out (one file per split " +
-                @"process) rather than <code>{3}</code>, which is the single-node " +
-                @"multi-file mode.</p>",
-                ARG_INPUT.ShortArgumentText, ARG_OUTPUT_DIR.ArgumentText, ARG_INPUT_LIST.ArgumentText,
-                ARG_PARALLEL_FILES.ArgumentText));
+            sb.AppendLine(@"<p>" + string.Format(
+                OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_EVERY_task_takes__0___naming_the_DATA_files,
+                Code(ARG_INPUT.ShortArgumentText), Code(ARG_OUTPUT_DIR.ArgumentText), Code(ARG_INPUT_LIST.ArgumentText),
+                Code(ARG_PARALLEL_FILES.ArgumentText), FirstPassFdrTask.TASK_NAME) + @"</p>");
+        }
+
+        private static string Code(string text)
+        {
+            return @"<code>" + WebUtility.HtmlEncode(text) + @"</code>";
+        }
+
+        /// <summary>
+        /// A per-input file name in the worked example: "&lt;stem&gt;" plus the extension, HTML-encoded.
+        /// </summary>
+        private static string StemFile(string extension)
+        {
+            return WebUtility.HtmlEncode(@"<stem>" + extension);
+        }
+
+        private static void AppendExampleComment(StringBuilder sb, string comment)
+        {
+            sb.AppendLine(@"# " + comment);
         }
 
         /// <summary>

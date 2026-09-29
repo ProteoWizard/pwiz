@@ -144,11 +144,11 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FileParallelismResolver_Resolve_File_parallelism__1__sequential_default__pass___parallel_files_to_score__0__files_" xml:space="preserve">
-    <value>文件并行数：1（默认按顺序；传入 {1} 可同时评分 {0} 个文件）</value>
+    <value>文件并行数：1（默认按顺序；传入“{1}”可同时评分 {0} 个文件）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FileParallelismResolver_Resolve_File_parallelism___0___explicit___parallel_files___1__files_" xml:space="preserve">
-    <value>文件并行数：{0}（显式指定 {2}，{1} 个文件）</value>
+    <value>文件并行数：{0}（显式指定“{2}”，{1} 个文件）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FileSaver_GetTempFileName_Access_denied__unable_to_create_a_file_in_the_folder___0____Adjust_the_folder_write_" xml:space="preserve">

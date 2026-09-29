@@ -230,7 +230,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="LibraryLoader_TryFinishSuppliedDecoys_Only__0___of_the_library_decoys_could_be_paired_with_a_target__at_least__1___is_needed___" xml:space="preserve">
-    <value>只有 {0:F1}% 的库诱饵能与目标配对（至少需要 {1:F0}%），因此 FDR 估计将不可靠。请提供 {2}，或为库诱饵赋予其目标的蛋白质编号并加上前缀 {3} 之一，或省略 {4} 以便 Osprey 生成自己的诱饵。</value>
+    <value>只有 {0:F1}% 的库诱饵能与目标配对（至少需要 {1:F0}%），因此 FDR 估计将不可靠。请提供“{2}”，或为库诱饵赋予其目标的蛋白质编号并加上前缀 {3} 之一，或省略“{4}”以便 Osprey 生成自己的诱饵。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="LibraryLoader_TryFinishSuppliedDecoys_Pairing_library_decoys_to_targets_by_amino_acid_composition__no_manifest_provided__" xml:space="preserve">
@@ -246,7 +246,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="LibraryLoader_TryFinishSuppliedDecoys___decoys_in_library_was_given__but_no_library_precursor_has_a_protein_accession_starting_" xml:space="preserve">
-    <value>已指定 {1}，但没有库母离子的蛋白质编号以诱饵前缀 {0} 之一开头。请检查库中是否包含带有这些前缀之一的诱饵，或省略 {1} 以便 Osprey 生成自己的诱饵。</value>
+    <value>已指定“{1}”，但没有库母离子的蛋白质编号以诱饵前缀 {0} 之一开头。请检查库中是否包含带有这些前缀之一的诱饵，或省略“{1}”以便 Osprey 生成自己的诱饵。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="LibraryValidation_ValidatePeptideLength_Library_peptide___0___has__1__residues__the_minimum_supported_length_is__2___Peptides_" xml:space="preserve">
@@ -266,7 +266,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ParquetScoreCache_CheckParquetMetadata__0__was_scored_against_a_different_spectral_library_than___library_names__Score_the_file_" xml:space="preserve">
-    <value>{0} 评分时所用的谱图库与 {3} 指定的谱图库不同（库哈希 {1}；本次运行 {2}）。请使用此库重新对该文件评分（{4}），或传入评分时所用的库。</value>
+    <value>{0} 评分时所用的谱图库与“{3}”指定的谱图库不同（库哈希 {1}；本次运行 {2}）。请使用此库重新对该文件评分（{4}），或传入评分时所用的库。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_Osprey__1___which_is_not_compatible_with_this_build___2____Score_the_" xml:space="preserve">
@@ -294,7 +294,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ParquetScoreCache_RequireCharge__0__is_corrupt__row__1___entry_id__2___has_a_charge_of_0__which_is_not_a_possible_" xml:space="preserve">
-    <value>{0} 已损坏：第 {1} 行（{3} {2}）的电荷为 0，这不是可能的母离子电荷。电荷列要么无法读取，要么写入时已损坏；由于电荷是该行标识的一部分，使用该文件会悄无声息地丢失母离子，而不是报告错误的数值。请删除此文件，并重新运行生成它的阶段。2026-09-17 之前写入的 Parquet 可能因并行列写入器中的写入竞争而出现此问题，该问题已在该版本中修复。</value>
+    <value>{0} 已损坏：第 {1} 行（{3} {2}）的电荷为 0，这不是可能的母离子电荷。请删除该文件并重新运行{4}以重写该文件。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ParquetScoreCache_StreamEntryIds_The_scores_file___0___is_damaged__row_group__1__has_no_readable_entry_id_column__so_its_" xml:space="preserve">
@@ -310,7 +310,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ParquetScoreCache_ValidateScoresParquetGroup___task_SecondPassFDR_needs_the_reconciled_scores_files_that___task_PerFileRescoring_" xml:space="preserve">
-    <value>{2} 需要 {3} 写入的已协调得分文件，但 {0} 不是（{4} =“{1}”）。请先运行 {3}。如果该文件由更新版本的 Osprey 写入，请使用该版本。</value>
+    <value>“{2}”需要“{3}”写入的已协调得分文件，但 {0} 不是（{4} =“{1}”）。请先运行“{3}”。如果该文件由更新版本的 Osprey 写入，请使用该版本。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ParquetScoreCache_WriteChunkedParquet_Writing__0__precursor_candidate_peaks" xml:space="preserve">

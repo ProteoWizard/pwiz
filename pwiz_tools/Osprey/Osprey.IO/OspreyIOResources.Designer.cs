@@ -533,7 +533,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} is corrupt: row {1} ({3} {2}) has a charge of 0, which is not a possible precursor charge. The charge column is either unreadable or was written corrupt, and because charge is part of the row&apos;s identity, using the file would silently drop precursors rather than report a wrong number. Delete this file and re-run the stage that produced it. Parquet written before 2026-09-17 may carry this from a write race in the parallel column writer, fixed in that release..
+        ///   Looks up a localized string similar to {0} is damaged: row {1} ({3} {2}) has a charge of 0, which is not a possible precursor charge. Delete the file and run {4} again to rewrite it..
         /// </summary>
         public static string ParquetScoreCache_RequireCharge__0__is_corrupt__row__1___entry_id__2___has_a_charge_of_0__which_is_not_a_possible_ {
             get {

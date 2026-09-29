@@ -172,12 +172,64 @@
     <value>{0} 不接受值。</value>
     <comment>Needs Review:New resource</comment>
   </data>
+  <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_Distributed_execution__HPC_" xml:space="preserve">
+    <value>分布式执行（HPC）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_EVERY_task_takes__0___naming_the_DATA_files" xml:space="preserve">
+    <value>每个任务都要用 {0} 指定数据文件，名称与第一次拆分时相同。合并任务根据输入文件名主干推导每次运行的 parquet 和中间文件，因此数据文件本身不必仍然存在：工作进程的工作目录（或 {1} 下）中必须有该运行的产物。{4} 协调对顺序敏感，因此请传入确定排序的列表。{2} 每行接受一个路径；由于 {0} 占用的命令行长度与文件数成正比，运行数超过几百个的队列需要使用它。请让调度程序进行扇出（每个拆分进程一个文件），而不要使用 {3}，它是单节点多文件模式。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_Run_with_no__0__for_the_whole_pipeline_in_one_process" xml:space="preserve">
+    <value>不指定 {0} 时，整个流程在一个进程中运行。对于分布式（HPC／工作流引擎）执行，流程在合并／扇出边界处拆分为四个单任务工作进程，每个节点对应一个 {0}：{2}（拆分，每个文件）{6} {3}（合并，所有文件）{6} {4}（拆分，每个文件）{6} {5}（合并，所有文件）。请向每个任务传入相同的 {1} 和搜索选项；parquet 完整性检查会拒绝搜索／库哈希不匹配的输入。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_join_1___one_process_over_ALL_runs" xml:space="preserve">
+    <value>合并 1 - 对所有运行使用一个进程（传入排序后的列表，以确保顺序确定）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_join_2___one_process_over_ALL_runs" xml:space="preserve">
+    <value>合并 2 - 对所有运行使用一个进程，读取协调后的 parquet（写入 {0}）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_split_1___one_process_per_mzML" xml:space="preserve">
+    <value>拆分 1 - 每个 mzML 一个进程（在每个输入旁写入 {0}、{1}）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_split_2___one_process_per_file" xml:space="preserve">
+    <value>拆分 2 - 每个文件一个进程（得分 parquet 及其中间文件一起）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes___0_" xml:space="preserve">
+    <value>写入：{0}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes_beside_each_parquet___0____1_" xml:space="preserve">
+    <value>在每个 parquet 旁写入：{0}、{1}</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_AppendUsageHtmlIntro_For_the_pipeline_overview__per_stage_detail__and_how_the_four_distributed_HPC_" xml:space="preserve">
+    <value>有关流程概述、各阶段详情以及四个分布式 HPC 任务如何拆分与合并，请参见工作流程图：{0}。下方的参数表由命令行声明生成，因此始终与构建版本一致；运行 {1} 可查看相同内容的文本版本。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_AppendUsageHtmlIntro_Osprey_is_a_peptide_centric_DIA_search_tool_from_the_MacCoss_lab" xml:space="preserve">
+    <value>Osprey 是 MacCoss 实验室开发的以肽段为中心的 DIA 搜索工具。它读取 DIA mzML 文件和谱图库，并将经过 FDR 控制的结果写入 BiblioSpecLite（{0}）库，该库可直接导入 Skyline。它在 Windows 和 Linux 上作为独立的可执行文件运行。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
   <data name="OspreyCommandArgs_BuildUsage_No_help_section_matching___0___found__Use__1__to_list_available_sections_" xml:space="preserve">
-    <value>未找到与“{0}”匹配的帮助部分。请使用 {1} 列出可用的部分。</value>
+    <value>未找到与“{0}”匹配的帮助部分。请使用“{1}”列出可用的部分。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="OspreyCommandArgs_FdrBenchMissingMessage__0__is_set_without__1___no_FDRBench_input_will_be_written__Pass__1___2__to_enable_FDRBench_output_" xml:space="preserve">
-    <value>设置了 {0} 但未设置 {1}；不会写入 FDRBench 输入。请传入 {1} {2} 以启用 FDRBench 输出。</value>
+    <value>设置了“{0}”但未设置“{1}”；不会写入 FDRBench 输入。请传入“{1}”“{2}”以启用 FDRBench 输出。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_GenerateUsageHtml_Command_line_usage_for_Osprey__the_peptide_centric_DIA_search_tool_from_the_MacCoss_lab" xml:space="preserve">
+    <value>Osprey（MacCoss 实验室开发的以肽段为中心的 DIA 搜索工具）的命令行用法：搜索和 FDR 参数、蛋白质推断、{0} 暂存任务、{1} 仅报告任务，以及四个分布式 HPC {2} 工作进程（{3}）。</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="OspreyCommandArgs_GenerateUsageHtml_Osprey_command_line_usage" xml:space="preserve">
+    <value>Osprey 命令行用法</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="OspreyCommandArgs_Group_Decoys" xml:space="preserve">
@@ -213,15 +265,15 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="OspreyCommandArgs_ReadInputList_The__0__file_lists_no_input_files___1_" xml:space="preserve">
-    <value>{0} 文件未列出任何输入文件：{1}</value>
+    <value>“{0}”文件未列出任何输入文件：{1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="OspreyCommandArgs_ReadInputList__0__file_not_found___1_" xml:space="preserve">
-    <value>未找到 {0} 文件：{1}</value>
+    <value>未找到“{0}”文件：{1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="OspreyCommandArgs_ToConfig__0__is_set_without__1___so_the_manifest_will_not_be_used" xml:space="preserve">
-    <value>设置了 {0} 但未设置 {1}，因此不会使用该清单。它仍属于搜索设置的一部分，因此不会重用在没有它的情况下评分的现有 {2} 文件。请传入 {1} 以使用库中的诱饵。</value>
+    <value>设置了“{0}”但未设置“{1}”，因此不会使用该清单。它仍属于搜索设置的一部分，因此不会重用在没有它的情况下评分的现有 {2} 文件。请传入“{1}”以使用库中的诱饵。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="OspreyCommandArgs_TokenizeAndDispatch_Unknown_argument___0_" xml:space="preserve">
@@ -229,7 +281,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="OspreyCommandArgs_TokenizeAndDispatch_Unknown_argument___0___Run_with__1__to_see_valid_options_" xml:space="preserve">
-    <value>未知参数：{0}。请使用 {1} 运行以查看有效选项。</value>
+    <value>未知参数：{0}。请使用“{1}”运行以查看有效选项。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="OspreyCommandArgs_Unknown_FDR_level___0____defaulting_to__1_" xml:space="preserve">
@@ -253,11 +305,11 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="OspreyCommandArgs_UsageBlocks_HPC_SPLIT__one_node___one__0____see__0__above_" xml:space="preserve">
-    <value>HPC 拆分（一个节点 = 一个 {0}）：请参见上方的 {0}。</value>
+    <value>HPC 拆分（一个节点 = 一个“{0}”）：请参见上方的“{0}”。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="OspreyCommandArgs_UsageBlocks_Osprey___Peptide_centric_DIA_analysis__NET_port_of_Osprey_" xml:space="preserve">
-    <value>Osprey - 以肽段为中心的 DIA 分析（Osprey 的 .NET 移植版）</value>
+    <value>Osprey - 以肽段为中心的 DIA 分析</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="OspreyCommandArgs_UsageBlocks_USAGE___0_" xml:space="preserve">
@@ -289,7 +341,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Program_ResolveTask__0___unknown_task___1____Valid_tasks___2__" xml:space="preserve">
-    <value>{0}：未知任务“{1}”。有效任务：{2}。</value>
+    <value>“{0}”：未知任务“{1}”。有效任务：{2}。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Program_RunModelDiagnosticsTask__0___building_the_report_from_the_completed_analysis__Nothing_is_re_run_and_no_other_" xml:space="preserve">
@@ -396,7 +448,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Program_Run__0__requires_a_task_name___1___" xml:space="preserve">
-    <value>{0} 需要一个任务名称（{1}）。</value>
+    <value>“{0}”需要一个任务名称（“{1}”）。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Program_Run__none_" xml:space="preserve">
