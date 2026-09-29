@@ -143,6 +143,7 @@
     <Compile Include="DiaNnPeakImputationTest.cs" />
     <Compile Include="DiannSearchPerfTest.cs" />
     <Compile Include="DiannSearchLFQbenchTest.cs" />
+    <Compile Include="LabelLayoutSweep.cs" />
     <Compile Include="PeakBoundaryImputationDiaTutorial.cs" />
     <Compile Include="DiaSearchTutorialTest.cs" />
     <Compile Include="FeatureDetectionTest.cs" />

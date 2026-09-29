@@ -318,6 +318,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 samplingLayout = new LabelLayout(pane, (int)Math.Ceiling(minLabelHeight));
                 visiblePoints = SamplePointsByDensityGrid(samplingLayout, pane, candidates);
             }
+#if DEBUG
+            LabelLayout.SamplerReport?.Invoke(pane, candidates.Count, visiblePoints.Count);
+#endif
             var visibleSet = new HashSet<LabeledPoint>(visiblePoints);
             foreach (var labeledPoint in candidates)
             {

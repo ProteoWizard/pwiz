@@ -69,6 +69,19 @@ namespace ZedGraph
         private const float DISTANCE_SCALE = 10000f;
         public Dictionary<TextObj, LabeledPoint> LabeledPoints => _labeledPoints;
 
+#if DEBUG
+        /// <summary>
+        /// Diagnostic hook reporting the pane, how many labels entered the layout and how many the
+        /// pre-annealer sampler kept. Null in normal use; set by the label layout sweep tool, which needs
+        /// the two stages separated because pruned labels are dropped from <see cref="LabeledPoints"/> and
+        /// so cannot be told apart from sampled-out ones afterwards. The pane is reported because several
+        /// panes share the layout code, so a report is otherwise unattributable.
+        ///
+        /// Debug only, like the annealing log below, so it costs the shipped executable nothing.
+        /// </summary>
+        public static Action<GraphPane, int, int> SamplerReport { get; set; }
+#endif
+
         public class LayoutResult
         {
             public Dictionary<LabeledPoint, PointF> Placements;
