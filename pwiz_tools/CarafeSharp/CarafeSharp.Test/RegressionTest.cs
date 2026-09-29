@@ -74,7 +74,8 @@ namespace pwiz.CarafeSharp.Test
         public const string REPORT_FILE = @"regression-report.txt";
         public const string DATA_FOLDER = @"regression.data";
 
-        private const string GOLDEN_FORMAT = @"carafesharp-regression-golden-2";
+        // 3: the training-table hashes are over the tables' lines, whatever their line ending.
+        private const string GOLDEN_FORMAT = @"carafesharp-regression-golden-3";
         /// <summary>The training export's key under a run's and a golden's <c>inputs</c>.</summary>
         private const string INPUT_EXPORT = @"export";
         private const string OUTPUT_FOLDER = @"out";
@@ -166,6 +167,7 @@ namespace pwiz.CarafeSharp.Test
         private void CreateGolden(RunMeasurement run, string folder)
         {
             Assert.IsFalse(run.Dirty, @"A golden must come from a clean working tree; {0} records changes.", RUN_INFO_FILE);
+            Assert.IsFalse(run.OtherExport, @"A golden must come from the packaged export; {0} records a run with -Export.", RUN_INFO_FILE);
             Assert.IsTrue(run.UseFineTuned, @"The fine-tune chose the pretrained MS2 model ({0} is false).", ModelFiles.METRICS_USE_FINETUNED);
             foreach (string metric in MS2_METRICS)
             {
@@ -417,9 +419,16 @@ namespace pwiz.CarafeSharp.Test
         /// </summary>
         private static string TextSha256(string path)
         {
-            string text = string.Join('\n', File.ReadLines(TestData.RequireFile(path)));
-            using (var sha = SHA256.Create())
-                return Convert.ToHexString(sha.ComputeHash(Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
+            using (var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256))
+            {
+                var newline = new[] { (byte)'\n' };
+                foreach (string line in File.ReadLines(TestData.RequireFile(path)))
+                {
+                    hash.AppendData(Encoding.UTF8.GetBytes(line));
+                    hash.AppendData(newline);
+                }
+                return Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();
+            }
         }
 
         /// <summary>The key of a precursor in the sample: its Skyline modified sequence and charge.</summary>

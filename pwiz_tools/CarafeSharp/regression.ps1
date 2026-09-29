@@ -595,8 +595,8 @@ if (-not $CompareRun) {
     if ($recorded.dataset -ne $Dataset) {
         throw "$runFolder is a $($recorded.dataset) run, not $Dataset."
     }
-    if ($CreateGolden -and ($recorded.dirty -or @($recorded.extra_args).Count -gt 0 -or $recorded.custom_exe -or $recorded.exit_code -ne 0)) {
-        throw "-CreateGolden -CompareRun needs a completed run made from a clean tree with this checkout's build and no -ExtraArgs; $runFolder is not one."
+    if ($CreateGolden -and ($recorded.dirty -or @($recorded.extra_args).Count -gt 0 -or $recorded.custom_exe -or $recorded.other_export -or $recorded.exit_code -ne 0)) {
+        throw "-CreateGolden -CompareRun needs a completed run made from a clean tree with this checkout's build, the packaged export and no -ExtraArgs; $runFolder is not one."
     }
     if ($CreateGolden -and $Torch -eq 'cuda' -and $recorded.device_used -ne 'cuda') {
         throw "-CreateGolden refuses a CPU fallback on a GPU request: $runFolder ran on $($recorded.device_used)."
