@@ -65,20 +65,6 @@ namespace pwiz.Osprey.Scoring
     /// </summary>
     public class DecoyGenerator
     {
-        private static readonly Dictionary<char, double> STANDARD_AA_MASSES = new Dictionary<char, double>
-        {
-            { 'A', 71.037114 }, { 'R', 156.101111 }, { 'N', 114.042927 },
-            { 'D', 115.026943 }, { 'C', 103.009185 }, { 'E', 129.042593 },
-            { 'Q', 128.058578 }, { 'G', 57.021464 }, { 'H', 137.058912 },
-            { 'I', 113.084064 }, { 'L', 113.084064 }, { 'K', 128.094963 },
-            { 'M', 131.040485 }, { 'F', 147.068414 }, { 'P', 97.052764 },
-            { 'S', 87.032028 }, { 'T', 101.047679 }, { 'W', 186.079313 },
-            { 'Y', 163.063329 }, { 'V', 99.068414 }
-        };
-
-        private const double PROTON_MASS = 1.007276;
-        private const double H2O_MASS = 18.010565;
-
         private readonly Enzyme _enzyme;
 
         /// <summary>
@@ -145,7 +131,7 @@ namespace pwiz.Osprey.Scoring
             decoy.Modifications = RemapModifications(target.Modifications, positionMapping);
 
             // Recalculate fragment m/z values for the reversed sequence
-            decoy.Fragments = RecalculateFragments(target, positionMapping, decoySequence);
+            decoy.Fragments = RecalculateFragments(target, decoy.Modifications, decoySequence);
 
             // Update protein IDs to indicate decoy
             decoy.ProteinIds = BuildDecoyProteinIds(target.ProteinIds, null);
@@ -417,7 +403,7 @@ namespace pwiz.Osprey.Scoring
         /// <summary>
         /// Singly-charged b and y ion m/z for every cleavage site of a stripped sequence,
         /// using the same residue masses and terminal adjustments as
-        /// <see cref="CalculateFragmentMz"/>. Ions spanning an unknown residue are skipped
+        /// <see cref="PeptideFragmentMass.CalculateFragmentMz"/>. Ions spanning an unknown residue are skipped
         /// rather than aborting the ladder.
         /// </summary>
         internal static double[] TheoreticalLadder(string sequence)
@@ -432,12 +418,12 @@ namespace pwiz.Osprey.Scoring
             // unknown, because total itself is then NaN -- and a leading unknown residue
             // would empty the ladder outright, which the caller reads as "accept".
             // Selenocysteine (U) and the ambiguity codes B/Z/X/J/O are all absent from
-            // STANDARD_AA_MASSES and do occur in UniProt-derived libraries.
+            // PeptideFragmentMass's standard residues and do occur in UniProt-derived libraries.
             var prefix = new double[len + 1];
             for (int i = 0; i < len; i++)
             {
                 double aa;
-                prefix[i + 1] = STANDARD_AA_MASSES.TryGetValue(sequence[i], out aa)
+                prefix[i + 1] = PeptideFragmentMass.TryGetResidueMass(sequence[i], out aa)
                     ? prefix[i] + aa
                     : double.NaN;
                 if (double.IsNaN(prefix[i]))
@@ -447,7 +433,7 @@ namespace pwiz.Osprey.Scoring
             for (int i = len - 1; i >= 0; i--)
             {
                 double aa;
-                suffix[len - i] = STANDARD_AA_MASSES.TryGetValue(sequence[i], out aa)
+                suffix[len - i] = PeptideFragmentMass.TryGetResidueMass(sequence[i], out aa)
                     ? suffix[len - i - 1] + aa
                     : double.NaN;
                 if (double.IsNaN(suffix[len - i - 1]))
@@ -459,11 +445,11 @@ namespace pwiz.Osprey.Scoring
             {
                 double bMass = prefix[ordinal];
                 if (!double.IsNaN(bMass))
-                    ladder.Add(bMass + PROTON_MASS);
+                    ladder.Add(bMass + PeptideFragmentMass.PROTON_MASS);
                 // y{ordinal} spans the last `ordinal` residues.
                 double yMass = suffix[ordinal];
                 if (!double.IsNaN(yMass))
-                    ladder.Add(yMass + H2O_MASS + PROTON_MASS);
+                    ladder.Add(yMass + PeptideFragmentMass.H2O_MASS + PeptideFragmentMass.PROTON_MASS);
             }
             return ladder.ToArray();
         }
@@ -551,11 +537,10 @@ namespace pwiz.Osprey.Scoring
                 target.RetentionTime);
             decoy.RtCalibrated = target.RtCalibrated;
             decoy.IsDecoy = true;
-            decoy.Modifications = RemapModificationsStatic(
-                target.Modifications, positionMapping);
+            decoy.Modifications = RemapModifications(target.Modifications, positionMapping);
             decoy.Fragments = omitFragments
                 ? Array.Empty<LibraryFragment>()
-                : RecalculateFragmentsStatic(target, positionMapping, decoySequence);
+                : RecalculateFragments(target, decoy.Modifications, decoySequence);
             // Strings stay un-interned here (this runs in a Parallel.For body);
             // the sequential collection loop interns every decoy afterwards.
             decoy.ProteinIds = BuildDecoyProteinIds(target.ProteinIds, null);
@@ -669,18 +654,10 @@ namespace pwiz.Osprey.Scoring
         }
 
         /// <summary>
-        /// Public static wrapper for <see cref="RemapModifications"/> so that
-        /// AnalysisPipeline can build decoys using a collision-checked sequence
-        /// while reusing the remapping logic.
+        /// The target's modifications moved with their residues to the decoy's positions
+        /// (<paramref name="positionMapping"/>: decoy position -> target position).
         /// </summary>
-        public static Modification[] RemapModificationsStatic(
-            IReadOnlyList<Modification> modifications, int[] positionMapping)
-        {
-            var instance = new DecoyGenerator();
-            return instance.RemapModifications(modifications, positionMapping);
-        }
-
-        private Modification[] RemapModifications(IReadOnlyList<Modification> modifications, int[] positionMapping)
+        private static Modification[] RemapModifications(IReadOnlyList<Modification> modifications, int[] positionMapping)
         {
             // Create reverse mapping: old_pos -> new_pos
             var reverseMap = new Dictionary<int, int>();
@@ -711,34 +688,20 @@ namespace pwiz.Osprey.Scoring
         }
 
         /// <summary>
-        /// Public static wrapper for <see cref="RecalculateFragments"/> so that
-        /// AnalysisPipeline can rebuild fragments for a collision-checked decoy.
+        /// The target's fragments for <paramref name="decoySequence"/>: each b or y ion keeps its
+        /// type, ordinal and intensity and gets the decoy's m/z, computed with
+        /// <paramref name="decoyModifications"/> - the decoy's own list, already remapped by
+        /// <see cref="RemapModifications"/>, so the fragments and the entry carry one set.
         /// </summary>
-        public static LibraryFragment[] RecalculateFragmentsStatic(
-            LibraryEntry target, int[] positionMapping, string decoySequence)
-        {
-            var instance = new DecoyGenerator();
-            return instance.RecalculateFragments(target, positionMapping, decoySequence);
-        }
-
-        private LibraryFragment[] RecalculateFragments(
-            LibraryEntry target, int[] positionMapping, string decoySequence)
+        private static LibraryFragment[] RecalculateFragments(
+            LibraryEntry target, IReadOnlyList<Modification> decoyModifications, string decoySequence)
         {
             int seqLen = target.Sequence.Length;
 
-            // Build modification mass map for decoy (by new position)
-            var modMasses = new Dictionary<int, double>();
-            foreach (var m in target.Modifications)
-            {
-                for (int newPos = 0; newPos < positionMapping.Length; newPos++)
-                {
-                    if (positionMapping[newPos] == m.Position)
-                    {
-                        modMasses[newPos] = m.MassDelta;
-                        break;
-                    }
-                }
-            }
+            // Modification mass by decoy position. Modifications that land on one residue add -
+            // an N-terminal acetyl and an oxidized first methionine both sit at position 0 - so
+            // every decoy ion spanning it carries both, as the target's ions do.
+            var modMasses = PeptideFragmentMass.ModMassesByPosition(decoyModifications);
 
             var result = new List<LibraryFragment>();
             foreach (var frag in target.Fragments)
@@ -782,7 +745,7 @@ namespace pwiz.Osprey.Scoring
                 if (newOrdinal <= 0 || newOrdinal > seqLen)
                     continue;
 
-                double? mz = CalculateFragmentMz(
+                double? mz = PeptideFragmentMass.CalculateFragmentMz(
                     newIonType, newOrdinal, annotation.Charge,
                     decoySequence, modMasses,
                     annotation.HasNeutralLoss ? annotation.NeutralLossMass : null);
@@ -808,61 +771,6 @@ namespace pwiz.Osprey.Scoring
             // uncomputable ordinals), so the count is not known up front;
             // accumulate in a list and return an array.
             return result.Count == 0 ? Array.Empty<LibraryFragment>() : result.ToArray();
-        }
-
-        private double? CalculateFragmentMz(
-            IonType ionType, int ordinal, byte charge,
-            string sequence, Dictionary<int, double> modMasses,
-            double? neutralLoss)
-        {
-            int seqLen = sequence.Length;
-            int start, end;
-
-            switch (ionType)
-            {
-                case IonType.B:
-                    start = 0;
-                    end = ordinal;
-                    break;
-                case IonType.Y:
-                    start = seqLen - ordinal;
-                    end = seqLen;
-                    break;
-                default:
-                    return null;
-            }
-
-            if (end > seqLen)
-                return null;
-
-            double mass = 0.0;
-            for (int i = start; i < end; i++)
-            {
-                double aaMass;
-                if (!STANDARD_AA_MASSES.TryGetValue(sequence[i], out aaMass))
-                    return null;
-                mass += aaMass;
-
-                double modMass;
-                if (modMasses.TryGetValue(i, out modMass))
-                    mass += modMass;
-            }
-
-            switch (ionType)
-            {
-                case IonType.B:
-                    mass += PROTON_MASS;
-                    break;
-                case IonType.Y:
-                    mass += H2O_MASS + PROTON_MASS;
-                    break;
-            }
-
-            if (neutralLoss.HasValue)
-                mass -= neutralLoss.Value;
-
-            double mz = (mass + (charge - 1.0) * PROTON_MASS) / charge;
-            return mz;
         }
     }
 }

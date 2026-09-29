@@ -1176,8 +1176,7 @@ namespace pwiz.Osprey.Tasks
             // The supplied-decoy half is DONE by now: marking and pairing are inside the load
             // (issue #4650), so the count below already reflects post-marking state, as it did
             // when marking ran here.
-            bool librarySuppliesDecoys = config.DecoysInLibrary ||
-                config.DecoyMethod == DecoyMethod.FromLibrary;
+            bool librarySuppliesDecoys = LibraryLoader.LibrarySuppliesDecoys(config);
 
             int nLibraryTargets = 0;
             foreach (var entry in library)

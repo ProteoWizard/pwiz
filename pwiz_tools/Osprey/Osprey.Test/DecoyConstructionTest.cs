@@ -92,6 +92,47 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(SinglyChargedY(decoyLadder, 4), decoy.Fragments[1].Mz, TOLERANCE);
         }
 
+        /// <summary>
+        /// Both library loaders put an N-terminal modification on residue 0, where a
+        /// modification of the first residue also sits (<c>(UniMod:1)M(UniMod:35)</c>). The
+        /// two travel with that residue into the decoy, and every decoy fragment spanning it
+        /// must carry both mass deltas, as the target's fragments do. Keeping only the last one
+        /// put those decoy ions 42 Da off the peptide they claim to be.
+        /// </summary>
+        [TestMethod]
+        public void DecoyFragmentCarriesStackedModifications()
+        {
+            const double acetyl = 42.010565;
+            const double oxidation = 15.994915;
+            var generator = new DecoyGenerator(Enzyme.Trypsin);
+            var target = new LibraryEntry(1, @"MPEPTIDEK", @"[+42.010565]M[+15.994915]PEPTIDEK", 2, 550.0, 10.0);
+            target.Modifications = new[]
+            {
+                new Modification { Position = 0, MassDelta = acetyl, UnimodId = 1 },
+                new Modification { Position = 0, MassDelta = oxidation, UnimodId = 35 },
+            };
+            target.Fragments = new[]
+            {
+                Fragment(300.0, 1.0f, IonType.B, 3),
+                Fragment(900.0, 0.8f, IonType.B, 8),
+                Fragment(400.0, 0.6f, IonType.Y, 2),
+                Fragment(500.0, 0.4f, IonType.Y, 4)
+            };
+
+            var decoy = generator.Generate(target);
+            // The reversal keeps the C-terminal K and moves the methionine, with both of its
+            // modifications, to position 7.
+            Assert.AreEqual(@"EDITPEPMK", decoy.Sequence);
+            Assert.AreEqual(2, decoy.Modifications.Count(m => m.Position == 7));
+
+            double[] ladder = DecoyGenerator.TheoreticalLadder(@"EDITPEPMK");
+            double stacked = acetyl + oxidation;
+            Assert.AreEqual(SinglyChargedB(ladder, 3), decoy.Fragments[0].Mz, TOLERANCE, @"b3 does not reach the methionine");
+            Assert.AreEqual(SinglyChargedB(ladder, 8) + stacked, decoy.Fragments[1].Mz, TOLERANCE, @"b8");
+            Assert.AreEqual(SinglyChargedY(ladder, 2) + stacked, decoy.Fragments[2].Mz, TOLERANCE, @"y2");
+            Assert.AreEqual(SinglyChargedY(ladder, 4) + stacked, decoy.Fragments[3].Mz, TOLERANCE, @"y4");
+        }
+
         [TestMethod]
         public void OverlapGateRejectsAnIsobaricNearDuplicate()
         {

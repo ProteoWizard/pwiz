@@ -126,8 +126,8 @@ production pipeline uses the batch `GenerateAllWithCollisionDetection`, not
 ### Fragment m/z recalculation
 
 Because reversal moves residues, fragment m/z values must be recomputed.
-`RecalculateFragments` (static wrapper `RecalculateFragmentsStatic`) walks the
-target's fragments and:
+`RecalculateFragments` walks the target's fragments, with the decoy's own remapped
+modification list (the one the decoy entry carries), and:
 
 - **b-ion and y-ion**: ion type and ordinal are carried through unchanged, and only
   the m/z is recomputed for the permuted sequence. A target y7 yields a decoy y7.
@@ -188,26 +188,30 @@ entrapment FDP unchanged within noise. It is kept for robustness at SMALL librar
 scale, where palindromes, low-complexity runs and isobaric I/L permutations are a far
 larger fraction.
 
-`CalculateFragmentMz` (`DecoyGenerator.cs`) computes masses from first
-principles against the `STANDARD_AA_MASSES` monoisotopic table
-(`DecoyGenerator.cs`) with `PROTON_MASS = 1.007276` and `H2O_MASS = 18.010565`
-(`DecoyGenerator.cs`):
+`CalculateFragmentMz` (`Osprey.Core/PeptideFragmentMass.cs`) computes masses from first
+principles against the `STANDARD_AA_MASSES` monoisotopic table with
+`PROTON_MASS = 1.007276` and `H2O_MASS = 18.010565`, all in the same file, so anything
+else that needs a peptide's b/y m/z shares one set of residue masses with `DecoyGenerator`:
 
-- b-ion: sum of residues `[0, ordinal)` + proton (`DecoyGenerator.cs`).
-- y-ion: sum of residues `[seqLen-ordinal, seqLen)` + H2O + proton
-  (`DecoyGenerator.cs`).
+- b-ion: sum of residues `[0, ordinal)` + proton.
+- y-ion: sum of residues `[seqLen-ordinal, seqLen)` + H2O + proton.
 - Per-residue modification mass deltas are added by new position via `modMasses`
-  (`DecoyGenerator.cs`).
-- Neutral loss is subtracted when present (`DecoyGenerator.cs`).
-- Final m/z: `(mass + (charge-1)*proton) / charge` (`DecoyGenerator.cs`).
+  (`PeptideFragmentMass.ModMassesByPosition`). Modifications that land on one residue ADD: an
+  N-terminal acetyl and an oxidized first methionine both sit at position 0 in both library
+  loaders, so every decoy ion spanning that residue carries both, as the target's ions do.
+  Until this was fixed the map kept only the last of the two, putting those decoy ions 42 Da
+  off. Every search that generates its decoys keys on `;decoymods=2`, so a directory scored
+  before the fix is not adopted even under `OSPREY_VERSION_OVERRIDE` (the build-version stamp
+  refuses it otherwise).
+- Neutral loss is subtracted when present.
+- Final m/z: `(mass + (charge-1)*proton) / charge`.
 
 This matches the Rust `calculate_fragment_mz` pseudocode step for step, including
 the constants.
 
 ### Modification remapping
 
-`RemapModifications` (`DecoyGenerator.cs`, static wrapper
-`RemapModificationsStatic`) builds a reverse map `old_pos → new_pos` from
+`RemapModifications` (`DecoyGenerator.cs`) builds a reverse map `old_pos → new_pos` from
 the position mapping and moves each modification to its new position, copying
 `Position`, `UnimodId`, `MassDelta`, `Name` (`DecoyGenerator.cs`). Mods whose
 original position isn't in the mapping are dropped. Because the amino-acid

@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -57,6 +58,19 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     public abstract class OspreyTask : ISelectableTask
     {
+        /// <summary>
+        /// The base-key term of every search that generates its decoys. Decoy fragments of an
+        /// entry with two modifications on one residue - an N-terminal acetyl before an oxidized
+        /// methionine, <c>(UniMod:1)M(UniMod:35)</c> - kept only the last of the two until they
+        /// added, so a directory scored before that could hold decoys 42 Da off on every ion
+        /// spanning the residue. Only libraries holding such an entry changed, but telling them
+        /// apart would mean reading the library before any skip decision; the build-version
+        /// stamp already makes every upgrade re-score, so this term costs a re-run only where
+        /// <c>OSPREY_VERSION_OVERRIDE</c> adopts another build's outputs. A search whose decoys
+        /// come from the library keys exactly as before.
+        /// </summary>
+        public const string DECOY_MODS_TERM = @";decoymods=2";
+
         /// <summary>
         /// Short identifier used in pipeline log lines, the <c>--task</c> selector and the
         /// validity sidecar. Each task returns its own <c>TASK_NAME</c> constant, the one
@@ -207,12 +221,16 @@ namespace pwiz.Osprey.Tasks
         /// selects which peak a precursor's row describes, in Stage 4, and
         /// everything downstream inherits that choice. Putting it here also
         /// means a task added later carries it without having to know.
+        ///
+        /// <see cref="DECOY_MODS_TERM"/> is here for the same reason: generated decoys reach
+        /// every stage after scoring.
         /// </summary>
         public virtual string ValidityKey(PipelineContext ctx) => string.Format(
-            @"search={0};library={1}{2}",
+            @"search={0};library={1}{2}{3}",
             ctx.Config.Identity.SearchParameterHash(),
             ctx.Config.Identity.LibraryIdentityHash(),
-            OspreyEnvironment.PickValidityKeySuffix());
+            OspreyEnvironment.PickValidityKeySuffix(),
+            LibraryLoader.LibrarySuppliesDecoys(ctx.Config) ? string.Empty : DECOY_MODS_TERM);
 
         /// <summary>
         /// A <see cref="ValidateSelection"/> error naming this task and what it is missing,

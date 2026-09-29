@@ -310,6 +310,19 @@ namespace pwiz.Osprey.IO
 
             return entries;
         }
+
+        /// <summary>
+        /// Whether the library supplies its own decoys, so the load must mark and pair them and
+        /// Osprey generates none. <c>DecoyMethod.FromLibrary</c> is a synonym for
+        /// <c>DecoysInLibrary</c>, and treating it as one is what fixed library-decoy mode
+        /// silently falling through to Reverse generation. The one definition: scoring and the
+        /// validity keys ask it here, so they cannot disagree about which searches generate.
+        /// </summary>
+        public static bool LibrarySuppliesDecoys(OspreyConfig config)
+        {
+            return config.DecoysInLibrary || config.DecoyMethod == DecoyMethod.FromLibrary;
+        }
+
         /// <summary>
         /// Finish a supplied-decoy library: mark the decoys, then pair each to its target.
         /// Returns false with <paramref name="error"/> set on the faults that make the library
@@ -644,17 +657,6 @@ namespace pwiz.Osprey.IO
                 - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
             sb.AppendFormat(CultureInfo.InvariantCulture, "{0}_mtime:{1}\n", label, mtimeSecs);
             // ReSharper restore LocalizableElement
-        }
-
-        /// <summary>
-        /// Whether the library supplies its own decoys, so the load must mark and pair them.
-        /// The same predicate the caller used to apply - <c>DecoyMethod.FromLibrary</c> is a
-        /// synonym for <c>DecoysInLibrary</c>, and treating it as one is what fixed library-decoy
-        /// mode silently falling through to Reverse generation.
-        /// </summary>
-        private static bool LibrarySuppliesDecoys(OspreyConfig config)
-        {
-            return config.DecoysInLibrary || config.DecoyMethod == DecoyMethod.FromLibrary;
         }
 
         /// <summary>
