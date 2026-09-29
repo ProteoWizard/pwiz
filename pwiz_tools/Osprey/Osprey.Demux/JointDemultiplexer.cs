@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.Intrinsics;
 using System.Threading;
 
 namespace pwiz.Osprey.Demux
@@ -303,6 +304,17 @@ namespace pwiz.Osprey.Demux
             private readonly double[] _columnA;              // the transmission into each of them
             private readonly double[] _b;                    // the peak, offsets -h..h, unit area
             private readonly double[] _b2;
+            // The peak and its square padded with zeros to whole groups of WIDTH terms: a sample's 2h + 1 terms as
+            // a few four-lane operations, in 256-bit vectors where the hardware has them and otherwise in four
+            // scalar partial sums in the same lane order, reduced in one fixed order, so every machine gets the
+            // same bits. The sample buffers are WIDTH longer than they hold, so the zero terms past the last
+            // sample read finite values (and subtract exactly 0 from them).
+            private const int WIDTH = 4;
+            private static readonly bool VECTORS = Vector256.IsHardwareAccelerated;
+            private readonly double[] _bp;
+            private readonly double[] _b2p;
+            private readonly Vector256<double>[] _bv;
+            private readonly Vector256<double>[] _b2v;
             private readonly int _half;
             private int _samples;                            // samples in the chunk: [lo - h, hi + h]
             private int _points;                             // grid points with coefficients: [lo, hi]
@@ -344,6 +356,11 @@ namespace pwiz.Osprey.Demux
                 _half = parameters.PeakHalfWidth;
                 _b = new double[2 * _half + 1];
                 _b2 = new double[2 * _half + 1];
+                int groups = (_b.Length + WIDTH - 1) / WIDTH;
+                _bp = new double[groups * WIDTH];
+                _b2p = new double[groups * WIDTH];
+                _bv = new Vector256<double>[groups];
+                _b2v = new Vector256<double>[groups];
                 _aT = new double[_columns * _rows];
                 _columnStart = new int[_columns + 1];
                 int entries = 0;
@@ -513,11 +530,11 @@ namespace pwiz.Osprey.Demux
             private void Allocate()
             {
                 int rs = _rows * _samples, cp = _columns * _points, rp = _rows * _points;
-                if (_y.Length < rs)
+                if (_y.Length < rs + WIDTH)
                 {
-                    _y = new double[rs];
-                    _residual = new double[rs];
-                    _weight = new double[rs];
+                    _y = new double[rs + WIDTH];
+                    _residual = new double[rs + WIDTH];
+                    _weight = new double[rs + WIDTH];
                 }
                 if (_beta.Length < cp)
                 {
@@ -553,6 +570,13 @@ namespace pwiz.Osprey.Demux
                 {
                     _b[d] /= sum;
                     _b2[d] = _b[d] * _b[d];
+                }
+                Array.Copy(_b, _bp, _b.Length);
+                Array.Copy(_b2, _b2p, _b2.Length);
+                for (int m = 0; m < _bv.Length; m++)
+                {
+                    _bv[m] = Vector256.Create(_bp, m * WIDTH);
+                    _b2v[m] = Vector256.Create(_b2p, m * WIDTH);
                 }
             }
 
@@ -596,10 +620,7 @@ namespace pwiz.Osprey.Demux
                         if (!_rowUsed[r])
                             continue;
                         int o = r * _samples + q;
-                        double v = 0;
-                        for (int d = 0; d < _b2.Length; d++)
-                            v += _b2[d] * _weight[o + d];
-                        _v[oq + r] = v;
+                        _v[oq + r] = PeakWeight(o);
                     }
                     int oc = q * _columns;
                     for (int j = 0; j < _columns; j++)
@@ -695,6 +716,68 @@ namespace pwiz.Osprey.Demux
                 return t;
             }
 
+            /// <summary>The peak times the weighted residual over the samples from <paramref name="o"/>.</summary>
+            private double PeakGradient(int o)
+            {
+                if (VECTORS)
+                {
+                    var sum = Vector256<double>.Zero;
+                    for (int m = 0, x = o; m < _bv.Length; m++, x += WIDTH)
+                        sum += _bv[m] * Vector256.Create(_weight, x) * Vector256.Create(_residual, x);
+                    return Reduce(sum.GetElement(0), sum.GetElement(1), sum.GetElement(2), sum.GetElement(3));
+                }
+                double s0 = 0, s1 = 0, s2 = 0, s3 = 0;
+                for (int d = 0, x = o; d < _bp.Length; d += WIDTH, x += WIDTH)
+                {
+                    s0 += _bp[d] * _weight[x] * _residual[x];
+                    s1 += _bp[d + 1] * _weight[x + 1] * _residual[x + 1];
+                    s2 += _bp[d + 2] * _weight[x + 2] * _residual[x + 2];
+                    s3 += _bp[d + 3] * _weight[x + 3] * _residual[x + 3];
+                }
+                return Reduce(s0, s1, s2, s3);
+            }
+
+            /// <summary>The squared peak times the weights over the samples from <paramref name="o"/>.</summary>
+            private double PeakWeight(int o)
+            {
+                if (VECTORS)
+                {
+                    var sum = Vector256<double>.Zero;
+                    for (int m = 0, x = o; m < _b2v.Length; m++, x += WIDTH)
+                        sum += _b2v[m] * Vector256.Create(_weight, x);
+                    return Reduce(sum.GetElement(0), sum.GetElement(1), sum.GetElement(2), sum.GetElement(3));
+                }
+                double s0 = 0, s1 = 0, s2 = 0, s3 = 0;
+                for (int d = 0, x = o; d < _b2p.Length; d += WIDTH, x += WIDTH)
+                {
+                    s0 += _b2p[d] * _weight[x];
+                    s1 += _b2p[d + 1] * _weight[x + 1];
+                    s2 += _b2p[d + 2] * _weight[x + 2];
+                    s3 += _b2p[d + 3] * _weight[x + 3];
+                }
+                return Reduce(s0, s1, s2, s3);
+            }
+
+            /// <summary>The four lanes' partial sums, added in one fixed order.</summary>
+            private static double Reduce(double s0, double s1, double s2, double s3)
+            {
+                return (s0 + s1) + (s2 + s3);
+            }
+
+            /// <summary>Takes <paramref name="scale"/> times the peak from the residual over the samples from <paramref name="o"/>.</summary>
+            private void SubtractPeak(int o, double scale)
+            {
+                if (VECTORS)
+                {
+                    var factor = Vector256.Create(scale);
+                    for (int m = 0, x = o; m < _bv.Length; m++, x += WIDTH)
+                        (Vector256.Create(_residual, x) - factor * _bv[m]).CopyTo(_residual, x);
+                    return;
+                }
+                for (int d = 0, x = o; d < _bp.Length; d++, x++)
+                    _residual[x] -= scale * _bp[d];
+            }
+
             /// <summary>Makes the active set the positive coefficients.</summary>
             private void Prune()
             {
@@ -749,10 +832,7 @@ namespace pwiz.Osprey.Demux
                         int q = _reach[i];
                         if (!_changed[q])
                             continue;
-                        double g = 0;
-                        for (int d = 0; d < _b.Length; d++)
-                            g += _b[d] * _weight[o + q + d] * _residual[o + q + d];
-                        _z[q * _rows + r] = g;
+                        _z[q * _rows + r] = PeakGradient(o + q);
                     }
                 }
                 int added = 0;
@@ -815,11 +895,7 @@ namespace pwiz.Osprey.Demux
                         double g = 0;
                         for (int k = _columnStart[j]; k < _columnStart[j + 1]; k++)
                         {
-                            int o = _columnRow[k] * _samples + q;
-                            double s = 0;
-                            for (int d = 0; d < _b.Length; d++)
-                                s += _b[d] * _weight[o + d] * _residual[o + d];
-                            g += _columnA[k] * s;
+                            g += _columnA[k] * PeakGradient(_columnRow[k] * _samples + q);
                         }
                         _blockGradient[u] = g;
                         _blockOld[u] = _beta[oc + j];
@@ -885,12 +961,7 @@ namespace pwiz.Osprey.Demux
                         int j = _blockColumns[u];
                         _beta[oc + j] = _blockNew[u];
                         for (int k = _columnStart[j]; k < _columnStart[j + 1]; k++)
-                        {
-                            double ad = _columnA[k] * delta;
-                            int o = _columnRow[k] * _samples + q;
-                            for (int d = 0; d < _b.Length; d++)
-                                _residual[o + d] -= ad * _b[d];
-                        }
+                            SubtractPeak(_columnRow[k] * _samples + q, _columnA[k] * delta);
                         moved = Math.Max(moved, Math.Abs(delta));
                     }
                     largest = Math.Max(largest, moved);
