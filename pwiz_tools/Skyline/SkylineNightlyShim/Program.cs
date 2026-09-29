@@ -135,7 +135,7 @@ namespace SkylineNightlyShim
             {
                 // Attempt to update SkylineNightly.exe
                 string zipFileLink = TeamCityNightlyAuth.GetArtifactUrl(TEAM_CITY_BUILD_TYPE_64_MASTER, SKYLINENIGHTLY_ZIP, TeamCityNightlyAuth.GetSkylineNightlyBranchQuery(), false);
-                var fileName = Path.Combine(nightlyDirectory ?? throw new InvalidOperationException(), SKYLINENIGHTLY_ZIP);
+                var fileName = Path.Combine(nightlyDirectory, SKYLINENIGHTLY_ZIP);
                 Log("Update " + nightlyDirectory + " with " + zipFileLink);
                 TeamCityNightlyAuth.DownloadArtifact(zipFileLink, fileName, teamCityToken);
                 using (var zipFile = new ZipFile(fileName))
@@ -162,7 +162,7 @@ namespace SkylineNightlyShim
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     FileName = "SkylineNightly.exe",
-                    WorkingDirectory = nightlyDirectory ?? throw new InvalidOperationException(),
+                    WorkingDirectory = nightlyDirectory,
                     Arguments = "run",
                     CreateNoWindow = true
                 }

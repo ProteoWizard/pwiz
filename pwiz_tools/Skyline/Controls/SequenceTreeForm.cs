@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
