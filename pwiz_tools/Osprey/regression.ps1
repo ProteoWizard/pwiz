@@ -640,7 +640,7 @@ $datasets = [ordered]@{
     # against the decoy provenance they are actually used with, at Stellar speed. Not Astral,
     # which is the suite's critical path and pays for an extra straight-through run in wall
     # clock directly.
-    Stellar = @{ Folder = 'stellar'; Resolution = 'unit'; SkipModes = @(2, 3, 5, 8, 9) }
+    Stellar = @{ Folder = 'stellar'; Resolution = 'unit'; SkipModes = @(2, 3, 5) }
     StellarLibDecoy = @{
         AltPass2         = $true
         Folder           = 'stellar'
@@ -683,7 +683,7 @@ $datasets = [ordered]@{
         # cost a second full sidecar + parquet-scalar walk per straight and resume leg on each
         # of them, most of it on Astral, for no property the gate does not already hold here.
         FdrBench         = $true
-        SkipModes        = @(3, 5, 7, 8, 9, 11)
+        SkipModes        = @(3, 5, 7, 11)
     }
     # Astral carries no entrapment, so its tier-2 bound is the null-alignment tilt.
     # 0.5 is an honest ceiling with the b<->y swap removed (this branch measures
@@ -701,8 +701,7 @@ $datasets = [ordered]@{
     # decoys, entrapment, diagnostics, the alternate pass-2 arm) and the cheapest
     # full-coverage configuration. The other three keep the legs whose property varies:
     #   Stellar (generated decoys, no diagnostics) keeps 1, 1c, 4, 6: the default
-    #     product path's answer against its golden. The two rescore-resume shapes (8, 9)
-    #     are decoy-source-neutral, so StellarLibDecoy's instance covers them. Resume,
+    #     product path's answer against its golden. Resume,
     #     chain and rehydrate (2, 3, 5) went on 2026-09-28 (#4728, ~603 s): they are
     #     pipeline mechanics, valid on any data, and SubsetPipelineTest runs all three
     #     in-process on a Stellar subset on every commit; StellarLibDecoy still runs
@@ -710,16 +709,16 @@ $datasets = [ordered]@{
     #   StellarGenDecoyEntrap (the decoy-construction oracle) keeps the straight run
     #     with its golden and FDP bound, mode 2 (which carries the resume half of mode
     #     12) and mode 4. The chain, rehydrate, regeneration, pay-later and rescore-resume
-    #     legs (3, 5, 7, 8, 9, 11) never touch decoy construction.
+    #     legs (3, 5, 7, 11) never touch decoy construction.
     #   Astral (hram, the suite's critical path) keeps the straight run, mode 3 (the one
     #     leg that ships hram's gap-fill rows across a process boundary) and mode 4.
     #     Mode 2 went first (2026-09-08, ~8.6 min) because 3, 5, 8 and 9 all drove partial
-    #     resumes to completion here; 5, 7, 8, 9 and 11 followed on 2026-09-12 by the
+    #     resumes to completion here; 5, 7 and 11 followed on 2026-09-12 by the
     #     same argument, once the TeamCity agent proved disk-bound.
     # Measured on this machine's two-lane run: wall 65 min before, 44 min after, with
     # the lanes rebalanced to Astral+StellarGenDecoyEntrap | Stellar+StellarLibDecoy.
     Astral  = @{ Folder = 'astral';  Resolution = 'hram'; ModelDiagnostics = $true
-                 MaxAbsTilt = 0.5; SkipModes = @(2, 5, 7, 8, 9, 11) }
+                 MaxAbsTilt = 0.5; SkipModes = @(2, 5, 7, 11) }
 }
 $selected = if ($Dataset -eq 'All') { @($datasets.Keys) } else { @($Dataset) }
 # A mode in a dataset's SkipModes is a designed omission: the leg does not run there and
@@ -3689,9 +3688,9 @@ foreach ($name in $selected) {
     #   the SAME report" is - a view held privately by some phase goes missing on this path
     #   and on no other, which is how the CAL view's loss was found.
     #
-    # Runs after mode 7 (which rewrites the report) and BEFORE mode 8, which invalidates the
-    # blib: this leg needs a cohort whose every analysis artifact is still current, because
-    # that currency is the whole precondition for the folds it is asserting.
+    # Runs after mode 7 (which rewrites the report): this leg needs a cohort whose every
+    # analysis artifact is still current, because that currency is the whole precondition for
+    # the folds it is asserting.
     if ($cfg.ModelDiagnostics -and -not (Test-ModeCut $cfg 11)) {
         Write-Progress-Tc "${name}: pay-later diagnostics fold (mode 11)"
         $m11Issues = [System.Collections.Generic.List[string]]::new()
@@ -4122,7 +4121,7 @@ foreach ($name in $selected) {
             }
 
             # Restored to exactly what the fold above produced, stamps included, whatever the
-            # cells left behind. Mode 8 follows and needs a cohort that is complete, and a
+            # cells left behind, and a
             # product a red cell failed to produce must not read as this run's output.
             & $m11Drop
             foreach ($f in @(Get-ChildItem -LiteralPath $m11CellsRef -File)) {
@@ -4142,135 +4141,6 @@ foreach ($name in $selected) {
             Write-Problem-Tc "$name mode11 (pay-later diagnostics): FAIL - $($m11Issues.Count) issue(s)"
             $m11Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
             $summaryLines.Add("$name mode11 (pay-later diagnostics): FAIL ($($m11Issues.Count) issues)")
-        }
-    }
-
-    # ---- mode 8: a PARTIALLY completed rescore resumes and FINISHES ----------------
-    # The state no other leg produces, which is why a real defect shipped. Mode 2 resumes from a
-    # COMPLETE Stage-5 directory and mode 4 re-runs with EVERYTHING cached, so neither ever
-    # presents a per-file set that is part done - and part done is what every interruption
-    # leaves behind. PerFileRescoreTask read "ANY file has a current 2nd-pass sidecar" as "the
-    # rescore is finished": a 446-run cohort killed at 141 came back, skipped Stage 5 correctly,
-    # rescored NOTHING, and left 305 runs to carry 1st-pass q-values into the picked-protein FDR
-    # and the blib - then rebuilt the whole survivor pool toward ~86 GB (2026-09-03).
-    #
-    # Runs LAST, after mode 7, because it invalidates and rewrites the blib in the
-    # straight-through directory; every leg that reads that directory has already run.
-    # Runs on the mdiag datasets too. It was skipped on them while a partial resume under
-    # --model-diagnostics had no plan source - no per-run hydrate, no worker bundle - so the
-    # rescore could only refuse. Retiring the --model-diagnostics exclusion from
-    # ScoringTaskShared.CanHydratePerRun supplied that plan source, which is what
-    # PerFileRescoreTask's perRunPlanAvailable reads, so the leg now asserts the capability
-    # instead of the gap. The skip was written to need no edit but its own deletion.
-    if (-not $SkipResume -and -not (Test-ModeCut $cfg 8)) {
-        Write-Progress-Tc "${name}: partial rescore resume (mode 8)"
-        # Captured BEFORE the invalidation: the resume overwrites the blib in place. Mode 1 has
-        # already proved this blib matches the committed golden, so comparing against it is
-        # comparing against the golden one hop removed - and it stays correct if the golden is
-        # ever refreshed.
-        $m8Expected = Join-Path $straightDir 'output.blib.premode8'
-        Copy-Item (Join-Path $straightDir 'output.blib') $m8Expected -Force
-        $m8Cut = Invoke-PartialRescoreInvalidation -WorkDir $straightDir
-        Write-Host ("  invalidated the rescore for {0} of {1} run(s)" -f $m8Cut.Cut, $m8Cut.Runs)
-
-        $m8Inputs = @($inputs.Mzmls | ForEach-Object { Join-Path $straightDir (Split-Path $_ -Leaf) })
-        $rPartial = Invoke-OspreyRun -Mzmls $m8Inputs -Library $inputs.Library -Resolution $cfg.Resolution `
-            -WorkDir $straightDir -LogName 'partial-resume.log' -Spec $cfg -Manifest $inputs.Manifest `
-            -AllowNonZeroExit
-        $m8Issues = [System.Collections.Generic.List[string]]::new()
-        # COUNT. The assertion the defect failed outright: the broken build left the count at the
-        # untouched runs and still reported success.
-        $m8Recon = @(Get-ChildItem $straightDir -Filter '*.scores-reconciled.parquet' -File |
-                     Where-Object { $_.Name -notlike '*.osprey.task' }).Count
-        if ($m8Recon -ne $m8Cut.Runs) {
-            $m8Issues.Add("only $m8Recon of $($m8Cut.Runs) reconciled parquet(s) after the resume; the rescore did not finish the cohort")
-        }
-
-        # VISIBILITY. How much was reused has to be STATED, not inferred from what the run does
-        # next; a resume nobody can audit is one nobody can trust after an interruption.
-        $m8Marker = Test-LogMarker -LogPath $rPartial.Log `
-            -Marker '[PATH] rescore-resume:' `
-            -Description 'the rescore reporting how many runs it adopted and how many it re-scored'
-        foreach ($issue in $m8Marker.Issues) { $m8Issues.Add($issue) }
-
-        # VALUE. Finishing is not finishing CORRECTLY. An interrupted run that completes to a
-        # different answer than an uninterrupted one is the failure that actually matters for the
-        # resume promise, and the COUNT check above cannot see it.
-        $m8 = Compare-BlibFull -BlibExpected $m8Expected `
-            -BlibActual (Join-Path $straightDir 'output.blib') -Tolerance $Tolerance
-        foreach ($issue in $m8.Issues) { $m8Issues.Add($issue) }
-        Remove-Scratch $m8Expected
-
-        if ($m8Issues.Count -eq 0) {
-            $summaryLines.Add("$name mode8 (partial rescore resume): PASS ($($m8Cut.Cut) of $($m8Cut.Runs) run(s) re-scored)")
-        } else {
-            $overallFail = $true
-            Write-Problem-Tc "$name mode8 (partial rescore resume): FAIL - $($m8Issues.Count) issue(s)"
-            $m8Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
-            $summaryLines.Add("$name mode8 (partial rescore resume): FAIL ($($m8Issues.Count) issues)")
-        }
-    }
-
-    # ---- mode 9: a CRASH-shaped half-done file is re-scored, not skipped -----------
-    # The state mode 8 structurally cannot present. The rescore writes a run's reconciled
-    # parquet, stamps it, and only then writes the 2nd-pass sidecar; a process that dies
-    # between those two leaves a file the cohort count calls outstanding and the per-file
-    # skip calls complete. Mode 8 amputates BOTH products, so its two checks agree and the
-    # split never appears.
-    #
-    # It is not hypothetical: a native AccessViolation killed a 446-file run mid-stamp on
-    # 2026-09-04, and the resume then logged 448 "skipping (outputs valid)" lines and ZERO
-    # rescores - in a run whose own header said one file still needed re-scoring. The blib
-    # came out silently missing that run.
-    #
-    # Runs after mode 8 and rebuilds from the same directory, so it inherits a cohort mode 8
-    # has already restored to whole.
-    # Runs on the mdiag datasets too, for the reason mode 8 does: the per-run hydrate is the
-    # plan source a half-done run needs to be re-scored, and --model-diagnostics is no longer
-    # excluded from it. This leg's property - a half-done file is RE-SCORED rather than
-    # skipped - is now assertable on every dataset.
-    if (-not $SkipResume -and -not (Test-ModeCut $cfg 9)) {
-        Write-Progress-Tc "${name}: crash-shaped half-done resume (mode 9)"
-        $m9Expected = Join-Path $straightDir 'output.blib.premode9'
-        Copy-Item (Join-Path $straightDir 'output.blib') $m9Expected -Force
-        $m9Cut = Invoke-PartialRescoreInvalidation -WorkDir $straightDir -Pass2SidecarOnly
-        Write-Host ("  cut the 2nd-pass sidecar for {0} of {1} run(s), leaving their reconciled parquets stamped" -f
-            $m9Cut.Cut, $m9Cut.Runs)
-
-        $m9Inputs = @($inputs.Mzmls | ForEach-Object { Join-Path $straightDir (Split-Path $_ -Leaf) })
-        $r9 = Invoke-OspreyRun -Mzmls $m9Inputs -Library $inputs.Library -Resolution $cfg.Resolution `
-            -WorkDir $straightDir -LogName 'crash-shaped-resume.log' -Spec $cfg -Manifest $inputs.Manifest `
-            -AllowNonZeroExit
-        $m9Issues = [System.Collections.Generic.List[string]]::new()
-
-        # THE assertion. A run that skips the cut files re-scores nothing and still exits 0,
-        # which is exactly how this shipped: the count and the skip disagreed and nobody
-        # compared them. Requiring a rescore LINE is what makes the disagreement visible.
-        $m9Rescored = @(Select-String -Path $r9.Log -Pattern $coldRescoreMarker -SimpleMatch `
-            -ErrorAction SilentlyContinue)
-        if ($m9Rescored.Count -lt $m9Cut.Cut) {
-            $m9Issues.Add((("only {0} file(s) were re-scored after cutting {1} run(s)' 2nd-pass " +
-                "sidecar - the resume treated a half-done file as complete, which is the " +
-                "silent-drop defect this leg exists for") -f $m9Rescored.Count, $m9Cut.Cut))
-        }
-        if ($r9.ExitCode -ne 0) {
-            $m9Issues.Add("the resume exited $($r9.ExitCode); a recoverable half-done file must not fail the run")
-        }
-
-        # VALUE. Finishing is not finishing correctly - the re-scored file has to land the
-        # same answer the uninterrupted run did.
-        $m9Blib = Compare-BlibFull -BlibExpected $m9Expected `
-            -BlibActual (Join-Path $straightDir 'output.blib') -Tolerance $Tolerance
-        foreach ($issue in $m9Blib.Issues) { $m9Issues.Add($issue) }
-        Remove-Scratch $m9Expected
-
-        if ($m9Issues.Count -eq 0) {
-            $summaryLines.Add("$name mode9 (crash-shaped half-done resume): PASS ($($m9Cut.Cut) of $($m9Cut.Runs) run(s) re-scored)")
-        } else {
-            $overallFail = $true
-            Write-Problem-Tc "$name mode9 (crash-shaped half-done resume): FAIL - $($m9Issues.Count) issue(s)"
-            $m9Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
-            $summaryLines.Add("$name mode9 (crash-shaped half-done resume): FAIL ($($m9Issues.Count) issues)")
         }
     }
 

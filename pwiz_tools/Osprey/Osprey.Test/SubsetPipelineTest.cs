@@ -233,6 +233,50 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Interrupted second-pass rescoring, the two shapes an interruption leaves (regression
+        /// modes 8 and 9), on the library-decoy search with the diagnostics report. The last run's
+        /// rescore is cut and the same command run again: it must re-score that run and only
+        /// that run, say so, and finish to the uninterrupted library.
+        /// </summary>
+        [TestMethod, DoNotParallelize]
+        public void TestSubsetRescoreResume()
+        {
+            string workDir = CreateDir(@"rescore-resume");
+            var args = new[]
+            {
+                OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY.ArgumentText,
+                OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText, Path.Combine(_dataDir, LIBDECOY_PAIRING_FILE),
+                OspreyCommandArgs.ARG_MODEL_DIAGNOSTICS.ArgumentText
+            };
+            RunAnalysis(workDir, DataInputs(), LIBDECOY_FILE, Verifier(false), args);
+            string blib = Path.Combine(workDir, BLIB_FILE);
+            string uninterruptedBlib = Path.Combine(workDir, @"output_uninterrupted.blib");
+            File.Copy(blib, uninterruptedBlib);
+            string cutRun = RUN_NAMES[RUN_NAMES.Length - 1];
+
+            // Mode 8: a rescore that stopped before the last run - neither of its products exists.
+            // Once, any current second-pass file read as "the rescore is finished", and the
+            // remaining runs carried first-pass q-values into the library.
+            CutRescore(workDir, cutRun, true);
+            DeleteSecondPassOutputs(blib);
+            string log = RunAnalysis(workDir, RunNames(workDir, MZML_EXTENSION), LIBDECOY_FILE, Verifier(false), args);
+            Assert.AreEqual(RUN_NAMES.Length, Directory.GetFiles(workDir, @"*.scores-reconciled.parquet").Length,
+                @"the rescore did not finish the cohort" + Environment.NewLine + log);
+            AssertHasLine(log, PathLine(LogKey.ROUTE_RESCORE_RESUME, string.Empty));
+            AssertRescoredOnly(log, 1);
+            AssertBlibsEqual(uninterruptedBlib, blib);
+
+            // Mode 9: a crash between the two products - the reconciled parquet is written and
+            // stamped, the second-pass sidecar is not. The cohort count calls the run outstanding
+            // while a per-file check would call it done; it must be re-scored.
+            CutRescore(workDir, cutRun, false);
+            DeleteSecondPassOutputs(blib);
+            log = RunAnalysis(workDir, RunNames(workDir, MZML_EXTENSION), LIBDECOY_FILE, Verifier(false), args);
+            AssertRescoredOnly(log, 1);
+            AssertBlibsEqual(uninterruptedBlib, blib);
+        }
+
+        /// <summary>
         /// Options that must not change the answer - the cross-implementation dumps, an input list
         /// instead of -i - against a plain straight-through run, and the alternative FDR methods
         /// and levels, which must at least complete and report precursors.
@@ -823,6 +867,38 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(File.Exists(blib) && File.Exists(stamp), @"no second-pass outputs to invalidate");
             File.Delete(blib);
             File.Delete(stamp);
+        }
+
+        /// <summary>
+        /// Delete <paramref name="run"/>'s second-pass sidecars and their stamps, and with
+        /// <paramref name="withReconciledParquet"/> its reconciled parquet too: a rescore that
+        /// never reached the run, or one that died between its two products.
+        /// </summary>
+        private static void CutRescore(string workDir, string run, bool withReconciledParquet)
+        {
+            var products = new List<string>
+            {
+                run + @".2nd-pass.fdr_scores.bin", run + @".2nd-pass.fdr_decoys.bin"
+            };
+            if (withReconciledParquet)
+                products.Add(run + @".scores-reconciled.parquet");
+            foreach (string product in products)
+            {
+                string path = Path.Combine(workDir, product);
+                Assert.IsTrue(File.Exists(path), @"no rescore product to cut: " + path);
+                File.Delete(path);
+                File.Delete(TaskValiditySidecar.PathFor(path, PerFileRescoreTask.TASK_NAME));
+            }
+        }
+
+        /// <summary>
+        /// Exactly <paramref name="count"/> runs were re-scored from spectra.
+        /// </summary>
+        private static void AssertRescoredOnly(string log, int count)
+        {
+            Assert.AreEqual(count, SplitLines(log).Count(line =>
+                    line.StartsWith(PathLine(LogKey.ROUTE_RESCORE_FILE, string.Empty), StringComparison.Ordinal)),
+                @"re-scored runs" + Environment.NewLine + log);
         }
 
         private static void DeleteFiles(string dir, string pattern)

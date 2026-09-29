@@ -55,7 +55,7 @@
     .\Regression\Write-RegressionMatrix.ps1 -CostsFrom TestResults\regression-lane-*.log
     .\Regression\Write-RegressionMatrix.ps1 -VerifyAgainst TestResults\regression-lane-*.log
     .\Regression\Write-RegressionMatrix.ps1 -OutPath regression-proposal.html -Title 'PROPOSAL' `
-        -SkipModesOverride @{ StellarGenDecoyEntrap = @(2,3,5,7,8,9,11); Astral = @(2,5,7,8,9,11); Stellar = @(8,9) } `
+        -SkipModesOverride @{ StellarGenDecoyEntrap = @(2,3,5,7,11); Astral = @(2,5,7,11); Stellar = @(2,3,5) } `
         -Lanes 'Astral,StellarGenDecoyEntrap', 'Stellar,StellarLibDecoy'
 #>
 param(
@@ -184,12 +184,6 @@ $modes = @(
     @{ Id = '11'; Cost = '11'; Title = 'pay-later diagnostics: folded, no analysis, same report'
        Proves = 'With both diagnostics products deleted, asking for the report folds it from the sidecars, runs no analysis, and produces the byte-identical page.'
        Lines = @('mode11 (pay-later diagnostics: folded, no analysis, same report, from every entry point)'); When = { param($s) [bool]$s.ModelDiagnostics -and -not (Skipped $s 11) }; Gate = 'ModelDiagnostics, not in SkipModes' }
-    @{ Id = '8';  Cost = '8'; Title = 'partial rescore resume'
-       Proves = 'A rescore killed part-way resumes and finishes, re-scoring only the outstanding runs; on a ModelDiagnostics dataset the --model-diagnostics arm also reports its capability gap.'
-       Lines = @('mode8 (partial rescore resume)'); When = { param($s) -not (Skipped $s 8) }; Gate = 'not in SkipModes' }
-    @{ Id = '9';  Cost = '9'; Title = 'crash-shaped half-done resume'
-       Proves = 'A file with one of its two rescore products missing is re-scored, not treated as done.'
-       Lines = @('mode9 (crash-shaped half-done resume)'); When = { param($s) -not (Skipped $s 9) }; Gate = 'not in SkipModes' }
 )
 
 function Expected-Lines($m, $spec) {
