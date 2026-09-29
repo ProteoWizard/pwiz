@@ -21,6 +21,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 
 namespace pwiz.Osprey.Core
@@ -79,16 +80,19 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// m/z of the b or y ion of <paramref name="ordinal"/> residues at
-        /// <paramref name="charge"/>, or null for another ion type, a charge of 0, an ordinal
-        /// below 1 or past the end of the sequence, or an ion spanning a residue with no
-        /// standard mass.
+        /// <paramref name="charge"/>, or null for another ion type, an ordinal below 1 or past
+        /// the end of the sequence, or an ion spanning a residue with no standard mass. A charge
+        /// of 0 throws: the library readers refuse one, so reaching here with it is a defect,
+        /// and any m/z returned for it would be bogus.
         /// </summary>
         public static double? CalculateFragmentMz(
             IonType ionType, int ordinal, byte charge,
             string sequence, IReadOnlyDictionary<int, double> modMasses,
             double? neutralLoss)
         {
-            if (ordinal < 1 || charge == 0)
+            if (charge == 0)
+                throw new ArgumentOutOfRangeException(nameof(charge), $@"Fragment charge 0 for {ionType}{ordinal} of {sequence}");
+            if (ordinal < 1)
                 return null;
             int seqLen = sequence.Length;
             int start, end;

@@ -456,11 +456,12 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// Libraries whose generated decoys have no fragments of their own. A decoy is built by
-        /// recomputing the target's b/y fragments on the reversed sequence, so a fragment of unknown
-        /// type is copied verbatim and one with no fragment number is dropped. An Osprey output
-        /// .blib (no fragment annotations) and a library whose fragment numbers are all missing
-        /// must each stop with one plain error; a library with a few such entries must warn and
-        /// still finish.
+        /// recomputing the target's b/y fragments on the reversed sequence, so a fragment of
+        /// another type is copied verbatim and one with no fragment number is dropped. An Osprey
+        /// output .blib (no fragment annotations) and a library with no fragment number column
+        /// must each stop with one plain error; a library with a few precursors of copied-only
+        /// fragments must warn and still finish. A fragment number the library HAS but states
+        /// as 0 is not "missing": the loader refuses the library, naming the lines.
         /// </summary>
         [TestMethod, DoNotParallelize]
         public void TestSubsetUnusableDecoys()
@@ -474,16 +475,27 @@ namespace pwiz.Osprey.Test
             string output = RunExpectingRefusal(@"blib-library", blib);
             StringAssert.Contains(output, RefusalText(blib, blibPrecursors));
 
-            // Every fragment number missing, so every decoy fragment is dropped.
-            string noNumbers = WriteLibraryWithoutFragmentNumbers(@"no-fragment-numbers.tsv", _ => true);
+            // No fragment number column, so every decoy fragment is dropped.
+            string noNumbers = WriteLibraryWithoutColumn(@"no-fragment-numbers.tsv", @"FragmentNumber");
             int libraryPrecursors = CountLibraryPrecursors(Path.Combine(_dataDir, LIBRARY_FILE));
             output = RunExpectingRefusal(@"no-fragment-numbers", noNumbers);
             StringAssert.Contains(output, RefusalText(noNumbers, libraryPrecursors));
 
-            // Two precursors without fragment numbers: a warning naming the count, and a search.
+            // Two precursors whose fragment numbers read 0: the library is invalid, and the load
+            // refuses it with every one of their lines counted.
             var strayPeptides = new HashSet<string>(File.ReadLines(Path.Combine(_dataDir, LIBRARY_FILE))
                 .Skip(1).Select(line => line.Split('\t')[0]).Distinct().Take(2));
-            string strays = WriteLibraryWithoutFragmentNumbers(@"two-stray.tsv", strayPeptides.Contains);
+            string zeroNumbers = WriteLibraryWithCell(@"zero-fragment-numbers.tsv", strayPeptides.Contains,
+                @"FragmentNumber", @"0");
+            int strayLines = File.ReadLines(Path.Combine(_dataDir, LIBRARY_FILE))
+                .Skip(1).Count(line => strayPeptides.Contains(line.Split('\t')[0]));
+            output = RunExpectingRefusal(@"zero-fragment-numbers", zeroNumbers);
+            StringAssert.Contains(output, string.Format(
+                OspreyIOResources.DiannTsvLoader_ToException__0__library_lines_have_errors__Fix_the_library_and_load_it_again_, strayLines));
+
+            // Two precursors of a-ion fragments, which a decoy copies verbatim: a warning naming
+            // the count, and a search.
+            string strays = WriteLibraryWithCell(@"two-stray.tsv", strayPeptides.Contains, @"FragmentType", @"a");
             string strayDir = CreateDir(@"two-stray");
             string log = RunOsprey(InputArgs(DataInputs()).Concat(new[]
             {
@@ -494,7 +506,11 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(log, string.Format(
                 OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_Decoys_with_no_fragment_distinct_from_their_target___0__of__1____2____generated_,
                 strayPeptides.Count, libraryPrecursors, strayPeptides.Count / (double)libraryPrecursors, strays));
-            Assert.IsTrue(BlibComparer.CountRows(Path.Combine(strayDir, BLIB_FILE), @"RefSpectra") >= MIN_PRECURSORS);
+            // The search finishes and reports. Not at the usual depth: those two decoys are
+            // identical to their targets, so they score as well as real detections, and on a
+            // subset reporting ~177 precursors two top-scoring decoys alone are over 1% FDR.
+            int strayPrecursors = BlibComparer.CountRows(Path.Combine(strayDir, BLIB_FILE), @"RefSpectra");
+            Assert.IsTrue(strayPrecursors > 0, string.Format(@"{0} precursors reported", strayPrecursors));
         }
 
         /// <summary>
@@ -548,23 +564,41 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// A copy of the subset library with the fragment number set to 0 on every row of the
-        /// precursors <paramref name="blank"/> selects by modified peptide.
+        /// A copy of the subset library with column <paramref name="columnName"/> set to
+        /// <paramref name="value"/> on every row of the precursors <paramref name="select"/>
+        /// selects by modified peptide.
         /// </summary>
-        private string WriteLibraryWithoutFragmentNumbers(string fileName, Func<string, bool> blank)
+        private string WriteLibraryWithCell(string fileName, Func<string, bool> select, string columnName, string value)
+        {
+            return WriteLibraryCopy(fileName, columnName, (fields, column) =>
+            {
+                if (!select(fields[0]))
+                    return fields;
+                fields[column] = value;
+                return fields;
+            });
+        }
+
+        /// <summary>A copy of the subset library without column <paramref name="columnName"/>.</summary>
+        private string WriteLibraryWithoutColumn(string fileName, string columnName)
+        {
+            return WriteLibraryCopy(fileName, columnName,
+                (fields, column) => fields.Where((_, i) => i != column).ToArray(), true);
+        }
+
+        /// <summary>
+        /// A copy of the subset library with each data row passed through
+        /// <paramref name="rewrite"/> (given the index of <paramref name="columnName"/>), and the
+        /// header too when <paramref name="rewriteHeader"/>.
+        /// </summary>
+        private string WriteLibraryCopy(string fileName, string columnName,
+            Func<string[], int, string[]> rewrite, bool rewriteHeader = false)
         {
             var lines = File.ReadAllLines(Path.Combine(_dataDir, LIBRARY_FILE));
-            int column = Array.IndexOf(lines[0].Split('\t'), @"FragmentNumber");
+            int column = Array.IndexOf(lines[0].Split('\t'), columnName);
             Assert.AreNotEqual(-1, column);
-            for (int i = 1; i < lines.Length; i++)
-            {
-                var fields = lines[i].Split('\t');
-                if (blank(fields[0]))
-                {
-                    fields[column] = @"0";
-                    lines[i] = string.Join('\t', fields);
-                }
-            }
+            for (int i = rewriteHeader ? 0 : 1; i < lines.Length; i++)
+                lines[i] = string.Join('\t', rewrite(lines[i].Split('\t'), column));
             string path = Path.Combine(_testDir, fileName);
             File.WriteAllLines(path, lines);
             return path;

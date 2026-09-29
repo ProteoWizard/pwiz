@@ -618,6 +618,11 @@ namespace pwiz.Osprey.IO
             sb.AppendFormat("decoy_method:{0}\n", config.DecoyMethod);
             sb.AppendFormat("decoy_prefixes:{0}\n", FormatPrefixList(config.DecoyPrefixes));
             AppendFileIdentity(sb, @"pairing_manifest", config.DecoyPairingManifestPath);
+            // A cache is only as validated as the reader that wrote it: a DIA-NN TSV cached
+            // before the reader refused invalid rows is re-read once, so a bad library is
+            // reported instead of served from its cache. A valid library caches the same bytes.
+            if (config.LibrarySource?.Format == LibraryFormat.DiannTsv)
+                sb.AppendFormat(CultureInfo.InvariantCulture, "tsv_reader:{0}\n", DiannTsvLoader.READER_VERSION);
             using (var sha256 = SHA256.Create())
             {
                 byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));

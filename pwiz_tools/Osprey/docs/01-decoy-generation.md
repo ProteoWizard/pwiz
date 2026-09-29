@@ -256,9 +256,10 @@ decoys from two OR'd signals:
 
 - **DIA-NN `Decoy` column**: the TSV loader sets `IsDecoy` at load time
   (`Osprey.IO/DiannTsvLoader.cs`). `ParseDecoyFlag`
-  (`DiannTsvLoader.cs`) accepts `1`, `true`, `yes`, `y`, `t` case-insensitively
-  (ASCII-only lowering to match Rust `to_ascii_lowercase`; `DiannTsvLoader.cs`);
-  everything else including `0`/empty/garbage is a target. Entries already flagged
+  (`DiannTsvLoader.cs`) accepts `1`, `true`, `yes`, `y`, `t` as decoy and `0`,
+  `false`, `no`, `n`, `f` as target, case-insensitively (ASCII-only lowering to match
+  Rust `to_ascii_lowercase`); anything else, empty included, is an invalid row and the
+  loader refuses the library (Rust reads it as a target). Entries already flagged
   by the loader just get `DECOY_ID_BIT` canonicalized onto their `Id` and count in
   `MarkingStats.NViaColumn` (`LibraryDecoyMarker.cs`).
 - **Protein-accession prefix scan**: `LibraryEntry.LooksLikeLibraryDecoy`

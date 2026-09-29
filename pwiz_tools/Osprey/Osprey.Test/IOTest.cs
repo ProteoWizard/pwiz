@@ -28,6 +28,7 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Parquet;
@@ -803,7 +804,7 @@ namespace pwiz.Osprey.Test
             string badPath = Path.GetTempFileName();
             try
             {
-                File.WriteAllBytes(badPath, System.Text.Encoding.ASCII.GetBytes("NOTVALID"));
+                File.WriteAllBytes(badPath, Encoding.ASCII.GetBytes("NOTVALID"));
                 Assert.IsNull(SpectraWindowIndex.BuildFromCache(badPath));
             }
             finally
@@ -825,7 +826,7 @@ namespace pwiz.Osprey.Test
                 using (var fs = new FileStream(v3Path, FileMode.Create, FileAccess.Write))
                 using (var w = new BinaryWriter(fs))
                 {
-                    w.Write(System.Text.Encoding.ASCII.GetBytes("OSPRSPC\0"));
+                    w.Write(Encoding.ASCII.GetBytes("OSPRSPC\0"));
                     w.Write((uint)3);   // pre-grouping version
                     w.Write((ulong)0);  // source size (no fingerprint)
                     w.Write((long)0);   // source mtime
@@ -1611,7 +1612,7 @@ namespace pwiz.Osprey.Test
 
             try
             {
-                File.WriteAllBytes(tempPath, System.Text.Encoding.ASCII.GetBytes("NOTVALID"));
+                File.WriteAllBytes(tempPath, Encoding.ASCII.GetBytes("NOTVALID"));
 
                 var result = LibraryCache.LoadCache(tempPath);
                 Assert.IsNull(result);
@@ -1806,8 +1807,8 @@ namespace pwiz.Osprey.Test
         {
             string tsv = "PrecursorMz\tPrecursorCharge\tModifiedPeptide\tProductMz\tLibraryIntensity\tFragmentType\tFragmentSeriesNumber\tFragmentCharge\tRT\n" +
                           "500.0\t2\tPEPTIDEK\t200.0\t1000\ty\t1\t1\t10.5\n" +
-                          "500.0\t2\tPEPTIDEK\t300.0\t800\ty\t2\t1.0\t10.5\n" +
-                          "500.0\t2\tPEPTIDEK\t400.0\t600\ty\t3\t2\t10.5\n";
+                          "500.0\t2\tPEPTIDEK\t300.0\t800\ty\t2\t1\t10.5\n" +
+                          "500.0\t2\tPEPTIDEK\t400.0\t600\ty\t3\t1\t10.5\n";
 
             var loader = new DiannTsvLoader();
             List<LibraryEntry> entries;
@@ -1819,9 +1820,6 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(1, entries.Count);
             Assert.AreEqual("PEPTIDEK", entries[0].Sequence);
             Assert.AreEqual(3, entries[0].Fragments.Count);
-            // An unparseable fragment charge ("1.0") reads as 1, as in Rust, not as 0.
-            var charges = entries[0].Fragments.Select(f => (int)f.Annotation.Charge).OrderBy(c => c).ToArray();
-            CollectionAssert.AreEqual(new[] { 1, 1, 2 }, charges);
             Assert.AreEqual(2, entries[0].Charge);
             Assert.AreEqual(500.0, entries[0].PrecursorMz, 1e-4);
             Assert.AreEqual(10.5, entries[0].RetentionTime, 1e-4);
@@ -1842,6 +1840,86 @@ namespace pwiz.Osprey.Test
             }
 
             Assert.AreEqual(0, entries.Count); // should be skipped (only 2 fragments)
+        }
+
+        /// <summary>
+        /// A library value the loader cannot read is never replaced with a guess: every invalid
+        /// value on every line is reported, after the whole file is read, and the library is
+        /// refused. Each error is located as Skyline's transition list import locates one - the
+        /// 1-based line of the file (the header is line 1, a blank line still counts) and the
+        /// 1-based column. Covers each column the reader validates, two bad values on one line,
+        /// a modification with no known mass, and the cap on how many errors the message lists.
+        /// </summary>
+        [TestMethod]
+        public void TestDiannTsvLoaderRefusesEveryInvalidLine()
+        {
+            string tsv = DIANN_HEADER +
+                DiannRow() +                                             // line 2: valid
+                "\n" +                                                   // line 3: blank
+                DiannRow(fragmentCharge: @"1.0") +                        // line 4
+                DiannRow(fragmentCharge: @"0") +                          // line 5
+                DiannRow(fragmentType: @"q") +                            // line 6
+                DiannRow(fragmentNumber: string.Empty) +                  // line 7
+                DiannRow(loss: @"garbage") +                              // line 8
+                DiannRow(decoy: @"maybe") +                               // line 9
+                DiannRow(rt: @"abc") +                                    // line 10
+                DiannRow(precursorMz: @"x", intensity: @"?") +            // line 11: two errors
+                DiannRow(modifiedPeptide: @"_(UniMod:9999)PEPTIDER_") +   // line 12
+                DiannRow(charge: @"0");                                   // line 13
+
+            string message = LoadDiannExpectingRefusal(tsv);
+            StringAssert.Contains(message, string.Format(
+                OspreyIOResources.DiannTsvLoader_ToException__0__library_lines_have_errors__Fix_the_library_and_load_it_again_, 10));
+            // (line, 1-based column in DIANN_HEADER, column name, value)
+            foreach (var (line, column, name, value) in new[]
+            {
+                (4, 12, @"FragmentCharge", @"1.0"), (5, 12, @"FragmentCharge", @"0"), (6, 10, @"FragmentType", @"q"),
+                (8, 13, @"FragmentLossType", @"garbage"), (9, 7, @"Decoy", @"maybe"),
+                (10, 5, @"NormalizedRetentionTime", @"abc"), (11, 3, @"PrecursorMz", @"x"),
+                (11, 9, @"RelativeIntensity", @"?"), (12, 1, @"ModifiedPeptide", @"UniMod:9999"),
+                (13, 4, @"PrecursorCharge", @"0")
+            })
+            {
+                StringAssert.Contains(message, string.Format(
+                    OspreyIOResources.DiannTsvLoader_LineReader___line__0___column__1___Invalid__2____3__, line, column, name, value));
+            }
+            StringAssert.Contains(message, string.Format(
+                OspreyIOResources.DiannTsvLoader_LineReader___line__0___column__1___Missing__2_, 7, 11, @"FragmentSeriesNumber"));
+            // The header line and exactly the eleven errors: the valid line reports nothing.
+            Assert.AreEqual(12, message.Split(new[] { Environment.NewLine }, StringSplitOptions.None).Length);
+
+            // A column wrong throughout lists the first 100 errors and counts the rest.
+            var many = new StringBuilder(DIANN_HEADER);
+            for (int i = 0; i < 150; i++)
+                many.Append(DiannRow(fragmentCharge: @"x"));
+            string manyMessage = LoadDiannExpectingRefusal(many.ToString());
+            StringAssert.Contains(manyMessage, string.Format(
+                OspreyIOResources.DiannTsvLoader_ToException__0__library_lines_have_errors__Fix_the_library_and_load_it_again_, 150));
+            StringAssert.Contains(manyMessage, string.Format(OspreyIOResources.DiannTsvLoader_ToException____and__0__more_errors, 50));
+        }
+
+        private const string DIANN_HEADER =
+            "ModifiedPeptide\tStrippedPeptide\tPrecursorMz\tPrecursorCharge\tTr_recalibrated\tProteinID\tDecoy\t" +
+            "FragmentMz\tRelativeIntensity\tFragmentType\tFragmentNumber\tFragmentCharge\tFragmentLossType\n";
+
+        /// <summary>One DIA-NN library line, valid unless a value is overridden.</summary>
+        private static string DiannRow(string modifiedPeptide = @"_PEPTIDEK_", string precursorMz = @"500.0",
+            string charge = @"2", string rt = @"10.5", string decoy = @"0", string intensity = @"1.0",
+            string fragmentType = @"y", string fragmentNumber = @"1", string fragmentCharge = @"1", string loss = @"noloss")
+        {
+            string stripped = DiannTsvLoader.StripModifications(DiannTsvLoader.StripFlankingChars(modifiedPeptide));
+            return string.Join("\t", modifiedPeptide, stripped, precursorMz, charge, rt, @"sp|P00001|TEST_HUMAN", decoy,
+                @"200.0", intensity, fragmentType, fragmentNumber, fragmentCharge, loss) + "\n";
+        }
+
+        /// <summary>The message of the <see cref="InvalidDataException"/> loading <paramref name="tsv"/> must throw.</summary>
+        private static string LoadDiannExpectingRefusal(string tsv)
+        {
+            using (var reader = new StringReader(tsv))
+            {
+                var ex = Assert.ThrowsException<InvalidDataException>(() => new DiannTsvLoader(1).ParseReader(reader));
+                return ex.Message;
+            }
         }
 
         #endregion
