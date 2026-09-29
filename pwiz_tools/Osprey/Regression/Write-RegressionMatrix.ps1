@@ -6,7 +6,7 @@
 
 .DESCRIPTION
     The gate has four datasets and a dozen modes, and the modes are gated on per-dataset spec
-    keys (ModelDiagnostics, AltPass2, FdrBench, SkipModes) scattered through regression.ps1.
+    keys (ModelDiagnostics, FdrBench, SkipModes) scattered through regression.ps1.
     Nothing showed the resulting matrix, and the recurring mistake was adding an assertion to
     every dataset when one covered its property - a 4x wall-time multiplier for no coverage.
 
@@ -55,7 +55,7 @@
     .\Regression\Write-RegressionMatrix.ps1 -CostsFrom TestResults\regression-lane-*.log
     .\Regression\Write-RegressionMatrix.ps1 -VerifyAgainst TestResults\regression-lane-*.log
     .\Regression\Write-RegressionMatrix.ps1 -OutPath regression-proposal.html -Title 'PROPOSAL' `
-        -SkipModesOverride @{ StellarGenDecoyEntrap = @(2,3,5,7,8,9,11); Astral = @(2,5,7,8,9,11); Stellar = @(8,9) } `
+        -SkipModesOverride @{ StellarGenDecoyEntrap = @(2,3); Astral = @(2,3); Stellar = @(2,3) } `
         -Lanes 'Astral,StellarGenDecoyEntrap', 'Stellar,StellarLibDecoy'
 #>
 param(
@@ -149,9 +149,6 @@ $modes = @(
     @{ Id = '3+'; Title = 'chain report is two-pass'
        Proves = 'The HPC chain''s diagnostics report carries both passes.'
        Lines = @('mode3 (chain report is two-pass)'); When = { param($s) [bool]$s.ModelDiagnostics -and -not (Skipped $s 3) }; Gate = 'ModelDiagnostics and mode 3' }
-    @{ Id = '10'; Cost = '10'; Title = 'alternate pass-2 arm (mean-best-2) runs and produces'
-       Proves = 'The non-default pass-2 arm is reachable and writes output; ONE dataset carries it by design (see AltPass2 in the spec table).'
-       Lines = @('mode10 (meanbest2 arm runs and produces)'); When = { param($s) [bool]$s.AltPass2 }; Gate = 'AltPass2' }
     @{ Id = '4';  Cost = '4'; Title = 'warm re-run: every task reports a cache hit'
        Proves = 'An identical second invocation runs no task and rewrites nothing - the only leg that can see a cache-invalidation regression. Seconds.'
        Lines = @('mode4 (warm re-run all cached)'); When = { param($s) $true }; Gate = 'every dataset (-SkipWarmRerun)' }
@@ -164,32 +161,14 @@ $modes = @(
     @{ Id = '12+'; Title = 'resume rewrites both FDRBench files identically'
        Proves = 'The second half of mode 12; rides the mode-2 resume.'
        Lines = @('mode12 (resume fdrbench==straight)'); When = { param($s) [bool]$s.FdrBench -and -not (Skipped $s 2) }; Gate = 'FdrBench and mode 2' }
-    @{ Id = '5';  Cost = '5'; Title = 'Stage-5 rehydrate (own-sidecar loader) == straight-through'
-       Proves = 'Invalidate only SecondPassFDR: the rehydrate arm builds its bundle from this run''s OWN sidecars (a marker from inside the loader proves it) and the blib still equals the straight-through one.'
-       Lines = @('mode5 (rehydrate entered + cache hits)', 'mode5 (rehydrate==straight)'); When = { param($s) -not (Skipped $s 5) }; Gate = 'not in SkipModes (-SkipRehydrate)' }
-    @{ Id = '5+'; Title = 'rehydrated diagnostics vs golden + FDR sanity bounds'
-       Proves = 'The report re-emitted from the rehydrated sidecars matches the golden and the bounds.'
-       Lines = @('mode5 (rehydrate diagnostics vs golden)', 'mode5 (rehydrate FDR sanity bounds)'); When = { param($s) [bool]$s.ModelDiagnostics -and -not (Skipped $s 5) }; Gate = 'ModelDiagnostics and mode 5' }
-    @{ Id = 'S7'; Title = 'streamed Stage-7 join on every leg (modes 1, 2, 5)'
+    @{ Id = 'S7'; Title = 'streamed Stage-7 join on every leg (modes 1, 2)'
        Proves = 'Each leg''s log shows the per-run fold and no all-runs survivor pool - the O(files) resident join must not come back silently. Free: log checks on legs that ran.'
-       Lines = @('mode1 (streamed join)'); When = { param($s) $true }; Gate = 'every dataset; the mode-2 and mode-5 lines follow those modes'
-       Extra = @{ 'mode2 (streamed join)' = { param($s) -not (Skipped $s 2) }
-                  'mode5 (streamed join)' = { param($s) -not (Skipped $s 5) } } }
+       Lines = @('mode1 (streamed join)'); When = { param($s) $true }; Gate = 'every dataset; the mode-2 line follows that mode'
+       Extra = @{ 'mode2 (streamed join)' = { param($s) -not (Skipped $s 2) } } }
     @{ Id = '6';  Title = 'library-fragment release engaged'
        Proves = 'The release RAN on every leg that holds the library and did NOT run on --task FirstPassFDR; output-neutral by design, so only the logs can see it. Free.'
        Lines = @('mode6 (library-fragment release engaged)'); When = { param($s) $true }; Gate = 'every dataset' }
-    @{ Id = '7';  Cost = '7'; Title = '--task ModelDiagnostics regeneration'
-       Proves = 'Re-entering a completed run changes exactly one artifact (the report) and it still matches the golden.'
-       Lines = @('mode7 (diagnostics regeneration: report only, vs golden)'); When = { param($s) [bool]$s.ModelDiagnostics -and -not (Skipped $s 7) }; Gate = 'ModelDiagnostics, not in SkipModes' }
-    @{ Id = '11'; Cost = '11'; Title = 'pay-later diagnostics: folded, no analysis, same report'
-       Proves = 'With both diagnostics products deleted, asking for the report folds it from the sidecars, runs no analysis, and produces the byte-identical page.'
-       Lines = @('mode11 (pay-later diagnostics: folded, no analysis, same report)'); When = { param($s) [bool]$s.ModelDiagnostics -and -not (Skipped $s 11) }; Gate = 'ModelDiagnostics, not in SkipModes' }
-    @{ Id = '8';  Cost = '8'; Title = 'partial rescore resume'
-       Proves = 'A rescore killed part-way resumes and finishes, re-scoring only the outstanding runs; on a ModelDiagnostics dataset the --model-diagnostics arm also reports its capability gap.'
-       Lines = @('mode8 (partial rescore resume)'); When = { param($s) -not (Skipped $s 8) }; Gate = 'not in SkipModes' }
-    @{ Id = '9';  Cost = '9'; Title = 'crash-shaped half-done resume'
-       Proves = 'A file with one of its two rescore products missing is re-scored, not treated as done.'
-       Lines = @('mode9 (crash-shaped half-done resume)'); When = { param($s) -not (Skipped $s 9) }; Gate = 'not in SkipModes' }
+
 )
 
 function Expected-Lines($m, $spec) {
@@ -297,7 +276,8 @@ if ($isProposal) {
     [void]$sb.AppendLine("<div class=`"prop`"><b>PROPOSAL, not what the gate runs today.</b> Rendered with <code>-SkipModesOverride</code> on top of the script's specs - $ov. Struck-through cells run today and would stop; their seconds are what each cut saves. Nothing in <code>regression.ps1</code> has changed.</div>")
 }
 [void]$sb.AppendLine(@'
-<div class="rule"><b>Before adding an assertion, pick its ONE dataset.</b> The four datasets are two acquisitions searched four ways, not four acquisitions. A new leg or check applied to every column inherits a 4x wall-time multiplier for no extra coverage unless the property genuinely differs by dataset. Gate it on a spec key (<code>ModelDiagnostics</code>, <code>AltPass2</code>, <code>FdrBench</code>, <code>SkipModes</code>, or a new one), give that key to the dataset that exercises every branch of the property, and emit no line on the others - a designed omission is not a SKIP. Then regenerate this page and run <code>-VerifyAgainst</code> on a green run.</div>
+<div class="rule"><b>First: does it belong in this gate at all?</b> Pipeline behavior - caching, resume, task boundaries, sidecar contracts, route markers, which files a run writes - is valid on any data and goes in <code>Osprey.Test\SubsetPipelineTest.cs</code>, which runs the whole pipeline in-process on committed subsets of this data on every commit. This gate is for results at real-data scale: the straight-through answer against its golden, the FDR sanity bounds, and comparisons whose value is scale fidelity (mode 3). A check on output a leg already produces is fine here; a new leg that exists to exercise pipeline behavior is not.</div>
+<div class="rule"><b>Before adding an assertion, pick its ONE dataset.</b> The four datasets are two acquisitions searched four ways, not four acquisitions. A new leg or check applied to every column inherits a 4x wall-time multiplier for no extra coverage unless the property genuinely differs by dataset. Gate it on a spec key (<code>ModelDiagnostics</code>, <code>FdrBench</code>, <code>SkipModes</code>, or a new one), give that key to the dataset that exercises every branch of the property, and emit no line on the others - a designed omission is not a SKIP. Then regenerate this page and run <code>-VerifyAgainst</code> on a green run.</div>
 '@)
 
 # Dataset properties
@@ -316,7 +296,7 @@ foreach ($k in $keys) {
     [void]$sb.AppendLine('</tr>')
 }
 [void]$sb.AppendLine('</table>')
-[void]$sb.AppendLine('<p class="muted">Blank = key not set, i.e. the default: generated decoys, no entrapment, no diagnostics report, no alternate pass-2 arm, no FDRBench files, every mode. <code>StripDecoys</code> takes the library-decoy file and removes its decoy rows, so Osprey generates decoys while the entrapment peptides stay - the only dataset that can measure a decoy-construction regression against a true-FDP oracle. What each dataset is FOR: Stellar = the default product path (generated decoys, unit resolution); StellarLibDecoy = library-supplied decoys and their pairing manifest (a different Stage-6 pairing path), plus the alternate pass-2 arm; StellarGenDecoyEntrap = the decoy-construction oracle; Astral = hram scoring and the gap-fill rows only hram produces.</p>')
+[void]$sb.AppendLine('<p class="muted">Blank = key not set, i.e. the default: generated decoys, no entrapment, no diagnostics report, no FDRBench files, every mode. <code>StripDecoys</code> takes the library-decoy file and removes its decoy rows, so Osprey generates decoys while the entrapment peptides stay - the only dataset that can measure a decoy-construction regression against a true-FDP oracle. What each dataset is FOR: Stellar = the default product path (generated decoys, unit resolution); StellarLibDecoy = library-supplied decoys and their pairing manifest (a different Stage-6 pairing path); StellarGenDecoyEntrap = the decoy-construction oracle; Astral = hram scoring and the gap-fill rows only hram produces.</p>')
 
 # Matrix
 [void]$sb.AppendLine('<h2>The matrix</h2><table><tr><th>mode</th><th>what it proves</th><th>gate</th>')
