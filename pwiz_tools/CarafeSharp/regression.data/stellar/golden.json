@@ -1,6 +1,6 @@
 {
-  "format": "carafesharp-regression-golden-2",
-  "created": "2026-09-29T03:32:53",
+  "format": "carafesharp-regression-golden-3",
+  "created": "2026-09-29T03:50:18",
   "provenance": {
     "dataset": "Stellar",
     "leg": "isolated",
@@ -97,10 +97,10 @@
   "exact": {
     "use": "information only: reported as SAME or DIFFERS, never failing a run",
     "training_tables": {
-      "fragment_intensity_df.tsv": "3ba1410b0f53ac1e00cf5bcb8b70dc49d277852a1f193df5dd30a76a12fdfbe4",
-      "fragment_intensity_valid.tsv": "6596b06e95ab8e002c330cd8e2a186c06b84fd439662694816d15d6105dbf2ec",
-      "psm_pdv.txt": "2681d143f4013c3513df108240019524b2d8d5995af278e6016790a2bb5b537d",
-      "rt_train_data.tsv": "79165299e3e5cd90517fb90988b02b7c90d58e94f1edd66637f37e9f4aebe4fa"
+      "fragment_intensity_df.tsv": "20ac5d0a2759fca016df6014f0c5da106603235be8ac1a2f629a1f6d650d6a21",
+      "fragment_intensity_valid.tsv": "676d8f042ddc08e1239b1d87813e38726d305e9e64970435b0b6f1d9600cdf9d",
+      "psm_pdv.txt": "f2a076878ed9e88b9fb4d59caac99169f5cf5726acbbabdbbd51185139215a89",
+      "rt_train_data.tsv": "0ee2693d98436e1f281999b9a08d73374f280ed4850ddb5cc7fea292acd54d2c"
     },
     "models": {
       "ms2.safetensors": "03e4a13f77827274536d817c5ae479f7fc1aad6dfaaf448b9300dbe5ced1d595",
