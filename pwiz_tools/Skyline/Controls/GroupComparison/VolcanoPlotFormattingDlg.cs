@@ -47,6 +47,12 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private readonly DataGridViewComboBoxColumn _pointSizeCombo;
         private readonly Font _symbolDropdownFont = new Font(SystemFonts.DefaultFont.FontFamily, 16f);
 
+        /// <summary>
+        /// Set while the constructor is loading control state from settings, so the CheckedChanged
+        /// handlers below do not act on a value the user did not change.
+        /// </summary>
+        private bool _initializing;
+
         public VolcanoPlotFormattingDlg(FoldChangeVolcanoPlot volcanoPlot, IList<MatchRgbHexColor> colorRows,
             FoldChangeRow[] foldChangeRows, Action<IEnumerable<MatchRgbHexColor>> updateGraph) : 
             this(true, colorRows, foldChangeRows, updateGraph, 
@@ -65,6 +71,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             object[] foldChangeRows, Action<IEnumerable<MatchRgbHexColor>> updateGraph, bool perProtein, SrmDocument document)
         {
             InitializeComponent();
+            _initializing = true;
             HasFoldChangeResults = hasFoldChangeResults;
             AnyMolecules = document.HasSmallMolecules;
             AnyProteomic = document.IsEmptyOrHasPeptides;
@@ -188,6 +195,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             grid.SelectionChanged += regexColorRowGrid1_SelectionChanged;
             grid.CurrentCellChanged += regexColorRowGrid1_SelectionChanged;
             UpdateRuleButtons();
+            _initializing = false;
         }
 
         public class PointSizeStringPair
@@ -724,10 +732,19 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private void advancedCheckBox_CheckedChanged(object sender, EventArgs e)
         {
+            if (_initializing)
+                return;     // The constructor calls UpdateAdvancedColumns itself
             UpdateAdvancedColumns();
         }
+
         private void layoutLabelsBox_CheckedChanged(object sender, EventArgs e)
         {
+            // Loading the checkbox from the setting used to land here, and writing the setting its own
+            // value still raises Settings.PropertyChanged. Both dot plots listen for that, so merely
+            // opening this dialog discarded the other plot's saved label layout and made it recompute -
+            // the flash the user sees. Nothing needs doing when the user did not change anything.
+            if (_initializing)
+                return;
             Settings.Default.GroupComparisonAvoidLabelOverlap = layoutLabelsBox.Checked;
             _updateGraph(ResultList);
         }
