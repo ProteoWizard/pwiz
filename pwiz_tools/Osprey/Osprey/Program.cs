@@ -322,6 +322,20 @@ namespace pwiz.Osprey
                 // --output -- so it is NOT warned about. The settings block below
                 // reports the real per-file parquet output for this task instead.
 
+                // --export-library reads the library and nothing else, so it is settled before the
+                // inputs are checked: a reused search command line may name inputs that moved.
+                if (!string.IsNullOrEmpty(config.ExportLibraryBlib))
+                {
+                    if (!File.Exists(config.LibrarySource.Path))
+                    {
+                        LogError(string.Format(OspreyResources.Program_Run_Library_file_not_found___0_, config.LibrarySource.Path));
+                        return EXIT_CODE_FAILURE_TO_START;
+                    }
+                    LogInfo(string.Format(OspreyResources.Program_Run_Osprey_v_0_, OspreyVersion.DisplayVersion));
+                    LogInfo(string.Format(OspreyResources.Program_Run_Command___0_, string.Join(@" ", args)));
+                    return RunExportLibrary(config);
+                }
+
                 // Validate input files exist on disk. EVERY run reaches this now: a task
                 // that starts after Stage 4 used to be handed parquets and skipped the
                 // check entirely, and it is handed the same data-file names as every other
@@ -410,8 +424,6 @@ namespace pwiz.Osprey
                 // Log startup info
                 LogInfo(string.Format(OspreyResources.Program_Run_Osprey_v_0_, OspreyVersion.DisplayVersion));
                 LogInfo(string.Format(OspreyResources.Program_Run_Command___0_, string.Join(@" ", args)));
-                if (!string.IsNullOrEmpty(config.ExportLibraryBlib))
-                    return RunExportLibrary(config);
                 LogInfo(string.Format(OspreyResources.Program_Run_Input_files___0_, config.InputFiles.Count));
                 LogInfo(string.Format(OspreyResources.Program_Run_Library___0____1__,
                     config.LibrarySource?.Path ?? OspreyResources.Program_Run__none_,
@@ -600,7 +612,19 @@ namespace pwiz.Osprey
                 return EXIT_CODE_FAILURE_TO_START;
             }
             string path = Path.GetFullPath(config.ExportLibraryBlib);
-            int written = LibraryBlibWriter.Write(path, library, config.LibrarySource.Path, true, config.NThreads);
+            int written;
+            try
+            {
+                written = LibraryBlibWriter.Write(path, library, config.LibrarySource.Path, true, config.NThreads,
+                    config.DecoyPrefixes);
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is System.Data.Common.DbException)
+            {
+                // A locked or unwritable output is the user's to fix: the message the search output
+                // gives for the same condition, not a stack trace. Only file writing happens here, so
+                // a database failure is the file, not a defect in the schema.
+                throw new BlibOutputException(path, ex);
+            }
             LogInfo(CountText.Format(written,
                 OspreyResources.Program_RunExportLibrary_Saved_1_library_precursor_to__1_,
                 OspreyResources.Program_RunExportLibrary_Saved__0_N0__library_precursors_to__1_,
@@ -711,6 +735,23 @@ namespace pwiz.Osprey
         /// </summary>
         internal static string ValidateArgs(OspreyConfig config)
         {
+            // --export-library converts the library and exits: it needs the library and nothing
+            // else, whatever else the command line holds, so nothing below may refuse it.
+            if (!string.IsNullOrEmpty(config.ExportLibraryBlib))
+            {
+                if (config.LibrarySource == null)
+                    return string.Format(OspreyResources.Program_ValidateArgs_No_spectral_library_specified__Use__0_, USAGE_LIBRARY);
+                // The loader has closed the library by the time the export replaces its output,
+                // so the same path would silently overwrite the library with the export.
+                if (string.Equals(Path.GetFullPath(config.ExportLibraryBlib), Path.GetFullPath(config.LibrarySource.Path),
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return string.Format(OspreyResources.Program_ValidateArgs_The__0__path_is_the_library_it_reads___1_,
+                        OspreyCommandArgs.ARG_EXPORT_LIBRARY.ArgumentText, config.LibrarySource.Path);
+                }
+                return null;
+            }
+
             bool hasInputFiles = config.HasInputFiles;
 
             // OSPREY_EXPERIMENT_AGG family, before any I/O. Checked here rather than at the
@@ -741,15 +782,6 @@ namespace pwiz.Osprey
                 string dupErr = DuplicateInputStemError(config.InputFiles);
                 if (dupErr != null)
                     return dupErr;
-            }
-
-            // --export-library converts the library and exits: it needs the library and nothing
-            // else, whatever else the command line holds.
-            if (!string.IsNullOrEmpty(config.ExportLibraryBlib))
-            {
-                return config.LibrarySource == null
-                    ? string.Format(OspreyResources.Program_ValidateArgs_No_spectral_library_specified__Use__0_, USAGE_LIBRARY)
-                    : null;
             }
 
             // A --task run: the task states what it needs, naming itself in the message.

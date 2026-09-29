@@ -343,4 +343,7 @@
   <data name="Program_ValidateArgs_No_spectral_library_specified__Use__0_" xml:space="preserve">
     <value>No spectral library specified. Use {0}</value>
   </data>
+  <data name="Program_ValidateArgs_The__0__path_is_the_library_it_reads___1_" xml:space="preserve">
+    <value>The {0} path is the library it reads: {1}. Choose another path for the exported library.</value>
+  </data>
 </root>

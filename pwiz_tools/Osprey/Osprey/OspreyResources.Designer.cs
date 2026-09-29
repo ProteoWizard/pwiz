@@ -743,20 +743,20 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Saved 1 library precursor to {1}.
-        /// </summary>
-        public static string Program_RunExportLibrary_Saved_1_library_precursor_to__1_ {
-            get {
-                return ResourceManager.GetString("Program_RunExportLibrary_Saved_1_library_precursor_to__1_", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Saved {0:N0} library precursors to {1}.
         /// </summary>
         public static string Program_RunExportLibrary_Saved__0_N0__library_precursors_to__1_ {
             get {
                 return ResourceManager.GetString("Program_RunExportLibrary_Saved__0_N0__library_precursors_to__1_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Saved 1 library precursor to {1}.
+        /// </summary>
+        public static string Program_RunExportLibrary_Saved_1_library_precursor_to__1_ {
+            get {
+                return ResourceManager.GetString("Program_RunExportLibrary_Saved_1_library_precursor_to__1_", resourceCulture);
             }
         }
 
@@ -814,6 +814,15 @@ namespace pwiz.Osprey {
         public static string Program_ValidateArgs_No_spectral_library_specified__Use__0_ {
             get {
                 return ResourceManager.GetString("Program_ValidateArgs_No_spectral_library_specified__Use__0_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The {0} path is the library it reads: {1}. Choose another path for the exported library..
+        /// </summary>
+        public static string Program_ValidateArgs_The__0__path_is_the_library_it_reads___1_ {
+            get {
+                return ResourceManager.GetString("Program_ValidateArgs_The__0__path_is_the_library_it_reads___1_", resourceCulture);
             }
         }
     }

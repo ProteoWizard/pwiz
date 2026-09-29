@@ -170,7 +170,10 @@ namespace pwiz.Osprey.IO
                 case NeutralLossCode.None:
                     return name;
                 case NeutralLossCode.Custom:
-                    return name + @"-" + annotation.CustomLossMass.ToString(@"R", CultureInfo.InvariantCulture);
+                    // At least four decimals: TryParseName snaps a loss to water, ammonia or
+                    // phosphoric acid within half its last printed digit, so a custom 17 Da loss
+                    // printed "17" would read back as ammonia.
+                    return name + @"-" + annotation.CustomLossMass.ToString(@"0.0000###########", CultureInfo.InvariantCulture);
                 default:
                     return name + @"-" + annotation.NeutralLoss;
             }

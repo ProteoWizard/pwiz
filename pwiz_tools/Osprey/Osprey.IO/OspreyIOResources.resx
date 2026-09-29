@@ -136,6 +136,9 @@
   <data name="DiannTsvLoader_ParseValue_Invalid__0____1___at_row__2_" xml:space="preserve">
     <value>Invalid {0} '{1}' at row {2}</value>
   </data>
+  <data name="LibraryBlibWriter_Write_Writing__0__library_precursors_to__1_" xml:space="preserve">
+    <value>Writing {0:N0} library precursors to {1}</value>
+  </data>
   <data name="LibraryCacheStatus_LoadCache_Loading_library_cache___0__precursors_" xml:space="preserve">
     <value>Loading library cache ({0:N0} precursors)</value>
   </data>

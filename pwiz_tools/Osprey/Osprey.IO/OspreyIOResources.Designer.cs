@@ -182,6 +182,15 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Writing {0:N0} library precursors to {1}.
+        /// </summary>
+        public static string LibraryBlibWriter_Write_Writing__0__library_precursors_to__1_ {
+            get {
+                return ResourceManager.GetString("LibraryBlibWriter_Write_Writing__0__library_precursors_to__1_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Loading library cache ({0:N0} precursors).
         /// </summary>
         public static string LibraryCacheStatus_LoadCache_Loading_library_cache___0__precursors_ {

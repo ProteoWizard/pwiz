@@ -616,10 +616,13 @@ namespace pwiz.Osprey.Test
 
             string library = Path.Combine(_dataDir, LIBRARY_FILE);
             string exported = Path.Combine(_testDir, @"subset-library.blib");
+            // A reused search command line: the export reads only the library, so an input that
+            // has moved does not refuse it.
             string log = RunOsprey(new[]
             {
                 OspreyCommandArgs.ARG_LIBRARY.ArgumentText, library,
-                OspreyCommandArgs.ARG_EXPORT_LIBRARY.ArgumentText, exported
+                OspreyCommandArgs.ARG_EXPORT_LIBRARY.ArgumentText, exported,
+                OspreyCommandArgs.ARG_INPUT.ShortArgumentText, Path.Combine(_testDir, @"moved.mzML")
             }, Verifier(false));
             int libraryPrecursors = CountLibraryPrecursors(library);
             StringAssert.Contains(log, CountText.Format(libraryPrecursors,
@@ -629,6 +632,7 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(libraryPrecursors, BlibComparer.CountRows(exported, @"RefSpectra"));
             int libraryFragments = File.ReadLines(library).Count() - 1;
             Assert.AreEqual(libraryFragments, BlibComparer.CountWhere(exported, BlibPeakAnnotations.TABLE_NAME, @"1"));
+            AssertExportOverLibraryRefused(library);
 
             string blibDir = CreateDir(@"blib-library");
             RunAnalysis(blibDir, DataInputs(), exported, Verifier(false));
@@ -645,6 +649,29 @@ namespace pwiz.Osprey.Test
             LibraryBlibWriter.Write(unannotated, new BlibLoader().Load(exported), exported, false);
             string output = RunExpectingRefusal(@"unannotated-blib", unannotated);
             StringAssert.Contains(output, RefusalText(unannotated, libraryPrecursors));
+        }
+
+        /// <summary>
+        /// An export onto the library it reads is refused before anything is written, and the
+        /// library is left as it was.
+        /// </summary>
+        private static void AssertExportOverLibraryRefused(string library)
+        {
+            byte[] before = HashFile(library);
+            string output;
+            int exitCode;
+            using (OspreyEnvironment.OverrideVariables(Verifier(false)))
+            {
+                exitCode = InProcessOsprey.Run(new[]
+                {
+                    OspreyCommandArgs.ARG_LIBRARY.ArgumentText, library,
+                    OspreyCommandArgs.ARG_EXPORT_LIBRARY.ArgumentText, library
+                }, out output);
+            }
+            Assert.AreEqual(Program.EXIT_CODE_FAILURE_TO_START, exitCode, output);
+            StringAssert.Contains(output, string.Format(OspreyResources.Program_ValidateArgs_The__0__path_is_the_library_it_reads___1_,
+                OspreyCommandArgs.ARG_EXPORT_LIBRARY.ArgumentText, library));
+            CollectionAssert.AreEqual(before, HashFile(library));
         }
 
         /// <summary>

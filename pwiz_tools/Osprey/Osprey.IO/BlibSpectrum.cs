@@ -50,10 +50,12 @@ namespace pwiz.Osprey.IO
     /// <list type="bullet">
     /// <item>Peaks are sorted by m/z, as BiblioSpec stores them and Skyline expects.</item>
     /// <item>The modified sequence is built from <see cref="LibraryEntry.Modifications"/>, never
-    /// from the library's own text: one signed four-decimal mass after each modified residue
-    /// (<c>AC[+57.0215]K</c>), the form Skyline matches by mass. An N-terminal modification sits
-    /// on the first residue, as BiblioSpec writes it, and modifications at one position are
-    /// summed, in the text and in the <c>Modifications</c> rows alike.</item>
+    /// from the library's own text: one signed mass of at most four decimals after each modified
+    /// residue (<c>AC[+57.0215]K</c>), the form Skyline matches by mass. An N-terminal modification
+    /// sits on the first residue, as BiblioSpec writes it, and modifications at one position are
+    /// summed, in the text and in the <c>Modifications</c> rows alike. An entry with a
+    /// modification its loader could not resolve keeps its own text instead, so distinct library
+    /// precursors never share a key.</item>
     /// <item>Each b or y ion whose m/z, recomputed from the sequence and modifications, names its
     /// peak gets an annotation row in the grammar <see cref="BlibPeakAnnotations"/> reads: the
     /// rows that let <see cref="BlibLoader"/> build real decoys from the blib. Other ion types,
@@ -63,15 +65,22 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public sealed class BlibSpectrum
     {
+        /// <summary>
+        /// Version of the rows this type composes. SecondPassFDR's validity key carries it, so a
+        /// change to what a precursor's blib rows hold re-writes an existing output blib.
+        /// </summary>
+        public const string FORMAT_VERSION = @"2";
+
         private BlibSpectrum(LibraryEntry entry, string modifiedSequence, IReadOnlyList<Modification> modifications,
-            byte[] mzBlob, byte[] intensityBlob, int numPeaks, IReadOnlyList<BlibPeakAnnotation> annotations)
+            byte[] mzBlob, byte[] intensityBlob, int numPeaks, IReadOnlyList<BlibPeakAnnotation> annotations,
+            IReadOnlyList<string> proteinIds)
         {
             PeptideSeq = entry.Sequence;
             ModifiedSequence = modifiedSequence;
             PrecursorMz = entry.PrecursorMz;
             Charge = entry.Charge;
             Modifications = modifications;
-            ProteinIds = entry.ProteinIds ?? Array.Empty<string>();
+            ProteinIds = proteinIds ?? entry.ProteinIds ?? Array.Empty<string>();
             MzBlob = mzBlob;
             IntensityBlob = intensityBlob;
             NumPeaks = numPeaks;
@@ -81,8 +90,10 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// The blib form of <paramref name="entry"/>. <paramref name="annotate"/> false leaves out
         /// the ion annotations, which is how a library without them is made for testing.
+        /// <paramref name="proteinIds"/>, when given, replaces the entry's accessions.
         /// </summary>
-        public static BlibSpectrum FromLibraryEntry(LibraryEntry entry, bool annotate = true)
+        public static BlibSpectrum FromLibraryEntry(LibraryEntry entry, bool annotate = true,
+            IReadOnlyList<string> proteinIds = null)
         {
             var fragments = entry.Fragments.OrderBy(f => f.Mz).ToArray();
             var mzs = new double[fragments.Length];
@@ -94,11 +105,19 @@ namespace pwiz.Osprey.IO
             }
             var modMasses = PeptideFragmentMass.ModMassesByPosition(entry.Modifications);
             var byResidue = SumByResidue(modMasses, entry.Sequence.Length);
+            // A modification the library loader could not resolve is missing from Modifications
+            // but not from the precursor's identity. Building the text from Modifications would
+            // then give two library precursors one (peptideModSeq, charge), so such an entry keeps
+            // its own text, with the UniMod ids the writer knows converted to masses.
+            string modifiedSequence = CountModificationTokens(entry.ModifiedSequence) == (entry.Modifications?.Count ?? 0)
+                ? FormatModifiedSequence(entry.Sequence, byResidue)
+                : BlibWriter.ConvertUnimodToMass(BlibWriter.StripFlankingChars(entry.ModifiedSequence));
             return new BlibSpectrum(entry,
-                FormatModifiedSequence(entry.Sequence, byResidue),
+                modifiedSequence,
                 byResidue.Select(pair => new Modification { Position = pair.Key, MassDelta = pair.Value }).ToArray(),
                 BlibWriter.CompressMzs(mzs), BlibWriter.CompressIntensities(intensities), fragments.Length,
-                annotate ? Annotate(entry.Sequence, modMasses, fragments) : Array.Empty<BlibPeakAnnotation>());
+                annotate ? Annotate(entry.Sequence, modMasses, fragments) : Array.Empty<BlibPeakAnnotation>(),
+                proteinIds);
         }
 
         public string PeptideSeq { get; }
@@ -117,7 +136,7 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// A peptide in blib modified-sequence form from its modification masses by residue:
-        /// one signed four-decimal bracket after each modified residue.
+        /// one <see cref="FormatMassDelta"/> bracket after each modified residue.
         /// </summary>
         public static string FormatModifiedSequence(string sequence, IReadOnlyDictionary<int, double> massByResidue)
         {
@@ -132,12 +151,30 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// A modification mass as a blib bracket, <c>[+57.0215]</c>: signed, four decimals, the
-        /// text <see cref="BlibWriter.ConvertUnimodToMass"/> writes too.
+        /// A modification mass as a blib bracket, <c>[+57.0215]</c>: signed, at most four
+        /// decimals, trailing zeros dropped. Skyline matches a library modification at the
+        /// precision its text prints, so a mass only known to one decimal (BiblioSpec's
+        /// <c>K[+114.0]</c>, which no known modification snaps) must stay <c>[+114.0]</c>: printed
+        /// as <c>[+114.0000]</c> it would claim a precision it does not have and match nothing.
         /// </summary>
         public static string FormatMassDelta(double mass)
         {
-            return string.Format(CultureInfo.InvariantCulture, mass >= 0.0 ? @"[+{0:F4}]" : @"[{0:F4}]", mass);
+            return @"[" + mass.ToString(@"+0.0###;-0.0###", CultureInfo.InvariantCulture) + @"]";
+        }
+
+        /// <summary>
+        /// The modification tokens in a library's own modified-sequence text: bracketed or
+        /// parenthesized groups (<c>C[+57.0]</c>, <c>(UniMod:35)</c>).
+        /// </summary>
+        private static int CountModificationTokens(string modifiedSequence)
+        {
+            int count = 0;
+            foreach (char c in modifiedSequence)
+            {
+                if (c == '[' || c == '(')
+                    count++;
+            }
+            return count;
         }
 
         /// <summary>
@@ -163,8 +200,10 @@ namespace pwiz.Osprey.IO
             for (int i = 0; i < fragments.Length; i++)
             {
                 var annotation = fragments[i].Annotation;
+                // The bounds BlibPeakAnnotations.Apply reads with: an ion as long as the peptide
+                // is not a fragment, and a row it would reject is not worth writing.
                 if ((annotation.IonType != IonType.B && annotation.IonType != IonType.Y) ||
-                    annotation.Ordinal < 1 || annotation.Charge < 1)
+                    annotation.Ordinal < 1 || annotation.Ordinal >= sequence.Length || annotation.Charge < 1)
                 {
                     continue;
                 }
