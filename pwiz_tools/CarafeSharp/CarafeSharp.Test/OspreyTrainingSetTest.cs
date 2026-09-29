@@ -38,6 +38,9 @@ namespace pwiz.CarafeSharp.Test
     [TestClass]
     public class OspreyTrainingSetTest
     {
+        /// <summary>UniMod 21, Phospho (HO3P).</summary>
+        private const double PHOSPHO_MASS = 79.966331;
+
         [TestMethod]
         public void TestModificationMapper()
         {
@@ -80,6 +83,49 @@ namespace pwiz.CarafeSharp.Test
                 new[] { 12.3456 }, new[] { -1 }, out peptide, out reason));
             Assert.IsNull(peptide);
             StringAssert.Contains(reason, @"12.3456");
+        }
+
+        [TestMethod]
+        public void TestPhosphoTrainingRows()
+        {
+            // Phospho on S, T and Y (UniMod 21) maps to alphabase's Phospho@S/T/Y, by id or by mass.
+            Assert.IsTrue(OspreyModificationMapper.TryMap(@"PEPSTYK", @"PEPS(UniMod:21)T(UniMod:21)Y(UniMod:21)K",
+                new[] { 3, 4, 5 }, new[] { PHOSPHO_MASS, PHOSPHO_MASS, PHOSPHO_MASS }, new[] { 21, 21, 21 },
+                out var peptide, out string reason), reason);
+            Assert.AreEqual(@"Phospho@S;Phospho@T;Phospho@Y", peptide.ModsText);
+            Assert.AreEqual(@"4;5;6", peptide.ModSitesText);
+            Assert.IsTrue(OspreyModificationMapper.TryMap(@"PEPSK", @"PEPS[+79.9663]K", new[] { 3 },
+                new[] { 79.9663 }, new[] { -1 }, out peptide, out reason), reason);
+            Assert.AreEqual(@"Phospho@S", peptide.ModsText);
+            // The models see the phosphate (HO3P), not the all-zero feature of a name alphabase does not know.
+            Assert.IsTrue(PeptdeepFeaturizer.GetModFeature(@"Phospho@S").Any(v => v != 0));
+            Assert.IsTrue(PeptdeepFeaturizer.GetModFeature(@"NotAModification@S").All(v => v == 0));
+
+            // A phosphopeptide and its unmodified form are two training precursors, each with its own
+            // spectrum and RT, the phosphate on the residue Osprey placed it.
+            var phospho = OspreyTestRecords.CleanRecord(@"PEPSIDEK", 2);
+            phospho.ModifiedSequence = @"PEPS[+79.9663]IDEK";
+            phospho.ModPositions = new[] { 3 };
+            phospho.ModMasses = new[] { PHOSPHO_MASS };
+            phospho.ModUnimodIds = new[] { 21 };
+            phospho.ApexRt = 6;
+            var plain = OspreyTestRecords.CleanRecord(@"PEPSIDEK", 2);
+            plain.ApexRt = 5;
+            var metadata = new Dictionary<string, string>
+            {
+                { @"osprey.rt_max", @"20" },
+                { @"osprey.instrument_model", @"Stellar" },
+                { @"osprey.isolation_mz_min", @"400.5" },
+                { @"osprey.isolation_mz_max", @"900.5" },
+            };
+            var export = OspreyTrainingExport.Create(@"a" + OspreyTrainingExport.FILE_SUFFIX, new[] { phospho, plain }, metadata);
+            var trainingSet = OspreyTrainingSet.Build(new[] { export }, new OspreyTrainingSetOptions());
+            var ms2 = trainingSet.Ms2.ToDictionary(e => e.Precursor.Peptide.ModsText);
+            CollectionAssert.AreEquivalent(new[] { string.Empty, @"Phospho@S" }, ms2.Keys.ToArray());
+            Assert.AreEqual(@"4", ms2[@"Phospho@S"].Precursor.Peptide.ModSitesText);
+            var rt = trainingSet.Rt.ToDictionary(e => e.Peptide.ModsText);
+            Assert.AreEqual(6 / 20.1, rt[@"Phospho@S"].RtNorm, 1e-12);
+            Assert.AreEqual(5 / 20.1, rt[string.Empty].RtNorm, 1e-12);
         }
 
         [TestMethod]
