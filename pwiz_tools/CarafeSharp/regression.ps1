@@ -190,7 +190,7 @@ function Get-TestDataRoot {
         if (-not (Test-Path -LiteralPath $env:CARAFESHARP_TESTDATA -PathType Container)) {
             throw "CARAFESHARP_TESTDATA names a folder that does not exist: $env:CARAFESHARP_TESTDATA"
         }
-        return (Resolve-Path -LiteralPath $env:CARAFESHARP_TESTDATA).Path
+        return (Resolve-Path -LiteralPath $env:CARAFESHARP_TESTDATA).ProviderPath
     }
     return Join-Path (Get-DownloadsPath) 'Perftests'
 }
@@ -454,7 +454,7 @@ if (-not $CompareRun) {
         if (-not (Test-Path -LiteralPath $Export -PathType Leaf)) {
             throw "-Export names a file that does not exist: $Export"
         }
-        $exportPath = (Resolve-Path -LiteralPath $Export).Path
+        $exportPath = (Resolve-Path -LiteralPath $Export).ProviderPath
         # CarafeSharp is given the export's folder (-i), and reads every export in it.
         $others = @(Get-ChildItem -LiteralPath (Split-Path -Parent $exportPath) -Filter '*.training.parquet' |
             Where-Object { $_.FullName -ne $exportPath })
@@ -586,7 +586,7 @@ if (-not $CompareRun) {
         Write-Warning "$message The run is compared as a CPU run."
     }
 } else {
-    $runFolder = (Resolve-Path -LiteralPath $CompareRun).Path
+    $runFolder = (Resolve-Path -LiteralPath $CompareRun).ProviderPath
     $infoPath = Join-Path $runFolder 'regression-run.json'
     if (-not (Test-Path -LiteralPath $infoPath)) {
         throw "$runFolder has no regression-run.json: it is not a regression.ps1 run folder."
