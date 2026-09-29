@@ -218,6 +218,10 @@ against the Windows golden (fine-tuned COS +1.4e-4, sampled spectral cosine medi
   last-digit differences do not reach the fine-tune;
 - the models differ from the Windows golden's as a CPU fine-tune on Linux and on Windows does.
 
+On the GPU under WSL2 (the Linux libtorch CUDA 12.8 build, GTX 1650, driver 591.86), `build.sh -Torch
+cuda` passes the `Cuda` test, and `regression.ps1 -Torch cuda` passes against the CPU golden: fine-tuned
+COS -2.8e-5, sampled spectral cosine median 0.99981, fine-tune and library in 3.6 minutes.
+
 **Sensitivity checks.** Each run changes one setting and must fail the golden's tolerances:
 
 | Setting | Gated checks that fail | Exact comparisons (information) |
