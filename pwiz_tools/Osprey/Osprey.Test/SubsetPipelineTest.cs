@@ -75,6 +75,9 @@ namespace pwiz.Osprey.Test
         private const int MIN_LIBDECOY_PRECURSORS = 100;
         // The Astral subset reports about 164.
         private const int MIN_ASTRAL_PRECURSORS = 120;
+        // An annotated .blib of the subset library reports within a few precursors of the .tsv it
+        // came from (the .blib stores intensities as float and loads through a different reader).
+        private const double MIN_BLIB_LIBRARY_FRACTION = 0.9;
         // The Astral subset recovers about 164 of the 203 its full run detected (81%), so the
         // Stellar floor would leave one precursor of headroom.
         private const double MIN_ASTRAL_RECOVERED_FRACTION = 0.7;
@@ -598,6 +601,113 @@ namespace pwiz.Osprey.Test
                 Environment.SetEnvironmentVariable(name, null);
             foreach (var pair in saved)
                 Environment.SetEnvironmentVariable(pair.Key, pair.Value);
+        }
+
+        /// <summary>
+        /// The subset library as a .blib, searched in place of the .tsv it came from. With
+        /// <c>RefSpectraPeakAnnotations</c> typing every peak b or y, decoys are built as they are
+        /// from the .tsv and the search reports what the .tsv search does; without them every decoy
+        /// would copy its target, and the library is refused.
+        /// </summary>
+        [TestMethod, DoNotParallelize]
+        public void TestSubsetAnnotatedBlibLibrary()
+        {
+            string tsvDir = CreateDir(@"tsv-library");
+            RunAnalysis(tsvDir, DataInputs(), Verifier(false));
+            int tsvPrecursors = BlibComparer.CountRows(Path.Combine(tsvDir, BLIB_FILE), @"RefSpectra");
+
+            string annotated = WriteSubsetLibraryBlib(Path.Combine(_testDir, @"subset-annotated.blib"), true);
+            string blibDir = CreateDir(@"blib-library");
+            RunAnalysis(blibDir, DataInputs(), annotated, Verifier(false));
+            string blibOutput = Path.Combine(blibDir, BLIB_FILE);
+            int blibPrecursors = BlibComparer.CountRows(blibOutput, @"RefSpectra");
+            Assert.IsTrue(blibPrecursors >= MIN_BLIB_LIBRARY_FRACTION * tsvPrecursors,
+                string.Format(@"{0} precursors from the annotated .blib, {1} from the .tsv", blibPrecursors, tsvPrecursors));
+            AssertRecoversFullRun(Path.Combine(_dataDir, MANIFEST_FILE), blibOutput, MIN_RECOVERED_FRACTION);
+
+            string unannotated = WriteSubsetLibraryBlib(Path.Combine(_testDir, @"subset-unannotated.blib"), false);
+            string output = RunExpectingRefusal(@"unannotated-blib", unannotated);
+            StringAssert.Contains(output, RefusalText(unannotated,
+                CountLibraryPrecursors(Path.Combine(_dataDir, LIBRARY_FILE))));
+        }
+
+        /// <summary>
+        /// Write the committed subset library as a .blib: one spectrum per precursor, its library
+        /// fragments as peaks, and - when <paramref name="annotate"/> - one
+        /// <c>RefSpectraPeakAnnotations</c> row per peak naming its ion (<c>y5</c>, <c>b2</c>).
+        /// </summary>
+        private string WriteSubsetLibraryBlib(string path, bool annotate)
+        {
+            var lines = File.ReadAllLines(Path.Combine(_dataDir, LIBRARY_FILE));
+            var header = lines[0].Split('\t');
+            int Column(string name) => Array.IndexOf(header, name);
+            int modified = Column(@"ModifiedPeptide"), stripped = Column(@"StrippedPeptide"),
+                precursorMz = Column(@"PrecursorMz"), charge = Column(@"PrecursorCharge"),
+                rt = Column(@"Tr_recalibrated"), fragmentMz = Column(@"FragmentMz"),
+                intensity = Column(@"RelativeIntensity"), type = Column(@"FragmentType"),
+                number = Column(@"FragmentNumber"), fragmentCharge = Column(@"FragmentCharge"),
+                protein = Column(@"ProteinID");
+            var precursors = lines.Skip(1).Select(line => line.Split('\t'))
+                .GroupBy(fields => fields[modified] + @"|" + fields[charge]);
+            var annotations = new List<(long RefId, int PeakIndex, string Name, int Charge, double Mz)>();
+            using (var writer = new BlibWriter(path))
+            {
+                long fileId = writer.AddSourceFile(@"subset.mzML", LIBRARY_FILE, 0.01);
+                foreach (var precursor in precursors)
+                {
+                    var first = precursor.First();
+                    var fragments = precursor.OrderBy(f => double.Parse(f[fragmentMz], CultureInfo.InvariantCulture)).ToArray();
+                    var mzs = fragments.Select(f => double.Parse(f[fragmentMz], CultureInfo.InvariantCulture)).ToArray();
+                    double libraryRt = double.Parse(first[rt], CultureInfo.InvariantCulture);
+                    long refId = writer.AddSpectrum(first[stripped], ToBlibModifiedSequence(first[modified]),
+                        double.Parse(first[precursorMz], CultureInfo.InvariantCulture),
+                        int.Parse(first[charge], CultureInfo.InvariantCulture), libraryRt, libraryRt, libraryRt, mzs,
+                        fragments.Select(f => float.Parse(f[intensity], CultureInfo.InvariantCulture)).ToArray(),
+                        0.01, fileId, 1, 0.0);
+                    // The proteins too: without them no protein has 2 or more detections, and the
+                    // second pass has no precursor candidates to recompute.
+                    writer.AddProteinMapping(refId, first[protein].Split(';'));
+                    for (int i = 0; annotate && i < fragments.Length; i++)
+                    {
+                        annotations.Add((refId, i, fragments[i][type] + fragments[i][number],
+                            int.Parse(fragments[i][fragmentCharge], CultureInfo.InvariantCulture), mzs[i]));
+                    }
+                }
+                writer.FinalizeDatabase();
+            }
+            using (var conn = new SQLiteConnection(@"Data Source=" + path + @";Version=3;Pooling=False;"))
+            {
+                conn.Open();
+                using (var transaction = conn.BeginTransaction())
+                {
+                    foreach (var annotation in annotations)
+                    {
+                        using (var cmd = conn.CreateCommand())
+                        {
+                            cmd.CommandText = @"INSERT INTO RefSpectraPeakAnnotations
+                                (RefSpectraID, peakIndex, name, formula, inchiKey, otherKeys, charge, adduct, comment, mzTheoretical, mzObserved)
+                                VALUES (@ref, @peak, @name, '', '', '', @charge, '', '', @mz, @mz)";
+                            cmd.Parameters.AddWithValue(@"@ref", annotation.RefId);
+                            cmd.Parameters.AddWithValue(@"@peak", annotation.PeakIndex);
+                            cmd.Parameters.AddWithValue(@"@name", annotation.Name);
+                            cmd.Parameters.AddWithValue(@"@charge", annotation.Charge);
+                            cmd.Parameters.AddWithValue(@"@mz", annotation.Mz);
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    transaction.Commit();
+                }
+            }
+            return path;
+        }
+
+        /// <summary>
+        /// A DIA-NN modified peptide (<c>_AC[UniMod:4]K_</c>) in blib form (<c>AC[+57.021464]K</c>);
+        /// carbamidomethyl is the only modification in the subset library.
+        /// </summary>
+        private static string ToBlibModifiedSequence(string modifiedPeptide)
+        {
+            return modifiedPeptide.Trim('_').Replace(@"[UniMod:4]", @"[+57.021464]");
         }
 
         private void ValidateStraightThrough(string workDir, string log)
