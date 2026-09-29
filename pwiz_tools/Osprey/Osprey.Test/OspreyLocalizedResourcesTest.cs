@@ -42,6 +42,11 @@ namespace pwiz.Osprey.Test
     /// renumbers a placeholder throws or prints the wrong value at run time, and a translated
     /// "Error:" that the exit-code detector does not recognize makes the log and the exit code
     /// disagree - neither shows up in an English run.
+    /// <para>
+    /// As in Skyline, only translations that exist are checked. English .resx files grow between
+    /// translation rounds, so a new English string with no ja / zh-Hans entry yet (or a new .resx
+    /// with no satellite at all) is not a failure; adding English text never requires a translation.
+    /// </para>
     /// </summary>
     [TestClass]
     public class OspreyLocalizedResourcesTest
@@ -68,30 +73,37 @@ namespace pwiz.Osprey.Test
                     string.Format(@"{0} is missing from the scanned resource managers", type.FullName));
             }
 
+            var checkedCounts = LANGUAGES.ToDictionary(language => language, language => 0);
             foreach (var resourceManager in resourceManagers)
-                VerifyResourceManager(resourceManager);
+                VerifyResourceManager(resourceManager, checkedCounts);
+            // Missing translations are skipped, so guard against a vacuous pass: satellites that
+            // stopped deploying beside the tests would otherwise skip every check silently.
+            foreach (var language in LANGUAGES)
+            {
+                Assert.IsTrue(checkedCounts[language] > 0,
+                    string.Format(@"No {0} translations were found to check; are the satellite assemblies deployed?", language));
+            }
         }
 
-        private static void VerifyResourceManager(ResourceManager resourceManager)
+        private static void VerifyResourceManager(ResourceManager resourceManager, IDictionary<string, int> checkedCounts)
         {
             var invariantSet = resourceManager.GetResourceSet(CultureInfo.InvariantCulture, true, true);
             Assert.IsNotNull(invariantSet, resourceManager.BaseName);
             foreach (var language in LANGUAGES)
             {
-                // tryParents: false, so a missing satellite or entry is not hidden by the English.
+                // tryParents: false, so an entry the satellite lacks reads as missing rather than
+                // as the English fallback, and is skipped instead of being compared to itself.
                 var localizedSet = resourceManager.GetResourceSet(CultureInfo.GetCultureInfo(language), true, false);
-                Assert.IsNotNull(localizedSet,
-                    string.Format(@"{0} has no {1} satellite resources", resourceManager.BaseName, language));
+                if (localizedSet == null)
+                    continue;
                 foreach (var entry in invariantSet.Cast<DictionaryEntry>().OrderBy(e => (string) e.Key))
                 {
                     string message = string.Format(@"{0} Entry:{1} Language:{2}", resourceManager.BaseName, entry.Key, language);
                     var invariantText = entry.Value as string;
-                    if (invariantText == null)
-                        continue;
-                    // Skyline's standard: an untranslated string carries the English, so every
-                    // entry exists in every language file.
                     var localizedText = localizedSet.GetString((string) entry.Key);
-                    Assert.IsNotNull(localizedText, message + @" is missing");
+                    if (invariantText == null || localizedText == null)
+                        continue;
+                    checkedCounts[language]++;
                     CollectionAssert.AreEquivalent(FormatItems(invariantText), FormatItems(localizedText),
                         message + @" has different format items: " + localizedText);
                     Assert.AreEqual(CommandStatusWriter.IsErrorLine(invariantText), CommandStatusWriter.IsErrorLine(localizedText),
