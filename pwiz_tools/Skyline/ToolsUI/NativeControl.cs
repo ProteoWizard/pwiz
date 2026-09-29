@@ -22,7 +22,6 @@ using System;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil.PInvoke;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -116,13 +115,10 @@ namespace pwiz.Skyline.ToolsUI
 
         public void SetValueNow(object value) => SetText(value?.ToString() ?? string.Empty);
 
-        /// <summary>Sets the field's text. Thread-agnostic: WM_SETTEXT blocks until the owning thread pumps it,
-        /// which the dialog's modal loop does.</summary>
+        /// <summary>Replaces the text in the text box as if the user had typed it.</summary>
         public void SetText(string text)
         {
-            if (!User32.SetWindowText(Hwnd, text))
-                throw new InvalidOperationException(LlmInstruction.Format(
-                    @"Could not type into the native dialog's text field."));
+            User32.ReplaceEditText(Hwnd, text);
         }
     }
 

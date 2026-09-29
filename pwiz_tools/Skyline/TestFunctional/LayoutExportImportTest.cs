@@ -58,7 +58,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.ShowDocumentGrid(true));
             WaitForOpenForm<DocumentGridForm>();
 
-            TestDefaultExportFileName();
+            TestDefaultExportFileName(documentPath);
 
             // A name of its own, so the round trip cannot be satisfied by the ".sky.view" that
             // saving the document already wrote beside it.
@@ -199,19 +199,23 @@ namespace pwiz.SkylineTestFunctional
         /// The Export dialog offers "&lt;document&gt;.sky.view" - the document's own layout name, handed
         /// over whole. The ".sky" is part of the name, not of the ".view" extension the dialog filters on,
         /// so the offer is neither trimmed to "&lt;document&gt;.view" nor doubled.
+        ///
+        /// <para>Proven by the file that accepting the offer writes, not by the file-name box: with Explorer's
+        /// "hide extensions for known file types" on - the Windows default, so what a fresh Docker image has -
+        /// the box shows "&lt;document&gt;.sky" while the dialog still returns the whole name.</para>
         /// </summary>
-        private void TestDefaultExportFileName()
+        private void TestDefaultExportFileName(string documentPath)
         {
+            var offeredPath = SkylineWindow.GetViewFile(documentPath);
+            // Saving the document wrote it; gone, accepting the offer cannot raise the overwrite prompt
+            FileEx.SafeDelete(offeredPath);
             RunLongNativeDlg<NativeSaveFileDialog>(SkylineWindow.ShowExportLayoutDlg, dlg =>
             {
-                string fileName = null;
-                WaitForConditionUI(() => null != (fileName =
-                    dlg.EnumerateChildren().OfType<NativeTextBox>().FirstOrDefault()?.GetValueNow() as string));
-                Assert.AreEqual(@"LayoutExportImport.sky.view", fileName);
                 // Captioned with the command, not the shell's generic "Save As"
                 Assert.AreEqual(SkylineResources.SkylineWindow_ShowExportLayoutDlg_Export_Window_Layout, dlg.Title);
-                dlg.DismissWithCancelButton();
+                dlg.DismissWithAcceptButton();
             });
+            AssertEx.FileExists(offeredPath);
         }
 
         /// <summary>

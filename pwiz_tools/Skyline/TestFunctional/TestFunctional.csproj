@@ -484,7 +484,6 @@
     <Compile Include="SetFormValueMcpConnectorTest.cs" />
     <Compile Include="SetGridTextMcpConnectorTest.cs" />
     <Compile Include="SetItemMcpConnectorTest.cs" />
-    <Compile Include="PrmMcpConnectorTest.cs" />
     <Compile Include="RunCommandMcpConnectorTest.cs" />
     <Compile Include="ProteinMetadataFunctionalTest.cs" />
     <Compile Include="ProteinMetadataBackgroundLoaderTest.cs" />
@@ -560,6 +559,7 @@
     <Compile Include="UpdateGlobalStandardTest.cs" />
     <Compile Include="UpgradeTest.cs" />
     <Compile Include="VolcanoPlotFormattingTest.cs" />
+    <Compile Include="ZeroLengthSpectraTest.cs" />
     <Compile Include="ZeroLengthSrmChromatogramTest.cs" />
   </ItemGroup>
   <ItemGroup>
