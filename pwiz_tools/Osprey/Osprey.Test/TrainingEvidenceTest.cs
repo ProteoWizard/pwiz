@@ -67,6 +67,7 @@ namespace pwiz.Osprey.Test
             AssertDoubleCountingNeighborsTakeTheDedupsOrder();
             AssertProteinIdsMatchTheScoresParquet();
             AssertScanRangeIsTheMeasuredRange();
+            AssertUnannotatedFragmentsMatchByMz();
         }
 
         private static void AssertCleanPrecursor()
@@ -387,7 +388,50 @@ namespace pwiz.Osprey.Test
             Assert.IsNull(noPeaks.ObservedMzRange);
         }
 
+        /// <summary>
+        /// A library fragment with no ion annotation (an unannotated blib) is placed on the
+        /// ladder slot nearest its m/z within the tolerance and flagged as matched by m/z, not as
+        /// annotated; one near no applicable slot marks none. The core is still the library's top
+        /// six, on whichever slots they matched.
+        /// </summary>
+        private static void AssertUnannotatedFragmentsMatchByMz()
+        {
+            var annotated = Peptide(SEQUENCE, 2, 1);
+            var window = Window(annotated, spikeSlot: -1);
+            var row = Row(annotated, FIRST, LAST);
+            var ladder = FragmentLadder.Build(SEQUENCE, null, 2);
+            const double offset = 0.002;   // well inside 20 ppm at these m/z
+            const double stray = 1300.0;   // above every b and y ion of PEPTIDEK
+            var unannotated = new LibraryEntry(annotated.Id, SEQUENCE, SEQUENCE, 2, 500.0, 10.5)
+            {
+                Fragments = annotated.Fragments
+                    .Select(f => new LibraryFragment { Mz = f.Mz + offset, RelativeIntensity = f.RelativeIntensity, Annotation = Unannotated() })
+                    .Concat(new[] { new LibraryFragment { Mz = stray, RelativeIntensity = 0.05f, Annotation = Unannotated() } })
+                    .ToList(),
+            };
+            var record = Compute(unannotated, row, window, null);
+
+            foreach (var f in LIBRARY)
+            {
+                int slot = Slot(f.Type, f.Ordinal);
+                byte flags = record.IonFlags[slot];
+                Assert.AreNotEqual(0, flags & TrainingIonFlags.LIBRARY_MZ_MATCHED, string.Format(@"slot {0} not matched by m/z", slot));
+                Assert.AreEqual(0, flags & TrainingIonFlags.LIBRARY_ANNOTATED, string.Format(@"slot {0} claimed an annotation", slot));
+                Assert.AreEqual(f.Rel, record.LibraryRelIntensity[slot]);
+            }
+            Assert.AreEqual(6, Enumerable.Range(0, ladder.Length).Count(k => (record.IonFlags[k] & TrainingIonFlags.CORE) != 0),
+                @"the core is the top six library fragments");
+            int matched = Enumerable.Range(0, ladder.Length).Count(k => (record.IonFlags[k] & TrainingIonFlags.LIBRARY_MZ_MATCHED) != 0);
+            Assert.AreEqual(LIBRARY.Length, matched, @"the stray fragment matched a slot");
+        }
+
         // ---- fixtures ------------------------------------------------------------------------
+
+        /// <summary>A fragment annotation that names no ion, as an unannotated blib's are.</summary>
+        private static FragmentAnnotation Unannotated()
+        {
+            return new FragmentAnnotation { IonType = IonType.Unknown };
+        }
 
         /// <summary>The entry with its library spectrum replaced by these m/z, in falling intensity.</summary>
         private static LibraryEntry WithFragments(LibraryEntry entry, params double[] mzs)
