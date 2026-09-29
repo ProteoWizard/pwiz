@@ -24,7 +24,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
-using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using pwiz.Osprey.Core;
@@ -74,6 +73,7 @@ namespace pwiz.Osprey.IO
         // Prepared statements - reused across all inserts to avoid per-row SQL recompilation
         private SQLiteCommand _cmdInsertRefSpectra;
         private SQLiteCommand _cmdInsertRefSpectraPeaks;
+        private SQLiteCommand _cmdInsertPeakAnnotation;
         private SQLiteCommand _cmdInsertModification;
         private SQLiteCommand _cmdInsertProtein;
         private SQLiteCommand _cmdInsertRefSpectraProtein;
@@ -164,6 +164,19 @@ namespace pwiz.Osprey.IO
             _cmdInsertRefSpectraPeaks.Parameters.Add(@"@mz", System.Data.DbType.Binary);
             _cmdInsertRefSpectraPeaks.Parameters.Add(@"@int", System.Data.DbType.Binary);
             _cmdInsertRefSpectraPeaks.Prepare();
+
+            _cmdInsertPeakAnnotation = new SQLiteCommand(_conn);
+            _cmdInsertPeakAnnotation.CommandText = @"INSERT INTO RefSpectraPeakAnnotations (
+                RefSpectraID, peakIndex, name, formula, inchiKey, otherKeys,
+                charge, adduct, comment, mzTheoretical, mzObserved
+            ) VALUES (@id, @peak, @name, '', '', '', @charge, '', '', @mzTheoretical, @mzObserved)";
+            _cmdInsertPeakAnnotation.Parameters.Add(@"@id", System.Data.DbType.Int64);
+            _cmdInsertPeakAnnotation.Parameters.Add(@"@peak", System.Data.DbType.Int32);
+            _cmdInsertPeakAnnotation.Parameters.Add(@"@name", System.Data.DbType.String);
+            _cmdInsertPeakAnnotation.Parameters.Add(@"@charge", System.Data.DbType.Int32);
+            _cmdInsertPeakAnnotation.Parameters.Add(@"@mzTheoretical", System.Data.DbType.Double);
+            _cmdInsertPeakAnnotation.Parameters.Add(@"@mzObserved", System.Data.DbType.Double);
+            _cmdInsertPeakAnnotation.Prepare();
 
             _cmdInsertModification = new SQLiteCommand(_conn);
             _cmdInsertModification.CommandText =
@@ -383,24 +396,38 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public long AddSpectrum(LibraryEntry entry, string fileName, double bestRt)
         {
-            double[] mzs;
-            float[] intensities;
-            ExtractFragmentArrays(entry, out mzs, out intensities);
-
             long fileId = AddSourceFile(fileName, fileName, 0.01);
-            long refId = AddSpectrum(
-                entry.Sequence, entry.ModifiedSequence,
-                entry.PrecursorMz, entry.Charge,
-                bestRt, bestRt - 1.0, bestRt + 1.0,
-                mzs, intensities,
-                0.01, fileId, 1, 0.0);
+            return AddSpectrum(BlibSpectrum.FromLibraryEntry(entry), bestRt, bestRt - 1.0, bestRt + 1.0, 0.01, fileId, 1);
+        }
 
-            if (entry.Modifications != null && entry.Modifications.Count > 0)
-                AddModifications(refId, entry.Modifications);
-
-            if (entry.ProteinIds != null && entry.ProteinIds.Count > 0)
-                AddProteinMapping(refId, entry.ProteinIds);
-
+        /// <summary>
+        /// Write a library precursor prepared by <see cref="BlibSpectrum.FromLibraryEntry"/>: its
+        /// <c>RefSpectra</c> and peak rows, then its modification, protein and peak annotation
+        /// rows. The retention times, score, source file and copy count are what the caller knows
+        /// about this row - a search result's apex and q-value, or a library's own retention time.
+        /// Returns the RefSpectra row ID.
+        /// </summary>
+        public long AddSpectrum(BlibSpectrum spectrum, double retentionTime, double startTime, double endTime,
+            double score, long fileId, int copies)
+        {
+            long refId = AddSpectrumPrecompressed(spectrum.PeptideSeq, spectrum.ModifiedSequence,
+                spectrum.PrecursorMz, spectrum.Charge, retentionTime, startTime, endTime,
+                spectrum.MzBlob, spectrum.IntensityBlob, spectrum.NumPeaks,
+                score, fileId, copies, 0.0);
+            if (spectrum.Modifications.Count > 0)
+                AddModifications(refId, spectrum.Modifications);
+            if (spectrum.ProteinIds.Count > 0)
+                AddProteinMapping(refId, spectrum.ProteinIds);
+            foreach (var annotation in spectrum.Annotations)
+            {
+                _cmdInsertPeakAnnotation.Parameters[@"@id"].Value = refId;
+                _cmdInsertPeakAnnotation.Parameters[@"@peak"].Value = annotation.PeakIndex;
+                _cmdInsertPeakAnnotation.Parameters[@"@name"].Value = annotation.Name;
+                _cmdInsertPeakAnnotation.Parameters[@"@charge"].Value = annotation.Charge;
+                _cmdInsertPeakAnnotation.Parameters[@"@mzTheoretical"].Value = annotation.MzTheoretical;
+                _cmdInsertPeakAnnotation.Parameters[@"@mzObserved"].Value = annotation.MzObserved;
+                _cmdInsertPeakAnnotation.ExecuteNonQuery();
+            }
             return refId;
         }
 
@@ -579,6 +606,7 @@ namespace pwiz.Osprey.IO
                 CREATE INDEX IF NOT EXISTS idx_refspectra_modseq ON RefSpectra(peptideModSeq);
                 CREATE INDEX IF NOT EXISTS idx_refspectra_mz ON RefSpectra(precursorMZ);
                 CREATE INDEX IF NOT EXISTS idx_peaks_refid ON RefSpectraPeaks(RefSpectraID);
+                CREATE INDEX IF NOT EXISTS idx_peakannotations_refid ON RefSpectraPeakAnnotations(RefSpectraID);
                 CREATE INDEX IF NOT EXISTS idx_mods_refid ON Modifications(RefSpectraID);
                 CREATE INDEX IF NOT EXISTS idx_boundaries_refid ON OspreyPeakBoundaries(RefSpectraID);
                 CREATE INDEX IF NOT EXISTS idx_runscores_refid ON OspreyRunScores(RefSpectraID);
@@ -610,6 +638,7 @@ namespace pwiz.Osprey.IO
                 }
                 if (_cmdInsertRefSpectra != null) { _cmdInsertRefSpectra.Dispose(); _cmdInsertRefSpectra = null; }
                 if (_cmdInsertRefSpectraPeaks != null) { _cmdInsertRefSpectraPeaks.Dispose(); _cmdInsertRefSpectraPeaks = null; }
+                if (_cmdInsertPeakAnnotation != null) { _cmdInsertPeakAnnotation.Dispose(); _cmdInsertPeakAnnotation = null; }
                 if (_cmdInsertModification != null) { _cmdInsertModification.Dispose(); _cmdInsertModification = null; }
                 if (_cmdInsertProtein != null) { _cmdInsertProtein.Dispose(); _cmdInsertProtein = null; }
                 if (_cmdInsertRefSpectraProtein != null) { _cmdInsertRefSpectraProtein.Dispose(); _cmdInsertRefSpectraProtein = null; }
@@ -694,12 +723,7 @@ namespace pwiz.Osprey.IO
                             double mass;
                             if (TryGetUnimodMass(unimodId, out mass))
                             {
-                                result.Append('[');
-                                if (mass >= 0.0)
-                                    result.AppendFormat(CultureInfo.InvariantCulture, @"+{0:F4}", mass);
-                                else
-                                    result.AppendFormat(CultureInfo.InvariantCulture, @"{0:F4}", mass);
-                                result.Append(']');
+                                result.Append(BlibSpectrum.FormatMassDelta(mass));
                                 i = close + 1;
                                 continue;
                             }
@@ -1092,25 +1116,6 @@ namespace pwiz.Osprey.IO
                     return i;
             }
             return -1;
-        }
-
-        private static void ExtractFragmentArrays(LibraryEntry entry,
-            out double[] mzs, out float[] intensities)
-        {
-            if (entry.Fragments == null || entry.Fragments.Count == 0)
-            {
-                mzs = new double[0];
-                intensities = new float[0];
-                return;
-            }
-
-            mzs = new double[entry.Fragments.Count];
-            intensities = new float[entry.Fragments.Count];
-            for (int i = 0; i < entry.Fragments.Count; i++)
-            {
-                mzs[i] = entry.Fragments[i].Mz;
-                intensities[i] = entry.Fragments[i].RelativeIntensity;
-            }
         }
 
         #endregion

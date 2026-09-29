@@ -75,6 +75,9 @@ namespace pwiz.Osprey.Test
         private const int MIN_LIBDECOY_PRECURSORS = 100;
         // The Astral subset reports about 164.
         private const int MIN_ASTRAL_PRECURSORS = 120;
+        // An annotated .blib of the subset library reports within a few precursors of the .tsv it
+        // came from (the .blib stores intensities as float and loads through a different reader).
+        private const double MIN_BLIB_LIBRARY_FRACTION = 0.9;
         // The Astral subset recovers about 164 of the 203 its full run detected (81%), so the
         // Stellar floor would leave one precursor of headroom.
         private const double MIN_ASTRAL_RECOVERED_FRACTION = 0.7;
@@ -457,27 +460,18 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// Libraries whose generated decoys have no fragments of their own. A decoy is built by
         /// recomputing the target's b/y fragments on the reversed sequence, so a fragment of unknown
-        /// type is copied verbatim and one with no fragment number is dropped. An Osprey output
-        /// .blib (no fragment annotations) and a library whose fragment numbers are all missing
-        /// must each stop with one plain error; a library with a few such entries must warn and
-        /// still finish.
+        /// type is copied verbatim and one with no fragment number is dropped. A library whose
+        /// fragment numbers are all missing must stop with one plain error; a library with a few
+        /// such entries must warn and still finish. (A .blib without fragment annotations is the
+        /// third case, in <see cref="TestSubsetAnnotatedBlibLibrary"/>.)
         /// </summary>
         [TestMethod, DoNotParallelize]
         public void TestSubsetUnusableDecoys()
         {
-            string straightDir = CreateDir(@"straight");
-            RunAnalysis(straightDir, DataInputs(), Verifier(false));
-
-            // Every decoy a copy of its target.
-            string blib = Path.Combine(straightDir, BLIB_FILE);
-            int blibPrecursors = BlibComparer.CountRows(blib, @"RefSpectra");
-            string output = RunExpectingRefusal(@"blib-library", blib);
-            StringAssert.Contains(output, RefusalText(blib, blibPrecursors));
-
             // Every fragment number missing, so every decoy fragment is dropped.
             string noNumbers = WriteLibraryWithoutFragmentNumbers(@"no-fragment-numbers.tsv", _ => true);
             int libraryPrecursors = CountLibraryPrecursors(Path.Combine(_dataDir, LIBRARY_FILE));
-            output = RunExpectingRefusal(@"no-fragment-numbers", noNumbers);
+            string output = RunExpectingRefusal(@"no-fragment-numbers", noNumbers);
             StringAssert.Contains(output, RefusalText(noNumbers, libraryPrecursors));
 
             // Two precursors without fragment numbers: a warning naming the count, and a search.
@@ -598,6 +592,70 @@ namespace pwiz.Osprey.Test
                 Environment.SetEnvironmentVariable(name, null);
             foreach (var pair in saved)
                 Environment.SetEnvironmentVariable(pair.Key, pair.Value);
+        }
+
+        /// <summary>
+        /// The BLIB libraries Osprey writes, searched as libraries. <c>--export-library</c> writes the
+        /// subset library as a .blib with <c>RefSpectraPeakAnnotations</c> typing every peak b or y,
+        /// and searching it reports what the .tsv search does. The output .blib of that search,
+        /// annotated the same way, searches back with decoys of its own. Without annotations every
+        /// decoy would copy its target, and the library is refused.
+        /// </summary>
+        [TestMethod, DoNotParallelize]
+        public void TestSubsetAnnotatedBlibLibrary()
+        {
+            string tsvDir = CreateDir(@"tsv-library");
+            RunAnalysis(tsvDir, DataInputs(), Verifier(false));
+            string tsvOutput = Path.Combine(tsvDir, BLIB_FILE);
+            // Peaks stored in m/z order, as BiblioSpec stores them, whatever the library order.
+            foreach (var spectrum in new BlibLoader().Load(tsvOutput))
+            {
+                for (int i = 1; i < spectrum.Fragments.Count; i++)
+                    Assert.IsTrue(spectrum.Fragments[i - 1].Mz <= spectrum.Fragments[i].Mz, spectrum.ModifiedSequence);
+            }
+
+            string library = Path.Combine(_dataDir, LIBRARY_FILE);
+            string exported = Path.Combine(_testDir, @"subset-library.blib");
+            string log = RunOsprey(new[]
+            {
+                OspreyCommandArgs.ARG_LIBRARY.ArgumentText, library,
+                OspreyCommandArgs.ARG_EXPORT_LIBRARY.ArgumentText, exported
+            }, Verifier(false));
+            int libraryPrecursors = CountLibraryPrecursors(library);
+            StringAssert.Contains(log, CountText.Format(libraryPrecursors,
+                OspreyResources.Program_RunExportLibrary_Saved_1_library_precursor_to__1_,
+                OspreyResources.Program_RunExportLibrary_Saved__0_N0__library_precursors_to__1_,
+                exported));
+            Assert.AreEqual(libraryPrecursors, BlibComparer.CountRows(exported, @"RefSpectra"));
+            int libraryFragments = File.ReadLines(library).Count() - 1;
+            Assert.AreEqual(libraryFragments, BlibComparer.CountWhere(exported, BlibPeakAnnotations.TABLE_NAME, @"1"));
+
+            string blibDir = CreateDir(@"blib-library");
+            RunAnalysis(blibDir, DataInputs(), exported, Verifier(false));
+            AssertSameSearch(tsvOutput, Path.Combine(blibDir, BLIB_FILE));
+
+            string backDir = CreateDir(@"output-blib-library");
+            RunAnalysis(backDir, DataInputs(), tsvOutput, Verifier(false));
+            int tsvPrecursors = BlibComparer.CountRows(tsvOutput, @"RefSpectra");
+            int backPrecursors = BlibComparer.CountRows(Path.Combine(backDir, BLIB_FILE), @"RefSpectra");
+            Assert.IsTrue(backPrecursors >= MIN_BLIB_LIBRARY_FRACTION * tsvPrecursors,
+                string.Format(@"{0} precursors from the output .blib, {1} in it", backPrecursors, tsvPrecursors));
+
+            string unannotated = Path.Combine(_testDir, @"subset-unannotated.blib");
+            LibraryBlibWriter.Write(unannotated, new BlibLoader().Load(exported), exported, false);
+            string output = RunExpectingRefusal(@"unannotated-blib", unannotated);
+            StringAssert.Contains(output, RefusalText(unannotated, libraryPrecursors));
+        }
+
+        /// <summary>
+        /// Two searches of one library in different formats report the same thing: every table,
+        /// peaks included, agrees at <see cref="TOLERANCE"/> but the library each names as its
+        /// source.
+        /// </summary>
+        private static void AssertSameSearch(string expectedBlib, string actualBlib)
+        {
+            var differences = BlibComparer.Compare(expectedBlib, actualBlib, TOLERANCE, @"SpectrumSourceFiles");
+            Assert.AreEqual(0, differences.Count, string.Join(Environment.NewLine, differences.Take(20)));
         }
 
         private void ValidateStraightThrough(string workDir, string log)

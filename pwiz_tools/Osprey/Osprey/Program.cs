@@ -410,6 +410,8 @@ namespace pwiz.Osprey
                 // Log startup info
                 LogInfo(string.Format(OspreyResources.Program_Run_Osprey_v_0_, OspreyVersion.DisplayVersion));
                 LogInfo(string.Format(OspreyResources.Program_Run_Command___0_, string.Join(@" ", args)));
+                if (!string.IsNullOrEmpty(config.ExportLibraryBlib))
+                    return RunExportLibrary(config);
                 LogInfo(string.Format(OspreyResources.Program_Run_Input_files___0_, config.InputFiles.Count));
                 LogInfo(string.Format(OspreyResources.Program_Run_Library___0____1__,
                     config.LibrarySource?.Path ?? OspreyResources.Program_Run__none_,
@@ -593,6 +595,34 @@ namespace pwiz.Osprey
         }
 
         /// <summary>
+        /// <c>--export-library</c>: load the library as a search would - deduplicated, and with
+        /// supplied decoys marked when the command line says the library has them - and write it
+        /// as a .blib (<see cref="LibraryBlibWriter"/>). No search runs.
+        /// </summary>
+        private static int RunExportLibrary(OspreyConfig config)
+        {
+            var library = LibraryLoader.Load(config, LibraryLoadOptions.Default, OspreyLog.Out, LogWarning,
+                out string loadError);
+            if (loadError != null)
+            {
+                LogError(loadError);
+                return EXIT_CODE_FAILURE_TO_START;
+            }
+            if (library == null || library.Count == 0)
+            {
+                LogError(OspreyTasksResources.PerFileScoringTask_LoadLibraryAndDecoys_The_spectral_library_is_empty_after_loading_);
+                return EXIT_CODE_FAILURE_TO_START;
+            }
+            string path = Path.GetFullPath(config.ExportLibraryBlib);
+            int written = LibraryBlibWriter.Write(path, library, config.LibrarySource.Path, true, config.NThreads);
+            LogInfo(CountText.Format(written,
+                OspreyResources.Program_RunExportLibrary_Saved_1_library_precursor_to__1_,
+                OspreyResources.Program_RunExportLibrary_Saved__0_N0__library_precursors_to__1_,
+                path));
+            return EXIT_CODE_SUCCESS;
+        }
+
+        /// <summary>
         /// <c>--task ModelDiagnostics</c>: produce the report from COMPLETED analysis state and
         /// never re-run the analysis. Returns the process exit code when the task is finished,
         /// or -1 to fall through to the pipeline when a diagnostics product still has to be
@@ -725,6 +755,15 @@ namespace pwiz.Osprey
                 string dupErr = DuplicateInputStemError(config.InputFiles);
                 if (dupErr != null)
                     return dupErr;
+            }
+
+            // --export-library converts the library and exits: it needs the library and nothing
+            // else, whatever else the command line holds.
+            if (!string.IsNullOrEmpty(config.ExportLibraryBlib))
+            {
+                return config.LibrarySource == null
+                    ? string.Format(OspreyResources.Program_ValidateArgs_No_spectral_library_specified__Use__0_, USAGE_LIBRARY)
+                    : null;
             }
 
             string exportErr = TrainingExportError(config.TrainingExport);
