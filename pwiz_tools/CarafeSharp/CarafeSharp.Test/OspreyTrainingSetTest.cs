@@ -78,6 +78,12 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(OspreyModificationMapper.PROTEIN_N_TERM_ACETYL + @";Oxidation@M", peptide.ModsText);
             Assert.AreEqual(@"0;1", peptide.ModSitesText);
 
+            // pyro-Glu on the first residue is alphabase's N-terminal modification of that residue.
+            Assert.IsTrue(OspreyModificationMapper.TryMap(@"QPEPTIDEK", @"Q[-17.0265]PEPTIDEK", new[] { 0 },
+                new[] { -17.026549 }, new[] { 28 }, out peptide, out reason), reason);
+            Assert.AreEqual(@"Gln->pyro-Glu@Q^Any_N-term", peptide.ModsText);
+            Assert.AreEqual(@"0", peptide.ModSitesText);
+
             // A mass alphabase does not know cannot be featurized.
             Assert.IsFalse(OspreyModificationMapper.TryMap(@"PEPCK", @"PEPC[+12.3456]K", new[] { 3 },
                 new[] { 12.3456 }, new[] { -1 }, out peptide, out reason));

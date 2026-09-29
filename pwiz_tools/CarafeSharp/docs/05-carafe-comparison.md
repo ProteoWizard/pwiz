@@ -8,6 +8,9 @@ through CarafeSharp, stage by stage, and why each difference is there.
   `_55` with the human FASTA.
 - Both arms searched with the same Osprey build: ProteoWizard/pwiz#4708 at a5d15e6a4f, with the
   Thermo reader.
+- Carafe is the 2.2.0 build of our fork, maccoss/Carafe (the Carafe app's jar, built 2026-07-23). The
+  fork adds the entrapment FASTA builder (`-build_entrapment_fasta`) and, after this build, the
+  decoy/entrapment similarity gate; the Noble Lab's Carafe (Noble-Lab/Carafe) has neither.
 - Carafe 2.2.0 read mzML (msconvert, vendor peak picking), because it cannot read .raw. CarafeSharp
   (a CUDA build of #4719 at 8a5f701d11, which includes this branch) read the .raw through Osprey.
 - Both used the options of `Run-CarafeOspreyWorkflow.ps1` and `Run-CarafeSharpWorkflow.ps1`: NoCut
@@ -20,7 +23,7 @@ through CarafeSharp, stage by stage, and why each difference is there.
 
 | Stage | Result | Why |
 |---|---|---|
-| Digests | Differ by design | CarafeSharp applies Carafe's decoy/entrapment similarity gate, which the 2.2.0 jar predates. With the gate off (`-no_similarity_gate`), the FASTAs are byte-identical to 2.2.0's. |
+| Digests | Differ by design | CarafeSharp applies the decoy/entrapment similarity gate from our Carafe fork's main branch, which the 2.2.0 build predates (the Noble Lab's Carafe has neither the gate nor the entrapment FASTA builder). With the gate off (`-no_similarity_gate`), the FASTAs are byte-identical to 2.2.0's. |
 | Initial library | The same library | On the precursors both have, fragment lists are identical and spectra agree to the TSV's printed precision (cosine > 0.99999998). |
 | Osprey search of the training run | Nearly the same IDs | Totals within 0.6%; precursor Jaccard 0.977 (Stellar) and 0.896 (Astral). The IDs only one arm has sit near the 1% threshold. |
 | Training set | 85.7-85.9% slot agreement | Masking comes from Osprey's evidence rather than Carafe's own peak matching (see 02-masking.md). |
@@ -37,8 +40,8 @@ through CarafeSharp, stage by stage, and why each difference is there.
   - Groups dropped for want of an acceptable shuffle: 26 and 322 training groups, 62 and 762 library
     groups. A colliding shuffle is redrawn rather than dropped, so on Astral CarafeSharp keeps 609
     more quartets than Carafe.
-- **The oracle:** CarafeSharp's digester matches Carafe byte for byte with the gate off, and Carafe's
-  origin/main with it on (`EntrapmentFastaParityTest`).
+- **The oracle:** CarafeSharp's digester matches the 2.2.0 build byte for byte with the gate off, and
+  the fork's main branch (maccoss/Carafe) with it on (`EntrapmentFastaParityTest`).
 
 ## Initial libraries
 

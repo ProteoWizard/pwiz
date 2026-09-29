@@ -127,7 +127,7 @@ namespace pwiz.CarafeSharp.Proteome
             foreach (var site in isoform.Modifications)
             {
                 var modification = site.Modification;
-                int position = GetSkylinePosition(AlphabaseName(modification), site.Position);
+                int position = GetSkylinePosition(modification, site.Position);
                 if (position < 1 || position > sequence.Length)
                 {
                     throw new NotSupportedException(string.Format(
@@ -150,11 +150,15 @@ namespace pwiz.CarafeSharp.Proteome
 
         /// <summary>
         /// <c>get_skyline_modification_position</c>: protein N-term acetyl at site 0 moves to
-        /// residue 1; every other site is used as it is.
+        /// residue 1; every other site is used as it is. A pyro-Glu (an N-terminal modification
+        /// of one residue) moves to that residue too, Skyline's place for it, where Carafe stops
+        /// with "invalid Skyline modification position".
         /// </summary>
-        private static int GetSkylinePosition(string alphabaseName, int site)
+        private static int GetSkylinePosition(CarafeModification modification, int site)
         {
-            return alphabaseName == PROTEIN_N_TERM_ACETYL && site == 0 ? 1 : site;
+            bool onResidue1 = AlphabaseName(modification) == PROTEIN_N_TERM_ACETYL ||
+                              modification.Type == CarafeModificationType.peptide_n_term_residue;
+            return onResidue1 && site == 0 ? 1 : site;
         }
 
         private static string ResidueNotation(CarafeModification modification, string name, ModifiedPeptideStyle style)

@@ -40,6 +40,9 @@ namespace pwiz.CarafeSharp.Test
             AssertFeature(@"Oxidation@M", (@"O", 1));
             AssertFeature(@"Phospho@S", (@"H", 1), (@"O", 3), (@"P", 1));
             AssertFeature(@"Deamidated@N", (@"H", -1), (@"N", -1), (@"O", 1));
+            // The pyro-Glu names Carafe ids 27 and 28 map to.
+            AssertFeature(@"Gln->pyro-Glu@Q^Any_N-term", (@"H", -3), (@"N", -1));
+            AssertFeature(@"Glu->pyro-Glu@E^Any_N-term", (@"H", -2), (@"O", -1));
             // Isotope labels have their own slots after the elements.
             AssertFeature(@"TMT6plex@K", (@"H", 20), (@"C", 8), (@"13C", 4), (@"N", 1), (@"15N", 1), (@"O", 2));
             // The space-to-underscore alias alphabase registers resolves to the same row.

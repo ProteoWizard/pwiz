@@ -57,6 +57,12 @@ namespace pwiz.CarafeSharp.Training
         private const string ANY_N_TERM = @"Any N-term";
         private const string PROTEIN_N_TERM = @"Protein N-term";
 
+        /// <summary>
+        /// alphabase's site for an N-terminal modification of one residue (pyro-Glu), after the
+        /// residue: its underscore alias, the name CarafeModification gives pyro-Glu.
+        /// </summary>
+        private const string RESIDUE_N_TERM = @"^Any_N-term";
+
         private static readonly Lazy<Dictionary<string, List<ModificationDefinition>>> BY_SITE =
             new Lazy<Dictionary<string, List<ModificationDefinition>>>(() => ModificationTable.All
                 .GroupBy(Site, StringComparer.Ordinal)
@@ -98,6 +104,14 @@ namespace pwiz.CarafeSharp.Training
                 var definition = nTerm
                     ? Find(ANY_N_TERM, mass, unimod) ?? Find(PROTEIN_N_TERM, mass, unimod)
                     : Find(residue, mass, unimod);
+                // An N-terminal modification of the first residue (pyro-Glu), which alphabase keys
+                // by the residue and the N terminus together.
+                bool residueNTerm = false;
+                if (definition == null && atStart)
+                {
+                    definition = Find(residue + RESIDUE_N_TERM, mass, unimod);
+                    residueNTerm = definition != null;
+                }
                 if (definition == null && atStart && !leadingNTerm)
                 {
                     // A blib's sum of the N-terminal acetyl and residue 1's modification.
@@ -118,7 +132,7 @@ namespace pwiz.CarafeSharp.Training
                     return false;
                 }
                 names.Add(definition.Name);
-                sites.Add(nTerm ? 0 : position + 1);
+                sites.Add(nTerm || residueNTerm ? 0 : position + 1);
             }
             peptide = new PeptideForm(sequence, names, sites);
             return true;
