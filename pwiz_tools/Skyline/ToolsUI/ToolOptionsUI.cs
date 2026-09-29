@@ -292,15 +292,15 @@ namespace pwiz.Skyline.ToolsUI
             _driverRemoteAccounts.EditList();
         }
 
-        protected override void OnClosing(CancelEventArgs e)
+        protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            base.OnClosing(e);
+            base.OnFormClosing(e);
 
             if (!e.Cancel)
                 _pingRequest?.Cancel();
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
             if (DialogResult == DialogResult.OK)
             {
@@ -326,7 +326,7 @@ namespace pwiz.Skyline.ToolsUI
                 if (koinaSettingsValidBefore != KoinaHelpers.KoinaSettingsValid)
                     Program.MainWindow?.UpdateGraphSpectrumEnabled();
             }
-            base.OnClosed(e);
+            base.OnFormClosed(e);
         }
 
         public void OkDialog()

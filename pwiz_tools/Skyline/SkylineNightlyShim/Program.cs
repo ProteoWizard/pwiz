@@ -122,17 +122,12 @@ namespace SkylineNightlyShim
                 return;
             }
 
-            // Do our work in the SkylineNightly directory
-            var file = System.Reflection.Assembly.GetExecutingAssembly().CodeBase;
-            if (file.StartsWith(@"file:"))
-            {
-                file = file.Substring(5);
-            }
-            while (file.StartsWith(@"/"))
-            {
-                file = file.Substring(1);
-            }
-            var nightlyDirectory = Path.GetDirectoryName(file);
+            // Do our work in the SkylineNightly directory. AppContext.BaseDirectory replaces
+            // Assembly.CodeBase, which was a file: URL and needed the unescaping below; it is
+            // already a plain directory path, and unlike Assembly.Location it survives a
+            // single-file publish. It carries a trailing separator, which GetDirectoryName
+            // never produced, so trim it to keep the logged and combined paths as they were.
+            var nightlyDirectory = AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar);
             if (!string.IsNullOrEmpty(nightlyDirectory))
                 Directory.SetCurrentDirectory(nightlyDirectory);
 
