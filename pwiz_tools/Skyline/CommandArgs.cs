@@ -170,10 +170,13 @@ namespace pwiz.Skyline
         }
 
         /// <summary>
-        /// Returns the culture a name resolves to, or null if it resolves to none the system knows. The resolved
-        /// name is checked rather than the text, so any spelling the system maps to a known culture is accepted
-        /// (e.g. "EN-us", or "en_US" on versions of Windows that resolve it). The check is needed because Windows
-        /// makes up a culture for any well-formed name (e.g. "not-a-culture") instead of failing.
+        /// Returns the culture a name resolves to, or null if neither it nor any of its parents is a culture the
+        /// system knows. The resolved name is checked rather than the text, so any spelling the system maps to a
+        /// known culture is accepted (e.g. "EN-us", or "en_US" on versions of Windows that resolve it), and the
+        /// parents are checked so that a deprecated name whose parent is known is accepted (e.g. "zh-CHS", which
+        /// .NET no longer lists but parents to "zh-Hans"). The check is needed because Windows makes up a culture
+        /// for any well-formed name (e.g. "not-a-culture") instead of failing, with only the invariant culture as
+        /// its parent.
         /// </summary>
         private static CultureInfo GetKnownCulture(string name)
         {
@@ -186,7 +189,13 @@ namespace pwiz.Skyline
             {
                 return null;
             }
-            return GetKnownCultureNames().Contains(culture.Name) ? culture : null;
+            var knownNames = new HashSet<string>(GetKnownCultureNames());
+            for (var ancestor = culture; !string.IsNullOrEmpty(ancestor.Name); ancestor = ancestor.Parent)
+            {
+                if (knownNames.Contains(ancestor.Name))
+                    return culture;
+            }
+            return null;
         }
 
         private static string[] GetKnownCultureNames()
