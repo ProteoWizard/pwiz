@@ -460,27 +460,18 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// Libraries whose generated decoys have no fragments of their own. A decoy is built by
         /// recomputing the target's b/y fragments on the reversed sequence, so a fragment of unknown
-        /// type is copied verbatim and one with no fragment number is dropped. An Osprey output
-        /// .blib (no fragment annotations) and a library whose fragment numbers are all missing
-        /// must each stop with one plain error; a library with a few such entries must warn and
-        /// still finish.
+        /// type is copied verbatim and one with no fragment number is dropped. A library whose
+        /// fragment numbers are all missing must stop with one plain error; a library with a few
+        /// such entries must warn and still finish. (A .blib without fragment annotations is the
+        /// third case, in <see cref="TestSubsetAnnotatedBlibLibrary"/>.)
         /// </summary>
         [TestMethod, DoNotParallelize]
         public void TestSubsetUnusableDecoys()
         {
-            string straightDir = CreateDir(@"straight");
-            RunAnalysis(straightDir, DataInputs(), Verifier(false));
-
-            // Every decoy a copy of its target.
-            string blib = Path.Combine(straightDir, BLIB_FILE);
-            int blibPrecursors = BlibComparer.CountRows(blib, @"RefSpectra");
-            string output = RunExpectingRefusal(@"blib-library", blib);
-            StringAssert.Contains(output, RefusalText(blib, blibPrecursors));
-
             // Every fragment number missing, so every decoy fragment is dropped.
             string noNumbers = WriteLibraryWithoutFragmentNumbers(@"no-fragment-numbers.tsv", _ => true);
             int libraryPrecursors = CountLibraryPrecursors(Path.Combine(_dataDir, LIBRARY_FILE));
-            output = RunExpectingRefusal(@"no-fragment-numbers", noNumbers);
+            string output = RunExpectingRefusal(@"no-fragment-numbers", noNumbers);
             StringAssert.Contains(output, RefusalText(noNumbers, libraryPrecursors));
 
             // Two precursors without fragment numbers: a warning naming the count, and a search.
@@ -604,110 +595,67 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The subset library as a .blib, searched in place of the .tsv it came from. With
-        /// <c>RefSpectraPeakAnnotations</c> typing every peak b or y, decoys are built as they are
-        /// from the .tsv and the search reports what the .tsv search does; without them every decoy
-        /// would copy its target, and the library is refused.
+        /// The BLIB libraries Osprey writes, searched as libraries. <c>--export-library</c> writes the
+        /// subset library as a .blib with <c>RefSpectraPeakAnnotations</c> typing every peak b or y,
+        /// and searching it reports what the .tsv search does. The output .blib of that search,
+        /// annotated the same way, searches back with decoys of its own. Without annotations every
+        /// decoy would copy its target, and the library is refused.
         /// </summary>
         [TestMethod, DoNotParallelize]
         public void TestSubsetAnnotatedBlibLibrary()
         {
             string tsvDir = CreateDir(@"tsv-library");
             RunAnalysis(tsvDir, DataInputs(), Verifier(false));
-            int tsvPrecursors = BlibComparer.CountRows(Path.Combine(tsvDir, BLIB_FILE), @"RefSpectra");
+            string tsvOutput = Path.Combine(tsvDir, BLIB_FILE);
+            // Peaks stored in m/z order, as BiblioSpec stores them, whatever the library order.
+            foreach (var spectrum in new BlibLoader().Load(tsvOutput))
+            {
+                for (int i = 1; i < spectrum.Fragments.Count; i++)
+                    Assert.IsTrue(spectrum.Fragments[i - 1].Mz <= spectrum.Fragments[i].Mz, spectrum.ModifiedSequence);
+            }
 
-            string annotated = WriteSubsetLibraryBlib(Path.Combine(_testDir, @"subset-annotated.blib"), true);
+            string library = Path.Combine(_dataDir, LIBRARY_FILE);
+            string exported = Path.Combine(_testDir, @"subset-library.blib");
+            string log = RunOsprey(new[]
+            {
+                OspreyCommandArgs.ARG_LIBRARY.ArgumentText, library,
+                OspreyCommandArgs.ARG_EXPORT_LIBRARY.ArgumentText, exported
+            }, Verifier(false));
+            int libraryPrecursors = CountLibraryPrecursors(library);
+            StringAssert.Contains(log, CountText.Format(libraryPrecursors,
+                OspreyResources.Program_RunExportLibrary_Saved_1_library_precursor_to__1_,
+                OspreyResources.Program_RunExportLibrary_Saved__0_N0__library_precursors_to__1_,
+                exported));
+            Assert.AreEqual(libraryPrecursors, BlibComparer.CountRows(exported, @"RefSpectra"));
+            int libraryFragments = File.ReadLines(library).Count() - 1;
+            Assert.AreEqual(libraryFragments, BlibComparer.CountWhere(exported, BlibPeakAnnotations.TABLE_NAME, @"1"));
+
             string blibDir = CreateDir(@"blib-library");
-            RunAnalysis(blibDir, DataInputs(), annotated, Verifier(false));
-            string blibOutput = Path.Combine(blibDir, BLIB_FILE);
-            int blibPrecursors = BlibComparer.CountRows(blibOutput, @"RefSpectra");
-            Assert.IsTrue(blibPrecursors >= MIN_BLIB_LIBRARY_FRACTION * tsvPrecursors,
-                string.Format(@"{0} precursors from the annotated .blib, {1} from the .tsv", blibPrecursors, tsvPrecursors));
-            AssertRecoversFullRun(Path.Combine(_dataDir, MANIFEST_FILE), blibOutput, MIN_RECOVERED_FRACTION);
+            RunAnalysis(blibDir, DataInputs(), exported, Verifier(false));
+            AssertSameSearch(tsvOutput, Path.Combine(blibDir, BLIB_FILE));
 
-            string unannotated = WriteSubsetLibraryBlib(Path.Combine(_testDir, @"subset-unannotated.blib"), false);
+            string backDir = CreateDir(@"output-blib-library");
+            RunAnalysis(backDir, DataInputs(), tsvOutput, Verifier(false));
+            int tsvPrecursors = BlibComparer.CountRows(tsvOutput, @"RefSpectra");
+            int backPrecursors = BlibComparer.CountRows(Path.Combine(backDir, BLIB_FILE), @"RefSpectra");
+            Assert.IsTrue(backPrecursors >= MIN_BLIB_LIBRARY_FRACTION * tsvPrecursors,
+                string.Format(@"{0} precursors from the output .blib, {1} in it", backPrecursors, tsvPrecursors));
+
+            string unannotated = Path.Combine(_testDir, @"subset-unannotated.blib");
+            LibraryBlibWriter.Write(unannotated, new BlibLoader().Load(exported), exported, false);
             string output = RunExpectingRefusal(@"unannotated-blib", unannotated);
-            StringAssert.Contains(output, RefusalText(unannotated,
-                CountLibraryPrecursors(Path.Combine(_dataDir, LIBRARY_FILE))));
+            StringAssert.Contains(output, RefusalText(unannotated, libraryPrecursors));
         }
 
         /// <summary>
-        /// Write the committed subset library as a .blib: one spectrum per precursor, its library
-        /// fragments as peaks, and - when <paramref name="annotate"/> - one
-        /// <c>RefSpectraPeakAnnotations</c> row per peak naming its ion (<c>y5</c>, <c>b2</c>).
+        /// Two searches of one library in different formats report the same thing: every table,
+        /// peaks included, agrees at <see cref="TOLERANCE"/> but the library each names as its
+        /// source.
         /// </summary>
-        private string WriteSubsetLibraryBlib(string path, bool annotate)
+        private static void AssertSameSearch(string expectedBlib, string actualBlib)
         {
-            var lines = File.ReadAllLines(Path.Combine(_dataDir, LIBRARY_FILE));
-            var header = lines[0].Split('\t');
-            int Column(string name) => Array.IndexOf(header, name);
-            int modified = Column(@"ModifiedPeptide"), stripped = Column(@"StrippedPeptide"),
-                precursorMz = Column(@"PrecursorMz"), charge = Column(@"PrecursorCharge"),
-                rt = Column(@"Tr_recalibrated"), fragmentMz = Column(@"FragmentMz"),
-                intensity = Column(@"RelativeIntensity"), type = Column(@"FragmentType"),
-                number = Column(@"FragmentNumber"), fragmentCharge = Column(@"FragmentCharge"),
-                protein = Column(@"ProteinID");
-            var precursors = lines.Skip(1).Select(line => line.Split('\t'))
-                .GroupBy(fields => fields[modified] + @"|" + fields[charge]);
-            var annotations = new List<(long RefId, int PeakIndex, string Name, int Charge, double Mz)>();
-            using (var writer = new BlibWriter(path))
-            {
-                long fileId = writer.AddSourceFile(@"subset.mzML", LIBRARY_FILE, 0.01);
-                foreach (var precursor in precursors)
-                {
-                    var first = precursor.First();
-                    var fragments = precursor.OrderBy(f => double.Parse(f[fragmentMz], CultureInfo.InvariantCulture)).ToArray();
-                    var mzs = fragments.Select(f => double.Parse(f[fragmentMz], CultureInfo.InvariantCulture)).ToArray();
-                    double libraryRt = double.Parse(first[rt], CultureInfo.InvariantCulture);
-                    long refId = writer.AddSpectrum(first[stripped], ToBlibModifiedSequence(first[modified]),
-                        double.Parse(first[precursorMz], CultureInfo.InvariantCulture),
-                        int.Parse(first[charge], CultureInfo.InvariantCulture), libraryRt, libraryRt, libraryRt, mzs,
-                        fragments.Select(f => float.Parse(f[intensity], CultureInfo.InvariantCulture)).ToArray(),
-                        0.01, fileId, 1, 0.0);
-                    // The proteins too: without them no protein has 2 or more detections, and the
-                    // second pass has no precursor candidates to recompute.
-                    writer.AddProteinMapping(refId, first[protein].Split(';'));
-                    for (int i = 0; annotate && i < fragments.Length; i++)
-                    {
-                        annotations.Add((refId, i, fragments[i][type] + fragments[i][number],
-                            int.Parse(fragments[i][fragmentCharge], CultureInfo.InvariantCulture), mzs[i]));
-                    }
-                }
-                writer.FinalizeDatabase();
-            }
-            using (var conn = new SQLiteConnection(@"Data Source=" + path + @";Version=3;Pooling=False;"))
-            {
-                conn.Open();
-                using (var transaction = conn.BeginTransaction())
-                {
-                    foreach (var annotation in annotations)
-                    {
-                        using (var cmd = conn.CreateCommand())
-                        {
-                            cmd.CommandText = @"INSERT INTO RefSpectraPeakAnnotations
-                                (RefSpectraID, peakIndex, name, formula, inchiKey, otherKeys, charge, adduct, comment, mzTheoretical, mzObserved)
-                                VALUES (@ref, @peak, @name, '', '', '', @charge, '', '', @mz, @mz)";
-                            cmd.Parameters.AddWithValue(@"@ref", annotation.RefId);
-                            cmd.Parameters.AddWithValue(@"@peak", annotation.PeakIndex);
-                            cmd.Parameters.AddWithValue(@"@name", annotation.Name);
-                            cmd.Parameters.AddWithValue(@"@charge", annotation.Charge);
-                            cmd.Parameters.AddWithValue(@"@mz", annotation.Mz);
-                            cmd.ExecuteNonQuery();
-                        }
-                    }
-                    transaction.Commit();
-                }
-            }
-            return path;
-        }
-
-        /// <summary>
-        /// A DIA-NN modified peptide (<c>_AC[UniMod:4]K_</c>) in blib form (<c>AC[+57.021464]K</c>);
-        /// carbamidomethyl is the only modification in the subset library.
-        /// </summary>
-        private static string ToBlibModifiedSequence(string modifiedPeptide)
-        {
-            return modifiedPeptide.Trim('_').Replace(@"[UniMod:4]", @"[+57.021464]");
+            var differences = BlibComparer.Compare(expectedBlib, actualBlib, TOLERANCE, @"SpectrumSourceFiles");
+            Assert.AreEqual(0, differences.Count, string.Join(Environment.NewLine, differences.Take(20)));
         }
 
         private void ValidateStraightThrough(string workDir, string log)

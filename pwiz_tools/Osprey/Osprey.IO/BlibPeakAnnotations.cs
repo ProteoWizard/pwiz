@@ -128,11 +128,7 @@ namespace pwiz.Osprey.IO
                 double? mz = PeptideFragmentMass.CalculateFragmentMz(annotation.IonType, annotation.Ordinal,
                     annotation.Charge, sequence, modMasses,
                     annotation.HasNeutralLoss ? annotation.NeutralLossMass : null);
-                double peakMz = fragments[row.PeakIndex].Mz;
-                // A peak m/z that is not finite matches nothing: an infinite one would widen the
-                // ppm tolerance to infinity and pass any annotation.
-                if (!mz.HasValue || !double.IsFinite(peakMz) ||
-                    !(Math.Abs(mz.Value - peakMz) <= Math.Max(MZ_TOLERANCE_TH, peakMz * MZ_TOLERANCE_PPM * 1e-6)))
+                if (!mz.HasValue || !MatchesPeak(mz.Value, fragments[row.PeakIndex].Mz))
                 {
                     stats.NRejectedMz++;
                     continue;
@@ -158,6 +154,37 @@ namespace pwiz.Osprey.IO
             }
             if (any)
                 stats.NSpectraAnnotated++;
+        }
+
+        /// <summary>
+        /// The <c>name</c> column <see cref="BlibWriter"/> writes for a typed peak, in the grammar
+        /// <see cref="TryParseName"/> reads: <c>y5</c>, <c>b3-H2O</c>, <c>y7-44.9977</c>. The charge
+        /// goes in the <c>charge</c> column, not the name.
+        /// </summary>
+        public static string FormatName(FragmentAnnotation annotation)
+        {
+            string name = char.ToLowerInvariant(annotation.IonType.ToString()[0]) +
+                          annotation.Ordinal.ToString(CultureInfo.InvariantCulture);
+            switch (annotation.NeutralLoss)
+            {
+                case NeutralLossCode.None:
+                    return name;
+                case NeutralLossCode.Custom:
+                    return name + @"-" + annotation.CustomLossMass.ToString(@"R", CultureInfo.InvariantCulture);
+                default:
+                    return name + @"-" + annotation.NeutralLoss;
+            }
+        }
+
+        /// <summary>
+        /// Whether an ion m/z recomputed from the sequence names a peak at <paramref name="peakMz"/>:
+        /// within max(0.02 Th, 20 ppm). A peak m/z that is not finite matches nothing, since an
+        /// infinite one would widen the ppm tolerance to infinity and pass any annotation.
+        /// </summary>
+        public static bool MatchesPeak(double ionMz, double peakMz)
+        {
+            return double.IsFinite(peakMz) &&
+                   Math.Abs(ionMz - peakMz) <= Math.Max(MZ_TOLERANCE_TH, peakMz * MZ_TOLERANCE_PPM * 1e-6);
         }
 
         /// <summary>

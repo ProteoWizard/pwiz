@@ -71,6 +71,12 @@ namespace pwiz.Osprey.Test
             // The other ion types are read, so they are not counted as unreadable (Apply ignores them).
             AssertParsed(@"a2", 1, IonType.A, 2, 1, NeutralLossCode.None);
             AssertParsed(@"z3", 1, IonType.Z, 3, 1, NeutralLossCode.None);
+            // The names BlibWriter writes read back as the ion they were written from.
+            foreach (string name in new[] { @"y7", @"b3-H2O", @"y5-NH3", @"y9-H3PO4", @"b4-44.9977" })
+            {
+                Assert.IsTrue(BlibPeakAnnotations.TryParseName(name, 1, out var parsed), name);
+                Assert.AreEqual(name, BlibPeakAnnotations.FormatName(parsed));
+            }
             // "NaN" and "Infinity" parse as numbers, but no fragment loses either.
             foreach (string name in new[] { null, string.Empty, @"p", @"?", @"precursor", @"y", @"y0", @"y7-", @"y7-junk", @"b3x",
                          @"y7-NaN", @"y7-nan", @"y7-Infinity", @"b3--Infinity", @"y7^bad", @"y7^2foo", @"y7^" })
@@ -149,6 +155,100 @@ namespace pwiz.Osprey.Test
             AssertRejectionsAreCountedByCause();
             AssertPreferenceRule();
             AssertProbeFailuresFailClosed();
+        }
+
+        /// <summary>
+        /// A library entry written by <see cref="LibraryBlibWriter"/> reads back as the same entry:
+        /// peaks sorted by m/z with every b and y ion typed as it was (neutral losses and charge
+        /// included), stacked N-terminal modifications summed onto the first residue, a known
+        /// modification at its exact mass and an unknown one to four decimals, proteins and
+        /// retention time. An a ion and an untyped peak are written unannotated.
+        /// </summary>
+        [TestMethod]
+        public void TestLibraryBlibWriterRoundTrip()
+        {
+            const string sequence = @"MPEPCTIDEK";
+            const double methyl = 14.01565;
+            var modifications = new[]
+            {
+                new Modification { Position = 0, MassDelta = 42.010565 },
+                new Modification { Position = 0, MassDelta = 15.994915 },
+                new Modification { Position = 4, MassDelta = CARBAMIDOMETHYL },
+                new Modification { Position = 9, MassDelta = methyl },
+            };
+            var modMasses = PeptideFragmentMass.ModMassesByPosition(modifications);
+            var typed = new[]
+            {
+                Annotation(IonType.Y, 3, 1, NeutralLossCode.None, 0),
+                Annotation(IonType.B, 2, 1, NeutralLossCode.None, 0),
+                Annotation(IonType.Y, 5, 2, NeutralLossCode.None, 0),
+                Annotation(IonType.Y, 4, 1, NeutralLossCode.H2O, 0),
+                Annotation(IonType.B, 4, 1, NeutralLossCode.Custom, 44.9977),
+            };
+            var fragments = typed.Select((a, i) => new LibraryFragment
+            {
+                Mz = PeptideFragmentMass.CalculateFragmentMz(a.IonType, a.Ordinal, a.Charge, sequence, modMasses,
+                    a.HasNeutralLoss ? a.NeutralLossMass : null).Value,
+                RelativeIntensity = 1000f - i,
+                Annotation = a
+            }).Concat(new[]
+            {
+                new LibraryFragment { Mz = 650.5, RelativeIntensity = 5f, Annotation = Annotation(IonType.A, 2, 1, NeutralLossCode.None, 0) },
+                new LibraryFragment { Mz = 700.25, RelativeIntensity = 3f, Annotation = Annotation(IonType.Unknown, 0, 1, NeutralLossCode.None, 0) },
+            }).ToArray();
+            var entry = new LibraryEntry(7, sequence, @"_(UniMod:1)M(UniMod:35)PEPC(UniMod:4)TIDEK_", 2, 624.28, 12.5)
+            {
+                Modifications = modifications,
+                Fragments = fragments,
+                ProteinIds = new[] { @"P12345", @"Q67890" }
+            };
+
+            string path = Path.GetTempFileName();
+            try
+            {
+                Assert.AreEqual(1, LibraryBlibWriter.Write(path, new[] { entry }, @"library.tsv"));
+                Assert.AreEqual(typed.Length, BlibComparer.CountWhere(path, BlibPeakAnnotations.TABLE_NAME, @"mzTheoretical > 0"));
+                var read = new BlibLoader().Load(path).Single();
+                Assert.AreEqual(@"M[+58.0055]PEPC[+57.0215]TIDEK[+14.0157]", read.ModifiedSequence);
+                Assert.AreEqual(entry.PrecursorMz, read.PrecursorMz);
+                Assert.AreEqual(entry.Charge, read.Charge);
+                Assert.AreEqual(entry.RetentionTime, read.RetentionTime);
+                CollectionAssert.AreEqual(entry.ProteinIds.ToArray(), read.ProteinIds.ToArray());
+
+                var readMods = PeptideFragmentMass.ModMassesByPosition(read.Modifications);
+                Assert.AreEqual(3, readMods.Count);
+                Assert.AreEqual(modMasses[0], readMods[0], 5e-5);
+                Assert.AreEqual(CARBAMIDOMETHYL, readMods[4]);
+                Assert.AreEqual(methyl, readMods[9], 5e-5);
+
+                var sorted = fragments.OrderBy(f => f.Mz).ToArray();
+                CollectionAssert.AreEqual(sorted.Select(f => f.Mz).ToArray(), read.Fragments.Select(f => f.Mz).ToArray());
+                // The reader scales the base peak to 1, as a DIA-NN library already is.
+                float basePeak = fragments.Max(f => f.RelativeIntensity);
+                CollectionAssert.AreEqual(sorted.Select(f => f.RelativeIntensity / basePeak).ToArray(),
+                    read.Fragments.Select(f => f.RelativeIntensity).ToArray());
+                for (int i = 0; i < sorted.Length; i++)
+                {
+                    var expected = sorted[i].Annotation;
+                    var actual = read.Fragments[i].Annotation;
+                    if (expected.IonType == IonType.B || expected.IonType == IonType.Y)
+                    {
+                        AssertAnnotation(actual, expected.IonType, expected.Ordinal, expected.Charge, expected.NeutralLoss);
+                        Assert.AreEqual(expected.CustomLossMass, actual.CustomLossMass);
+                    }
+                    else
+                    {
+                        Assert.AreEqual(IonType.Unknown, actual.IonType);
+                    }
+                }
+
+                LibraryBlibWriter.Write(path, new[] { entry }, @"library.tsv", false);
+                Assert.AreEqual(0, BlibComparer.CountWhere(path, BlibPeakAnnotations.TABLE_NAME, @"1"));
+            }
+            finally
+            {
+                TryDeleteFile(path);
+            }
         }
 
         /// <summary>
@@ -396,6 +496,14 @@ namespace pwiz.Osprey.Test
         {
             Assert.IsTrue(BlibPeakAnnotations.TryParseName(name, chargeColumn, out var annotation), name);
             AssertAnnotation(annotation, ionType, ordinal, charge, loss);
+        }
+
+        private static FragmentAnnotation Annotation(IonType ionType, byte ordinal, byte charge, NeutralLossCode loss, double customLoss)
+        {
+            return new FragmentAnnotation
+            {
+                IonType = ionType, Ordinal = ordinal, Charge = charge, NeutralLoss = loss, CustomLossMass = customLoss
+            };
         }
 
         private static void AssertAnnotation(FragmentAnnotation annotation, IonType ionType, byte ordinal, byte charge, NeutralLossCode loss)

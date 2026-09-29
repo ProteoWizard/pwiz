@@ -49,6 +49,12 @@ namespace pwiz.Osprey.Core
         public string OutputReport { get; set; }
 
         /// <summary>
+        /// Optional: write the loaded spectral library to this path as a .blib, with fragment ion
+        /// annotations, and exit without searching. No input files are needed.
+        /// </summary>
+        public string ExportLibraryBlib { get; set; }
+
+        /// <summary>
         /// Optional: write an FDRBench-compatible input TSV to this path. Includes every reported
         /// (compaction-surviving) target, i.e. the peptides actually written to the output, regardless
         /// of q-value, with the raw SVM discriminant as <c>score</c>. The level
