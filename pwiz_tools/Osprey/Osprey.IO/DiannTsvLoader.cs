@@ -48,15 +48,37 @@ namespace pwiz.Osprey.IO
         private const string UNIMOD_PREFIX = @"UniMod:";
 
         private readonly int _minFragments;
+        private readonly FragmentToleranceConfig _fragmentTolerance;
 
         public DiannTsvLoader() : this(DEFAULT_MIN_FRAGMENTS)
         {
         }
 
-        public DiannTsvLoader(int minFragments)
+        public DiannTsvLoader(int minFragments) : this(minFragments, null)
+        {
+        }
+
+        /// <summary>
+        /// A reader that also compares the fragment types the library's columns state with the
+        /// types Osprey computes from m/z within <paramref name="fragmentTolerance"/>, the
+        /// search's fragment tolerance (<see cref="TypeCheck"/>). The columns stay the typing
+        /// the search uses.
+        /// </summary>
+        public DiannTsvLoader(FragmentToleranceConfig fragmentTolerance) : this(DEFAULT_MIN_FRAGMENTS, fragmentTolerance)
+        {
+        }
+
+        public DiannTsvLoader(int minFragments, FragmentToleranceConfig fragmentTolerance)
         {
             _minFragments = minFragments;
+            _fragmentTolerance = fragmentTolerance;
         }
+
+        /// <summary>
+        /// The library's stated fragment types compared with Osprey's typing; empty until a load,
+        /// and always empty for a reader given no fragment tolerance.
+        /// </summary>
+        public FragmentTypeCheck TypeCheck { get; private set; } = new FragmentTypeCheck();
 
         /// <summary>
         /// Load library entries from a DIA-NN TSV file.
@@ -150,6 +172,7 @@ namespace pwiz.Osprey.IO
             // so output is unchanged.
             var entries = new List<LibraryEntry>(precursorMap.Count);
             var interner = new LibraryStringInterner();
+            TypeCheck = new FragmentTypeCheck();
             uint id = 0;
 
             // Phase 2. The byte progress above ends when the stream is exhausted, so without this
@@ -178,6 +201,8 @@ namespace pwiz.Osprey.IO
                     data.Charge, data.PrecursorMz, data.RetentionTime);
                 entry.Modifications = modifications;
                 entry.Fragments = data.Fragments.ToArray();
+                if (_fragmentTolerance != null)
+                    CheckStatedTypes(entry, _fragmentTolerance, TypeCheck);
                 entry.ProteinIds = interner.InternToArray(data.ProteinIds);
                 entry.GeneNames = interner.InternToArray(data.GeneNames);
                 entry.IsDecoy = data.IsDecoy;
@@ -189,6 +214,26 @@ namespace pwiz.Osprey.IO
             progress.Dispose();
             interner.LogSummary(logInfo);
             return entries;
+        }
+
+        /// <summary>
+        /// Add each fragment of <paramref name="entry"/> whose type the library's columns state
+        /// to <paramref name="check"/>, against the type Osprey computes for its m/z.
+        /// </summary>
+        private static void CheckStatedTypes(LibraryEntry entry, FragmentToleranceConfig tolerance,
+            FragmentTypeCheck check)
+        {
+            var computed = FragmentTyping.Compute(entry.Sequence, entry.Modifications, entry.Charge,
+                entry.Fragments, tolerance);
+            var stated = new FragmentAnnotation[1];
+            for (int i = 0; i < entry.Fragments.Count; i++)
+            {
+                var fragment = entry.Fragments[i];
+                if (fragment.Annotation.IonType == IonType.Unknown)
+                    continue;
+                stated[0] = fragment.Annotation;
+                check.AddPeak(stated, false, computed[i], entry.Sequence, entry.Charge, fragment.Mz);
+            }
         }
 
         /// <summary>

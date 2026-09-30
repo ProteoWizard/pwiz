@@ -44,9 +44,50 @@ namespace pwiz.Osprey.IO
         private const double DEAMIDATION_MASS = 0.984016;
         private const double TMT6PLEX_MASS = 229.162932;
         private const double MOD_TOLERANCE = 0.01;
+        private const double CYSTEINE_RESIDUE_MASS = 103.009185;
 
         /// <summary>
-        /// Load library entries from a blib file.
+        /// Version of what this reader makes of a blib. 2: every peak is typed from m/z
+        /// (<see cref="FragmentTyping"/>), where version 1 left every peak Unknown, and
+        /// modification text is read residue- and precision-aware
+        /// (<see cref="IdentifyModification"/>). Every blib reads differently under it, so the
+        /// <c>.libcache</c> composition term and the task-key term both carry it for every blib,
+        /// and a change to either moves both by editing this one value.
+        /// </summary>
+        public const string READER_VERSION = @"2";
+
+        private readonly FragmentToleranceConfig _fragmentTolerance;
+
+        /// <summary>
+        /// A reader that types each spectrum's peaks within <paramref name="fragmentTolerance"/>,
+        /// the search's fragment tolerance, so a peak it calls y6 is one chromatogram extraction
+        /// would count as y6.
+        /// </summary>
+        public BlibLoader(FragmentToleranceConfig fragmentTolerance)
+        {
+            _fragmentTolerance = fragmentTolerance;
+        }
+
+        /// <summary>What the library's own annotation rows state, compared with the typing; empty until a load.</summary>
+        public FragmentTypeCheck TypeCheck { get; private set; } = new FragmentTypeCheck();
+
+        /// <summary>
+        /// The <c>.libcache</c> composition term of a blib read by this reader: its version and
+        /// the tolerance it types within, which the cached fragment types carry.
+        /// </summary>
+        public static string CacheTerm(FragmentToleranceConfig fragmentTolerance)
+        {
+            // ReSharper disable LocalizableElement
+            return string.Format(CultureInfo.InvariantCulture, "blib_reader:{0},{1},{2}\n",
+                READER_VERSION, fragmentTolerance.Tolerance, fragmentTolerance.Unit);
+            // ReSharper restore LocalizableElement
+        }
+
+        /// <summary>
+        /// Load library entries from a blib file, every peak typed from m/z
+        /// (<see cref="FragmentTyping"/>). When the blib has <c>RefSpectraPeakAnnotations</c>
+        /// rows, what they state is compared with the typing in <see cref="TypeCheck"/>; they
+        /// never type a peak.
         /// </summary>
         public List<LibraryEntry> Load(string path, Action<string> logInfo = null)
         {
@@ -64,9 +105,15 @@ namespace pwiz.Osprey.IO
                 // spectra and the protein-mapping pass; only object identity
                 // changes, so output is unchanged.
                 var interner = new LibraryStringInterner();
-                var entries = LoadSpectra(conn, interner);
+                var typingStats = new FragmentTypingStats();
+                TypeCheck = new FragmentTypeCheck();
+                var entries = LoadSpectra(conn, interner, typingStats, HasRows(conn, BlibPeakAnnotations.TABLE_NAME));
                 LoadProteinMappings(conn, entries, interner);
                 interner.LogSummary(logInfo);
+                logInfo?.Invoke(string.Format(
+                    OspreyIOResources.BlibLoader_Load_Typed__0_N0__of__1_N0__library_peaks_as_b_or_y_ions_within__2___3_,
+                    typingStats.Typed, typingStats.Typed + typingStats.Untyped,
+                    FormatTolerance(_fragmentTolerance), typingStats.Ties));
                 return entries;
             }
         }
@@ -84,10 +131,37 @@ namespace pwiz.Osprey.IO
             }
         }
 
-        private List<LibraryEntry> LoadSpectra(SQLiteConnection conn, LibraryStringInterner interner)
+        /// <summary>True when the table exists and holds at least one row.</summary>
+        private static bool HasRows(SQLiteConnection conn, string tableName)
+        {
+            if (!TableExists(conn, tableName))
+                return false;
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = string.Format(@"SELECT EXISTS (SELECT 1 FROM [{0}])", tableName);
+                return Convert.ToInt64(cmd.ExecuteScalar() ?? 0L) != 0;
+            }
+        }
+
+        /// <summary>The tolerance as a user reads it: <c>0.5 Th</c>, <c>10 ppm</c>.</summary>
+        private static string FormatTolerance(FragmentToleranceConfig tolerance)
+        {
+            return string.Format(CultureInfo.InvariantCulture, @"{0} {1}", tolerance.Tolerance,
+                tolerance.Unit == ToleranceUnit.Ppm ? @"ppm" : @"Th");
+        }
+
+        /// <summary>
+        /// Reads every spectrum with its peaks, typing them as they are read. When
+        /// <paramref name="hasAnnotations"/>, a second cursor over <c>RefSpectraPeakAnnotations</c>,
+        /// in the same RefSpectraID order, is merge-joined with the spectra, so each spectrum's
+        /// rows are compared with its typing (<see cref="BlibPeakAnnotations.Check"/>).
+        /// </summary>
+        private List<LibraryEntry> LoadSpectra(SQLiteConnection conn, LibraryStringInterner interner,
+            FragmentTypingStats typingStats, bool hasAnnotations)
         {
             var entries = new List<LibraryEntry>();
 
+            using (var annotations = hasAnnotations ? new AnnotationCursor(conn) : null)
             using (var cmd = conn.CreateCommand())
             {
                 cmd.CommandText = @"
@@ -133,6 +207,17 @@ namespace pwiz.Osprey.IO
                             fragments = DecodeBlibPeaks(peakMzBlob, peakIntBlob, numPeaks).ToArray();
                         else
                             fragments = Array.Empty<LibraryFragment>();
+                        FragmentTyping.TypeFragments(peptideSeq, modifications, precursorCharge, fragments,
+                            _fragmentTolerance, typingStats);
+                        if (annotations != null)
+                        {
+                            var rows = annotations.RowsFor(id);
+                            if (rows.Count > 0)
+                            {
+                                BlibPeakAnnotations.Check(peptideSeq, modifications, precursorCharge, fragments,
+                                    _fragmentTolerance, rows, TypeCheck);
+                            }
+                        }
 
                         var entry = new LibraryEntry((uint)id,
                             interner.Intern(peptideSeq), interner.Intern(peptideModSeq),
@@ -223,6 +308,7 @@ namespace pwiz.Osprey.IO
         {
             var modifications = new List<Modification>();
             int position = 0;
+            char residue = '\0';
             int i = 0;
 
             while (i < modSeq.Length)
@@ -231,6 +317,7 @@ namespace pwiz.Osprey.IO
 
                 if (char.IsLetter(c))
                 {
+                    residue = c;
                     position++;
                     i++;
                 }
@@ -252,7 +339,9 @@ namespace pwiz.Osprey.IO
                         double massDelta;
                         int? unimodId;
                         string name;
-                        IdentifyModification(mass, modPosition == 0, out massDelta, out unimodId, out name);
+                        bool isSigned = massStr.Length > 0 && (massStr[0] == '+' || massStr[0] == '-');
+                        IdentifyModification(mass, modPosition == 0, residue, isSigned,
+                            PrintedDecimals(toParse), out massDelta, out unimodId, out name);
 
                         modifications.Add(new Modification
                         {
@@ -275,46 +364,67 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Identify a modification by its mass. Recognizes common modifications and
         /// handles both mass shift and absolute mass formats.
+        ///
+        /// <para>An UNSIGNED value between 100 and 200 Da on cysteine is taken as the absolute
+        /// mass of the modified residue (<c>C[160.0]</c>). A signed value, or one on any other
+        /// residue, is a mass shift: GlyGly on lysine is <c>K[+114.042927]</c> and
+        /// N-ethylmaleimide on cysteine <c>C[+125.047679]</c>, and reading either as an
+        /// absolute cysteine mass left an 11 or 22 Da shift on every fragment that carries
+        /// it.</para>
+        ///
+        /// <para>A value snaps to a known modification within half its last printed digit, and
+        /// never within less than <see cref="MOD_TOLERANCE"/>: BiblioSpec prints one decimal
+        /// (<c>C[+57.0]</c>, <c>[+42.0]</c>, <c>S[+80.0]</c>), which is the known mass rounded,
+        /// so the fragments get the known mass rather than one 0.02-0.03 Da off it. Text with
+        /// two or more decimals keeps the 0.01 Da snap it always had.</para>
         /// </summary>
-        internal static void IdentifyModification(double mass, bool isNterm,
-            out double massDelta, out int? unimodId, out string name)
+        /// <param name="mass">The bracket value.</param>
+        /// <param name="isNterm">The modification is on the first residue or before it.</param>
+        /// <param name="residue">The residue the bracket follows, or '\0' before the first.</param>
+        /// <param name="isSigned">The text carries an explicit '+' or '-'.</param>
+        /// <param name="decimals">Digits printed after the decimal point.</param>
+        /// <param name="massDelta">The mass shift: the known modification's mass when snapped.</param>
+        /// <param name="unimodId">The known modification's UniMod id, or null.</param>
+        /// <param name="name">The known modification's name, or null.</param>
+        internal static void IdentifyModification(double mass, bool isNterm, char residue, bool isSigned,
+            int decimals, out double massDelta, out int? unimodId, out string name)
         {
-            // Check if this is likely an absolute mass (for Cys: subtract residue mass)
             double delta = mass;
-            if (mass > 100.0 && mass < 200.0)
-                delta = mass - 103.009185; // Cys residue mass
+            if (residue == 'C' && !isSigned && mass > 100.0 && mass < 200.0)
+                delta = mass - CYSTEINE_RESIDUE_MASS;
+            double tolerance = Math.Max(MOD_TOLERANCE, 0.5 * Math.Pow(10, -decimals));
 
-            if (Math.Abs(delta - CARBAMIDOMETHYL_MASS) < MOD_TOLERANCE)
+            if (Math.Abs(delta - CARBAMIDOMETHYL_MASS) < tolerance)
             {
                 massDelta = CARBAMIDOMETHYL_MASS;
                 unimodId = 4;
                 name = @"Carbamidomethyl";
             }
-            else if (Math.Abs(delta - OXIDATION_MASS) < MOD_TOLERANCE)
+            else if (Math.Abs(delta - OXIDATION_MASS) < tolerance)
             {
                 massDelta = OXIDATION_MASS;
                 unimodId = 35;
                 name = @"Oxidation";
             }
-            else if (Math.Abs(delta - ACETYL_MASS) < MOD_TOLERANCE && isNterm)
+            else if (Math.Abs(delta - ACETYL_MASS) < tolerance && isNterm)
             {
                 massDelta = ACETYL_MASS;
                 unimodId = 1;
                 name = @"Acetyl";
             }
-            else if (Math.Abs(delta - PHOSPHO_MASS) < MOD_TOLERANCE)
+            else if (Math.Abs(delta - PHOSPHO_MASS) < tolerance)
             {
                 massDelta = PHOSPHO_MASS;
                 unimodId = 21;
                 name = @"Phospho";
             }
-            else if (Math.Abs(delta - DEAMIDATION_MASS) < MOD_TOLERANCE)
+            else if (Math.Abs(delta - DEAMIDATION_MASS) < tolerance)
             {
                 massDelta = DEAMIDATION_MASS;
                 unimodId = 7;
                 name = @"Deamidated";
             }
-            else if (Math.Abs(delta - TMT6PLEX_MASS) < MOD_TOLERANCE)
+            else if (Math.Abs(delta - TMT6PLEX_MASS) < tolerance)
             {
                 massDelta = TMT6PLEX_MASS;
                 unimodId = 737;
@@ -326,6 +436,19 @@ namespace pwiz.Osprey.IO
                 unimodId = null;
                 name = null;
             }
+        }
+
+        /// <summary>
+        /// Digits printed after the decimal point of a bracket value, or
+        /// <see cref="int.MaxValue"/> for exponent notation, whose precision the text does not
+        /// show.
+        /// </summary>
+        internal static int PrintedDecimals(string number)
+        {
+            if (number.IndexOfAny(new[] { 'e', 'E' }) >= 0)
+                return int.MaxValue;
+            int dot = number.IndexOf('.');
+            return dot < 0 ? 0 : number.Length - dot - 1;
         }
 
         /// <summary>
@@ -503,6 +626,88 @@ namespace pwiz.Osprey.IO
             // Fall through - use raw blobs
             mzData = mzBlob;
             intData = intensityBlob;
+        }
+
+        /// <summary>
+        /// A forward-only cursor over <c>RefSpectraPeakAnnotations</c> in RefSpectraID order,
+        /// advanced in step with the spectra reader so only one spectrum's rows are held.
+        /// </summary>
+        private sealed class AnnotationCursor : IDisposable
+        {
+            private readonly SQLiteCommand _command;
+            private readonly SQLiteDataReader _reader;
+            private readonly List<BlibAnnotationRow> _rows = new List<BlibAnnotationRow>();
+            private bool _hasRow;
+
+            public AnnotationCursor(SQLiteConnection conn)
+            {
+                // Ordered by RefSpectraID, rowid - not peakIndex as well: BiblioSpec's index on
+                // RefSpectraID serves this order with no sort, where adding peakIndex made SQLite
+                // sort each spectrum's rows. The check groups rows by peak itself; rowid rather
+                // than id, because a table written without the id column (Skyline's schema
+                // comment shows none) reads the same. The CASE columns hand back only integers,
+                // so a malformed row - a NULL or text RefSpectraID, a text peakIndex or charge -
+                // is passed over or counted as unreadable instead of failing the load. The rows
+                // only feed the comparison, which a malformed table must not stop.
+                _command = conn.CreateCommand();
+                try
+                {
+                    _command.CommandText = @"
+                        SELECT RefSpectraID,
+                               CASE typeof(peakIndex) WHEN 'integer' THEN peakIndex ELSE -1 END,
+                               CAST(name AS TEXT),
+                               CASE typeof(charge) WHEN 'integer' THEN charge ELSE 0 END
+                        FROM RefSpectraPeakAnnotations
+                        WHERE typeof(RefSpectraID) = 'integer'
+                        ORDER BY RefSpectraID, rowid";
+                    _reader = _command.ExecuteReader();
+                    _hasRow = _reader.Read();
+                }
+                catch (Exception)
+                {
+                    _reader?.Dispose();
+                    _command.Dispose();
+                    throw;
+                }
+            }
+
+            /// <summary>
+            /// The rows for <paramref name="refSpectraId"/>, which must not be smaller than the
+            /// id of the previous call. The list is reused by the next call.
+            /// </summary>
+            public List<BlibAnnotationRow> RowsFor(long refSpectraId)
+            {
+                _rows.Clear();
+                while (_hasRow && _reader.GetInt64(0) < refSpectraId)
+                    _hasRow = _reader.Read();
+                while (_hasRow && _reader.GetInt64(0) == refSpectraId)
+                {
+                    _rows.Add(new BlibAnnotationRow
+                    {
+                        PeakIndex = ReadInt(1, -1),
+                        Name = _reader.IsDBNull(2) ? null : _reader.GetString(2),
+                        Charge = ReadInt(3, 0),
+                    });
+                    _hasRow = _reader.Read();
+                }
+                return _rows;
+            }
+
+            public void Dispose()
+            {
+                _reader.Dispose();
+                _command.Dispose();
+            }
+
+            /// <summary>
+            /// An integer column of the current row, or <paramref name="fallback"/> for a value
+            /// outside the int range, which no peak index or charge can take.
+            /// </summary>
+            private int ReadInt(int ordinal, int fallback)
+            {
+                long value = _reader.GetInt64(ordinal);
+                return value >= int.MinValue && value <= int.MaxValue ? (int)value : fallback;
+            }
         }
 
         #endregion

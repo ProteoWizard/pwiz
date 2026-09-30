@@ -77,12 +77,14 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// Every difference between the two libraries, or an empty list when they agree at
-        /// <paramref name="tolerance"/>. Each entry names the table and the key it concerns.
+        /// <paramref name="tolerance"/>, leaving out <paramref name="ignoredTables"/>. Each entry
+        /// names the table and the key it concerns.
         /// </summary>
-        public static IList<string> Compare(string expectedBlib, string actualBlib, double tolerance)
+        public static IList<string> Compare(string expectedBlib, string actualBlib, double tolerance,
+            params string[] ignoredTables)
         {
             var differences = new List<string>();
-            foreach (var projection in PROJECTIONS)
+            foreach (var projection in PROJECTIONS.Where(p => !ignoredTables.Contains(p.Table)))
             {
                 var expected = ReadRows(expectedBlib, projection);
                 var actual = ReadRows(actualBlib, projection);

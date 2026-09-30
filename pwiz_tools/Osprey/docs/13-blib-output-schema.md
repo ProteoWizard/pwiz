@@ -61,9 +61,16 @@ Stage 7 blib emission runs entirely inside `BlibOutputWriter.Write(...)` (BlibOu
 
 The path stored is a bare `<stem>.mzML` filename, not a computed relative path with `../` segments.
 
-### Step 4 — Parallel fragment pre-compression
+### Step 4 — Parallel spectrum preparation
 
-`PrecompressSpectra` (BlibOutputWriter.cs:121-153) pulls the **library theoretical fragments** (b/y ions) for each passing precursor from the in-memory library (`libraryById[entry.EntryId].Fragments`), packs m/z as little-endian `f64` and intensity as little-endian `f32`, and zlib-compresses them in parallel via `BlibWriter.CompressMzs` / `CompressIntensities` (static, thread-safe). These are the library predicted fragments, **not** observed DIA peaks — Skyline uses them to build XICs for the correct transitions. The compressed blobs are held per-index so the sequential emit loop stays deterministic.
+`PrepareSpectra` (BlibOutputWriter.cs) builds a `BlibSpectrum` in parallel for each passing precursor from its in-memory library entry (`libraryById[entry.EntryId]`). `BlibSpectrum.FromLibraryEntry` (Osprey.IO/BlibSpectrum.cs) is the one place a library entry becomes blib rows, shared with `--export-library` (`LibraryBlibWriter`):
+
+- the **library theoretical fragments**, **sorted by m/z** (as BiblioSpec stores them; Skyline's `ReadPeaks` keeps the stored order), packed as little-endian `f64` m/z and `f32` intensity and zlib-compressed via `BlibWriter.CompressMzs` / `CompressIntensities`. These are the library predicted fragments, **not** observed DIA peaks — Skyline uses them to build XICs for the correct transitions;
+- the modified sequence, built from the entry's `Modifications` (signed masses of at most four decimals with trailing zeros dropped, so a mass known only to one decimal keeps that precision for Skyline's matching; an N-terminal modification on the first residue; modifications at one residue summed). An entry with a modification its loader could not resolve keeps its own text, so distinct precursors never share a key;
+- one `Modifications` row per modified residue, and the protein accessions;
+- no `RefSpectraPeakAnnotations` rows: the table stays empty, as BiblioSpec leaves it (below).
+
+The prepared spectra are held per-index so the sequential emit loop stays deterministic.
 
 Compression detail (BlibWriter.cs:980-1008): Osprey uses **DotNetZip `Ionic.Zlib` at level 6** — the same library and level as Skyline's `pwiz.Skyline.Util.Extensions.UtilDB.Compress` — rather than `System.IO.Compression.DeflateStream`, which emits a subtly different byte stream on small inputs and would break byte parity with both Rust (`flate2` stock-zlib backend) and Skyline's `BlibData`. If the compressed output is not smaller than the raw bytes, the raw bytes are stored (BlibWriter.cs:1005-1007); the reader detects this by comparing blob length to the expected uncompressed size.
 
@@ -71,11 +78,11 @@ Compression detail (BlibWriter.cs:980-1008): Osprey uses **DotNetZip `Ionic.Zlib
 
 `EmitSpectrumRows` (BlibOutputWriter.cs:159-260) iterates the best-per-precursor entries in order. For each:
 
-- **`AddSpectrumPrecompressed`** (BlibWriter.cs:311) inserts the `RefSpectra` row and its `RefSpectraPeaks` blob row. Before insert it runs `StripFlankingChars` (removes `_`, `.`, `-`, and `K.PEPTIDE.R`-style flanks, bracket-aware; BlibWriter.cs:635) and `ConvertUnimodToMass` (rewrites `[UniMod:4]` → `[+57.0215]` using the built-in `UNIMOD_MASSES` table, BlibWriter.cs:653, 46-65). Fixed column values: `prevAA`/`nextAA = '-'`, `ionMobility`/`ccs`/`highEnergyOffset = 0.0`, `ionMobilityType = 0`, `moleculeName`/`chemicalFormula`/`precursorAdduct`/`inchiKey`/`otherKeys = ''` (empty strings, BlibWriter.cs:127-131).
+- **`AddSpectrum(BlibSpectrum, ...)`** (BlibWriter.cs) inserts the `RefSpectra` row and its `RefSpectraPeaks` blob row through `AddSpectrumPrecompressed`, then the spectrum's `Modifications` and protein rows. Fixed column values: `prevAA`/`nextAA = '-'`, `ionMobility`/`ccs`/`highEnergyOffset = 0.0`, `ionMobilityType = 0`, `moleculeName`/`chemicalFormula`/`precursorAdduct`/`inchiKey`/`otherKeys = ''` (empty strings, BlibWriter.cs:127-131).
   - `retentionTime`/`startTime`/`endTime` = the cross-charge **shared** apex/start/end if the peptide was detected at multiple charges in this file (`sharedBounds`, BlibOutputWriter.cs:208-218), else the entry's own boundaries.
   - `copies = nRunsDetected` (count of runs this precursor was detected in, BlibOutputWriter.cs:198-204).
   - `score = scoreQvalue`, the **experiment-precursor q-value** (min across observations, `bestExpPrecursorQ`, BlibOutputWriter.cs:190-193). This is a raw q-value (lower = better), consistent with score type 19 being a "probability the ID is incorrect". `scoreType = 19`.
-- **`AddModifications`** (BlibWriter.cs:399): one `Modifications` row per mod, `position` converted from internal **0-based to 1-based** (`mod.Position + 1`, BlibWriter.cs:403), `mass = MassDelta`. Verified by `Osprey.Test/IOTest.cs:107` (`TestBlibModifications1Based`).
+- **`AddModifications`** (BlibWriter.cs): one `Modifications` row per modified residue, `position` converted from internal **0-based to 1-based** (`mod.Position + 1`), `mass` the summed mass at that residue. Verified by `Osprey.Test/IOTest.cs` (`TestBlibModifications1Based`).
 - **`AddProteinMapping`** (BlibWriter.cs:414): de-duplicates accessions via `_proteinCache`, inserting `Proteins` + `RefSpectraProteins` rows.
 - **`WriteRetentionTimes`** (see Step 6).
 - **Osprey extension rows** (BlibOutputWriter.cs:247-258): `AddPeakBoundaries` (best-run start/end/apex + `IntegratedArea = entry.BoundsArea`, `ApexIntensity = 0.0` placeholder), `AddRunScores` (`RunQValue = EffectiveRunQvalue(Both)`, `DiscriminantScore`/`PosteriorErrorProb = 0.0` placeholders), `AddExperimentScores` (`ExperimentQValue = scoreQvalue`, `NRunsDetected`, `NRunsSearched = perFileEntries.Count`).
@@ -105,7 +112,78 @@ The C# adds a **fallback the Rust doc does not describe**: if *no* run passes ru
 
 ## Reading back (`BlibLoader.cs`)
 
-`BlibLoader.Load` (BlibLoader.cs:51) reads `RefSpectra` + `RefSpectraPeaks` (`LoadSpectra`) and `RefSpectraProteins`/`Proteins` (`LoadProteinMappings`). Peak blobs are decoded by `DecodeBlibPeaks` / `DecompressPeakBlobs` (BlibLoader.cs:320, 389), which try raw-first then zlib (`TryZlibDecompress` skips the 2-byte zlib header and inflates with `DeflateStream`, BlibLoader.cs:293), tolerate f32 or f64 intensities, and normalize intensity to the max. Modifications are re-parsed from the `peptideModSeq` string (not the `Modifications` table) by `ParseBlibModifications` + `IdentifyModification` (BlibLoader.cs:181, 238), which recognizes common mods by mass within `MOD_TOLERANCE = 0.01` and handles both mass-shift (`[+57.0]`) and absolute-mass (`[160.0]`) notation.
+`BlibLoader.Load` (BlibLoader.cs:51) reads `RefSpectra` + `RefSpectraPeaks` (`LoadSpectra`) and `RefSpectraProteins`/`Proteins` (`LoadProteinMappings`). Peak blobs are decoded by `DecodeBlibPeaks` / `DecompressPeakBlobs` (BlibLoader.cs:320, 389), which try raw-first then zlib (`TryZlibDecompress` skips the 2-byte zlib header and inflates with `DeflateStream`, BlibLoader.cs:293), tolerate f32 or f64 intensities, and normalize intensity to the max. Modifications are re-parsed from the `peptideModSeq` string (not the `Modifications` table) by `ParseBlibModifications` + `IdentifyModification`, which recognize common mods by mass within half the last printed digit (at least `MOD_TOLERANCE = 0.01`) and handle both mass-shift (`[+57.0]`) and absolute-mass (`C[160.0]`) notation; see "Modification masses from `peptideModSeq`" below.
+
+### Fragment typing, computed from m/z
+
+A blib states no fragment ion types that Osprey uses. `LoadSpectra` types every spectrum's
+peaks as it reads them (`Osprey.Core/FragmentTyping.cs`), as Skyline types a peptide library's
+peaks for itself:
+
+- **Candidates:** the primary b and y ions of `FragmentLadder` - fragment charge 1 to
+  min(precursor charge, 2), no neutral losses - with m/z from
+  `PeptideFragmentMass.CalculateFragmentMz`, stacked modifications included.
+- **Tolerance:** the search's fragment tolerance (`--fragment-tolerance`; 0.5 Th under
+  `--resolution unit`, ppm for HRAM), the tolerance chromatogram extraction uses, so a peak typed
+  y6 is one extraction counts as y6. Typing runs once per library, before any run's MS2
+  calibration narrows extraction to |mean| + 3 SD, so it types within the configured tolerance,
+  the upper bound of what extraction uses.
+- **Nearest wins;** a peak with two or more candidates equally near (within 0.001 Th - isobars
+  such as `b2` and `b4^2` of `IQQLTEEIGR`) stays Unknown rather than guessing, as does a peak no
+  candidate reaches. Decoy generation copies an Unknown peak unchanged.
+- **Logged:** one line with the peaks typed, of all peaks, and the ties.
+- **Resume and cache safety:** every blib search adds `;blibreader=2` to every task validity key,
+  and the `.libcache` composition carries `blib_reader:2` with the fragment tolerance the cached
+  types were computed within ([14](14-intermediate-files.md)). Both carry
+  `BlibLoader.READER_VERSION`, which also covers the modification parsing below.
+
+### Library annotations are compared, never used
+
+When a blib's `RefSpectraPeakAnnotations` table has rows, `LoadSpectra` merge-joins it with the
+spectra cursor (both ordered by `RefSpectraID`; rows then by `rowid`, so a table written without
+the `id` column reads the same) and compares what the rows state with the typing
+(`BlibPeakAnnotations.Check`, `FragmentTypeCheck`). The table exists for small molecules, which
+have no fragmentation model; for peptides Skyline ignores it, and so does Osprey's typing.
+
+- **Grammar of `name`:** `<ion><ordinal>[-<loss>]`, ion `a/b/c/x/y/z` in any case, loss `H2O`,
+  `NH3`, `H3PO4` or a finite decimal mass (`y7`, `b3`, `y7-H2O`, `y5-97.9769`). A decimal loss
+  within half its last printed digit of a known loss (at least 0.005 Da), or an integer loss equal
+  to its nominal mass, snaps to it. A NIST-style `/` tail and anything after whitespace are
+  ignored. The fragment charge is the `charge` column, or when that is 0 a `^2`, `++` or `+2`
+  suffix.
+- **Per peak:** *agree* when the rows name a primary b or y ion Osprey computes; *isobaric* when
+  they name one of the ions Osprey could not tell apart; *differ* otherwise; *outside the model*
+  when the rows state only a loss, an a/c/x/z ion, a charge above 2, or an unreadable name.
+- **Reported:** one line naming the library, with counts and the denominator - a warning when a
+  peak differs, else information - and the first differing peaks under `--verbose`. A DIA-NN TSV
+  gets the same comparison of its type columns, which stay the typing its search uses.
+- **Never fatal:** the rows type nothing, so a malformed row - a non-integer `RefSpectraID` or
+  `peakIndex` - is passed over.
+
+### Modification masses from `peptideModSeq`
+
+`ParseBlibModifications` reads the bracket values of `peptideModSeq` (`PEPC[+57.021464]TIDE`)
+and snaps each to a known modification (carbamidomethyl, oxidation, N-terminal acetyl,
+phospho, deamidation, TMT6plex):
+
+- A value snaps within half its last printed digit, and never within less than 0.01 Da, so
+  BiblioSpec's one-decimal text (`C[+57.0]`, `[+42.0]`, `S[+80.0]`) gets the exact known mass.
+- An unsigned value between 100 and 200 is read as an absolute residue mass only on C
+  (`C[160.03]` becomes carbamidomethyl); on any other residue, or signed, it is a mass shift,
+  so `K[+114.042927]` (GlyGly) keeps 114.043.
+- An N-terminal modification and a modification of the first residue both sit at position 0,
+  and their masses add in every b ion.
+
+The modification parsing is part of `BlibLoader.READER_VERSION`, so the `;blibreader=2` key term and
+the `blib_reader:2` cache term cover it for every blib.
+
+### The annotation table Osprey writes
+
+Osprey writes `RefSpectraPeakAnnotations` empty, as BiblioSpec's `BlibBuild` does: a reader
+computes peptide fragment types from m/z, as Skyline and Osprey do. Skyline reads the table from
+every blib it opens (`BiblioSpecLite.ReadPeakAnnotations`), asserting that `mzObserved` equals
+the peak's m/z (within 1e-7) and reading every text column as a string, so a writer that does
+fill it must write `mzObserved` as the peak's m/z exactly and empty strings rather than NULL.
 
 ---
 

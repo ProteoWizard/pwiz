@@ -90,6 +90,16 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Typed {0:N0} of {1:N0} library peaks as b or y ions within {2} ({3:N0} left untyped by a tie between two ions).
+        /// </summary>
+        public static string BlibLoader_Load_Typed__0_N0__of__1_N0__library_peaks_as_b_or_y_ions_within__2___3_ {
+            get {
+                return ResourceManager.GetString("BlibLoader_Load_Typed__0_N0__of__1_N0__library_peaks_as_b_or_y_ions_within__2___3" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Library protein accessions carry the per-peptide &apos;_pepNNNNN&apos; suffix that Carafe adds (e.g. &apos;{2}&apos; -&gt; &apos;{3}&apos;); removing it maps {0:N0} accessions to {1:N0} proteins. Without this, every peptide would count as its own protein..
         /// </summary>
         public static string CarafeProteinIdNormalizer_Normalize_Library_protein_accessions_carry_the_per_peptide___pepNNNNN__suffix_that_Carafe_adds__e_g_ {
@@ -188,6 +198,44 @@ namespace pwiz.Osprey.IO {
             get {
                 return ResourceManager.GetString("DiannTsvLoader_ToException__0__library_lines_have_errors__Fix_the_library_and_loa" +
                         "d_it_again_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}, charge {1}, peak m/z {2:F4}: the library says {3}, Osprey computes {4}.
+        /// </summary>
+        public static string FragmentTypeCheck_AddPeak__0___charge__1___peak_m_z__2_F4___the_library_says__3___Osprey_computes__4_ {
+            get {
+                return ResourceManager.GetString("FragmentTypeCheck_AddPeak__0___charge__1___peak_m_z__2_F4___the_library_says__3__" +
+                        "_Osprey_computes__4_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to no ion.
+        /// </summary>
+        public static string FragmentTypeCheck_AddPeak_no_ion {
+            get {
+                return ResourceManager.GetString("FragmentTypeCheck_AddPeak_no_ion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment types in {0}: Osprey&apos;s computed types agree with {1:N0} of {2:N0} peaks the library types as a b or y ion and differ on {3:N0}; {5:N0} name one of several ions at the same m/z, which Osprey leaves untyped; {4:N0} more peaks are typed outside what Osprey computes (neutral losses, other ion types, fragment charge above 2, or unreadable).
+        /// </summary>
+        public static string FragmentTypeCheck_Summary_Fragment_types_in__0___Osprey_s_computed_types_agree_with__1_N0__of__2_N0__peaks {
+            get {
+                return ResourceManager.GetString("FragmentTypeCheck_Summary_Fragment_types_in__0___Osprey_s_computed_types_agree_wi" +
+                        "th__1_N0__of__2_N0__peaks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Writing {0:N0} library precursors to {1}.
+        /// </summary>
+        public static string LibraryBlibWriter_Write_Writing__0__library_precursors_to__1_ {
+            get {
+                return ResourceManager.GetString("LibraryBlibWriter_Write_Writing__0__library_precursors_to__1_", resourceCulture);
             }
         }
         

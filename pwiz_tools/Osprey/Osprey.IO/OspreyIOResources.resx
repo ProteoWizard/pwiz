@@ -97,6 +97,18 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="BlibLoader_Load_Typed__0_N0__of__1_N0__library_peaks_as_b_or_y_ions_within__2___3_" xml:space="preserve">
+    <value>Typed {0:N0} of {1:N0} library peaks as b or y ions within {2} ({3:N0} left untyped by a tie between two ions)</value>
+  </data>
+  <data name="FragmentTypeCheck_AddPeak__0___charge__1___peak_m_z__2_F4___the_library_says__3___Osprey_computes__4_" xml:space="preserve">
+    <value>{0}, charge {1}, peak m/z {2:F4}: the library says {3}, Osprey computes {4}</value>
+  </data>
+  <data name="FragmentTypeCheck_AddPeak_no_ion" xml:space="preserve">
+    <value>no ion</value>
+  </data>
+  <data name="FragmentTypeCheck_Summary_Fragment_types_in__0___Osprey_s_computed_types_agree_with__1_N0__of__2_N0__peaks" xml:space="preserve">
+    <value>Fragment types in {0}: Osprey's computed types agree with {1:N0} of {2:N0} peaks the library types as a b or y ion and differ on {3:N0}; {5:N0} name one of several ions at the same m/z, which Osprey leaves untyped; {4:N0} more peaks are typed outside what Osprey computes (neutral losses, other ion types, fragment charge above 2, or unreadable)</value>
+  </data>
   <data name="BlibLoader_DecodeBlibPeaks_Invalid_peak_intensity_blob_size__expected__0__or__1__bytes__got__2_" xml:space="preserve">
     <value>Invalid peak intensity blob size: expected {0} or {1} bytes, got {2}</value>
   </data>
@@ -138,6 +150,9 @@
   </data>
   <data name="DiannTsvLoader_ToException__0__library_lines_have_errors__Fix_the_library_and_load_it_again_" xml:space="preserve">
     <value>{0:N0} library lines have errors. Fix the library and load it again:</value>
+  </data>
+  <data name="LibraryBlibWriter_Write_Writing__0__library_precursors_to__1_" xml:space="preserve">
+    <value>Writing {0:N0} library precursors to {1}</value>
   </data>
   <data name="LibraryCacheStatus_LoadCache_Loading_library_cache___0__precursors_" xml:space="preserve">
     <value>Loading library cache ({0:N0} precursors)</value>

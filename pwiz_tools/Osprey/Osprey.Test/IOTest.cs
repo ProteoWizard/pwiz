@@ -1049,7 +1049,7 @@ namespace pwiz.Osprey.Test
             int? unimodId;
             string name;
 
-            BlibLoader.IdentifyModification(57.021, false, out massDelta, out unimodId, out name);
+            BlibLoader.IdentifyModification(57.021, false, 'C', true, 3, out massDelta, out unimodId, out name);
             Assert.AreEqual(57.021464, massDelta, 0.01);
             Assert.AreEqual(4, unimodId);
             Assert.AreEqual("Carbamidomethyl", name);
@@ -1796,6 +1796,31 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(1, mods.Count);
             Assert.AreEqual(4, mods[0].Position);
             Assert.AreEqual(35, mods[0].UnimodId);
+
+            // BiblioSpec prints one decimal; a mass within half its last digit of a known
+            // modification is that modification, so the fragments get its exact mass.
+            AssertBlibModification("PEPTC[+57.0]IDE", 57.021464, 4);
+            AssertBlibModification("[+42.0]PEPTIDE", 42.010565, 1);
+            AssertBlibModification("PEPS[+80.0]TIDE", 79.966331, 21);
+            // High-precision text keeps the 0.01 Da snap, and a mass outside it stays as written.
+            AssertBlibModification("PEPTC[+57.02146]IDE", 57.021464, 4);
+            AssertBlibModification("PEPTM[+15.99491]IDE", 15.994915, 35);
+            AssertBlibModification("[+42.03000]PEPTIDE", 42.03, null);
+            // A delta between 100 and 200 Da is not an absolute cysteine mass on any other
+            // residue (GlyGly on lysine), nor on cysteine when it is signed (N-ethylmaleimide).
+            AssertBlibModification("PEPTK[+114.042927]IDE", 114.042927, null);
+            AssertBlibModification("PEPTC[+125.047679]IDE", 125.047679, null);
+            // An unsigned value on cysteine is still its absolute mass.
+            AssertBlibModification("PEPTC[160.030649]IDE", 57.021464, 4);
+            AssertBlibModification("PEPTC[160.0]IDE", 57.021464, 4);
+        }
+
+        private static void AssertBlibModification(string modSeq, double massDelta, int? unimodId)
+        {
+            var mods = BlibLoader.ParseBlibModifications(modSeq);
+            Assert.AreEqual(1, mods.Count, modSeq);
+            Assert.AreEqual(massDelta, mods[0].MassDelta, 1e-12, modSeq);
+            Assert.AreEqual(unimodId, mods[0].UnimodId, modSeq);
         }
 
         #endregion
