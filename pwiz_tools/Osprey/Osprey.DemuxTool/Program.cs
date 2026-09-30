@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using Pwiz.Analysis;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData;
@@ -201,7 +202,8 @@ namespace pwiz.Osprey.DemuxTool
                         groupBinsSet = true;
                         break;
                     case @"--joint-param":
-                        // Any scalar setting of the joint solve by its property name, for tuning.
+                        // Any scalar setting of the joint solve by its property name, for tuning; a table of numbers
+                        // (PeakSigmaSamples, MergeSigmaSamples) as comma-separated values.
                         if (!SetJointParameter(options.JointParameters, value))
                         {
                             Console.Error.WriteLine(@"Unknown joint setting: {0}", value);
@@ -395,10 +397,15 @@ namespace pwiz.Osprey.DemuxTool
             if (equals <= 0)
                 return false;
             var property = typeof(JointDemuxParams).GetProperty(assignment.Substring(0, equals));
-            if (property == null || !property.CanWrite || property.PropertyType.IsArray)
+            if (property == null || !property.CanWrite)
                 return false;
-            property.SetValue(parameters, Convert.ChangeType(assignment.Substring(equals + 1), property.PropertyType,
-                CultureInfo.InvariantCulture));
+            string text = assignment.Substring(equals + 1);
+            if (property.PropertyType == typeof(double[]))
+                property.SetValue(parameters, text.Split(',').Select(v => double.Parse(v, CultureInfo.InvariantCulture)).ToArray());
+            else if (property.PropertyType.IsArray)
+                return false;
+            else
+                property.SetValue(parameters, Convert.ChangeType(text, property.PropertyType, CultureInfo.InvariantCulture));
             Console.WriteLine(@"Joint setting: {0}", assignment);
             return true;
         }

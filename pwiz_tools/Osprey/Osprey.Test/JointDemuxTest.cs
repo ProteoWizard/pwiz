@@ -159,6 +159,16 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(1.0, gaussian.Sum(), 1e-12);
             Assert.AreEqual(Math.Exp(-0.5 / (1.35 * 1.35)), gaussian[half + 1] / gaussian[half], 1e-12);
             Assert.AreEqual(1.35, new JointDemuxParams().SigmaAt(550), 1e-12);
+            // A narrower Gaussian fitted, merged within the default widths.
+            var narrow = new JointDemuxParams
+            {
+                PeakSigmaSamples = new[] { 0.8, 0.9, 1.0, 1.0 },
+                MergeSigmaSamples = new[] { 1.17, 1.35, 1.51, 1.52 },
+            };
+            Assert.AreEqual(0.9, narrow.GaussianSigmaAt(550), 1e-12);
+            Assert.AreEqual(1.35, narrow.SigmaAt(550), 1e-12);
+            Assert.AreEqual(0.5 * (1.35 + 1.51), narrow.SigmaAt(700), 1e-12);
+            Assert.AreEqual(Math.Exp(-0.5 / (0.9 * 0.9)), narrow.PeakAt(550)[half + 1] / narrow.PeakAt(550)[half], 1e-12);
         }
 
         /// <summary>

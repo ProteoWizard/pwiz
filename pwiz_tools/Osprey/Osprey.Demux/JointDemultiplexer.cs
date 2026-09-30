@@ -38,6 +38,13 @@ namespace pwiz.Osprey.Demux
         /// <summary>The m/z of each <see cref="PeakSigmaSamples"/> value.</summary>
         public double[] PeakSigmaMz { get; set; } = { 300, 550, 850, 1200 };
 
+        /// <summary>
+        /// With the Gaussian, the sigmas at the m/z of <see cref="PeakSigmaMz"/> that <see cref="SigmaAt"/> gives, and
+        /// so what neighbouring positions' centroids are merged within; null for the Gaussian's own. For fitting with
+        /// a narrower or wider peak without changing the merge.
+        /// </summary>
+        public double[] MergeSigmaSamples { get; set; }
+
         /// <summary>The TOF peak's support: this many samples either side of its center.</summary>
         public int PeakHalfWidth { get; set; } = 5;
 
@@ -179,12 +186,13 @@ namespace pwiz.Osprey.Demux
 
         /// <summary>
         /// The TOF peak's width at an m/z in samples: the second moment of the measured kernel when there is
-        /// one, else <see cref="GaussianSigmaAt"/>. What neighbouring positions' centroids are merged within.
+        /// one, else <see cref="MergeSigmaSamples"/> when set, else <see cref="GaussianSigmaAt"/>. What
+        /// neighbouring positions' centroids are merged within.
         /// </summary>
         public double SigmaAt(double mz)
         {
             if (PeakShapes == null || PeakShapes.Length == 0)
-                return GaussianSigmaAt(mz);
+                return MergeSigmaSamples != null ? Interpolate(PeakSigmaMz, MergeSigmaSamples, mz) : GaussianSigmaAt(mz);
             var kernel = PeakAt(mz);
             int half = PeakHalfWidth;
             double moment = 0;
@@ -196,16 +204,20 @@ namespace pwiz.Osprey.Demux
         /// <summary>The sigma of the Gaussian kernel at an m/z, from <see cref="PeakSigmaSamples"/>.</summary>
         public double GaussianSigmaAt(double mz)
         {
-            var at = PeakSigmaMz;
-            var sigma = PeakSigmaSamples;
+            return Interpolate(PeakSigmaMz, PeakSigmaSamples, mz);
+        }
+
+        /// <summary>Linear between the values at the m/z of <paramref name="at"/>, constant beyond them.</summary>
+        private static double Interpolate(double[] at, double[] values, double mz)
+        {
             if (mz <= at[0])
-                return sigma[0];
+                return values[0];
             for (int i = 1; i < at.Length; i++)
             {
                 if (mz <= at[i])
-                    return sigma[i - 1] + (sigma[i] - sigma[i - 1]) * (mz - at[i - 1]) / (at[i] - at[i - 1]);
+                    return values[i - 1] + (values[i] - values[i - 1]) * (mz - at[i - 1]) / (at[i] - at[i - 1]);
             }
-            return sigma[sigma.Length - 1];
+            return values[values.Length - 1];
         }
     }
 
