@@ -107,8 +107,8 @@ new version.
 
 | Pass | Command | Tests | Time |
 |---|---|---|---|
-| CPU, no data | `build.ps1` | 68, of which the 8 parity tests are Inconclusive | about 1 min |
-| CPU, with data | `build.ps1 -RequireData` | all 68 | about 10 min |
+| CPU, no data | `build.ps1` | 74, of which the 8 parity tests are Inconclusive | about 1 min |
+| CPU, with data | `build.ps1 -RequireData` | all 74 | about 10 min |
 | Astral | `build.ps1 -TestCategory Astral -RequireData` | 4, on the Astral package | about 12 min |
 | CUDA | `build.ps1 -Torch cuda` | the `Cuda` category: pretrained predictions on the GPU against the CPU | not yet timed |
 | Regression | `regression.ps1` | the `Regression` category: a fine-tune and library against the golden (see "Regression") | 20-35 min on the CPU |
@@ -235,22 +235,26 @@ DecoyPairs checks. Its margin is the peak change against the 1% tolerance, 2.8 t
 
 ## Coverage
 
-With no test data (the pretrained archive is bundled, so its tests run), statement coverage from
-`build.ps1 -Coverage` is:
+Statement coverage from `build.ps1 -Coverage`, with no test data (what CI sees; the pretrained archive
+is bundled, so its tests run) and with the data (`-RequireData`). The regression runs CarafeSharp as a
+separate process, so it is in neither.
 
-| Assembly | Statements |
-|---|---|
-| CarafeSharp | 94.0% |
-| CarafeSharp.Core | 94.2% |
-| CarafeSharp.IO | 98.7% |
-| CarafeSharp.Models | 96.8% |
-| CarafeSharp.Proteome | 98.0% |
-| CarafeSharp.Training | 99.6% |
+| Assembly | No data | With data |
+|---|---|---|
+| CarafeSharp | 97.7% | 98.3% |
+| CarafeSharp.Core | 94.2% | 94.2% |
+| CarafeSharp.IO | 98.8% | 98.8% |
+| CarafeSharp.Models | 96.8% | 97.5% |
+| CarafeSharp.Proteome | 98.8% | 99.0% |
+| CarafeSharp.Training | 99.6% | 99.6% |
+
+Most of what is left is argument checks, `ToString` and the CUDA path, which a CPU run does not reach.
 
 The no-data unit tests work on synthetic inputs built in the test:
 - the masking rules at, above and below each threshold;
 - a training export written as parquet;
 - the fine-tune loop on random models: the loss falls, a checkpoint round-trips, and the seed is honored;
+- a training run that predicts the final library, from the model it wrote and the training run's settings;
 - blib annotations and DecoyPairs;
 - command-line errors, and outputs left behind by a failed run;
 - entrapment from a foreign proteome, and pairing reconciliation.
