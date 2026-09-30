@@ -436,6 +436,9 @@ namespace pwiz.Osprey.Demux
             private int[] _reach = Array.Empty<int>();       // the grid points with data in reach, ascending
             private int _reachCount;
             private bool[] _dirty = Array.Empty<bool>();      // per grid point: to solve in the next pass
+            private int[] _activeCount = Array.Empty<int>();  // per grid point: its active positions
+            private int[] _solved = Array.Empty<int>();       // the grid points the current pass has solved
+            private int _solvedCount;
             private bool[] _changed = Array.Empty<bool>();    // per grid point: gradient changed since the last check
             private readonly double[] _rowGradient;          // per row: the peak times its weighted residual at a block's point
             private readonly int[] _rowStamp;                // per row: the block solve _rowGradient was computed for
@@ -595,6 +598,7 @@ namespace pwiz.Osprey.Demux
                 Array.Clear(_curvature, 0, cp);
                 Array.Clear(_lambda, 0, cp);
                 Array.Clear(_active, 0, cp);
+                Array.Clear(_activeCount, 0, _points);
                 Array.Copy(_y, _residual, _rows * _samples);
                 long t1 = Now();
                 // 1. Poisson weights from the data smoothed by the peak, with the z-scaled lasso.
@@ -701,6 +705,8 @@ namespace pwiz.Osprey.Demux
                     _reach = new int[_samples];
                     _inReach = new bool[_samples];
                     _dirty = new bool[_samples];
+                    _activeCount = new int[_samples];
+                    _solved = new int[_samples];
                     _changed = new bool[_samples];
                 }
             }
@@ -793,7 +799,7 @@ namespace pwiz.Osprey.Demux
                 double change = _parameters.RefitLambdaChange;
                 for (int i = 0; i < _reachCount; i++)
                 {
-                    int q = _reach[i], oc = q * _columns;
+                    int q = _reach[i], oc = q * _columns, count = 0;
                     bool refit = !selective;
                     for (int j = 0; j < _columns; j++)
                     {
@@ -803,7 +809,10 @@ namespace pwiz.Osprey.Demux
                             refit = true;
                         _lambda[oc + j] = lambda;
                         _active[oc + j] = _beta[oc + j] > 0;
+                        if (_active[oc + j])
+                            count++;
                     }
+                    _activeCount[q] = count;
                     _dirty[q] = _changed[q] = refit;
                     if (selective && refit)
                         _refitPoints++;
@@ -923,14 +932,22 @@ namespace pwiz.Osprey.Demux
                     _residual[x] -= scale * _bp[d];
             }
 
-            /// <summary>Makes the active set the positive coefficients.</summary>
+            /// <summary>
+            /// Makes the active set the positive coefficients. Only the grid points the last pass solved can have
+            /// changed since the last prune: elsewhere the active set already is the positive coefficients.
+            /// </summary>
             private void Prune()
             {
-                for (int i = 0; i < _reachCount; i++)
+                for (int i = 0; i < _solvedCount; i++)
                 {
-                    int oc = _reach[i] * _columns;
+                    int q = _solved[i], oc = q * _columns, count = 0;
                     for (int j = 0; j < _columns; j++)
+                    {
                         _active[oc + j] = _beta[oc + j] > 0;
+                        if (_active[oc + j])
+                            count++;
+                    }
+                    _activeCount[q] = count;
                 }
             }
 
@@ -1030,6 +1047,7 @@ namespace pwiz.Osprey.Demux
                             if (g - _lambda[index] > Math.Max(_lambda[index] * 1e-9 + 1e-12, _parameters.ToleranceIons * _curvature[index]))
                             {
                                 _active[index] = true;
+                                _activeCount[q]++;
                                 _dirty[q] = true;
                                 added++;
                             }
@@ -1101,12 +1119,18 @@ namespace pwiz.Osprey.Demux
             {
                 double largest = 0;
                 _decrease = 0;
+                _solvedCount = 0;
                 for (int i = 0; i < _reachCount; i++)
                 {
                     int q = _reach[i], oc = q * _columns, oq = q * _rows;
                     if (!_dirty[q])
                         continue;
                     _dirty[q] = false;
+                    if (_activeCount[q] == 0)
+                    {
+                        _empty++;
+                        continue;
+                    }
                     int n = 0;
                     for (int j = 0; j < _columns; j++)
                     {
@@ -1118,6 +1142,7 @@ namespace pwiz.Osprey.Demux
                         _empty++;
                         continue;
                     }
+                    _solved[_solvedCount++] = q;
                     _blockSolves++;
                     _blockColumnCount += n;
                     double stretch;
