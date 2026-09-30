@@ -68,6 +68,7 @@ namespace pwiz.Osprey.Test
             AssertProteinIdsMatchTheScoresParquet();
             AssertScanRangeIsTheMeasuredRange();
             AssertUnannotatedFragmentsMatchByMz();
+            AssertBlibTypesMatchByMz();
         }
 
         private static void AssertCleanPrecursor()
@@ -425,6 +426,31 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(LIBRARY.Length, matched, @"the stray fragment matched a slot");
         }
 
+        /// <summary>
+        /// A .blib states no ion types: the types its fragments carry are the ones Osprey's typing
+        /// gave them from m/z at load. They place each fragment on its slot as a stated type does,
+        /// but flag it matched by m/z, not annotated.
+        /// </summary>
+        private static void AssertBlibTypesMatchByMz()
+        {
+            var entry = Peptide(SEQUENCE, 2, 1);
+            var window = Window(entry, spikeSlot: -1);
+            var row = Row(entry, FIRST, LAST);
+            var blib = new LibrarySource(LibraryFormat.Blib, @"library.blib");
+            var record = TrainingEvidence.Compute(entry, row, 0.005, 3.0, window, null, Settings(false, blib));
+
+            foreach (var f in LIBRARY)
+            {
+                int slot = Slot(f.Type, f.Ordinal);
+                byte flags = record.IonFlags[slot];
+                Assert.AreNotEqual(0, flags & TrainingIonFlags.LIBRARY_MZ_MATCHED, string.Format(@"slot {0} not matched by m/z", slot));
+                Assert.AreEqual(0, flags & TrainingIonFlags.LIBRARY_ANNOTATED, string.Format(@"slot {0} claimed an annotation", slot));
+                Assert.AreEqual(f.Rel, record.LibraryRelIntensity[slot]);
+            }
+            Assert.AreEqual(6, record.IonFlags.Count(flags => (flags & TrainingIonFlags.CORE) != 0),
+                @"the core is the top six library fragments");
+        }
+
         // ---- fixtures ------------------------------------------------------------------------
 
         /// <summary>A fragment annotation that names no ion, as an unannotated blib's are.</summary>
@@ -446,13 +472,14 @@ namespace pwiz.Osprey.Test
             return TrainingEvidence.Compute(entry, row, 0.005, 3.0, window, claimants, Settings(writeXics));
         }
 
-        private static TrainingEvidenceSettings Settings(bool writeXics)
+        private static TrainingEvidenceSettings Settings(bool writeXics, LibrarySource library = null)
         {
             return new TrainingEvidenceSettings
             {
                 SearchConfig = new OspreyConfig
                 {
                     FragmentTolerance = new FragmentToleranceConfig { Tolerance = 20, Unit = ToleranceUnit.Ppm },
+                    LibrarySource = library,
                 },
                 Ms2ScanWindow = new[] { 200.0, 1500.0 },
                 WriteXics = writeXics,

@@ -114,7 +114,10 @@ namespace pwiz.Osprey.Scoring
             }
             record.MpResidualMad = residualMad;
 
-            MapLibrary(entry, ladder, length, tolerance, record);
+            // A .blib states no ion types: its peaks carry the ones Osprey's typing gave them
+            // from m/z at load, so they are matched by m/z, not annotated by the library.
+            bool libraryStatesTypes = settings.SearchConfig.LibrarySource?.Format != LibraryFormat.Blib;
+            MapLibrary(entry, ladder, length, tolerance, libraryStatesTypes, record);
 
             // Every applicable ion: its apex match, its XIC over the peak, and its projection
             // onto the fit.
@@ -322,10 +325,13 @@ namespace pwiz.Osprey.Scoring
         /// <summary>
         /// Map each library fragment onto its ladder slot - by annotation when it has one, else
         /// the nearest applicable slot within the tolerance - recording the library's relative
-        /// intensity there and marking the core fragments.
+        /// intensity there and marking the core fragments. An annotation is flagged
+        /// <see cref="TrainingIonFlags.LIBRARY_ANNOTATED"/> only when
+        /// <paramref name="libraryStatesTypes"/>; otherwise it is Osprey's typing from m/z and
+        /// flagged <see cref="TrainingIonFlags.LIBRARY_MZ_MATCHED"/>, as an unannotated fragment is.
         /// </summary>
         private static void MapLibrary(LibraryEntry entry, double[] ladder, int length,
-            FragmentToleranceConfig tolerance, TrainingRecord record)
+            FragmentToleranceConfig tolerance, bool libraryStatesTypes, TrainingRecord record)
         {
             var fragments = entry.Fragments;
             if (fragments == null || fragments.Count == 0)
@@ -347,7 +353,7 @@ namespace pwiz.Osprey.Scoring
                     slot = FragmentLadder.SlotOf(annotation, length);
                     if (slot >= 0 && double.IsNaN(ladder[slot]))
                         slot = -1;
-                    flag = TrainingIonFlags.LIBRARY_ANNOTATED;
+                    flag = libraryStatesTypes ? TrainingIonFlags.LIBRARY_ANNOTATED : TrainingIonFlags.LIBRARY_MZ_MATCHED;
                 }
                 slotOfFragment[i] = slot;
                 if (slot < 0)
