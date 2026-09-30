@@ -103,6 +103,13 @@ namespace pwiz.CarafeSharp.Models.Modules
             RegisterComponents();
         }
 
+        /// <summary>Sets instrument slot <paramref name="to"/>'s weights to slot <paramref name="from"/>'s.</summary>
+        public void CopyInstrumentSlot(int from, int to)
+        {
+            using (no_grad())
+                _nn.weight[TensorIndex.Colon, to].copy_(_nn.weight[TensorIndex.Colon, from]);
+        }
+
         public override Tensor forward(Tensor charges, Tensor nces, Tensor instrumentIndices)
         {
             var instrument = nn.functional.one_hot(instrumentIndices, PeptdeepConstants.MAX_INSTRUMENT_NUM).to_type(ScalarType.Float32);

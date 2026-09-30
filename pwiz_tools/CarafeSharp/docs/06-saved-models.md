@@ -72,14 +72,15 @@ files and shows what each was trained on. A `.carafemodel` file is a zip holding
 A reader that only lists models, as a model picker does, needs `manifest.json` alone.
 
 `manifest.json` from the chained regression leg's run on the Stellar subset (three runs; only the first
-is shown, and hashes and the path are shortened). The fine-tuned MS2 model lost to the pretrained one there
-(SPC 0.90760 against 0.90765), so the file holds only the fine-tuned RT model:
+is shown, and hashes and the path are shortened). The runs are Stellar HCD, read out in the ion trap, so
+they trained as LIT. The fine-tuned MS2 model lost to the pretrained one there, so the file holds only
+the fine-tuned RT model:
 
 ```json
 {
   "format": "carafemodel-1",
-  "creator": "CarafeSharp 26.1.1.0+a943ca409b...",
-  "created": "2026-09-30T21:15:19.0027444Z",
+  "creator": "CarafeSharp 26.1.1.0+<commit>",
+  "created": "2026-09-30T22:28:04.7619472Z",
   "training_type": "all",
   "models": {
     "ms2": {
@@ -121,13 +122,16 @@ is shown, and hashes and the path are shortened). The fine-tuned MS2 model lost 
         "ms_file": "D:\\data\\Ste-2024-12-02_HeLa_4mz_sDIA_400-900_20.mzML",
         "instrument_vendor": "Thermo",
         "instrument_model": "Stellar",
-        "instrument": "",
+        "instrument": "LIT",
         "nce": 30,
         "dissociation_methods": {
           "HCD": 200
         },
         "collision_energies": {
           "30": 200
+        },
+        "ms2_mass_analyzers": {
+          "radial ejection linear ion trap": 200
         },
         "rt_min": 6.5132626409,
         "rt_max": 13.47915817605,
@@ -166,13 +170,13 @@ is shown, and hashes and the path are shortened). The fine-tuned MS2 model lost 
   },
   "prediction_defaults": {
     "nce": 30,
-    "instrument": null,
+    "instrument": "LIT",
     "rt_max": 13.58782254745
   },
   "entries": {
     "rt.safetensors": "56668607...",
     "model_evaluation_metrics.json": "2834903c...",
-    "meta.json": "cdcc4271..."
+    "meta.json": "9d481c7e..."
   }
 }
 ```
@@ -188,7 +192,7 @@ is shown, and hashes and the path are shortened). The fine-tuned MS2 model lost 
 | `pretrained_sha256` | The SHA-256 of the pretrained archive the training started from (AlphaPeptDeep v1, `models/alphapeptdeep-v1`), or null. |
 | `ms2_start_model` | The file name of the `-ms2_model` the MS2 fine-tune started from instead of the pretrained model, or null. |
 | `training` | What the models were trained on, or null (below). |
-| `prediction_defaults` | The NCE, instrument and rt_max a library takes unless its command line gives its own. `instrument` is null when the training runs' instrument is not one of Carafe's classes. |
+| `prediction_defaults` | The NCE, instrument and rt_max a library takes unless its command line gives its own. `instrument` is the class the model trained as (LIT for a Stellar HCD model), or null when the training runs' instrument is none of the classes. |
 | `entries` | Every other entry and its SHA-256 (lowercase hex). |
 
 `training`:
@@ -203,9 +207,10 @@ is shown, and hashes and the path are shortened). The fine-tuned MS2 model lost 
 | `runs[]` | Each training run, from Osprey's training export footer (Osprey's docs/22-training-export.md). |
 | `runs[].run`, `ms_file` | The run's name, and its file as `-ms` named it. |
 | `runs[].instrument_vendor`, `instrument_model` | As the run's data file reports them; null when Osprey searched it without the file. |
-| `runs[].instrument` | The instrument class the models were trained for (Carafe's: Lumos, Astral, ...), or empty when the model is none of them. |
+| `runs[].instrument` | The instrument class the run trained as: Carafe's names (Eclipse, Lumos, Astral, QE, ...), or CarafeSharp's `LIT` (HCD read out in a linear ion trap: a Stellar, a Tribrid's ion trap) and `CID` (resonance CID, Thermo's CID, in either analyzer); empty when Carafe names none. See 01-model-spec.md for the model slots. |
 | `runs[].nce` | The NCE the models were trained with. |
-| `runs[].dissociation_methods`, `collision_energies` | MS2 spectra by dissociation method and by collision energy as the file reports it (normalized for Thermo, eV for Sciex), over the spectra Osprey sampled; empty without the data file. |
+| `runs[].dissociation_methods`, `collision_energies` | MS2 spectra by dissociation method (pwiz's short names: `HCD` for beam-type, `CID` for resonance CID) and by collision energy as the file reports it (normalized for Thermo, eV for Sciex), over the spectra Osprey sampled; empty without the data file. |
+| `runs[].ms2_mass_analyzers` | MS2 spectra by the mass analyzer that read them out (`orbitrap`, `radial ejection linear ion trap`, ...); empty without the data file or from an Osprey that did not record it. |
 | `runs[].rt_min`, `rt_max` | The run's first and last MS2 retention time, minutes. |
 | `runs[].isolation_mz_min`, `_max` | The range of the run's isolation windows. |
 | `runs[].ms2_mz_min`, `_max` | The MS2 m/z range the run measured. |

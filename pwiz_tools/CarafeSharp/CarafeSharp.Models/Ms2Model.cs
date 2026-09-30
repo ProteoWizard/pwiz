@@ -40,6 +40,9 @@ namespace pwiz.CarafeSharp.Models
     {
         public const int DEFAULT_BATCH_SIZE = 512;
 
+        /// <summary>The safetensors metadata key naming a saved model's instrument slots (<see cref="PeptdeepConstants.INSTRUMENT_SLOTS"/>).</summary>
+        public const string INSTRUMENT_SLOTS_KEY = @"carafesharp.instrument_slots";
+
         /// <summary>
         /// Loads the pretrained generic MS2 model. As in peptdeep's general mode, the four
         /// modloss columns are predicted as zeros.
@@ -47,7 +50,7 @@ namespace pwiz.CarafeSharp.Models
         public static Ms2Model FromPretrained(PretrainedModels pretrained, Device device)
         {
             var weights = StateDict.ReadPthFromZip(pretrained.ZipPath, PretrainedModels.MS2_ENTRY);
-            return Create(weights, device);
+            return Create(weights, device, false);
         }
 
         /// <summary>
@@ -56,13 +59,15 @@ namespace pwiz.CarafeSharp.Models
         /// </summary>
         public static Ms2Model FromPthFile(string path, Device device)
         {
-            return Create(StateDict.ReadPthFile(path), device);
+            return Create(StateDict.ReadPthFile(path), device, false);
         }
 
         /// <summary>Loads a model saved with <see cref="Save"/>.</summary>
         public static Ms2Model FromSafetensors(string path, Device device)
         {
-            return Create(StateDict.ReadSafetensors(path), device);
+            bool carafeSharpSlots = StateDict.ReadSafetensorsMetadata(path).TryGetValue(INSTRUMENT_SLOTS_KEY, out string slots) &&
+                                    slots == PeptdeepConstants.INSTRUMENT_SLOTS;
+            return Create(StateDict.ReadSafetensors(path), device, carafeSharpSlots);
         }
 
         /// <summary>Loads a <c>.safetensors</c> model, or else a PyTorch checkpoint.</summary>
@@ -73,10 +78,22 @@ namespace pwiz.CarafeSharp.Models
                 : FromPthFile(path, device);
         }
 
-        private static Ms2Model Create(IReadOnlyDictionary<string, Tensor> weights, Device device)
+        /// <param name="weights">The state dict.</param>
+        /// <param name="device">Where the model runs.</param>
+        /// <param name="carafeSharpSlots">
+        /// The weights come from a model CarafeSharp saved, whose LIT and CID slots are its own.
+        /// Any other model (peptdeep's pretrained one, a Carafe checkpoint, a CarafeSharp model saved
+        /// before the slots existed) has never trained them, so they start as a copy of Lumos.
+        /// </param>
+        private static Ms2Model Create(IReadOnlyDictionary<string, Tensor> weights, Device device, bool carafeSharpSlots)
         {
             var network = new ModelMs2Bert();
             StateDict.Load(network, weights);
+            if (!carafeSharpSlots)
+            {
+                network.CopyInstrumentSlot(PeptdeepConstants.LUMOS_INDEX, PeptdeepConstants.LIT_INDEX);
+                network.CopyInstrumentSlot(PeptdeepConstants.LUMOS_INDEX, PeptdeepConstants.CID_INDEX);
+            }
             foreach (var tensor in weights.Values)
                 tensor.Dispose();
             network.to(device);
@@ -130,9 +147,10 @@ namespace pwiz.CarafeSharp.Models
         }
 
         /// <summary>Saves the weights as safetensors, readable by <see cref="FromSafetensors"/>.</summary>
+        /// <summary>Saves the model as safetensors, recording that its instrument slots are CarafeSharp's.</summary>
         public void Save(string path)
         {
-            StateDict.WriteSafetensors(Network, path);
+            StateDict.WriteSafetensors(Network, path, new Dictionary<string, string> { { INSTRUMENT_SLOTS_KEY, PeptdeepConstants.INSTRUMENT_SLOTS } });
         }
 
         public void Dispose()

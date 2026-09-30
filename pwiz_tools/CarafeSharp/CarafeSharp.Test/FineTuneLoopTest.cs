@@ -325,6 +325,52 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(1, Directory.GetFiles(output, @"*.blib").Length, text);
         }
 
+        /// <summary>
+        /// CarafeSharp's LIT and CID instrument slots. A model that has never trained them (one
+        /// saved without CarafeSharp's slot record, as peptdeep's pretrained model and Carafe's
+        /// checkpoints are) predicts them exactly as Lumos. Fine-tuning on LIT spectra trains the
+        /// LIT slot alone: CID, untouched, still predicts as Lumos. A model CarafeSharp saves records
+        /// its slots, so loading it keeps the trained LIT slot; the same weights without the record
+        /// start LIT from Lumos again.
+        /// </summary>
+        [TestMethod]
+        public void TestInstrumentSlots()
+        {
+            string start = RandomMs2Model(@"slots_start", 5);
+            var rows = Ms2Rows(PeptdeepConstants.LIT);
+            float[] As(Ms2Model model, string instrument) =>
+                Predict(model, rows.Select(r => new Ms2TrainingExample(r.Precursor, r.Nce, instrument, r.Intensities, r.Invalid)));
+            using (var untrained = Ms2Model.FromSafetensors(start, CPU))
+            {
+                var lumos = As(untrained, @"Lumos");
+                CollectionAssert.AreEqual(lumos, As(untrained, PeptdeepConstants.LIT));
+                CollectionAssert.AreEqual(lumos, As(untrained, PeptdeepConstants.CID));
+                CollectionAssert.AreEqual(lumos, As(untrained, @"Stellar"));
+                CollectionAssert.AreNotEqual(lumos, As(untrained, @"QE"), @"a peptdeep slot of its own");
+            }
+
+            var options = new FineTuneOptions
+            {
+                Seed = 5,
+                Ms2Model = start,
+                Ms2 = new FineTuneSettings { Epochs = 2, WarmupEpochs = 0, BatchSize = 4, LearningRate = 1e-3, AdjustBatchSize = false },
+            };
+            string output = Path.Combine(_folder, @"slots_tuned");
+            FineTuneRun.Run(null, rows, null, options, output, null);
+            string tuned = Path.Combine(output, FineTuneRun.MS2_MODEL_FILE);
+            Assert.AreEqual(PeptdeepConstants.INSTRUMENT_SLOTS, StateDict.ReadSafetensorsMetadata(tuned)[Ms2Model.INSTRUMENT_SLOTS_KEY]);
+            string unrecorded = Path.Combine(_folder, @"slots_unrecorded.safetensors");
+            using (var model = Ms2Model.FromSafetensors(tuned, CPU))
+            {
+                var lumos = As(model, @"Lumos");
+                CollectionAssert.AreNotEqual(lumos, As(model, PeptdeepConstants.LIT), @"the LIT slot trained, and loading kept it");
+                CollectionAssert.AreEqual(lumos, As(model, PeptdeepConstants.CID), @"the CID slot did not train");
+                StateDict.WriteSafetensors(model.Network, unrecorded);
+            }
+            using (var model = Ms2Model.FromSafetensors(unrecorded, CPU))
+                CollectionAssert.AreEqual(As(model, @"Lumos"), As(model, PeptdeepConstants.LIT), @"without the record, LIT starts from Lumos");
+        }
+
         [TestMethod]
         public void TestDevicesAndIrtCalibration()
         {
@@ -468,7 +514,7 @@ namespace pwiz.CarafeSharp.Test
         /// Two lengths of peptide at charges 2 and 3: y ions rising along the ladder, weak b
         /// ions, charge 2 fragments only from the 3+ precursor, b1 masked.
         /// </summary>
-        private static Ms2TrainingExample[] Ms2Rows()
+        private static Ms2TrainingExample[] Ms2Rows(string instrument = @"Lumos")
         {
             var rows = new List<Ms2TrainingExample>();
             foreach (string sequence in MS2_PEPTIDES)
@@ -486,7 +532,7 @@ namespace pwiz.CarafeSharp.Test
                             intensities[row * Ms2TrainingExample.FRAGMENT_TYPES + AlphabaseFragmentMz.Y_Z2] = 0.3;
                     }
                     invalid[AlphabaseFragmentMz.B_Z1] = 1;
-                    rows.Add(new Ms2TrainingExample(new PrecursorForm(new PeptideForm(sequence), charge), 30, @"Lumos", intensities, invalid));
+                    rows.Add(new Ms2TrainingExample(new PrecursorForm(new PeptideForm(sequence), charge), 30, instrument, intensities, invalid));
                 }
             }
             return rows.ToArray();

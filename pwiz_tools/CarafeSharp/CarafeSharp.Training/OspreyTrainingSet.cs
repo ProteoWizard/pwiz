@@ -20,6 +20,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
@@ -144,7 +145,14 @@ namespace pwiz.CarafeSharp.Training
             { @"Q Exactive Plus", @"QE+" },              // MS:1002634
             { @"Q Exactive HF-X", @"QEHFX" },            // MS:1002877
             { @"TripleTOF 6600", @"SciexTOF" },          // MS:1002533
+            // CarafeSharp's: a Stellar reads MS2 out only in its linear ion trap.
+            { @"Stellar", PeptdeepConstants.LIT },       // MS:1003409
         };
+
+        /// <summary>The histogram key for a spectrum that carries no value (Osprey's SourceRunMetadata.NONE_KEY).</summary>
+        private const string NONE_KEY = @"none";
+
+        private const string OTHER_ACTIVATION = @"other";
 
         public static OspreyTrainingSet Build(IReadOnlyList<OspreyTrainingExport> exports, OspreyTrainingSetOptions options)
         {
@@ -154,7 +162,7 @@ namespace pwiz.CarafeSharp.Training
             foreach (var export in exports)
             {
                 double nce = GetNce(export, options.Nce);
-                string instrument = options.Instrument ?? GetCarafeInstrument(export.InstrumentModel) ?? OspreyTrainingSetOptions.DEFAULT_INSTRUMENT;
+                string instrument = GetTrainingInstrument(export, options.Instrument) ?? OspreyTrainingSetOptions.DEFAULT_INSTRUMENT;
                 foreach (var record in export.Records)
                 {
                     stats.Records++;
@@ -233,10 +241,80 @@ namespace pwiz.CarafeSharp.Training
             return instrumentModel != null && CARAFE_INSTRUMENTS.TryGetValue(instrumentModel.Trim(), out string name) ? name : null;
         }
 
+        /// <summary>
+        /// The instrument a run's spectra train as: <paramref name="userInstrument"/>
+        /// (<c>-ms_instrument</c>) when given; else how Osprey's export says its MS2 spectra were
+        /// acquired. Resonance CID (Thermo's CID) in either analyzer is <see cref="PeptdeepConstants.CID"/>;
+        /// HCD read out in a linear ion trap is <see cref="PeptdeepConstants.LIT"/>; HCD read out in
+        /// an Orbitrap (or another analyzer) is the instrument model's Carafe name, a Tribrid's
+        /// being one of the Lumos family. Without the analyzers (an older Osprey, or no data file)
+        /// the model decides, a Stellar being LIT. Null for a model Carafe does not name.
+        /// </summary>
+        /// <exception cref="InvalidDataException">
+        /// The run's sampled MS2 spectra fall in more than one class (HCD and CID, or HCD read out
+        /// in an ion trap and an Orbitrap): trained as one, some would train another class's slot.
+        /// </exception>
+        public static string GetTrainingInstrument(OspreyTrainingExport export, string userInstrument)
+        {
+            if (userInstrument != null)
+                return userInstrument;
+            var activations = new SortedDictionary<string, long>(StringComparer.Ordinal);
+            foreach (var pair in export.DissociationMethods)
+            {
+                string activation = ActivationClass(pair.Key);
+                if (activation != null)
+                    activations[activation] = (activations.TryGetValue(activation, out long n) ? n : 0) + pair.Value;
+            }
+            if (activations.Count > 1)
+                throw MixedClasses(export, @"activations", activations);
+            if (activations.ContainsKey(PeptdeepConstants.CID))
+                return PeptdeepConstants.CID;
+            if (activations.ContainsKey(OTHER_ACTIVATION))
+                return GetCarafeInstrument(export.InstrumentModel);
+
+            var analyzers = new SortedDictionary<string, long>(StringComparer.Ordinal);
+            foreach (var pair in export.Ms2MassAnalyzers.Where(p => p.Key != NONE_KEY))
+            {
+                string readout = pair.Key.IndexOf(@"ion trap", StringComparison.OrdinalIgnoreCase) >= 0 ? @"ion trap" : @"not an ion trap";
+                analyzers[readout] = (analyzers.TryGetValue(readout, out long n) ? n : 0) + pair.Value;
+            }
+            if (analyzers.Count > 1)
+                throw MixedClasses(export, @"HCD read out in", analyzers);
+            if (analyzers.ContainsKey(@"ion trap"))
+                return PeptdeepConstants.LIT;
+            return GetCarafeInstrument(export.InstrumentModel);
+        }
+
         /// <summary>The collision energy Carafe trains a run with: its own, else <paramref name="nce"/>, else 27.</summary>
         public static double GetNce(OspreyTrainingExport export, double? nce)
         {
             return export.DominantCollisionEnergy ?? nce ?? OspreyTrainingSetOptions.DEFAULT_NCE;
+        }
+
+        /// <summary>
+        /// The class of a dissociation method as pwiz names it: CID (resonance), HCD (beam-type),
+        /// other for an electron-based one (ETD, EThcD, ...), or null for none.
+        /// </summary>
+        private static string ActivationClass(string method)
+        {
+            var tokens = method.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            if (tokens.Length == 0 || tokens.All(t => t == NONE_KEY))
+                return null;
+            if (tokens.Any(t => t.EndsWith(@"ETD", StringComparison.Ordinal) || t.EndsWith(@"ECD", StringComparison.Ordinal)))
+                return OTHER_ACTIVATION;
+            if (tokens.Contains(@"CID"))
+                return PeptdeepConstants.CID;
+            if (tokens.Contains(@"HCD"))
+                return @"HCD";
+            return OTHER_ACTIVATION;
+        }
+
+        private static InvalidDataException MixedClasses(OspreyTrainingExport export, string what, IReadOnlyDictionary<string, long> counts)
+        {
+            return new InvalidDataException(string.Format(
+                @"{0}: its MS2 spectra mix {1} {2}. CarafeSharp trains one instrument class per run, and would train some of these " +
+                @"spectra as another class; train the run on its own, or name the class for all of it with -ms_instrument.",
+                export.Path, what, string.Join(@" and ", counts.Select(p => p.Key + @" (" + p.Value + @")"))));
         }
 
         /// <summary>A run's <c>rt_max</c>, the larger of <c>-rt_max</c> and its last MS2 RT plus the padding.</summary>

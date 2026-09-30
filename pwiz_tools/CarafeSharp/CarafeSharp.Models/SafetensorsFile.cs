@@ -52,9 +52,14 @@ namespace pwiz.CarafeSharp.Models
             { ScalarType.Bool, (@"BOOL", 1) },
         };
 
-        public static void Write(string path, IReadOnlyDictionary<string, Tensor> tensors)
+        /// <param name="path">The file to write.</param>
+        /// <param name="tensors">The tensors, by name.</param>
+        /// <param name="metadata">Free-text metadata for the header's <c>__metadata__</c>, or null for none.</param>
+        public static void Write(string path, IReadOnlyDictionary<string, Tensor> tensors, IReadOnlyDictionary<string, string> metadata = null)
         {
             var header = new Dictionary<string, object>(StringComparer.Ordinal);
+            if (metadata != null && metadata.Count > 0)
+                header[METADATA_KEY] = metadata.OrderBy(p => p.Key, StringComparer.Ordinal).ToDictionary(p => p.Key, p => p.Value);
             var payloads = new List<byte[]>();
             long offset = 0;
             // Ordinal key order, so the same weights always produce the same bytes.
@@ -85,6 +90,24 @@ namespace pwiz.CarafeSharp.Models
                     writer.Write((byte)' ');
                 foreach (byte[] data in payloads)
                     writer.Write(data);
+            }
+        }
+
+        /// <summary>A safetensors file's free-text metadata (<c>__metadata__</c>), empty when it has none.</summary>
+        public static Dictionary<string, string> ReadMetadata(string path)
+        {
+            using (var stream = File.OpenRead(path))
+            using (var reader = new BinaryReader(stream))
+            {
+                long headerLength = (long)reader.ReadUInt64();
+                if (headerLength <= 0 || headerLength > stream.Length - 8)
+                    throw new InvalidDataException(string.Format(@"{0} is not a safetensors file.", path));
+                using (var header = JsonDocument.Parse(reader.ReadBytes((int)headerLength)))
+                {
+                    if (!header.RootElement.TryGetProperty(METADATA_KEY, out var metadata) || metadata.ValueKind != JsonValueKind.Object)
+                        return new Dictionary<string, string>(StringComparer.Ordinal);
+                    return metadata.EnumerateObject().ToDictionary(p => p.Name, p => p.Value.GetString(), StringComparer.Ordinal);
+                }
             }
         }
 

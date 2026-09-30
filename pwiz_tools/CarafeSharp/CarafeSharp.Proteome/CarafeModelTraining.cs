@@ -141,7 +141,11 @@ namespace pwiz.CarafeSharp.Proteome
         public string MsFile { get; set; }
         public string InstrumentVendor { get; set; }
         public string InstrumentModel { get; set; }
-        /// <summary>The instrument name the models were trained for (Carafe's classes: Lumos, Astral, ...), or empty.</summary>
+        /// <summary>
+        /// The instrument class the run trained as: Carafe's names (Lumos, Astral, QE, ...), or
+        /// CarafeSharp's LIT (HCD read out in a linear ion trap) or CID (resonance CID); empty when
+        /// Carafe names none.
+        /// </summary>
         public string Instrument { get; set; }
         /// <summary>The NCE the models were trained with.</summary>
         public double Nce { get; set; }
@@ -149,6 +153,8 @@ namespace pwiz.CarafeSharp.Proteome
         public IReadOnlyDictionary<string, long> DissociationMethods { get; set; } = new Dictionary<string, long>();
         /// <summary>MS2 spectra by collision energy as the file reports it, over the spectra Osprey sampled.</summary>
         public IReadOnlyDictionary<string, long> CollisionEnergies { get; set; } = new Dictionary<string, long>();
+        /// <summary>MS2 spectra by the mass analyzer that read them out, over the spectra Osprey sampled.</summary>
+        public IReadOnlyDictionary<string, long> Ms2MassAnalyzers { get; set; } = new Dictionary<string, long>();
         /// <summary>The first and last MS2 retention time, minutes.</summary>
         public double? RtMin { get; set; }
         public double? RtMax { get; set; }
@@ -182,6 +188,7 @@ namespace pwiz.CarafeSharp.Proteome
             json.WriteNumber(@"nce", Nce);
             CarafeModelTraining.WriteCounts(json, @"dissociation_methods", DissociationMethods.Select(p => (p.Key, p.Value)));
             CarafeModelTraining.WriteCounts(json, @"collision_energies", CollisionEnergies.Select(p => (p.Key, p.Value)));
+            CarafeModelTraining.WriteCounts(json, @"ms2_mass_analyzers", Ms2MassAnalyzers.Select(p => (p.Key, p.Value)));
             WriteNumber(json, @"rt_min", RtMin);
             WriteNumber(json, @"rt_max", RtMax);
             WriteNumber(json, @"isolation_mz_min", IsolationMzMin);
@@ -213,6 +220,9 @@ namespace pwiz.CarafeSharp.Proteome
                 Nce = element.GetProperty(@"nce").GetDouble(),
                 DissociationMethods = CarafeModelTraining.ReadCounts(element.GetProperty(@"dissociation_methods")),
                 CollisionEnergies = CarafeModelTraining.ReadCounts(element.GetProperty(@"collision_energies")),
+                Ms2MassAnalyzers = element.TryGetProperty(@"ms2_mass_analyzers", out var analyzers)
+                    ? CarafeModelTraining.ReadCounts(analyzers)
+                    : new Dictionary<string, long>(),
                 RtMin = ReadNumber(element, @"rt_min"),
                 RtMax = ReadNumber(element, @"rt_max"),
                 IsolationMzMin = ReadNumber(element, @"isolation_mz_min"),

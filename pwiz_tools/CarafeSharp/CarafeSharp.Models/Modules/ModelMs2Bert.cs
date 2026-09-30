@@ -78,6 +78,12 @@ namespace pwiz.CarafeSharp.Models.Modules
             RegisterComponents();
         }
 
+        /// <summary>Sets instrument slot <paramref name="to"/>'s weights to slot <paramref name="from"/>'s (see <see cref="PeptdeepConstants"/>).</summary>
+        public void CopyInstrumentSlot(int from, int to)
+        {
+            _metaNn.CopyInstrumentSlot(from, to);
+        }
+
         public override Tensor forward(Tensor aaIndices, Tensor modX, Tensor charges, Tensor nces, Tensor instrumentIndices)
         {
             var inX = _dropout.call(_inputNn.call(aaIndices, modX));

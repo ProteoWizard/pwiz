@@ -163,7 +163,7 @@ namespace pwiz.CarafeSharp
                 runs.Add(new CarafeRunMeta
                 {
                     MsFile = runPaths.TryGetValue(stem, out string path) ? path : stem,
-                    MsInstrument = OspreyTrainingSet.GetCarafeInstrument(export.InstrumentModel) ?? string.Empty,
+                    MsInstrument = OspreyTrainingSet.GetTrainingInstrument(export, null) ?? string.Empty,
                     Nce = OspreyTrainingSet.GetNce(export, options.Nce),
                     MinFragmentIonMz = scanWindow.Lower,
                     MaxFragmentIonMz = scanWindow.Upper,
@@ -198,10 +198,11 @@ namespace pwiz.CarafeSharp
                     MsFile = runPaths.TryGetValue(stem, out string path) ? path : stem,
                     InstrumentVendor = Footer(export, @"osprey.instrument_vendor"),
                     InstrumentModel = export.InstrumentModel,
-                    Instrument = OspreyTrainingSet.GetCarafeInstrument(export.InstrumentModel) ?? string.Empty,
+                    Instrument = OspreyTrainingSet.GetTrainingInstrument(export, settings.Instrument) ?? string.Empty,
                     Nce = OspreyTrainingSet.GetNce(export, options.Nce),
-                    DissociationMethods = FooterCounts(export, @"osprey.dissociation_methods"),
-                    CollisionEnergies = FooterCounts(export, @"osprey.collision_energies"),
+                    DissociationMethods = export.DissociationMethods,
+                    CollisionEnergies = export.CollisionEnergies,
+                    Ms2MassAnalyzers = export.Ms2MassAnalyzers,
                     RtMin = FooterNumber(export, @"osprey.rt_min"),
                     RtMax = FooterNumber(export, @"osprey.rt_max"),
                     IsolationMzMin = FooterNumber(export, @"osprey.isolation_mz_min"),
@@ -245,16 +246,6 @@ namespace pwiz.CarafeSharp
         {
             string text = Footer(export, key);
             return text != null && double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out double value) ? value : null;
-        }
-
-        /// <summary>A footer histogram (JSON, key to count), empty when the export has none.</summary>
-        private static IReadOnlyDictionary<string, long> FooterCounts(OspreyTrainingExport export, string key)
-        {
-            string text = Footer(export, key);
-            if (text == null)
-                return new Dictionary<string, long>();
-            using (var json = System.Text.Json.JsonDocument.Parse(text))
-                return json.RootElement.EnumerateObject().ToDictionary(p => p.Name, p => p.Value.GetInt64(), StringComparer.Ordinal);
         }
 
         private void Log(string message)

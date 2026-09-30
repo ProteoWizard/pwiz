@@ -88,9 +88,15 @@ namespace pwiz.CarafeSharp.Models
             return result;
         }
 
-        public static void WriteSafetensors(nn.Module module, string path)
+        public static void WriteSafetensors(nn.Module module, string path, IReadOnlyDictionary<string, string> metadata = null)
         {
-            SafetensorsFile.Write(path, module.state_dict());
+            SafetensorsFile.Write(path, module.state_dict(), metadata);
+        }
+
+        /// <summary>A safetensors file's free-text metadata, empty when it has none.</summary>
+        public static Dictionary<string, string> ReadSafetensorsMetadata(string path)
+        {
+            return SafetensorsFile.ReadMetadata(path);
         }
 
         /// <summary>

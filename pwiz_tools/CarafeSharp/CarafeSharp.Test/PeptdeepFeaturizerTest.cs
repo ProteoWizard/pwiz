@@ -97,10 +97,13 @@ namespace pwiz.CarafeSharp.Test
             }
             using (var charges = PeptdeepFeaturizer.Charges(new[] { 2, 3 }))
                 CollectionAssert.AreEqual(new[] { 2 * 0.1f, 3 * 0.1f }, charges.data<float>().ToArray());
-            using (var instruments = PeptdeepFeaturizer.InstrumentIndices(new[] { @"Eclipse", @"Exploris", @"Astral", @"Stellar" }))
+            using (var instruments = PeptdeepFeaturizer.InstrumentIndices(new[]
+                       { @"Eclipse", @"Exploris", @"Astral", @"Ascend", @"TribridOT", @"Stellar", @"LIT", @"CID", @"reCID" }))
             {
-                // Eclipse and Astral are Lumos (1), Exploris is QE (0), anything unlisted is Lumos.
-                CollectionAssert.AreEqual(new long[] { 1, 0, 1, 1 }, instruments.data<long>().ToArray());
+                // Eclipse and Astral are Lumos (1), Exploris is QE (0), anything unlisted is Lumos,
+                // and TribridOT names the Lumos family. CarafeSharp's classes: a Stellar and LIT
+                // (HCD read out in an ion trap) are slot 5, CID and reCID (resonance CID) slot 6.
+                CollectionAssert.AreEqual(new long[] { 1, 0, 1, 1, 1, 5, 5, 6, 6 }, instruments.data<long>().ToArray());
             }
             Assert.ThrowsException<ArgumentException>(() => PeptdeepFeaturizer.AaIndices(
                 new[] { new PeptideForm(@"PEPTIDE"), new PeptideForm(@"PEPTIDES") }));

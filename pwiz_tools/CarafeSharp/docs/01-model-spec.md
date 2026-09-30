@@ -110,6 +110,19 @@ when the training `rt_max` is known, else `irt_pred`.
   Elite, OrbitrapTribrid, ThermoTribrid to Lumos; QE, QE+, QEHF, QEHFX, Exploris,
   Exploris480 to QE; timsTOF, SciexTOF, ThermoTOF to themselves; **anything else to Lumos**),
   then indexed QE=0, Lumos=1, timsTOF=2, SciexTOF=3, ThermoTOF=4.
+- **CarafeSharp's instrument classes (not peptdeep's).** Two slots peptdeep leaves untrained take
+  CarafeSharp's classes: LIT=5 (HCD read out in a linear ion trap: a Stellar, a Tribrid's ion trap;
+  names LIT and Stellar) and CID=6 (resonance CID, Thermo's CID, read out in either analyzer; names CID
+  and reCID). TribridOT names the Lumos family (a Tribrid's Orbitrap HCD). Slot 7 stays peptdeep's
+  unknown. In peptdeep's pretrained weights slots 5-7 were never trained: their columns of
+  `meta_nn.nn.weight` are at initialization scale and uncorrelated with Lumos's (cosine -0.14 for 5).
+  So a model that has never trained CarafeSharp's slots (the pretrained one, a Carafe checkpoint, a
+  CarafeSharp model saved before them) starts LIT and CID as a copy of Lumos's column when loaded,
+  and predicts them as Lumos until fine-tuning on ion trap or CID spectra separates them. A model
+  CarafeSharp saves records `carafesharp.instrument_slots` in its safetensors metadata, and is loaded
+  with its own slots. A run trains as a class by how its MS2 spectra were acquired (Osprey's export
+  footer: `osprey.dissociation_methods`, `osprey.ms2_mass_analyzers`); a run that mixes classes is
+  refused unless `-ms_instrument` names one for all of it.
 
 ## Prediction post-processing
 

@@ -57,7 +57,7 @@ namespace pwiz.CarafeSharp.Test
             try
             {
                 manual_seed(7);
-                // A saved model reloads to identical predictions, and saves to identical bytes.
+                // A saved model reloads to identical predictions, and saves again to identical bytes.
                 var requests = new[]
                 {
                     new Ms2Request(new PrecursorForm(new PeptideForm(@"PEPTIDEK"), 2), 30, @"Lumos"),
@@ -73,9 +73,13 @@ namespace pwiz.CarafeSharp.Test
                     predicted = model.Predict(requests).SelectMany(p => p.Intensities).ToArray();
                     model.Save(saved);
                 }
+                string resaved = Path.Combine(folder, @"resaved_ms2.safetensors");
                 using (var model = Ms2Model.FromSafetensors(saved, CPU))
+                {
                     CollectionAssert.AreEqual(predicted, model.Predict(requests).SelectMany(p => p.Intensities).ToArray());
-                CollectionAssert.AreEqual(File.ReadAllBytes(random), File.ReadAllBytes(saved));
+                    model.Save(resaved);
+                }
+                CollectionAssert.AreEqual(File.ReadAllBytes(saved), File.ReadAllBytes(resaved));
 
                 var peptides = new[] { new PeptideForm(@"PEPTIDEK"), new PeptideForm(@"LGGNEQVTR") };
                 string randomRt = Path.Combine(folder, @"random_rt.safetensors");

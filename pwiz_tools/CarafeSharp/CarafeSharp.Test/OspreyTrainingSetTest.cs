@@ -259,8 +259,8 @@ namespace pwiz.CarafeSharp.Test
             // Two runs of unequal length, one with a collision energy and a model Carafe names,
             // one with neither.
             var exploris = NewExport(@"a", 10, @"{""30"":1000}", @"Orbitrap Exploris 480", @"PEPTIDEK", 5);
-            var stellar = NewExport(@"b", 20, null, @"Stellar", @"SAMPLERK", 8);
-            var exports = new[] { exploris, stellar };
+            var ascend = NewExport(@"b", 20, null, @"Orbitrap Ascend", @"SAMPLERK", 8);
+            var exports = new[] { exploris, ascend };
             var trainingSet = OspreyTrainingSet.Build(exports, new OspreyTrainingSetOptions { Nce = 25 });
             // Carafe's NCE: the run's own, then -nce, then 27; its instrument name, else Eclipse.
             var ms2 = trainingSet.Ms2.ToDictionary(e => e.Sequence);
@@ -269,7 +269,7 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(25.0, ms2[@"SAMPLERK"].Nce);
             Assert.AreEqual(OspreyTrainingSetOptions.DEFAULT_INSTRUMENT, ms2[@"SAMPLERK"].Instrument);
             Assert.AreEqual(OspreyTrainingSetOptions.DEFAULT_NCE,
-                OspreyTrainingSet.Build(new[] { stellar }, new OspreyTrainingSetOptions()).Ms2.Single().Nce);
+                OspreyTrainingSet.Build(new[] { ascend }, new OspreyTrainingSetOptions()).Ms2.Single().Nce);
             Assert.AreEqual(LibrarySettings.DEFAULT_NCE, OspreyTrainingSetOptions.DEFAULT_NCE);
             Assert.AreEqual(LibrarySettings.DEFAULT_INSTRUMENT, OspreyTrainingSetOptions.DEFAULT_INSTRUMENT);
             // -ms_instrument names every row's instrument.
@@ -473,6 +473,70 @@ namespace pwiz.CarafeSharp.Test
                 if (Directory.Exists(folder))
                     Directory.Delete(folder, true);
             }
+        }
+
+        /// <summary>
+        /// The instrument class a run trains as, from how Osprey's export says its MS2 spectra were
+        /// acquired: resonance CID (Thermo's CID) in either analyzer is CID; HCD read out in an ion
+        /// trap is LIT; Orbitrap HCD is the model's Carafe name; without the analyzers a Stellar is
+        /// LIT by its model. A run mixing classes is refused, and -ms_instrument names one for all of it.
+        /// </summary>
+        [TestMethod]
+        public void TestInstrumentClasses()
+        {
+            string folder = Path.Combine(Path.GetTempPath(), @"CarafeSharpInstruments_" + Guid.NewGuid().ToString(@"N"));
+            Directory.CreateDirectory(folder);
+            try
+            {
+                const string trap = @"{""radial ejection linear ion trap"":200}";
+                const string orbitrap = @"{""orbitrap"":200}";
+                string Class(string model, string activations, string analyzers, string user = null) =>
+                    OspreyTrainingSet.GetTrainingInstrument(InstrumentExport(folder, model, activations, analyzers), user);
+
+                Assert.AreEqual(PeptdeepConstants.LIT, Class(@"Stellar", @"{""HCD"":200}", trap));
+                Assert.AreEqual(PeptdeepConstants.LIT, Class(@"Orbitrap Eclipse", @"{""HCD"":200}", trap), @"a Tribrid's ion trap HCD");
+                Assert.AreEqual(PeptdeepConstants.CID, Class(@"Stellar", @"{""CID"":200}", trap));
+                Assert.AreEqual(PeptdeepConstants.CID, Class(@"Orbitrap Eclipse", @"{""CID"":200}", orbitrap), @"resonance CID read out in the Orbitrap");
+                Assert.AreEqual(@"Eclipse", Class(@"Orbitrap Eclipse", @"{""HCD"":200}", orbitrap), @"a Tribrid's Orbitrap HCD: the Lumos family");
+                Assert.AreEqual(@"Astral", Class(@"Orbitrap Astral", @"{""HCD"":200}", @"{""orbitrap astral"":200}"));
+                // Spectra without a value are left out; an electron-based method is the model's name, as before.
+                Assert.AreEqual(PeptdeepConstants.LIT, Class(@"Stellar", @"{""HCD"":199,""none"":1}", @"{""radial ejection linear ion trap"":199,""none"":1}"));
+                Assert.AreEqual(@"Eclipse", Class(@"Orbitrap Eclipse", @"{""ETD"":200}", orbitrap));
+                // Without the run info (no data file, or an Osprey that did not record the analyzers), the model decides.
+                Assert.AreEqual(PeptdeepConstants.LIT, Class(@"Stellar", null, null));
+                Assert.AreEqual(PeptdeepConstants.LIT, Class(@"Stellar", @"{""HCD"":200}", null));
+                Assert.AreEqual(@"Eclipse", Class(@"Orbitrap Eclipse", null, null));
+                Assert.IsNull(Class(@"Orbitrap Ascend", null, null));
+
+                // A run that mixes classes is refused, naming what it mixes; -ms_instrument decides for all of it.
+                var mixedActivation = Assert.ThrowsException<InvalidDataException>(() => Class(@"Stellar", @"{""HCD"":150,""CID"":50}", trap));
+                StringAssert.Contains(mixedActivation.Message, @"CID (50) and HCD (150)");
+                var mixedReadout = Assert.ThrowsException<InvalidDataException>(() =>
+                    Class(@"Orbitrap Eclipse", @"{""HCD"":200}", @"{""orbitrap"":150,""radial ejection linear ion trap"":50}"));
+                StringAssert.Contains(mixedReadout.Message, @"ion trap (50) and not an ion trap (150)");
+                Assert.AreEqual(PeptdeepConstants.LIT, Class(@"Stellar", @"{""HCD"":150,""CID"":50}", trap, PeptdeepConstants.LIT));
+            }
+            finally
+            {
+                Directory.Delete(folder, true);
+            }
+        }
+
+        /// <summary>A one-record export of <paramref name="model"/> with these footer histograms (JSON), each left out when null.</summary>
+        private static OspreyTrainingExport InstrumentExport(string folder, string model, string activations, string analyzers)
+        {
+            var footer = new Dictionary<string, string>
+            {
+                { @"osprey.training_export.format_version", OspreyTrainingExport.FORMAT_VERSION },
+                { @"osprey.instrument_model", model },
+            };
+            if (activations != null)
+                footer[@"osprey.dissociation_methods"] = activations;
+            if (analyzers != null)
+                footer[@"osprey.ms2_mass_analyzers"] = analyzers;
+            string path = Path.Combine(folder, Guid.NewGuid().ToString(@"N") + OspreyTrainingExport.FILE_SUFFIX);
+            OspreyTestRecords.WriteExport(path, new[] { OspreyTestRecords.CleanRecord(@"PEPTIDEK", 2) }, footer, 1);
+            return OspreyTrainingExport.Read(path);
         }
 
         /// <summary>The exports for <paramref name="identifications"/> and the <c>-ms</c> runs, every one of the same search.</summary>
