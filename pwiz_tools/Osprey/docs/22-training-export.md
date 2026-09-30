@@ -259,8 +259,8 @@ and 0 when either series is constant.
 | 1 | 2 | `IN_SCAN_RANGE` | `ion_mz` lies inside the m/z range this precursor's isolation window measured: the lowest to the highest peak m/z over that window's MS2 spectra in `.spectra.bin`, after calibration (`TrainingEvidenceWindow.ObservedMzRange`). Over a run's worth of spectra that is the scan range as the data shows it, a little inside the method's nominal limits; an ion outside it was not measured, so its absence is not a zero. A window with no peaks marks every applicable ion |
 | 2 | 4 | `MATCHED_AT_APEX` | A peak was found within the tolerance in the apex spectrum |
 | 3 | 8 | `CORE` | One of the library fragments Osprey's median polish was fit to |
-| 4 | 16 | `LIBRARY_ANNOTATED` | The library holds this ion by annotation (b/y, ordinal, charge, no loss) |
-| 5 | 32 | `LIBRARY_MZ_MATCHED` | The library holds an UNannotated fragment matched to this ion by m/z |
+| 4 | 16 | `LIBRARY_ANNOTATED` | The library states this ion's type for one of its fragments (b/y, ordinal, charge, no loss): a DIA-NN TSV library |
+| 5 | 32 | `LIBRARY_MZ_MATCHED` | The library holds a fragment matched to this ion by m/z: every fragment of a .blib, which states no types, and any fragment a library leaves untyped |
 | 6 | 64 | `BETTER_CLAIMANT_APEX` | An APEX-scope sharer has a lower run q (or an equal q and a higher score) |
 | 7 | 128 | `BETTER_CLAIMANT_COELUTE` | A CO-ELUTION-scope sharer has a lower run q (or an equal q and a higher score) |
 
@@ -352,7 +352,10 @@ latter aligned by exact retention time.
 
 **Library mapping.** A library fragment annotated as b or y at charge 1 or 2 without a loss maps
 to its slot directly (`FragmentLadder.SlotOf`); an unannotated one maps to the nearest applicable
-slot within the tolerance. The six core fragments carry `CORE` on their slots.
+slot within the tolerance. A .blib's fragments carry the types Osprey's typing gave them from m/z
+at load ([13](13-blib-output-schema.md)), so they map to those slots, the ions the search
+extracted them as, but are flagged `LIBRARY_MZ_MATCHED`: the type is Osprey's, not the library's.
+The six core fragments carry `CORE` on their slots.
 
 ### Shared-peak evidence: two scopes
 
