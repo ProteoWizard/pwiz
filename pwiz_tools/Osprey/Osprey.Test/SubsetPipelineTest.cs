@@ -78,9 +78,6 @@ namespace pwiz.Osprey.Test
         // A .blib of the subset library reports within a few precursors of the .tsv it came from
         // (the .blib stores intensities as float and its peaks are typed from m/z).
         private const double MIN_BLIB_LIBRARY_FRACTION = 0.9;
-        // Peaks of the subset library whose stated b or y ion shares its m/z with another ion
-        // (b2 and b4^2 of IQQLTEEIGR, LQQIAAAVENK; b2 of ELEIGQAGSQR, VQVQDNEGCPVEALVK).
-        private const int SUBSET_ISOBARIC_PEAKS = 6;
         // The Astral subset recovers about 164 of the 203 its full run detected (81%), so the
         // Stellar floor would leave one precursor of headroom.
         private const double MIN_ASTRAL_RECOVERED_FRACTION = 0.7;
@@ -671,25 +668,22 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0, BlibComparer.CountWhere(exported, BlibPeakAnnotations.TABLE_NAME, @"1"));
             AssertExportOverLibraryRefused(library);
 
-            // The subset library's stated types agree with Osprey's typing on every peak but the
-            // isobars Osprey declines to type (b2 and b4^2 of IQQLTEEIGR share one m/z).
+            // Osprey's own typing reproduces every type the subset library states - the isobars
+            // too: b2 and b4^2 of IQQLTEEIGR share one m/z, and the library lists both as two
+            // peaks, which the lower-charge preference and one peak per ion type as it does.
             var tsvLoader = new DiannTsvLoader(FragmentToleranceConfig.UnitResolution(0.5));
             tsvLoader.Load(library);
-            Assert.AreEqual(0, tsvLoader.TypeCheck.Differ, string.Join(Environment.NewLine, tsvLoader.TypeCheck.Examples));
-            Assert.AreEqual(SUBSET_ISOBARIC_PEAKS, tsvLoader.TypeCheck.Isobaric);
+            Assert.AreEqual(tsvLoader.TypeCheck.StatedPrimary, tsvLoader.TypeCheck.Agree,
+                string.Join(Environment.NewLine, tsvLoader.TypeCheck.Examples));
 
-            // Searching the .blib reports what the .tsv search does, to within those isobars: the
-            // .blib leaves them untyped where the .tsv states a type, so a few decoys differ, and
-            // with them the scores of the whole search.
+            // So searching the .blib, which states no types, reports what the .tsv search does.
             string blibDir = CreateDir(@"blib-library");
             RunAnalysis(blibDir, DataInputs(), exported, Verifier(false));
-            int tsvPrecursors = BlibComparer.CountRows(tsvOutput, @"RefSpectra");
-            int exportedPrecursors = BlibComparer.CountRows(Path.Combine(blibDir, BLIB_FILE), @"RefSpectra");
-            Assert.IsTrue(exportedPrecursors >= MIN_BLIB_LIBRARY_FRACTION * tsvPrecursors,
-                string.Format(@"{0} precursors from the exported .blib, {1} from the .tsv", exportedPrecursors, tsvPrecursors));
+            AssertSameSearch(tsvOutput, Path.Combine(blibDir, BLIB_FILE));
 
             string backDir = CreateDir(@"output-blib-library");
             RunAnalysis(backDir, DataInputs(), tsvOutput, Verifier(false));
+            int tsvPrecursors = BlibComparer.CountRows(tsvOutput, @"RefSpectra");
             int backPrecursors = BlibComparer.CountRows(Path.Combine(backDir, BLIB_FILE), @"RefSpectra");
             Assert.IsTrue(backPrecursors >= MIN_BLIB_LIBRARY_FRACTION * tsvPrecursors,
                 string.Format(@"{0} precursors from the output .blib, {1} in it", backPrecursors, tsvPrecursors));
@@ -716,6 +710,17 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(output, string.Format(OspreyResources.Program_ValidateArgs_The__0__path_is_the_library_it_reads___1_,
                 OspreyCommandArgs.ARG_EXPORT_LIBRARY.ArgumentText, library));
             CollectionAssert.AreEqual(before, HashFile(library));
+        }
+
+        /// <summary>
+        /// Two searches of one library in different formats report the same thing: every table,
+        /// peaks included, agrees at <see cref="TOLERANCE"/> but the library each names as its
+        /// source.
+        /// </summary>
+        private static void AssertSameSearch(string expectedBlib, string actualBlib)
+        {
+            var differences = BlibComparer.Compare(expectedBlib, actualBlib, TOLERANCE, @"SpectrumSourceFiles");
+            Assert.AreEqual(0, differences.Count, string.Join(Environment.NewLine, differences.Take(20)));
         }
 
         private void ValidateStraightThrough(string workDir, string log)

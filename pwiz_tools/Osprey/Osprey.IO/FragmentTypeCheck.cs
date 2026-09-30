@@ -21,7 +21,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Threading;
 using pwiz.Osprey.Core;
 
@@ -29,19 +28,20 @@ namespace pwiz.Osprey.IO
 {
     /// <summary>
     /// Compares the fragment ion types a library STATES (blib annotation rows, DIA-NN TSV
-    /// columns) with the types Osprey computes from m/z (<see cref="FragmentTyping"/>), peak by
-    /// peak, so a library whose statements and Osprey's typing part ways is reported rather than
-    /// silently searched one way or the other.
+    /// columns) with the types Osprey's own typing gives (<see cref="FragmentTyping.Compute"/>,
+    /// no library statement), peak by peak, so a library whose statements and Osprey's typing
+    /// part ways is reported rather than silently searched one way or the other.
     ///
     /// <list type="bullet">
     /// <item><b>Agree</b>: the library names a primary b or y ion (<see cref="FragmentTyping.IsPrimary"/>)
-    /// for the peak and Osprey computes one of the ions it names. A library may name several
-    /// candidates for one peak, as NIST does.</item>
-    /// <item><b>Isobaric</b>: the library names one of two or more ions at one m/z - <c>b2</c> and
-    /// <c>b4^2</c> of <c>IQQLTEEIGR</c> - which Osprey cannot tell apart and leaves untyped. Not a
-    /// disagreement: the library chose where Osprey declines to guess.</item>
-    /// <item><b>Differ</b>: the library names a primary b or y ion and Osprey computes none of
-    /// them - another ion, or no ion within the search tolerance.</item>
+    /// for the peak that Osprey's own typing chooses too. A library may name several ions for one
+    /// peak, as NIST does.</item>
+    /// <item><b>Library's choice</b>: the library names a primary ion within the search tolerance
+    /// of the peak that Osprey would not have chosen on its own - one of an isobaric pair, say.
+    /// The library may know what Osprey cannot (an isotope label separating the pair), so its
+    /// choice is the one used.</item>
+    /// <item><b>Differ</b>: the library names primary ions, none within the search tolerance of
+    /// the peak - an ion Osprey does not agree could have produced it.</item>
     /// <item><b>Outside the model</b>: the library types the peak only as something typing does
     /// not produce - a neutral loss, an a/c/x/z ion, a fragment charge above 2 - or states it
     /// unreadably. Reported, not a disagreement.</item>
@@ -56,17 +56,17 @@ namespace pwiz.Osprey.IO
 
         private readonly List<string> _examples = new List<string>();
         private long _agree;
-        private long _isobaric;
+        private long _libraryChoice;
         private long _differ;
         private long _outside;
 
         public long Agree => Interlocked.Read(ref _agree);
-        public long Isobaric => Interlocked.Read(ref _isobaric);
+        public long LibraryChoice => Interlocked.Read(ref _libraryChoice);
         public long Differ => Interlocked.Read(ref _differ);
         public long Outside => Interlocked.Read(ref _outside);
 
         /// <summary>Peaks the library types as a primary b or y ion - the denominator.</summary>
-        public long StatedPrimary => Agree + Isobaric + Differ;
+        public long StatedPrimary => Agree + LibraryChoice + Differ;
 
         /// <summary>Whether the library stated a type for any peak.</summary>
         public bool AnyStated => StatedPrimary + Outside > 0;
@@ -74,23 +74,27 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Count one peak: <paramref name="stated"/> is every type the library gives it that
         /// could be read; <paramref name="unreadable"/> that it also gave one that could not.
-        /// <paramref name="computed"/> is what Osprey computes for it.
+        /// <paramref name="ospreyChoice"/> is the ion Osprey's own typing gives the peak, or null;
+        /// <paramref name="candidates"/> the peptide's ions, which say whether a stated ion is
+        /// possible for the peak within <paramref name="tolerance"/>.
         /// </summary>
-        public void AddPeak(IReadOnlyList<FragmentAnnotation> stated, bool unreadable, ComputedType computed,
+        public void AddPeak(IReadOnlyList<FragmentAnnotation> stated, bool unreadable, FragmentAnnotation? ospreyChoice,
+            FragmentCandidates candidates, FragmentToleranceConfig tolerance,
             string sequence, int precursorCharge, double peakMz)
         {
             bool anyPrimary = false;
+            bool anyPossible = false;
             bool agrees = false;
-            bool isobaric = false;
             foreach (var annotation in stated)
             {
                 if (!FragmentTyping.IsPrimary(annotation))
                     continue;
                 anyPrimary = true;
-                if (computed.Ion.HasValue && IsSameIon(annotation, computed.Ion.Value))
+                if (!candidates.IsPossible(annotation, peakMz, tolerance))
+                    continue;
+                anyPossible = true;
+                if (ospreyChoice.HasValue && IsSameIon(annotation, ospreyChoice.Value))
                     agrees = true;
-                else if (computed.TiedIons != null && computed.TiedIons.Any(ion => IsSameIon(annotation, ion)))
-                    isobaric = true;
             }
             if (!anyPrimary)
             {
@@ -103,9 +107,9 @@ namespace pwiz.Osprey.IO
                 Interlocked.Increment(ref _agree);
                 return;
             }
-            if (isobaric)
+            if (anyPossible)
             {
-                Interlocked.Increment(ref _isobaric);
+                Interlocked.Increment(ref _libraryChoice);
                 return;
             }
             Interlocked.Increment(ref _differ);
@@ -115,7 +119,7 @@ namespace pwiz.Osprey.IO
                 {
                     _examples.Add(string.Format(OspreyIOResources.FragmentTypeCheck_AddPeak__0___charge__1___peak_m_z__2_F4___the_library_says__3___Osprey_computes__4_,
                         sequence, precursorCharge, peakMz, FormatIons(stated),
-                        computed.Ion.HasValue ? FormatIon(computed.Ion.Value) : OspreyIOResources.FragmentTypeCheck_AddPeak_no_ion));
+                        ospreyChoice.HasValue ? FormatIon(ospreyChoice.Value) : OspreyIOResources.FragmentTypeCheck_AddPeak_no_ion));
                 }
             }
         }
@@ -136,7 +140,7 @@ namespace pwiz.Osprey.IO
         public string Summary(string libraryName)
         {
             return string.Format(OspreyIOResources.FragmentTypeCheck_Summary_Fragment_types_in__0___Osprey_s_computed_types_agree_with__1_N0__of__2_N0__peaks,
-                libraryName, Agree, StatedPrimary, Differ, Outside, Isobaric);
+                libraryName, Agree, StatedPrimary, Differ, Outside, LibraryChoice);
         }
 
         /// <summary>

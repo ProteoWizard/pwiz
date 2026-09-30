@@ -90,7 +90,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Typed {0:N0} of {1:N0} library peaks as b or y ions within {2} ({3:N0} left untyped by a tie between two ions).
+        ///   Looks up a localized string similar to Typed {0:N0} of {1:N0} library peaks as b or y ions within {2}, {3:N0} of them as the library states.
         /// </summary>
         public static string BlibLoader_Load_Typed__0_N0__of__1_N0__library_peaks_as_b_or_y_ions_within__2___3_ {
             get {
@@ -221,7 +221,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Fragment types in {0}: Osprey&apos;s computed types agree with {1:N0} of {2:N0} peaks the library types as a b or y ion and differ on {3:N0}; {5:N0} name one of several ions at the same m/z, which Osprey leaves untyped; {4:N0} more peaks are typed outside what Osprey computes (neutral losses, other ion types, fragment charge above 2, or unreadable).
+        ///   Looks up a localized string similar to Fragment types in {0}: of {2:N0} peaks the library types as a b or y ion, Osprey&apos;s own typing agrees on {1:N0}, the library chooses another ion within tolerance of the peak on {5:N0}, and names no ion within tolerance on {3:N0}; {4:N0} more peaks are typed outside what Osprey computes (neutral losses, other ion types, fragment charge above 2, or unreadable).
         /// </summary>
         public static string FragmentTypeCheck_Summary_Fragment_types_in__0___Osprey_s_computed_types_agree_with__1_N0__of__2_N0__peaks {
             get {

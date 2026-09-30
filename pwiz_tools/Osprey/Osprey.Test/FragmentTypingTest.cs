@@ -36,12 +36,16 @@ namespace pwiz.Osprey.Test
     {
         private const string SEQUENCE = @"PEPTIDEK";
 
+        // The first twelve residues repeat the first six, so b6 and b12^2 share one m/z.
+        private const string REPEAT = @"AAAAAAAAAAAAAAK";
+
         [TestMethod]
         public void TestFragmentTypingRules()
         {
             AssertNearestPrimaryIonWithinTolerance();
             AssertChargeLimitAndNoLosses();
-            AssertTieLeavesPeakUnknown();
+            AssertTiesAndOnePeakPerIon();
+            AssertLibraryStatedIonsAreUsedWhenPossible();
             AssertStackedModificationsType();
             AssertNonFinitePeakIsUntyped();
         }
@@ -101,22 +105,70 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// Two ions at one m/z - b6 and b12^2 of a peptide whose first twelve residues repeat its
-        /// first six - leave the peak Unknown rather than guessing, and are counted as a tie.
+        /// first six - go to the lower charge: the peak is typed b6, never left untyped. Each ion
+        /// types one peak, the most intense first, so a second peak at that m/z takes b12^2, and a
+        /// third, with both ions claimed, stays Unknown.
         /// </summary>
-        private static void AssertTieLeavesPeakUnknown()
+        private static void AssertTiesAndOnePeakPerIon()
         {
-            const string repeat = @"AAAAAAAAAAAAAAK";
-            double b6 = Mz(IonType.B, 6, 1, repeat, null);
-            Assert.AreEqual(b6, Mz(IonType.B, 12, 2, repeat, null), 1e-9);
+            var ppm10 = FragmentToleranceConfig.Hram(10);
+            double b6 = Mz(IonType.B, 6, 1, REPEAT, null);
+            Assert.AreEqual(b6, Mz(IonType.B, 12, 2, REPEAT, null), 1e-9);
+            AssertIon(Type(REPEAT, 2, ppm10, b6)[0], IonType.B, 6, 1);
+
             var stats = new FragmentTypingStats();
-            var fragments = Fragments(b6);
-            FragmentTyping.TypeFragments(repeat, null, 2, fragments, FragmentToleranceConfig.Hram(10), stats);
-            Assert.AreEqual(IonType.Unknown, fragments[0].Annotation.IonType);
-            Assert.AreEqual(0, stats.Typed);
+            var fragments = Fragments((b6, 0.1f), (b6, 1.0f), (b6, 0.05f));
+            FragmentTyping.TypeFragments(REPEAT, null, 2, fragments, ppm10, stats);
+            AssertIon(fragments[1].Annotation, IonType.B, 6, 1);
+            AssertIon(fragments[0].Annotation, IonType.B, 12, 2);
+            Assert.AreEqual(IonType.Unknown, fragments[2].Annotation.IonType, @"both ions already claimed");
+            Assert.AreEqual(2, stats.Typed);
             Assert.AreEqual(1, stats.Untyped);
-            Assert.AreEqual(1, stats.Ties);
-            // A 1+ precursor has no b12^2 to tie with.
-            AssertIon(Type(repeat, 1, FragmentToleranceConfig.Hram(10), b6)[0], IonType.B, 6, 1);
+            Assert.AreEqual(0, stats.Stated);
+        }
+
+        /// <summary>
+        /// An ion the library states is used when Osprey agrees it is possible - a primary b or y
+        /// ion within tolerance of the peak - even where Osprey on its own would choose another:
+        /// the library may know what Osprey cannot (an isotope label separating an isobaric pair).
+        /// Of several possible stated ions, Osprey's order chooses; a stated ion that claims an ion
+        /// takes it from the unstated peaks. A stated ion out of tolerance, a neutral loss or a
+        /// charge above 2 is not possible, and the peak is typed as Osprey types it.
+        /// </summary>
+        private static void AssertLibraryStatedIonsAreUsedWhenPossible()
+        {
+            var ppm10 = FragmentToleranceConfig.Hram(10);
+            var b6 = Ion(IonType.B, 6, 1);
+            var b12Doubly = Ion(IonType.B, 12, 2);
+            double b6Mz = Mz(IonType.B, 6, 1, REPEAT, null);
+
+            var stats = new FragmentTypingStats();
+            var fragments = Fragments((b6Mz, 1.0f), (b6Mz, 0.5f));
+            FragmentTyping.TypeFragments(REPEAT, null, 2, fragments, ppm10, stats,
+                new IReadOnlyList<FragmentAnnotation>[] { new[] { b12Doubly }, null });
+            AssertIon(fragments[0].Annotation, IonType.B, 12, 2);
+            AssertIon(fragments[1].Annotation, IonType.B, 6, 1);
+            Assert.AreEqual(1, stats.Stated);
+            Assert.AreEqual(1, stats.Typed);
+
+            fragments = Fragments((b6Mz, 1.0f));
+            FragmentTyping.TypeFragments(REPEAT, null, 2, fragments, ppm10, null,
+                new IReadOnlyList<FragmentAnnotation>[] { new[] { b12Doubly, b6 } });
+            AssertIon(fragments[0].Annotation, IonType.B, 6, 1);
+
+            double b4 = Mz(IonType.B, 4, 1, SEQUENCE, null);
+            double y3 = Mz(IonType.Y, 3, 1, SEQUENCE, null);
+            fragments = Fragments((b4, 1.0f), (y3, 0.8f), (y3 + 0.001, 0.6f));
+            FragmentTyping.TypeFragments(SEQUENCE, null, 3, fragments, ppm10, null,
+                new IReadOnlyList<FragmentAnnotation>[]
+                {
+                    new[] { Ion(IonType.Y, 3, 1) },                                                            // out of tolerance
+                    new[] { new FragmentAnnotation { IonType = IonType.Y, Ordinal = 3, Charge = 1, NeutralLoss = NeutralLossCode.H2O } },
+                    new[] { Ion(IonType.Y, 7, 3) },                                                            // charge above 2
+                });
+            AssertIon(fragments[0].Annotation, IonType.B, 4, 1);
+            AssertIon(fragments[1].Annotation, IonType.Y, 3, 1);
+            Assert.AreEqual(IonType.Unknown, fragments[2].Annotation.IonType, @"y3 claimed, and no other ion within 10 ppm");
         }
 
         /// <summary>
@@ -133,7 +185,7 @@ namespace pwiz.Osprey.Test
             };
             var modMasses = PeptideFragmentMass.ModMassesByPosition(mods);
             double b3 = PeptideFragmentMass.CalculateFragmentMz(IonType.B, 3, 1, sequence, modMasses, null).Value;
-            var fragments = Fragments(b3, b3 - 42.010565);
+            var fragments = Fragments((b3, 1f), (b3 - 42.010565, 0.5f));
             FragmentTyping.TypeFragments(sequence, mods, 2, fragments, FragmentToleranceConfig.Hram(10), null);
             AssertIon(fragments[0].Annotation, IonType.B, 3, 1);
             Assert.AreEqual(IonType.Unknown, fragments[1].Annotation.IonType, @"one modification light is no ion");
@@ -203,20 +255,20 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0, warnings.Count);
             CollectionAssert.AreEqual(new[] { agreeing.TypeCheck.Summary(@"library.tsv") }, info);
 
-            // A stated ion at the m/z of another that Osprey cannot tell it from - b6 and b12^2 of
-            // a repeat - is isobaric, not a disagreement: counted apart, and no warning.
-            const string repeat = @"AAAAAAAAAAAAAAK";
-            double b6 = Mz(IonType.B, 6, 1, repeat, null);
+            // A stated ion Osprey agrees is possible but would not choose itself - b12^2 of a
+            // repeat, where Osprey prefers the b6 at the same m/z - is the library's choice, not
+            // a disagreement: counted apart, and no warning.
+            double b6 = Mz(IonType.B, 6, 1, REPEAT, null);
             string isobaricTsv = tsv.Substring(0, tsv.IndexOf('\n') + 1) +
-                                 Line(Mz(IonType.Y, 3, 1, repeat, null), @"y", 3, @"noloss").Replace(@"PEPTIDEK", repeat) +
-                                 Line(b6, @"b", 6, @"noloss").Replace(@"PEPTIDEK", repeat);
+                                 Line(Mz(IonType.Y, 3, 1, REPEAT, null), @"y", 3, @"noloss").Replace(@"PEPTIDEK", REPEAT) +
+                                 Line(b6, @"b", 12, @"noloss", 2).Replace(@"PEPTIDEK", REPEAT);
             var isobaric = new DiannTsvLoader(2, FragmentToleranceConfig.Hram(10));
             using (var reader = new StringReader(isobaricTsv))
             {
                 isobaric.ParseReader(reader);
             }
             Assert.AreEqual(1, isobaric.TypeCheck.Agree);
-            Assert.AreEqual(1, isobaric.TypeCheck.Isobaric);
+            Assert.AreEqual(1, isobaric.TypeCheck.LibraryChoice);
             Assert.AreEqual(0, isobaric.TypeCheck.Differ);
             warnings.Clear();
             isobaric.TypeCheck.Report(@"library.tsv", true, info.Add, warnings.Add);
@@ -231,28 +283,38 @@ namespace pwiz.Osprey.Test
             Assert.IsFalse(noTolerance.TypeCheck.AnyStated);
         }
 
-        private static string Line(double mz, string type, int number, string loss)
+        private static string Line(double mz, string type, int number, string loss, int fragmentCharge = 1)
         {
-            return string.Join("\t", @"_PEPTIDEK_", SEQUENCE, @"466.7", @"2", @"10.5", @"P1", mz.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                @"1.0", type, number.ToString(System.Globalization.CultureInfo.InvariantCulture), @"1", loss) + "\n";
+            var invariant = System.Globalization.CultureInfo.InvariantCulture;
+            return string.Join("\t", @"_PEPTIDEK_", SEQUENCE, @"466.7", @"2", @"10.5", @"P1", mz.ToString(invariant),
+                @"1.0", type, number.ToString(invariant), fragmentCharge.ToString(invariant), loss) + "\n";
         }
 
+        /// <summary>The type each of <paramref name="peaks"/> takes as the only peak of its spectrum.</summary>
         private static FragmentAnnotation[] Type(string sequence, int precursorCharge, FragmentToleranceConfig tolerance,
             params double[] peaks)
         {
-            var fragments = Fragments(peaks);
-            FragmentTyping.TypeFragments(sequence, null, precursorCharge, fragments, tolerance, null);
-            return fragments.Select(f => f.Annotation).ToArray();
+            return peaks.Select(mz =>
+            {
+                var fragments = Fragments((mz, 1f));
+                FragmentTyping.TypeFragments(sequence, null, precursorCharge, fragments, tolerance, null);
+                return fragments[0].Annotation;
+            }).ToArray();
         }
 
-        private static LibraryFragment[] Fragments(params double[] peaks)
+        private static LibraryFragment[] Fragments(params (double Mz, float Intensity)[] peaks)
         {
-            return peaks.Select(mz => new LibraryFragment
+            return peaks.Select(peak => new LibraryFragment
             {
-                Mz = mz,
-                RelativeIntensity = 1f,
+                Mz = peak.Mz,
+                RelativeIntensity = peak.Intensity,
                 Annotation = new FragmentAnnotation { IonType = IonType.Unknown, Charge = 1 }
             }).ToArray();
+        }
+
+        private static FragmentAnnotation Ion(IonType ionType, int ordinal, int charge)
+        {
+            return new FragmentAnnotation { IonType = ionType, Ordinal = (byte)ordinal, Charge = (byte)charge };
         }
 
         private static double Mz(IonType ionType, int ordinal, byte charge, string sequence, double? loss)

@@ -112,8 +112,8 @@ namespace pwiz.Osprey.IO
                 interner.LogSummary(logInfo);
                 logInfo?.Invoke(string.Format(
                     OspreyIOResources.BlibLoader_Load_Typed__0_N0__of__1_N0__library_peaks_as_b_or_y_ions_within__2___3_,
-                    typingStats.Typed, typingStats.Typed + typingStats.Untyped,
-                    FormatTolerance(_fragmentTolerance), typingStats.Ties));
+                    typingStats.Stated + typingStats.Typed, typingStats.Total,
+                    FormatTolerance(_fragmentTolerance), typingStats.Stated));
                 return entries;
             }
         }
@@ -207,17 +207,22 @@ namespace pwiz.Osprey.IO
                             fragments = DecodeBlibPeaks(peakMzBlob, peakIntBlob, numPeaks).ToArray();
                         else
                             fragments = Array.Empty<LibraryFragment>();
-                        FragmentTyping.TypeFragments(peptideSeq, modifications, precursorCharge, fragments,
-                            _fragmentTolerance, typingStats);
+                        // What the library states for each peak, if anything: compared with
+                        // Osprey's own typing, then used for every peak where Osprey agrees the
+                        // stated ion is possible.
+                        IReadOnlyList<FragmentAnnotation>[] stated = null;
                         if (annotations != null)
                         {
                             var rows = annotations.RowsFor(id);
                             if (rows.Count > 0)
                             {
+                                stated = BlibPeakAnnotations.ReadStated(rows, fragments.Length, out var unreadable);
                                 BlibPeakAnnotations.Check(peptideSeq, modifications, precursorCharge, fragments,
-                                    _fragmentTolerance, rows, TypeCheck);
+                                    _fragmentTolerance, stated, unreadable, TypeCheck);
                             }
                         }
+                        FragmentTyping.TypeFragments(peptideSeq, modifications, precursorCharge, fragments,
+                            _fragmentTolerance, typingStats, stated);
 
                         var entry = new LibraryEntry((uint)id,
                             interner.Intern(peptideSeq), interner.Intern(peptideModSeq),

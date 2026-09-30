@@ -61,36 +61,47 @@ namespace pwiz.Osprey.IO
         private static readonly char[] NAME_TERMINATORS = { ' ', '\t', '/' };
 
         /// <summary>
-        /// Adds one spectrum's annotation rows to <paramref name="check"/>, peak by peak, against
-        /// what <see cref="FragmentTyping"/> computes for <paramref name="fragments"/> (in blib
-        /// peak order) within <paramref name="tolerance"/>. A row naming a peak the spectrum lacks
-        /// names no peak and is passed over.
+        /// What one spectrum's annotation rows state for each of its <paramref name="peakCount"/>
+        /// peaks (in blib peak order): the ions whose names could be read, or null for a peak no
+        /// row names; <paramref name="unreadable"/> gets the peaks a row names unreadably. A row
+        /// naming a peak the spectrum lacks names no peak and is passed over.
         /// </summary>
-        public static void Check(string sequence, IEnumerable<Modification> modifications, int precursorCharge,
-            LibraryFragment[] fragments, FragmentToleranceConfig tolerance, List<BlibAnnotationRow> rows,
-            FragmentTypeCheck check)
+        public static IReadOnlyList<FragmentAnnotation>[] ReadStated(List<BlibAnnotationRow> rows, int peakCount,
+            out bool[] unreadable)
         {
-            var computed = FragmentTyping.Compute(sequence, modifications, precursorCharge, fragments, tolerance);
-            var stated = new Dictionary<int, List<FragmentAnnotation>>();
-            var unreadable = new HashSet<int>();
+            var stated = new List<FragmentAnnotation>[peakCount];
+            unreadable = new bool[peakCount];
             foreach (var row in rows)
             {
-                if (row.PeakIndex < 0 || row.PeakIndex >= fragments.Length)
+                if (row.PeakIndex < 0 || row.PeakIndex >= peakCount)
                     continue;
-                if (!stated.TryGetValue(row.PeakIndex, out var list))
-                {
-                    list = new List<FragmentAnnotation>();
-                    stated.Add(row.PeakIndex, list);
-                }
+                if (stated[row.PeakIndex] == null)
+                    stated[row.PeakIndex] = new List<FragmentAnnotation>();
                 if (TryParseName(row.Name, row.Charge, out var annotation))
-                    list.Add(annotation);
+                    stated[row.PeakIndex].Add(annotation);
                 else
-                    unreadable.Add(row.PeakIndex);
+                    unreadable[row.PeakIndex] = true;
             }
-            foreach (var pair in stated)
+            return stated;
+        }
+
+        /// <summary>
+        /// Adds what one spectrum's rows state (<see cref="ReadStated"/>) to
+        /// <paramref name="check"/>, peak by peak, against Osprey's own typing of
+        /// <paramref name="fragments"/> within <paramref name="tolerance"/>.
+        /// </summary>
+        public static void Check(string sequence, IReadOnlyList<Modification> modifications, int precursorCharge,
+            LibraryFragment[] fragments, FragmentToleranceConfig tolerance,
+            IReadOnlyList<FragmentAnnotation>[] stated, bool[] unreadable, FragmentTypeCheck check)
+        {
+            var candidates = new FragmentCandidates(sequence, modifications, precursorCharge);
+            var ospreyChoice = FragmentTyping.Compute(sequence, modifications, precursorCharge, fragments, tolerance);
+            for (int i = 0; i < fragments.Length; i++)
             {
-                check.AddPeak(pair.Value, unreadable.Contains(pair.Key), computed[pair.Key], sequence, precursorCharge,
-                    fragments[pair.Key].Mz);
+                if (stated[i] == null)
+                    continue;
+                check.AddPeak(stated[i], unreadable[i], ospreyChoice[i], candidates, tolerance, sequence,
+                    precursorCharge, fragments[i].Mz);
             }
         }
 

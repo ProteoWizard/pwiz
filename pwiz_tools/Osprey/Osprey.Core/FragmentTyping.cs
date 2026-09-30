@@ -26,94 +26,117 @@ using System.Threading;
 namespace pwiz.Osprey.Core
 {
     /// <summary>
-    /// Types a library spectrum's peaks from m/z against the peptide's own ions, as Skyline does
-    /// for a library: Osprey computes which ion a peak is rather than taking a library's word for
-    /// it.
+    /// Types a library spectrum's peaks against the peptide's own ions, as Skyline does for a
+    /// library, accepting what the library states where Osprey agrees it is possible.
     ///
-    /// <list type="bullet">
-    /// <item>Candidates are the primary b and y ions of <see cref="FragmentLadder"/> - fragment
-    /// charge 1 to min(precursor charge, 2), no neutral losses. Every allowed loss would add
-    /// candidate m/z and random matches; a loss, if one is ever added, belongs to the ion or the
-    /// modification that makes it and is added in <see cref="FragmentLadder"/>, the one place
-    /// candidates are built.</item>
-    /// <item>A peak takes the nearest candidate within the SEARCH fragment tolerance - the
-    /// tolerance chromatogram extraction uses - so a peak Osprey calls y6 is one extraction would
-    /// count as y6. The tolerance is the configured one: typing runs once per library, before any
-    /// run's MS2 calibration narrows extraction, so it is the upper bound of what extraction
-    /// uses.</item>
-    /// <item>Two candidates as near as each other, within <see cref="TIE_TOLERANCE"/>, leave the
-    /// peak Unknown rather than guessing: <c>b6</c> and <c>b12^2</c> of a peptide whose first
-    /// twelve residues repeat its first six sum to one m/z.</item>
-    /// <item>A peak no candidate reaches stays <see cref="IonType.Unknown"/>, which decoy
-    /// generation copies unchanged.</item>
+    /// <list type="number">
+    /// <item><b>The library's word, where possible.</b> A peak whose library-stated ion is one
+    /// Osprey can produce - a primary b or y ion (<see cref="IsPrimary"/>) whose m/z is within the
+    /// search fragment tolerance of the peak - takes that ion. The library may know what Osprey
+    /// cannot: a stable isotope label resolves the b/y isobars an unlabeled peptide has, and one on
+    /// the third or fourth residue separates <c>b2</c> from <c>b4^2</c>. A stated ion out of
+    /// tolerance, a neutral loss or another ion type is outside what Osprey accepts, and the peak is
+    /// typed as in 2.</item>
+    /// <item><b>Osprey's own typing</b> for every other peak, most intense first: the preferred
+    /// primary b or y ion within the search fragment tolerance that no peak has claimed. Each ion
+    /// types one peak (as Skyline's library ranking lets each predicted ion match one peak), so
+    /// two peaks at one m/z - a library listing <c>b2</c> and <c>b4^2</c> as two peaks - take the
+    /// two ions rather than one twice.</item>
+    /// <item><b>Preference among candidates:</b> the nearest, counting ions within
+    /// <see cref="TIE_TOLERANCE"/> of each other as equally near; then the lower fragment charge
+    /// (a <c>b2</c> over a <c>b4^2</c> at one m/z); then y before b, then the shorter ion, so
+    /// the choice is always made. A peak with any candidate in reach is never left untyped: left
+    /// Unknown, a peak reads as not produced by the peptide's fragmentation at all, which is worse
+    /// than a possibly wrong choice between ions that each could have produced it.</item>
     /// </list>
+    ///
+    /// <para>Candidates are the primary b and y ions of <see cref="FragmentLadder"/> - fragment
+    /// charge 1 to min(precursor charge, 2), no neutral losses; a loss, if one is ever added,
+    /// belongs to the residue or modification that makes it and is added there. The tolerance is
+    /// the search's fragment tolerance, the one chromatogram extraction uses, so a peak typed y6
+    /// is one extraction counts as y6; typing runs once per library, before any run's MS2
+    /// calibration narrows extraction, so it is the upper bound of what extraction uses. A peak no
+    /// unclaimed candidate reaches stays <see cref="IonType.Unknown"/>, which decoy generation
+    /// copies unchanged.</para>
     /// </summary>
     public static class FragmentTyping
     {
         /// <summary>
-        /// Distances to the two nearest candidates closer than this (Th) are a tie. Isobaric ions
-        /// sum to the same m/z within floating-point rounding, far below it; distinct ions a
-        /// search could tell apart differ by far more.
+        /// Ions whose distances to a peak differ by less than this (Th) are equally near: isobaric
+        /// ions sum to one m/z within floating-point rounding, far below it.
         /// </summary>
         public const double TIE_TOLERANCE = 1e-3;
 
         /// <summary>
         /// Types <paramref name="fragments"/> of the peptide <paramref name="sequence"/> carrying
-        /// <paramref name="modifications"/> at <paramref name="precursorCharge"/>, in place: a
-        /// typed peak gets the ion's type, ordinal and charge with no loss; any other keeps its
-        /// annotation. Counts go to <paramref name="stats"/> when it is not null.
+        /// <paramref name="modifications"/> at <paramref name="precursorCharge"/>, in place, by the
+        /// rules in the class summary. <paramref name="stated"/>, when not null, holds per peak the
+        /// ions the library states for it (null or empty for none). A typed peak gets the ion's
+        /// type, ordinal and charge with no loss; any other keeps its annotation. Counts go to
+        /// <paramref name="stats"/> when it is not null.
         /// </summary>
         public static void TypeFragments(string sequence, IEnumerable<Modification> modifications,
             int precursorCharge, LibraryFragment[] fragments, FragmentToleranceConfig tolerance,
-            FragmentTypingStats stats)
+            FragmentTypingStats stats, IReadOnlyList<FragmentAnnotation>[] stated = null)
         {
             if (fragments.Length == 0)
                 return;
-            var candidates = Candidates(sequence, modifications, precursorCharge);
-            for (int i = 0; i < fragments.Length; i++)
+            var candidates = new FragmentCandidates(sequence, modifications, precursorCharge);
+            var claimed = new bool[candidates.SlotCount];
+            var typed = new bool[fragments.Length];
+            if (stated != null)
             {
-                int slot = NearestSlot(candidates, fragments[i].Mz, tolerance, null, out bool tie);
-                if (slot >= 0)
+                for (int i = 0; i < fragments.Length; i++)
                 {
-                    fragments[i].Annotation = AnnotationOf(slot, sequence.Length);
-                    stats?.CountTyped();
+                    int slot = candidates.PreferredStatedSlot(stated[i], fragments[i].Mz, tolerance);
+                    if (slot < 0)
+                        continue;
+                    fragments[i].Annotation = candidates.AnnotationOf(slot);
+                    claimed[slot] = true;
+                    typed[i] = true;
+                    stats?.CountStated();
                 }
-                else
+            }
+            // Most intense first, so the ion a peak claims goes to the strongest peak it explains.
+            foreach (int i in Enumerable.Range(0, fragments.Length)
+                         .OrderByDescending(i => fragments[i].RelativeIntensity).ThenBy(i => i))
+            {
+                if (typed[i])
+                    continue;
+                int slot = candidates.PreferredSlot(fragments[i].Mz, tolerance, claimed);
+                if (slot < 0)
                 {
-                    stats?.CountUntyped(tie);
+                    stats?.CountUntyped();
+                    continue;
                 }
+                fragments[i].Annotation = candidates.AnnotationOf(slot);
+                claimed[slot] = true;
+                stats?.CountTyped();
             }
         }
 
         /// <summary>
-        /// What Osprey computes for each of <paramref name="fragments"/> - the same rule as
-        /// <see cref="TypeFragments"/>, leaving the fragments as they are - for comparing with
-        /// the types a library states: the ion, or for a tie the ions it could not tell apart,
-        /// or neither.
+        /// The ion Osprey's own typing gives each of <paramref name="fragments"/>, or null - the
+        /// rules of <see cref="TypeFragments"/> with no library statement, leaving the fragments as
+        /// they are - for comparing with the types a library states.
         /// </summary>
-        public static ComputedType[] Compute(string sequence, IEnumerable<Modification> modifications,
+        public static FragmentAnnotation?[] Compute(string sequence, IEnumerable<Modification> modifications,
             int precursorCharge, IReadOnlyList<LibraryFragment> fragments, FragmentToleranceConfig tolerance)
         {
-            var computed = new ComputedType[fragments.Count];
-            if (fragments.Count == 0)
-                return computed;
-            var candidates = Candidates(sequence, modifications, precursorCharge);
-            var tiedSlots = new List<int>();
-            for (int i = 0; i < fragments.Count; i++)
+            var copy = fragments.Select(f => new LibraryFragment
             {
-                int slot = NearestSlot(candidates, fragments[i].Mz, tolerance, tiedSlots, out bool tie);
-                if (slot >= 0)
-                    computed[i] = new ComputedType(AnnotationOf(slot, sequence.Length), null);
-                else if (tie)
-                    computed[i] = new ComputedType(null, tiedSlots.Select(s => AnnotationOf(s, sequence.Length)).ToArray());
-            }
-            return computed;
+                Mz = f.Mz,
+                RelativeIntensity = f.RelativeIntensity,
+                Annotation = new FragmentAnnotation { IonType = IonType.Unknown }
+            }).ToArray();
+            TypeFragments(sequence, modifications, precursorCharge, copy, tolerance, null);
+            return copy.Select(f => f.Annotation.IonType == IonType.Unknown ? (FragmentAnnotation?)null : f.Annotation)
+                .ToArray();
         }
 
         /// <summary>
         /// Whether <paramref name="annotation"/> is an ion typing can produce: a b or y ion with
-        /// no loss at charge 1 or 2. A library stating anything else is outside the model, not
-        /// in disagreement with it.
+        /// no loss at charge 1 or 2. A library stating anything else is outside the model.
         /// </summary>
         public static bool IsPrimary(FragmentAnnotation annotation)
         {
@@ -121,104 +144,139 @@ namespace pwiz.Osprey.Core
                    !annotation.HasNeutralLoss && annotation.Ordinal >= 1 &&
                    annotation.Charge >= 1 && annotation.Charge <= FragmentLadder.MAX_FRAGMENT_CHARGE;
         }
+    }
 
-        /// <summary>
-        /// The applicable ladder slots, as parallel arrays sorted by m/z, so each peak is placed
-        /// by binary search.
-        /// </summary>
-        private static Candidate[] Candidates(string sequence, IEnumerable<Modification> modifications,
-            int precursorCharge)
+    /// <summary>
+    /// The primary b and y ions of one peptide precursor that <see cref="FragmentTyping"/> types
+    /// peaks as: the applicable <see cref="FragmentLadder"/> slots, sorted by m/z so each peak is
+    /// placed by binary search.
+    /// </summary>
+    public sealed class FragmentCandidates
+    {
+        private readonly int _length;
+        private readonly double[] _ladder;
+        private readonly Candidate[] _sorted;
+
+        public FragmentCandidates(string sequence, IEnumerable<Modification> modifications, int precursorCharge)
         {
-            double[] ladder = FragmentLadder.Build(sequence, modifications, precursorCharge);
-            var candidates = new List<Candidate>(ladder.Length);
-            for (int slot = 0; slot < ladder.Length; slot++)
+            _length = sequence?.Length ?? 0;
+            _ladder = FragmentLadder.Build(sequence, modifications, precursorCharge);
+            var candidates = new List<Candidate>(_ladder.Length);
+            for (int slot = 0; slot < _ladder.Length; slot++)
             {
-                if (!double.IsNaN(ladder[slot]))
-                    candidates.Add(new Candidate(ladder[slot], slot));
+                if (!double.IsNaN(_ladder[slot]))
+                    candidates.Add(new Candidate(_ladder[slot], slot));
             }
             candidates.Sort((a, b) => a.Mz != b.Mz ? a.Mz.CompareTo(b.Mz) : a.Slot.CompareTo(b.Slot)); // Array.Sort OK: slots are unique, so the order is total
-            return candidates.ToArray();
+            _sorted = candidates.ToArray();
+        }
+
+        /// <summary>Slots of the ladder, applicable or not.</summary>
+        public int SlotCount => _ladder.Length;
+
+        /// <summary>
+        /// Whether <paramref name="ion"/> is a candidate within <paramref name="tolerance"/> of a
+        /// peak at <paramref name="peakMz"/> - an ion Osprey agrees could have produced the peak.
+        /// </summary>
+        public bool IsPossible(FragmentAnnotation ion, double peakMz, FragmentToleranceConfig tolerance)
+        {
+            return SlotOf(ion, peakMz, tolerance) >= 0;
         }
 
         /// <summary>
-        /// The slot of the candidate nearest <paramref name="peakMz"/> within tolerance of the
-        /// candidate's m/z, or -1 - with <paramref name="tie"/> set, and the tied slots in
-        /// <paramref name="tiedSlots"/> when it is not null, when two or more were equally near.
+        /// The slot of the preferred ion among <paramref name="stated"/> that is possible for the
+        /// peak (<see cref="IsPossible"/>), or -1 when none is.
         /// </summary>
-        private static int NearestSlot(Candidate[] candidates, double peakMz, FragmentToleranceConfig tolerance,
-            List<int> tiedSlots, out bool tie)
+        public int PreferredStatedSlot(IReadOnlyList<FragmentAnnotation> stated, double peakMz,
+            FragmentToleranceConfig tolerance)
         {
-            tie = false;
-            tiedSlots?.Clear();
-            if (candidates.Length == 0 || !double.IsFinite(peakMz))
+            if (stated == null || stated.Count == 0)
                 return -1;
-            // The candidates that could be in reach, scanning outward from the insertion point;
-            // a ppm tolerance is taken at the candidate's m/z, as extraction takes it.
-            int start = LowerBound(candidates, peakMz);
-            double reach = tolerance.ToleranceDa(peakMz) * 1.01 + TIE_TOLERANCE;
-            int first = start;
-            while (first > 0 && peakMz - candidates[first - 1].Mz <= reach)
-                first--;
-            int end = start;
-            while (end < candidates.Length && candidates[end].Mz - peakMz <= reach)
-                end++;
+            var possible = new List<Candidate>(stated.Count);
+            foreach (var ion in stated)
+            {
+                int slot = SlotOf(ion, peakMz, tolerance);
+                if (slot >= 0)
+                    possible.Add(new Candidate(_ladder[slot], slot));
+            }
+            return Preferred(possible, peakMz);
+        }
 
-            int best = -1;
-            double bestDistance = double.MaxValue;
-            for (int i = first; i < end; i++)
-            {
-                double distance = Math.Abs(candidates[i].Mz - peakMz);
-                if (distance < bestDistance && tolerance.WithinTolerance(candidates[i].Mz, peakMz))
-                {
-                    bestDistance = distance;
-                    best = candidates[i].Slot;
-                }
-            }
-            if (best < 0)
+        /// <summary>
+        /// The slot of the preferred unclaimed candidate within tolerance of the peak, or -1.
+        /// A ppm tolerance is taken at the candidate's m/z, as extraction takes it.
+        /// </summary>
+        public int PreferredSlot(double peakMz, FragmentToleranceConfig tolerance, bool[] claimed)
+        {
+            if (_sorted.Length == 0 || !double.IsFinite(peakMz))
                 return -1;
-            int nearest = 0;
-            for (int i = first; i < end; i++)
+            double reach = tolerance.ToleranceDa(peakMz) * 1.01;
+            var inReach = new List<Candidate>();
+            for (int i = LowerBound(peakMz - reach); i < _sorted.Length && _sorted[i].Mz <= peakMz + reach; i++)
             {
-                if (Math.Abs(candidates[i].Mz - peakMz) - bestDistance < TIE_TOLERANCE &&
-                    tolerance.WithinTolerance(candidates[i].Mz, peakMz))
-                {
-                    nearest++;
-                    tiedSlots?.Add(candidates[i].Slot);
-                }
+                var candidate = _sorted[i];
+                if (!claimed[candidate.Slot] && tolerance.WithinTolerance(candidate.Mz, peakMz))
+                    inReach.Add(candidate);
             }
-            if (nearest > 1)
+            return Preferred(inReach, peakMz);
+        }
+
+        public FragmentAnnotation AnnotationOf(int slot)
+        {
+            return new FragmentAnnotation
             {
-                tie = true;
+                IonType = FragmentLadder.IonTypeOf(slot),
+                Ordinal = (byte)FragmentLadder.OrdinalOf(slot, _length),
+                Charge = (byte)FragmentLadder.ChargeOf(slot),
+                NeutralLoss = NeutralLossCode.None
+            };
+        }
+
+        /// <summary>
+        /// The preferred of <paramref name="candidates"/> for a peak at <paramref name="peakMz"/>:
+        /// the nearest, taking those within <see cref="FragmentTyping.TIE_TOLERANCE"/> of it as
+        /// equally near; then the lower fragment charge; then y before b; then the shorter ion.
+        /// -1 for none.
+        /// </summary>
+        private int Preferred(List<Candidate> candidates, double peakMz)
+        {
+            if (candidates.Count == 0)
+                return -1;
+            double nearest = candidates.Min(c => Math.Abs(c.Mz - peakMz));
+            return candidates.Where(c => Math.Abs(c.Mz - peakMz) - nearest < FragmentTyping.TIE_TOLERANCE)
+                .OrderBy(c => FragmentLadder.ChargeOf(c.Slot))
+                .ThenBy(c => FragmentLadder.IonTypeOf(c.Slot) == IonType.Y ? 0 : 1)
+                .ThenBy(c => FragmentLadder.OrdinalOf(c.Slot, _length))
+                .First().Slot;
+        }
+
+        /// <summary>The slot of a primary <paramref name="ion"/> within tolerance of the peak, or -1.</summary>
+        private int SlotOf(FragmentAnnotation ion, double peakMz, FragmentToleranceConfig tolerance)
+        {
+            if (!FragmentTyping.IsPrimary(ion) || !double.IsFinite(peakMz))
+                return -1;
+            int slot = FragmentLadder.SlotOf(ion, _length);
+            if (slot < 0 || slot >= _ladder.Length || double.IsNaN(_ladder[slot]) ||
+                !tolerance.WithinTolerance(_ladder[slot], peakMz))
+            {
                 return -1;
             }
-            tiedSlots?.Clear();
-            return best;
+            return slot;
         }
 
         /// <summary>The first index whose m/z is at least <paramref name="mz"/>.</summary>
-        private static int LowerBound(Candidate[] candidates, double mz)
+        private int LowerBound(double mz)
         {
-            int lo = 0, hi = candidates.Length;
+            int lo = 0, hi = _sorted.Length;
             while (lo < hi)
             {
                 int mid = (lo + hi) / 2;
-                if (candidates[mid].Mz < mz)
+                if (_sorted[mid].Mz < mz)
                     lo = mid + 1;
                 else
                     hi = mid;
             }
             return lo;
-        }
-
-        private static FragmentAnnotation AnnotationOf(int slot, int length)
-        {
-            return new FragmentAnnotation
-            {
-                IonType = FragmentLadder.IonTypeOf(slot),
-                Ordinal = (byte)FragmentLadder.OrdinalOf(slot, length),
-                Charge = (byte)FragmentLadder.ChargeOf(slot),
-                NeutralLoss = NeutralLossCode.None
-            };
         }
 
         private readonly struct Candidate
@@ -235,53 +293,39 @@ namespace pwiz.Osprey.Core
     }
 
     /// <summary>
-    /// What <see cref="FragmentTyping.Compute"/> found for one peak: the ion it types the peak
-    /// as, or the ions it could not tell apart, or neither.
-    /// </summary>
-    public readonly struct ComputedType
-    {
-        public ComputedType(FragmentAnnotation? ion, FragmentAnnotation[] tiedIons)
-        {
-            Ion = ion;
-            TiedIons = tiedIons;
-        }
-
-        /// <summary>The ion the peak is typed as, or null.</summary>
-        public FragmentAnnotation? Ion { get; }
-
-        /// <summary>The equally near ions that left the peak untyped, or null for no tie.</summary>
-        public FragmentAnnotation[] TiedIons { get; }
-    }
-
-    /// <summary>
     /// What <see cref="FragmentTyping.TypeFragments"/> did across a whole library. Counted from
     /// parallel loads, so the counts are updated atomically.
     /// </summary>
     public sealed class FragmentTypingStats
     {
+        private long _stated;
         private long _typed;
         private long _untyped;
-        private long _ties;
 
-        /// <summary>Peaks typed as a primary b or y ion.</summary>
+        /// <summary>Peaks typed as the ion the library states for them.</summary>
+        public long Stated => Interlocked.Read(ref _stated);
+
+        /// <summary>Peaks typed by Osprey's own typing.</summary>
         public long Typed => Interlocked.Read(ref _typed);
 
-        /// <summary>Peaks no candidate typed, ties included.</summary>
+        /// <summary>Peaks no unclaimed candidate reaches.</summary>
         public long Untyped => Interlocked.Read(ref _untyped);
 
-        /// <summary>Peaks left Unknown because two candidates were equally near.</summary>
-        public long Ties => Interlocked.Read(ref _ties);
+        public long Total => Stated + Typed + Untyped;
+
+        public void CountStated()
+        {
+            Interlocked.Increment(ref _stated);
+        }
 
         public void CountTyped()
         {
             Interlocked.Increment(ref _typed);
         }
 
-        public void CountUntyped(bool tie)
+        public void CountUntyped()
         {
             Interlocked.Increment(ref _untyped);
-            if (tie)
-                Interlocked.Increment(ref _ties);
         }
     }
 }

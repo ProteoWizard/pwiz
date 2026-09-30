@@ -218,12 +218,13 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Add each fragment of <paramref name="entry"/> whose type the library's columns state
-        /// to <paramref name="check"/>, against the type Osprey computes for its m/z.
+        /// to <paramref name="check"/>, against the type Osprey's own typing gives its m/z.
         /// </summary>
         private static void CheckStatedTypes(LibraryEntry entry, FragmentToleranceConfig tolerance,
             FragmentTypeCheck check)
         {
-            var computed = FragmentTyping.Compute(entry.Sequence, entry.Modifications, entry.Charge,
+            var candidates = new FragmentCandidates(entry.Sequence, entry.Modifications, entry.Charge);
+            var ospreyChoice = FragmentTyping.Compute(entry.Sequence, entry.Modifications, entry.Charge,
                 entry.Fragments, tolerance);
             var stated = new FragmentAnnotation[1];
             for (int i = 0; i < entry.Fragments.Count; i++)
@@ -232,7 +233,8 @@ namespace pwiz.Osprey.IO
                 if (fragment.Annotation.IonType == IonType.Unknown)
                     continue;
                 stated[0] = fragment.Annotation;
-                check.AddPeak(stated, false, computed[i], entry.Sequence, entry.Charge, fragment.Mz);
+                check.AddPeak(stated, false, ospreyChoice[i], candidates, tolerance, entry.Sequence, entry.Charge,
+                    fragment.Mz);
             }
         }
 

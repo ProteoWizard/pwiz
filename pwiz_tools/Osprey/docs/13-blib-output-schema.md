@@ -114,11 +114,11 @@ The C# adds a **fallback the Rust doc does not describe**: if *no* run passes ru
 
 `BlibLoader.Load` (BlibLoader.cs:51) reads `RefSpectra` + `RefSpectraPeaks` (`LoadSpectra`) and `RefSpectraProteins`/`Proteins` (`LoadProteinMappings`). Peak blobs are decoded by `DecodeBlibPeaks` / `DecompressPeakBlobs` (BlibLoader.cs:320, 389), which try raw-first then zlib (`TryZlibDecompress` skips the 2-byte zlib header and inflates with `DeflateStream`, BlibLoader.cs:293), tolerate f32 or f64 intensities, and normalize intensity to the max. Modifications are re-parsed from the `peptideModSeq` string (not the `Modifications` table) by `ParseBlibModifications` + `IdentifyModification`, which recognize common mods by mass within half the last printed digit (at least `MOD_TOLERANCE = 0.01`) and handle both mass-shift (`[+57.0]`) and absolute-mass (`C[160.0]`) notation; see "Modification masses from `peptideModSeq`" below.
 
-### Fragment typing, computed from m/z
+### Fragment typing
 
-A blib states no fragment ion types that Osprey uses. `LoadSpectra` types every spectrum's
-peaks as it reads them (`Osprey.Core/FragmentTyping.cs`), as Skyline types a peptide library's
-peaks for itself:
+`LoadSpectra` types every blib spectrum's peaks as it reads them
+(`Osprey.Core/FragmentTyping.cs`), accepting what the library states where Osprey agrees it is
+possible and computing the rest from m/z, as Skyline does for a peptide library:
 
 - **Candidates:** the primary b and y ions of `FragmentLadder` - fragment charge 1 to
   min(precursor charge, 2), no neutral losses - with m/z from
@@ -128,22 +128,34 @@ peaks for itself:
   y6 is one extraction counts as y6. Typing runs once per library, before any run's MS2
   calibration narrows extraction to |mean| + 3 SD, so it types within the configured tolerance,
   the upper bound of what extraction uses.
-- **Nearest wins;** a peak with two or more candidates equally near (within 0.001 Th - isobars
-  such as `b2` and `b4^2` of `IQQLTEEIGR`) stays Unknown rather than guessing, as does a peak no
-  candidate reaches. Decoy generation copies an Unknown peak unchanged.
-- **Logged:** one line with the peaks typed, of all peaks, and the ties.
+- **1. The library's word, where possible:** a peak whose annotation rows name a candidate within
+  tolerance of it takes that ion, even where Osprey on its own would choose another. The library
+  may know what Osprey cannot: an isotope label on the C-terminus resolves b/y isobars, and one
+  on the third or fourth residue separates `b2` from `b4^2` of `IQQLTEEIGR`. A stated ion out of
+  tolerance, a neutral loss, another ion type or a charge above 2 is not possible, and the peak
+  is typed as in 2.
+- **2. Osprey's own typing** for every other peak, most intense first: the preferred candidate
+  within tolerance that no peak has claimed. Each ion types one peak, as Skyline's library
+  ranking lets each predicted ion match one peak, so a library listing `b2` and `b4^2` as two
+  peaks at one m/z gets the two ions.
+- **Preference:** the nearest, counting candidates within 0.001 Th of each other as equally near;
+  then the lower fragment charge (`b2` over `b4^2`); then y before b, then the shorter ion, so the
+  choice is always made. A peak with a candidate in reach is never left untyped: Unknown says the
+  peak was not produced by the peptide's fragmentation at all, which is worse than a possibly
+  wrong choice between ions that each could have produced it. A peak no unclaimed candidate
+  reaches stays Unknown, and decoy generation copies it unchanged.
+- **Logged:** one line with the peaks typed, of all peaks, and how many as the library states.
 - **Resume and cache safety:** every blib search adds `;blibreader=2` to every task validity key,
   and the `.libcache` composition carries `blib_reader:2` with the fragment tolerance the cached
   types were computed within ([14](14-intermediate-files.md)). Both carry
   `BlibLoader.READER_VERSION`, which also covers the modification parsing below.
 
-### Library annotations are compared, never used
+### Library annotations: read, used where possible, compared
 
 When a blib's `RefSpectraPeakAnnotations` table has rows, `LoadSpectra` merge-joins it with the
 spectra cursor (both ordered by `RefSpectraID`; rows then by `rowid`, so a table written without
-the `id` column reads the same) and compares what the rows state with the typing
-(`BlibPeakAnnotations.Check`, `FragmentTypeCheck`). The table exists for small molecules, which
-have no fragmentation model; for peptides Skyline ignores it, and so does Osprey's typing.
+the `id` column reads the same). What the rows state feeds the typing above and is compared with
+Osprey's own typing (`BlibPeakAnnotations.Check`, `FragmentTypeCheck`).
 
 - **Grammar of `name`:** `<ion><ordinal>[-<loss>]`, ion `a/b/c/x/y/z` in any case, loss `H2O`,
   `NH3`, `H3PO4` or a finite decimal mass (`y7`, `b3`, `y7-H2O`, `y5-97.9769`). A decimal loss
@@ -151,14 +163,15 @@ have no fragmentation model; for peptides Skyline ignores it, and so does Osprey
   to its nominal mass, snaps to it. A NIST-style `/` tail and anything after whitespace are
   ignored. The fragment charge is the `charge` column, or when that is 0 a `^2`, `++` or `+2`
   suffix.
-- **Per peak:** *agree* when the rows name a primary b or y ion Osprey computes; *isobaric* when
-  they name one of the ions Osprey could not tell apart; *differ* otherwise; *outside the model*
-  when the rows state only a loss, an a/c/x/z ion, a charge above 2, or an unreadable name.
+- **Per peak:** *agree* when the rows name the ion Osprey's own typing chooses; *library's
+  choice* when they name another candidate within tolerance, which is used; *differ* when they
+  name primary ions but none within tolerance; *outside the model* when they state only a loss,
+  an a/c/x/z ion, a charge above 2, or an unreadable name.
 - **Reported:** one line naming the library, with counts and the denominator - a warning when a
   peak differs, else information - and the first differing peaks under `--verbose`. A DIA-NN TSV
   gets the same comparison of its type columns, which stay the typing its search uses.
-- **Never fatal:** the rows type nothing, so a malformed row - a non-integer `RefSpectraID` or
-  `peakIndex` - is passed over.
+- **Never fatal:** a malformed row - a non-integer `RefSpectraID` or `peakIndex` - is passed
+  over.
 
 ### Modification masses from `peptideModSeq`
 
