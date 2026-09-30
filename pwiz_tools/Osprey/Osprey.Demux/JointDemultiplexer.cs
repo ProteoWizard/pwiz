@@ -96,9 +96,10 @@ namespace pwiz.Osprey.Demux
         /// Over-relaxation of each block step (1: none, below 2): the step from the block's old coefficients to
         /// its optimum is lengthened by this factor, or less where a coefficient would go negative. Along m/z
         /// neighbouring coefficients are nearly interchangeable, and plain coordinate descent moves peak mass
-        /// between them only slowly.
+        /// between them only slowly. Against the converged solve of 12 sweeps, 1.5 came closest for the fewest
+        /// block solves with either peak shape (1.7 and above overshoot; 1.4 and below converge more slowly).
         /// </summary>
-        public double Relaxation { get; set; } = 1.7;
+        public double Relaxation { get; set; } = 1.5;
 
         /// <summary>Coordinate-descent passes over the active set in one round.</summary>
         public int MaxPasses { get; set; } = 20;
