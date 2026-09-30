@@ -27,24 +27,22 @@ using pwiz.Osprey.Core;
 namespace pwiz.Osprey.IO
 {
     /// <summary>
-    /// Compares the fragment ion types a library STATES (blib annotation rows, DIA-NN TSV
-    /// columns) with the types Osprey's own typing gives (<see cref="FragmentTyping.Compute"/>,
-    /// no library statement), peak by peak, so a library whose statements and Osprey's typing
-    /// part ways is reported rather than silently searched one way or the other.
+    /// Compares the fragment ion types a library STATES (DIA-NN TSV columns) with the types
+    /// Osprey's own typing gives (<see cref="FragmentTyping.Compute"/>), peak by peak, so a
+    /// library whose statements and Osprey's typing part ways is reported. The library's types
+    /// are the ones the search uses either way.
     ///
     /// <list type="bullet">
     /// <item><b>Agree</b>: the library names a primary b or y ion (<see cref="FragmentTyping.IsPrimary"/>)
-    /// for the peak that Osprey's own typing chooses too. A library may name several ions for one
-    /// peak, as NIST does.</item>
+    /// for the peak that Osprey's own typing chooses too.</item>
     /// <item><b>Library's choice</b>: the library names a primary ion within the search tolerance
     /// of the peak that Osprey would not have chosen on its own - one of an isobaric pair, say.
-    /// The library may know what Osprey cannot (an isotope label separating the pair), so its
-    /// choice is the one used.</item>
-    /// <item><b>Differ</b>: the library names primary ions, none within the search tolerance of
+    /// The library may know what Osprey cannot (an isotope label separating the pair).</item>
+    /// <item><b>Differ</b>: the library names a primary ion not within the search tolerance of
     /// the peak - an ion Osprey does not agree could have produced it.</item>
-    /// <item><b>Outside the model</b>: the library types the peak only as something typing does
-    /// not produce - a neutral loss, an a/c/x/z ion, a fragment charge above 2 - or states it
-    /// unreadably. Reported, not a disagreement.</item>
+    /// <item><b>Outside the model</b>: the library types the peak as something typing does not
+    /// produce - a neutral loss, an a/c/x/z ion, a fragment charge above 2. Reported, not a
+    /// disagreement.</item>
     /// </list>
     /// Peaks the library states nothing about are not counted. Counted from parallel loads, so
     /// the counts are updated atomically.
@@ -72,42 +70,26 @@ namespace pwiz.Osprey.IO
         public bool AnyStated => StatedPrimary + Outside > 0;
 
         /// <summary>
-        /// Count one peak: <paramref name="stated"/> is every type the library gives it that
-        /// could be read; <paramref name="unreadable"/> that it also gave one that could not.
-        /// <paramref name="ospreyChoice"/> is the ion Osprey's own typing gives the peak, or null;
-        /// <paramref name="candidates"/> the peptide's ions, which say whether a stated ion is
+        /// Count one peak: <paramref name="stated"/> is the type the library gives it;
+        /// <paramref name="ospreyChoice"/> the ion Osprey's own typing gives the peak, or null;
+        /// <paramref name="candidates"/> the peptide's ions, which say whether the stated ion is
         /// possible for the peak within <paramref name="tolerance"/>.
         /// </summary>
-        public void AddPeak(IReadOnlyList<FragmentAnnotation> stated, bool unreadable, FragmentAnnotation? ospreyChoice,
+        public void AddPeak(FragmentAnnotation stated, FragmentAnnotation? ospreyChoice,
             FragmentCandidates candidates, FragmentToleranceConfig tolerance,
             string sequence, int precursorCharge, double peakMz)
         {
-            bool anyPrimary = false;
-            bool anyPossible = false;
-            bool agrees = false;
-            foreach (var annotation in stated)
+            if (!FragmentTyping.IsPrimary(stated))
             {
-                if (!FragmentTyping.IsPrimary(annotation))
-                    continue;
-                anyPrimary = true;
-                if (!candidates.IsPossible(annotation, peakMz, tolerance))
-                    continue;
-                anyPossible = true;
-                if (ospreyChoice.HasValue && IsSameIon(annotation, ospreyChoice.Value))
-                    agrees = true;
-            }
-            if (!anyPrimary)
-            {
-                if (stated.Count > 0 || unreadable)
-                    Interlocked.Increment(ref _outside);
+                Interlocked.Increment(ref _outside);
                 return;
             }
-            if (agrees)
+            if (ospreyChoice.HasValue && IsSameIon(stated, ospreyChoice.Value))
             {
                 Interlocked.Increment(ref _agree);
                 return;
             }
-            if (anyPossible)
+            if (candidates.IsPossible(stated, peakMz, tolerance))
             {
                 Interlocked.Increment(ref _libraryChoice);
                 return;
@@ -118,7 +100,7 @@ namespace pwiz.Osprey.IO
                 if (_examples.Count < MAX_EXAMPLES)
                 {
                     _examples.Add(string.Format(OspreyIOResources.FragmentTypeCheck_AddPeak__0___charge__1___peak_m_z__2_F4___the_library_says__3___Osprey_computes__4_,
-                        sequence, precursorCharge, peakMz, FormatIons(stated),
+                        sequence, precursorCharge, peakMz, FormatIon(stated),
                         ospreyChoice.HasValue ? FormatIon(ospreyChoice.Value) : OspreyIOResources.FragmentTypeCheck_AddPeak_no_ion));
                 }
             }
@@ -177,14 +159,6 @@ namespace pwiz.Osprey.IO
                 default:
                     return name + @"-" + annotation.NeutralLoss;
             }
-        }
-
-        private static string FormatIons(IReadOnlyList<FragmentAnnotation> annotations)
-        {
-            var names = new string[annotations.Count];
-            for (int i = 0; i < names.Length; i++)
-                names[i] = FormatIon(annotations[i]);
-            return string.Join(@",", names);
         }
 
         private static bool IsSameIon(FragmentAnnotation a, FragmentAnnotation b)

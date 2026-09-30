@@ -41,30 +41,6 @@ namespace pwiz.Osprey.IO
         private const int BLIB_MINOR_VERSION = 11;
         private const int SCORE_TYPE_GENERIC_QVALUE = 19;
 
-        /// <summary>
-        /// Known UniMod accession IDs mapped to their monoisotopic mass deltas.
-        /// </summary>
-        private static readonly Dictionary<int, double> UNIMOD_MASSES = new Dictionary<int, double>
-        {
-            { 1, 42.010565 },    // Acetyl
-            { 4, 57.021464 },    // Carbamidomethyl
-            { 5, 43.005814 },    // Carbamyl
-            { 7, 0.984016 },     // Deamidated
-            { 21, 79.966331 },   // Phospho
-            { 28, -18.010565 },  // Glu->pyro-Glu
-            { 34, 14.015650 },   // Methyl
-            { 35, 15.994915 },   // Oxidation
-            { 36, 28.031300 },   // Dimethyl
-            { 37, 42.046950 },   // Trimethyl
-            { 121, 114.042927 }, // Ubiquitin (GlyGly)
-            { 122, 383.228102 }, // SUMO
-            { 214, 44.985078 },  // Nitro
-            { 312, -17.026549 }, // Ammonia loss
-            { 385, 229.162932 }, // TMT6plex
-            { 737, 229.162932 }, // TMT6plex (alternate ID)
-            { 747, 304.207146 }, // TMTpro
-        };
-
         private SQLiteConnection _conn;
         private bool _inTransaction;
         private long _nextSpecId;
@@ -725,7 +701,9 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static bool TryGetUnimodMass(int unimodId, out double mass)
         {
-            return UNIMOD_MASSES.TryGetValue(unimodId, out mass);
+            var entry = UniMod.Find(unimodId);
+            mass = entry?.Mass ?? 0;
+            return entry != null;
         }
 
         #endregion

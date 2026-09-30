@@ -98,7 +98,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="BlibLoader_Load_Typed__0_N0__of__1_N0__library_peaks_as_b_or_y_ions_within__2___3_" xml:space="preserve">
-    <value>Typed {0:N0} of {1:N0} library peaks as b or y ions within {2}, {3:N0} of them as the library states</value>
+    <value>Typed {0:N0} of {1:N0} library peaks as b or y ions within {2} {3}</value>
   </data>
   <data name="FragmentTypeCheck_AddPeak__0___charge__1___peak_m_z__2_F4___the_library_says__3___Osprey_computes__4_" xml:space="preserve">
     <value>{0}, charge {1}, peak m/z {2:F4}: the library says {3}, Osprey computes {4}</value>
@@ -393,5 +393,17 @@
   </data>
   <data name="SpectrumFileReader_LoadAllSpectra_Reading__0_" xml:space="preserve">
     <value>Reading {0}</value>
+  </data>
+  <data name="BlibLoader_ToException__0__library_spectra_have_modifications_Osprey_cannot_identify" xml:space="preserve">
+    <value>{0:N0} library spectra have modifications Osprey cannot identify. A modification mass printed with fewer than {1} decimals must match a known UniMod modification allowed on its residue, and a UniMod id must be one Osprey knows. Build the library with full-precision modification masses and load it again:</value>
+  </data>
+  <data name="BlibLoader_ToException__0__in__1__spectra__first__2_" xml:space="preserve">
+    <value>{0} in {1:N0} spectra, first {2}</value>
+  </data>
+  <data name="BlibLoader_ToException____and__0__more_modifications" xml:space="preserve">
+    <value>... and {0:N0} more modifications</value>
+  </data>
+  <data name="LibraryLoader_DescribeUnflaggedDecoys__0__library_precursors_have_protein_accessions_marking_them_as_decoys" xml:space="preserve">
+    <value>{0:N0} library precursors have protein accessions marking them as decoys ({1}), the first {2}, but {3} was not given, so they would be searched as targets. Search with {3} to use the library's decoys, or remove them from the library.</value>
   </data>
 </root>

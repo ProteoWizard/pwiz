@@ -346,4 +346,10 @@
   <data name="Program_ValidateArgs_The__0__path_is_the_library_it_reads___1_" xml:space="preserve">
     <value>The {0} path is the library it reads: {1}. Choose another path for the exported library.</value>
   </data>
+  <data name="Program_ValidateArgs_No_path_given_for__0__" xml:space="preserve">
+    <value>No path given for {0}.</value>
+  </data>
+  <data name="Program_ValidateArgs_The__0__path_is_the_library_the_search_reads___1_" xml:space="preserve">
+    <value>The {0} path is the library the search reads: {1}. Choose another path for the search results.</value>
+  </data>
 </root>

@@ -27,21 +27,14 @@ namespace pwiz.Osprey.Core
 {
     /// <summary>
     /// Types a library spectrum's peaks against the peptide's own ions, as Skyline does for a
-    /// library, accepting what the library states where Osprey agrees it is possible.
+    /// library, for a library that does not state them (a BiblioSpec .blib).
     ///
     /// <list type="number">
-    /// <item><b>The library's word, where possible.</b> A peak whose library-stated ion is one
-    /// Osprey can produce - a primary b or y ion (<see cref="IsPrimary"/>) whose m/z is within the
-    /// search fragment tolerance of the peak - takes that ion. The library may know what Osprey
-    /// cannot: a stable isotope label resolves the b/y isobars an unlabeled peptide has, and one on
-    /// the third or fourth residue separates <c>b2</c> from <c>b4^2</c>. A stated ion out of
-    /// tolerance, a neutral loss or another ion type is outside what Osprey accepts, and the peak is
-    /// typed as in 2.</item>
-    /// <item><b>Osprey's own typing</b> for every other peak, most intense first: the preferred
-    /// primary b or y ion within the search fragment tolerance that no peak has claimed. Each ion
-    /// types one peak (as Skyline's library ranking lets each predicted ion match one peak), so
-    /// two peaks at one m/z - a library listing <c>b2</c> and <c>b4^2</c> as two peaks - take the
-    /// two ions rather than one twice.</item>
+    /// <item><b>Most intense first:</b> each peak takes the preferred primary b or y ion within
+    /// the search fragment tolerance that no peak has claimed. Each ion types one peak (as
+    /// Skyline's library ranking lets each predicted ion match one peak), so two peaks at one m/z
+    /// - a library listing <c>b2</c> and <c>b4^2</c> as two peaks - take the two ions rather than
+    /// one twice.</item>
     /// <item><b>Preference among candidates:</b> the nearest, counting ions within
     /// <see cref="TIE_TOLERANCE"/> of each other as equally near; then the lower fragment charge
     /// (a <c>b2</c> over a <c>b4^2</c> at one m/z); then y before b, then the shorter ion, so
@@ -54,55 +47,40 @@ namespace pwiz.Osprey.Core
     /// charge 1 to min(precursor charge, 2), no neutral losses; a loss, if one is ever added,
     /// belongs to the residue or modification that makes it and is added there. The tolerance is
     /// the search's fragment tolerance, the one chromatogram extraction uses, so a peak typed y6
-    /// is one extraction counts as y6; typing runs once per library, before any run's MS2
-    /// calibration narrows extraction, so it is the upper bound of what extraction uses. A peak no
+    /// is one extraction counts as y6; typing runs once per library, at the configured tolerance,
+    /// before any run's MS2 calibration sets that run's extraction tolerance. A peak no
     /// unclaimed candidate reaches stays <see cref="IonType.Unknown"/>, which decoy generation
     /// copies unchanged.</para>
     /// </summary>
     public static class FragmentTyping
     {
         /// <summary>
-        /// Ions whose distances to a peak differ by less than this (Th) are equally near: isobaric
-        /// ions sum to one m/z within floating-point rounding, far below it.
+        /// Ions whose distances to a peak differ by less than this (Th) are equally near. Isobaric
+        /// ions (<c>b2</c> and <c>b4^2</c> of one peptide) differ by at most a few 1e-6 Th of
+        /// floating-point rounding; distinct ions of tryptic peptides come within 1e-4 Th of each
+        /// other, so a wider window would let the charge preference override the nearer ion.
         /// </summary>
-        public const double TIE_TOLERANCE = 1e-3;
+        public const double TIE_TOLERANCE = 1e-5;
 
         /// <summary>
         /// Types <paramref name="fragments"/> of the peptide <paramref name="sequence"/> carrying
         /// <paramref name="modifications"/> at <paramref name="precursorCharge"/>, in place, by the
-        /// rules in the class summary. <paramref name="stated"/>, when not null, holds per peak the
-        /// ions the library states for it (null or empty for none). A typed peak gets the ion's
-        /// type, ordinal and charge with no loss; any other keeps its annotation. Counts go to
-        /// <paramref name="stats"/> when it is not null.
+        /// rules in the class summary. A typed peak gets the ion's type, ordinal and charge with no
+        /// loss; any other keeps its annotation. Counts go to <paramref name="stats"/> when it is
+        /// not null.
         /// </summary>
         public static void TypeFragments(string sequence, IEnumerable<Modification> modifications,
             int precursorCharge, LibraryFragment[] fragments, FragmentToleranceConfig tolerance,
-            FragmentTypingStats stats, IReadOnlyList<FragmentAnnotation>[] stated = null)
+            FragmentTypingStats stats)
         {
             if (fragments.Length == 0)
                 return;
             var candidates = new FragmentCandidates(sequence, modifications, precursorCharge);
             var claimed = new bool[candidates.SlotCount];
-            var typed = new bool[fragments.Length];
-            if (stated != null)
-            {
-                for (int i = 0; i < fragments.Length; i++)
-                {
-                    int slot = candidates.PreferredStatedSlot(stated[i], fragments[i].Mz, tolerance);
-                    if (slot < 0)
-                        continue;
-                    fragments[i].Annotation = candidates.AnnotationOf(slot);
-                    claimed[slot] = true;
-                    typed[i] = true;
-                    stats?.CountStated();
-                }
-            }
             // Most intense first, so the ion a peak claims goes to the strongest peak it explains.
             foreach (int i in Enumerable.Range(0, fragments.Length)
                          .OrderByDescending(i => fragments[i].RelativeIntensity).ThenBy(i => i))
             {
-                if (typed[i])
-                    continue;
                 int slot = candidates.PreferredSlot(fragments[i].Mz, tolerance, claimed);
                 if (slot < 0)
                 {
@@ -117,8 +95,8 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// The ion Osprey's own typing gives each of <paramref name="fragments"/>, or null - the
-        /// rules of <see cref="TypeFragments"/> with no library statement, leaving the fragments as
-        /// they are - for comparing with the types a library states.
+        /// rules of <see cref="TypeFragments"/>, leaving the fragments as they are - for comparing
+        /// with the types a library states.
         /// </summary>
         public static FragmentAnnotation?[] Compute(string sequence, IEnumerable<Modification> modifications,
             int precursorCharge, IReadOnlyList<LibraryFragment> fragments, FragmentToleranceConfig tolerance)
@@ -181,25 +159,6 @@ namespace pwiz.Osprey.Core
         public bool IsPossible(FragmentAnnotation ion, double peakMz, FragmentToleranceConfig tolerance)
         {
             return SlotOf(ion, peakMz, tolerance) >= 0;
-        }
-
-        /// <summary>
-        /// The slot of the preferred ion among <paramref name="stated"/> that is possible for the
-        /// peak (<see cref="IsPossible"/>), or -1 when none is.
-        /// </summary>
-        public int PreferredStatedSlot(IReadOnlyList<FragmentAnnotation> stated, double peakMz,
-            FragmentToleranceConfig tolerance)
-        {
-            if (stated == null || stated.Count == 0)
-                return -1;
-            var possible = new List<Candidate>(stated.Count);
-            foreach (var ion in stated)
-            {
-                int slot = SlotOf(ion, peakMz, tolerance);
-                if (slot >= 0)
-                    possible.Add(new Candidate(_ladder[slot], slot));
-            }
-            return Preferred(possible, peakMz);
         }
 
         /// <summary>
@@ -298,25 +257,16 @@ namespace pwiz.Osprey.Core
     /// </summary>
     public sealed class FragmentTypingStats
     {
-        private long _stated;
         private long _typed;
         private long _untyped;
 
-        /// <summary>Peaks typed as the ion the library states for them.</summary>
-        public long Stated => Interlocked.Read(ref _stated);
-
-        /// <summary>Peaks typed by Osprey's own typing.</summary>
+        /// <summary>Peaks typed as a b or y ion.</summary>
         public long Typed => Interlocked.Read(ref _typed);
 
         /// <summary>Peaks no unclaimed candidate reaches.</summary>
         public long Untyped => Interlocked.Read(ref _untyped);
 
-        public long Total => Stated + Typed + Untyped;
-
-        public void CountStated()
-        {
-            Interlocked.Increment(ref _stated);
-        }
+        public long Total => Typed + Untyped;
 
         public void CountTyped()
         {

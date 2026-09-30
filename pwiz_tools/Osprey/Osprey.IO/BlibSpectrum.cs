@@ -132,13 +132,13 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// A modification mass as a blib bracket, <c>[+57.0215]</c>: signed, at most four
         /// decimals, trailing zeros dropped. Skyline matches a library modification at the
-        /// precision its text prints, so a mass only known to one decimal (BiblioSpec's
-        /// <c>K[+114.0]</c>, which no known modification snaps) must stay <c>[+114.0]</c>: printed
-        /// as <c>[+114.0000]</c> it would claim a precision it does not have and match nothing.
+        /// precision its text prints, so a mass only known to one decimal (a DIA-NN library's
+        /// <c>K[+114.0]</c>) must stay <c>[+114.0]</c>: printed as <c>[+114.0000]</c> it would
+        /// claim a precision it does not have. A mass that rounds to zero prints <c>[+0.0]</c>.
         /// </summary>
         public static string FormatMassDelta(double mass)
         {
-            return @"[" + mass.ToString(@"+0.0###;-0.0###", CultureInfo.InvariantCulture) + @"]";
+            return @"[" + mass.ToString(@"+0.0###;-0.0###;+0.0", CultureInfo.InvariantCulture) + @"]";
         }
 
         /// <summary>

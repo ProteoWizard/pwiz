@@ -809,6 +809,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No path given for {0}..
+        /// </summary>
+        public static string Program_ValidateArgs_No_path_given_for__0__ {
+            get {
+                return ResourceManager.GetString("Program_ValidateArgs_No_path_given_for__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No spectral library specified. Use {0}.
         /// </summary>
         public static string Program_ValidateArgs_No_spectral_library_specified__Use__0_ {
@@ -823,6 +832,15 @@ namespace pwiz.Osprey {
         public static string Program_ValidateArgs_The__0__path_is_the_library_it_reads___1_ {
             get {
                 return ResourceManager.GetString("Program_ValidateArgs_The__0__path_is_the_library_it_reads___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The {0} path is the library the search reads: {1}. Choose another path for the search results..
+        /// </summary>
+        public static string Program_ValidateArgs_The__0__path_is_the_library_the_search_reads___1_ {
+            get {
+                return ResourceManager.GetString("Program_ValidateArgs_The__0__path_is_the_library_the_search_reads___1_", resourceCulture);
             }
         }
     }

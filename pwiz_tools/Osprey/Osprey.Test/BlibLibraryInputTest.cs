@@ -32,8 +32,8 @@ namespace pwiz.Osprey.Test
     /// <summary>
     /// Blib libraries as search input: every peak typed from m/z within the search's fragment
     /// tolerance (<see cref="FragmentTyping"/>), whatever the blib's own
-    /// <c>RefSpectraPeakAnnotations</c> rows say - they are only compared with the typing
-    /// (<see cref="FragmentTypeCheck"/>) - and the decoys generated from the typed peaks.
+    /// <c>RefSpectraPeakAnnotations</c> table holds - it is not read - and the decoys generated
+    /// from the typed peaks; and the libraries Osprey refuses rather than search wrongly.
     /// </summary>
     [TestClass]
     public class BlibLibraryInputTest
@@ -46,48 +46,12 @@ namespace pwiz.Osprey.Test
         /// <summary>The fragment tolerance these tests search with: an HRAM search's 10 ppm.</summary>
         internal static readonly FragmentToleranceConfig TOLERANCE = FragmentToleranceConfig.Hram(10);
 
-        [TestMethod]
-        public void TestBlibPeakAnnotationNames()
-        {
-            AssertParsed(@"b3", 0, IonType.B, 3, 1, NeutralLossCode.None);
-            AssertParsed(@"y7", 0, IonType.Y, 7, 1, NeutralLossCode.None);
-            AssertParsed(@"Y7", 2, IonType.Y, 7, 2, NeutralLossCode.None);
-            // The charge column wins; suffixes apply only when it is 0.
-            AssertParsed(@"y7^2", 0, IonType.Y, 7, 2, NeutralLossCode.None);
-            AssertParsed(@"y7^2", 3, IonType.Y, 7, 3, NeutralLossCode.None);
-            AssertParsed(@"y7++", 0, IonType.Y, 7, 2, NeutralLossCode.None);
-            AssertParsed(@"b4+2", 0, IonType.B, 4, 2, NeutralLossCode.None);
-            AssertParsed(@"y7-H2O", 1, IonType.Y, 7, 1, NeutralLossCode.H2O);
-            AssertParsed(@"b5-NH3", 1, IonType.B, 5, 1, NeutralLossCode.NH3);
-            AssertParsed(@"y9-H3PO4", 1, IonType.Y, 9, 1, NeutralLossCode.H3PO4);
-            // A decimal loss snaps to a known loss within half its last printed digit (at least
-            // 0.005 Th), an integer one by nominal mass.
-            AssertParsed(@"y4-97.9769", 1, IonType.Y, 4, 1, NeutralLossCode.H3PO4);
-            AssertParsed(@"y4-44.0262", 1, IonType.Y, 4, 1, NeutralLossCode.Custom);
-            AssertParsed(@"y4-44.03", 1, IonType.Y, 4, 1, NeutralLossCode.Custom);
-            AssertParsed(@"y7-18.0", 1, IonType.Y, 7, 1, NeutralLossCode.H2O);
-            AssertParsed(@"b5-17.0", 1, IonType.B, 5, 1, NeutralLossCode.NH3);
-            AssertParsed(@"y9-98.0", 1, IonType.Y, 9, 1, NeutralLossCode.H3PO4);
-            // NIST-style tails and anything after whitespace are ignored.
-            AssertParsed(@"y7-18^2/0.3ppm", 0, IonType.Y, 7, 2, NeutralLossCode.H2O);
-            AssertParsed(@"b3 some comment", 1, IonType.B, 3, 1, NeutralLossCode.None);
-            // The other ion types are read, so the check counts them outside the model, not unreadable.
-            AssertParsed(@"a2", 1, IonType.A, 2, 1, NeutralLossCode.None);
-            AssertParsed(@"z3", 1, IonType.Z, 3, 1, NeutralLossCode.None);
-            // "NaN" and "Infinity" parse as numbers, but no fragment loses either.
-            foreach (string name in new[] { null, string.Empty, @"p", @"?", @"precursor", @"y", @"y0", @"y7-", @"y7-junk", @"b3x",
-                         @"y7-NaN", @"y7-nan", @"y7-Infinity", @"b3--Infinity", @"y7^bad", @"y7^2foo", @"y7^", @"y7-noloss" })
-            {
-                Assert.IsFalse(BlibPeakAnnotations.TryParseName(name, 1, out _), name ?? @"null");
-            }
-        }
-
         /// <summary>
         /// A blib's peaks are typed from m/z: primary b and y ions at charge 1 or 2 are typed; a
-        /// neutral-loss peak and a peak no ion reaches stay Unknown. The blib's annotation rows
-        /// change nothing about the typing - the same blib with rows that name other ions types
-        /// identically - and are counted by the check: agree, differ, or outside the model.
-        /// Decoys generated from the typed peaks get their own m/z.
+        /// neutral-loss peak and a peak no ion reaches stay Unknown. The blib's
+        /// <c>RefSpectraPeakAnnotations</c> table is not read: the same blib with rows naming
+        /// other ions, or with a table missing its columns, types identically. Decoys generated
+        /// from the typed peaks get their own m/z.
         /// </summary>
         [TestMethod]
         public void TestBlibLoaderTypesPeaksFromMz()
@@ -105,13 +69,11 @@ namespace pwiz.Osprey.Test
             try
             {
                 var log = new List<string>();
-                var loader = new BlibLoader(TOLERANCE);
-                var entry = loader.Load(plain, log.Add).Single();
+                var entry = new BlibLoader(TOLERANCE).Load(plain, log.Add).Single();
                 AssertTypedAsExpected(entry);
-                Assert.IsFalse(loader.TypeCheck.AnyStated, @"a blib without annotation rows states nothing");
                 CollectionAssert.Contains(log, string.Format(
                     OspreyIOResources.BlibLoader_Load_Typed__0_N0__of__1_N0__library_peaks_as_b_or_y_ions_within__2___3_,
-                    4, peaks.Length, @"10 ppm", 0));
+                    4, peaks.Length, TOLERANCE.Tolerance, TOLERANCE.Unit.GetLocalizedString()));
 
                 // Decoys generated from typed fragments get their own m/z, not the target's.
                 var decoys = DecoyGenerator.GenerateAllWithCollisionDetection(new List<LibraryEntry> { entry },
@@ -129,38 +91,85 @@ namespace pwiz.Osprey.Test
                 TryDeleteFile(plain);
             }
 
-            var annotations = new[]
-            {
-                (0, @"b3", 1),              // agrees
-                (1, @"y3", 1),              // agrees...
-                (1, @"y3-NH3", 1),          // ...and a second name for the peak does not change that
-                (2, @"y5", 2),              // agrees
-                (3, @"y4-H2O", 1),          // a loss: outside the model
-                (4, @"y5", 1),              // names another ion than Osprey computes: differs
-                (5, @"?", 0),               // unreadable: outside the model
-            };
-            string annotated = CreateBlib(peaks, annotations);
+            // Rows naming other ions than the typing gives change nothing.
+            string annotated = CreateBlib(peaks, new[] { (0, @"y2", 1), (1, @"b3", 1), (4, @"y5", 1), (5, @"y6", 1) });
             try
             {
-                var loader = new BlibLoader(TOLERANCE);
-                var entry = loader.Load(annotated).Single();
-                AssertTypedAsExpected(entry);
-                var check = loader.TypeCheck;
-                Assert.AreEqual(3, check.Agree);
-                Assert.AreEqual(1, check.Differ);
-                Assert.AreEqual(2, check.Outside);
-                CollectionAssert.AreEqual(new[]
-                {
-                    string.Format(OspreyIOResources.FragmentTypeCheck_AddPeak__0___charge__1___peak_m_z__2_F4___the_library_says__3___Osprey_computes__4_,
-                        SEQUENCE, 2, b5, @"y5", @"b5")
-                }, check.Examples.ToArray());
+                AssertTypedAsExpected(new BlibLoader(TOLERANCE).Load(annotated).Single());
+                // Nor does a table the reader could not have read.
+                ExecuteSql(annotated, @"DROP TABLE RefSpectraPeakAnnotations",
+                    @"CREATE TABLE RefSpectraPeakAnnotations (id INTEGER PRIMARY KEY, RefSpectraID INTEGER, peakIndex INTEGER)",
+                    @"INSERT INTO RefSpectraPeakAnnotations (RefSpectraID, peakIndex) VALUES (1, 0)");
+                AssertTypedAsExpected(new BlibLoader(TOLERANCE).Load(annotated).Single());
             }
             finally
             {
                 TryDeleteFile(annotated);
             }
+        }
 
-            AssertMalformedRowsAreNotFatal(peaks);
+        /// <summary>
+        /// Blib libraries Osprey refuses rather than search wrongly. Modifications are matched as
+        /// Skyline matches them, at the precision their text prints: a one-decimal SILAC label
+        /// gets its exact mass, while a one-decimal mass no known modification matches, an
+        /// unknown UniMod id and other text are listed - each once, with the spectra carrying it -
+        /// and the library is refused. And a blib whose protein accessions mark decoys is refused
+        /// unless <c>--decoys-in-library</c> is given, where a TSV's Decoy column is not needed.
+        /// </summary>
+        [TestMethod]
+        public void TestBlibLibraryRefusals()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), @"BlibLibraryRefusals_" + Path.GetRandomFileName());
+            Directory.CreateDirectory(dir);
+            try
+            {
+                double[] peaks = { 300.0, 400.0, 500.0 };
+                string labeled = Path.Combine(dir, @"labeled.blib");
+                WriteBlib(labeled, peaks, (@"PEPC[+57.0]TIDEK[+8.0]", @"P1"), (@"PEPCTIDEK", @"P1"));
+                var entries = new BlibLoader(TOLERANCE).Load(labeled);
+                var labels = entries.First().Modifications.OrderBy(m => m.Position).ToArray();
+                Assert.AreEqual(CARBAMIDOMETHYL, labels[0].MassDelta);
+                Assert.AreEqual(8.014199, labels[1].MassDelta);
+                Assert.AreEqual(259, labels[1].UnimodId);
+
+                string unidentified = Path.Combine(dir, @"unidentified.blib");
+                WriteBlib(unidentified, peaks, (@"PEPC[+99.9]TIDEK", @"P1"), (@"PEPTIDEK(UniMod:99999)", @"P1"),
+                    (@"PEPCTIDEK", @"P1"), (@"PEPTIDEC[+99.9]", @"P1"), (@"PEPTIDEK[Junk]", @"P1"));
+                var error = Assert.ThrowsException<InvalidDataException>(() => new BlibLoader(TOLERANCE).Load(unidentified));
+                string[] lines = error.Message.Split('\n').Select(l => l.Trim()).ToArray();
+                Assert.AreEqual(string.Format(
+                    OspreyIOResources.BlibLoader_ToException__0__library_spectra_have_modifications_Osprey_cannot_identify,
+                    4, UniMod.MAX_PRECISION_TO_MATCH), lines[0]);
+                CollectionAssert.AreEqual(new[]
+                {
+                    string.Format(OspreyIOResources.BlibLoader_ToException__0__in__1__spectra__first__2_, @"[+99.9]", 2, @"PEPC[+99.9]TIDEK (id 1)"),
+                    string.Format(OspreyIOResources.BlibLoader_ToException__0__in__1__spectra__first__2_, @"(UniMod:99999)", 1, @"PEPTIDEK(UniMod:99999) (id 2)"),
+                    string.Format(OspreyIOResources.BlibLoader_ToException__0__in__1__spectra__first__2_, @"[Junk]", 1, @"PEPTIDEK[Junk] (id 5)"),
+                }, lines.Skip(1).ToArray());
+
+                string withDecoys = Path.Combine(dir, @"decoys.blib");
+                WriteBlib(withDecoys, peaks, (@"PEPCTIDEK", @"P1"), (@"KEDITCPEP", @"DECOY_P1"));
+                var config = new OspreyConfig
+                {
+                    LibrarySource = new LibrarySource(LibraryFormat.Blib, withDecoys),
+                    FragmentTolerance = TOLERANCE
+                };
+                var refusal = Assert.ThrowsException<InvalidDataException>(() => LibraryLoader.Load(config, null, null));
+                StringAssert.Contains(refusal.Message, OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY));
+                StringAssert.Contains(refusal.Message, @"KEDITCPEP");
+            }
+            finally
+            {
+                SQLiteConnection.ClearAllPools();
+                try
+                {
+                    Directory.Delete(dir, true);
+                }
+                catch (IOException)
+                {
+                    // A test's temp directory; a lingering handle must not fail the test.
+                }
+            }
         }
 
         /// <summary>
@@ -215,7 +224,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 Assert.AreEqual(1, LibraryBlibWriter.Write(path, new[] { entry }, @"library.tsv"));
-                Assert.AreEqual(0, BlibComparer.CountWhere(path, BlibPeakAnnotations.TABLE_NAME, @"1"));
+                Assert.AreEqual(0, BlibComparer.CountWhere(path, @"RefSpectraPeakAnnotations", @"1"));
                 // The library retention time, where Skyline reads library retention times from, with
                 // no peak boundaries.
                 Assert.AreEqual(1, BlibComparer.CountWhere(path, @"RetentionTimes",
@@ -291,37 +300,6 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0, BlibComparer.CountWhere(path, @"Proteins", @"accession = 'P12345'"));
         }
 
-        /// <summary>
-        /// A malformed annotation row is passed over, never fatal - the rows only feed the
-        /// check: a NULL RefSpectraID is skipped, a peakIndex that is not an integer names no
-        /// peak, and a table written without the id column reads the same. The typing does not
-        /// depend on the rows at all.
-        /// </summary>
-        private static void AssertMalformedRowsAreNotFatal(double[] peaks)
-        {
-            string path = CreateBlib(peaks, new[] { (0, @"b3", 1) });
-            try
-            {
-                const string columns = @"(RefSpectraID, peakIndex, name, formula, inchiKey, otherKeys, charge, adduct, comment, mzTheoretical, mzObserved)";
-                ExecuteSql(path,
-                    @"INSERT INTO RefSpectraPeakAnnotations " + columns + @" VALUES (NULL, 0, 'y3', '', '', '', 1, '', '', 0, 0)",
-                    @"INSERT INTO RefSpectraPeakAnnotations " + columns + @" VALUES ((SELECT MIN(id) FROM RefSpectra), 'one', 'y3', '', '', '', 'two', '', '', 0, 0)",
-                    @"CREATE TABLE annotations_without_id AS SELECT RefSpectraID, peakIndex, name, formula, inchiKey, otherKeys, charge, adduct, comment, mzTheoretical, mzObserved FROM RefSpectraPeakAnnotations",
-                    @"DROP TABLE RefSpectraPeakAnnotations",
-                    @"ALTER TABLE annotations_without_id RENAME TO RefSpectraPeakAnnotations");
-                var loader = new BlibLoader(TOLERANCE);
-                var entry = loader.Load(path).Single();
-                AssertTypedAsExpected(entry);
-                Assert.AreEqual(1, loader.TypeCheck.Agree, @"only the well-formed b3 row reaches the check");
-                Assert.AreEqual(0, loader.TypeCheck.Differ);
-                Assert.AreEqual(0, loader.TypeCheck.Outside);
-            }
-            finally
-            {
-                TryDeleteFile(path);
-            }
-        }
-
         /// <summary>The types <see cref="TestBlibLoaderTypesPeaksFromMz"/>'s six peaks take.</summary>
         private static void AssertTypedAsExpected(LibraryEntry entry)
         {
@@ -344,6 +322,43 @@ namespace pwiz.Osprey.Test
         private static string CreateBlib(double[] peaks, (int PeakIndex, string Name, int Charge)[] annotations)
         {
             return CreateBlib(Path.GetTempFileName(), MOD_SEQUENCE, peaks, annotations);
+        }
+
+        /// <summary>
+        /// A blib at <paramref name="path"/> with one spectrum of <paramref name="peaks"/> per
+        /// modified sequence, each mapped to its protein.
+        /// </summary>
+        private static void WriteBlib(string path, double[] peaks, params (string ModSeq, string Protein)[] spectra)
+        {
+            using (var writer = new BlibWriter(path))
+            {
+                long fileId = writer.AddSourceFile(@"test.mzML", @"library.blib", 0.01);
+                foreach (var (modSeq, protein) in spectra)
+                {
+                    string sequence = new string(StripBrackets(modSeq).Where(char.IsLetter).ToArray());
+                    long refId = writer.AddSpectrum(sequence, modSeq, 525.25, 2, 10.0, 9.0, 11.0,
+                        peaks, peaks.Select((_, i) => 100f + i).ToArray(), 0.01, fileId, 1, 0.0);
+                    writer.AddProteinMapping(refId, new[] { protein });
+                }
+                writer.FinalizeDatabase();
+            }
+            SQLiteConnection.ClearAllPools();
+        }
+
+        private static string StripBrackets(string modSeq)
+        {
+            var sb = new System.Text.StringBuilder();
+            int depth = 0;
+            foreach (char c in modSeq)
+            {
+                if (c == '[' || c == '(')
+                    depth++;
+                else if (c == ']' || c == ')')
+                    depth--;
+                else if (depth == 0)
+                    sb.Append(c);
+            }
+            return sb.ToString();
         }
 
         /// <summary>
@@ -386,12 +401,6 @@ namespace pwiz.Osprey.Test
             }
             SQLiteConnection.ClearAllPools();
             return path;
-        }
-
-        private static void AssertParsed(string name, int chargeColumn, IonType ionType, byte ordinal, byte charge, NeutralLossCode loss)
-        {
-            Assert.IsTrue(BlibPeakAnnotations.TryParseName(name, chargeColumn, out var annotation), name);
-            AssertAnnotation(annotation, ionType, ordinal, charge, loss);
         }
 
         private static FragmentAnnotation Annotation(IonType ionType, byte ordinal, byte charge, NeutralLossCode loss, double customLoss)

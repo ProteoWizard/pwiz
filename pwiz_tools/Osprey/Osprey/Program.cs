@@ -741,15 +741,28 @@ namespace pwiz.Osprey
             {
                 if (config.LibrarySource == null)
                     return string.Format(OspreyResources.Program_ValidateArgs_No_spectral_library_specified__Use__0_, USAGE_LIBRARY);
+                if (string.IsNullOrWhiteSpace(config.ExportLibraryBlib))
+                {
+                    return string.Format(OspreyResources.Program_ValidateArgs_No_path_given_for__0__,
+                        OspreyCommandArgs.ARG_EXPORT_LIBRARY.ArgumentText);
+                }
                 // The loader has closed the library by the time the export replaces its output,
                 // so the same path would silently overwrite the library with the export.
-                if (string.Equals(Path.GetFullPath(config.ExportLibraryBlib), Path.GetFullPath(config.LibrarySource.Path),
-                        StringComparison.OrdinalIgnoreCase))
+                if (IsSamePath(config.ExportLibraryBlib, config.LibrarySource.Path))
                 {
                     return string.Format(OspreyResources.Program_ValidateArgs_The__0__path_is_the_library_it_reads___1_,
                         OspreyCommandArgs.ARG_EXPORT_LIBRARY.ArgumentText, config.LibrarySource.Path);
                 }
                 return null;
+            }
+
+            // The search replaces its output blib at the end, after the library was read, so the
+            // library's own path would silently replace the library with this run's results.
+            if (config.LibrarySource != null && !string.IsNullOrWhiteSpace(config.OutputBlib) &&
+                IsSamePath(config.OutputBlib, config.LibrarySource.Path))
+            {
+                return string.Format(OspreyResources.Program_ValidateArgs_The__0__path_is_the_library_the_search_reads___1_,
+                    OspreyCommandArgs.ARG_OUTPUT.ArgumentText, config.LibrarySource.Path);
             }
 
             bool hasInputFiles = config.HasInputFiles;
@@ -798,6 +811,16 @@ namespace pwiz.Osprey
             if (string.IsNullOrEmpty(config.OutputBlib))
                 return string.Format(OspreyResources.Program_ValidateArgs_No_output_path_specified__Use__0_, USAGE_OUTPUT);
             return null;
+        }
+
+        /// <summary>
+        /// Whether two paths name the same file once made absolute: ignoring case except on
+        /// Linux, whose file systems are case-sensitive.
+        /// </summary>
+        private static bool IsSamePath(string path1, string path2)
+        {
+            return string.Equals(Path.GetFullPath(path1), Path.GetFullPath(path2),
+                OperatingSystem.IsLinux() ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>

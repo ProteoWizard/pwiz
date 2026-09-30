@@ -665,7 +665,7 @@ namespace pwiz.Osprey.Test
                 OspreyResources.Program_RunExportLibrary_Saved__0_N0__library_precursors_to__1_,
                 exported));
             Assert.AreEqual(libraryPrecursors, BlibComparer.CountRows(exported, @"RefSpectra"));
-            Assert.AreEqual(0, BlibComparer.CountWhere(exported, BlibPeakAnnotations.TABLE_NAME, @"1"));
+            Assert.AreEqual(0, BlibComparer.CountWhere(exported, @"RefSpectraPeakAnnotations", @"1"));
             AssertExportOverLibraryRefused(library);
 
             // Osprey's own typing reproduces every type the subset library states - the isobars

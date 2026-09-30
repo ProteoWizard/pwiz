@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
@@ -191,9 +192,13 @@ namespace pwiz.Osprey.IO
                         {
                             LogCachedPairingSummary(RecoverPairingStats(cached), log);
                             error = DescribeSharedDecoyIds(cached);
-                            if (error != null)
-                                return null;
                         }
+                        else
+                        {
+                            error = DescribeUnflaggedDecoys(cached, config);
+                        }
+                        if (error != null)
+                            return null;
                         return cached;
                     }
                     if (status == LibraryCache.LibraryCacheStatus.IdentityMismatch)
@@ -226,7 +231,6 @@ namespace pwiz.Osprey.IO
                 case LibraryFormat.Blib:
                     var blibLoader = new BlibLoader(config.FragmentTolerance);
                     entries = blibLoader.Load(path, log.LogInfo);
-                    blibLoader.TypeCheck.Report(Path.GetFileName(path), config.Verbose, log.LogInfo, logWarning);
                     break;
 
                 default:
@@ -270,6 +274,12 @@ namespace pwiz.Osprey.IO
                 !TryFinishSuppliedDecoys(entries, config, log, out error))
             {
                 return null;
+            }
+            if (!config.LibrarySuppliesDecoys)
+            {
+                error = DescribeUnflaggedDecoys(entries, config);
+                if (error != null)
+                    return null;
             }
 
             // Save binary cache for next run
@@ -507,6 +517,26 @@ namespace pwiz.Osprey.IO
             foreach (int i in indices)
                 sb.AppendLine().Append(@"  ").Append(DescribeEntry(library[i]));
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// The load-time error for library precursors whose protein accessions mark them as
+        /// decoys (<see cref="OspreyConfig.DecoyPrefixes"/>) in a search that generates its own,
+        /// or null when there are none. Nothing else flags them - a .blib has no decoy column -
+        /// so they would be searched as targets, pass FDR as targets of a decoy protein, and
+        /// shape the generated decoys. A precursor a DIA-NN Decoy column flags is not counted:
+        /// decoy generation already drops it.
+        /// </summary>
+        private static string DescribeUnflaggedDecoys(List<LibraryEntry> library, OspreyConfig config)
+        {
+            var unflagged = library.Where(entry => !entry.IsDecoy && entry.LooksLikeLibraryDecoy(config.DecoyPrefixes))
+                .ToList();
+            if (unflagged.Count == 0)
+                return null;
+            return string.Format(
+                OspreyIOResources.LibraryLoader_DescribeUnflaggedDecoys__0__library_precursors_have_protein_accessions_marking_them_as_decoys,
+                unflagged.Count, FormatPrefixList(config.DecoyPrefixes), unflagged[0].ModifiedSequence,
+                OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY));
         }
 
         /// <summary>

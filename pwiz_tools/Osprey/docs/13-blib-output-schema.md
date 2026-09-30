@@ -112,78 +112,71 @@ The C# adds a **fallback the Rust doc does not describe**: if *no* run passes ru
 
 ## Reading back (`BlibLoader.cs`)
 
-`BlibLoader.Load` (BlibLoader.cs:51) reads `RefSpectra` + `RefSpectraPeaks` (`LoadSpectra`) and `RefSpectraProteins`/`Proteins` (`LoadProteinMappings`). Peak blobs are decoded by `DecodeBlibPeaks` / `DecompressPeakBlobs` (BlibLoader.cs:320, 389), which try raw-first then zlib (`TryZlibDecompress` skips the 2-byte zlib header and inflates with `DeflateStream`, BlibLoader.cs:293), tolerate f32 or f64 intensities, and normalize intensity to the max. Modifications are re-parsed from the `peptideModSeq` string (not the `Modifications` table) by `ParseBlibModifications` + `IdentifyModification`, which recognize common mods by mass within half the last printed digit (at least `MOD_TOLERANCE = 0.01`) and handle both mass-shift (`[+57.0]`) and absolute-mass (`C[160.0]`) notation; see "Modification masses from `peptideModSeq`" below.
+`BlibLoader.Load` reads `RefSpectra` + `RefSpectraPeaks` (`LoadSpectra`) and `RefSpectraProteins`/`Proteins` (`LoadProteinMappings`). Peak blobs are decoded by `DecodeBlibPeaks` / `DecompressPeakBlobs`, which try raw-first then zlib (`TryZlibDecompress` skips the 2-byte zlib header and inflates with `DeflateStream`), tolerate f32 or f64 intensities, and normalize intensity to the max. Modifications are re-parsed from the `peptideModSeq` string (not the `Modifications` table); see "Modification masses from `peptideModSeq`" below.
 
 ### Fragment typing
 
-`LoadSpectra` types every blib spectrum's peaks as it reads them
-(`Osprey.Core/FragmentTyping.cs`), accepting what the library states where Osprey agrees it is
-possible and computing the rest from m/z, as Skyline does for a peptide library:
+`LoadSpectra` types every blib spectrum's peaks from m/z as it reads them
+(`Osprey.Core/FragmentTyping.cs`), as Skyline does for a peptide library:
 
 - **Candidates:** the primary b and y ions of `FragmentLadder` - fragment charge 1 to
   min(precursor charge, 2), no neutral losses - with m/z from
   `PeptideFragmentMass.CalculateFragmentMz`, stacked modifications included.
 - **Tolerance:** the search's fragment tolerance (`--fragment-tolerance`; 0.5 Th under
   `--resolution unit`, ppm for HRAM), the tolerance chromatogram extraction uses, so a peak typed
-  y6 is one extraction counts as y6. Typing runs once per library, before any run's MS2
-  calibration narrows extraction to |mean| + 3 SD, so it types within the configured tolerance,
-  the upper bound of what extraction uses.
-- **1. The library's word, where possible:** a peak whose annotation rows name a candidate within
-  tolerance of it takes that ion, even where Osprey on its own would choose another. The library
-  may know what Osprey cannot: an isotope label on the C-terminus resolves b/y isobars, and one
-  on the third or fourth residue separates `b2` from `b4^2` of `IQQLTEEIGR`. A stated ion out of
-  tolerance, a neutral loss, another ion type or a charge above 2 is not possible, and the peak
-  is typed as in 2.
-- **2. Osprey's own typing** for every other peak, most intense first: the preferred candidate
-  within tolerance that no peak has claimed. Each ion types one peak, as Skyline's library
-  ranking lets each predicted ion match one peak, so a library listing `b2` and `b4^2` as two
-  peaks at one m/z gets the two ions.
-- **Preference:** the nearest, counting candidates within 0.001 Th of each other as equally near;
-  then the lower fragment charge (`b2` over `b4^2`); then y before b, then the shorter ion, so the
-  choice is always made. A peak with a candidate in reach is never left untyped: Unknown says the
-  peak was not produced by the peptide's fragmentation at all, which is worse than a possibly
-  wrong choice between ions that each could have produced it. A peak no unclaimed candidate
-  reaches stays Unknown, and decoy generation copies it unchanged.
-- **Logged:** one line with the peaks typed, of all peaks, and how many as the library states.
+  y6 is one extraction counts as y6. Typing runs once per library, at the configured tolerance,
+  before any run's MS2 calibration sets that run's extraction tolerance.
+- **Most intense first:** each peak takes the preferred candidate within tolerance that no peak
+  has claimed. Each ion types one peak, as Skyline's library ranking lets each predicted ion match
+  one peak, so a library listing `b2` and `b4^2` as two peaks at one m/z gets the two ions.
+- **Preference:** the nearest, counting candidates within 1e-5 Th of each other as equally near
+  (isobaric ions differ only by floating-point rounding; distinct ions of tryptic peptides come
+  within 1e-4 Th); then the lower fragment charge (`b2` over `b4^2`); then y before b, then the
+  shorter ion, so the choice is always made. A peak with a candidate in reach is never left
+  untyped: Unknown says the peak was not produced by the peptide's fragmentation at all, which is
+  worse than a possibly wrong choice between ions that each could have produced it. A peak no
+  unclaimed candidate reaches stays Unknown, and decoy generation copies it unchanged.
+- **Logged:** one line with the peaks typed, of all peaks, and the tolerance.
 - **Resume and cache safety:** every blib search adds `;blibreader=2` to every task validity key,
   and the `.libcache` composition carries `blib_reader:2` with the fragment tolerance the cached
   types were computed within ([14](14-intermediate-files.md)). Both carry
   `BlibLoader.READER_VERSION`, which also covers the modification parsing below.
 
-### Library annotations: read, used where possible, compared
+### Library annotations are not read
 
-When a blib's `RefSpectraPeakAnnotations` table has rows, `LoadSpectra` merge-joins it with the
-spectra cursor (both ordered by `RefSpectraID`; rows then by `rowid`, so a table written without
-the `id` column reads the same). What the rows state feeds the typing above and is compared with
-Osprey's own typing (`BlibPeakAnnotations.Check`, `FragmentTypeCheck`).
+A blib's `RefSpectraPeakAnnotations` table is not read. Skyline designed it for small molecules,
+and no proteomics software is known to write peptide fragment ions into it, so every blib peak is
+typed by Osprey as above. A DIA-NN TSV's fragment type columns are different: they stay the
+typing its search uses, and are compared with Osprey's own typing (`FragmentTypeCheck`):
 
-- **Grammar of `name`:** `<ion><ordinal>[-<loss>]`, ion `a/b/c/x/y/z` in any case, loss `H2O`,
-  `NH3`, `H3PO4` or a finite decimal mass (`y7`, `b3`, `y7-H2O`, `y5-97.9769`). A decimal loss
-  within half its last printed digit of a known loss (at least 0.005 Da), or an integer loss equal
-  to its nominal mass, snaps to it. A NIST-style `/` tail and anything after whitespace are
-  ignored. The fragment charge is the `charge` column, or when that is 0 a `^2`, `++` or `+2`
-  suffix.
-- **Per peak:** *agree* when the rows name the ion Osprey's own typing chooses; *library's
-  choice* when they name another candidate within tolerance, which is used; *differ* when they
-  name primary ions but none within tolerance; *outside the model* when they state only a loss,
-  an a/c/x/z ion, a charge above 2, or an unreadable name.
+- **Per peak:** *agree* when the stated ion is the one Osprey's own typing chooses; *library's
+  choice* when it is another candidate within tolerance; *differ* when it is a primary b or y ion
+  not within tolerance; *outside the model* when it is a loss, an a/c/x/z ion or a charge above 2.
 - **Reported:** one line naming the library, with counts and the denominator - a warning when a
-  peak differs, else information - and the first differing peaks under `--verbose`. A DIA-NN TSV
-  gets the same comparison of its type columns, which stay the typing its search uses.
-- **Never fatal:** a malformed row - a non-integer `RefSpectraID` or `peakIndex` - is passed
-  over.
+  peak differs, else information - and the first differing peaks under `--verbose`. A TSV with
+  no fragment type column states nothing and costs no typing.
 
 ### Modification masses from `peptideModSeq`
 
-`ParseBlibModifications` reads the bracket values of `peptideModSeq` (`PEPC[+57.021464]TIDE`)
-and snaps each to a known modification (carbamidomethyl, oxidation, N-terminal acetyl,
-phospho, deamidation, TMT6plex):
+`ParseBlibModifications` reads each bracket of `peptideModSeq` - a mass shift
+(`PEPC[+57.021464]TIDE`), an absolute cysteine mass (`C[160.0]`) or a UniMod id (`[UniMod:4]`,
+or `(UniMod:4)` as DIA-NN writes it) - and identifies it against Osprey's UniMod table
+(`Osprey.Core/UniMod.cs`, masses from Skyline's `UniModData.cs`), as Skyline matches library
+modifications:
 
-- A value snaps within half its last printed digit, and never within less than 0.01 Da, so
-  BiblioSpec's one-decimal text (`C[+57.0]`, `[+42.0]`, `S[+80.0]`) gets the exact known mass.
+- A mass matches a known modification allowed on its residue or terminus when both round to the
+  same value at the precision the text prints, at most four decimals, or lie within 1e-4 Da
+  (Skyline's `MassModification.Matches`). BiblioSpec's one-decimal text (`C[+57.0]`, `K[+8.0]`,
+  `Q[-17.0]` at the N-terminus) gets the exact known mass. When two match, the table's order
+  decides: Skyline's common modifications first (Acetyl before Trimethyl for `K[+42.0]`).
+- A mass printed with four or more decimals that matches nothing is used as printed. One printed
+  with fewer cannot be, and a UniMod id Osprey does not know or any other text cannot be
+  identified: the library is refused, listing each such modification with the number of spectra
+  carrying it and the first of them. Like Skyline, a bracket summing two modifications
+  (`M[+58.0]`) is not split.
 - An unsigned value between 100 and 200 is read as an absolute residue mass only on C
   (`C[160.03]` becomes carbamidomethyl); on any other residue, or signed, it is a mass shift,
-  so `K[+114.042927]` (GlyGly) keeps 114.043.
+  so `K[+114.042927]` is GlyGly.
 - An N-terminal modification and a modification of the first residue both sit at position 0,
   and their masses add in every b ion.
 

@@ -90,12 +90,40 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Typed {0:N0} of {1:N0} library peaks as b or y ions within {2}, {3:N0} of them as the library states.
+        ///   Looks up a localized string similar to Typed {0:N0} of {1:N0} library peaks as b or y ions within {2} {3}.
         /// </summary>
         public static string BlibLoader_Load_Typed__0_N0__of__1_N0__library_peaks_as_b_or_y_ions_within__2___3_ {
             get {
                 return ResourceManager.GetString("BlibLoader_Load_Typed__0_N0__of__1_N0__library_peaks_as_b_or_y_ions_within__2___3" +
                         "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} in {1:N0} spectra, first {2}.
+        /// </summary>
+        public static string BlibLoader_ToException__0__in__1__spectra__first__2_ {
+            get {
+                return ResourceManager.GetString("BlibLoader_ToException__0__in__1__spectra__first__2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0:N0} library spectra have modifications Osprey cannot identify. A modification mass printed with fewer than {1} decimals must match a known UniMod modification allowed on its residue, and a UniMod id must be one Osprey knows. Build the library with full-precision modification masses and load it again:.
+        /// </summary>
+        public static string BlibLoader_ToException__0__library_spectra_have_modifications_Osprey_cannot_identify {
+            get {
+                return ResourceManager.GetString("BlibLoader_ToException__0__library_spectra_have_modifications_Osprey_cannot_ident" +
+                        "ify", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ... and {0:N0} more modifications.
+        /// </summary>
+        public static string BlibLoader_ToException____and__0__more_modifications {
+            get {
+                return ResourceManager.GetString("BlibLoader_ToException____and__0__more_modifications", resourceCulture);
             }
         }
         
@@ -302,6 +330,16 @@ namespace pwiz.Osprey.IO {
         public static string LibraryLoader_DescribeSharedDecoyIds_Library_precursor_ID__0__ {
             get {
                 return ResourceManager.GetString("LibraryLoader_DescribeSharedDecoyIds_Library_precursor_ID__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0:N0} library precursors have protein accessions marking them as decoys ({1}), the first {2}, but {3} was not given, so they would be searched as targets. Search with {3} to use the library&apos;s decoys, or remove them from the library..
+        /// </summary>
+        public static string LibraryLoader_DescribeUnflaggedDecoys__0__library_precursors_have_protein_accessions_marking_them_as_decoys {
+            get {
+                return ResourceManager.GetString("LibraryLoader_DescribeUnflaggedDecoys__0__library_precursors_have_protein_accessi" +
+                        "ons_marking_them_as_decoys", resourceCulture);
             }
         }
         
