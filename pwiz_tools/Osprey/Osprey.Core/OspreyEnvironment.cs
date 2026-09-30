@@ -204,8 +204,15 @@ namespace pwiz.Osprey.Core
         public static readonly string CrossImplReconciliationOut = Environment.GetEnvironmentVariable(@"OSPREY_CROSS_IMPL_RECONCILIATION_OUT");
 
         /// <summary>
+        /// OSPREY_DEMUX_ENGINE: developer override of the <c>--demux</c> engine, weighted (the
+        /// default) | msconvert. msconvert runs the overlap demultiplexer, kept to compare against
+        /// msconvert until it is removed; the three variables below apply to it only.
+        /// </summary>
+        public static readonly string DemuxEngine = Environment.GetEnvironmentVariable(@"OSPREY_DEMUX_ENGINE");
+
+        /// <summary>
         /// OSPREY_DEMUX_BLOCK / OSPREY_DEMUX_INTERPOLATION / OSPREY_DEMUX_OUTPUT: developer
-        /// overrides of the <c>--demux</c> block mode (covered_bins | truncated_slice),
+        /// overrides of the msconvert engine's block mode (covered_bins | truncated_slice),
         /// RT interpolant (makima | pchip | natural_three_point | linear) and output mode
         /// (apportioned | solution). Setting block and interpolation to truncated_slice and
         /// natural_three_point reproduces msconvert's overlap demultiplexer, so a difference

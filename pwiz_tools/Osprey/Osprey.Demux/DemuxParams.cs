@@ -23,6 +23,29 @@ using System.Globalization;
 namespace pwiz.Osprey.Demux
 {
     /// <summary>
+    /// Which demultiplexer solves a staggered run.
+    /// </summary>
+    public enum DemuxEngine
+    {
+        /// <summary>
+        /// Fragment channels matched across the run's spectra, each channel solved by weighted
+        /// NNLS over a block of cycles with the other windows interpolated to each spectrum's
+        /// time, and each observed peak apportioned among its spectrum's bins. The default:
+        /// 40,009 precursors at 0.26% FDP on the Eclipse EV13 + EV14 runs, against msconvert's
+        /// 38,411.
+        /// </summary>
+        weighted,
+
+        /// <summary>
+        /// pwiz's scheme, one target spectrum at a time: its neighbors interpolated to its time,
+        /// then one unweighted NNLS per target centroid (<see cref="DemuxBlockMode"/>,
+        /// <see cref="DemuxOutputMode"/> and <see cref="RtInterpolation"/> apply to it only).
+        /// Kept to compare against msconvert, and to be removed.
+        /// </summary>
+        msconvert,
+    }
+
+    /// <summary>
     /// Which bins become unknowns in the local block solved for each spectrum.
     /// </summary>
     public enum DemuxBlockMode
@@ -72,13 +95,21 @@ namespace pwiz.Osprey.Demux
         /// Version of the demultiplexing algorithm. Bump it whenever a change alters the output
         /// for unchanged settings, so demultiplexed caches written before the change are rebuilt.
         /// </summary>
-        public const int ALGORITHM_VERSION = 3;
+        public const int ALGORITHM_VERSION = 4;
 
         /// <summary>Default fragment-channel tolerance, the pwiz massError default.</summary>
         public const double DEFAULT_CHANNEL_TOLERANCE_PPM = 10;
 
         /// <summary>Bins in the core of each local block (pwiz's OverlapRegionsInApprox).</summary>
         public const int DEFAULT_BLOCK_BINS = 7;
+
+        /// <summary>
+        /// Default detector counts per ion for the weighted engine's Poisson weights: an Orbitrap's
+        /// centroids have no single-ion levels to measure it from.
+        /// </summary>
+        public const double DEFAULT_COUNTS_PER_ION = 100;
+
+        public DemuxEngine Engine { get; set; } = DemuxEngine.weighted;
 
         /// <summary>
         /// Half-width of a fragment channel: a peak in another spectrum within this distance
@@ -101,6 +132,12 @@ namespace pwiz.Osprey.Demux
         public int BlockBins { get; set; } = DEFAULT_BLOCK_BINS;
 
         /// <summary>
+        /// Intensity of one ion, for the weighted engine: its weights and its channel and output
+        /// thresholds are in ions.
+        /// </summary>
+        public double CountsPerIon { get; set; } = DEFAULT_COUNTS_PER_ION;
+
+        /// <summary>
         /// Degree of parallelism across spectra. The output does not depend on it.
         /// </summary>
         public int Threads { get; set; } = 1;
@@ -115,11 +152,16 @@ namespace pwiz.Osprey.Demux
             get
             {
                 var ic = CultureInfo.InvariantCulture;
-                return string.Format(ic,
-                    @"osprey-demux/{0};block={1};interpolation={2};output={3};channel_tolerance={4}{5};min_bin_width={6};block_bins={7}",
-                    ALGORITHM_VERSION, BlockMode, Interpolation, OutputMode,
-                    ChannelTolerance.ToString(@"R", ic), ChannelToleranceIsPpm ? @"ppm" : @"th",
-                    MinimumBinWidth.ToString(@"R", ic), BlockBins);
+                string common = string.Format(ic, @"osprey-demux/{0};engine={1};channel_tolerance={2}{3};min_bin_width={4}",
+                    ALGORITHM_VERSION, Engine, ChannelTolerance.ToString(@"R", ic), ChannelToleranceIsPpm ? @"ppm" : @"th",
+                    MinimumBinWidth.ToString(@"R", ic));
+                if (Engine == DemuxEngine.weighted)
+                {
+                    return common + string.Format(ic, @";counts_per_ion={0};{1}", CountsPerIon.ToString(@"R", ic),
+                        WeightedDemultiplexer.Descriptor(WeightedDemultiplexer.CreateOptions(this)));
+                }
+                return common + string.Format(ic, @";block={0};interpolation={1};output={2};block_bins={3}",
+                    BlockMode, Interpolation, OutputMode, BlockBins);
             }
         }
     }

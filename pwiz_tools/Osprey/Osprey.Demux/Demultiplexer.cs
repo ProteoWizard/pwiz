@@ -51,7 +51,9 @@ namespace pwiz.Osprey.Demux
                 };
                 return new DemuxResult(scheme, ms2Spectra, statistics);
             }
-            return new OverlapDemultiplexer(scheme, ms2Spectra, parameters).Run();
+            return parameters.Engine == DemuxEngine.msconvert
+                ? new OverlapDemultiplexer(scheme, ms2Spectra, parameters).Run()
+                : WeightedDemultiplexer.Run(ms2Spectra, parameters);
         }
 
         /// <summary>

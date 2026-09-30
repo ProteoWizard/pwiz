@@ -72,6 +72,11 @@ namespace pwiz.Osprey.Test
         private const double FIXTURE_MIN_MEDIAN_COSINE = 0.995;
         private const double FIXTURE_MIN_FRACTION_95 = 0.90;
         private const double FIXTURE_MIN_MEDIAN_COSINE_MSCONVERT_LIKE = 0.997;
+        // The weighted engine against msconvert, measured 0.9949 and 0.855: further from it than the msconvert
+        // engine, since it pools each channel over a block of spectra and weights the fit, and on the whole
+        // Eclipse runs it identifies more (40,009 precursors against the msconvert engine's 39,355).
+        private const double FIXTURE_MIN_MEDIAN_COSINE_WEIGHTED = 0.99;
+        private const double FIXTURE_MIN_FRACTION_95_WEIGHTED = 0.80;
 
         /// <summary>
         /// NNLS: exact and constrained cases, then agreement with an independent brute-force
@@ -262,7 +267,7 @@ namespace pwiz.Osprey.Test
 
             foreach (var outputMode in new[] { DemuxOutputMode.apportioned, DemuxOutputMode.solution })
             {
-                var parameters = new DemuxParams { OutputMode = outputMode };
+                var parameters = new DemuxParams { Engine = DemuxEngine.msconvert, OutputMode = outputMode };
                 var result = Demultiplexer.Demultiplex(run.Spectra, parameters);
                 Assert.AreEqual(2 * run.Spectra.Count, result.Spectra.Count);
                 Assert.AreEqual(0, result.Statistics.IterationCapSolves);
@@ -278,6 +283,7 @@ namespace pwiz.Osprey.Test
             // it wherever the target's other bin solved to zero, so look at the solution itself.
             var truncated = Demultiplexer.Demultiplex(run.Spectra, new DemuxParams
             {
+                Engine = DemuxEngine.msconvert,
                 BlockMode = DemuxBlockMode.truncated_slice,
                 OutputMode = DemuxOutputMode.solution,
             });
@@ -285,8 +291,8 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(truncatedError > 0.01, string.Format(@"truncated error {0}", truncatedError));
 
             // Thread count changes scheduling only, never the output.
-            var single = Demultiplexer.Demultiplex(run.Spectra, new DemuxParams { Threads = 1 });
-            var multi = Demultiplexer.Demultiplex(run.Spectra, new DemuxParams { Threads = 4 });
+            var single = Demultiplexer.Demultiplex(run.Spectra, new DemuxParams { Engine = DemuxEngine.msconvert, Threads = 1 });
+            var multi = Demultiplexer.Demultiplex(run.Spectra, new DemuxParams { Engine = DemuxEngine.msconvert, Threads = 4 });
             AssertIdentical(single, multi);
         }
 
@@ -368,6 +374,7 @@ namespace pwiz.Osprey.Test
             {
                 var errors = MeasureErrors(Demultiplexer.Demultiplex(eluting.Spectra, new DemuxParams
                 {
+                    Engine = DemuxEngine.msconvert,
                     Interpolation = interpolation,
                     OutputMode = DemuxOutputMode.solution,
                 }), eluting);
@@ -388,7 +395,7 @@ namespace pwiz.Osprey.Test
             }
 
             // The default configuration end to end, apportioned output: no peak lost.
-            var defaults = MeasureErrors(Demultiplexer.Demultiplex(eluting.Spectra, new DemuxParams()), eluting);
+            var defaults = MeasureErrors(Demultiplexer.Demultiplex(eluting.Spectra, new DemuxParams { Engine = DemuxEngine.msconvert }), eluting);
             Assert.AreEqual(0, defaults.Missing, @"default apportioned: missing");
             Assert.IsTrue(defaults.Max < 0.02, string.Format(@"default apportioned: max error {0:P2}", defaults.Max));
         }
@@ -417,10 +424,10 @@ namespace pwiz.Osprey.Test
             foreach (var bin in scheme.Bins)
                 Assert.AreEqual(6.0, bin.Width, 0.01);
 
-            var result = Demultiplexer.Demultiplex(staggered, new DemuxParams { Threads = 4 });
+            var result = Demultiplexer.Demultiplex(staggered, new DemuxParams { Engine = DemuxEngine.msconvert, Threads = 4 });
             Assert.AreEqual(408, result.Spectra.Count);
             Assert.AreEqual(0, result.Statistics.IterationCapSolves);
-            AssertIdentical(result, Demultiplexer.Demultiplex(staggered, new DemuxParams { Threads = 1 }));
+            AssertIdentical(result, Demultiplexer.Demultiplex(staggered, new DemuxParams { Engine = DemuxEngine.msconvert, Threads = 1 }));
             CheckGolden(Path.Combine(folder, FIXTURE_GOLDEN), result);
 
             // Against msconvert: close, by design not identical (block layout and interpolant).
@@ -435,6 +442,7 @@ namespace pwiz.Osprey.Test
             // msconvert's own settings bring Osprey's typical spectrum closer to it.
             var msconvertLike = Demultiplexer.Demultiplex(staggered, new DemuxParams
             {
+                Engine = DemuxEngine.msconvert,
                 BlockMode = DemuxBlockMode.truncated_slice,
                 Interpolation = RtInterpolation.natural_three_point,
                 Threads = 4,
@@ -445,6 +453,45 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(likeAgreement.MedianCosine >= agreement.MedianCosine,
                 string.Format(@"msconvert-like median {0:F4} vs default {1:F4}",
                     likeAgreement.MedianCosine, agreement.MedianCosine));
+        }
+
+        /// <summary>
+        /// The weighted engine, the default: each parent into its bins with its scan number and time, the
+        /// constant-elution truth recovered, the output independent of the thread count, and on the Eclipse
+        /// fixture close to msconvert's demultiplexing with the intensity it measured.
+        /// </summary>
+        [TestMethod]
+        public void TestDemuxWeightedEngine()
+        {
+            var run = BuildStaggeredRun(20);
+            var result = Demultiplexer.Demultiplex(run.Spectra, new DemuxParams { Threads = 4 });
+            Assert.AreEqual(2 * run.Spectra.Count, result.Spectra.Count);
+            AssertStructure(result, run);
+            double maxError = MaxRelativeError(result, run, out int missing, out int spurious);
+            Assert.IsTrue(maxError < 1e-5, string.Format(@"max relative error {0}", maxError));
+            Assert.AreEqual(0, missing);
+            Assert.AreEqual(0, spurious);
+            Assert.AreEqual(result.Statistics.Channels, result.Statistics.ChannelsSolved);
+            Assert.AreEqual(0, result.Statistics.IonsPassedThrough);
+            AssertIdentical(result, Demultiplexer.Demultiplex(run.Spectra, new DemuxParams { Threads = 1 }));
+
+            string folder = Path.Combine(IOTest.FindPwizRoot(), FIXTURE_FOLDER);
+            var staggered = SpectrumFileReader.LoadAllSpectra(Path.Combine(folder, FIXTURE_STAGGERED)).Ms2Spectra;
+            var msconvert = SpectrumFileReader.LoadAllSpectra(Path.Combine(folder, FIXTURE_MSCONVERT)).Ms2Spectra;
+            var eclipse = Demultiplexer.Demultiplex(staggered, new DemuxParams { Threads = 4 });
+            Assert.AreEqual(408, eclipse.Spectra.Count);
+            AssertIdentical(eclipse, Demultiplexer.Demultiplex(staggered, new DemuxParams { Threads = 1 }));
+            var agreement = MeasureAgreement(msconvert, eclipse.Spectra);
+            Assert.AreEqual(408, agreement.Paired);
+            Assert.IsTrue(agreement.MedianCosine >= FIXTURE_MIN_MEDIAN_COSINE_WEIGHTED,
+                string.Format(@"median cosine vs msconvert {0:F4}", agreement.MedianCosine));
+            Assert.IsTrue(agreement.FractionAbove95 >= FIXTURE_MIN_FRACTION_95_WEIGHTED,
+                string.Format(@"fraction >= 0.95 vs msconvert {0:F3}", agreement.FractionAbove95));
+            Assert.AreEqual(1.0, agreement.IntensityRatio, 0.01);
+            // Apportioning divides each measured peak among its bins, so the intensity is what was measured.
+            double input = staggered.Sum(s => s.Intensities.Sum(v => (double)v));
+            double output = eclipse.Spectra.Sum(s => s.Intensities.Sum(v => (double)v));
+            Assert.AreEqual(1.0, output / input, 0.01);
         }
 
         /// <summary>
@@ -590,11 +637,11 @@ namespace pwiz.Osprey.Test
                 // demultiplexed, and a descriptor from other settings.
                 AssertRefused(demuxPath, null);
                 AssertRefused(rawPath, descriptor);
-                AssertRefused(demuxPath, new DemuxParams { Interpolation = RtInterpolation.pchip }.Descriptor);
+                AssertRefused(demuxPath, new DemuxParams { Engine = DemuxEngine.msconvert }.Descriptor);
                 Assert.IsNull(SpectraCache.LoadSpectraCache(demuxPath));
 
                 // The same rules from the header alone, as the start-up input check reads it.
-                string otherDescriptor = new DemuxParams { Interpolation = RtInterpolation.pchip }.Descriptor;
+                string otherDescriptor = new DemuxParams { Engine = DemuxEngine.msconvert }.Descriptor;
                 Assert.AreEqual(SpectraCacheRejection.None, SpectraCache.CheckHeader(demuxPath, null, descriptor));
                 Assert.AreEqual(SpectraCacheRejection.DemuxSettingsChanged,
                     SpectraCache.CheckHeader(demuxPath, null, otherDescriptor));
@@ -632,11 +679,19 @@ namespace pwiz.Osprey.Test
             }
 
             // Descriptors are stable and distinguish every output-changing setting, but not threads.
+            // The msconvert engine's own settings do not change the weighted engine's output.
+            Assert.AreEqual(DemuxEngine.weighted, new DemuxParams().Engine);
             Assert.AreEqual(new DemuxParams().Descriptor, new DemuxParams { Threads = 8 }.Descriptor);
-            Assert.AreNotEqual(new DemuxParams().Descriptor,
+            Assert.AreNotEqual(new DemuxParams().Descriptor, new DemuxParams { Engine = DemuxEngine.msconvert }.Descriptor);
+            Assert.AreNotEqual(new DemuxParams().Descriptor, new DemuxParams { ChannelTolerance = 20 }.Descriptor);
+            Assert.AreNotEqual(new DemuxParams().Descriptor, new DemuxParams { CountsPerIon = 50 }.Descriptor);
+            Assert.AreEqual(new DemuxParams().Descriptor,
                 new DemuxParams { BlockMode = DemuxBlockMode.truncated_slice }.Descriptor);
-            Assert.AreNotEqual(new DemuxParams().Descriptor,
-                new DemuxParams { OutputMode = DemuxOutputMode.solution }.Descriptor);
+            var msconvertEngine = new DemuxParams { Engine = DemuxEngine.msconvert };
+            Assert.AreNotEqual(msconvertEngine.Descriptor,
+                new DemuxParams { Engine = DemuxEngine.msconvert, BlockMode = DemuxBlockMode.truncated_slice }.Descriptor);
+            Assert.AreNotEqual(msconvertEngine.Descriptor,
+                new DemuxParams { Engine = DemuxEngine.msconvert, OutputMode = DemuxOutputMode.solution }.Descriptor);
 
             // --demux selects the mode, and only an enabled mode enters the search hash, so every
             // existing hash is unchanged while it is off.
@@ -659,7 +714,7 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(DemuxCacheBuilder.ValidityKeySuffix(config), new DemuxParams().Descriptor);
             Assert.AreNotEqual(DemuxCacheBuilder.ValidityKeySuffix(DemuxMode.auto, new DemuxParams().Descriptor),
                 DemuxCacheBuilder.ValidityKeySuffix(DemuxMode.auto,
-                    new DemuxParams { Interpolation = RtInterpolation.natural_three_point }.Descriptor));
+                    new DemuxParams { Engine = DemuxEngine.msconvert }.Descriptor));
         }
 
         private static void AssertRefused(string cachePath, string descriptor)
@@ -1044,7 +1099,7 @@ namespace pwiz.Osprey.Test
             foreach (var outputMode in new[] { DemuxOutputMode.apportioned, DemuxOutputMode.solution })
             {
                 string label = string.Format(@"{0}, {1}", name, outputMode);
-                var result = Demultiplexer.Demultiplex(run.Spectra, new DemuxParams { OutputMode = outputMode });
+                var result = Demultiplexer.Demultiplex(run.Spectra, new DemuxParams { Engine = DemuxEngine.msconvert, OutputMode = outputMode });
                 if (binsPerSpectrum > 0)
                     Assert.AreEqual(binsPerSpectrum * run.Spectra.Count, result.Spectra.Count, label);
                 var errors = MeasureErrors(result, run);

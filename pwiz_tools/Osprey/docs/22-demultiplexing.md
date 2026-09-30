@@ -12,15 +12,20 @@ selectivity, where searching the raw spectra would get the window width's, and w
 every precursor in two windows.
 
 **Where it stands.** There are two demultiplexers, in the same library (`Osprey.Demux`):
-- **The overlap demultiplexer**, run by `--demux auto`. It reproduces, inside Osprey, the overlap
-  demultiplexing msconvert does (`--filter "demultiplex optimization=overlap_only"`), reads the
-  raw file directly and caches the result as Osprey spectra. Everything from
-  [Using it](#using-it) to [Validation](#validation) describes it.
 - **The per-channel demultiplexer**, one algorithm for staggered windows and for a scanning
-  quadrupole (SCIEX ZT Scan). It solves each fragment channel with the quadrupole's measured
-  transmission and counting-statistics weights. It is not wired into `--demux` yet; it runs in
-  `Osprey.DemuxTool`, which writes a demultiplexed mzML that Osprey or DIA-NN can search. See
+  quadrupole (SCIEX ZT Scan). It solves each fragment channel with the quadrupole's transmission
+  and counting-statistics weights. For staggered windows it is what `--demux auto` runs (the
+  *weighted* engine, the default); ZT Scan still runs only in `Osprey.DemuxTool`, which writes a
+  demultiplexed mzML that Osprey or DIA-NN can search. See
   [The per-channel demultiplexer](#the-per-channel-demultiplexer-staggered-and-zt-scan).
+- **The overlap demultiplexer** (the *msconvert* engine, `OSPREY_DEMUX_ENGINE=msconvert`). It
+  reproduces, inside Osprey, the overlap demultiplexing msconvert does
+  (`--filter "demultiplex optimization=overlap_only"`). It is kept to compare against msconvert,
+  and is to be removed. [The algorithm](#the-algorithm) and
+  [Differences from msconvert](#differences-from-msconvert) describe it.
+
+Both engines read the raw file directly, through Osprey's own reader, and cache the result as
+Osprey spectra; everything from [Using it](#using-it) to [Files](#files) applies to either.
 
 The goal is one demultiplexer for every compressed-sampling scheme, where each measured spectrum
 mixes several precursor bins in known proportions:
@@ -77,7 +82,7 @@ it looks for, in order:
 available and its windows overlap, rescoring stops with an error, because the earlier stages
 searched the demultiplexed spectra.
 
-The log records the scheme found, the solver's work and the timing:
+The log records the scheme found, the solver's work and the timing. With the msconvert engine:
 
 ```
 Demultiplexing Ecl_..._10.raw: 2-fold overlap, 101 windows into 102 bins of 6.000-6.003 Th
@@ -85,8 +90,12 @@ Demultiplexing Ecl_..._10.raw: 2-fold overlap, 101 windows into 102 bins of 6.00
   Demultiplexed in 18.8s on 16 thread(s); parse 191.0s, ratio 0.10; osprey-demux/3;block=covered_bins;...
 ```
 
+The weighted engine reports its fragment channels instead: how many it found, how many were
+strong enough to solve, and the share of the ions passed through unsolved.
+
 The last line is the timing gate for the implementation: demultiplexing as a fraction of the raw
-parse it follows. On the Orbitrap Eclipse data that fraction is 0.10-0.13, with scalar code.
+parse it follows. On the Orbitrap Eclipse data that fraction is 0.10-0.13 for the msconvert
+engine, with scalar code.
 
 ## Files
 
@@ -105,10 +114,12 @@ cache's VERSION 4 layout with a different magic and a **descriptor** after the h
 example:
 
 ```
-osprey-demux/3;block=covered_bins;interpolation=makima;output=apportioned;channel_tolerance=10ppm;min_bin_width=0.2;block_bins=7
+osprey-demux/4;engine=weighted;channel_tolerance=10ppm;min_bin_width=0.2;counts_per_ion=100;block_cycles=12;cycle_pad=4;group_bins=16;min_channel_ions=8;min_channel_cells=3;poisson_weights=True;weight_floor_ions=0.5;min_output_ions=0.2
+osprey-demux/4;engine=msconvert;channel_tolerance=10ppm;min_bin_width=0.2;block=covered_bins;interpolation=makima;output=apportioned;block_bins=7
 ```
 
-The descriptor names the algorithm version and every setting that changes the output. A cache
+The descriptor names the algorithm version, the engine, and every setting of that engine that
+changes the output. Version 4 added the engine, so caches written before it are rebuilt. A cache
 whose descriptor differs from the current one is rejected and rebuilt from `.spectra.bin`, in
 seconds, as it is when its source file changes. The thread count is not part of it, because it
 never changes the output.
@@ -120,8 +131,8 @@ demux off, neither the key nor the hash changes.
 
 ## The algorithm
 
-This is the overlap demultiplexer that `--demux auto` runs. For each acquired MS2 spectrum (the
-*target*), independently and in parallel:
+This is the overlap demultiplexer, the msconvert engine (`OSPREY_DEMUX_ENGINE=msconvert`). For
+each acquired MS2 spectrum (the *target*), independently and in parallel:
 
 1. **Scheme.** Detected once per run from every distinct isolation window
    (`DemuxSchemeDetector`).
@@ -176,8 +187,10 @@ not been isolated.
 
 ## Developer overrides
 
-For attributing a difference from msconvert, and nothing else, three environment variables
-override the defaults:
+For attributing a difference from msconvert, and nothing else, environment variables override
+the defaults:
+- `OSPREY_DEMUX_ENGINE` = `weighted` | `msconvert`: the engine. The three below apply to the
+  msconvert engine only.
 - `OSPREY_DEMUX_BLOCK` = `covered_bins` | `truncated_slice`;
 - `OSPREY_DEMUX_INTERPOLATION` = `makima` | `pchip` | `natural_three_point` | `linear`;
 - `OSPREY_DEMUX_OUTPUT` = `apportioned` | `solution`.
@@ -187,7 +200,8 @@ the descriptor, so a cache built under an override is rebuilt without it.
 
 ## Validation
 
-**Unit tests** (`Osprey.Test/DemuxTest.cs`, about a second together):
+**Unit tests** (`Osprey.Test/DemuxTest.cs`, about a second together; each names the engine it
+tests):
 - **NNLS** against a brute-force optimum over 3,000 random systems, including underdetermined
   ones.
 - **Interpolant exactness**, and the apex-error ordering behind the choice of makima.
@@ -203,9 +217,13 @@ the descriptor, so a cache built under an override is rebuilt without it.
   it alone, rebuilding it on a settings change, a non-overlapping run left alone, and the
   Stage 6 rule.
 - **A real-data fixture** (`Osprey.Test/Data/Demux`): a 3-minute, 8-window slice of an Orbitrap
-  Eclipse staggered run, and msconvert's demultiplexing of the same slice. The test pins Osprey's
-  output against a committed per-bin golden and its agreement with msconvert against measured
-  floors. How the slice was made, and how to rebless the golden, is in the folder's README.
+  Eclipse staggered run, and msconvert's demultiplexing of the same slice. The test pins the
+  msconvert engine's output against a committed per-bin golden and its agreement with msconvert
+  against measured floors. How the slice was made, and how to rebless the golden, is in the
+  folder's README.
+- **The weighted engine**: exact recovery of the constant-elution truth, output independent of
+  the thread count, and on the fixture a median cosine with msconvert of 0.995 (0.855 of spectra
+  at 0.95 or more), with the measured intensity kept.
 
 **Whole runs**: two Orbitrap Eclipse staggered runs (EV13 and EV14; 12 Th windows at k = 2),
 searched with a Carafe library carrying 1:1 entrapment.
@@ -293,7 +311,9 @@ Osprey.DemuxTool --in run.raw --out run.demux.mzML --scheme staggered
 | `--cycles`, `--mz` | all | restrict to sweeps `first:last` (0-based) and precursor m/z `low:high` |
 | `--threads` | all | the output does not depend on it |
 
-The tool is for evaluation until the demultiplexer is wired into `--demux`. The Sciex.Wiff2
+For staggered data the tool and `--demux auto` run the same pipeline (`StaggeredDemuxPipeline`),
+the tool on the file, Osprey on the spectra it has parsed. For ZT Scan the tool is for evaluation
+until that is wired into `--demux` too. The Sciex.Wiff2
 reader plugin and its native SQLite libraries are staged beside the tool when it is built with
 the vendor readers. Osprey.exe does not stage them yet.
 
@@ -847,11 +867,13 @@ The scripts behind these ZT Scan tables are in pwiz-ai, under `ai/scripts/Osprey
 ## Status and limitations
 
 - **Supported (`--demux auto`):** stepped overlapping windows (staggered DIA) at any overlap factor, including
-  variable widths, from centroided data (vendor centroiding, or a centroided mzML).
-- **Supported in `Osprey.DemuxTool` only:** the per-channel demultiplexer, for staggered windows
-  and for SCIEX ZT Scan, and the joint solve for ZT Scan. Wiring them into `--demux` still needs:
+  variable widths, from centroided data (vendor centroiding, or a centroided mzML), by the
+  per-channel demultiplexer (or the overlap demultiplexer, with `OSPREY_DEMUX_ENGINE=msconvert`).
+- **Supported in `Osprey.DemuxTool` only:** the per-channel demultiplexer for SCIEX ZT Scan, and
+  the joint solve for ZT Scan. Wiring them into `--demux` still needs:
   - the .wiff2 reader staged for Osprey.exe;
   - the transmission calibrated per file, in C#;
+  - for the joint solve, the profile, which the `.spectra.bin` does not hold;
   - its descriptor in the demultiplexed cache.
 - **Open questions for ZT Scan:**
   - quantitation over whole runs: the per-channel solve's quantities are noisier than the acquired

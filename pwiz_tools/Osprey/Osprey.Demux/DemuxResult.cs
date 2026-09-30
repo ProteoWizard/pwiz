@@ -24,8 +24,8 @@ using pwiz.Osprey.Core;
 namespace pwiz.Osprey.Demux
 {
     /// <summary>
-    /// Counts describing one demultiplexing run. All are exact integer sums, so they do not
-    /// depend on thread count or scheduling.
+    /// Counts describing one demultiplexing run. None depends on thread count or scheduling: the
+    /// counts are exact integer sums, and the ion totals are summed in a fixed order.
     /// </summary>
     public sealed class DemuxStatistics
     {
@@ -35,8 +35,20 @@ namespace pwiz.Osprey.Demux
         /// <summary>Distinct local block geometries, i.e. factorizations built.</summary>
         public int Geometries { get; set; }
 
-        /// <summary>Fragment channels solved (one NNLS each).</summary>
+        /// <summary>
+        /// Fragment channels: one NNLS each for <see cref="DemuxEngine.msconvert"/>; for
+        /// <see cref="DemuxEngine.weighted"/> every channel found, of which
+        /// <see cref="ChannelsSolved"/> were strong enough to solve.
+        /// </summary>
         public long Channels { get; set; }
+
+        /// <summary>Channels the weighted engine solved; the rest were passed through.</summary>
+        public long ChannelsSolved { get; set; }
+
+        /// <summary>Ions the weighted engine read, and of them those passed through unsolved.</summary>
+        public double IonsIn { get; set; }
+
+        public double IonsPassedThrough { get; set; }
 
         public long ZeroSolves { get; set; }
         public long UnconstrainedSolves { get; set; }

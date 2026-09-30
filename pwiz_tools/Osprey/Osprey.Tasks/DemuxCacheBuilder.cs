@@ -46,12 +46,15 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// The demux settings a run uses. Library defaults throughout; <c>--demux</c> is the
         /// only switch, so the demultiplexed cache stays independent of search settings. The
-        /// developer overrides in <see cref="OspreyEnvironment.DemuxBlockMode"/> exist to
-        /// attribute differences from msconvert.
+        /// developer overrides in <see cref="OspreyEnvironment.DemuxEngine"/> and
+        /// <see cref="OspreyEnvironment.DemuxBlockMode"/> exist to attribute differences from
+        /// msconvert.
         /// </summary>
         internal static DemuxParams CreateParams(OspreyConfig config)
         {
             var parameters = new DemuxParams { Threads = Math.Max(1, config.NThreads) };
+            parameters.Engine = ParseOverride(OspreyEnvironment.DemuxEngine,
+                @"OSPREY_DEMUX_ENGINE", parameters.Engine);
             parameters.BlockMode = ParseOverride(OspreyEnvironment.DemuxBlockMode,
                 @"OSPREY_DEMUX_BLOCK", parameters.BlockMode);
             parameters.Interpolation = ParseOverride(OspreyEnvironment.DemuxInterpolation,
@@ -246,13 +249,24 @@ namespace pwiz.Osprey.Tasks
                 "Demultiplexing {0}: {1}-fold overlap, {2} windows into {3} bins of {4:F3}-{5:F3} Th",
                 Path.GetFileName(inputFile), scheme.OverlapFactor, scheme.Windows.Count,
                 scheme.Bins.Count, minWidth, maxWidth));
-            double channels = Math.Max(1, stats.Channels);
-            ctx.LogInfo(string.Format(
-                "  {0:N0} MS2 spectra -> {1:N0}; {2:N0} channel solves ({3:P1} zero, {4:P1} unconstrained, " +
-                "{5:P1} active set, {6:N0} at the iteration cap) over {7} block geometries",
-                stats.SpectraIn, stats.SpectraOut, stats.Channels, stats.ZeroSolves / channels,
-                stats.UnconstrainedSolves / channels, stats.ActiveSetSolves / channels,
-                stats.IterationCapSolves, stats.Geometries));
+            if (parameters.Engine == DemuxEngine.weighted)
+            {
+                ctx.LogInfo(string.Format(
+                    "  {0:N0} MS2 spectra -> {1:N0}; {2:N0} fragment channels, {3:N0} solved; " +
+                    "{4:P2} of {5:E3} ions passed through unsolved",
+                    stats.SpectraIn, stats.SpectraOut, stats.Channels, stats.ChannelsSolved,
+                    stats.IonsPassedThrough / Math.Max(stats.IonsIn, 1e-30), stats.IonsIn));
+            }
+            else
+            {
+                double channels = Math.Max(1, stats.Channels);
+                ctx.LogInfo(string.Format(
+                    "  {0:N0} MS2 spectra -> {1:N0}; {2:N0} channel solves ({3:P1} zero, {4:P1} unconstrained, " +
+                    "{5:P1} active set, {6:N0} at the iteration cap) over {7} block geometries",
+                    stats.SpectraIn, stats.SpectraOut, stats.Channels, stats.ZeroSolves / channels,
+                    stats.UnconstrainedSolves / channels, stats.ActiveSetSolves / channels,
+                    stats.IterationCapSolves, stats.Geometries));
+            }
             // The timing gate: demux against the parse it follows decides whether the solver
             // needs more than scalar code.
             string parse = double.IsNaN(parseSeconds)
