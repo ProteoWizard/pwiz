@@ -231,6 +231,46 @@ namespace pwiz.CarafeSharp.Test
                 var expectedNce = JavaHashOrder.OrderStringKeys(new[] { keyA, keyB }).Select(k => k == keyA ? 1.0 : 2.0);
                 CollectionAssert.AreEqual(expectedNce.ToList(), runs.Select(r => r.Nce).ToList());
                 Assert.AreEqual(keyA, runs.Single(r => r.Nce == 1.0).MsFile);
+
+                // use_finetuned_for_prediction is read as Python's bool(): anything but a zero,
+                // an empty string, array or object, null or false is true. A metrics file that is
+                // not JSON, or has no ms2 object, means the pretrained model.
+                string metrics = Path.Combine(folder, CarafeModelDirectory.METRICS_FILE);
+                foreach (var (value, expected) in new[]
+                         {
+                             (@"true", true), (@"false", false), (@"null", false), (@"1", true), (@"0", false), (@"0.0", false),
+                             (@"""yes""", true), (@"""""", false), (@"[0]", true), (@"[]", false), (@"{""a"":0}", true), (@"{}", false),
+                         })
+                {
+                    File.WriteAllText(metrics, @"{""ms2"":{""use_finetuned_for_prediction"":" + value + @"}}");
+                    Assert.AreEqual(expected, CarafeModelDirectory.Open(folder).UseFineTunedMs2, value);
+                }
+                foreach (string unreadable in new[] { @"{not json", @"[]", @"{""ms2"":true}", @"{""rt"":{}}" })
+                {
+                    File.WriteAllText(metrics, unreadable);
+                    Assert.IsFalse(CarafeModelDirectory.Open(folder).UseFineTunedMs2, unreadable);
+                }
+
+                // After training, the training run's instrument replaces the default, but not an -ms_instrument.
+                File.WriteAllText(Path.Combine(folder, CarafeModelDirectory.META_FILE),
+                    @"{""run.mzML"":{""nce"":27.0,""ms_instrument"":""Astral"",""rt_max"":40.0}}");
+                directory = CarafeModelDirectory.Open(folder);
+                settings = new LibrarySettings();
+                directory.ApplyTrainingRunOverrides(settings);
+                Assert.AreEqual(@"Astral", settings.Instrument);
+                Assert.AreEqual(27.0, settings.Nce);
+                Assert.AreEqual(40.0, settings.RtMax);
+                settings = new LibrarySettings { Instrument = @"Lumos", UserInstrument = true };
+                directory.ApplyTrainingRunOverrides(settings);
+                Assert.AreEqual(@"Lumos", settings.Instrument);
+                // With no meta.json there is no training run, and nothing is overridden.
+                File.Delete(Path.Combine(folder, CarafeModelDirectory.META_FILE));
+                settings = new LibrarySettings { Nce = 31 };
+                CarafeModelDirectory.Open(folder).ApplyTrainingRunOverrides(settings);
+                Assert.AreEqual(31.0, settings.Nce);
+                Assert.AreEqual(LibrarySettings.DEFAULT_INSTRUMENT, settings.Instrument);
+
+                Assert.ThrowsException<DirectoryNotFoundException>(() => CarafeModelDirectory.Open(Path.Combine(folder, @"missing")));
             }
             finally
             {
@@ -296,6 +336,11 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(4, LibraryChunkWriter.WriteThreads(false, 16));
             Assert.AreEqual(1, LibraryChunkWriter.WriteThreads(false, 3));
             Assert.AreEqual(-1, LibraryChunkWriter.WriteThreads(true, 16));
+
+            // A second Dispose, as a using block's after an explicit one, does nothing.
+            var idle = new LibraryChunkWriter(null, null, null);
+            idle.Dispose();
+            idle.Dispose();
 
             string folder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"Writer_" + Guid.NewGuid().ToString(@"N"));
             Directory.CreateDirectory(folder);
