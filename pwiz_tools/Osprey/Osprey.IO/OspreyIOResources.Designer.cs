@@ -128,11 +128,20 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Missing {0} at row {1}.
+        ///   Looks up a localized string similar to (line {0}, column {1}) Invalid {2} &apos;{3}&apos;.
         /// </summary>
-        public static string DiannTsvLoader_GetField_Missing__0__at_row__1_ {
+        public static string DiannTsvLoader_LineReader___line__0___column__1___Invalid__2____3__ {
             get {
-                return ResourceManager.GetString("DiannTsvLoader_GetField_Missing__0__at_row__1_", resourceCulture);
+                return ResourceManager.GetString("DiannTsvLoader_LineReader___line__0___column__1___Invalid__2____3__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (line {0}, column {1}) Missing {2}.
+        /// </summary>
+        public static string DiannTsvLoader_LineReader___line__0___column__1___Missing__2_ {
+            get {
+                return ResourceManager.GetString("DiannTsvLoader_LineReader___line__0___column__1___Missing__2_", resourceCulture);
             }
         }
         
@@ -164,11 +173,21 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid {0} &apos;{1}&apos; at row {2}.
+        ///   Looks up a localized string similar to ... and {0:N0} more errors.
         /// </summary>
-        public static string DiannTsvLoader_ParseValue_Invalid__0____1___at_row__2_ {
+        public static string DiannTsvLoader_ToException____and__0__more_errors {
             get {
-                return ResourceManager.GetString("DiannTsvLoader_ParseValue_Invalid__0____1___at_row__2_", resourceCulture);
+                return ResourceManager.GetString("DiannTsvLoader_ToException____and__0__more_errors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0:N0} library lines have errors. Fix the library and load it again:.
+        /// </summary>
+        public static string DiannTsvLoader_ToException__0__library_lines_have_errors__Fix_the_library_and_load_it_again_ {
+            get {
+                return ResourceManager.GetString("DiannTsvLoader_ToException__0__library_lines_have_errors__Fix_the_library_and_loa" +
+                        "d_it_again_", resourceCulture);
             }
         }
         
