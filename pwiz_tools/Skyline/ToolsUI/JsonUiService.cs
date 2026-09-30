@@ -562,9 +562,9 @@ namespace pwiz.Skyline.ToolsUI
             string denial = CheckScreenCaptureAvailability();
             if (denial != null)
             {
-                // Permission denial / desktop unavailable: return a structured Message instead of bytes. The
-                // wrapper emits Message as plain text content (no error flag) so the response shape matches
-                // what the legacy file-based path returned for the same condition.
+                // Permission denied, pending, or with no window to ask from: return a structured Message instead
+                // of bytes. The wrapper emits Message as plain text content (no error flag) so the response shape
+                // matches what the legacy file-based path returned for the same condition.
                 return new ImageBytesMetadata { Message = denial };
             }
             using (var bitmap = form.CaptureImage())

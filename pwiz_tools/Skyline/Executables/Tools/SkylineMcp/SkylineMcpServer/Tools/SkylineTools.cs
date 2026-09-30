@@ -993,8 +993,12 @@ public static class SkylineTools
     // do not drift out of sync.
     [McpServerTool(Name = "skyline_get_form_image"),
      Description("Export a PNG screenshot of any open Skyline form, dialog, or dockable panel. " +
-        "By default returns the PNG inline as an MCP ImageContentBlock. The screenshot is captured " +
-        "from the screen with non-Skyline content automatically redacted. Set returnFormat='file' to " +
+        "By default returns the PNG inline as an MCP ImageContentBlock. The screenshot is copied from " +
+        "the screen when the screen shows the whole form. When it does not - another application's " +
+        "window covers it, it is off the monitors, or there is no desktop (e.g. a disconnected Remote " +
+        "Desktop session) - the form is drawn off-screen instead: that image has a plain window frame " +
+        "and leaves out other windows on top of the form, such as a completion pop-up, which you can " +
+        "capture by its own form id. Set returnFormat='file' to " +
         "force file-on-disk, or 'inline' to require inline (errors if too big or Skyline too old). " +
         "Use skyline_get_open_forms to discover form IDs. For graphs, prefer skyline_get_graph_image " +
         "which renders directly without screen capture. " +

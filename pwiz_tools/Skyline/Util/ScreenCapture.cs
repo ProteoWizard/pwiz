@@ -207,9 +207,10 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// Captures a Skyline form as it appears on the screen when the screen can supply it. Otherwise renders it
         /// off-screen with <see cref="RenderControl"/>: when there is no desktop to copy from (e.g. a disconnected
-        /// Remote Desktop session), or when a window of another application covers it. If rendering fails and the
-        /// desktop is available, falls back to a screen copy with the covering windows redacted. Returns null if no
-        /// image could be made. Must be called on the form's thread.
+        /// Remote Desktop session), when the form is not on the monitors (e.g. the offscreen test mode), or when a
+        /// window of another application covers it. If rendering fails and the desktop is available, falls back to a
+        /// screen copy with the covering windows redacted. Returns null if no image could be made. Must be called on
+        /// the form's thread.
         /// </summary>
         public static Bitmap CaptureOrRender(Control targetForm)
         {
@@ -217,7 +218,7 @@ namespace pwiz.Skyline.Util
             if (desktopAvailable)
             {
                 var screenRect = GetWindowRectangle(targetForm);
-                if (GetForeignWindowRects(screenRect, GetTopLevelHandle(targetForm)).Count == 0)
+                if (IsShownOnScreen(screenRect, targetForm))
                     return CaptureScreen(screenRect);
             }
             var rendered = RenderControl(GetRenderedControl(targetForm));
@@ -329,7 +330,7 @@ namespace pwiz.Skyline.Util
                 var windowRect = rect.Rectangle * scalingFactor;
                 var intersection = Rectangle.Intersect(screenRect, windowRect);
 
-                if (intersection.IsEmpty)
+                if (intersection.Width == 0 || intersection.Height == 0)
                     continue; // no overlap, skip
 
                 if (windowPid == currentPid)
@@ -339,6 +340,45 @@ namespace pwiz.Skyline.Util
             }
 
             return foreignRects;
+        }
+
+        // Whether the screen shows the whole form, so that a copy of the screen is its image: the rectangle lies on
+        // the monitors and no window of another application covers it. A band as wide as the window border is
+        // ignored at the edges. The rectangle keeps part of the frame's invisible resize border, which a maximized
+        // window pushes past the monitor edge and under the taskbar, and other windows' invisible borders reach
+        // into it without hiding anything.
+        private static bool IsShownOnScreen(Rectangle screenRect, Control targetForm)
+        {
+            int edge = GetBorderWidth(targetForm);
+            var inner = Rectangle.Inflate(screenRect, -edge, -edge);
+            if (inner.Width <= 0 || inner.Height <= 0)
+                return false;
+            return IsOnMonitors(inner) && GetForeignWindowRects(inner, GetTopLevelHandle(targetForm)).Count == 0;
+        }
+
+        // The width of the frame around the form's top-level window, invisible resize border included, in the
+        // physical pixels of a screen rectangle; the system's frame width for a window drawn without a frame.
+        private static int GetBorderWidth(Control targetForm)
+        {
+            var topLevel = targetForm.TopLevelControl ?? targetForm;
+            int border = (topLevel.Width - topLevel.ClientSize.Width) / 2;
+            if (border <= 0)
+                border = SystemInformation.FrameBorderSize.Width;
+            return (new Rectangle(0, 0, border, border) * GetScalingFactor()).Width;
+        }
+
+        // Whether every pixel of the rectangle is on a monitor. Monitors do not overlap, so the rectangle is covered
+        // exactly when the areas it shares with each of them add up to its own.
+        private static bool IsOnMonitors(Rectangle screenRect)
+        {
+            var scalingFactor = GetScalingFactor();
+            long onMonitors = 0;
+            foreach (var screen in Screen.AllScreens)
+            {
+                var shared = Rectangle.Intersect(screenRect, screen.Bounds * scalingFactor);
+                onMonitors += (long)shared.Width * shared.Height;
+            }
+            return onMonitors == (long)screenRect.Width * screenRect.Height;
         }
 
         /// <summary>
