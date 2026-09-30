@@ -196,7 +196,7 @@ namespace pwiz.Osprey.Tasks
         // Phase B resume surface: the library and every input mzML are
         // read; per-file .scores.parquet + .calibration.json are written.
         // ValidityKey is the default: the search and library hashes, plus
-        // the peak-pick arm and (for generated decoys) the decoy term the base key carries. The pick belongs to THIS
+        // the peak-pick arm the base key carries. The pick belongs to THIS
         // stage - it chooses which candidate peak each precursor's row
         // describes - so a re-run under a different pick model must not
         // adopt these parquets.

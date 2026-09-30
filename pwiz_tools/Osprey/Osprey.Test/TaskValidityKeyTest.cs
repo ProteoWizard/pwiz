@@ -22,9 +22,7 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.Tasks;
@@ -56,47 +54,6 @@ namespace pwiz.Osprey.Test
             AssertEveryTaskCarriesTheSuffixesItNeeds();
             AssertLibraryFragmentArmIsPinnedToThePipeline();
             AssertDiagnosticsReportIsADeclaredOutputOnlyWhenAsked();
-            AssertGeneratedDecoysKeyOnTheStackedModFix();
-        }
-
-        /// <summary>
-        /// Decoy fragments now add two modifications on one residue, so a search that generates
-        /// its decoys appends exactly <see cref="OspreyTask.DECOY_MODS_TERM"/> to the base key
-        /// (every task carrying it is checked with the other base-key suffixes); a search whose
-        /// decoys come from the library (<c>DecoysInLibrary</c>, or its synonym
-        /// <c>DecoyMethod.FromLibrary</c>) keys exactly as before.
-        /// </summary>
-        private static void AssertGeneratedDecoysKeyOnTheStackedModFix()
-        {
-            var generated = new OspreyConfig();
-            Assert.AreEqual(PreFixBaseKey(generated) + OspreyTask.DECOY_MODS_TERM,
-                TaskKeys(generated)[PerFileScoringTask.TASK_NAME]);
-
-            var inLibrary = new OspreyConfig { DecoysInLibrary = true };
-            var fromLibrary = new OspreyConfig { DecoyMethod = DecoyMethod.FromLibrary };
-            foreach (var supplied in new[] { inLibrary, fromLibrary })
-            {
-                var suppliedKeys = TaskKeys(supplied);
-                Assert.AreEqual(PreFixBaseKey(supplied), suppliedKeys[PerFileScoringTask.TASK_NAME],
-                    @"decoys from the library key exactly as before");
-                foreach (var key in suppliedKeys)
-                    Assert.IsFalse(key.Value.Contains(OspreyTask.DECOY_MODS_TERM), key.Key);
-            }
-        }
-
-        /// <summary>Every pipeline task's validity key for <paramref name="config"/>, by task name.</summary>
-        private static Dictionary<string, string> TaskKeys(OspreyConfig config)
-        {
-            var tasks = OspreyTasks.Create().Pipeline;
-            var ctx = new PipelineContext(config, tasks, null, null, null);
-            return tasks.ToDictionary(t => t.Name, t => t.ValidityKey(ctx));
-        }
-
-        /// <summary>The base task key as every build before the stacked-modification decoy fix wrote it.</summary>
-        private static string PreFixBaseKey(OspreyConfig config)
-        {
-            return string.Format(@"search={0};library={1}{2}", config.Identity.SearchParameterHash(),
-                config.Identity.LibraryIdentityHash(), OspreyEnvironment.PickValidityKeySuffix());
         }
 
         /// <summary>
@@ -279,9 +236,6 @@ namespace pwiz.Osprey.Test
                 string key = task.ValidityKey(ctx);
                 StringAssert.Contains(key, pick, string.Format(
                     @"{0} must key on the peak-pick arm", task.Name));
-                // The default config generates its decoys.
-                StringAssert.Contains(key, OspreyTask.DECOY_MODS_TERM, string.Format(
-                    @"{0} must key on the stacked-modification decoy fix", task.Name));
                 bool expectPass2 = task.Name != PerFileScoringTask.TASK_NAME;
                 Assert.AreEqual(expectPass2, key.Contains(pass2), string.Format(
                     @"{0} must {1} key on the 2nd-pass q-value mode",

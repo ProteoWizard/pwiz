@@ -49,8 +49,8 @@ librarySuppliesDecoys = config.LibrarySuppliesDecoys   // DecoysInLibrary || Dec
    `ExitCode = 1` exactly as it did when it owned the work.
 
 `DecoyMethod.FromLibrary` is treated as a synonym for `DecoysInLibrary = true`
-(`OspreyConfig.LibrarySuppliesDecoys`, the rule's one definition, which the load, scoring,
-the argument checks and the validity keys all read); it historically fell through to
+(`OspreyConfig.LibrarySuppliesDecoys`, the rule's one definition, which the load, scoring
+and the argument checks all read); it historically fell through to
 Reverse generation, which was a bug.
 
 Generated and supplied decoys are concatenated onto the (valid) targets into
@@ -203,11 +203,9 @@ else that needs a peptide's b/y m/z shares one set of residue masses with `Decoy
   spanning it does. Until this was fixed the map kept only the last of the two, putting those
   decoy ions 42 Da off. (Both travel with the residue, so the N-terminal modification lands
   on an internal decoy residue - the same in Rust, and a separate question from this sum.)
-  Every search that generates its decoys keys on `;decoymods=2`: task sidecars compare the
-  validity key and nothing else, so without the term a resume would adopt decoys scored
-  before the fix. The cost is that every directory from an earlier build re-runs in full on
-  its next resume. The `--task` join path does not read task keys - it checks the parquet
-  footer's build version and hashes - so this term does not reach it.
+  No validity-key term marks the fix: task sidecars compare the key and nothing else, so a
+  directory scored before it and resumed after it keeps its old decoys. Only a library with
+  two modifications on one residue is affected; delete the outputs to re-score one.
 - Neutral loss is subtracted when present.
 - Final m/z: `(mass + (charge-1)*proton) / charge`.
 

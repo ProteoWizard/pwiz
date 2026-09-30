@@ -362,7 +362,7 @@ placed there is paid at full cost by every cohort. Moving work into a `PerFile*`
 makes it scale with the cluster; leaving it in a join makes it scale with nothing.
 
 **P4. A per-run artifact's validity key must not name the cohort.** `PerFileScoring`'s
-key is the base key - search parameters, library identity, the peak-pick arm and (for generated decoys) the decoy-construction term - and
+key is the base key - search parameters, library identity, and the peak-pick arm - and
 deliberately omits the file set, because a run's Stage 1-4 scores do not depend on which
 other runs are being searched.
 Were the cohort in that key, scoring one run per node would stamp a different key than
@@ -934,7 +934,7 @@ the stamp and is the sanctioned way to consume another build's artifacts deliber
 ### What the key is made of, and why it decides correctness
 
 Each task composes its own key: a base of search parameters, library identity and the
-peak-pick arm (plus `;decoymods=2` when Osprey generates the decoys), plus per-task additions - `FirstPassFDR` adds six, `PerFileRescoring`
+peak-pick arm, plus per-task additions - `FirstPassFDR` adds six, `PerFileRescoring`
 seven, `SecondPassFDR` seven. `PerFileRescoring`'s seventh is the one to know about:
 `LibraryFragmentRelease.ValidityKeySuffix` branches on the per-leg flags, which is exactly
 why a `SecondPassFDR` process and a `PerFileRescoring` process compute different keys for

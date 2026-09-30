@@ -58,20 +58,6 @@ namespace pwiz.Osprey.Tasks
     public abstract class OspreyTask : ISelectableTask
     {
         /// <summary>
-        /// The base-key term of every search that generates its decoys. Decoy fragments of an
-        /// entry with two modifications on one residue - an N-terminal acetyl before an oxidized
-        /// methionine, <c>(UniMod:1)M(UniMod:35)</c> - kept only the last of the two until they
-        /// added, so a directory scored before that could hold decoys 42 Da off on every ion
-        /// spanning the residue. Task sidecars compare the validity key and nothing else - no
-        /// resume check reads the build version - so without this term a resume would adopt
-        /// those decoys. Only libraries holding such an entry changed, but telling them apart
-        /// would mean reading the library before any skip decision, so every directory from an
-        /// earlier build re-runs in full on its next resume. A search whose decoys come from
-        /// the library keys exactly as before.
-        /// </summary>
-        public const string DECOY_MODS_TERM = @";decoymods=2";
-
-        /// <summary>
         /// Short identifier used in pipeline log lines, the <c>--task</c> selector and the
         /// validity sidecar. Each task returns its own <c>TASK_NAME</c> constant, the one
         /// spelling the CLI value list and the tests reference too.
@@ -221,16 +207,12 @@ namespace pwiz.Osprey.Tasks
         /// selects which peak a precursor's row describes, in Stage 4, and
         /// everything downstream inherits that choice. Putting it here also
         /// means a task added later carries it without having to know.
-        ///
-        /// <see cref="DECOY_MODS_TERM"/> is here for the same reason: generated decoys reach
-        /// every stage after scoring.
         /// </summary>
         public virtual string ValidityKey(PipelineContext ctx) => string.Format(
-            @"search={0};library={1}{2}{3}",
+            @"search={0};library={1}{2}",
             ctx.Config.Identity.SearchParameterHash(),
             ctx.Config.Identity.LibraryIdentityHash(),
-            OspreyEnvironment.PickValidityKeySuffix(),
-            ctx.Config.LibrarySuppliesDecoys ? string.Empty : DECOY_MODS_TERM);
+            OspreyEnvironment.PickValidityKeySuffix());
 
         /// <summary>
         /// A <see cref="ValidateSelection"/> error naming this task and what it is missing,

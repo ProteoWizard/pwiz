@@ -573,8 +573,8 @@ It records the producing task, the Osprey version, a `validity_key`, and the inp
 ```
 
 The base `validity_key` is
-`search=<SearchParameterHash>;library=<LibraryIdentityHash>` plus the peak-pick arm and,
-when Osprey generates the decoys, `;decoymods=2` (`OspreyTask.ValidityKey`); tasks with extra state append to it - `FirstPassFdrTask` adds six
+`search=<SearchParameterHash>;library=<LibraryIdentityHash>` plus the peak-pick arm
+(`OspreyTask.ValidityKey`); tasks with extra state append to it - `FirstPassFdrTask` adds six
 further components; the full composition, with the defect each entry prevents, is under
 "What a validity key is made of" below. 00 owns the *rule* those entries serve (P15: an
 under-inclusive key is the dangerous direction); this document owns what they are.
@@ -614,14 +614,6 @@ The peak-pick arm sits in the *base* rather than in the overrides because it is 
 lever that reaches every task: the pick decides which peak a precursor's row describes,
 back in Stage 4, and everything downstream inherits that choice. Putting it in the base
 also means a task added later carries it without having to know.
-
-`;decoymods=2` is in the base for the same reason, on every search that generates its decoys
-(`OspreyConfig.LibrarySuppliesDecoys` false): generated decoy fragments now ADD two
-modifications that share a residue - an N-terminal acetyl and an oxidized first methionine
-both sit at position 0 - where they once kept only the last, 42 Da light on every decoy ion
-spanning it. The decoys reach every stage after scoring, and nothing on the resume path
-reads the build version, so without the term a resume would adopt the old decoys. A search
-with library-supplied decoys does not carry it.
 
 Read that table as a worked example of P15's asymmetry. Every row was added after an
 under-inclusive key reused something it should not have, and none of them cost more than

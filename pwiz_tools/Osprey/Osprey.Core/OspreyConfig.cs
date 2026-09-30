@@ -157,8 +157,8 @@ namespace pwiz.Osprey.Core
         /// Osprey generates none: <see cref="DecoysInLibrary"/>, or its synonym
         /// <see cref="DecoyMethod.FromLibrary"/>. Treating the two as one is what fixed
         /// library-decoy mode silently falling through to Reverse generation. The one
-        /// definition: the load, scoring, argument checks and validity keys all ask it here,
-        /// so they cannot disagree about which searches generate.
+        /// definition: the load, scoring and the argument checks all ask it here, so they
+        /// cannot disagree about which searches generate.
         /// </summary>
         public bool LibrarySuppliesDecoys => DecoysInLibrary || DecoyMethod == DecoyMethod.FromLibrary;
 
