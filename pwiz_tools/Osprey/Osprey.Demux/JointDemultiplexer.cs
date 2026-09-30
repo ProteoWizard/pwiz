@@ -393,6 +393,7 @@ namespace pwiz.Osprey.Demux
             private readonly int[] _columnStart;             // per column, its span of _columnRow and _columnA
             private readonly int[] _columnRow;               // the rows each column transmits into, ascending
             private readonly double[] _columnA;              // the transmission into each of them
+            private readonly double[] _columnA2;             // its square
             // Per pair of columns j <= j' (index j * columns + j'), the rows both transmit into, ascending, and the
             // product of their transmissions there: a block Hessian entry is these times the grid point's row weights.
             // A block's positions are mostly far apart, and many pairs share no row at all.
@@ -401,7 +402,7 @@ namespace pwiz.Osprey.Demux
             private readonly double[] _pairA;
             private readonly double[] _b;                    // the peak, offsets -h..h, unit area
             private readonly double[] _b2;
-            // The peak and its square padded with zeros to whole groups of WIDTH terms: a sample's 2h + 1 terms as
+            // The peak padded with zeros to whole groups of WIDTH terms: a sample's 2h + 1 terms as
             // a few four-lane operations, in 256-bit vectors where the hardware has them and otherwise in four
             // scalar partial sums in the same lane order, reduced in one fixed order, so every machine gets the
             // same bits. The sample buffers are WIDTH longer than they hold, so the zero terms past the last
@@ -409,9 +410,7 @@ namespace pwiz.Osprey.Demux
             private const int WIDTH = 4;
             private static readonly bool VECTORS = Vector256.IsHardwareAccelerated;
             private readonly double[] _bp;
-            private readonly double[] _b2p;
             private readonly Vector256<double>[] _bv;
-            private readonly Vector256<double>[] _b2v;
             private readonly int _half;
             private readonly double[] _laneGradient = new double[WIDTH];
             private int _samples;                            // samples in the chunk: [lo - h, hi + h]
@@ -428,6 +427,7 @@ namespace pwiz.Osprey.Demux
             // B convolved with it (rows x _groupPoints, grid point fastest), and which groups of four to check.
             private double[] _wr = Array.Empty<double>();
             private double[] _zRow = Array.Empty<double>();
+            private double[] _vRow = Array.Empty<double>();  // rows x _groupPoints: v, grid point fastest
             private bool[] _groupCheck = Array.Empty<bool>();
             private bool[] _inReach = Array.Empty<bool>();
             private int _groupPoints;                        // grid points rounded up to whole groups
@@ -442,6 +442,9 @@ namespace pwiz.Osprey.Demux
             private bool[] _changed = Array.Empty<bool>();    // per grid point: gradient changed since the last check
             private readonly double[] _rowGradient;          // per row: the peak times its weighted residual at a block's point
             private readonly int[] _rowStamp;                // per row: the block solve _rowGradient was computed for
+            private readonly double[] _rowDelta;             // per row: a block step's change to its peak's height
+            private readonly int[] _rowsMoved;               // the rows a block step changes
+            private readonly bool[] _rowIsMoved;
             private int _stamp;
             private readonly int[] _blockColumns;            // one grid point's active columns
             private readonly double[] _blockGradient;
@@ -469,9 +472,7 @@ namespace pwiz.Osprey.Demux
                 _b2 = new double[2 * _half + 1];
                 int groups = (_b.Length + WIDTH - 1) / WIDTH;
                 _bp = new double[groups * WIDTH];
-                _b2p = new double[groups * WIDTH];
                 _bv = new Vector256<double>[groups];
-                _b2v = new Vector256<double>[groups];
                 _columnStart = new int[_columns + 1];
                 int entries = 0;
                 for (int j = 0; j < _columns; j++)
@@ -499,6 +500,9 @@ namespace pwiz.Osprey.Demux
                     }
                 }
                 _columnStart[_columns] = k;
+                _columnA2 = new double[entries];
+                for (int e = 0; e < entries; e++)
+                    _columnA2[e] = _columnA[e] * _columnA[e];
                 _pairStart = new int[_columns * _columns + 1];
                 var pairRow = new List<int>();
                 var pairA = new List<double>();
@@ -526,6 +530,9 @@ namespace pwiz.Osprey.Demux
                 _rowSignal = new bool[_rows];
                 _rowUsed = new bool[_rows];
                 _rowGradient = new double[_rows];
+                _rowDelta = new double[_rows];
+                _rowsMoved = new int[_rows];
+                _rowIsMoved = new bool[_rows];
                 _rowStamp = new int[_rows];
                 _columnUsed = new bool[_columns];
                 _blockColumns = new int[_columns];
@@ -694,7 +701,10 @@ namespace pwiz.Osprey.Demux
                     _v = new double[rp];
                 _groupPoints = (_points + WIDTH - 1) / WIDTH * WIDTH;
                 if (_zRow.Length < _rows * _groupPoints)
+                {
                     _zRow = new double[_rows * _groupPoints];
+                    _vRow = new double[_rows * _groupPoints];
+                }
                 if (_wr.Length < rs + 2 * WIDTH)
                     _wr = new double[rs + 2 * WIDTH];
                 if (_groupCheck.Length < _groupPoints / WIDTH)
@@ -719,12 +729,8 @@ namespace pwiz.Osprey.Demux
                     _b2[d] = _b[d] * _b[d];
                 }
                 Array.Copy(_b, _bp, _b.Length);
-                Array.Copy(_b2, _b2p, _b2.Length);
                 for (int m = 0; m < _bv.Length; m++)
-                {
                     _bv[m] = Vector256.Create(_bp, m * WIDTH);
-                    _b2v[m] = Vector256.Create(_b2p, m * WIDTH);
-                }
             }
 
             /// <summary>
@@ -762,26 +768,42 @@ namespace pwiz.Osprey.Demux
                     for (int s = 0; s < _samples; s++)
                         _weight[o + s] = 1 / Math.Max(_weight[o + s], floor);
                 }
-                // v[q, r] = sum_d B[d]^2 w[r, q + d]; curvature[q, j] = sum_r A_rj^2 v[q, r].
+                // v[q, r] = sum_d B[d]^2 w[r, q + d]; curvature[q, j] = sum_r A_rj^2 v[q, r]: four neighbouring grid
+                // points at a time, as in the gradient check, each lane's sums in a single point's order.
+                int groups = _groupPoints / WIDTH;
+                Array.Clear(_groupCheck, 0, groups);
                 for (int i = 0; i < _reachCount; i++)
+                    _groupCheck[_reach[i] / WIDTH] = true;
+                for (int r = 0; r < _rows; r++)
                 {
-                    int q = _reach[i], oq = q * _rows;
-                    for (int r = 0; r < _rows; r++)
+                    if (!_rowUsed[r])
+                        continue;
+                    int o = r * _samples, oz = r * _groupPoints;
+                    for (int m = 0; m < groups; m++)
                     {
-                        if (!_rowUsed[r])
+                        if (!_groupCheck[m])
                             continue;
-                        int o = r * _samples + q;
-                        _v[oq + r] = PeakWeight(o);
+                        int q0 = m * WIDTH;
+                        Slide(_b2, _weight, o + q0, _vRow, oz + q0);
+                        for (int l = 0; l < WIDTH && q0 + l < _points; l++)
+                            _v[(q0 + l) * _rows + r] = _vRow[oz + q0 + l];
                     }
-                    int oc = q * _columns;
+                }
+                for (int m = 0; m < groups; m++)
+                {
+                    if (!_groupCheck[m])
+                        continue;
+                    int q0 = m * WIDTH;
                     for (int j = 0; j < _columns; j++)
                     {
                         if (!_columnUsed[j])
                             continue;
-                        double c = 0;
-                        for (int k = _columnStart[j]; k < _columnStart[j + 1]; k++)
-                            c += _columnA[k] * _columnA[k] * _v[oq + _columnRow[k]];
-                        _curvature[oc + j] = c;
+                        ColumnSum(_columnA2, _vRow, j, q0);
+                        for (int l = 0; l < WIDTH && q0 + l < _points; l++)
+                        {
+                            if (_inReach[q0 + l])
+                                _curvature[(q0 + l) * _columns + j] = _laneGradient[l];
+                        }
                     }
                 }
                 _weightTicks += Now() - t0;
@@ -891,27 +913,6 @@ namespace pwiz.Osprey.Demux
                 return Reduce(s0, s1, s2, s3);
             }
 
-            /// <summary>The squared peak times the weights over the samples from <paramref name="o"/>.</summary>
-            private double PeakWeight(int o)
-            {
-                if (VECTORS)
-                {
-                    var sum = Vector256<double>.Zero;
-                    for (int m = 0, x = o; m < _b2v.Length; m++, x += WIDTH)
-                        sum += _b2v[m] * Vector256.Create(_weight, x);
-                    return Reduce(sum.GetElement(0), sum.GetElement(1), sum.GetElement(2), sum.GetElement(3));
-                }
-                double s0 = 0, s1 = 0, s2 = 0, s3 = 0;
-                for (int d = 0, x = o; d < _b2p.Length; d += WIDTH, x += WIDTH)
-                {
-                    s0 += _b2p[d] * _weight[x];
-                    s1 += _b2p[d + 1] * _weight[x + 1];
-                    s2 += _b2p[d + 2] * _weight[x + 2];
-                    s3 += _b2p[d + 3] * _weight[x + 3];
-                }
-                return Reduce(s0, s1, s2, s3);
-            }
-
             /// <summary>The four lanes' partial sums, added in one fixed order.</summary>
             private static double Reduce(double s0, double s1, double s2, double s3)
             {
@@ -1013,7 +1014,7 @@ namespace pwiz.Osprey.Demux
                     for (int m = 0; m < groups; m++)
                     {
                         if (_groupCheck[m])
-                            SlidePeak(o + m * WIDTH, oz + m * WIDTH);
+                            Slide(_b, _wr, o + m * WIDTH, _zRow, oz + m * WIDTH);
                     }
                 }
                 int added = 0;
@@ -1036,7 +1037,7 @@ namespace pwiz.Osprey.Demux
                         }
                         if (lanes == 0)
                             continue;
-                        ColumnGradient(j, q0);
+                        ColumnSum(_columnA, _zRow, j, q0);
                         for (int l = 0; l < WIDTH; l++)
                         {
                             if ((lanes & (1 << l)) == 0)
@@ -1063,40 +1064,40 @@ namespace pwiz.Osprey.Demux
             }
 
             /// <summary>
-            /// B convolved with the weighted residual at four neighbouring grid points: _zRow[oz + l] =
-            /// sum_d B[d] _wr[o + l + d], each in ascending d.
+            /// A kernel slid over a row's values at four neighbouring grid points: into[oz + l] =
+            /// sum_d kernel[d] values[o + l + d], each in ascending d.
             /// </summary>
-            private void SlidePeak(int o, int oz)
+            private void Slide(double[] kernel, double[] values, int o, double[] into, int oz)
             {
                 int span = 2 * _half + 1;
                 if (VECTORS)
                 {
                     var sum = Vector256<double>.Zero;
                     for (int d = 0; d < span; d++)
-                        sum += Vector256.Create(_b[d]) * Vector256.Create(_wr, o + d);
-                    sum.CopyTo(_zRow, oz);
+                        sum += Vector256.Create(kernel[d]) * Vector256.Create(values, o + d);
+                    sum.CopyTo(into, oz);
                     return;
                 }
                 for (int l = 0; l < WIDTH; l++)
                 {
                     double sum = 0;
                     for (int d = 0; d < span; d++)
-                        sum += _b[d] * _wr[o + l + d];
-                    _zRow[oz + l] = sum;
+                        sum += kernel[d] * values[o + l + d];
+                    into[oz + l] = sum;
                 }
             }
 
             /// <summary>
-            /// Column j's gradient at four neighbouring grid points from q0 into _laneGradient: sum_k A_kj z[row_k],
-            /// each in the column's row order.
+            /// Column j's sum over its rows at four neighbouring grid points from q0 into _laneGradient:
+            /// sum_k weight[k] rows[row_k, q0 + l], each in the column's row order.
             /// </summary>
-            private void ColumnGradient(int j, int q0)
+            private void ColumnSum(double[] weight, double[] rows, int j, int q0)
             {
                 if (VECTORS)
                 {
                     var sum = Vector256<double>.Zero;
                     for (int k = _columnStart[j]; k < _columnStart[j + 1]; k++)
-                        sum += Vector256.Create(_columnA[k]) * Vector256.Create(_zRow, _columnRow[k] * _groupPoints + q0);
+                        sum += Vector256.Create(weight[k]) * Vector256.Create(rows, _columnRow[k] * _groupPoints + q0);
                     sum.CopyTo(_laneGradient);
                     return;
                 }
@@ -1104,7 +1105,7 @@ namespace pwiz.Osprey.Demux
                 {
                     double sum = 0;
                     for (int k = _columnStart[j]; k < _columnStart[j + 1]; k++)
-                        sum += _columnA[k] * _zRow[_columnRow[k] * _groupPoints + q0 + l];
+                        sum += weight[k] * rows[_columnRow[k] * _groupPoints + q0 + l];
                     _laneGradient[l] = sum;
                 }
             }
@@ -1221,7 +1222,9 @@ namespace pwiz.Osprey.Demux
                     }
                     long p3 = Now();
                     _tNnls += p3 - p2;
+                    // The step's change to each row, summed over the block's positions, then one peak taken per row.
                     double moved = 0;
+                    int rowsMoved = 0;
                     for (int u = 0; u < n; u++)
                     {
                         double delta = _blockNew[u] - _blockOld[u];
@@ -1230,8 +1233,23 @@ namespace pwiz.Osprey.Demux
                         int j = _blockColumns[u];
                         _beta[oc + j] = _blockNew[u];
                         for (int k = _columnStart[j]; k < _columnStart[j + 1]; k++)
-                            SubtractPeak(_columnRow[k] * _samples + q, _columnA[k] * delta);
+                        {
+                            int r = _columnRow[k];
+                            if (!_rowIsMoved[r])
+                            {
+                                _rowIsMoved[r] = true;
+                                _rowsMoved[rowsMoved++] = r;
+                            }
+                            _rowDelta[r] += _columnA[k] * delta;
+                        }
                         moved = Math.Max(moved, Math.Abs(delta));
+                    }
+                    for (int t = 0; t < rowsMoved; t++)
+                    {
+                        int r = _rowsMoved[t];
+                        SubtractPeak(r * _samples + q, _rowDelta[r]);
+                        _rowDelta[r] = 0;
+                        _rowIsMoved[r] = false;
                     }
                     largest = Math.Max(largest, moved);
                     _tUpdate += Now() - p3;
