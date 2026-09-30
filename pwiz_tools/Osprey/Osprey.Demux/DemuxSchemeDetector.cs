@@ -175,7 +175,7 @@ namespace pwiz.Osprey.Demux
             if (!TryReadSurveyScansFromIds(source, isSurvey))
             {
                 for (int k = 0; k < source.Count; k++)
-                    isSurvey[k] = source.MsLevel(k) == 1;
+                    isSurvey[k] = source.Describe(k).MsLevel == 1;
             }
             var sweep = new List<int>();
             for (int k = 0; k < source.Count; k++)
@@ -221,10 +221,10 @@ namespace pwiz.Osprey.Demux
 
             // Geometry: one sweep of narrow bins, stepping up in m/z.
             var steps = new double[geometry.Length - 1];
-            double previous = source.IsolationTarget(geometry[0]);
+            double previous = source.Describe(geometry[0]).Target;
             for (int b = 1; b < geometry.Length; b++)
             {
-                double target = source.IsolationTarget(geometry[b]);
+                double target = source.Describe(geometry[b]).Target;
                 steps[b - 1] = target - previous;
                 previous = target;
             }

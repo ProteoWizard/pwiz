@@ -24,7 +24,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace pwiz.Osprey.Demux
@@ -107,51 +106,17 @@ namespace pwiz.Osprey.Demux
     }
 
     /// <summary>
-    /// An acquisition as the demultiplexing pipeline reads it: its spectra in acquisition order, described by
-    /// index, their points read on request.
-    /// </summary>
-    public interface IDemuxSource
-    {
-        /// <summary>Spectra in acquisition order.</summary>
-        int Count { get; }
-
-        /// <summary>A spectrum's native id (SCIEX: "sample=1 period=1 cycle=N experiment=E").</summary>
-        string NativeId(int index);
-
-        /// <summary>A spectrum's MS level.</summary>
-        int MsLevel(int index);
-
-        /// <summary>An MS2 spectrum's isolation window target m/z; 0 if it has none.</summary>
-        double IsolationTarget(int index);
-
-        /// <summary>
-        /// A spectrum's points as the file reports them, zeros included; null lists if it has none. The lists stay
-        /// valid until <see cref="Release"/> is called for the spectrum. Called from several threads at once when
-        /// <see cref="ScanningDemuxOptions.ReadThreads"/> is above 1.
-        /// </summary>
-        void Read(int index, out IReadOnlyList<double> mz, out IReadOnlyList<double> intensity);
-
-        /// <summary>The points read for a spectrum are no longer needed; the source may keep the rest of it.</summary>
-        void Release(int index);
-
-        /// <summary>A spectrum's sweep is no longer needed: the source may drop anything it kept of it.</summary>
-        void Forget(int index);
-    }
-
-    /// <summary>
-    /// Demultiplexes a scanning-quadrupole acquisition (SCIEX ZT Scan) and lays it out as
+    /// The scanning-quadrupole scheme's part of <see cref="DemuxPipeline"/> (see <see cref="ScanningDemuxPipeline"/>):
+    /// demultiplexes a scanning-quadrupole acquisition (SCIEX ZT Scan) and lays it out as
     /// <see cref="ScanningDemuxOptions.Layout"/> says. MS1 spectra pass through, or are centroided by the joint
     /// solve; each output MS2 spectrum is built on the acquired spectrum of the middle bin of its window, with the
     /// window and peaks replaced.
     /// </summary>
     /// <remarks>
     /// Blocks of sweeps are read in order, a batch at a time, and demultiplexed in parallel, one
-    /// task per block of encoded bins. Each batch is read and queued before the one before it is
-    /// waited for, so the solve threads go on to it while that batch is laid out and written. The
-    /// caller asks for output spectra in index order, so only the current batch and the next one's
-    /// sweeps are resident.
+    /// solve per block of encoded bins.
     /// </remarks>
-    public sealed class ScanningDemuxPipeline
+    internal sealed class ScanningDemuxPlan : DemuxPlan
     {
         private readonly IDemuxSource _source;
         private readonly ScanningKernel _kernel;
@@ -164,7 +129,6 @@ namespace pwiz.Osprey.Demux
         private readonly int _lastOutBin;
         private readonly List<ScanningOutputSpectrum> _plan;
         private readonly List<(int Cycle, int Slot)> _output = new List<(int, int)>();
-        private readonly Dictionary<int, (double[] Mz, double[] Ions)[]> _built = new Dictionary<int, (double[], double[])[]>();
         private readonly Dictionary<int, List<(double[] Mz, double[] Ions)>> _peaks = new Dictionary<int, List<(double[], double[])>>();
         private readonly Dictionary<int, double[,]> _transmission = new Dictionary<int, double[,]>();
         private readonly object _lock = new object();
@@ -174,10 +138,8 @@ namespace pwiz.Osprey.Demux
         private JointDemuxParams _surveyParameters;           // the joint settings with MS1's peak width
         private double _surveyCountsPerIon = double.NaN;      // of the last MS1 spectrum whose low levels fitted
         private TofGrid _grid;
-        private DemuxBatch _nextBatch;                        // queued while the batch before it is laid out and written
-        private TaskScheduler _solveScheduler;
 
-        public ScanningDemuxPipeline(IDemuxSource source, ScanningKernel kernel, ScanningDemuxOptions options,
+        public ScanningDemuxPlan(IDemuxSource source, ScanningKernel kernel, ScanningDemuxOptions options,
             TextWriter log)
         {
             _source = source;
@@ -191,7 +153,7 @@ namespace pwiz.Osprey.Demux
 
             // Encoded bins are the sweep positions; their centers are the same in every sweep.
             var first = _ms2OfCycle[0];
-            _centers = first.Select(source.IsolationTarget).ToArray();
+            _centers = first.Select(k => source.Describe(k).Target).ToArray();
             _firstOutBin = Array.FindIndex(_centers, c => c >= options.MinMz);
             _lastOutBin = Array.FindLastIndex(_centers, c => c < options.MaxMz);
             if (_firstOutBin < 0 || _lastOutBin < _firstOutBin)
@@ -218,16 +180,24 @@ namespace pwiz.Osprey.Demux
 
         public int CycleCount { get; }
         public int FirstCycle { get; }
-        public int LastCycle { get; }
-        public long Channels { get; private set; }
-        public long ChannelsSolved { get; private set; }
-        public double IonsIn { get; private set; }
-        public double IonsPassedThrough { get; private set; }
+        public override int LastCycle { get; }
 
         /// <summary>Output spectra: each cycle's survey scan, then its layout spectra.</summary>
-        public int OutputCount
+        public override int OutputCount
         {
             get { return _output.Count; }
+        }
+
+        /// <summary>A layout spectrum's cycle; -1 for a survey scan, which is not demultiplexed.</summary>
+        public override int CycleOfOutput(int output)
+        {
+            var (cycle, slot) = _output[output];
+            return slot < 0 ? -1 : cycle;
+        }
+
+        public override string DescribeBatch(int firstCycle, int lastCycle)
+        {
+            return string.Format(CultureInfo.InvariantCulture, @"  sweeps {0}-{1} of {2} written", firstCycle, lastCycle, CycleCount);
         }
 
         /// <summary>Whether an output spectrum is a survey scan (passed through, or centroided by <see cref="CentroidSurvey"/>).</summary>
@@ -254,13 +224,6 @@ namespace pwiz.Osprey.Demux
             var planned = _plan[_output[index].Slot];
             low = _centers[planned.FirstBin] - HalfWidth(planned.FirstBin);
             high = _centers[planned.LastBin] + HalfWidth(planned.LastBin);
-        }
-
-        /// <summary>A layout spectrum's peaks, in ions, demultiplexing its batch if needed.</summary>
-        public (double[] Mz, double[] Ions) Peaks(int index)
-        {
-            var (cycle, slot) = _output[index];
-            return Built(cycle)[slot];
         }
 
         /// <summary>
@@ -374,27 +337,8 @@ namespace pwiz.Osprey.Demux
             return 0.25 * (left + right);
         }
 
-        /// <summary>The output peaks of a cycle's layout spectra, demultiplexing its batch if needed.</summary>
-        private (double[] Mz, double[] Ions)[] Built(int cycle)
-        {
-            lock (_lock)
-            {
-                if (_built.TryGetValue(cycle, out var cached))
-                    return cached;
-                foreach (int old in _built.Keys.Where(c => c < cycle).ToList())
-                    _built.Remove(old);
-                int batchLast = Math.Min(LastCycle, cycle + BatchCycles - 1);
-                if (_options.Raw)
-                    BuildRaw(cycle, batchLast);
-                else
-                    BuildDemux(cycle, batchLast);
-                _log.WriteLine(@"  sweeps {0}-{1} of {2} written", cycle, batchLast, CycleCount);
-                return _built[cycle];
-            }
-        }
-
         /// <summary>Sweeps demultiplexed together: enough blocks to keep every thread busy.</summary>
-        private int BatchCycles
+        public override int BatchCycles
         {
             get
             {
@@ -403,96 +347,27 @@ namespace pwiz.Osprey.Demux
             }
         }
 
-        private void BuildRaw(int firstCycle, int lastCycle)
+        /// <summary>
+        /// The sweeps before this batch's context are written: no batch still to be solved needs them (raw
+        /// output: the sweeps before the batch, which reads no context).
+        /// </summary>
+        public override void Forget(int firstCycle)
         {
-            foreach (int old in _peaks.Keys.Where(c => c < firstCycle).ToList())
+            int keep = _options.Raw ? firstCycle : Math.Max(0, firstCycle - _options.CyclePad);
+            foreach (int old in _peaks.Keys.Where(c => c < keep).ToList())
                 DropSweep(old);
-            for (int c = firstCycle; c <= lastCycle; c++)
-            {
-                var peaks = SweepPeaks(c);
-                _built[c] = _plan.Select(p => peaks[p.FirstBin]).ToArray();
-            }
-        }
-
-        private void BuildDemux(int firstCycle, int lastCycle)
-        {
-            // The sweeps before this batch's context are written: no batch still to be solved needs them.
-            int padLo = Math.Max(0, firstCycle - _options.CyclePad);
-            foreach (int old in _peaks.Keys.Where(c => c < padLo).ToList())
-                DropSweep(old);
-            var batch = _nextBatch != null && _nextBatch.FirstCycle == firstCycle && _nextBatch.LastCycle == lastCycle
-                ? _nextBatch
-                : QueueBatch(firstCycle, lastCycle);
-            _nextBatch = null;
-            // The next batch is read and queued before this one is waited for: the solve threads move on to it as
-            // this batch's units run out, and solve it while this batch is laid out and written.
-            if (lastCycle < LastCycle)
-                _nextBatch = QueueBatch(lastCycle + 1, Math.Min(LastCycle, lastCycle + BatchCycles));
-            var wait = Stopwatch.StartNew();
-            try
-            {
-                Task.WaitAll(batch.Solves);
-            }
-            catch (AggregateException e)
-            {
-                throw new AggregateException(@"Exception while demultiplexing sweeps", e.InnerExceptions);
-            }
-            double waitSeconds = wait.Elapsed.TotalSeconds;
-            var layoutClock = Stopwatch.StartNew();
-            var results = batch.Results;
-            var grid = batch.Grid;
-
-            // Peaks by (cycle, bin), then each layout spectrum from its bins and source positions.
-            var through = new Dictionary<(int, int), List<ScanningPeak>>();
-            var demuxed = new Dictionary<(int, int), List<ScanningPeak>>();
-            foreach (var result in results)
-            {
-                Channels += result.Channels;
-                ChannelsSolved += result.ChannelsSolved;
-                IonsIn += result.IonsIn;
-                IonsPassedThrough += result.IonsPassedThrough;
-                Bucket(result.PassedThrough, through);
-                Bucket(result.Demultiplexed, demuxed);
-            }
-            var none = new List<ScanningPeak>();
-            // The joint solve centroids each position on its own, so one fragment's centroids from neighbouring
-            // positions can lie a grid sample apart: merged when closer than the TOF peak's sigma, in m/z
-            // (dm/dk = 2 sqrt(m/z) step on the grid).
-            Func<double, double> mergeWithin = null;
-            if (grid != null && _options.JointMergeSigmas > 0)
-            {
-                var joint = _options.JointParameters;
-                double sigmas = _options.JointMergeSigmas, step = grid.Step;
-                mergeWithin = m => sigmas * joint.SigmaAt(m) * 2 * Math.Sqrt(m) * step;
-            }
-            for (int c = firstCycle; c <= lastCycle; c++)
-            {
-                int cycle = c;
-                var spectra = new (double[], double[])[_plan.Count];
-                for (int s = 0; s < _plan.Count; s++)
-                {
-                    var planned = _plan[s];
-                    var own = Enumerable.Range(planned.FirstBin, planned.LastBin - planned.FirstBin + 1)
-                        .SelectMany(b => through.TryGetValue((cycle, b), out var list) ? list : none);
-                    var sources = Enumerable.Range(planned.FirstSourceBin, planned.LastSourceBin - planned.FirstSourceBin + 1)
-                        .SelectMany(b => demuxed.TryGetValue((cycle, b), out var list) ? list : none);
-                    ScanningLayout.Assemble(own, sources, out double[] mz, out double[] ions, _options.MergePpm, mergeWithin);
-                    spectra[s] = (mz, ions);
-                }
-                _built[cycle] = spectra;
-            }
-            _log.WriteLine(@"  read {0:F1} s, units {1:F1} s, solve {2:F1} s (waited {3:F1} s), layout {4:F1} s ({5} units)",
-                batch.ReadSeconds, batch.UnitSeconds, batch.SolveSeconds, waitSeconds, layoutClock.Elapsed.TotalSeconds,
-                results.Length);
         }
 
         /// <summary>
-        /// Reads a batch's sweeps, makes its units and queues them on the solve threads, largest first: a batch's
-        /// slowest units then start first, and the order of units does not change their results (they share no
-        /// state). Returns without waiting for the solves.
+        /// Reads a batch's sweeps and makes one solve per block of sweeps and group of encoded bins; raw output
+        /// solves nothing.
         /// </summary>
-        private DemuxBatch QueueBatch(int firstCycle, int lastCycle)
+        public override IReadOnlyList<DemuxWork> MakeWork(int firstCycle, int lastCycle, out double readSeconds)
         {
+            var work = new List<DemuxWork>();
+            readSeconds = 0;
+            if (_options.Raw)
+                return work;
             int readLo = Math.Max(0, _firstOutBin - _options.ContextBins - _options.ReachBins);
             int readHi = Math.Min(_centers.Length - 1, _lastOutBin + _options.ContextBins + _options.ReachBins);
             int padLo = Math.Max(0, firstCycle - _options.CyclePad);
@@ -501,11 +376,10 @@ namespace pwiz.Osprey.Demux
             var sweeps = new Dictionary<int, List<(double[] Mz, double[] Ions)>>();
             for (int c = padLo; c <= padHi; c++)
                 sweeps[c] = SweepPeaks(c);
-            double readSeconds = clock.Elapsed.TotalSeconds;
+            readSeconds = clock.Elapsed.TotalSeconds;
             var grid = _options.Joint ? TofGridOf(sweeps) : null;
 
             // One unit per block of sweeps and group of encoded bins.
-            var units = new List<ScanningUnit>();
             for (int k0 = firstCycle; k0 <= lastCycle; k0 += _options.BlockCycles)
             {
                 int k1 = Math.Min(lastCycle, k0 + _options.BlockCycles - 1);
@@ -530,41 +404,69 @@ namespace pwiz.Osprey.Demux
                     unit.ColumnCenters = columnBins.Select(b => _centers[b]).ToArray();
                     unit.Kernel = _kernel;
                     unit.KernelScale = ScanningDemultiplexer.KernelScale(_kernel, _centers[g0 + 1] - _centers[g0]);
-                    units.Add(unit);
+                    // The units hold copies of their peaks, so they solve on the solve threads while the pipeline
+                    // goes on reading, laying out and writing.
+                    work.Add(new DemuxWork(() => _options.Joint
+                        ? JointDemultiplexer.DemuxUnit(unit, _options.JointParameters, grid)
+                        : ScanningDemultiplexer.DemuxUnit(unit, _options.Parameters), unit.Mz.Length));
                 }
             }
-
-            double unitSeconds = clock.Elapsed.TotalSeconds - readSeconds;
-
-            // The units hold copies of their peaks, so they solve on the solve threads while this thread goes on
-            // reading, laying out and writing.
-            var batch = new DemuxBatch(firstCycle, lastCycle, units.Count, grid, readSeconds, unitSeconds);
-            var order = Enumerable.Range(0, units.Count).OrderByDescending(i => units[i].Mz.Length).ToArray();
-            for (int n = 0; n < order.Length; n++)
-            {
-                int i = order[n];
-                batch.Solves[n] = Task.Factory.StartNew(() =>
-                {
-                    batch.Results[i] = _options.Joint
-                        ? JointDemultiplexer.DemuxUnit(units[i], _options.JointParameters, grid)
-                        : ScanningDemultiplexer.DemuxUnit(units[i], _options.Parameters);
-                    batch.Solved();
-                }, CancellationToken.None, TaskCreationOptions.None, SolveScheduler);
-            }
-            return batch;
+            return work;
         }
 
-        /// <summary>
-        /// At most <see cref="ScanningDemuxOptions.Threads"/> units solving at once, across batches, in the order
-        /// they were queued.
-        /// </summary>
-        private TaskScheduler SolveScheduler
+        /// <summary>Peaks by (cycle, bin), then each layout spectrum from its bins and source positions.</summary>
+        public override void LayOut(int firstCycle, int lastCycle, ScanningUnitResult[] results,
+            IDictionary<int, (double[] Mz, double[] Ions)> peaks)
         {
-            get
+            if (_options.Raw)
             {
-                return _solveScheduler ??= new ConcurrentExclusiveSchedulerPair(TaskScheduler.Default,
-                    Math.Max(1, _options.Threads)).ConcurrentScheduler;
+                for (int c = firstCycle; c <= lastCycle; c++)
+                {
+                    var sweep = SweepPeaks(c);
+                    for (int s = 0; s < _plan.Count; s++)
+                        peaks[OutputIndex(c, s)] = sweep[_plan[s].FirstBin];
+                }
+                return;
             }
+            var grid = _options.Joint ? _grid : null;
+            var through = new Dictionary<(int, int), List<ScanningPeak>>();
+            var demuxed = new Dictionary<(int, int), List<ScanningPeak>>();
+            foreach (var result in results)
+            {
+                Bucket(result.PassedThrough, through);
+                Bucket(result.Demultiplexed, demuxed);
+            }
+            var none = new List<ScanningPeak>();
+            // The joint solve centroids each position on its own, so one fragment's centroids from neighbouring
+            // positions can lie a grid sample apart: merged when closer than the TOF peak's sigma, in m/z
+            // (dm/dk = 2 sqrt(m/z) step on the grid).
+            Func<double, double> mergeWithin = null;
+            if (grid != null && _options.JointMergeSigmas > 0)
+            {
+                var joint = _options.JointParameters;
+                double sigmas = _options.JointMergeSigmas, step = grid.Step;
+                mergeWithin = m => sigmas * joint.SigmaAt(m) * 2 * Math.Sqrt(m) * step;
+            }
+            for (int c = firstCycle; c <= lastCycle; c++)
+            {
+                int cycle = c;
+                for (int s = 0; s < _plan.Count; s++)
+                {
+                    var planned = _plan[s];
+                    var own = Enumerable.Range(planned.FirstBin, planned.LastBin - planned.FirstBin + 1)
+                        .SelectMany(b => through.TryGetValue((cycle, b), out var list) ? list : none);
+                    var sources = Enumerable.Range(planned.FirstSourceBin, planned.LastSourceBin - planned.FirstSourceBin + 1)
+                        .SelectMany(b => demuxed.TryGetValue((cycle, b), out var list) ? list : none);
+                    ScanningLayout.Assemble(own, sources, out double[] mz, out double[] ions, _options.MergePpm, mergeWithin);
+                    peaks[OutputIndex(cycle, s)] = (mz, ions);
+                }
+            }
+        }
+
+        /// <summary>The output index of a cycle's layout spectrum: after the cycle's survey scan.</summary>
+        private int OutputIndex(int cycle, int slot)
+        {
+            return (cycle - FirstCycle) * (_plan.Count + 1) + 1 + slot;
         }
 
         private static ScanningUnit MakeUnit(double[,] a, int[] rowBins, int[] columnBins, int[] cycles, int g0, int g1,
@@ -732,41 +634,73 @@ namespace pwiz.Osprey.Demux
                 _source.Forget(index);
         }
 
-        /// <summary>A batch of sweeps queued on the solve threads: its units' results and its timings.</summary>
-        private sealed class DemuxBatch
+    }
+
+    /// <summary>
+    /// Demultiplexes a scanning-quadrupole acquisition (SCIEX ZT Scan) and lays it out as
+    /// <see cref="ScanningDemuxOptions.Layout"/> says, on the shared <see cref="DemuxPipeline"/>. MS1 spectra pass
+    /// through, or are centroided by the joint solve; each output MS2 spectrum is built on the acquired spectrum of the
+    /// middle bin of its window, with the window and peaks replaced.
+    /// </summary>
+    public sealed class ScanningDemuxPipeline : DemuxPipeline
+    {
+        private readonly ScanningDemuxPlan _scanning;
+
+        public ScanningDemuxPipeline(IDemuxSource source, ScanningKernel kernel, ScanningDemuxOptions options,
+            TextWriter log)
+            : this(new ScanningDemuxPlan(source, kernel, options, log), options, log)
         {
-            private readonly Stopwatch _clock = Stopwatch.StartNew();
-            private int _remaining;
+        }
 
-            public DemuxBatch(int firstCycle, int lastCycle, int units, TofGrid grid, double readSeconds, double unitSeconds)
-            {
-                FirstCycle = firstCycle;
-                LastCycle = lastCycle;
-                Grid = grid;
-                ReadSeconds = readSeconds;
-                UnitSeconds = unitSeconds;
-                Results = new ScanningUnitResult[units];
-                Solves = new Task[units];
-                _remaining = units;
-            }
+        private ScanningDemuxPipeline(ScanningDemuxPlan plan, ScanningDemuxOptions options, TextWriter log)
+            : base(plan, options, log)
+        {
+            _scanning = plan;
+        }
 
-            public int FirstCycle { get; }
-            public int LastCycle { get; }
-            public TofGrid Grid { get; }
-            public double ReadSeconds { get; }
-            public double UnitSeconds { get; }
-            public ScanningUnitResult[] Results { get; }
-            public Task[] Solves { get; }
+        public int CycleCount
+        {
+            get { return _scanning.CycleCount; }
+        }
 
-            /// <summary>From queueing the batch to its last unit solved.</summary>
-            public double SolveSeconds { get; private set; }
+        public int FirstCycle
+        {
+            get { return _scanning.FirstCycle; }
+        }
 
-            /// <summary>Called as each unit is solved; the last records the batch's solve time.</summary>
-            public void Solved()
-            {
-                if (Interlocked.Decrement(ref _remaining) == 0)
-                    SolveSeconds = _clock.Elapsed.TotalSeconds;
-            }
+        public int LastCycle
+        {
+            get { return _scanning.LastCycle; }
+        }
+
+        /// <summary>Whether an output spectrum is a survey scan (passed through, or centroided by <see cref="CentroidSurvey"/>).</summary>
+        public bool IsSurvey(int index)
+        {
+            return _scanning.IsSurvey(index);
+        }
+
+        /// <summary>The acquired spectrum an output spectrum is built on: the MS1, or its window's middle bin.</summary>
+        public int BaseIndex(int index)
+        {
+            return _scanning.BaseIndex(index);
+        }
+
+        /// <summary>Whether an acquired spectrum is some layout spectrum's base (its header is worth keeping).</summary>
+        public bool IsLayoutBase(int sourceIndex)
+        {
+            return _scanning.IsLayoutBase(sourceIndex);
+        }
+
+        /// <summary>A layout spectrum's isolation window: the bins it reports.</summary>
+        public void WindowOf(int index, out double low, out double high)
+        {
+            _scanning.WindowOf(index, out low, out high);
+        }
+
+        /// <summary>A profile MS1 spectrum's centroids from the joint solve; null to leave it as read.</summary>
+        public (double[] Mz, double[] Counts)? CentroidSurvey(IReadOnlyList<double> mz, IReadOnlyList<double> counts)
+        {
+            return _scanning.CentroidSurvey(mz, counts);
         }
     }
 }

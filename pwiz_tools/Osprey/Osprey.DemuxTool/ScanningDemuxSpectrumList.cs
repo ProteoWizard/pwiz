@@ -160,14 +160,9 @@ namespace pwiz.Osprey.DemuxTool
             return _describe.NativeId(index);
         }
 
-        int IDemuxSource.MsLevel(int index)
+        DemuxSpectrumInfo IDemuxSource.Describe(int index)
         {
-            return _describe.MsLevel(index);
-        }
-
-        double IDemuxSource.IsolationTarget(int index)
-        {
-            return _describe.IsolationTarget(index);
+            return _describe.Describe(index);
         }
 
         void IDemuxSource.Read(int index, out IReadOnlyList<double> mz, out IReadOnlyList<double> intensity)

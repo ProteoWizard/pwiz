@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.MsData.Spectra;
 using pwiz.Osprey.Demux;
+using IsolationWindow = pwiz.Osprey.Core.IsolationWindow;
 
 namespace pwiz.Osprey.DemuxTool
 {
@@ -48,17 +49,20 @@ namespace pwiz.Osprey.DemuxTool
             return _spectra.SpectrumIdentity(index).Id;
         }
 
-        public int MsLevel(int index)
-        {
-            return _spectra.GetSpectrum(index).Params.CvParamValueOrDefault(CVID.MS_ms_level, 0);
-        }
-
-        public double IsolationTarget(int index)
+        public DemuxSpectrumInfo Describe(int index)
         {
             var spectrum = _spectra.GetSpectrum(index);
-            return spectrum.Precursors.Count > 0
-                ? spectrum.Precursors[0].IsolationWindow.CvParamValueOrDefault(CVID.MS_isolation_window_target_m_z, 0.0)
+            int level = spectrum.Params.CvParamValueOrDefault(CVID.MS_ms_level, 0);
+            double time = spectrum.ScanList.Scans.Count > 0
+                ? spectrum.ScanList.Scans[0].CvParamValueOrDefault(CVID.MS_scan_start_time, 0.0)
                 : 0.0;
+            if (spectrum.Precursors.Count == 0)
+                return new DemuxSpectrumInfo(level, false, default, time);
+            var window = spectrum.Precursors[0].IsolationWindow;
+            return new DemuxSpectrumInfo(level, true, new IsolationWindow(
+                window.CvParamValueOrDefault(CVID.MS_isolation_window_target_m_z, 0.0),
+                window.CvParamValueOrDefault(CVID.MS_isolation_window_lower_offset, 0.0),
+                window.CvParamValueOrDefault(CVID.MS_isolation_window_upper_offset, 0.0)), time);
         }
 
         public void Read(int index, out IReadOnlyList<double> mz, out IReadOnlyList<double> intensity)

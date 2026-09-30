@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Osprey.Core;
 using pwiz.Osprey.Demux;
 
 namespace pwiz.Osprey.Test
@@ -620,15 +621,13 @@ namespace pwiz.Osprey.Test
                     : string.Format(@"scan={0}", index + 1);
             }
 
-            public int MsLevel(int index)
-            {
-                return index % (_bins + 1) == 0 ? 1 : 2;
-            }
-
-            public double IsolationTarget(int index)
+            public DemuxSpectrumInfo Describe(int index)
             {
                 int bin = index % (_bins + 1) - 1;
-                return bin < 0 ? 0 : FIRST_CENTER + STEP * (_reversed ? _bins - 1 - bin : bin);
+                if (bin < 0)
+                    return new DemuxSpectrumInfo(1, false, default, index);
+                double target = FIRST_CENTER + STEP * (_reversed ? _bins - 1 - bin : bin);
+                return new DemuxSpectrumInfo(2, true, IsolationWindow.Symmetric(target, STEP / 2), index);
             }
 
             public void Read(int index, out IReadOnlyList<double> mz, out IReadOnlyList<double> intensity)
