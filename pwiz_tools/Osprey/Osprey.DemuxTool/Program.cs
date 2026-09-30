@@ -50,7 +50,7 @@ namespace pwiz.Osprey.DemuxTool
         {
             string input = null, output = null, kernelPath = null;
             bool staggered = false, profile = false, eventCentroids = false, groupBinsSet = false, readThreadsSet = false;
-            bool countsPerIonSet = false;
+            bool countsPerIonSet = false, ms1Set = false;
             var options = new ScanningDemuxOptions();
             for (int i = 0; i < args.Length; i++)
             {
@@ -180,12 +180,14 @@ namespace pwiz.Osprey.DemuxTool
                         options.MeasuredPeakShape = value == @"measured";
                         break;
                     case @"--ms1":
-                        // joint: MS1 read as profile and centroided by the joint solve; vendor (the default): the
-                        // vendor's centroids from a vendor file, else as read.
+                        // joint (the default with --joint): MS1 read as profile and centroided by the joint solve;
+                        // vendor (the default otherwise): the vendor's centroids from a vendor file, else as read.
                         options.JointMs1 = value == @"joint";
+                        ms1Set = true;
                         break;
                     case @"--merge-sigmas":
-                        // Joint solve: neighbouring positions' centroids closer than this many TOF peak sigmas merge.
+                        // Joint solve: neighbouring positions' centroids closer than this many TOF peak sigmas merge
+                        // (default 2).
                         options.JointMergeSigmas = double.Parse(value, CultureInfo.InvariantCulture);
                         break;
                     case @"--read-threads":
@@ -229,6 +231,10 @@ namespace pwiz.Osprey.DemuxTool
             // keep 16 of 36) and leave fewer block edges.
             if (options.Joint && !groupBinsSet)
                 options.GroupBins = 48;
+            // On the ZT Scan slice MS1 centroided by the joint solve found 3-7% more peptides than the vendor's
+            // centroids (DIA-NN's tolerance pinned), at a CV 0.002-0.003 worse.
+            if (options.Joint && !ms1Set)
+                options.JointMs1 = true;
             // A vendor reader serves concurrent requests, and decoding and centroiding its spectra is the slowest
             // step of a run read serially (about 2.6 s a sweep for a ZT Scan .wiff2).
             if (!readThreadsSet && input != null && SpectrumList_PeakPicker.SupportsVendorPeakPicking(input))

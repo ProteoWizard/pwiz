@@ -90,9 +90,10 @@ namespace pwiz.Osprey.DemuxTool
         /// <summary>
         /// For the joint solve: neighbouring positions' centroids closer than this many TOF peak sigmas (at their
         /// m/z, <see cref="JointDemuxParams.SigmaAt"/>) are summed into one, in place of <see cref="MergePpm"/>;
-        /// 0 uses <see cref="MergePpm"/>. Two Gaussians closer than sigma are not resolved (Centrix's merge).
+        /// 0 uses <see cref="MergePpm"/>. Two Gaussians closer than sigma are not resolved (Centrix's merge); on
+        /// the ZT Scan slice two sigmas left about 60% of one sigma's close doublets and found 3-4% more peptides.
         /// </summary>
-        public double JointMergeSigmas { get; set; } = 1;
+        public double JointMergeSigmas { get; set; } = 2;
 
         /// <summary>
         /// Centroid MS1 with the joint solve (one bin, one position) instead of passing it through: needs profile
