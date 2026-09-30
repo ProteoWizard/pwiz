@@ -77,6 +77,17 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get { return SkylineWindow.DocumentUI; }
         }
+
+        /// <summary>
+        /// True while alignment work can still be queued and run. For tests: an aborted row
+        /// update queue never restarts, so this going false while the form is open means
+        /// alignment is dead for the rest of the session.
+        /// </summary>
+        internal bool IsAlignmentActive
+        {
+            get { return !_cancellationTokenSource.IsCancellationRequested && _rowUpdateQueue.Exception == null; }
+        }
+
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
@@ -86,11 +97,28 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             UpdateAll();
         }
+
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            _cancellationTokenSource.Cancel();
+            // Cancel early to give in-flight alignment warning before the handle goes away, but
+            // not when the owner is driving the close. WinForms raises FormClosing on owned forms
+            // before the owner's own OnFormClosing, so the owner may still cancel, and cancelling
+            // here would leave this form open with _rowUpdateQueue permanently aborted by the
+            // OperationCanceledException that in-flight alignment rethrows.
+            if (e.CloseReason != CloseReason.FormOwnerClosing)
+                _cancellationTokenSource.Cancel();
 
             base.OnFormClosing(e);
+        }
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            // Covers the owner-driven close that OnFormClosing deliberately skips. This runs only
+            // on a close that actually happened, unlike OnHandleDestroyed, which also runs when
+            // WinForms recreates the handle of a form that is staying open.
+            _cancellationTokenSource.Cancel();
+
+            base.OnFormClosed(e);
         }
 
         protected override void OnHandleDestroyed(EventArgs e)
