@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Xml;
 using pwiz.Osprey.Core;
@@ -45,18 +46,39 @@ namespace pwiz.Osprey.IO
         public const int READER_VERSION = 2;
 
         private const int DEFAULT_MIN_FRAGMENTS = 3;
-        private const string UNIMOD_PREFIX = @"UniMod:";
 
         private readonly int _minFragments;
+        private readonly FragmentToleranceConfig _fragmentTolerance;
 
         public DiannTsvLoader() : this(DEFAULT_MIN_FRAGMENTS)
         {
         }
 
-        public DiannTsvLoader(int minFragments)
+        public DiannTsvLoader(int minFragments) : this(minFragments, null)
+        {
+        }
+
+        /// <summary>
+        /// A reader that also compares the fragment types the library's columns state with the
+        /// types Osprey computes from m/z within <paramref name="fragmentTolerance"/>, the
+        /// search's fragment tolerance (<see cref="TypeCheck"/>). The columns stay the typing
+        /// the search uses.
+        /// </summary>
+        public DiannTsvLoader(FragmentToleranceConfig fragmentTolerance) : this(DEFAULT_MIN_FRAGMENTS, fragmentTolerance)
+        {
+        }
+
+        public DiannTsvLoader(int minFragments, FragmentToleranceConfig fragmentTolerance)
         {
             _minFragments = minFragments;
+            _fragmentTolerance = fragmentTolerance;
         }
+
+        /// <summary>
+        /// The library's stated fragment types compared with Osprey's typing; empty until a load,
+        /// and always empty for a reader given no fragment tolerance.
+        /// </summary>
+        public FragmentTypeCheck TypeCheck { get; private set; } = new FragmentTypeCheck();
 
         /// <summary>
         /// Load library entries from a DIA-NN TSV file.
@@ -150,6 +172,7 @@ namespace pwiz.Osprey.IO
             // so output is unchanged.
             var entries = new List<LibraryEntry>(precursorMap.Count);
             var interner = new LibraryStringInterner();
+            TypeCheck = new FragmentTypeCheck();
             uint id = 0;
 
             // Phase 2. The byte progress above ends when the stream is exhausted, so without this
@@ -178,6 +201,8 @@ namespace pwiz.Osprey.IO
                     data.Charge, data.PrecursorMz, data.RetentionTime);
                 entry.Modifications = modifications;
                 entry.Fragments = data.Fragments.ToArray();
+                if (_fragmentTolerance != null)
+                    CheckStatedTypes(entry, _fragmentTolerance, TypeCheck);
                 entry.ProteinIds = interner.InternToArray(data.ProteinIds);
                 entry.GeneNames = interner.InternToArray(data.GeneNames);
                 entry.IsDecoy = data.IsDecoy;
@@ -189,6 +214,29 @@ namespace pwiz.Osprey.IO
             progress.Dispose();
             interner.LogSummary(logInfo);
             return entries;
+        }
+
+        /// <summary>
+        /// Add each fragment of <paramref name="entry"/> whose type the library's columns state
+        /// to <paramref name="check"/>, against the type Osprey's own typing gives its m/z. A
+        /// library with no fragment type column states none, and costs no typing.
+        /// </summary>
+        private static void CheckStatedTypes(LibraryEntry entry, FragmentToleranceConfig tolerance,
+            FragmentTypeCheck check)
+        {
+            if (entry.Fragments.All(f => f.Annotation.IonType == IonType.Unknown))
+                return;
+            var candidates = new FragmentCandidates(entry.Sequence, entry.Modifications, entry.Charge);
+            var ospreyChoice = FragmentTyping.Compute(entry.Sequence, entry.Modifications, entry.Charge,
+                entry.Fragments, tolerance);
+            for (int i = 0; i < entry.Fragments.Count; i++)
+            {
+                var fragment = entry.Fragments[i];
+                if (fragment.Annotation.IonType == IonType.Unknown)
+                    continue;
+                check.AddPeak(fragment.Annotation, ospreyChoice[i], candidates, tolerance, entry.Sequence, entry.Charge,
+                    fragment.Mz);
+            }
         }
 
         /// <summary>
@@ -483,8 +531,8 @@ namespace pwiz.Osprey.IO
             }
 
             // Try UniMod notation (e.g. "UniMod:4" or "UNIMOD:4" - the prefix match ignores case)
-            if (s.StartsWith(UNIMOD_PREFIX, StringComparison.OrdinalIgnoreCase) &&
-                int.TryParse(s.Substring(UNIMOD_PREFIX.Length), out int unimodId))
+            if (s.StartsWith(UniMod.PREFIX, StringComparison.OrdinalIgnoreCase) &&
+                int.TryParse(s.Substring(UniMod.PREFIX.Length), out int unimodId))
             {
                 double? unimodMass = UnimodIdToMass(unimodId);
                 if (unimodMass.HasValue)
@@ -513,11 +561,11 @@ namespace pwiz.Osprey.IO
             if (string.IsNullOrEmpty(s))
                 return null;
 
-            int idx = s.IndexOf(UNIMOD_PREFIX, StringComparison.OrdinalIgnoreCase);
+            int idx = s.IndexOf(UniMod.PREFIX, StringComparison.OrdinalIgnoreCase);
             if (idx < 0)
                 return null;
 
-            string rest = s.Substring(idx + UNIMOD_PREFIX.Length);
+            string rest = s.Substring(idx + UniMod.PREFIX.Length);
             int end = 0;
             while (end < rest.Length && char.IsDigit(rest[end]))
                 end++;
@@ -533,31 +581,11 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Look up mass delta for a UniMod ID.
+        /// Look up mass delta for a UniMod ID (<see cref="UniMod"/>).
         /// </summary>
         public static double? UnimodIdToMass(int id)
         {
-            switch (id)
-            {
-                case 1: return 42.010565;    // Acetyl
-                case 4: return 57.021464;    // Carbamidomethyl
-                case 5: return 43.005814;    // Carbamyl
-                case 7: return 0.984016;     // Deamidated
-                case 21: return 79.966331;   // Phospho
-                case 28: return -18.010565;  // Glu->pyro-Glu
-                case 34: return 14.015650;   // Methyl
-                case 35: return 15.994915;   // Oxidation
-                case 36: return 28.031300;   // Dimethyl
-                case 37: return 42.046950;   // Trimethyl
-                case 121: return 114.042927; // Ubiquitin (GlyGly)
-                case 122: return 383.228102; // SUMO
-                case 214: return 44.985078;  // Nitro
-                case 312: return -17.026549; // Ammonia loss
-                case 385: return 229.162932; // TMT6plex
-                case 737: return 229.162932; // TMT6plex (alternate)
-                case 747: return 304.207146; // TMTpro
-                default: return null;
-            }
+            return UniMod.Find(id)?.Mass;
         }
 
         /// <summary>

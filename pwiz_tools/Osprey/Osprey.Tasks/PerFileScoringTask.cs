@@ -1234,9 +1234,10 @@ namespace pwiz.Osprey.Tasks
                 library = validTargets;
                 // A decoy's fragments are recomputed from the target's b/y ion annotations; a
                 // fragment of unknown type is copied verbatim and one with no usable fragment
-                // number is dropped. A decoy left with no fragment of its own - every peak of an
-                // unannotated .blib, or a TSV whose fragment numbers are missing - scores exactly
-                // like its target or not at all, so its target has no real decoy competition.
+                // number is dropped. A decoy left with no fragment of its own - a .blib whose
+                // peaks are not b or y ions within the fragment tolerance, or a TSV whose fragment
+                // types or numbers are missing - scores exactly like its target or not at all, so
+                // its target has no real decoy competition.
                 // Only checkable where fragments were loaded; the first task of every run loads
                 // them, so a bad library stops before any work.
                 if (!omitFragments && loadOptions.RetainFragmentsFor == null &&
@@ -1362,10 +1363,24 @@ namespace pwiz.Osprey.Tasks
             string library = config.LibrarySource?.Path;
             if (fraction > MAX_UNUSABLE_DECOY_FRACTION)
             {
-                ctx.LogError(string.Format(
-                    OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_The_library__3__is_missing_b_or_y_fragment_ion_annotations_or_fragment_numbers___0__of__,
-                    nUnusable, decoys.Count, fraction, library, MAX_UNUSABLE_DECOY_FRACTION,
-                    OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY)));
+                // A .blib's peaks are typed from m/z, so what it lacks is peaks within the
+                // fragment tolerance of the peptide's b and y ions, not annotations.
+                if (config.LibrarySource?.Format == LibraryFormat.Blib)
+                {
+                    ctx.LogError(string.Format(
+                        OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_Too_few_peaks_of_the_library__3__are_b_or_y_ions_within_the_fragment_tolerance,
+                        nUnusable, decoys.Count, fraction, library, MAX_UNUSABLE_DECOY_FRACTION,
+                        OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY),
+                        config.FragmentTolerance.Tolerance, config.FragmentTolerance.Unit.GetLocalizedString(),
+                        OspreyArgNames.Text(OspreyArgNames.FRAGMENT_TOLERANCE), OspreyArgNames.Text(OspreyArgNames.RESOLUTION)));
+                }
+                else
+                {
+                    ctx.LogError(string.Format(
+                        OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_The_library__3__is_missing_b_or_y_fragment_ion_annotations_or_fragment_numbers___0__of__,
+                        nUnusable, decoys.Count, fraction, library, MAX_UNUSABLE_DECOY_FRACTION,
+                        OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY)));
+                }
                 return false;
             }
             ctx.LogWarning(string.Format(

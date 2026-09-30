@@ -1522,4 +1522,7 @@
   <data name="Stage6Planner_ScanFiles_Reconciliation_planning__pass_1_of_2__for_1_file" xml:space="preserve">
     <value>Reconciliation planning (pass 1 of 2) for 1 file</value>
   </data>
+  <data name="PerFileScoringTask_CheckDecoysUsable_Too_few_peaks_of_the_library__3__are_b_or_y_ions_within_the_fragment_tolerance" xml:space="preserve">
+    <value>Too few peaks of the library {3} are b or y ions within the fragment tolerance of {6} {7}: {0:N0} of {1:N0} generated decoys ({2:P1}, more than {4:P0}) have no fragment distinct from their target, so Osprey cannot generate usable decoys from it. Set a fragment tolerance that fits the library's m/z accuracy with {8} or {9}, or use a library that already contains decoys, with {5}.</value>
+  </data>
 </root>

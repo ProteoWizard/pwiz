@@ -564,10 +564,9 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(result.StartsWith("PEPTC[+57."),
                 "Case-insensitive UNIMOD should work, got: " + result);
 
-            // Negative mass (Glu->pyro-Glu)
-            result = BlibWriter.ConvertUnimodToMass("E[UniMod:28]PEPTIDE");
-            Assert.IsTrue(result.Contains("[-18."),
-                "Expected negative mass for UniMod:28, got: " + result);
+            // Negative masses: Glu->pyro-Glu is UniMod:27, Gln->pyro-Glu UniMod:28
+            Assert.AreEqual("E[-18.0106]PEPTIDE", BlibWriter.ConvertUnimodToMass("E[UniMod:27]PEPTIDE"));
+            Assert.AreEqual("Q[-17.0265]PEPTIDE", BlibWriter.ConvertUnimodToMass("Q[UniMod:28]PEPTIDE"));
 
             // Verify TryGetUnimodMass for known IDs
             double mass;
@@ -576,6 +575,30 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(BlibWriter.TryGetUnimodMass(35, out mass));
             Assert.AreEqual(15.994915, mass, 1e-6);
             Assert.IsFalse(BlibWriter.TryGetUnimodMass(99999, out mass));
+
+            // The ids Osprey once mapped to another modification's mass, now Skyline's UniModData
+            // masses: every reader and writer shares the one table.
+            var skylineMasses = new Dictionary<int, double>
+            {
+                { 27, -18.010565 },   // Glu->pyro-Glu
+                { 28, -17.026549 },   // Gln->pyro-Glu, once Glu->pyro-Glu
+                { 122, 27.994915 },   // Formyl, once SUMO
+                { 214, 144.102062 },  // iTRAQ4plex, once Nitro
+                { 312, 119.004099 },  // Cysteinyl, once Ammonia-loss
+                { 354, 44.985078 },   // Nitro
+                { 385, -17.026549 },  // Ammonia-loss, once TMT6plex
+                { 737, 229.162932 },  // TMT6plex
+                { 747, 86.000394 },   // Malonyl, once TMTpro
+                { 2016, 304.207146 }, // TMTpro
+                { 259, 8.014199 },    // Label:13C(6)15N(2)
+                { 267, 10.008269 },   // Label:13C(6)15N(4)
+            };
+            foreach (var pair in skylineMasses)
+            {
+                Assert.IsTrue(BlibWriter.TryGetUnimodMass(pair.Key, out mass), pair.Key.ToString());
+                Assert.AreEqual(pair.Value, mass, pair.Key.ToString());
+                Assert.AreEqual(pair.Value, DiannTsvLoader.UnimodIdToMass(pair.Key), pair.Key.ToString());
+            }
         }
 
         #endregion
@@ -1045,14 +1068,10 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestIdentifyModification()
         {
-            double massDelta;
-            int? unimodId;
-            string name;
-
-            BlibLoader.IdentifyModification(57.021, false, out massDelta, out unimodId, out name);
-            Assert.AreEqual(57.021464, massDelta, 0.01);
-            Assert.AreEqual(4, unimodId);
-            Assert.AreEqual("Carbamidomethyl", name);
+            var modification = BlibLoader.IdentifyModification("+57.021", 'C', false, false);
+            Assert.AreEqual(57.021464, modification.MassDelta);
+            Assert.AreEqual(4, modification.UnimodId);
+            Assert.AreEqual("Carbamidomethyl", modification.Name);
         }
 
         #endregion
@@ -1781,21 +1800,87 @@ namespace pwiz.Osprey.Test
         public void TestBlibModifications()
         {
             // Simple unmodified
-            var mods = BlibLoader.ParseBlibModifications("PEPTIDE");
-            Assert.AreEqual(0, mods.Count);
+            Assert.AreEqual(0, ParseBlibModifications("PEPTIDE").Count);
 
             // Carbamidomethyl
-            mods = BlibLoader.ParseBlibModifications("PEPTC[+57.021]IDE");
+            var mods = ParseBlibModifications("PEPTC[+57.021]IDE");
             Assert.AreEqual(1, mods.Count);
             Assert.AreEqual(4, mods[0].Position);
-            Assert.AreEqual(57.021464, mods[0].MassDelta, 0.01);
+            Assert.AreEqual(57.021464, mods[0].MassDelta);
             Assert.AreEqual(4, mods[0].UnimodId);
 
             // Oxidation
-            mods = BlibLoader.ParseBlibModifications("PEPTM[+15.995]IDE");
+            mods = ParseBlibModifications("PEPTM[+15.995]IDE");
             Assert.AreEqual(1, mods.Count);
             Assert.AreEqual(4, mods[0].Position);
             Assert.AreEqual(35, mods[0].UnimodId);
+
+            // A mass matches a known modification as Skyline matches it: rounded at the precision
+            // its text prints, so BiblioSpec's one decimal gets the exact mass.
+            AssertBlibModification("PEPTC[+57.0]IDE", 57.021464, 4);
+            AssertBlibModification("[+42.0]PEPTIDE", 42.010565, 1);
+            AssertBlibModification("PEPS[+80.0]TIDE", 79.966331, 21);
+            AssertBlibModification("PEPTIDEK[+8.0]", 8.014199, 259);
+            AssertBlibModification("PEPTIDER[+10.0]", 10.008269, 267);
+            AssertBlibModification("Q[-17.0]PEPTIDE", -17.026549, 28);
+            AssertBlibModification("PEPTK[+114.0]IDE", 114.042927, 121);
+            // Only on its residue or terminus: acetyl on lysine, trimethyl where two decimals
+            // tell it from acetyl, and sulfo where three tell it from phospho.
+            AssertBlibModification("PEPTK[+42.0]IDE", 42.010565, 1);
+            AssertBlibModification("PEPTK[+42.05]IDE", 42.046950, 37);
+            AssertBlibModification("PEPTY[+79.957]IDE", 79.956815, 40);
+            // A mass printed with four or more decimals that matches nothing is used as printed.
+            AssertBlibModification("[+42.03000]PEPTIDE", 42.03, null);
+            AssertBlibModification("PEPTC[+125.047679]IDE", 125.047679, null);
+            // A delta between 100 and 200 Da is not an absolute cysteine mass on any other
+            // residue (GlyGly on lysine), nor on cysteine when it is signed (N-ethylmaleimide).
+            AssertBlibModification("PEPTK[+114.042927]IDE", 114.042927, 121);
+            // An unsigned value on cysteine is still its absolute mass.
+            AssertBlibModification("PEPTC[160.030649]IDE", 57.021464, 4);
+            AssertBlibModification("PEPTC[160.0]IDE", 57.021464, 4);
+            // A UniMod id, in brackets or in parentheses as DIA-NN writes it.
+            AssertBlibModification("PEPTC[UniMod:4]IDE", 57.021464, 4);
+            AssertBlibModification("PEPTM(UniMod:35)IDE", 15.994915, 35);
+            mods = ParseBlibModifications("C(UniMod:4)PEPTIDEM(UniMod:35)K");
+            Assert.AreEqual(2, mods.Count);
+            Assert.AreEqual(0, mods[0].Position);
+            Assert.AreEqual(8, mods[1].Position);
+            // A bracket summing a modification of the first residue and the N-terminus is used
+            // as printed at four decimals, as Osprey writes it.
+            AssertBlibModification("M[+58.0055]PEPTIDEK", 58.0055, null);
+            // A mass that rounds to zero is written as a readable zero.
+            Assert.AreEqual("[+0.0]", BlibSpectrum.FormatMassDelta(-4e-6));
+            Assert.AreEqual("[-17.0265]", BlibSpectrum.FormatMassDelta(-17.026549));
+
+            // Not identified: a mass printed with fewer than four decimals that matches nothing,
+            // a known mass off its residue, an unknown UniMod id, and other text.
+            AssertUnidentified("PEPTC[+99.9]IDE", "[+99.9]");
+            AssertUnidentified("PEPTIDEK[+80.0]", "[+80.0]");
+            AssertUnidentified("M[+58.0]PEPTIDEK", "[+58.0]");
+            AssertUnidentified("PEPTIDEK(UniMod:99999)", "(UniMod:99999)");
+            AssertUnidentified("PEPTIDEK[Oxidation]", "[Oxidation]");
+            AssertUnidentified("PEPTIDEK[+1e2]", "[+1e2]");
+        }
+
+        private static List<Modification> ParseBlibModifications(string modSeq)
+        {
+            var mods = BlibLoader.ParseBlibModifications(modSeq, out string unidentified);
+            Assert.IsNull(unidentified, modSeq);
+            return mods;
+        }
+
+        private static void AssertBlibModification(string modSeq, double massDelta, int? unimodId)
+        {
+            var mods = ParseBlibModifications(modSeq);
+            Assert.AreEqual(1, mods.Count, modSeq);
+            Assert.AreEqual(massDelta, mods[0].MassDelta, 1e-12, modSeq);
+            Assert.AreEqual(unimodId, mods[0].UnimodId, modSeq);
+        }
+
+        private static void AssertUnidentified(string modSeq, string bracket)
+        {
+            Assert.IsNull(BlibLoader.ParseBlibModifications(modSeq, out string unidentified), modSeq);
+            Assert.AreEqual(bracket, unidentified, modSeq);
         }
 
         #endregion
