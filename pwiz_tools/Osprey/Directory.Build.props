@@ -17,9 +17,6 @@
            * the .NET 8.0 target can still be built AnyCPU on other hosts
              (e.g. Arm64 macOS/Linux) without touching any csproj. -->
     <Platforms>AnyCPU;x64</Platforms>
-    <!-- The configuration of ProteowizardWrapper, CommonUtil and pwiz-sharp, which are not
-         in Osprey.sln, is set by CarryConfigurationToOutOfSolutionReferences in
-         Directory.Build.targets. -->
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>

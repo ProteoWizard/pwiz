@@ -48,11 +48,7 @@
        (pwiz-sharp's IAgreeToVendorLicenses, plus NativeVendorsAvailable for the
        Windows-only native SDKs); without it they compile in NO_VENDOR_SUPPORT mode where
        Identify() works and Read() throws. So this reference costs a default developer
-       clone nothing.
-
-       ProteowizardWrapper, CommonUtil and pwiz-sharp are not in Osprey.sln. The configuration
-       they build in, and why a Release Osprey once deployed their Debug builds, are recorded
-       at CarryConfigurationToOutOfSolutionReferences in ..\Directory.Build.targets. -->
+       clone nothing. -->
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj" />
   </ItemGroup>

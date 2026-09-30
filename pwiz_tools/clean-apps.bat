@@ -13,6 +13,7 @@ call :CleanBinaries Skyline
 call :CleanBinaries SeeMS
 call :CleanBinaries MSConvertGUI
 call :CleanBinaries Bumbershoot
+call :CleanBinaries Osprey
 
 IF EXIST Shared\CommonTest rmdir /s/q Shared\CommonTest
 

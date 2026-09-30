@@ -63,18 +63,10 @@
        reference is invoked with that string as global properties, and global properties
        flow down to the referenced project's own references, so the whole out-of-solution
        subtree inherits Configuration and Platform the way a build.bat csproj build does.
-       Command-line csproj builds carry no solution configuration and are untouched.
-
-       Osprey carries its own build's configuration down its out-of-solution subtree
-       (pwiz_tools\Osprey\Directory.Build.targets) and marks it with the global property
-       PwizOutOfSolutionConfigurationCarried=true. A marked project is left alone: reassigning
-       ProteowizardWrapper's references to AnyCPU would compile pwiz-sharp a second time
-       alongside Osprey's x64 build of it. The test is the marker, not
-       ShouldUnsetParentConfigurationAndPlatform, because that property can also be false from
-       a local setting, a /p: override or MSBuild's own default. -->
+       Command-line csproj builds carry no solution configuration and are untouched. -->
   <Target Name="AssignOutOfSolutionProjectReferenceConfiguration"
           AfterTargets="AssignProjectConfiguration"
-          Condition="'$(CurrentSolutionConfigurationContents)' != '' and '$(PwizOutOfSolutionConfigurationCarried)' != 'true'">
+          Condition="'$(CurrentSolutionConfigurationContents)' != ''">
     <ItemGroup>
       <ProjectReferenceWithConfiguration Condition="'%(ProjectReferenceWithConfiguration.SetConfiguration)' == ''">
         <SetConfiguration>Configuration=$(Configuration)</SetConfiguration>

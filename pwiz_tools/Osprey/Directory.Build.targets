@@ -54,53 +54,20 @@
           Condition="Exists('$(_ResolvedParquetTarget)') and Exists('$(_PatchedParquetSource)')" />
   </Target>
 
-  <!-- Build everything Osprey reaches outside Osprey.sln (ProteowizardWrapper, CommonUtil and
-       pwiz-sharp) once, in this build's Configuration and Platform.
-
-       A solution build strips Configuration and Platform from a reference to a project that is
-       not in the solution, and the project falls back to Debug|AnyCPU. That repeats at every
-       hop. Until 2026-09-27, Directory.Build.props set ShouldUnsetParentConfigurationAndPlatform
-       to false as a property, which fixed only the first hop and so only what was deployed: one
-       Release build still compiled the 15 pwiz-sharp projects 36 times, into bin\x64\Release,
-       bin\Debug and bin\Release. ProteowizardWrapper, which imports pwiz_tools\Directory.Build.targets,
-       sent its subtree to Release|AnyCPU. A Debug build compiled six projects twice into the same
-       obj\Debug, and every vendor SDK extraction ran once per configuration into one folder.
-
-       This is a target rather than metadata on Osprey.IO's one ProjectReference because the SDK
-       flattens transitive ProjectReferences (IncludeTransitiveProjectReferences runs before
-       AssignProjectConfiguration). Osprey.IO, Osprey.Tasks, Osprey and Osprey.Test each reference
-       all 15 pwiz-sharp projects directly, and Osprey.csproj references CommonUtil itself. Every
-       one of those references must pass identical global properties, or MSBuild builds another
-       instance. So Configuration, Platform and ShouldUnsetParentConfigurationAndPlatform=false
-       go down as GLOBAL properties, which flow to every reference below, and no hop strips them.
-       PwizOutOfSolutionConfigurationCarried=true marks the subtree, so the AnyCPU reassignment in
-       pwiz_tools\Directory.Build.targets leaves ProteowizardWrapper's references alone.
-
-       The Platform passed down is the referencing Osprey project's own, not a constant AnyCPU as
-       for Skyline.sln. Every scripted Osprey build is x64: build.ps1 and the Jamfile build
-       Osprey.sln as x64, and package.ps1 publishes Osprey.csproj with -p:Platform=x64, which
-       reaches all of pwiz-sharp. So shipped pwiz-sharp has always been x64, and the solution build
-       now compiles those same binaries. An Any CPU or x86 solution configuration passes AnyCPU
-       down instead, which is the build that stays usable on Arm64 hosts. Verified 2026-09-27: 27
-       projects compiled 27 times, and the 51 in-tree assemblies Osprey deploys are byte-identical
-       to their bin\x64\Release outputs.
-
-       The subtree gets exactly one configuration only while every Osprey.sln project maps to the
-       same platform in each solution configuration, and while ProteowizardWrapper, CommonUtil and
-       pwiz-sharp stay out of Osprey.sln. A subtree project added to the solution would be
-       configured by the solution instead, and pwiz-sharp would build a second time.
-
-       Skyline.sln also builds ProteowizardWrapper as x64 into the same bin and obj folders, but
-       against AnyCPU pwiz-sharp. Alternating the two solutions in one checkout therefore
-       recompiles ProteowizardWrapper each time; the result is correct either way. -->
-
+  <!-- ProteowizardWrapper, CommonUtil and pwiz-sharp are not in Osprey.sln, so a solution build
+       strips Configuration and Platform from references to them and every level below falls back
+       to Debug|AnyCPU. Give them this build's Configuration and AnyCPU, as
+       pwiz_tools\Directory.Build.targets does for Skyline.sln, so Osprey and Skyline share one
+       pwiz-sharp build in bin\<Configuration>. A target rather than reference metadata, because
+       the SDK flattens transitive references into every Osprey project and each one must pass the
+       same global properties, or a second instance is built. -->
   <Target Name="CarryConfigurationToOutOfSolutionReferences"
           AfterTargets="AssignProjectConfiguration"
           Condition="'$(CurrentSolutionConfigurationContents)' != ''">
     <ItemGroup>
       <ProjectReferenceWithConfiguration Condition="'%(ProjectReferenceWithConfiguration.SetConfiguration)' == ''">
         <SetConfiguration>Configuration=$(Configuration)</SetConfiguration>
-        <SetPlatform>Platform=$(Platform);ShouldUnsetParentConfigurationAndPlatform=false;PwizOutOfSolutionConfigurationCarried=true</SetPlatform>
+        <SetPlatform>Platform=AnyCPU;ShouldUnsetParentConfigurationAndPlatform=false</SetPlatform>
         <GlobalPropertiesToRemove />
       </ProjectReferenceWithConfiguration>
     </ItemGroup>
