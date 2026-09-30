@@ -125,10 +125,6 @@
     <value>デコイペアリングマニフェストに必須列がありません（{1}、{2}、{3}が必要です）。検出された列：{0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="DiannTsvLoader_GetField_Missing__0__at_row__1_" xml:space="preserve">
-    <value>行{1}に{0}がありません</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="DiannTsvLoader_Load_Parsing__0_" xml:space="preserve">
     <value>{0}を解析中</value>
     <comment>Needs Review:New resource</comment>
@@ -139,10 +135,6 @@
   </data>
   <data name="DiannTsvLoader_ParseReader_The_library_file_is_empty__it_has_no_header_row_" xml:space="preserve">
     <value>ライブラリファイルが空です：ヘッダー行がありません。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="DiannTsvLoader_ParseValue_Invalid__0____1___at_row__2_" xml:space="preserve">
-    <value>行{2}の{0}「{1}」が無効です</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="LibraryCacheStatus_LoadCache_Loading_library_cache___0__precursors_" xml:space="preserve">

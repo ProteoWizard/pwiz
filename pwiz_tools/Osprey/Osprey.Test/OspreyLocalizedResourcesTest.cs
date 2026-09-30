@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -47,6 +48,11 @@ namespace pwiz.Osprey.Test
     /// translation rounds, so a new English string with no ja / zh-Hans entry yet (or a new .resx
     /// with no satellite at all) is not a failure; adding English text never requires a translation.
     /// </para>
+    /// <para>
+    /// The reverse is a failure: a translation whose English key no longer exists. Removing or
+    /// renaming an English resource must remove its ja / zh-Hans entries in the same change, or they
+    /// linger as dead text that no code reads and that reviewers would still be asked to check.
+    /// </para>
     /// </summary>
     [TestClass]
     public class OspreyLocalizedResourcesTest
@@ -74,8 +80,12 @@ namespace pwiz.Osprey.Test
             }
 
             var checkedCounts = LANGUAGES.ToDictionary(language => language, language => 0);
+            var orphans = new List<string>();
             foreach (var resourceManager in resourceManagers)
-                VerifyResourceManager(resourceManager, checkedCounts);
+                VerifyResourceManager(resourceManager, checkedCounts, orphans);
+            Assert.AreEqual(0, orphans.Count,
+                "Translations with no English resource (the English key was removed or renamed); delete them " +
+                "from the .ja.resx / .zh-Hans.resx files:" + Environment.NewLine + string.Join(Environment.NewLine, orphans));
             // Missing translations are skipped, so guard against a vacuous pass: satellites that
             // stopped deploying beside the tests would otherwise skip every check silently.
             foreach (var language in LANGUAGES)
@@ -85,10 +95,12 @@ namespace pwiz.Osprey.Test
             }
         }
 
-        private static void VerifyResourceManager(ResourceManager resourceManager, IDictionary<string, int> checkedCounts)
+        private static void VerifyResourceManager(ResourceManager resourceManager, IDictionary<string, int> checkedCounts,
+            ICollection<string> orphans)
         {
             var invariantSet = resourceManager.GetResourceSet(CultureInfo.InvariantCulture, true, true);
             Assert.IsNotNull(invariantSet, resourceManager.BaseName);
+            var invariantKeys = new HashSet<string>(invariantSet.Cast<DictionaryEntry>().Select(e => (string) e.Key));
             foreach (var language in LANGUAGES)
             {
                 // tryParents: false, so an entry the satellite lacks reads as missing rather than
@@ -96,6 +108,8 @@ namespace pwiz.Osprey.Test
                 var localizedSet = resourceManager.GetResourceSet(CultureInfo.GetCultureInfo(language), true, false);
                 if (localizedSet == null)
                     continue;
+                foreach (var key in localizedSet.Cast<DictionaryEntry>().Select(e => (string) e.Key).Where(k => !invariantKeys.Contains(k)).OrderBy(k => k))
+                    orphans.Add(string.Format(@"{0} Entry:{1} Language:{2}", resourceManager.BaseName, key, language));
                 foreach (var entry in invariantSet.Cast<DictionaryEntry>().OrderBy(e => (string) e.Key))
                 {
                     string message = string.Format(@"{0} Entry:{1} Language:{2}", resourceManager.BaseName, entry.Key, language);

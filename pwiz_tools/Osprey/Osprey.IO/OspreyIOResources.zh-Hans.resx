@@ -125,10 +125,6 @@
     <value>诱饵配对清单缺少必需列（需要 {1}、{2} 和 {3}）。找到：{0}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="DiannTsvLoader_GetField_Missing__0__at_row__1_" xml:space="preserve">
-    <value>第 {1} 行缺少 {0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="DiannTsvLoader_Load_Parsing__0_" xml:space="preserve">
     <value>正在解析 {0}</value>
     <comment>Needs Review:New resource</comment>
@@ -139,10 +135,6 @@
   </data>
   <data name="DiannTsvLoader_ParseReader_The_library_file_is_empty__it_has_no_header_row_" xml:space="preserve">
     <value>库文件为空：没有标题行。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="DiannTsvLoader_ParseValue_Invalid__0____1___at_row__2_" xml:space="preserve">
-    <value>第 {2} 行的 {0}“{1}”无效</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="LibraryCacheStatus_LoadCache_Loading_library_cache___0__precursors_" xml:space="preserve">
