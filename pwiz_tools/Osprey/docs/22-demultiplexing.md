@@ -280,7 +280,13 @@ Osprey.DemuxTool --in run.raw --out run.demux.mzML --scheme staggered
 | `--centroid events` | vendor | ZT Scan: centroid the MS2 profile ourselves, one centroid per run of adjacent digitizer samples, single ion events kept (MS1 keeps the vendor's centroids) |
 | `--profile` | off | read a vendor file without centroiding (with `--raw`, a profile dump for inspection) |
 | `--apportion H` | off | ZT Scan: apportion observed peaks instead of writing solved values |
-| `--counts-per-ion` | 100 | the detector counts of one ion, for the weights and the ion thresholds |
+| `--counts-per-ion` | from the data | the detector counts of one ion, for the weights and the ion thresholds; estimated from each file's lowest intensity levels (see [The joint solve](#the-joint-solve-zt-scan---joint)) |
+| `--joint` | off | ZT Scan: demultiplex and centroid the profile in one solve (see [The joint solve](#the-joint-solve-zt-scan---joint)) |
+| `--merge-sigmas F` | 2 | with `--joint`: neighbouring positions' centroids closer than F TOF peak sigmas are summed |
+| `--ms1 vendor\|joint` | joint with `--joint`, else vendor | MS1 as the vendor's centroids, or centroided by the joint solve on its own grid |
+| `--peak-shape gaussian\|measured` | gaussian | with `--joint`: the TOF peak as the Gaussian of the sigma table, or as kernels measured from the file |
+| `--joint-param Name=Value` | - | with `--joint`: any scalar setting of `JointDemuxParams`, for tuning |
+| `--solve-profile` | off | with `--joint`: print where the solve's time went |
 | `--ppm` | 10 | the channel tolerance |
 | `--unweighted` | off | skip the Poisson refit |
 | `--raw` | off | ZT Scan: write the selected spectra as acquired (a control arm) |
@@ -629,6 +635,64 @@ times the vendor centroids' signal. Placement of identified precursors' strong f
 what only the joint solve does, separating near-isobaric fragments of different precursors; that needs a
 demultiplexed file searched with DIA-NN, and so a C# implementation.
 
+### The joint solve (ZT Scan, `--joint`)
+
+`JointDemultiplexer` solves spec §5.4d on the TOF grid: each sweep's profile counts are
+y_r[k] = sum_j A_rj sum_q B[k - q] beta_j[q], with r an encoded bin, k a grid sample, A the measured
+transmission, B the TOF peak and beta_j[q] >= 0 the signal of source position j at grid point q.
+- **The fit.** Poisson weights 1 / max(mu, 0.5 ion), mu first from the data smoothed by B, then from the
+  first solution's expected counts; the second, reweighted solve is essential (without it the answer moves
+  0.24 in mean |log2| per peak). A lasso of 2 standard deviations per coefficient, lambda = 2 sqrt(c), with c
+  the coefficient's curvature under the weights.
+- **The solver.** Units of 48 bins and 12 sweeps, each sweep in chunks of 2,048 grid samples with margins.
+  Block coordinate descent grid point by grid point: the positions active at a point solved together by
+  NNLS on their block Hessian, the step over-relaxed by 1.5. The active set grows from the full gradient,
+  checked four grid points per vector, and loses its zeros after every pass. Only grid points with data
+  within a peak's reach are solved, and one is solved again only when a coefficient within two peak
+  half-widths moved by more than 0.001 ion. After reweighting, only the points where some lambda moved by
+  more than 20% are refitted (as Centrix refits only the regions whose lambda moved).
+- **Centroids.** Each position's run of adjacent positive coefficients is one centroid at their
+  beta-weighted m/z. In the layout, neighbouring positions' centroids within 2 sigma of the TOF peak, by
+  Centrix's running-centre rule, are summed: a peak between two grid points or two positions otherwise
+  leaves a close doublet, and DIA-NN quantifies a fragment from one peak.
+- **Ion calibration** (spec §6.2, `IonCalibration`): the counts of one ion from the lowest intensity
+  levels, by least squares on their spacing. MS2: one value per file (99.665 on ZT Scan, every level within
+  0.25 of a multiple). MS1: one per spectrum (5.9 to 19.3 across a run, following the TIC), since SCIEX MS1
+  intensities are rates over an accumulation time that varies.
+- **MS1** (`--ms1 joint`, the default with `--joint`): centroided by the same solve, one bin and one
+  position, on its own TOF grid (step 9.786586e-5, 0.45 of a sample off MS2's), with kernels measured
+  from the strong isolated peaks of 30 MS1 spectra (sigma 1.62 samples at 475 m/z, 1.70 at 660).
+- **The peak shape.** The Gaussian of the sigma table by default. `--peak-shape measured` (`TofPeakShape`)
+  fits kernels averaged from a file's strong isolated MS2 peaks; they are sharper at the core and bring the
+  solve closer to convergence, but on the slice they doubled the close doublets and found fewer peptides.
+
+On the slice (sweeps 247-371, precursors 500-700 m/z, three runs, `centered:7`, DIA-NN at 14 / 17 ppm;
+CV on the 2,011 precursors all four find in all three runs):
+
+| Arm | Precursors A1 / D1 / G1 | Peptides in all runs / any | CV |
+|---|---|---|---|
+| per-channel solve, vendor centroids | 2,909 / 3,067 / 3,094 | 2,281 / 3,851 | 0.096 |
+| joint, 1 sigma merge, vendor MS1 | 3,330 / 3,652 / 3,328 | 2,516 / 4,457 | 0.093 |
+| joint, 2 sigma merge, vendor MS1 | 3,551 / 3,446 / 3,528 | 2,610 / 4,495 | 0.088 |
+| **joint, 2 sigma merge, MS1 by the joint solve** | **3,586 / 3,775 / 3,589** | **2,698 / 4,698** | **0.090** |
+
+With DIA-NN choosing its own tolerances the last arm finds 3,447 / 3,788 / 3,532 precursors against the
+per-channel solve's 2,885 / 2,890 / 3,027, 2,651 peptides in all runs against 2,197, CV 0.091 against
+0.095.
+
+**Convergence.** Against the same 12 sweeps solved to convergence (637 passes), the default lands 0.022 in
+ion-weighted mean |log2 ratio| of matched peaks from it with the Gaussian and 0.006 with the measured
+kernels. Stopping earlier keeps the identifications but not the precision: 3 rounds and a relative
+tolerance of 1e-3 raised the CV by 0.013-0.017, because the unconverged split of a peak between
+neighbouring positions differs from run to run. `--joint-param BlockPoints=K` solves up to K = 5
+neighbouring grid points per block step: 3 points land twice as close to convergence in 42% of the block
+solves, but each block costs more and the solve takes longer.
+
+**Speed.** One whole A1 run from the `.wiff2`, 16 threads on a laptop with 6 performance and 8 efficiency
+cores: 6,438 s, a 16.8 GB mzML, against 14.4 min of acquisition. The solve took 96 thread-seconds a sweep:
+block passes 53%, gradient checks 31%, weights and curvature 11%. Reading and writing are hidden behind
+it.
+
 ### Determinism
 
 - The rules are the overlap demultiplexer's: index order everywhere, ties to the lowest index, and
@@ -637,6 +701,9 @@ demultiplexed file searched with DIA-NN, and so a C# implementation.
 - The tool solves a batch of blocks on worker threads while its calling thread reads the next
   batch. The source file is read from one thread only.
 - The output is byte-identical at any thread count, and with or without that overlap.
+- The joint solve's peak loops run as fixed-width four-lane vectors where the hardware has them, and
+  otherwise as four scalar partial sums in the same lane order, reduced in one fixed order, so every
+  machine gets the same bits.
 
 ### Speed
 
@@ -782,24 +849,22 @@ The scripts behind these ZT Scan tables are in pwiz-ai, under `ai/scripts/Osprey
 - **Supported (`--demux auto`):** stepped overlapping windows (staggered DIA) at any overlap factor, including
   variable widths, from centroided data (vendor centroiding, or a centroided mzML).
 - **Supported in `Osprey.DemuxTool` only:** the per-channel demultiplexer, for staggered windows
-  and for SCIEX ZT Scan. Wiring it into `--demux` still needs:
+  and for SCIEX ZT Scan, and the joint solve for ZT Scan. Wiring them into `--demux` still needs:
   - the .wiff2 reader staged for Osprey.exe;
   - the transmission calibrated per file, in C#;
   - its descriptor in the demultiplexed cache.
 - **Open questions for ZT Scan:**
-  - quantitation: over whole runs the per-sweep solve's quantities are noisier than the acquired
+  - quantitation over whole runs: the per-channel solve's quantities are noisier than the acquired
     data's (CV 0.119 against 0.112, with DIA-NN pinned), and DIA-NN's scanning mode on the `.wiff`
-    reaches 0.088 (identifications are no longer the gap: the demultiplexed runs find 4-7% more);
-  - `--source-positions` does not close it on the slice, and no form of the lasso does
-    ([Sparsity](#sparsity-the-lasso));
-  - most of DIA-NN's advantage in quantities is the data it reads from the `.wiff`, which the vendor
-    centroids do not carry ([Centroiding and the TOF grid](#centroiding-and-the-tof-grid)): the next
-    step is solving centroids and demultiplexing together on the profile grid (spec §5.4d), with a
-    TOF peak model and a Poisson-scaled L1;
+    reaches 0.088. The joint solve, which carries the profile signal the vendor centroids drop, beats
+    the per-channel solve on the slice in identifications and CV
+    ([The joint solve](#the-joint-solve-zt-scan---joint)); its whole-run searches are the next measure;
+  - the joint solve's speed: a whole run takes 1 h 47 min on a 16-thread laptop, against 14.4 min of
+    acquisition;
+  - fragment interference: DIA-NN picks candidates at the 1.18 Th bin, but each `centered:7` spectrum
+    carries 8.3 Th of positions, and a narrower layout has not been tried with the joint solve;
   - how to recover the early-gradient losses, for instance by scoring a precursor against both the
-    acquired and the demultiplexed spectra;
-  - whether the counts-per-ion scale, which sets the weights, should be calibrated rather than
-    fixed at 100. The Orbitrap runs used the same 100.
+    acquired and the demultiplexed spectra.
 - **MSX is not supported, and is misread today.** The reader keeps only a spectrum's first
   precursor, so each multiplexed spectrum is treated as a single window, and nothing refuses such
   a file yet. Support needs every precursor and its own fill time, which the ProteoWizard Thermo
