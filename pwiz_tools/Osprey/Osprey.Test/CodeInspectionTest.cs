@@ -514,6 +514,61 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// No file is written with an encoding that emits a UTF-8 BOM, as in Skyline's CodeInspection
+        /// rule for <c>Encoding.UTF8</c>. <c>Encoding.UTF8</c> carries a BOM preamble, so passing it to
+        /// a file writer puts a BOM at the start of the file - invisible in an editor, but a reader
+        /// comparing the first field of a TSV header or the start of a JSON intermediate file sees
+        /// three extra bytes. The .NET defaults (<c>new StreamWriter(path)</c>,
+        /// <c>File.WriteAllText(path, text)</c>) already write UTF-8 without a BOM, so the fix is
+        /// to drop the argument or use <c>new UTF8Encoding(false)</c>. Also caught: the other ways
+        /// to ask for a BOM (<c>new UTF8Encoding(true)</c>, <c>Encoding.GetEncoding("utf-8")</c>,
+        /// <c>XmlWriterSettings { Encoding = Encoding.UTF8 }</c>). <c>Encoding.UTF8.GetBytes</c> and
+        /// reading with <c>Encoding.UTF8</c> never write a preamble and are not matched. Test code is
+        /// included; a test that writes a BOM on purpose (to exercise a reader) adds an inline comment
+        /// beginning <c>// UTF8 BOM OK:</c>.
+        /// </summary>
+        [TestMethod]
+        public void TestNoBomWritingEncoding()
+        {
+            string sourceRoot = FindOspreySourceRoot();
+            var violations = new List<string>();
+            foreach (var file in Directory.EnumerateFiles(sourceRoot, "*.cs", SearchOption.AllDirectories))
+            {
+                string rel = RelativePath(sourceRoot, file).Replace('\\', '/');
+                if (rel.Split('/').Any(part => BOM_SKIPPED_DIRECTORIES.Contains(part, StringComparer.OrdinalIgnoreCase)))
+                    continue;
+                string[] lines = File.ReadAllLines(file);
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    string line = lines[i];
+                    if (line.Contains(@"// UTF8 BOM OK:"))
+                        continue;
+                    int comment = IndexOfLineComment(line);
+                    string code = comment >= 0 ? line.Substring(0, comment) : line;
+                    if (code.TrimStart().StartsWith(@"///") || code.TrimStart().StartsWith(@"*"))
+                        continue;
+                    if (BOM_WRITING_ENCODING.IsMatch(code))
+                        violations.Add(string.Format(@"{0}:{1}: {2}", rel, i + 1, line.Trim()));
+                }
+            }
+
+            Assert.AreEqual(0, violations.Count,
+                "A file writer is given an encoding that writes a UTF-8 BOM. Encoding.UTF8 includes a BOM; " +
+                "drop the argument (the .NET default is UTF-8 without BOM) or use 'new UTF8Encoding(false)':\n" +
+                string.Join("\n", violations));
+        }
+
+        /// <summary>
+        /// Skyline's pattern (a writer call with <c>Encoding.UTF8</c> on the same line, not
+        /// <c>UTF8Encoding</c>) plus the Append* writers and the other BOM-emitting encodings.
+        /// </summary>
+        private static readonly Regex BOM_WRITING_ENCODING = new Regex(
+            @"(new XmlTextWriter|File\.WriteAllText|File\.WriteAllLines|File\.AppendAllText|File\.AppendAllLines|\.SaveAsXml|new StreamWriter)\(.*Encoding\.UTF8[^E]" +
+            @"|Encoding\s*=\s*Encoding\.UTF8\b" +
+            @"|new (System\.Text\.)?UTF8Encoding\(\s*true" +
+            @"|Encoding\.GetEncoding\(\s*@?""utf-?8""");
+
+        /// <summary>
         /// Find the Osprey source root by walking up from the test
         /// assembly location until we see an Osprey.sln-bearing dir.
         /// </summary>
