@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Proteome;
@@ -123,6 +124,12 @@ namespace pwiz.CarafeSharp
                 pretrained, fineTune, _settings.OutputDirectory, Log);
             CarafeModelDirectory.WriteMeta(_settings.OutputDirectory, BuildRunMeta(exports, selection.Runs, options));
 
+            // The fine-tuned model as one file, to predict later libraries from with -model.
+            string modelFile = Path.Combine(_settings.OutputDirectory, CarafeModelFile.DEFAULT_FILE_NAME);
+            var saved = CarafeModelFile.Write(modelFile, CarafeModelDirectory.Open(_settings.OutputDirectory, true), _settings.TrainingType,
+                pretrained?.Sha256, _settings.Ms2Model, BuildTrainingDescription(exports, selection.Runs, options, trainingSet, _settings));
+            Log(@"Saved the fine-tuned model " + modelFile + @": " + saved.Describe());
+
             if (_settings.Library != null)
             {
                 // The models this run wrote, not checkpoints an earlier Carafe run left in -o.
@@ -166,6 +173,88 @@ namespace pwiz.CarafeSharp
                 });
             }
             return runs;
+        }
+
+        /// <summary>
+        /// What the models were trained on, saved in the model file for a user choosing among
+        /// models: the settings, the training data's size, charges, peptide lengths and
+        /// modifications, and each run's acquisition from its export footer.
+        /// </summary>
+        internal static CarafeModelTraining BuildTrainingDescription(IReadOnlyList<OspreyTrainingExport> exports,
+            IReadOnlyDictionary<string, string> runPaths, OspreyTrainingSetOptions options, OspreyTrainingSet trainingSet,
+            TrainingSettings settings)
+        {
+            var forms = new Dictionary<string, PeptideForm>(StringComparer.Ordinal);
+            foreach (var form in trainingSet.Rt.Select(r => r.Peptide).Concat(trainingSet.Ms2.Select(m => m.Precursor.Peptide)))
+                forms[form.Sequence + @"|" + string.Join(@";", form.ModNames) + @"|" + string.Join(@";", form.ModSites)] = form;
+            var runs = new List<CarafeModelTrainingRun>();
+            foreach (var export in exports)
+            {
+                string stem = TrainingExportLocator.RunStem(export.Path);
+                var scanWindow = export.Ms2ScanWindow;
+                runs.Add(new CarafeModelTrainingRun
+                {
+                    Run = Footer(export, @"osprey.file_name") ?? stem,
+                    MsFile = runPaths.TryGetValue(stem, out string path) ? path : stem,
+                    InstrumentVendor = Footer(export, @"osprey.instrument_vendor"),
+                    InstrumentModel = export.InstrumentModel,
+                    Instrument = OspreyTrainingSet.GetCarafeInstrument(export.InstrumentModel) ?? string.Empty,
+                    Nce = OspreyTrainingSet.GetNce(export, options.Nce),
+                    DissociationMethods = FooterCounts(export, @"osprey.dissociation_methods"),
+                    CollisionEnergies = FooterCounts(export, @"osprey.collision_energies"),
+                    RtMin = FooterNumber(export, @"osprey.rt_min"),
+                    RtMax = FooterNumber(export, @"osprey.rt_max"),
+                    IsolationMzMin = FooterNumber(export, @"osprey.isolation_mz_min"),
+                    IsolationMzMax = FooterNumber(export, @"osprey.isolation_mz_max"),
+                    Ms2MzMin = scanWindow?.Lower,
+                    Ms2MzMax = scanWindow?.Upper,
+                    FragmentTolerance = FooterNumber(export, @"osprey.fragment_tolerance"),
+                    FragmentToleranceUnit = Footer(export, @"osprey.fragment_tolerance_unit"),
+                    Precursors = export.Records.Count,
+                    PrecursorCharges = export.Records.GroupBy(r => r.Charge).ToDictionary(g => g.Key, g => g.Count()),
+                    RunQPass = export.RunQPass,
+                    MaxQ = FooterNumber(export, @"osprey.training_export.max_q"),
+                    OspreyVersion = Footer(export, @"osprey.version"),
+                    SearchHash = Footer(export, OspreyTrainingExport.SEARCH_HASH_KEY),
+                    LibraryHash = Footer(export, OspreyTrainingExport.LIBRARY_HASH_KEY),
+                });
+            }
+            return new CarafeModelTraining
+            {
+                Fdr = settings.Fdr,
+                MinCorrelation = settings.MinCorrelation,
+                Masking = !settings.NoMasking,
+                Seed = settings.Seed,
+                Ms2Spectra = trainingSet.Ms2.Count,
+                RtPeptideForms = trainingSet.Rt.Count,
+                Ms2Charges = trainingSet.Ms2.GroupBy(m => m.Precursor.Charge).ToDictionary(g => g.Key, g => g.Count()),
+                MinPeptideLength = forms.Count > 0 ? forms.Values.Min(f => f.Sequence.Length) : 0,
+                MaxPeptideLength = forms.Count > 0 ? forms.Values.Max(f => f.Sequence.Length) : 0,
+                Modifications = forms.Values.SelectMany(f => f.ModNames.Distinct())
+                    .GroupBy(name => name, StringComparer.Ordinal).ToDictionary(g => g.Key, g => g.Count(), StringComparer.Ordinal),
+                Runs = runs,
+            };
+        }
+
+        private static string Footer(OspreyTrainingExport export, string key)
+        {
+            return export.Metadata.TryGetValue(key, out string value) && !string.IsNullOrEmpty(value) ? value : null;
+        }
+
+        private static double? FooterNumber(OspreyTrainingExport export, string key)
+        {
+            string text = Footer(export, key);
+            return text != null && double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out double value) ? value : null;
+        }
+
+        /// <summary>A footer histogram (JSON, key to count), empty when the export has none.</summary>
+        private static IReadOnlyDictionary<string, long> FooterCounts(OspreyTrainingExport export, string key)
+        {
+            string text = Footer(export, key);
+            if (text == null)
+                return new Dictionary<string, long>();
+            using (var json = System.Text.Json.JsonDocument.Parse(text))
+                return json.RootElement.EnumerateObject().ToDictionary(p => p.Name, p => p.Value.GetInt64(), StringComparer.Ordinal);
         }
 
         private void Log(string message)

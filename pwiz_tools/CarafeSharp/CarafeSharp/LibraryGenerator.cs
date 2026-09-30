@@ -41,8 +41,9 @@ namespace pwiz.CarafeSharp
     /// Carafe's library prediction (<c>-db</c> without <c>-ms</c>): digests the FASTA, lists
     /// every peptidoform and precursor, predicts MS2 and RT, and writes the library as Carafe's
     /// TSV and/or a BiblioSpec .blib. Work proceeds in Carafe's batches of 200,000 peptidoforms,
-    /// each predicted and written in chunks, so memory is bounded by a chunk plus the peptide
-    /// list; spectra are written in peptidoform mass order, charges ascending.
+    /// each predicted in chunks that a <see cref="LibraryChunkWriter"/> thread writes while the
+    /// next chunk is predicted, so memory is bounded by a few chunks plus the peptide list;
+    /// spectra are written in peptidoform mass order, charges ascending.
     /// </summary>
     public sealed class LibraryGenerator
     {
@@ -58,8 +59,8 @@ namespace pwiz.CarafeSharp
         private readonly Stopwatch _ms2Clock = new Stopwatch();
         private readonly Stopwatch _rtClock = new Stopwatch();
         private readonly Stopwatch _buildClock = new Stopwatch();
-        private readonly Stopwatch _writeClock = new Stopwatch();
         private PretrainedModels _pretrained;
+        private string _modelFileFolder;
 
         /// <param name="settings">The library to predict.</param>
         /// <param name="log">Receives progress, or null.</param>
@@ -80,7 +81,37 @@ namespace pwiz.CarafeSharp
         /// <summary>Precursors written.</summary>
         public int SpectrumCount { get; private set; }
 
+        /// <summary>A test hook called with each chunk's index before it is predicted, on the predicting thread.</summary>
+        internal Action<int> BeforePredictChunk { get; set; }
+
+        /// <summary>
+        /// A test hook called with each chunk's index and the threads it is written with, before it
+        /// is written, on the writer thread.
+        /// </summary>
+        internal Action<int, int> BeforeWriteChunk { get; set; }
+
+        /// <summary>
+        /// A test hook called with a chunk's index when it is about to wait for room in the full
+        /// writer queue, on the predicting thread.
+        /// </summary>
+        internal Action<int> BeforeQueueWait { get; set; }
+
         public void Run()
+        {
+            try
+            {
+                Predict();
+            }
+            finally
+            {
+                // A saved model's unpacked copy, which the models were loaded from.
+                if (_modelFileFolder != null && Directory.Exists(_modelFileFolder))
+                    Directory.Delete(_modelFileFolder, true);
+                _modelFileFolder = null;
+            }
+        }
+
+        private void Predict()
         {
             _clock.Restart();
             Directory.CreateDirectory(_settings.OutputDirectory);
@@ -127,47 +158,16 @@ namespace pwiz.CarafeSharp
             using (var tsv = TsvPath != null ? new CarafeLibraryTsvWriter(TsvPath) : null)
             using (var blib = BlibPath != null ? new BlibLibraryWriter(BlibPath, Path.GetFileNameWithoutExtension(BlibPath)) : null)
             {
-                int batchCount = (forms.Count + _settings.PeptidesPerBatch - 1) / Math.Max(1, _settings.PeptidesPerBatch);
-                for (int batch = 0; batch < batchCount; batch++)
+                // Disposed before tsv and blib, so a failure stops the writer thread before their partial files are discarded.
+                using (var writer = new LibraryChunkWriter(tsv, blib, pairingPrecursors, BeforeWriteChunk, BeforeQueueWait))
                 {
-                    int batchStart = batch * _settings.PeptidesPerBatch;
-                    int batchEnd = Math.Min(forms.Count, batchStart + _settings.PeptidesPerBatch);
-                    int written = 0;
-                    var batchClock = Stopwatch.StartNew();
-                    for (int start = batchStart; start < batchEnd; start += FORMS_PER_CHUNK)
-                    {
-                        var spectra = PredictChunk(forms, start, Math.Min(batchEnd, start + FORMS_PER_CHUNK), builder, ms2, rt, irt);
-                        _writeClock.Start();
-                        if (tsv != null)
-                        {
-                            var rows = new string[spectra.Count];
-                            Parallel.For(0, spectra.Count, i => rows[i] = CarafeLibraryTsvWriter.FormatRows(spectra[i]));
-                            foreach (string text in rows)
-                                tsv.WriteRows(text);
-                        }
-                        if (blib != null)
-                        {
-                            int firstId = blib.WriteBatch(spectra);
-                            if (pairingPrecursors != null)
-                            {
-                                for (int i = 0; i < spectra.Count; i++)
-                                {
-                                    var peptide = spectra[i].Precursor.Peptide;
-                                    pairingPrecursors.Add(new DecoyPairPlanner.Precursor(firstId + i, peptide.Sequence,
-                                        spectra[i].Charge, DecoyPairPlanner.ModKey(peptide.ModNames)));
-                                }
-                            }
-                        }
-                        written += spectra.Count;
-                        _writeClock.Stop();
-                    }
-                    SpectrumCount += written;
+                    PredictChunks(forms, builder, ms2, rt, irt, writer);
+                    var finishClock = Stopwatch.StartNew();
+                    writer.Finish();
+                    SpectrumCount = writer.Written;
                     Log(string.Format(CultureInfo.InvariantCulture,
-                        @"Batch {0}/{1}: peptide forms {2}-{3}, {4} precursors written in {5:F1} s ({6} total, {7:F1} s elapsed; " +
-                        @"MS2 {8:F1} s, RT {9:F1} s, assembly {10:F1} s, writing {11:F1} s)",
-                        batch + 1, batchCount, batchStart + 1, batchEnd, written, batchClock.Elapsed.TotalSeconds, SpectrumCount,
-                        _clock.Elapsed.TotalSeconds, _ms2Clock.Elapsed.TotalSeconds, _rtClock.Elapsed.TotalSeconds,
-                        _buildClock.Elapsed.TotalSeconds, _writeClock.Elapsed.TotalSeconds));
+                        @"Writing finished {0:F1} s after prediction: {1} precursors, writing {2:F1} s, prediction waiting on writer {3:F1} s",
+                        finishClock.Elapsed.TotalSeconds, SpectrumCount, writer.WriteTime.TotalSeconds, writer.QueueWaitTime.TotalSeconds));
                 }
                 if (blib != null)
                 {
@@ -181,6 +181,41 @@ namespace pwiz.CarafeSharp
                     tsv.Complete();
                     Log(@"The spectral library is saved to " + TsvPath);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Predicts Carafe's batches of peptidoforms chunk by chunk, handing each chunk to the
+        /// writer thread, which writes it while the next is predicted. Stops with the writer's
+        /// exception as soon as writing fails.
+        /// </summary>
+        private void PredictChunks(List<PeptideIsoform> forms, LibrarySpectrumBuilder builder, Ms2Model ms2, RtModel rt,
+            (double Slope, double Intercept) irt, LibraryChunkWriter writer)
+        {
+            int batchCount = (forms.Count + _settings.PeptidesPerBatch - 1) / Math.Max(1, _settings.PeptidesPerBatch);
+            int chunkIndex = 0;
+            int predicted = 0;
+            for (int batch = 0; batch < batchCount; batch++)
+            {
+                int batchStart = batch * _settings.PeptidesPerBatch;
+                int batchEnd = Math.Min(forms.Count, batchStart + _settings.PeptidesPerBatch);
+                int batchPredicted = 0;
+                var batchClock = Stopwatch.StartNew();
+                for (int start = batchStart; start < batchEnd; start += FORMS_PER_CHUNK)
+                {
+                    writer.ThrowIfFailed();
+                    BeforePredictChunk?.Invoke(chunkIndex++);
+                    var spectra = PredictChunk(forms, start, Math.Min(batchEnd, start + FORMS_PER_CHUNK), builder, ms2, rt, irt);
+                    writer.Add(spectra);
+                    batchPredicted += spectra.Count;
+                }
+                predicted += batchPredicted;
+                Log(string.Format(CultureInfo.InvariantCulture,
+                    @"Batch {0}/{1}: peptide forms {2}-{3}, {4} precursors predicted in {5:F1} s ({6} total, {7} written, {8:F1} s elapsed; " +
+                    @"MS2 {9:F1} s, RT {10:F1} s, assembly {11:F1} s, writing {12:F1} s, waiting on writer {13:F1} s)",
+                    batch + 1, batchCount, batchStart + 1, batchEnd, batchPredicted, batchClock.Elapsed.TotalSeconds, predicted,
+                    writer.Written, _clock.Elapsed.TotalSeconds, _ms2Clock.Elapsed.TotalSeconds, _rtClock.Elapsed.TotalSeconds,
+                    _buildClock.Elapsed.TotalSeconds, writer.WriteTime.TotalSeconds, writer.QueueWaitTime.TotalSeconds));
             }
         }
 
@@ -259,6 +294,8 @@ namespace pwiz.CarafeSharp
         /// </summary>
         private CarafeModelDirectory OpenModelDirectory()
         {
+            if (_settings.ModelFile != null)
+                return OpenModelFile();
             string folder = _settings.ModelDirectory ?? _settings.OutputDirectory;
             var modelDirectory = CarafeModelDirectory.Open(folder, _settings.PreferSafetensors);
             if (_settings.ModelDirectory != null)
@@ -280,6 +317,25 @@ namespace pwiz.CarafeSharp
                     @"From the training run: precursor m/z {0}-{1}, NCE {2}, instrument {3}, rt_max {4}",
                     _settings.MinPrecursorMz, _settings.MaxPrecursorMz, _settings.Nce, _settings.Instrument, _settings.RtMax));
             }
+            return modelDirectory;
+        }
+
+        /// <summary>
+        /// A saved model (<c>-model</c>), checked and unpacked into a folder of its own, which
+        /// <see cref="Run"/> deletes. The training run's NCE, instrument and rt_max apply where the
+        /// command line gives none; the m/z ranges stay the command line's.
+        /// </summary>
+        private CarafeModelDirectory OpenModelFile()
+        {
+            var modelFile = CarafeModelFile.Open(_settings.ModelFile);
+            _modelFileFolder = Path.Combine(Path.GetTempPath(), @"CarafeSharp_model_" + Guid.NewGuid().ToString(@"N"));
+            var modelDirectory = modelFile.Extract(_modelFileFolder);
+            Log(@"Use the saved model " + _settings.ModelFile + @" for spectral library generation: " + modelFile.Describe());
+            modelFile.ApplyPredictionDefaults(_settings);
+            Log(string.Format(CultureInfo.InvariantCulture,
+                @"Precursor m/z {0}-{1}, fragment m/z {2}-{3} from the command line; NCE {4}, instrument {5}, rt_max {6}",
+                _settings.MinPrecursorMz, _settings.MaxPrecursorMz, _settings.MinFragmentMz, _settings.MaxFragmentMz, _settings.Nce,
+                _settings.Instrument, _settings.RtMax));
             return modelDirectory;
         }
 

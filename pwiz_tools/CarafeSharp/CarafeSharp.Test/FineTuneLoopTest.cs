@@ -202,29 +202,7 @@ namespace pwiz.CarafeSharp.Test
         public void TestModelTrainerRun()
         {
             // One run's export of six clean precursors, trained -tf ms2 from a random -ms2_model.
-            var records = new List<OspreyTrainingRecord>();
-            foreach (string sequence in MS2_PEPTIDES)
-            {
-                foreach (int charge in new[] { 2, 3 })
-                {
-                    var record = OspreyTestRecords.CleanRecord(sequence, charge);
-                    record.EntryId = (uint)(records.Count + 1);
-                    record.FileName = @"run_a";
-                    record.RunPrecursorQ = 0.001;
-                    record.ApexRt = 2 + records.Count;
-                    records.Add(record);
-                }
-            }
-            string export = Path.Combine(_folder, @"run_a" + OspreyTrainingExport.FILE_SUFFIX);
-            OspreyTestRecords.WriteExport(export, records, new Dictionary<string, string>
-            {
-                { @"osprey.training_export.format_version", OspreyTrainingExport.FORMAT_VERSION },
-                { @"osprey.rt_max", @"12" },
-                { @"osprey.instrument_model", @"Orbitrap Astral" },
-                { @"osprey.isolation_mz_min", @"380" },
-                { @"osprey.isolation_mz_max", @"980" },
-                { @"osprey.ms2_scan_window", @"150,2000" },
-            }, 4);
+            string export = WriteCleanExport(@"run_a");
             string output = Path.Combine(_folder, @"out");
             var settings = CarafeCommandLine.Parse(new[] { @"-i", export, @"-o", output, @"-tf", @"ms2", @"-seed", @"9",
                 @"-ms2_model", RandomMs2Model(@"start_ms2", 9), @"-device", @"cpu", @"-nce", @"28" }).TrainingSettings;
@@ -261,6 +239,90 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(12.1, run.RtMax, 1e-12);
             Assert.AreEqual(150.0, run.MinFragmentIonMz);
             Assert.AreEqual(380.0, run.PrecursorMzMin);
+
+            // Every training run saves its model as one file, to predict later libraries from:
+            // the MS2 model fine-tuned here (held only when it beat its start model), no RT model
+            // (-tf ms2), and the NCE, instrument and rt_max a library takes from this run.
+            var saved = CarafeModelFile.Open(Path.Combine(output, CarafeModelFile.DEFAULT_FILE_NAME));
+            Assert.IsTrue(saved.Ms2FineTuned);
+            Assert.AreEqual(trainer.Result.UseFineTunedMs2, saved.Ms2Used);
+            Assert.AreEqual(saved.Ms2Used, saved.Entries.ContainsKey(ModelFiles.MS2_SAFETENSORS));
+            Assert.IsFalse(saved.RtFineTuned);
+            Assert.IsFalse(saved.RtUsed);
+            Assert.AreEqual(@"start_ms2.safetensors", saved.Ms2StartModel);
+            Assert.AreEqual(@"run_a", saved.Runs.Single().MsFile);
+            Assert.AreEqual(28.0, saved.Nce);
+            Assert.AreEqual(@"Astral", saved.Instrument);
+            Assert.AreEqual(12.1, saved.RtMax, 1e-12);
+            Assert.IsFalse(File.Exists(Path.Combine(output, CarafeModelFile.DEFAULT_FILE_NAME + @".tmp")));
+
+            // With what the models were trained on, for a user choosing a model: the settings, the
+            // training data, the run's acquisition from its export, and the held-out metrics.
+            var training = saved.Training;
+            Assert.AreEqual(0.01, training.Fdr);
+            Assert.IsTrue(training.Masking);
+            Assert.AreEqual(9u, training.Seed);
+            Assert.AreEqual(trainer.Stats.Ms2Rows, training.Ms2Spectra);
+            Assert.AreEqual(trainer.Stats.RtRows, training.RtPeptideForms);
+            CollectionAssert.AreEquivalent(new[] { 2, 3 }, training.Ms2Charges.Keys.ToList());
+            Assert.AreEqual(8, training.MinPeptideLength);
+            Assert.AreEqual(10, training.MaxPeptideLength);
+            var trainingRun = training.Runs.Single();
+            Assert.AreEqual(@"run_a", trainingRun.MsFile);
+            Assert.AreEqual(@"Orbitrap Astral", trainingRun.InstrumentModel);
+            Assert.AreEqual(@"Astral", trainingRun.Instrument);
+            Assert.AreEqual(28.0, trainingRun.Nce);
+            Assert.AreEqual(12.0, trainingRun.RtMax);
+            Assert.AreEqual(380.0, trainingRun.IsolationMzMin);
+            Assert.AreEqual(980.0, trainingRun.IsolationMzMax);
+            Assert.AreEqual(150.0, trainingRun.Ms2MzMin);
+            Assert.AreEqual(2000.0, trainingRun.Ms2MzMax);
+            Assert.AreEqual(6, trainingRun.Precursors);
+            Assert.AreEqual(3, trainingRun.PrecursorCharges[2]);
+            Assert.AreEqual(3, trainingRun.PrecursorCharges[3]);
+            Assert.IsTrue(training.HeldOutMetrics.ContainsKey(@"ms2.finetuned.cos"), string.Join(@", ", training.HeldOutMetrics.Keys));
+            // -model_info prints it.
+            string info = saved.FormatInfo();
+            StringAssert.Contains(info, @"Orbitrap Astral (trained as Astral)");
+            StringAssert.Contains(info, @"6 precursors (3 at 2+, 3 at 3+)");
+        }
+
+        /// <summary>
+        /// A training run with <c>-db</c> predicts the final library right after training, as
+        /// Carafe's does: from the model this run wrote, not a checkpoint an earlier Carafe run
+        /// left in <c>-o</c>, and with the training run's precursor window, NCE and instrument.
+        /// Its log names a run whose q-values came from Osprey's first pass, exports of two
+        /// different Osprey searches, and <c>-no_masking</c>.
+        /// </summary>
+        [TestMethod]
+        public void TestModelTrainerPredictsLibrary()
+        {
+            string exportA = WriteCleanExport(@"run_a", @"search_a", @"2");
+            string exportB = WriteCleanExport(@"run_b", @"search_b", @"1");
+            string output = Path.Combine(_folder, @"out");
+            Directory.CreateDirectory(output);
+            string staleCheckpoint = Path.Combine(output, ModelFiles.MS2_CHECKPOINT);
+            File.WriteAllText(staleCheckpoint, @"not a checkpoint");
+            File.WriteAllText(Path.Combine(output, ModelFiles.RT_CHECKPOINT), @"not a checkpoint");
+            string fasta = Path.Combine(_folder, @"proteins.fasta");
+            File.WriteAllText(fasta, ">sp|P1|A\nMPEPTIDEKSAMPLERLVNELTEFAK\n");
+            var settings = CarafeCommandLine.Parse(new[] { @"-i", exportA + @"," + exportB, @"-o", output, @"-tf", @"ms2",
+                @"-seed", @"9", @"-ms2_model", RandomMs2Model(@"start_ms2", 9), @"-device", @"cpu", @"-nce", @"28", @"-no_masking",
+                @"-db", fasta, @"-lf_type", LibraryOutputs.BLIB_FORMAT, @"-lf_min_n_frag", @"1" }).TrainingSettings;
+            var log = new StringWriter();
+            new ModelTrainer(settings, log, zip => null).Run();
+            string text = log.ToString();
+
+            StringAssert.Contains(text, string.Format(@"WARNING: {0} took its run q-values from Osprey's first pass", exportB));
+            Assert.IsFalse(text.Contains(exportA + @" took its run q-values"), @"a second-pass export is not warned about");
+            StringAssert.Contains(text, @"come from different Osprey searches");
+            StringAssert.Contains(text, @"-no_masking: training on every ion of the kept spectra");
+            // The library opens the model this run wrote, over the stale checkpoint beside it.
+            StringAssert.Contains(text, string.Format(CarafeModelDirectory.BOTH_MODELS_WARNING_FORMAT,
+                Path.Combine(output, ModelFiles.MS2_SAFETENSORS), staleCheckpoint));
+            // Each run's isolation window widened by 0.5, the -nce the exports lack, the detected instrument.
+            StringAssert.Contains(text, @"From the training run: precursor m/z 379.5-980.5, NCE 28, instrument Astral,");
+            Assert.AreEqual(1, Directory.GetFiles(output, @"*.blib").Length, text);
         }
 
         [TestMethod]
@@ -307,6 +369,43 @@ namespace pwiz.CarafeSharp.Test
             // A training row of the wrong width is refused.
             Assert.ThrowsException<ArgumentException>(() => new Ms2TrainingExample(new PrecursorForm(new PeptideForm(@"PEPTIDEK"), 2),
                 30, @"Lumos", new double[4], new double[4]));
+        }
+
+        /// <summary>
+        /// A training export of six clean precursors for <paramref name="run"/>, from an Astral run
+        /// isolating 380-980 m/z, with the search hash and run q pass given (none when null).
+        /// </summary>
+        private string WriteCleanExport(string run, string searchHash = null, string runQPass = null)
+        {
+            var records = new List<OspreyTrainingRecord>();
+            foreach (string sequence in MS2_PEPTIDES)
+            {
+                foreach (int charge in new[] { 2, 3 })
+                {
+                    var record = OspreyTestRecords.CleanRecord(sequence, charge);
+                    record.EntryId = (uint)(records.Count + 1);
+                    record.FileName = run;
+                    record.RunPrecursorQ = 0.001;
+                    record.ApexRt = 2 + records.Count;
+                    records.Add(record);
+                }
+            }
+            var footer = new Dictionary<string, string>
+            {
+                { @"osprey.training_export.format_version", OspreyTrainingExport.FORMAT_VERSION },
+                { @"osprey.rt_max", @"12" },
+                { @"osprey.instrument_model", @"Orbitrap Astral" },
+                { @"osprey.isolation_mz_min", @"380" },
+                { @"osprey.isolation_mz_max", @"980" },
+                { @"osprey.ms2_scan_window", @"150,2000" },
+            };
+            if (searchHash != null)
+                footer[OspreyTrainingExport.SEARCH_HASH_KEY] = searchHash;
+            if (runQPass != null)
+                footer[@"osprey.training_export.run_q_pass"] = runQPass;
+            string export = Path.Combine(_folder, run + OspreyTrainingExport.FILE_SUFFIX);
+            OspreyTestRecords.WriteExport(export, records, footer, 4);
+            return export;
         }
 
         /// <summary>A randomly initialized MS2 model from <paramref name="seed"/>, saved under <paramref name="name"/>.</summary>

@@ -65,17 +65,17 @@ namespace pwiz.Osprey.FDR
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
-                    sw.NewLine = "\n";
-                    sw.WriteLine(@"feature_idx	feature_name	mean	std");
+                    sw.NewLine = TextUtil.LF;
+                    sw.WriteLine(new[] { @"feature_idx", @"feature_name", @"mean", @"std" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                     for (int i = 0; i < means.Length; i++)
                     {
                         string name = (featureInfos != null && i < featureInfos.Length)
                             ? featureInfos[i].Name
                             : @"unknown";
                         sw.Write(i.ToString(inv));
-                        sw.Write('\t'); sw.Write(name);
-                        sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(means[i]));
-                        sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(stds[i]));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(name);
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(means[i]));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.WriteLine(Diagnostics.FormatF64Roundtrip(stds[i]));
                     }
                 }
                 saver.Commit();
@@ -101,14 +101,14 @@ namespace pwiz.Osprey.FDR
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
-                    sw.NewLine = "\n";
-                    sw.Write(@"native_position	entry_id	is_decoy");
+                    sw.NewLine = TextUtil.LF;
+                    sw.Write(new[] { @"native_position", @"entry_id", @"is_decoy" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                     for (int i = 0; i < nFeatures; i++)
                     {
                         string name = (featureInfos != null && i < featureInfos.Length)
                             ? featureInfos[i].Name
                             : @"unknown";
-                        sw.Write('\t'); sw.Write(name);
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(name);
                     }
                     sw.WriteLine();
 
@@ -125,11 +125,11 @@ namespace pwiz.Osprey.FDR
                     {
                         var e = entries[idx];
                         sw.Write(idx.ToString(inv));
-                        sw.Write('\t'); sw.Write(e.EntryId.ToString(inv));
-                        sw.Write('\t'); sw.Write(e.IsDecoy ? @"true" : @"false");
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.EntryId.ToString(inv));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.IsDecoy.ToLowerText());
                         for (int i = 0; i < e.Features.Length; i++)
                         {
-                            sw.Write('\t');
+                            sw.Write(TextUtil.SEPARATOR_TSV);
                             sw.Write(Diagnostics.FormatF64Roundtrip(e.Features[i]));
                         }
                         sw.WriteLine();
@@ -194,20 +194,20 @@ namespace pwiz.Osprey.FDR
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
-                    sw.NewLine = "\n";
-                    sw.WriteLine(@"entry_id	native_position	charge	modified_sequence	is_decoy	base_id	in_subsample	fold_id");
+                    sw.NewLine = TextUtil.LF;
+                    sw.WriteLine(new[] { @"entry_id", @"native_position", @"charge", @"modified_sequence", @"is_decoy", @"base_id", @"in_subsample", @"fold_id" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                     foreach (int i in order)
                     {
                         var e = entries[i];
                         uint baseId = e.EntryId & PercolatorEntry.BASE_ID_MASK;
                         sw.Write(e.EntryId.ToString(inv));
-                        sw.Write('\t'); sw.Write(i.ToString(inv));
-                        sw.Write('\t'); sw.Write(e.Charge.ToString(inv));
-                        sw.Write('\t'); sw.Write(e.Peptide ?? string.Empty);
-                        sw.Write('\t'); sw.Write(e.IsDecoy ? @"true" : @"false");
-                        sw.Write('\t'); sw.Write(baseId.ToString(inv));
-                        sw.Write('\t'); sw.Write(inSub[i] ? @"true" : @"false");
-                        sw.Write('\t'); sw.WriteLine(foldFor[i].ToString(inv));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(i.ToString(inv));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.Charge.ToString(inv));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.Peptide ?? string.Empty);
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(e.IsDecoy.ToLowerText());
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(baseId.ToString(inv));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(inSub[i].ToLowerText());
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.WriteLine(foldFor[i].ToString(inv));
                     }
                 }
                 saver.Commit();
@@ -238,8 +238,8 @@ namespace pwiz.Osprey.FDR
             {
                 using (var sw = new StreamWriter(saver.SafeName))
                 {
-                    sw.NewLine = "\n";
-                    sw.WriteLine(@"fold	weight_idx	feature_name	value	fold_iterations");
+                    sw.NewLine = TextUtil.LF;
+                    sw.WriteLine(new[] { @"fold", @"weight_idx", @"feature_name", @"value", @"fold_iterations" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                     for (int fold = 0; fold < foldModels.Length; fold++)
                     {
                         var model = foldModels[fold];
@@ -251,16 +251,16 @@ namespace pwiz.Osprey.FDR
                                 ? featureInfos[wi].Name
                                 : @"unknown";
                             sw.Write(fold.ToString(inv));
-                            sw.Write('\t'); sw.Write(wi.ToString(inv));
-                            sw.Write('\t'); sw.Write(name);
-                            sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(weights[wi]));
-                            sw.Write('\t'); sw.WriteLine(iters.ToString(inv));
+                            sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(wi.ToString(inv));
+                            sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(name);
+                            sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(weights[wi]));
+                            sw.Write(TextUtil.SEPARATOR_TSV); sw.WriteLine(iters.ToString(inv));
                         }
                         sw.Write(fold.ToString(inv));
-                        sw.Write('\t'); sw.Write(weights.Length.ToString(inv));
-                        sw.Write('\t'); sw.Write(@"bias");
-                        sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(model.Bias));
-                        sw.Write('\t'); sw.WriteLine(iters.ToString(inv));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(weights.Length.ToString(inv));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(@"bias");
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.Write(Diagnostics.FormatF64Roundtrip(model.Bias));
+                        sw.Write(TextUtil.SEPARATOR_TSV); sw.WriteLine(iters.ToString(inv));
                     }
                 }
                 saver.Commit();

@@ -277,9 +277,15 @@ namespace pwiz.CarafeSharp.Proteome
         /// </summary>
         private static List<CarafeRunMeta> ReadMeta(string path)
         {
+            return ReadMetaText(File.ReadAllText(path));
+        }
+
+        /// <summary>The runs of a meta.json's text, as <see cref="Runs"/> reads them (a saved model's copy, for one).</summary>
+        internal static List<CarafeRunMeta> ReadMetaText(string text)
+        {
             var runs = new Dictionary<string, CarafeRunMeta>(StringComparer.Ordinal);
             var keys = new List<string>();
-            using (var json = JsonDocument.Parse(EscapeStrayBackslashes(File.ReadAllText(path))))
+            using (var json = JsonDocument.Parse(EscapeStrayBackslashes(text)))
             {
                 foreach (var property in json.RootElement.EnumerateObject())
                 {

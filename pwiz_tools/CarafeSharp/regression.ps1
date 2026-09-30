@@ -30,6 +30,20 @@
     log, the subset inputs, regression-run.json (what was run, on what) and the comparator's
     regression-report.txt.
 
+    -Leg Chained instead checks that the two tools work together, with no test data:
+      1. Builds CarafeSharp and Osprey (unless -NoBuild or -OspreyExe).
+      2. Extracts Osprey's committed Stellar subset (Osprey.Test/TestData/StellarSubset.zip:
+         one isolation window of the three Stellar runs, 7 minutes, and a 358-precursor
+         library) and writes a peptide FASTA of the library's peptides.
+      3. Runs Osprey on it with --training-export.
+      4. Runs CarafeSharp on the exports, -tf all with the same library arguments as the
+         isolated leg, predicting a library from the peptide FASTA.
+      5. Runs the comparator's chained checks: an export per run with the precursors a 1% run
+         FDR keeps and the per-run second pass's q-values, non-empty training tables, both
+         models and finite metrics, each run's isolation window in meta.json, and a library.
+    It has no golden: the fine-tune on one isolation window says little about training, which
+    the isolated leg gates.
+
 .PARAMETER Dataset
     Stellar. Each dataset is an entry of $datasets below and a folder of regression.data;
     Astral follows when its training export is packaged.
@@ -81,6 +95,12 @@
     comparator reports the export's SHA-256 against the golden's as information and gates on the
     calibrated tolerances: Osprey's scores differ in the last digit between platforms, so another
     platform's export is never byte-identical. Not allowed with -CreateGolden.
+.PARAMETER Leg
+    Isolated (default): fine-tune on the packaged export and compare with the golden.
+    Chained: Osprey's export of the Stellar subset feeding CarafeSharp (see the description).
+
+.PARAMETER OspreyExe
+    With -Leg Chained, run this Osprey executable instead of this checkout's build.
 .PARAMETER Preflight
     Find the inputs and write the subset, print the CarafeSharp command, and stop.
 
@@ -90,6 +110,8 @@
     pwsh -File pwiz_tools/CarafeSharp/regression.ps1 -NoBuild -ExtraArgs "-lf_top_n_frag 19" -RunName top19
 .EXAMPLE
     pwsh -File pwiz_tools/CarafeSharp/regression.ps1 -CreateGolden         # from a clean tree
+.EXAMPLE
+    pwsh -File pwiz_tools/CarafeSharp/regression.ps1 -Leg Chained          # Osprey's export feeding CarafeSharp
 #>
 #requires -Version 7
 [CmdletBinding()]
@@ -105,6 +127,8 @@ param(
     [string]$RunName,
     [string]$CarafeSharpExe,
     [string]$Export,
+    [ValidateSet('Isolated', 'Chained')] [string]$Leg = 'Isolated',
+    [string]$OspreyExe,
     [switch]$Preflight
 )
 
@@ -141,6 +165,9 @@ $datasets = @{
         MaxPeptideMz  = '900'
         ExportNote    = 'carafesharp-export-v1: the format 2 export Osprey #4708 (a5d15e6a4f, vendor reader) wrote ' +
                         'from the Stellar _21 .raw.'
+        # -Leg Chained: Osprey's committed subset, relative to pwiz_tools/Osprey.
+        Subset        = 'Osprey.Test/TestData/StellarSubset.zip'
+        SubsetLibrary = 'stellar-subset-library.tsv'
     }
 }
 $config = $datasets[$Dataset]
@@ -162,6 +189,17 @@ function Get-LibraryArguments {
         '-lf_min_n_frag', '2', '-lf_frag_n_min', '2', '-lf_type', 'blib',
         '-se', 'Osprey', '-decoy_prefix', 'decoy_', '-nm', '-nf', '4', '-min_n', '4',
         '-valid', '-na', '0', '-fast')
+}
+
+# -Leg Chained's second library, from the saved model with -model: the arguments of
+# Get-LibraryArguments that shape a library, so its spectra match the library training predicted.
+function Get-SavedModelArguments {
+    return @(
+        '-device', $device, '-enzyme', 'NoCut', '-miss_c', '1', '-fixMod', '1', '-varMod', '0', '-maxVar', '1', '-clip_n_m',
+        '-minLength', '7', '-maxLength', '35', '-min_pep_mz', $config.MinPeptideMz, '-max_pep_mz', $config.MaxPeptideMz,
+        '-min_pep_charge', '2', '-max_pep_charge', '3',
+        '-lf_frag_mz_min', '200', '-lf_frag_mz_max', '1960', '-lf_top_n_frag', '20',
+        '-lf_min_n_frag', '2', '-lf_frag_n_min', '2', '-lf_type', 'blib', '-decoy_prefix', 'decoy_', '-fast')
 }
 
 function Write-Step([string]$Message) {
@@ -306,6 +344,27 @@ function Write-SubsetFasta([string]$Source, [string]$Target, $Sequences) {
 
 # Splits arguments into options, each with the value that follows it when the next token is
 # not itself an option.
+# -Leg Chained: a peptide FASTA of a DIA-NN library's peptides, one record each (the library
+# step digests it with -enzyme NoCut, as the workflow's peptide FASTA). Returns the record count.
+function Write-PeptideFasta([string]$Library, [string]$Target) {
+    $peptides = [ordered]@{}
+    foreach ($row in Import-Csv -LiteralPath $Library -Delimiter "`t") {
+        if ($row.Decoy -ne '1' -and -not $peptides.Contains($row.StrippedPeptide)) {
+            $peptides[$row.StrippedPeptide] = $row.ProteinID
+        }
+    }
+    $builder = [System.Text.StringBuilder]::new()
+    $index = 0
+    foreach ($peptide in $peptides.Keys) {
+        $index++
+        # One accession per record: the subset's synthetic protein and the peptide's number.
+        $accession = ($peptides[$peptide] -split '\|')[1]
+        [void]$builder.Append(">sp|$accession-$index|$($accession)_SUBSET`n$peptide`n")
+    }
+    [IO.File]::WriteAllText($Target, $builder.ToString(), [System.Text.UTF8Encoding]::new($false))
+    return $peptides.Count
+}
+
 function Split-Options([string[]]$Tokens) {
     $options = [System.Collections.Generic.List[object]]::new()
     for ($i = 0; $i -lt $Tokens.Count; $i++) {
@@ -439,6 +498,16 @@ if ($CreateGolden -and $Export) {
 if ($CreateGolden -and $CarafeSharpExe) {
     throw '-CreateGolden with -CarafeSharpExe: a golden is made with this checkout''s build, whose commit it records.'
 }
+if ($Leg -eq 'Chained') {
+    if ($CreateGolden) {
+        throw '-Leg Chained has no golden: its checks are structural (see the description).'
+    }
+    if ($Export) {
+        throw '-Leg Chained runs Osprey for its exports; -Export is for the isolated leg.'
+    }
+} elseif ($OspreyExe) {
+    throw '-OspreyExe is for -Leg Chained.'
+}
 $git = Get-GitState
 if ($CreateGolden -and $git.Dirty) {
     throw ("-CreateGolden needs a clean working tree, because the golden records the commit it came from. Changes:`n  " +
@@ -450,23 +519,31 @@ $packages = (Get-Content -Raw -LiteralPath $packageList | ConvertFrom-Json).pack
 $testDataRoot = Get-TestDataRoot
 
 if (-not $CompareRun) {
-    if ($Export) {
-        if (-not (Test-Path -LiteralPath $Export -PathType Leaf)) {
-            throw "-Export names a file that does not exist: $Export"
+    if ($Leg -eq 'Isolated') {
+        if ($Export) {
+            if (-not (Test-Path -LiteralPath $Export -PathType Leaf)) {
+                throw "-Export names a file that does not exist: $Export"
+            }
+            $exportPath = (Resolve-Path -LiteralPath $Export).ProviderPath
+            # CarafeSharp is given the export's folder (-i), and reads every export in it.
+            $others = @(Get-ChildItem -LiteralPath (Split-Path -Parent $exportPath) -Filter '*.training.parquet' |
+                Where-Object { $_.FullName -ne $exportPath })
+            if ($others.Count -gt 0) {
+                throw "-Export: $(Split-Path -Parent $exportPath) holds other training exports ($($others[0].Name)); CarafeSharp would train on all of them."
+            }
+            $exportFile = [PSCustomObject]@{ Path = $exportPath; Relative = $exportPath }
+        } else {
+            $exportFile = Resolve-PackageFile $config.Export
         }
-        $exportPath = (Resolve-Path -LiteralPath $Export).ProviderPath
-        # CarafeSharp is given the export's folder (-i), and reads every export in it.
-        $others = @(Get-ChildItem -LiteralPath (Split-Path -Parent $exportPath) -Filter '*.training.parquet' |
-            Where-Object { $_.FullName -ne $exportPath })
-        if ($others.Count -gt 0) {
-            throw "-Export: $(Split-Path -Parent $exportPath) holds other training exports ($($others[0].Name)); CarafeSharp would train on all of them."
-        }
-        $exportFile = [PSCustomObject]@{ Path = $exportPath; Relative = $exportPath }
+        $libraryFasta = Resolve-PackageFile $config.LibraryFasta
+        $pairing = Resolve-PackageFile $config.Pairing
     } else {
-        $exportFile = Resolve-PackageFile $config.Export
+        $ospreyRoot = Join-Path (Split-Path -Parent $scriptRoot) 'Osprey'
+        $subsetZip = Join-Path $ospreyRoot ($config.Subset -replace '/', [IO.Path]::DirectorySeparatorChar)
+        if (-not (Test-Path -LiteralPath $subsetZip -PathType Leaf)) {
+            throw "Osprey's subset test data is not at $subsetZip."
+        }
     }
-    $libraryFasta = Resolve-PackageFile $config.LibraryFasta
-    $pairing = Resolve-PackageFile $config.Pairing
 
     $binFolder = if ($Torch -eq 'cuda') { 'bin-cuda' } else { 'bin' }
     $exeName = if ($IsWindows) { 'CarafeSharp.exe' } else { 'CarafeSharp' }
@@ -482,6 +559,20 @@ if (-not $CompareRun) {
     if (-not (Test-Path -LiteralPath $exe)) {
         throw "CarafeSharp not found at $exe. Build it with build.ps1$(if ($Torch -eq 'cuda') { ' -Torch cuda' }), or drop -NoBuild."
     }
+    if ($Leg -eq 'Chained') {
+        $ospreyExeName = if ($IsWindows) { 'Osprey.exe' } else { 'Osprey' }
+        $osprey = if ($OspreyExe) { $OspreyExe } else { Join-Path $ospreyRoot "Osprey/bin/x64/Release/net10.0/$ospreyExeName" }
+        if (-not $NoBuild -and -not $OspreyExe) {
+            Write-Step 'Building Osprey'
+            & pwsh -NoProfile -File (Join-Path $ospreyRoot 'build.ps1') -NoTests
+            if ($LASTEXITCODE -ne 0) {
+                throw "Osprey's build.ps1 failed (exit $LASTEXITCODE)"
+            }
+        }
+        if (-not (Test-Path -LiteralPath $osprey)) {
+            throw "Osprey not found at $osprey. Build it with pwiz_tools/Osprey/build.ps1, or drop -NoBuild."
+        }
+    }
 
     # ---------------------------------------------------------------------------
     # Run
@@ -490,7 +581,7 @@ if (-not $CompareRun) {
         $WorkDir = if ($env:CARAFESHARP_REGRESSION_WORKDIR) { $env:CARAFESHARP_REGRESSION_WORKDIR } else { Join-Path $scriptRoot 'TestResults/regression' }
     }
     $stamp = (Get-Date).ToString('yyyyMMdd-HHmmss')
-    $name = "$($Dataset.ToLowerInvariant())-isolated-$Torch-$stamp" + $(if ($RunName) { "-$RunName" } else { '' })
+    $name = "$($Dataset.ToLowerInvariant())-$($Leg.ToLowerInvariant())-$Torch-$stamp" + $(if ($RunName) { "-$RunName" } else { '' })
     $runFolder = Join-Path $WorkDir $name
     if (Test-Path -LiteralPath $runFolder) {
         throw "Run folder already exists: $runFolder"
@@ -498,27 +589,12 @@ if (-not $CompareRun) {
     $inputFolder = Join-Path $runFolder 'inputs'
     $outFolder = Join-Path $runFolder 'out'
     New-Item -ItemType Directory -Force -Path $inputFolder | Out-Null
-
-    Write-Step "Subset of $($libraryFasta.Relative): the pair groups whose peptide_pair_index is a multiple of $subsetModulus"
-    $subsetFasta = Join-Path $inputFolder 'library_subset_peptides.fasta'
-    $subsetPairing = Join-Path $inputFolder 'library_subset_pairing.tsv'
-    $subset = Write-SubsetPairing $pairing.Path $subsetPairing
-    $subsetRecords = Write-SubsetFasta $libraryFasta.Path $subsetFasta $subset.Sequences
-    Write-Host ("  {0} pair groups: {1} pairing rows, {2} FASTA records" -f $subset.Groups, $subset.Rows, $subsetRecords)
-    if ($subsetRecords -lt $subset.Sequences.Count) {
-        throw "$($libraryFasta.Relative) has no record for $($subset.Sequences.Count - $subsetRecords) of the subset's peptides."
-    }
-
-    $exportFolder = Split-Path -Parent $exportFile.Path
-    $runFile = Join-Path $exportFolder $config.RunFile
     $arguments = Merge-Arguments (Get-LibraryArguments) $ExtraArgs
-    $cliArgs = @('-db', $subsetFasta, '-i', $exportFolder, '-ms', $runFile, '-o', $outFolder,
-        '-pairing_manifest', $subsetPairing) + $arguments + @('-tf', 'all')
 
     $info = [ordered]@{
         format            = 'carafesharp-regression-run-1'
         dataset           = $Dataset
-        leg               = 'isolated'
+        leg               = $Leg.ToLowerInvariant()
         torch             = $Torch
         device_requested  = $device
         device_used       = $null
@@ -535,26 +611,97 @@ if (-not $CompareRun) {
         custom_exe        = [bool]$CarafeSharpExe
         extra_args        = @($ExtraArgs)
         arguments         = @($arguments)
-        subset_rule       = "the pair groups whose peptide_pair_index is a multiple of $subsetModulus, with all their members"
-        subset_groups     = $subset.Groups
-        subset_records    = $subsetRecords
-        subset_pairing_rows = $subset.Rows
-        export_note       = $config.ExportNote
-        other_export      = [bool]$Export
-        inputs            = [ordered]@{
+    }
+
+    if ($Leg -eq 'Isolated') {
+        Write-Step "Subset of $($libraryFasta.Relative): the pair groups whose peptide_pair_index is a multiple of $subsetModulus"
+        $subsetFasta = Join-Path $inputFolder 'library_subset_peptides.fasta'
+        $subsetPairing = Join-Path $inputFolder 'library_subset_pairing.tsv'
+        $subset = Write-SubsetPairing $pairing.Path $subsetPairing
+        $subsetRecords = Write-SubsetFasta $libraryFasta.Path $subsetFasta $subset.Sequences
+        Write-Host ("  {0} pair groups: {1} pairing rows, {2} FASTA records" -f $subset.Groups, $subset.Rows, $subsetRecords)
+        if ($subsetRecords -lt $subset.Sequences.Count) {
+            throw "$($libraryFasta.Relative) has no record for $($subset.Sequences.Count - $subsetRecords) of the subset's peptides."
+        }
+
+        $exportFolder = Split-Path -Parent $exportFile.Path
+        $runFile = Join-Path $exportFolder $config.RunFile
+        $cliArgs = @('-db', $subsetFasta, '-i', $exportFolder, '-ms', $runFile, '-o', $outFolder,
+            '-pairing_manifest', $subsetPairing) + $arguments + @('-tf', 'all')
+
+        $info.subset_rule = "the pair groups whose peptide_pair_index is a multiple of $subsetModulus, with all their members"
+        $info.subset_groups = $subset.Groups
+        $info.subset_records = $subsetRecords
+        $info.subset_pairing_rows = $subset.Rows
+        $info.export_note = $config.ExportNote
+        $info.other_export = [bool]$Export
+        $info.inputs = [ordered]@{
             export          = [ordered]@{ path = $exportFile.Relative; sha256 = Get-Sha256 $exportFile.Path }
             library_fasta   = [ordered]@{ path = $libraryFasta.Relative; sha256 = Get-Sha256 $libraryFasta.Path }
             library_pairing = [ordered]@{ path = $pairing.Relative; sha256 = Get-Sha256 $pairing.Path }
             subset_fasta    = [ordered]@{ path = 'inputs/library_subset_peptides.fasta'; sha256 = Get-Sha256 $subsetFasta }
             subset_pairing  = [ordered]@{ path = 'inputs/library_subset_pairing.tsv'; sha256 = Get-Sha256 $subsetPairing }
         }
-        started           = (Get-Date).ToString('o')
-        finished          = $null
-        minutes           = $null
-        exit_code         = $null
+    } else {
+        Write-Step "Osprey's Stellar subset ($subsetZip)"
+        Expand-Archive -LiteralPath $subsetZip -DestinationPath $inputFolder
+        $runFiles = @(Get-ChildItem -LiteralPath $inputFolder -Filter '*.mzML' | Sort-Object Name | ForEach-Object { $_.FullName })
+        $subsetLibrary = Join-Path $inputFolder $config.SubsetLibrary
+        $subsetFasta = Join-Path $inputFolder 'subset_peptides.fasta'
+        $fastaRecords = Write-PeptideFasta $subsetLibrary $subsetFasta
+        Write-Host ("  {0} runs; {1} library peptides, one FASTA record each" -f $runFiles.Count, $fastaRecords)
+
+        $ospreyFolder = Join-Path $runFolder 'osprey'
+        New-Item -ItemType Directory -Force -Path $ospreyFolder | Out-Null
+        $ospreyArgs = @($runFiles | ForEach-Object { '--input', $_ }) + @('--library', $subsetLibrary,
+            '--output', (Join-Path $ospreyFolder 'output.blib'), '--work-dir', $ospreyFolder, '--resolution', 'unit', '--training-export')
+        # Osprey writes each run's export into its work directory.
+        $exportFolder = $ospreyFolder
+        $cliArgs = @('-db', $subsetFasta, '-i', $exportFolder, '-ms', ($runFiles -join ','), '-o', $outFolder) + $arguments + @('-tf', 'all')
+
+        $info.osprey_exe = $osprey
+        $info.custom_osprey_exe = [bool]$OspreyExe
+        $info.osprey_arguments = @($ospreyArgs)
+        $info.runs = $runFiles.Count
+        $info.subset_fasta_records = $fastaRecords
+        $info.export_folder = 'osprey'
+        $info.inputs = [ordered]@{
+            subset_zip     = [ordered]@{ path = "pwiz_tools/Osprey/$($config.Subset)"; sha256 = Get-Sha256 $subsetZip }
+            subset_library = [ordered]@{ path = "inputs/$($config.SubsetLibrary)"; sha256 = Get-Sha256 $subsetLibrary }
+            subset_fasta   = [ordered]@{ path = 'inputs/subset_peptides.fasta'; sha256 = Get-Sha256 $subsetFasta }
+        }
+        $info.osprey_exit_code = $null
+        $info.osprey_minutes = $null
     }
+    $info.started = (Get-Date).ToString('o')
+    $info.finished = $null
+    $info.minutes = $null
+    $info.exit_code = $null
     $infoPath = Join-Path $runFolder 'regression-run.json'
     $info | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $infoPath -Encoding utf8
+
+    if ($Leg -eq 'Chained') {
+        Write-Step "Osprey: search the subset with --training-export ($ospreyFolder)"
+        Write-Host "$osprey $($ospreyArgs -join ' ')" -ForegroundColor DarkGray
+        if (-not $Preflight) {
+            $ospreyLog = Join-Path $runFolder 'osprey.log'
+            $ospreyClock = [Diagnostics.Stopwatch]::StartNew()
+            & $osprey @ospreyArgs *>&1 | Tee-Object -FilePath $ospreyLog | Out-Host
+            $ospreyExit = $LASTEXITCODE
+            $ospreyClock.Stop()
+            $info.osprey_exit_code = $ospreyExit
+            $info.osprey_minutes = [math]::Round($ospreyClock.Elapsed.TotalMinutes, 2)
+            $info | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $infoPath -Encoding utf8
+            if ($ospreyExit -ne 0) {
+                throw "Osprey failed (exit $ospreyExit); log: $ospreyLog"
+            }
+            $exports = @(Get-ChildItem -LiteralPath $exportFolder -Filter '*.training.parquet')
+            Write-Host ("Osprey finished in {0:F1} min: {1} training exports" -f $ospreyClock.Elapsed.TotalMinutes, $exports.Count) -ForegroundColor Green
+            if ($exports.Count -eq 0) {
+                throw "Osprey wrote no training export into $exportFolder; log: $ospreyLog"
+            }
+        }
+    }
 
     Write-Step "CarafeSharp: fine-tune and library ($runFolder)"
     Write-Host "$exe $($cliArgs -join ' ')" -ForegroundColor DarkGray
@@ -585,6 +732,25 @@ if (-not $CompareRun) {
         }
         Write-Warning "$message The run is compared as a CPU run."
     }
+
+    if ($Leg -eq 'Chained') {
+        # The saved model reused as a user would: a library predicted from it with -model and no
+        # training, over the command line's wider precursor window.
+        $savedModel = Join-Path $outFolder 'carafe_fine_tuned_model.carafemodel'
+        $savedFolder = Join-Path $runFolder 'saved-model-library'
+        $savedArgs = @('-db', $subsetFasta, '-model', $savedModel, '-o', $savedFolder) + (Get-SavedModelArguments)
+        Write-Step "CarafeSharp: a library from the saved model ($savedFolder)"
+        Write-Host "$exe $($savedArgs -join ' ')" -ForegroundColor DarkGray
+        $savedLog = Join-Path $runFolder 'carafesharp-saved-model.log'
+        & $exe @savedArgs *>&1 | Tee-Object -FilePath $savedLog | Out-Host
+        $savedExit = $LASTEXITCODE
+        $info.saved_model_library = 'saved-model-library'
+        $info.saved_model_exit_code = $savedExit
+        $info | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $infoPath -Encoding utf8
+        if ($savedExit -ne 0) {
+            throw "CarafeSharp failed to predict from the saved model (exit $savedExit); log: $savedLog"
+        }
+    }
 } else {
     $runFolder = (Resolve-Path -LiteralPath $CompareRun).ProviderPath
     $infoPath = Join-Path $runFolder 'regression-run.json'
@@ -601,8 +767,12 @@ if (-not $CompareRun) {
     if ($CreateGolden -and $Torch -eq 'cuda' -and $recorded.device_used -ne 'cuda') {
         throw "-CreateGolden refuses a CPU fallback on a GPU request: $runFolder ran on $($recorded.device_used)."
     }
+    if ($CreateGolden -and $recorded.leg -eq 'chained') {
+        throw "-CreateGolden: $runFolder is a chained run, which has no golden."
+    }
     Write-Step "Comparing the existing run $runFolder"
 }
+$runLeg = if ($CompareRun) { if ($recorded.leg) { $recorded.leg } else { 'isolated' } } else { $Leg.ToLowerInvariant() }
 
 # ---------------------------------------------------------------------------
 # Compare, or make the golden
@@ -613,17 +783,20 @@ if (-not $CreateGolden) {
     if (-not (Test-Path -LiteralPath $goldenPath)) {
         throw "No golden at $goldenPath. Make one with -CreateGolden."
     }
-    Write-Step "Comparing with $goldenPath"
+    $chained = $runLeg -eq 'chained'
+    Write-Step $(if ($chained) { 'Checking the chained run' } else { "Comparing with $goldenPath" })
     $code = Invoke-Comparator $runFolder '' 'comparator.log'
     $report = Join-Path $runFolder 'regression-report.txt'
     if (Test-Path -LiteralPath $report) {
         Get-Content -LiteralPath $report | Out-Host
     }
+    $failed = if ($chained) { 'failed its checks' } else { "is outside the golden's tolerances" }
+    $passed = if ($chained) { 'passed its checks' } else { "is within the golden's tolerances" }
     if ($code -ne 0) {
-        Write-Host "REGRESSION FAILED: $runFolder is outside the golden's tolerances (report: $report)" -ForegroundColor Red
+        Write-Host "REGRESSION FAILED: $runFolder $failed (report: $report)" -ForegroundColor Red
         exit 1
     }
-    Write-Host "REGRESSION PASSED: $runFolder is within the golden's tolerances (report: $report)" -ForegroundColor Green
+    Write-Host "REGRESSION PASSED: $runFolder $passed (report: $report)" -ForegroundColor Green
     exit 0
 }
 

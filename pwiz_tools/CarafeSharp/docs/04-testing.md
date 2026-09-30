@@ -107,8 +107,8 @@ new version.
 
 | Pass | Command | Tests | Time |
 |---|---|---|---|
-| CPU, no data | `build.ps1` | 68, of which the 8 parity tests are Inconclusive | about 1 min |
-| CPU, with data | `build.ps1 -RequireData` | all 68 | about 10 min |
+| CPU, no data | `build.ps1` | 74, of which the 8 parity tests are Inconclusive | about 1 min |
+| CPU, with data | `build.ps1 -RequireData` | all 74 | about 10 min |
 | Astral | `build.ps1 -TestCategory Astral -RequireData` | 4, on the Astral package | about 12 min |
 | CUDA | `build.ps1 -Torch cuda` | the `Cuda` category: pretrained predictions on the GPU against the CPU | not yet timed |
 | Regression | `regression.ps1` | the `Regression` category: a fine-tune and library against the golden (see "Regression") | 20-35 min on the CPU |
@@ -122,9 +122,13 @@ new version.
 
 ## Regression
 
-`regression.ps1` compares a CarafeSharp run with a golden kept in `regression.data/<dataset>`. Only the
-isolated leg exists so far: it fine-tunes on the packaged Osprey training export and predicts the final
-library, so it depends on CarafeSharp alone.
+`regression.ps1` has two legs:
+- **Isolated** (the default): it fine-tunes on the packaged Osprey training export and predicts the final
+  library, so it depends on CarafeSharp alone, and compares the run with a golden kept in
+  `regression.data/<dataset>`. It is the gate on training and prediction.
+- **Chained** (`-Leg Chained`): Osprey searches its committed Stellar subset with `--training-export`, and
+  CarafeSharp trains on those exports and predicts a library (see "The chained leg" below). It checks that
+  the two tools work together, needs no test data, and has no golden.
 
 ```
 pwsh -File regression.ps1                                   # CPU run, compared with the golden
@@ -132,6 +136,7 @@ pwsh -File regression.ps1 -NoBuild -ExtraArgs "-cor 0.7"    # a sensitivity chec
 pwsh -File regression.ps1 -CompareRun <run folder>          # compare an existing run again
 pwsh -File regression.ps1 -Export <x.training.parquet>      # fine-tune on another export instead
 pwsh -File regression.ps1 -CreateGolden                     # from a clean tree; -Force to replace
+pwsh -File regression.ps1 -Leg Chained                      # Osprey's export feeding CarafeSharp
 ```
 
 **The run.** The inputs come from the test data packages, by the rules the tests use: the training
@@ -197,6 +202,28 @@ mzML. Against it, every fine-tuned metric and library check was within tolerance
 median 0.99963, RT difference median 0.016 min); only the export's hash and the pretrained metrics
 differed, as they must with another export, because the held-out set comes from it.
 
+**The chained leg.** `regression.ps1` builds Osprey from the same checkout (or takes `-OspreyExe`),
+extracts `pwiz_tools/Osprey/Osprey.Test/TestData/StellarSubset.zip` (one isolation window of the three
+Stellar runs, 6.5-13.5 min, and a 358-precursor DIA-NN library; its README has the details), and writes
+a peptide FASTA of the library's 358 peptides. Osprey searches the three runs with `--training-export`,
+the full pipeline including the second pass: the subset is sized so a 1% run FDR keeps 118-159
+precursors per run. CarafeSharp then runs `-tf all` on the exports, with the isolated leg's library
+arguments, predicting a library from the FASTA. The comparator checks, with no golden:
+- an export per run, each with at least 50 precursors (how many is Osprey's regression's to gate) and
+  run q-values from the per-run second pass;
+- the four training tables are not empty, and hold no more PSMs than were exported;
+- both models are written and every metric is finite;
+- `meta.json` records each run, with a precursor window that holds the subset's (594.52 m/z);
+- the library has precursors, each with at least `-lf_min_n_frag` peaks.
+- the saved model (`carafe_fine_tuned_model.carafemodel`, [06](06-saved-models.md)) opens, and a second
+  library predicted from it with `-model` over a wider precursor window holds every precursor of the
+  first with the same m/z, retention time and fragments, and intensities within 1e-5 (float32
+  rounding moves with a batch's other peptides; over the same window the spectra are identical).
+
+Training on one isolation window says little about the models, so the chained leg does not judge them;
+the isolated leg does. After the builds it takes under a minute on the CPU: Osprey 7 s, CarafeSharp
+19 s to train, and about 10 s for the library from the saved model.
+
 **Another export: `-Export`.** The run fine-tunes on the given file instead of the packaged export,
 for example one Osprey wrote from the .raw on another platform. The export's SHA-256 is then reported
 as information, and the calibrated tolerances decide. Osprey on Linux does not write a byte-identical
@@ -235,22 +262,26 @@ DecoyPairs checks. Its margin is the peak change against the 1% tolerance, 2.8 t
 
 ## Coverage
 
-With no test data (the pretrained archive is bundled, so its tests run), statement coverage from
-`build.ps1 -Coverage` is:
+Statement coverage from `build.ps1 -Coverage`, with no test data (what CI sees; the pretrained archive
+is bundled, so its tests run) and with the data (`-RequireData`). The regression runs CarafeSharp as a
+separate process, so it is in neither.
 
-| Assembly | Statements |
-|---|---|
-| CarafeSharp | 94.0% |
-| CarafeSharp.Core | 94.2% |
-| CarafeSharp.IO | 98.7% |
-| CarafeSharp.Models | 96.8% |
-| CarafeSharp.Proteome | 98.0% |
-| CarafeSharp.Training | 99.6% |
+| Assembly | No data | With data |
+|---|---|---|
+| CarafeSharp | 97.7% | 98.3% |
+| CarafeSharp.Core | 94.2% | 94.2% |
+| CarafeSharp.IO | 98.8% | 98.8% |
+| CarafeSharp.Models | 96.8% | 97.5% |
+| CarafeSharp.Proteome | 98.8% | 99.0% |
+| CarafeSharp.Training | 99.6% | 99.6% |
+
+Most of what is left is argument checks, `ToString` and the CUDA path, which a CPU run does not reach.
 
 The no-data unit tests work on synthetic inputs built in the test:
 - the masking rules at, above and below each threshold;
 - a training export written as parquet;
 - the fine-tune loop on random models: the loss falls, a checkpoint round-trips, and the seed is honored;
+- a training run that predicts the final library, from the model it wrote and the training run's settings;
 - blib annotations and DecoyPairs;
 - command-line errors, and outputs left behind by a failed run;
 - entrapment from a foreign proteome, and pairing reconciliation.

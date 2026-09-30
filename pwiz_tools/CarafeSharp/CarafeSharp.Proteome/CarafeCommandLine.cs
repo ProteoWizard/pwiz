@@ -37,6 +37,7 @@ namespace pwiz.CarafeSharp.Proteome
         reconcile_manifest,
         predict_library,
         train,
+        model_info,
     }
 
     /// <summary>
@@ -132,6 +133,9 @@ namespace pwiz.CarafeSharp.Proteome
         /// <summary>The manifest to reconcile (<c>-manifest</c>), in reconcile mode.</summary>
         public string ReconcileManifestIn { get; private set; }
 
+        /// <summary>The saved model <c>-model_info</c> describes.</summary>
+        public string ModelInfoPath { get; private set; }
+
         /// <summary>The predicted library (<c>-predicted_library</c>), in reconcile mode.</summary>
         public string ReconcileLibrary { get; private set; }
 
@@ -169,7 +173,9 @@ namespace pwiz.CarafeSharp.Proteome
                     @"  -min_pep_mz <mz> -max_pep_mz <mz> -min_pep_charge <z> -max_pep_charge <z> -I2L",
                     @"  -lf_frag_mz_min <mz> -lf_frag_mz_max <mz> -lf_top_n_frag <n> -lf_min_n_frag <n> -lf_frag_n_min <n>",
                     @"  -nce <nce> -ms_instrument <name> -rt_max <min> -model_dir <folder> -tf all|ms2|rt",
-                    @"  -device cpu|gpu -pairing_manifest <tsv>; CarafeSharp only: -pretrained <pretrained_models.zip>",
+                    @"  -device cpu|gpu -pairing_manifest <tsv>; CarafeSharp only: -pretrained <pretrained_models.zip>,",
+                    @"  -model <file.carafemodel> (a saved fine-tuned model, which every training run writes into -o)",
+                    @"Saved models: CarafeSharp -model_info <file.carafemodel> (what the model was trained on)",
                     @"Training options (Carafe's): -se Osprey -fdr <q> -cor <r> -n_ion_min <n> -c_ion_min <n> -lf_frag_n_min <n>",
                     @"  -nf <n> -min_n <n> -valid -no_masking -tf all|ms2|rt -seed <n> -nce <nce> -ms_instrument <name>",
                     @"  -rt_max <min> -ms2_model <model> -device cpu|gpu; CarafeSharp only: -pretrained <pretrained_models.zip>");
@@ -218,6 +224,12 @@ namespace pwiz.CarafeSharp.Proteome
                 BuildSettings = InterpretBuild(digest, modifications, minMz, maxMz);
                 return;
             }
+            if (TryGet(@"model_info", out string modelInfo))
+            {
+                Mode = CarafeCommandMode.model_info;
+                ModelInfoPath = modelInfo;
+                return;
+            }
             if (Has(@"reconcile_manifest"))
             {
                 Mode = CarafeCommandMode.reconcile_manifest;
@@ -232,6 +244,18 @@ namespace pwiz.CarafeSharp.Proteome
             }
             if (Has(@"build_koina_library"))
                 throw new NotSupportedException(@"-build_koina_library is not supported by CarafeSharp");
+            if (Has(@"model"))
+            {
+                if (Has(@"model_dir"))
+                    throw new ArgumentException(@"-model and -model_dir both name the models to predict with; give one");
+                if (Has(@"ms") || NamesTrainingExports())
+                {
+                    throw new ArgumentException(@"-model predicts a library from a saved model without training; a training run " +
+                                                @"(-ms, or -i naming training exports) saves its own model instead");
+                }
+                if (!Has(@"db"))
+                    throw new ArgumentException(@"-model predicts a library, which needs the FASTA to predict via -db");
+            }
             // Carafe trains when -ms is given. CarafeSharp also trains on Osprey's training exports
             // named by -i directly, which Carafe could never have read; -i alone is otherwise
             // ignored, as Carafe ignores it.
@@ -400,18 +424,31 @@ namespace pwiz.CarafeSharp.Proteome
             if (TryGet(@"decoy_prefix", out string decoyPrefix))
                 settings.DecoyPrefix = decoyPrefix;
             if (TryGet(@"nce", out string nce))
+            {
                 settings.Nce = ParseDouble(@"nce", nce);
+                settings.UserNce = true;
+            }
             if (TryGet(@"ms_instrument", out string instrument))
             {
                 settings.Instrument = instrument;
                 settings.UserInstrument = true;
             }
             if (TryGet(@"rt_max", out string rtMax))
+            {
                 settings.RtMax = ParseDouble(@"rt_max", rtMax);
-            if (TryGet(@"model_dir", out string modelDir))
+                settings.UserRtMax = true;
+            }
+            bool hasModelDir = TryGet(@"model_dir", out string modelDir);
+            bool hasModelFile = TryGet(@"model", out string modelFile);
+            if (hasModelDir)
             {
                 settings.ModelDirectory = modelDir;
                 settings.ApplyModelDirectoryMeta = true;
+            }
+            if (hasModelFile)
+                settings.ModelFile = modelFile;
+            if (hasModelDir || hasModelFile)
+            {
                 // Carafe reads -tf only in its -model_dir branch.
                 if (TryGet(@"tf", out string trainingType))
                     settings.TrainingType = trainingType;
@@ -640,7 +677,7 @@ namespace pwiz.CarafeSharp.Proteome
                                      @"entrapment_ratio entrapment_seed decoy_seed reconcile_manifest predicted_library " +
                                      @"build_koina_library koina_url koina_ms2_model koina_rt_model nce_ms n_ion_min " +
                                      @"c_ion_min nce ms_instrument device se mode tf seed python mod2mass user_var_mods " +
-                                     @"model_dir ms2_model verbose ai_version pretrained";
+                                     @"model_dir ms2_model verbose ai_version pretrained model model_info";
             const string flagsOnly = @"printPTM nm cs ez skyline valid use_all_peaks I2L clip_n_m rf xic export_mgf " +
                                      @"no_masking no_similarity_gate ignore_pairing_errors entrapment no_decoys mz_filter " +
                                      @"y1 fast ccs torch_compile h";

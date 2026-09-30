@@ -102,8 +102,10 @@ namespace pwiz.Osprey
                 // stages whose outputs already exist (ctx.CanRehydrate) - are
                 // not run here; their state lazy-rehydrates through ctx.Demand
                 // when a running stage reaches for it. A task returning false is
-                // still the signal to stop and propagate ctx.ExitCode (e.g. an
-                // empty score set or a sidecar-write failure).
+                // still the signal to stop: with a failure exit code the run ends
+                // there (e.g. a sidecar-write failure); with exit code 0 the task
+                // stopped on purpose (a per-file worker's boundary, an empty score
+                // set), so the run is complete and says so like any other.
                 foreach (var task in pipeline)
                 {
                     if (!config.Includes(task))
@@ -111,31 +113,36 @@ namespace pwiz.Osprey
 
                     if (ctx.CanRehydrate(task))
                     {
-                        LogInfo(string.Format(@"[TASK] {0}:skipping (outputs valid)", task.Name));
+                        ctx.LogInfo(LogTag.TASK, @"{0}:skipping (outputs valid)", task.Name);
                         continue;
                     }
 
                     if (!RunTask(task, ctx))
-                        return ctx.ExitCode;
+                    {
+                        if (ctx.ExitCode != 0)
+                            return ctx.ExitCode;
+                        break;
+                    }
                 }
 
                 stopwatch.Stop();
-                LogInfo("");
-                LogInfo(string.Format("[TIMING] Total pipeline: {0:F1}s",
-                    stopwatch.Elapsed.TotalSeconds));
-                LogInfo(string.Format("Analysis complete in {0}", FormatDuration(stopwatch.Elapsed)));
+                LogInfo(string.Empty);
+                ctx.LogInfo(LogTag.TIMING, @"Total pipeline: {0:F1}s",
+                    stopwatch.Elapsed.TotalSeconds);
+                LogInfo(string.Format(OspreyResources.AnalysisPipeline_Run_Analysis_complete_in__0_, FormatDuration(stopwatch.Elapsed)));
                 return 0;
             }
             catch (Exception ex)
             {
-                // The whole exception, not ex.Message plus ex.StackTrace. Message can be
-                // empty and a wrapper carries its real cause only in InnerException, so the
-                // pair could name the throwing frame while saying nothing about why: a
-                // 17-hour 163-file run ended in "Pipeline failed: " and a bare BlibWriter
-                // constructor frame, which leaves a file lock, a full disk and a missing
-                // native library indistinguishable. ToString() prints the type, the message,
-                // every inner exception and the stack.
-                LogError(string.Format("Pipeline failed: {0}", ex));
+                // Skyline's line (CommonExceptionUtil.IsProgrammingDefect): a file or data
+                // problem the user can act on is reported as its message; anything else is a
+                // defect and is reported whole, not ex.Message plus ex.StackTrace. Message can
+                // be empty and a wrapper carries its real cause only in InnerException, so the
+                // pair could name the throwing frame while saying nothing about why: a 17-hour
+                // 163-file run ended in "Pipeline failed: " and a bare BlibWriter constructor
+                // frame. ToString() prints the type, the message, every inner exception and
+                // the stack.
+                LogError(Program.DescribeFailure(ex, OspreyResources.AnalysisPipeline_Run_Pipeline_failed___0_));
                 return 1;
             }
         }
@@ -167,7 +174,7 @@ namespace pwiz.Osprey
             // sidecars at the start of Run.
 
             var sw = Stopwatch.StartNew();
-            ctx.LogInfo(string.Format(@"[TASK] {0}:starting", task.Name));
+            ctx.LogInfo(LogTag.TASK, @"{0}:starting", task.Name);
             bool keepGoing = task.Run(ctx);
             // The driver has now run this task, so its state is in memory: mark it
             // materialized so a later Demand/Get by a downstream task returns the
@@ -175,8 +182,8 @@ namespace pwiz.Osprey
             // _runOrHydrated guard that formerly bridged the Run and Rehydrate paths.
             ctx.MarkMaterialized(task);
             sw.Stop();
-            ctx.LogInfo(string.Format(@"[TASK] {0}:done ({1:F1}s)",
-                task.Name, sw.Elapsed.TotalSeconds));
+            ctx.LogInfo(LogTag.TASK, @"{0}:done ({1:F1}s)",
+                task.Name, sw.Elapsed.TotalSeconds);
             // DIAGNOSTIC (OSPREY_DROP_BETWEEN_TASKS=1): make the in-process pipeline behave like
             // the HPC split - this task drops everything but the library, and the next reloads
             // what it needs from artifacts. Off by default; the whole experiment reverts
@@ -184,21 +191,27 @@ namespace pwiz.Osprey
             if (OspreyEnvironment.DropBetweenTasks)
                 ctx.DropAllButLibrary();
 
-            // [STAGE-WALL] one line per task->stage with parseable format
-            // for Measure-Pipeline.ps1 / Osprey-workflow.html perf tables.
-            // SecondPassFdrTask emits its own stage7 + blib lines internally
-            // (one task -> two pipeline stages).
+            // [STAGE-WALL] one line per task, labelled with the Rust Osprey stage it
+            // covers, for the perf tooling that compares the two implementations
+            // (Measure-Pipeline.ps1, Test-PerfGate.ps1, Get-MemoryReport.ps1). Machine text
+            // only: the tag prints under --perf-stats and nowhere else. SecondPassFDR has no
+            // entry on purpose, because its wall is NOT one Rust stage: it covers Rust's
+            // stage 7 (second-pass FDR + protein FDR) and the blib write, so the task emits
+            // those walls itself around the steps that match - second-pass-fdr (from
+            // Pass2FdrSidecar), stage7 (protein FDR only) and blib - and Measure-Pipeline.ps1
+            // adds second-pass-fdr into stage7. A whole-task stage7 line here would count the
+            // second-pass FDR twice. SpectraCache and ModelDiagnostics are not Rust stages.
             string stageName = task.Name switch
             {
-                PerFileScoringTask.TASK_NAME => "stage1to4",
-                FirstPassFdrTask.TASK_NAME => "stage5",
-                PerFileRescoreTask.TASK_NAME => "stage6",
+                PerFileScoringTask.TASK_NAME => @"stage1to4",
+                FirstPassFdrTask.TASK_NAME => @"stage5",
+                PerFileRescoreTask.TASK_NAME => @"stage6",
                 _                => null,
             };
             if (stageName != null)
             {
-                ctx.LogInfo(string.Format(@"[STAGE-WALL] {0}: {1:F1}s",
-                    stageName, sw.Elapsed.TotalSeconds));
+                ctx.LogInfo(LogTag.STAGE_WALL, @"{0}: {1:F1}s",
+                    stageName, sw.Elapsed.TotalSeconds);
             }
 
             // Write sidecars whenever the task ran without setting a
@@ -226,12 +239,13 @@ namespace pwiz.Osprey
                 if (!File.Exists(output)) continue;
                 try
                 {
-                    TaskValiditySidecar.Write(output, task.Name, OspreyVersion.Current, key, inputs);
+                    TaskValiditySidecar.Write(output, task.Name, OspreyVersion.Current,
+                        task.OutputValidityKey(ctx, key, output), task.OutputInputs(ctx, inputs, output));
                 }
                 catch (Exception ex)
                 {
                     ctx.LogWarning(string.Format(
-                        @"Failed to write {0} sidecar for {1}: {2}",
+                        OspreyResources.AnalysisPipeline_WriteTaskSidecars_Failed_to_record_that_task__0__completed__1____2___A_resume_will_redo_this_step_,
                         task.Name, output, ex.Message));
                 }
             }
@@ -242,24 +256,24 @@ namespace pwiz.Osprey
             if (duration.TotalDays >= 1)
             {
                 if (duration.Hours > 0)
-                    return string.Format("{0} days {1} hours", (int)duration.TotalDays, duration.Hours);
-                return string.Format("{0} days", (int)duration.TotalDays);
+                    return string.Format(OspreyResources.AnalysisPipeline_FormatDuration__0__days__1__hours, (int)duration.TotalDays, duration.Hours);
+                return string.Format(OspreyResources.AnalysisPipeline_FormatDuration__0__days, (int)duration.TotalDays);
             }
             if (duration.TotalHours >= 1)
             {
                 if (duration.Minutes > 0)
-                    return string.Format("{0} hours {1} minutes", (int)duration.TotalHours, duration.Minutes);
-                return string.Format("{0} hours", (int)duration.TotalHours);
+                    return string.Format(OspreyResources.AnalysisPipeline_FormatDuration__0__hours__1__minutes, (int)duration.TotalHours, duration.Minutes);
+                return string.Format(OspreyResources.AnalysisPipeline_FormatDuration__0__hours, (int)duration.TotalHours);
             }
             if (duration.TotalMinutes >= 1)
             {
                 if (duration.Seconds > 0)
-                    return string.Format("{0} minutes {1} seconds", (int)duration.TotalMinutes, duration.Seconds);
-                return string.Format("{0} minutes", (int)duration.TotalMinutes);
+                    return string.Format(OspreyResources.AnalysisPipeline_FormatDuration__0__minutes__1__seconds, (int)duration.TotalMinutes, duration.Seconds);
+                return string.Format(OspreyResources.AnalysisPipeline_FormatDuration__0__minutes, (int)duration.TotalMinutes);
             }
             if (duration.TotalSeconds >= 1)
-                return string.Format("{0:F3} seconds", duration.TotalSeconds);
-            return string.Format("{0} ms", (int)duration.TotalMilliseconds);
+                return string.Format(OspreyResources.AnalysisPipeline_FormatDuration__0__seconds, duration.TotalSeconds);
+            return string.Format(OspreyResources.AnalysisPipeline_FormatDuration__0__ms, (int)duration.TotalMilliseconds);
         }
 
         private static void LogInfo(string message)

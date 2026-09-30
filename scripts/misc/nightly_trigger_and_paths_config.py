@@ -40,6 +40,9 @@ matchPaths = [
     ("pwiz_tools/Skyline/.*", merge(targets['Skyline'], targets['Container'])),
     ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['Bumbershoot'], targets['Container'])),
     ("pwiz_tools/Osprey/.*", targets['OspreyWindowsNetPerfRegressionTests']),
+    # CarafeSharp has no perf config yet and nothing else builds it; see the matching
+    # entry in vcs_trigger_and_paths_config.py.
+    ("pwiz_tools/CarafeSharp/.*", {}),
     ("pwiz_tools/.*", targets['All']),
     ("Jamroot.jam", targets['All'])
 ]

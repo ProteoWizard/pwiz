@@ -99,6 +99,9 @@ namespace pwiz.CarafeSharp.Proteome
         /// <summary><c>-nce</c>.</summary>
         public double Nce { get; set; } = DEFAULT_NCE;
 
+        /// <summary>True when <c>-nce</c> was given, which a saved model (<c>-model</c>) does not override.</summary>
+        public bool UserNce { get; set; }
+
         /// <summary>The instrument name predicted for: <c>-ms_instrument</c>, else Carafe's default.</summary>
         public string Instrument { get; set; } = DEFAULT_INSTRUMENT;
 
@@ -110,6 +113,16 @@ namespace pwiz.CarafeSharp.Proteome
         /// <c>rt_max * rt_pred</c> in minutes, else iRT.
         /// </summary>
         public double RtMax { get; set; }
+
+        /// <summary>True when <c>-rt_max</c> was given, which a saved model (<c>-model</c>) does not override.</summary>
+        public bool UserRtMax { get; set; }
+
+        /// <summary>
+        /// A saved fine-tuned model to predict with (<c>-model</c>, a <see cref="CarafeModelFile"/>):
+        /// its models, and its training run's NCE, instrument and rt_max unless given, with the
+        /// command line's m/z ranges.
+        /// </summary>
+        public string ModelFile { get; set; }
 
         /// <summary>
         /// The Carafe model folder to predict with: <c>-model_dir</c>. Without it Carafe looks in

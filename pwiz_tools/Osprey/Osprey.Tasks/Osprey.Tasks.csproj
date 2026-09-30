@@ -41,4 +41,17 @@
     <ProjectReference Include="..\Osprey.FDR\Osprey.FDR.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- User-facing text. The Designer is checked in; VS regenerates it when the .resx is saved. -->
+    <Compile Update="OspreyTasksResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>OspreyTasksResources.resx</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="OspreyTasksResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>OspreyTasksResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
 </Project>

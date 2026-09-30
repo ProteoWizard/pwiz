@@ -48,6 +48,8 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     public static class FdrBenchInputWriter
     {
+        public const string EXT_PAIRING = @".pairing.tsv";
+
         /// <summary>
         /// Mask for extracting the target-side base id from <see cref="FdrEntry.EntryId"/>.
         /// The high bit is set for decoys; clearing it yields the library entry id shared
@@ -258,10 +260,10 @@ namespace pwiz.Osprey.Tasks
                 try
                 {
                     _writer = new StreamWriter(_saver.SafeName, false);
-                    _writer.NewLine = "\n"; // emit '\n' line endings for the TSV body
+                    _writer.NewLine = TextUtil.LF; // emit '\n' line endings for the TSV body
                     _writer.WriteLine(perRun
-                        ? "peptide\tmod_peptide\tcharge\tq_value\tscore\tprotein\trun"
-                        : "peptide\tmod_peptide\tcharge\tq_value\tscore\tprotein");
+                        ? new[] { @"peptide", @"mod_peptide", @"charge", @"q_value", @"score", @"protein", @"run" }.ToDsvLine(TextUtil.SEPARATOR_TSV)
+                        : new[] { @"peptide", @"mod_peptide", @"charge", @"q_value", @"score", @"protein" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                 }
                 catch
                 {
@@ -395,22 +397,22 @@ namespace pwiz.Osprey.Tasks
             {
                 using (var writer = new StreamWriter(saver.SafeName, false))
                 {
-                    writer.NewLine = "\n";
-                    writer.WriteLine("sequence\tdecoy\tproteins\tpeptide_type\tpeptide_pair_index");
+                    writer.NewLine = TextUtil.LF;
+                    writer.WriteLine(new[] { @"sequence", @"decoy", @"proteins", @"peptide_type", @"peptide_pair_index" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                     foreach (var kv in rows)
                     {
                         var lib = kv.Value;
                         bool entrap = EntrapmentLibraryClassifier.IsEntrapment(lib.ProteinIds);
                         uint pair = pairing.PairIndexBySeq[lib.Sequence];
                         string protein = FormatProteinField(lib.ProteinIds, out _);
-                        writer.WriteLine(string.Join("\t", new[]
+                        writer.WriteLine(new[]
                         {
                             lib.Sequence,
-                            "No",
+                            @"No",
                             protein,
-                            entrap ? "p_target" : "target",
+                            entrap ? @"p_target" : @"target",
                             pair.ToString(CultureInfo.InvariantCulture)
-                        }));
+                        }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                         written++;
                     }
                 }
@@ -423,7 +425,7 @@ namespace pwiz.Osprey.Tasks
         private static string FormatRow(string peptide, string modSeq, byte charge,
             double qValue, double score, string protein, string runName)
         {
-            string row = string.Join("\t", new[]
+            var fields = new List<string>
             {
                 peptide,
                 modSeq,
@@ -431,8 +433,10 @@ namespace pwiz.Osprey.Tasks
                 qValue.ToString(@"E10", CultureInfo.InvariantCulture),
                 score.ToString(@"E10", CultureInfo.InvariantCulture),
                 protein
-            });
-            return runName == null ? row : row + "\t" + runName;
+            };
+            if (runName != null)
+                fields.Add(runName);
+            return fields.ToDsvLine(TextUtil.SEPARATOR_TSV);
         }
 
         /// <summary>Resolve an entry id to its (sequence, protein-field), updating warning counts.</summary>

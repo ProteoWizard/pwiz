@@ -218,6 +218,15 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(@"_PEPTIDER_", ModifiedPeptideNotation.Format(unmodified, ModifiedPeptideStyle.dia_nn));
             Assert.AreEqual(@"PEPTIDER", ModifiedPeptideNotation.FormatSkyline(unmodified, out _));
 
+            // Phospho S, T and Y (Carafe ids 7-9) name the residue in every notation, as Carafe writes them.
+            var phospho = new PeptideIsoformGenerator(new ModificationSettings
+                { FixedModifications = @"0", VariableModifications = @"7,8,9", MaxVariableModifications = 3 }, new HashSet<string>());
+            var allThree = phospho.Enumerate(@"STYK").Single(f => f.Modifications.Count == 3);
+            Assert.AreEqual(@"_S[UniMod:21]T[UniMod:21]Y[UniMod:21]K_", ModifiedPeptideNotation.Format(allThree, ModifiedPeptideStyle.dia_nn));
+            Assert.AreEqual(@"_S[Phosphorylation (ST)]T[Phosphorylation (ST)]Y[Phosphorylation (Y)]K_",
+                ModifiedPeptideNotation.Format(allThree, ModifiedPeptideStyle.encyclopedia));
+            Assert.AreEqual(@"_S[Phospho]T[Phospho]Y[Phospho]K_", ModifiedPeptideNotation.Format(allThree, ModifiedPeptideStyle.generic));
+
             Assert.AreEqual(ModifiedPeptideStyle.dia_nn, ModifiedPeptideNotation.GetStyle(@"diann"));
             Assert.AreEqual(ModifiedPeptideStyle.encyclopedia, ModifiedPeptideNotation.GetStyle(@"EncyclopeDIA"));
             Assert.AreEqual(ModifiedPeptideStyle.generic, ModifiedPeptideNotation.GetStyle(@" DIA-NN"));
