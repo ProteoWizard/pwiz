@@ -21,7 +21,9 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
+using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -102,6 +104,24 @@ namespace pwiz.CarafeSharp.Test
             Assert.IsTrue(settings.Digest.ConvertIToL);
             Assert.AreEqual(@"p.zip", settings.PretrainedModels);
             Assert.AreEqual(@"all", CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-tf", @"rt" }).LibrarySettings.TrainingType);
+
+            // -model names a saved model, which takes no meta.json window; -nce and -rt_max given
+            // are marked, so the saved model's own do not replace them.
+            settings = CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model", @"m.carafemodel", @"-tf", @"ms2", @"-nce", @"25" })
+                .LibrarySettings;
+            Assert.AreEqual(@"m.carafemodel", settings.ModelFile);
+            Assert.IsFalse(settings.ApplyModelDirectoryMeta);
+            Assert.AreEqual(@"ms2", settings.TrainingType);
+            Assert.IsTrue(settings.UserNce);
+            Assert.IsFalse(settings.UserRtMax);
+            Assert.IsTrue(CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model", @"m.carafemodel", @"-rt_max", @"30" }).LibrarySettings.UserRtMax);
+            var infoCommand = CarafeCommandLine.Parse(new[] { @"-model_info", @"m.carafemodel" });
+            Assert.AreEqual(CarafeCommandMode.model_info, infoCommand.Mode);
+            Assert.AreEqual(@"m.carafemodel", infoCommand.ModelInfoPath);
+            // It is refused with -model_dir, with training, and without -db.
+            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model", @"m.carafemodel", @"-model_dir", @"d" }));
+            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model", @"m.carafemodel", @"-i", @"a.training.parquet" }));
+            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-model", @"m.carafemodel", @"-o", @"out" }));
 
             // -ms is training, which reads Osprey's results (-i) rather than the raw data.
             Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-ms", @"a.mzML" }));
@@ -324,6 +344,127 @@ namespace pwiz.CarafeSharp.Test
         }
 
         /// <summary>
+        /// A saved model (.carafemodel) predicts a library of any peptides with no training: the
+        /// same spectra its models predict from their folder, with the command line's m/z ranges
+        /// (not the training run's window, which -model_dir would take) and the training run's
+        /// NCE, instrument and rt_max for those the command line does not give. A fine-tuned MS2
+        /// model that lost to the pretrained one is left out, and a damaged or foreign file fails
+        /// before anything is predicted.
+        /// </summary>
+        [TestMethod]
+        public void TestSavedModel()
+        {
+            string folder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"Saved_" + Guid.NewGuid().ToString(@"N"));
+            Directory.CreateDirectory(folder);
+            try
+            {
+                var settings = CreateGeneratorSettings(folder, LibraryOutputs.BLIB_FORMAT);
+                string models = settings.ModelDirectory;
+                // The training run: a precursor window that holds none of the FASTA's peptides.
+                File.WriteAllText(Path.Combine(models, ModelFiles.META),
+                    @"{""run_a.mzML"":{""ms_file"":""run_a.mzML"",""nce"":31.0,""ms_instrument"":""Astral"",""rt_max"":45.0,""precursor_ion_mz_min"":1500.0,""precursor_ion_mz_max"":1504.0}}");
+                string modelFile = Path.Combine(folder, @"hela" + CarafeModelFile.EXTENSION);
+                var written = CarafeModelFile.Write(modelFile, CarafeModelDirectory.Open(models, true), @"all", PretrainedModels.PINNED_SHA256, null, null);
+                Assert.IsTrue(written.Ms2Used && written.RtUsed);
+                CollectionAssert.AreEquivalent(new[] { ModelFiles.MS2_SAFETENSORS, ModelFiles.RT_SAFETENSORS, ModelFiles.METRICS, ModelFiles.META },
+                    written.Entries.Keys.ToList());
+                var opened = CarafeModelFile.Open(modelFile);
+                Assert.AreEqual(CarafeModelFile.FORMAT, opened.Format);
+                Assert.AreEqual(PretrainedModels.PINNED_SHA256, opened.PretrainedSha256);
+                Assert.AreEqual(@"run_a.mzML", opened.Runs.Single().MsFile);
+                Assert.AreEqual(31.0, opened.Nce);
+                Assert.AreEqual(@"Astral", opened.Instrument);
+                Assert.AreEqual(45.0, opened.RtMax);
+
+                // From the file, with no NCE, instrument or rt_max given: the training run's, and the
+                // command line's precursor window, so every peptide the folder's models predict.
+                settings.OutputDirectory = Path.Combine(folder, @"from_folder");
+                settings.Nce = 31;
+                settings.Instrument = @"Astral";
+                settings.RtMax = 45;
+                var fromFolder = new LibraryGenerator(settings, null);
+                fromFolder.Run();
+                var fileSettings = new LibrarySettings
+                {
+                    Database = settings.Database,
+                    OutputDirectory = Path.Combine(folder, @"from_file"),
+                    ModelFile = modelFile,
+                    LibraryFormat = LibraryOutputs.BLIB_FORMAT,
+                    Device = TorchDevice.CPU,
+                    MinFragments = 1,
+                };
+                var log = new StringWriter();
+                var fromFile = new LibraryGenerator(fileSettings, log);
+                fromFile.Run();
+                Assert.AreEqual(31.0, fileSettings.Nce);
+                Assert.AreEqual(@"Astral", fileSettings.Instrument);
+                Assert.AreEqual(45.0, fileSettings.RtMax);
+                Assert.IsTrue(fromFile.SpectrumCount > 0, log.ToString());
+                CollectionAssert.AreEqual(ReadSpectra(fromFolder.BlibPath), ReadSpectra(fromFile.BlibPath), @"the file holds the folder's models");
+                StringAssert.Contains(log.ToString(), @"Use the saved model " + modelFile);
+
+                // The command line's NCE, instrument and rt_max stay.
+                var given = new LibrarySettings { Nce = 25, UserNce = true, Instrument = @"Lumos", UserInstrument = true, RtMax = 60, UserRtMax = true };
+                opened.ApplyPredictionDefaults(given);
+                Assert.AreEqual(25.0, given.Nce);
+                Assert.AreEqual(@"Lumos", given.Instrument);
+                Assert.AreEqual(60.0, given.RtMax);
+
+                // A fine-tuned MS2 model that did not beat the pretrained one is not saved, so the
+                // library predicts MS2 with the pretrained model.
+                File.WriteAllText(Path.Combine(models, ModelFiles.METRICS), @"{""ms2"":{""use_finetuned_for_prediction"":false}}");
+                string rtOnly = Path.Combine(folder, @"rt_only" + CarafeModelFile.EXTENSION);
+                var lost = CarafeModelFile.Write(rtOnly, CarafeModelDirectory.Open(models, true), @"all", null, null, null);
+                Assert.IsTrue(lost.Ms2FineTuned);
+                Assert.IsFalse(lost.Ms2Used);
+                Assert.IsFalse(lost.Entries.ContainsKey(ModelFiles.MS2_SAFETENSORS));
+                var extracted = CarafeModelFile.Open(rtOnly).Extract(Path.Combine(folder, @"rt_only_extracted"));
+                Assert.IsNull(extracted.GetMs2ModelPath(@"all"));
+                Assert.IsNotNull(extracted.GetRtModelPath(@"all"));
+
+                // A damaged entry, a file that is not a zip, one without a manifest, and a newer format fail on opening.
+                string damaged = Path.Combine(folder, @"damaged" + CarafeModelFile.EXTENSION);
+                File.Copy(modelFile, damaged);
+                using (var zip = ZipFile.Open(damaged, ZipArchiveMode.Update))
+                {
+                    var rtEntry = zip.GetEntry(ModelFiles.RT_SAFETENSORS);
+                    Assert.IsNotNull(rtEntry);
+                    rtEntry.Delete();
+                    using (var writer = new StreamWriter(zip.CreateEntry(ModelFiles.RT_SAFETENSORS).Open()))
+                        writer.Write(@"not the model");
+                }
+                StringAssert.Contains(Assert.ThrowsException<InvalidDataException>(() => CarafeModelFile.Open(damaged)).Message, @"does not match its SHA-256");
+                string notZip = Path.Combine(folder, @"text" + CarafeModelFile.EXTENSION);
+                File.WriteAllText(notZip, @"not a model");
+                StringAssert.Contains(Assert.ThrowsException<InvalidDataException>(() => CarafeModelFile.Open(notZip)).Message, @"is not a CarafeSharp model file");
+                string noManifest = Path.Combine(folder, @"bare" + CarafeModelFile.EXTENSION);
+                using (var zip = ZipFile.Open(noManifest, ZipArchiveMode.Create))
+                    zip.CreateEntryFromFile(Path.Combine(models, ModelFiles.RT_SAFETENSORS), ModelFiles.RT_SAFETENSORS);
+                StringAssert.Contains(Assert.ThrowsException<InvalidDataException>(() => CarafeModelFile.Open(noManifest)).Message, CarafeModelFile.MANIFEST_ENTRY);
+                string newer = Path.Combine(folder, @"newer" + CarafeModelFile.EXTENSION);
+                File.Copy(modelFile, newer);
+                using (var zip = ZipFile.Open(newer, ZipArchiveMode.Update))
+                {
+                    var entry = zip.GetEntry(CarafeModelFile.MANIFEST_ENTRY);
+                    Assert.IsNotNull(entry);
+                    string manifest;
+                    using (var reader = new StreamReader(entry.Open()))
+                        manifest = reader.ReadToEnd();
+                    entry.Delete();
+                    using (var writer = new StreamWriter(zip.CreateEntry(CarafeModelFile.MANIFEST_ENTRY).Open()))
+                        writer.Write(manifest.Replace(CarafeModelFile.FORMAT, @"carafemodel-2"));
+                }
+                StringAssert.Contains(Assert.ThrowsException<InvalidDataException>(() => CarafeModelFile.Open(newer)).Message, @"carafemodel-2");
+                Assert.ThrowsException<FileNotFoundException>(() => CarafeModelFile.Open(Path.Combine(folder, @"missing" + CarafeModelFile.EXTENSION)));
+            }
+            finally
+            {
+                SQLiteConnection.ClearAllPools();
+                Directory.Delete(folder, true);
+            }
+        }
+
+        /// <summary>
         /// The library writer thread: it writes every chunk predicted, in order, on all processors
         /// once a chunk is waiting; a writing failure ends a wait for room in the queue and fails
         /// the run; a prediction failure stops the writer; and a failed run leaves the previous
@@ -514,6 +655,29 @@ namespace pwiz.CarafeSharp.Test
                 RtMax = 30,
                 MinFragments = 1,
             };
+        }
+
+        /// <summary>A .blib's spectra, one line each: modified sequence, charge, precursor m/z, RT and the peak blobs.</summary>
+        private static List<string> ReadSpectra(string blib)
+        {
+            var spectra = new List<string>();
+            using (var connection = new SQLiteConnection(new SQLiteConnectionStringBuilder { DataSource = blib, ReadOnly = true }.ToString()))
+            {
+                connection.Open();
+                using (var command = new SQLiteCommand(@"SELECT r.peptideModSeq, r.precursorCharge, r.precursorMZ, r.retentionTime, p.peakMZ, p.peakIntensity " +
+                                                       @"FROM RefSpectra r JOIN RefSpectraPeaks p ON p.RefSpectraID = r.id", connection))
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        spectra.Add(string.Join(@"|", reader.GetString(0), reader.GetInt64(1), reader.GetDouble(2).ToString(@"R", CultureInfo.InvariantCulture),
+                            reader.GetDouble(3).ToString(@"R", CultureInfo.InvariantCulture), Convert.ToBase64String((byte[])reader.GetValue(4)),
+                            Convert.ToBase64String((byte[])reader.GetValue(5))));
+                    }
+                }
+            }
+            spectra.Sort(StringComparer.Ordinal);
+            return spectra;
         }
 
         /// <summary>

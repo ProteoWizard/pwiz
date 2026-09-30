@@ -215,9 +215,14 @@ arguments, predicting a library from the FASTA. The comparator checks, with no g
 - both models are written and every metric is finite;
 - `meta.json` records each run, with a precursor window that holds the subset's (594.52 m/z);
 - the library has precursors, each with at least `-lf_min_n_frag` peaks.
+- the saved model (`carafe_fine_tuned_model.carafemodel`, [06](06-saved-models.md)) opens, and a second
+  library predicted from it with `-model` over a wider precursor window holds every precursor of the
+  first with the same m/z, retention time and fragments, and intensities within 1e-5 (float32
+  rounding moves with a batch's other peptides; over the same window the spectra are identical).
 
 Training on one isolation window says little about the models, so the chained leg does not judge them;
-the isolated leg does. After the builds it takes under a minute on the CPU: Osprey 7 s, CarafeSharp 19 s.
+the isolated leg does. After the builds it takes under a minute on the CPU: Osprey 7 s, CarafeSharp
+19 s to train, and about 10 s for the library from the saved model.
 
 **Another export: `-Export`.** The run fine-tunes on the given file instead of the packaged export,
 for example one Osprey wrote from the .raw on another platform. The export's SHA-256 is then reported

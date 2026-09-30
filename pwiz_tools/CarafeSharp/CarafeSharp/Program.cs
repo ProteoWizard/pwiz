@@ -74,6 +74,9 @@ namespace pwiz.CarafeSharp
                         new ModelTrainer(commandLine.TrainingSettings, output).Run();
                         output.WriteLine(@"Time used for training and spectral library generation: " + Seconds(stopwatch) + @" s.");
                         return 0;
+                    case CarafeCommandMode.model_info:
+                        output.Write(CarafeModelFile.Open(commandLine.ModelInfoPath).FormatInfo());
+                        return 0;
                     case CarafeCommandMode.predict_library:
                         new LibraryGenerator(commandLine.LibrarySettings, output).Run();
                         output.WriteLine(@"Time used for spectral library generation: " + Seconds(stopwatch) + @" s.");

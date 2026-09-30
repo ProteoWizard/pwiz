@@ -60,6 +60,7 @@ namespace pwiz.CarafeSharp
         private readonly Stopwatch _rtClock = new Stopwatch();
         private readonly Stopwatch _buildClock = new Stopwatch();
         private PretrainedModels _pretrained;
+        private string _modelFileFolder;
 
         /// <param name="settings">The library to predict.</param>
         /// <param name="log">Receives progress, or null.</param>
@@ -96,6 +97,21 @@ namespace pwiz.CarafeSharp
         internal Action<int> BeforeQueueWait { get; set; }
 
         public void Run()
+        {
+            try
+            {
+                Predict();
+            }
+            finally
+            {
+                // A saved model's unpacked copy, which the models were loaded from.
+                if (_modelFileFolder != null && Directory.Exists(_modelFileFolder))
+                    Directory.Delete(_modelFileFolder, true);
+                _modelFileFolder = null;
+            }
+        }
+
+        private void Predict()
         {
             _clock.Restart();
             Directory.CreateDirectory(_settings.OutputDirectory);
@@ -278,6 +294,8 @@ namespace pwiz.CarafeSharp
         /// </summary>
         private CarafeModelDirectory OpenModelDirectory()
         {
+            if (_settings.ModelFile != null)
+                return OpenModelFile();
             string folder = _settings.ModelDirectory ?? _settings.OutputDirectory;
             var modelDirectory = CarafeModelDirectory.Open(folder, _settings.PreferSafetensors);
             if (_settings.ModelDirectory != null)
@@ -299,6 +317,25 @@ namespace pwiz.CarafeSharp
                     @"From the training run: precursor m/z {0}-{1}, NCE {2}, instrument {3}, rt_max {4}",
                     _settings.MinPrecursorMz, _settings.MaxPrecursorMz, _settings.Nce, _settings.Instrument, _settings.RtMax));
             }
+            return modelDirectory;
+        }
+
+        /// <summary>
+        /// A saved model (<c>-model</c>), checked and unpacked into a folder of its own, which
+        /// <see cref="Run"/> deletes. The training run's NCE, instrument and rt_max apply where the
+        /// command line gives none; the m/z ranges stay the command line's.
+        /// </summary>
+        private CarafeModelDirectory OpenModelFile()
+        {
+            var modelFile = CarafeModelFile.Open(_settings.ModelFile);
+            _modelFileFolder = Path.Combine(Path.GetTempPath(), @"CarafeSharp_model_" + Guid.NewGuid().ToString(@"N"));
+            var modelDirectory = modelFile.Extract(_modelFileFolder);
+            Log(@"Use the saved model " + _settings.ModelFile + @" for spectral library generation: " + modelFile.Describe());
+            modelFile.ApplyPredictionDefaults(_settings);
+            Log(string.Format(CultureInfo.InvariantCulture,
+                @"Precursor m/z {0}-{1}, fragment m/z {2}-{3} from the command line; NCE {4}, instrument {5}, rt_max {6}",
+                _settings.MinPrecursorMz, _settings.MaxPrecursorMz, _settings.MinFragmentMz, _settings.MaxFragmentMz, _settings.Nce,
+                _settings.Instrument, _settings.RtMax));
             return modelDirectory;
         }
 

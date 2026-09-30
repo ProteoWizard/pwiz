@@ -127,6 +127,10 @@ namespace pwiz.CarafeSharp.Test
         private const double CHAINED_WINDOW_TARGET = 594.5201;
         /// <summary>The regression's -lf_min_n_frag.</summary>
         private const int CHAINED_MIN_PEAKS = 2;
+        // The same model predicts the same spectrum to float32 rounding, which moves with the other
+        // peptides in a prediction batch: 8.6e-7 at most over the subset's wider window, and no
+        // difference at all over the same window (2026-09-30).
+        private const double SAVED_MODEL_INTENSITY_TOLERANCE = 1e-5;
         /// <summary>The per-run second pass, which a run of a multi-run analysis selects on.</summary>
         private const string SECOND_PASS = @"2";
 
@@ -252,12 +256,15 @@ namespace pwiz.CarafeSharp.Test
         /// The chained leg's checks: Osprey wrote an export per run, each with the precursors a
         /// 1% run FDR keeps and the per-run second pass's q-values; CarafeSharp read them, trained
         /// on a subset of their rows, wrote both models and finite metrics, recorded every run's
-        /// isolation window, and predicted a library whose spectra keep -lf_min_n_frag peaks.
+        /// isolation window, and predicted a library whose spectra keep -lf_min_n_frag peaks. Then
+        /// the model it saved predicted the same spectra again with -model, as a user reuses it.
         /// </summary>
         private void CheckChained(string folder)
         {
             int runs;
             string exportFolder;
+            int savedExitCode;
+            string savedLibraryFolder;
             using (var info = JsonDocument.Parse(File.ReadAllText(TestData.RequireFile(Path.Combine(folder, RUN_INFO_FILE)))))
             {
                 var root = info.RootElement;
@@ -270,6 +277,8 @@ namespace pwiz.CarafeSharp.Test
                 runs = root.GetProperty(@"runs").GetInt32();
                 string relative = root.GetProperty(@"export_folder").GetString() ?? string.Empty;
                 exportFolder = Path.Combine(new[] { folder }.Concat(relative.Split('/')).ToArray());
+                savedExitCode = root.GetProperty(@"saved_model_exit_code").GetInt32();
+                savedLibraryFolder = Path.Combine(folder, root.GetProperty(@"saved_model_library").GetString() ?? string.Empty);
             }
 
             var exports = Directory.GetFiles(exportFolder, @"*" + OspreyTrainingExport.FILE_SUFFIX).OrderBy(p => p, StringComparer.Ordinal).ToList();
@@ -319,6 +328,38 @@ namespace pwiz.CarafeSharp.Test
             SQLiteConnection.ClearAllPools();
             Check(library.Precursors > 0, @"library: {0} precursors, {1} peaks", library.Precursors, library.Peaks);
             Check(fewestPeaks >= CHAINED_MIN_PEAKS, @"library: fewest peaks in a spectrum {0} (at least {1})", fewestPeaks, CHAINED_MIN_PEAKS);
+
+            // The saved model, and a library predicted from it with -model over a wider precursor
+            // window: every precursor of the library training predicted, with the same spectrum.
+            var saved = CarafeModelFile.Open(TestData.RequireFile(Path.Combine(output, CarafeModelFile.DEFAULT_FILE_NAME)));
+            Check(saved.Runs.Count == runs && saved.RtUsed, @"{0}: {1} training runs; {2}", CarafeModelFile.DEFAULT_FILE_NAME,
+                saved.Runs.Count, saved.Describe());
+            Check(savedExitCode == 0, @"CarafeSharp -model exit code {0}", savedExitCode);
+            var trainedSpectra = ReadSpectra(blib).ToDictionary(s => PrecursorKey(s.Sequence, s.Charge), StringComparer.Ordinal);
+            var savedSpectra = ReadSpectra(TestData.RequireFile(Path.Combine(savedLibraryFolder, BlibLibraryWriter.FILE_NAME)))
+                .ToDictionary(s => PrecursorKey(s.Sequence, s.Charge), StringComparer.Ordinal);
+            SQLiteConnection.ClearAllPools();
+            int missing = 0, differ = 0;
+            double largest = 0;
+            foreach (var pair in trainedSpectra)
+            {
+                if (!savedSpectra.TryGetValue(pair.Key, out var other))
+                {
+                    missing++;
+                    continue;
+                }
+                var spectrum = pair.Value;
+                if (spectrum.PrecursorMz != other.PrecursorMz || spectrum.RetentionTime != other.RetentionTime || !spectrum.Mz.SequenceEqual(other.Mz))
+                {
+                    differ++;
+                    continue;
+                }
+                largest = Math.Max(largest, spectrum.Intensity.Zip(other.Intensity, (a, b) => (double)Math.Abs(a - b)).Max());
+            }
+            Check(savedSpectra.Count > trainedSpectra.Count && missing == 0 && differ == 0 && largest <= SAVED_MODEL_INTENSITY_TOLERANCE,
+                @"library from the saved model: {0} precursors over the wider window; of the training run's {1}, {2} missing, {3} with " +
+                @"another m/z, RT or fragments, largest intensity difference {4} (at most {5})",
+                savedSpectra.Count, trainedSpectra.Count, missing, differ, Format(largest), Format(SAVED_MODEL_INTENSITY_TOLERANCE));
         }
 
         private void CheckMetrics(Golden golden, RunMeasurement run)
@@ -580,6 +621,34 @@ namespace pwiz.CarafeSharp.Test
             return (hash >> 32) % SAMPLE_MODULUS == 0;
         }
 
+        /// <summary>Every spectrum of a .blib, its peaks decoded.</summary>
+        private static IEnumerable<LibrarySpectrumRow> ReadSpectra(string path)
+        {
+            using (var connection = OpenLibrary(path))
+            {
+                const string sql = @"SELECT r.peptideModSeq, r.precursorCharge, r.precursorMZ, r.retentionTime, r.numPeaks, p.peakMZ, p.peakIntensity " +
+                                   @"FROM RefSpectra r JOIN RefSpectraPeaks p ON p.RefSpectraID = r.id";
+                using (var command = new SQLiteCommand(sql, connection))
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        int count = (int)reader.GetInt64(4);
+                        byte[] mzBytes = BlibLibraryWriter.DecodeBlob((byte[])reader.GetValue(5), count * sizeof(double));
+                        byte[] intensityBytes = BlibLibraryWriter.DecodeBlob((byte[])reader.GetValue(6), count * sizeof(float));
+                        var mz = new double[count];
+                        var intensity = new float[count];
+                        for (int i = 0; i < count; i++)
+                        {
+                            mz[i] = BitConverter.ToDouble(mzBytes, i * sizeof(double));
+                            intensity[i] = BitConverter.ToSingle(intensityBytes, i * sizeof(float));
+                        }
+                        yield return new LibrarySpectrumRow(reader.GetString(0), reader.GetInt64(1), reader.GetDouble(2), reader.GetDouble(3), mz, intensity);
+                    }
+                }
+            }
+        }
+
         private static SQLiteConnection OpenLibrary(string path)
         {
             var connection = new SQLiteConnection(@"Data Source=" + path + @";Read Only=True;");
@@ -667,6 +736,26 @@ namespace pwiz.CarafeSharp.Test
             }
         }
 
+        private sealed class LibrarySpectrumRow
+        {
+            public LibrarySpectrumRow(string sequence, long charge, double precursorMz, double retentionTime, double[] mz, float[] intensity)
+            {
+                Sequence = sequence;
+                Charge = charge;
+                PrecursorMz = precursorMz;
+                RetentionTime = retentionTime;
+                Mz = mz;
+                Intensity = intensity;
+            }
+
+            public string Sequence { get; }
+            public long Charge { get; }
+            public double PrecursorMz { get; }
+            public double RetentionTime { get; }
+            public double[] Mz { get; }
+            public float[] Intensity { get; }
+        }
+
         /// <summary>
         /// A .blib's content, read with SQLite: counts, a hash over every precursor, and the
         /// sampled precursors' spectra. The file's bytes are not compared, since createTime changes
@@ -679,36 +768,13 @@ namespace pwiz.CarafeSharp.Test
                 var lines = new List<string>();
                 var sample = new List<SampledSpectrum>();
                 long peaks = 0;
-                using (var connection = OpenLibrary(path))
+                foreach (var spectrum in ReadSpectra(path))
                 {
-                    const string sql = @"SELECT r.peptideModSeq, r.precursorCharge, r.precursorMZ, r.retentionTime, r.numPeaks, p.peakMZ, p.peakIntensity " +
-                                       @"FROM RefSpectra r JOIN RefSpectraPeaks p ON p.RefSpectraID = r.id";
-                    using (var command = new SQLiteCommand(sql, connection))
-                    using (var reader = command.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            string sequence = reader.GetString(0);
-                            long charge = reader.GetInt64(1);
-                            double precursorMz = reader.GetDouble(2);
-                            double retentionTime = reader.GetDouble(3);
-                            int count = (int)reader.GetInt64(4);
-                            byte[] mzBytes = BlibLibraryWriter.DecodeBlob((byte[])reader.GetValue(5), count * sizeof(double));
-                            byte[] intensityBytes = BlibLibraryWriter.DecodeBlob((byte[])reader.GetValue(6), count * sizeof(float));
-                            var mz = new double[count];
-                            var intensity = new float[count];
-                            for (int i = 0; i < count; i++)
-                            {
-                                mz[i] = BitConverter.ToDouble(mzBytes, i * sizeof(double));
-                                intensity[i] = BitConverter.ToSingle(intensityBytes, i * sizeof(float));
-                            }
-                            peaks += count;
-                            lines.Add(CanonicalLine(sequence, charge, precursorMz, retentionTime, mz, intensity));
-                            string key = PrecursorKey(sequence, charge);
-                            if (IsSampled(key))
-                                sample.Add(new SampledSpectrum(key, precursorMz, retentionTime, mz, intensity));
-                        }
-                    }
+                    peaks += spectrum.Mz.Length;
+                    lines.Add(CanonicalLine(spectrum.Sequence, spectrum.Charge, spectrum.PrecursorMz, spectrum.RetentionTime, spectrum.Mz, spectrum.Intensity));
+                    string key = PrecursorKey(spectrum.Sequence, spectrum.Charge);
+                    if (IsSampled(key))
+                        sample.Add(new SampledSpectrum(key, spectrum.PrecursorMz, spectrum.RetentionTime, spectrum.Mz, spectrum.Intensity));
                 }
                 lines.Sort(StringComparer.Ordinal);
                 using (var sha = SHA256.Create())

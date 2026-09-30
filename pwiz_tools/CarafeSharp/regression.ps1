@@ -191,6 +191,17 @@ function Get-LibraryArguments {
         '-valid', '-na', '0', '-fast')
 }
 
+# -Leg Chained's second library, from the saved model with -model: the arguments of
+# Get-LibraryArguments that shape a library, so its spectra match the library training predicted.
+function Get-SavedModelArguments {
+    return @(
+        '-device', $device, '-enzyme', 'NoCut', '-miss_c', '1', '-fixMod', '1', '-varMod', '0', '-maxVar', '1', '-clip_n_m',
+        '-minLength', '7', '-maxLength', '35', '-min_pep_mz', $config.MinPeptideMz, '-max_pep_mz', $config.MaxPeptideMz,
+        '-min_pep_charge', '2', '-max_pep_charge', '3',
+        '-lf_frag_mz_min', '200', '-lf_frag_mz_max', '1960', '-lf_top_n_frag', '20',
+        '-lf_min_n_frag', '2', '-lf_frag_n_min', '2', '-lf_type', 'blib', '-decoy_prefix', 'decoy_', '-fast')
+}
+
 function Write-Step([string]$Message) {
     Write-Host "==> $Message" -ForegroundColor Cyan
 }
@@ -720,6 +731,25 @@ if (-not $CompareRun) {
             throw "$message -CreateGolden refuses a CPU fallback on a GPU request."
         }
         Write-Warning "$message The run is compared as a CPU run."
+    }
+
+    if ($Leg -eq 'Chained') {
+        # The saved model reused as a user would: a library predicted from it with -model and no
+        # training, over the command line's wider precursor window.
+        $savedModel = Join-Path $outFolder 'carafe_fine_tuned_model.carafemodel'
+        $savedFolder = Join-Path $runFolder 'saved-model-library'
+        $savedArgs = @('-db', $subsetFasta, '-model', $savedModel, '-o', $savedFolder) + (Get-SavedModelArguments)
+        Write-Step "CarafeSharp: a library from the saved model ($savedFolder)"
+        Write-Host "$exe $($savedArgs -join ' ')" -ForegroundColor DarkGray
+        $savedLog = Join-Path $runFolder 'carafesharp-saved-model.log'
+        & $exe @savedArgs *>&1 | Tee-Object -FilePath $savedLog | Out-Host
+        $savedExit = $LASTEXITCODE
+        $info.saved_model_library = 'saved-model-library'
+        $info.saved_model_exit_code = $savedExit
+        $info | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $infoPath -Encoding utf8
+        if ($savedExit -ne 0) {
+            throw "CarafeSharp failed to predict from the saved model (exit $savedExit); log: $savedLog"
+        }
     }
 } else {
     $runFolder = (Resolve-Path -LiteralPath $CompareRun).ProviderPath

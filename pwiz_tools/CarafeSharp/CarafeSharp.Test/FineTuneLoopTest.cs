@@ -239,6 +239,52 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(12.1, run.RtMax, 1e-12);
             Assert.AreEqual(150.0, run.MinFragmentIonMz);
             Assert.AreEqual(380.0, run.PrecursorMzMin);
+
+            // Every training run saves its model as one file, to predict later libraries from:
+            // the MS2 model fine-tuned here (held only when it beat its start model), no RT model
+            // (-tf ms2), and the NCE, instrument and rt_max a library takes from this run.
+            var saved = CarafeModelFile.Open(Path.Combine(output, CarafeModelFile.DEFAULT_FILE_NAME));
+            Assert.IsTrue(saved.Ms2FineTuned);
+            Assert.AreEqual(trainer.Result.UseFineTunedMs2, saved.Ms2Used);
+            Assert.AreEqual(saved.Ms2Used, saved.Entries.ContainsKey(ModelFiles.MS2_SAFETENSORS));
+            Assert.IsFalse(saved.RtFineTuned);
+            Assert.IsFalse(saved.RtUsed);
+            Assert.AreEqual(@"start_ms2.safetensors", saved.Ms2StartModel);
+            Assert.AreEqual(@"run_a", saved.Runs.Single().MsFile);
+            Assert.AreEqual(28.0, saved.Nce);
+            Assert.AreEqual(@"Astral", saved.Instrument);
+            Assert.AreEqual(12.1, saved.RtMax, 1e-12);
+            Assert.IsFalse(File.Exists(Path.Combine(output, CarafeModelFile.DEFAULT_FILE_NAME + @".tmp")));
+
+            // With what the models were trained on, for a user choosing a model: the settings, the
+            // training data, the run's acquisition from its export, and the held-out metrics.
+            var training = saved.Training;
+            Assert.AreEqual(0.01, training.Fdr);
+            Assert.IsTrue(training.Masking);
+            Assert.AreEqual(9u, training.Seed);
+            Assert.AreEqual(trainer.Stats.Ms2Rows, training.Ms2Spectra);
+            Assert.AreEqual(trainer.Stats.RtRows, training.RtPeptideForms);
+            CollectionAssert.AreEquivalent(new[] { 2, 3 }, training.Ms2Charges.Keys.ToList());
+            Assert.AreEqual(8, training.MinPeptideLength);
+            Assert.AreEqual(10, training.MaxPeptideLength);
+            var trainingRun = training.Runs.Single();
+            Assert.AreEqual(@"run_a", trainingRun.MsFile);
+            Assert.AreEqual(@"Orbitrap Astral", trainingRun.InstrumentModel);
+            Assert.AreEqual(@"Astral", trainingRun.Instrument);
+            Assert.AreEqual(28.0, trainingRun.Nce);
+            Assert.AreEqual(12.0, trainingRun.RtMax);
+            Assert.AreEqual(380.0, trainingRun.IsolationMzMin);
+            Assert.AreEqual(980.0, trainingRun.IsolationMzMax);
+            Assert.AreEqual(150.0, trainingRun.Ms2MzMin);
+            Assert.AreEqual(2000.0, trainingRun.Ms2MzMax);
+            Assert.AreEqual(6, trainingRun.Precursors);
+            Assert.AreEqual(3, trainingRun.PrecursorCharges[2]);
+            Assert.AreEqual(3, trainingRun.PrecursorCharges[3]);
+            Assert.IsTrue(training.HeldOutMetrics.ContainsKey(@"ms2.finetuned.cos"), string.Join(@", ", training.HeldOutMetrics.Keys));
+            // -model_info prints it.
+            string info = saved.FormatInfo();
+            StringAssert.Contains(info, @"Orbitrap Astral (trained as Astral)");
+            StringAssert.Contains(info, @"6 precursors (3 at 2+, 3 at 3+)");
         }
 
         /// <summary>
