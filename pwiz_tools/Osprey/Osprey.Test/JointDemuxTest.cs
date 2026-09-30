@@ -204,7 +204,8 @@ namespace pwiz.Osprey.Test
         /// its precursor's position at its own m/z and intensity, with and without the relaxed lasso; two
         /// fragments of different precursors two samples apart, within one TOF peak, keep their own
         /// positions, m/z and intensities; with counting noise, the three positions centered on each
-        /// precursor hold its intensity; and the result is the same twice.
+        /// precursor hold its intensity; and the result is the same twice. Solving neighbouring grid points in
+        /// pairs or threes gives the same recoveries.
         /// </summary>
         [TestMethod]
         public void TestJointDemuxRecovers()
@@ -240,6 +241,22 @@ namespace pwiz.Osprey.Test
             }
             var again = Demux(a, grid, sources, new Random(5), noisyParams);
             CollectionAssert.AreEqual(noisy.Demultiplexed, again.Demultiplexed);
+
+            // Neighbouring grid points solved together, two or three at a time: the same recoveries.
+            for (int points = 2; points <= JointDemultiplexer.MAX_BLOCK_POINTS; points++)
+            {
+                string label = string.Format(@"{0}-point blocks", points);
+                var blockParams = new JointDemuxParams { L1Z = 0, ChunkSamples = 256, BlockPoints = points };
+                AssertRecovered(Demux(a, grid, sources, null, blockParams), grid, sources, 0.01, label);
+                AssertRecovered(Demux(a, grid, close, null, blockParams), grid, close, 0.02, label + @", near-isobaric");
+                var blockNoisy = Demux(a, grid, sources, new Random(5), new JointDemuxParams { ChunkSamples = 256, BlockPoints = points });
+                foreach (var s in sources)
+                {
+                    double expected = s.Amount * ScanningDemuxTest.TotalElution();
+                    double found = Enumerable.Range(s.Bin - 1, 3).Sum(bin => Sum(blockNoisy.Demultiplexed, bin, grid, s.Sample, 3));
+                    Assert.AreEqual(expected, found, 0.15 * expected, string.Format(@"{0}, noisy, sample {1}", label, s.Sample));
+                }
+            }
         }
 
         /// <summary>

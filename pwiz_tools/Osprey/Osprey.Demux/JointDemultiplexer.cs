@@ -118,6 +118,13 @@ namespace pwiz.Osprey.Demux
         /// </summary>
         public double RelativeTolerance { get; set; } = 1e-4;
 
+        /// <summary>
+        /// The neighbouring grid points whose active positions each block step solves together (1 to
+        /// <see cref="JointDemultiplexer.MAX_BLOCK_POINTS"/>), the blocks' boundaries moving from pass to pass: with
+        /// more than one, a peak's mass can move between grid points within one step.
+        /// </summary>
+        public int BlockPoints { get; set; } = 1;
+
         /// <summary>A copy, to change without changing these (arrays are replaced, not changed, so shared).</summary>
         public JointDemuxParams Copy()
         {
@@ -282,6 +289,9 @@ namespace pwiz.Osprey.Demux
     /// </remarks>
     public static class JointDemultiplexer
     {
+        /// <summary>The most neighbouring grid points one block step solves together.</summary>
+        public const int MAX_BLOCK_POINTS = 5;
+
         /// <summary>
         /// Demultiplexes one block of profile data. The unit's points are profile samples (zeros dropped),
         /// their intensities in ions; each must lie on <paramref name="grid"/>.
@@ -447,7 +457,16 @@ namespace pwiz.Osprey.Demux
             private readonly int[] _rowsMoved;               // the rows a block step changes
             private readonly bool[] _rowIsMoved;
             private int _stamp;
-            private readonly int[] _blockColumns;            // one grid point's active columns
+            private readonly int[] _blockColumns;            // a block's active columns
+            private readonly int[] _blockPoint;              // with BlockPoints > 1, each one's grid point
+            // With BlockPoints > 1, per offset k of a block's grid point from its first: _rowGradient and _rowStamp
+            // at that point; B[d] B[d - k], a peak times the one k grid points on; and that times the weights
+            // (points x rows), the cross term of v between grid points k apart.
+            private readonly double[][] _rowGradientAt = new double[MAX_BLOCK_POINTS][];
+            private readonly int[][] _rowStampAt = new int[MAX_BLOCK_POINTS][];
+            private readonly double[][] _bShift = new double[MAX_BLOCK_POINTS][];
+            private readonly double[][] _vShift = new double[MAX_BLOCK_POINTS][];
+            private double[] _vShiftRow = Array.Empty<double>();
             private readonly double[] _blockGradient;
             private readonly double[] _blockOld;
             private readonly double[] _blockNew;
@@ -470,6 +489,8 @@ namespace pwiz.Osprey.Demux
                 _parameters = parameters;
                 _half = parameters.PeakHalfWidth;
                 _b = new double[2 * _half + 1];
+                for (int o = 1; o < MAX_BLOCK_POINTS; o++)
+                    _bShift[o] = new double[2 * _half + 1];
                 _b2 = new double[2 * _half + 1];
                 int groups = (_b.Length + WIDTH - 1) / WIDTH;
                 _bp = new double[groups * WIDTH];
@@ -535,14 +556,24 @@ namespace pwiz.Osprey.Demux
                 _rowsMoved = new int[_rows];
                 _rowIsMoved = new bool[_rows];
                 _rowStamp = new int[_rows];
+                _rowGradientAt[0] = _rowGradient;
+                _rowStampAt[0] = _rowStamp;
+                for (int o = 1; o < MAX_BLOCK_POINTS; o++)
+                {
+                    _rowGradientAt[o] = new double[_rows];
+                    _rowStampAt[o] = new int[_rows];
+                    _vShift[o] = Array.Empty<double>();
+                }
                 _columnUsed = new bool[_columns];
-                _blockColumns = new int[_columns];
-                _blockGradient = new double[_columns];
-                _blockOld = new double[_columns];
-                _blockNew = new double[_columns];
-                _blockRhs = new double[_columns];
-                _blockGram = new double[_columns * _columns];
-                _workspace = new NnlsSolver.Workspace(_columns);
+                int most = MAX_BLOCK_POINTS * _columns;
+                _blockColumns = new int[most];
+                _blockPoint = new int[most];
+                _blockGradient = new double[most];
+                _blockOld = new double[most];
+                _blockNew = new double[most];
+                _blockRhs = new double[most];
+                _blockGram = new double[most * most];
+                _workspace = new NnlsSolver.Workspace(most);
             }
 
             /// <summary>Solves the coefficients of grid points [lo, hi] from points[start, end).</summary>
@@ -559,6 +590,8 @@ namespace pwiz.Osprey.Demux
                 Array.Clear(_y, 0, _rows * _samples);
                 Array.Clear(_rowSignal, 0, _rows);
                 Array.Clear(_rowStamp, 0, _rows);
+                for (int o = 1; o < MAX_BLOCK_POINTS; o++)
+                    Array.Clear(_rowStampAt[o], 0, _rows);
                 _stamp = 0;
                 Array.Clear(_sampleData, 0, _samples);
                 long baseSample = lo - _half;
@@ -700,11 +733,17 @@ namespace pwiz.Osprey.Demux
                 }
                 if (_v.Length < rp)
                     _v = new double[rp];
+                for (int o = 1; o < _parameters.BlockPoints; o++)
+                {
+                    if (_vShift[o].Length < rp)
+                        _vShift[o] = new double[rp];
+                }
                 _groupPoints = (_points + WIDTH - 1) / WIDTH * WIDTH;
                 if (_zRow.Length < _rows * _groupPoints)
                 {
                     _zRow = new double[_rows * _groupPoints];
                     _vRow = new double[_rows * _groupPoints];
+                    _vShiftRow = new double[_rows * _groupPoints];
                 }
                 if (_wr.Length < rs + 2 * WIDTH)
                     _wr = new double[rs + 2 * WIDTH];
@@ -728,6 +767,11 @@ namespace pwiz.Osprey.Demux
                 {
                     _b[d] = kernel[d];
                     _b2[d] = _b[d] * _b[d];
+                }
+                for (int o = 1; o < MAX_BLOCK_POINTS; o++)
+                {
+                    for (int d = 0; d < _b.Length; d++)
+                        _bShift[o][d] = d >= o ? _b[d] * _b[d - o] : 0;
                 }
                 Array.Copy(_b, _bp, _b.Length);
                 for (int m = 0; m < _bv.Length; m++)
@@ -788,6 +832,12 @@ namespace pwiz.Osprey.Demux
                         Slide(_b2, _weight, o + q0, _vRow, oz + q0);
                         for (int l = 0; l < WIDTH && q0 + l < _points; l++)
                             _v[(q0 + l) * _rows + r] = _vRow[oz + q0 + l];
+                        for (int k = 1; k < _parameters.BlockPoints; k++)
+                        {
+                            Slide(_bShift[k], _weight, o + q0, _vShiftRow, oz + q0);
+                            for (int l = 0; l < WIDTH && q0 + l < _points; l++)
+                                _vShift[k][(q0 + l) * _rows + r] = _vShiftRow[oz + q0 + l];
+                        }
                     }
                 }
                 for (int m = 0; m < groups; m++)
@@ -855,7 +905,7 @@ namespace pwiz.Osprey.Demux
                     for (int pass = 0; pass < _parameters.MaxPasses; pass++)
                     {
                         long t2 = Now();
-                        double largest = Pass();
+                        double largest = _parameters.BlockPoints > 1 ? MultiPass(pass) : Pass();
                         if (grow && _parameters.PruneActive)
                             Prune();
                         _passTicks += Now() - t2;
@@ -932,6 +982,178 @@ namespace pwiz.Osprey.Demux
                 }
                 for (int d = 0, x = o; d < _bp.Length; d++, x++)
                     _residual[x] -= scale * _bp[d];
+            }
+
+            /// <summary>
+            /// One pass of block coordinate descent over runs of up to <see cref="JointDemuxParams.BlockPoints"/>
+            /// neighbouring grid points: each run's active positions at all its points solved together, the terms
+            /// between points from the shifted v, so that a peak's mass can move between the points within one step.
+            /// The runs' boundaries fall on the multiples of the run length offset by the pass; a run stops early where
+            /// the next point is not in reach. Otherwise as <see cref="Pass"/>.
+            /// </summary>
+            private double MultiPass(int pass)
+            {
+                int length = _parameters.BlockPoints, offset = pass % length;
+                double largest = 0;
+                _decrease = 0;
+                _solvedCount = 0;
+                for (int i = 0; i < _reachCount; i++)
+                {
+                    int q = _reach[i];
+                    int most = length - (q + offset) % length, span = 1;
+                    while (span < most && i + span < _reachCount && _reach[i + span] == q + span)
+                        span++;
+                    i += span - 1;
+                    bool dirty = false;
+                    for (int p = q; p < q + span; p++)
+                    {
+                        dirty |= _dirty[p];
+                        _dirty[p] = false;
+                    }
+                    if (!dirty)
+                        continue;
+                    int n = 0;
+                    for (int p = q; p < q + span; p++)
+                    {
+                        if (_activeCount[p] == 0)
+                            continue;
+                        int op = p * _columns;
+                        for (int j = 0; j < _columns; j++)
+                        {
+                            if (_active[op + j] && _curvature[op + j] > 0)
+                            {
+                                _blockColumns[n] = j;
+                                _blockPoint[n] = p;
+                                n++;
+                            }
+                        }
+                    }
+                    if (n == 0)
+                    {
+                        _empty++;
+                        continue;
+                    }
+                    for (int p = q; p < q + span; p++)
+                        _solved[_solvedCount++] = p;
+                    _blockSolves++;
+                    _blockColumnCount += n;
+                    double stretch;
+                    _stamp++;
+                    for (int u = 0; u < n; u++)
+                    {
+                        int j = _blockColumns[u], p = _blockPoint[u];
+                        var rowGradient = _rowGradientAt[p - q];
+                        var rowStamp = _rowStampAt[p - q];
+                        double g = 0;
+                        for (int k = _columnStart[j]; k < _columnStart[j + 1]; k++)
+                        {
+                            int r = _columnRow[k];
+                            if (rowStamp[r] != _stamp)
+                            {
+                                rowGradient[r] = PeakGradient(r * _samples + p);
+                                rowStamp[r] = _stamp;
+                            }
+                            g += _columnA[k] * rowGradient[r];
+                        }
+                        _blockGradient[u] = g;
+                        _blockOld[u] = _beta[p * _columns + j];
+                    }
+                    if (n == 1)
+                    {
+                        _singles++;
+                        int index = _blockPoint[0] * _columns + _blockColumns[0];
+                        double c = _curvature[index];
+                        _blockNew[0] = Math.Max(0, _blockOld[0] + (_blockGradient[0] - _lambda[index]) / c);
+                        stretch = Relax(1);
+                        double step = _blockNew[0] - _blockOld[0];
+                        _decrease += (_blockGradient[0] - _lambda[index]) * step - 0.5 * c * step * step;
+                    }
+                    else
+                    {
+                        // Within a point, H = sum_r A A v[p, r]; between points k apart, sum_r A A vShift_k[first, r].
+                        for (int u = 0; u < n; u++)
+                        {
+                            int ju = _blockColumns[u], pu = _blockPoint[u];
+                            for (int w = u; w < n; w++)
+                            {
+                                int jw = _blockColumns[w], pw = _blockPoint[w];
+                                int pair = Math.Min(ju, jw) * _columns + Math.Max(ju, jw);
+                                var weights = pu == pw ? _v : _vShift[Math.Abs(pw - pu)];
+                                int ow = Math.Min(pu, pw) * _rows;
+                                int m1 = _pairStart[pair + 1];
+                                double h = 0;
+                                for (int m = _pairStart[pair]; m < m1; m++)
+                                    h += _pairA[m] * weights[ow + _pairRow[m]];
+                                _blockGram[u * n + w] = h;
+                                _blockGram[w * n + u] = h;
+                            }
+                        }
+                        for (int u = 0; u < n; u++)
+                        {
+                            double rhs = _blockGradient[u] - _lambda[_blockPoint[u] * _columns + _blockColumns[u]];
+                            for (int w = 0; w < n; w++)
+                                rhs += _blockGram[u * n + w] * _blockOld[w];
+                            _blockRhs[u] = rhs;
+                        }
+                        NnlsSolver.SolveNormal(_blockGram, _blockRhs, n, _blockNew, _workspace, 0, _blockOld);
+                        stretch = Relax(n);
+                        for (int u = 0; u < n; u++)
+                        {
+                            double du = _blockNew[u] - _blockOld[u];
+                            if (du == 0)
+                                continue;
+                            double hd = 0;
+                            for (int w = 0; w < n; w++)
+                                hd += _blockGram[u * n + w] * (_blockNew[w] - _blockOld[w]);
+                            _decrease += (_blockGradient[u] - _lambda[_blockPoint[u] * _columns + _blockColumns[u]]) * du - 0.5 * du * hd;
+                        }
+                    }
+                    double moved = 0;
+                    for (int p = q; p < q + span; p++)
+                    {
+                        int rowsMoved = 0;
+                        for (int u = 0; u < n; u++)
+                        {
+                            double delta = _blockNew[u] - _blockOld[u];
+                            if (_blockPoint[u] != p || delta == 0)
+                                continue;
+                            int j = _blockColumns[u];
+                            _beta[p * _columns + j] = _blockNew[u];
+                            for (int k = _columnStart[j]; k < _columnStart[j + 1]; k++)
+                            {
+                                int r = _columnRow[k];
+                                if (!_rowIsMoved[r])
+                                {
+                                    _rowIsMoved[r] = true;
+                                    _rowsMoved[rowsMoved++] = r;
+                                }
+                                _rowDelta[r] += _columnA[k] * delta;
+                            }
+                            moved = Math.Max(moved, Math.Abs(delta));
+                        }
+                        for (int t = 0; t < rowsMoved; t++)
+                        {
+                            int r = _rowsMoved[t];
+                            SubtractPeak(r * _samples + p, _rowDelta[r]);
+                            _rowDelta[r] = 0;
+                            _rowIsMoved[r] = false;
+                        }
+                    }
+                    largest = Math.Max(largest, moved);
+                    if (moved > _parameters.ToleranceIons)
+                        _moves++;
+                    if (moved <= _parameters.ToleranceIons)
+                        continue;
+                    bool overshot = (stretch - 1) / stretch * moved > _parameters.ToleranceIons;
+                    int reach0 = Math.Max(0, q - 2 * _half), reach1 = Math.Min(_points - 1, q + span - 1 + 2 * _half);
+                    for (int t = reach0; t <= reach1; t++)
+                    {
+                        _changed[t] = true;
+                        if (t < q || t >= q + span || overshot)
+                            _dirty[t] = true;
+                    }
+                }
+                return largest;
             }
 
             /// <summary>
