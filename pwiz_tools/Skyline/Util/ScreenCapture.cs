@@ -20,7 +20,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -32,6 +31,8 @@ using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.ToolsUI;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Util
 {
@@ -59,10 +60,6 @@ namespace pwiz.Skyline.Util
     /// </summary>
     public static class ScreenCapture
     {
-        // Largest width or height rendered off-screen. A form in a bad state can report a nonsense size, and a
-        // bitmap that large would fail or exhaust memory rather than produce a useful image.
-        private const int MAX_RENDER_DIMENSION = 10000;
-
         private static volatile bool _sessionPermissionGranted;
         private static volatile bool _sessionDenied;
         // 0 = no prompt outstanding, 1 = prompt scheduled or open.
@@ -191,10 +188,8 @@ namespace pwiz.Skyline.Util
             var bmp = new Bitmap(screenRect.Width, screenRect.Height, PixelFormat.Format32bppArgb);
             try
             {
-                using (var g = Graphics.FromImage(bmp))
-                {
-                    g.CopyFromScreen(screenRect.Location, Point.Empty, screenRect.Size);
-                }
+                using var g = Graphics.FromImage(bmp);
+                g.CopyFromScreen(screenRect.Location, Point.Empty, screenRect.Size);
             }
             catch (Exception)
             {
@@ -205,65 +200,76 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Captures a Skyline form as it appears on the screen when the screen can supply it. Otherwise renders it
-        /// off-screen with <see cref="RenderControl"/>: when there is no desktop to copy from (e.g. a disconnected
-        /// Remote Desktop session), when the form is not on the monitors (e.g. the offscreen test mode), or when a
-        /// window of another application covers it. If rendering fails and the desktop is available, falls back to a
-        /// screen copy with the covering windows redacted. Returns null if no image could be made. Must be called on
-        /// the form's thread.
+        /// Returns an image of a Skyline form. The image may be incomplete if parts of the form could not be drawn,
+        /// but if no image of the form could be made at all, this throws. Must be called on the form's thread.
         /// </summary>
-        public static Bitmap CaptureOrRender(Control targetForm)
+        public static Bitmap GetFormImage(Control targetForm)
         {
-            bool desktopAvailable = IsDesktopAvailable();
-            if (desktopAvailable)
+            // Copy the screen when it shows the whole form. Otherwise render the form off-screen: there is no
+            // desktop to copy from (e.g. a disconnected Remote Desktop session), the form is not on the monitors
+            // (e.g. the offscreen test mode), or a window of another application covers it. If rendering fails and
+            // the desktop is available, fall back to a screen copy with the covering windows redacted.
+            if (!IsDesktopAvailable())
             {
-                var screenRect = GetWindowRectangle(targetForm);
-                if (IsShownOnScreen(screenRect, targetForm))
-                    return CaptureScreen(screenRect);
+                return RenderControl(GetRenderedControl(targetForm)) ??
+                       throw new InvalidOperationException(JsonUiService.LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE);
             }
-            var rendered = RenderControl(GetRenderedControl(targetForm));
-            if (rendered != null || !desktopAvailable)
-                return rendered;
-            return CaptureAndRedact(GetWindowRectangle(targetForm), targetForm);
+            var screenRect = GetWindowRectangle(targetForm);
+            if (IsShownOnScreen(screenRect, targetForm))
+                return CaptureScreen(screenRect);
+            Exception renderException = null;
+            try
+            {
+                var rendered = RenderControl(GetRenderedControl(targetForm));
+                if (rendered != null)
+                    return rendered;
+            }
+            catch (Exception e)
+            {
+                renderException = e;
+            }
+            try
+            {
+                return CaptureAndRedact(screenRect, targetForm);
+            }
+            catch (Exception e) when (renderException != null)
+            {
+                // AggregateException's own message does not include its inner exceptions' messages
+                throw new AggregateException(TextUtil.LineSeparate(renderException.Message, e.Message),
+                    renderException, e);
+            }
         }
 
         /// <summary>
         /// Renders a control, and the forms and user controls nested inside it, into a new bitmap without reading
         /// the screen, so it works when the control is covered by other windows or there is no desktop at all.
-        /// Nested forms and user controls are rendered individually and drawn over their parent, because
-        /// <see cref="Control.DrawToBitmap"/> on the parent alone does not reliably include them (e.g. docked
-        /// panes).
+        /// Nested forms and user controls are rendered individually and drawn over their parent, because printing
+        /// the parent alone (as <see cref="Control.DrawToBitmap"/> does) does not reliably include them (e.g.
+        /// docked panes).
         /// <para>This also takes the screenshots attached to an error report, when Skyline may already be in a bad
-        /// state, so it must not make things worse: it never throws, skips anything it cannot safely draw (disposed,
-        /// hidden, without a handle, or owned by another thread whose message loop may be stuck), and returns null
-        /// if the control itself cannot be drawn. Must be called on the control's thread.</para>
+        /// state, so it must not make things worse: it skips anything it cannot safely draw (disposed, hidden,
+        /// without a handle, or owned by another thread whose message loop may be stuck), returning null if that is
+        /// the control itself. A nested form or user control that throws while drawing is left out; the control
+        /// itself throwing is thrown to the caller. Must be called on the control's thread.</para>
         /// </summary>
         public static Bitmap RenderControl(Control control)
         {
-            Bitmap bitmap = null;
+            if (!CanRender(control))
+                return null;
+            var bitmap = new Bitmap(control.Width, control.Height);
             try
             {
-                if (!CanRender(control))
-                    return null;
-                bitmap = new Bitmap(control.Width, control.Height);
                 var origin = GetScreenLocation(control);
                 var bounds = new Rectangle(Point.Empty, control.Size);
-                using (var g = Graphics.FromImage(bitmap))
-                {
-                    if (!DrawOnto(g, control, origin, bounds))
-                    {
-                        bitmap.Dispose();
-                        return null;
-                    }
-                    DrawNestedControls(g, control, origin, bounds);
-                }
+                using var g = Graphics.FromImage(bitmap);
+                DrawOnto(g, control, origin, bounds);
+                DrawNestedControls(g, control, origin, bounds);
                 return bitmap;
             }
-            catch (Exception e)
+            catch
             {
-                Debug.WriteLine($@"Exception rendering {control?.GetType().Name}: {e}");
-                bitmap?.Dispose();
-                return null;
+                bitmap.Dispose();
+                throw;
             }
         }
 
@@ -283,20 +289,18 @@ namespace pwiz.Skyline.Util
                 return bmp;
 
             // Redact foreign window regions
-            using (var g = Graphics.FromImage(bmp))
-            using (var redactRegion = new Region(Rectangle.Empty))
+            using var g = Graphics.FromImage(bmp);
+            using var redactRegion = new Region(Rectangle.Empty);
+            foreach (var foreignRect in foreignRects)
             {
-                foreach (var foreignRect in foreignRects)
-                {
-                    var bmpRect = new Rectangle(
-                        foreignRect.X - screenRect.X,
-                        foreignRect.Y - screenRect.Y,
-                        foreignRect.Width, foreignRect.Height);
-                    redactRegion.Union(bmpRect);
-                }
-                using (var brush = new SolidBrush(Color.Cyan))
-                    g.FillRegion(brush, redactRegion);
+                var bmpRect = new Rectangle(
+                    foreignRect.X - screenRect.X,
+                    foreignRect.Y - screenRect.Y,
+                    foreignRect.Width, foreignRect.Height);
+                redactRegion.Union(bmpRect);
             }
+            using var brush = new SolidBrush(Color.Cyan);
+            g.FillRegion(brush, redactRegion);
             return bmp;
         }
 
@@ -453,22 +457,20 @@ namespace pwiz.Skyline.Util
         {
             try
             {
-                using (var dlg = new ScreenCapturePermissionDlg())
+                using var dlg = new ScreenCapturePermissionDlg();
+                var owner = (Form)Program.MainWindow ?? Program.StartWindow;
+                if (dlg.ShowDialog(owner) == DialogResult.OK)
                 {
-                    var owner = (Form)Program.MainWindow ?? Program.StartWindow;
-                    if (dlg.ShowDialog(owner) == DialogResult.OK)
+                    _sessionPermissionGranted = true;
+                    if (dlg.DoNotAskAgain)
                     {
-                        _sessionPermissionGranted = true;
-                        if (dlg.DoNotAskAgain)
-                        {
-                            Settings.Default.AllowMcpScreenCapture = true;
-                            Settings.Default.Save();
-                        }
+                        Settings.Default.AllowMcpScreenCapture = true;
+                        Settings.Default.Save();
                     }
-                    else
-                    {
-                        _sessionDenied = true;
-                    }
+                }
+                else
+                {
+                    _sessionDenied = true;
                 }
             }
             finally
@@ -520,35 +522,32 @@ namespace pwiz.Skyline.Util
                 if (!CanRender(child))
                     continue;
                 if (child is Form || child is UserControl)
-                    DrawOnto(g, child, origin, clip);
+                {
+                    try
+                    {
+                        DrawOnto(g, child, origin, clip);
+                    }
+                    catch (Exception e)
+                    {
+                        // Leave out the child that failed and keep drawing the rest
+                        Messages.WriteAsyncDebugMessage(@"Exception rendering {0}: {1}", child.GetType().Name, e);
+                    }
+                }
                 DrawNestedControls(g, child, origin, clip);
             }
         }
 
-        // Renders a single control and draws it onto the bitmap at its position relative to the origin. Returns
-        // false, rather than throwing, if the control could not be drawn.
-        private static bool DrawOnto(Graphics g, Control control, Point origin, Rectangle clip)
+        // Draws a single control onto the bitmap at its position relative to the origin, limited to the clip.
+        // Only the visible part is painted (see Gdi32.PrintControl), however large the control.
+        private static void DrawOnto(Graphics g, Control control, Point origin, Rectangle clip)
         {
-            try
-            {
-                var location = GetScreenLocation(control);
-                using (var image = new Bitmap(control.Width, control.Height))
-                {
-                    control.DrawToBitmap(image, new Rectangle(Point.Empty, control.Size));
-                    g.SetClip(clip);
-                    g.DrawImage(image, location.X - origin.X, location.Y - origin.Y);
-                }
-                return true;
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine($@"Exception rendering {control.GetType().Name}: {e}");
-                return false;
-            }
+            var location = GetScreenLocation(control);
+            var bounds = new Rectangle(location.X - origin.X, location.Y - origin.Y, control.Width, control.Height);
+            Gdi32.PrintControl(g, control, bounds, clip);
         }
 
-        // Whether a control can be drawn without side effects or risk: DrawToBitmap would create a missing handle,
-        // and on a control owned by another thread it would wait on that thread, which may never respond.
+        // Whether a control can be drawn without side effects or risk: reading its Handle would create a missing
+        // one, and a control owned by another thread would be sent WM_PRINT on that thread, which may never respond.
         private static bool CanRender(Control control)
         {
             if (control == null || control.IsDisposed || control.Disposing || !control.IsHandleCreated)
@@ -557,8 +556,7 @@ namespace pwiz.Skyline.Util
                 return false;
             if (control is Form form && form.WindowState == FormWindowState.Minimized)
                 return false;
-            return control.Width > 0 && control.Height > 0 &&
-                   control.Width <= MAX_RENDER_DIMENSION && control.Height <= MAX_RENDER_DIMENSION;
+            return control.Width > 0 && control.Height > 0;
         }
 
         // The screen location of the control's outer (window) bounds.

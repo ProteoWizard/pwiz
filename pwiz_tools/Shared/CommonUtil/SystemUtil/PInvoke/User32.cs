@@ -89,6 +89,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
             WM_LBUTTONDOWN = 0x0201,
             WM_LBUTTONUP = 0x0202,
             WM_MOUSELEAVE = 0x02A3,
+            WM_PRINT = 0x0317,
             EM_SETSEL = 0x00B1,
             EM_REPLACESEL = 0x00C2,
             BM_CLICK = 0x00F5
@@ -104,8 +105,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
         /// <summary>
         /// Combined wParam for WM_CHANGEUISTATE to hide both focus rectangles and mnemonic underscores.
         /// </summary>
-        public static readonly IntPtr UISF_HIDEALL = (IntPtr)(UIS_SET | ((UISF_HIDEFOCUS | UISF_HIDEACCEL) << 16));
-        // ReSharper restore InconsistentNaming
+        public static readonly IntPtr UISF_HIDEALL = (IntPtr)(UIS_SET | ((UISF_HIDEFOCUS | UISF_HIDEACCEL) << 16));        // ReSharper restore InconsistentNaming
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         // ReSharper disable once InconsistentNaming IdentifierTypo
