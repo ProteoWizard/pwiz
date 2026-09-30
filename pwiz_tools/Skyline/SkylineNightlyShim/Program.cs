@@ -127,7 +127,11 @@ namespace SkylineNightlyShim
             // already a plain directory path, and unlike Assembly.Location it survives a
             // single-file publish. It carries a trailing separator, which GetDirectoryName
             // never produced, so trim it to keep the logged and combined paths as they were.
-            var nightlyDirectory = AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar);
+            // TrimEndingDirectorySeparator rather than TrimEnd: it leaves a path root alone, so an
+            // install at a drive root stays "C:\" instead of becoming "C:", which Windows reads as
+            // drive-relative and would resolve the ZIP path and working directory against the
+            // drive's current directory rather than this one.
+            var nightlyDirectory = Path.TrimEndingDirectorySeparator(AppContext.BaseDirectory);
             if (!string.IsNullOrEmpty(nightlyDirectory))
                 Directory.SetCurrentDirectory(nightlyDirectory);
 

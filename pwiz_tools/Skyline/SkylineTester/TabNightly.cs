@@ -444,7 +444,11 @@ namespace SkylineTester
                 DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss.ffffff", CultureInfo.InvariantCulture),
                 message));
             var frames = stackTrace.GetFrames();
-            if (frames.Length == 0)
+            // Kept although net10 annotates GetFrames non-null, for the same reason as the ClrMD
+            // walks in HangDetection and GcRootReporter: this is a diagnostic path, and an NRE here
+            // would cost the nightly record it exists to write
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+            if (frames == null || frames.Length == 0)
                 lines.Add("    !!no stack!!");
             else
                 lines.AddRange(frames.Select(f => "    " + f.ToString().Trim()));
