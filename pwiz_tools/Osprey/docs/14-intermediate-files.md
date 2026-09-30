@@ -615,6 +615,16 @@ lever that reaches every task: the pick decides which peak a precursor's row des
 back in Stage 4, and everything downstream inherits that choice. Putting it in the base
 also means a task added later carries it without having to know.
 
+`;blibreader=2` sits in the base for the same reason, on every search of a blib library: the
+reader types every peak from m/z and reads modification text residue- and precision-aware
+([13](13-blib-output-schema.md)), so a blib's entries carry ion types and masses they did not
+before, and those reach every stage. It carries `BlibLoader.READER_VERSION`, as the `.libcache`
+composition term `blib_reader:` does (with the fragment tolerance the cached types were computed
+within), so one edit moves the key term and the cache term together. The tolerance itself needs
+no key term: it is in the search hash. A DIA-NN TSV search keys as before; its `.libcache`
+carries `tsv_reader:2`, so a cache written before the reader refused invalid lines is re-read
+once.
+
 Read that table as a worked example of P15's asymmetry. Every row was added after an
 under-inclusive key reused something it should not have, and none of them cost more than
 a recompute if they were unnecessary.

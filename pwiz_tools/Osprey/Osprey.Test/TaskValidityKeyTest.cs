@@ -22,9 +22,13 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 using pwiz.Osprey.Tasks.ModelDiagnostics;
 
@@ -54,6 +58,103 @@ namespace pwiz.Osprey.Test
             AssertEveryTaskCarriesTheSuffixesItNeeds();
             AssertLibraryFragmentArmIsPinnedToThePipeline();
             AssertDiagnosticsReportIsADeclaredOutputOnlyWhenAsked();
+            AssertLibraryTermsKeyOnlyWhatChanged();
+        }
+
+        /// <summary>
+        /// Each library term keys what its change reaches, and no more:
+        /// <list type="bullet">
+        /// <item>every blib is read differently since the reader started typing its peaks from
+        /// m/z (and reading modification text residue- and precision-aware), so every task of a
+        /// blib search keys on <see cref="OspreyTask.BLIB_READER_TERM"/>, and the
+        /// <c>.libcache</c> composition carries the reader version with the fragment tolerance
+        /// the cached types were computed within;</item>
+        /// <item>a DIA-NN TSV search keys exactly as before - its columns are still the typing -
+        /// while its <c>.libcache</c> is re-read once through the validating reader;</item>
+        /// <item>the output blib's rows changed for every library, so SecondPassFDR keys on
+        /// <c>;blibout</c> for both.</item>
+        /// </list>
+        /// </summary>
+        private static void AssertLibraryTermsKeyOnlyWhatChanged()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), @"osprey_libterms_" + Path.GetRandomFileName());
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string tsv = Path.Combine(dir, @"library.tsv");
+                File.WriteAllText(tsv, @"not read");
+                string blib = Path.Combine(dir, @"library.blib");
+                File.WriteAllText(blib, @"not read");
+
+                var tsvConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(tsv) };
+                var tsvKeys = TaskKeys(tsvConfig);
+                Assert.AreEqual(PreUpgradeBaseKey(tsvConfig), tsvKeys[PerFileScoringTask.TASK_NAME],
+                    @"a TSV search keys as before the reader change");
+                foreach (var key in tsvKeys)
+                    Assert.IsFalse(key.Value.Contains(OspreyTask.BLIB_READER_TERM), key.Key);
+                Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, "tsv_reader:{0}\n", DiannTsvLoader.READER_VERSION),
+                    LibraryLoader.LibraryReaderTerms(tsvConfig));
+
+                var blibConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(blib) };
+                var blibKeys = TaskKeys(blibConfig);
+                Assert.AreEqual(PreUpgradeBaseKey(blibConfig) + OspreyTask.BLIB_READER_TERM,
+                    blibKeys[PerFileScoringTask.TASK_NAME]);
+                foreach (var key in blibKeys)
+                    StringAssert.Contains(key.Value, OspreyTask.BLIB_READER_TERM, key.Key + @" must key on the blib reader");
+                Assert.AreEqual(BlibLoader.CacheTerm(blibConfig.FragmentTolerance), LibraryLoader.LibraryReaderTerms(blibConfig));
+                // The cached types were computed within the fragment tolerance, so another
+                // tolerance is another cache (the task keys follow it through the search hash).
+                var unitConfig = new OspreyConfig
+                {
+                    LibrarySource = LibrarySource.FromPath(blib),
+                    FragmentTolerance = FragmentToleranceConfig.UnitResolution(0.5)
+                };
+                Assert.AreNotEqual(LibraryLoader.LibraryReaderTerms(blibConfig), LibraryLoader.LibraryReaderTerms(unitConfig));
+                Assert.AreNotEqual(blibConfig.Identity.SearchParameterHash(), unitConfig.Identity.SearchParameterHash());
+
+                foreach (var config in new[] { tsvConfig, blibConfig })
+                {
+                    StringAssert.Contains(TaskKeys(config)[SecondPassFdrTask.TASK_NAME],
+                        @";blibout=" + BlibSpectrum.FORMAT_VERSION);
+                }
+            }
+            finally
+            {
+                DeleteTempDirectory(dir);
+            }
+        }
+
+        /// <summary>Every pipeline task's validity key for <paramref name="config"/>, by task name.</summary>
+        private static Dictionary<string, string> TaskKeys(OspreyConfig config)
+        {
+            var tasks = OspreyTasks.Create().Pipeline;
+            var ctx = new PipelineContext(config, tasks, null, null, null);
+            return tasks.ToDictionary(t => t.Name, t => t.ValidityKey(ctx));
+        }
+
+        /// <summary>
+        /// Removes a test's temp folder best effort, so a lingering SQLite handle cannot replace
+        /// the assertion that failed with an IOException from a finally block.
+        /// </summary>
+        private static void DeleteTempDirectory(string dir)
+        {
+            foreach (string file in Directory.GetFiles(dir))
+                BlibLibraryInputTest.TryDeleteFile(file);
+            try
+            {
+                Directory.Delete(dir, true);
+            }
+            catch (IOException)
+            {
+                // A test's temp folder; a lingering handle must not fail the test.
+            }
+        }
+
+        /// <summary>The base task key as every build before the blib reader change wrote it.</summary>
+        private static string PreUpgradeBaseKey(OspreyConfig config)
+        {
+            return string.Format(@"search={0};library={1}{2}", config.Identity.SearchParameterHash(),
+                config.Identity.LibraryIdentityHash(), OspreyEnvironment.PickValidityKeySuffix());
         }
 
         /// <summary>

@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -57,6 +58,19 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     public abstract class OspreyTask : ISelectableTask
     {
+        /// <summary>
+        /// The base-key term of every search of a blib library. Since the reader started typing
+        /// every peak from m/z and reading modification text residue- and precision-aware, a
+        /// blib's entries carry ion types and masses they did not before - which reach the
+        /// scores, the generated decoys and every stage after them - so a directory scored
+        /// before the change must not be adopted after. A TSV library keys exactly as before.
+        /// It carries <see cref="BlibLoader.READER_VERSION"/>, as the <c>.libcache</c> composition
+        /// term does, so a change to the reader moves both. The typing tolerance needs no term:
+        /// it is the search's fragment tolerance, already in
+        /// <see cref="SearchIdentity.SearchParameterHash"/>.
+        /// </summary>
+        public const string BLIB_READER_TERM = @";blibreader=" + BlibLoader.READER_VERSION;
+
         /// <summary>
         /// Short identifier used in pipeline log lines, the <c>--task</c> selector and the
         /// validity sidecar. Each task returns its own <c>TASK_NAME</c> constant, the one
@@ -194,12 +208,16 @@ namespace pwiz.Osprey.Tasks
         /// selects which peak a precursor's row describes, in Stage 4, and
         /// everything downstream inherits that choice. Putting it here also
         /// means a task added later carries it without having to know.
+        ///
+        /// <see cref="BLIB_READER_TERM"/> is here for the same reason: it changes what every
+        /// task reads from a blib library.
         /// </summary>
         public virtual string ValidityKey(PipelineContext ctx) => string.Format(
-            @"search={0};library={1}{2}",
+            @"search={0};library={1}{2}{3}",
             ctx.Config.Identity.SearchParameterHash(),
             ctx.Config.Identity.LibraryIdentityHash(),
-            OspreyEnvironment.PickValidityKeySuffix());
+            OspreyEnvironment.PickValidityKeySuffix(),
+            ctx.Config.LibrarySource?.Format == LibraryFormat.Blib ? BLIB_READER_TERM : string.Empty);
 
         /// <summary>
         /// A <see cref="ValidateSelection"/> error naming this task and what it is missing,

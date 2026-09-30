@@ -147,6 +147,27 @@ namespace pwiz.Skyline
 
         public int Run(string[] args, bool withoutUsage = false, bool test = false)
         {
+            // --culture sets the process-wide culture, so restore it for callers that run more than one command
+            // in the same process (the Skyline MCP, the Immediate Window and batch commands).
+            var originalCulture = LocalizationHelper.CurrentCulture;
+            var originalUICulture = LocalizationHelper.CurrentUICulture;
+            var originalThreadCulture = Thread.CurrentThread.CurrentCulture;
+            var originalThreadUICulture = Thread.CurrentThread.CurrentUICulture;
+            try
+            {
+                return RunAndReconcileStatus(args, withoutUsage, test);
+            }
+            finally
+            {
+                LocalizationHelper.CurrentCulture = originalCulture;
+                LocalizationHelper.CurrentUICulture = originalUICulture;
+                Thread.CurrentThread.CurrentCulture = originalThreadCulture;
+                Thread.CurrentThread.CurrentUICulture = originalThreadUICulture;
+            }
+        }
+
+        private int RunAndReconcileStatus(string[] args, bool withoutUsage, bool test)
+        {
             var exitStatus = RunInner(args, withoutUsage);
 
             // Handle cases where the error reporting and exit code are out of synch

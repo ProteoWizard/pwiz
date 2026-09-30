@@ -177,9 +177,11 @@ namespace pwiz.Osprey.Core
         /// OSPREY_CAL_SAMPLE_SIZE: override the calibration library sample size (targets
         /// sampled per attempt). Default 0 = use the configured CalibrationSampleSize
         /// (100K). Experimental lever for testing whether a larger sample surfaces
-        /// proportionally more near-zero-FDR calibration anchors on rich files.
+        /// proportionally more near-zero-FDR calibration anchors on rich files. Re-read on
+        /// each access (once per file), so an in-process test can drive the sampling path on
+        /// a library smaller than the default sample.
         /// </summary>
-        public static readonly int CalSampleSizeOverride = ParseIntOrZero(@"OSPREY_CAL_SAMPLE_SIZE");
+        public static int CalSampleSizeOverride => ParseIntOrZero(@"OSPREY_CAL_SAMPLE_SIZE");
 
         // Note: the OSPREY_EXIT_AFTER_SCORING env var that used to live here
         // was retired in favor of the --task PerFileScoring CLI flag. See the HPC
@@ -304,7 +306,7 @@ namespace pwiz.Osprey.Core
         /// after Stage 5, including entries already judged false. They read only the identity
         /// fields, never the spectra - so dropping entries would silently move protein FDR,
         /// while dropping fragments cannot. The blib write is safe for a separate reason:
-        /// <c>BlibOutputWriter.PrecompressSpectra</c> reads fragments only for
+        /// <c>BlibOutputWriter.PrepareSpectra</c> reads fragments only for
         /// <c>bestByPrecursor</c>, which is derived from the post-compaction survivors, so
         /// blib-written is a SUBSET of what is retained here.</para>
         ///
@@ -663,8 +665,11 @@ namespace pwiz.Osprey.Core
         /// <para>Deliberately NOT in any validity key: it changes no output, so including it
         /// would invalidate every cached artifact the moment it was flipped, turning a
         /// diagnostic into a re-run.</para>
+        ///
+        /// <para>Re-read on each access rather than fixed at class load, so an in-process test
+        /// can switch it per command line with <see cref="OverrideVariables"/>.</para>
         /// </summary>
-        public static readonly bool Pass2VerifyWorker =
+        public static bool Pass2VerifyWorker =>
             IsSetAndNotZero(@"OSPREY_PASS2_VERIFY_WORKER");
 
         /// <summary>

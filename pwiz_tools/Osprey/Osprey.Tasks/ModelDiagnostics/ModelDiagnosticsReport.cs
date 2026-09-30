@@ -58,7 +58,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// <para>A JSON round-trip (Newtonsoft, camelCase, NaN/Infinity as literals) so it
         /// reloads into the same object graph the HTML embeds.</para>
         /// </summary>
-        private const string EXT_PASS1 = @"." + FdrScoresSidecar.LABEL_FIRST_PASS + @".model-diagnostics.json";
+        public const string EXT_PASS1 = @"." + FdrScoresSidecar.LABEL_FIRST_PASS + @".model-diagnostics.json";
 
         /// <summary>
         /// The pass-2 (final reported pool) bundle alone - <see cref="ModelDiagnosticsData.Pass2"/>
@@ -68,7 +68,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// pass-2 views are computed by pass 2. Absence therefore means "pass 2 has not run",
         /// never "pass 2 had nothing to say" (P13).
         /// </summary>
-        private const string EXT_PASS2 = @"." + FdrScoresSidecar.LABEL_SECOND_PASS + @".model-diagnostics.json";
+        public const string EXT_PASS2 = @"." + FdrScoresSidecar.LABEL_SECOND_PASS + @".model-diagnostics.json";
 
         private static readonly JsonSerializerSettings SidecarSettings = new JsonSerializerSettings
         {

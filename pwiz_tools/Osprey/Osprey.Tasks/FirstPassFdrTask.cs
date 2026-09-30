@@ -1511,7 +1511,7 @@ namespace pwiz.Osprey.Tasks
             // report rows are keyed by the same index the hook reports, and the streaming
             // hydrate rederives its own names from the parquet stems (checked below).
             var fileNames = perFileEntries.ConvertAll(kv => kv.Key);
-            // The [PATH] line is what regression.ps1 mode 5 asserts on. It has to come from
+            // The [PATH] line is what SubsetPipelineTest's rehydrate leg asserts on. It has to come from
             // THIS arm: Rehydrate's own "Bundle hydration" line is emitted before the bundle
             // source is even known, so a worker-supplied bundle logs it too and it cannot
             // witness the own-sidecar streaming path.

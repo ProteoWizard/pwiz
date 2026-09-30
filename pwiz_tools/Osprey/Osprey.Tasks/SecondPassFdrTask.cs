@@ -158,7 +158,7 @@ namespace pwiz.Osprey.Tasks
             // it. Task validity requires every declared output to exist, so a deleted or
             // renamed report invalidates this task alone - Stages 1-5 stay cached and the
             // pass-1 panel is rebuilt by rehydrating the 1st-pass sidecars, the same path
-            // regression mode 5 already covers.
+            // SubsetPipelineTest's diagnostics rehydrate already covers.
             //
             // CONDITIONAL ON THE FLAG, deliberately. Declaring it unconditionally would make
             // every run that never asked for diagnostics permanently invalid, re-running
@@ -277,6 +277,11 @@ namespace pwiz.Osprey.Tasks
                 // version. A term here would invalidate this task for a format that did not move,
                 // and invalidating FirstPassFDR costs a 5-hour Stage 5 re-run at 446 files.
                 + @";pass2proteinq=2"
+                // How a library precursor becomes blib rows (m/z-sorted peaks, modified-sequence
+                // text from the parsed modifications). Unconditional: every library's output blib
+                // changed with it, and the task stamp compares only this key, so without the term
+                // a resume keeps a blib the current build would not write.
+                + @";blibout=" + BlibSpectrum.FORMAT_VERSION
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()
                 + OspreyEnvironment.Pass2QValueValidityKeySuffix()

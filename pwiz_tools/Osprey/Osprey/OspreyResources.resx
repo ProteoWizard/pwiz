@@ -283,6 +283,12 @@
   <data name="Program_ResolveTask__0___unknown_task___1____Valid_tasks___2__" xml:space="preserve">
     <value>{0}: unknown task '{1}'. Valid tasks: {2}.</value>
   </data>
+  <data name="Program_RunExportLibrary_Saved_1_library_precursor_to__1_" xml:space="preserve">
+    <value>Saved 1 library precursor to {1}</value>
+  </data>
+  <data name="Program_RunExportLibrary_Saved__0_N0__library_precursors_to__1_" xml:space="preserve">
+    <value>Saved {0:N0} library precursors to {1}</value>
+  </data>
   <data name="Program_RunModelDiagnosticsTask__0___building_the_report_from_the_completed_analysis__Nothing_is_re_run_and_no_other_" xml:space="preserve">
     <value>{0}: building the report from the completed analysis. Nothing is re-run and no other output changes.</value>
   </data>
@@ -375,5 +381,14 @@
   </data>
   <data name="Program_ValidateArgs_No_spectral_library_specified__Use__0_" xml:space="preserve">
     <value>No spectral library specified. Use {0}</value>
+  </data>
+  <data name="Program_ValidateArgs_The__0__path_is_the_library_it_reads___1_" xml:space="preserve">
+    <value>The {0} path is the library it reads: {1}. Choose another path for the exported library.</value>
+  </data>
+  <data name="Program_ValidateArgs_No_path_given_for__0__" xml:space="preserve">
+    <value>No path given for {0}.</value>
+  </data>
+  <data name="Program_ValidateArgs_The__0__path_is_the_library_the_search_reads___1_" xml:space="preserve">
+    <value>The {0} path is the library the search reads: {1}. Choose another path for the search results.</value>
   </data>
 </root>
