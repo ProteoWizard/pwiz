@@ -122,9 +122,13 @@ new version.
 
 ## Regression
 
-`regression.ps1` compares a CarafeSharp run with a golden kept in `regression.data/<dataset>`. Only the
-isolated leg exists so far: it fine-tunes on the packaged Osprey training export and predicts the final
-library, so it depends on CarafeSharp alone.
+`regression.ps1` has two legs:
+- **Isolated** (the default): it fine-tunes on the packaged Osprey training export and predicts the final
+  library, so it depends on CarafeSharp alone, and compares the run with a golden kept in
+  `regression.data/<dataset>`. It is the gate on training and prediction.
+- **Chained** (`-Leg Chained`): Osprey searches its committed Stellar subset with `--training-export`, and
+  CarafeSharp trains on those exports and predicts a library (see "The chained leg" below). It checks that
+  the two tools work together, needs no test data, and has no golden.
 
 ```
 pwsh -File regression.ps1                                   # CPU run, compared with the golden
@@ -132,6 +136,7 @@ pwsh -File regression.ps1 -NoBuild -ExtraArgs "-cor 0.7"    # a sensitivity chec
 pwsh -File regression.ps1 -CompareRun <run folder>          # compare an existing run again
 pwsh -File regression.ps1 -Export <x.training.parquet>      # fine-tune on another export instead
 pwsh -File regression.ps1 -CreateGolden                     # from a clean tree; -Force to replace
+pwsh -File regression.ps1 -Leg Chained                      # Osprey's export feeding CarafeSharp
 ```
 
 **The run.** The inputs come from the test data packages, by the rules the tests use: the training
@@ -196,6 +201,23 @@ the .raw. The golden it replaced was made from the June export, which an earlier
 mzML. Against it, every fine-tuned metric and library check was within tolerance (sampled cosine
 median 0.99963, RT difference median 0.016 min); only the export's hash and the pretrained metrics
 differed, as they must with another export, because the held-out set comes from it.
+
+**The chained leg.** `regression.ps1` builds Osprey from the same checkout (or takes `-OspreyExe`),
+extracts `pwiz_tools/Osprey/Osprey.Test/TestData/StellarSubset.zip` (one isolation window of the three
+Stellar runs, 6.5-13.5 min, and a 358-precursor DIA-NN library; its README has the details), and writes
+a peptide FASTA of the library's 358 peptides. Osprey searches the three runs with `--training-export`,
+the full pipeline including the second pass: the subset is sized so a 1% run FDR keeps 118-159
+precursors per run. CarafeSharp then runs `-tf all` on the exports, with the isolated leg's library
+arguments, predicting a library from the FASTA. The comparator checks, with no golden:
+- an export per run, each with at least 50 precursors (how many is Osprey's regression's to gate) and
+  run q-values from the per-run second pass;
+- the four training tables are not empty, and hold no more PSMs than were exported;
+- both models are written and every metric is finite;
+- `meta.json` records each run, with a precursor window that holds the subset's (594.52 m/z);
+- the library has precursors, each with at least `-lf_min_n_frag` peaks.
+
+Training on one isolation window says little about the models, so the chained leg does not judge them;
+the isolated leg does. After the builds it takes under a minute on the CPU: Osprey 7 s, CarafeSharp 19 s.
 
 **Another export: `-Export`.** The run fine-tunes on the given file instead of the packaged export,
 for example one Osprey wrote from the .raw on another platform. The export's SHA-256 is then reported

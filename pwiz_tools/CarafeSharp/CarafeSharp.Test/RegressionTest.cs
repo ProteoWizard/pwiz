@@ -58,6 +58,12 @@ namespace pwiz.CarafeSharp.Test
     /// there instead, after checking that the fine-tuned MS2 model beats the pretrained one and
     /// that the library's DecoyPairs table pairs every target whose decoy was written.
     /// </para>
+    /// <para>
+    /// A chained run (<c>regression.ps1 -Leg Chained</c>) has no golden: Osprey searched the
+    /// committed Stellar subset with <c>--training-export</c>, and CarafeSharp trained on those
+    /// exports and predicted a library. Its checks are that each tool did its part and that
+    /// CarafeSharp read what Osprey wrote.
+    /// </para>
     /// </summary>
     [TestClass]
     public class RegressionTest
@@ -112,6 +118,18 @@ namespace pwiz.CarafeSharp.Test
         /// <summary>A precursor may be in one library only when it has at most this many fragments (lf_min_n_frag + 1).</summary>
         private const int FEW_FRAGMENTS = 3;
 
+        private const string LEG_CHAINED = @"chained";
+        // A 1% run FDR keeps 118-159 precursors per run of the subset (2026-09-30). The floor is
+        // well below that: how many Osprey identifies is its own regression's to gate, and this
+        // leg's to see only that each export is a real one.
+        private const int CHAINED_MIN_EXPORTED = 50;
+        /// <summary>The target m/z of the one isolation window the Stellar subset keeps.</summary>
+        private const double CHAINED_WINDOW_TARGET = 594.5201;
+        /// <summary>The regression's -lf_min_n_frag.</summary>
+        private const int CHAINED_MIN_PEAKS = 2;
+        /// <summary>The per-run second pass, which a run of a multi-run analysis selects on.</summary>
+        private const string SECOND_PASS = @"2";
+
         /// <summary>The MS2 metrics a golden's fine-tuned model must improve on.</summary>
         private static readonly string[] MS2_METRICS = { @"cos", @"pcc", @"sa", @"spc" };
 
@@ -144,9 +162,19 @@ namespace pwiz.CarafeSharp.Test
             if (string.IsNullOrEmpty(runFolder))
                 Assert.Inconclusive(@"{0} is not set: regression.ps1 runs this test on a run folder.", RUN_VARIABLE);
             Assert.IsTrue(Directory.Exists(runFolder), @"{0} names a folder that does not exist: {1}", RUN_VARIABLE, runFolder);
+            string createFolder = Environment.GetEnvironmentVariable(CREATE_VARIABLE);
+
+            if (ReadLeg(runFolder) == LEG_CHAINED)
+            {
+                Assert.IsTrue(string.IsNullOrEmpty(createFolder), @"A chained run has no golden to make.");
+                CheckChained(runFolder);
+                WriteReport(runFolder);
+                Assert.AreEqual(0, _failures.Count, @"The chained run failed its checks:{0}{1}",
+                    Environment.NewLine, string.Join(Environment.NewLine, _failures));
+                return;
+            }
 
             var run = RunMeasurement.Measure(runFolder, TorchSharp.torch.get_num_threads());
-            string createFolder = Environment.GetEnvironmentVariable(CREATE_VARIABLE);
             if (!string.IsNullOrEmpty(createFolder))
             {
                 CreateGolden(run, createFolder);
@@ -156,10 +184,7 @@ namespace pwiz.CarafeSharp.Test
             string goldenFolder = GetGoldenFolder(run.Dataset);
             var golden = Golden.Read(goldenFolder);
             Compare(golden, run);
-            string report = Path.Combine(runFolder, REPORT_FILE);
-            File.WriteAllLines(report, _report);
-            foreach (string line in _report)
-                TestContext.WriteLine(@"{0}", line);
+            WriteReport(runFolder);
             Assert.AreEqual(0, _failures.Count, @"The run is outside the calibrated tolerances of the golden {0}:{1}{2}", goldenFolder,
                 Environment.NewLine, string.Join(Environment.NewLine, _failures));
         }
@@ -221,6 +246,79 @@ namespace pwiz.CarafeSharp.Test
             CheckDecoyPairs(golden, run);
             CheckSample(golden, run);
             ReportExactComparisons(golden, run);
+        }
+
+        /// <summary>
+        /// The chained leg's checks: Osprey wrote an export per run, each with the precursors a
+        /// 1% run FDR keeps and the per-run second pass's q-values; CarafeSharp read them, trained
+        /// on a subset of their rows, wrote both models and finite metrics, recorded every run's
+        /// isolation window, and predicted a library whose spectra keep -lf_min_n_frag peaks.
+        /// </summary>
+        private void CheckChained(string folder)
+        {
+            int runs;
+            string exportFolder;
+            using (var info = JsonDocument.Parse(File.ReadAllText(TestData.RequireFile(Path.Combine(folder, RUN_INFO_FILE)))))
+            {
+                var root = info.RootElement;
+                Report(@"Chained run {0}: Osprey searched the Stellar subset with --training-export, CarafeSharp trained on its exports",
+                    folder);
+                Report(@"Run: commit {0}, {1} on {2}, {3}", root.GetProperty(@"commit").GetString(), root.GetProperty(@"device_used").GetString(),
+                    root.GetProperty(@"processor").GetString(), root.GetProperty(@"os_platform").GetString());
+                Check(root.GetProperty(@"osprey_exit_code").GetInt32() == 0, @"Osprey exit code {0}", root.GetProperty(@"osprey_exit_code").GetInt32());
+                Check(root.GetProperty(@"exit_code").GetInt32() == 0, @"CarafeSharp exit code {0}", root.GetProperty(@"exit_code").GetInt32());
+                runs = root.GetProperty(@"runs").GetInt32();
+                string relative = root.GetProperty(@"export_folder").GetString() ?? string.Empty;
+                exportFolder = Path.Combine(new[] { folder }.Concat(relative.Split('/')).ToArray());
+            }
+
+            var exports = Directory.GetFiles(exportFolder, @"*" + OspreyTrainingExport.FILE_SUFFIX).OrderBy(p => p, StringComparer.Ordinal).ToList();
+            Check(exports.Count == runs, @"training exports: {0} for {1} runs", exports.Count, runs);
+            long exported = 0;
+            foreach (string path in exports)
+            {
+                var export = OspreyTrainingExport.Read(path);
+                exported += export.Records.Count;
+                string name = Path.GetFileName(path);
+                Check(export.Records.Count >= CHAINED_MIN_EXPORTED, @"{0}: {1} precursors (at least {2})", name, export.Records.Count, CHAINED_MIN_EXPORTED);
+                Check(export.RunQPass == SECOND_PASS, @"{0}: run q from pass {1} (the per-run second pass is {2})", name,
+                    export.RunQPass ?? @"unknown", SECOND_PASS);
+            }
+
+            string output = Path.Combine(folder, OUTPUT_FOLDER);
+            foreach (string table in TRAINING_TABLES)
+            {
+                int rows = File.ReadLines(TestData.RequireFile(Path.Combine(output, table))).Count() - 1;
+                Check(rows > 0, @"training table {0}: {1} rows", table, rows);
+            }
+            int psms = File.ReadLines(Path.Combine(output, CarafeTrainingDirectory.PSM_FILE)).Count() - 1;
+            Check(psms <= exported, @"{0}: {1} PSMs from {2} exported precursors", CarafeTrainingDirectory.PSM_FILE, psms, exported);
+            foreach (string model in MODEL_FILES)
+                Check(File.Exists(Path.Combine(output, model)), @"model {0} written", model);
+            foreach (var metric in ReadMetricValues(TestData.RequireFile(Path.Combine(output, ModelFiles.METRICS))))
+                Check(double.IsFinite(metric.Value), @"metric {0}: {1}", metric.Key, Format(metric.Value));
+
+            var meta = CarafeModelDirectory.Open(output).Runs;
+            Check(meta.Count == runs, @"{0}: {1} runs", CarafeModelDirectory.META_FILE, meta.Count);
+            foreach (var run in meta)
+            {
+                Check(run.PrecursorMzMin <= CHAINED_WINDOW_TARGET && CHAINED_WINDOW_TARGET <= run.PrecursorMzMax,
+                    @"{0} {1}: precursor m/z {2}-{3} holds the subset's window at {4}", CarafeModelDirectory.META_FILE, run.MsFile,
+                    Format(run.PrecursorMzMin), Format(run.PrecursorMzMax), Format(CHAINED_WINDOW_TARGET));
+            }
+
+            string blib = TestData.RequireFile(Path.Combine(output, BlibLibraryWriter.FILE_NAME));
+            var library = LibraryContent.Read(blib);
+            long fewestPeaks;
+            using (var connection = OpenLibrary(blib))
+            using (var command = new SQLiteCommand(@"SELECT MIN(numPeaks) FROM RefSpectra", connection))
+            {
+                object value = command.ExecuteScalar();
+                fewestPeaks = value is long peaks ? peaks : 0;
+            }
+            SQLiteConnection.ClearAllPools();
+            Check(library.Precursors > 0, @"library: {0} precursors, {1} peaks", library.Precursors, library.Peaks);
+            Check(fewestPeaks >= CHAINED_MIN_PEAKS, @"library: fewest peaks in a spectrum {0} (at least {1})", fewestPeaks, CHAINED_MIN_PEAKS);
         }
 
         private void CheckMetrics(Golden golden, RunMeasurement run)
@@ -385,6 +483,42 @@ namespace pwiz.CarafeSharp.Test
         private void Report(string format, params object[] args)
         {
             _report.Add(string.Format(CultureInfo.InvariantCulture, format, args));
+        }
+
+        private void WriteReport(string runFolder)
+        {
+            File.WriteAllLines(Path.Combine(runFolder, REPORT_FILE), _report);
+            foreach (string line in _report)
+                TestContext.WriteLine(@"{0}", line);
+        }
+
+        /// <summary>The leg regression-run.json records; runs from before the chained leg are isolated.</summary>
+        private static string ReadLeg(string runFolder)
+        {
+            using (var info = JsonDocument.Parse(File.ReadAllText(TestData.RequireFile(Path.Combine(runFolder, RUN_INFO_FILE)))))
+                return info.RootElement.TryGetProperty(@"leg", out var leg) ? leg.GetString() : @"isolated";
+        }
+
+        /// <summary>Every number of model_evaluation_metrics.json, keyed by its path.</summary>
+        private static IEnumerable<KeyValuePair<string, double>> ReadMetricValues(string path)
+        {
+            var values = new List<KeyValuePair<string, double>>();
+            using (var json = JsonDocument.Parse(File.ReadAllText(path)))
+                AddNumbers(json.RootElement, string.Empty, values);
+            return values;
+        }
+
+        private static void AddNumbers(JsonElement element, string prefix, List<KeyValuePair<string, double>> values)
+        {
+            if (element.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var property in element.EnumerateObject())
+                    AddNumbers(property.Value, prefix.Length == 0 ? property.Name : prefix + @"." + property.Name, values);
+            }
+            else if (element.ValueKind == JsonValueKind.Number)
+            {
+                values.Add(new KeyValuePair<string, double>(prefix, element.GetDouble()));
+            }
         }
 
         private static string DescribeArgumentChange(IReadOnlyList<string> golden, IReadOnlyList<string> run)
