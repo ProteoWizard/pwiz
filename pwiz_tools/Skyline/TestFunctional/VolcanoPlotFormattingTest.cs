@@ -327,6 +327,7 @@ namespace pwiz.SkylineTestFunctional
             VerifyRuleToolbar(volcanoPlot);
 
             VerifyOpeningDialogDoesNotBroadcastOverlapSetting(volcanoPlot);
+            VerifyVolcanoFormattingLeavesRelativeAbundanceAlone(volcanoPlot);
 
             // Restore per-protein scope, which TestMatchExpressionListDlg below relies on (it expects
             // protein-level match counts).
@@ -402,6 +403,56 @@ namespace pwiz.SkylineTestFunctional
 
             Assert.AreEqual(0, overlapNotifications,
                 @"Opening the formatting dialog notified the other dot plot to rebuild its label layout.");
+        }
+
+        /// <summary>
+        /// Editing the volcano plot's formatting rules must not rebuild the Relative Abundance plot. The
+        /// two use entirely separate rule sets, but a formatting edit goes through ModifyDocument and
+        /// every graph in Skyline refreshes on document changes.
+        ///
+        /// Checks both directions, because a guard that skips too much shows a stale plot, which is worse
+        /// than the refresh it avoids: a change the pane DOES care about must still rebuild it.
+        /// </summary>
+        private void VerifyVolcanoFormattingLeavesRelativeAbundanceAlone(FoldChangeVolcanoPlot volcanoPlot)
+        {
+            RunUI(SkylineWindow.ShowPeakAreaRelativeAbundanceGraph);
+            var relativeAbundance = WaitForRelativeAbundancePane();
+
+            // A volcano formatting edit: the Relative Abundance plot draws from none of it
+            var beforeVolcanoEdit = 0;
+            RunUI(() => beforeVolcanoEdit = relativeAbundance.RenderCount);
+            var formattingDlg = ShowDialog<VolcanoPlotFormattingDlg>(volcanoPlot.ShowFormattingDialog);
+            RunUI(() => formattingDlg.AddRow(MakeRule(Color.Magenta, PointSymbol.Square, PointSize.large, "ALIHCLHMS")));
+            OkDialog(formattingDlg, formattingDlg.OkDialog);
+            WaitForGraphs();
+            RunUI(() => Assert.AreEqual(beforeVolcanoEdit, relativeAbundance.RenderCount,
+                @"Editing volcano formatting rebuilt the Relative Abundance plot."));
+
+            // A change this plot does care about must still get through
+            var beforeOwnChange = 0;
+            RunUI(() => beforeOwnChange = relativeAbundance.RenderCount);
+            RunUI(() => Settings.Default.AreaProteinTargets = !Settings.Default.AreaProteinTargets);
+            RunUI(SkylineWindow.UpdatePeakAreaGraph);
+            WaitForGraphs();
+            RunUI(() => Assert.AreNotEqual(beforeOwnChange, relativeAbundance.RenderCount,
+                @"The Relative Abundance plot ignored a change to its own settings."));
+            RunUI(() => Settings.Default.AreaProteinTargets = !Settings.Default.AreaProteinTargets);
+
+            RunUI(() => SkylineWindow.ShowGraphPeakArea(false));
+            WaitForGraphs();
+        }
+
+        private static SummaryRelativeAbundanceGraphPane WaitForRelativeAbundancePane()
+        {
+            SummaryRelativeAbundanceGraphPane pane = null;
+            WaitForConditionUI(() =>
+            {
+                pane = SkylineWindow.GraphPeakArea?.GraphControl?.MasterPane?.PaneList
+                    .OfType<SummaryRelativeAbundanceGraphPane>().FirstOrDefault();
+                return pane != null && pane.IsSuccessfullyComplete;
+            });
+            WaitForGraphs();
+            return pane;
         }
 
         private void VerifyMatchExpressions(FoldChangeVolcanoPlot volcanoPlot, MatchExprInfo[] matchExprInfos, int initialRowCount = 0, RemoveMode removeMode = RemoveMode.Cancel)
