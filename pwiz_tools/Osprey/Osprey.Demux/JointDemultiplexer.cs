@@ -413,6 +413,7 @@ namespace pwiz.Osprey.Demux
             private readonly Vector256<double>[] _bv;
             private readonly Vector256<double>[] _b2v;
             private readonly int _half;
+            private readonly double[] _laneGradient = new double[WIDTH];
             private int _samples;                            // samples in the chunk: [lo - h, hi + h]
             private int _points;                             // grid points with coefficients: [lo, hi]
             private long _lo;
@@ -423,7 +424,13 @@ namespace pwiz.Osprey.Demux
             private double[] _curvature = Array.Empty<double>();
             private double[] _lambda = Array.Empty<double>();
             private bool[] _active = Array.Empty<bool>();
-            private double[] _z = Array.Empty<double>();     // points x rows: B convolved with the weighted residual
+            // The gradient check, four neighbouring grid points at a time: the weighted residual (rows x samples),
+            // B convolved with it (rows x _groupPoints, grid point fastest), and which groups of four to check.
+            private double[] _wr = Array.Empty<double>();
+            private double[] _zRow = Array.Empty<double>();
+            private bool[] _groupCheck = Array.Empty<bool>();
+            private bool[] _inReach = Array.Empty<bool>();
+            private int _groupPoints;                        // grid points rounded up to whole groups
             private double[] _v = Array.Empty<double>();     // points x rows: B^2 convolved with the weights
             private bool[] _sampleData = Array.Empty<bool>(); // per sample: data in some row
             private int[] _reach = Array.Empty<int>();       // the grid points with data in reach, ascending
@@ -564,6 +571,7 @@ namespace pwiz.Osprey.Demux
                 {
                     if (_sampleData[q + width])
                         inWindow++;
+                    _inReach[q] = inWindow > 0;
                     if (inWindow > 0)
                         _reach[_reachCount++] = q;
                     if (_sampleData[q])
@@ -678,15 +686,20 @@ namespace pwiz.Osprey.Demux
                     _lambda = new double[cp];
                     _active = new bool[cp];
                 }
-                if (_z.Length < rp)
-                {
-                    _z = new double[rp];
+                if (_v.Length < rp)
                     _v = new double[rp];
-                }
+                _groupPoints = (_points + WIDTH - 1) / WIDTH * WIDTH;
+                if (_zRow.Length < _rows * _groupPoints)
+                    _zRow = new double[_rows * _groupPoints];
+                if (_wr.Length < rs + 2 * WIDTH)
+                    _wr = new double[rs + 2 * WIDTH];
+                if (_groupCheck.Length < _groupPoints / WIDTH)
+                    _groupCheck = new bool[_groupPoints / WIDTH];
                 if (_sampleData.Length < _samples)
                 {
                     _sampleData = new bool[_samples];
                     _reach = new int[_samples];
+                    _inReach = new bool[_samples];
                     _dirty = new bool[_samples];
                     _changed = new bool[_samples];
                 }
@@ -952,46 +965,130 @@ namespace pwiz.Osprey.Demux
             /// lambda to the active set; returns how many. Only the grid points whose gradient has changed since the
             /// last check are checked.
             /// </summary>
+            /// <remarks>
+            /// Four neighbouring grid points at a time, one per vector lane, each lane's sums in the order a single
+            /// point's would be: the weighted residual is formed once, then slid under the peak.
+            /// </remarks>
             private int AddViolators()
             {
+                int groups = _groupPoints / WIDTH;
+                Array.Clear(_groupCheck, 0, groups);
+                bool any = false;
+                for (int i = 0; i < _reachCount; i++)
+                {
+                    int q = _reach[i];
+                    if (_changed[q])
+                    {
+                        _groupCheck[q / WIDTH] = true;
+                        any = true;
+                    }
+                }
+                if (!any)
+                    return 0;
+                // Per used row: z[q] = sum_d B[d] w r[q + d], for each group of four with a point to check.
                 for (int r = 0; r < _rows; r++)
                 {
                     if (!_rowUsed[r])
                         continue;
-                    int o = r * _samples;
-                    for (int i = 0; i < _reachCount; i++)
+                    int o = r * _samples, oz = r * _groupPoints;
+                    for (int x = o; x < o + _samples; x++)
+                        _wr[x] = _weight[x] * _residual[x];
+                    for (int m = 0; m < groups; m++)
                     {
-                        int q = _reach[i];
-                        if (!_changed[q])
-                            continue;
-                        _z[q * _rows + r] = PeakGradient(o + q);
+                        if (_groupCheck[m])
+                            SlidePeak(o + m * WIDTH, oz + m * WIDTH);
                     }
                 }
                 int added = 0;
-                for (int i = 0; i < _reachCount; i++)
+                for (int m = 0; m < groups; m++)
                 {
-                    int q = _reach[i], oq = q * _rows, oc = q * _columns;
-                    if (!_changed[q])
+                    if (!_groupCheck[m])
                         continue;
-                    _changed[q] = false;
+                    int q0 = m * WIDTH;
                     for (int j = 0; j < _columns; j++)
                     {
-                        int index = oc + j;
-                        if (!_columnUsed[j] || _active[index] || _curvature[index] <= 0)
+                        if (!_columnUsed[j])
                             continue;
-                        double g = 0;
-                        for (int k = _columnStart[j]; k < _columnStart[j + 1]; k++)
-                            g += _columnA[k] * _z[oq + _columnRow[k]];
-                        // Worth a round only if the coefficient would move by more than a pass's tolerance.
-                        if (g - _lambda[index] > Math.Max(_lambda[index] * 1e-9 + 1e-12, _parameters.ToleranceIons * _curvature[index]))
+                        // The lanes to test: points in reach, changed since their last check, inactive, curved.
+                        int lanes = 0;
+                        for (int l = 0; l < WIDTH && q0 + l < _points; l++)
                         {
-                            _active[index] = true;
-                            _dirty[q] = true;
-                            added++;
+                            int q = q0 + l, index = q * _columns + j;
+                            if (_inReach[q] && _changed[q] && !_active[index] && _curvature[index] > 0)
+                                lanes |= 1 << l;
                         }
+                        if (lanes == 0)
+                            continue;
+                        ColumnGradient(j, q0);
+                        for (int l = 0; l < WIDTH; l++)
+                        {
+                            if ((lanes & (1 << l)) == 0)
+                                continue;
+                            int q = q0 + l, index = q * _columns + j;
+                            double g = _laneGradient[l];
+                            // Worth a round only if the coefficient would move by more than a pass's tolerance.
+                            if (g - _lambda[index] > Math.Max(_lambda[index] * 1e-9 + 1e-12, _parameters.ToleranceIons * _curvature[index]))
+                            {
+                                _active[index] = true;
+                                _dirty[q] = true;
+                                added++;
+                            }
+                        }
+                    }
+                    for (int l = 0; l < WIDTH && q0 + l < _points; l++)
+                    {
+                        if (_inReach[q0 + l])
+                            _changed[q0 + l] = false;
                     }
                 }
                 return added;
+            }
+
+            /// <summary>
+            /// B convolved with the weighted residual at four neighbouring grid points: _zRow[oz + l] =
+            /// sum_d B[d] _wr[o + l + d], each in ascending d.
+            /// </summary>
+            private void SlidePeak(int o, int oz)
+            {
+                int span = 2 * _half + 1;
+                if (VECTORS)
+                {
+                    var sum = Vector256<double>.Zero;
+                    for (int d = 0; d < span; d++)
+                        sum += Vector256.Create(_b[d]) * Vector256.Create(_wr, o + d);
+                    sum.CopyTo(_zRow, oz);
+                    return;
+                }
+                for (int l = 0; l < WIDTH; l++)
+                {
+                    double sum = 0;
+                    for (int d = 0; d < span; d++)
+                        sum += _b[d] * _wr[o + l + d];
+                    _zRow[oz + l] = sum;
+                }
+            }
+
+            /// <summary>
+            /// Column j's gradient at four neighbouring grid points from q0 into _laneGradient: sum_k A_kj z[row_k],
+            /// each in the column's row order.
+            /// </summary>
+            private void ColumnGradient(int j, int q0)
+            {
+                if (VECTORS)
+                {
+                    var sum = Vector256<double>.Zero;
+                    for (int k = _columnStart[j]; k < _columnStart[j + 1]; k++)
+                        sum += Vector256.Create(_columnA[k]) * Vector256.Create(_zRow, _columnRow[k] * _groupPoints + q0);
+                    sum.CopyTo(_laneGradient);
+                    return;
+                }
+                for (int l = 0; l < WIDTH; l++)
+                {
+                    double sum = 0;
+                    for (int k = _columnStart[j]; k < _columnStart[j + 1]; k++)
+                        sum += _columnA[k] * _zRow[_columnRow[k] * _groupPoints + q0 + l];
+                    _laneGradient[l] = sum;
+                }
             }
 
             /// <summary>
