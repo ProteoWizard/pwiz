@@ -18,6 +18,7 @@ public sealed class ChromatogramList_Waters : ChromatogramListBase
     private readonly WatersRawFile _data;
     private readonly int _preferOnlyMsLevel;
     private readonly bool _globalChromatogramsAreMs1Only;
+    private readonly bool _ignoreCalibrationScans;
     private readonly List<IndexEntry> _index = new();
 
     /// <summary>DataProcessing emitted as the <c>defaultDataProcessingRef</c>.</summary>
@@ -40,12 +41,14 @@ public sealed class ChromatogramList_Waters : ChromatogramListBase
     }
 
     internal ChromatogramList_Waters(WatersRawFile data, int preferOnlyMsLevel,
-        bool srmAsSpectra = false, bool globalChromatogramsAreMs1Only = false)
+        bool srmAsSpectra = false, bool globalChromatogramsAreMs1Only = false,
+        bool ignoreCalibrationScans = false)
     {
         ArgumentNullException.ThrowIfNull(data);
         _data = data;
         _preferOnlyMsLevel = preferOnlyMsLevel;
         _globalChromatogramsAreMs1Only = globalChromatogramsAreMs1Only;
+        _ignoreCalibrationScans = ignoreCalibrationScans;
 
         _index.Add(new IndexEntry { Index = 0, Id = "TIC", Kind = CVID.MS_TIC_chromatogram });
 
@@ -345,8 +348,17 @@ public sealed class ChromatogramList_Waters : ChromatogramListBase
         // point with its source function index in a non-standard integer array (matches
         // pwiz C++ chromatogramList[0] for combined TIC).
         var points = new List<(double Time, double Intensity, long Function)>();
+
+        // When IgnoreCalibrationScans is set the lockmass function is kept out of the spectrum
+        // list, so it must not be summed into the global TIC either - otherwise the TIC carries
+        // points that no spectrum in the file accounts for. Mirrors pwiz C++ ChromatogramList_Waters.
+        int? lockmassFunction = _ignoreCalibrationScans ? _data.GetLockMassFunction() : null;
+
         foreach (int function in _data.FunctionIndices)
         {
+            if (lockmassFunction == function)
+                continue;
+
             // pwiz C++ ChromatogramList_Waters TIC includes all functions (even DiodeArray)
             // unless globalChromatogramsAreMs1Only is set; preferOnlyMsLevel narrows similarly.
             int rawType;
