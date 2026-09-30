@@ -352,6 +352,39 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Detecting a scanning quadrupole from the data: cycles of 128 contiguous 1.18 Th bins whose fragments stay
+        /// in the 9 bins after their precursor's are a scan; the same windows with each fragment in its own bin only
+        /// (narrow-window DIA) are not, nor are windows that do not step up, nor too few bins a cycle. Survey scans
+        /// are found from SCIEX ids and, for other ids, from the MS level.
+        /// </summary>
+        [TestMethod]
+        public void TestScanningDetection()
+        {
+            var scan = new SyntheticSweeps(128, 5, 9, sciexIds: true);
+            var detection = DemuxSchemeDetector.DetectScanning(scan);
+            Assert.IsTrue(detection.IsScanning);
+            Assert.AreEqual(5, detection.Cycles);
+            Assert.AreEqual(128, detection.BinsPerCycle);
+            Assert.AreEqual(STEP, detection.BinWidth, 1e-9);
+            Assert.AreEqual(9, detection.Persistence);
+
+            var narrow = new SyntheticSweeps(128, 5, 0, sciexIds: false);
+            detection = DemuxSchemeDetector.DetectScanning(narrow);
+            Assert.IsFalse(detection.IsScanning);
+            Assert.AreEqual(5, detection.Cycles);
+            Assert.AreEqual(0, detection.Persistence);
+
+            Assert.IsFalse(DemuxSchemeDetector.DetectScanning(new SyntheticSweeps(32, 5, 9, sciexIds: true)).IsScanning);
+            Assert.IsFalse(DemuxSchemeDetector.DetectScanning(new SyntheticSweeps(128, 5, 9, sciexIds: true, reversed: true)).IsScanning);
+
+            var surveys = new List<int>();
+            var sweeps = new List<int[]>();
+            DemuxSchemeDetector.FindCycles(narrow, surveys, sweeps);
+            CollectionAssert.AreEqual(new[] { 0, 129, 258, 387, 516 }, surveys);
+            Assert.IsTrue(sweeps.All(s => s.Length == 128));
+        }
+
+        /// <summary>
         /// The per-sweep lasso: noiseless, the penalty keeps each source's own bin but shrinks it,
         /// and the relaxed refit returns every source exactly. Under counting noise the lasso writes
         /// fewer positions than the plain solve, and with the refit the three bins centered on each
@@ -554,6 +587,71 @@ namespace pwiz.Osprey.Test
         private static double Sum(IEnumerable<ScanningPeak> peaks, int bin, double mz)
         {
             return peaks.Where(p => p.Bin == bin && Math.Abs(p.Mz - mz) < 1e-6).Sum(p => p.Ions);
+        }
+
+        /// <summary>
+        /// Cycles of a survey scan and a sweep of contiguous 1.18 Th bins from 500 m/z. Each bin's precursor has
+        /// three fragments; a spectrum holds those of the precursors within <c>reach</c> bins of its own, strongest
+        /// for its own, as a scanning quadrupole's transmission does, so a spectrum's strongest fragments stay in
+        /// about the <c>reach</c> bins after it.
+        /// </summary>
+        private sealed class SyntheticSweeps : IDemuxSource
+        {
+            private readonly int _bins;
+            private readonly int _reach;
+            private readonly bool _sciexIds;
+            private readonly bool _reversed;
+
+            public SyntheticSweeps(int bins, int cycles, int reach, bool sciexIds, bool reversed = false)
+            {
+                _bins = bins;
+                _reach = reach;
+                _sciexIds = sciexIds;
+                _reversed = reversed;
+                Count = cycles * (bins + 1);
+            }
+
+            public int Count { get; }
+
+            public string NativeId(int index)
+            {
+                return _sciexIds
+                    ? string.Format(@"sample=1 period=1 cycle={0} experiment={1}", index / (_bins + 1) + 1, index % (_bins + 1) + 1)
+                    : string.Format(@"scan={0}", index + 1);
+            }
+
+            public int MsLevel(int index)
+            {
+                return index % (_bins + 1) == 0 ? 1 : 2;
+            }
+
+            public double IsolationTarget(int index)
+            {
+                int bin = index % (_bins + 1) - 1;
+                return bin < 0 ? 0 : FIRST_CENTER + STEP * (_reversed ? _bins - 1 - bin : bin);
+            }
+
+            public void Read(int index, out IReadOnlyList<double> mz, out IReadOnlyList<double> intensity)
+            {
+                int bin = index % (_bins + 1) - 1;
+                var points = new List<(double Mz, double Intensity)>();
+                for (int source = Math.Max(0, bin - _reach); source <= Math.Min(_bins - 1, bin + _reach); source++)
+                {
+                    for (int f = 0; f < 3; f++)
+                        points.Add((200 + 7.31 * source + 101.7 * f, 1000.0 - 10 * Math.Abs(bin - source) - f));
+                }
+                points.Sort(); // Array.Sort OK: m/z are distinct
+                mz = points.Select(p => p.Mz).ToList();
+                intensity = points.Select(p => p.Intensity).ToList();
+            }
+
+            public void Release(int index)
+            {
+            }
+
+            public void Forget(int index)
+            {
+            }
         }
 
         private static int ChannelOf(int[] channel, List<int> source, int id)

@@ -51,7 +51,7 @@ namespace pwiz.Osprey.DemuxTool
         {
             string input = null, output = null, kernelPath = null;
             bool staggered = false, profile = false, eventCentroids = false, groupBinsSet = false, readThreadsSet = false;
-            bool countsPerIonSet = false, ms1Set = false;
+            bool countsPerIonSet = false, ms1Set = false, schemeSet = false;
             var options = new ScanningDemuxOptions();
             for (int i = 0; i < args.Length; i++)
             {
@@ -79,8 +79,10 @@ namespace pwiz.Osprey.DemuxTool
                         kernelPath = value;
                         break;
                     case @"--scheme":
-                        // scanning: SCIEX ZT Scan (needs --kernel); staggered: stepped overlapping windows.
+                        // scanning: SCIEX ZT Scan (needs --kernel); staggered: stepped overlapping windows. Without it
+                        // the run must look like a scanning acquisition (DemuxSchemeDetector.DetectScanning).
                         staggered = value == @"staggered";
+                        schemeSet = true;
                         break;
                     case @"--layout":
                         options.Layout = ScanningLayout.Parse(value);
@@ -321,6 +323,19 @@ namespace pwiz.Osprey.DemuxTool
                 // reader that cannot centroid fails rather than handing profile data on.
                 spectra = new SpectrumList_PeakPicker(spectra, null, true, @"1-");
                 Console.WriteLine(@"Vendor centroiding: {0}", input);
+            }
+            if (!schemeSet)
+            {
+                var detection = DemuxSchemeDetector.DetectScanning(new PwizDemuxSource(spectra));
+                Console.WriteLine(@"Scheme: {0}; {1} cycles, {2} bins of {3:F3} Th a sweep, a strong peak kept in {4} following bins",
+                    detection.IsScanning ? @"scanning" : @"not scanning", detection.Cycles, detection.BinsPerCycle,
+                    detection.BinWidth, detection.Persistence);
+                if (!detection.IsScanning)
+                {
+                    Console.Error.WriteLine(@"{0} does not look like a scanning-quadrupole acquisition. Use --scheme staggered for " +
+                        @"stepped overlapping windows, or --scheme scanning to demultiplex it as a scan anyway.", input);
+                    return 1;
+                }
             }
             ScanningDemuxSpectrumList scanning = null;
             StaggeredDemuxSpectrumList stepped = null;

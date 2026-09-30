@@ -145,4 +145,34 @@ namespace pwiz.Osprey.Demux
         /// </summary>
         public int[] WindowOfSpectrum { get; }
     }
+
+    /// <summary>
+    /// What <see cref="DemuxSchemeDetector.DetectScanning"/> measured of an acquisition, and whether it is a
+    /// scanning quadrupole's.
+    /// </summary>
+    public sealed class ScanningDetection
+    {
+        public ScanningDetection(bool isScanning, int cycles, int binsPerCycle, double binWidth, double persistence)
+        {
+            IsScanning = isScanning;
+            Cycles = cycles;
+            BinsPerCycle = binsPerCycle;
+            BinWidth = binWidth;
+            Persistence = persistence;
+        }
+
+        public bool IsScanning { get; }
+
+        /// <summary>Survey scans, each with the sweep of MS2 spectra after it.</summary>
+        public int Cycles { get; }
+
+        /// <summary>MS2 spectra in the first cycle that has a sweep's worth; 0 if none has.</summary>
+        public int BinsPerCycle { get; }
+
+        /// <summary>The median step of that cycle's isolation targets, in Th.</summary>
+        public double BinWidth { get; }
+
+        /// <summary>How many following bins of a cycle keep a strong peak, at the median.</summary>
+        public double Persistence { get; }
+    }
 }

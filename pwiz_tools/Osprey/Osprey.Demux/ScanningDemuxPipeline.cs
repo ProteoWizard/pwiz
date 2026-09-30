@@ -185,31 +185,8 @@ namespace pwiz.Osprey.Demux
             _options = options;
             _log = log;
 
-            // A cycle is a survey scan and the sweep after it. SCIEX native ids name the experiment,
-            // experiment 1 being the survey scan; for any other id form, read each MS level.
-            var isSurvey = new bool[source.Count];
-            if (!TryReadSurveyScansFromIds(source, isSurvey))
-            {
-                for (int k = 0; k < source.Count; k++)
-                    isSurvey[k] = source.MsLevel(k) == 1;
-            }
-            var sweep = new List<int>();
-            for (int k = 0; k < source.Count; k++)
-            {
-                if (isSurvey[k])
-                {
-                    if (_ms1OfCycle.Count > 0)
-                        _ms2OfCycle.Add(sweep.ToArray());
-                    sweep.Clear();
-                    _ms1OfCycle.Add(k);
-                }
-                else if (_ms1OfCycle.Count > 0)
-                {
-                    sweep.Add(k);
-                }
-            }
-            if (_ms1OfCycle.Count > 0)
-                _ms2OfCycle.Add(sweep.ToArray());
+            // A cycle is a survey scan and the sweep after it.
+            DemuxSchemeDetector.FindCycles(source, _ms1OfCycle, _ms2OfCycle);
             CycleCount = _ms1OfCycle.Count;
 
             // Encoded bins are the sweep positions; their centers are the same in every sweep.
@@ -753,29 +730,6 @@ namespace pwiz.Osprey.Demux
             _peaks.Remove(cycle);
             foreach (int index in _ms2OfCycle[cycle])
                 _source.Forget(index);
-        }
-
-        /// <summary>
-        /// Marks the survey scans from SCIEX native ids ("sample=1 period=1 cycle=N experiment=E"),
-        /// experiment 1 being the survey scan. False if any id is in another form.
-        /// </summary>
-        private static bool TryReadSurveyScansFromIds(IDemuxSource source, bool[] isSurvey)
-        {
-            const string token = @"experiment=";
-            for (int k = 0; k < source.Count; k++)
-            {
-                string id = source.NativeId(k);
-                int at = id.IndexOf(token, StringComparison.Ordinal);
-                if (at < 0 || id.IndexOf(@"cycle=", StringComparison.Ordinal) < 0)
-                    return false;
-                int start = at + token.Length, end = start;
-                while (end < id.Length && char.IsDigit(id[end]))
-                    end++;
-                if (end == start)
-                    return false;
-                isSurvey[k] = id.Substring(start, end - start) == @"1";
-            }
-            return true;
         }
 
         /// <summary>A batch of sweeps queued on the solve threads: its units' results and its timings.</summary>

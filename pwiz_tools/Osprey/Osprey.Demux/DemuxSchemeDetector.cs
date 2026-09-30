@@ -42,6 +42,15 @@ namespace pwiz.Osprey.Demux
         /// <summary>Boundaries closer than this (Th) are one boundary; msconvert's minWindowSize.</summary>
         public const double DEFAULT_MINIMUM_BIN_WIDTH = 0.2;
 
+        /// <summary>Fewer MS2 spectra a cycle than this is not a sweep.</summary>
+        public const int MIN_SCANNING_BINS = 64;
+
+        /// <summary>Encoded bins wider than this (Th) are not a scanning quadrupole's.</summary>
+        public const double MAX_SCANNING_BIN_WIDTH = 3.0;
+
+        /// <summary>A strong peak kept in at least this many following bins, at the median, is a scanning acquisition.</summary>
+        public const int MIN_SCANNING_PERSISTENCE = 3;
+
         // Boundaries are compared as integers at this resolution (0.1 mTh), which keeps the
         // clustering exact and independent of floating-point summation order.
         private const double BOUNDARY_SCALE = 1e4;
@@ -153,6 +162,184 @@ namespace pwiz.Osprey.Demux
 
             var kind = overlapFactor > 1 ? DemuxSchemeKind.overlapping : DemuxSchemeKind.non_overlapping;
             return new DemuxScheme(kind, bins, windows, overlapFactor, maxCoverage, windowOfSpectrum);
+        }
+
+        /// <summary>
+        /// Groups a scanning acquisition's spectra into cycles: a survey scan and the sweep of MS2 spectra after it.
+        /// SCIEX native ids name the experiment, experiment 1 being the survey scan; for any other id form, each
+        /// spectrum's MS level is read. Spectra before the first survey scan belong to no cycle.
+        /// </summary>
+        public static void FindCycles(IDemuxSource source, List<int> surveyOfCycle, List<int[]> sweepOfCycle)
+        {
+            var isSurvey = new bool[source.Count];
+            if (!TryReadSurveyScansFromIds(source, isSurvey))
+            {
+                for (int k = 0; k < source.Count; k++)
+                    isSurvey[k] = source.MsLevel(k) == 1;
+            }
+            var sweep = new List<int>();
+            for (int k = 0; k < source.Count; k++)
+            {
+                if (isSurvey[k])
+                {
+                    if (surveyOfCycle.Count > 0)
+                        sweepOfCycle.Add(sweep.ToArray());
+                    sweep.Clear();
+                    surveyOfCycle.Add(k);
+                }
+                else if (surveyOfCycle.Count > 0)
+                {
+                    sweep.Add(k);
+                }
+            }
+            if (surveyOfCycle.Count > 0)
+                sweepOfCycle.Add(sweep.ToArray());
+        }
+
+        /// <summary>
+        /// Tells a scanning-quadrupole acquisition (SCIEX ZT Scan) from ordinary narrow-window DIA. The windows alone
+        /// cannot: a ZT Scan file reports each spectrum's encoded bin, and the bins tile the range once a cycle, as
+        /// narrow windows do. The data can: the quadrupole transmits about ten bins' width, so a precursor's
+        /// fragments are in many consecutive bins of one cycle, where with narrow windows they are in one or two.
+        /// </summary>
+        public static ScanningDetection DetectScanning(IDemuxSource source)
+        {
+            var surveys = new List<int>();
+            var sweeps = new List<int[]>();
+            FindCycles(source, surveys, sweeps);
+            int[] geometry = null;
+            foreach (var sweep in sweeps)
+            {
+                if (sweep.Length >= MIN_SCANNING_BINS)
+                {
+                    geometry = sweep;
+                    break;
+                }
+            }
+            if (geometry == null)
+                return new ScanningDetection(false, sweeps.Count, 0, 0, 0);
+
+            // Geometry: one sweep of narrow bins, stepping up in m/z.
+            var steps = new double[geometry.Length - 1];
+            double previous = source.IsolationTarget(geometry[0]);
+            for (int b = 1; b < geometry.Length; b++)
+            {
+                double target = source.IsolationTarget(geometry[b]);
+                steps[b - 1] = target - previous;
+                previous = target;
+            }
+            Array.Sort(steps); // Array.Sort OK: primitive doubles, so tied values are indistinguishable
+            double step = steps[steps.Length / 2];
+            if (steps[0] <= 0 || step > MAX_SCANNING_BIN_WIDTH)
+                return new ScanningDetection(false, sweeps.Count, geometry.Length, step, 0);
+
+            // Data: in three cycles from the middle of the run, how many following bins keep each strong peak.
+            var runs = new List<int>();
+            int middle = sweeps.Count / 2;
+            for (int c = Math.Max(0, middle - 1); c <= Math.Min(sweeps.Count - 1, middle + 1); c++)
+                ProbePersistence(source, sweeps[c], runs);
+            runs.Sort(); // Array.Sort OK: ints, so tied values are indistinguishable
+            double persistence = runs.Count > 0 ? runs[runs.Count / 2] : 0;
+            return new ScanningDetection(persistence >= MIN_SCANNING_PERSISTENCE, sweeps.Count, geometry.Length, step,
+                persistence);
+        }
+
+        /// <summary>
+        /// For every sixteenth bin of the middle half of a sweep, the 20 most intense points, and for each how many of
+        /// the following bins (up to 24) hold a point within 10 ppm of it, without a gap.
+        /// </summary>
+        private static void ProbePersistence(IDemuxSource source, int[] sweep, List<int> runs)
+        {
+            const int probeEvery = 16, probePeaks = 20, maxRun = 24;
+            const double tolerance = 10e-6;
+            var sorted = new Dictionary<int, double[]>();
+            for (int b = sweep.Length / 4; b < sweep.Length * 3 / 4; b += probeEvery)
+            {
+                source.Read(sweep[b], out var mz, out var intensity);
+                var top = StrongestPoints(mz, intensity, probePeaks);
+                source.Release(sweep[b]);
+                foreach (double m in top)
+                {
+                    int run = 0;
+                    while (run < maxRun && b + run + 1 < sweep.Length &&
+                           HasPointNear(PositiveMz(source, sweep[b + run + 1], sorted), m, m * tolerance))
+                    {
+                        run++;
+                    }
+                    runs.Add(run);
+                }
+            }
+        }
+
+        /// <summary>The m/z of the most intense points, strongest first.</summary>
+        private static List<double> StrongestPoints(IReadOnlyList<double> mz, IReadOnlyList<double> intensity, int count)
+        {
+            var top = new List<double>();
+            if (mz == null || intensity == null)
+                return top;
+            var order = new List<int>();
+            for (int i = 0; i < Math.Min(mz.Count, intensity.Count); i++)
+            {
+                if (intensity[i] > 0)
+                    order.Add(i);
+            }
+            order.Sort((a, b) => intensity[b] != intensity[a] ? intensity[b].CompareTo(intensity[a]) : a.CompareTo(b)); // Array.Sort OK: ties broken by index
+            for (int i = 0; i < Math.Min(count, order.Count); i++)
+                top.Add(mz[order[i]]);
+            return top;
+        }
+
+        /// <summary>A spectrum's m/z with a positive intensity, sorted, read once per probe.</summary>
+        private static double[] PositiveMz(IDemuxSource source, int index, Dictionary<int, double[]> sorted)
+        {
+            if (sorted.TryGetValue(index, out var cached))
+                return cached;
+            source.Read(index, out var mz, out var intensity);
+            var kept = new List<double>();
+            if (mz != null && intensity != null)
+            {
+                for (int i = 0; i < Math.Min(mz.Count, intensity.Count); i++)
+                {
+                    if (intensity[i] > 0)
+                        kept.Add(mz[i]);
+                }
+            }
+            source.Release(index);
+            var result = kept.ToArray();
+            Array.Sort(result); // Array.Sort OK: primitive doubles, so tied values are indistinguishable
+            sorted[index] = result;
+            return result;
+        }
+
+        private static bool HasPointNear(double[] sortedMz, double mz, double tolerance)
+        {
+            int at = Array.BinarySearch(sortedMz, mz - tolerance);
+            if (at < 0)
+                at = ~at;
+            return at < sortedMz.Length && sortedMz[at] <= mz + tolerance;
+        }
+
+        /// <summary>
+        /// Marks the survey scans from SCIEX native ids ("sample=1 period=1 cycle=N experiment=E"),
+        /// experiment 1 being the survey scan. False if any id is in another form.
+        /// </summary>
+        private static bool TryReadSurveyScansFromIds(IDemuxSource source, bool[] isSurvey)
+        {
+            const string token = @"experiment=";
+            for (int k = 0; k < source.Count; k++)
+            {
+                string id = source.NativeId(k);
+                int at = id.IndexOf(token, StringComparison.Ordinal);
+                if (at < 0 || id.IndexOf(@"cycle=", StringComparison.Ordinal) < 0)
+                    return false;
+                int start = at + token.Length, end = start;
+                while (end < id.Length && char.IsDigit(id[end]))
+                    end++;
+                if (end == start)
+                    return false;
+                isSurvey[k] = id.Substring(start, end - start) == @"1";
+            }
+            return true;
         }
 
         private static long ToKey(double mz)

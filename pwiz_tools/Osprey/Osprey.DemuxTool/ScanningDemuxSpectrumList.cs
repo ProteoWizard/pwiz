@@ -37,6 +37,7 @@ namespace pwiz.Osprey.DemuxTool
     internal sealed class ScanningDemuxSpectrumList : SpectrumListWrapper, IDemuxSource
     {
         private readonly ScanningDemuxOptions _options;
+        private readonly PwizDemuxSource _describe;
         private readonly ScanningDemuxPipeline _pipeline;
         private readonly object _lock = new object();
         private readonly Dictionary<int, Spectrum> _reading = new Dictionary<int, Spectrum>(); // read, points not yet released
@@ -47,6 +48,7 @@ namespace pwiz.Osprey.DemuxTool
             : base(inner)
         {
             _options = options;
+            _describe = new PwizDemuxSource(inner);
             _pipeline = new ScanningDemuxPipeline(this, kernel, options, log);
         }
 
@@ -150,25 +152,22 @@ namespace pwiz.Osprey.DemuxTool
 
         int IDemuxSource.Count
         {
-            get { return Inner.Count; }
+            get { return _describe.Count; }
         }
 
         string IDemuxSource.NativeId(int index)
         {
-            return Inner.SpectrumIdentity(index).Id;
+            return _describe.NativeId(index);
         }
 
         int IDemuxSource.MsLevel(int index)
         {
-            return Inner.GetSpectrum(index).Params.CvParamValueOrDefault(CVID.MS_ms_level, 0);
+            return _describe.MsLevel(index);
         }
 
         double IDemuxSource.IsolationTarget(int index)
         {
-            var spectrum = Inner.GetSpectrum(index);
-            return spectrum.Precursors.Count > 0
-                ? spectrum.Precursors[0].IsolationWindow.CvParamValueOrDefault(CVID.MS_isolation_window_target_m_z, 0.0)
-                : 0.0;
+            return _describe.IsolationTarget(index);
         }
 
         void IDemuxSource.Read(int index, out IReadOnlyList<double> mz, out IReadOnlyList<double> intensity)
