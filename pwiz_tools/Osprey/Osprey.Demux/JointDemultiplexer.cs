@@ -119,6 +119,12 @@ namespace pwiz.Osprey.Demux
         public double RelativeTolerance { get; set; } = 1e-4;
 
         /// <summary>
+        /// Skip, in a descent's later gradient checks, the coefficients whose gradient from the data alone cannot
+        /// beat their lambda (they can never violate; the solution is the same).
+        /// </summary>
+        public bool Screen { get; set; } = true;
+
+        /// <summary>
         /// The neighbouring grid points whose active positions each block step solves together (1 to
         /// <see cref="JointDemultiplexer.MAX_BLOCK_POINTS"/>), the blocks' boundaries moving from pass to pass: with
         /// more than one, a peak's mass can move between grid points within one step.
@@ -434,12 +440,22 @@ namespace pwiz.Osprey.Demux
             private double[] _curvature = Array.Empty<double>();
             private double[] _lambda = Array.Empty<double>();
             private bool[] _active = Array.Empty<bool>();
+            // Screening: a coefficient whose gradient from the data alone cannot beat its lambda. Within one descent
+            // the weights are fixed and the model only adds non-negative peaks, so the residual stays at or below
+            // the data and no coefficient's gradient exceeds its value at zero: a screened coefficient never
+            // violates, and the later gradient checks of the descent skip it. Per grid point, the columns left.
+            private bool[] _screened = Array.Empty<bool>();
+            private int[] _unscreened = Array.Empty<int>();
+            private bool _screening;                         // the descent's first check computes the screening
+            private bool _screenReady;                         // the descent has a screening
             // The gradient check, four neighbouring grid points at a time: the weighted residual (rows x samples),
             // B convolved with it (rows x _groupPoints, grid point fastest), and which groups of four to check.
             private double[] _wr = Array.Empty<double>();
             private double[] _zRow = Array.Empty<double>();
             private double[] _vRow = Array.Empty<double>();  // rows x _groupPoints: v, grid point fastest
             private bool[] _groupCheck = Array.Empty<bool>();
+            private readonly int[] _rowSlid;                 // per row: the group check that slid its peak last
+            private int _slideStamp;
             private bool[] _inReach = Array.Empty<bool>();
             private int _groupPoints;                        // grid points rounded up to whole groups
             private double[] _v = Array.Empty<double>();     // points x rows: B^2 convolved with the weights
@@ -552,6 +568,7 @@ namespace pwiz.Osprey.Demux
                 _rowSignal = new bool[_rows];
                 _rowUsed = new bool[_rows];
                 _rowGradient = new double[_rows];
+                _rowSlid = new int[_rows];
                 _rowDelta = new double[_rows];
                 _rowsMoved = new int[_rows];
                 _rowIsMoved = new bool[_rows];
@@ -590,6 +607,8 @@ namespace pwiz.Osprey.Demux
                 Array.Clear(_y, 0, _rows * _samples);
                 Array.Clear(_rowSignal, 0, _rows);
                 Array.Clear(_rowStamp, 0, _rows);
+                Array.Clear(_rowSlid, 0, _rows);
+                _slideStamp = 0;
                 for (int o = 1; o < MAX_BLOCK_POINTS; o++)
                     Array.Clear(_rowStampAt[o], 0, _rows);
                 _stamp = 0;
@@ -644,7 +663,7 @@ namespace pwiz.Osprey.Demux
                 long t1 = Now();
                 // 1. Poisson weights from the data smoothed by the peak, with the z-scaled lasso.
                 FillWeights(false);
-                Descend(_parameters.L1Z);
+                Descend(_parameters.L1Z, true, false, true);
                 // 2. Poisson weights from that solution's expected counts.
                 if (_parameters.Reweight)
                 {
@@ -730,6 +749,7 @@ namespace pwiz.Osprey.Demux
                     _curvature = new double[cp];
                     _lambda = new double[cp];
                     _active = new bool[cp];
+                    _screened = new bool[cp];
                 }
                 if (_v.Length < rp)
                     _v = new double[rp];
@@ -756,6 +776,7 @@ namespace pwiz.Osprey.Demux
                     _inReach = new bool[_samples];
                     _dirty = new bool[_samples];
                     _activeCount = new int[_samples];
+                    _unscreened = new int[_samples];
                     _solved = new int[_samples];
                     _changed = new bool[_samples];
                 }
@@ -867,9 +888,12 @@ namespace pwiz.Osprey.Demux
             /// With <paramref name="selective"/>, only the grid points where some lambda moved by more than
             /// <see cref="JointDemuxParams.RefitLambdaChange"/> since the last descent start out to be solved.
             /// </summary>
-            private void Descend(double z, bool grow = true, bool selective = false)
+            private void Descend(double z, bool grow = true, bool selective = false, bool screen = false)
             {
                 double change = _parameters.RefitLambdaChange;
+                _screening = screen && grow && _parameters.Screen;
+                _screenReady = false;
+                Array.Clear(_screened, 0, _points * _columns);
                 for (int i = 0; i < _reachCount; i++)
                 {
                     int q = _reach[i], oc = q * _columns, count = 0;
@@ -897,6 +921,11 @@ namespace pwiz.Osprey.Demux
                 {
                     long t0 = Now();
                     int added = grow ? AddViolators() : 0;
+                    if (_screening)
+                    {
+                        _screening = false;
+                        _screenReady = true;
+                    }
                     long t1 = Now();
                     _gradientTicks += t1 - t0;
                     if (grow && added == 0 && round > 0)
@@ -1218,7 +1247,7 @@ namespace pwiz.Osprey.Demux
                 for (int i = 0; i < _reachCount; i++)
                 {
                     int q = _reach[i];
-                    if (_changed[q])
+                    if (_changed[q] && (!_screenReady || _unscreened[q] > 0))
                     {
                         _groupCheck[q / WIDTH] = true;
                         any = true;
@@ -1226,19 +1255,20 @@ namespace pwiz.Osprey.Demux
                 }
                 if (!any)
                     return 0;
-                // Per used row: z[q] = sum_d B[d] w r[q + d], for each group of four with a point to check.
+                if (_screening)
+                {
+                    for (int i = 0; i < _reachCount; i++)
+                        _unscreened[_reach[i]] = 0;
+                }
+                // The weighted residual of the used rows; B convolved with it, z[q] = sum_d B[d] w r[q + d], only
+                // for the rows a column tested at a group needs, when it first does.
                 for (int r = 0; r < _rows; r++)
                 {
                     if (!_rowUsed[r])
                         continue;
-                    int o = r * _samples, oz = r * _groupPoints;
+                    int o = r * _samples;
                     for (int x = o; x < o + _samples; x++)
                         _wr[x] = _weight[x] * _residual[x];
-                    for (int m = 0; m < groups; m++)
-                    {
-                        if (_groupCheck[m])
-                            Slide(_b, _wr, o + m * WIDTH, _zRow, oz + m * WIDTH);
-                    }
                 }
                 int added = 0;
                 for (int m = 0; m < groups; m++)
@@ -1246,6 +1276,7 @@ namespace pwiz.Osprey.Demux
                     if (!_groupCheck[m])
                         continue;
                     int q0 = m * WIDTH;
+                    _slideStamp++;
                     for (int j = 0; j < _columns; j++)
                     {
                         if (!_columnUsed[j])
@@ -1255,11 +1286,19 @@ namespace pwiz.Osprey.Demux
                         for (int l = 0; l < WIDTH && q0 + l < _points; l++)
                         {
                             int q = q0 + l, index = q * _columns + j;
-                            if (_inReach[q] && _changed[q] && !_active[index] && _curvature[index] > 0)
+                            if (_inReach[q] && _changed[q] && !_active[index] && _curvature[index] > 0 && !_screened[index])
                                 lanes |= 1 << l;
                         }
                         if (lanes == 0)
                             continue;
+                        for (int k = _columnStart[j]; k < _columnStart[j + 1]; k++)
+                        {
+                            int r = _columnRow[k];
+                            if (_rowSlid[r] == _slideStamp)
+                                continue;
+                            _rowSlid[r] = _slideStamp;
+                            Slide(_b, _wr, r * _samples + q0, _zRow, r * _groupPoints + q0);
+                        }
                         ColumnSum(_columnA, _zRow, j, q0);
                         for (int l = 0; l < WIDTH; l++)
                         {
@@ -1268,7 +1307,16 @@ namespace pwiz.Osprey.Demux
                             int q = q0 + l, index = q * _columns + j;
                             double g = _laneGradient[l];
                             // Worth a round only if the coefficient would move by more than a pass's tolerance.
-                            if (g - _lambda[index] > Math.Max(_lambda[index] * 1e-9 + 1e-12, _parameters.ToleranceIons * _curvature[index]))
+                            double threshold = Math.Max(_lambda[index] * 1e-9 + 1e-12, _parameters.ToleranceIons * _curvature[index]);
+                            if (_screening)
+                            {
+                                // Below the threshold by more than rounding: it can never pass it in this descent.
+                                if (g - _lambda[index] <= threshold - 1e-9 * (Math.Abs(g) + _lambda[index]) - 1e-12)
+                                    _screened[index] = true;
+                                else
+                                    _unscreened[q]++;
+                            }
+                            if (g - _lambda[index] > threshold)
                             {
                                 _active[index] = true;
                                 _activeCount[q]++;
