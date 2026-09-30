@@ -66,6 +66,11 @@ namespace pwiz.Common.CommandLine
         public bool OptionalValue { get; set; }
         public bool InternalUse { get; set; }
         public bool HasValueChecking { get; set; }  // Set to avoid default checking against values listed for documentation
+        /// <summary>
+        /// Values accepted in addition to <see cref="Values"/> without being listed in help or errors,
+        /// e.g. the invariant names for an argument whose values are shown localized.
+        /// </summary>
+        public Func<string[]> AcceptedValues { get; set; }
 
         public string ArgumentText
         {
@@ -85,7 +90,7 @@ namespace pwiz.Common.CommandLine
         /// <see cref="ArgUsage.ArgumentValueSeparator"/> - the same process-wide setting the
         /// usage text renders with, so a token built here always has the shape the host's
         /// own documentation shows (Skyline: <c>--in=path</c>; Osprey: <c>--threads 8</c>).
-        /// A fixed value list is always enforced here, <see cref="HasValueChecking"/> or not:
+        /// A value list (<see cref="Values"/> and <see cref="AcceptedValues"/>) is always enforced here, <see cref="HasValueChecking"/> or not:
         /// Skyline's ConsoleArgumentInvalidValuesTest pins that every listed argument refuses
         /// an unlisted value at build time. A host whose parser accepts an unlisted alias
         /// passes that value as its own token instead of through this builder.
@@ -94,10 +99,32 @@ namespace pwiz.Common.CommandLine
         {
             if (ValueExample == null)
                 throw new ValueUnexpectedException(this);
-            else if (Values != null && !Values.Any(v => v.Equals(value, StringComparison.CurrentCultureIgnoreCase)))
-                throw new ValueInvalidException(this, value, Values);
+            else if (!IsValidValue(value))
+                throw new ValueInvalidException(this, value, ValuesForError);
 
             return ArgumentText + ArgUsage.ArgumentValueSeparator + value;
+        }
+
+        /// <summary>
+        /// True if the value is one of <see cref="Values"/> or <see cref="AcceptedValues"/>, ignoring case,
+        /// or if the argument lists neither and so has nothing to check the value against.
+        /// </summary>
+        public bool IsValidValue(string value)
+        {
+            if (Values == null && AcceptedValues == null)
+                return true;
+            if (Values != null && Values.Any(v => string.Equals(v, value, StringComparison.CurrentCultureIgnoreCase)))
+                return true;
+            return AcceptedValues != null && AcceptedValues().Any(v => string.Equals(v, value, StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        /// The values to name in an invalid value message: those listed for documentation, or the
+        /// accepted values for an argument that lists none.
+        /// </summary>
+        public string[] ValuesForError
+        {
+            get { return Values ?? AcceptedValues?.Invoke() ?? Array.Empty<string>(); }
         }
 
         /// <summary>
