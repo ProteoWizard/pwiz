@@ -157,6 +157,9 @@
   <data name="ExportLiveReportDlg_ExportLiveReportDlg_Invariant" xml:space="preserve">
     <value>Invariant</value>
   </data>
+  <data name="ExportLiveReportDlg_ExportReport_Exporting_report___0__" xml:space="preserve">
+    <value>Exporting report '{0}'</value>
+  </data>
   <data name="ExportLiveReportDlg_ShowPreview_Preview__" xml:space="preserve">
     <value>Preview: </value>
   </data>

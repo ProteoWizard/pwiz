@@ -1149,6 +1149,14 @@ namespace pwiz.Skyline
         {
             e.Cancel = false;
 
+            // Before anything else, including the offer to save: it would be worse to ask about saving and only
+            // then refuse to close.
+            if (!CheckBackgroundJobs())
+            {
+                e.Cancel = true;
+                return;
+            }
+
             if (!CheckSaveDocument())
             {
                 e.Cancel = true;
@@ -2894,6 +2902,86 @@ namespace pwiz.Skyline
             ShowImmediateWindow();
         }
 
+        private void runningJobsMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowRunningJobsDlg();
+        }
+
+        // The status bar is where a background job's progress shows, so double-clicking it is the direct way to
+        // the list the progress came from - the same dialog as Tools > Running Jobs.
+        private void statusProgress_DoubleClick(object sender, EventArgs e)
+        {
+            ShowRunningJobsDlg();
+        }
+
+        public void ShowRunningJobsDlg()
+        {
+            using (var dlg = new RunningJobsDlg())
+            {
+                dlg.ShowDialog(this);
+            }
+        }
+
+        /// <summary>
+        /// Sees the background jobs off before the window closes: asks whether to stop what is still running,
+        /// and then waits for it to stop. A job goes on writing its file and reporting progress on its own thread,
+        /// and closing the window out from under one would leave it writing into a process being torn down.
+        ///
+        /// <para>Returns false to stay in Skyline - the user said no, or gave up on the wait.</para>
+        /// </summary>
+        private bool CheckBackgroundJobs()
+        {
+            var running = BackgroundJobs.Running;
+            if (running.Length == 0)
+            {
+                return true;
+            }
+
+            // Jobs that have already been asked to stop are not worth asking about again - they are only worth
+            // waiting for, which is what happens below.
+            var uncanceled = running.Where(job => !BackgroundJobs.IsCancelRequested(job.JobId)).ToArray();
+            if (uncanceled.Length > 0)
+            {
+                string message = uncanceled.Length == 1
+                    ? string.Format(
+                        SkylineResources.SkylineWindow_CheckBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__The_job___0___is_still_running__Do_you_want_to_stop_it_,
+                        uncanceled[0].Description)
+                    : string.Format(
+                        SkylineResources.SkylineWindow_CheckBackgroundJobs_Background_jobs_must_be_stopped_before_exiting__Do_you_want_to_stop_the__0__jobs_that_are_still_running_,
+                        uncanceled.Length);
+                if (MultiButtonMsgDlg.Show(this, message, MessageBoxButtons.OKCancel) != DialogResult.OK)
+                {
+                    return false;
+                }
+                BackgroundJobs.CancelAll();
+            }
+
+            return WaitForBackgroundJobs();
+        }
+
+        /// <summary>
+        /// Waits for the stopping jobs to actually end, which they do at their own next cancellation check
+        /// rather than at once. The wait is itself cancellable: giving up on it stays in Skyline, with the jobs
+        /// still stopping.
+        /// </summary>
+        private bool WaitForBackgroundJobs()
+        {
+            using (var longWaitDlg = new LongWaitDlg())
+            {
+                longWaitDlg.Message = SkylineResources.SkylineWindow_WaitForBackgroundJobs_Waiting_for_background_jobs_to_end;
+                // The delay is what keeps this invisible in the ordinary case, where the jobs stop long before it
+                // elapses and no dialog is ever shown.
+                longWaitDlg.PerformWork(this, 500, (ILongWaitBroker broker) =>
+                {
+                    while (!broker.IsCanceled && BackgroundJobs.Running.Length > 0)
+                    {
+                        Thread.Sleep(100);
+                    }
+                });
+                return !longWaitDlg.IsCanceled;
+            }
+        }
+
         public void ShowImmediateWindow()
         {
             if (_immediateWindow != null)
@@ -4168,6 +4256,22 @@ namespace pwiz.Skyline
                 }
             }
             return statusGeneral.Text.Contains(start) && statusGeneral.Text.Contains(end);
+        }
+
+        /// <summary>
+        /// A snapshot of the progress being reported right now - what the status bar is showing, and everything
+        /// queued behind it. A copy, because the list is written by the threads doing the work, so it must not be
+        /// enumerated outside its lock.
+        /// </summary>
+        public IProgressStatus[] ProgressStatuses
+        {
+            get
+            {
+                lock (_listProgress)
+                {
+                    return _listProgress.ToArray();
+                }
+            }
         }
 
         public int StatusBarHeight { get { return statusStrip.Height; } }

@@ -431,6 +431,28 @@ namespace SkylineTool
     }
 
     /// <summary>
+    /// One operation Skyline is still working on that was started through this service, returned by
+    /// <see cref="IJsonToolService.GetRunningJobs"/>. Only these can be cancelled: work the user started
+    /// (a results import, a library build) is not reported here and is not a caller's to stop.
+    /// </summary>
+    public class JobInfo
+    {
+        /// <summary>The job's identifier - what <see cref="IJsonToolService.CancelJob"/> takes.</summary>
+        public string Id { get; set; }
+        /// <summary>What the job is, in the terms of the call that started it ("Exporting report 'Peak Areas'").</summary>
+        public string Description { get; set; }
+        /// <summary>What the job is doing at the moment ("Writing row 5,000 / 20,000"), or empty before it says.</summary>
+        public string Message { get; set; }
+        /// <summary>How far along the job is, or -1 when it cannot say (an operation of unknown length).</summary>
+        public int PercentComplete { get; set; }
+        /// <summary>
+        /// True once <see cref="IJsonToolService.CancelJob"/> has been called for this job. It is still listed:
+        /// a job stops at its next cancellation check, so it can appear here for a moment after being cancelled.
+        /// </summary>
+        public bool CancelRequested { get; set; }
+    }
+
+    /// <summary>
     /// A single entry in the undo/redo stack returned by GetUndoRedo.
     /// Negative index = undo step, positive = redo step.
     /// </summary>

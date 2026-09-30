@@ -134,6 +134,7 @@ namespace pwiz.Skyline
             this.searchToolsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator46 = new System.Windows.Forms.ToolStripSeparator();
             this.immediateWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.runningJobsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator47 = new System.Windows.Forms.ToolStripSeparator();
             this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -205,11 +206,13 @@ namespace pwiz.Skyline
             this.statusGeneral.Name = "statusGeneral";
             resources.ApplyResources(this.statusGeneral, "statusGeneral");
             this.statusGeneral.Spring = true;
-            // 
+            this.statusGeneral.DoubleClick += new System.EventHandler(this.statusProgress_DoubleClick);
+            //
             // statusProgress
-            // 
+            //
             this.statusProgress.Name = "statusProgress";
             resources.ApplyResources(this.statusProgress, "statusProgress");
+            this.statusProgress.DoubleClick += new System.EventHandler(this.statusProgress_DoubleClick);
             // 
             // buttonShowAllChromatograms
             // 
@@ -804,6 +807,7 @@ namespace pwiz.Skyline
             this.searchToolsMenuItem,
             this.toolStripSeparator46,
             this.immediateWindowToolStripMenuItem,
+            this.runningJobsMenuItem,
             this.toolStripSeparator47,
             this.optionsToolStripMenuItem});
             this.toolsMenu.Name = "toolsMenu";
@@ -854,7 +858,13 @@ namespace pwiz.Skyline
             this.immediateWindowToolStripMenuItem.Name = "immediateWindowToolStripMenuItem";
             resources.ApplyResources(this.immediateWindowToolStripMenuItem, "immediateWindowToolStripMenuItem");
             this.immediateWindowToolStripMenuItem.Click += new System.EventHandler(this.immediateWindowToolStripMenuItem_Click);
-            // 
+            //
+            // runningJobsMenuItem
+            //
+            this.runningJobsMenuItem.Name = "runningJobsMenuItem";
+            resources.ApplyResources(this.runningJobsMenuItem, "runningJobsMenuItem");
+            this.runningJobsMenuItem.Click += new System.EventHandler(this.runningJobsMenuItem_Click);
+            //
             // toolStripSeparator47
             // 
             this.toolStripSeparator47.Name = "toolStripSeparator47";
@@ -1112,6 +1122,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem publishMenuItem;
         private System.Windows.Forms.ToolStripMenuItem immediateWindowToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem runningJobsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importPeptideSearchMenuItem;
         // groupReplicatesByContextMenuItem, groupByReplicateContextMenuItem moved to ContextMenuControl
         private System.Windows.Forms.ToolStripMenuItem mProphetFeaturesMenuItem;

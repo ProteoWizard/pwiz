@@ -82,6 +82,8 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public TutorialListItem[] GetAvailableTutorials() { return CallClient(c => c.GetAvailableTutorials()); }
     public ReportDocTopicSummary[] GetReportDocTopics(string dataSource = null) { return CallClient(c => c.GetReportDocTopics(dataSource)); }
     public string GetProcessId() { return CallClient(c => c.GetProcessId()); }
+    public JobInfo[] GetRunningJobs() { return CallClient(c => c.GetRunningJobs()); }
+    public ActionResult CancelJob(string jobId) { return CallClient(c => c.CancelJob(jobId)); }
     public int ModalNestingCount() { return CallClient(c => c.ModalNestingCount()); }
     public FormInfo[] GetOpenForms() { return CallClient(c => c.GetOpenForms()); }
     public ControlInfo[] GetControls(string formId) { return CallClient(c => c.GetControls(formId)); }
