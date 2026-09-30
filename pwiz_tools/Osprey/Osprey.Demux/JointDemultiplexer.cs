@@ -390,10 +390,15 @@ namespace pwiz.Osprey.Demux
             private readonly int _rows;
             private readonly int _columns;
             private readonly JointDemuxParams _parameters;
-            private readonly double[] _aT;                   // columns x rows: the transmission, transposed
             private readonly int[] _columnStart;             // per column, its span of _columnRow and _columnA
             private readonly int[] _columnRow;               // the rows each column transmits into, ascending
             private readonly double[] _columnA;              // the transmission into each of them
+            // Per pair of columns j <= j' (index j * columns + j'), the rows both transmit into, ascending, and the
+            // product of their transmissions there: a block Hessian entry is these times the grid point's row weights.
+            // A block's positions are mostly far apart, and many pairs share no row at all.
+            private readonly int[] _pairStart;
+            private readonly int[] _pairRow;
+            private readonly double[] _pairA;
             private readonly double[] _b;                    // the peak, offsets -h..h, unit area
             private readonly double[] _b2;
             // The peak and its square padded with zeros to whole groups of WIDTH terms: a sample's 2h + 1 terms as
@@ -457,14 +462,12 @@ namespace pwiz.Osprey.Demux
                 _b2p = new double[groups * WIDTH];
                 _bv = new Vector256<double>[groups];
                 _b2v = new Vector256<double>[groups];
-                _aT = new double[_columns * _rows];
                 _columnStart = new int[_columns + 1];
                 int entries = 0;
                 for (int j = 0; j < _columns; j++)
                 {
                     for (int r = 0; r < _rows; r++)
                     {
-                        _aT[j * _rows + r] = a[r, j];
                         if (a[r, j] > 0)
                             entries++;
                     }
@@ -486,6 +489,30 @@ namespace pwiz.Osprey.Demux
                     }
                 }
                 _columnStart[_columns] = k;
+                _pairStart = new int[_columns * _columns + 1];
+                var pairRow = new List<int>();
+                var pairA = new List<double>();
+                for (int j = 0; j < _columns; j++)
+                {
+                    for (int j2 = 0; j2 < _columns; j2++)
+                    {
+                        _pairStart[j * _columns + j2] = pairRow.Count;
+                        if (j2 < j)
+                            continue;
+                        for (int m = _columnStart[j]; m < _columnStart[j + 1]; m++)
+                        {
+                            double a2 = a[_columnRow[m], j2];
+                            if (a2 > 0)
+                            {
+                                pairRow.Add(_columnRow[m]);
+                                pairA.Add(_columnA[m] * a2);
+                            }
+                        }
+                    }
+                }
+                _pairStart[_columns * _columns] = pairRow.Count;
+                _pairRow = pairRow.ToArray();
+                _pairA = pairA.ToArray();
                 _rowSignal = new bool[_rows];
                 _rowUsed = new bool[_rows];
                 _rowGradient = new double[_rows];
@@ -695,22 +722,26 @@ namespace pwiz.Osprey.Demux
                     if (!_rowUsed[r])
                         continue;
                     int o = r * _samples;
-                    for (int s = 0; s < _samples; s++)
+                    if (fromModel)
                     {
-                        double mu;
-                        if (fromModel)
-                        {
-                            mu = _y[o + s] - _residual[o + s];
-                        }
-                        else
-                        {
-                            mu = 0;
-                            int d0 = Math.Max(-_half, -s), d1 = Math.Min(_half, _samples - 1 - s);
-                            for (int d = d0; d <= d1; d++)
-                                mu += _b[d + _half] * _y[o + s + d];
-                        }
-                        _weight[o + s] = 1 / Math.Max(mu, floor);
+                        for (int s = 0; s < _samples; s++)
+                            _weight[o + s] = 1 / Math.Max(_y[o + s] - _residual[o + s], floor);
+                        continue;
                     }
+                    // mu[s] = sum_d B[d] y[s + d], each sample's terms in ascending d: spread from each sample with
+                    // data in ascending order, which leaves out only the zero terms (most samples hold no data).
+                    Array.Clear(_weight, o, _samples);
+                    for (int t = 0; t < _samples; t++)
+                    {
+                        double yt = _y[o + t];
+                        if (yt == 0)
+                            continue;
+                        int d0 = Math.Max(-_half, t - (_samples - 1)), d1 = Math.Min(_half, t);
+                        for (int d = d1; d >= d0; d--)
+                            _weight[o + t - d] += _b[d + _half] * yt;
+                    }
+                    for (int s = 0; s < _samples; s++)
+                        _weight[o + s] = 1 / Math.Max(_weight[o + s], floor);
                 }
                 // v[q, r] = sum_d B[d]^2 w[r, q + d]; curvature[q, j] = sum_r A_rj^2 v[q, r].
                 for (int i = 0; i < _reachCount; i++)
@@ -1032,18 +1063,13 @@ namespace pwiz.Osprey.Demux
                         // 1/2 x^T H x - (g + H x_old - lambda)^T x, x >= 0.
                         for (int u = 0; u < n; u++)
                         {
-                            int ju = _blockColumns[u];
+                            int pair = _blockColumns[u] * _columns;
                             for (int w = u; w < n; w++)
                             {
-                                int ow = _blockColumns[w] * _rows;
+                                int m1 = _pairStart[pair + _blockColumns[w] + 1];
                                 double h = 0;
-                                for (int k = _columnStart[ju]; k < _columnStart[ju + 1]; k++)
-                                {
-                                    int r = _columnRow[k];
-                                    double aw = _aT[ow + r];
-                                    if (aw > 0)
-                                        h += _columnA[k] * aw * _v[oq + r];
-                                }
+                                for (int m = _pairStart[pair + _blockColumns[w]]; m < m1; m++)
+                                    h += _pairA[m] * _v[oq + _pairRow[m]];
                                 _blockGram[u * n + w] = h;
                                 _blockGram[w * n + u] = h;
                             }
