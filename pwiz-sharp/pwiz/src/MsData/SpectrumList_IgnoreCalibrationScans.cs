@@ -87,8 +87,11 @@ public sealed class SpectrumList_IgnoreCalibrationScans : SpectrumListBase
         ArgumentNullException.ThrowIfNull(msd);
         var inner = msd.Run.SpectrumList;
         var filtered = Create(inner, msd);
+        // Nothing hidden: the declaration is absent, or present on a file whose spectra never carry
+        // the term (ProteoWizard #4499), where it is false. It is kept in that second case anyway,
+        // because cpp keeps it and conversion output has to match cpp's.
         if (ReferenceEquals(filtered, inner))
-            return; // Nothing was hidden, so the declaration is either absent or still true
+            return;
 
         msd.Run.SpectrumList = filtered;
         msd.FileDescription.FileContent.CVParams.RemoveAll(p => p.Cvid == CVID.MS_calibration_spectrum);

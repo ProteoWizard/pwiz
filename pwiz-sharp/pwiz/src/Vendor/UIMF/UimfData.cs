@@ -52,6 +52,7 @@ public sealed class UimfData : IDisposable
     private readonly DataReader _reader;
     private readonly List<UimfIndexEntry> _index = new();
     private readonly HashSet<UimfFrameType> _frameTypes = new();
+    private readonly HashSet<int> _calibrationFrames = new();
     private readonly int _frameCount;
     private readonly int _binsPerFrame;
     private bool _disposed;
@@ -91,6 +92,8 @@ public sealed class UimfData : IDisposable
                     FrameType: (UimfFrameType)reader.GetInt32(2));
                 _index.Add(entry);
                 _frameTypes.Add(entry.FrameType);
+                if (entry.FrameType == UimfFrameType.Calibration)
+                    _calibrationFrames.Add(entry.Frame);
             }
         }
 
@@ -112,6 +115,10 @@ public sealed class UimfData : IDisposable
 
     /// <summary>Number of frames reported by <c>GlobalParams.NumFrames</c>.</summary>
     public int FrameCount => _frameCount;
+
+    /// <summary>Number of distinct calibration frames, taken from the index built at open, so
+    /// that leaving them out of a frame count costs no further read.</summary>
+    public int CalibrationFrameCount => _calibrationFrames.Count;
 
     /// <summary>Total drift bins per frame (cpp's <c>driftScansPerFrame_</c>).</summary>
     public int DriftScansPerFrame => _binsPerFrame;
@@ -250,8 +257,7 @@ public sealed class UimfData : IDisposable
         var ticByFrame = _reader.GetTICByFrame(0, 0, 0, 0);
         foreach (var kv in ticByFrame)
         {
-            if (ignoreCalibrationFrames &&
-                (UimfFrameType)(int)_reader.GetFrameTypeForFrame(kv.Key) == UimfFrameType.Calibration)
+            if (ignoreCalibrationFrames && _calibrationFrames.Contains(kv.Key))
                 continue;
 
             times.Add(_reader.GetFrameStartTimeMinutesEstimated(kv.Key));

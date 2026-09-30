@@ -76,9 +76,9 @@ public sealed class ChromatogramList_UIMF : ChromatogramListBase
         }
         else if (ignoreCalibrationFrames)
         {
-            // Without the arrays there is nothing to count, so ask for them rather than report a
-            // frame count that includes the frames just excluded
-            c.DefaultArrayLength = _data.GetTic(ignoreCalibrationFrames: true).TimeMinutes.Length;
+            // One TIC point per frame, less the calibration frames just excluded - counted from
+            // the index, so a metadata request stays as cheap as the plain frame count below
+            c.DefaultArrayLength = _data.FrameCount - _data.CalibrationFrameCount;
         }
         else
         {

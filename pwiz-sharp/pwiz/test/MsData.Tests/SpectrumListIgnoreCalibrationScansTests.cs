@@ -124,13 +124,16 @@ public class SpectrumListIgnoreCalibrationScansTests
         {
             File.WriteAllText(path, new MzmlWriter().Write(BuildMSData(declareInFileContent: true)));
 
-            var kept = ReadMzml(path, ignoreCalibrationScans: false);
-            Assert.AreEqual(4, kept.Run.SpectrumList!.Count);
-            Assert.IsFalse(kept.Run.SpectrumList.CalibrationSpectraAreOmitted);
-            Assert.IsTrue(kept.FileDescription.FileContent.HasCVParam(CVID.MS_calibration_spectrum));
-            kept.Run.SpectrumList.Dispose();
+            // Disposed on every path, not only on success: the lazy list holds the file open, and
+            // an assertion failing with it still open would have the Delete below throw in its place
+            using (var kept = ReadMzml(path, ignoreCalibrationScans: false))
+            {
+                Assert.AreEqual(4, kept.Run.SpectrumList!.Count);
+                Assert.IsFalse(kept.Run.SpectrumList.CalibrationSpectraAreOmitted);
+                Assert.IsTrue(kept.FileDescription.FileContent.HasCVParam(CVID.MS_calibration_spectrum));
+            }
 
-            var omitted = ReadMzml(path, ignoreCalibrationScans: true);
+            using var omitted = ReadMzml(path, ignoreCalibrationScans: true);
             var sl = omitted.Run.SpectrumList!;
             Assert.AreEqual(3, sl.Count);
             Assert.IsTrue(sl.CalibrationSpectraAreOmitted);
@@ -141,7 +144,6 @@ public class SpectrumListIgnoreCalibrationScansTests
             // And the declaration stays gone on the way back out
             StringAssert.DoesNotMatch(new MzmlWriter().Write(omitted),
                 new System.Text.RegularExpressions.Regex("MS:1000928"));
-            sl.Dispose();
         }
         finally
         {
