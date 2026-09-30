@@ -48,6 +48,7 @@ namespace pwiz.Osprey.Test
             {
                 AssertReadsInstrumentAndActivation(dir);
                 AssertSamplesOnlyTheFirstMs2Spectra(dir);
+                AssertCountsMs2Analyzers(dir);
                 AssertUnreadableSourceIsUnknown(dir);
             }
             finally
@@ -80,6 +81,31 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(4, metadata.NMs2Sampled);
             AssertHistogram(metadata.DissociationMethods, (@"ETD", 1), (@"HCD", 3));
             AssertHistogram(metadata.CollisionEnergies, (@"27", 2), (@"30", 1), (SourceRunMetadata.NONE_KEY, 1));
+            AssertHistogram(metadata.MassAnalyzers, (SourceRunMetadata.NONE_KEY, 4));
+        }
+
+        /// <summary>
+        /// A Tribrid file whose MS2 spectra are read out in both analyzers, HCD in the Orbitrap and
+        /// resonance CID in the ion trap: each spectrum's analyzer is the one its scan's instrument
+        /// configuration names, and the activation is pwiz's short name (Thermo's HCD and CID).
+        /// </summary>
+        private static void AssertCountsMs2Analyzers(string dir)
+        {
+            string path = Path.Combine(dir, @"tribrid.mzML");
+            var spectra = new List<string>
+            {
+                Spectrum(0, 1, null, null),
+                Spectrum(1, 2, HCD, 30.0),
+                Spectrum(2, 2, HCD, 30.0),
+                Spectrum(3, 2, CID, 35.0, @"IC2"),
+            };
+            File.WriteAllText(path, Mzml(spectra, true, ORBITRAP, ION_TRAP));
+
+            var metadata = SpectrumFileReader.TryReadSourceMetadata(path);
+            Assert.IsNotNull(metadata);
+            Assert.AreEqual(3, metadata.NMs2Sampled);
+            AssertHistogram(metadata.MassAnalyzers, (@"orbitrap", 2), (@"radial ejection linear ion trap", 1));
+            AssertHistogram(metadata.DissociationMethods, (@"CID", 1), (@"HCD", 2));
         }
 
         /// <summary>
@@ -128,13 +154,19 @@ namespace pwiz.Osprey.Test
 
         private const string HCD = @"<cvParam cvRef=""MS"" accession=""MS:1000422"" name=""beam-type collision-induced dissociation"" />";
         private const string ETD = @"<cvParam cvRef=""MS"" accession=""MS:1000598"" name=""electron transfer dissociation"" />";
+        private const string CID = @"<cvParam cvRef=""MS"" accession=""MS:1000133"" name=""collision-induced dissociation"" />";
+        private const string ORBITRAP = @"<cvParam cvRef=""MS"" accession=""MS:1000484"" name=""orbitrap"" />";
+        private const string ION_TRAP = @"<cvParam cvRef=""MS"" accession=""MS:1000083"" name=""radial ejection linear ion trap"" />";
 
         /// <summary>
         /// A minimal mzML document. <paramref name="thermo"/> declares a Thermo RAW source file
         /// and a Q Exactive instrument configuration, which is where ProteoWizard reads the
         /// vendor and model from; otherwise the file declares neither.
         /// </summary>
-        private static string Mzml(IReadOnlyList<string> spectra, bool thermo)
+        /// <param name="spectra">The spectrum elements.</param>
+        /// <param name="thermo">A Q Exactive Thermo file, else one that declares no instrument.</param>
+        /// <param name="analyzers">One instrument configuration (IC1, IC2, ...) per analyzer term; none gives one bare IC1.</param>
+        private static string Mzml(IReadOnlyList<string> spectra, bool thermo, params string[] analyzers)
         {
             var sb = new StringBuilder();
             sb.Append(@"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -158,15 +190,30 @@ namespace pwiz.Osprey.Test
             }
             sb.Append(@"
   </fileDescription>
-  <instrumentConfigurationList count=""1"">
-    <instrumentConfiguration id=""IC1"">");
-            if (thermo)
+  <instrumentConfigurationList count=""");
+            int configurations = Math.Max(1, analyzers.Length);
+            sb.Append(configurations.ToString(CultureInfo.InvariantCulture));
+            sb.Append(@""">");
+            for (int i = 0; i < configurations; i++)
             {
-                sb.Append(@"
+                sb.Append(string.Format(CultureInfo.InvariantCulture, @"
+    <instrumentConfiguration id=""IC{0}"">", i + 1));
+                if (thermo)
+                {
+                    sb.Append(@"
       <cvParam cvRef=""MS"" accession=""MS:1001911"" name=""Q Exactive"" />");
+                }
+                if (i < analyzers.Length)
+                {
+                    sb.Append(@"
+      <componentList count=""1"">
+        <analyzer order=""1"">" + analyzers[i] + @"</analyzer>
+      </componentList>");
+                }
+                sb.Append(@"
+    </instrumentConfiguration>");
             }
             sb.Append(@"
-    </instrumentConfiguration>
   </instrumentConfigurationList>
   <run id=""run"" defaultInstrumentConfigurationRef=""IC1"">
     <spectrumList count=""");
@@ -182,7 +229,7 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>One centroided spectrum of two peaks; an MS2 carries a precursor.</summary>
-        private static string Spectrum(int index, int msLevel, string dissociation, double? collisionEnergy)
+        private static string Spectrum(int index, int msLevel, string dissociation, double? collisionEnergy, string configuration = @"IC1")
         {
             string precursor = string.Empty;
             if (msLevel == 2)
@@ -215,7 +262,7 @@ namespace pwiz.Osprey.Test
         <cvParam cvRef=""MS"" accession=""MS:1000511"" value=""{2}"" />
         <cvParam cvRef=""MS"" accession=""MS:1000127"" name=""centroid spectrum"" />
         <scanList count=""1"">
-          <scan instrumentConfigurationRef=""IC1"">
+          <scan instrumentConfigurationRef=""{7}"">
             <cvParam cvRef=""MS"" accession=""MS:1000016"" value=""{3}"" unitCvRef=""UO"" unitAccession=""UO:0000031"" unitName=""minute"" />
           </scan>
         </scanList>{4}
@@ -235,7 +282,7 @@ namespace pwiz.Osprey.Test
         </binaryDataArrayList>
       </spectrum>",
                 index, index + 1, msLevel, 1.0 + 0.01 * index, precursor,
-                Base64(new[] { 200.0, 300.0 }), Base64(new[] { 100f, 200f }));
+                Base64(new[] { 200.0, 300.0 }), Base64(new[] { 100f, 200f }), configuration);
         }
 
         private static string Base64(double[] values)

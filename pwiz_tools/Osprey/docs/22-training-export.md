@@ -297,6 +297,7 @@ with a Savitzky-Golay filter; Osprey's XICs are unsmoothed - see Risks).
 | `osprey.instrument_vendor`, `osprey.instrument_model` | From the run's data file (see Source metadata), or empty without it |
 | `osprey.source_ms2_sampled` | MS2 spectra the two histograms below were counted over; `0` without the data file |
 | `osprey.dissociation_methods`, `osprey.collision_energies` | JSON histograms (method or energy -> MS2 spectrum count) over the sampled spectra, or empty without the data file |
+| `osprey.ms2_mass_analyzers` | JSON histogram (the mass analyzer of each sampled MS2 spectrum's scan configuration, pwiz's name such as `orbitrap` or `radial ejection linear ion trap` -> MS2 spectrum count), or empty without the data file. A Tribrid reads MS2 out in either analyzer; a consumer such as CarafeSharp trains ion trap and Orbitrap spectra as different instruments. The dissociation names are pwiz's short names: `HCD` for beam-type CID, `CID` for resonance CID, as Thermo names them |
 
 Collision energy is exported as the file reports it, which differs by vendor (normalized for
 Thermo, eV for Sciex, stepped HCD as several values), hence a histogram rather than a number.
