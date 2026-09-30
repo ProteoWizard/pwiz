@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Ionic.Zip;
+using pwiz.Common.Database.FileSystems;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Lib;
@@ -40,6 +41,24 @@ namespace pwiz.Skyline.Model
     {
         public const string EXT = ".zip";
         public const string EXT_SKY_ZIP = ".sky.zip";
+
+        /// <summary>
+        /// Extensions of the files that a document opened in place needs RANDOM access to (.skyd is
+        /// the chromatogram cache, .blib are BiblioSpec spectral libraries, .protdb is the
+        /// background proteome). These can be used directly from the .zip only if we can get a
+        /// random-access stream to them, i.e. their bytes are a contiguous, unmodified range inside
+        /// the .zip. They are stored uncompressed when sharing, and <see cref="CanOpenInPlace"/>
+        /// checks that they really are before opening in place.
+        /// </summary>
+        public static readonly string[] RandomAccessExtensions = { @".skyd", @".blib", @".protdb" };
+
+        /// <summary>
+        /// Extensions of the other files a document opened in place needs, which we can use as long
+        /// as we can get a stream and read them SEQUENTIALLY (so they may be compressed). This
+        /// excludes the <see cref="RandomAccessExtensions"/>.
+        /// </summary>
+        public static readonly string[] SequentialAccessExtensions = { @".sky", @".sky.view", @".skyl" };
+
         private TemporaryDirectory _tempDir;
         public static string FILTER_SHARING
         {
@@ -107,6 +126,74 @@ namespace pwiz.Skyline.Model
                         : ModelResources.SrmDocumentSharing_DefaultMessage_Extracting_files_from_sharing_archive__0__,
                     Path.GetFileName(SharedPath));
             }
+        }
+
+        /// <summary>
+        /// True if the document in <see cref="SharedPath"/> can be opened directly from the .zip,
+        /// without extracting anything: every file in it is one a document opened in place knows
+        /// how to read, and can be read the way that file needs to be read.
+        /// </summary>
+        public bool CanOpenInPlace()
+        {
+            using var zip = ZipFile.Read(SharedPath);
+            var randomAccessEntries = new List<ZipEntry>();
+            var sequentialAccessEntries = new List<ZipEntry>();
+            foreach (var entry in zip.Entries)
+            {
+                // Skyline never sets a zip password, so an encrypted .zip cannot be opened at all -
+                // extracting it throws BadPasswordException. Extracting is still the right answer,
+                // because reading an encrypted entry here would hand ciphertext to the inflater
+                // instead of failing that clearly. Encryption is independent of the compression
+                // method, so even a stored entry can be encrypted.
+                if (entry.UsesEncryption)
+                {
+                    return false;
+                }
+                if (RandomAccessExtensions.Any(ext =>
+                        entry.FileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+                {
+                    randomAccessEntries.Add(entry);
+                }
+                else if (SequentialAccessExtensions.Any(ext =>
+                             entry.FileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+                {
+                    sequentialAccessEntries.Add(entry);
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            return randomAccessEntries.All(CanGetRandomAccess) &&
+                   sequentialAccessEntries.All(CanGetSequentialStream);
+        }
+
+        /// <summary>
+        /// True if the entry's bytes are a contiguous, unmodified range inside the .zip, so they can
+        /// be read in place. The sizes must agree as well as the method being "stored", because
+        /// reading an entry in place whose bytes are not what the directory describes would silently
+        /// produce garbage rather than fail. (An encrypted entry is one such: its bytes are
+        /// ciphertext preceded by a header, which makes it bigger than its uncompressed size.
+        /// <see cref="CanOpenInPlace"/> rejects those before this is reached.)
+        /// </summary>
+        private static bool CanGetRandomAccess(ZipEntry entry)
+        {
+            return entry.CompressionMethod == CompressionMethod.None
+                   && entry.UncompressedSize == entry.CompressedSize;
+        }
+
+        /// <summary>
+        /// True if the entry can be read from beginning to end, i.e. it is stored or deflated - see
+        /// <see cref="ZipFileReader.Entry.OpenSequentialStream"/>, which reads a zip entry with .NET's inflater
+        /// rather than DotNetZip's because it is markedly faster. Extracting the .zip goes through
+        /// DotNetZip, which reads compression methods we do not, so an entry compressed some other
+        /// way means the whole .zip has to be extracted.
+        /// </summary>
+        private static bool CanGetSequentialStream(ZipEntry entry)
+        {
+            return entry.CompressionMethod == CompressionMethod.None ||
+                   entry.CompressionMethod == CompressionMethod.Deflate;
         }
 
         public void Extract(IProgressMonitor progressMonitor)
@@ -427,7 +514,8 @@ namespace pwiz.Skyline.Model
             if (librarySpec is BiblioSpecLiteSpec)
             {
                 var redundantBlibPath = BiblioSpecLiteSpec.GetRedundantName(blibPath);
-                if (File.Exists(redundantBlibPath))
+                // The redundant .blib may be inside the .sky.zip the document was opened from
+                if (new FilePath(redundantBlibPath).Exists())
                 {
                     zip.AddFile(redundantBlibPath);
                 }
@@ -464,7 +552,8 @@ namespace pwiz.Skyline.Model
         {
             zip.AddFile(docFilePath);
             var auditLogPath = SrmDocument.GetAuditLogPath(docFilePath);
-            if (File.Exists(auditLogPath))
+            // The .skyl may be inside the .sky.zip the document was opened from
+            if (new FilePath(auditLogPath).Exists())
             {
                 zip.AddFile(auditLogPath);
             }
@@ -477,7 +566,8 @@ namespace pwiz.Skyline.Model
                 return;
             }
             string pathCache = ChromatogramCache.FinalPathForName(DocumentPath, null);
-            if (!File.Exists(pathCache))
+            // The .skyd may be inside the .sky.zip the document was opened from
+            if (!new FilePath(pathCache).Exists())
             {
                 return;
             }
@@ -604,9 +694,12 @@ namespace pwiz.Skyline.Model
                     }
                     else
                     {
-                        var message = string.Format(
-                            ModelResources.SrmDocumentSharing_SrmDocumentSharing_SaveProgress_Compressing__0__,
-                            e.CurrentEntry.FileName);
+                        // Files that need random access (.skyd, .blib) are stored uncompressed so the
+                        // document can be opened directly from the .zip; report those as "Storing".
+                        var format = e.CurrentEntry.CompressionMethod == CompressionMethod.None
+                            ? ModelResources.SrmDocumentSharing_SrmDocumentSharing_SaveProgress_Storing__0_
+                            : ModelResources.SrmDocumentSharing_SrmDocumentSharing_SaveProgress_Compressing__0__;
+                        var message = string.Format(format, e.CurrentEntry.FileName);
                         ProgressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangeMessage(message));
                     }
                 }
@@ -652,7 +745,23 @@ namespace pwiz.Skyline.Model
                 }
                 else
                 {
-                    _zip.AddFile(path, string.Empty);
+                    ZipEntry entry;
+                    if (new FilePath(path).IsInZipFile)
+                    {
+                        // The document was opened in place, so this file lives inside another .zip
+                        // and has no path that Ionic can open. Give it a stream instead, opened
+                        // only when the .zip is written, so that no file is ever held in memory.
+                        entry = _zip.AddEntry(fileName, name => new FilePath(path).OpenSequentialStream(),
+                            (name, stream) => stream?.Dispose());
+                    }
+                    else
+                    {
+                        entry = _zip.AddFile(path, string.Empty);
+                    }
+                    // Store the files that need random access (.skyd, .blib) UNCOMPRESSED so the
+                    // document can be opened directly from the .zip without extracting them.
+                    if (RandomAccessExtensions.Contains(Path.GetExtension(fileName), StringComparer.OrdinalIgnoreCase))
+                        entry.CompressionMethod = CompressionMethod.None;
                 }
             }
 

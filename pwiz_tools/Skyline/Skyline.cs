@@ -755,19 +755,24 @@ namespace pwiz.Skyline
             if (logChange != null)
                 logChange(docNew, docOriginal);
 
-            SrmDocument docResult;
-            lock (_documentChangeLock)
+            // Remember the streams of the document being replaced, so that the ones which the new
+            // document does not have get closed.
+            using (new DocumentStreams(this))
             {
-                docResult = Interlocked.CompareExchange(ref _document, docNew, docOriginal);
+                SrmDocument docResult;
+                lock (_documentChangeLock)
+                {
+                    docResult = Interlocked.CompareExchange(ref _document, docNew, docOriginal);
+                }
+
+                if (!ReferenceEquals(docResult, docOriginal))
+                    return false;
+
+                Program.GcTracker?.Register(docNew);
+
+                if (DocumentChangedEvent != null)
+                    DocumentChangedEvent(this, new DocumentChangedEventArgs(docOriginal, IsOpeningFile));
             }
-
-            if (!ReferenceEquals(docResult, docOriginal))
-                return false;
-
-            Program.GcTracker?.Register(docNew);
-
-            if (DocumentChangedEvent != null)
-                DocumentChangedEvent(this, new DocumentChangedEventArgs(docOriginal, IsOpeningFile));
 
             RunUIActionAsync(UpdateDocumentUI);
 

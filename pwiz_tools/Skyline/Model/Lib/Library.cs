@@ -124,18 +124,6 @@ namespace pwiz.Skyline.Model.Lib
             return results == null || results.IsLoaded;
         }
 
-        protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
-        {
-            if (document == null)
-                yield break;
-            var libraries = document.Settings.PeptideSettings.Libraries.Libraries;
-            foreach (var readStream in libraries.Where(library => library != null)
-                                                .SelectMany(library => library.ReadStreams))
-            {
-                yield return readStream;
-            }
-        }
-
         protected override bool IsCanceled(IDocumentContainer container, object tag)
         {
             if (tag == null)
@@ -314,6 +302,9 @@ namespace pwiz.Skyline.Model.Lib
         private SrmDocument CallWithSettingsChangeMonitor(IDocumentContainer container, SrmDocument docCurrent,
             [InstantHandle] Func<SrmSettingsChangeMonitor, SrmDocument> changeFunc)
         {
+            // Changing the settings reads the chromatograms of docCurrent, which opens streams
+            // that need closing if the container has moved on to a different document.
+            using var documentStreams = new DocumentStreams(container, docCurrent);
             using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(
                        new LoadMonitor(this, container, null),
                        Resources.LibraryManager_LoadBackground_Updating_library_settings_for__0_, container,

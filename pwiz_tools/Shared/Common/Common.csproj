@@ -81,6 +81,7 @@
       <HintPath>..\..\..\libraries\SQLite\$(PLATFORM)\System.Data.SQLite.dll</HintPath>
     </Reference>
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.Web" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Windows.Forms" />
@@ -161,8 +162,11 @@
     <Compile Include="Database\NHibernate\AbstractSessionWithLock.cs" />
     <Compile Include="Database\NHibernate\SessionFactoryFactory.cs" />
     <Compile Include="Database\NHibernate\SessionWithLock.cs" />
+    <Compile Include="Database\FileSystems\FilePath.cs" />
+    <Compile Include="Database\FileSystems\ZipFileReader.cs" />
     <Compile Include="Database\NHibernate\StatelessSessionWithLock.cs" />
     <Compile Include="Database\SqliteOperations.cs" />
+    <Compile Include="Database\SqliteSliceVfs.cs" />
     <Compile Include="DataBinding\AbstractViewContext.cs" />
     <Compile Include="DataBinding\AggregateOperation.cs" />
     <Compile Include="DataBinding\AnnotatedValue.cs" />

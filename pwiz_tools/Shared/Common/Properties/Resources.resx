@@ -578,4 +578,10 @@
   <data name="FilterClauseSerializer_ParseFilterString_Invalid_filter_string___0_" xml:space="preserve">
 	  <value>Invalid filter string: {0}</value>
   </data>
+  <data name="FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_" xml:space="preserve">
+    <value>The entry {0} was not found in the zip file {1}.</value>
+  </data>
+  <data name="SqliteSliceVfs_EnsureVfsRegistered_Unable_to_load__0_" xml:space="preserve">
+    <value>Unable to load {0}.</value>
+  </data>
 </root>
