@@ -617,7 +617,7 @@ namespace pwiz.Osprey
                 }
             }
 
-            if (!_config.DecoysInLibrary &&
+            if (!_config.LibrarySuppliesDecoys &&
                 !string.IsNullOrEmpty(_config.DecoyPairingManifestPath))
             {
                 Program.LogWarning(string.Format(

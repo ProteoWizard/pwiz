@@ -70,15 +70,15 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
-        /// Parses a string to a neutral loss. Returns
-        /// (<see cref="NeutralLossCode.None"/>, 0) for empty, "NOLOSS", or
-        /// unrecognized input; a named code for known losses; and
-        /// (<see cref="NeutralLossCode.Custom"/>, mass) for a numeric mass.
+        /// Parses a string to a neutral loss: (<see cref="NeutralLossCode.None"/>, 0) for
+        /// "NOLOSS", a named code for known losses, and
+        /// (<see cref="NeutralLossCode.Custom"/>, mass) for a numeric mass. Null for empty or
+        /// unrecognized input, which a library reader must report rather than read as no loss.
         /// </summary>
-        public static (NeutralLossCode Code, double CustomMass) Parse(string s)
+        public static (NeutralLossCode Code, double CustomMass)? Parse(string s)
         {
             if (string.IsNullOrEmpty(s))
-                return (NeutralLossCode.None, 0.0);
+                return null;
 
             switch (s.ToUpperInvariant())
             {
@@ -97,7 +97,7 @@ namespace pwiz.Osprey.Core
                     double mass;
                     if (double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out mass))
                         return (NeutralLossCode.Custom, mass);
-                    return (NeutralLossCode.None, 0.0);
+                    return null;
             }
         }
     }

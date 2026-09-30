@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
 	<!-- 
 		Microsoft ResX Schema
@@ -118,8 +118,8 @@
   <data name="DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_missing_required_columns__it_needs_sequence__peptide_type_" xml:space="preserve">
     <value>The decoy pairing manifest is missing required columns (it needs sequence, peptide_type and peptide_pair_index). Found: {0}</value>
   </data>
-  <data name="DiannTsvLoader_GetField_Missing__0__at_row__1_" xml:space="preserve">
-    <value>Missing {0} at row {1}</value>
+  <data name="DiannTsvLoader_LineReader___line__0___column__1___Missing__2_" xml:space="preserve">
+    <value>(line {0}, column {1}) Missing {2}</value>
   </data>
   <data name="DiannTsvLoader_Load_Parsing__0_" xml:space="preserve">
     <value>Parsing {0}</value>
@@ -130,8 +130,14 @@
   <data name="DiannTsvLoader_ParseReader_The_library_file_is_empty__it_has_no_header_row_" xml:space="preserve">
     <value>The library file is empty: it has no header row.</value>
   </data>
-  <data name="DiannTsvLoader_ParseValue_Invalid__0____1___at_row__2_" xml:space="preserve">
-    <value>Invalid {0} '{1}' at row {2}</value>
+  <data name="DiannTsvLoader_LineReader___line__0___column__1___Invalid__2____3__" xml:space="preserve">
+    <value>(line {0}, column {1}) Invalid {2} '{3}'</value>
+  </data>
+  <data name="DiannTsvLoader_ToException____and__0__more_errors" xml:space="preserve">
+    <value>... and {0:N0} more errors</value>
+  </data>
+  <data name="DiannTsvLoader_ToException__0__library_lines_have_errors__Fix_the_library_and_load_it_again_" xml:space="preserve">
+    <value>{0:N0} library lines have errors. Fix the library and load it again:</value>
   </data>
   <data name="LibraryCacheStatus_LoadCache_Loading_library_cache___0__precursors_" xml:space="preserve">
     <value>Loading library cache ({0:N0} precursors)</value>

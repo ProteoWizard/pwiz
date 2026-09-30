@@ -187,7 +187,7 @@ namespace pwiz.Osprey.IO
                         // already proven unchanged. The summary is still reported, recovered
                         // from the finished library, so a cached run is not silent about the
                         // pairing fraction (issue #4650).
-                        if (LibrarySuppliesDecoys(config))
+                        if (config.LibrarySuppliesDecoys)
                         {
                             LogCachedPairingSummary(RecoverPairingStats(cached), log);
                             error = DescribeSharedDecoyIds(cached);
@@ -264,7 +264,7 @@ namespace pwiz.Osprey.IO
             // rewritten from the manifest. Ordering against Normalize and Deduplicate above is
             // unchanged - both still run first, which is what the cross-impl byte parity rests
             // on.
-            if (LibrarySuppliesDecoys(config) &&
+            if (config.LibrarySuppliesDecoys &&
                 !TryFinishSuppliedDecoys(entries, config, log, out error))
             {
                 return null;
@@ -310,6 +310,7 @@ namespace pwiz.Osprey.IO
 
             return entries;
         }
+
         /// <summary>
         /// Finish a supplied-decoy library: mark the decoys, then pair each to its target.
         /// Returns false with <paramref name="error"/> set on the faults that make the library
@@ -617,6 +618,11 @@ namespace pwiz.Osprey.IO
             sb.AppendFormat("decoy_method:{0}\n", config.DecoyMethod);
             sb.AppendFormat("decoy_prefixes:{0}\n", FormatPrefixList(config.DecoyPrefixes));
             AppendFileIdentity(sb, @"pairing_manifest", config.DecoyPairingManifestPath);
+            // A cache is only as validated as the reader that wrote it: a DIA-NN TSV cached
+            // before the reader refused invalid rows is re-read once, so a bad library is
+            // reported instead of served from its cache. A valid library caches the same bytes.
+            if (config.LibrarySource?.Format == LibraryFormat.DiannTsv)
+                sb.AppendFormat(CultureInfo.InvariantCulture, "tsv_reader:{0}\n", DiannTsvLoader.READER_VERSION);
             using (var sha256 = SHA256.Create())
             {
                 byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
@@ -644,17 +650,6 @@ namespace pwiz.Osprey.IO
                 - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
             sb.AppendFormat(CultureInfo.InvariantCulture, "{0}_mtime:{1}\n", label, mtimeSecs);
             // ReSharper restore LocalizableElement
-        }
-
-        /// <summary>
-        /// Whether the library supplies its own decoys, so the load must mark and pair them.
-        /// The same predicate the caller used to apply - <c>DecoyMethod.FromLibrary</c> is a
-        /// synonym for <c>DecoysInLibrary</c>, and treating it as one is what fixed library-decoy
-        /// mode silently falling through to Reverse generation.
-        /// </summary>
-        private static bool LibrarySuppliesDecoys(OspreyConfig config)
-        {
-            return config.DecoysInLibrary || config.DecoyMethod == DecoyMethod.FromLibrary;
         }
 
         /// <summary>
