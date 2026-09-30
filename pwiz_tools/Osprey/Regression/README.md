@@ -40,6 +40,15 @@ already had the tree; the v1 zip and URL stay live for older branches.
 
 ## What it asserts
 
+**Pipeline behavior is not asserted here.** Caching, resume, rehydrate, task boundaries,
+sidecar contracts, route markers and which files a run writes are valid on any data, so they
+are checked in `Osprey.Test\SubsetPipelineTest.cs`, which runs the whole pipeline in-process
+on committed subsets of this data on every commit. This gate is for results at real-data
+scale: the answer against its golden, the FDR bounds, and the comparisons whose value is
+scale fidelity (the HPC chain against straight-through). The rehydrate, diagnostics
+regeneration, pay-later, rescore-resume and alternate pass-2 legs (modes 5 and 7-11) moved
+there in #4728. Put a new pipeline-behavior check there, not here.
+
 For each dataset, with **zero input copies**
 (inputs referenced read-only from `<Downloads>\Perftests\osprey-testfiles-mzML-v2`,
 all output + caches under a per-run timestamped `TestResults/regression-<stamp>`
@@ -63,37 +72,15 @@ artifact**, so the multi-GB spectra caches there are harmless):
    in resume mode (invalidate the Stage 5 join + blib, re-run the same command
    so the rehydrate paths fire) and asserts the resume blib equals the
    straight-through blib at 1e-9. The build is its own oracle — no baseline.
-4. **mode 5 - Stage-5 rehydrate self-consistency**. Invalidates ONLY the
-   `SecondPassFDR` task (the blib + its `SecondPassFDR` stamp), leaving the
-   `FirstPassFDR` stamp and every 1st-pass sidecar valid, so the re-run rebuilds
-   its post-Stage-5 bundle from those **own** sidecars
-   (`LoadOwnReconciliationBundle`). (Task **names** throughout - the classes
-   behind them are `FirstPassFdrTask` and `SecondPassFdrTask`, and only the names appear
-   in the `[TASK]` log lines and `.osprey.task` stamps.) **No other leg reaches
-   that loader**: mode 2 deletes the `FirstPassFDR` stamp, so that task *runs*;
-   mode 4 invalidates nothing, so nothing demands its state; and mode 3's
-   `PerFileRescoring` phase *does* enter the rehydrate arm, but adopts a
-   **worker-supplied** bundle rather than loading its own. Asserts a marker logged
-   from inside that loader (a cache hit does not prove it ran, and neither does the
-   generic rehydrate line, which a worker bundle emits too), the blib against the
-   pristine straight-through one at 1e-9, and, for datasets with
-   `ModelDiagnostics`, the report re-emitted from those sidecars against the same
-   golden mode 1b uses.
-
-   Runs after mode 2: its SecondPassFDR leg rewrites the 2nd-pass sidecars and the
-   diagnostics report as well as the blib, none of which `Invoke-ResumeInvalidation`
-   deletes, so running it earlier would leave mode 2 resuming on top of mode-5
-   state.
-
 6. **mode 6 - library-fragment release engagement** (issue #4532). Asserts, from
    each leg's own log, that the Stage 5 -> 6 library-fragment release RAN wherever
-   the library is held - straight-through, resume, the own-sidecar rehydrate, every
+   the library is held - straight-through, resume, every
    `--task PerFileRescoring` worker, and the `SecondPassFDR` node - and did **not**
    run on `--task FirstPassFDR`, which loads with `OmitFragments` and so can only
    ever report a saving it did not make.
 
    No output comparator can make this assertion. The release is **output-neutral by
-   design** - that is its safety argument - so modes 1-5 pass identically whether it
+   design** - that is its safety argument - so modes 1-4 pass identically whether it
    ran or was deleted outright. They catch an *over*-release (the released-spectrum
    tripwire throws) but are structurally blind to it silently not happening, and
    every defect found reviewing #4534 was in that blind spot. Verified by
@@ -112,13 +99,14 @@ artifact**, so the multi-GB spectra caches there are harmless):
    a reworded C# line fails the gate instead of quietly satisfying the
    "must not release" leg. Always on; there is no skip switch.
 
-   Runs **last**, after mode 5, because it reads the logs every leg above wrote.
+   Runs **last**, because it reads the logs every leg above wrote. The own-sidecar
+   rehydrate's release is asserted by `SubsetPipelineTest` (#4728).
 
 **modes 3 and 4** (the HPC 4-task worker chain, and the warm re-run cache-hit
 assertion) are described in `regression.ps1`'s own comment header, alongside why
 comparing output alone cannot detect a cache-invalidation regression.
 
-**No** leg names a resident-pool token. Mode 5 was the last one that did
+**No** leg names a resident-pool token. The rehydrate leg (formerly mode 5) was the last one that did
 (`OSPREY_ALLOW_UNFIXED_RESIDENT=resume-survivor-handoff`, because a resume could not stream
 the Stage 6 survivor handoff); issue #4536 gave the rehydrate its own per-file survivor
 loader, so that arm streams instead of needing one. An *inherited* value is cleared at
@@ -186,11 +174,12 @@ unexplained failure go green; a red mode-1 means the output moved.
 ## Local use
 
 ```powershell
-# Stellar only, against the committed golden (mode 1 + mode 2)
+# Stellar only, against the committed golden: modes 1, 1c, 4 and 6. Resume, rehydrate and
+# the HPC chain are in the unit tests (SubsetPipelineTest); run those first.
 pwsh -File ./pwiz_tools/Osprey/regression.ps1 -Dataset Stellar
 
-# Mode 1 only (skip the resume leg)
-pwsh -File ./pwiz_tools/Osprey/regression.ps1 -Dataset Stellar -SkipResume
+# Resume and the HPC chain at full size
+pwsh -File ./pwiz_tools/Osprey/regression.ps1 -Dataset StellarLibDecoy
 
 # Reuse an existing Release build (skip the build step)
 pwsh -File ./pwiz_tools/Osprey/regression.ps1 -Dataset Stellar -NoBuild
