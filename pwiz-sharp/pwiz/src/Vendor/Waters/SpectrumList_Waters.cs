@@ -81,6 +81,13 @@ public sealed class SpectrumList_Waters : SpectrumListBase, IVendorCentroidingSp
         _mobilityFilter = mobilityFilter ?? Array.Empty<Pwiz.Data.Common.Chemistry.MzMobilityWindow>();
         _reportSonarBins = reportSonarBins;
         _ddaIsolationOffsets = new Lazy<(float, float)?>(_data.GetDdaIsolationWindowOffsets);
+
+        // Resolve the lockmass function now, while still single threaded, as cpp does in its
+        // constructor. Nothing here serializes SDK access, so a first lookup made later -
+        // CalibrationSpectraAreOmitted can be asked from any thread, and the DDA index never
+        // asks at all - could enter the SDK while a spectrum read is using the same handle.
+        _data.GetLockMassFunction();
+
         if (ddaProcessing)
             BuildDdaIndex();
         else

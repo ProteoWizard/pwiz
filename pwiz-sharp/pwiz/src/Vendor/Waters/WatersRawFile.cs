@@ -361,11 +361,10 @@ internal sealed class WatersRawFile : IDisposable
     /// Cached after the first lookup since the answer doesn't change for an open file.
     /// </summary>
     /// <remarks>
-    /// Locked because callers differ in what they hold: spectrum reads ask while serialized
-    /// against the SDK, CalibrationSpectraAreOmitted asks from whatever thread wants to know. An
-    /// unguarded cache let a second caller see the checked flag before the value was stored and
-    /// report no lockmass function, and let two threads into the SDK call at once - the race
-    /// cpp's SpectrumList_Waters closed by resolving this in its constructor.
+    /// Locked so the cache is published whole: unguarded, a second caller could see the checked
+    /// flag before the value was stored and report no lockmass function. The lock serializes
+    /// this lookup only, not SDK access in general, so SpectrumList_Waters resolves it in its
+    /// constructor - as cpp does - before any other thread can be reading from the file.
     /// </remarks>
     public int? GetLockMassFunction()
     {

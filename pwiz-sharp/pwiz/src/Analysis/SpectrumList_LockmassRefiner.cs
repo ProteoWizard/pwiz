@@ -26,10 +26,14 @@ namespace Pwiz.Analysis;
 /// overload on <see cref="SpectrumList_Waters"/> with the configured (positive, negative)
 /// lockmass m/z values and tolerance. It also strips the redundant <see cref="CVID.MS_profile_spectrum"/>
 /// term when the inner Waters list claims a centroid result (mirrors pwiz cpp).
+/// <para>A <see cref="SpectrumListWrapper"/>, as in cpp, so what the list underneath knows
+/// stays visible through it: <see cref="ISpectrumList.CalibrationSpectraAreOmitted"/> is
+/// forwarded, and <see cref="SpectrumListWrapper.Innermost"/> reaches the Waters list, which
+/// is how <see cref="SpectrumList_IonMobility"/> finds its ion mobility and SONAR support.
+/// Skyline installs this over every Waters list it lockmass corrects.</para>
 /// </remarks>
-public sealed class SpectrumList_LockmassRefiner : SpectrumListBase
+public sealed class SpectrumList_LockmassRefiner : SpectrumListWrapper
 {
-    private readonly ISpectrumList _inner;
     private readonly double _mzPositiveScans;
     private readonly double _mzNegativeScans;
     private readonly double _tolerance;
@@ -38,15 +42,11 @@ public sealed class SpectrumList_LockmassRefiner : SpectrumListBase
     /// <inheritdoc/>
     public override DataProcessing? DataProcessing => _dp;
 
-    /// <summary>The wrapped spectrum list (peak picker or Waters list).</summary>
-    public ISpectrumList Inner => _inner;
-
     /// <summary>Constructs the wrapper with separate positive/negative lockmass m/z values.</summary>
     public SpectrumList_LockmassRefiner(ISpectrumList inner,
         double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance)
+        : base(inner)
     {
-        ArgumentNullException.ThrowIfNull(inner);
-        _inner = inner;
         _mzPositiveScans = lockmassMzPosScans;
         _mzNegativeScans = lockmassMzNegScans;
         _tolerance = lockmassTolerance;
@@ -78,12 +78,6 @@ public sealed class SpectrumList_LockmassRefiner : SpectrumListBase
     }
 
     /// <inheritdoc/>
-    public override int Count => _inner.Count;
-
-    /// <inheritdoc/>
-    public override SpectrumIdentity SpectrumIdentity(int index) => _inner.SpectrumIdentity(index);
-
-    /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
     {
         var waters = FindInnerWaters(out var picker);
@@ -92,7 +86,7 @@ public sealed class SpectrumList_LockmassRefiner : SpectrumListBase
         {
             // Passthrough — non-Waters source, lockmass refinement isn't meaningful but the
             // wrapper is still semantically valid (matches pwiz C++ which logs a warning).
-            spec = _inner.GetSpectrum(index, getBinaryData);
+            spec = Inner.GetSpectrum(index, getBinaryData);
         }
         else if (picker is not null)
         {
@@ -118,15 +112,15 @@ public sealed class SpectrumList_LockmassRefiner : SpectrumListBase
     }
 
     /// <summary>
-    /// Walks <see cref="Inner"/> down through one optional <see cref="SpectrumList_PeakPicker"/>
+    /// Walks <see cref="SpectrumListWrapper.Inner"/> down through one optional <see cref="SpectrumList_PeakPicker"/>
     /// and returns the underlying <see cref="SpectrumList_Waters"/>, or null if the chain
     /// doesn't terminate in a Waters list.
     /// </summary>
     private SpectrumList_Waters? FindInnerWaters(out SpectrumList_PeakPicker? peakPicker)
     {
-        peakPicker = _inner as SpectrumList_PeakPicker;
+        peakPicker = Inner as SpectrumList_PeakPicker;
         if (peakPicker is not null)
             return peakPicker.Inner as SpectrumList_Waters;
-        return _inner as SpectrumList_Waters;
+        return Inner as SpectrumList_Waters;
     }
 }
