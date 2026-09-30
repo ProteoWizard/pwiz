@@ -2012,11 +2012,10 @@ namespace pwiz.Osprey.Tasks
                 fdrEntries.TrimExcess();
                 return true;
             }
-            // About to (re-)rescore this file: clear any stale sidecar
-            // so a mid-Run crash leaves no false-positive pointing at
-            // the partially-written reconciled parquet.
-            if (hasParquetPath)
-                PerFileResumeDriver.ClearStale(reconciledPath, Name);
+            // The stale stamp is cleared where the reconciled parquet is rewritten
+            // (WriteReconciledAndStamp), not here: a file with no Stage 6 work keeps a current
+            // parquet as it is (WriteUnchangedReconciled), and clearing its stamp here would
+            // force a rewrite that changes nothing but its mtime.
             return false;
         }
 
@@ -2131,6 +2130,9 @@ namespace pwiz.Osprey.Tasks
             }
 
             string reconciledOutPath = ParquetScoreCache.ReconciledPathFromScoresPath(parquetPath);
+            // Clear any stale stamp before the write starts, so a mid-write crash leaves no
+            // false-positive pointing at a partially-written reconciled parquet.
+            PerFileResumeDriver.ClearStale(reconciledOutPath, Name);
             bool wrote = ReconciledParquetWriter.Write(parquetPath, reconciledOutPath, fdrEntries, fileName,
                 inputs.LibraryById, config, inputs.JoinFileStems, ctx.LogInfo, ctx.LogWarning);
 
@@ -2189,6 +2191,17 @@ namespace pwiz.Osprey.Tasks
         {
             if (inputs.FileNameToIdx == null ||
                 !inputs.FileNameToIdx.TryGetValue(fileName, out int inputIdx))
+            {
+                return;
+            }
+            // A current copy is left as it is. This file's resume arm can still decline it -
+            // its 2nd-pass sidecar is outstanding, which in a run with no Stage 6 work at all
+            // stays true on every invocation (#4729) - and rewriting an identical copy moves
+            // only its mtime, which is part of the identity a training export of this run is
+            // keyed on, so the export was rewritten whenever the re-run landed in a later second.
+            if (inputs.ParquetPaths.TryGetValue(fileName, out string parquetPath) &&
+                PerFileResumeDriver.IsCurrent(ParquetScoreCache.ReconciledPathFromScoresPath(parquetPath),
+                    Name, inputs.TaskValidityKey))
             {
                 return;
             }
