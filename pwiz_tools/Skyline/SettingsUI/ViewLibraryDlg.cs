@@ -497,6 +497,15 @@ namespace pwiz.Skyline.SettingsUI
             Settings.Default.ViewLibrarySplitMainDist = splitMain.SplitterDistance;
             Settings.Default.ViewLibraryPropertiesVisible = propertiesButton.Checked;
 
+            base.OnFormClosing(e);
+        }
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            // Unsubscribe here rather than in OnFormClosing. WinForms raises FormClosing on owned
+            // forms before the owner's own OnFormClosing, so a shutdown the owner goes on to cancel
+            // would leave this dialog open with the ion type and loss selectors disconnected.
+            // UpdateIonTypeMenu only subscribes when it builds the menu, so they never come back.
             var ionTypeSelector = GetHostedControl<IonTypeSelectionPanel>();
             if (ionTypeSelector != null)
             {
@@ -504,7 +513,7 @@ namespace pwiz.Skyline.SettingsUI
                 ionTypeSelector.HostedControl.LossChanged -= IonTypeSelector_LossChanged;
             }
 
-            base.OnFormClosing(e);
+            base.OnFormClosed(e);
         }
 
         #endregion
