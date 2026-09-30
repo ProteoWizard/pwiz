@@ -118,8 +118,10 @@ namespace pwiz.Osprey.DemuxTool
     /// </summary>
     /// <remarks>
     /// Blocks of sweeps are read in order, a batch at a time, and demultiplexed in parallel, one
-    /// task per block of encoded bins, while the next batch is read. The writer asks for spectra
-    /// in index order, so only the current batch and the next one's sweeps are resident.
+    /// task per block of encoded bins. Each batch is read and queued before the one before it is
+    /// waited for, so the solve threads go on to it while that batch is laid out and written. The
+    /// writer asks for spectra in index order, so only the current batch and the next one's sweeps
+    /// are resident.
     /// </remarks>
     internal sealed class ScanningDemuxSpectrumList : SpectrumListWrapper
     {
@@ -144,6 +146,8 @@ namespace pwiz.Osprey.DemuxTool
         private JointDemuxParams _surveyParameters;           // the joint settings with MS1's peak width
         private double _surveyCountsPerIon = double.NaN;      // of the last MS1 spectrum whose low levels fitted
         private TofGrid _grid;
+        private DemuxBatch _nextBatch;                        // queued while the batch before it is laid out and written
+        private TaskScheduler _solveScheduler;
 
         public ScanningDemuxSpectrumList(ISpectrumList inner, ScanningKernel kernel, ScanningDemuxOptions options,
             TextWriter log)
@@ -465,83 +469,31 @@ namespace pwiz.Osprey.DemuxTool
 
         private void BuildDemux(int firstCycle, int lastCycle)
         {
-            int readLo = Math.Max(0, _firstOutBin - _options.ContextBins - _options.ReachBins);
-            int readHi = Math.Min(_centers.Length - 1, _lastOutBin + _options.ContextBins + _options.ReachBins);
+            // The sweeps before this batch's context are written: no batch still to be solved needs them.
             int padLo = Math.Max(0, firstCycle - _options.CyclePad);
-            int padHi = Math.Min(CycleCount - 1, lastCycle + _options.CyclePad);
             foreach (int old in _peaks.Keys.Where(c => c < padLo).ToList())
                 DropSweep(old);
-            var clock = Stopwatch.StartNew();
-            var sweeps = new Dictionary<int, List<(double[] Mz, double[] Ions)>>();
-            for (int c = padLo; c <= padHi; c++)
-                sweeps[c] = SweepPeaks(c);
-            double readSeconds = clock.Elapsed.TotalSeconds;
-            var grid = _options.Joint ? TofGridOf(sweeps) : null;
-
-            // One unit per block of sweeps and group of encoded bins.
-            var units = new List<ScanningUnit>();
-            for (int k0 = firstCycle; k0 <= lastCycle; k0 += _options.BlockCycles)
-            {
-                int k1 = Math.Min(lastCycle, k0 + _options.BlockCycles - 1);
-                var cycles = Enumerable.Range(Math.Max(padLo, k0 - _options.CyclePad),
-                    Math.Min(padHi, k1 + _options.CyclePad) - Math.Max(padLo, k0 - _options.CyclePad) + 1).ToArray();
-                for (int g0 = _firstOutBin; g0 <= _lastOutBin; g0 += _options.GroupBins)
-                {
-                    int g1 = Math.Min(_lastOutBin, g0 + _options.GroupBins - 1);
-                    int col0 = Math.Max(readLo, g0 - _options.ContextBins), col1 = Math.Min(readHi, g1 + _options.ContextBins);
-                    int row0 = Math.Max(readLo, col0 - _options.ReachBins), row1 = Math.Min(readHi, col1 + _options.ReachBins);
-                    var rowBins = Enumerable.Range(row0, row1 - row0 + 1).ToArray();
-                    var columnBins = Enumerable.Range(col0, col1 - col0 + 1).ToArray();
-                    if (!_transmission.TryGetValue(g0, out var a))
-                    {
-                        a = ScanningDemultiplexer.TransmissionMatrix(_kernel, rowBins.Select(b => _centers[b]).ToArray(),
-                            columnBins.Select(b => _centers[b]).ToArray(), _centers[g0 + 1] - _centers[g0]);
-                        _transmission[g0] = a;
-                    }
-                    var unit = MakeUnit(a, rowBins, columnBins, cycles, g0, g1, k0, k1, sweeps);
-                    // Source positions evaluate the kernel at exact positions, in the matrix's scale.
-                    unit.RowCenters = rowBins.Select(b => _centers[b]).ToArray();
-                    unit.ColumnCenters = columnBins.Select(b => _centers[b]).ToArray();
-                    unit.Kernel = _kernel;
-                    unit.KernelScale = ScanningDemultiplexer.KernelScale(_kernel, _centers[g0 + 1] - _centers[g0]);
-                    units.Add(unit);
-                }
-            }
-
-            double unitSeconds = clock.Elapsed.TotalSeconds - readSeconds;
-
-            // Solve on worker threads while this thread reads the next batch's sweeps. The units
-            // hold copies of their peaks, and the source spectra are read from this thread and its read workers.
-            var results = new ScanningUnitResult[units.Count];
-            Exception solveException = null;
-            var solver = new Thread(() =>
-            {
-                try
-                {
-                    Parallel.For(0, units.Count, new ParallelOptions { MaxDegreeOfParallelism = _options.Threads },
-                        i => results[i] = _options.Joint
-                            ? JointDemultiplexer.DemuxUnit(units[i], _options.JointParameters, grid)
-                            : ScanningDemultiplexer.DemuxUnit(units[i], _options.Parameters));
-                }
-                catch (Exception e)
-                {
-                    solveException = e;
-                }
-            });
-            solver.IsBackground = true;
-            solver.Name = @"ScanningDemuxSolve";
-            solver.Start();
+            var batch = _nextBatch != null && _nextBatch.FirstCycle == firstCycle && _nextBatch.LastCycle == lastCycle
+                ? _nextBatch
+                : QueueBatch(firstCycle, lastCycle);
+            _nextBatch = null;
+            // The next batch is read and queued before this one is waited for: the solve threads move on to it as
+            // this batch's units run out, and solve it while this batch is laid out and written.
             if (lastCycle < LastCycle)
+                _nextBatch = QueueBatch(lastCycle + 1, Math.Min(LastCycle, lastCycle + BatchCycles));
+            var wait = Stopwatch.StartNew();
+            try
             {
-                int nextPadHi = Math.Min(CycleCount - 1, Math.Min(LastCycle, lastCycle + BatchCycles) + _options.CyclePad);
-                for (int c = padHi + 1; c <= nextPadHi; c++)
-                    SweepPeaks(c);
+                Task.WaitAll(batch.Solves);
             }
-            double readAheadSeconds = clock.Elapsed.TotalSeconds - readSeconds - unitSeconds;
-            solver.Join();
-            if (solveException != null)
-                throw new AggregateException(@"Exception while demultiplexing sweeps", solveException);
-            double solveSeconds = clock.Elapsed.TotalSeconds - readSeconds - unitSeconds;
+            catch (AggregateException e)
+            {
+                throw new AggregateException(@"Exception while demultiplexing sweeps", e.InnerExceptions);
+            }
+            double waitSeconds = wait.Elapsed.TotalSeconds;
+            var layoutClock = Stopwatch.StartNew();
+            var results = batch.Results;
+            var grid = batch.Grid;
 
             // Peaks by (cycle, bin), then each layout spectrum from its bins and source positions.
             var through = new Dictionary<(int, int), List<ScanningPeak>>();
@@ -582,39 +534,127 @@ namespace pwiz.Osprey.DemuxTool
                 }
                 _built[cycle] = spectra;
             }
-            _log.WriteLine(@"  read {0:F1} s, units {1:F1} s, solve {2:F1} s (read ahead {3:F1} s), layout {4:F1} s ({5} units)",
-                readSeconds, unitSeconds, solveSeconds, readAheadSeconds,
-                clock.Elapsed.TotalSeconds - readSeconds - unitSeconds - solveSeconds, units.Count);
+            _log.WriteLine(@"  read {0:F1} s, units {1:F1} s, solve {2:F1} s (waited {3:F1} s), layout {4:F1} s ({5} units)",
+                batch.ReadSeconds, batch.UnitSeconds, batch.SolveSeconds, waitSeconds, layoutClock.Elapsed.TotalSeconds,
+                results.Length);
+        }
+
+        /// <summary>
+        /// Reads a batch's sweeps, makes its units and queues them on the solve threads, largest first: a batch's
+        /// slowest units then start first, and the order of units does not change their results (they share no
+        /// state). Returns without waiting for the solves.
+        /// </summary>
+        private DemuxBatch QueueBatch(int firstCycle, int lastCycle)
+        {
+            int readLo = Math.Max(0, _firstOutBin - _options.ContextBins - _options.ReachBins);
+            int readHi = Math.Min(_centers.Length - 1, _lastOutBin + _options.ContextBins + _options.ReachBins);
+            int padLo = Math.Max(0, firstCycle - _options.CyclePad);
+            int padHi = Math.Min(CycleCount - 1, lastCycle + _options.CyclePad);
+            var clock = Stopwatch.StartNew();
+            var sweeps = new Dictionary<int, List<(double[] Mz, double[] Ions)>>();
+            for (int c = padLo; c <= padHi; c++)
+                sweeps[c] = SweepPeaks(c);
+            double readSeconds = clock.Elapsed.TotalSeconds;
+            var grid = _options.Joint ? TofGridOf(sweeps) : null;
+
+            // One unit per block of sweeps and group of encoded bins.
+            var units = new List<ScanningUnit>();
+            for (int k0 = firstCycle; k0 <= lastCycle; k0 += _options.BlockCycles)
+            {
+                int k1 = Math.Min(lastCycle, k0 + _options.BlockCycles - 1);
+                var cycles = Enumerable.Range(Math.Max(padLo, k0 - _options.CyclePad),
+                    Math.Min(padHi, k1 + _options.CyclePad) - Math.Max(padLo, k0 - _options.CyclePad) + 1).ToArray();
+                for (int g0 = _firstOutBin; g0 <= _lastOutBin; g0 += _options.GroupBins)
+                {
+                    int g1 = Math.Min(_lastOutBin, g0 + _options.GroupBins - 1);
+                    int col0 = Math.Max(readLo, g0 - _options.ContextBins), col1 = Math.Min(readHi, g1 + _options.ContextBins);
+                    int row0 = Math.Max(readLo, col0 - _options.ReachBins), row1 = Math.Min(readHi, col1 + _options.ReachBins);
+                    var rowBins = Enumerable.Range(row0, row1 - row0 + 1).ToArray();
+                    var columnBins = Enumerable.Range(col0, col1 - col0 + 1).ToArray();
+                    if (!_transmission.TryGetValue(g0, out var a))
+                    {
+                        a = ScanningDemultiplexer.TransmissionMatrix(_kernel, rowBins.Select(b => _centers[b]).ToArray(),
+                            columnBins.Select(b => _centers[b]).ToArray(), _centers[g0 + 1] - _centers[g0]);
+                        _transmission[g0] = a;
+                    }
+                    var unit = MakeUnit(a, rowBins, columnBins, cycles, g0, g1, k0, k1, sweeps);
+                    // Source positions evaluate the kernel at exact positions, in the matrix's scale.
+                    unit.RowCenters = rowBins.Select(b => _centers[b]).ToArray();
+                    unit.ColumnCenters = columnBins.Select(b => _centers[b]).ToArray();
+                    unit.Kernel = _kernel;
+                    unit.KernelScale = ScanningDemultiplexer.KernelScale(_kernel, _centers[g0 + 1] - _centers[g0]);
+                    units.Add(unit);
+                }
+            }
+
+            double unitSeconds = clock.Elapsed.TotalSeconds - readSeconds;
+
+            // The units hold copies of their peaks, so they solve on the solve threads while this thread goes on
+            // reading, laying out and writing.
+            var batch = new DemuxBatch(firstCycle, lastCycle, units.Count, grid, readSeconds, unitSeconds);
+            var order = Enumerable.Range(0, units.Count).OrderByDescending(i => units[i].Mz.Length).ToArray();
+            for (int n = 0; n < order.Length; n++)
+            {
+                int i = order[n];
+                batch.Solves[n] = Task.Factory.StartNew(() =>
+                {
+                    batch.Results[i] = _options.Joint
+                        ? JointDemultiplexer.DemuxUnit(units[i], _options.JointParameters, grid)
+                        : ScanningDemultiplexer.DemuxUnit(units[i], _options.Parameters);
+                    batch.Solved();
+                }, CancellationToken.None, TaskCreationOptions.None, SolveScheduler);
+            }
+            return batch;
+        }
+
+        /// <summary>
+        /// At most <see cref="ScanningDemuxOptions.Threads"/> units solving at once, across batches, in the order
+        /// they were queued.
+        /// </summary>
+        private TaskScheduler SolveScheduler
+        {
+            get
+            {
+                return _solveScheduler ??= new ConcurrentExclusiveSchedulerPair(TaskScheduler.Default,
+                    Math.Max(1, _options.Threads)).ConcurrentScheduler;
+            }
         }
 
         private static ScanningUnit MakeUnit(double[,] a, int[] rowBins, int[] columnBins, int[] cycles, int g0, int g1,
             int k0, int k1, Dictionary<int, List<(double[] Mz, double[] Ions)>> sweeps)
         {
-            var mz = new List<double>();
-            var ions = new List<double>();
-            var row = new List<int>();
-            var cycle = new List<int>();
+            // Sized once: while the solve threads run, growing lists point by point costs more than the copy.
+            int count = 0;
+            for (int ci = 0; ci < cycles.Length; ci++)
+            {
+                var sweep = sweeps[cycles[ci]];
+                for (int ri = 0; ri < rowBins.Length; ri++)
+                    count += sweep[rowBins[ri]].Mz.Length;
+            }
+            var mz = new double[count];
+            var ions = new double[count];
+            var row = new int[count];
+            var cycle = new int[count];
+            int at = 0;
             for (int ci = 0; ci < cycles.Length; ci++)
             {
                 var sweep = sweeps[cycles[ci]];
                 for (int ri = 0; ri < rowBins.Length; ri++)
                 {
                     var (m, v) = sweep[rowBins[ri]];
-                    for (int p = 0; p < m.Length; p++)
-                    {
-                        mz.Add(m[p]);
-                        ions.Add(v[p]);
-                        row.Add(ri);
-                        cycle.Add(ci);
-                    }
+                    Array.Copy(m, 0, mz, at, m.Length);
+                    Array.Copy(v, 0, ions, at, v.Length);
+                    Array.Fill(row, ri, at, m.Length);
+                    Array.Fill(cycle, ci, at, m.Length);
+                    at += m.Length;
                 }
             }
             return new ScanningUnit(a, rowBins, columnBins, cycles, g0, g1, k0, k1)
             {
-                Mz = mz.ToArray(),
-                Ions = ions.ToArray(),
-                Row = row.ToArray(),
-                Cycle = cycle.ToArray(),
+                Mz = mz,
+                Ions = ions,
+                Row = row,
+                Cycle = cycle,
             };
         }
 
@@ -713,20 +753,29 @@ namespace pwiz.Osprey.DemuxTool
                 var spectrum = Inner.GetSpectrum(indices[b], true);
                 var mzArray = spectrum.GetMZArray();
                 var intensityArray = spectrum.GetIntensityArray();
-                var mzs = new List<double>();
-                var values = new List<double>();
+                var mzs = Array.Empty<double>();
+                var values = Array.Empty<double>();
                 if (mzArray != null && intensityArray != null)
                 {
-                    int count = Math.Min(mzArray.Data.Count, intensityArray.Data.Count);
+                    var mzData = mzArray.Data;
+                    var intensityData = intensityArray.Data;
+                    int count = Math.Min(mzData.Count, intensityData.Count), kept = 0;
                     for (int i = 0; i < count; i++)
                     {
-                        if (intensityArray.Data[i] <= 0)
+                        if (intensityData[i] > 0)
+                            kept++;
+                    }
+                    mzs = new double[kept];
+                    values = new double[kept];
+                    for (int i = 0, k = 0; i < count; i++)
+                    {
+                        if (intensityData[i] <= 0)
                             continue;
-                        mzs.Add(mzArray.Data[i]);
-                        values.Add(intensityArray.Data[i] / _options.CountsPerIon);
+                        mzs[k] = mzData[i];
+                        values[k++] = intensityData[i] / _options.CountsPerIon;
                     }
                 }
-                bins[b] = (mzs.ToArray(), values.ToArray());
+                bins[b] = (mzs, values);
                 spectrum.BinaryDataArrays.Clear();
                 spectrum.IntegerDataArrays.Clear();
                 headers[b] = spectrum;
@@ -789,6 +838,43 @@ namespace pwiz.Osprey.DemuxTool
                 isSurvey[k] = id.Substring(start, end - start) == @"1";
             }
             return true;
+        }
+
+        /// <summary>A batch of sweeps queued on the solve threads: its units' results and its timings.</summary>
+        private sealed class DemuxBatch
+        {
+            private readonly Stopwatch _clock = Stopwatch.StartNew();
+            private int _remaining;
+
+            public DemuxBatch(int firstCycle, int lastCycle, int units, TofGrid grid, double readSeconds, double unitSeconds)
+            {
+                FirstCycle = firstCycle;
+                LastCycle = lastCycle;
+                Grid = grid;
+                ReadSeconds = readSeconds;
+                UnitSeconds = unitSeconds;
+                Results = new ScanningUnitResult[units];
+                Solves = new Task[units];
+                _remaining = units;
+            }
+
+            public int FirstCycle { get; }
+            public int LastCycle { get; }
+            public TofGrid Grid { get; }
+            public double ReadSeconds { get; }
+            public double UnitSeconds { get; }
+            public ScanningUnitResult[] Results { get; }
+            public Task[] Solves { get; }
+
+            /// <summary>From queueing the batch to its last unit solved.</summary>
+            public double SolveSeconds { get; private set; }
+
+            /// <summary>Called as each unit is solved; the last records the batch's solve time.</summary>
+            public void Solved()
+            {
+                if (Interlocked.Decrement(ref _remaining) == 0)
+                    SolveSeconds = _clock.Elapsed.TotalSeconds;
+            }
         }
     }
 }
