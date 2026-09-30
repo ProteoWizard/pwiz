@@ -118,7 +118,7 @@ namespace pwiz.Osprey.Test
             string okPath = WriteTempBlib(AT_MINIMUM);
             try
             {
-                var loader = new BlibLoader();
+                var loader = new BlibLoader(FragmentToleranceConfig.UnitResolution(0.5));
                 var ex = Assert.ThrowsException<InvalidDataException>(() => loader.Load(shortPath));
                 StringAssert.Contains(ex.Message, TOO_SHORT);
 

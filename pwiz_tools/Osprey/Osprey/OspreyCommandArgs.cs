@@ -116,15 +116,18 @@ namespace pwiz.Osprey
             () => @"<dir>", (c, p) => c._cacheDir = p.Value) { DescriptionArgs = () => new object[] { SpectraCache.EXT, ARG_WORK_DIR.ArgumentText } };
         public static readonly OspreyArgument ARG_REPORT = new OspreyArgument(@"report",
             () => @"<report.tsv>", (c, p) => c._config.OutputReport = p.Value);
+        public static readonly OspreyArgument ARG_EXPORT_LIBRARY = new OspreyArgument(@"export-library",
+            () => @"<library.blib>", (c, p) => c._config.ExportLibraryBlib = p.Value) { DescriptionArgs = () => new object[] { ARG_LIBRARY.ArgumentText } };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_GENERAL_IO =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_General_IO, true,
-                ARG_INPUT, ARG_INPUT_LIST, ARG_LIBRARY, ARG_OUTPUT, ARG_WORK_DIR, ARG_OUTPUT_DIR, ARG_CACHE_DIR, ARG_REPORT);
+                ARG_INPUT, ARG_INPUT_LIST, ARG_LIBRARY, ARG_OUTPUT, ARG_WORK_DIR, ARG_OUTPUT_DIR, ARG_CACHE_DIR, ARG_REPORT,
+                ARG_EXPORT_LIBRARY);
 
         // --- Scoring & Tolerance ----------------------------------------------------------
-        public static readonly OspreyArgument ARG_RESOLUTION = new OspreyArgument(@"resolution",
+        public static readonly OspreyArgument ARG_RESOLUTION = new OspreyArgument(OspreyArgNames.RESOLUTION,
             new[] { @"unit", @"hram", @"auto" }, (c, p) => c._resolution = p.Value.ToLowerInvariant()) { DescriptionArgs = () => new object[] { @"auto" } };
-        public static readonly OspreyArgument ARG_FRAGMENT_TOLERANCE = new OspreyArgument(@"fragment-tolerance",
+        public static readonly OspreyArgument ARG_FRAGMENT_TOLERANCE = new OspreyArgument(OspreyArgNames.FRAGMENT_TOLERANCE,
             () => @"<value>", (c, p) => c._fragmentTolerance = ParseDouble(p));
         public static readonly OspreyArgument ARG_FRAGMENT_UNIT = new OspreyArgument(@"fragment-unit",
             new[] { @"ppm", @"mz" }, (c, p) => c._fragmentUnit = p.Value.ToLowerInvariant()) { DescriptionArgs = () => new object[] { @"ppm" } };

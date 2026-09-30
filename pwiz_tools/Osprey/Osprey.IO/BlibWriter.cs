@@ -41,30 +41,6 @@ namespace pwiz.Osprey.IO
         private const int BLIB_MINOR_VERSION = 11;
         private const int SCORE_TYPE_GENERIC_QVALUE = 19;
 
-        /// <summary>
-        /// Known UniMod accession IDs mapped to their monoisotopic mass deltas.
-        /// </summary>
-        private static readonly Dictionary<int, double> UNIMOD_MASSES = new Dictionary<int, double>
-        {
-            { 1, 42.010565 },    // Acetyl
-            { 4, 57.021464 },    // Carbamidomethyl
-            { 5, 43.005814 },    // Carbamyl
-            { 7, 0.984016 },     // Deamidated
-            { 21, 79.966331 },   // Phospho
-            { 28, -18.010565 },  // Glu->pyro-Glu
-            { 34, 14.015650 },   // Methyl
-            { 35, 15.994915 },   // Oxidation
-            { 36, 28.031300 },   // Dimethyl
-            { 37, 42.046950 },   // Trimethyl
-            { 121, 114.042927 }, // Ubiquitin (GlyGly)
-            { 122, 383.228102 }, // SUMO
-            { 214, 44.985078 },  // Nitro
-            { 312, -17.026549 }, // Ammonia loss
-            { 385, 229.162932 }, // TMT6plex
-            { 737, 229.162932 }, // TMT6plex (alternate ID)
-            { 747, 304.207146 }, // TMTpro
-        };
-
         private SQLiteConnection _conn;
         private bool _inTransaction;
         private long _nextSpecId;
@@ -383,24 +359,28 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public long AddSpectrum(LibraryEntry entry, string fileName, double bestRt)
         {
-            double[] mzs;
-            float[] intensities;
-            ExtractFragmentArrays(entry, out mzs, out intensities);
-
             long fileId = AddSourceFile(fileName, fileName, 0.01);
-            long refId = AddSpectrum(
-                entry.Sequence, entry.ModifiedSequence,
-                entry.PrecursorMz, entry.Charge,
-                bestRt, bestRt - 1.0, bestRt + 1.0,
-                mzs, intensities,
-                0.01, fileId, 1, 0.0);
+            return AddSpectrum(BlibSpectrum.FromLibraryEntry(entry), bestRt, bestRt - 1.0, bestRt + 1.0, 0.01, fileId, 1);
+        }
 
-            if (entry.Modifications != null && entry.Modifications.Count > 0)
-                AddModifications(refId, entry.Modifications);
-
-            if (entry.ProteinIds != null && entry.ProteinIds.Count > 0)
-                AddProteinMapping(refId, entry.ProteinIds);
-
+        /// <summary>
+        /// Write a library precursor prepared by <see cref="BlibSpectrum.FromLibraryEntry"/>: its
+        /// <c>RefSpectra</c> and peak rows, then its modification and protein rows. The
+        /// retention times, score, source file and copy count are what the caller knows
+        /// about this row - a search result's apex and q-value, or a library's own retention time.
+        /// Returns the RefSpectra row ID.
+        /// </summary>
+        public long AddSpectrum(BlibSpectrum spectrum, double retentionTime, double startTime, double endTime,
+            double score, long fileId, int copies)
+        {
+            long refId = AddSpectrumPrecompressed(spectrum.PeptideSeq, spectrum.ModifiedSequence,
+                spectrum.PrecursorMz, spectrum.Charge, retentionTime, startTime, endTime,
+                spectrum.MzBlob, spectrum.IntensityBlob, spectrum.NumPeaks,
+                score, fileId, copies, 0.0);
+            if (spectrum.Modifications.Count > 0)
+                AddModifications(refId, spectrum.Modifications);
+            if (spectrum.ProteinIds.Count > 0)
+                AddProteinMapping(refId, spectrum.ProteinIds);
             return refId;
         }
 
@@ -447,18 +427,19 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Add a retention time entry for per-run peak boundaries.
-        /// Pass null for retentionTime when the precursor did not pass run-level FDR.
+        /// Pass null for retentionTime when the precursor did not pass run-level FDR, and null
+        /// start and end times for a library retention time, which has no peak boundaries.
         /// </summary>
         public void AddRetentionTime(long refId, long sourceFileId,
-            double? retentionTime, double startTime, double endTime,
+            double? retentionTime, double? startTime, double? endTime,
             double score, bool bestSpectrum)
         {
             _cmdInsertRetentionTime.Parameters[@"@refId"].Value = refId;
             _cmdInsertRetentionTime.Parameters[@"@srcId"].Value = sourceFileId;
             _cmdInsertRetentionTime.Parameters[@"@rt"].Value =
                 retentionTime.HasValue ? retentionTime.Value : DBNull.Value;
-            _cmdInsertRetentionTime.Parameters[@"@start"].Value = startTime;
-            _cmdInsertRetentionTime.Parameters[@"@end"].Value = endTime;
+            _cmdInsertRetentionTime.Parameters[@"@start"].Value = startTime.HasValue ? startTime.Value : DBNull.Value;
+            _cmdInsertRetentionTime.Parameters[@"@end"].Value = endTime.HasValue ? endTime.Value : DBNull.Value;
             _cmdInsertRetentionTime.Parameters[@"@score"].Value = score;
             _cmdInsertRetentionTime.Parameters[@"@best"].Value = bestSpectrum ? 1 : 0;
             _cmdInsertRetentionTime.ExecuteNonQuery();
@@ -694,12 +675,7 @@ namespace pwiz.Osprey.IO
                             double mass;
                             if (TryGetUnimodMass(unimodId, out mass))
                             {
-                                result.Append('[');
-                                if (mass >= 0.0)
-                                    result.AppendFormat(CultureInfo.InvariantCulture, @"+{0:F4}", mass);
-                                else
-                                    result.AppendFormat(CultureInfo.InvariantCulture, @"{0:F4}", mass);
-                                result.Append(']');
+                                result.AppendFormat(CultureInfo.InvariantCulture, mass >= 0.0 ? @"[+{0:F4}]" : @"[{0:F4}]", mass);
                                 i = close + 1;
                                 continue;
                             }
@@ -725,7 +701,9 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static bool TryGetUnimodMass(int unimodId, out double mass)
         {
-            return UNIMOD_MASSES.TryGetValue(unimodId, out mass);
+            var entry = UniMod.Find(unimodId);
+            mass = entry?.Mass ?? 0;
+            return entry != null;
         }
 
         #endregion
@@ -1092,25 +1070,6 @@ namespace pwiz.Osprey.IO
                     return i;
             }
             return -1;
-        }
-
-        private static void ExtractFragmentArrays(LibraryEntry entry,
-            out double[] mzs, out float[] intensities)
-        {
-            if (entry.Fragments == null || entry.Fragments.Count == 0)
-            {
-                mzs = new double[0];
-                intensities = new float[0];
-                return;
-            }
-
-            mzs = new double[entry.Fragments.Count];
-            intensities = new float[entry.Fragments.Count];
-            for (int i = 0; i < entry.Fragments.Count; i++)
-            {
-                mzs[i] = entry.Fragments[i].Mz;
-                intensities[i] = entry.Fragments[i].RelativeIntensity;
-            }
         }
 
         #endregion
