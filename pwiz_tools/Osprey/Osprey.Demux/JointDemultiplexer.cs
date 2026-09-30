@@ -81,8 +81,13 @@ namespace pwiz.Osprey.Demux
         /// <summary>Centroids below this many ions are not written.</summary>
         public double MinOutputIons { get; set; } = 0.2;
 
-        /// <summary>Grid samples whose coefficients one chunk owns; chunks overlap by a margin.</summary>
-        public int ChunkSamples { get; set; } = 2048;
+        /// <summary>
+        /// Grid samples whose coefficients one chunk owns; chunks overlap by a margin. At 16 threads the solve is
+        /// limited by memory traffic, and a 512-sample chunk's arrays mostly stay in cache: 8% faster than 2048 on
+        /// a whole ZT Scan run's heaviest sweeps (256 gained little more), its output within the default solve's
+        /// distance from the converged one.
+        /// </summary>
+        public int ChunkSamples { get; set; } = 512;
 
         /// <summary>
         /// After each pass, drop the coefficients at zero from the active set; the next round's gradient check
