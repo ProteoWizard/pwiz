@@ -2199,9 +2199,12 @@ namespace pwiz.Skyline
             if (includeSelf)
                 yield return change;
 
+            if (!document.MeasuredResults.TryGetChromatogramSet(change.NameSet, out var sourceChromSet, out _))
+                yield break;
+
             ChromatogramSet thisChromSet = null;
             var syncTargets = new List<ChromatogramSet>();
-            foreach (var syncTarget in document.GetSynchronizeIntegrationChromatogramSets())
+            foreach (var syncTarget in document.GetSynchronizeIntegrationChromatogramSets(sourceChromSet))
             {
                 syncTargets.Add(syncTarget);
                 if (thisChromSet == null && Equals(change.NameSet, syncTarget.Name))

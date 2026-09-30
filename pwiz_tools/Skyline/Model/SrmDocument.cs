@@ -2113,7 +2113,47 @@ namespace pwiz.Skyline.Model
             doc = (SrmDocument) doc.ChangeChildren(Children.ToArray());
             return doc;
         }
-        public IEnumerable<ChromatogramSet> GetSynchronizeIntegrationChromatogramSets()
+        /// <summary>
+        /// True if changing the peak boundaries in a replicate changes them in other replicates too.
+        /// </summary>
+        public bool HasSynchronizedIntegration
+        {
+            get
+            {
+                var integration = Settings.TransitionSettings.Integration;
+                return integration.SynchronizedIntegrationAll ||
+                       !string.IsNullOrEmpty(integration.SynchronizedIntegrationGroupBy) ||
+                       (integration.SynchronizedIntegrationTargets?.Length ?? 0) != 0;
+            }
+        }
+
+        /// <summary>
+        /// True if the user chose to group by a replicate property without choosing any values,
+        /// which means a change to a replicate is applied to the replicates with the same value.
+        /// </summary>
+        private bool IsSynchronizedIntegrationWithinGroup
+        {
+            get
+            {
+                var integration = Settings.TransitionSettings.Integration;
+                return !string.IsNullOrEmpty(integration.SynchronizedIntegrationGroupBy) &&
+                       (integration.SynchronizedIntegrationTargets?.Length ?? 0) == 0;
+            }
+        }
+
+        private ReplicateValue GetSynchronizedIntegrationGroupBy()
+        {
+            var groupBy = Settings.TransitionSettings.Integration.SynchronizedIntegrationGroupBy;
+            if (string.IsNullOrEmpty(groupBy))
+                return null;
+            return ReplicateValue.FromPersistedString(Settings, groupBy);
+        }
+
+        /// <summary>
+        /// Returns the replicates whose peak boundaries should change along with the peak boundaries
+        /// of <paramref name="source"/>.
+        /// </summary>
+        public IEnumerable<ChromatogramSet> GetSynchronizeIntegrationChromatogramSets(ChromatogramSet source)
         {
             if (!Settings.HasResults)
                 return Array.Empty<ChromatogramSet>();
@@ -2121,6 +2161,23 @@ namespace pwiz.Skyline.Model
             if (Settings.TransitionSettings.Integration.SynchronizedIntegrationAll)
             {
                 return MeasuredResults.Chromatograms;
+            }
+
+            var annotationCalculator = new AnnotationCalculator(this);
+            if (IsSynchronizedIntegrationWithinGroup)
+            {
+                if (source == null)
+                    return Array.Empty<ChromatogramSet>();
+
+                // Synchronize the replicates with the same value as the source replicate
+                var groupByValue = GetSynchronizedIntegrationGroupBy();
+                var sourceValue = groupByValue?.GetValue(annotationCalculator, source);
+                if (sourceValue == null)
+                {
+                    return Array.Empty<ChromatogramSet>();
+                }
+                return MeasuredResults.Chromatograms.Where(chromatogramSet =>
+                    Equals(sourceValue, groupByValue.GetValue(annotationCalculator, chromatogramSet)));
             }
 
             var targets = Settings.TransitionSettings.Integration.SynchronizedIntegrationTargets?.ToHashSet();
@@ -2136,7 +2193,7 @@ namespace pwiz.Skyline.Model
                 // Synchronize individual replicates
                 return MeasuredResults.Chromatograms.Where(chromSet => targets.Contains(chromSet.Name));
             }
-            ReplicateValue replicateValue = ReplicateValue.FromPersistedString(Settings, Settings.TransitionSettings.Integration.SynchronizedIntegrationGroupBy);
+            ReplicateValue replicateValue = GetSynchronizedIntegrationGroupBy();
             if (replicateValue == null)
             {
                 // Annotation no longer exists
@@ -2144,7 +2201,6 @@ namespace pwiz.Skyline.Model
             }
 
             // Synchronize by annotation
-            var annotationCalculator = new AnnotationCalculator(this);
             return MeasuredResults.Chromatograms.Where(chromatogramSet =>
                 targets.Contains(Convert.ToString(
                     replicateValue.GetValue(annotationCalculator, chromatogramSet) ?? string.Empty,

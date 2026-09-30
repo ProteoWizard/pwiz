@@ -742,7 +742,7 @@ namespace pwiz.Skyline.Menus
 
         public void EditToolStripMenuItemDropDownOpening()
         {
-            var synchronizedIntegration = DocumentUI.GetSynchronizeIntegrationChromatogramSets().Any();
+            var synchronizedIntegration = DocumentUI.HasSynchronizedIntegration;
             CanApplyOrRemovePeak(null, null, out var canApply, out var canRemove);
             if (!canApply && !canRemove)
             {
@@ -891,7 +891,7 @@ namespace pwiz.Skyline.Menus
                     {
                         continue;
                     }
-                    if (document.GetSynchronizeIntegrationChromatogramSets().Any())
+                    if (document.HasSynchronizedIntegration)
                     {
                         // Apply peak with synchronized integration
 
@@ -1101,7 +1101,7 @@ namespace pwiz.Skyline.Menus
 
             if (syncRecurse)
             {
-                var syncTargets = document.GetSynchronizeIntegrationChromatogramSets().ToHashSet();
+                var syncTargets = document.GetSynchronizeIntegrationChromatogramSets(document.MeasuredResults.Chromatograms[resultsIndex]).ToHashSet();
                 for (var i = 0; i < document.MeasuredResults.Chromatograms.Count; i++)
                 {
                     var chromSet = document.MeasuredResults.Chromatograms[i];

@@ -36,8 +36,6 @@ namespace pwiz.Skyline.EditUI
 
         private int _idxLastSelected = -1;
 
-        private Tuple<ReplicateValue, HashSet<object>> _memory = Tuple.Create((ReplicateValue)null, new HashSet<object>());
-
         private SrmDocument Document => _skylineWindow.Document;
         private GroupByItem SelectedGroupBy => (GroupByItem) comboGroupBy.SelectedItem;
 
@@ -76,7 +74,7 @@ namespace pwiz.Skyline.EditUI
             comboGroupBy.Items.Add(groupByReplicates);
             comboGroupBy.Items.AddRange(ReplicateValue.GetGroupableReplicateValues(Document).Select(v => new GroupByItem(v)).ToArray());
 
-            if (!Document.GetSynchronizeIntegrationChromatogramSets().Any())
+            if (!Document.HasSynchronizedIntegration)
             {
                 // Synchronized integration is off, select everything
                 comboGroupBy.SelectedIndex = 0;
@@ -125,35 +123,11 @@ namespace pwiz.Skyline.EditUI
             listSync.Items.Clear();
             listSync.Items.AddRange(newItems);
 
-            var selectedChroms = _memory.Item1 == null
-                ? Document.MeasuredResults.Chromatograms.Where(chromSet => _memory.Item2.Contains(chromSet.Name)).ToHashSet()
-                : Document.MeasuredResults.Chromatograms.Where(chromSet => _memory.Item2.Contains(_memory.Item1.GetValue(annotationCalc, chromSet) ?? string.Empty)).ToHashSet();
-
-            var toCheck = new HashSet<string>();
-            if (string.IsNullOrEmpty(SelectedGroupBy.PersistedString))
-            {
-                // replicates
-                toCheck = selectedChroms.Select(chromSet => chromSet.Name).ToHashSet();
-            }
-            else
-            {
-                // annotation
-                foreach (var item in newItems)
-                {
-                    var thisChroms = Document.MeasuredResults.Chromatograms.Where(chromSet =>
-                        Equals(item, SelectedGroupBy.ReplicateValue.GetValue(annotationCalc, chromSet) ?? string.Empty)).ToArray();
-                    var selectCount = thisChroms.Count(chromSet => selectedChroms.Contains(chromSet));
-                    if (selectCount == thisChroms.Length)
-                    {
-                        toCheck.Add(item.ToString());
-                    }
-                    else if (selectCount != 0)
-                    {
-                        toCheck.Clear();
-                        break;
-                    }
-                }
-            }
+            // Grouping by replicates starts with every replicate checked. Grouping by anything else starts
+            // with nothing checked, which synchronizes replicates having the same value.
+            var toCheck = SelectedGroupBy.ReplicateValue == null
+                ? newItems.Select(item => item.ToString()).ToHashSet()
+                : new HashSet<string>();
 
             listSync.ItemCheck -= listSync_ItemCheck;
             cbSelectAll.CheckedChanged -= cbSelectAll_CheckedChanged;
@@ -169,8 +143,6 @@ namespace pwiz.Skyline.EditUI
             for (var i = 0; i < listSync.Items.Count; i++)
                 listSync.SetItemChecked(i, cbSelectAll.Checked);
             listSync.ItemCheck += listSync_ItemCheck;
-
-            _memory = Tuple.Create(SelectedGroupBy.ReplicateValue, listSync.CheckedItems.Cast<object>().ToHashSet());
         }
 
         private void listSync_SelectedIndexChanged(object sender, EventArgs e)
@@ -200,8 +172,6 @@ namespace pwiz.Skyline.EditUI
             else if (cbSelectAll.Checked && !anyChecked)
                 cbSelectAll.Checked = false;
             cbSelectAll.CheckedChanged += cbSelectAll_CheckedChanged;
-
-            _memory = Tuple.Create(SelectedGroupBy.ReplicateValue, checkedItems);
         }
 
         private void btnOk_Click(object sender, EventArgs e)

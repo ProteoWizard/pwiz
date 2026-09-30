@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Menus
                                    (settings.TransitionSettings.FullScan.IsEnabled || settings.PeptideSettings.Libraries.HasMidasLibrary));
             AddApplyRemovePeak(menuStrip, paneKey.IsotopeLabelType, 1, ref iInsert);
 
-            synchronizeIntegrationContextMenuItem.Checked = DocumentUI.GetSynchronizeIntegrationChromatogramSets().Any();
+            synchronizeIntegrationContextMenuItem.Checked = DocumentUI.HasSynchronizedIntegration;
             menuStrip.Items.Insert(iInsert++, synchronizeIntegrationContextMenuItem);
             menuStrip.Items.Insert(iInsert++, new ToolStripSeparator());
 
@@ -217,7 +217,7 @@ namespace pwiz.Skyline.Menus
                 if (canApply)
                 {
                     menuStrip.Items.Insert(iInsert++, applyPeakAllGraphMenuItem);
-                    if (!document.GetSynchronizeIntegrationChromatogramSets().Any())
+                    if (!document.HasSynchronizedIntegration)
                     {
                         menuStrip.Items.Insert(iInsert++, applyPeakSubsequentGraphMenuItem);
                         if (ReplicateValue.GetGroupableReplicateValues(document).Any())
