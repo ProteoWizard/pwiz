@@ -440,8 +440,9 @@ per-file check read the parquet's stamp) four log lines later: 448 "skipping (ou
 valid)" lines, zero re-scores, and a .blib silently missing a run. Two notions of "done"
 is the defect, so the fix is one predicate, not a second check.
 
-The gate leg for this is mode 9 in `regression.ps1`, which cuts ONLY the later product and
-asserts the file is re-scored. Note why the pre-existing mode 8 could not catch it: it
+The test for this is `TestSubsetRescoreResume` in `SubsetPipelineTest` (formerly
+`regression.ps1` mode 9), which cuts ONLY the later product and asserts the file is
+re-scored. Note why the partial-rescore case before it (formerly mode 8) could not catch it: it
 amputates BOTH products, which puts the two checks back into agreement - an interruption
 test has to leave the state an interruption actually leaves, not a tidier one.
 
