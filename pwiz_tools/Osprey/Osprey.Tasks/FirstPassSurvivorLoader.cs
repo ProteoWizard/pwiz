@@ -152,7 +152,7 @@ namespace pwiz.Osprey.Tasks
                 !_perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
             {
                 error = string.Format(
-                    @"First-pass survivor load: no scores parquet path for {0}", fileName);
+                    OspreyTasksResources.FirstPassSurvivorLoader_Load_No__scores_parquet_file_is_known_for__0___so_its_kept_precursor_candidates_cannot_be_, fileName);
                 return null;
             }
             if (parquetPathOverride != null)
@@ -164,11 +164,8 @@ namespace pwiz.Osprey.Tasks
                 if (ParquetScoreCache.IsSubsetWithoutScoreIndex(parquetPathOverride))
                 {
                     error = string.Format(
-                        @"First-pass survivor load: {0} holds the survivor subset but carries no " +
-                        @"score_index column, so its rows cannot be matched back to " +
-                        @".scores.parquet. Re-run the analysis from Stage 5 over this directory - " +
-                        @"the FDR sidecars beside it are from the same older build, so there is no " +
-                        @"self-consistent set to convert toward.", parquetPathOverride);
+                        OspreyTasksResources.FirstPassSurvivorLoader_Load__0__was_written_by_an_older_Osprey_build_and_cannot_be_matched_to_its__scores_parquet__,
+                        parquetPathOverride);
                     return null;
                 }
                 parquetPath = parquetPathOverride;
@@ -189,7 +186,7 @@ namespace pwiz.Osprey.Tasks
             catch (Exception ex)
             {
                 error = string.Format(
-                    @"First-pass survivor load: failed to load stubs from {0}: {1}",
+                    OspreyTasksResources.FirstPassSurvivorLoader_Load_Failed_to_load_the_first_pass_precursor_candidates_from__0____1_,
                     parquetPath, ex.Message);
                 return null;
             }
@@ -207,8 +204,7 @@ namespace pwiz.Osprey.Tasks
                     entryId => !isSurvivor(entryId), _experimentRecords))
             {
                 error = string.Format(
-                    @"First-pass survivor load: failed to overlay .1st-pass.fdr_scores.bin for {0} " +
-                    @"(expected at {1})", fileName, pass1Path);
+                    OspreyTasksResources.FirstPassSurvivorLoader_Load_Failed_to_read_the_first_pass_intermediate_file_for__0___expected_at__1___, fileName, pass1Path);
                 return null;
             }
 

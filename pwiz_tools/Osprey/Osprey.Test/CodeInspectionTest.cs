@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace pwiz.Osprey.Test
@@ -194,6 +195,186 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Every <c>[TAG]</c> log prefix comes from <c>LogTag</c>, never from a string literal.
+        /// <c>OspreyLog.Write</c> is the one place that decides whether a tagged line is written;
+        /// a hand-typed <c>"[COUNT] ..."</c> skips that decision and lands in the default log
+        /// whatever <c>--perf-stats</c> says, which is how <c>[PATH]</c> and <c>[TRAIN]</c> once
+        /// leaked into every run. It also makes the line invisible to anyone looking for the
+        /// tag's uses. Write <c>log.LogInfo(LogTag.COUNT, "...")</c> instead.
+        ///
+        /// A literal is flagged when its text starts with a bracketed upper-case word followed
+        /// by <c>]</c> or a space (<c>"[COUNT] "</c>, <c>"[MEM "</c>), after any leading spaces
+        /// or format holes (<c>"  [COUNT] "</c>, <c>"{0}[TIMING] "</c>, <c>$"{indent}[BENCH] "</c>):
+        /// the runtime filter that once caught those shapes is gone, so this test is the only
+        /// guard. Comments are ignored. For
+        /// a genuine exception - a literal that is not a log line - add an inline comment
+        /// beginning <c>// Log tag OK:</c> on the same line.
+        /// </summary>
+        [TestMethod]
+        public void TestLogTagsComeFromLogTag()
+        {
+            string sourceRoot = FindOspreySourceRoot();
+            var violations = new List<string>();
+            var pattern = new Regex("@?\\$?\"(?:\\s|\\{[^{}\"]*\\})*\\[[A-Z][A-Z0-9-]*[\\] ]");
+            const string exemptionTag = "// Log tag OK:";
+
+            foreach (var file in EnumerateProductionCsFiles(sourceRoot))
+            {
+                string[] lines;
+                try { lines = File.ReadAllLines(file); }
+                catch (IOException) { continue; }
+
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    string line = lines[i];
+                    int commentIdx = IndexOfLineComment(line);
+                    string codePart = commentIdx >= 0 ? line.Substring(0, commentIdx) : line;
+                    if (!pattern.IsMatch(codePart))
+                        continue;
+                    if (line.Contains(exemptionTag))
+                        continue;
+                    string rel = RelativePath(sourceRoot, file).Replace('\\', '/');
+                    violations.Add(string.Format("{0}:{1}: {2}", rel, i + 1, line.TrimEnd()));
+                }
+            }
+
+            Assert.AreEqual(0, violations.Count,
+                "Log tag written as a string literal. Use the LogTag constant with an IOspreyLog " +
+                "sink - log.LogInfo(LogTag.COUNT, \"...\") - so OspreyLog.Write decides whether the " +
+                "line is emitted. If the literal is not a log line, add an inline '// Log tag OK: " +
+                "<reason>' on the same line.\n" +
+                string.Join("\n", violations));
+        }
+
+        /// <summary>
+        /// Developer words that must not reach a user through a resource: the first table of
+        /// docs/21-user-facing-text.md. The English .resx VALUES are scanned (translations follow
+        /// the English), so a banned word cannot come back through a reworded message. Keys may
+        /// say anything - they are code. A value that genuinely needs one of these words (none
+        /// does today) would be the place to add an exemption, not a reason to weaken a pattern.
+        /// </summary>
+        private static readonly string[] BANNED_RESOURCE_WORDS =
+        {
+            @"\bsidecars?\b", @"\bentry\b", @"\bentries\b", @"\bbundles?\b", @"\bstrat(um|a)\b",
+            @"\bbase_ids?\b", @"\bhydrat", @"\bcompaction\b", @"\bsurvivors?\b", @"\bstubs?\b",
+            @"\bscalars?\b", @"\bfrozen\b", @"\bprojections?\b", @"\bbyproducts?\b", @"\binterned\b",
+            @"\bresident\b", @"\bStage[ -]?[1-7]\b", @"OSPREY_[A-Z_]+", @"\b\w+\.cs\b", @"\b\w+Task\b",
+            @"\bRun\w+\(", @"\(s\)"
+        };
+
+        [TestMethod]
+        public void TestResourcesUseUserVocabulary()
+        {
+            string sourceRoot = FindOspreySourceRoot();
+            var patterns = new List<Regex>();
+            foreach (var pattern in BANNED_RESOURCE_WORDS)
+                patterns.Add(new Regex(pattern, RegexOptions.CultureInvariant));
+            var violations = new List<string>();
+            int resourceCount = 0;
+            foreach (var file in EnumerateEnglishResxFiles(sourceRoot))
+            {
+                var resxRoot = XDocument.Load(file).Root;
+                Assert.IsNotNull(resxRoot, file);
+                foreach (var data in resxRoot.Elements("data"))
+                {
+                    string value = (string) data.Element("value") ?? string.Empty;
+                    resourceCount++;
+                    foreach (var pattern in patterns)
+                    {
+                        var match = pattern.Match(value);
+                        if (match.Success)
+                        {
+                            violations.Add(string.Format("{0} {1}: '{2}' in \"{3}\"",
+                                Path.GetFileName(file), (string) data.Attribute("name"), match.Value, value));
+                        }
+                    }
+                }
+            }
+
+            Assert.IsTrue(resourceCount > 0, "no Osprey resources found under " + sourceRoot);
+            Assert.AreEqual(0, violations.Count,
+                "A resource uses developer vocabulary. Reword it in the user's terms " +
+                "(docs/21-user-facing-text.md, \"Words that never appear in user text\"):\n" +
+                string.Join("\n", violations));
+        }
+
+        /// <summary>
+        /// Every production project opts in to ReSharper's LocalizableElement inspection with the
+        /// same two lines as Skyline.csproj.DotSettings, so a plain string literal in user text
+        /// fails the inspection gate. Deleting a project's .DotSettings would silently turn the
+        /// gate off for that project; this is what notices.
+        /// </summary>
+        [TestMethod]
+        public void TestEveryProjectEnforcesLocalization()
+        {
+            string sourceRoot = FindOspreySourceRoot();
+            var missing = new List<string>();
+            foreach (var csproj in Directory.EnumerateFiles(sourceRoot, "*.csproj", SearchOption.AllDirectories))
+            {
+                string name = Path.GetFileNameWithoutExtension(csproj);
+                if (name == "Osprey.Test")
+                    continue;
+                string settings = csproj + ".DotSettings";
+                string text = File.Exists(settings) ? File.ReadAllText(settings) : string.Empty;
+                if (!text.Contains("Localization/Localizable/@EntryValue\">Yes<") ||
+                    !text.Contains("Localization/LocalizableInspector/@EntryValue\">Pessimistic<"))
+                {
+                    missing.Add(name);
+                }
+            }
+            Assert.AreEqual(0, missing.Count,
+                "Project(s) without the LocalizableElement opt-in (copy Osprey.Core.csproj.DotSettings): " +
+                string.Join(", ", missing));
+        }
+
+        /// <summary>
+        /// Skyline's rule (<c>CommonExceptionUtil.IsProgrammingDefect</c>): an exception type that
+        /// is NOT a programming defect - InvalidDataException, every IOException, access denied,
+        /// cancellation, UserMessageException and Osprey's subclasses of them - is shown to the
+        /// user as its message, so that message must come from a resource. A parse error is one of
+        /// these: it means a damaged file the user can correct or delete. Only defect types
+        /// (InvalidOperationException, ArgumentException, ...) may carry a string literal. For a
+        /// genuine exception add an inline comment beginning <c>// User exception literal OK:</c>.
+        /// </summary>
+        [TestMethod]
+        public void TestUserExceptionsUseResources()
+        {
+            string sourceRoot = FindOspreySourceRoot();
+            var pattern = new Regex(@"new\s+(InvalidDataException|IOException|FileNotFoundException|" +
+                @"DirectoryNotFoundException|EndOfStreamException|UnauthorizedAccessException|" +
+                @"OperationCanceledException|UserMessageException|SpectraCacheException|BlibOutputException)" +
+                @"\s*\(\s*(string\.Format\(\s*(CultureInfo\.\w+\s*,\s*)?)?[@$]*""");
+            const string exemptionTag = "// User exception literal OK:";
+            var violations = new List<string>();
+            foreach (var file in EnumerateProductionCsFiles(sourceRoot))
+            {
+                string[] lines = File.ReadAllLines(file);
+                var code = new System.Text.StringBuilder();
+                var lineStarts = new List<int>();
+                foreach (string line in lines)
+                {
+                    lineStarts.Add(code.Length);
+                    int commentIdx = IndexOfLineComment(line);
+                    code.Append(commentIdx >= 0 ? line.Substring(0, commentIdx) : line).Append('\n');
+                }
+                foreach (Match m in pattern.Matches(code.ToString()))
+                {
+                    int lineIndex = lineStarts.BinarySearch(m.Index);
+                    if (lineIndex < 0)
+                        lineIndex = ~lineIndex - 1;
+                    if (lines[lineIndex].Contains(exemptionTag))
+                        continue;
+                    violations.Add(string.Format("{0}:{1}: {2}", RelativePath(sourceRoot, file).Replace('\\', '/'),
+                        lineIndex + 1, lines[lineIndex].Trim()));
+                }
+            }
+            Assert.AreEqual(0, violations.Count,
+                "A user-facing exception (not a programming defect) has a string-literal message. " +
+                "Put the message in the project's .resx, or throw a defect type such as " +
+                "InvalidOperationException if the user cannot act on it:\n" + string.Join("\n", violations));
+        }
+
+        /// <summary>
         /// Find the Osprey source root by walking up from the test
         /// assembly location until we see an Osprey.sln-bearing dir.
         /// </summary>
@@ -284,6 +465,18 @@ namespace pwiz.Osprey.Test
                 if (c == '/' && i + 1 < line.Length && line[i + 1] == '/') return i;
             }
             return -1;
+        }
+
+        private static IEnumerable<string> EnumerateEnglishResxFiles(string root)
+        {
+            var translated = new Regex(@"\.[a-z]{2}(-[A-Za-z]+)?\.resx$", RegexOptions.IgnoreCase);
+            foreach (var file in Directory.EnumerateFiles(root, "*.resx", SearchOption.AllDirectories))
+            {
+                string rel = RelativePath(root, file).Replace('\\', '/');
+                if (rel.Contains("/bin/") || rel.Contains("/obj/") || translated.IsMatch(file))
+                    continue;
+                yield return file;
+            }
         }
     }
 }

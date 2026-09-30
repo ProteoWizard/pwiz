@@ -122,9 +122,9 @@ namespace pwiz.Osprey.Test
             // The three log-conditioned features carry "(log10)" in their display label, so
             // the feature-contribution report cannot present a per-decade weight as though
             // it were per intensity unit.
-            Assert.AreEqual("Peak apex intensity (log10)", OspreyFeatureCalculators.Get(3).DisplayName);
-            Assert.AreEqual("Peak area (log10)", OspreyFeatureCalculators.Get(4).DisplayName);
-            Assert.AreEqual("Peak sharpness (log10)", OspreyFeatureCalculators.Get(5).DisplayName);
+            Assert.AreEqual(OspreyScoringResources.PeakApexCalc_DisplayName_Peak_apex_intensity__log10_, OspreyFeatureCalculators.Get(3).DisplayName);
+            Assert.AreEqual(OspreyScoringResources.PeakAreaCalc_DisplayName_Peak_area__log10_, OspreyFeatureCalculators.Get(4).DisplayName);
+            Assert.AreEqual(OspreyScoringResources.PeakSharpnessCalc_DisplayName_Peak_sharpness__log10_, OspreyFeatureCalculators.Get(5).DisplayName);
         }
 
         /// <summary>

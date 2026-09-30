@@ -156,6 +156,12 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public static class FdrScoresSidecar
     {
+        /// <summary>File-name token of every first-pass artifact.</summary>
+        public const string LABEL_FIRST_PASS = @"1st-pass";
+        /// <summary>File-name token of every second-pass artifact.</summary>
+        public const string LABEL_SECOND_PASS = @"2nd-pass";
+        public const string EXT = @".fdr_scores.bin";
+
         // 8-byte magic. ASCII "OSPRYFDR" — same as Rust.
         private static readonly byte[] Magic =
             { (byte)'O', (byte)'S', (byte)'P', (byte)'R', (byte)'Y', (byte)'F', (byte)'D', (byte)'R' };
@@ -214,13 +220,13 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static string Pass1Path(string inputPath)
         {
-            return ScoresPath(inputPath, "1st-pass");
+            return ScoresPath(inputPath, LABEL_FIRST_PASS);
         }
 
         /// <summary>Path for the second-pass FDR scores sidecar.</summary>
         public static string Pass2Path(string inputPath)
         {
-            return ScoresPath(inputPath, "2nd-pass");
+            return ScoresPath(inputPath, LABEL_SECOND_PASS);
         }
 
         /// <summary>
@@ -285,15 +291,23 @@ namespace pwiz.Osprey.IO
             }
         }
 
+        /// <summary>
+        /// <see cref="LABEL_FIRST_PASS"/> or <see cref="LABEL_SECOND_PASS"/>.
+        /// </summary>
+        public static string PassLabel(Pass pass)
+        {
+            return pass == Pass.FirstPass ? LABEL_FIRST_PASS : LABEL_SECOND_PASS;
+        }
+
         private static string ScoresPath(string inputPath, string passLabel)
         {
-            string stem = Path.GetFileNameWithoutExtension(inputPath) ?? "unknown";
+            string stem = Path.GetFileNameWithoutExtension(inputPath) ?? @"unknown";
             // Route through ArtifactPaths so the sidecar follows the scores
             // parquet into --output-dir (default = the input's own directory).
             // Every caller -- straight-through writes, resume reads, and the
             // resume-check iterators -- shares this, so they stay consistent.
             string parent = ArtifactPaths.ResolveOutputDir(inputPath);
-            string filename = string.Format("{0}.{1}.fdr_scores.bin", stem, passLabel);
+            string filename = string.Format(@"{0}.{1}{2}", stem, passLabel, EXT);
             return string.IsNullOrEmpty(parent) ? filename : Path.Combine(parent, filename);
         }
 
@@ -335,7 +349,7 @@ namespace pwiz.Osprey.IO
                 long len = fs.Length;
                 if (len < HeaderLength)
                     throw new IOException(string.Format(
-                        "FdrScoresSidecar too short ({0} bytes): {1}", len, path));
+                        OspreyIOResources.Pass_ReadScalars_The_intermediate_file_is_damaged__only__0__bytes____1_, len, path));
                 // Reject a payload that is not a whole number of records instead of flooring.
                 // Flooring silently drops a trailing partial record, so a truncated sidecar
                 // returns fewer scalars than it has entries and reads as a short file rather
@@ -344,7 +358,7 @@ namespace pwiz.Osprey.IO
                 if (payload % RecordLength != 0)
                 {
                     throw new IOException(string.Format(
-                        "FdrScoresSidecar payload {0} bytes is not a multiple of the {1}-byte record: {2}",
+                        OspreyIOResources.Pass_ReadScalars_The_intermediate_file_is_damaged___0__bytes_of_records_is_not_a_whole_number_of__1__byte_,
                         payload, RecordLength, path));
                 }
                 int n = (int)(payload / RecordLength);
@@ -352,16 +366,16 @@ namespace pwiz.Osprey.IO
                 scores = new double[n];
                 var header = new byte[HeaderLength];
                 if (!ReadFully(fs, header, HeaderLength))
-                    throw new IOException("FdrScoresSidecar header truncated: " + path);
+                    throw new IOException(string.Format(OspreyIOResources.Pass_ReadScalars_The_intermediate_file_is_damaged__its_header_is_cut_short___, path));
                 for (int i = 0; i < Magic.Length; i++)
                 {
                     if (header[i] != Magic[i])
-                        throw new IOException("FdrScoresSidecar bad magic: " + path);
+                        throw new IOException(string.Format(OspreyIOResources.Pass_ReadScalars_The_file_is_not_an_Osprey_intermediate_file__, path));
                 }
                 if (header[8] != FormatVersion)
                 {
                     throw new IOException(string.Format(
-                        "FdrScoresSidecar version {0}, expected {1}: {2}",
+                        OspreyIOResources.Pass_ReadScalars_The_intermediate_file_was_written_by_a_different_Osprey_version__format__0___expected__1__,
                         header[8], FormatVersion, path));
                 }
                 // Every other reader here checks the pass byte; this one did not, so a 2nd-pass
@@ -371,7 +385,7 @@ namespace pwiz.Osprey.IO
                 if (header[9] != (byte)expectedPass)
                 {
                     throw new IOException(string.Format(
-                        "FdrScoresSidecar pass {0}, expected {1}: {2}",
+                        OspreyIOResources.Pass_ReadScalars_The_intermediate_file_belongs_to_the_other_FDR_pass__pass__0___expected__1_____2_,
                         header[9], (byte)expectedPass, path));
                 }
                 var rec = new byte[RecordLength];
@@ -379,7 +393,7 @@ namespace pwiz.Osprey.IO
                 {
                     if (!ReadFully(fs, rec, RecordLength))
                         throw new IOException(string.Format(
-                            "FdrScoresSidecar truncated at record {0}: {1}", i, path));
+                            OspreyIOResources.Pass_ReadScalars_The_intermediate_file_is_damaged__cut_short_at_record__0_____1_, i, path));
                     entryIds[i] = BitConverter.ToUInt32(rec, 0);
                     scores[i] = BitConverter.ToDouble(rec, 4);
                     // Decoded only for the selected subset. The other ~82% of a file's records
@@ -538,10 +552,11 @@ namespace pwiz.Osprey.IO
         /// harness check on the HPC legs - those only see cross-TASK modification, and this
         /// catches a task rewriting its own output too.</para>
         ///
-        /// <para>Per PROCESS, keyed by full path. A resumed run is a new process and legitimately
-        /// rewrites what a previous one left; what is forbidden is producing the same artifact
-        /// twice inside one run, because only one of those writes can be the one that was
-        /// stamped.</para>
+        /// <para>Per RUN, keyed by full path. A resumed run legitimately rewrites what a previous
+        /// one left; what is forbidden is producing the same artifact twice inside one run,
+        /// because only one of those writes can be the one that was stamped. A run is one
+        /// command line, which starts with <see cref="BeginRun"/> - usually one per process, but
+        /// a test runs several in one.</para>
         /// </summary>
         private static void AssertNotWrittenAlready(string path)
         {
@@ -560,10 +575,22 @@ namespace pwiz.Osprey.IO
                 @"sidecar, not in a second pass over this one. See issue #4486.", key));
         }
 
-        // Full paths of every per-file sidecar written by this process. Never cleared: the
-        // question it answers is "twice in one run", and a run is a process.
+        // Full paths of every per-file sidecar written by this run. Cleared only when a new
+        // command line starts: the question it answers is "twice in one run".
         private static readonly HashSet<string> WrittenThisRun =
             new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Start a new run for the write-once check: a sidecar a previous command line in this
+        /// process wrote may be written again. Called once per command line, before any work.
+        /// </summary>
+        public static void BeginRun()
+        {
+            lock (WrittenThisRun)
+            {
+                WrittenThisRun.Clear();
+            }
+        }
 
         private static void WriteRecord(
             BinaryWriter bw, uint entryId, double score,
@@ -879,10 +906,7 @@ namespace pwiz.Osprey.IO
         private static bool ThrowPartialWalk(string path, long delivered, Exception inner = null)
         {
             string message = string.Format(
-                @"Reading the FDR sidecar '{0}' failed after {1} record(s) had already been " +
-                @"applied. Those entries now hold this file's values and the rest do not, which " +
-                @"no caller can detect or undo, so the run stops here rather than continuing " +
-                @"with a partly-overlaid pool.",
+                OspreyIOResources.Pass_ThrowPartialWalk_Reading_the_intermediate_file___0___failed_partway__after__1__records_were_read__The_run_,
                 path, delivered);
             if (inner != null)
                 throw new IOException(message, inner);

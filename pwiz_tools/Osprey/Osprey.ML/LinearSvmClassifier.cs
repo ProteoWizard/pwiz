@@ -93,12 +93,12 @@ namespace pwiz.Osprey.ML
                     }
                 });
                 threads[t].IsBackground = true;
-                threads[t].Name = "OspreyParallel";
+                threads[t].Name = @"OspreyParallel";
                 threads[t].Start();
             }
             foreach (var th in threads) th.Join();
             if (firstException != null)
-                throw new AggregateException("Exception in OspreyParallel.For", firstException);
+                throw new AggregateException(@"Exception in OspreyParallel.For", firstException);
         }
     }
 
@@ -457,7 +457,7 @@ namespace pwiz.Osprey.ML
             SvmTrainScratch scratch)
         {
             if (features.Rows != labels.Length)
-                throw new ArgumentException("Feature rows must match label count");
+                throw new ArgumentException(@"Feature rows must match label count");
 
             int n = features.Rows;
             int p = features.Cols;

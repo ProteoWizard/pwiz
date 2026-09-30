@@ -52,9 +52,9 @@ namespace pwiz.Osprey.Scoring
     /// </summary>
     internal sealed class XcorrCalc : ApexSpectrumOspreyFeatureCalculator
     {
-        public override string Name { get { return "xcorr"; } }
+        public override string Name { get { return @"xcorr"; } }
 
-        public override string DisplayName { get { return "Cross-correlation (xcorr)"; } }
+        public override string DisplayName { get { return OspreyScoringResources.XcorrCalc_DisplayName_Cross_correlation__xcorr_; } }
 
         public override bool IsReversedScore { get { return false; } }   // higher is better
 
@@ -244,9 +244,9 @@ namespace pwiz.Osprey.Scoring
     /// </summary>
     internal sealed class SgXcorrCalc : ApexSpectraOspreyFeatureCalculator
     {
-        public override string Name { get { return "sg_weighted_xcorr"; } }
+        public override string Name { get { return @"sg_weighted_xcorr"; } }
 
-        public override string DisplayName { get { return "SG-weighted xcorr"; } }
+        public override string DisplayName { get { return OspreyScoringResources.SgXcorrCalc_DisplayName_SG_weighted_xcorr; } }
 
         public override bool IsReversedScore { get { return false; } }   // higher is better
 
@@ -266,9 +266,9 @@ namespace pwiz.Osprey.Scoring
     /// </summary>
     internal sealed class SgCosineCalc : ApexSpectraOspreyFeatureCalculator
     {
-        public override string Name { get { return "sg_weighted_cosine"; } }
+        public override string Name { get { return @"sg_weighted_cosine"; } }
 
-        public override string DisplayName { get { return "SG-weighted cosine"; } }
+        public override string DisplayName { get { return OspreyScoringResources.SgCosineCalc_DisplayName_SG_weighted_cosine; } }
 
         public override bool IsReversedScore { get { return false; } }   // higher is better
 
