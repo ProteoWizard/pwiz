@@ -454,6 +454,66 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Source files are UTF-8 WITHOUT a byte order mark, as in Skyline's CodeInspection
+        /// (<c>InspectUtf8Bom</c>). A BOM is invisible in an editor but churns diffs, trips Unix
+        /// tools and is easy to add by accident: a script writing Python's <c>utf-8-sig</c> or
+        /// .NET's <c>Encoding.UTF8</c> adds one, which is how the Osprey .resx files and several .cs
+        /// files acquired theirs. Now that the tree holds Japanese and Chinese .resx, an editor
+        /// "helpfully" saving with a BOM is more likely still. Like Skyline's inspection, this one
+        /// removes each BOM it finds (keeping the file timestamps) and then fails, so the fix is
+        /// to review and commit the rewritten files.
+        /// </summary>
+        [TestMethod]
+        public void TestNoUtf8Bom()
+        {
+            string sourceRoot = FindOspreySourceRoot();
+            var fixedFiles = new List<string>();
+            foreach (var file in Directory.EnumerateFiles(sourceRoot, "*", SearchOption.AllDirectories))
+            {
+                string rel = RelativePath(sourceRoot, file).Replace('\\', '/');
+                if (rel.Split('/').Any(part => BOM_SKIPPED_DIRECTORIES.Contains(part, StringComparer.OrdinalIgnoreCase)))
+                    continue;
+                if (!BOM_CHECKED_EXTENSIONS.Contains(Path.GetExtension(file), StringComparer.OrdinalIgnoreCase))
+                    continue;
+                if (RemoveUtf8Bom(file))
+                    fixedFiles.Add(rel);
+            }
+
+            Assert.AreEqual(0, fixedFiles.Count,
+                "Found and removed a UTF-8 byte order mark from these files. Review the change with " +
+                "'git diff' and commit it; source files are UTF-8 without a BOM:\n" +
+                string.Join("\n", fixedFiles));
+        }
+
+        private static readonly string[] BOM_CHECKED_EXTENSIONS =
+        {
+            ".cs", ".resx", ".csproj", ".sln", ".props", ".targets", ".DotSettings", ".config", ".xml",
+            ".xsd", ".wxs", ".manifest", ".json", ".md", ".html", ".tsv", ".txt", ".ps1", ".bat", ".sh",
+            ".py", ".jam"
+        };
+
+        private static readonly string[] BOM_SKIPPED_DIRECTORIES = { "bin", "obj", "TestResults", ".vs" };
+
+        /// <summary>
+        /// Strips a leading UTF-8 BOM from <paramref name="path"/>, preserving its timestamps, and
+        /// returns true when there was one.
+        /// </summary>
+        private static bool RemoveUtf8Bom(string path)
+        {
+            byte[] bytes = File.ReadAllBytes(path);
+            if (bytes.Length < 3 || bytes[0] != 0xEF || bytes[1] != 0xBB || bytes[2] != 0xBF)
+                return false;
+            var creationTime = File.GetCreationTimeUtc(path);
+            var lastWriteTime = File.GetLastWriteTimeUtc(path);
+            var withoutBom = new byte[bytes.Length - 3];
+            Array.Copy(bytes, 3, withoutBom, 0, withoutBom.Length);
+            File.WriteAllBytes(path, withoutBom);
+            File.SetCreationTimeUtc(path, creationTime);
+            File.SetLastWriteTimeUtc(path, lastWriteTime);
+            return true;
+        }
+
+        /// <summary>
         /// Find the Osprey source root by walking up from the test
         /// assembly location until we see an Osprey.sln-bearing dir.
         /// </summary>
