@@ -104,7 +104,16 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("_experiment_fdr", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Write the spectral library given by {0} to this path as a .blib file that Skyline and Osprey can read, and exit without searching.
+        /// </summary>
+        public static string _export_library {
+            get {
+                return ResourceManager.GetString("_export_library", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to FDR level (default: {0}).
         /// </summary>
