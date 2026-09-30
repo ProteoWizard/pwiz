@@ -277,13 +277,10 @@ namespace pwiz.Osprey.Tasks
                 // version. A term here would invalidate this task for a format that did not move,
                 // and invalidating FirstPassFDR costs a 5-hour Stage 5 re-run at 446 files.
                 + @";pass2proteinq=2"
-                // The output blib's Modifications table carries the library's modification
-                // masses, which the precision-aware blib reader can read differently.
-                + LibraryModsValidityKeySuffix(ctx.Config)
-                // How a library precursor becomes blib rows (peak order, modified-sequence text,
-                // annotation rows). Unconditional: every library's output blib changed with it,
-                // and the task stamp compares only this key, so without the term a resume keeps
-                // a blib the current build would not write.
+                // How a library precursor becomes blib rows (m/z-sorted peaks, modified-sequence
+                // text from the parsed modifications). Unconditional: every library's output blib
+                // changed with it, and the task stamp compares only this key, so without the term
+                // a resume keeps a blib the current build would not write.
                 + @";blibout=" + BlibSpectrum.FORMAT_VERSION
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash()
                 + OspreyEnvironment.ExperimentAggValidityKeySuffix()

@@ -18,6 +18,12 @@ The three required inputs are `-i`/`--input` (one or more mzML), `-l`/`--library
 (a DIA-NN TSV or `.blib`), and `-o`/`--output` (the result `.blib`). Everything else
 has a sensible default; `--resolution` is the one flag you will almost always set.
 
+A DIA-NN TSV is validated in full before any search: a value Osprey cannot read in any
+column the library has (a fragment charge of `1.0` or `0`, an ion type other than
+a/b/c/x/y/z, an unknown loss or decoy flag, an empty cell) or a modification with no known
+mass refuses the library, listing each line and column to fix, as Skyline's transition
+list import does. Nothing is guessed for a bad value.
+
 ---
 
 ## Quick start

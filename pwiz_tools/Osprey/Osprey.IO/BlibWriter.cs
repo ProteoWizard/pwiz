@@ -41,30 +41,6 @@ namespace pwiz.Osprey.IO
         private const int BLIB_MINOR_VERSION = 11;
         private const int SCORE_TYPE_GENERIC_QVALUE = 19;
 
-        /// <summary>
-        /// Known UniMod accession IDs mapped to their monoisotopic mass deltas.
-        /// </summary>
-        private static readonly Dictionary<int, double> UNIMOD_MASSES = new Dictionary<int, double>
-        {
-            { 1, 42.010565 },    // Acetyl
-            { 4, 57.021464 },    // Carbamidomethyl
-            { 5, 43.005814 },    // Carbamyl
-            { 7, 0.984016 },     // Deamidated
-            { 21, 79.966331 },   // Phospho
-            { 28, -18.010565 },  // Glu->pyro-Glu
-            { 34, 14.015650 },   // Methyl
-            { 35, 15.994915 },   // Oxidation
-            { 36, 28.031300 },   // Dimethyl
-            { 37, 42.046950 },   // Trimethyl
-            { 121, 114.042927 }, // Ubiquitin (GlyGly)
-            { 122, 383.228102 }, // SUMO
-            { 214, 44.985078 },  // Nitro
-            { 312, -17.026549 }, // Ammonia loss
-            { 385, 229.162932 }, // TMT6plex
-            { 737, 229.162932 }, // TMT6plex (alternate ID)
-            { 747, 304.207146 }, // TMTpro
-        };
-
         private SQLiteConnection _conn;
         private bool _inTransaction;
         private long _nextSpecId;
@@ -74,7 +50,6 @@ namespace pwiz.Osprey.IO
         // Prepared statements - reused across all inserts to avoid per-row SQL recompilation
         private SQLiteCommand _cmdInsertRefSpectra;
         private SQLiteCommand _cmdInsertRefSpectraPeaks;
-        private SQLiteCommand _cmdInsertPeakAnnotation;
         private SQLiteCommand _cmdInsertModification;
         private SQLiteCommand _cmdInsertProtein;
         private SQLiteCommand _cmdInsertRefSpectraProtein;
@@ -165,19 +140,6 @@ namespace pwiz.Osprey.IO
             _cmdInsertRefSpectraPeaks.Parameters.Add(@"@mz", System.Data.DbType.Binary);
             _cmdInsertRefSpectraPeaks.Parameters.Add(@"@int", System.Data.DbType.Binary);
             _cmdInsertRefSpectraPeaks.Prepare();
-
-            _cmdInsertPeakAnnotation = new SQLiteCommand(_conn);
-            _cmdInsertPeakAnnotation.CommandText = @"INSERT INTO RefSpectraPeakAnnotations (
-                RefSpectraID, peakIndex, name, formula, inchiKey, otherKeys,
-                charge, adduct, comment, mzTheoretical, mzObserved
-            ) VALUES (@id, @peak, @name, '', '', '', @charge, '', '', @mzTheoretical, @mzObserved)";
-            _cmdInsertPeakAnnotation.Parameters.Add(@"@id", System.Data.DbType.Int64);
-            _cmdInsertPeakAnnotation.Parameters.Add(@"@peak", System.Data.DbType.Int32);
-            _cmdInsertPeakAnnotation.Parameters.Add(@"@name", System.Data.DbType.String);
-            _cmdInsertPeakAnnotation.Parameters.Add(@"@charge", System.Data.DbType.Int32);
-            _cmdInsertPeakAnnotation.Parameters.Add(@"@mzTheoretical", System.Data.DbType.Double);
-            _cmdInsertPeakAnnotation.Parameters.Add(@"@mzObserved", System.Data.DbType.Double);
-            _cmdInsertPeakAnnotation.Prepare();
 
             _cmdInsertModification = new SQLiteCommand(_conn);
             _cmdInsertModification.CommandText =
@@ -403,8 +365,8 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Write a library precursor prepared by <see cref="BlibSpectrum.FromLibraryEntry"/>: its
-        /// <c>RefSpectra</c> and peak rows, then its modification, protein and peak annotation
-        /// rows. The retention times, score, source file and copy count are what the caller knows
+        /// <c>RefSpectra</c> and peak rows, then its modification and protein rows. The
+        /// retention times, score, source file and copy count are what the caller knows
         /// about this row - a search result's apex and q-value, or a library's own retention time.
         /// Returns the RefSpectra row ID.
         /// </summary>
@@ -419,16 +381,6 @@ namespace pwiz.Osprey.IO
                 AddModifications(refId, spectrum.Modifications);
             if (spectrum.ProteinIds.Count > 0)
                 AddProteinMapping(refId, spectrum.ProteinIds);
-            foreach (var annotation in spectrum.Annotations)
-            {
-                _cmdInsertPeakAnnotation.Parameters[@"@id"].Value = refId;
-                _cmdInsertPeakAnnotation.Parameters[@"@peak"].Value = annotation.PeakIndex;
-                _cmdInsertPeakAnnotation.Parameters[@"@name"].Value = annotation.Name;
-                _cmdInsertPeakAnnotation.Parameters[@"@charge"].Value = annotation.Charge;
-                _cmdInsertPeakAnnotation.Parameters[@"@mzTheoretical"].Value = annotation.MzTheoretical;
-                _cmdInsertPeakAnnotation.Parameters[@"@mzObserved"].Value = annotation.MzObserved;
-                _cmdInsertPeakAnnotation.ExecuteNonQuery();
-            }
             return refId;
         }
 
@@ -608,7 +560,6 @@ namespace pwiz.Osprey.IO
                 CREATE INDEX IF NOT EXISTS idx_refspectra_modseq ON RefSpectra(peptideModSeq);
                 CREATE INDEX IF NOT EXISTS idx_refspectra_mz ON RefSpectra(precursorMZ);
                 CREATE INDEX IF NOT EXISTS idx_peaks_refid ON RefSpectraPeaks(RefSpectraID);
-                CREATE INDEX IF NOT EXISTS idx_peakannotations_refid ON RefSpectraPeakAnnotations(RefSpectraID);
                 CREATE INDEX IF NOT EXISTS idx_mods_refid ON Modifications(RefSpectraID);
                 CREATE INDEX IF NOT EXISTS idx_boundaries_refid ON OspreyPeakBoundaries(RefSpectraID);
                 CREATE INDEX IF NOT EXISTS idx_runscores_refid ON OspreyRunScores(RefSpectraID);
@@ -640,7 +591,6 @@ namespace pwiz.Osprey.IO
                 }
                 if (_cmdInsertRefSpectra != null) { _cmdInsertRefSpectra.Dispose(); _cmdInsertRefSpectra = null; }
                 if (_cmdInsertRefSpectraPeaks != null) { _cmdInsertRefSpectraPeaks.Dispose(); _cmdInsertRefSpectraPeaks = null; }
-                if (_cmdInsertPeakAnnotation != null) { _cmdInsertPeakAnnotation.Dispose(); _cmdInsertPeakAnnotation = null; }
                 if (_cmdInsertModification != null) { _cmdInsertModification.Dispose(); _cmdInsertModification = null; }
                 if (_cmdInsertProtein != null) { _cmdInsertProtein.Dispose(); _cmdInsertProtein = null; }
                 if (_cmdInsertRefSpectraProtein != null) { _cmdInsertRefSpectraProtein.Dispose(); _cmdInsertRefSpectraProtein = null; }
@@ -751,7 +701,9 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static bool TryGetUnimodMass(int unimodId, out double mass)
         {
-            return UNIMOD_MASSES.TryGetValue(unimodId, out mass);
+            var entry = UniMod.Find(unimodId);
+            mass = entry?.Mass ?? 0;
+            return entry != null;
         }
 
         #endregion

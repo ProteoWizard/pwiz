@@ -21,6 +21,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 
 namespace pwiz.Osprey.Core
@@ -28,7 +29,7 @@ namespace pwiz.Osprey.Core
     /// <summary>
     /// b and y fragment m/z from a stripped sequence plus per-residue modification masses.
     /// Moved out of <c>DecoyGenerator</c> with its arithmetic unchanged, so decoy fragments and
-    /// anything that checks a library's fragment annotations share one set of residue masses
+    /// anything else that needs a peptide's fragment m/z share one set of residue masses
     /// and one order of floating-point additions. The one addition is that an ordinal the
     /// sequence cannot hold returns null instead of indexing past either end.
     /// </summary>
@@ -80,13 +81,17 @@ namespace pwiz.Osprey.Core
         /// <summary>
         /// m/z of the b or y ion of <paramref name="ordinal"/> residues at
         /// <paramref name="charge"/>, or null for another ion type, an ordinal below 1 or past
-        /// the end of the sequence, or an ion spanning a residue with no standard mass.
+        /// the end of the sequence, or an ion spanning a residue with no standard mass. A charge
+        /// of 0 throws: the library readers refuse one, so reaching here with it is a defect,
+        /// and any m/z returned for it would be bogus.
         /// </summary>
         public static double? CalculateFragmentMz(
             IonType ionType, int ordinal, byte charge,
             string sequence, IReadOnlyDictionary<int, double> modMasses,
             double? neutralLoss)
         {
+            if (charge == 0)
+                throw new ArgumentOutOfRangeException(nameof(charge), $@"Fragment charge 0 for {ionType}{ordinal} of {sequence}");
             if (ordinal < 1)
                 return null;
             int seqLen = sequence.Length;

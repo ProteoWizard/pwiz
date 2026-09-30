@@ -106,7 +106,7 @@ namespace pwiz.Osprey {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Write the spectral library given by {0} to this path as a .blib file that Skyline can read, with fragment ion annotations, and exit without searching.
+        ///   Looks up a localized string similar to Write the spectral library given by {0} to this path as a .blib file that Skyline and Osprey can read, and exit without searching.
         /// </summary>
         public static string _export_library {
             get {

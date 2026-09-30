@@ -113,7 +113,7 @@
     <value>Experiment-level FDR threshold (default: 0.01)</value>
   </data>
   <data name="_export_library" xml:space="preserve">
-    <value>Write the spectral library given by {0} to this path as a .blib file that Skyline can read, with fragment ion annotations, and exit without searching</value>
+    <value>Write the spectral library given by {0} to this path as a .blib file that Skyline and Osprey can read, and exit without searching</value>
   </data>
   <data name="_fdr_level" xml:space="preserve">
     <value>FDR level (default: {0})</value>

@@ -20,7 +20,6 @@
 
 using System.Collections.Generic;
 using System.Data.SQLite;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -31,9 +30,10 @@ using pwiz.Osprey.Scoring;
 namespace pwiz.Osprey.Test
 {
     /// <summary>
-    /// Blib libraries as search input: fragment ion types read from
-    /// <c>RefSpectraPeakAnnotations</c> (<see cref="BlibPeakAnnotations"/>), and the decoys
-    /// generated from those typed fragments.
+    /// Blib libraries as search input: every peak typed from m/z within the search's fragment
+    /// tolerance (<see cref="FragmentTyping"/>), whatever the blib's own
+    /// <c>RefSpectraPeakAnnotations</c> table holds - it is not read - and the decoys generated
+    /// from the typed peaks; and the libraries Osprey refuses rather than search wrongly.
     /// </summary>
     [TestClass]
     public class BlibLibraryInputTest
@@ -43,50 +43,18 @@ namespace pwiz.Osprey.Test
         private const int CYSTEINE_POSITION = 3;
         private const double CARBAMIDOMETHYL = 57.021464;
 
-        [TestMethod]
-        public void TestBlibPeakAnnotationNames()
-        {
-            AssertParsed(@"b3", 0, IonType.B, 3, 1, NeutralLossCode.None);
-            AssertParsed(@"y7", 0, IonType.Y, 7, 1, NeutralLossCode.None);
-            AssertParsed(@"Y7", 2, IonType.Y, 7, 2, NeutralLossCode.None);
-            // The charge column wins; suffixes apply only when it is 0.
-            AssertParsed(@"y7^2", 0, IonType.Y, 7, 2, NeutralLossCode.None);
-            AssertParsed(@"y7^2", 3, IonType.Y, 7, 3, NeutralLossCode.None);
-            AssertParsed(@"y7++", 0, IonType.Y, 7, 2, NeutralLossCode.None);
-            AssertParsed(@"b4+2", 0, IonType.B, 4, 2, NeutralLossCode.None);
-            AssertParsed(@"y7-H2O", 1, IonType.Y, 7, 1, NeutralLossCode.H2O);
-            AssertParsed(@"b5-NH3", 1, IonType.B, 5, 1, NeutralLossCode.NH3);
-            AssertParsed(@"y9-H3PO4", 1, IonType.Y, 9, 1, NeutralLossCode.H3PO4);
-            // A decimal loss snaps to a known loss within half its last printed digit (at least
-            // 0.005 Th), an integer one by nominal mass.
-            AssertParsed(@"y4-97.9769", 1, IonType.Y, 4, 1, NeutralLossCode.H3PO4);
-            AssertParsed(@"y4-44.0262", 1, IonType.Y, 4, 1, NeutralLossCode.Custom);
-            AssertParsed(@"y4-44.03", 1, IonType.Y, 4, 1, NeutralLossCode.Custom);
-            AssertParsed(@"y7-18.0", 1, IonType.Y, 7, 1, NeutralLossCode.H2O);
-            AssertParsed(@"b5-17.0", 1, IonType.B, 5, 1, NeutralLossCode.NH3);
-            AssertParsed(@"y9-98.0", 1, IonType.Y, 9, 1, NeutralLossCode.H3PO4);
-            // NIST-style tails and anything after whitespace are ignored.
-            AssertParsed(@"y7-18^2/0.3ppm", 0, IonType.Y, 7, 2, NeutralLossCode.H2O);
-            AssertParsed(@"b3 some comment", 1, IonType.B, 3, 1, NeutralLossCode.None);
-            // The other ion types are read, so they are not counted as unreadable (Apply ignores them).
-            AssertParsed(@"a2", 1, IonType.A, 2, 1, NeutralLossCode.None);
-            AssertParsed(@"z3", 1, IonType.Z, 3, 1, NeutralLossCode.None);
-            // The names BlibWriter writes read back as the ion they were written from.
-            foreach (string name in new[] { @"y7", @"b3-H2O", @"y5-NH3", @"y9-H3PO4", @"b4-44.9977" })
-            {
-                Assert.IsTrue(BlibPeakAnnotations.TryParseName(name, 1, out var parsed), name);
-                Assert.AreEqual(name, BlibPeakAnnotations.FormatName(parsed));
-            }
-            // "NaN" and "Infinity" parse as numbers, but no fragment loses either.
-            foreach (string name in new[] { null, string.Empty, @"p", @"?", @"precursor", @"y", @"y0", @"y7-", @"y7-junk", @"b3x",
-                         @"y7-NaN", @"y7-nan", @"y7-Infinity", @"b3--Infinity", @"y7^bad", @"y7^2foo", @"y7^" })
-            {
-                Assert.IsFalse(BlibPeakAnnotations.TryParseName(name, 1, out _), name ?? @"null");
-            }
-        }
+        /// <summary>The fragment tolerance these tests search with: an HRAM search's 10 ppm.</summary>
+        internal static readonly FragmentToleranceConfig TOLERANCE = FragmentToleranceConfig.Hram(10);
 
+        /// <summary>
+        /// A blib's peaks are typed from m/z: primary b and y ions at charge 1 or 2 are typed; a
+        /// neutral-loss peak and a peak no ion reaches stay Unknown. The blib's
+        /// <c>RefSpectraPeakAnnotations</c> table is not read: the same blib with rows naming
+        /// other ions, or with a table missing its columns, types identically. Decoys generated
+        /// from the typed peaks get their own m/z.
+        /// </summary>
         [TestMethod]
-        public void TestBlibLoaderTypesAnnotatedPeaks()
+        public void TestBlibLoaderTypesPeaksFromMz()
         {
             var cysteine = new[] { new Modification { Position = CYSTEINE_POSITION, MassDelta = CARBAMIDOMETHYL } };
             var modMasses = PeptideFragmentMass.ModMassesByPosition(cysteine);
@@ -96,28 +64,16 @@ namespace pwiz.Osprey.Test
             double y4Water = Mz(IonType.Y, 4, 1, modMasses, NeutralLoss.H2OMass);
             double b5 = Mz(IonType.B, 5, 1, modMasses, null);
             double[] peaks = { b3, y3, y5Doubly, y4Water, b5, 700.0 };
-            var annotations = new[]
-            {
-                (0, @"b3", 1),
-                (1, @"y3", 1),
-                (1, @"y3-NH3", 1),          // a lossy name for the same peak: m/z disagrees, ignored
-                (2, @"y5", 2),
-                (3, @"y4-H2O", 1),
-                (4, @"y5", 1),              // names a different ion: m/z disagrees, ignored
-                (5, @"?", 0),               // unreadable name, peak stays Unknown
-            };
 
-            string path = CreateBlib(peaks, annotations);
+            string plain = CreateBlib(peaks, new (int, string, int)[0]);
             try
             {
-                var entry = new BlibLoader().Load(path).Single();
-                var types = entry.Fragments.Select(f => f.Annotation).ToArray();
-                AssertAnnotation(types[0], IonType.B, 3, 1, NeutralLossCode.None);
-                AssertAnnotation(types[1], IonType.Y, 3, 1, NeutralLossCode.None);
-                AssertAnnotation(types[2], IonType.Y, 5, 2, NeutralLossCode.None);
-                AssertAnnotation(types[3], IonType.Y, 4, 1, NeutralLossCode.H2O);
-                Assert.AreEqual(IonType.Unknown, types[4].IonType);
-                Assert.AreEqual(IonType.Unknown, types[5].IonType);
+                var log = new List<string>();
+                var entry = new BlibLoader(TOLERANCE).Load(plain, log.Add).Single();
+                AssertTypedAsExpected(entry);
+                CollectionAssert.Contains(log, string.Format(
+                    OspreyIOResources.BlibLoader_Load_Typed__0_N0__of__1_N0__library_peaks_as_b_or_y_ions_within__2___3_,
+                    4, peaks.Length, TOLERANCE.Tolerance, TOLERANCE.Unit.GetLocalizedString()));
 
                 // Decoys generated from typed fragments get their own m/z, not the target's.
                 var decoys = DecoyGenerator.GenerateAllWithCollisionDetection(new List<LibraryEntry> { entry },
@@ -132,37 +88,98 @@ namespace pwiz.Osprey.Test
             }
             finally
             {
-                TryDeleteFile(path);
-            }
-
-            // Without annotation rows every peak stays Unknown, exactly as before.
-            string plain = CreateBlib(peaks, new (int, string, int)[0]);
-            try
-            {
-                var entry = new BlibLoader().Load(plain).Single();
-                Assert.IsTrue(entry.Fragments.All(f => f.Annotation.IonType == IonType.Unknown));
-                CollectionAssert.AreEqual(Enumerable.Range(1, peaks.Length).Select(i => (byte)i).ToArray(),
-                    entry.Fragments.Select(f => f.Annotation.Ordinal).ToArray());
-            }
-            finally
-            {
                 TryDeleteFile(plain);
             }
 
-            AssertMalformedRowsAreNotFatal(peaks);
-            AssertStackedModificationsAnnotate();
-            AssertNonFiniteMzIsRejected();
-            AssertRejectionsAreCountedByCause();
-            AssertPreferenceRule();
-            AssertProbeFailuresFailClosed();
+            // Rows naming other ions than the typing gives change nothing.
+            string annotated = CreateBlib(peaks, new[] { (0, @"y2", 1), (1, @"b3", 1), (4, @"y5", 1), (5, @"y6", 1) });
+            try
+            {
+                AssertTypedAsExpected(new BlibLoader(TOLERANCE).Load(annotated).Single());
+                // Nor does a table the reader could not have read.
+                ExecuteSql(annotated, @"DROP TABLE RefSpectraPeakAnnotations",
+                    @"CREATE TABLE RefSpectraPeakAnnotations (id INTEGER PRIMARY KEY, RefSpectraID INTEGER, peakIndex INTEGER)",
+                    @"INSERT INTO RefSpectraPeakAnnotations (RefSpectraID, peakIndex) VALUES (1, 0)");
+                AssertTypedAsExpected(new BlibLoader(TOLERANCE).Load(annotated).Single());
+            }
+            finally
+            {
+                TryDeleteFile(annotated);
+            }
+        }
+
+        /// <summary>
+        /// Blib libraries Osprey refuses rather than search wrongly. Modifications are matched as
+        /// Skyline matches them, at the precision their text prints: a one-decimal SILAC label
+        /// gets its exact mass, while a one-decimal mass no known modification matches, an
+        /// unknown UniMod id and other text are listed - each once, with the spectra carrying it -
+        /// and the library is refused. And a blib whose protein accessions mark decoys is refused
+        /// unless <c>--decoys-in-library</c> is given, where a TSV's Decoy column is not needed.
+        /// </summary>
+        [TestMethod]
+        public void TestBlibLibraryRefusals()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), @"BlibLibraryRefusals_" + Path.GetRandomFileName());
+            Directory.CreateDirectory(dir);
+            try
+            {
+                double[] peaks = { 300.0, 400.0, 500.0 };
+                string labeled = Path.Combine(dir, @"labeled.blib");
+                WriteBlib(labeled, peaks, (@"PEPC[+57.0]TIDEK[+8.0]", @"P1"), (@"PEPCTIDEK", @"P1"));
+                var entries = new BlibLoader(TOLERANCE).Load(labeled);
+                var labels = entries.First().Modifications.OrderBy(m => m.Position).ToArray();
+                Assert.AreEqual(CARBAMIDOMETHYL, labels[0].MassDelta);
+                Assert.AreEqual(8.014199, labels[1].MassDelta);
+                Assert.AreEqual(259, labels[1].UnimodId);
+
+                string unidentified = Path.Combine(dir, @"unidentified.blib");
+                WriteBlib(unidentified, peaks, (@"PEPC[+99.9]TIDEK", @"P1"), (@"PEPTIDEK(UniMod:99999)", @"P1"),
+                    (@"PEPCTIDEK", @"P1"), (@"PEPTIDEC[+99.9]", @"P1"), (@"PEPTIDEK[Junk]", @"P1"));
+                var error = Assert.ThrowsException<InvalidDataException>(() => new BlibLoader(TOLERANCE).Load(unidentified));
+                string[] lines = error.Message.Split('\n').Select(l => l.Trim()).ToArray();
+                Assert.AreEqual(string.Format(
+                    OspreyIOResources.BlibLoader_ToException__0__library_spectra_have_modifications_Osprey_cannot_identify,
+                    4, UniMod.MAX_PRECISION_TO_MATCH), lines[0]);
+                CollectionAssert.AreEqual(new[]
+                {
+                    string.Format(OspreyIOResources.BlibLoader_ToException__0__in__1__spectra__first__2_, @"[+99.9]", 2, @"PEPC[+99.9]TIDEK (id 1)"),
+                    string.Format(OspreyIOResources.BlibLoader_ToException__0__in__1__spectra__first__2_, @"(UniMod:99999)", 1, @"PEPTIDEK(UniMod:99999) (id 2)"),
+                    string.Format(OspreyIOResources.BlibLoader_ToException__0__in__1__spectra__first__2_, @"[Junk]", 1, @"PEPTIDEK[Junk] (id 5)"),
+                }, lines.Skip(1).ToArray());
+
+                string withDecoys = Path.Combine(dir, @"decoys.blib");
+                WriteBlib(withDecoys, peaks, (@"PEPCTIDEK", @"P1"), (@"KEDITCPEP", @"DECOY_P1"));
+                var config = new OspreyConfig
+                {
+                    LibrarySource = new LibrarySource(LibraryFormat.Blib, withDecoys),
+                    FragmentTolerance = TOLERANCE
+                };
+                var refusal = Assert.ThrowsException<InvalidDataException>(() => LibraryLoader.Load(config, null, null));
+                StringAssert.Contains(refusal.Message, OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY));
+                StringAssert.Contains(refusal.Message, @"KEDITCPEP");
+            }
+            finally
+            {
+                SQLiteConnection.ClearAllPools();
+                try
+                {
+                    Directory.Delete(dir, true);
+                }
+                catch (IOException)
+                {
+                    // A test's temp directory; a lingering handle must not fail the test.
+                }
+            }
         }
 
         /// <summary>
         /// A library entry written by <see cref="LibraryBlibWriter"/> reads back as the same entry:
-        /// peaks sorted by m/z with every b and y ion typed as it was (neutral losses and charge
-        /// included), stacked N-terminal modifications summed onto the first residue, a known
-        /// modification at its exact mass and an unknown one to four decimals, proteins and
-        /// retention time. An a ion and an untyped peak are written unannotated.
+        /// peaks sorted by m/z and typed from m/z, stacked N-terminal modifications summed onto
+        /// the first residue, a known modification at its exact mass and an unknown one to four
+        /// decimals, proteins and retention time. No <c>RefSpectraPeakAnnotations</c> row is
+        /// written: the table stays empty, as BiblioSpec leaves it, and the reader types the
+        /// primary b and y ions back from m/z; a loss, an a ion and an untyped peak read back
+        /// Unknown.
         /// </summary>
         [TestMethod]
         public void TestLibraryBlibWriterRoundTrip()
@@ -184,10 +201,6 @@ namespace pwiz.Osprey.Test
                 Annotation(IonType.Y, 5, 2, NeutralLossCode.None, 0),
                 Annotation(IonType.Y, 4, 1, NeutralLossCode.H2O, 0),
                 Annotation(IonType.B, 4, 1, NeutralLossCode.Custom, 44.9977),
-                // A whole-number custom loss stays custom: printed "17" it would read as ammonia.
-                Annotation(IonType.Y, 6, 1, NeutralLossCode.Custom, 17.0),
-                // As long as the peptide: not a fragment, so the reader would reject it.
-                Annotation(IonType.Y, 10, 1, NeutralLossCode.None, 0),
             };
             var fragments = typed.Select((a, i) => new LibraryFragment
             {
@@ -211,16 +224,12 @@ namespace pwiz.Osprey.Test
             try
             {
                 Assert.AreEqual(1, LibraryBlibWriter.Write(path, new[] { entry }, @"library.tsv"));
-                Assert.AreEqual(typed.Count(a => a.Ordinal < sequence.Length),
-                    BlibComparer.CountWhere(path, BlibPeakAnnotations.TABLE_NAME, @"mzTheoretical > 0"));
+                Assert.AreEqual(0, BlibComparer.CountWhere(path, @"RefSpectraPeakAnnotations", @"1"));
                 // The library retention time, where Skyline reads library retention times from, with
                 // no peak boundaries.
                 Assert.AreEqual(1, BlibComparer.CountWhere(path, @"RetentionTimes",
                     @"retentionTime = 12.5 AND startTime IS NULL AND endTime IS NULL AND bestSpectrum = 1"));
-                var read = new BlibLoader().Load(path).Single();
-                // Skyline asserts each annotation's mzObserved is its peak's m/z (to 1e-7).
-                foreach (var (peakIndex, mzObserved) in ReadAnnotationMzObserved(path))
-                    Assert.AreEqual(read.Fragments[peakIndex].Mz, mzObserved);
+                var read = new BlibLoader(TOLERANCE).Load(path).Single();
                 Assert.AreEqual(@"M[+58.0055]PEPC[+57.0215]TIDEK[+14.0157]", read.ModifiedSequence);
                 Assert.AreEqual(entry.PrecursorMz, read.PrecursorMz);
                 Assert.AreEqual(entry.Charge, read.Charge);
@@ -243,19 +252,11 @@ namespace pwiz.Osprey.Test
                 {
                     var expected = sorted[i].Annotation;
                     var actual = read.Fragments[i].Annotation;
-                    if ((expected.IonType == IonType.B || expected.IonType == IonType.Y) && expected.Ordinal < sequence.Length)
-                    {
-                        AssertAnnotation(actual, expected.IonType, expected.Ordinal, expected.Charge, expected.NeutralLoss);
-                        Assert.AreEqual(expected.CustomLossMass, actual.CustomLossMass);
-                    }
+                    if (FragmentTyping.IsPrimary(expected))
+                        AssertAnnotation(actual, expected.IonType, expected.Ordinal, expected.Charge, NeutralLossCode.None);
                     else
-                    {
-                        Assert.AreEqual(IonType.Unknown, actual.IonType);
-                    }
+                        Assert.AreEqual(IonType.Unknown, actual.IonType, FragmentTypeCheck.FormatIon(expected));
                 }
-
-                LibraryBlibWriter.Write(path, new[] { entry }, @"library.tsv", false);
-                Assert.AreEqual(0, BlibComparer.CountWhere(path, BlibPeakAnnotations.TABLE_NAME, @"1"));
 
                 AssertLibraryTextAndDecoys(path);
             }
@@ -299,207 +300,16 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0, BlibComparer.CountWhere(path, @"Proteins", @"accession = 'P12345'"));
         }
 
-        private static List<(int PeakIndex, double MzObserved)> ReadAnnotationMzObserved(string path)
+        /// <summary>The types <see cref="TestBlibLoaderTypesPeaksFromMz"/>'s six peaks take.</summary>
+        private static void AssertTypedAsExpected(LibraryEntry entry)
         {
-            var rows = new List<(int, double)>();
-            using (var conn = new SQLiteConnection(@"Data Source=" + path + @";Version=3;Read Only=True;Pooling=False;"))
-            {
-                conn.Open();
-                using (var cmd = new SQLiteCommand(@"SELECT peakIndex, mzObserved FROM " + BlibPeakAnnotations.TABLE_NAME, conn))
-                using (var reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                        rows.Add((reader.GetInt32(0), reader.GetDouble(1)));
-                }
-            }
-            return rows;
-        }
-
-        /// <summary>
-        /// A malformed annotation row is passed over or counted, never fatal: a NULL RefSpectraID
-        /// is skipped, a peakIndex or charge that is not an integer counts as a rejection or as no
-        /// charge, and a table written without the id column reads the same. The summary line
-        /// states how many of the library's spectra were typed.
-        /// </summary>
-        private static void AssertMalformedRowsAreNotFatal(double[] peaks)
-        {
-            string path = CreateBlib(peaks, new[] { (0, @"b3", 1) });
-            try
-            {
-                const string columns = @"(RefSpectraID, peakIndex, name, formula, inchiKey, otherKeys, charge, adduct, comment, mzTheoretical, mzObserved)";
-                ExecuteSql(path,
-                    @"INSERT INTO RefSpectraPeakAnnotations " + columns + @" VALUES (NULL, 0, 'y3', '', '', '', 1, '', '', 0, 0)",
-                    @"INSERT INTO RefSpectraPeakAnnotations " + columns + @" VALUES ((SELECT MIN(id) FROM RefSpectra), 'one', 'y3', '', '', '', 'two', '', '', 0, 0)",
-                    @"CREATE TABLE annotations_without_id AS SELECT RefSpectraID, peakIndex, name, formula, inchiKey, otherKeys, charge, adduct, comment, mzTheoretical, mzObserved FROM RefSpectraPeakAnnotations",
-                    @"DROP TABLE RefSpectraPeakAnnotations",
-                    @"ALTER TABLE annotations_without_id RENAME TO RefSpectraPeakAnnotations");
-                var log = new List<string>();
-                var entry = new BlibLoader().Load(path, log.Add).Single();
-                AssertAnnotation(entry.Fragments[0].Annotation, IonType.B, 3, 1, NeutralLossCode.None);
-                // One spectrum of one typed, one peak typed and the rest without an annotation;
-                // the text peakIndex is the one range rejection, the NULL RefSpectraID no row at all.
-                string summary = string.Format(OspreyIOResources.BlibAnnotationStats_Summary_Library_fragment_annotations___0_N0__of__1_N0__spectra_typed,
-                    1, 1, 1, peaks.Length - 1, 0, 0, 1, 0);
-                CollectionAssert.Contains(log, summary);
-            }
-            finally
-            {
-                TryDeleteFile(path);
-            }
-        }
-
-        /// <summary>
-        /// Of several annotations that fit one peak, one without a neutral loss wins, then the
-        /// lower charge, and on a tie the earlier row stays. The loader test cannot show this,
-        /// because two names for one peak rarely both fit its m/z.
-        /// </summary>
-        private static void AssertPreferenceRule()
-        {
-            var plain = new FragmentAnnotation { IonType = IonType.Y, Ordinal = 3, Charge = 1 };
-            var lossy = new FragmentAnnotation { IonType = IonType.Y, Ordinal = 3, Charge = 1, NeutralLoss = NeutralLossCode.H2O };
-            var doubly = new FragmentAnnotation { IonType = IonType.Y, Ordinal = 6, Charge = 2 };
-            Assert.IsTrue(BlibPeakAnnotations.IsPreferred(plain, lossy));
-            Assert.IsFalse(BlibPeakAnnotations.IsPreferred(lossy, plain));
-            Assert.IsTrue(BlibPeakAnnotations.IsPreferred(plain, doubly));
-            Assert.IsFalse(BlibPeakAnnotations.IsPreferred(doubly, plain));
-            Assert.IsTrue(BlibPeakAnnotations.IsPreferred(doubly, lossy), @"no loss outranks a lower charge");
-            Assert.IsFalse(BlibPeakAnnotations.IsPreferred(plain, plain), @"a tie keeps the earlier row");
-        }
-
-        /// <summary>
-        /// A probe that fails - the file is locked, or not a database - answers that the file
-        /// reads differently, so the keys and the .libcache fail toward re-running rather than
-        /// adopting an output written before a reader change; and that answer is not remembered,
-        /// so the next question about the same version of the file reads it again. A cached
-        /// false kept an annotated blib reading as unannotated for the rest of the process.
-        /// </summary>
-        private static void AssertProbeFailuresFailClosed()
-        {
-            string path = CreateBlib(new[] { 300.0, 400.0 }, new (int, string, int)[0]);
-            try
-            {
-                byte[] blib = File.ReadAllBytes(path);
-                var written = File.GetLastWriteTimeUtc(path);
-                // The same length and time as the blib, so the probe sees the same version of
-                // the file, but not a database: the probe fails.
-                File.WriteAllBytes(path, new byte[blib.Length]);
-                File.SetLastWriteTimeUtc(path, written);
-                Assert.IsTrue(BlibLoader.HasPeakAnnotations(path), @"a probe that fails answers that the file reads differently");
-
-                File.WriteAllBytes(path, blib);
-                File.SetLastWriteTimeUtc(path, written);
-                Assert.IsFalse(BlibLoader.HasPeakAnnotations(path), @"a failed probe must not be cached");
-            }
-            finally
-            {
-                TryDeleteFile(path);
-            }
-
-            string file = Path.GetTempFileName();
-            try
-            {
-                var counting = new CountingProbe { Fail = true };
-                var probe = new FileVersionProbe(counting.Read);
-                Assert.IsTrue(probe.Ask(file), @"a probe that throws answers true");
-                counting.Fail = false;
-                Assert.IsFalse(probe.Ask(file), @"and is asked again");
-                Assert.IsFalse(probe.Ask(file));
-                Assert.AreEqual(2, counting.Calls, @"an answer is kept for the version of the file");
-
-                File.AppendAllText(file, @"x");
-                Assert.IsFalse(probe.Ask(file));
-                Assert.AreEqual(3, counting.Calls, @"a new version of the file is asked again");
-
-                Assert.IsFalse(probe.Ask(null));
-                Assert.IsFalse(probe.Ask(file + @".missing"));
-                Assert.AreEqual(3, counting.Calls, @"a missing file is not probed");
-            }
-            finally
-            {
-                File.Delete(file);
-            }
-        }
-
-        /// <summary>
-        /// A row naming a peak the spectrum lacks, or an ion as long as the peptide, is counted
-        /// apart from a name the grammar cannot read, so the summary line points at the cause.
-        /// </summary>
-        private static void AssertRejectionsAreCountedByCause()
-        {
-            var fragments = new[] { new LibraryFragment { Mz = 300.0, RelativeIntensity = 1f } };
-            var stats = new BlibAnnotationStats();
-            BlibPeakAnnotations.Apply(SEQUENCE, new Modification[0], fragments, new List<BlibAnnotationRow>
-            {
-                new BlibAnnotationRow { PeakIndex = 5, Name = @"y3", Charge = 1 },
-                new BlibAnnotationRow { PeakIndex = -1, Name = @"y3", Charge = 1 },
-                new BlibAnnotationRow { PeakIndex = 0, Name = @"y" + SEQUENCE.Length, Charge = 1 },
-                new BlibAnnotationRow { PeakIndex = 0, Name = @"?", Charge = 1 },
-                // Well-formed names of ions the reader cannot check against the peak: not unreadable.
-                new BlibAnnotationRow { PeakIndex = 0, Name = @"a3", Charge = 1 },
-                new BlibAnnotationRow { PeakIndex = 0, Name = @"c2", Charge = 1 },
-                new BlibAnnotationRow { PeakIndex = 0, Name = @"x4", Charge = 1 },
-                new BlibAnnotationRow { PeakIndex = 0, Name = @"z5", Charge = 1 },
-            }, stats);
-            Assert.AreEqual(3, stats.NRejectedRange);
-            Assert.AreEqual(1, stats.NRejectedName, @"a, c, x and z ions are not unreadable names");
-            Assert.AreEqual(4, stats.NUncheckedIonType);
-            Assert.AreEqual(0, stats.NRejectedMz);
-        }
-
-        /// <summary>
-        /// An N-terminal acetyl and an oxidized first methionine both sit at position 0, so a
-        /// b ion's m/z carries their sum, and a correctly annotated b ion is accepted.
-        /// </summary>
-        private static void AssertStackedModificationsAnnotate()
-        {
-            const string sequence = @"MPEPTIDEK";
-            var mods = BlibLoader.ParseBlibModifications(@"[+42.010565]M[+15.994915]PEPTIDEK");
-            Assert.AreEqual(2, mods.Count(m => m.Position == 0));
-            double b3 = PeptideFragmentMass.PROTON_MASS + 42.010565 + 15.994915;
-            foreach (char aa in sequence.Substring(0, 3))
-            {
-                Assert.IsTrue(PeptideFragmentMass.TryGetResidueMass(aa, out double residue));
-                b3 += residue;
-            }
-            var stats = ApplyOne(sequence, mods, b3, @"b3", out var annotation);
-            Assert.AreEqual(1, stats.NPeaksAnnotated, @"the b3 annotation matches the peak once both modifications count");
-            AssertAnnotation(annotation, IonType.B, 3, 1, NeutralLossCode.None);
-        }
-
-        /// <summary>
-        /// A peak whose m/z is not finite matches no annotation; an infinite one would otherwise
-        /// widen the ppm tolerance to infinity and pass any name.
-        /// </summary>
-        private static void AssertNonFiniteMzIsRejected()
-        {
-            var cysteine = new[] { new Modification { Position = CYSTEINE_POSITION, MassDelta = CARBAMIDOMETHYL } };
-            foreach (double peakMz in new[] { double.NaN, double.PositiveInfinity, double.NegativeInfinity })
-            {
-                var stats = ApplyOne(SEQUENCE, cysteine, peakMz, @"y3", out var annotation);
-                Assert.AreEqual(0, stats.NPeaksAnnotated, peakMz.ToString(CultureInfo.InvariantCulture));
-                Assert.AreEqual(1, stats.NRejectedMz, peakMz.ToString(CultureInfo.InvariantCulture));
-                Assert.AreEqual(IonType.Unknown, annotation.IonType);
-            }
-        }
-
-        /// <summary>Applies one annotation row to a one-peak spectrum.</summary>
-        private static BlibAnnotationStats ApplyOne(string sequence, IReadOnlyList<Modification> modifications,
-            double peakMz, string name, out FragmentAnnotation annotation)
-        {
-            var fragments = new[]
-            {
-                new LibraryFragment
-                {
-                    Mz = peakMz,
-                    RelativeIntensity = 1f,
-                    Annotation = new FragmentAnnotation { IonType = IonType.Unknown, Ordinal = 1, Charge = 1 },
-                },
-            };
-            var stats = new BlibAnnotationStats();
-            BlibPeakAnnotations.Apply(sequence, modifications, fragments,
-                new List<BlibAnnotationRow> { new BlibAnnotationRow { PeakIndex = 0, Name = name, Charge = 1 } }, stats);
-            annotation = fragments[0].Annotation;
-            return stats;
+            var types = entry.Fragments.Select(f => f.Annotation).ToArray();
+            AssertAnnotation(types[0], IonType.B, 3, 1, NeutralLossCode.None);
+            AssertAnnotation(types[1], IonType.Y, 3, 1, NeutralLossCode.None);
+            AssertAnnotation(types[2], IonType.Y, 5, 2, NeutralLossCode.None);
+            Assert.AreEqual(IonType.Unknown, types[3].IonType, @"a neutral loss is not typed");
+            AssertAnnotation(types[4], IonType.B, 5, 1, NeutralLossCode.None);
+            Assert.AreEqual(IonType.Unknown, types[5].IonType, @"no ion reaches 700.0");
         }
 
         private static double Mz(IonType ionType, int ordinal, byte charge, IReadOnlyDictionary<int, double> modMasses, double? loss)
@@ -512,6 +322,43 @@ namespace pwiz.Osprey.Test
         private static string CreateBlib(double[] peaks, (int PeakIndex, string Name, int Charge)[] annotations)
         {
             return CreateBlib(Path.GetTempFileName(), MOD_SEQUENCE, peaks, annotations);
+        }
+
+        /// <summary>
+        /// A blib at <paramref name="path"/> with one spectrum of <paramref name="peaks"/> per
+        /// modified sequence, each mapped to its protein.
+        /// </summary>
+        private static void WriteBlib(string path, double[] peaks, params (string ModSeq, string Protein)[] spectra)
+        {
+            using (var writer = new BlibWriter(path))
+            {
+                long fileId = writer.AddSourceFile(@"test.mzML", @"library.blib", 0.01);
+                foreach (var (modSeq, protein) in spectra)
+                {
+                    string sequence = new string(StripBrackets(modSeq).Where(char.IsLetter).ToArray());
+                    long refId = writer.AddSpectrum(sequence, modSeq, 525.25, 2, 10.0, 9.0, 11.0,
+                        peaks, peaks.Select((_, i) => 100f + i).ToArray(), 0.01, fileId, 1, 0.0);
+                    writer.AddProteinMapping(refId, new[] { protein });
+                }
+                writer.FinalizeDatabase();
+            }
+            SQLiteConnection.ClearAllPools();
+        }
+
+        private static string StripBrackets(string modSeq)
+        {
+            var sb = new System.Text.StringBuilder();
+            int depth = 0;
+            foreach (char c in modSeq)
+            {
+                if (c == '[' || c == '(')
+                    depth++;
+                else if (c == ']' || c == ')')
+                    depth--;
+                else if (depth == 0)
+                    sb.Append(c);
+            }
+            return sb.ToString();
         }
 
         /// <summary>
@@ -556,12 +403,6 @@ namespace pwiz.Osprey.Test
             return path;
         }
 
-        private static void AssertParsed(string name, int chargeColumn, IonType ionType, byte ordinal, byte charge, NeutralLossCode loss)
-        {
-            Assert.IsTrue(BlibPeakAnnotations.TryParseName(name, chargeColumn, out var annotation), name);
-            AssertAnnotation(annotation, ionType, ordinal, charge, loss);
-        }
-
         private static FragmentAnnotation Annotation(IonType ionType, byte ordinal, byte charge, NeutralLossCode loss, double customLoss)
         {
             return new FragmentAnnotation
@@ -570,7 +411,7 @@ namespace pwiz.Osprey.Test
             };
         }
 
-        private static void AssertAnnotation(FragmentAnnotation annotation, IonType ionType, byte ordinal, byte charge, NeutralLossCode loss)
+        internal static void AssertAnnotation(FragmentAnnotation annotation, IonType ionType, byte ordinal, byte charge, NeutralLossCode loss)
         {
             Assert.AreEqual(ionType, annotation.IonType);
             Assert.AreEqual(ordinal, annotation.Ordinal);
@@ -606,21 +447,6 @@ namespace pwiz.Osprey.Test
             catch (IOException)
             {
                 // A test's temp file; a lingering handle must not fail the test.
-            }
-        }
-
-        /// <summary>A probe that counts its reads and throws, as a locked file does, while <see cref="Fail"/> is set.</summary>
-        private sealed class CountingProbe
-        {
-            public int Calls;
-            public bool Fail;
-
-            public bool Read(string path)
-            {
-                Calls++;
-                if (Fail)
-                    throw new IOException(@"locked");
-                return false;
             }
         }
     }

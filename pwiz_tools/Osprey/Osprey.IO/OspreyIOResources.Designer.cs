@@ -61,15 +61,6 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Library fragment annotations: {0:N0} of {1:N0} spectra typed, {2:N0} peaks typed, {3:N0} peaks without an annotation, {4:N0} annotations with an unreadable name, {5:N0} annotations of an a, c, x or z ion, which cannot be checked against its peak, {6:N0} annotations naming a peak or an ion the spectrum does not have, {7:N0} annotations whose m/z disagrees with the peak.
-        /// </summary>
-        public static string BlibAnnotationStats_Summary_Library_fragment_annotations___0_N0__of__1_N0__spectra_typed {
-            get {
-                return ResourceManager.GetString("BlibAnnotationStats_Summary_Library_fragment_annotations___0_N0__of__1_N0__spectra_typed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Invalid peak intensity blob size: expected {0} or {1} bytes, got {2}.
         /// </summary>
         public static string BlibLoader_DecodeBlibPeaks_Invalid_peak_intensity_blob_size__expected__0__or__1__bytes__got__2_ {
@@ -95,6 +86,44 @@ namespace pwiz.Osprey.IO {
         public static string BlibLoader_Load_Invalid_BiblioSpec_library__the_RefSpectra_table_was_not_found_ {
             get {
                 return ResourceManager.GetString("BlibLoader_Load_Invalid_BiblioSpec_library__the_RefSpectra_table_was_not_found_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Typed {0:N0} of {1:N0} library peaks as b or y ions within {2} {3}.
+        /// </summary>
+        public static string BlibLoader_Load_Typed__0_N0__of__1_N0__library_peaks_as_b_or_y_ions_within__2___3_ {
+            get {
+                return ResourceManager.GetString("BlibLoader_Load_Typed__0_N0__of__1_N0__library_peaks_as_b_or_y_ions_within__2___3" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} in {1:N0} spectra, first {2}.
+        /// </summary>
+        public static string BlibLoader_ToException__0__in__1__spectra__first__2_ {
+            get {
+                return ResourceManager.GetString("BlibLoader_ToException__0__in__1__spectra__first__2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0:N0} library spectra have modifications Osprey cannot identify. A modification mass printed with fewer than {1} decimals must match a known UniMod modification allowed on its residue, and a UniMod id must be one Osprey knows. Build the library with full-precision modification masses and load it again:.
+        /// </summary>
+        public static string BlibLoader_ToException__0__library_spectra_have_modifications_Osprey_cannot_identify {
+            get {
+                return ResourceManager.GetString("BlibLoader_ToException__0__library_spectra_have_modifications_Osprey_cannot_ident" +
+                        "ify", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ... and {0:N0} more modifications.
+        /// </summary>
+        public static string BlibLoader_ToException____and__0__more_modifications {
+            get {
+                return ResourceManager.GetString("BlibLoader_ToException____and__0__more_modifications", resourceCulture);
             }
         }
         
@@ -137,11 +166,20 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Missing {0} at row {1}.
+        ///   Looks up a localized string similar to (line {0}, column {1}) Invalid {2} &apos;{3}&apos;.
         /// </summary>
-        public static string DiannTsvLoader_GetField_Missing__0__at_row__1_ {
+        public static string DiannTsvLoader_LineReader___line__0___column__1___Invalid__2____3__ {
             get {
-                return ResourceManager.GetString("DiannTsvLoader_GetField_Missing__0__at_row__1_", resourceCulture);
+                return ResourceManager.GetString("DiannTsvLoader_LineReader___line__0___column__1___Invalid__2____3__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (line {0}, column {1}) Missing {2}.
+        /// </summary>
+        public static string DiannTsvLoader_LineReader___line__0___column__1___Missing__2_ {
+            get {
+                return ResourceManager.GetString("DiannTsvLoader_LineReader___line__0___column__1___Missing__2_", resourceCulture);
             }
         }
         
@@ -173,11 +211,50 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid {0} &apos;{1}&apos; at row {2}.
+        ///   Looks up a localized string similar to ... and {0:N0} more errors.
         /// </summary>
-        public static string DiannTsvLoader_ParseValue_Invalid__0____1___at_row__2_ {
+        public static string DiannTsvLoader_ToException____and__0__more_errors {
             get {
-                return ResourceManager.GetString("DiannTsvLoader_ParseValue_Invalid__0____1___at_row__2_", resourceCulture);
+                return ResourceManager.GetString("DiannTsvLoader_ToException____and__0__more_errors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0:N0} library lines have errors. Fix the library and load it again:.
+        /// </summary>
+        public static string DiannTsvLoader_ToException__0__library_lines_have_errors__Fix_the_library_and_load_it_again_ {
+            get {
+                return ResourceManager.GetString("DiannTsvLoader_ToException__0__library_lines_have_errors__Fix_the_library_and_loa" +
+                        "d_it_again_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}, charge {1}, peak m/z {2:F4}: the library says {3}, Osprey computes {4}.
+        /// </summary>
+        public static string FragmentTypeCheck_AddPeak__0___charge__1___peak_m_z__2_F4___the_library_says__3___Osprey_computes__4_ {
+            get {
+                return ResourceManager.GetString("FragmentTypeCheck_AddPeak__0___charge__1___peak_m_z__2_F4___the_library_says__3__" +
+                        "_Osprey_computes__4_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to no ion.
+        /// </summary>
+        public static string FragmentTypeCheck_AddPeak_no_ion {
+            get {
+                return ResourceManager.GetString("FragmentTypeCheck_AddPeak_no_ion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment types in {0}: of {2:N0} peaks the library types as a b or y ion, Osprey&apos;s own typing agrees on {1:N0}, the library chooses another ion within tolerance of the peak on {5:N0}, and names no ion within tolerance on {3:N0}; {4:N0} more peaks are typed outside what Osprey computes (neutral losses, other ion types, fragment charge above 2, or unreadable).
+        /// </summary>
+        public static string FragmentTypeCheck_Summary_Fragment_types_in__0___Osprey_s_computed_types_agree_with__1_N0__of__2_N0__peaks {
+            get {
+                return ResourceManager.GetString("FragmentTypeCheck_Summary_Fragment_types_in__0___Osprey_s_computed_types_agree_wi" +
+                        "th__1_N0__of__2_N0__peaks", resourceCulture);
             }
         }
         
@@ -189,7 +266,7 @@ namespace pwiz.Osprey.IO {
                 return ResourceManager.GetString("LibraryBlibWriter_Write_Writing__0__library_precursors_to__1_", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Loading library cache ({0:N0} precursors).
         /// </summary>
@@ -253,6 +330,16 @@ namespace pwiz.Osprey.IO {
         public static string LibraryLoader_DescribeSharedDecoyIds_Library_precursor_ID__0__ {
             get {
                 return ResourceManager.GetString("LibraryLoader_DescribeSharedDecoyIds_Library_precursor_ID__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0:N0} library precursors have protein accessions marking them as decoys ({1}), the first {2}, but {3} was not given, so they would be searched as targets. Search with {3} to use the library&apos;s decoys, or remove them from the library..
+        /// </summary>
+        public static string LibraryLoader_DescribeUnflaggedDecoys__0__library_precursors_have_protein_accessions_marking_them_as_decoys {
+            get {
+                return ResourceManager.GetString("LibraryLoader_DescribeUnflaggedDecoys__0__library_precursors_have_protein_accessi" +
+                        "ons_marking_them_as_decoys", resourceCulture);
             }
         }
         

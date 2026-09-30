@@ -34,7 +34,8 @@ namespace pwiz.Osprey.Core
     /// <para>A slot is NOT applicable - its m/z is NaN - when its fragment charge exceeds
     /// <c>min(precursor charge, 2)</c>, or when the ion spans a residue with no standard mass.
     /// m/z comes from <see cref="PeptideFragmentMass.CalculateFragmentMz"/>, the same residue
-    /// masses and order of additions decoy generation and the blib annotation check use.</para>
+    /// masses and order of additions decoy generation uses. <see cref="FragmentTyping"/> types
+    /// library peaks against these slots.</para>
     /// </summary>
     public static class FragmentLadder
     {

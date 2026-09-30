@@ -59,42 +59,17 @@ namespace pwiz.Osprey.Tasks
     public abstract class OspreyTask : ISelectableTask
     {
         /// <summary>
-        /// The base-key term of a blib library whose <c>RefSpectraPeakAnnotations</c> table has
-        /// rows. Since the reader started typing fragments from that table, such a library's
-        /// entries carry ion types they did not before - which reach the scores, the generated
-        /// decoys and every stage after them - so a directory scored before the change against
-        /// it must not be adopted after. A TSV library or a blib without annotation rows reads
-        /// exactly as it did, so it gets no term and every such key is unchanged. The same
-        /// shape as <see cref="SecondPassFdrTask"/>'s <c>;pass2proteinq=2</c>: a meaning changed
-        /// without anything the key already follows moving. It carries
-        /// <see cref="BlibLoader.ANNOTATION_READER_VERSION"/>, as the <c>.libcache</c>
-        /// composition term does, so a change to how annotations are read moves both.
+        /// The base-key term of every search of a blib library. Since the reader started typing
+        /// every peak from m/z and reading modification text residue- and precision-aware, a
+        /// blib's entries carry ion types and masses they did not before - which reach the
+        /// scores, the generated decoys and every stage after them - so a directory scored
+        /// before the change must not be adopted after. A TSV library keys exactly as before.
+        /// It carries <see cref="BlibLoader.READER_VERSION"/>, as the <c>.libcache</c> composition
+        /// term does, so a change to the reader moves both. The typing tolerance needs no term:
+        /// it is the search's fragment tolerance, already in
+        /// <see cref="SearchIdentity.SearchParameterHash"/>.
         /// </summary>
-        public const string LIBRARY_READER_TERM = @";libext=ann" + BlibLoader.ANNOTATION_READER_VERSION;
-
-        /// <summary>
-        /// The <see cref="SecondPassFdrTask"/> key term of a blib library whose modification text
-        /// the residue- and precision-aware reader parses differently: one-decimal BiblioSpec
-        /// masses, or a 100-200 value on a residue other than C. Those masses reach no score
-        /// unless the fragments are typed (and a typed blib already carries
-        /// <see cref="LIBRARY_READER_TERM"/> in every key), but SecondPassFDR writes them to the
-        /// output blib's Modifications table, so only its outputs from before the change must
-        /// not be adopted. It carries <see cref="BlibLoader.MODIFICATION_READER_VERSION"/>.
-        /// </summary>
-        public const string LIBRARY_MODS_TERM = @";libmods=" + BlibLoader.MODIFICATION_READER_VERSION;
-
-        /// <summary>
-        /// The base-key term of every search that generates its decoys. Decoy fragments of an
-        /// entry with two modifications on one residue - an N-terminal acetyl before an oxidized
-        /// methionine, <c>(UniMod:1)M(UniMod:35)</c> - kept only the last of the two until they
-        /// added, so a directory scored before that could hold decoys 42 Da off on every ion
-        /// spanning the residue. Only libraries holding such an entry changed, but telling them
-        /// apart would mean reading the library before any skip decision; the build-version
-        /// stamp already makes every upgrade re-score, so this term costs a re-run only where
-        /// <c>OSPREY_VERSION_OVERRIDE</c> adopts another build's outputs. A search whose decoys
-        /// come from the library keys exactly as before.
-        /// </summary>
-        public const string DECOY_MODS_TERM = @";decoymods=2";
+        public const string BLIB_READER_TERM = @";blibreader=" + BlibLoader.READER_VERSION;
 
         /// <summary>
         /// Short identifier used in pipeline log lines, the <c>--task</c> selector and the
@@ -247,17 +222,15 @@ namespace pwiz.Osprey.Tasks
         /// everything downstream inherits that choice. Putting it here also
         /// means a task added later carries it without having to know.
         ///
-        /// The library terms are here for the same reason: they change what every task reads
-        /// from the library, or the decoys it generates from it (see
-        /// <see cref="LIBRARY_READER_TERM"/>, <see cref="DECOY_MODS_TERM"/>).
-        /// <see cref="LIBRARY_MODS_TERM"/> is not: only SecondPassFDR's output reads the masses.
+        /// <see cref="BLIB_READER_TERM"/> is here for the same reason: it changes what every
+        /// task reads from a blib library.
         /// </summary>
         public virtual string ValidityKey(PipelineContext ctx) => string.Format(
             @"search={0};library={1}{2}{3}",
             ctx.Config.Identity.SearchParameterHash(),
             ctx.Config.Identity.LibraryIdentityHash(),
             OspreyEnvironment.PickValidityKeySuffix(),
-            LibraryValidityKeySuffix(ctx.Config));
+            ctx.Config.LibrarySource?.Format == LibraryFormat.Blib ? BLIB_READER_TERM : string.Empty);
 
         /// <summary>
         /// The key one declared output is stamped and checked with: <paramref name="taskKey"/>
@@ -298,37 +271,6 @@ namespace pwiz.Osprey.Tasks
             return string.IsNullOrEmpty(directory)
                 ? string.Format(OspreyTasksResources.OspreyTask_DescribePerInputOutput_a__0__file_next_to_each_input, extension)
                 : string.Format(OspreyTasksResources.OspreyTask_DescribePerInputOutput_a__0__file_for_each_input__in__1_, extension, directory);
-        }
-
-        /// <summary>
-        /// <see cref="LIBRARY_MODS_TERM"/> for a blib library with precision-sensitive
-        /// modification text, else empty; for the <see cref="SecondPassFdrTask"/> key. The probe
-        /// is answered once per version of the file.
-        /// </summary>
-        protected static string LibraryModsValidityKeySuffix(OspreyConfig config)
-        {
-            var source = config.LibrarySource;
-            return source != null && source.Format == LibraryFormat.Blib &&
-                   BlibLoader.HasPrecisionSensitiveModifications(source.Path)
-                ? LIBRARY_MODS_TERM
-                : string.Empty;
-        }
-
-        /// <summary>
-        /// <see cref="LIBRARY_READER_TERM"/> for a blib library with annotation rows, and
-        /// <see cref="DECOY_MODS_TERM"/> when Osprey generates the decoys; else empty.
-        /// </summary>
-        private static string LibraryValidityKeySuffix(OspreyConfig config)
-        {
-            var source = config.LibrarySource;
-            if (source == null)
-                return string.Empty;
-            string suffix = string.Empty;
-            if (source.Format == LibraryFormat.Blib && BlibLoader.HasPeakAnnotations(source.Path))
-                suffix += LIBRARY_READER_TERM;
-            if (!LibraryLoader.LibrarySuppliesDecoys(config))
-                suffix += DECOY_MODS_TERM;
-            return suffix;
         }
     }
 }

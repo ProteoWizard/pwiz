@@ -28,21 +28,8 @@ using pwiz.Osprey.Core;
 namespace pwiz.Osprey.IO
 {
     /// <summary>
-    /// One <c>RefSpectraPeakAnnotations</c> row: the peak it names, in the stored peak order.
-    /// </summary>
-    public struct BlibPeakAnnotation
-    {
-        public int PeakIndex;
-        public string Name;
-        public int Charge;
-        public double MzTheoretical;
-        public double MzObserved;
-    }
-
-    /// <summary>
     /// A library precursor in the form a blib stores it: the <c>RefSpectra</c> identity, the
-    /// compressed peaks, the <c>Modifications</c>, protein and <c>RefSpectraPeakAnnotations</c>
-    /// rows. The one place a <see cref="LibraryEntry"/> becomes blib rows, shared by the search
+    /// compressed peaks, the <c>Modifications</c> and protein rows. The one place a <see cref="LibraryEntry"/> becomes blib rows, shared by the search
     /// output and <see cref="LibraryBlibWriter"/>; <see cref="BlibWriter.AddSpectrum(BlibSpectrum, double, double, double, double, long, int)"/>
     /// writes it. Built from the entry alone, so it can be prepared on any thread while the
     /// SQLite inserts stay on one.
@@ -56,11 +43,9 @@ namespace pwiz.Osprey.IO
     /// summed, in the text and in the <c>Modifications</c> rows alike. An entry with a
     /// modification its loader could not resolve keeps its own text instead, so distinct library
     /// precursors never share a key.</item>
-    /// <item>Each b or y ion whose m/z, recomputed from the sequence and modifications, names its
-    /// peak gets an annotation row in the grammar <see cref="BlibPeakAnnotations"/> reads: the
-    /// rows that let <see cref="BlibLoader"/> build real decoys from the blib. Other ion types,
-    /// and peaks with no fragment number, are left unannotated: the reader could not check
-    /// them.</item>
+    /// <item>No <c>RefSpectraPeakAnnotations</c> rows: a reader computes a peptide's fragment
+    /// ion types from m/z, as Skyline and <see cref="BlibLoader"/> do, so the table is left
+    /// empty, as BiblioSpec leaves it.</item>
     /// </list>
     /// </summary>
     public sealed class BlibSpectrum
@@ -72,8 +57,7 @@ namespace pwiz.Osprey.IO
         public const string FORMAT_VERSION = @"2";
 
         private BlibSpectrum(LibraryEntry entry, string modifiedSequence, IReadOnlyList<Modification> modifications,
-            byte[] mzBlob, byte[] intensityBlob, int numPeaks, IReadOnlyList<BlibPeakAnnotation> annotations,
-            IReadOnlyList<string> proteinIds)
+            byte[] mzBlob, byte[] intensityBlob, int numPeaks, IReadOnlyList<string> proteinIds)
         {
             PeptideSeq = entry.Sequence;
             ModifiedSequence = modifiedSequence;
@@ -84,16 +68,13 @@ namespace pwiz.Osprey.IO
             MzBlob = mzBlob;
             IntensityBlob = intensityBlob;
             NumPeaks = numPeaks;
-            Annotations = annotations;
         }
 
         /// <summary>
-        /// The blib form of <paramref name="entry"/>. <paramref name="annotate"/> false leaves out
-        /// the ion annotations, which is how a library without them is made for testing.
-        /// <paramref name="proteinIds"/>, when given, replaces the entry's accessions.
+        /// The blib form of <paramref name="entry"/>. <paramref name="proteinIds"/>, when given,
+        /// replaces the entry's accessions.
         /// </summary>
-        public static BlibSpectrum FromLibraryEntry(LibraryEntry entry, bool annotate = true,
-            IReadOnlyList<string> proteinIds = null)
+        public static BlibSpectrum FromLibraryEntry(LibraryEntry entry, IReadOnlyList<string> proteinIds = null)
         {
             var fragments = entry.Fragments.OrderBy(f => f.Mz).ToArray();
             var mzs = new double[fragments.Length];
@@ -116,7 +97,6 @@ namespace pwiz.Osprey.IO
                 modifiedSequence,
                 byResidue.Select(pair => new Modification { Position = pair.Key, MassDelta = pair.Value }).ToArray(),
                 BlibWriter.CompressMzs(mzs), BlibWriter.CompressIntensities(intensities), fragments.Length,
-                annotate ? Annotate(entry.Sequence, modMasses, fragments) : Array.Empty<BlibPeakAnnotation>(),
                 proteinIds);
         }
 
@@ -132,7 +112,6 @@ namespace pwiz.Osprey.IO
         public byte[] MzBlob { get; }
         public byte[] IntensityBlob { get; }
         public int NumPeaks { get; }
-        public IReadOnlyList<BlibPeakAnnotation> Annotations { get; }
 
         /// <summary>
         /// A peptide in blib modified-sequence form from its modification masses by residue:
@@ -153,13 +132,13 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// A modification mass as a blib bracket, <c>[+57.0215]</c>: signed, at most four
         /// decimals, trailing zeros dropped. Skyline matches a library modification at the
-        /// precision its text prints, so a mass only known to one decimal (BiblioSpec's
-        /// <c>K[+114.0]</c>, which no known modification snaps) must stay <c>[+114.0]</c>: printed
-        /// as <c>[+114.0000]</c> it would claim a precision it does not have and match nothing.
+        /// precision its text prints, so a mass only known to one decimal (a DIA-NN library's
+        /// <c>K[+114.0]</c>) must stay <c>[+114.0]</c>: printed as <c>[+114.0000]</c> it would
+        /// claim a precision it does not have. A mass that rounds to zero prints <c>[+0.0]</c>.
         /// </summary>
         public static string FormatMassDelta(double mass)
         {
-            return @"[" + mass.ToString(@"+0.0###;-0.0###", CultureInfo.InvariantCulture) + @"]";
+            return @"[" + mass.ToString(@"+0.0###;-0.0###;+0.0", CultureInfo.InvariantCulture) + @"]";
         }
 
         /// <summary>
@@ -191,37 +170,6 @@ namespace pwiz.Osprey.IO
                 byResidue[position] = mass + pair.Value;
             }
             return byResidue;
-        }
-
-        private static BlibPeakAnnotation[] Annotate(string sequence, Dictionary<int, double> modMasses,
-            LibraryFragment[] fragments)
-        {
-            var annotations = new List<BlibPeakAnnotation>(fragments.Length);
-            for (int i = 0; i < fragments.Length; i++)
-            {
-                var annotation = fragments[i].Annotation;
-                // The bounds BlibPeakAnnotations.Apply reads with: an ion as long as the peptide
-                // is not a fragment, and a row it would reject is not worth writing.
-                if ((annotation.IonType != IonType.B && annotation.IonType != IonType.Y) ||
-                    annotation.Ordinal < 1 || annotation.Ordinal >= sequence.Length || annotation.Charge < 1)
-                {
-                    continue;
-                }
-                double? mz = PeptideFragmentMass.CalculateFragmentMz(annotation.IonType, annotation.Ordinal,
-                    annotation.Charge, sequence, modMasses,
-                    annotation.HasNeutralLoss ? annotation.NeutralLossMass : null);
-                if (!mz.HasValue || !BlibPeakAnnotations.MatchesPeak(mz.Value, fragments[i].Mz))
-                    continue;
-                annotations.Add(new BlibPeakAnnotation
-                {
-                    PeakIndex = i,
-                    Name = BlibPeakAnnotations.FormatName(annotation),
-                    Charge = annotation.Charge,
-                    MzTheoretical = mz.Value,
-                    MzObserved = fragments[i].Mz
-                });
-            }
-            return annotations.ToArray();
         }
     }
 }

@@ -125,9 +125,9 @@ namespace pwiz.Osprey
                 ARG_EXPORT_LIBRARY);
 
         // --- Scoring & Tolerance ----------------------------------------------------------
-        public static readonly OspreyArgument ARG_RESOLUTION = new OspreyArgument(@"resolution",
+        public static readonly OspreyArgument ARG_RESOLUTION = new OspreyArgument(OspreyArgNames.RESOLUTION,
             new[] { @"unit", @"hram", @"auto" }, (c, p) => c._resolution = p.Value.ToLowerInvariant()) { DescriptionArgs = () => new object[] { @"auto" } };
-        public static readonly OspreyArgument ARG_FRAGMENT_TOLERANCE = new OspreyArgument(@"fragment-tolerance",
+        public static readonly OspreyArgument ARG_FRAGMENT_TOLERANCE = new OspreyArgument(OspreyArgNames.FRAGMENT_TOLERANCE,
             () => @"<value>", (c, p) => c._fragmentTolerance = ParseDouble(p));
         public static readonly OspreyArgument ARG_FRAGMENT_UNIT = new OspreyArgument(@"fragment-unit",
             new[] { @"ppm", @"mz" }, (c, p) => c._fragmentUnit = p.Value.ToLowerInvariant()) { DescriptionArgs = () => new object[] { @"ppm" } };
@@ -639,7 +639,7 @@ namespace pwiz.Osprey
                 }
             }
 
-            if (!_config.DecoysInLibrary &&
+            if (!_config.LibrarySuppliesDecoys &&
                 !string.IsNullOrEmpty(_config.DecoyPairingManifestPath))
             {
                 Program.LogWarning(string.Format(

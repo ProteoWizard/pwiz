@@ -249,7 +249,7 @@ namespace pwiz.Osprey.Tasks
         }
 
         // Sequential per-best-precursor emission: one RefSpectra row (plus its
-        // modifications / protein mappings / peak annotations / Osprey extension
+        // modifications / protein mappings / Osprey extension
         // rows) for each prepared spectrum, in iteration order so row IDs stay
         // deterministic.
         private static Dictionary<(string, byte), long> EmitSpectrumRows(
@@ -312,8 +312,8 @@ namespace pwiz.Osprey.Tasks
                         sharedEnd = sharedVals[2];
                     }
 
-                    // The library precursor's own rows - peaks, modifications, proteins and
-                    // fragment ion annotations - exactly as --export-library writes them; this
+                    // The library precursor's own rows - peaks, modifications and proteins -
+                    // exactly as --export-library writes them; this
                     // row adds the search result's apex, boundaries, q-value and run count.
                     long refId = writer.AddSpectrum(spectrum,
                         sharedApex, sharedStart, sharedEnd,

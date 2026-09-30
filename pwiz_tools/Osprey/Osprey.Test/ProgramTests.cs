@@ -164,6 +164,38 @@ namespace pwiz.Osprey.Test
             Assert.IsNull(Program.ValidateArgs(config));
         }
 
+        /// <summary>
+        /// A search whose output is its own library is refused - it would replace the library
+        /// with its results when it finishes - whether the paths are spelled alike or not, and
+        /// under a task as well as the full pipeline. So is an export given only blanks as its
+        /// path.
+        /// </summary>
+        [TestMethod]
+        public void TestValidateRejectsOutputOverLibrary()
+        {
+            var config = new OspreyConfig
+            {
+                InputFiles = new List<string> { @"a.mzML" },
+                LibrarySource = LibrarySource.FromPath(@"ref.blib"),
+                OutputBlib = Path.GetFullPath(@"ref.blib")
+            };
+            string expected = string.Format(OspreyResources.Program_ValidateArgs_The__0__path_is_the_library_the_search_reads___1_,
+                OspreyCommandArgs.ARG_OUTPUT.ArgumentText, @"ref.blib");
+            Assert.AreEqual(expected, Program.ValidateArgs(config));
+            config.OutputBlib = @"results.blib";
+            Assert.IsNull(Program.ValidateArgs(config));
+
+            var task = TaskConfigs.ForTask(PerFileScoringTask.TASK_NAME);
+            task.InputFiles = new List<string> { @"a.mzML" };
+            task.LibrarySource = LibrarySource.FromPath(@"ref.blib");
+            task.OutputBlib = @"ref.blib";
+            Assert.AreEqual(expected, Program.ValidateArgs(task));
+
+            var export = new OspreyConfig { LibrarySource = LibrarySource.FromPath(@"ref.blib"), ExportLibraryBlib = @"  " };
+            Assert.AreEqual(string.Format(OspreyResources.Program_ValidateArgs_No_path_given_for__0__,
+                OspreyCommandArgs.ARG_EXPORT_LIBRARY.ArgumentText), Program.ValidateArgs(export));
+        }
+
         // --- ValidateArgs: what each task requires -------------------------
         // Each config comes from TaskConfigs.ForTask, i.e. through the same SelectTask the
         // CLI goes through, so the flags are the task's own and not a copy of Main's wiring.

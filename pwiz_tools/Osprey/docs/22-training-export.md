@@ -168,7 +168,7 @@ has a standard mass). A non-applicable slot is NaN in every float blob, 0 in eve
 blob, and has no flag bits.
 
 m/z is `PeptideFragmentMass.CalculateFragmentMz` with the precursor's modifications - the same
-residue masses and order of additions decoy generation and the blib annotation check use.
+residue masses and order of additions decoy generation and blib fragment typing use.
 Modifications at one position add: an N-terminal modification and one of the first residue both
 sit at position 0 (`(UniMod:1)M(UniMod:35)`), and every b ion carries both. `mod_positions` /
 `mod_masses` list them separately. No neutral losses and no fragment charge above 2 are on the

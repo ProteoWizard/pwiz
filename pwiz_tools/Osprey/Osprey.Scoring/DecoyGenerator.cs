@@ -117,27 +117,9 @@ namespace pwiz.Osprey.Scoring
                 decoySequence = CycleSequence(target.Sequence, out positionMapping);
             }
 
-            var decoy = new LibraryEntry(
-                target.Id | 0x80000000,
-                decoySequence,
-                @"DECOY_" + target.ModifiedSequence,
-                target.Charge,
-                target.PrecursorMz,
-                target.RetentionTime);
-            decoy.RtCalibrated = target.RtCalibrated;
-            decoy.IsDecoy = true;
-
-            // Remap modifications to new positions
-            decoy.Modifications = RemapModifications(target.Modifications, positionMapping);
-
-            // Recalculate fragment m/z values for the reversed sequence
-            decoy.Fragments = RecalculateFragments(target, decoy.Modifications, decoySequence);
-
-            // Update protein IDs to indicate decoy
-            decoy.ProteinIds = BuildDecoyProteinIds(target.ProteinIds, null);
-            decoy.GeneNames = CopyGeneNames(target.GeneNames, null);
-
-            return decoy;
+            // The same construction the collision-checked batch uses, so a test of this entry
+            // point also pins the production wiring.
+            return BuildDecoyFromSequence(target, decoySequence, positionMapping, false);
         }
 
         /// <summary>
@@ -519,8 +501,8 @@ namespace pwiz.Osprey.Scoring
         }
 
         /// <summary>
-        /// Build a decoy LibraryEntry from a decoy sequence and position mapping.
-        /// Mirrors <see cref="Generate"/>'s construction but takes an already-chosen sequence.
+        /// Build a decoy LibraryEntry from a decoy sequence and position mapping - the one
+        /// construction <see cref="Generate"/> and the collision-checked batch share.
         /// With <paramref name="omitFragments"/> the decoy gets an empty fragment
         /// list (RecalculateFragments is skipped) -- the identity scalars are
         /// unchanged, matching the lean library a StopAfterStage5 worker loads.
@@ -767,8 +749,8 @@ namespace pwiz.Osprey.Scoring
                 }
             }
 
-            // Fragments are filtered (b/y swap can drop out-of-range or
-            // uncomputable ordinals), so the count is not known up front;
+            // Fragments are filtered (an ion spanning a residue with no standard mass
+            // has no m/z), so the count is not known up front;
             // accumulate in a list and return an array.
             return result.Count == 0 ? Array.Empty<LibraryFragment>() : result.ToArray();
         }

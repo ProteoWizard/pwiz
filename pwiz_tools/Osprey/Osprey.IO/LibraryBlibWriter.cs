@@ -37,8 +37,8 @@ namespace pwiz.Osprey.IO
     ///
     /// <para>What survives the round trip: precursor m/z, charge, retention time, fragment m/z
     /// and intensity (both stored at the precision Osprey holds them, though the reader scales
-    /// intensities to a base peak of 1, as a DIA-NN library already is), fragment ion types,
-    /// and proteins. A modification mass is written with at most four decimals; a known
+    /// intensities to a base peak of 1, as a DIA-NN library already is), and proteins. Fragment
+    /// ion types are not stored - the reader computes them from m/z, as Skyline does. A modification mass is written with at most four decimals; a known
     /// modification reads back as its exact mass. Library decoys are recognized by their protein
     /// accession prefix, which is how <c>--decoys-in-library</c> finds them in a blib, so a decoy
     /// whose accessions carry none of the decoy prefixes (a DIA-NN library flags it in a
@@ -56,13 +56,11 @@ namespace pwiz.Osprey.IO
         /// Write <paramref name="entries"/> to a new blib at <paramref name="path"/>, replacing any
         /// file there only once the new one is complete. <paramref name="librarySource"/> names the
         /// library the entries were loaded from, recorded as the spectrum source.
-        /// <paramref name="annotate"/> false leaves out the ion annotations, which is how a
-        /// library without them is made for testing. <paramref name="decoyPrefixes"/> are the
-        /// accession prefixes that mark a library decoy (a search's defaults when none are given).
-        /// Returns the number of spectra written.
+        /// <paramref name="decoyPrefixes"/> are the accession prefixes that mark a library decoy
+        /// (a search's defaults when none are given). Returns the number of spectra written.
         /// </summary>
         public static int Write(string path, IReadOnlyList<LibraryEntry> entries, string librarySource,
-            bool annotate = true, int nThreads = 0, IList<string> decoyPrefixes = null)
+            int nThreads = 0, IList<string> decoyPrefixes = null)
         {
             var parallelOptions = new ParallelOptions
             {
@@ -91,7 +89,7 @@ namespace pwiz.Osprey.IO
                             Parallel.For(0, count, parallelOptions, i =>
                             {
                                 var entry = entries[blockStart + i];
-                                block[i] = BlibSpectrum.FromLibraryEntry(entry, annotate,
+                                block[i] = BlibSpectrum.FromLibraryEntry(entry,
                                     DecoyAccessions(entry, prefixes, decoyPrefix));
                             });
                             for (int i = 0; i < count; i++)
