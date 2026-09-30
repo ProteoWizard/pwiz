@@ -763,8 +763,14 @@ counted together in one pass, below 1000.70 m/z):
 | overlap demultiplexer | 39,355 (+2.5%) | 0.27% | 33,905 |
 | per-channel, solved values written | 36,670 (-4.5%) | 0.20% | 30,945 |
 | **per-channel, apportioned** | **40,009 (+4.2%)** | **0.26%** | **34,501** |
+| per-channel, apportioned, through `--demux auto` | 39,956 (+4.0%) | 0.26% | 34,483 |
 
 - The same channels and weighted solve beat both, at equal FDP: 52 entrapment hits, against 54.
+- The first four rows searched the tool's mzML; the last is Osprey demultiplexing the raw files itself
+  with the weighted engine, the default. Its demultiplexed cache carries every peak of the tool's
+  output unchanged; only record metadata differs (each bin keeps its parent's scan number, and its
+  precursor m/z is the bin center), and the counts differ by run-to-run noise, with the same 52
+  entrapment hits.
 - It shares 31,327 peptides with msconvert, adds 3,174 of its own, and misses 1,818.
 
 **ZT Scan, a slice** (A1, D1 and G1 at 4.1-5.9 min, 500-700 m/z; searched with DIA-NN 2.3.2
