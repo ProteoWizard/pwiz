@@ -360,15 +360,28 @@ internal sealed class WatersRawFile : IDisposable
     /// Returns the lockmass function index, or null if the file has no lockmass function.
     /// Cached after the first lookup since the answer doesn't change for an open file.
     /// </summary>
+    /// <remarks>
+    /// Locked because callers differ in what they hold: spectrum reads ask while serialized
+    /// against the SDK, CalibrationSpectraAreOmitted asks from whatever thread wants to know. An
+    /// unguarded cache let a second caller see the checked flag before the value was stored and
+    /// report no lockmass function, and let two threads into the SDK call at once - the race
+    /// cpp's SpectrumList_Waters closed by resolving this in its constructor.
+    /// </remarks>
     public int? GetLockMassFunction()
     {
-        if (_lockmassChecked) return _lockmassFunction;
-        _lockmassChecked = true;
-        if (NativeMethods.getLockMassFunction(_info, out bool has, out int which) == 0 && has)
-            _lockmassFunction = which;
-        return _lockmassFunction;
+        lock (_lockmassLock)
+        {
+            if (!_lockmassChecked)
+            {
+                if (NativeMethods.getLockMassFunction(_info, out bool has, out int which) == 0 && has)
+                    _lockmassFunction = which;
+                _lockmassChecked = true;
+            }
+            return _lockmassFunction;
+        }
     }
 
+    private readonly object _lockmassLock = new();
     private bool _lockmassChecked;
     private int? _lockmassFunction;
 

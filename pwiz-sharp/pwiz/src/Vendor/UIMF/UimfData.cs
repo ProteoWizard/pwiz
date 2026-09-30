@@ -239,8 +239,10 @@ public sealed class UimfData : IDisposable
 
     /// <summary>File-level TIC. cpp UIMFReader.cpp:311-322. Walks
     /// <c>DataReader.GetTICByFrame(0,0,0,0)</c> (all-frames sentinel) and pairs each
-    /// frame's TIC value with its retention time.</summary>
-    public (double[] TimeMinutes, double[] Intensities) GetTic()
+    /// frame's TIC value with its retention time. <paramref name="ignoreCalibrationFrames"/> leaves
+    /// out the frames that <c>ReaderConfig.IgnoreCalibrationScans</c> keeps out of the spectrum
+    /// list, so that every TIC point has a spectrum in the output behind it.</summary>
+    public (double[] TimeMinutes, double[] Intensities) GetTic(bool ignoreCalibrationFrames = false)
     {
         ThrowIfDisposed();
         var times = new List<double>(_frameCount);
@@ -248,6 +250,10 @@ public sealed class UimfData : IDisposable
         var ticByFrame = _reader.GetTICByFrame(0, 0, 0, 0);
         foreach (var kv in ticByFrame)
         {
+            if (ignoreCalibrationFrames &&
+                (UimfFrameType)(int)_reader.GetFrameTypeForFrame(kv.Key) == UimfFrameType.Calibration)
+                continue;
+
             times.Add(_reader.GetFrameStartTimeMinutesEstimated(kv.Key));
             intensities.Add(kv.Value);
         }

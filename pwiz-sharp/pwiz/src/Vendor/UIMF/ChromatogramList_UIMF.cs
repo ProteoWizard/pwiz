@@ -18,6 +18,7 @@ namespace Pwiz.Vendor.UIMF;
 public sealed class ChromatogramList_UIMF : ChromatogramListBase
 {
     private readonly UimfData _data;
+    private readonly bool _ignoreCalibrationScans;
 
     /// <summary>DataProcessing emitted as the document's <c>defaultDataProcessingRef</c>.</summary>
     public DataProcessing? Dp { get; set; }
@@ -25,11 +26,13 @@ public sealed class ChromatogramList_UIMF : ChromatogramListBase
     /// <inheritdoc/>
     public override DataProcessing? DataProcessing => Dp;
 
-    /// <summary>Wraps <paramref name="data"/>.</summary>
-    public ChromatogramList_UIMF(UimfData data)
+    /// <summary>Wraps <paramref name="data"/>. <paramref name="ignoreCalibrationScans"/> leaves
+    /// calibration frames out of the TIC, matching the spectrum list.</summary>
+    public ChromatogramList_UIMF(UimfData data, bool ignoreCalibrationScans = false)
     {
         ArgumentNullException.ThrowIfNull(data);
         _data = data;
+        _ignoreCalibrationScans = ignoreCalibrationScans;
     }
 
     /// <inheritdoc/>
@@ -52,9 +55,14 @@ public sealed class ChromatogramList_UIMF : ChromatogramListBase
         var c = new Chromatogram { Index = 0, Id = "TIC" };
         c.Params.Set(CVID.MS_TIC_chromatogram);
 
+        // Calibration frames kept out of the spectrum list must not be summed into the file's TIC
+        // either, or it carries points that no spectrum in the output accounts for
+        bool ignoreCalibrationFrames = _ignoreCalibrationScans &&
+                                       _data.FrameTypes.Contains(UimfFrameType.Calibration);
+
         if (getBinaryData)
         {
-            var (timeMin, intensities) = _data.GetTic();
+            var (timeMin, intensities) = _data.GetTic(ignoreCalibrationFrames);
             c.DefaultArrayLength = timeMin.Length;
 
             var timeArr = new BinaryDataArray();
@@ -65,6 +73,12 @@ public sealed class ChromatogramList_UIMF : ChromatogramListBase
             intensityArr.Data.AddRange(intensities);
             c.BinaryDataArrays.Add(timeArr);
             c.BinaryDataArrays.Add(intensityArr);
+        }
+        else if (ignoreCalibrationFrames)
+        {
+            // Without the arrays there is nothing to count, so ask for them rather than report a
+            // frame count that includes the frames just excluded
+            c.DefaultArrayLength = _data.GetTic(ignoreCalibrationFrames: true).TimeMinutes.Length;
         }
         else
         {

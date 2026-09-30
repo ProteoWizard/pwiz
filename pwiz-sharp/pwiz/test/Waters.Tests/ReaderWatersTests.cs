@@ -214,6 +214,9 @@ public class ReaderWatersTests
 
         ctx.Run(new ReaderTestConfig());
         ctx.Run(new ReaderTestConfig { GlobalChromatogramsAreMs1Only = true, IndexRange = (0, 0) });
+        // MSe_Short has a lockspray function (3), unlike HDDDA_Short_noLM, so only here can the
+        // test show the calibration spectra dropped AND the global TIC no longer summing them.
+        ctx.Run(new ReaderTestConfig { IgnoreCalibrationScans = true });
 
         ctx.Check();
     }
