@@ -205,10 +205,11 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public static Bitmap GetFormImage(Control targetForm)
         {
-            // Copy the screen when it shows the whole form. Otherwise render the form off-screen: there is no
-            // desktop to copy from (e.g. a disconnected Remote Desktop session), the form is not on the monitors
-            // (e.g. the offscreen test mode), or a window of another application covers it. If rendering fails and
-            // the desktop is available, fall back to a screen copy with the covering windows redacted.
+            // Copy the screen when it shows the whole form, still redacting any other application's window in the
+            // edge band IsShownOnScreen ignores. Otherwise render the form off-screen: there is no desktop to copy
+            // from (e.g. a disconnected Remote Desktop session), the form is not on the monitors (e.g. the
+            // offscreen test mode), or a window of another application covers it. If rendering fails and the
+            // desktop is available, fall back to a screen copy with the covering windows redacted.
             if (!IsDesktopAvailable())
             {
                 return RenderControl(GetRenderedControl(targetForm)) ??
@@ -216,7 +217,7 @@ namespace pwiz.Skyline.Util
             }
             var screenRect = GetWindowRectangle(targetForm);
             if (IsShownOnScreen(screenRect, targetForm))
-                return CaptureScreen(screenRect);
+                return CaptureAndRedact(screenRect, targetForm);
             Exception renderException = null;
             try
             {
@@ -386,13 +387,17 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Brings a control's form to the foreground.
+        /// Brings a control's form to the foreground, and a docked form to the front of its pane's tabs.
         /// </summary>
         public static void ActivateForm(Control control)
         {
             User32.SetForegroundWindow(control.Handle);
             var form = control.FindForm();
-            form?.Activate();
+            // DockableForm.Activate hides Form.Activate rather than overriding it, and only it selects the tab
+            if (form is DockableForm dockableForm)
+                dockableForm.Activate();
+            else
+                form?.Activate();
         }
 
         /// <summary>
@@ -491,10 +496,12 @@ namespace pwiz.Skyline.Util
 
         // Returns the control whose area GetWindowRectangle captures from the screen: the pane of a docked form
         // (which includes its caption), the floating window holding a floating form, or else the control itself.
+        // A docked form that is not its pane's selected tab is returned itself: the pane would show another
+        // form, and the hidden form cannot be rendered.
         private static Control GetRenderedControl(Control ctrl)
         {
             if (ctrl is DockableForm dockableForm && IsDocked(dockableForm))
-                return dockableForm.Pane;
+                return ReferenceEquals(dockableForm.Pane.ActiveContent, dockableForm) ? dockableForm.Pane : ctrl;
             return FindParent<FloatingWindow>(ctrl) ?? ctrl;
         }
 

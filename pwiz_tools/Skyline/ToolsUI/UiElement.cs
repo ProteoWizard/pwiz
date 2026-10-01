@@ -1263,16 +1263,19 @@ namespace pwiz.Skyline.ToolsUI
         // between, this off-UI caller releases the UI thread and polls until the form's top-level window is
         // actually the foreground window -- stopping the moment it is, or after the cap if activation was refused.
         // A form still covered by another application's window, or with no desktop to copy from, is rendered
-        // off-screen instead of copied from the screen (see ScreenCapture.GetFormImage).
+        // off-screen instead of copied from the screen (see ScreenCapture.GetFormImage). With no desktop the
+        // activation still selects a docked form's tab, but there is no foreground window to wait for.
         public override System.Drawing.Bitmap CaptureImage()
         {
+            bool desktopAvailable = ScreenCapture.IsDesktopAvailable();
             var topLevelHandle = DialogWatcher.CallFunction(Hwnd, () =>
             {
                 ScreenCapture.ActivateForm(Form);
                 return (FormUtil.FindTopLevelOwner(Form) ?? Form).Handle;
             }, CancellationToken);
             for (int waited = 0;
-                 waited < ACTIVATE_SETTLE_MAX_MILLIS && User32.GetForegroundWindow() != topLevelHandle;
+                 desktopAvailable && waited < ACTIVATE_SETTLE_MAX_MILLIS &&
+                 User32.GetForegroundWindow() != topLevelHandle;
                  waited += ACTIVATE_POLL_MILLIS)
                 Thread.Sleep(ACTIVATE_POLL_MILLIS);
             return DialogWatcher.CallFunction(Hwnd, () =>
