@@ -290,6 +290,12 @@ namespace pwiz.Osprey.Core
         /// <summary>Inter-replicate peak reconciliation settings.</summary>
         public ReconciliationConfig Reconciliation { get; set; } = new ReconciliationConfig();
 
+        /// <summary>
+        /// The optional training export (<c>--training-export</c>), a PerFileRescoring output.
+        /// Off by default, and in no identity hash: off, it is not declared at all.
+        /// </summary>
+        public TrainingExportConfig TrainingExport { get; set; } = new TrainingExportConfig();
+
         /// <summary>Enable the coelution signal pre-filter.</summary>
         public bool PrefilterEnabled { get; set; } = true;
 

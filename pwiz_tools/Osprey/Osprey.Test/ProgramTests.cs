@@ -231,6 +231,108 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(err, expected);
         }
 
+        // - TrainingExport (a selector for PerFileRescoring's export) --
+
+        /// <summary>
+        /// --task TrainingExport validates like the full pipeline it selects (inputs, library,
+        /// output), and the export settings are refused when they cannot apply: given without
+        /// the export they would be silently inert, and a q threshold outside (0, 1] selects
+        /// nothing or everything.
+        /// </summary>
+        [TestMethod]
+        public void TestValidateTrainingExport()
+        {
+            var config = TaskConfigs.ForTask(TrainingExportTask.TASK_NAME);
+            config.InputFiles = new List<string> { "a.mzML" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            Assert.IsNull(Program.ValidateArgs(config));
+            config.OutputBlib = null;
+            StringAssert.Contains(Program.ValidateArgs(config), OspreyCommandArgs.ARG_TASK + TrainingExportTask.TASK_NAME);
+
+            var full = FullPipelineConfig();
+            full.TrainingExport.Enabled = true;
+            full.TrainingExport.MaxQ = 0.05;
+            full.TrainingExport.ClaimantQ = 0.02;
+            full.TrainingExport.WriteXics = true;
+            Assert.IsNull(Program.ValidateArgs(full));
+
+            foreach (Action<TrainingExportConfig> orphan in new Action<TrainingExportConfig>[]
+                     {
+                         e => e.MaxQ = 0.05, e => e.ClaimantQ = 0.02, e => e.WriteXics = true,
+                     })
+            {
+                var withoutExport = FullPipelineConfig();
+                orphan(withoutExport.TrainingExport);
+                StringAssert.Contains(Program.ValidateArgs(withoutExport), OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText);
+            }
+            foreach (double bad in new[] { 0.0, -0.1, 1.5, double.NaN })
+            {
+                var maxQ = FullPipelineConfig();
+                maxQ.TrainingExport.Enabled = true;
+                maxQ.TrainingExport.MaxQ = bad;
+                StringAssert.Contains(Program.ValidateArgs(maxQ), OspreyCommandArgs.ARG_TRAINING_EXPORT_MAX_Q.ArgumentText);
+                var claimantQ = FullPipelineConfig();
+                claimantQ.TrainingExport.Enabled = true;
+                claimantQ.TrainingExport.ClaimantQ = bad;
+                StringAssert.Contains(Program.ValidateArgs(claimantQ), OspreyCommandArgs.ARG_TRAINING_EXPORT_CLAIMANT_Q.ArgumentText);
+            }
+
+            AssertTrainingExportUnderOtherSelections();
+        }
+
+        /// <summary>
+        /// HPC wrappers hand every node the same options, so <c>--training-export</c> under a
+        /// selection that leaves the export out is not an error - but the startup line must not
+        /// announce an export the run will not write. It names the export where it runs, and
+        /// elsewhere says where it does.
+        /// </summary>
+        private static void AssertTrainingExportUnderOtherSelections()
+        {
+            var straight = FullPipelineConfig();
+            straight.TrainingExport.Enabled = true;
+            string runs = Program.DescribeTrainingExport(straight);
+            Assert.IsNotNull(runs);
+            // The export is a product of PerFileRescoring, so a node running that task writes it.
+            Assert.AreEqual(runs, Program.DescribeTrainingExport(ExportNode(TrainingExportTask.TASK_NAME)));
+            Assert.AreEqual(runs, Program.DescribeTrainingExport(ExportNode(PerFileRescoreTask.TASK_NAME)));
+            Assert.IsNull(Program.DescribeTrainingExport(FullPipelineConfig()), @"no line at all with the option off");
+            string elsewhere = string.Format(OspreyResources.Program_DescribeTrainingExport_Training_export__not_written_by_this_run___0__writes_it_under__1___2___1___3__or_a_run_without__1__,
+                OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText, OspreyCommandArgs.ARG_TASK.ArgumentText,
+                TrainingExportTask.TASK_NAME, PerFileRescoreTask.TASK_NAME);
+            foreach (string taskName in new[]
+                     {
+                         SpectraCacheTask.TASK_NAME, PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME,
+                         SecondPassFdrTask.TASK_NAME, ModelDiagnosticsTask.TASK_NAME,
+                     })
+            {
+                var node = ExportNode(taskName);
+                Assert.AreEqual(elsewhere, Program.DescribeTrainingExport(node), taskName + @" does not run the export");
+                string err = Program.ValidateArgs(node);
+                Assert.IsTrue(err == null || !err.Contains(OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText),
+                    taskName + @" must accept --training-export: " + err);
+            }
+        }
+
+        private static OspreyConfig ExportNode(string taskName)
+        {
+            var config = TaskConfigs.ForTask(taskName);
+            config.InputFiles = new List<string> { "a.mzML", "b.mzML" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            config.TrainingExport.Enabled = true;
+            return config;
+        }
+
+        private static OspreyConfig FullPipelineConfig()
+        {
+            var config = TaskConfigs.StraightThrough();
+            config.InputFiles = new List<string> { "a.mzML" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            return config;
+        }
+
         // - PerFileScoring (mzML in) --
 
         [TestMethod]
@@ -492,7 +594,8 @@ namespace pwiz.Osprey.Test
                 new[]
                 {
                     SpectraCacheTask.TASK_NAME, PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME,
-                    PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME, ModelDiagnosticsTask.TASK_NAME
+                    PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME, TrainingExportTask.TASK_NAME,
+                    ModelDiagnosticsTask.TASK_NAME
                 },
                 OspreyCommandArgs.ARG_TASK.Values);
 
@@ -528,6 +631,7 @@ namespace pwiz.Osprey.Test
                 (FirstPassFdrTask.TASK_NAME,     true,  false, false),
                 (PerFileRescoreTask.TASK_NAME,   false, false, false),
                 (SecondPassFdrTask.TASK_NAME,    false, true,  false),
+                (TrainingExportTask.TASK_NAME,   false, false, false),
                 (ModelDiagnosticsTask.TASK_NAME, false, false, true),
             };
             Assert.AreEqual(OspreyTasks.Create().All.Count, cases.Length, @"every task has a flags row");
@@ -566,6 +670,11 @@ namespace pwiz.Osprey.Test
             // ... except --model-diagnostics, which is the operator's own flag, not a
             // selection's: ModelDiagnostics implies it but a later selection does not revoke it.
             Assert.IsTrue(reselected.ModelDiagnostics);
+            // --training-export is the same kind of flag: --task TrainingExport implies it, and
+            // nothing else does.
+            Assert.IsTrue(TaskConfigs.ForTask(TrainingExportTask.TASK_NAME).TrainingExport.Enabled);
+            Assert.IsFalse(TaskConfigs.ForTask(SecondPassFdrTask.TASK_NAME).TrainingExport.Enabled);
+            Assert.IsFalse(full.TrainingExport.Enabled);
             // A selection without the pipeline it runs is refused: the two travel together.
             Assert.ThrowsException<ArgumentNullException>(() => new OspreyConfig().SelectTask(secondPass, null));
         }

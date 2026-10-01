@@ -2796,82 +2796,12 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot find the folder of the calibration file for input &apos;{0}&apos;. Re-scoring needs the calibration that PerFileScoring saved for this input..
-        /// </summary>
-        public static string PerFileRescoreTask_LoadMassCalibrations_Cannot_find_the_folder_of_the_calibration_file_for_input___0____Re_scoring_needs_the_ {
-            get {
-                return ResourceManager.GetString("PerFileRescoreTask_LoadMassCalibrations_Cannot_find_the_folder_of_the_calibration" +
-                        "_file_for_input___0____Re_scoring_needs_the_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to read the calibration file {0}: {1}. The file exists but could not be read. Check that it was written by the same version of Osprey..
-        /// </summary>
-        public static string PerFileRescoreTask_LoadMassCalibrations_Failed_to_read_the_calibration_file__0____1___The_file_exists_but_could_not_be_read__ {
-            get {
-                return ResourceManager.GetString("PerFileRescoreTask_LoadMassCalibrations_Failed_to_read_the_calibration_file__0___" +
-                        "_1___The_file_exists_but_could_not_be_read__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The calibration file {0} for input {1} was not found. Re-scoring needs the calibration that PerFileScoring saved for this input. Run --task PerFileScoring for it first, or check the output folder..
-        /// </summary>
-        public static string PerFileRescoreTask_LoadMassCalibrations_The_calibration_file__0__for_input__1__was_not_found__Re_scoring_needs_the_calibration_ {
-            get {
-                return ResourceManager.GetString("PerFileRescoreTask_LoadMassCalibrations_The_calibration_file__0__for_input__1__wa" +
-                        "s_not_found__Re_scoring_needs_the_calibration_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Streaming {1:N0} MS1 and {0:N0} MS/MS spectra from cache for {2}.
         /// </summary>
         public static string PerFileRescoreTask_LoadSpectraForRescore___Streaming__1__MS1_and__0__MS_MS_spectra_from_cache_for__2_ {
             get {
                 return ResourceManager.GetString("PerFileRescoreTask_LoadSpectraForRescore___Streaming__1__MS1_and__0__MS_MS_spectr" +
                         "a_from_cache_for__2_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Re-scoring needs the spectra cache &apos;{0}&apos; that PerFileScoring writes, but {1}. {2}.
-        /// </summary>
-        public static string PerFileRescoreTask_LoadSpectraForRescore_Re_scoring_needs_the_spectra_cache___0___that_PerFileScoring_writes__but__1____2_ {
-            get {
-                return ResourceManager.GetString("PerFileRescoreTask_LoadSpectraForRescore_Re_scoring_needs_the_spectra_cache___0__" +
-                        "_that_PerFileScoring_writes__but__1____2_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Re-scoring needs the spectra cache &apos;{0}&apos; that PerFileScoring writes, but it could not be read: {1}.
-        /// </summary>
-        public static string PerFileRescoreTask_LoadSpectraForRescore_Re_scoring_needs_the_spectra_cache___0___that_PerFileScoring_writes__but_it_could_not_be_ {
-            get {
-                return ResourceManager.GetString("PerFileRescoreTask_LoadSpectraForRescore_Re_scoring_needs_the_spectra_cache___0__" +
-                        "_that_PerFileScoring_writes__but_it_could_not_be_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Run --task PerFileScoring for &apos;{0}&apos; again to rebuild it..
-        /// </summary>
-        public static string PerFileRescoreTask_LoadSpectraForRescore_Run___task_PerFileScoring_for___0___again_to_rebuild_it_ {
-            get {
-                return ResourceManager.GetString("PerFileRescoreTask_LoadSpectraForRescore_Run___task_PerFileScoring_for___0___agai" +
-                        "n_to_rebuild_it_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The cache is written beside its source data, so a --task worker whose --output-dir differs from the data folder must be pointed at it with --cache-dir. Pass --cache-dir &lt;folder holding {0}.spectra.bin&gt;, or run --task PerFileScoring for &apos;{0}&apos; again if no cache was ever written..
-        /// </summary>
-        public static string PerFileRescoreTask_LoadSpectraForRescore_The_cache_is_written_beside_its_source_data__so_a___task_worker_whose___output_dir_ {
-            get {
-                return ResourceManager.GetString("PerFileRescoreTask_LoadSpectraForRescore_The_cache_is_written_beside_its_source_d" +
-                        "ata__so_a___task_worker_whose___output_dir_", resourceCulture);
             }
         }
         
@@ -3146,6 +3076,24 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("PerFileRescoreTask_WriteReconciledAndStamp___Failed_to_remove_the_incomplete_re_s" +
                         "cored_results_file__0__after_a_failed_write___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The training export failed for {0}: {1}.
+        /// </summary>
+        public static string PerFileRescoreTask_WriteTrainingExports_The_training_export_failed_for__0____1_ {
+            get {
+                return ResourceManager.GetString("PerFileRescoreTask_WriteTrainingExports_The_training_export_failed_for__0____1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Training export {0}/{1}: {2}.
+        /// </summary>
+        public static string PerFileRescoreTask_WriteTrainingExports_Training_export__0___1____2_ {
+            get {
+                return ResourceManager.GetString("PerFileRescoreTask_WriteTrainingExports_Training_export__0___1____2_", resourceCulture);
             }
         }
         
@@ -4112,6 +4060,71 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot find the folder of the calibration file for input '{0}'. {1} needs the calibration that PerFileScoring saved for this input..
+        /// </summary>
+        public static string ScoringTaskShared_LoadMassCalibrations_Cannot_find_the_folder_of_the_calibration_file_for_input___0_____1__needs_the_calibration {
+            get {
+                return ResourceManager.GetString("ScoringTaskShared_LoadMassCalibrations_Cannot_find_the_folder_of_the_calibration_file_for_input___0_____1__needs_the_calibration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to read the calibration file {0}: {1}. The file exists but could not be read. Check that it was written by the same version of Osprey..
+        /// </summary>
+        public static string ScoringTaskShared_LoadMassCalibrations_Failed_to_read_the_calibration_file__0____1___The_file_exists_but_could_not_be_read__ {
+            get {
+                return ResourceManager.GetString("ScoringTaskShared_LoadMassCalibrations_Failed_to_read_the_calibration_file__0____1___The_file_exists_but_could_not_be_read__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The calibration file {0} for input {1} was not found. {2} needs the calibration that PerFileScoring saved for this input. Run --task PerFileScoring for it first, or check the output folder..
+        /// </summary>
+        public static string ScoringTaskShared_LoadMassCalibrations_The_calibration_file__0__for_input__1__was_not_found___2__needs_the_calibration {
+            get {
+                return ResourceManager.GetString("ScoringTaskShared_LoadMassCalibrations_The_calibration_file__0__for_input__1__was_not_found___2__needs_the_calibration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} needs the spectra cache '{1}' that PerFileScoring writes, but {2}. {3}.
+        /// </summary>
+        public static string ScoringTaskShared_LoadSpectraForRescore__0__needs_the_spectra_cache___1___that_PerFileScoring_writes__but__2____3_ {
+            get {
+                return ResourceManager.GetString("ScoringTaskShared_LoadSpectraForRescore__0__needs_the_spectra_cache___1___that_PerFileScoring_writes__but__2____3_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} needs the spectra cache '{1}' that PerFileScoring writes, but it could not be read: {2}.
+        /// </summary>
+        public static string ScoringTaskShared_LoadSpectraForRescore__0__needs_the_spectra_cache___1___that_PerFileScoring_writes__but_it_could_not_be_read {
+            get {
+                return ResourceManager.GetString("ScoringTaskShared_LoadSpectraForRescore__0__needs_the_spectra_cache___1___that_PerFileScoring_writes__but_it_could_not_be_read", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Run {1} for '{0}' to rebuild it from its source data..
+        /// </summary>
+        public static string ScoringTaskShared_LoadSpectraForRescore_Run__1__for___0___to_rebuild_it_from_its_source_data_ {
+            get {
+                return ResourceManager.GetString("ScoringTaskShared_LoadSpectraForRescore_Run__1__for___0___to_rebuild_it_from_its" +
+                        "_source_data_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The cache is written beside its source data, so a --task worker whose --output-dir differs from the data folder must be pointed at it with --cache-dir. Pass --cache-dir &lt;folder holding {0}.spectra.bin&gt;, or run {1} for '{0}' if no cache was ever written..
+        /// </summary>
+        public static string ScoringTaskShared_LoadSpectraForRescore_The_cache_is_written_beside_its_source_data__so_a___task_worker_whose___output_dir_ {
+            get {
+                return ResourceManager.GetString("ScoringTaskShared_LoadSpectraForRescore_The_cache_is_written_beside_its_source_d" +
+                        "ata__so_a___task_worker_whose___output_dir_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0:N0} passing target-decoy pairs.
         /// </summary>
         public static string ScoringTaskShared_LogCompaction____0__passing_target_decoy_pairs {
@@ -4724,5 +4737,215 @@ namespace pwiz.Osprey.Tasks {
                 return ResourceManager.GetString("Stage6Planner_ScanFiles_Reconciliation_planning__pass_1_of_2__for_1_file", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exporting isolation windows.
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun_Exporting_isolation_windows {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun_Exporting_isolation_windows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: {1:N0} of {2:N0} fitted precursors did not reproduce the scored median polish cosine..
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun__0____1_N0__of__2_N0__fitted_precursors_did_not_reproduce_the_scored_median_polish_cosine_ {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun__0____1_N0__of__2_N0__fitted_precursors_did_not_reproduce_the_scored_median_polish_cosine_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: {1:N0} target precursors at run q &lt;= {2} ({3:N0} entrapment) of {4:N0} reconciled targets, by the {5} run q, in {6:F1}s.
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun__0____1_N0__target_precursors_at_run_q____2___3_N0__entrapment__of__4_N0__reconciled_targets {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun__0____1_N0__target_precursors_at_run_q____2___3_N0__entrapment__of__4_N0__reconciled_targets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: median polish cosine reproduced for {1:N0} of {2:N0} fitted precursors ({3:N0} exported without a fit).
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun__0___median_polish_cosine_reproduced_for__1_N0__of__2_N0__fitted_precursors {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun__0___median_polish_cosine_reproduced_for__1_N0__of__2_N0__fitted_precursors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: selected by the first-pass run q-values; this run's second pass, if the analysis computes one, comes from {1} after the export, and its q-values can differ..
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun__0___selected_by_the_first_pass_run_q_values__this_run_s_second_pass__if_the_analysis_computes_one__comes_from__1__ {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun__0___selected_by_the_first_pass_run_q_values__thi" +
+                        "s_run_s_second_pass__if_the_analysis_computes_one__comes_from__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: the source file '{1}' is not here or cannot be read, so the instrument, dissociation and collision-energy footer keys are empty..
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun__0___the_source_file___1___is_not_here_or_cannot_be_read__so_the_instrument_ {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun__0___the_source_file___1___is_not_here_or_cannot_be_read__so_the_instrument_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} was written by Osprey {1}, not this build ({2}). Add {3} with the build that ran the analysis, or run the analysis again with this build..
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun__0__was_written_by_Osprey__1___not_this_build___2____Add__3__with_the_build_that_ran_the_analysis_ {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun__0__was_written_by_Osprey__1___not_this_build___2" +
+                        "____Add__3__with_the_build_that_ran_the_analysis_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {1}: 1 precursor had no isolation window holding its apex scan and was not exported..
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun__1___1_precursor_had_no_isolation_window_holding_its_apex_scan_and_was_not_exported_ {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun__1___1_precursor_had_no_isolation_window_holding_" +
+                        "its_apex_scan_and_was_not_exported_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {1}: 1 reconciled target has no library spectrum and was skipped..
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun__1___1_reconciled_target_has_no_library_spectrum_and_was_skipped_ {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun__1___1_reconciled_target_has_no_library_spectrum_" +
+                        "and_was_skipped_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {1}: 1 reconciled target has no run q-value at its final apex in '{2}' and could not be selected..
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun__1___1_reconciled_target_has_no_run_q_value_at_its_final_apex_in___2___and_could_not_be_selected_ {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun__1___1_reconciled_target_has_no_run_q_value_at_it" +
+                        "s_final_apex_in___2___and_could_not_be_selected_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {1}: {0:N0} precursors had no isolation window holding their apex scan and were not exported..
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun__1____0_N0__precursors_had_no_isolation_window_holding_their_apex_scan_and_were_not_exported_ {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun__1____0_N0__precursors_had_no_isolation_window_ho" +
+                        "lding_their_apex_scan_and_were_not_exported_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {1}: {0:N0} reconciled targets have no library spectrum and were skipped..
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun__1____0_N0__reconciled_targets_have_no_library_spectrum_and_were_skipped_ {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun__1____0_N0__reconciled_targets_have_no_library_sp" +
+                        "ectrum_and_were_skipped_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {1}: {0:N0} reconciled targets have no run q-value at their final apex in '{2}' and could not be selected..
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun__1____0_N0__reconciled_targets_have_no_run_q_value_at_their_final_apex_in___2___and_could_not_be_selected_ {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun__1____0_N0__reconciled_targets_have_no_run_q_valu" +
+                        "e_at_their_final_apex_in___2___and_could_not_be_selected_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to first pass.
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun_first_pass {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun_first_pass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to second pass.
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun_second_pass {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun_second_pass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The reconciled scores file '{0}' is missing. The training export reads the final peak boundaries from it..
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun_The_reconciled_scores_file___0___is_missing__The_training_export_ {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun_The_reconciled_scores_file___0___is_missing__The_" +
+                        "training_export_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The training export.
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun_The_training_export {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun_The_training_export", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The intermediate file '{0}' holds two records for precursor candidate {1} at apex RT {2}, so the training export cannot tell which one belongs to that peak..
+        /// </summary>
+        public static string TrainingExportWriter_PairTargets_The_intermediate_file___0___holds_two_records_for_precursor_candidate__1__at_apex_RT__2_ {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_PairTargets_The_intermediate_file___0___holds_two_records_for_precursor_candidate__1__at_apex_RT__2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The reconciled scores file '{0}' holds two peaks for precursor candidate {1} at apex RT {2}, so the training export cannot tell which one the record in '{3}' belongs to..
+        /// </summary>
+        public static string TrainingExportWriter_PairTargets_The_reconciled_scores_file___0___holds_two_peaks_for_precursor_candidate__1__at_ {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_PairTargets_The_reconciled_scores_file___0___holds_two_peak" +
+                        "s_for_precursor_candidate__1__at_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The reconciled scores file '{0}' names precursor candidate {1} as {2} {3}+, but in the library precursor candidate {1} is {4} {5}+. The file was scored against another library, or by a build that numbered the library differently. Run the search again against this library before exporting..
+        /// </summary>
+        public static string TrainingExportWriter_PairTargets_The_reconciled_scores_file___0___names_precursor_candidate__1__as__2___3____ {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_PairTargets_The_reconciled_scores_file___0___names_precurso" +
+                        "r_candidate__1__as__2___3____", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The intermediate file '{0}' is missing or unreadable..
+        /// </summary>
+        public static string TrainingExportWriter_ReadRunQ_The_intermediate_file___0___is_missing_or_unreadable_ {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ReadRunQ_The_intermediate_file___0___is_missing_or_unreadable_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The library is empty after loading..
+        /// </summary>
+        public static string TrainingExportWriter_ResolveTargets_The_library_is_empty_after_loading_ {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ResolveTargets_The_library_is_empty_after_loading_", resourceCulture);
+            }
+        }
+
     }
 }
