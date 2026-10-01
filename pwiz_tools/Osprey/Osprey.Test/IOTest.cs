@@ -3417,9 +3417,10 @@ namespace pwiz.Osprey.Test
         /// <para>A single-shot round-trip cannot see a defect this rare - it surfaced as a ~2%
         /// failure across four unrelated tests. Iterating in-process is what turns hours of
         /// full-suite soaking into seconds. Cheap by default (25 iterations) so it costs the
-        /// gate nothing; set <c>OSPREY_PARQUET_STRESS_ITERS</c> to sweep harder. Parquet.Net 6
-        /// writes the columns one after another, so the race it guarded against is gone, but
-        /// the round-trip is still worth its seconds.</para>
+        /// gate nothing; set <c>OSPREY_PARQUET_STRESS_ITERS</c> to sweep harder. The 6.1.0 fork
+        /// had the same bug, fixed in 6.1.0-osprey3, and Osprey prepares a row group's columns
+        /// concurrently on it too. On .NET 10 this test did not catch the unfixed fork in 5,000
+        /// iterations, so it is a round-trip check rather than a guard for that fix.</para>
         /// </summary>
         [TestMethod]
         public void TestParquetRoundTripScalarStress()

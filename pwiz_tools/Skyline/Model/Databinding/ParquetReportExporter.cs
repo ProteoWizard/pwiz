@@ -21,6 +21,7 @@ using Parquet.Schema;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -47,9 +48,22 @@ namespace pwiz.Skyline.Model.Databinding
                 CompressionMethod = CompressionMethod.Zstd,
                 // Parquet.Net's default is SmallestSize, which is Zstd level 19 and many times slower
                 // than the level 3 that Optimal maps to, for a few percent smaller file
-                CompressionLevel = CompressionLevel.Optimal
+                CompressionLevel = CompressionLevel.Optimal,
+                // Parquet.Net 6 only dictionary-encodes a column when asked to, and decides by scanning the
+                // column's values; a sample of this many rows rejects a mostly unique column without the full scan
+                DictionaryEncodingSampleSize = 10000
             };
-            var writer = ParquetWriter.CreateAsync(schema, stream, options).GetAwaiter().GetResult();
+            // The strings in a report are mostly repeated (protein, peptide, replicate and file names),
+            // which Parquet.Net 4 dictionary-encoded without being asked. List columns are left plain
+            // because some readers cannot decode dictionary-encoded lists.
+            foreach (var column in columns.Where(col => col.ListElementType == null && col.StorageType == typeof(string)))
+            {
+                options.ColumnEncodingHints[column.DataField.Path.ToString()] = EncodingHint.Dictionary;
+            }
+            // Parquet.Net 6 does not use ConfigureAwait(false) when it writes the file's header and footer,
+            // so blocking on it from a thread with a WinForms SynchronizationContext would deadlock
+            var writer = ActionUtil.CallWithoutSynchronizationContext(() =>
+                ParquetWriter.CreateAsync(schema, stream, options).GetAwaiter().GetResult());
             using var writeWorker = new QueueWorker<Array[]>(
                 consume: (chunkArrays, threadIndex) =>
                 {
@@ -95,7 +109,13 @@ namespace pwiz.Skyline.Model.Databinding
                 writeWorker.Add(chunkArrays);
             }
 
-            writeWorker.DoneAdding(wait: true);
+            // After the writer thread fails it has already queued the null which stops it, and nothing takes
+            // from the queue any more, so adding another one would block forever. Disposing the worker clears
+            // the queue before it waits for the thread to exit.
+            if (writeWorker.Exception == null)
+            {
+                writeWorker.DoneAdding(wait: true);
+            }
             if (writeWorker.Exception != null)
             {
                 throw writeWorker.Exception;
@@ -103,7 +123,7 @@ namespace pwiz.Skyline.Model.Databinding
             // Disposing the writer writes the file's footer, so it is not disposed when the export fails:
             // that would throw again and hide the exception which says why. The writer holds nothing but
             // the caller's stream.
-            writer.DisposeAsync().GetAwaiter().GetResult();
+            ActionUtil.CallWithoutSynchronizationContext(() => writer.DisposeAsync().GetAwaiter().GetResult());
         }
 
         private List<ColumnData> BuildColumns(ItemProperties itemProperties)
@@ -238,8 +258,7 @@ namespace pwiz.Skyline.Model.Databinding
                 else
                 {
                     StorageType = DecideStorageType(valueType);
-                    // Parquet.Net 6 only makes a field nullable by itself for a Nullable<T>, not a string
-                    DataField = new DataField(Name, StorageType, isNullable: true);
+                    DataField = new DataField(Name, StorageType);
                     SchemaField = DataField;
                 }
             }
@@ -276,14 +295,14 @@ namespace pwiz.Skyline.Model.Databinding
                         ? typeof(ReadOnlyMemory<char>)
                         : Nullable.GetUnderlyingType(ElementStorageType);
                     return (Task) WRITE_LIST_COLUMN_METHOD.MakeGenericMethod(elementType)
-                        .Invoke(null, new object[] { groupWriter, DataField, chunkArray });
+                        .Invoke(null, BindingFlags.DoNotWrapExceptions, null, new object[] { groupWriter, DataField, chunkArray }, null);
                 }
                 if (StorageType == typeof(string))
                 {
                     return groupWriter.WriteAsync(DataField, (string[]) chunkArray);
                 }
                 return (Task) WRITE_NULLABLE_COLUMN_METHOD.MakeGenericMethod(Nullable.GetUnderlyingType(StorageType))
-                    .Invoke(null, new object[] { groupWriter, DataField, chunkArray });
+                    .Invoke(null, BindingFlags.DoNotWrapExceptions, null, new object[] { groupWriter, DataField, chunkArray }, null);
             }
 
             public void StoreValue(RowItem rowItem, int rowIndex, Array values)

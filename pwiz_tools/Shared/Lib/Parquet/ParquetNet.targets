@@ -8,8 +8,9 @@
     skylinedev/Parquet.Net6 - a SIBLING checkout under the same project root as pwiz,
     not a folder inside this repo. BUILD.md there says how it is built and
     PATCH-NOTES.md what it changes: upstream 6.1.0 plus the ThriftCompactProtocolReader
-    struct-skip fix (a defensive read fix), and a split of writing a column into preparing
-    it in memory and appending it to the file (added public API; written bytes unchanged).
+    struct-skip fix (a defensive read fix), a split of writing a column into preparing
+    it in memory and appending it to the file (added public API; written bytes unchanged),
+    and a fix to the narrow integer encoders, which were not safe to run concurrently.
 
     Why a copy rather than a Reference alone: on .NET the host resolves an assembly from
     the file whose name matches the assembly name, and this assembly is "Parquet". The
@@ -30,8 +31,10 @@
   -->
   <ItemGroup Condition="'$(ReferenceParquetNet)' == 'true'">
     <PackageReference Include="Parquet.Net" Version="6.1.0" ExcludeAssets="compile" />
-    <Reference Include="Parquet">
-      <HintPath>$(MSBuildThisFileDirectory)ParquetNet.dll</HintPath>
+    <!-- A full path, not "Parquet" with a HintPath: a simple name lets ResolveAssemblyReference
+         bind to any Parquet.dll among a project's Content items first, and Skyline deploys
+         BlibBuild's output folder as Content. -->
+    <Reference Include="$(MSBuildThisFileDirectory)ParquetNet.dll">
       <Private>false</Private>
     </Reference>
   </ItemGroup>

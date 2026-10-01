@@ -61,9 +61,9 @@ namespace pwiz.Skyline.Util.Extensions
         /// waiting for the result, so neither ever runs. With no context installed the
         /// continuations resume on the thread pool instead, and the blocking call finishes.
         ///
-        /// Parquet.Net's reader is one of these. ParquetReader.CreateAsync(...).GetAwaiter()
+        /// Parquet.Net is one of these. ParquetReader.CreateAsync(...).GetAwaiter()
         /// .GetResult() deadlocks on any thread with such a context, and an ordinary warm read
-        /// is enough to trigger it. Its writer does not, so exporting needs nothing.
+        /// is enough to trigger it. Since 6.x the writer's CreateAsync and DisposeAsync do too.
         ///
         /// Note that this only removes the deadlock, not the blocking. The calling thread
         /// still waits, so this is not a way to do slow work on the UI thread.
@@ -80,6 +80,19 @@ namespace pwiz.Skyline.Util.Extensions
             {
                 SynchronizationContext.SetSynchronizationContext(saveContext);
             }
+        }
+
+        /// <summary>
+        /// Calls an action with no SynchronizationContext installed on this thread.
+        /// See <see cref="CallWithoutSynchronizationContext{T}"/>.
+        /// </summary>
+        public static void CallWithoutSynchronizationContext(Action action)
+        {
+            CallWithoutSynchronizationContext(() =>
+            {
+                action();
+                return true;
+            });
         }
     }
 }

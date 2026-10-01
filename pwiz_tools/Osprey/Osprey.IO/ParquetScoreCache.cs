@@ -27,9 +27,11 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Parquet;
 using Parquet.Schema;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -343,6 +345,12 @@ namespace pwiz.Osprey.IO
         // force several row groups from a handful of rows and assert the multi-group
         // round-trip is logically identical. Always null in production.
         internal static int? RowGroupRowCapForTest;
+
+        // Columns of a row group to compress concurrently. Output is identical at any value -
+        // only the append is ordered - so this is purely a speed/memory trade. Defaults to the
+        // core count; 1 prepares the columns one at a time through the same code, which is how
+        // an A/B against the golden is taken.
+        private static readonly int ParquetWriteThreads = ResolveParquetWriteThreads();
 
         /// <summary>
         /// Write scored entries to a Parquet file.
@@ -702,25 +710,60 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// One column of a row group, written to the group in schema order. Parquet.Net 6
-        /// writes typed memory rather than a DataColumn it inspects, so a column is the
-        /// write itself.
+        /// One column of a row group: encodes and compresses the column into memory, ready to
+        /// be appended to the group in schema order. Parquet.Net 6 writes typed memory rather
+        /// than a DataColumn it inspects, so a column is the preparation itself.
         /// </summary>
-        private delegate Task ColumnWriter(ParquetRowGroupWriter group);
+        private delegate Task<PreparedColumn> ColumnWriter(ParquetRowGroupWriter group);
 
         private static ColumnWriter Column<T>(DataField field, T[] values) where T : struct
         {
-            return group => group.WriteAsync(field, new ReadOnlyMemory<T>(values));
+            return group => group.PrepareColumnAsync(field, new ReadOnlyMemory<T>(values), null, null, CancellationToken.None);
         }
 
         private static ColumnWriter Column(DataField field, string[] values)
         {
-            return group => group.WriteAsync(field, (IReadOnlyCollection<string>) values);
+            return group => PrepareNullableColumn(group, field, values, s => s.AsMemory());
         }
 
         private static ColumnWriter Column(DataField field, byte[][] values)
         {
-            return group => group.WriteAsync(field, (IReadOnlyCollection<byte[]>) values);
+            return group => PrepareNullableColumn(group, field, values, b => new ReadOnlyMemory<byte>(b));
+        }
+
+        /// <summary>
+        /// Prepares a column of reference values. PrepareColumnAsync takes the values which are not
+        /// null packed together, with a definition level per row saying which rows were null.
+        /// </summary>
+        private static Task<PreparedColumn> PrepareNullableColumn<TValue, TStorage>(ParquetRowGroupWriter group,
+            DataField field, TValue[] values, Func<TValue, TStorage> toStorage)
+            where TValue : class where TStorage : struct
+        {
+            var storageValues = new List<TStorage>(values.Length);
+            int[] definitionLevels = null;
+            if (field.IsNullable)
+            {
+                definitionLevels = new int[values.Length];
+                for (int i = 0; i < values.Length; i++)
+                {
+                    if (values[i] == null)
+                    {
+                        definitionLevels[i] = field.MaxDefinitionLevel - 1;
+                    }
+                    else
+                    {
+                        definitionLevels[i] = field.MaxDefinitionLevel;
+                        storageValues.Add(toStorage(values[i]));
+                    }
+                }
+            }
+            else
+            {
+                foreach (var value in values)
+                    storageValues.Add(toStorage(value));
+            }
+            return group.PrepareColumnAsync(field, new ReadOnlyMemory<TStorage>(storageValues.ToArray()),
+                definitionLevels, null, CancellationToken.None);
         }
 
         /// <summary>
@@ -750,7 +793,7 @@ namespace pwiz.Osprey.IO
                     string.Format(OspreyIOResources.ParquetScoreCache_WriteChunkedParquet_Writing__0__precursor_candidate_peaks, totalRows), totalRows, string.Empty,
                     ProgressReporter.IO_INTERVAL_SECONDS))
                 {
-                    var writer = RunSync(ParquetWriter.CreateAsync(schema, stream, WriteOptions()));
+                    var writer = RunSync(ParquetWriter.CreateAsync(schema, stream, WriteOptions(schema)));
 
                     // Set custom metadata if provided
                     if (metadata != null && metadata.Count > 0)
@@ -777,27 +820,61 @@ namespace pwiz.Osprey.IO
             }
         }
 
-        private static ParquetOptions WriteOptions()
+        private static ParquetOptions WriteOptions(ParquetSchema schema)
         {
-            return new ParquetOptions
+            var options = new ParquetOptions
             {
                 CompressionMethod = CompressionMethod.Zstd,
                 // Parquet.Net's default is SmallestSize, Zstd level 19, which is many times
-                // slower than the level 3 that Optimal maps to (and the 4.x writer used) for
-                // a few percent smaller file.
-                CompressionLevel = CompressionLevel.Optimal
+                // slower than the level 3 that Optimal maps to for a few percent smaller file.
+                CompressionLevel = CompressionLevel.Optimal,
+                // Parquet.Net 6 only dictionary-encodes a column when asked to, and decides by
+                // scanning its values; a sample of this many rows rejects a mostly unique column
+                // without the full scan
+                DictionaryEncodingSampleSize = 10000
             };
+            // file_name is one value per file and protein_ids and the sequences repeat across a
+            // precursor's candidate peaks, which Parquet.Net 4 dictionary-encoded without being asked
+            foreach (var field in schema.GetDataFields().Where(f => f.ClrType == typeof(string)))
+                options.ColumnEncodingHints[field.Path.ToString()] = EncodingHint.Dictionary;
+            return options;
         }
 
         /// <summary>
         /// Write the assembled <paramref name="columns"/> to <paramref name="group"/> in the
-        /// <see cref="BuildRowGroupColumns"/> order, one after another: Parquet.Net 6 has no
-        /// concurrent column write. The parquet bytes within the group are exactly that order.
+        /// <see cref="BuildRowGroupColumns"/> order. Encoding and compressing a column is most
+        /// of the cost and touches nothing shared, so the columns are prepared concurrently on
+        /// <see cref="ParquetWriteThreads"/> threads and then appended one after another. The
+        /// parquet bytes within the group are exactly that order, at any thread count.
         /// </summary>
         private static void WriteRowGroupColumns(ParquetRowGroupWriter group, List<ColumnWriter> columns)
         {
-            foreach (var column in columns)
-                RunSync(column(group));
+            var prepared = new PreparedColumn[columns.Count];
+            try
+            {
+                ParallelEx.For(0, columns.Count, i => prepared[i] = RunSync(columns[i](group)),
+                    maxThreads: ParquetWriteThreads, threadName: @"Parquet column");
+                for (int i = 0; i < prepared.Length; i++)
+                {
+                    // Writing it disposes it
+                    var column = prepared[i];
+                    prepared[i] = null;
+                    RunSync(group.WritePreparedColumnAsync(column, CancellationToken.None));
+                }
+            }
+            finally
+            {
+                foreach (var column in prepared)
+                    column?.Dispose();
+            }
+        }
+
+        private static int ResolveParquetWriteThreads()
+        {
+            string raw = Environment.GetEnvironmentVariable(@"OSPREY_PARQUET_WRITE_THREADS");
+            if (!string.IsNullOrEmpty(raw) && int.TryParse(raw, out int n) && n > 0)
+                return n;
+            return Environment.ProcessorCount;
         }
 
         /// <summary>
@@ -1691,7 +1768,7 @@ namespace pwiz.Osprey.IO
                     OspreyIOResources.ParquetScoreCache_static_Writing_precursor_candidate_peaks, totalRows, progressIndent,
                     ProgressReporter.IO_INTERVAL_SECONDS))
                 {
-                    var writer = RunSync(ParquetWriter.CreateAsync(schema, writeStream, WriteOptions()));
+                    var writer = RunSync(ParquetWriter.CreateAsync(schema, writeStream, WriteOptions(schema)));
                     if (metadata != null && metadata.Count > 0)
                         writer.CustomMetadata = metadata;
 
