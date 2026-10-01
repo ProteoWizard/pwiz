@@ -338,7 +338,15 @@ namespace pwiz.SkylineTest
             {
                 Assert.IsTrue(tips.Contains(nickname.Key));
             }
-        
+
+            // Ion charge keys are matched exactly against what users type, so an invisible or look-alike character
+            // in a key makes it unmatchable without any error.
+            foreach (var ionCharge in Adduct.DICT_ADDUCT_ION_CHARGES)
+            {
+                AssertEx.IsTrue(ionCharge.Key.All(ch => ch < 128 && char.IsLetterOrDigit(ch)),
+                    "Ion charge key is not plain ASCII letters and digits: " + ionCharge.Key);
+            }
+
         }
 
         private static void CheckLabel(string label)
