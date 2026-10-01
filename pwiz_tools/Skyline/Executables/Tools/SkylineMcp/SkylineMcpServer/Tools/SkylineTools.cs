@@ -711,8 +711,8 @@ public static class SkylineTools
         "which differs from the one asked for when the window has a minimum or maximum size.")]
     public static string ResizeWindow(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
-        [Description("Outer width in screen pixels, border included")] int width,
-        [Description("Outer height in screen pixels, border and title bar included")] int height)
+        [Description("Outer width in pixels, border included")] int width,
+        [Description("Outer height in pixels, border and title bar included")] int height)
     {
         return Invoke(connection =>
         {

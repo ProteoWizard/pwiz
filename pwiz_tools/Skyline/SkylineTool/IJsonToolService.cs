@@ -499,8 +499,8 @@ namespace SkylineTool
         /// arrange those with "File > Import > Window Layout".
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
-        /// <param name="width">The outer width in screen pixels, border included.</param>
-        /// <param name="height">The outer height in screen pixels, border and title bar included.</param>
+        /// <param name="width">The outer width in pixels, border included.</param>
+        /// <param name="height">The outer height in pixels, border and title bar included.</param>
         /// <returns>The size the window ended up at, which is smaller or larger than asked when the window
         /// has a minimum or maximum size.</returns>
         WindowSize ResizeWindow(string formId, int width, int height);

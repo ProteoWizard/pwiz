@@ -294,9 +294,7 @@ namespace pwiz.Skyline.ToolsUI
                 else
                 {
                     var elementRef = ElementRefs.FromObjectReference(ElementLocator.Parse(elementLocatorString));
-                    // Navigation falls back to the nearest ancestor that exists, which would report success
-                    // with something else selected
-                    if (elementRef is NodeRef nodeRef && nodeRef.ToIdentityPath(skylineWindow.DocumentUI) == null)
+                    if (!IsInDocument(elementRef, skylineWindow.DocumentUI))
                         throw NoSuchElement(elementLocatorString);
                     // Full navigation (bookmark, replicate, scroll)
                     skylineWindow.SelectElement(elementRef);
@@ -329,6 +327,30 @@ namespace pwiz.Skyline.ToolsUI
                     skylineWindow.SequenceTree.SelectedPaths = allPaths;
                 }
             });
+        }
+
+        // Whether the element an ElementRef names is in the document. Navigation to a missing node falls back to
+        // the nearest ancestor that exists, and navigation to a missing replicate or result file does nothing,
+        // either of which would report success with something else selected.
+        private static bool IsInDocument(ElementRef elementRef, SrmDocument document)
+        {
+            switch (elementRef)
+            {
+                case NodeRef nodeRef:
+                    return nodeRef.ToIdentityPath(document) != null;
+                case ReplicateRef replicateRef:
+                    return replicateRef.FindChromatogramSet(document) != null;
+                case ResultFileRef resultFileRef:
+                    var chromatogramSet = ((ReplicateRef) resultFileRef.Parent).FindChromatogramSet(document);
+                    return chromatogramSet != null && chromatogramSet.MSDataFilePaths.Any(resultFileRef.Matches);
+                case ResultRef resultRef:
+                    int replicateIndex = resultRef.FindReplicateIndex(document);
+                    return replicateIndex >= 0 &&
+                           resultRef.FindChromFileInfo(document.Settings.MeasuredResults.Chromatograms[replicateIndex]) != null &&
+                           IsInDocument(resultRef.Parent, document);
+                default:
+                    return true;
+            }
         }
 
         private static Exception NoSuchElement(string elementLocator)

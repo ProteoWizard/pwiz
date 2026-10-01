@@ -1265,23 +1265,30 @@ namespace pwiz.Skyline.ToolsUI
         // controls report not-visible - is still found. Must be called on the form's UI thread.
         internal GraphElement FindGraph()
         {
-            var zedGraph = Form is DockableFormEx dockable ? JsonUiService.TryGetZedGraphControl(dockable) : null;
+            var zedGraph = TryGetGraphControl();
             if (zedGraph != null)
                 return (GraphElement) ElementFor(zedGraph);
-            // A dialog showing one graph among its other controls (e.g. Edit Peak Scoring Model, the Spectral
-            // Library Explorer) -- the one currently visible
-            var graphs = VisibleControls(Form).OfType<ZedGraph.ZedGraphControl>().ToList();
-            if (graphs.Count == 1)
-                return (GraphElement) ElementFor(graphs[0]);
             throw new ArgumentException(LlmInstruction.Format(
                 @"Not a graph form: {0}. Use skyline_get_open_forms to find forms with HasGraph=True.", FormId));
         }
 
+        // The graph of a graph pane, or of a dialog showing one graph among its other controls (e.g. Edit Peak
+        // Scoring Model, the Spectral Library Explorer) -- the one currently visible; null for any other form.
+        private ZedGraph.ZedGraphControl TryGetGraphControl()
+        {
+            if (Form is DockableFormEx dockable)
+                return JsonUiService.TryGetZedGraphControl(dockable);
+            var graphs = VisibleControls(Form).OfType<ZedGraph.ZedGraphControl>().Take(2).ToList();
+            return graphs.Count == 1 ? graphs[0] : null;
+        }
+
+        // The visible controls of a form, not counting those of the forms it hosts (the main window's docked
+        // panes), which are forms of their own.
         private static IEnumerable<Control> VisibleControls(Control parent)
         {
             foreach (Control control in parent.Controls)
             {
-                if (!control.Visible)
+                if (!control.Visible || control is Form)
                     continue;
                 yield return control;
                 foreach (var inner in VisibleControls(control))
@@ -1442,8 +1449,7 @@ namespace pwiz.Skyline.ToolsUI
                 return formInfo;    // another thread owns this form: report only what is safe to read from here
 
             formInfo.DockState = GetDockState();
-            formInfo.HasGraph = Form is DockableFormEx dockableForm &&
-                                null != JsonUiService.TryGetZedGraphControl(dockableForm);
+            formInfo.HasGraph = TryGetGraphControl() != null;
             // What the form SAYS -- an alert's text -- so a caller listing the forms can see that one is in the way,
             // and why, without capturing an image of it. Only for a form that says something beyond its own title (a
             // CommonFormEx: an alert, an error); a plain form's DetailedMessage IS its title.
