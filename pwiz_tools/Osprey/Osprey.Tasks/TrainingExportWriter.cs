@@ -24,6 +24,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using pwiz.Osprey.Chromatography;
@@ -130,9 +131,20 @@ namespace pwiz.Osprey.Tasks
             var perWindow = new List<TrainingRecord>[windows.Count];
             var observed = new double[windows.Count][];
             var provider = new StreamingWindowSpectraProvider(index, ms2Cal);
-            Parallel.For(0, windows.Count, new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, maxThreads) },
-                w => perWindow[w] = ExportWindow(windows[w], provider, targets, maxQ, claimantQ, evidenceSettings,
-                    rtNeighborhood, ddcTolerance, ddcUnit, out observed[w]));
+            // Reported like the rescore's windows: from disk, without the rescore having just
+            // streamed them, a run's windows take about a minute on cohort-scale data, and a
+            // silent minute per run reads as a hang.
+            int nDone = 0;
+            using (var progress = new ProgressReporter(OspreyTasksResources.TrainingExportWriter_ExportRun_Exporting_isolation_windows,
+                       windows.Count, @"  ", 2.0))
+            {
+                Parallel.For(0, windows.Count, new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, maxThreads) }, w =>
+                {
+                    perWindow[w] = ExportWindow(windows[w], provider, targets, maxQ, claimantQ, evidenceSettings,
+                        rtNeighborhood, ddcTolerance, ddcUnit, out observed[w]);
+                    progress.Report(Interlocked.Increment(ref nDone));
+                });
+            }
 
             var records = perWindow.Where(list => list != null).SelectMany(list => list)
                 .OrderBy(r => r.EntryId).ToList();
