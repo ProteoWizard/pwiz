@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
 
@@ -994,6 +995,17 @@ namespace pwiz.Osprey.FDR
             var contribAcc = new FeatureContributions.Accumulator(nFeatures, percConfig.CollectFeatureHistograms);
             int nonEmptyFiles = 0;
             int g1 = 0;
+            // Pass-1 cost attribution, same [PATH] diagnostic treatment as pass 2 below. The
+            // run-q timer is the one that matters: this pass calls the SAME per-file sort on the
+            // SAME rows that pass 2 no longer calls, so it measures directly what reading the
+            // q-values off the sidecar saves - rather than inferring it from two wall clocks on
+            // a shared machine.
+            var swWalk1 = new Stopwatch();
+            var swSidecar1 = new Stopwatch();
+            var swScore1 = new Stopwatch();
+            var swRunQ1 = new Stopwatch();
+            var swClamp1 = new Stopwatch();
+            var swFlush1 = new Stopwatch();
             // No "Running Percolator on N" heading here: it would print AFTER the training lines
             // above, reading as a second Percolator pass. The score heading below marks the step.
             // Fill the previously-silent multi-minute streaming score pass with throttled percent,
@@ -1008,7 +1020,9 @@ namespace pwiz.Osprey.FDR
                 buffer.Clear();
                 // The ONE walk that needs it: this pass hands the file's finished run-scope
                 // output to flushFileRunScope, which writes the v7 sidecar.
+                swWalk1.Start();
                 streamFileRows(fileNames[f], StubColumns.ApexRt, buffer.Add);
+                swWalk1.Stop();
                 int count = buffer.Count;
                 if (count > 0)
                     nonEmptyFiles++;
@@ -1017,8 +1031,10 @@ namespace pwiz.Osprey.FDR
                 // file could read them back, but here they feed only the clamp-floor reduction,
                 // so the saving would be confined to a resume while the blast radius would be
                 // global state rather than one row's output.
+                swSidecar1.Start();
                 double[] doneScores = TryLoadCompletedScores(
                     tryStreamCompletedScores, fileNames[f], count, buffer.EntryIds, out _, out _);
+                swSidecar1.Stop();
                 IReadOnlyList<double[]> rows = doneScores == null ? loadFileFeatures(fileNames[f]) : null;
                 var fScores = new double[count];
                 var fLabels = new bool[count];
@@ -1029,6 +1045,7 @@ namespace pwiz.Osprey.FDR
                 // contract says the arrays are consumed synchronously - the same rule the other
                 // four already follow.
                 var fApexRts = new double[count];
+                swScore1.Start();
                 for (int r = 0; r < count; r++)
                 {
                     // ComputeStreamedScore leaves featureBuf standardized, which contribAcc bins.
@@ -1052,15 +1069,20 @@ namespace pwiz.Osprey.FDR
                     g1++;
                     scoreProgress.Report(g1);
                 }
+                swScore1.Stop();
+                swRunQ1.Start();
                 PercolatorQValues.ComputePerFileRunQvalues(
                     fScores, fLabels, fEntryIds, fPeptides, 0, count,
                     out double[] runPrecFile, out double[] runPeptFile);
+                swRunQ1.Stop();
+                swClamp1.Start();
                 for (int r = 0; r < count; r++)
                 {
                     double runBoth = Math.Max(runPrecFile[r], runPeptFile[r]);
                     PercolatorQValues.UpdateExperimentQClampFloor(
                         minRunBothByEntryId, minRunBothByPeptide, fEntryIds[r], fPeptides[r], fLabels[r], runBoth);
                 }
+                swClamp1.Stop();
 
                 // This file's run-scope output is COMPLETE here - score, run precursor q and run
                 // peptide q are all final, and none of them depends on another file. Hand it to
@@ -1069,9 +1091,18 @@ namespace pwiz.Osprey.FDR
                 // FileRunScopeSink). Skipped when the scores came off an existing sidecar: that
                 // file is already written, and rewriting an artifact a validity marker attests
                 // would replace it with a copy the marker no longer describes.
+                swFlush1.Start();
                 if (doneScores == null)
                     flushFileRunScope?.Invoke(fileNames[f], f, count, fEntryIds, fScores, runPrecFile, runPeptFile, fApexRts);
+                swFlush1.Stop();
             }
+            // "run-q" here is the per-file sort pass 2 stopped doing. Read it against pass 2's
+            // own "run-q recompute" line below: this one is what that one used to cost.
+            log.LogInfo(LogTag.PATH,
+                @"{0} pass 1 cost over {1} rows: parquet walk {2:F1}s, sidecar load {3:F1}s, score+competition {4:F1}s, run-q sort {5:F1}s, clamp floors {6:F1}s, sidecar write {7:F1}s",
+                passLabel, n, swWalk1.Elapsed.TotalSeconds, swSidecar1.Elapsed.TotalSeconds,
+                swScore1.Elapsed.TotalSeconds, swRunQ1.Elapsed.TotalSeconds,
+                swClamp1.Elapsed.TotalSeconds, swFlush1.Elapsed.TotalSeconds);
 
             var contributions = contribAcc.Build(trainResults.FoldWeights, percConfig.FeatureInfos);
             PercolatorDiagnosticsDump.EmitFeatureContributions(contributions);
@@ -1095,6 +1126,17 @@ namespace pwiz.Osprey.FDR
             // ---- Pass 2: re-score + assign the 5 q-values + stream to the sink ----
             // Progress-reported (log-only) like Pass 1 so the second streaming pass over all rows
             // is not silent; byte-identical q-values and sink output.
+            // Cost attribution for this pass, reported once on the [PATH] diagnostic channel.
+            // Worth measuring rather than reasoning about: the pass runs ~3x pass 1's cost per
+            // row while doing strictly LESS work, since the score comes off the sidecar and no
+            // feature vector is loaded. The stopwatches start and stop once per FILE, not per
+            // row, so they cannot move the number they are measuring.
+            var swWalk = new Stopwatch();
+            var swSidecar = new Stopwatch();
+            var swFill = new Stopwatch();
+            var swRunQ = new Stopwatch();
+            var swAssign = new Stopwatch();
+            var swSink = new Stopwatch();
             int gEmit = 0;
             using (var emitProgress = new ProgressReporter(string.Format(OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Assigning_q_values_to__0__precursor_candidate_peaks, n), n))
             for (int f = 0; f < nFiles; f++)
@@ -1109,17 +1151,22 @@ namespace pwiz.Osprey.FDR
                 // walk needs the sink to be able to REFUSE a write it has no apex RT for, which
                 // is an interface change; until then the ~7% is the price of not relying on a
                 // distant invariant.
+                swWalk.Start();
                 streamFileRows(fileNames[f], StubColumns.ApexRt, buffer.Add);
+                swWalk.Stop();
                 int count = buffer.Count;
+                swSidecar.Start();
                 double[] doneScores2 = TryLoadCompletedScores(
                     tryStreamCompletedScores, fileNames[f], count, buffer.EntryIds,
                     out double[] doneRunPrec, out double[] doneRunPept);
+                swSidecar.Stop();
                 IReadOnlyList<double[]> rows = doneScores2 == null ? loadFileFeatures(fileNames[f]) : null;
                 var fScores = new double[count];
                 var fLabels = new bool[count];
                 var fEntryIds = new uint[count];
                 var fPeptides = new string[count];
                 var fCharges = new byte[count];
+                swFill.Start();
                 for (int r = 0; r < count; r++)
                 {
                     fScores[r] = doneScores2 != null
@@ -1131,6 +1178,7 @@ namespace pwiz.Osprey.FDR
                     fPeptides[r] = buffer.Peptides[r];
                     fCharges[r] = buffer.Charges[r];
                 }
+                swFill.Stop();
                 // Pass 1's run q-values, read back off the sidecar with the scores. Recomputing
                 // them would sort this file again to arrive at the same numbers: they are a
                 // function of these same scores, and pass 1 computed and wrote all three
@@ -1140,10 +1188,13 @@ namespace pwiz.Osprey.FDR
                 double[] runPeptFile = doneRunPept;
                 if (runPrecFile == null)
                 {
+                    swRunQ.Start();
                     PercolatorQValues.ComputePerFileRunQvalues(
                         fScores, fLabels, fEntryIds, fPeptides, 0, count,
                         out runPrecFile, out runPeptFile);
+                    swRunQ.Stop();
                 }
+                swAssign.Start();
                 for (int r = 0; r < count; r++)
                 {
                     double rp = runPrecFile[r];
@@ -1168,13 +1219,27 @@ namespace pwiz.Osprey.FDR
                     double ea = expAggByEntryId.TryGetValue(fEntryIds[r], out double eav)
                         ? eav : fScores[r];
 
+                    swSink.Start();
                     sink.Accept(f, r, fEntryIds[r], fLabels[r], fCharges[r], pept, fScores[r], ea,
                         buffer.ApexRts[r],
                         new FdrQValues(rp, rpe, ep, epe, pep));
+                    swSink.Stop();
                     emitProgress.Report(gEmit + r + 1);
                 }
+                swAssign.Stop();
                 gEmit += count;
             }
+            // The sink timer runs per ROW, so it costs two QueryPerformanceCounter reads per row
+            // (~1.5s over 33M rows, under 0.5% of the pass). That is worth paying: it is the one
+            // split that matters, since q-assign otherwise lumps the five q-value lookups in
+            // with the record write and those call for completely different fixes. The lookup
+            // cost is q-assign MINUS sink. The per-row progress Report stays inside q-assign;
+            // it is an uncontended lock plus a Stopwatch read, ~1.5s over the pass.
+            log.LogInfo(LogTag.PATH,
+                @"{0} pass 2 cost over {1} rows: parquet walk {2:F1}s, sidecar load {3:F1}s, array fill {4:F1}s, run-q recompute {5:F1}s, q-assign {6:F1}s (of which sink {7:F1}s)",
+                passLabel, n, swWalk.Elapsed.TotalSeconds, swSidecar.Elapsed.TotalSeconds,
+                swFill.Elapsed.TotalSeconds, swRunQ.Elapsed.TotalSeconds, swAssign.Elapsed.TotalSeconds,
+                swSink.Elapsed.TotalSeconds);
             sink.Finish(log);
             return false;
         }
