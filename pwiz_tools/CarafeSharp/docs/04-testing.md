@@ -215,10 +215,11 @@ machine gave byte-identical models and libraries.
 
 **The Astral golden** is a CPU run on the same machine (35 minutes, most of it the fine-tune on 39,702
 MS2 spectra and 77,073 RT peptide forms):
-- Library: 123,399 precursors, 1,703,849 peaks and 123,380 DecoyPairs rows (61,690 pairs, 30,836 of them
-  entrapment pairs).
-- Pairing: 61,675 of 61,685 targets paired. 6 are unpaired because their decoy was not written, 4 because
-  their partner precursor is paired in its other role, and 37 I/L twins are left out of the check.
+- Library: 123,389 precursors, 1,703,785 peaks and 123,380 DecoyPairs rows (61,690 pairs, 30,836 of them
+  entrapment pairs). It was remade on 2026-10-01 (8362e74827) when the library began writing its pairs
+  whole: 10 precursors whose partner had too few fragments were left out with it, 6 targets and 4 decoys.
+- Pairing: 61,675 of 61,679 targets paired. The other 4 are unpaired because their partner precursor is
+  paired in its other role, and 37 I/L twins are left out of the check.
 - Sample: 1,738 precursors at modulus 70, 313 KB.
 - Held-out metrics, pretrained to fine-tuned: MS2 COS 0.9771 to 0.9868, RT R2 0.8595 to 0.9972.
 - Export: `carafesharp-export-astral-v1`, which Osprey (#4708) wrote from the `_55` .raw against Carafe's
