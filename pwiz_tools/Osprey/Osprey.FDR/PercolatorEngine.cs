@@ -327,7 +327,7 @@ namespace pwiz.Osprey.FDR
             string passLabel = FIRST_PASS_LABEL,
             Action<FeatureContributions> captureContributions = null,
             Action<PercolatorResults> captureModel = null,
-            Func<string, Action<uint, double>, bool> tryStreamCompletedScores = null,
+            CompletedScoreStreamer tryStreamCompletedScores = null,
             PercolatorResults pretrainedModel = null,
             FileRunScopeSink flushFileRunScope = null)
         {

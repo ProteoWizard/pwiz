@@ -185,4 +185,25 @@ namespace pwiz.Osprey.FDR
     public delegate void FileRunScopeSink(string fileName, int fileIndex, int rowCount,
         uint[] entryIds, double[] scores, double[] runPrecursorQvalues, double[] runPeptideQvalues,
         double[] apexRts);
+
+    /// <summary>
+    /// Streams one file's finished first-pass run-scope record back off the sidecar
+    /// <see cref="FileRunScopeSink"/> wrote: the entry id, the score, and BOTH run q-values.
+    /// Returns false when that file has nothing on disk, which leaves the caller to score it
+    /// normally.
+    ///
+    /// <para>The two q-values ride along with the score because the pass that reads this back
+    /// would otherwise recompute them, and recomputing them is a sort per file. The reason that
+    /// sort looks free is that it is normally weighed against loading the file's feature vectors
+    /// and re-running the dot product - but on the path that reads a sidecar neither of those
+    /// happens, so there is nothing left for it to hide behind and it becomes the dominant cost
+    /// of the pass.</para>
+    ///
+    /// <para>Reading them is not trusting a second writer to agree with the first. There is one
+    /// writer: pass 1 computes the score and both run q-values together and they are final when
+    /// that file's rows have been walked, so a reader gets the same bytes the recompute would
+    /// have produced from the same scores.</para>
+    /// </summary>
+    public delegate bool CompletedScoreStreamer(string fileName,
+        Action<uint, double, double, double> onRecord);
 }

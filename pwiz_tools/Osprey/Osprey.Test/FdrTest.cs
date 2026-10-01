@@ -1333,6 +1333,13 @@ namespace pwiz.Osprey.Test
         /// here would diverge. The fixture carries ParquetIndex == within-file row position, so the
         /// streaming path's running row ordinal indexes the same feature row the resident path's
         /// ParquetIndex does (the production invariant: parquet written in row order).
+        ///
+        /// A THIRD arm runs the streaming path with pass 1's run-scope output captured and served
+        /// back to pass 2, which is how a cold production run behaves once pass 1 has written each
+        /// file's sidecar. Pass 2 then reads both run q-values instead of re-deriving them, and
+        /// this arm is what holds that read-back to the same byte-identity as the sort: it is
+        /// compared against the resident oracle, so it cannot pass by agreeing with a streaming
+        /// arm that is itself wrong.
         /// </summary>
         [TestMethod]
         public void TestStreamingFirstPassMatchesProjection()
@@ -1390,24 +1397,86 @@ namespace pwiz.Osprey.Test
                 sinkStr);
             Assert.IsFalse(abortStr);
 
-            Assert.AreEqual(sinkRes.Count, sinkStr.Count);
-            Assert.AreEqual(projSet.PerFile.Count, fixtureStr.Count);
+            AssertSinkMatchesOracle(sinkRes, sinkStr, fixtureStr, projSet);
+
+            // Third arm: the same streaming path, but pass 1's finished run-scope output is
+            // captured and handed back to pass 2 instead of pass 2 recomputing it. On this arm
+            // pass 2 takes BOTH run q-values off the sidecar rather than sorting the file again,
+            // so a divergence here - measured against the SAME resident oracle, not merely
+            // against the other streaming arm - is the read-back disagreeing with the sort it
+            // replaces. Nothing else in the pass changes, which is why one fixture and one
+            // oracle cover all three arms.
+            var fixtureSide = BuildMultiObservationEquivFixture(nFeat, out var featuresSide);
+            var fileNamesSide = fixtureSide.ConvertAll(kv => kv.Key);
+            Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> streamFileRowsSide =
+                (name, columns, onRow) =>
+                {
+                    var list = fixtureSide.Find(kv => kv.Key == name).Value;
+                    foreach (var e in list)
+                        onRow(e.EntryId, e.Charge, e.IsDecoy, e.CoelutionSum, e.ModifiedSequence, e.ApexRt);
+                };
+            // Stands in for the on-disk sidecar: pass 1 writes into it, pass 2 reads back out.
+            // Keyed by file and serving only files pass 1 actually flushed, which is what the
+            // production streamer does through its scoresOnDisk set.
+            var sidecar = new Dictionary<string, List<(uint EntryId, double Score, double RunPrecQ, double RunPeptQ)>>();
+            FileRunScopeSink captureFileRunScope =
+                (fileName, fileIndex, rowCount, entryIds, scores, runPrecQ, runPeptQ, apexRts) =>
+                {
+                    // Copied out, not retained: the sink contract says these arrays are the
+                    // pass's own scratch and are reused after this returns.
+                    var records = new List<(uint EntryId, double Score, double RunPrecQ, double RunPeptQ)>(rowCount);
+                    for (int r = 0; r < rowCount; r++)
+                        records.Add((entryIds[r], scores[r], runPrecQ[r], runPeptQ[r]));
+                    sidecar[fileName] = records;
+                };
+            CompletedScoreStreamer streamCompleted =
+                (fileName, onRecord) =>
+                {
+                    if (!sidecar.TryGetValue(fileName, out var records))
+                        return false;
+                    foreach (var rec in records)
+                        onRecord(rec.EntryId, rec.Score, rec.RunPrecQ, rec.RunPeptQ);
+                    return true;
+                };
+            var sinkSide = new CapturingSink();
+            bool abortSide = PercolatorScorer.RunStreamingFirstPass(
+                fileNamesSide, streamFileRowsSide, f => featuresSide[f], percConfig, OspreyLog.None,
+                "First-pass", sinkSide, null, null, streamCompleted, null, captureFileRunScope);
+            Assert.IsFalse(abortSide);
+            // Without this the arm could pass vacuously: a pass 1 that flushed nothing leaves
+            // pass 2 on the recompute path, which is the behaviour the other two arms already
+            // cover.
+            Assert.AreEqual(fixtureSide.Count, sidecar.Count);
+            AssertSinkMatchesOracle(sinkRes, sinkSide, fixtureSide, projSet);
+        }
+
+        /// <summary>
+        /// Positional compare of a streaming arm's sink against the resident projection oracle:
+        /// Score, all five q-values, identity and apex RT, every row, exact (0.0 delta). Shared
+        /// by the streaming arms of <see cref="TestStreamingFirstPassMatchesProjection"/> so each
+        /// is held to the same oracle rather than to the arm before it.
+        /// </summary>
+        private static void AssertSinkMatchesOracle(CapturingSink oracle, CapturingSink actual,
+            List<KeyValuePair<string, List<FdrEntry>>> fixture, FdrProjectionSet projSet)
+        {
+            Assert.AreEqual(oracle.Count, actual.Count);
+            Assert.AreEqual(projSet.PerFile.Count, fixture.Count);
             int compared = 0;
-            for (int f = 0; f < fixtureStr.Count; f++)
+            for (int f = 0; f < fixture.Count; f++)
             {
-                var list = fixtureStr[f].Value;
+                var list = fixture[f].Value;
                 for (int r = 0; r < list.Count; r++)
                 {
-                    Assert.AreEqual(sinkRes.ScoreAt(f, r), sinkStr.ScoreAt(f, r), 0.0);
-                    var qRes = sinkRes.QAt(f, r);
-                    var qStr = sinkStr.QAt(f, r);
+                    Assert.AreEqual(oracle.ScoreAt(f, r), actual.ScoreAt(f, r), 0.0);
+                    var qRes = oracle.QAt(f, r);
+                    var qStr = actual.QAt(f, r);
                     Assert.AreEqual(qRes.RunPrecursorQvalue, qStr.RunPrecursorQvalue, 0.0);
                     Assert.AreEqual(qRes.RunPeptideQvalue, qStr.RunPeptideQvalue, 0.0);
                     Assert.AreEqual(qRes.ExperimentPrecursorQvalue, qStr.ExperimentPrecursorQvalue, 0.0);
                     Assert.AreEqual(qRes.ExperimentPeptideQvalue, qStr.ExperimentPeptideQvalue, 0.0);
                     Assert.AreEqual(qRes.Pep, qStr.Pep, 0.0);
-                    var idRes = sinkRes.IdentAt(f, r);
-                    var idStr = sinkStr.IdentAt(f, r);
+                    var idRes = oracle.IdentAt(f, r);
+                    var idStr = actual.IdentAt(f, r);
                     Assert.AreEqual(idRes.EntryId, idStr.EntryId);
                     Assert.AreEqual(idRes.IsDecoy, idStr.IsDecoy);
                     Assert.AreEqual(idRes.Charge, idStr.Charge);
@@ -1415,7 +1484,7 @@ namespace pwiz.Osprey.Test
                     // Sourced differently by the two paths - the resident one by ParquetIndex
                     // against a column, the streaming one off the row stream - so this is the
                     // one output a shared bug could NOT produce identically by accident.
-                    Assert.AreEqual(sinkRes.ApexRtAt(f, r), sinkStr.ApexRtAt(f, r), 0.0);
+                    Assert.AreEqual(oracle.ApexRtAt(f, r), actual.ApexRtAt(f, r), 0.0);
                     compared++;
                 }
             }

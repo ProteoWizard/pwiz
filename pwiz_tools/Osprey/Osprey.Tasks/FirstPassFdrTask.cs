@@ -3557,8 +3557,8 @@ namespace pwiz.Osprey.Tasks
                 // pass 2 recomputing all 446 files' scores 82 minutes after pass 1 computed
                 // them. Returns false for a file whose sidecar is not on disk, which scores
                 // normally.
-                Func<string, Action<uint, double>, bool> tryStreamCompletedScores =
-                    (fileName, onScore) =>
+                CompletedScoreStreamer tryStreamCompletedScores =
+                    (fileName, onRecord) =>
                     {
                         if (!scoresOnDisk.Contains(fileName))
                             return false;
@@ -3566,9 +3566,13 @@ namespace pwiz.Osprey.Tasks
                             fileName, perFileParquetPaths, config);
                         if (string.IsNullOrEmpty(doneBase))
                             return false;
+                        // Both run q-values travel with the score. The record carries them
+                        // already - it is the record pass 1 wrote - so handing them on costs
+                        // nothing here and saves the reader a sort per file.
                         return FdrScoresSidecar.ReadRecords(
                             FdrScoresSidecar.Pass1Path(doneBase), FdrScoresSidecar.Pass.FirstPass,
-                            rec => onScore(rec.EntryId, rec.Score));
+                            rec => onRecord(rec.EntryId, rec.Score,
+                                rec.RunPrecursorQvalue, rec.RunPeptideQvalue));
                     };
                 // Training is the one phase whose product does not depend on how far the run
                 // got: the model is a function of the cohort, the library, the arm and the

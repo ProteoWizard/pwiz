@@ -585,25 +585,40 @@ namespace pwiz.Osprey.FDR
 
         /// <summary>
         /// A file's already-computed scores, in parquet row order, or null when the caller has
-        /// nothing on disk for it.
+        /// nothing on disk for it. The two run q-values pass 1 stored with each score come back
+        /// through <paramref name="runPrecursorQvalues"/> and <paramref name="runPeptideQvalues"/>
+        /// in the same row order, and are null exactly when the return is.
         ///
-        /// <para>Only the SCORE is taken from disk. The run q-values are recomputed from it,
-        /// which is a sort and costs nothing next to loading a file's feature vectors and
-        /// re-running the dot product - and recomputing keeps a resumed file byte-identical to a
-        /// freshly scored one by construction rather than by trusting two writers to agree.</para>
+        /// <para>Taking the q-values from disk rather than recomputing them is byte-identical,
+        /// not a second opinion: pass 1 produced all three together from these same scores and
+        /// nothing revises them afterwards. The recompute is a sort per file, and the reason it
+        /// reads as free is that it is normally weighed against loading the file's feature
+        /// vectors and re-running the dot product. On this path neither happens - that is what
+        /// having the scores on disk means - so the sort is measured against nothing and becomes
+        /// the pass's dominant cost.</para>
+        ///
+        /// <para>A caller that must WRITE the q-values still has to compute them; the sort is
+        /// what produces them. Only a pure reader can take them from here.</para>
         /// </summary>
         private static double[] TryLoadCompletedScores(
-            Func<string, Action<uint, double>, bool> tryStream, string fileName, int expectedCount,
-            IReadOnlyList<uint> expectedEntryIds)
+            CompletedScoreStreamer tryStream, string fileName, int expectedCount,
+            IReadOnlyList<uint> expectedEntryIds, out double[] runPrecursorQvalues,
+            out double[] runPeptideQvalues)
         {
+            runPrecursorQvalues = null;
+            runPeptideQvalues = null;
             if (tryStream == null)
                 return null;
             var scores = new List<double>(expectedCount);
             var entryIds = new List<uint>(expectedCount);
-            if (!tryStream(fileName, (entryId, score) =>
+            var runPrec = new List<double>(expectedCount);
+            var runPept = new List<double>(expectedCount);
+            if (!tryStream(fileName, (entryId, score, runPrecQ, runPeptQ) =>
                 {
                     entryIds.Add(entryId);
                     scores.Add(score);
+                    runPrec.Add(runPrecQ);
+                    runPept.Add(runPeptQ);
                 }))
             {
                 return null;
@@ -624,6 +639,11 @@ namespace pwiz.Osprey.FDR
                 if (entryIds[r] != expectedEntryIds[r])
                     return null;
             }
+            // Published only now that count and row identity have both checked out, so a
+            // rejected sidecar hands back three nulls together rather than q-values a caller
+            // could pair with scores it was told not to use.
+            runPrecursorQvalues = runPrec.ToArray();
+            runPeptideQvalues = runPept.ToArray();
             return scores.ToArray();
         }
 
@@ -670,7 +690,7 @@ namespace pwiz.Osprey.FDR
             IFdrOutputSink sink,
             Action<FeatureContributions> captureContributions = null,
             Action<PercolatorResults> captureModel = null,
-            Func<string, Action<uint, double>, bool> tryStreamCompletedScores = null,
+            CompletedScoreStreamer tryStreamCompletedScores = null,
             PercolatorResults pretrainedModel = null,
             FileRunScopeSink flushFileRunScope = null)
         {
@@ -992,7 +1012,13 @@ namespace pwiz.Osprey.FDR
                 int count = buffer.Count;
                 if (count > 0)
                     nonEmptyFiles++;
-                double[] doneScores = TryLoadCompletedScores(tryStreamCompletedScores, fileNames[f], count, buffer.EntryIds);
+                // Discards the stored q-values deliberately. This pass is the WRITER, and for
+                // any file it actually scores the sort is the step that produces them. A resumed
+                // file could read them back, but here they feed only the clamp-floor reduction,
+                // so the saving would be confined to a resume while the blast radius would be
+                // global state rather than one row's output.
+                double[] doneScores = TryLoadCompletedScores(
+                    tryStreamCompletedScores, fileNames[f], count, buffer.EntryIds, out _, out _);
                 IReadOnlyList<double[]> rows = doneScores == null ? loadFileFeatures(fileNames[f]) : null;
                 var fScores = new double[count];
                 var fLabels = new bool[count];
@@ -1085,7 +1111,9 @@ namespace pwiz.Osprey.FDR
                 // distant invariant.
                 streamFileRows(fileNames[f], StubColumns.ApexRt, buffer.Add);
                 int count = buffer.Count;
-                double[] doneScores2 = TryLoadCompletedScores(tryStreamCompletedScores, fileNames[f], count, buffer.EntryIds);
+                double[] doneScores2 = TryLoadCompletedScores(
+                    tryStreamCompletedScores, fileNames[f], count, buffer.EntryIds,
+                    out double[] doneRunPrec, out double[] doneRunPept);
                 IReadOnlyList<double[]> rows = doneScores2 == null ? loadFileFeatures(fileNames[f]) : null;
                 var fScores = new double[count];
                 var fLabels = new bool[count];
@@ -1103,9 +1131,19 @@ namespace pwiz.Osprey.FDR
                     fPeptides[r] = buffer.Peptides[r];
                     fCharges[r] = buffer.Charges[r];
                 }
-                PercolatorQValues.ComputePerFileRunQvalues(
-                    fScores, fLabels, fEntryIds, fPeptides, 0, count,
-                    out double[] runPrecFile, out double[] runPeptFile);
+                // Pass 1's run q-values, read back off the sidecar with the scores. Recomputing
+                // them would sort this file again to arrive at the same numbers: they are a
+                // function of these same scores, and pass 1 computed and wrote all three
+                // together. Only a file with no sidecar is sorted here, which is also the only
+                // file whose scores were computed in this pass.
+                double[] runPrecFile = doneRunPrec;
+                double[] runPeptFile = doneRunPept;
+                if (runPrecFile == null)
+                {
+                    PercolatorQValues.ComputePerFileRunQvalues(
+                        fScores, fLabels, fEntryIds, fPeptides, 0, count,
+                        out runPrecFile, out runPeptFile);
+                }
                 for (int r = 0; r < count; r++)
                 {
                     double rp = runPrecFile[r];
