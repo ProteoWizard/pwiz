@@ -931,10 +931,10 @@ namespace pwiz.Osprey
         private static void AppendUsageHtmlIntro(StringBuilder sb)
         {
             sb.AppendLine(@"<h1>" + WebUtility.HtmlEncode(OspreyResources.OspreyCommandArgs_GenerateUsageHtml_Osprey_command_line_usage) + @"</h1>");
-            sb.AppendLine(@"<p>" + string.Format(
+            sb.AppendLine(@"<p>" + Prose(
                 OspreyResources.OspreyCommandArgs_AppendUsageHtmlIntro_Osprey_is_a_peptide_centric_DIA_search_tool_from_the_MacCoss_lab,
                 Code(LibrarySource.EXT_BLIB)) + @"</p>");
-            sb.AppendLine(@"<p>" + string.Format(
+            sb.AppendLine(@"<p>" + Prose(
                 OspreyResources.OspreyCommandArgs_AppendUsageHtmlIntro_For_the_pipeline_overview__per_stage_detail__and_how_the_four_distributed_HPC_,
                 @"<a href=""https://raw.githack.com/ProteoWizard/pwiz/master/pwiz_tools/Osprey/Osprey-workflow.html"">Osprey-workflow.html</a>",
                 Code(@"Osprey " + ARG_HELP.ArgumentText)) + @"</p>");
@@ -946,34 +946,43 @@ namespace pwiz.Osprey
         {
             sb.AppendLine(@"<div class=""RowType"">" + WebUtility.HtmlEncode(
                 OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_Distributed_execution__HPC_) + @"</div>");
-            sb.AppendLine(@"<p>" + string.Format(
+            sb.AppendLine(@"<p>" + Prose(
                 OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_Run_with_no__0__for_the_whole_pipeline_in_one_process,
                 Code(ARG_TASK.ArgumentText), Code(ARG_LIBRARY.ArgumentText), Code(PerFileScoringTask.TASK_NAME),
                 Code(FirstPassFdrTask.TASK_NAME), Code(PerFileRescoreTask.TASK_NAME), Code(SecondPassFdrTask.TASK_NAME),
                 @"&rarr;") + @"</p>");
             sb.AppendLine(@"<pre>");
-            AppendExampleComment(sb, string.Format(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_split_1___one_process_per_mzML,
+            AppendExampleComment(sb, Prose(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_split_1___one_process_per_mzML,
                 StemFile(ParquetScoreCache.EXT_SCORES), StemFile(CalibrationIO.EXT)));
             sb.AppendLine(HpcExampleCommandLine(PerFileScoringTask.TASK_NAME, ARG_INPUT.ShortArgumentText, @"s1.mzML"));
             sb.AppendLine();
-            AppendExampleComment(sb, OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_join_1___one_process_over_ALL_runs);
+            AppendExampleComment(sb, ArgUsage.HtmlEncode(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_join_1___one_process_over_ALL_runs));
             sb.AppendLine(HpcExampleCommandLine(FirstPassFdrTask.TASK_NAME, ARG_INPUT_LIST.ArgumentText, @"runs.txt"));
-            AppendExampleComment(sb, @"  " + string.Format(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes_beside_each_parquet___0____1_,
+            AppendExampleComment(sb, @"  " + Prose(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes_beside_each_parquet___0____1_,
                 StemFile(FdrScoresSidecar.EXT_FIRST_PASS), StemFile(ReconciliationFile.EXT)));
             sb.AppendLine();
-            AppendExampleComment(sb, OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_split_2___one_process_per_file);
+            AppendExampleComment(sb, ArgUsage.HtmlEncode(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_split_2___one_process_per_file));
             sb.AppendLine(HpcExampleCommandLine(PerFileRescoreTask.TASK_NAME, ARG_INPUT.ShortArgumentText, @"s1.mzML"));
-            AppendExampleComment(sb, @"  " + string.Format(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes___0_,
+            AppendExampleComment(sb, @"  " + Prose(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes___0_,
                 StemFile(ParquetScoreCache.EXT_SCORES_RECONCILED)));
             sb.AppendLine();
-            AppendExampleComment(sb, string.Format(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_join_2___one_process_over_ALL_runs,
+            AppendExampleComment(sb, Prose(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_join_2___one_process_over_ALL_runs,
                 @"out" + LibrarySource.EXT_BLIB));
             sb.AppendLine(HpcExampleCommandLine(SecondPassFdrTask.TASK_NAME, ARG_INPUT_LIST.ArgumentText, @"runs.txt"));
             sb.AppendLine(@"</pre>");
-            sb.AppendLine(@"<p>" + string.Format(
+            sb.AppendLine(@"<p>" + Prose(
                 OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_EVERY_task_takes__0___naming_the_DATA_files,
                 Code(ARG_INPUT.ShortArgumentText), Code(ARG_OUTPUT_DIR.ArgumentText), Code(ARG_INPUT_LIST.ArgumentText),
                 Code(ARG_PARALLEL_FILES.ArgumentText), FirstPassFdrTask.TASK_NAME) + @"</p>");
+        }
+
+        /// <summary>
+        /// A help-page sentence: the translated format string is HTML-encoded before the arguments,
+        /// which carry the intentional markup (<c>&lt;code&gt;</c>, links), are substituted.
+        /// </summary>
+        private static string Prose(string format, params object[] args)
+        {
+            return string.Format(ArgUsage.HtmlEncode(format), args);
         }
 
         private static string Code(string text)

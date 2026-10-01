@@ -39,7 +39,9 @@ namespace pwiz.Common.CommandLine
 
         public string ToHtmlString()
         {
-            return @"<p>" + Text + @"</p>";
+            // Encoded like the table cells: usage text names placeholders such as <file.mzML>,
+            // which a browser would otherwise parse as tags and drop.
+            return @"<p>" + ArgUsage.HtmlEncode(Text) + @"</p>";
         }
     }
 }

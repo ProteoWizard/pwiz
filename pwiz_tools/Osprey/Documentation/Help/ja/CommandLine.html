@@ -17,7 +17,7 @@ a { color: #1565c0; }
 <h1>Ospreyコマンドラインの使用法</h1>
 <p>Ospreyは、MacCossラボによるペプチド中心型のDIA検索ツールです。DIA mzMLファイルとスペクトルライブラリを読み込み、FDR制御された結果をBiblioSpecLite（<code>.blib</code>）ライブラリとして書き込みます。このライブラリはSkylineに直接インポートできます。WindowsとLinuxでスタンドアロンの実行ファイルとして動作します。</p>
 <p>パイプラインの概要、各段階の詳細、および4つの分散HPCタスクの分割と結合については、ワークフロー図<a href="https://raw.githack.com/ProteoWizard/pwiz/master/pwiz_tools/Osprey/Osprey-workflow.html">Osprey-workflow.html</a>を参照してください。以下の引数表はコマンドラインの宣言から生成されるため、常にビルドと一致します。同じ内容をテキストで表示するには、<code>Osprey --help</code>を実行してください。</p>
-<p>Osprey - ペプチド中心のDIA解析</p><p>使用法：osprey -i <file1.mzML> [file2.mzML ...] -l <library.tsv> -o <output.blib></p><div class="RowType">一般I/O</div>
+<p>Osprey - ペプチド中心のDIA解析</p><p>使用法：osprey -i &lt;file1.mzML&gt; [file2.mzML ...] -l &lt;library.tsv&gt; -o &lt;output.blib&gt;</p><div class="RowType">一般I/O</div>
 <table>
 <tr><th>引数</th><th>説明</th></tr>
 <tr><td><nobr>-i</nobr>,&nbsp;<nobr>--input</nobr>&nbsp;&lt;file1.mzML&nbsp;...&gt;</td><td>入力mzMLファイル</td></tr>

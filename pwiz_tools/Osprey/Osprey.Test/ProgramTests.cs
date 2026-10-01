@@ -828,6 +828,13 @@ namespace pwiz.Osprey.Test
             string err = CheckMd(null, VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
             AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_Osprey_build_wrote_it__so_it_cannot_be_reused__Score_the_file_, err, ScoreAgain);
+
+            // A reconciled scores file is rewritten by PerFileRescoring, not PerFileScoring.
+            string reconciled = @"test" + ParquetScoreCache.EXT_SCORES_RECONCILED;
+            Assert.AreEqual(string.Format(
+                    OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_Osprey_build_wrote_it__so_it_cannot_be_reused__Score_the_file_,
+                    reconciled, OspreyArgNames.TaskText(OspreyTaskNames.PER_FILE_RESCORING)),
+                ParquetScoreCache.CheckParquetMetadata(reconciled, null, VALID_SEARCH, VALID_LIB, VALID_SEARCH, VALID_LIB, CURRENT_VERSION));
         }
 
         [TestMethod]

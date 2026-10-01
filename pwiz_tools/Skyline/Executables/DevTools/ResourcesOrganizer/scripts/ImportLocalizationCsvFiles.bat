@@ -13,10 +13,8 @@ pushd %WORKDIR%
 REM Import Japanese translations
 if exist localization.ja.csv (
     echo Importing Japanese translations from localization.ja.csv
-    %RESORGANIZER% importLocalizationCsv --db ForImportLocalizationCsv.db --input localization.ja.csv --language ja
-    if %ERRORLEVEL% neq 0 (
-        goto error
-    )
+    REM Inside a parenthesized block %ERRORLEVEL% is expanded before the command runs; test it with ||
+    %RESORGANIZER% importLocalizationCsv --db ForImportLocalizationCsv.db --input localization.ja.csv --language ja || goto error
 ) else (
     echo localization.ja.csv not found, skipping Japanese
 )
@@ -24,10 +22,8 @@ if exist localization.ja.csv (
 REM Import Chinese translations
 if exist localization.zh-Hans.csv (
     echo Importing Chinese translations from localization.zh-Hans.csv
-    %RESORGANIZER% importLocalizationCsv --db ForImportLocalizationCsv.db --input localization.zh-Hans.csv --language zh-Hans
-    if %ERRORLEVEL% neq 0 (
-        goto error
-    )
+    REM Inside a parenthesized block %ERRORLEVEL% is expanded before the command runs; test it with ||
+    %RESORGANIZER% importLocalizationCsv --db ForImportLocalizationCsv.db --input localization.zh-Hans.csv --language zh-Hans || goto error
 ) else (
     echo localization.zh-Hans.csv not found, skipping Chinese
 )
@@ -53,4 +49,5 @@ echo SUCCESS
 goto end
 :error
 echo ERROR
+exit /b 1
 :end

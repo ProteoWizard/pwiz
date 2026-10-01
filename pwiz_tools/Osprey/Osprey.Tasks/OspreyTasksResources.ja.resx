@@ -158,11 +158,19 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting__2___1_attempt_at_most_" xml:space="preserve">
-    <value>校正：ライブラリのターゲット数{1:N0}、{2}個を要求（最大1回の試行）</value>
+    <value>校正：ライブラリのターゲット数{1:N0}、{2:N0}個を要求（最大1回の試行）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting__2__per_attempt__up_to__0__attempts_" xml:space="preserve">
-    <value>校正：ライブラリのターゲット数{1:N0}、試行ごとに{2}個を要求（最大{0:N0}回の試行）</value>
+    <value>校正：ライブラリのターゲット数{1:N0}、試行ごとに{2:N0}個を要求（最大{0:N0}回の試行）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting_all__1_attempt_at_most_" xml:space="preserve">
+    <value>校正：ライブラリのターゲット数{1:N0}、すべてを要求（最大1回の試行）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting_all_per_attempt__up_to__0__attempts_" xml:space="preserve">
+    <value>校正：ライブラリのターゲット数{1:N0}、試行ごとにすべてを要求（最大{0:N0}回の試行）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Calibrator_RunCalibration_Calibration__the_linear_fit_disagrees_with_the_library_mzML_RT_range_mapping__Using_" xml:space="preserve">
@@ -245,10 +253,6 @@
     <value>RT校正を実行中...</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="Calibrator_RunCalibration_all" xml:space="preserve">
-    <value>すべて</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="Calibrator_RunLdaAndCollectPoints_Calibration_pass__0____1__RT_calibration_points__from__2__peptides_at_1__FDR_" xml:space="preserve">
     <value>校正パス{0}：{1:N0}個のRT校正ポイント（1% FDRの{2:N0}個のペプチドから）</value>
     <comment>Needs Review:New resource</comment>
@@ -287,6 +291,10 @@
   </data>
   <data name="CwtCandidateLoader_ValidateFileInRange__0___a_CWT_candidate_refers_to_row__1___but_the__scores_parquet_file_has_only__2__rows_" xml:space="preserve">
     <value>{0}（CWT候補が行{1:N0}を参照していますが、{3}ファイルには{2:N0}行しかありません）</value>
+    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="CwtCandidateLoader_ValidateFileInRange__0___unreadable___1__" xml:space="preserve">
+    <value>{0}（読み取れません：{1}）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="EntrapmentPairing_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair__an_N_terminal_Met_clip__from_the_" xml:space="preserve">

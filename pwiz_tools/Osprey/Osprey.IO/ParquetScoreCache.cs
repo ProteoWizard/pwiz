@@ -881,7 +881,7 @@ namespace pwiz.Osprey.IO
         /// failure before that. A guard here would have named it the first time a file was read.
         /// Files written in that window can still be on disk; failing them loudly is the point.</para>
         /// </summary>
-        private static byte RequireCharge(byte[] chargeCol, int row, uint entryId, string path)
+        private static byte RequireCharge(byte[] chargeCol, int rowGroup, int row, uint entryId, string path)
         {
             byte charge = chargeCol == null ? (byte)0 : chargeCol[row];
             if (charge != 0)
@@ -889,12 +889,10 @@ namespace pwiz.Osprey.IO
             // Charge is part of the row's identity, so reading on would silently drop precursors
             // rather than report a wrong number. Parquet written before 2026-09-17 can carry a zero
             // charge from a write race in the parallel column writer, fixed in that release.
-            string rewriteTask = OspreyArgNames.TaskText(path.EndsWith(EXT_SCORES_RECONCILED, StringComparison.OrdinalIgnoreCase)
-                ? OspreyTaskNames.PER_FILE_RESCORING
-                : OspreyTaskNames.PER_FILE_SCORING);
+            string rewriteTask = RewriteTaskText(path);
             throw new InvalidDataException(string.Format(
                 OspreyIOResources.ParquetScoreCache_RequireCharge__0__is_corrupt__row__1___entry_id__2___has_a_charge_of_0__which_is_not_a_possible_,
-                path, row, entryId, COLUMN_ENTRY_ID, rewriteTask));
+                path, row, entryId, COLUMN_ENTRY_ID, rewriteTask, rowGroup));
         }
 
         /// <summary>
@@ -1103,7 +1101,7 @@ namespace pwiz.Osprey.IO
                                 EntryId = entryIdCol[row],
                                 ParquetIndex = parquetIndex,
                                 IsDecoy = isDecoyCol[row],
-                                Charge = RequireCharge(chargeCol, row, entryIdCol[row], path),
+                                Charge = RequireCharge(chargeCol, g, row, entryIdCol[row], path),
                                 ScanNumber = scanCol != null ? scanCol[row] : 0u,
                                 ApexRt = apexCol != null ? apexCol[row] : 0.0,
                                 StartRt = startCol != null ? startCol[row] : 0.0,
@@ -1267,7 +1265,7 @@ namespace pwiz.Osprey.IO
                         {
                             onRow(
                                 entryIdCol[row],
-                                RequireCharge(chargeCol, row, entryIdCol[row], path),
+                                RequireCharge(chargeCol, g, row, entryIdCol[row], path),
                                 isDecoyCol[row],
                                 coelutionCol != null ? coelutionCol[row] : 0.0,
                                 modseqCol != null ? modseqCol[row] : string.Empty,
@@ -1832,7 +1830,7 @@ namespace pwiz.Osprey.IO
                             ? scoreIndexCol[row]
                             : (uint)(startParquetIndex + entries.Count),
                         IsDecoy = isDecoyCol[row],
-                        Charge = RequireCharge(chargeCol, row, entryIdCol[row], path),
+                        Charge = RequireCharge(chargeCol, g, row, entryIdCol[row], path),
                         ScanNumber = scanCol != null ? scanCol[row] : 0u,
                         ApexRt = apexCol != null ? apexCol[row] : 0.0,
                         StartRt = startCol != null ? startCol[row] : 0.0,
@@ -1950,6 +1948,17 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// The command line that rewrites a scores file: <c>--task PerFileRescoring</c> for a
+        /// reconciled one, which only that task writes, otherwise <c>--task PerFileScoring</c>.
+        /// </summary>
+        public static string RewriteTaskText(string path)
+        {
+            return OspreyArgNames.TaskText(IsReconciledScoresPath(path)
+                ? OspreyTaskNames.PER_FILE_RESCORING
+                : OspreyTaskNames.PER_FILE_SCORING);
+        }
+
+        /// <summary>
         /// Map an original <c>.scores.parquet</c> path to its reconciled sibling
         /// <c>.scores-reconciled.parquet</c> by swapping the trailing suffix. A
         /// path that is already a reconciled output is returned unchanged (safe
@@ -2057,8 +2066,8 @@ namespace pwiz.Osprey.IO
             string expectedLibrary,
             string currentVersion)
         {
-            // Every remedy below is the same command line: score the file again.
-            string scoreAgain = OspreyArgNames.TaskText(OspreyTaskNames.PER_FILE_SCORING);
+            // Every remedy below is the same command line: run again the task that wrote the file.
+            string scoreAgain = RewriteTaskText(fileLabel);
             if (cachedVersion == null)
                 return string.Format(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_Osprey_build_wrote_it__so_it_cannot_be_reused__Score_the_file_, fileLabel, scoreAgain);
             int cY, cO, cB, cD, rY, rO, rB, rD;

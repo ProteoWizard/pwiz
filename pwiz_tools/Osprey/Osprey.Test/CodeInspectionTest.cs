@@ -468,6 +468,7 @@ namespace pwiz.Osprey.Test
         {
             string sourceRoot = FindOspreySourceRoot();
             var fixedFiles = new List<string>();
+            var uncheckedFiles = new List<string>();
             foreach (var file in Directory.EnumerateFiles(sourceRoot, "*", SearchOption.AllDirectories))
             {
                 string rel = RelativePath(sourceRoot, file).Replace('\\', '/');
@@ -475,14 +476,24 @@ namespace pwiz.Osprey.Test
                     continue;
                 if (!BOM_CHECKED_EXTENSIONS.Contains(Path.GetExtension(file), StringComparer.OrdinalIgnoreCase))
                     continue;
-                if (RemoveUtf8Bom(file))
-                    fixedFiles.Add(rel);
+                try
+                {
+                    if (RemoveUtf8Bom(file))
+                        fixedFiles.Add(rel);
+                }
+                catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
+                {
+                    // A locked or read-only file must not hide the files already fixed.
+                    uncheckedFiles.Add(string.Format(@"{0}: {1}", rel, e.Message));
+                }
             }
 
             Assert.AreEqual(0, fixedFiles.Count,
                 "Found and removed a UTF-8 byte order mark from these files. Review the change with " +
                 "'git diff' and commit it; source files are UTF-8 without a BOM:\n" +
                 string.Join("\n", fixedFiles));
+            Assert.AreEqual(0, uncheckedFiles.Count,
+                "Could not check these files for a UTF-8 byte order mark:\n" + string.Join("\n", uncheckedFiles));
         }
 
         private static readonly string[] BOM_CHECKED_EXTENSIONS =
@@ -563,10 +574,10 @@ namespace pwiz.Osprey.Test
         /// <c>UTF8Encoding</c>) plus the Append* writers and the other BOM-emitting encodings.
         /// </summary>
         private static readonly Regex BOM_WRITING_ENCODING = new Regex(
-            @"(new XmlTextWriter|File\.WriteAllText|File\.WriteAllLines|File\.AppendAllText|File\.AppendAllLines|\.SaveAsXml|new StreamWriter)\(.*Encoding\.UTF8[^E]" +
+            @"(new XmlTextWriter|File\.(WriteAllText|WriteAllLines|AppendAllText|AppendAllLines)(Async)?|\.SaveAsXml|new StreamWriter)\(.*Encoding\.UTF8\b" +
             @"|Encoding\s*=\s*Encoding\.UTF8\b" +
-            @"|new (System\.Text\.)?UTF8Encoding\(\s*true" +
-            @"|Encoding\.GetEncoding\(\s*@?""utf-?8""");
+            @"|new (System\.Text\.)?UTF8Encoding\(\s*(encoderShouldEmitUTF8Identifier\s*:\s*)?true" +
+            @"|Encoding\.GetEncoding\(\s*@?""(?i:utf-?8)""");
 
         /// <summary>
         /// Find the Osprey source root by walking up from the test

@@ -15,7 +15,7 @@ The simplest way to use ResourcesOrganizer is via Jamfile targets. Run from the 
 b.bat pwiz_tools/Skyline/Executables/DevTools/ResourcesOrganizer//GenerateLocalizationCsvFiles
 ```
 
-Creates `localization.ja.csv` and `localization.zh-CHS.csv` in `pwiz_tools\Skyline\Translation\Scratch\` containing strings needing translation. The CSV includes columns for:
+Creates `localization.ja.csv` and `localization.zh-Hans.csv` in `pwiz_tools\Skyline\Translation\Scratch\` containing strings needing translation. The CSV includes columns for:
 - **Name**: Resource key (empty for consolidated entries)
 - **English**: Text to translate
 - **Translation**: Empty column for translators
@@ -28,7 +28,7 @@ Creates `localization.ja.csv` and `localization.zh-CHS.csv` in `pwiz_tools\Skyli
 b.bat pwiz_tools/Skyline/Executables/DevTools/ResourcesOrganizer//ImportLocalizationCsvFiles
 ```
 
-Place translated CSV files in `pwiz_tools\Skyline\Translation\Scratch\` (keeping filenames `localization.ja.csv` and `localization.zh-CHS.csv`), then run this target to:
+Place translated CSV files in `pwiz_tools\Skyline\Translation\Scratch\` (keeping filenames `localization.ja.csv` and `localization.zh-Hans.csv`), then run this target to:
 1. Import translations into the database
 2. Export updated .resx files
 3. Extract them to the project

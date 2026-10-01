@@ -106,7 +106,9 @@ namespace pwiz.Osprey.Test
                 // tryParents: false, so an entry the satellite lacks reads as missing rather than
                 // as the English fallback, and is skipped instead of being compared to itself.
                 var localizedSet = resourceManager.GetResourceSet(CultureInfo.GetCultureInfo(language), true, false);
-                if (localizedSet == null)
+                // An earlier lookup with fallback can leave the English set cached under this culture;
+                // that is no satellite, and must not count as translations checked.
+                if (localizedSet == null || ReferenceEquals(localizedSet, invariantSet))
                     continue;
                 foreach (var key in localizedSet.Cast<DictionaryEntry>().Select(e => (string) e.Key).Where(k => !invariantKeys.Contains(k)).OrderBy(k => k))
                     orphans.Add(string.Format(@"{0} Entry:{1} Language:{2}", resourceManager.BaseName, key, language));
@@ -122,9 +124,28 @@ namespace pwiz.Osprey.Test
                         message + @" has different format items: " + localizedText);
                     Assert.AreEqual(CommandStatusWriter.IsErrorLine(invariantText), CommandStatusWriter.IsErrorLine(localizedText),
                         message + @" disagrees with the English about being an error line: " + localizedText);
+                    // A stray brace the format-item regex cannot see still throws at run time.
+                    AssertFormats(localizedText, message);
                 }
             }
         }
+
+        private static void AssertFormats(string text, string message)
+        {
+            try
+            {
+                // The call is the check: string.Format throws on a malformed format string.
+                // ReSharper disable once RedundantStringFormatCall
+                Assert.IsNotNull(string.Format(CultureInfo.InvariantCulture, text, FORMAT_ARGUMENTS));
+            }
+            catch (FormatException e)
+            {
+                Assert.Fail(message + @" is not a valid format string (" + e.Message + @"): " + text);
+            }
+        }
+
+        // More arguments than any Osprey resource uses, so only a malformed string can fail to format.
+        private static readonly object[] FORMAT_ARGUMENTS = new object[30];
 
         private static List<string> FormatItems(string text)
         {

@@ -84,7 +84,7 @@ namespace pwiz.Osprey.Tasks
             }
             catch (Exception ex)
             {
-                invalid.Add(string.Format(@"{0} (unreadable: {1})", fileName, ex.Message));
+                invalid.Add(string.Format(OspreyTasksResources.CwtCandidateLoader_ValidateFileInRange__0___unreadable___1__, fileName, ex.Message));
                 return;
             }
 
@@ -94,9 +94,11 @@ namespace pwiz.Osprey.Tasks
             // What must hold is that every stub's ParquetIndex is in range.
             uint maxIdx = MaxParquetIndex(entries);
             if (entries.Count > 0 && maxIdx >= effectiveRowCount)
+            {
                 invalid.Add(string.Format(
                     OspreyTasksResources.CwtCandidateLoader_ValidateFileInRange__0___a_CWT_candidate_refers_to_row__1___but_the__scores_parquet_file_has_only__2__rows_,
                     fileName, maxIdx, effectiveRowCount, ParquetScoreCache.EXT_SCORES));
+            }
         }
 
         /// <summary>

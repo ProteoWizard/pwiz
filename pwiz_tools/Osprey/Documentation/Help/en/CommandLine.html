@@ -17,7 +17,7 @@ a { color: #1565c0; }
 <h1>Osprey command-line usage</h1>
 <p>Osprey is a peptide-centric DIA search tool from the MacCoss lab. It reads DIA mzML files plus a spectral library and writes a BiblioSpecLite (<code>.blib</code>) library of FDR-controlled results that imports directly into Skyline. It runs as a standalone executable on Windows and Linux.</p>
 <p>For the pipeline overview, per-stage detail, and how the four distributed HPC tasks split and join, see the workflow diagram: <a href="https://raw.githack.com/ProteoWizard/pwiz/master/pwiz_tools/Osprey/Osprey-workflow.html">Osprey-workflow.html</a>. The argument tables below are generated from the command-line declarations, so they always match the build; run <code>Osprey --help</code> for the same reference as text.</p>
-<p>Osprey - Peptide-centric DIA analysis</p><p>USAGE: osprey -i <file1.mzML> [file2.mzML ...] -l <library.tsv> -o <output.blib></p><div class="RowType">General I/O</div>
+<p>Osprey - Peptide-centric DIA analysis</p><p>USAGE: osprey -i &lt;file1.mzML&gt; [file2.mzML ...] -l &lt;library.tsv&gt; -o &lt;output.blib&gt;</p><div class="RowType">General I/O</div>
 <table>
 <tr><th>Argument</th><th>Description</th></tr>
 <tr><td><nobr>-i</nobr>,&nbsp;<nobr>--input</nobr>&nbsp;&lt;file1.mzML&nbsp;...&gt;</td><td>Input mzML files</td></tr>

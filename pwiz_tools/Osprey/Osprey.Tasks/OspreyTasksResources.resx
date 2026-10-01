@@ -143,10 +143,16 @@
     <value>Calibration: {0} points span too little of the library RT range to determine a slope. Using fallback tolerance.</value>
   </data>
   <data name="Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting__2___1_attempt_at_most_" xml:space="preserve">
-    <value>Calibration: library has {1:N0} targets, requesting {2} (1 attempt at most)</value>
+    <value>Calibration: library has {1:N0} targets, requesting {2:N0} (1 attempt at most)</value>
   </data>
   <data name="Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting__2__per_attempt__up_to__0__attempts_" xml:space="preserve">
-    <value>Calibration: library has {1:N0} targets, requesting {2} per attempt (up to {0:N0} attempts)</value>
+    <value>Calibration: library has {1:N0} targets, requesting {2:N0} per attempt (up to {0:N0} attempts)</value>
+  </data>
+  <data name="Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting_all__1_attempt_at_most_" xml:space="preserve">
+    <value>Calibration: library has {1:N0} targets, requesting all of them (1 attempt at most)</value>
+  </data>
+  <data name="Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting_all_per_attempt__up_to__0__attempts_" xml:space="preserve">
+    <value>Calibration: library has {1:N0} targets, requesting all of them per attempt (up to {0:N0} attempts)</value>
   </data>
   <data name="Calibrator_RunCalibration_Calibration__the_linear_fit_disagrees_with_the_library_mzML_RT_range_mapping__Using_" xml:space="preserve">
     <value>Calibration: the linear fit disagrees with the library/mzML RT range mapping. Using fallback tolerance.</value>
@@ -208,9 +214,6 @@
   <data name="Calibrator_RunCalibration_Running_RT_calibration___" xml:space="preserve">
     <value>Running RT calibration...</value>
   </data>
-  <data name="Calibrator_RunCalibration_all" xml:space="preserve">
-    <value>all</value>
-  </data>
   <data name="Calibrator_RunLdaAndCollectPoints_Calibration_pass__0____1__RT_calibration_points__from__2__peptides_at_1__FDR_" xml:space="preserve">
     <value>Calibration pass {0}: {1:N0} RT calibration points (from {2:N0} peptides at 1% FDR)</value>
   </data>
@@ -240,6 +243,9 @@
   </data>
   <data name="CwtCandidateLoader_ValidateFileInRange__0___a_CWT_candidate_refers_to_row__1___but_the__scores_parquet_file_has_only__2__rows_" xml:space="preserve">
     <value>{0} (a CWT candidate refers to row {1:N0}, but the {3} file has only {2:N0} rows)</value>
+  </data>
+  <data name="CwtCandidateLoader_ValidateFileInRange__0___unreadable___1__" xml:space="preserve">
+    <value>{0} (unreadable: {1})</value>
   </data>
   <data name="EntrapmentPairing_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair__an_N_terminal_Met_clip__from_the_" xml:space="preserve">
     <value>Excluded 1 entrapment peptide with no target pair (an N-terminal Met clip) from the FDRBench input and the diagnostics.</value>

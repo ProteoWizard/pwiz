@@ -207,15 +207,6 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to all.
-        /// </summary>
-        public static string Calibrator_RunCalibration_all {
-            get {
-                return ResourceManager.GetString("Calibrator_RunCalibration_all", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Calibration: {0} points span too little of the library RT range to determine a slope. Using fallback tolerance..
         /// </summary>
         public static string Calibrator_RunCalibration_Calibration___0__points_span_too_little_of_the_library_RT_range_to_determine_a_slope__ {
@@ -226,7 +217,7 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Calibration: library has {1:N0} targets, requesting {2} (1 attempt at most).
+        ///   Looks up a localized string similar to Calibration: library has {1:N0} targets, requesting {2:N0} (1 attempt at most).
         /// </summary>
         public static string Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting__2___1_attempt_at_most_ {
             get {
@@ -236,11 +227,31 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Calibration: library has {1:N0} targets, requesting {2} per attempt (up to {0:N0} attempts).
+        ///   Looks up a localized string similar to Calibration: library has {1:N0} targets, requesting {2:N0} per attempt (up to {0:N0} attempts).
         /// </summary>
         public static string Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting__2__per_attempt__up_to__0__attempts_ {
             get {
                 return ResourceManager.GetString("Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting__2__pe" +
+                        "r_attempt__up_to__0__attempts_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calibration: library has {1:N0} targets, requesting all of them (1 attempt at most).
+        /// </summary>
+        public static string Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting_all__1_attempt_at_most_ {
+            get {
+                return ResourceManager.GetString("Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting_all__1" +
+                        "_attempt_at_most_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calibration: library has {1:N0} targets, requesting all of them per attempt (up to {0:N0} attempts).
+        /// </summary>
+        public static string Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting_all_per_attempt__up_to__0__attempts_ {
+            get {
+                return ResourceManager.GetString("Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting_all_pe" +
                         "r_attempt__up_to__0__attempts_", resourceCulture);
             }
         }
@@ -524,6 +535,15 @@ namespace pwiz.Osprey.Tasks {
             get {
                 return ResourceManager.GetString("CwtCandidateLoader_ValidateFileInRange__0___a_CWT_candidate_refers_to_row__1___bu" +
                         "t_the__scores_parquet_file_has_only__2__rows_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} (unreadable: {1}).
+        /// </summary>
+        public static string CwtCandidateLoader_ValidateFileInRange__0___unreadable___1__ {
+            get {
+                return ResourceManager.GetString("CwtCandidateLoader_ValidateFileInRange__0___unreadable___1__", resourceCulture);
             }
         }
         

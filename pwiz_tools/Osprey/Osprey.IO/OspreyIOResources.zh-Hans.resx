@@ -286,7 +286,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ParquetScoreCache_RequireCharge__0__is_corrupt__row__1___entry_id__2___has_a_charge_of_0__which_is_not_a_possible_" xml:space="preserve">
-    <value>{0} 已损坏：第 {1} 行（{3} {2}）的电荷为 0，这不是可能的母离子电荷。请删除该文件并重新运行{4}以重写该文件。</value>
+    <value>{0} 已损坏：行组 {5} 的第 {1} 行（{3} {2}）的电荷为 0，这不是可能的母离子电荷。请删除该文件并重新运行“{4}”以重写该文件。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ParquetScoreCache_StreamEntryIds_The_scores_file___0___is_damaged__row_group__1__has_no_readable_entry_id_column__so_its_" xml:space="preserve">

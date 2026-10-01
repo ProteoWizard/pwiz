@@ -638,7 +638,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} is damaged: row {1} ({3} {2}) has a charge of 0, which is not a possible precursor charge. Delete the file and run {4} again to rewrite it..
+        ///   Looks up a localized string similar to {0} is damaged: row {1} in row group {5} ({3} {2}) has a charge of 0, which is not a possible precursor charge. Delete the file and run {4} again to rewrite it..
         /// </summary>
         public static string ParquetScoreCache_RequireCharge__0__is_corrupt__row__1___entry_id__2___has_a_charge_of_0__which_is_not_a_possible_ {
             get {

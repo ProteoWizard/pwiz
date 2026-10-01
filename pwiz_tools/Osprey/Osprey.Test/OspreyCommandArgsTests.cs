@@ -45,6 +45,9 @@ namespace pwiz.Osprey.Test
     [TestClass]
     public class OspreyCommandArgsTests
     {
+        // OspreyCommandArgs renders --help at 78 columns.
+        private const int HELP_WIDTH = 78;
+
         /// <summary>
         /// Parses tokens built from the Argument instances (<c>ARG_THREADS + 8</c>), split
         /// into argv the way a shell would by <see cref="ArgTokens.Split"/>.
@@ -504,6 +507,23 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(string.Format(OspreyResources.OspreyCommandArgs_BuildUsage_No_help_section_matching___0___found__Use__1__to_list_available_sections_,
                     @"NoSuchSection", OspreyCommandArgs.ARG_HELP.ArgumentText + @" sections") + Environment.NewLine,
                 OspreyCommandArgs.BuildUsage(@"NoSuchSection"));
+
+            // Japanese and Chinese: a CJK character fills two console columns, so every line must fit
+            // the table width in display columns, and a flag inside CJK text (which has no spaces to
+            // break at) must never be split across lines, where a user copying it gets a broken one.
+            foreach (var language in new[] { @"ja", @"zh-Hans" })
+            {
+                string localized;
+                using (new CultureScope(CultureInfo.GetCultureInfo(language)))
+                    localized = OspreyCommandArgs.BuildUsage(null);
+                foreach (var line in localized.Split('\n').Select(l => l.TrimEnd('\r')))
+                {
+                    Assert.IsTrue(ConsoleTable.DisplayWidth(line) <= HELP_WIDTH,
+                        string.Format(@"{0} help line is {1} columns wide: {2}", language, ConsoleTable.DisplayWidth(line), line));
+                }
+                foreach (var arg in OspreyCommandArgs.AllArguments.Where(a => !a.InternalUse))
+                    StringAssert.Contains(localized, arg.ArgumentText, language);
+            }
 
             // html: well-formed-ish document with a table.
             string html = OspreyCommandArgs.GenerateUsageHtml();
