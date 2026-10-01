@@ -29,8 +29,10 @@ using System.Text;
 namespace pwiz.Osprey.Test
 {
     /// <summary>
-    /// Compares the Osprey-written tables of two .blib files row by row, the C# counterpart of
-    /// <c>Compare-BlibFull</c> in the regression's <c>Regression\BlibGolden.ps1</c>. Rows are
+    /// Compares the Osprey-written tables of two .blib files row by row, for these tests and for
+    /// <c>Compare-BlibFull</c> in the regression's <c>Regression\BlibGolden.ps1</c>, which compiles
+    /// this file with <c>Add-Type</c>. Keep it to the BCL and System.Data.SQLite, which is all that
+    /// compile references; nothing else in this assembly is there. Rows are
     /// keyed by precursor (peptideModSeq, charge) and run, never by database id, so two libraries
     /// written in a different order still compare; doubles compare at an absolute tolerance and
     /// every other value exactly. Source files are keyed by file name without directory or
@@ -77,12 +79,14 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// Every difference between the two libraries, or an empty list when they agree at
-        /// <paramref name="tolerance"/>. Each entry names the table and the key it concerns.
+        /// <paramref name="tolerance"/>, leaving out <paramref name="ignoredTables"/>. Each entry
+        /// names the table and the key it concerns.
         /// </summary>
-        public static IList<string> Compare(string expectedBlib, string actualBlib, double tolerance)
+        public static IList<string> Compare(string expectedBlib, string actualBlib, double tolerance,
+            params string[] ignoredTables)
         {
             var differences = new List<string>();
-            foreach (var projection in PROJECTIONS)
+            foreach (var projection in PROJECTIONS.Where(p => !ignoredTables.Contains(p.Table)))
             {
                 var expected = ReadRows(expectedBlib, projection);
                 var actual = ReadRows(actualBlib, projection);

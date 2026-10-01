@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
@@ -187,13 +188,17 @@ namespace pwiz.Osprey.IO
                         // already proven unchanged. The summary is still reported, recovered
                         // from the finished library, so a cached run is not silent about the
                         // pairing fraction (issue #4650).
-                        if (LibrarySuppliesDecoys(config))
+                        if (config.LibrarySuppliesDecoys)
                         {
                             LogCachedPairingSummary(RecoverPairingStats(cached), log);
                             error = DescribeSharedDecoyIds(cached);
-                            if (error != null)
-                                return null;
                         }
+                        else
+                        {
+                            error = DescribeUnflaggedDecoys(cached, config);
+                        }
+                        if (error != null)
+                            return null;
                         return cached;
                     }
                     if (status == LibraryCache.LibraryCacheStatus.IdentityMismatch)
@@ -218,12 +223,13 @@ namespace pwiz.Osprey.IO
             switch (config.LibrarySource.Format)
             {
                 case LibraryFormat.DiannTsv:
-                    var tsvLoader = new DiannTsvLoader();
+                    var tsvLoader = new DiannTsvLoader(config.FragmentTolerance);
                     entries = tsvLoader.Load(path, log.LogInfo);
+                    tsvLoader.TypeCheck.Report(Path.GetFileName(path), config.Verbose, log.LogInfo, logWarning);
                     break;
 
                 case LibraryFormat.Blib:
-                    var blibLoader = new BlibLoader();
+                    var blibLoader = new BlibLoader(config.FragmentTolerance);
                     entries = blibLoader.Load(path, log.LogInfo);
                     break;
 
@@ -264,10 +270,16 @@ namespace pwiz.Osprey.IO
             // rewritten from the manifest. Ordering against Normalize and Deduplicate above is
             // unchanged - both still run first, which is what the cross-impl byte parity rests
             // on.
-            if (LibrarySuppliesDecoys(config) &&
+            if (config.LibrarySuppliesDecoys &&
                 !TryFinishSuppliedDecoys(entries, config, log, out error))
             {
                 return null;
+            }
+            if (!config.LibrarySuppliesDecoys)
+            {
+                error = DescribeUnflaggedDecoys(entries, config);
+                if (error != null)
+                    return null;
             }
 
             // Save binary cache for next run
@@ -310,6 +322,7 @@ namespace pwiz.Osprey.IO
 
             return entries;
         }
+
         /// <summary>
         /// Finish a supplied-decoy library: mark the decoys, then pair each to its target.
         /// Returns false with <paramref name="error"/> set on the faults that make the library
@@ -507,6 +520,26 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// The load-time error for library precursors whose protein accessions mark them as
+        /// decoys (<see cref="OspreyConfig.DecoyPrefixes"/>) in a search that generates its own,
+        /// or null when there are none. Nothing else flags them - a .blib has no decoy column -
+        /// so they would be searched as targets, pass FDR as targets of a decoy protein, and
+        /// shape the generated decoys. A precursor a DIA-NN Decoy column flags is not counted:
+        /// decoy generation already drops it.
+        /// </summary>
+        private static string DescribeUnflaggedDecoys(List<LibraryEntry> library, OspreyConfig config)
+        {
+            var unflagged = library.Where(entry => !entry.IsDecoy && entry.LooksLikeLibraryDecoy(config.DecoyPrefixes))
+                .ToList();
+            if (unflagged.Count == 0)
+                return null;
+            return string.Format(
+                OspreyIOResources.LibraryLoader_DescribeUnflaggedDecoys__0__library_precursors_have_protein_accessions_marking_them_as_decoys,
+                unflagged.Count, FormatPrefixList(config.DecoyPrefixes), unflagged[0].ModifiedSequence,
+                OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY));
+        }
+
+        /// <summary>
         /// The load-time error for decoys that share an entry_id (see
         /// <see cref="LibraryDecoyPairing.FindSharedDecoyIds"/>), or null when every decoy id is
         /// unique. Checked at load because the same defect otherwise surfaces only in first-pass
@@ -617,6 +650,7 @@ namespace pwiz.Osprey.IO
             sb.AppendFormat("decoy_method:{0}\n", config.DecoyMethod);
             sb.AppendFormat("decoy_prefixes:{0}\n", FormatPrefixList(config.DecoyPrefixes));
             AppendFileIdentity(sb, @"pairing_manifest", config.DecoyPairingManifestPath);
+            sb.Append(LibraryReaderTerms(config));
             using (var sha256 = SHA256.Create())
             {
                 byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
@@ -625,6 +659,29 @@ namespace pwiz.Osprey.IO
                     result.Append(hashBytes[i].ToString(@"x2", CultureInfo.InvariantCulture));
                 return result.ToString();
             }
+        }
+
+        /// <summary>
+        /// The composition terms that name a reader version, so a library whose parse changed is
+        /// re-read after an upgrade: the DIA-NN TSV reader's, and the blib reader's with the
+        /// fragment tolerance the cached types were computed within
+        /// (<see cref="BlibLoader.CacheTerm"/>).
+        /// </summary>
+        internal static string LibraryReaderTerms(OspreyConfig config)
+        {
+            var source = config.LibrarySource;
+            if (source == null)
+                return string.Empty;
+            // A cache is only as validated as the reader that wrote it: a DIA-NN TSV cached
+            // before the reader refused invalid lines is re-read once, so a bad library is
+            // reported instead of served from its cache. A valid library caches the same bytes.
+            if (source.Format == LibraryFormat.DiannTsv)
+                return string.Format(CultureInfo.InvariantCulture, "tsv_reader:{0}\n", DiannTsvLoader.READER_VERSION);
+            if (source.Format != LibraryFormat.Blib)
+                return string.Empty;
+            // Every blib's peaks are typed from m/z within the search's fragment tolerance, and
+            // the cache holds the types, so a different tolerance is a different cache.
+            return BlibLoader.CacheTerm(config.FragmentTolerance);
         }
 
         /// <summary>Name, size and mtime of one file, or just its name when it is absent.</summary>
@@ -644,17 +701,6 @@ namespace pwiz.Osprey.IO
                 - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
             sb.AppendFormat(CultureInfo.InvariantCulture, "{0}_mtime:{1}\n", label, mtimeSecs);
             // ReSharper restore LocalizableElement
-        }
-
-        /// <summary>
-        /// Whether the library supplies its own decoys, so the load must mark and pair them.
-        /// The same predicate the caller used to apply - <c>DecoyMethod.FromLibrary</c> is a
-        /// synonym for <c>DecoysInLibrary</c>, and treating it as one is what fixed library-decoy
-        /// mode silently falling through to Reverse generation.
-        /// </summary>
-        private static bool LibrarySuppliesDecoys(OspreyConfig config)
-        {
-            return config.DecoysInLibrary || config.DecoyMethod == DecoyMethod.FromLibrary;
         }
 
         /// <summary>

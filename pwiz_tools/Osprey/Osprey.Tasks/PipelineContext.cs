@@ -302,6 +302,15 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// This run's instance of task <typeparamref name="T"/>, or null when the run has none,
+        /// without materializing it - for a task that asks whether another will run.
+        /// </summary>
+        internal T TaskOf<T>() where T : OspreyTask
+        {
+            return _tasksByType.TryGetValue(typeof(T), out var task) ? (T)task : null;
+        }
+
+        /// <summary>
         /// Publish a byproduct value for downstream tasks, keyed by its purpose
         /// type <typeparamref name="TInfo"/>. Once-only: publishing the same type
         /// twice in a run is a programming defect (two producers, or a producer
@@ -498,7 +507,7 @@ namespace pwiz.Osprey.Tasks
             foreach (var output in outputs)
             {
                 if (!File.Exists(output)) return false;
-                if (!TaskValiditySidecar.IsValid(output, task.Name, key)) return false;
+                if (!TaskValiditySidecar.IsValid(output, task.Name, task.OutputValidityKey(this, key, output))) return false;
             }
             return true;
         }

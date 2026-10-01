@@ -160,6 +160,9 @@
   <data name="OspreyCommandArgs_FdrBenchMissingMessage__0__is_set_without__1___no_FDRBench_input_will_be_written__Pass__1___2__to_enable_FDRBench_output_" xml:space="preserve">
     <value>{0} is set without {1}; no FDRBench input will be written. Pass {1} {2} to enable FDRBench output.</value>
   </data>
+  <data name="OspreyCommandArgs_Group_Training_Export" xml:space="preserve">
+    <value>Training Export</value>
+  </data>
   <data name="OspreyCommandArgs_Group_Decoys" xml:space="preserve">
     <value>Decoys</value>
   </data>
@@ -243,6 +246,12 @@
   </data>
   <data name="Program_ResolveTask__0___unknown_task___1____Valid_tasks___2__" xml:space="preserve">
     <value>{0}: unknown task '{1}'. Valid tasks: {2}.</value>
+  </data>
+  <data name="Program_RunExportLibrary_Saved_1_library_precursor_to__1_" xml:space="preserve">
+    <value>Saved 1 library precursor to {1}</value>
+  </data>
+  <data name="Program_RunExportLibrary_Saved__0_N0__library_precursors_to__1_" xml:space="preserve">
+    <value>Saved {0:N0} library precursors to {1}</value>
   </data>
   <data name="Program_RunModelDiagnosticsTask__0___building_the_report_from_the_completed_analysis__Nothing_is_re_run_and_no_other_" xml:space="preserve">
     <value>{0}: building the report from the completed analysis. Nothing is re-run and no other output changes.</value>
@@ -336,5 +345,38 @@
   </data>
   <data name="Program_ValidateArgs_No_spectral_library_specified__Use__0_" xml:space="preserve">
     <value>No spectral library specified. Use {0}</value>
+  </data>
+  <data name="Program_DescribeTrainingExport_Training_export___0__per_run__run_q_____1___claimant_q_____2___XICs__3__" xml:space="preserve">
+    <value>Training export: {0} per run (run q &lt;= {1}, claimant q &lt;= {2}, XICs {3})</value>
+  </data>
+  <data name="Program_DescribeTrainingExport_on" xml:space="preserve">
+    <value>on</value>
+  </data>
+  <data name="Program_DescribeTrainingExport_off" xml:space="preserve">
+    <value>off</value>
+  </data>
+  <data name="Program_DescribeTrainingExport_Training_export__not_written_by_this_run___0__writes_it_under__1___2___1___3__or_a_run_without__1__" xml:space="preserve">
+    <value>Training export: not written by this run; {0} writes it under {1} {2}, {1} {3} or a run without {1}.</value>
+  </data>
+  <data name="Program_TrainingExportError__0____1__and__2__apply_only_with__3__" xml:space="preserve">
+    <value>{0}, {1} and {2} apply only with {3}.</value>
+  </data>
+  <data name="Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_the_run_q_values_in__2__after_the_per_run_export_" xml:space="preserve">
+    <value>{0} cannot run with {1}: that mode computes the run q-values in {2}, after the per-run export is written. Leave out {0}, or run without {1}.</value>
+  </data>
+  <data name="Program_TrainingExportError__0__must_be_in__0__1__" xml:space="preserve">
+    <value>{0} must be in (0, 1].</value>
+  </data>
+  <data name="Program_Run_Task___0___runs_every_stage_the_analysis_still_needs_" xml:space="preserve">
+    <value>Task: {0} (runs every stage the analysis still needs)</value>
+  </data>
+  <data name="Program_ValidateArgs_The__0__path_is_the_library_it_reads___1_" xml:space="preserve">
+    <value>The {0} path is the library it reads: {1}. Choose another path for the exported library.</value>
+  </data>
+  <data name="Program_ValidateArgs_No_path_given_for__0__" xml:space="preserve">
+    <value>No path given for {0}.</value>
+  </data>
+  <data name="Program_ValidateArgs_The__0__path_is_the_library_the_search_reads___1_" xml:space="preserve">
+    <value>The {0} path is the library the search reads: {1}. Choose another path for the search results.</value>
   </data>
 </root>

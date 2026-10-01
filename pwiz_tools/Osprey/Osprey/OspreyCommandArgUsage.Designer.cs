@@ -104,7 +104,16 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("_experiment_fdr", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Write the spectral library given by {0} to this path as a .blib file that Skyline and Osprey can read, and exit without searching.
+        /// </summary>
+        public static string _export_library {
+            get {
+                return ResourceManager.GetString("_export_library", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to FDR level (default: {0}).
         /// </summary>
@@ -331,7 +340,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to HPC: run exactly one pipeline task (one node = one task). Omit for the full pipeline. {0} stages the {1} caches; {2} regenerates only the {3} report for a COMPLETED run, writing no other output..
+        ///   Looks up a localized string similar to HPC: run exactly one pipeline task (one node = one task). Omit for the full pipeline. {0} stages the {1} caches; {4} writes the {5} parquets, and on a COMPLETED run only the missing ones; {2} regenerates only the {3} report for a COMPLETED run, writing no other output..
         /// </summary>
         public static string _task {
             get {
@@ -354,6 +363,42 @@ namespace pwiz.Osprey {
         public static string _timestamp {
             get {
                 return ResourceManager.GetString("_timestamp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Write {0} per run: every target precursor at run q &lt;= {1} with the observed intensities of its full b/y ladder and per-ion interference evidence (for training CarafeSharp). Adding it to a finished run writes only the exports and re-scores nothing..
+        /// </summary>
+        public static string _training_export {
+            get {
+                return ResourceManager.GetString("_training_export", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With {0}: the run q-value at which another target counts as a claimant of a shared fragment peak (default: {1}).
+        /// </summary>
+        public static string _training_export_claimant_q {
+            get {
+                return ResourceManager.GetString("_training_export_claimant_q", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With {0}: the run precursor q-value a target must reach to be exported (default: {1}).
+        /// </summary>
+        public static string _training_export_max_q {
+            get {
+                return ResourceManager.GetString("_training_export_max_q", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to With {0}: also write each precursor's per-ion XIC matrix over its final peak boundaries.
+        /// </summary>
+        public static string _training_export_xics {
+            get {
+                return ResourceManager.GetString("_training_export_xics", resourceCulture);
             }
         }
         

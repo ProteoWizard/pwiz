@@ -287,8 +287,8 @@ namespace pwiz.Osprey.IO
         /// them - so ONE zero-length or partially-written parquet turning a predicate into an
         /// unhandled stack trace pre-empts <c>SecondPassFdrTask</c>'s named, file-listing
         /// refusal, which is the message the operator is supposed to get.
-        /// <see cref="ValidateScoresParquetGroup"/> already wrapped the identical call, so the
-        /// convention existed before this did.</para>
+        /// <see cref="ValidateScoresParquetGroup(IEnumerable{string},OspreyConfig,string,string)"/>
+        /// already wrapped the identical call, so the convention existed before this did.</para>
         ///
         /// <para><b>One open, not two.</b> The footer and the schema come off the same reader.
         /// Read separately they were two opens per file per call, uncached across five call
@@ -598,10 +598,10 @@ namespace pwiz.Osprey.IO
                 boundsAreas[j] = entry.BoundsArea;
                 boundsSnrs[j] = entry.BoundsSnr;
                 fileNames[j] = fileName ?? string.Empty;
-                fragmentMzs[j] = EncodeF64Blob(entry.FragmentMzs);
-                fragmentIntensities[j] = EncodeF32Blob(entry.FragmentIntensities);
-                refXicRts[j] = EncodeF64Blob(entry.ReferenceXicRts);
-                refXicIntensities[j] = EncodeF64Blob(entry.ReferenceXicIntensities);
+                fragmentMzs[j] = ParquetBlobCodec.EncodeF64Blob(entry.FragmentMzs);
+                fragmentIntensities[j] = ParquetBlobCodec.EncodeF32Blob(entry.FragmentIntensities);
+                refXicRts[j] = ParquetBlobCodec.EncodeF64Blob(entry.ReferenceXicRts);
+                refXicIntensities[j] = ParquetBlobCodec.EncodeF64Blob(entry.ReferenceXicIntensities);
 
                 // Mirror Rust's invariant: every row carries a cwt_candidates
                 // blob, even when the candidate list is empty. Rust's
@@ -1065,102 +1065,6 @@ namespace pwiz.Osprey.IO
             throw new InvalidDataException(string.Format(
                 OspreyIOResources.ParquetScoreCache_RequireCharge__0__is_corrupt__row__1___entry_id__2___has_a_charge_of_0__which_is_not_a_possible_,
                 path, row, entryId));
-        }
-
-        /// <summary>
-        /// Encode an array of f64 values as a little-endian byte blob with
-        /// no length prefix - bytes / 8 recovers the count on read. Mirrors
-        /// Rust pipeline.rs:1620-1623 (`v.to_le_bytes().flat_map(...)`)
-        /// byte-for-byte for a non-empty input. A null or empty input encodes
-        /// as a NULL cell (the column is declared nullable). A zero-length blob
-        /// would instead leave a whole row group's column zero-length whenever
-        /// every row in that group is empty -- reachable once the file is
-        /// written in bounded row groups (e.g. a group that falls entirely in
-        /// the contiguous decoy region, where reference XICs can be absent) --
-        /// which the Parquet reader cannot decode (an all-zero-length page
-        /// overruns on the length prefix). A null cell reads back as an empty
-        /// array (DecodeF64Blob(null) == empty), so the decoded value is
-        /// unchanged and no gate is affected (the regression + cross-impl gates
-        /// compare the blib + protein-FDR, never parquet bytes). This is the
-        /// "more parquet-idiomatic" form the cwt_candidates TODO above anticipates.
-        /// </summary>
-        private static byte[] EncodeF64Blob(double[] values)
-        {
-            if (values == null || values.Length == 0)
-                return null;
-            var buf = new byte[values.Length * 8];
-            for (int i = 0; i < values.Length; i++)
-            {
-                long bits = BitConverter.DoubleToInt64Bits(values[i]);
-                System.Buffers.Binary.BinaryPrimitives.WriteInt64LittleEndian(
-                    new Span<byte>(buf, i * 8, 8), bits);
-            }
-            return buf;
-        }
-
-        /// <summary>
-        /// Encode an array of f32 values as a little-endian byte blob with
-        /// no length prefix - bytes / 4 recovers the count on read. Mirrors
-        /// Rust pipeline.rs:1626-1631 byte-for-byte. Used for
-        /// `fragment_intensities` (f32 in both impls). Uses a single
-        /// <see cref="Buffer.BlockCopy"/> over the underlying float[] storage
-        /// (allocation-free per element); the IEEE-754 little-endian byte
-        /// layout matches the Rust blob exactly on LE hosts (x64/x86 - both
-        /// pwiz target archs are LE), avoiding net472's missing
-        /// <c>BitConverter.SingleToInt32Bits</c>. A null or empty input encodes
-        /// as a NULL cell (not a zero-length blob) for the same reason as
-        /// <see cref="EncodeF64Blob"/> -- see that method for the rationale.
-        /// </summary>
-        private static byte[] EncodeF32Blob(float[] values)
-        {
-            if (values == null || values.Length == 0)
-                return null;
-            var buf = new byte[values.Length * 4];
-            Buffer.BlockCopy(values, 0, buf, 0, buf.Length);
-            return buf;
-        }
-
-        /// <summary>
-        /// Inverse of <see cref="EncodeF64Blob"/>. Returns an empty array
-        /// for null or empty input (preserves <see cref="EncodeF64Blob"/>'s
-        /// invariant). Throws if the byte length is not a multiple of 8.
-        /// </summary>
-        private static double[] DecodeF64Blob(byte[] blob)
-        {
-            if (blob == null || blob.Length == 0)
-                return Array.Empty<double>();
-            if (blob.Length % 8 != 0)
-                throw new InvalidDataException(string.Format(
-                    OspreyIOResources.ParquetScoreCache_DecodeBlob_The_scores_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__,
-                    blob.Length, 8));
-            int n = blob.Length / 8;
-            var values = new double[n];
-            for (int i = 0; i < n; i++)
-            {
-                long bits = System.Buffers.Binary.BinaryPrimitives.ReadInt64LittleEndian(
-                    new ReadOnlySpan<byte>(blob, i * 8, 8));
-                values[i] = BitConverter.Int64BitsToDouble(bits);
-            }
-            return values;
-        }
-
-        /// <summary>
-        /// Inverse of <see cref="EncodeF32Blob"/>. Returns an empty array
-        /// for null or empty input. Throws if the byte length is not a
-        /// multiple of 4.
-        /// </summary>
-        private static float[] DecodeF32Blob(byte[] blob)
-        {
-            if (blob == null || blob.Length == 0)
-                return Array.Empty<float>();
-            if (blob.Length % 4 != 0)
-                throw new InvalidDataException(string.Format(
-                    OspreyIOResources.ParquetScoreCache_DecodeBlob_The_scores_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__,
-                    blob.Length, 4));
-            int n = blob.Length / 4;
-            var values = new float[n];
-            Buffer.BlockCopy(blob, 0, values, 0, blob.Length);
-            return values;
         }
 
         #endregion
@@ -1646,8 +1550,37 @@ namespace pwiz.Osprey.IO
             using (var reader = OpenReader(stream))
             {
                 var fieldsByName = BuildFieldLookup(reader);
+                var columns = scalarsOnly ? FdrRowColumns.ScalarsOnly : FdrRowColumns.Full;
                 for (int g = 0; g < reader.RowGroupCount; g++)
-                    entries.AddRange(ReadFdrEntryGroup(reader, g, fieldsByName, entries.Count, path, scalarsOnly));
+                    entries.AddRange(ReadFdrEntryGroup(reader, g, fieldsByName, entries.Count, path, columns, out _));
+            }
+
+            return entries;
+        }
+
+        /// <summary>
+        /// The rows the training export reads from a reconciled parquet: the TARGET rows only,
+        /// each with every scalar, the 21 PIN features and the reference XIC - but not the CWT
+        /// candidates or the fragment arrays, which the export never reads and which are most
+        /// of a row. Decoy rows are skipped as they are read, so they are never built. Every
+        /// field that is read is set exactly as <see cref="LoadFullFdrEntries"/> sets it,
+        /// <see cref="FdrEntry.ParquetIndex"/> included.
+        /// </summary>
+        public static List<FdrEntry> LoadTrainingExportRows(string path)
+        {
+            var entries = new List<FdrEntry>();
+
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = OpenReader(stream))
+            {
+                var fieldsByName = BuildFieldLookup(reader);
+                int rowsRead = 0;
+                for (int g = 0; g < reader.RowGroupCount; g++)
+                {
+                    entries.AddRange(ReadFdrEntryGroup(reader, g, fieldsByName, rowsRead, path,
+                        FdrRowColumns.TrainingExport, out int groupRows));
+                    rowsRead += groupRows;
+                }
             }
 
             return entries;
@@ -1823,7 +1756,8 @@ namespace pwiz.Osprey.IO
 
                     for (int g = 0; g < reader.RowGroupCount; g++)
                     {
-                        var groupEntries = ReadFdrEntryGroup(reader, g, fieldsByName, origRead, originalPath);
+                        var groupEntries = ReadFdrEntryGroup(reader, g, fieldsByName, origRead, originalPath,
+                            FdrRowColumns.Full, out _);
                         for (int j = 0; j < groupEntries.Count; j++)
                         {
                             var row = groupEntries[j];
@@ -1914,6 +1848,19 @@ namespace pwiz.Osprey.IO
             return a.ScanNumber < b.ScanNumber;
         }
 
+        /// <summary>Which columns <see cref="ReadFdrEntryGroup"/> decodes, and which rows it keeps.</summary>
+        private enum FdrRowColumns
+        {
+            /// <summary>Every column, every row.</summary>
+            Full,
+
+            /// <summary>The scalars only, every row (<c>scalarsOnly</c>).</summary>
+            ScalarsOnly,
+
+            /// <summary>Scalars, PIN features and reference XIC, target rows only.</summary>
+            TrainingExport,
+        }
+
         /// <summary>
         /// Read one row group's full <see cref="FdrEntry"/> rows -- the per-group body of
         /// <see cref="LoadFullFdrEntries"/>, extracted so the Stage-6 streaming reconciled
@@ -1923,11 +1870,19 @@ namespace pwiz.Osprey.IO
         /// <paramref name="startParquetIndex"/> + row, matching the whole-file loader.
         /// Returns an empty list when the group lacks the entry_id / is_decoy columns
         /// (the same "skip this group" rule the whole-file loader applies).
+        /// <paramref name="columns"/> says which heavy columns to decode and whether decoy rows
+        /// are wanted; <paramref name="groupRowCount"/> is the group's row count, kept or not.
         /// </summary>
         private static List<FdrEntry> ReadFdrEntryGroup(SyncParquetReader reader, int g,
             IReadOnlyDictionary<string, DataField> fieldsByName, int startParquetIndex,
-            string path, bool scalarsOnly = false)
+            string path, FdrRowColumns columns, out int groupRowCount)
         {
+            bool scalarsOnly = columns == FdrRowColumns.ScalarsOnly;
+            // The CWT candidates and fragment arrays are read for a full row only; the export
+            // projection keeps the features and the reference XIC.
+            bool readCandidatesAndFragments = columns == FdrRowColumns.Full;
+            bool targetsOnly = columns == FdrRowColumns.TrainingExport;
+            groupRowCount = 0;
             var entries = new List<FdrEntry>();
             using (var groupReader = reader.OpenRowGroupReader(g))
             {
@@ -1949,13 +1904,13 @@ namespace pwiz.Osprey.IO
                 var boundsAreaCol = ReadColumnByName<double>(groupReader, fieldsByName, FIELD_BOUNDS_AREA.Name);
                 var boundsSnrCol = ReadColumnByName<double>(groupReader, fieldsByName, FIELD_BOUNDS_SNR.Name);
                 // The heavy columns: read only when the caller wants the payload.
-                var cwtCol = scalarsOnly
+                var cwtCol = !readCandidatesAndFragments
                     ? null
                     : ReadBlobColumnByName(groupReader, fieldsByName, FIELD_CWT_CANDIDATES.Name);
-                var fragMzCol = scalarsOnly
+                var fragMzCol = !readCandidatesAndFragments
                     ? null
                     : ReadBlobColumnByName(groupReader, fieldsByName, FIELD_FRAGMENT_MZS.Name);
-                var fragIntCol = scalarsOnly
+                var fragIntCol = !readCandidatesAndFragments
                     ? null
                     : ReadBlobColumnByName(groupReader, fieldsByName, FIELD_FRAGMENT_INTENSITIES.Name);
                 var refXicRtsCol = scalarsOnly
@@ -1976,8 +1931,11 @@ namespace pwiz.Osprey.IO
                 }
 
                 int rowCount = entryIdCol.Length;
+                groupRowCount = rowCount;
                 for (int row = 0; row < rowCount; row++)
                 {
+                    if (targetsOnly && isDecoyCol[row])
+                        continue;
                     double[] features = null;
                     if (!scalarsOnly)
                     {
@@ -1998,7 +1956,7 @@ namespace pwiz.Osprey.IO
                         EntryId = entryIdCol[row],
                         ParquetIndex = scoreIndexCol != null
                             ? scoreIndexCol[row]
-                            : (uint)(startParquetIndex + entries.Count),
+                            : (uint)(startParquetIndex + row),
                         IsDecoy = isDecoyCol[row],
                         Charge = RequireCharge(chargeCol, row, entryIdCol[row], path),
                         ScanNumber = scanCol != null ? scanCol[row] : 0u,
@@ -2011,10 +1969,10 @@ namespace pwiz.Osprey.IO
                         CwtCandidates = cwt,
                         BoundsArea = boundsAreaCol != null ? boundsAreaCol[row] : 0.0,
                         BoundsSnr = boundsSnrCol != null ? boundsSnrCol[row] : 0.0,
-                        FragmentMzs = DecodeF64Blob(fragMzCol != null ? fragMzCol[row] : null),
-                        FragmentIntensities = DecodeF32Blob(fragIntCol != null ? fragIntCol[row] : null),
-                        ReferenceXicRts = DecodeF64Blob(refXicRtsCol != null ? refXicRtsCol[row] : null),
-                        ReferenceXicIntensities = DecodeF64Blob(refXicIntsCol != null ? refXicIntsCol[row] : null),
+                        FragmentMzs = ParquetBlobCodec.DecodeF64Blob(fragMzCol != null ? fragMzCol[row] : null),
+                        FragmentIntensities = ParquetBlobCodec.DecodeF32Blob(fragIntCol != null ? fragIntCol[row] : null),
+                        ReferenceXicRts = ParquetBlobCodec.DecodeF64Blob(refXicRtsCol != null ? refXicRtsCol[row] : null),
+                        ReferenceXicIntensities = ParquetBlobCodec.DecodeF64Blob(refXicIntsCol != null ? refXicIntsCol[row] : null),
                     });
                 }
             }
@@ -2287,6 +2245,24 @@ namespace pwiz.Osprey.IO
             OspreyConfig config,
             string currentVersion)
         {
+            return ValidateScoresParquetGroup(paths, config, currentVersion,
+                config.ExpectReconciledInput ? @"--task SecondPassFDR" : null);
+        }
+
+        /// <summary>
+        /// As <see cref="ValidateScoresParquetGroup(IEnumerable{string},OspreyConfig,string)"/>,
+        /// requiring a reconciled (post-Stage-6) parquet whenever
+        /// <paramref name="reconciledConsumer"/> is non-null and naming it in the refusal - for
+        /// a consumer that reads only reconciled parquets under every selection, which
+        /// <see cref="OspreyConfig.ExpectReconciledInput"/> (a <c>--task SecondPassFDR</c> flag)
+        /// does not describe.
+        /// </summary>
+        public static string ValidateScoresParquetGroup(
+            IEnumerable<string> paths,
+            OspreyConfig config,
+            string currentVersion,
+            string reconciledConsumer)
+        {
             string expectedSearch = config.Identity.SearchParameterHash();
             string expectedLibrary = config.Identity.LibraryIdentityHash();
 
@@ -2318,7 +2294,7 @@ namespace pwiz.Osprey.IO
                 // run. Failing fast here is the contract that lets the
                 // post-Stage-6 entry point be a useful HPC boundary
                 // (sidecar fanout across compute nodes).
-                if (config.ExpectReconciledInput)
+                if (reconciledConsumer != null)
                 {
                     string cachedReconciled;
                     kv.TryGetValue(@"osprey.reconciled", out cachedReconciled);
@@ -2329,9 +2305,8 @@ namespace pwiz.Osprey.IO
                     if (!string.Equals(cachedReconciled, @"true", StringComparison.Ordinal) &&
                         !string.Equals(cachedReconciled, RECONCILED_SURVIVORS, StringComparison.Ordinal))
                     {
-                        return string.Format(
-                            OspreyIOResources.ParquetScoreCache_ValidateScoresParquetGroup___task_SecondPassFDR_needs_the_reconciled_scores_files_that___task_PerFileRescoring_,
-                            path, cachedReconciled ?? @"<unset>");
+                        return string.Format(OspreyIOResources.ParquetScoreCache_ValidateScoresParquetGroup__2__needs_the_reconciled_scores_files_that___task_PerFileRescoring_writes,
+                            path, cachedReconciled ?? @"<unset>", reconciledConsumer);
                     }
                 }
             }
