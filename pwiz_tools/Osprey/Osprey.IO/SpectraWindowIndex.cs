@@ -21,6 +21,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using pwiz.Osprey.Core;
@@ -57,6 +58,8 @@ namespace pwiz.Osprey.IO
         private readonly Dictionary<int, IsolationWindow> _windowKeyToFirstIso;
         private readonly List<int> _windowKeysInFileOrder;
         private readonly long _ms1SectionOffset;
+        // Held by LoadWindowSerialRead only while it reads a block from disk.
+        private readonly object _blockReadLock = new object();
 
         private SpectraWindowIndex(string cachePath,
             Dictionary<int, List<long>> windowKeyToOffsets, double[] allMs2Rts,
@@ -248,10 +251,9 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public List<Spectrum> LoadWindow(int windowKey)
         {
-            if (!_windowKeyToOffsets.TryGetValue(windowKey, out var offsets) || offsets.Count == 0)
+            if (!_windowKeyToOffsets.TryGetValue(windowKey, out var offsets))
                 return new List<Spectrum>();
 
-            var result = new List<Spectrum>(offsets.Count);
             // Default FileStream buffer is deliberate on this hot per-window path: a
             // larger explicit buffer SLOWS it (the >4 KB peak blobs would be copied
             // through the buffer instead of read direct). See the NOTE in SpectraCache.cs.
@@ -264,84 +266,79 @@ namespace pwiz.Osprey.IO
                 // contiguity -- reads stay in-sequence within the group, and a mis-grouped
                 // cache faults instead of silently seeking out of the block.
                 fs.Seek(offsets[0], SeekOrigin.Begin);
-                foreach (long offset in offsets)
-                {
-                    if (fs.Position != offset)
-                        throw new InvalidDataException(string.Format(
-                            OspreyIOResources.SpectraWindowIndex_LoadWindow_The_spectra_cache_is_damaged__a_record_is_not_where_its_index_says__expected_byte__0___, offset, fs.Position));
-                    result.Add(SpectraCache.ReadMs2Record(r));
-                }
+                return ReadRecords(r, offsets, 0);
             }
-            return result;
         }
 
         /// <summary>
-        /// Read one window's records as raw bytes in a single read, for
-        /// <see cref="DecodeWindowBlock"/>. Returns null for an absent key.
+        /// The same spectra as <see cref="LoadWindow"/>, read as one block while holding a lock
+        /// that every call on this index shares, then decoded outside it. Threads that load
+        /// windows in parallel this way take turns at the disk and decode concurrently.
         ///
-        /// <para>For a consumer that reads every window of a run from a cold disk, where
-        /// <see cref="LoadWindow"/> is slow: concurrent LoadWindow calls each walk their own
-        /// block in small reads, so a spinning disk seeks between as many streams as there are
-        /// threads. A caller that issues these block reads one at a time keeps the disk on one
-        /// contiguous read per window and decodes the blocks in parallel. Scoring keeps
-        /// LoadWindow: there the spectra are usually warm, and the copy through this buffer
-        /// costs time (see the NOTE in SpectraCache.cs).</para>
+        /// <para>For a consumer that reads every window of a run from a cold spinning disk:
+        /// concurrent LoadWindow calls each walk their own window in small reads, so the disk
+        /// seeks between as many streams as there are threads. When the spectra are already in
+        /// the file cache, LoadWindow is faster. A window too large for one array is read by
+        /// LoadWindow.</para>
         /// </summary>
-        public byte[] ReadWindowBlock(int windowKey)
+        public List<Spectrum> LoadWindowSerialRead(int windowKey)
         {
-            if (!_windowKeyToOffsets.TryGetValue(windowKey, out var offsets) || offsets.Count == 0)
-                return null;
+            if (!_windowKeyToOffsets.TryGetValue(windowKey, out var offsets))
+                return new List<Spectrum>();
 
             long start = offsets[0];
-            long length = BlockEnd(start) - start;
-            if (length > int.MaxValue)
-            {
-                throw new InvalidDataException(string.Format(
-                    OspreyIOResources.SpectraWindowIndex_ReadWindowBlock_An_isolation_window_holds__0__bytes_of_spectra__more_than_one_read_can_hold_,
-                    length));
-            }
-            var block = new byte[length];
+            long end = BlockEnd(start);
+            byte[] block;
             // Buffer size 1 turns off FileStream's own buffer: one read straight into the block.
             using (var fs = new FileStream(_cachePath, FileMode.Open, FileAccess.Read, FileShare.Read, 1))
             {
-                fs.Seek(start, SeekOrigin.Begin);
-                fs.ReadExactly(block);
-            }
-            return block;
-        }
-
-        /// <summary>
-        /// Decode a block from <see cref="ReadWindowBlock"/> for the same key: the raw
-        /// (uncalibrated) MS2 spectra in file order, byte-for-byte what
-        /// <see cref="LoadWindow"/> returns. An empty list for a null block (absent key).
-        /// </summary>
-        public List<Spectrum> DecodeWindowBlock(int windowKey, byte[] block)
-        {
-            if (block == null)
-                return new List<Spectrum>();
-
-            var offsets = _windowKeyToOffsets[windowKey];
-            long start = offsets[0];
-            var result = new List<Spectrum>(offsets.Count);
-            using (var ms = new MemoryStream(block, false))
-            using (var r = new BinaryReader(ms))
-            {
-                // The same contiguity check as LoadWindow, plus that the records fill the block
-                // exactly - a block that ends early or late was cut at the wrong place.
-                foreach (long offset in offsets)
-                {
-                    if (start + ms.Position != offset)
-                    {
-                        throw new InvalidDataException(string.Format(
-                            OspreyIOResources.SpectraWindowIndex_LoadWindow_The_spectra_cache_is_damaged__a_record_is_not_where_its_index_says__expected_byte__0___, offset, start + ms.Position));
-                    }
-                    result.Add(SpectraCache.ReadMs2Record(r));
-                }
-                if (ms.Position != block.Length)
+                // The last window ends where the footer says the MS1 section starts, which no
+                // other check reads when MS1 is not loaded.
+                if (end <= start || end > fs.Length)
                 {
                     throw new InvalidDataException(string.Format(
-                        OspreyIOResources.SpectraWindowIndex_LoadWindow_The_spectra_cache_is_damaged__a_record_is_not_where_its_index_says__expected_byte__0___, start + block.Length, start + ms.Position));
+                        OspreyIOResources.SpectraWindowIndex_LoadWindowSerialRead_The_spectra_cache_is_damaged__an_isolation_window_would_end_at_byte__0___outside_the_file_, end));
                 }
+                if (end - start > Array.MaxLength)
+                    return LoadWindow(windowKey);
+                // Allocated before taking the lock, so no other thread's read waits on it.
+                block = new byte[end - start];
+                lock (_blockReadLock)
+                {
+                    fs.Seek(start, SeekOrigin.Begin);
+                    fs.ReadExactly(block);
+                }
+            }
+            using (var r = new BinaryReader(new MemoryStream(block, false)))
+            {
+                var result = ReadRecords(r, offsets, start);
+                // The records must fill the block exactly: one that ends early or late was cut
+                // at the wrong place.
+                if (r.BaseStream.Position != block.Length)
+                {
+                    throw new InvalidDataException(string.Format(
+                        OspreyIOResources.SpectraWindowIndex_LoadWindow_The_spectra_cache_is_damaged__a_record_is_not_where_its_index_says__expected_byte__0___, end, start + r.BaseStream.Position));
+                }
+                return result;
+            }
+        }
+
+        // Decode a window's records from a reader positioned at its first record. origin is the
+        // file offset of the reader's position 0, so each record's position can be checked
+        // against the index: the window's records are contiguous (v4 grouping), and a
+        // mis-grouped cache faults instead of silently reading past its window.
+        private static List<Spectrum> ReadRecords(BinaryReader r, List<long> offsets, long origin)
+        {
+            var result = new List<Spectrum>(offsets.Count);
+            foreach (long offset in offsets)
+            {
+                long position = origin + r.BaseStream.Position;
+                if (position != offset)
+                {
+                    throw new InvalidDataException(string.Format(
+                        OspreyIOResources.SpectraWindowIndex_LoadWindow_The_spectra_cache_is_damaged__a_record_is_not_where_its_index_says__expected_byte__0___, offset, position));
+                }
+                result.Add(SpectraCache.ReadMs2Record(r));
             }
             return result;
         }

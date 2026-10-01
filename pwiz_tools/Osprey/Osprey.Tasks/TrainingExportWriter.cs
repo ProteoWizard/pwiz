@@ -130,17 +130,14 @@ namespace pwiz.Osprey.Tasks
             var windows = index.IsolationWindows;
             var perWindow = new List<TrainingRecord>[windows.Count];
             var observed = new double[windows.Count][];
-            // An export made later reads every window of the run from disk, where parallel window
-            // reads make a spinning disk seek between threads (~85 MB/s on SEA-AD against 191 MB/s
-            // sequential), so it reads one window block at a time. Straight after the rescore the
-            // caller passes the index whose windows it has just streamed; they are warm, and there
-            // serial block reads only add a copy (~0.8 s per SEA-AD run).
-            var provider = new StreamingWindowSpectraProvider(index, ms2Cal, spectra == null);
-            // Reported because, from disk, without the rescore having just streamed them, a
-            // run's windows take about a minute on cohort-scale data, and a silent minute per
-            // run reads as a hang. At the I/O cadence rather than the rescore's 2 s: this loop
-            // streams each window from .spectra.bin, and at 2 s it printed ~19 percent lines
-            // per run of a ~37 s export on SEA-AD (~1,500 for 82 runs).
+            // An export made later reads every window of the run from disk, where serial block reads
+            // took a cold SEA-AD run from ~52 s to ~29 s on a spinning disk. Straight after the
+            // rescore the caller passes the index whose windows it has just streamed; they are warm,
+            // and there parallel LoadWindow was ~0.8 s per run faster.
+            var provider = new StreamingWindowSpectraProvider(index, ms2Cal, serialBlockReads: spectra == null);
+            // Reported because, read from disk, a run's windows take tens of seconds on cohort-scale
+            // data, and silence that long reads as a hang. At the I/O cadence rather than the
+            // rescore's 2 s: at 2 s this loop printed ~19 percent lines per SEA-AD run.
             int nDone = 0;
             using (var progress = new ProgressReporter(OspreyTasksResources.TrainingExportWriter_ExportRun_Exporting_isolation_windows,
                        windows.Count, @"  ", ProgressReporter.IO_INTERVAL_SECONDS))

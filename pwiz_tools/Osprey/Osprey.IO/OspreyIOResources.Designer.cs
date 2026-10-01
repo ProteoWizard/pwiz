@@ -996,12 +996,12 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An isolation window holds {0} bytes of spectra, more than one read can hold..
+        ///   Looks up a localized string similar to The spectra cache is damaged: an isolation window would end at byte {0:N0}, outside the file. Delete the .spectra.bin..
         /// </summary>
-        public static string SpectraWindowIndex_ReadWindowBlock_An_isolation_window_holds__0__bytes_of_spectra__more_than_one_read_can_hold_ {
+        public static string SpectraWindowIndex_LoadWindowSerialRead_The_spectra_cache_is_damaged__an_isolation_window_would_end_at_byte__0___outside_the_file_ {
             get {
-                return ResourceManager.GetString("SpectraWindowIndex_ReadWindowBlock_An_isolation_window_holds__0__bytes_of_spectr" +
-                        "a__more_than_one_read_can_hold_", resourceCulture);
+                return ResourceManager.GetString("SpectraWindowIndex_LoadWindowSerialRead_The_spectra_cache_is_damaged__an_isolati" +
+                        "on_window_would_end_at_byte__0___outside_the_file_", resourceCulture);
             }
         }
         
