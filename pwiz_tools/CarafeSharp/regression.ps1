@@ -45,8 +45,11 @@
     the isolated leg gates.
 
 .PARAMETER Dataset
-    Stellar. Each dataset is an entry of $datasets below and a folder of regression.data;
-    Astral follows when its training export is packaged.
+    Stellar (default) or Astral. Each dataset is an entry of $datasets below and a folder of
+    regression.data. Astral needs the Astral packages (carafesharp-testfiles-astral-v1 and
+    carafesharp-export-astral-v1); its export has about four times Stellar's precursors, so a
+    run is best made with -Torch cuda. Its golden, like Stellar's, comes from the CPU. -Leg Chained
+    runs on Stellar only.
 
 .PARAMETER Torch
     cpu (default) or cuda: the libtorch build to use and the device CarafeSharp runs on.
@@ -116,7 +119,7 @@
 #requires -Version 7
 [CmdletBinding()]
 param(
-    [ValidateSet('Stellar')] [string]$Dataset = 'Stellar',
+    [ValidateSet('Stellar', 'Astral')] [string]$Dataset = 'Stellar',
     [ValidateSet('cpu', 'cuda')] [string]$Torch = 'cpu',
     [switch]$NoBuild,
     [switch]$CreateGolden,
@@ -168,6 +171,19 @@ $datasets = @{
         # -Leg Chained: Osprey's committed subset, relative to pwiz_tools/Osprey.
         Subset        = 'Osprey.Test/TestData/StellarSubset.zip'
         SubsetLibrary = 'stellar-subset-library.tsv'
+    }
+    Astral = @{
+        Folder        = 'astral'
+        Export        = @{ Package = 'astral-export'; Path = 'astral/Ast-2024-12-05_HeLa_3mzDIA_6mIIT_400-900_55.training.parquet' }
+        LibraryFasta  = @{ Package = 'astral'; Path = 'astral/Carafe-Osprey-entrapment/osprey_library_db_peptides.fasta' }
+        Pairing       = @{ Package = 'astral'; Path = 'astral/Carafe-Osprey-entrapment/osprey_library_db_pairing.tsv' }
+        RunFile       = 'Ast-2024-12-05_HeLa_3mzDIA_6mIIT_400-900_55.raw'
+        Itol          = '20'
+        ItolUnit      = 'ppm'
+        MinPeptideMz  = '400'
+        MaxPeptideMz  = '900'
+        ExportNote    = 'carafesharp-export-astral-v1: the format 2 export Osprey #4708 (a5d15e6a4f, vendor reader) wrote ' +
+                        'from the Astral _55 .raw.'
     }
 }
 $config = $datasets[$Dataset]
@@ -499,6 +515,9 @@ if ($CreateGolden -and $CarafeSharpExe) {
     throw '-CreateGolden with -CarafeSharpExe: a golden is made with this checkout''s build, whose commit it records.'
 }
 if ($Leg -eq 'Chained') {
+    if (-not $config.Subset) {
+        throw "-Leg Chained runs on Osprey's committed Stellar subset; $Dataset has none."
+    }
     if ($CreateGolden) {
         throw '-Leg Chained has no golden: its checks are structural (see the description).'
     }
