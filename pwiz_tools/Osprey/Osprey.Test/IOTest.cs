@@ -3217,11 +3217,46 @@ namespace pwiz.Osprey.Test
                             label + " candidate " + k);
                     }
                 }
+
+                AssertTrainingExportProjection(path, reloaded);
             }
             finally
             {
                 ParquetScoreCache.RowGroupRowCapForTest = null;
                 try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// The training export's projection of the same two-group file: the target rows only,
+        /// each field it reads exactly as the full load reads it - the running ParquetIndex
+        /// across groups with the decoys skipped included - and no CWT candidates or fragment
+        /// arrays.
+        /// </summary>
+        private static void AssertTrainingExportProjection(string path, List<FdrEntry> full)
+        {
+            var targets = full.Where(e => !e.IsDecoy).ToList();
+            var projected = ParquetScoreCache.LoadTrainingExportRows(path);
+            Assert.AreEqual(targets.Count, projected.Count, "targets only");
+            for (int i = 0; i < targets.Count; i++)
+            {
+                var e = targets[i];
+                var a = projected[i];
+                Assert.AreEqual(e.EntryId, a.EntryId);
+                Assert.AreEqual(e.ParquetIndex, a.ParquetIndex);
+                Assert.AreEqual(e.Charge, a.Charge);
+                Assert.AreEqual(e.ModifiedSequence, a.ModifiedSequence);
+                Assert.AreEqual(e.ScanNumber, a.ScanNumber);
+                Assert.AreEqual(e.ApexRt, a.ApexRt);
+                Assert.AreEqual(e.StartRt, a.StartRt);
+                Assert.AreEqual(e.EndRt, a.EndRt);
+                Assert.AreEqual(e.BoundsArea, a.BoundsArea);
+                CollectionAssert.AreEqual(e.Features, a.Features);
+                CollectionAssert.AreEqual(e.ReferenceXicRts, a.ReferenceXicRts);
+                CollectionAssert.AreEqual(e.ReferenceXicIntensities, a.ReferenceXicIntensities);
+                Assert.IsNull(a.CwtCandidates, "the CWT candidates are not decoded");
+                Assert.AreEqual(0, a.FragmentMzs.Length, "the fragment m/z are not decoded");
+                Assert.AreEqual(0, a.FragmentIntensities.Length, "the fragment intensities are not decoded");
             }
         }
 

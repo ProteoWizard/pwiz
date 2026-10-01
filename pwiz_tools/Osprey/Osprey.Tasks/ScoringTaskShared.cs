@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.ModelDiagnostics;
@@ -126,7 +127,7 @@ namespace pwiz.Osprey.Tasks
         /// written to the cache, then indexed and the parsed list dropped. Stages 1-4
         /// (calibration + scoring) stream each isolation window from the returned index. The
         /// full resident load survives only in Stage-6 rescore
-        /// (<c>PerFileRescoreTask.LoadSpectraForRescore</c>, a separate follow-up).
+        /// (<see cref="LoadSpectraForRescore"/>, a separate follow-up).
         ///
         /// Shared here rather than owned by <see cref="PerFileScoringTask"/> because
         /// <see cref="SpectraCacheTask"/> (<c>--task SpectraCache</c>) builds exactly the
@@ -246,6 +247,148 @@ namespace pwiz.Osprey.Tasks
                 throw new IOException(string.Format(
                     OspreyTasksResources.ScoringTaskShared_EnsureSpectraCache_Could_not_index_the_spectra_cache_for___0____Per_file_scoring_reads_MS_MS_spectra_from___, inputFile, cachePath), indexError);
             return index;
+        }
+
+        /// <summary>
+        /// Build a streaming <see cref="SpectraWindowIndex"/> over the <c>.spectra.bin</c>
+        /// cache the original Stage 1-4 run wrote, so a task that starts after it (the Stage-6
+        /// rescore, the training export) loads each isolation window's MS2 on demand instead of
+        /// materializing the whole ~6 GB resident <c>List&lt;Spectrum&gt;</c>. MS1 + the
+        /// first-cycle isolation windows come from the same index, MS1 only when
+        /// <paramref name="loadMs1"/>. There is NO mzML fallback: such a task always runs
+        /// against a file the upstream stages already cached, so an absent/invalid cache is a
+        /// deployment error (the mzML may not even be shipped to the worker), and re-reading
+        /// the 6 GB mzML would defeat the streaming this method exists to enable. Throws
+        /// <see cref="SpectraCacheException"/> when the cache cannot be indexed, naming
+        /// <paramref name="consumer"/> as the stage that needed it. Moved unchanged from
+        /// <c>PerFileRescoreTask</c>.
+        /// </summary>
+        internal static SpectraWindowIndex LoadSpectraForRescore(string inputFile, string fileName,
+            string consumer, bool loadMs1)
+        {
+            string cachePath = SpectraCache.GetCachePath(inputFile);
+            SpectraWindowIndex index;
+            var reason = SpectraCacheRejection.None;
+            try
+            {
+                // Ask for the REASON, not just null. The six rejection rules have different
+                // remedies, and a message that lists them all sends the reader to the wrong one:
+                // "re-run PerFileScoring" is right for a stale cache and wrong for an absent
+                // one, where the cache usually exists and is valid but sits beside the raw data
+                // rather than in this worker's directory.
+                index = SpectraWindowIndex.BuildFromCache(cachePath, inputFile, loadMs1, out reason);
+            }
+            catch (Exception ex)
+            {
+                throw new SpectraCacheException(string.Format(
+                    OspreyTasksResources.ScoringTaskShared_LoadSpectraForRescore__0__needs_the_spectra_cache___1___that_PerFileScoring_writes__but_it_could_not_be_read, consumer, cachePath, ex.Message),
+                    SpectraCacheRejection.None, cachePath, ex);
+            }
+            if (index == null)
+            {
+                // Absence is the one refusal that is usually a LOCATION problem rather than a
+                // damaged cache, so it names the flag that fixes it. The others are about the
+                // file that is there, and --task SpectraCache is what rebuilds it: PerFileScoring
+                // does not declare the cache, so over scoring that is current it only skips.
+                string spectraCacheTask = OspreyArgNames.TaskText(SpectraCacheTask.TASK_NAME);
+                string remedy = reason == SpectraCacheRejection.Absent
+                    ? string.Format(OspreyTasksResources.ScoringTaskShared_LoadSpectraForRescore_The_cache_is_written_beside_its_source_data__so_a___task_worker_whose___output_dir_, fileName, spectraCacheTask)
+                    : string.Format(OspreyTasksResources.ScoringTaskShared_LoadSpectraForRescore_Run__1__for___0___to_rebuild_it_from_its_source_data_, fileName, spectraCacheTask);
+                throw new SpectraCacheException(string.Format(OspreyTasksResources.ScoringTaskShared_LoadSpectraForRescore__0__needs_the_spectra_cache___1___that_PerFileScoring_writes__but__2____3_,
+                    consumer, cachePath, SpectraCacheException.Describe(reason), remedy),
+                    reason, cachePath);
+            }
+            return index;
+        }
+
+        /// <summary>
+        /// Load MS2 + MS1 mass calibrations and the original Stage-4 RT
+        /// calibration MAD from the sibling .calibration.json that
+        /// Stage 2 wrote. Moved unchanged from <c>PerFileRescoreTask</c>, with
+        /// <paramref name="consumer"/> naming the stage in the errors. Throws
+        /// <see cref="InvalidDataException"/> if the
+        /// calibration sidecar is missing or unreadable -- Stage 6
+        /// requires the Stage 1-4 calibration to rescore, and silently
+        /// falling back to uncalibrated would mask a real configuration
+        /// error (the worker's output would diverge from the
+        /// straight-through pipeline's output). Mirrors the hard-error
+        /// behavior in Rust <c>run_rescore</c> at
+        /// <c>osprey/crates/osprey/src/rescore.rs</c>. Individual calibration
+        /// sections (Ms1Calibration / Ms2Calibration / RtMad) may still
+        /// be absent within the file; those leave the corresponding
+        /// out-param at its uncalibrated / null default.
+        /// </summary>
+        internal static void LoadMassCalibrations(string inputFile, string consumer,
+            out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal,
+            out double? rtMadFromCalJson)
+        {
+            ms2Cal = MzCalibrationResult.Uncalibrated();
+            ms1Cal = MzCalibrationResult.Uncalibrated();
+            rtMadFromCalJson = null;
+
+            // Stage 1-4 wrote the calibration sidecar to the configured output
+            // directory (ArtifactPaths), which for a straight-through --output-dir
+            // run is NOT the (possibly read-only) input mzML's directory. Resolve
+            // it the same way the writer did; fall back to the input's own dir
+            // (via GetFullPath so a bare-filename input still yields an absolute
+            // dir) when no output dir is configured.
+            string parent = !string.IsNullOrEmpty(ArtifactPaths.OutputDir)
+                ? ArtifactPaths.OutputDir
+                : Path.GetDirectoryName(Path.GetFullPath(inputFile));
+            if (string.IsNullOrEmpty(parent))
+            {
+                throw new InvalidDataException(string.Format(OspreyTasksResources.ScoringTaskShared_LoadMassCalibrations_Cannot_find_the_folder_of_the_calibration_file_for_input___0_____1__needs_the_calibration, inputFile, consumer));
+            }
+            string calPath = CalibrationIO.CalibrationPathForInput(inputFile, parent);
+            if (!File.Exists(calPath))
+            {
+                throw new InvalidDataException(string.Format(OspreyTasksResources.ScoringTaskShared_LoadMassCalibrations_The_calibration_file__0__for_input__1__was_not_found___2__needs_the_calibration, calPath, inputFile, consumer));
+            }
+
+            CalibrationParams calParams;
+            try
+            {
+                calParams = CalibrationIO.LoadCalibration(calPath);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidDataException(string.Format(OspreyTasksResources.ScoringTaskShared_LoadMassCalibrations_Failed_to_read_the_calibration_file__0____1___The_file_exists_but_could_not_be_read__, calPath, ex.Message), ex);
+            }
+
+            if (calParams.Ms2Calibration != null && calParams.Ms2Calibration.Calibrated)
+            {
+                ms2Cal = new MzCalibrationResult
+                {
+                    Mean = calParams.Ms2Calibration.Mean,
+                    Median = calParams.Ms2Calibration.Median,
+                    SD = calParams.Ms2Calibration.SD,
+                    Count = calParams.Ms2Calibration.Count,
+                    Unit = calParams.Ms2Calibration.Unit,
+                    AdjustedTolerance = calParams.Ms2Calibration.AdjustedTolerance,
+                    Calibrated = true
+                };
+            }
+            if (calParams.Ms1Calibration != null && calParams.Ms1Calibration.Calibrated)
+            {
+                ms1Cal = new MzCalibrationResult
+                {
+                    Mean = calParams.Ms1Calibration.Mean,
+                    Median = calParams.Ms1Calibration.Median,
+                    SD = calParams.Ms1Calibration.SD,
+                    Count = calParams.Ms1Calibration.Count,
+                    Unit = calParams.Ms1Calibration.Unit,
+                    AdjustedTolerance = calParams.Ms1Calibration.AdjustedTolerance,
+                    Calibrated = true
+                };
+            }
+            // The MAD is what Rust's run_search uses for rt_tolerance
+            // derivation; emit it from here (not from the refined cal's
+            // abs_residuals) so the C# rescore matches Rust's window
+            // size byte-for-byte.
+            if (calParams.RtCalibration != null && calParams.RtCalibration.MAD.HasValue)
+            {
+                rtMadFromCalJson = calParams.RtCalibration.MAD.Value;
+            }
         }
 
         /// <summary>
@@ -983,14 +1126,17 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// A search of one input file with no <c>--task</c>: the only configuration with no other
-        /// run to reconcile against, so its log never mentions cross-run reconciliation. A
-        /// <c>--task PerFileRescoring</c> worker also holds one input, but it re-scores against
-        /// the cross-run plan a multi-file FirstPassFDR wrote, and says so.
+        /// A search of one input file that runs the whole pipeline - no <c>--task</c>, or a
+        /// selector such as <c>--task TrainingExport</c> that is not a stage of the pipeline it
+        /// runs: the only configuration with no other run to reconcile against, so its log never
+        /// mentions cross-run reconciliation. A <c>--task PerFileRescoring</c> worker also holds
+        /// one input, but it re-scores against the cross-run plan a multi-file FirstPassFDR
+        /// wrote, and says so.
         /// </summary>
         internal static bool IsSingleFileSearch(OspreyConfig config)
         {
-            return config.SelectedTask == null && config.InputFiles != null && config.InputFiles.Count == 1;
+            return (config.SelectedTask == null || !config.Pipeline.Contains(config.SelectedTask)) &&
+                   config.InputFiles != null && config.InputFiles.Count == 1;
         }
     }
 }

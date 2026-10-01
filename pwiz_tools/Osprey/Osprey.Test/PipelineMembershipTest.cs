@@ -67,6 +67,9 @@ namespace pwiz.Osprey.Test
                 // suppresses. The row here used to read {true,true,false,false}, which was
                 // the shape of a config the CLI cannot build.
                 (ModelDiagnosticsTask.TASK_NAME, new[] { true,  true,  true,  true  }),
+                // TrainingExport is a selector too: the export is PerFileRescoring's product,
+                // so asking for it walks the canonical stages and adds no stage of its own.
+                (TrainingExportTask.TASK_NAME,   new[] { true,  true,  true,  true  }),
             };
             // Every selection that walks the canonical pipeline has a row, so a task added
             // later cannot leave its membership unpinned; the standalone task has none to pin.
@@ -107,7 +110,8 @@ namespace pwiz.Osprey.Test
                 new[]
                 {
                     SpectraCacheTask.TASK_NAME, PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME,
-                    PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME, ModelDiagnosticsTask.TASK_NAME
+                    PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME, TrainingExportTask.TASK_NAME,
+                    ModelDiagnosticsTask.TASK_NAME
                 },
                 set.All.Select(t => t.Name).ToArray(), @"the --task values, in --help order");
             CollectionAssert.AreEqual(
@@ -128,6 +132,8 @@ namespace pwiz.Osprey.Test
                 @"SpectraCache runs alone");
             Assert.AreSame(set.Pipeline, set.PipelineFor(set.FindByName(ModelDiagnosticsTask.TASK_NAME)),
                 @"ModelDiagnostics runs the canonical stages");
+            Assert.AreSame(set.Pipeline, set.PipelineFor(set.FindByName(TrainingExportTask.TASK_NAME)),
+                @"TrainingExport runs the canonical stages");
 
             // Case-insensitive lookup resolves to the canonical spelling.
             Assert.AreSame(set.FindByName(FirstPassFdrTask.TASK_NAME), set.FindByName(@"firstpassfdr"));
@@ -173,6 +179,7 @@ namespace pwiz.Osprey.Test
                 (FirstPassFdrTask.TASK_NAME,     false, false, true,  false, false),
                 (PerFileRescoreTask.TASK_NAME,   true,  true,  true,  false, false),
                 (SecondPassFdrTask.TASK_NAME,    false, false, true,  true,  true),
+                (TrainingExportTask.TASK_NAME,   false, true,  false, false, true),
                 (ModelDiagnosticsTask.TASK_NAME, false, true,  false, false, true),
             };
             var set = OspreyTasks.Create();
@@ -222,7 +229,7 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestOnlyStage7JoinTasksAdmitTheStreamedJoin()
         {
-            var admitted = new[] { SecondPassFdrTask.TASK_NAME, ModelDiagnosticsTask.TASK_NAME };
+            var admitted = new[] { SecondPassFdrTask.TASK_NAME, TrainingExportTask.TASK_NAME, ModelDiagnosticsTask.TASK_NAME };
             foreach (var task in OspreyTasks.Create().All)
             {
                 bool expected = admitted.Contains(task.Name);

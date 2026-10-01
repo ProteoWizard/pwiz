@@ -105,8 +105,8 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// A fresh set of instances: the six tasks, the canonical pipeline over four of them,
-        /// and what the other two run when selected.
+        /// A fresh set of instances: the seven tasks, the canonical pipeline over four of them,
+        /// and what the other three run when selected.
         /// </summary>
         public static OspreyTasks Create()
         {
@@ -115,11 +115,12 @@ namespace pwiz.Osprey.Tasks
             var firstPassFdr = new FirstPassFdrTask();
             var perFileRescore = new PerFileRescoreTask();
             var secondPassFdr = new SecondPassFdrTask();
+            var trainingExport = new TrainingExportTask();
             var modelDiagnostics = new ModelDiagnosticsTask();
 
             var pipeline = new OspreyTask[] { perFileScoring, firstPassFdr, perFileRescore, secondPassFdr };
             return new OspreyTasks(
-                new OspreyTask[] { spectraCache, perFileScoring, firstPassFdr, perFileRescore, secondPassFdr, modelDiagnostics },
+                new OspreyTask[] { spectraCache, perFileScoring, firstPassFdr, perFileRescore, secondPassFdr, trainingExport, modelDiagnostics },
                 pipeline,
                 new Dictionary<OspreyTask, IReadOnlyList<OspreyTask>>
                 {
@@ -130,6 +131,11 @@ namespace pwiz.Osprey.Tasks
                     // the report with every other write suppressed.
                     { spectraCache, new OspreyTask[] { spectraCache } },
                     { modelDiagnostics, pipeline },
+                    // TrainingExport asks for the export, a declared output of PerFileRescoring:
+                    // on a finished analysis every other stage rehydrates and PerFileRescoring
+                    // writes only the missing exports; on an unfinished one the analysis runs
+                    // with the export. A selector, never a stage (P17).
+                    { trainingExport, pipeline },
                 });
         }
 

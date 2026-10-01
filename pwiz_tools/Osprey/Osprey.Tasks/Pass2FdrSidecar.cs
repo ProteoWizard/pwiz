@@ -930,14 +930,23 @@ namespace pwiz.Osprey.Tasks
             // is one whose producer was legitimately skipped as already-done.
             foreach (string inputFile in ctx.Config.InputFiles)
             {
-                string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
-                if (File.Exists(pass2Path) &&
-                    File.Exists(TaskValiditySidecar.PathFor(pass2Path, PerFileRescoreTask.TASK_NAME)))
-                {
+                if (HasWorkerStamp(inputFile))
                     owned.Add(Path.GetFileNameWithoutExtension(inputFile));
-                }
             }
             return owned;
+        }
+
+        /// <summary>
+        /// Whether <paramref name="inputFile"/>'s <c>.2nd-pass.fdr_scores.bin</c> carries a
+        /// <c>PerFileRescoring</c> stamp - the per-file test behind
+        /// <see cref="WorkerOwnedPass2Sidecars"/>, kept in one place so every reader of "who
+        /// wrote this sidecar" asks the same question.
+        /// </summary>
+        internal static bool HasWorkerStamp(string inputFile)
+        {
+            string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
+            return File.Exists(pass2Path) &&
+                   File.Exists(TaskValiditySidecar.PathFor(pass2Path, PerFileRescoreTask.TASK_NAME));
         }
 
         /// <summary>

@@ -537,6 +537,16 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The file is damaged: a stored list of values is {0:N0} bytes long, which is not a multiple of {1}..
+        /// </summary>
+        public static string ParquetBlobCodec_Decode_The_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__ {
+            get {
+                return ResourceManager.GetString("ParquetBlobCodec_Decode_The_file_is_damaged__a_stored_list_of_values_is__0__byte" +
+                        "s_long__which_is_not_a_multiple_of__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} does not record the search settings it was scored with, so it cannot be reused. Score the file again (--task PerFileScoring)..
         /// </summary>
         public static string ParquetScoreCache_CheckParquetMetadata__0__does_not_record_the_search_settings_it_was_scored_with__so_it_cannot_be_reused__Score_ {
@@ -617,16 +627,6 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The scores file is damaged: a stored list of values is {0:N0} bytes long, which is not a multiple of {1}..
-        /// </summary>
-        public static string ParquetScoreCache_DecodeBlob_The_scores_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__ {
-            get {
-                return ResourceManager.GetString("ParquetScoreCache_DecodeBlob_The_scores_file_is_damaged__a_stored_list_of_values_" +
-                        "is__0__bytes_long__which_is_not_a_multiple_of__1__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to {0}: the stored peak candidates in row group {1} have an unexpected type ({2}). The file is damaged or was written by a different version of Osprey..
         /// </summary>
         public static string ParquetScoreCache_LoadCwtCandidatesFromParquet__0___the_stored_peak_candidates_in_row_group__1__have_an_unexpected_type___2____The_file_is_damaged_or_was_written_by_a_different_version_of_Osprey_ {
@@ -678,12 +678,11 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to --task SecondPassFDR needs the reconciled scores files that --task PerFileRescoring writes, but {0} is not one (osprey.reconciled = &apos;{1}&apos;). Run --task PerFileRescoring first. If the file was written by a newer version of Osprey, use that version..
+        ///   Looks up a localized string similar to {2} needs the reconciled scores files that --task PerFileRescoring writes, but {0} is not one (osprey.reconciled = '{1}'). Run --task PerFileRescoring first. If the file was written by a newer version of Osprey, use that version..
         /// </summary>
-        public static string ParquetScoreCache_ValidateScoresParquetGroup___task_SecondPassFDR_needs_the_reconciled_scores_files_that___task_PerFileRescoring_ {
+        public static string ParquetScoreCache_ValidateScoresParquetGroup__2__needs_the_reconciled_scores_files_that___task_PerFileRescoring_writes {
             get {
-                return ResourceManager.GetString("ParquetScoreCache_ValidateScoresParquetGroup___task_SecondPassFDR_needs_the_recon" +
-                        "ciled_scores_files_that___task_PerFileRescoring_", resourceCulture);
+                return ResourceManager.GetString("ParquetScoreCache_ValidateScoresParquetGroup__2__needs_the_reconciled_scores_files_that___task_PerFileRescoring_writes", resourceCulture);
             }
         }
         
