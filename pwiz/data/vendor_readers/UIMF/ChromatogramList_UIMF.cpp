@@ -36,8 +36,8 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
-ChromatogramList_UIMF::ChromatogramList_UIMF(UIMFReaderPtr rawfile)
-:   rawfile_(rawfile), indexInitialized_(util::init_once_flag_proxy)
+ChromatogramList_UIMF::ChromatogramList_UIMF(UIMFReaderPtr rawfile, const Reader::Config& config)
+:   rawfile_(rawfile), config_(config), indexInitialized_(util::init_once_flag_proxy)
 {
 }
 
@@ -102,13 +102,26 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_UIMF::chromatogram(size_t index, 
             if (detailLevel < DetailLevel_FullMetadata)
                 return result;
 
+            // Calibration frames kept out of the spectrum list must not be summed into the file's
+            // TIC either, or it carries points that no spectrum in the output accounts for
+            bool ignoreCalibrationFrames = config_.ignoreCalibrationScans &&
+                                           rawfile_->getFrameTypes().count(FrameType_Calibration) > 0;
+
             if (getBinaryData)
             {
                 std::vector<double> timeArray, intensityArray;
-                rawfile_->getTic(timeArray, intensityArray);
+                rawfile_->getTic(timeArray, intensityArray, ignoreCalibrationFrames);
                 result->setTimeIntensityArrays(timeArray, intensityArray, UO_minute, MS_number_of_detector_counts);
 
                 result->defaultArrayLength = result->getTimeArray()->data.size();
+            }
+            else if (ignoreCalibrationFrames)
+            {
+                // Without the arrays there is nothing to count, so ask for them rather than report a
+                // frame count that includes the frames just excluded
+                std::vector<double> timeArray, intensityArray;
+                rawfile_->getTic(timeArray, intensityArray, true);
+                result->defaultArrayLength = timeArray.size();
             }
             else
                 result->defaultArrayLength = rawfile_->getFrameCount();

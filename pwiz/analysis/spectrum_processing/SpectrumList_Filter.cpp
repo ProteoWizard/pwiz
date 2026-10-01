@@ -318,15 +318,29 @@ PWIZ_API_DECL SpectrumList_FilterPredicate_MSLevelSet::SpectrumList_FilterPredic
 
 PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_MSLevelSet::accept(const msdata::Spectrum& spectrum) const
 {
-    CVParam param = spectrum.cvParamChild(MS_spectrum_type);
-    if (param.cvid == CVID_Unknown) return boost::logic::indeterminate;
-    if (!cvIsA(param.cvid, MS_mass_spectrum))
-        return msLevelSet_.contains(0); // non-MS spectra are considered ms level 0
-    param = spectrum.cvParam(MS_ms_level);
-    if (param.cvid == CVID_Unknown) return boost::logic::indeterminate;
-    int msLevel = param.valueAs<int>();
-    bool result = msLevelSet_.contains(msLevel);
-    return result;
+    // A declared ms level decides this outright, whatever the spectrum type says. Reading it before
+    // asking anything about the type also keeps this predicate clear of how the CV happens to file
+    // any one type term: a calibration spectrum declares a level like any other, so it is filtered
+    // on that level whether the CV attaches "calibration spectrum" to "spectrum type" by is_a or by
+    // has-a. Only a spectrum that declares no level at all needs the type, and the terms consulted
+    // there keep their is_a children across that change.
+    //
+    // Leaving calibration data out is not this filter's decision to make - that is what
+    // Reader::Config::ignoreCalibrationScans is for, and it acts upstream of any filter.
+    CVParam param = spectrum.cvParam(MS_ms_level);
+    if (param.cvid != CVID_Unknown)
+        return msLevelSet_.contains(param.valueAs<int>());
+
+    // Nothing declared, so the type is all there is to go on. Ask by child rather than for the
+    // first one: a spectrum may carry more than one child of "spectrum type", and no rule fixes
+    // the order a writer emits them in.
+    if (!spectrum.hasCVParamChild(MS_spectrum_type))
+        return boost::logic::indeterminate;
+
+    // A spectrum that is not a mass spectrum at all - an emission spectrum, say - is ms level 0.
+    if (!spectrum.hasCVParamChild(MS_mass_spectrum))
+        return msLevelSet_.contains(0);
+    return boost::logic::indeterminate;
 }
 
 

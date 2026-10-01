@@ -124,8 +124,19 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
 
             multimap<double, pair<int, double>> fullFileTIC;
 
+            // When ignoreCalibrationScans is set the lockmass function is kept out of the spectrum list,
+            // so it must not be summed into the global TIC either - otherwise the TIC carries points that
+            // no spectrum in the file accounts for.
+            int lockmassFunction = -1;
+            bool excludeLockmassFunction = config_.ignoreCalibrationScans &&
+                                           rawdata_->Info.TryGetLockMassFunction(lockmassFunction) &&
+                                           lockmassFunction >= 0;
+
             for(int function : rawdata_->FunctionIndexList())
             {
+                if (excludeLockmassFunction && function == lockmassFunction)
+                    continue;
+
                 if (config_.globalChromatogramsAreMs1Only)
                 {
                     int msLevel;

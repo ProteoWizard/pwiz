@@ -55,6 +55,12 @@ class PWIZ_API_DECL SpectrumListWrapper : public SpectrumListBase
     virtual IndexList findNameValue(const std::string& name, const std::string& value) const {return size() == inner_->size() ? inner_->findNameValue(name, value) : SpectrumList::findNameValue(name, value);}
     virtual IndexList findSpotID(const std::string& spotID) const {return size() == inner_->size() ? inner_->findSpotID(spotID) : SpectrumList::findSpotID(spotID);}
 
+    // A wrapper only ever filters or transforms what the inner list presents, so if the inner list is
+    // omitting calibration spectra then so is the wrapper. Without forwarding this, the base
+    // implementation answers false and callers cannot tell a wrapped vendor list from one with no
+    // calibration spectra at all.
+    virtual bool calibrationSpectraAreOmitted() const {return inner_->calibrationSpectraAreOmitted();}
+
     // no default implementation, because otherwise subclasses could override the DetailLevel overload and the getBinaryData overload would be inconsistent
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const = 0;
 

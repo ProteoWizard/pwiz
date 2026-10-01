@@ -518,6 +518,112 @@ void testMSLevelSet(SpectrumListPtr sl)
     }
 }
 
+
+// A declared ms level decides which spectra this predicate keeps, whatever the spectrum type says.
+// Calibration spectra are the interesting case, because "calibration spectrum" (MS:1000928) is not
+// under "mass spectrum" and it reaches this code in two shapes that both have to keep working:
+//
+//   - sole declaration (scan=2): "calibration spectrum" and no mass-spectrum term at all. What the
+//     UIMF reader writes today, and what any mzML written while MS:1000928 is still a child of
+//     "spectrum type" can carry, since a writer forced to pick one term picks the marker.
+//   - paired (scan=4): "MS1 spectrum" and "calibration spectrum" together, as mzML in the wild
+//     already marks a Waters lockspray scan - and as every writer must once psi-ms-CV #541 reparents
+//     the term under "spectrum attribute", an attribute being no substitute for a type.
+//
+// Which shape a file has therefore depends on when it was written, and both are permanent: the files
+// carrying the sole declaration already exist and are not going to be rewritten. So a reader will be
+// handed both indefinitely, and this predicate cannot key off the type to tell them apart.
+//
+// That is what makes reading the declared level first the stable rule rather than a convenience. A
+// type-first predicate answers the sole-declaration shape correctly only while the CV still files
+// MS:1000928 under "spectrum type"; after the reparent such a spectrum has no child of "spectrum
+// type" at all, so the predicate would answer indeterminate and SpectrumList_Filter would drop a
+// frame that had told it exactly which level it was. The CV is fixed at build time, so that future
+// cannot be exercised here directly - scan=5, a declared level with no spectrum type at all, is the
+// same shape and is what covers it.
+//
+// Such a spectrum is still in the list when a filter runs because
+// Reader::Config::ignoreCalibrationScans defaults to false. Removing calibration data is that flag's
+// job, so until someone asks for it this predicate is what decides how one is classified.
+//
+// Uses its own list, since the shared one is pinned by exact sizes and ids throughout this file.
+void testMSLevelWithCalibrations()
+{
+    if (os_) *os_ << "testMSLevelWithCalibrations:\n";
+
+    SpectrumListSimplePtr sl(new SpectrumListSimple);
+
+    SpectrumPtr ms1(new Spectrum);
+    ms1->index = 0;
+    ms1->id = "scan=1";
+    ms1->set(MS_ms_level, 1);
+    ms1->set(MS_MS1_spectrum);
+    sl->spectra.push_back(ms1);
+
+    // The UIMF reader writes calibration as the sole type on a frame that still declares an ms level
+    SpectrumPtr calibration(new Spectrum);
+    calibration->index = 1;
+    calibration->id = "scan=2";
+    calibration->set(MS_ms_level, 1);
+    calibration->set(MS_calibration_spectrum);
+    sl->spectra.push_back(calibration);
+
+    // A spectrum type with no ms level at all is what the level 0 rule is for
+    SpectrumPtr emission(new Spectrum);
+    emission->index = 2;
+    emission->id = "scan=3";
+    emission->set(MS_emission_spectrum);
+    sl->spectra.push_back(emission);
+
+    // A Waters lockspray scan carries both terms and is a real MS1
+    SpectrumPtr lockspray(new Spectrum);
+    lockspray->index = 3;
+    lockspray->id = "scan=4";
+    lockspray->set(MS_ms_level, 1);
+    lockspray->set(MS_MS1_spectrum);
+    lockspray->set(MS_calibration_spectrum);
+    sl->spectra.push_back(lockspray);
+
+    // A declared level and no spectrum type at all. This is the case that separates reading the
+    // level first from consulting the type first: the type-first form finds no child of "spectrum
+    // type", answers indeterminate, and SpectrumList_Filter drops the spectrum once it runs out of
+    // detail levels to try. It is also what a UIMF calibration frame becomes once psi-ms-CV #541
+    // reparents "calibration spectrum" under "spectrum attribute", which is why the level has to win.
+    SpectrumPtr levelOnly(new Spectrum);
+    levelOnly->index = 4;
+    levelOnly->id = "scan=5";
+    levelOnly->set(MS_ms_level, 1);
+    sl->spectra.push_back(levelOnly);
+
+    {
+        SpectrumList_Filter filter(sl, SpectrumList_FilterPredicate_MSLevelSet(IntegerSet(1)));
+        if (os_)
+        {
+            printSpectrumList(filter, *os_);
+            *os_ << endl;
+        }
+        // Everything that declares ms level 1 is kept, whether its type is a mass spectrum, a
+        // calibration spectrum, both, or absent altogether
+        unit_assert_operator_equal(4, filter.size());
+        unit_assert(filter.spectrumIdentity(0).id == "scan=1");
+        unit_assert(filter.spectrumIdentity(1).id == "scan=2");
+        unit_assert(filter.spectrumIdentity(2).id == "scan=4");
+        unit_assert(filter.spectrumIdentity(3).id == "scan=5");
+    }
+
+    {
+        SpectrumList_Filter filter(sl, SpectrumList_FilterPredicate_MSLevelSet(IntegerSet(0)));
+        if (os_)
+        {
+            printSpectrumList(filter, *os_);
+            *os_ << endl;
+        }
+        // And level 0 catches only the spectrum that declares no level at all
+        unit_assert_operator_equal(1, filter.size());
+        unit_assert(filter.spectrumIdentity(0).id == "scan=3");
+    }
+}
+
 void testMS2Activation(SpectrumListPtr sl)
 {
     if (os_) *os_ << "testMS2Activation:\n";
@@ -840,6 +946,7 @@ void test()
     testScanEventSet(sl);
     testScanTimeRange(sl);
     testMSLevelSet(sl);
+    testMSLevelWithCalibrations();
     testMS2Activation(sl);
     testMassAnalyzerFilter(sl);
     testMZPresentFilter(sl);
