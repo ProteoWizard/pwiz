@@ -61,11 +61,14 @@ repository. They come as zips with one top folder each:
 | `carafesharp-testfiles-v1` | Stellar Carafe runs (libraries, predictions, digests, fine-tuned models), 12 stage-1 builds, small library references | 1.5 GB zip, 5.6 GB extracted | the default pass |
 | `carafesharp-testfiles-astral-v1` | the Astral Carafe run | 4.8 GB zip, 22 GB extracted | category `Astral` |
 | `carafesharp-export-v1` | Osprey's training export of the Stellar run | 67 MB zip, 67 MB extracted | masking parity |
+| `carafesharp-export-astral-v1` | Osprey's training export of the Astral run | 162 MB zip, 162 MB extracted | `regression.ps1 -Dataset Astral` |
 
 The zips are in the PanoramaWeb perftests folder beside the Osprey test files,
 <https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/>, and anyone can download them.
-`testdata.json` has each one's URL, size and SHA-256. The export package holds the format 2 export that
-Osprey (#4708) wrote from the Stellar `_21` .raw; its README records the command.
+`testdata.json` has each one's URL, size and SHA-256. The export packages hold the format 2 exports that
+Osprey (#4708) wrote from the Stellar `_21` and Astral `_55` .raw files, each searched against the Carafe
+initial library of its test-files package; each README records the command. The Astral one is not
+uploaded yet: its URL in `testdata.json` is PLACEHOLDER until it is.
 
 Extract a zip into `<Downloads>/Perftests/`, where the Skyline and Osprey perf tests keep theirs:
 - `<Downloads>` is `SKYLINE_DOWNLOAD_PATH` when it is set, else the user's Downloads folder.
@@ -111,7 +114,7 @@ new version.
 | CPU, with data | `build.ps1 -RequireData` | all 74 | about 10 min |
 | Astral | `build.ps1 -TestCategory Astral -RequireData` | 4, on the Astral package | about 12 min |
 | CUDA | `build.ps1 -Torch cuda` | the `Cuda` category: pretrained predictions on the GPU against the CPU | not yet timed |
-| Regression | `regression.ps1` | the `Regression` category: a fine-tune and library against the golden (see "Regression") | 20-35 min on the CPU |
+| Regression | `regression.ps1 [-Dataset Astral]` | the `Regression` category: a fine-tune and library against the golden (see "Regression") | Stellar 13 min, Astral 35 min on the CPU |
 
 - **CUDA:** the pass sets `CARAFESHARP_REQUIRE_CUDA=1`, so a GPU test that finds no usable GPU fails
   instead of passing untested. The GPU and CPU predictions agree within 3e-5 in intensity and 5e-5 in
@@ -145,7 +148,10 @@ export from `carafesharp-export`, and the library FASTA and pairing manifest fro
 whole pair groups: the groups whose `peptide_pair_index` is a multiple of 50, each with its target,
 entrapment target, decoy and entrapment decoy. The subset manifest is exactly those groups' rows and the
 subset FASTA those peptides' records: 4,378 groups and 17,512 records of the 875,484, so the library
-has a DecoyPairs table as a full one does. CarafeSharp runs once, `-tf all` with the library arguments
+has a DecoyPairs table as a full one does. `-Dataset Astral` takes the export from
+`carafesharp-export-astral-v1` and the FASTA and manifest from `carafesharp-testfiles-astral-v1`
+(`astral/Carafe-Osprey-entrapment`): 27,820 groups and 111,322 records. Carafe's digest repeats 39
+sequences across records, which is why there are 45 more records than distinct sequences. CarafeSharp runs once, `-tf all` with the library arguments
 of the workflow's stage 4-5, so fine-tuning and prediction happen in one call. The library is not
 rebuilt with `-model_dir`, because `meta.json` carries Carafe's default `lf_frag_mz_max` of 1800 while
 the workflow predicts with 1960. A CPU run takes 20 to 35 minutes; each gets its own folder under
@@ -207,6 +213,19 @@ beam-CID and LIT columns now train. Against the golden before it, the pretrained
 tables and RT model were identical, the fine-tuned MS2 metrics moved by at most 3.5e-4 (PCC), library
 peaks by +0.33%, and the sampled spectral cosine median was 0.9998. Two runs of that commit on this
 machine gave byte-identical models and libraries.
+
+**The Astral golden** is a CPU run on the same machine (35 minutes, most of it the fine-tune on 39,702
+MS2 spectra and 77,073 RT peptide forms):
+- Library: 123,399 precursors, 1,703,849 peaks and 123,380 DecoyPairs rows (61,690 pairs, 30,836 of them
+  entrapment pairs).
+- Pairing: 61,675 of 61,685 targets paired. 6 are unpaired because their decoy was not written, 4 because
+  their partner precursor is paired in its other role, and 37 I/L twins are left out of the check.
+- Sample: 1,738 precursors at modulus 70, 313 KB.
+- Held-out metrics, pretrained to fine-tuned: MS2 COS 0.9771 to 0.9868, RT R2 0.8595 to 0.9972.
+- Export: `carafesharp-export-astral-v1`, which Osprey (#4708) wrote from the `_55` .raw against Carafe's
+  initial library. Seven precursors are left out of that library: Carafe had merged each with a decoy
+  of the same sequence, and this Osprey refuses such rows against the pairing manifest. The package
+  README lists them.
 
 **The chained leg.** `regression.ps1` builds Osprey from the same checkout (or takes `-OspreyExe`),
 extracts `pwiz_tools/Osprey/Osprey.Test/TestData/StellarSubset.zip` (one isolation window of the three
