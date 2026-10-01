@@ -1448,6 +1448,39 @@ namespace pwiz.Osprey.Test
             // cover.
             Assert.AreEqual(fixtureSide.Count, sidecar.Count);
             AssertSinkMatchesOracle(sinkRes, sinkSide, fixtureSide, projSet);
+
+            // Fourth arm: a sidecar holding MORE records than the parquet has rows. The reader
+            // sizes its arrays from the parquet row count, so this is the case that would run
+            // off the end of them. It has to refuse the file and score it normally - not throw,
+            // and above all not accept a misaligned shortcut, which is the failure that would
+            // finish the run clean with wrong identifications. Refusing means both passes fall
+            // back to computing, so the output must match the oracle a third time. The records
+            // served are the real ones arm 3 captured, with the last one repeated.
+            var fixtureLong = BuildMultiObservationEquivFixture(nFeat, out var featuresLong);
+            Action<string, StubColumns, Action<uint, byte, bool, double, string, double>> streamFileRowsLong =
+                (name, columns, onRow) =>
+                {
+                    var list = fixtureLong.Find(kv => kv.Key == name).Value;
+                    foreach (var e in list)
+                        onRow(e.EntryId, e.Charge, e.IsDecoy, e.CoelutionSum, e.ModifiedSequence, e.ApexRt);
+                };
+            CompletedScoreStreamer streamOneTooMany =
+                (fileName, onRecord) =>
+                {
+                    if (!sidecar.TryGetValue(fileName, out var records))
+                        return false;
+                    foreach (var rec in records)
+                        onRecord(rec.EntryId, rec.Score, rec.RunPrecQ, rec.RunPeptQ);
+                    var extra = records[records.Count - 1];
+                    onRecord(extra.EntryId, extra.Score, extra.RunPrecQ, extra.RunPeptQ);
+                    return true;
+                };
+            var sinkLong = new CapturingSink();
+            bool abortLong = PercolatorScorer.RunStreamingFirstPass(
+                fixtureLong.ConvertAll(kv => kv.Key), streamFileRowsLong, f => featuresLong[f],
+                percConfig, OspreyLog.None, "First-pass", sinkLong, null, null, streamOneTooMany);
+            Assert.IsFalse(abortLong);
+            AssertSinkMatchesOracle(sinkRes, sinkLong, fixtureLong, projSet);
         }
 
         /// <summary>

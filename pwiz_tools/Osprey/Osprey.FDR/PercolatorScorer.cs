@@ -610,16 +610,29 @@ namespace pwiz.Osprey.FDR
             runPeptideQvalues = null;
             if (tryStream == null)
                 return null;
-            var scores = new List<double>(expectedCount);
-            var entryIds = new List<uint>(expectedCount);
-            var runPrec = new List<double>(expectedCount);
-            var runPept = new List<double>(expectedCount);
+            // Sized exactly and filled by index. The row count is known before the first record
+            // arrives, so the growable lists this used to build - and the copy each one ended in
+            // to become an array - are both avoidable. At a cohort file's ~4.2M rows that is four
+            // fewer allocations and about 67 MB less copying per file, every file, in both passes.
+            var scores = new double[expectedCount];
+            var entryIds = new uint[expectedCount];
+            var runPrec = new double[expectedCount];
+            var runPept = new double[expectedCount];
+            int nRead = 0;
             if (!tryStream(fileName, (entryId, score, runPrecQ, runPeptQ) =>
                 {
-                    entryIds.Add(entryId);
-                    scores.Add(score);
-                    runPrec.Add(runPrecQ);
-                    runPept.Add(runPeptQ);
+                    // A sidecar holding MORE records than the parquet has rows would run off the
+                    // end of these arrays. Keep counting past it and let the length check below
+                    // refuse the file - the same answer the list form gave by growing and then
+                    // comparing, reached without an exception on the way.
+                    if (nRead < expectedCount)
+                    {
+                        entryIds[nRead] = entryId;
+                        scores[nRead] = score;
+                        runPrec[nRead] = runPrecQ;
+                        runPept[nRead] = runPeptQ;
+                    }
+                    nRead++;
                 }))
             {
                 return null;
@@ -627,7 +640,7 @@ namespace pwiz.Osprey.FDR
             // A count mismatch means the sidecar and the parquet disagree about how many rows
             // this file has, which no validity key can catch - so refuse the shortcut and score
             // it rather than emit a silently misaligned file.
-            if (scores.Count != expectedCount)
+            if (nRead != expectedCount)
                 return null;
             // And the ROWS must line up, not just the count. This binds the sidecar's records
             // to parquet rows by POSITION, while every other reader of the file matches by
@@ -643,9 +656,9 @@ namespace pwiz.Osprey.FDR
             // Published only now that count and row identity have both checked out, so a
             // rejected sidecar hands back three nulls together rather than q-values a caller
             // could pair with scores it was told not to use.
-            runPrecursorQvalues = runPrec.ToArray();
-            runPeptideQvalues = runPept.ToArray();
-            return scores.ToArray();
+            runPrecursorQvalues = runPrec;
+            runPeptideQvalues = runPept;
+            return scores;
         }
 
         /// <summary>
