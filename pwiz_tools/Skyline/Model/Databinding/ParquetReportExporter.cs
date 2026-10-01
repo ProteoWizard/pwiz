@@ -19,6 +19,7 @@
 using Parquet;
 using Parquet.Schema;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -109,13 +110,7 @@ namespace pwiz.Skyline.Model.Databinding
                 writeWorker.Add(chunkArrays);
             }
 
-            // After the writer thread fails it has already queued the null which stops it, and nothing takes
-            // from the queue any more, so adding another one would block forever. Disposing the worker clears
-            // the queue before it waits for the thread to exit.
-            if (writeWorker.Exception == null)
-            {
-                writeWorker.DoneAdding(wait: true);
-            }
+            writeWorker.DoneAdding(wait: true);
             if (writeWorker.Exception != null)
             {
                 throw writeWorker.Exception;
@@ -240,6 +235,7 @@ namespace pwiz.Skyline.Model.Databinding
                 Name = name;
                 PropertyDescriptor = propertyDescriptor;
                 var valueType = PropertyDescriptor.DataSchema.GetWrappedValueType(PropertyDescriptor.PropertyType);
+                IsUtcTimestamp = PropertyDescriptor.Attributes[typeof(UtcTimestampAttribute)] != null;
 
                 // Check if this is a ListColumnValue<T>
                 ListElementType = GetListColumnValueStorageType(valueType);
@@ -250,7 +246,7 @@ namespace pwiz.Skyline.Model.Databinding
                     ElementStorageType = DecideStorageType(ListElementType);
                     StorageType = typeof(IEnumerable<>).MakeGenericType(ElementStorageType);
                     // Element is nullable so individual list slots can hold nulls
-                    var elementField = new DataField(@"element", ElementStorageType,
+                    var elementField = MakeDataField(@"element", ElementStorageType,
                         isNullable: true, isArray: false);
                     SchemaField = new ListField(Name, elementField);
                     DataField = elementField;
@@ -258,7 +254,7 @@ namespace pwiz.Skyline.Model.Databinding
                 else
                 {
                     StorageType = DecideStorageType(valueType);
-                    DataField = new DataField(Name, StorageType);
+                    DataField = MakeDataField(Name, StorageType);
                     SchemaField = DataField;
                 }
             }
@@ -270,6 +266,7 @@ namespace pwiz.Skyline.Model.Databinding
             public Type ElementStorageType { get; }
             public Field SchemaField { get; }
             public DataField DataField { get; }
+            public bool IsUtcTimestamp { get; }
 
             public object GetValue(RowItem rowItem)
             {
@@ -320,9 +317,38 @@ namespace pwiz.Skyline.Model.Databinding
                 }
                 else
                 {
-                    value = ConvertToStorageType(value, StorageType);
+                    value = ConvertToColumnValue(value, StorageType);
                 }
                 values.SetValue(value, rowIndex);
+            }
+
+            private DataField MakeDataField(string name, Type storageType, bool? isNullable = null, bool? isArray = null)
+            {
+                if (storageType != typeof(DateTime?))
+                {
+                    return new DataField(name, storageType, isNullable, isArray);
+                }
+                // Without a format, Parquet.Net writes DateTime as the deprecated INT96. The
+                // TIMESTAMP logical type says whether the value is a moment in time (adjusted
+                // to UTC) or a wall-clock reading with no time zone. The values are stored to the
+                // millisecond because Parquet.Net 6 converts a local DateTime to UTC when it
+                // writes Micros or Nanos, which would shift a wall-clock time, and writes the
+                // digits of a Millis value as they are.
+                return new DateTimeDataField(name, DateTimeFormat.Timestamp, IsUtcTimestamp,
+                    DateTimeTimeUnit.Millis, isNullable ?? true, isArray);
+            }
+
+            private object ConvertToColumnValue(object value, Type type)
+            {
+                value = ConvertToStorageType(value, type);
+                // Parquet.Net writes the DateTime digits without looking at DateTime.Kind,
+                // so a local time has to be converted here. Other values are written as-is,
+                // which keeps the output the same on every computer.
+                if (IsUtcTimestamp && value is DateTime dateTime && dateTime.Kind == DateTimeKind.Local)
+                {
+                    return dateTime.ToUniversalTime();
+                }
+                return value;
             }
 
             private Array ConvertListColumnValue(object listColumnValue)
@@ -334,7 +360,7 @@ namespace pwiz.Skyline.Model.Databinding
                     return null;
                 }
 
-                if (array.GetType().GetElementType() == ListElementType)
+                if (array.GetType().GetElementType() == ListElementType && !IsUtcTimestamp)
                 {
                     return array;
                 }
@@ -342,7 +368,7 @@ namespace pwiz.Skyline.Model.Databinding
                 var convertedArray = Array.CreateInstance(ListElementType, array.Length);
                 for (int i = 0; i < array.Length; i++)
                 {
-                    var value = ConvertToStorageType(array.GetValue(i), ListElementType);
+                    var value = ConvertToColumnValue(array.GetValue(i), ListElementType);
                     if (value != null)
                     {
                         convertedArray.SetValue(value, i);
@@ -425,7 +451,8 @@ namespace pwiz.Skyline.Model.Databinding
             { typeof(decimal), typeof(decimal?) },
             // Old call sites wrapped DateTime as DateTimeOffset with a local-Kind
             // assumption that wasn't actually valid; store DateTime? directly so
-            // the value goes through unchanged.
+            // the value goes through unchanged. See ColumnData.MakeDataField for
+            // how it is encoded.
             { typeof(DateTime), typeof(DateTime?) }
         };
 
