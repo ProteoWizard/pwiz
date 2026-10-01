@@ -61,10 +61,6 @@ namespace pwiz.Skyline.Util.Extensions
         /// waiting for the result, so neither ever runs. With no context installed the
         /// continuations resume on the thread pool instead, and the blocking call finishes.
         ///
-        /// Parquet.Net's reader is one of these. ParquetReader.CreateAsync(...).GetAwaiter()
-        /// .GetResult() deadlocks on any thread with such a context, and an ordinary warm read
-        /// is enough to trigger it. Its writer does not, so exporting needs nothing.
-        ///
         /// Note that this only removes the deadlock, not the blocking. The calling thread
         /// still waits, so this is not a way to do slow work on the UI thread.
         /// </summary>
