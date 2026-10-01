@@ -82,6 +82,9 @@ namespace pwiz.Osprey.Test
         private const int MIN_LIBDECOY_PRECURSORS = 100;
         // The Astral subset reports about 164.
         private const int MIN_ASTRAL_PRECURSORS = 120;
+        // A .blib of the subset library reports within a few precursors of the .tsv it came from
+        // (the .blib stores intensities as float and its peaks are typed from m/z).
+        private const double MIN_BLIB_LIBRARY_FRACTION = 0.9;
         // The Astral subset recovers about 164 of the 203 its full run detected (81%), so the
         // Stellar floor would leave one precursor of headroom.
         private const double MIN_ASTRAL_RECOVERED_FRACTION = 0.7;
@@ -571,34 +574,38 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// Libraries whose generated decoys have no fragments of their own. A decoy is built by
-        /// recomputing the target's b/y fragments on the reversed sequence, so a fragment of unknown
-        /// type is copied verbatim and one with no fragment number is dropped. An Osprey output
-        /// .blib (no fragment annotations) and a library whose fragment numbers are all missing
-        /// must each stop with one plain error; a library with a few such entries must warn and
-        /// still finish.
+        /// recomputing the target's b/y fragments on the reversed sequence, so a fragment of
+        /// another type is copied verbatim and one with no fragment number is dropped. A library
+        /// with no fragment number column must stop with one plain error; a library with a few
+        /// precursors of copied-only fragments must warn and still finish. A fragment number the
+        /// library HAS but states as 0 is not "missing": the loader refuses the library, naming
+        /// the lines. (A .blib states no fragment types at all, but Osprey types its peaks from
+        /// m/z, so its decoys are usable - see the blib library tests.)
         /// </summary>
         [TestMethod, DoNotParallelize]
         public void TestSubsetUnusableDecoys()
         {
-            string straightDir = CreateDir(@"straight");
-            RunAnalysis(straightDir, DataInputs(), Verifier(false));
-
-            // Every decoy a copy of its target.
-            string blib = Path.Combine(straightDir, BLIB_FILE);
-            int blibPrecursors = BlibComparer.CountRows(blib, @"RefSpectra");
-            string output = RunExpectingRefusal(@"blib-library", blib);
-            StringAssert.Contains(output, RefusalText(blib, blibPrecursors));
-
-            // Every fragment number missing, so every decoy fragment is dropped.
-            string noNumbers = WriteLibraryWithoutFragmentNumbers(@"no-fragment-numbers.tsv", _ => true);
+            // No fragment number column, so every decoy fragment is dropped.
+            string noNumbers = WriteLibraryWithoutColumn(@"no-fragment-numbers.tsv", @"FragmentNumber");
             int libraryPrecursors = CountLibraryPrecursors(Path.Combine(_dataDir, LIBRARY_FILE));
-            output = RunExpectingRefusal(@"no-fragment-numbers", noNumbers);
+            string output = RunExpectingRefusal(@"no-fragment-numbers", noNumbers);
             StringAssert.Contains(output, RefusalText(noNumbers, libraryPrecursors));
 
-            // Two precursors without fragment numbers: a warning naming the count, and a search.
+            // Two precursors whose fragment numbers read 0: the library is invalid, and the load
+            // refuses it with every one of their lines counted.
             var strayPeptides = new HashSet<string>(File.ReadLines(Path.Combine(_dataDir, LIBRARY_FILE))
                 .Skip(1).Select(line => line.Split('\t')[0]).Distinct().Take(2));
-            string strays = WriteLibraryWithoutFragmentNumbers(@"two-stray.tsv", strayPeptides.Contains);
+            string zeroNumbers = WriteLibraryWithCell(@"zero-fragment-numbers.tsv", strayPeptides.Contains,
+                @"FragmentNumber", @"0");
+            int strayLines = File.ReadLines(Path.Combine(_dataDir, LIBRARY_FILE))
+                .Skip(1).Count(line => strayPeptides.Contains(line.Split('\t')[0]));
+            output = RunExpectingRefusal(@"zero-fragment-numbers", zeroNumbers);
+            StringAssert.Contains(output, string.Format(
+                OspreyIOResources.DiannTsvLoader_ToException__0__library_lines_have_errors__Fix_the_library_and_load_it_again_, strayLines));
+
+            // Two precursors of a-ion fragments, which a decoy copies verbatim: a warning naming
+            // the count, and a search.
+            string strays = WriteLibraryWithCell(@"two-stray.tsv", strayPeptides.Contains, @"FragmentType", @"a");
             string strayDir = CreateDir(@"two-stray");
             string log = RunOsprey(InputArgs(DataInputs()).Concat(new[]
             {
@@ -609,7 +616,11 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(log, string.Format(
                 OspreyTasksResources.PerFileScoringTask_CheckDecoysUsable_Decoys_with_no_fragment_distinct_from_their_target___0__of__1____2____generated_,
                 strayPeptides.Count, libraryPrecursors, strayPeptides.Count / (double)libraryPrecursors, strays));
-            Assert.IsTrue(BlibComparer.CountRows(Path.Combine(strayDir, BLIB_FILE), @"RefSpectra") >= MIN_PRECURSORS);
+            // The search finishes and reports. Not at the usual depth: those two decoys are
+            // identical to their targets, so they score as well as real detections, and on a
+            // subset reporting ~177 precursors two top-scoring decoys alone are over 1% FDR.
+            int strayPrecursors = BlibComparer.CountRows(Path.Combine(strayDir, BLIB_FILE), @"RefSpectra");
+            Assert.IsTrue(strayPrecursors > 0, string.Format(@"{0} precursors reported", strayPrecursors));
         }
 
         /// <summary>
@@ -663,23 +674,41 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// A copy of the subset library with the fragment number set to 0 on every row of the
-        /// precursors <paramref name="blank"/> selects by modified peptide.
+        /// A copy of the subset library with column <paramref name="columnName"/> set to
+        /// <paramref name="value"/> on every row of the precursors <paramref name="select"/>
+        /// selects by modified peptide.
         /// </summary>
-        private string WriteLibraryWithoutFragmentNumbers(string fileName, Func<string, bool> blank)
+        private string WriteLibraryWithCell(string fileName, Func<string, bool> select, string columnName, string value)
+        {
+            return WriteLibraryCopy(fileName, columnName, (fields, column) =>
+            {
+                if (!select(fields[0]))
+                    return fields;
+                fields[column] = value;
+                return fields;
+            });
+        }
+
+        /// <summary>A copy of the subset library without column <paramref name="columnName"/>.</summary>
+        private string WriteLibraryWithoutColumn(string fileName, string columnName)
+        {
+            return WriteLibraryCopy(fileName, columnName,
+                (fields, column) => fields.Where((_, i) => i != column).ToArray(), true);
+        }
+
+        /// <summary>
+        /// A copy of the subset library with each data row passed through
+        /// <paramref name="rewrite"/> (given the index of <paramref name="columnName"/>), and the
+        /// header too when <paramref name="rewriteHeader"/>.
+        /// </summary>
+        private string WriteLibraryCopy(string fileName, string columnName,
+            Func<string[], int, string[]> rewrite, bool rewriteHeader = false)
         {
             var lines = File.ReadAllLines(Path.Combine(_dataDir, LIBRARY_FILE));
-            int column = Array.IndexOf(lines[0].Split('\t'), @"FragmentNumber");
+            int column = Array.IndexOf(lines[0].Split('\t'), columnName);
             Assert.AreNotEqual(-1, column);
-            for (int i = 1; i < lines.Length; i++)
-            {
-                var fields = lines[i].Split('\t');
-                if (blank(fields[0]))
-                {
-                    fields[column] = @"0";
-                    lines[i] = string.Join('\t', fields);
-                }
-            }
+            for (int i = rewriteHeader ? 0 : 1; i < lines.Length; i++)
+                lines[i] = string.Join('\t', rewrite(lines[i].Split('\t'), column));
             string path = Path.Combine(_testDir, fileName);
             File.WriteAllLines(path, lines);
             return path;
@@ -713,6 +742,100 @@ namespace pwiz.Osprey.Test
                 Environment.SetEnvironmentVariable(name, null);
             foreach (var pair in saved)
                 Environment.SetEnvironmentVariable(pair.Key, pair.Value);
+        }
+
+        /// <summary>
+        /// The BLIB libraries Osprey writes, searched as libraries. <c>--export-library</c> writes the
+        /// subset library as a .blib with no <c>RefSpectraPeakAnnotations</c> rows, as BiblioSpec
+        /// writes one; Osprey types every peak from m/z, so searching it builds real decoys and
+        /// reports what the .tsv search does. The output .blib of that search searches back with
+        /// decoys of its own.
+        /// </summary>
+        [TestMethod, DoNotParallelize]
+        public void TestSubsetBlibLibrary()
+        {
+            string tsvDir = CreateDir(@"tsv-library");
+            RunAnalysis(tsvDir, DataInputs(), Verifier(false));
+            string tsvOutput = Path.Combine(tsvDir, BLIB_FILE);
+            // Peaks stored in m/z order, as BiblioSpec stores them, whatever the library order.
+            foreach (var spectrum in new BlibLoader(FragmentToleranceConfig.UnitResolution(0.5)).Load(tsvOutput))
+            {
+                for (int i = 1; i < spectrum.Fragments.Count; i++)
+                    Assert.IsTrue(spectrum.Fragments[i - 1].Mz <= spectrum.Fragments[i].Mz, spectrum.ModifiedSequence);
+            }
+
+            string library = Path.Combine(_dataDir, LIBRARY_FILE);
+            string exported = Path.Combine(_testDir, @"subset-library.blib");
+            // A reused search command line: the export reads only the library, so an input that
+            // has moved does not refuse it.
+            string log = RunOsprey(new[]
+            {
+                OspreyCommandArgs.ARG_LIBRARY.ArgumentText, library,
+                OspreyCommandArgs.ARG_EXPORT_LIBRARY.ArgumentText, exported,
+                OspreyCommandArgs.ARG_INPUT.ShortArgumentText, Path.Combine(_testDir, @"moved.mzML")
+            }, Verifier(false));
+            int libraryPrecursors = CountLibraryPrecursors(library);
+            StringAssert.Contains(log, CountText.Format(libraryPrecursors,
+                OspreyResources.Program_RunExportLibrary_Saved_1_library_precursor_to__1_,
+                OspreyResources.Program_RunExportLibrary_Saved__0_N0__library_precursors_to__1_,
+                exported));
+            Assert.AreEqual(libraryPrecursors, BlibComparer.CountRows(exported, @"RefSpectra"));
+            Assert.AreEqual(0, BlibComparer.CountWhere(exported, @"RefSpectraPeakAnnotations", @"1"));
+            AssertExportOverLibraryRefused(library);
+
+            // Osprey's own typing reproduces every type the subset library states - the isobars
+            // too: b2 and b4^2 of IQQLTEEIGR share one m/z, and the library lists both as two
+            // peaks, which the lower-charge preference and one peak per ion type as it does.
+            var tsvLoader = new DiannTsvLoader(FragmentToleranceConfig.UnitResolution(0.5));
+            tsvLoader.Load(library);
+            Assert.AreEqual(tsvLoader.TypeCheck.StatedPrimary, tsvLoader.TypeCheck.Agree,
+                string.Join(Environment.NewLine, tsvLoader.TypeCheck.Examples));
+
+            // So searching the .blib, which states no types, reports what the .tsv search does.
+            string blibDir = CreateDir(@"blib-library");
+            RunAnalysis(blibDir, DataInputs(), exported, Verifier(false));
+            AssertSameSearch(tsvOutput, Path.Combine(blibDir, BLIB_FILE));
+
+            string backDir = CreateDir(@"output-blib-library");
+            RunAnalysis(backDir, DataInputs(), tsvOutput, Verifier(false));
+            int tsvPrecursors = BlibComparer.CountRows(tsvOutput, @"RefSpectra");
+            int backPrecursors = BlibComparer.CountRows(Path.Combine(backDir, BLIB_FILE), @"RefSpectra");
+            Assert.IsTrue(backPrecursors >= MIN_BLIB_LIBRARY_FRACTION * tsvPrecursors,
+                string.Format(@"{0} precursors from the output .blib, {1} in it", backPrecursors, tsvPrecursors));
+        }
+
+        /// <summary>
+        /// An export onto the library it reads is refused before anything is written, and the
+        /// library is left as it was.
+        /// </summary>
+        private static void AssertExportOverLibraryRefused(string library)
+        {
+            byte[] before = HashFile(library);
+            string output;
+            int exitCode;
+            using (OspreyEnvironment.OverrideVariables(Verifier(false)))
+            {
+                exitCode = InProcessOsprey.Run(new[]
+                {
+                    OspreyCommandArgs.ARG_LIBRARY.ArgumentText, library,
+                    OspreyCommandArgs.ARG_EXPORT_LIBRARY.ArgumentText, library
+                }, out output);
+            }
+            Assert.AreEqual(Program.EXIT_CODE_FAILURE_TO_START, exitCode, output);
+            StringAssert.Contains(output, string.Format(OspreyResources.Program_ValidateArgs_The__0__path_is_the_library_it_reads___1_,
+                OspreyCommandArgs.ARG_EXPORT_LIBRARY.ArgumentText, library));
+            CollectionAssert.AreEqual(before, HashFile(library));
+        }
+
+        /// <summary>
+        /// Two searches of one library in different formats report the same thing: every table,
+        /// peaks included, agrees at <see cref="TOLERANCE"/> but the library each names as its
+        /// source.
+        /// </summary>
+        private static void AssertSameSearch(string expectedBlib, string actualBlib)
+        {
+            var differences = BlibComparer.Compare(expectedBlib, actualBlib, TOLERANCE, @"SpectrumSourceFiles");
+            Assert.AreEqual(0, differences.Count, string.Join(Environment.NewLine, differences.Take(20)));
         }
 
         private void ValidateStraightThrough(string workDir, string log)
