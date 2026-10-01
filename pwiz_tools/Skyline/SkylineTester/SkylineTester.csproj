@@ -193,7 +193,9 @@
     <PropertyGroup>
       <_Wanted>false</_Wanted>
       <_Wanted Condition="$(DistroZips.Contains('%(DistroZipPrereq.Zip)'))">true</_Wanted>
-      <_PrereqOut>%(DistroZipPrereq.RootDir)%(DistroZipPrereq.Directory)bin\$(Configuration)\%(DistroZipPrereq.Tfm)</_PrereqOut>
+      <!-- The prerequisites build with this project's Platform (it flows down as a global
+           property), so their output is under the same platform directory. -->
+      <_PrereqOut>%(DistroZipPrereq.RootDir)%(DistroZipPrereq.Directory)bin\$(BundledProjectPlatformDir)$(Configuration)\%(DistroZipPrereq.Tfm)</_PrereqOut>
     </PropertyGroup>
 
     <Message Condition="'$(_Wanted)' == 'true'" Importance="high"

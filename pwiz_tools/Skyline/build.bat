@@ -173,7 +173,13 @@ if %REQUIRE_VENDOR%==1 if %IAGREE%==0 (
     goto error
 )
 
-set MSBUILD_PROPS=-p:Configuration=%CONFIG%
+REM # x64, the platform Visual Studio and the code inspection build Skyline.sln with (the
+REM # solution defines no Any CPU). Building the same layout lets build.bat pick up where the
+REM # inspection step left off instead of building a second copy under bin\<Config>, and it
+REM # matches the x64-only vendor readers. Keep these properties in step with tcinspect.ps1's:
+REM # any difference - AutomatedBuild changes every assembly's version stamp - turns that
+REM # reuse into a full rebuild.
+set MSBUILD_PROPS=-p:Configuration=%CONFIG% -p:Platform=x64
 if %IAGREE%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:IAgreeToVendorLicenses=true
 if %AUTOMATED%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:AutomatedBuild=true
 

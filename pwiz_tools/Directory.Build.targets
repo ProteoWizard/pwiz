@@ -50,9 +50,12 @@
        the Debug binaries when one does (observed 2026-09-02: a VS Release build put the
        267,776-byte Debug Pwiz.Data.MsData.dll next to Skyline-daily.exe while the
        248,320-byte Release one sat unused). Give unassigned references the solution's
-       Configuration and AnyCPU - the platform build.bat builds pwiz-sharp with - so the
-       IDE uses the Debug or Release ProteoWizard binaries matching the configuration
-       chosen in the IDE.
+       Configuration and Platform - what a csproj build (build.bat) passes down to them anyway
+       - so the IDE uses the Debug or Release ProteoWizard binaries matching the configuration
+       chosen in the IDE, and a solution build (Visual Studio, or the code inspection) links the
+       same pwiz-sharp output build.bat does instead of a second copy under another platform.
+       That is also where ReSharper looks for them: it resolves these references itself with
+       the solution's Platform, which this target does not reach.
 
        The stripping repeats at every level: BlibBuild's reference to BiblioSpec, or
        Thermo's to Vendor.Common, is just as absent from Skyline.sln, and pwiz-sharp does
@@ -70,9 +73,42 @@
     <ItemGroup>
       <ProjectReferenceWithConfiguration Condition="'%(ProjectReferenceWithConfiguration.SetConfiguration)' == ''">
         <SetConfiguration>Configuration=$(Configuration)</SetConfiguration>
-        <SetPlatform>Platform=AnyCPU;ShouldUnsetParentConfigurationAndPlatform=false</SetPlatform>
+        <SetPlatform>Platform=$(Platform);ShouldUnsetParentConfigurationAndPlatform=false</SetPlatform>
         <GlobalPropertiesToRemove />
       </ProjectReferenceWithConfiguration>
     </ItemGroup>
   </Target>
+
+  <!-- SkylineTool is AnyCPU in every build. External tools link against SkylineTool.dll and may run
+       as 32-bit processes, which is why Skyline.sln maps it to Any CPU under its x64 configuration.
+       An x64 csproj build (build.bat) would otherwise pass x64 down to it and make a different
+       SkylineTool.dll from the one a solution build (Visual Studio, the code inspection) makes -
+       and every project that references it, Skyline's test projects included, hashes that
+       reference's PATH into its CoreCompileInputs.cache, so the two kinds of build would recompile
+       each other's output every time they alternate. Done here rather than on the reference
+       because most of those references are transitive, added by the SDK without any metadata;
+       DependsOnTargets puts this after IncludeTransitiveProjectReferences has added them. SDK
+       projects only: this file is imported by native projects too (Hardklor.vcxproj), which have
+       no ResolvePackageDependenciesForBuild, and a false Condition skips DependsOnTargets. -->
+  <Target Name="BuildSkylineToolAsAnyCPU"
+          Condition="'$(UsingMicrosoftNETSdk)' == 'true'"
+          DependsOnTargets="ResolvePackageDependenciesForBuild"
+          BeforeTargets="AssignProjectConfiguration">
+    <ItemGroup>
+      <ProjectReference Condition="'%(ProjectReference.Filename)' == 'SkylineTool'">
+        <SetPlatform>Platform=AnyCPU</SetPlatform>
+      </ProjectReference>
+    </ItemGroup>
+  </Target>
+
+  <!-- The output-path platform segment of a project this one references, for the places that
+       bundle a referenced project's output by path (BlibBuild, msconvert, SkylineCmd and the rest,
+       in Skyline.csproj). Referenced projects build with the referencing project's Platform -
+       passed down by a csproj build, and set by the target above in a solution build - and the
+       SDK puts any platform but AnyCPU into the output path, so an x64 build lands in bin\x64.
+       A path hard-coded to bin\$(Configuration) misses that silently: every one of those items
+       is guarded by Exists(), so the content is just left out of the build. -->
+  <PropertyGroup>
+    <BundledProjectPlatformDir Condition="'$(Platform)' != '' And '$(Platform)' != 'AnyCPU'">$(Platform)\</BundledProjectPlatformDir>
+  </PropertyGroup>
 </Project>

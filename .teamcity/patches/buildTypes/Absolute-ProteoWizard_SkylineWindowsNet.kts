@@ -50,16 +50,18 @@ create(DslContext.projectId, BuildType({
             // The one clean for the whole build, and it runs first so the code inspection starts
             // from a clean slate too: on an agent that reuses its checkout, stale bin\x64 and
             // obj\x64 left by an earlier commit fail inspectcode's own solution build.
-            // tcbuild.bat does not clean again - the inspection's x64 output sits beside
-            // build.bat's AnyCPU output, and the stager takes the newer of the two per project,
-            // which is build.bat's. Without -cpp, clean.bat leaves the C++ build alone and just
-            // runs pwiz_tools\clean-apps.bat.
+            // tcbuild.bat does not clean again: build.bat builds the same x64 tree the
+            // inspection just built, and picks up from it. Without -cpp, clean.bat leaves the C++
+            // build alone and just runs pwiz_tools\clean-apps.bat.
         }
         exec {
             name = "Skyline code inspection"
             id = "Skyline_Code_Inspection"
             path = "pwsh"
-            arguments = "-NoProfile -File pwiz_tools/Skyline/tcinspect.ps1"
+            // -AutomatedBuild because tcbuild.bat passes build.bat --automated: the inspection
+            // builds the x64 tree build.bat then builds on top of, and the two only reuse each
+            // other's output when every MSBuild property matches.
+            arguments = "-NoProfile -File pwiz_tools/Skyline/tcinspect.ps1 -AutomatedBuild"
             // tcinspect.ps1 posts its own GitHub commit status rather than handing a verdict
             // to a following step, so the check updates when the inspection finishes instead
             // of when the enclosing step ends - and it stays correct if the inspection ever

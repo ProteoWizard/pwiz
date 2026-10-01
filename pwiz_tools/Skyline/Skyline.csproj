@@ -227,14 +227,14 @@
        Skyline's bin dir AND to any project that references Skyline via ProjectReference
        (test assemblies). Content items propagate through ProjectReference by default. -->
   <ItemGroup>
-    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\**\*"
-             Condition="Exists('..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0')">
+    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(BundledProjectPlatformDir)$(Configuration)\net10.0\**\*"
+             Condition="Exists('..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(BundledProjectPlatformDir)$(Configuration)\net10.0')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
       <Visible>false</Visible>
     </Content>
-    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibFilter\bin\$(Configuration)\net10.0\**\*"
-             Condition="Exists('..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibFilter\bin\$(Configuration)\net10.0')">
+    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibFilter\bin\$(BundledProjectPlatformDir)$(Configuration)\net10.0\**\*"
+             Condition="Exists('..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibFilter\bin\$(BundledProjectPlatformDir)$(Configuration)\net10.0')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
       <Visible>false</Visible>
@@ -248,8 +248,8 @@
        run time. Deploy the mascot natives flat next to BlibBuild.exe - as legacy Skyline shipped
        msparser.dll - so DllImport("MascotShim") and its msparser dependency resolve from the
        executable's own directory. -->
-  <ItemGroup Condition="Exists('..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native')">
-    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native\MascotShim.dll">
+  <ItemGroup Condition="Exists('..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(BundledProjectPlatformDir)$(Configuration)\net10.0\runtimes\win-x64\native')">
+    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(BundledProjectPlatformDir)$(Configuration)\net10.0\runtimes\win-x64\native\MascotShim.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>MascotShim.dll</Link>
       <Visible>false</Visible>
@@ -259,17 +259,17 @@
          too. Copying the Release name unconditionally made every Debug build after
          the first one fail MSB3030 - the first build passes only because the native
          directory does not exist yet when this ItemGroup condition is evaluated. -->
-    <Content Condition="'$(Configuration)' == 'Debug'" Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native\msparserD.dll">
+    <Content Condition="'$(Configuration)' == 'Debug'" Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(BundledProjectPlatformDir)$(Configuration)\net10.0\runtimes\win-x64\native\msparserD.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>msparserD.dll</Link>
       <Visible>false</Visible>
     </Content>
-    <Content Condition="'$(Configuration)' != 'Debug'" Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native\msparser.dll">
+    <Content Condition="'$(Configuration)' != 'Debug'" Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(BundledProjectPlatformDir)$(Configuration)\net10.0\runtimes\win-x64\native\msparser.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>msparser.dll</Link>
       <Visible>false</Visible>
     </Content>
-    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net10.0\runtimes\win-x64\native\msparser-config\**\*">
+    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(BundledProjectPlatformDir)$(Configuration)\net10.0\runtimes\win-x64\native\msparser-config\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>msparser-config\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <Visible>false</Visible>
@@ -286,8 +286,8 @@
                       ReferenceOutputAssembly="false"
                       Private="false" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net10.0')">
-    <Content Include="..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(Configuration)\net10.0\**\*">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(BundledProjectPlatformDir)$(Configuration)\net10.0')">
+    <Content Include="..\..\pwiz-sharp\Tools\Commandline\MsConvert\src\bin\$(BundledProjectPlatformDir)$(Configuration)\net10.0\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
       <Visible>false</Visible>
@@ -305,8 +305,8 @@
                       ReferenceOutputAssembly="false"
                       Private="false" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('..\..\pwiz-sharp\Tools\BullseyeSharp\src\bin\$(Configuration)\net10.0')">
-    <Content Include="..\..\pwiz-sharp\Tools\BullseyeSharp\src\bin\$(Configuration)\net10.0\**\*">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('..\..\pwiz-sharp\Tools\BullseyeSharp\src\bin\$(BundledProjectPlatformDir)$(Configuration)\net10.0')">
+    <Content Include="..\..\pwiz-sharp\Tools\BullseyeSharp\src\bin\$(BundledProjectPlatformDir)$(Configuration)\net10.0\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
       <Visible>false</Visible>
@@ -389,8 +389,8 @@
                       ReferenceOutputAssembly="false"
                       Private="false" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('Executables\SkylineProcessRunner\SkylineProcessRunner\bin\$(Configuration)\net10.0-windows')">
-    <Content Include="Executables\SkylineProcessRunner\SkylineProcessRunner\bin\$(Configuration)\net10.0-windows\**\*">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('Executables\SkylineProcessRunner\SkylineProcessRunner\bin\$(BundledProjectPlatformDir)$(Configuration)\net10.0-windows')">
+    <Content Include="Executables\SkylineProcessRunner\SkylineProcessRunner\bin\$(BundledProjectPlatformDir)$(Configuration)\net10.0-windows\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
       <Visible>false</Visible>
@@ -414,7 +414,7 @@
           Condition="'$(TargetFramework)' == 'net10.0-windows'"
           AfterTargets="Build">
     <ItemGroup>
-      <_SkylineCmdOutput Include="SkylineCmd\bin\$(Configuration)\net10.0-windows\SkylineCmd.*" />
+      <_SkylineCmdOutput Include="SkylineCmd\bin\$(BundledProjectPlatformDir)$(Configuration)\net10.0-windows\SkylineCmd.*" />
     </ItemGroup>
     <Copy SourceFiles="@(_SkylineCmdOutput)"
           DestinationFolder="$(OutDir)"
@@ -509,10 +509,28 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <Compile Remove="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <!-- Net8Version.g.cs is rewritten only when the values stamped into it change, the way the SDK's
+       own GenerateAssemblyInfo works. WriteCodeFragment writes its file unconditionally, so running
+       it on every build left Net8Version.g.cs newer than Skyline-daily.dll every time, and Skyline -
+       with everything that references it - recompiled on every build, however small the change.
+       The inputs cache below is rewritten only when its content differs, and gates the target. -->
+  <Target Name="_WriteNet8VersionInputsCache"
+          Condition="'$(TargetFramework)' == 'net10.0-windows'"
+          DependsOnTargets="ComputeSkylineVersion">
+    <WriteLinesToFile File="$(IntermediateOutputPath)Net8Version.inputs.cache"
+                      Lines="$(SkylineNumericVersion);$(SkylineInformationalVersion)"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <FileWrites Include="$(IntermediateOutputPath)Net8Version.inputs.cache" />
+    </ItemGroup>
+  </Target>
   <Target Name="StampNet8InformationalVersion"
           Condition="'$(TargetFramework)' == 'net10.0-windows'"
-          DependsOnTargets="ComputeSkylineVersion"
-          BeforeTargets="CoreCompile">
+          DependsOnTargets="ComputeSkylineVersion;_WriteNet8VersionInputsCache"
+          BeforeTargets="CoreCompile"
+          Inputs="$(IntermediateOutputPath)Net8Version.inputs.cache"
+          Outputs="$(IntermediateOutputPath)Net8Version.g.cs">
     <ItemGroup>
       <AssemblyAttribute Include="System.Reflection.AssemblyVersionAttribute">
         <_Parameter1>$(SkylineNumericVersion)</_Parameter1>
@@ -526,10 +544,14 @@
     </ItemGroup>
     <WriteCodeFragment AssemblyAttributes="@(AssemblyAttribute)"
                        Language="C#"
-                       OutputDirectory="$(IntermediateOutputPath)"
-                       OutputFile="Net8Version.g.cs">
-      <Output TaskParameter="OutputFile" ItemName="Compile" />
-    </WriteCodeFragment>
+                       OutputFile="$(IntermediateOutputPath)Net8Version.g.cs" />
+    <!-- Added here rather than from the task's Output: when the target is skipped as up to date,
+         MSBuild still evaluates its item groups but does not run the task, so this is what keeps
+         the existing file in the compile. -->
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)Net8Version.g.cs" />
+      <FileWrites Include="$(IntermediateOutputPath)Net8Version.g.cs" />
+    </ItemGroup>
   </Target>
 
 

@@ -39,6 +39,10 @@ param(
     [string] $Solution = (Join-Path $PSScriptRoot 'Skyline.sln'),
     [ValidateSet('Debug', 'Release')] [string] $Configuration = 'Release',
     [string] $Platform = 'x64',
+    # Build with AutomatedBuild=true, as build.bat --automated does. TeamCity passes this so the
+    # inspection's build matches the one build.bat then builds on top of - AutomatedBuild
+    # changes every assembly's version stamp, so leaving it out forces a full rebuild.
+    [switch] $AutomatedBuild,
     # Minimal severity to report, matching the -e=WARNING the standalone config has always used.
     [ValidateSet('INFO', 'HINT', 'SUGGESTION', 'WARNING', 'ERROR')] [string] $Severity = 'WARNING',
     [string] $ReportPath = (Join-Path ([System.IO.Path]::GetTempPath()) 'skyline-inspectcode/inspectcode_report.xml'),
@@ -52,15 +56,11 @@ param(
     # Building x64 first clears them. Building AnyCPU instead fixes nothing - it fills
     # bin\Release, which is not where the inspection looks (build #298).
     #
-    # Skyline.csproj, not Skyline.sln, and the difference is the whole point:
-    # AssignOutOfSolutionProjectReferenceConfiguration in pwiz_tools/Directory.Build.targets
-    # fires only for a SOLUTION build and pins out-of-solution references to AnyCPU on
-    # purpose, so building the solution leaves bin\x64\Release empty no matter what Platform
-    # it is given (build #298 and a local run both measured that). A csproj build carries no
-    # solution configuration, that target stays quiet, and Platform flows down the whole
-    # reference graph. Skyline.csproj is the hub - ProteowizardWrapper and its fifteen,
-    # Bruker.PrmScheduling, and the tool projects all hang off it - so nothing here needs a
-    # list of what to build.
+    # Skyline.csproj is the hub - ProteowizardWrapper and its fifteen, Bruker.PrmScheduling,
+    # and the tool projects all hang off it - so nothing here needs a list of what to build,
+    # and a csproj build passes Platform down the whole reference graph. It is also the same
+    # x64 build build.bat does, so the build step that follows the inspection builds on top of
+    # it instead of starting over.
     [string] $PreBuild = (Join-Path $PSScriptRoot 'Skyline.csproj'),
     # Empty by default: with the references resolved there is nothing left for an exclusion of
     # the ported sandbox to hide.
@@ -151,10 +151,20 @@ try {
                 Complete-Inspection 'error' "dotnet tool restore failed with code $LASTEXITCODE; inspection did not run"
             }
 
+            # Shared by the pre-build and inspectcode's own solution build, and kept in step with
+            # build.bat's MSBUILD_PROPS: build.bat builds this same x64 tree afterwards, and any
+            # property that differs turns that incremental build into a full one.
+            $buildProperties = [ordered]@{
+                Configuration = $Configuration
+                Platform = $Platform
+                IAgreeToVendorLicenses = 'true'
+            }
+            if ($AutomatedBuild) { $buildProperties.AutomatedBuild = 'true' }
+
             if (-not [string]::IsNullOrEmpty($PreBuild)) {
                 Write-Host "##teamcity[progressMessage 'Building $(Split-Path -Leaf $PreBuild) for the inspection']"
                 Write-Host "##teamcity[blockOpened name='pre-build']"
-                & dotnet build $PreBuild -c $Configuration -p:Platform=$Platform -p:IAgreeToVendorLicenses=true
+                & dotnet build $PreBuild @($buildProperties.GetEnumerator() | ForEach-Object { "-p:$($_.Key)=$($_.Value)" })
                 $preBuildExit = $LASTEXITCODE
                 Write-Host "##teamcity[blockClosed name='pre-build']"
                 # Not fatal, and not silent: the inspection still runs, it just reports every
@@ -182,7 +192,7 @@ try {
                 '-f=Xml'
                 '--no-swea'
                 "-e=$Severity"
-                "--properties:Configuration=$Configuration;Platform=$Platform;IAgreeToVendorLicenses=true"
+                "--properties:$(($buildProperties.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join ';')"
             )
             if ($Exclude.Count -gt 0) { $inspectArgs += "--exclude=$($Exclude -join ';')" }
             & dotnet jb inspectcode @inspectArgs
