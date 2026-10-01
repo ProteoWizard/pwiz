@@ -254,7 +254,7 @@ file holds only the fine-tuned RT model:
 | `runs[].nce`, `nce_source` | The NCE the models were trained with, and where it came from: `file` (a Thermo run's own NCE), `calibrated` (on the run's spectra, its energy being in eV; 01-model-spec.md), `-nce`, or `default` (Carafe's 27). |
 | `runs[].dissociation_methods`, `collision_energies` | MS2 spectra by dissociation method (pwiz's short names: `HCD` for beam-type, `CID` for resonance CID) and by collision energy as the file reports it, over the spectra Osprey sampled; empty without the data file. |
 | `runs[].collision_energy_unit` | The unit of `collision_energies`: `NCE` for Thermo (the value pwiz reports is the scan filter's NCE), `eV` for any other vendor, or null when the run reports none. |
-| `runs[].ms2_mass_analyzers` | MS2 spectra by the mass analyzer that read them out (`orbitrap`, `radial ejection linear ion trap`, ...); empty without the data file or from an Osprey that did not record it. |
+| `runs[].ms2_mass_analyzers` | MS2 spectra by the mass analyzers of their scan configuration, as Osprey's footer names them (pwiz's names joined with `/`: a Stellar's `radial ejection linear ion trap`, an Astral's `quadrupole/asymmetric track lossless time-of-flight analyzer`); empty without the data file or from an Osprey without the key (before #4757). |
 | `runs[].rt_min`, `rt_max` | The run's first and last MS2 retention time, minutes. |
 | `runs[].isolation_mz_min`, `_max` | The range of the run's isolation windows. |
 | `runs[].ms2_mz_min`, `_max` | The MS2 m/z range the run measured. |

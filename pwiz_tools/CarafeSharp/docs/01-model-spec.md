@@ -132,8 +132,8 @@ when the training `rt_max` is known, else `irt_pred`.
   - reCID: trap-type CID, and plain CID from Thermo, whose CID is resonance CID in an ion trap;
   - none for an electron-based method (ETD, EThcD, EAD), whose columns stay zero;
   - ToF for a time-of-flight analyzer (an Astral's MS2, a timsTOF, a Sciex TOF), LIT for an ion trap
-    (a Stellar, a Tribrid's), Orbitrap for an Orbitrap; without the analyzers, a Stellar is LIT and an
-    Astral ToF.
+    (a Stellar, a Tribrid's), Orbitrap for an Orbitrap; without the analyzers (an export from before
+    #4757 added them, or no data file), a Stellar is LIT and an Astral ToF.
   A run whose MS2 spectra mix activations or analyzers is refused unless `-activation` or `-analyzer`
   names one for all of it. A library predicts for `-activation` and `-analyzer`, else the training
   run's.
