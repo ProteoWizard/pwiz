@@ -36,7 +36,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
     <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj" />
     <ProjectReference Include="..\..\Shared\zedgraph\ZedGraph.csproj" />
     <ProjectReference Include="..\Skyline.csproj" />
@@ -48,7 +47,6 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <PackageReference Include="PROdotnetzip" Version="1.20.0" />
     <PackageReference Include="TaskScheduler" Version="2.11.0" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
   </ItemGroup>
 
   <!-- net472: the legacy on-disk DLLs + EnvDTE VS COM automation the net8 path drops -->
