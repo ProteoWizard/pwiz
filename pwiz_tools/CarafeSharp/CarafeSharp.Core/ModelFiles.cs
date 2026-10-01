@@ -39,6 +39,9 @@ namespace pwiz.CarafeSharp.Core
         // meta.json: an object per training run, keyed by the run's path, with Carafe's JMeta fields.
         public const string META_MS_FILE = @"ms_file";
         public const string META_MS_INSTRUMENT = @"ms_instrument";
+        /// <summary>CarafeSharp's: the run's activation and MS2 analyzer (AcquisitionVocabulary), absent when unknown.</summary>
+        public const string META_ACTIVATION = @"activation";
+        public const string META_ANALYZER = @"analyzer";
         public const string META_NCE = @"nce";
         public const string META_MIN_FRAGMENT_ION_MZ = @"min_fragment_ion_mz";
         public const string META_MAX_FRAGMENT_ION_MZ = @"max_fragment_ion_mz";
@@ -61,6 +64,13 @@ namespace pwiz.CarafeSharp.Core
 
         /// <summary>CarafeSharp's fine-tuned RT model.</summary>
         public const string RT_SAFETENSORS = @"rt.safetensors";
+
+        /// <summary>
+        /// CarafeSharp's: the MS2 model of the saved model a training run fine-tuned further
+        /// (<c>-model</c>), which prediction keeps when the run's fine-tuned MS2 model did not beat
+        /// it. No Carafe folder holds one.
+        /// </summary>
+        public const string MS2_BASE_SAFETENSORS = @"ms2_base.safetensors";
 
         /// <summary>Held-out scores before and after fine-tuning, and whether to predict with the fine-tuned MS2 model.</summary>
         public const string METRICS = @"model_evaluation_metrics.json";

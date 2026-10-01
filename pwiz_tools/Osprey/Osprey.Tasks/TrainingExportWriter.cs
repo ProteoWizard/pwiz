@@ -521,6 +521,7 @@ namespace pwiz.Osprey.Tasks
                 [@"osprey.source_ms2_sampled"] = (source?.NMs2Sampled ?? 0).ToString(ic),
                 [@"osprey.dissociation_methods"] = source != null ? JsonConvert.SerializeObject(source.DissociationMethods) : string.Empty,
                 [@"osprey.collision_energies"] = source != null ? JsonConvert.SerializeObject(source.CollisionEnergies) : string.Empty,
+                [@"osprey.ms2_mass_analyzers"] = source != null ? JsonConvert.SerializeObject(source.MassAnalyzers) : string.Empty,
             };
             return metadata;
         }

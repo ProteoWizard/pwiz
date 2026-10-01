@@ -89,6 +89,10 @@ namespace pwiz.CarafeSharp.Test
         /// <summary>The sample keeps the precursors whose key hash is 0 modulo this.</summary>
         private const int SAMPLE_MODULUS = 10;
 
+        // A golden of a larger library samples less of it: its modulus is SAMPLE_MODULUS for each
+        // started SAMPLE_PRECURSORS_PER_STEP precursors, so a sample holds at most about 2,000.
+        private const int SAMPLE_PRECURSORS_PER_STEP = 20000;
+
         /// <summary>A golden sample larger than this is not committed.</summary>
         private const long MAX_SAMPLE_BYTES = 2L * 1024 * 1024;
 
@@ -211,13 +215,15 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(0, pairs.UnpairedTargetsWithDecoy, @"DecoyPairs leaves out targets whose decoy the library has.");
 
             Directory.CreateDirectory(folder);
+            int modulus = SampleModulusFor(run.Library.Precursors);
+            var sample = run.Library.SampleAt(modulus);
             string samplePath = Path.Combine(folder, SAMPLE_FILE);
-            LibrarySample.Write(samplePath, run.Library.Sample);
+            LibrarySample.Write(samplePath, sample);
             long sampleBytes = new FileInfo(samplePath).Length;
             Assert.IsTrue(sampleBytes <= MAX_SAMPLE_BYTES, @"The library sample is {0} bytes, more than {1}.", sampleBytes, MAX_SAMPLE_BYTES);
-            Golden.Write(Path.Combine(folder, GOLDEN_FILE), run);
-            TestContext.WriteLine(@"Golden written to {0}: {1} precursors, {2} peaks, {3} DecoyPairs rows, {4} sampled ({5} bytes).",
-                folder, run.Library.Precursors, run.Library.Peaks, pairs.Rows, run.Library.Sample.Count, sampleBytes);
+            Golden.Write(Path.Combine(folder, GOLDEN_FILE), run, modulus, sample.Count);
+            TestContext.WriteLine(@"Golden written to {0}: {1} precursors, {2} peaks, {3} DecoyPairs rows, {4} sampled at modulus {5} ({6} bytes).",
+                folder, run.Library.Precursors, run.Library.Peaks, pairs.Rows, sample.Count, modulus, sampleBytes);
         }
 
         private void Compare(Golden golden, RunMeasurement run)
@@ -257,7 +263,8 @@ namespace pwiz.CarafeSharp.Test
         /// 1% run FDR keeps and the per-run second pass's q-values; CarafeSharp read them, trained
         /// on a subset of their rows, wrote both models and finite metrics, recorded every run's
         /// isolation window, and predicted a library whose spectra keep -lf_min_n_frag peaks. Then
-        /// the model it saved predicted the same spectra again with -model, as a user reuses it.
+        /// the model it saved predicted the same spectra again with -model, as a user reuses it,
+        /// and was fine-tuned further on the same exports, starting from the models it holds.
         /// </summary>
         private void CheckChained(string folder)
         {
@@ -265,6 +272,8 @@ namespace pwiz.CarafeSharp.Test
             string exportFolder;
             int savedExitCode;
             string savedLibraryFolder;
+            int? furtherExitCode = null;
+            string furtherFolder = null;
             using (var info = JsonDocument.Parse(File.ReadAllText(TestData.RequireFile(Path.Combine(folder, RUN_INFO_FILE)))))
             {
                 var root = info.RootElement;
@@ -279,6 +288,12 @@ namespace pwiz.CarafeSharp.Test
                 exportFolder = Path.Combine(new[] { folder }.Concat(relative.Split('/')).ToArray());
                 savedExitCode = root.GetProperty(@"saved_model_exit_code").GetInt32();
                 savedLibraryFolder = Path.Combine(folder, root.GetProperty(@"saved_model_library").GetString() ?? string.Empty);
+                // A run made before the leg fine-tuned the saved model further has neither.
+                if (root.TryGetProperty(@"fine_tuned_further_exit_code", out var furtherExit))
+                {
+                    furtherExitCode = furtherExit.GetInt32();
+                    furtherFolder = Path.Combine(folder, root.GetProperty(@"fine_tuned_further").GetString() ?? string.Empty);
+                }
             }
 
             var exports = Directory.GetFiles(exportFolder, @"*" + OspreyTrainingExport.FILE_SUFFIX).OrderBy(p => p, StringComparer.Ordinal).ToList();
@@ -360,6 +375,46 @@ namespace pwiz.CarafeSharp.Test
                 @"library from the saved model: {0} precursors over the wider window; of the training run's {1}, {2} missing, {3} with " +
                 @"another m/z, RT or fragments, largest intensity difference {4} (at most {5})",
                 savedSpectra.Count, trainedSpectra.Count, missing, differ, Format(largest), Format(SAVED_MODEL_INTENSITY_TOLERANCE));
+
+            if (furtherExitCode == null)
+            {
+                Report(@"INFO the run did not fine-tune the saved model further (made before the leg did)");
+                return;
+            }
+            CheckFineTunedFurther(output, saved, furtherExitCode.Value, furtherFolder);
+        }
+
+        /// <summary>
+        /// The saved model fine-tuned further on the exports it was trained on (-model with
+        /// training). Its start models are the ones the first training chose, so their held-out
+        /// scores, on the same rows, are the first training's for those models: RT's fine-tuned
+        /// scores, and MS2's fine-tuned or pretrained ones as it chose. A new MS2 model that does
+        /// not beat a saved fine-tuned one leaves that one in the new file; the new file names the
+        /// saved one as its base.
+        /// </summary>
+        private void CheckFineTunedFurther(string output, CarafeModelFile saved, int exitCode, string furtherFolder)
+        {
+            Check(exitCode == 0, @"CarafeSharp -model with training exit code {0}", exitCode);
+            var first = ReadMetricValues(TestData.RequireFile(Path.Combine(output, ModelFiles.METRICS)))
+                .ToDictionary(p => p.Key, p => p.Value, StringComparer.Ordinal);
+            var further = ReadMetricValues(TestData.RequireFile(Path.Combine(furtherFolder, ModelFiles.METRICS)))
+                .ToDictionary(p => p.Key, p => p.Value, StringComparer.Ordinal);
+            string ms2Start = saved.Ms2Used ? @"finetuned" : @"pretrained";
+            foreach (var pair in further.Where(p => p.Key.Contains(@".pretrained.")))
+            {
+                string start = pair.Key.StartsWith(ModelFiles.METRICS_RT + @".", StringComparison.Ordinal)
+                    ? pair.Key.Replace(@".pretrained.", @".finetuned.")
+                    : pair.Key.Replace(@".pretrained.", @"." + ms2Start + @".");
+                Check(first.TryGetValue(start, out double expected) && expected == pair.Value,
+                    @"fine-tuned further: start {0} {1}, the first training's {2} {3}", pair.Key, Format(pair.Value), start,
+                    first.TryGetValue(start, out double value) ? Format(value) : @"(missing)");
+            }
+            var model = CarafeModelFile.Open(TestData.RequireFile(Path.Combine(furtherFolder, CarafeModelFile.DEFAULT_FILE_NAME)));
+            bool beat = CarafeModelDirectory.Open(furtherFolder, true).UseFineTunedMs2;
+            Check(model.Ms2FromBase == (!beat && saved.Ms2Used) && model.BaseModels.Count == 1 && model.BaseModels[0].Sha256 == saved.FileSha256,
+                @"fine-tuned further: {0}; base {1} (SHA-256 {2}, the saved model's {3})", model.Describe(),
+                model.BaseModels.Count == 0 ? @"none" : model.BaseModels[0].File, model.BaseModels.Count == 0 ? @"-" : model.BaseModels[0].Sha256,
+                saved.FileSha256);
         }
 
         private void CheckMetrics(Golden golden, RunMeasurement run)
@@ -400,8 +455,9 @@ namespace pwiz.CarafeSharp.Test
                 @"DecoyPairs pairs: {0} of {1} are not a target and the decoy of its pair group with one charge ({2} entrapment pairs)",
                 pairs.MalformedPairs, pairs.Pairs, pairs.EntrapmentPairs);
             Check(pairs.UnpairedTargetsWithDecoy == 0,
-                @"DecoyPairs targets: {0} of {1} paired; {2} unpaired although their decoy was written, {3} unpaired because it was not",
-                pairs.PairedTargets, pairs.Targets, pairs.UnpairedTargetsWithDecoy, pairs.UnpairedTargetsWithoutDecoy);
+                @"DecoyPairs targets: {0} of {1} paired; {2} unpaired although their decoy was written, {3} unpaired because it was not, " +
+                @"{4} unpaired because their partner precursor is paired in its other role",
+                pairs.PairedTargets, pairs.Targets, pairs.UnpairedTargetsWithDecoy, pairs.UnpairedTargetsWithoutDecoy, pairs.SharedPartnerTargets);
             if (pairs.AmbiguousPrecursors > 0 || pairs.UnlistedPrecursors > 0)
             {
                 Report(@"INFO DecoyPairs: {0} precursors left out of the pairing check (an I/L twin: their I/L-normalized sequence has more than one place in the manifest), {1} not in the manifest",
@@ -411,7 +467,7 @@ namespace pwiz.CarafeSharp.Test
 
         private void CheckSample(Golden golden, RunMeasurement run)
         {
-            var comparison = SampleComparison.Compare(golden.Sample, run.Library.Sample);
+            var comparison = SampleComparison.Compare(golden.Sample, run.Library.SampleAt(golden.SampleModulus));
             Check(comparison.MissingWithManyFragments == 0 && comparison.ExtraWithManyFragments == 0,
                 @"sampled precursors: {0} of the golden's {1} missing from the run ({2} with more than {3} fragments), {4} only in the run ({5} with more)",
                 comparison.Missing, golden.Sample.Count, comparison.MissingWithManyFragments, FEW_FRAGMENTS, comparison.Extra,
@@ -612,13 +668,19 @@ namespace pwiz.CarafeSharp.Test
             return modifiedSequence + @"/" + charge.ToString(CultureInfo.InvariantCulture);
         }
 
-        private static bool IsSampled(string key)
+        private static bool IsSampled(string key, int modulus)
         {
             ulong hash = FNV_OFFSET_BASIS;
             foreach (byte b in Encoding.UTF8.GetBytes(key))
                 hash = (hash ^ b) * FNV_PRIME;
             // FNV-1a mixes each byte into the high bits, so the sample reads those.
-            return (hash >> 32) % SAMPLE_MODULUS == 0;
+            return (hash >> 32) % (ulong)modulus == 0;
+        }
+
+        /// <summary>The sample modulus of a golden of <paramref name="precursors"/> precursors: a multiple of <see cref="SAMPLE_MODULUS"/>.</summary>
+        private static int SampleModulusFor(long precursors)
+        {
+            return SAMPLE_MODULUS * (int)Math.Max(1, (precursors + SAMPLE_PRECURSORS_PER_STEP - 1) / SAMPLE_PRECURSORS_PER_STEP);
         }
 
         /// <summary>Every spectrum of a .blib, its peaks decoded.</summary>
@@ -773,7 +835,7 @@ namespace pwiz.CarafeSharp.Test
                     peaks += spectrum.Mz.Length;
                     lines.Add(CanonicalLine(spectrum.Sequence, spectrum.Charge, spectrum.PrecursorMz, spectrum.RetentionTime, spectrum.Mz, spectrum.Intensity));
                     string key = PrecursorKey(spectrum.Sequence, spectrum.Charge);
-                    if (IsSampled(key))
+                    if (IsSampled(key, SAMPLE_MODULUS))
                         sample.Add(new SampledSpectrum(key, spectrum.PrecursorMz, spectrum.RetentionTime, spectrum.Mz, spectrum.Intensity));
                 }
                 lines.Sort(StringComparer.Ordinal);
@@ -793,7 +855,18 @@ namespace pwiz.CarafeSharp.Test
             public long Precursors { get; private set; }
             public long Peaks { get; private set; }
             public string ContentSha256 { get; private set; }
+            /// <summary>The precursors sampled at <see cref="SAMPLE_MODULUS"/>, by key.</summary>
             public IReadOnlyList<SampledSpectrum> Sample { get; private set; }
+
+            /// <summary>
+            /// The precursors sampled at <paramref name="modulus"/>, a multiple of <see cref="SAMPLE_MODULUS"/>:
+            /// a subset of <see cref="Sample"/>, since a hash that is 0 modulo it is 0 modulo that too.
+            /// </summary>
+            public IReadOnlyList<SampledSpectrum> SampleAt(int modulus)
+            {
+                Assert.AreEqual(0, modulus % SAMPLE_MODULUS, @"A sample modulus is a multiple of {0}, not {1}.", SAMPLE_MODULUS, modulus);
+                return Sample.Where(s => IsSampled(s.Key, modulus)).ToList();
+            }
 
             /// <summary>
             /// One precursor for the content hash: modified sequence, charge, exact precursor m/z,
@@ -899,6 +972,14 @@ namespace pwiz.CarafeSharp.Test
                         continue;
                     }
                     groups[group.PairIndex].TryGetValue(group.Type == TARGET ? DECOY : ENTRAPMENT_DECOY, out string partner);
+                    if (partner != null && ambiguous.Contains(partner))
+                    {
+                        // Its partner's sequence has another role in the manifest too (Carafe's digest gave a group's
+                        // decoy and entrapment decoy one sequence, or an entrapment decoy its target's): the library
+                        // holds that precursor once, and the planner pairs it once, in its other pair.
+                        summary.SharedPartnerTargets++;
+                        continue;
+                    }
                     if (partner != null && written.Contains(Precursor.MakeKey(partner, precursor.Charge, precursor.ModificationKey)))
                         summary.UnpairedTargetsWithDecoy++;
                     else
@@ -915,6 +996,8 @@ namespace pwiz.CarafeSharp.Test
             public int PairedTargets { get; private set; }
             public int UnpairedTargetsWithDecoy { get; private set; }
             public int UnpairedTargetsWithoutDecoy { get; private set; }
+            /// <summary>Unpaired targets whose partner precursor is also another role's, and paired in that role.</summary>
+            public int SharedPartnerTargets { get; private set; }
             public int AmbiguousPrecursors { get; private set; }
             public int UnlistedPrecursors { get; private set; }
 
@@ -1195,14 +1278,16 @@ namespace pwiz.CarafeSharp.Test
                     golden.Library = new LibrarySummary(library.GetProperty(@"precursors").GetInt64(), library.GetProperty(@"peaks").GetInt64(),
                         exact.GetProperty(@"library_content_sha256").GetString());
                     var sample = root.GetProperty(@"sample");
-                    Assert.AreEqual(SAMPLE_MODULUS, sample.GetProperty(@"modulus").GetInt32(), @"{0} was sampled with another modulus", path);
+                    golden.SampleModulus = sample.GetProperty(@"modulus").GetInt32();
+                    Assert.IsTrue(golden.SampleModulus > 0 && golden.SampleModulus % SAMPLE_MODULUS == 0,
+                        @"{0} was sampled at modulus {1}, which is not a multiple of {2}", path, golden.SampleModulus, SAMPLE_MODULUS);
                     golden.Sample = LibrarySample.Read(Path.Combine(folder, sample.GetProperty(@"file").GetString() ?? SAMPLE_FILE));
                 }
                 return golden;
             }
 
-            /// <summary>Writes golden.json for <paramref name="run"/>, whose sample is written beside it.</summary>
-            public static void Write(string path, RunMeasurement run)
+            /// <summary>Writes golden.json for <paramref name="run"/>, whose sample at <paramref name="modulus"/> is written beside it.</summary>
+            public static void Write(string path, RunMeasurement run, int modulus, int sampled)
             {
                 using (var stream = File.Create(path))
                 using (var json = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
@@ -1244,8 +1329,8 @@ namespace pwiz.CarafeSharp.Test
                     json.WriteEndObject();
                     json.WriteStartObject(@"sample");
                     json.WriteString(@"file", SAMPLE_FILE);
-                    json.WriteNumber(@"modulus", SAMPLE_MODULUS);
-                    json.WriteNumber(@"precursors", run.Library.Sample.Count);
+                    json.WriteNumber(@"modulus", modulus);
+                    json.WriteNumber(@"precursors", sampled);
                     json.WriteString(@"rule", @"the precursors whose 64-bit FNV-1a hash of modseq/charge, shifted right 32 bits, is 0 modulo the modulus");
                     json.WriteEndObject();
                     json.WriteStartObject(@"tolerances");
@@ -1291,6 +1376,8 @@ namespace pwiz.CarafeSharp.Test
             public int DecoyPairRows { get; private set; }
             public LibrarySummary Library { get; private set; }
             public IReadOnlyList<SampledSpectrum> Sample { get; private set; }
+            /// <summary>The modulus the golden's library was sampled at, a multiple of <see cref="SAMPLE_MODULUS"/>.</summary>
+            public int SampleModulus { get; private set; }
 
             private static void ReadMap(JsonElement element, IDictionary<string, string> map)
             {

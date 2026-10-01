@@ -178,7 +178,7 @@ namespace pwiz.CarafeSharp.Models
 
         private static Tensor Ms2Loss(Ms2Model model, IReadOnlyList<Ms2TrainingExample> batch)
         {
-            var predicted = model.Forward(batch.Select(e => new Ms2Request(e.Precursor, e.Nce, e.Instrument)).ToArray());
+            var predicted = model.Forward(batch.Select(e => new Ms2Request(e.Precursor, e.Nce, e.Instrument, e.Activation, e.Analyzer)).ToArray());
             int rows = batch[0].Precursor.Peptide.Length - 1;
             int width = rows * PeptdeepConstants.CHARGED_FRAG_TYPES.Length;
             var observed = new float[batch.Count * width];
@@ -210,7 +210,7 @@ namespace pwiz.CarafeSharp.Models
             if (max <= 0)
                 return example;
             return new Ms2TrainingExample(example.Precursor, example.Nce, example.Instrument,
-                example.Intensities.Select(v => v / max).ToArray(), example.Invalid);
+                example.Intensities.Select(v => v / max).ToArray(), example.Invalid, example.Activation, example.Analyzer);
         }
     }
 }

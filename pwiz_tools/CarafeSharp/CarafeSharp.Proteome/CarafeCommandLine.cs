@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using pwiz.CarafeSharp.Core;
 
 namespace pwiz.CarafeSharp.Proteome
 {
@@ -174,11 +175,14 @@ namespace pwiz.CarafeSharp.Proteome
                     @"  -lf_frag_mz_min <mz> -lf_frag_mz_max <mz> -lf_top_n_frag <n> -lf_min_n_frag <n> -lf_frag_n_min <n>",
                     @"  -nce <nce> -ms_instrument <name> -rt_max <min> -model_dir <folder> -tf all|ms2|rt",
                     @"  -device cpu|gpu -pairing_manifest <tsv>; CarafeSharp only: -pretrained <pretrained_models.zip>,",
-                    @"  -model <file.carafemodel> (a saved fine-tuned model, which every training run writes into -o)",
+                    @"  -model <file.carafemodel> (a saved fine-tuned model, which every training run writes into -o),",
+                    @"  -activation beam-CID|reCID -analyzer Orbitrap|LIT|ToF (else the training run's)",
                     @"Saved models: CarafeSharp -model_info <file.carafemodel> (what the model was trained on)",
                     @"Training options (Carafe's): -se Osprey -fdr <q> -cor <r> -n_ion_min <n> -c_ion_min <n> -lf_frag_n_min <n>",
                     @"  -nf <n> -min_n <n> -valid -no_masking -tf all|ms2|rt -seed <n> -nce <nce> -ms_instrument <name>",
-                    @"  -rt_max <min> -ms2_model <model> -device cpu|gpu; CarafeSharp only: -pretrained <pretrained_models.zip>");
+                    @"  -rt_max <min> -ms2_model <model> -device cpu|gpu; CarafeSharp only: -pretrained <pretrained_models.zip>,",
+                    @"  -activation beam-CID|reCID -analyzer Orbitrap|LIT|ToF (else each run's, from Osprey's export),",
+                    @"  -model <file.carafemodel> (fine-tune a saved model further, instead of the pretrained models)");
             }
         }
 
@@ -248,12 +252,16 @@ namespace pwiz.CarafeSharp.Proteome
             {
                 if (Has(@"model_dir"))
                     throw new ArgumentException(@"-model and -model_dir both name the models to predict with; give one");
-                if (Has(@"ms") || NamesTrainingExports())
+                if (Has(@"ms2_model"))
+                    throw new ArgumentException(@"-model and -ms2_model both name the MS2 model to start from; give one");
+                bool training = Has(@"ms") || NamesTrainingExports();
+                // With training, -model is the model to fine-tune further, and the new file holds both of its models.
+                if (training && TryGet(@"tf", out string trainingType) && !string.Equals(trainingType, @"all", StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new ArgumentException(@"-model predicts a library from a saved model without training; a training run " +
-                                                @"(-ms, or -i naming training exports) saves its own model instead");
+                    throw new ArgumentException(@"-model with training fine-tunes both of the saved model's models further; -tf " +
+                                                trainingType + @" would leave the other one pretrained in the new model");
                 }
-                if (!Has(@"db"))
+                if (!training && !Has(@"db"))
                     throw new ArgumentException(@"-model predicts a library, which needs the FASTA to predict via -db");
             }
             // Carafe trains when -ms is given. CarafeSharp also trains on Osprey's training exports
@@ -353,18 +361,26 @@ namespace pwiz.CarafeSharp.Proteome
                 settings.Nce = ParseDouble(@"nce", nce);
             if (TryGet(@"ms_instrument", out string instrument))
                 settings.Instrument = instrument;
+            if (TryGet(@"activation", out string activation))
+                settings.Activation = ParseActivation(activation);
+            if (TryGet(@"analyzer", out string analyzer))
+                settings.Analyzer = ParseAnalyzer(analyzer);
             if (TryGet(@"rt_max", out string rtMax))
                 settings.RtMax = ParseDouble(@"rt_max", rtMax);
             if (TryGet(@"ms2_model", out string ms2Model))
                 settings.Ms2Model = ms2Model;
+            if (TryGet(@"model", out string baseModel))
+                settings.BaseModel = baseModel;
             if (TryGet(@"pretrained", out string pretrained))
                 settings.PretrainedModels = pretrained;
             if (Has(@"db"))
             {
-                // The library predicted right after training, with the fine-tuned models in -o.
+                // The library predicted right after training, with the fine-tuned models in -o,
+                // not the -model they were fine-tuned from.
                 var library = InterpretLibrary(digest, modifications, minMz, maxMz);
                 library.ApplyTrainingRunMeta = true;
                 library.TrainingType = settings.TrainingType;
+                library.ModelFile = null;
                 settings.Library = library;
             }
             return settings;
@@ -432,6 +448,16 @@ namespace pwiz.CarafeSharp.Proteome
             {
                 settings.Instrument = instrument;
                 settings.UserInstrument = true;
+            }
+            if (TryGet(@"activation", out string activation))
+            {
+                settings.Activation = ParseActivation(activation);
+                settings.UserActivation = true;
+            }
+            if (TryGet(@"analyzer", out string analyzer))
+            {
+                settings.Analyzer = ParseAnalyzer(analyzer);
+                settings.UserAnalyzer = true;
             }
             if (TryGet(@"rt_max", out string rtMax))
             {
@@ -637,6 +663,20 @@ namespace pwiz.CarafeSharp.Proteome
         }
 
         /// <summary>Java's <c>Integer.parseInt</c>: an optional sign and digits, nothing else.</summary>
+        /// <summary><c>-activation</c>'s value, a known activation (case-insensitive).</summary>
+        private static string ParseActivation(string value)
+        {
+            return AcquisitionVocabulary.ParseActivation(value) ?? throw new ArgumentException(string.Format(
+                @"-activation {0} is not an activation CarafeSharp knows; use {1}", value, string.Join(@" or ", AcquisitionVocabulary.KNOWN_ACTIVATIONS)));
+        }
+
+        /// <summary><c>-analyzer</c>'s value, a known analyzer (case-insensitive).</summary>
+        private static string ParseAnalyzer(string value)
+        {
+            return AcquisitionVocabulary.ParseAnalyzer(value) ?? throw new ArgumentException(string.Format(
+                @"-analyzer {0} is not an analyzer CarafeSharp knows; use {1}", value, string.Join(@", ", AcquisitionVocabulary.KNOWN_ANALYZERS)));
+        }
+
         private static int ParseInt(string option, string value)
         {
             if (!int.TryParse(value, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out int result))
@@ -677,7 +717,7 @@ namespace pwiz.CarafeSharp.Proteome
                                      @"entrapment_ratio entrapment_seed decoy_seed reconcile_manifest predicted_library " +
                                      @"build_koina_library koina_url koina_ms2_model koina_rt_model nce_ms n_ion_min " +
                                      @"c_ion_min nce ms_instrument device se mode tf seed python mod2mass user_var_mods " +
-                                     @"model_dir ms2_model verbose ai_version pretrained model model_info";
+                                     @"model_dir ms2_model verbose ai_version pretrained model model_info activation analyzer";
             const string flagsOnly = @"printPTM nm cs ez skyline valid use_all_peaks I2L clip_n_m rf xic export_mgf " +
                                      @"no_masking no_similarity_gate ignore_pairing_errors entrapment no_decoys mz_filter " +
                                      @"y1 fast ccs torch_compile h";

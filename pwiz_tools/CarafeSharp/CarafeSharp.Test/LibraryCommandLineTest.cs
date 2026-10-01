@@ -118,10 +118,27 @@ namespace pwiz.CarafeSharp.Test
             var infoCommand = CarafeCommandLine.Parse(new[] { @"-model_info", @"m.carafemodel" });
             Assert.AreEqual(CarafeCommandMode.model_info, infoCommand.Mode);
             Assert.AreEqual(@"m.carafemodel", infoCommand.ModelInfoPath);
-            // It is refused with -model_dir, with training, and without -db.
+            // -activation and -analyzer name known values, whatever their case, and are marked as given.
+            settings = CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-activation", @"RECID", @"-analyzer", @"lit" }).LibrarySettings;
+            Assert.AreEqual(AcquisitionVocabulary.RE_CID, settings.Activation);
+            Assert.AreEqual(AcquisitionVocabulary.LIT, settings.Analyzer);
+            Assert.IsTrue(settings.UserActivation && settings.UserAnalyzer);
+            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-activation", @"CID" }));
+            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-analyzer", @"FTICR" }));
+            var training = CarafeCommandLine.Parse(new[] { @"-i", @"a.training.parquet", @"-activation", @"beam-cid", @"-analyzer", @"ToF" }).TrainingSettings;
+            Assert.AreEqual(AcquisitionVocabulary.BEAM_CID, training.Activation);
+            Assert.AreEqual(AcquisitionVocabulary.TOF, training.Analyzer);
+            // It is refused with -model_dir, with -ms2_model, and without -db or training.
             Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model", @"m.carafemodel", @"-model_dir", @"d" }));
-            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model", @"m.carafemodel", @"-i", @"a.training.parquet" }));
+            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model", @"m.carafemodel", @"-ms2_model", @"s.safetensors" }));
             Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-model", @"m.carafemodel", @"-o", @"out" }));
+            // With training, -model is the saved model to fine-tune further, with -tf all only;
+            // the library after training predicts with the run's own models, not the saved one.
+            var further = CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model", @"m.carafemodel", @"-i", @"a.training.parquet" });
+            Assert.AreEqual(CarafeCommandMode.train, further.Mode);
+            Assert.AreEqual(@"m.carafemodel", further.TrainingSettings.BaseModel);
+            Assert.IsNull(further.TrainingSettings.Library.ModelFile);
+            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-model", @"m.carafemodel", @"-i", @"a.training.parquet", @"-tf", @"rt" }));
 
             // -ms is training, which reads Osprey's results (-i) rather than the raw data.
             Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-ms", @"a.mzML" }));
@@ -347,7 +364,8 @@ namespace pwiz.CarafeSharp.Test
         /// A saved model (.carafemodel) predicts a library of any peptides with no training: the
         /// same spectra its models predict from their folder, with the command line's m/z ranges
         /// (not the training run's window, which -model_dir would take) and the training run's
-        /// NCE, instrument and rt_max for those the command line does not give. A fine-tuned MS2
+        /// NCE, instrument, activation, analyzer and rt_max for those the command line does not
+        /// give. A fine-tuned MS2
         /// model that lost to the pretrained one is left out, and a damaged or foreign file fails
         /// before anything is predicted.
         /// </summary>
@@ -362,9 +380,10 @@ namespace pwiz.CarafeSharp.Test
                 string models = settings.ModelDirectory;
                 // The training run: a precursor window that holds none of the FASTA's peptides.
                 File.WriteAllText(Path.Combine(models, ModelFiles.META),
-                    @"{""run_a.mzML"":{""ms_file"":""run_a.mzML"",""nce"":31.0,""ms_instrument"":""Astral"",""rt_max"":45.0,""precursor_ion_mz_min"":1500.0,""precursor_ion_mz_max"":1504.0}}");
+                    @"{""run_a.mzML"":{""ms_file"":""run_a.mzML"",""nce"":31.0,""ms_instrument"":""Astral"",""activation"":""reCID"",""analyzer"":""LIT"",""rt_max"":45.0," +
+                    @"""precursor_ion_mz_min"":1500.0,""precursor_ion_mz_max"":1504.0}}");
                 string modelFile = Path.Combine(folder, @"hela" + CarafeModelFile.EXTENSION);
-                var written = CarafeModelFile.Write(modelFile, CarafeModelDirectory.Open(models, true), @"all", PretrainedModels.PINNED_SHA256, null, null);
+                var written = CarafeModelFile.Write(modelFile, CarafeModelDirectory.Open(models, true), @"all", PretrainedModels.PINNED_SHA256, null, null, AcquisitionVocabulary.DEFAULT, null);
                 Assert.IsTrue(written.Ms2Used && written.RtUsed);
                 CollectionAssert.AreEquivalent(new[] { ModelFiles.MS2_SAFETENSORS, ModelFiles.RT_SAFETENSORS, ModelFiles.METRICS, ModelFiles.META },
                     written.Entries.Keys.ToList());
@@ -374,6 +393,9 @@ namespace pwiz.CarafeSharp.Test
                 Assert.AreEqual(@"run_a.mzML", opened.Runs.Single().MsFile);
                 Assert.AreEqual(31.0, opened.Nce);
                 Assert.AreEqual(@"Astral", opened.Instrument);
+                Assert.AreEqual(AcquisitionVocabulary.RE_CID, opened.Activation);
+                Assert.AreEqual(AcquisitionVocabulary.LIT, opened.Analyzer);
+                Assert.AreEqual(AcquisitionVocabulary.DEFAULT.ToString(), opened.Acquisition.ToString());
                 Assert.AreEqual(45.0, opened.RtMax);
 
                 // From the file, with no NCE, instrument or rt_max given: the training run's, and the
@@ -398,23 +420,31 @@ namespace pwiz.CarafeSharp.Test
                 fromFile.Run();
                 Assert.AreEqual(31.0, fileSettings.Nce);
                 Assert.AreEqual(@"Astral", fileSettings.Instrument);
+                Assert.AreEqual(AcquisitionVocabulary.RE_CID, fileSettings.Activation);
+                Assert.AreEqual(AcquisitionVocabulary.LIT, fileSettings.Analyzer);
                 Assert.AreEqual(45.0, fileSettings.RtMax);
                 Assert.IsTrue(fromFile.SpectrumCount > 0, log.ToString());
                 CollectionAssert.AreEqual(ReadSpectra(fromFolder.BlibPath), ReadSpectra(fromFile.BlibPath), @"the file holds the folder's models");
                 StringAssert.Contains(log.ToString(), @"Use the saved model " + modelFile);
 
-                // The command line's NCE, instrument and rt_max stay.
-                var given = new LibrarySettings { Nce = 25, UserNce = true, Instrument = @"Lumos", UserInstrument = true, RtMax = 60, UserRtMax = true };
+                // The command line's NCE, instrument, activation, analyzer and rt_max stay.
+                var given = new LibrarySettings
+                {
+                    Nce = 25, UserNce = true, Instrument = @"Lumos", UserInstrument = true, RtMax = 60, UserRtMax = true,
+                    Activation = AcquisitionVocabulary.BEAM_CID, UserActivation = true, Analyzer = AcquisitionVocabulary.TOF, UserAnalyzer = true,
+                };
                 opened.ApplyPredictionDefaults(given);
                 Assert.AreEqual(25.0, given.Nce);
                 Assert.AreEqual(@"Lumos", given.Instrument);
+                Assert.AreEqual(AcquisitionVocabulary.BEAM_CID, given.Activation);
+                Assert.AreEqual(AcquisitionVocabulary.TOF, given.Analyzer);
                 Assert.AreEqual(60.0, given.RtMax);
 
                 // A fine-tuned MS2 model that did not beat the pretrained one is not saved, so the
                 // library predicts MS2 with the pretrained model.
                 File.WriteAllText(Path.Combine(models, ModelFiles.METRICS), @"{""ms2"":{""use_finetuned_for_prediction"":false}}");
                 string rtOnly = Path.Combine(folder, @"rt_only" + CarafeModelFile.EXTENSION);
-                var lost = CarafeModelFile.Write(rtOnly, CarafeModelDirectory.Open(models, true), @"all", null, null, null);
+                var lost = CarafeModelFile.Write(rtOnly, CarafeModelDirectory.Open(models, true), @"all", null, null, null, null, null);
                 Assert.IsTrue(lost.Ms2FineTuned);
                 Assert.IsFalse(lost.Ms2Used);
                 Assert.IsFalse(lost.Entries.ContainsKey(ModelFiles.MS2_SAFETENSORS));

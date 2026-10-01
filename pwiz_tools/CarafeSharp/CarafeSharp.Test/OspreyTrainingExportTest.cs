@@ -205,7 +205,7 @@ namespace pwiz.CarafeSharp.Test
             footerA[@"osprey.collision_energies"] = @"{""30"":100,""27"":100}";
             var footerB = Footer(@"a");
             footerB[@"osprey.rt_max"] = @"20";
-            footerB[@"osprey.instrument_model"] = @"Stellar";
+            footerB[@"osprey.instrument_model"] = @"Orbitrap Ascend";
             footerB.Remove(@"osprey.collision_energies");
             var exportA = OspreyTrainingExport.Read(WriteExport(@"a", Number(a1, a2, a3, a4, a5, a6, a7, a8, a9), footerA, 4));
             var exportB = OspreyTrainingExport.Read(WriteExport(@"b", Number(b1, b2, b3), footerB, 4));
@@ -277,7 +277,8 @@ namespace pwiz.CarafeSharp.Test
             // Carafe's names for instrument models, trimmed and case-insensitive.
             Assert.AreEqual(@"QEHF", OspreyTrainingSet.GetCarafeInstrument(@"  q exactive hf "));
             Assert.AreEqual(@"QE+", OspreyTrainingSet.GetCarafeInstrument(@"Exactive Plus"));
-            Assert.IsNull(OspreyTrainingSet.GetCarafeInstrument(@"Stellar"));
+            // CarafeSharp's name for a Stellar, which is peptdeep's Lumos family.
+            Assert.AreEqual(@"Stellar", OspreyTrainingSet.GetCarafeInstrument(@"Stellar"));
             Assert.IsNull(OspreyTrainingSet.GetCarafeInstrument(null));
 
             TestTrainingTables(trainingSet);

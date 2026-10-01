@@ -27,7 +27,7 @@ namespace pwiz.Osprey.IO
 {
     /// <summary>
     /// What a run's source file says about its acquisition - instrument vendor and model, and
-    /// the dissociation methods and collision energies of its first MS2 spectra - for the
+    /// the dissociation methods, collision energies and mass analyzers of its first MS2 spectra - for the
     /// training export's footer. Read by <see cref="SpectrumFileReader.TryReadSourceMetadata"/>
     /// only when an export asks for it, never during the search's own parse, so a run cached
     /// before the export existed describes itself just as well and the search pays nothing.
@@ -52,6 +52,14 @@ namespace pwiz.Osprey.IO
 
         /// <summary>Dissociation method name, counted over the sampled MS2 spectra.</summary>
         public SortedDictionary<string, int> DissociationMethods { get; } =
+            new SortedDictionary<string, int>(StringComparer.Ordinal);
+
+        /// <summary>
+        /// The mass analyzer of each sampled MS2 spectrum's scan configuration (pwiz's names, such
+        /// as "orbitrap" or "radial ejection linear ion trap"), counted: a Tribrid reads MS2 out in
+        /// either, and a spectral library model treats ion trap and Orbitrap spectra differently.
+        /// </summary>
+        public SortedDictionary<string, int> MassAnalyzers { get; } =
             new SortedDictionary<string, int>(StringComparer.Ordinal);
 
         /// <summary>Collision energy (round-trip text), counted over the sampled MS2 spectra.</summary>
@@ -90,6 +98,8 @@ namespace pwiz.Osprey.IO
             }
             NMs2Sampled++;
             Count(DissociationMethods, string.IsNullOrEmpty(precursor.DissociationMethod) ? NONE_KEY : precursor.DissociationMethod);
+            string analyzer = spectrum.InstrumentInfo?.Analyzer;
+            Count(MassAnalyzers, string.IsNullOrEmpty(analyzer) ? NONE_KEY : analyzer);
             double? energy = precursor.PrecursorCollisionEnergy;
             Count(CollisionEnergies, energy.HasValue ? energy.Value.ToString(@"R", CultureInfo.InvariantCulture) : NONE_KEY);
         }

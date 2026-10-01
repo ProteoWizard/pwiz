@@ -20,6 +20,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
@@ -55,11 +56,18 @@ namespace pwiz.CarafeSharp.Training
         public double RtMax { get; set; }
 
         /// <summary>
-        /// Carafe's <c>-nce</c>: the collision energy of a run whose export records none (the
-        /// run's own is used when it has one, as Carafe does); null for Carafe's default,
-        /// <see cref="DEFAULT_NCE"/>.
+        /// Carafe's <c>-nce</c>: the collision energy of a run whose export records none (a Thermo
+        /// run's own NCE is used when it has one, as Carafe does), and of a run whose energy is in
+        /// eV, instead of its calibration; null for Carafe's default, <see cref="DEFAULT_NCE"/>.
         /// </summary>
         public double? Nce { get; set; }
+
+        /// <summary>
+        /// Calibrates the NCE of a run whose collision energy is in eV (<see cref="RunCollisionEnergy"/>)
+        /// from its MS2 rows, as <see cref="NceCalibration.Calibrate"/> does with the start MS2
+        /// model; null trains such a run at its energy, as Carafe does.
+        /// </summary>
+        public Func<IReadOnlyList<Ms2TrainingExample>, NceCalibration> CalibrateNce { get; set; }
 
         /// <summary>
         /// Carafe's <c>-ms_instrument</c>, the instrument of every row; null takes each run's
@@ -67,6 +75,12 @@ namespace pwiz.CarafeSharp.Training
         /// <see cref="DEFAULT_INSTRUMENT"/>.
         /// </summary>
         public string Instrument { get; set; }
+
+        /// <summary><c>-activation</c>: every run's activation, else each run's own from its export.</summary>
+        public string Activation { get; set; }
+
+        /// <summary><c>-analyzer</c>: every run's MS2 analyzer, else each run's own from its export.</summary>
+        public string Analyzer { get; set; }
 
         public OspreyMaskingSettings Masking { get; set; } = new OspreyMaskingSettings();
 
@@ -144,17 +158,28 @@ namespace pwiz.CarafeSharp.Training
             { @"Q Exactive Plus", @"QE+" },              // MS:1002634
             { @"Q Exactive HF-X", @"QEHFX" },            // MS:1002877
             { @"TripleTOF 6600", @"SciexTOF" },          // MS:1002533
+            // CarafeSharp's: peptdeep's Lumos family; its ion trap is the acquisition layer's LIT.
+            { @"Stellar", @"Stellar" },                  // MS:1003409
         };
+
+        /// <summary>The histogram key for a spectrum that carries no value (Osprey's SourceRunMetadata.NONE_KEY).</summary>
+        private const string NONE_KEY = @"none";
+
+        private const string OTHER_ACTIVATION = @"other";
 
         public static OspreyTrainingSet Build(IReadOnlyList<OspreyTrainingExport> exports, OspreyTrainingSetOptions options)
         {
             var stats = new OspreyTrainingSetStats();
             var candidates = new List<Candidate>();
+            var energies = new Dictionary<string, RunCollisionEnergy>(StringComparer.Ordinal);
             double rtMax = GetRtMax(exports, options);
             foreach (var export in exports)
             {
-                double nce = GetNce(export, options.Nce);
+                var energy = GetCollisionEnergy(export, options);
+                energies[export.Path] = energy;
                 string instrument = options.Instrument ?? GetCarafeInstrument(export.InstrumentModel) ?? OspreyTrainingSetOptions.DEFAULT_INSTRUMENT;
+                string activation = GetActivation(export, options.Activation);
+                string analyzer = GetAnalyzer(export, options.Analyzer);
                 foreach (var record in export.Records)
                 {
                     stats.Records++;
@@ -174,7 +199,7 @@ namespace pwiz.CarafeSharp.Training
                         stats.Unmapped++;
                         continue;
                     }
-                    candidates.Add(new Candidate(record, peptide, nce, instrument));
+                    candidates.Add(new Candidate(record, peptide, energy, instrument, activation, analyzer));
                 }
             }
 
@@ -200,6 +225,7 @@ namespace pwiz.CarafeSharp.Training
 
             var policy = new OspreyMaskingPolicy(options.Masking);
             var ms2 = new List<Ms2TrainingExample>(best.Length);
+            var rowEnergies = new List<RunCollisionEnergy>(best.Length);
             foreach (var candidate in best)
             {
                 stats.Ms2Candidates++;
@@ -217,11 +243,56 @@ namespace pwiz.CarafeSharp.Training
                     continue;
                 }
                 ms2.Add(new Ms2TrainingExample(new PrecursorForm(candidate.Peptide, candidate.Record.Charge),
-                    candidate.Nce, candidate.Instrument, masked.Intensities,
-                    options.UseMasking ? masked.Invalid : new double[masked.SlotCount]));
+                    candidate.Energy.Nce, candidate.Instrument, masked.Intensities,
+                    options.UseMasking ? masked.Invalid : new double[masked.SlotCount], candidate.Activation, candidate.Analyzer));
+                rowEnergies.Add(candidate.Energy);
             }
             stats.Ms2Rows = ms2.Count;
-            return new OspreyTrainingSet(rt, ms2, stats);
+
+            // A run whose energy is in eV: its rows at the NCE its own spectra calibrate, else
+            // Carafe's default when none of its spectra was kept.
+            foreach (var energy in energies.Values.Where(e => e.Source == RunCollisionEnergy.CALIBRATED))
+            {
+                int[] rows = Enumerable.Range(0, ms2.Count).Where(i => ReferenceEquals(rowEnergies[i], energy)).ToArray();
+                if (rows.Length == 0)
+                {
+                    energy.Source = RunCollisionEnergy.DEFAULT;
+                    continue;
+                }
+                energy.Calibration = options.CalibrateNce(rows.Select(i => ms2[i]).ToArray());
+                energy.Nce = energy.Calibration.Nce;
+                foreach (int i in rows)
+                    ms2[i] = ms2[i].WithNce(energy.Nce);
+            }
+            return new OspreyTrainingSet(rt, ms2, stats, energies);
+        }
+
+        /// <summary>
+        /// A run's collision energy and the NCE it trains with:
+        /// <list type="bullet">
+        /// <item>a Thermo run's own NCE, else <c>-nce</c>, else Carafe's default, as Carafe takes it;</item>
+        /// <item>for a run whose energy is in eV (any other vendor), <c>-nce</c>, else the NCE
+        /// <see cref="OspreyTrainingSetOptions.CalibrateNce"/> finds on its spectra (set by
+        /// <see cref="Build"/>), else its energy as Carafe takes it.</item>
+        /// </list>
+        /// A run that names neither vendor nor model counts as Thermo, as Carafe reads it.
+        /// </summary>
+        public static RunCollisionEnergy GetCollisionEnergy(OspreyTrainingExport export, OspreyTrainingSetOptions options)
+        {
+            double? energy = export.DominantCollisionEnergy;
+            if (energy.HasValue && ReportsElectronvolts(export))
+            {
+                if (options.Nce.HasValue)
+                    return new RunCollisionEnergy(options.Nce.Value, RunCollisionEnergy.COMMAND_LINE, energy, RunCollisionEnergy.EV_UNIT);
+                return options.CalibrateNce != null
+                    ? new RunCollisionEnergy(OspreyTrainingSetOptions.DEFAULT_NCE, RunCollisionEnergy.CALIBRATED, energy, RunCollisionEnergy.EV_UNIT)
+                    : new RunCollisionEnergy(energy.Value, RunCollisionEnergy.FROM_FILE, energy, RunCollisionEnergy.EV_UNIT);
+            }
+            if (energy.HasValue)
+                return new RunCollisionEnergy(energy.Value, RunCollisionEnergy.FROM_FILE, energy, RunCollisionEnergy.NCE_UNIT);
+            return options.Nce.HasValue
+                ? new RunCollisionEnergy(options.Nce.Value, RunCollisionEnergy.COMMAND_LINE, null, null)
+                : new RunCollisionEnergy(OspreyTrainingSetOptions.DEFAULT_NCE, RunCollisionEnergy.DEFAULT, null, null);
         }
 
         /// <summary>
@@ -233,10 +304,131 @@ namespace pwiz.CarafeSharp.Training
             return instrumentModel != null && CARAFE_INSTRUMENTS.TryGetValue(instrumentModel.Trim(), out string name) ? name : null;
         }
 
-        /// <summary>The collision energy Carafe trains a run with: its own, else <paramref name="nce"/>, else 27.</summary>
-        public static double GetNce(OspreyTrainingExport export, double? nce)
+        /// <summary>
+        /// How a run's precursors were activated (<see cref="AcquisitionVocabulary"/>):
+        /// <paramref name="userActivation"/> (<c>-activation</c>) when given, else from Osprey's
+        /// export. Beam-type CID (pwiz's HCD) is beam-CID and trap-type CID is reCID, whoever made
+        /// the instrument; plain CID is reCID from a Thermo instrument, whose CID is resonance CID
+        /// in an ion trap, and beam-CID from any other, whose CID is beam-type. Null when the export
+        /// says nothing or names only electron-based methods, which leave the columns zero.
+        /// </summary>
+        /// <exception cref="InvalidDataException">The run's sampled MS2 spectra mix activations.</exception>
+        public static string GetActivation(OspreyTrainingExport export, string userActivation)
         {
-            return export.DominantCollisionEnergy ?? nce ?? OspreyTrainingSetOptions.DEFAULT_NCE;
+            if (userActivation != null)
+                return userActivation;
+            bool thermo = IsThermo(export);
+            var counts = new SortedDictionary<string, long>(StringComparer.Ordinal);
+            foreach (var pair in export.DissociationMethods)
+            {
+                string activation = ActivationOf(pair.Key, thermo);
+                if (activation != null)
+                    counts[activation] = (counts.TryGetValue(activation, out long n) ? n : 0) + pair.Value;
+            }
+            if (counts.Count > 1)
+                throw MixedClasses(export, @"activations", counts, @"-activation");
+            return counts.Keys.FirstOrDefault();
+        }
+
+        /// <summary>
+        /// The analyzer that read a run's MS2 spectra out (<see cref="AcquisitionVocabulary"/>):
+        /// <paramref name="userAnalyzer"/> (<c>-analyzer</c>) when given, else from Osprey's export,
+        /// a time-of-flight analyzer (an Astral's too) being ToF, an ion trap LIT and an Orbitrap
+        /// Orbitrap. Without the analyzers (an older Osprey, or no data file) the model decides where
+        /// it has one MS2 analyzer: a Stellar's LIT, an Astral's ToF. Null otherwise.
+        /// </summary>
+        /// <exception cref="InvalidDataException">The run's sampled MS2 spectra were read out in more than one kind of analyzer.</exception>
+        public static string GetAnalyzer(OspreyTrainingExport export, string userAnalyzer)
+        {
+            if (userAnalyzer != null)
+                return userAnalyzer;
+            var counts = new SortedDictionary<string, long>(StringComparer.Ordinal);
+            foreach (var pair in export.Ms2MassAnalyzers)
+            {
+                string analyzer = AnalyzerOf(pair.Key);
+                if (analyzer != null)
+                    counts[analyzer] = (counts.TryGetValue(analyzer, out long n) ? n : 0) + pair.Value;
+            }
+            if (counts.Count > 1)
+                throw MixedClasses(export, @"analyzers", counts, @"-analyzer");
+            if (counts.Count == 1)
+                return counts.Keys.First();
+            string model = export.InstrumentModel?.Trim();
+            if (string.Equals(model, @"Stellar", StringComparison.OrdinalIgnoreCase))
+                return AcquisitionVocabulary.LIT;
+            if (string.Equals(model, @"Orbitrap Astral", StringComparison.OrdinalIgnoreCase))
+                return AcquisitionVocabulary.TOF;
+            return null;
+        }
+
+        /// <summary>
+        /// The activation of a dissociation method as pwiz names it (PSI-MS's short name, else its
+        /// name): beam-CID, reCID, or null for none or an electron-based method (ETD, EThcD, EAD).
+        /// </summary>
+        private static string ActivationOf(string method, bool thermo)
+        {
+            if (method == NONE_KEY)
+                return null;
+            var tokens = method.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            if (tokens.Any(t => t.EndsWith(@"ETD", StringComparison.Ordinal) || t.EndsWith(@"ECD", StringComparison.Ordinal) ||
+                                t.EndsWith(@"EAD", StringComparison.Ordinal)) ||
+                method.IndexOf(@"electron", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return null;
+            }
+            if (tokens.Contains(@"HCD") || method.IndexOf(@"beam-type", StringComparison.OrdinalIgnoreCase) >= 0)
+                return AcquisitionVocabulary.BEAM_CID;
+            if (method.IndexOf(@"trap-type", StringComparison.OrdinalIgnoreCase) >= 0)
+                return AcquisitionVocabulary.RE_CID;
+            if (tokens.Contains(@"CID") || method.IndexOf(@"collision-induced", StringComparison.OrdinalIgnoreCase) >= 0)
+                return thermo ? AcquisitionVocabulary.RE_CID : AcquisitionVocabulary.BEAM_CID;
+            return null;
+        }
+
+        /// <summary>The kind of an analyzer as pwiz names it (its configuration's analyzers, joined), or null for none or another kind.</summary>
+        private static string AnalyzerOf(string analyzer)
+        {
+            if (analyzer == NONE_KEY)
+                return null;
+            if (analyzer.IndexOf(@"time-of-flight", StringComparison.OrdinalIgnoreCase) >= 0)
+                return AcquisitionVocabulary.TOF;
+            if (analyzer.IndexOf(@"ion trap", StringComparison.OrdinalIgnoreCase) >= 0)
+                return AcquisitionVocabulary.LIT;
+            if (analyzer.IndexOf(@"orbitrap", StringComparison.OrdinalIgnoreCase) >= 0)
+                return AcquisitionVocabulary.ORBITRAP;
+            return null;
+        }
+
+        /// <summary>A Thermo instrument, by its vendor or, without one, by its model's name.</summary>
+        private static bool IsThermo(OspreyTrainingExport export)
+        {
+            if (export.Metadata.TryGetValue(@"osprey.instrument_vendor", out string vendor) && !string.IsNullOrEmpty(vendor))
+                return vendor.IndexOf(@"Thermo", StringComparison.OrdinalIgnoreCase) >= 0;
+            string model = export.InstrumentModel ?? string.Empty;
+            return CARAFE_INSTRUMENTS.TryGetValue(model.Trim(), out string name) && name != @"SciexTOF" ||
+                   model.IndexOf(@"Orbitrap", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   model.IndexOf(@"Exactive", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   model.IndexOf(@"LTQ", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        /// <summary>
+        /// The run's collision energies are in eV: its vendor is not Thermo, or, without a vendor,
+        /// its model is not a Thermo one. pwiz reports a Thermo file's NCE as the energy.
+        /// </summary>
+        private static bool ReportsElectronvolts(OspreyTrainingExport export)
+        {
+            if (export.Metadata.TryGetValue(@"osprey.instrument_vendor", out string vendor) && !string.IsNullOrEmpty(vendor))
+                return !IsThermo(export);
+            return !string.IsNullOrWhiteSpace(export.InstrumentModel) && !IsThermo(export);
+        }
+
+        private static InvalidDataException MixedClasses(OspreyTrainingExport export, string what, IReadOnlyDictionary<string, long> counts,
+            string option)
+        {
+            return new InvalidDataException(string.Format(
+                @"{0}: its MS2 spectra mix {1} {2}. CarafeSharp trains one activation and one analyzer per run, and would train " +
+                @"some of these spectra as another; train the run on its own, or name one for all of it with {3}.",
+                export.Path, what, string.Join(@" and ", counts.Select(p => p.Key + @" (" + p.Value + @")")), option));
         }
 
         /// <summary>A run's <c>rt_max</c>, the larger of <c>-rt_max</c> and its last MS2 RT plus the padding.</summary>
@@ -251,12 +443,16 @@ namespace pwiz.CarafeSharp.Training
             return exports.Aggregate(options.RtMax, (max, export) => Math.Max(max, GetRtMax(export, options)));
         }
 
-        private OspreyTrainingSet(IReadOnlyList<RtTrainingExample> rt, IReadOnlyList<Ms2TrainingExample> ms2, OspreyTrainingSetStats stats)
+        private OspreyTrainingSet(IReadOnlyList<RtTrainingExample> rt, IReadOnlyList<Ms2TrainingExample> ms2, OspreyTrainingSetStats stats,
+            IReadOnlyDictionary<string, RunCollisionEnergy> energies)
         {
             Rt = rt;
             Ms2 = ms2;
             Stats = stats;
+            _energies = energies;
         }
+
+        private readonly IReadOnlyDictionary<string, RunCollisionEnergy> _energies;
 
         public IReadOnlyList<RtTrainingExample> Rt { get; }
 
@@ -264,22 +460,33 @@ namespace pwiz.CarafeSharp.Training
 
         public OspreyTrainingSetStats Stats { get; }
 
+        /// <summary>The collision energy, and the NCE trained with, of the run of an export <see cref="Build"/> read.</summary>
+        public RunCollisionEnergy GetCollisionEnergy(OspreyTrainingExport export)
+        {
+            return _energies[export.Path];
+        }
+
         private sealed class Candidate
         {
-            public Candidate(OspreyTrainingRecord record, PeptideForm peptide, double nce, string instrument)
+            public Candidate(OspreyTrainingRecord record, PeptideForm peptide, RunCollisionEnergy energy, string instrument, string activation,
+                string analyzer)
             {
                 Record = record;
                 Peptide = peptide;
-                Nce = nce;
+                Energy = energy;
                 Instrument = instrument;
+                Activation = activation;
+                Analyzer = analyzer;
                 FormKey = peptide.Sequence + @"|" + peptide.ModsText + @"|" + peptide.ModSitesText;
                 Key = FormKey + @"|" + record.Charge;
             }
 
             public OspreyTrainingRecord Record { get; }
             public PeptideForm Peptide { get; }
-            public double Nce { get; }
+            public RunCollisionEnergy Energy { get; }
             public string Instrument { get; }
+            public string Activation { get; }
+            public string Analyzer { get; }
             public string FormKey { get; }
             public string Key { get; }
         }

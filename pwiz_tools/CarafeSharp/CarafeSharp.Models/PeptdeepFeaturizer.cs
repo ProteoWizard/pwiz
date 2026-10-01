@@ -121,6 +121,29 @@ namespace pwiz.CarafeSharp.Models
             return tensor(data, new long[] { data.Length }).unsqueeze(1) * PeptdeepConstants.NCE_FACTOR;
         }
 
+        /// <summary>
+        /// The meta features <c>[batch, 8 + width]</c> (float32): each request's one-hot instrument
+        /// family, then its one-hot activation and analyzer in <paramref name="vocabulary"/>'s
+        /// columns. A null activation or analyzer, or one the model has no column for, stays zero.
+        /// </summary>
+        public static Tensor MetaFeatures(IReadOnlyList<Ms2Request> requests, AcquisitionVocabulary vocabulary)
+        {
+            int instruments = PeptdeepConstants.MAX_INSTRUMENT_NUM;
+            int width = instruments + vocabulary.Width;
+            var data = new float[requests.Count * width];
+            for (int i = 0; i < requests.Count; i++)
+            {
+                data[i * width + PeptdeepConstants.GetInstrumentIndex(requests[i].Instrument)] = 1;
+                int activation = vocabulary.ActivationColumn(requests[i].Activation);
+                if (activation >= 0)
+                    data[i * width + instruments + activation] = 1;
+                int analyzer = vocabulary.AnalyzerColumn(requests[i].Analyzer);
+                if (analyzer >= 0)
+                    data[i * width + instruments + analyzer] = 1;
+            }
+            return tensor(data, new long[] { requests.Count, width });
+        }
+
         /// <summary>Instrument embedding indices <c>[batch]</c> (int64).</summary>
         public static Tensor InstrumentIndices(IReadOnlyList<string> instruments)
         {

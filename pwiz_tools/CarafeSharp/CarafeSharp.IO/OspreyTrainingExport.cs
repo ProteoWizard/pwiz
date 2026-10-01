@@ -245,6 +245,27 @@ namespace pwiz.CarafeSharp.IO
             }
         }
 
+        /// <summary>MS2 spectra by dissociation method, pwiz's short names (<c>HCD</c>, <c>CID</c>, ...); empty without the run info.</summary>
+        public IReadOnlyDictionary<string, long> DissociationMethods
+        {
+            get { return GetCounts(@"osprey.dissociation_methods"); }
+        }
+
+        /// <summary>MS2 spectra by collision energy as the file reports it; empty without the run info.</summary>
+        public IReadOnlyDictionary<string, long> CollisionEnergies
+        {
+            get { return GetCounts(@"osprey.collision_energies"); }
+        }
+
+        /// <summary>
+        /// MS2 spectra by mass analyzer, pwiz's names (<c>orbitrap</c>, <c>radial ejection linear
+        /// ion trap</c>, ...); empty without the run info or from an Osprey that did not record it.
+        /// </summary>
+        public IReadOnlyDictionary<string, long> Ms2MassAnalyzers
+        {
+            get { return GetCounts(@"osprey.ms2_mass_analyzers"); }
+        }
+
         /// <summary>
         /// The collision energy most MS2 spectra were acquired at (<c>osprey.collision_energies</c>),
         /// or null when the run info is missing.
@@ -272,6 +293,20 @@ namespace pwiz.CarafeSharp.IO
                     return best;
                 }
             }
+        }
+
+        /// <summary>A footer histogram (JSON, key to count), empty when the export has none.</summary>
+        private IReadOnlyDictionary<string, long> GetCounts(string key)
+        {
+            var counts = new Dictionary<string, long>(StringComparer.Ordinal);
+            if (!Metadata.TryGetValue(key, out string json) || string.IsNullOrEmpty(json))
+                return counts;
+            using (var document = System.Text.Json.JsonDocument.Parse(json))
+            {
+                foreach (var property in document.RootElement.EnumerateObject())
+                    counts[property.Name] = property.Value.GetInt64();
+            }
+            return counts;
         }
 
         private double GetDouble(string key)

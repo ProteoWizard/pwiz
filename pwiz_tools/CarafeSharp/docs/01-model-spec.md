@@ -110,6 +110,46 @@ when the training `rt_max` is known, else `irt_pred`.
   Elite, OrbitrapTribrid, ThermoTribrid to Lumos; QE, QE+, QEHF, QEHFX, Exploris,
   Exploris480 to QE; timsTOF, SciexTOF, ThermoTOF to themselves; **anything else to Lumos**),
   then indexed QE=0, Lumos=1, timsTOF=2, SciexTOF=3, ThermoTOF=4.
+- **CarafeSharp's acquisition layer (not peptdeep's).** How a precursor was activated and which
+  analyzer read the spectrum out are not peptdeep instrument families, and the 8 instrument slots are
+  fixed by the pretrained weights (5 trained, slot 7 unknown). So the MS2 model gains a second layer
+  beside peptdeep's `meta_nn.nn`: `meta_nn.acquisition_nn`, a linear map with no bias from one input
+  column per activation (beam-CID, reCID) and per analyzer (Orbitrap, LIT, ToF) to the same 7 outputs,
+  added to peptdeep's. Its weights start at zero in any model that has not trained it (the pretrained
+  one, a Carafe checkpoint), which adds exact zeros, so predictions are peptdeep's bit for bit; fine-
+  tuning learns each value's effect from the spectra that carry it, as an adjustment to the instrument
+  family's prediction. Runs of one activation and one analyzer train the two columns alike (every
+  spectrum carries both, so they get the same updates and learn the same shift); only training data
+  that differs in one of them tells them apart. The number of values is not fixed by the model: a
+  model records its columns by name in its safetensors metadata (`carafesharp.activations`,
+  `carafesharp.analyzers`), a value is found by name, one the model lacks predicts with its columns
+  zero, and loading a model whose list lacks a known value gives it a zero column, each stored column
+  kept under its name. A Stellar and TribridOT name peptdeep's Lumos family.
+- **Activation and analyzer of a run**, from Osprey's export footer (`osprey.dissociation_methods`,
+  `osprey.ms2_mass_analyzers`), named to avoid vendors' terms:
+  - beam-CID: beam-type CID (PSI-MS's HCD) from any vendor, and plain CID from any vendor but Thermo,
+    since Sciex's and Bruker's CID is beam-type;
+  - reCID: trap-type CID, and plain CID from Thermo, whose CID is resonance CID in an ion trap;
+  - none for an electron-based method (ETD, EThcD, EAD), whose columns stay zero;
+  - ToF for a time-of-flight analyzer (an Astral's MS2, a timsTOF, a Sciex TOF), LIT for an ion trap
+    (a Stellar, a Tribrid's), Orbitrap for an Orbitrap; without the analyzers, a Stellar is LIT and an
+    Astral ToF.
+  A run whose MS2 spectra mix activations or analyzers is refused unless `-activation` or `-analyzer`
+  names one for all of it. A library predicts for `-activation` and `-analyzer`, else the training
+  run's.
+- **NCE of a run** (CarafeSharp's; Carafe trains every run at its file's energy). The NCE input is
+  Thermo's normalized collision energy. pwiz reports every vendor's energy as PSI-MS's collision
+  energy in eV, but a Thermo file's value is its scan filter's NCE, so:
+  - a Thermo run trains at its own NCE (the most common over its sampled MS2 spectra), else `-nce`,
+    else 27, as Carafe's does;
+  - a run from any other vendor, whose energy is in eV, trains at `-nce`, else at the NCE where the
+    start MS2 model predicts its training spectra best: the highest median PCC over NCE 20 to 40 in
+    steps of 1, on at most 1,000 of its spectra, as AlphaPeptDeep calibrated the NCE of its SCIEX
+    TripleTOF fine-tune. A rolling collision energy needs nothing more, since the run's spectra
+    decide. A calibration at 20 or 40 is warned about;
+  - a run that names neither vendor nor model counts as Thermo.
+  A library from the run's models predicts at the NCE it trained with (meta.json, and a saved
+  model's `prediction_defaults`), and the saved model records where it came from.
 
 ## Prediction post-processing
 

@@ -51,8 +51,16 @@ namespace pwiz.CarafeSharp.Training
         /// </summary>
         public string Ms2Model { get; set; }
 
-        /// <summary>A safetensors RT model to fine-tune instead of the pretrained one; for tests, which have no pretrained models.</summary>
-        internal string RtModel { get; set; }
+        /// <summary>
+        /// When the fine-tuned MS2 model does not beat <see cref="Ms2Model"/> (a safetensors
+        /// file), keep that start model as <see cref="ModelFiles.MS2_BASE_SAFETENSORS"/>, which
+        /// prediction then uses instead of the pretrained model: for a saved model fine-tuned
+        /// further. Carafe's <c>--ms2_model</c> keeps the pretrained model instead.
+        /// </summary>
+        public bool KeepMs2Start { get; set; }
+
+        /// <summary>A safetensors RT model to fine-tune instead of the pretrained one: a saved model's, or a test's.</summary>
+        public string RtModel { get; set; }
 
         public Device Device { get; set; } = CPU;
     }
@@ -105,6 +113,8 @@ namespace pwiz.CarafeSharp.Training
             RequireRows(ms2Rows, @"MS2");
             log = log ?? (_ => { });
             Directory.CreateDirectory(outputDirectory);
+            // An earlier run's base model would otherwise predict in place of this run's choice.
+            File.Delete(Path.Combine(outputDirectory, ModelFiles.MS2_BASE_SAFETENSORS));
             manual_seed(options.Seed);
             var shuffle = new NumpyRandomState(options.Seed);
             var result = new FineTuneResult();
@@ -144,6 +154,8 @@ namespace pwiz.CarafeSharp.Training
             int batchSize = options.Rt.EffectiveBatchSize(trainCount);
             log(string.Format(@"RT: {0} rows, {1} peptide forms, {2} training rows, {3} test rows, batch {4}",
                 rows.Count, forms.Count, train.Length, test.Length, batchSize));
+            if (options.RtModel != null)
+                log(@"RT: fine-tuning " + options.RtModel);
 
             using (var model = options.RtModel != null
                        ? RtModel.FromSafetensors(options.RtModel, options.Device)
@@ -189,10 +201,15 @@ namespace pwiz.CarafeSharp.Training
                 result.Ms2FineTuned = Ms2Metrics.Evaluate(model, test);
                 log(@"MS2 fine-tuned: " + result.Ms2FineTuned);
                 result.UseFineTunedMs2 = result.Ms2FineTuned.BeatsOnAll(result.Ms2Pretrained);
+                bool keepStart = !result.UseFineTunedMs2 && options.KeepMs2Start && options.Ms2Model != null;
                 log(result.UseFineTunedMs2
                     ? @"MS2: the fine-tuned model beats the pretrained one on all four metrics and will be used."
-                    : @"MS2: the fine-tuned model does not beat the pretrained one on all four metrics; predictions keep the pretrained model.");
+                    : keepStart
+                        ? @"MS2: the fine-tuned model does not beat its start model on all four metrics; predictions keep the start model."
+                        : @"MS2: the fine-tuned model does not beat the pretrained one on all four metrics; predictions keep the pretrained model.");
                 model.Save(Path.Combine(outputDirectory, MS2_MODEL_FILE));
+                if (keepStart)
+                    File.Copy(options.Ms2Model, Path.Combine(outputDirectory, ModelFiles.MS2_BASE_SAFETENSORS));
             }
             result.Ms2TrainCount = train.Length;
             result.Ms2BatchSize = batchSize;

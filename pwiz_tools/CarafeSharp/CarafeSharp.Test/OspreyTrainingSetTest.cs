@@ -24,6 +24,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Proteome;
@@ -259,8 +260,8 @@ namespace pwiz.CarafeSharp.Test
             // Two runs of unequal length, one with a collision energy and a model Carafe names,
             // one with neither.
             var exploris = NewExport(@"a", 10, @"{""30"":1000}", @"Orbitrap Exploris 480", @"PEPTIDEK", 5);
-            var stellar = NewExport(@"b", 20, null, @"Stellar", @"SAMPLERK", 8);
-            var exports = new[] { exploris, stellar };
+            var ascend = NewExport(@"b", 20, null, @"Orbitrap Ascend", @"SAMPLERK", 8);
+            var exports = new[] { exploris, ascend };
             var trainingSet = OspreyTrainingSet.Build(exports, new OspreyTrainingSetOptions { Nce = 25 });
             // Carafe's NCE: the run's own, then -nce, then 27; its instrument name, else Eclipse.
             var ms2 = trainingSet.Ms2.ToDictionary(e => e.Sequence);
@@ -269,7 +270,7 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(25.0, ms2[@"SAMPLERK"].Nce);
             Assert.AreEqual(OspreyTrainingSetOptions.DEFAULT_INSTRUMENT, ms2[@"SAMPLERK"].Instrument);
             Assert.AreEqual(OspreyTrainingSetOptions.DEFAULT_NCE,
-                OspreyTrainingSet.Build(new[] { stellar }, new OspreyTrainingSetOptions()).Ms2.Single().Nce);
+                OspreyTrainingSet.Build(new[] { ascend }, new OspreyTrainingSetOptions()).Ms2.Single().Nce);
             Assert.AreEqual(LibrarySettings.DEFAULT_NCE, OspreyTrainingSetOptions.DEFAULT_NCE);
             Assert.AreEqual(LibrarySettings.DEFAULT_INSTRUMENT, OspreyTrainingSetOptions.DEFAULT_INSTRUMENT);
             // -ms_instrument names every row's instrument.
@@ -295,7 +296,7 @@ namespace pwiz.CarafeSharp.Test
                 // defaults where Carafe sets nothing; read back exactly as written.
                 var runPaths = new Dictionary<string, string> { { @"a", @"D:\data\a.mzML" } };
                 var options = new OspreyTrainingSetOptions { Nce = 25, RtMax = 15, Instrument = @"QE" };
-                CarafeModelDirectory.WriteMeta(folder, ModelTrainer.BuildRunMeta(exports, runPaths, options));
+                CarafeModelDirectory.WriteMeta(folder, ModelTrainer.BuildRunMeta(exports, runPaths, options, OspreyTrainingSet.Build(exports, options)));
                 var runs = CarafeModelDirectory.Open(folder).Runs.ToDictionary(r => r.MsFile);
                 Assert.AreEqual(2, runs.Count);
                 AssertRunMeta(runs[@"D:\data\a.mzML"], @"Exploris", 30, 15);
@@ -473,6 +474,141 @@ namespace pwiz.CarafeSharp.Test
                 if (Directory.Exists(folder))
                     Directory.Delete(folder, true);
             }
+        }
+
+        /// <summary>
+        /// A run's activation and MS2 analyzer, from Osprey's export. Beam-type CID (pwiz's HCD) is
+        /// beam-CID and trap-type CID reCID from any vendor; plain CID is reCID from Thermo, whose
+        /// CID is resonance CID, and beam-CID from Sciex or Bruker, whose CID is beam-type. A
+        /// time-of-flight analyzer (an Astral's) is ToF, an ion trap LIT, an Orbitrap Orbitrap;
+        /// without the analyzers a Stellar is LIT and an Astral ToF. A run mixing either is refused,
+        /// and -activation or -analyzer names one for all of it.
+        /// </summary>
+        [TestMethod]
+        public void TestAcquisitionClasses()
+        {
+            string folder = Path.Combine(Path.GetTempPath(), @"CarafeSharpAcquisition_" + Guid.NewGuid().ToString(@"N"));
+            Directory.CreateDirectory(folder);
+            try
+            {
+                string Activation(string vendor, string model, string methods, string user = null) =>
+                    OspreyTrainingSet.GetActivation(AcquisitionExport(folder, vendor, model, methods, null), user);
+                string Analyzer(string model, string analyzers, string user = null) =>
+                    OspreyTrainingSet.GetAnalyzer(AcquisitionExport(folder, @"Thermo", model, null, analyzers), user);
+
+                Assert.AreEqual(AcquisitionVocabulary.BEAM_CID, Activation(@"Thermo", @"Stellar", @"{""HCD"":200}"));
+                Assert.AreEqual(AcquisitionVocabulary.RE_CID, Activation(@"Thermo", @"Orbitrap Eclipse", @"{""CID"":200}"), @"Thermo's CID is resonance CID");
+                Assert.AreEqual(AcquisitionVocabulary.BEAM_CID, Activation(@"Sciex", @"TripleTOF 6600", @"{""CID"":200}"), @"Sciex's CID is beam-type");
+                Assert.AreEqual(AcquisitionVocabulary.BEAM_CID, Activation(@"Bruker", @"timsTOF Pro", @"{""CID"":200}"), @"so is Bruker's");
+                Assert.AreEqual(AcquisitionVocabulary.RE_CID, Activation(null, @"Orbitrap Eclipse", @"{""CID"":200}"), @"no vendor: a Thermo model");
+                Assert.AreEqual(AcquisitionVocabulary.RE_CID, Activation(@"Sciex", @"QTRAP 6500", @"{""trap-type collision-induced dissociation"":200}"));
+                Assert.AreEqual(AcquisitionVocabulary.BEAM_CID,
+                    Activation(@"Thermo", @"Orbitrap Eclipse", @"{""higher energy beam-type collision-induced dissociation"":200}"));
+                Assert.AreEqual(AcquisitionVocabulary.BEAM_CID, Activation(@"Thermo", @"Stellar", @"{""HCD"":199,""none"":1}"), @"spectra without a value are left out");
+                Assert.IsNull(Activation(@"Thermo", @"Orbitrap Eclipse", @"{""ETD"":200}"), @"an electron-based method leaves the columns zero");
+                Assert.IsNull(Activation(@"Thermo", @"Stellar", null), @"no data file");
+
+                Assert.AreEqual(AcquisitionVocabulary.LIT, Analyzer(@"Stellar", @"{""radial ejection linear ion trap"":200}"));
+                Assert.AreEqual(AcquisitionVocabulary.LIT, Analyzer(@"Orbitrap Eclipse", @"{""radial ejection linear ion trap"":200}"), @"a Tribrid's ion trap");
+                Assert.AreEqual(AcquisitionVocabulary.ORBITRAP, Analyzer(@"Orbitrap Eclipse", @"{""quadrupole orbitrap"":200}"));
+                Assert.AreEqual(AcquisitionVocabulary.TOF,
+                    Analyzer(@"Orbitrap Astral", @"{""quadrupole asymmetric track lossless time-of-flight analyzer"":200}"), @"an Astral's MS2");
+                Assert.AreEqual(AcquisitionVocabulary.TOF, Analyzer(@"timsTOF Pro", @"{""quadrupole time-of-flight"":200}"));
+                // Without the analyzers, the model decides where it has one MS2 analyzer.
+                Assert.AreEqual(AcquisitionVocabulary.LIT, Analyzer(@"Stellar", null));
+                Assert.AreEqual(AcquisitionVocabulary.TOF, Analyzer(@"Orbitrap Astral", null));
+                Assert.IsNull(Analyzer(@"Orbitrap Eclipse", null));
+
+                // A run that mixes either is refused, naming what it mixes; the option decides for all of it.
+                var mixedActivation = Assert.ThrowsException<InvalidDataException>(() => Activation(@"Thermo", @"Stellar", @"{""HCD"":150,""CID"":50}"));
+                StringAssert.Contains(mixedActivation.Message, @"beam-CID (150) and reCID (50)");
+                StringAssert.Contains(mixedActivation.Message, @"-activation");
+                var mixedAnalyzer = Assert.ThrowsException<InvalidDataException>(() =>
+                    Analyzer(@"Orbitrap Eclipse", @"{""quadrupole orbitrap"":150,""radial ejection linear ion trap"":50}"));
+                StringAssert.Contains(mixedAnalyzer.Message, @"LIT (50) and Orbitrap (150)");
+                Assert.AreEqual(AcquisitionVocabulary.RE_CID, Activation(@"Thermo", @"Stellar", @"{""HCD"":150,""CID"":50}", AcquisitionVocabulary.RE_CID));
+                Assert.AreEqual(AcquisitionVocabulary.LIT, Analyzer(@"Orbitrap Eclipse", @"{""orbitrap"":1,""linear ion trap"":1}", AcquisitionVocabulary.LIT));
+
+                // The training rows carry the run's activation and analyzer.
+                var export = AcquisitionExport(folder, @"Thermo", @"Stellar", @"{""HCD"":200}", @"{""radial ejection linear ion trap"":200}");
+                var row = OspreyTrainingSet.Build(new[] { export }, new OspreyTrainingSetOptions()).Ms2.Single();
+                Assert.AreEqual(AcquisitionVocabulary.BEAM_CID, row.Activation);
+                Assert.AreEqual(AcquisitionVocabulary.LIT, row.Analyzer);
+                Assert.AreEqual(@"Stellar", row.Instrument, @"a Stellar is peptdeep's Lumos family");
+            }
+            finally
+            {
+                Directory.Delete(folder, true);
+            }
+        }
+
+        /// <summary>
+        /// A run's collision energy and the NCE it trains with. A Thermo file's energy is its NCE
+        /// and wins over -nce, as Carafe takes it. Any other vendor's is in eV: -nce names the NCE,
+        /// else the run's spectra calibrate it, and with no calibrator the energy is taken as
+        /// Carafe takes it. A run with no energy takes -nce, else Carafe's default.
+        /// </summary>
+        [TestMethod]
+        public void TestCollisionEnergies()
+        {
+            string folder = Path.Combine(Path.GetTempPath(), @"CarafeSharpEnergy_" + Guid.NewGuid().ToString(@"N"));
+            Directory.CreateDirectory(folder);
+            try
+            {
+                RunCollisionEnergy Energy(string vendor, string model, string energies, double? nce = null, bool calibrate = true) =>
+                    OspreyTrainingSet.GetCollisionEnergy(AcquisitionExport(folder, vendor, model, null, null, energies),
+                        new OspreyTrainingSetOptions { Nce = nce, CalibrateNce = calibrate ? rows => null : null });
+                void AssertEnergy(RunCollisionEnergy energy, double nce, string source, double? recorded, string unit)
+                {
+                    Assert.AreEqual(nce, energy.Nce, energy.ToString());
+                    Assert.AreEqual(source, energy.Source, energy.ToString());
+                    Assert.AreEqual(recorded, energy.Energy, energy.ToString());
+                    Assert.AreEqual(unit, energy.Unit, energy.ToString());
+                }
+
+                AssertEnergy(Energy(@"Thermo", @"Stellar", @"{""30"":200}", 25), 30, RunCollisionEnergy.FROM_FILE, 30, RunCollisionEnergy.NCE_UNIT);
+                AssertEnergy(Energy(@"Sciex", @"TripleTOF 6600", @"{""35"":150,""40"":50}"), OspreyTrainingSetOptions.DEFAULT_NCE,
+                    RunCollisionEnergy.CALIBRATED, 35, RunCollisionEnergy.EV_UNIT);
+                AssertEnergy(Energy(@"Sciex", @"TripleTOF 6600", @"{""35"":200}", 28), 28, RunCollisionEnergy.COMMAND_LINE, 35, RunCollisionEnergy.EV_UNIT);
+                AssertEnergy(Energy(@"Sciex", @"TripleTOF 6600", @"{""35"":200}", null, false), 35, RunCollisionEnergy.FROM_FILE, 35,
+                    RunCollisionEnergy.EV_UNIT);
+                AssertEnergy(Energy(null, @"timsTOF Pro", @"{""42"":200}"), OspreyTrainingSetOptions.DEFAULT_NCE, RunCollisionEnergy.CALIBRATED, 42,
+                    RunCollisionEnergy.EV_UNIT);
+                AssertEnergy(Energy(null, string.Empty, @"{""30"":200}"), 30, RunCollisionEnergy.FROM_FILE, 30, RunCollisionEnergy.NCE_UNIT);
+                AssertEnergy(Energy(@"Sciex", @"TripleTOF 6600", null, 26), 26, RunCollisionEnergy.COMMAND_LINE, null, null);
+                AssertEnergy(Energy(@"Sciex", @"TripleTOF 6600", null), OspreyTrainingSetOptions.DEFAULT_NCE, RunCollisionEnergy.DEFAULT, null, null);
+                StringAssert.Contains(Energy(@"Sciex", @"TripleTOF 6600", @"{""35"":200}", 28).ToString(), @"NCE 28 (-nce); the file records 35 eV");
+            }
+            finally
+            {
+                Directory.Delete(folder, true);
+            }
+        }
+
+        /// <summary>A one-record export from <paramref name="vendor"/>'s <paramref name="model"/>, with these footer histograms (JSON), each left out when null.</summary>
+        private static OspreyTrainingExport AcquisitionExport(string folder, string vendor, string model, string methods, string analyzers,
+            string energies = null)
+        {
+            var footer = new Dictionary<string, string>
+            {
+                { @"osprey.training_export.format_version", OspreyTrainingExport.FORMAT_VERSION },
+                { @"osprey.instrument_model", model },
+                { @"osprey.rt_max", @"20" },
+            };
+            if (vendor != null)
+                footer[@"osprey.instrument_vendor"] = vendor;
+            if (methods != null)
+                footer[@"osprey.dissociation_methods"] = methods;
+            if (analyzers != null)
+                footer[@"osprey.ms2_mass_analyzers"] = analyzers;
+            if (energies != null)
+                footer[@"osprey.collision_energies"] = energies;
+            string path = Path.Combine(folder, Guid.NewGuid().ToString(@"N") + OspreyTrainingExport.FILE_SUFFIX);
+            var record = OspreyTestRecords.CleanRecord(@"PEPTIDEK", 2);
+            record.FileName = Path.GetFileNameWithoutExtension(path);
+            record.RunPrecursorQ = 0.001;
+            OspreyTestRecords.WriteExport(path, new[] { record }, footer, 1);
+            return OspreyTrainingExport.Read(path);
         }
 
         /// <summary>The exports for <paramref name="identifications"/> and the <c>-ms</c> runs, every one of the same search.</summary>

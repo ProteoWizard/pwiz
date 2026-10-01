@@ -1,19 +1,19 @@
 {
   "format": "carafesharp-regression-golden-3",
-  "created": "2026-09-29T03:50:18",
+  "created": "2026-09-30T18:40:28",
   "provenance": {
     "dataset": "Stellar",
     "leg": "isolated",
     "torch": "cpu",
     "device_used": "cpu",
-    "commit": "67ab84346507ff54c9290e17e15d540816b1da79",
-    "branch": "nightlywork/carafesharp-regression",
+    "commit": "8dfe512b59707e1d466809b44bdc9a80b26855ce",
+    "branch": "Skyline/work/20260923_carafesharp",
     "os": "Microsoft Windows 10.0.26200",
     "os_platform": "Windows",
     "processor": "Intel(R) Core(TM) i9-9900K CPU @ 3.60GHz",
     "logical_processors": 16,
     "omp_num_threads": null,
-    "minutes": 11.95,
+    "minutes": 12.64,
     "subset_rule": "the pair groups whose peptide_pair_index is a multiple of 50, with all their members",
     "subset_groups": 4378,
     "subset_records": 17512,
@@ -45,10 +45,10 @@
     }
   },
   "metrics": {
-    "ms2.finetuned.cos": 0.9844104051589966,
-    "ms2.finetuned.pcc": 0.9833605885505676,
-    "ms2.finetuned.sa": 0.8874415159225464,
-    "ms2.finetuned.spc": 0.920178234577179,
+    "ms2.finetuned.cos": 0.984411358833313,
+    "ms2.finetuned.pcc": 0.9830074906349182,
+    "ms2.finetuned.sa": 0.8874449133872986,
+    "ms2.finetuned.spc": 0.9202814698219299,
     "ms2.pretrained.cos": 0.9671434164047241,
     "ms2.pretrained.pcc": 0.9650570154190063,
     "ms2.pretrained.sa": 0.8363550305366516,
@@ -61,7 +61,7 @@
   "use_finetuned_for_prediction": true,
   "library": {
     "precursors": 19344,
-    "peaks": 334744,
+    "peaks": 335840,
     "decoy_pair_rows": 19340,
     "decoy_pairs": 9670,
     "entrapment_pairs": 4833,
@@ -103,10 +103,10 @@
       "rt_train_data.tsv": "0ee2693d98436e1f281999b9a08d73374f280ed4850ddb5cc7fea292acd54d2c"
     },
     "models": {
-      "ms2.safetensors": "03e4a13f77827274536d817c5ae479f7fc1aad6dfaaf448b9300dbe5ced1d595",
+      "ms2.safetensors": "41eaf36fbacb56f2d1eba50d3eb489b6ce962e303fca45719f0110bcc0fbcb48",
       "rt.safetensors": "91472800bafdfe0860babb5a373d67fb1452d07fd7807fb6b4f993237b2e1a7f"
     },
-    "library_content_sha256": "09831f66d4ed52a6a6a8fc94a007a2d1451ba7ca5f98e84ac708bba62971165f",
+    "library_content_sha256": "34039b55dd4c312eaf20d91f0487a6414dc487df459f7c6a3418d177e972d5e2",
     "library_content": "SHA-256 of one line per precursor, sorted: Skyline modified sequence, charge, precursor m/z, RT rounded to 1e-6, then the fragments in m/z order as m/z:intensity, each rounded to 1e-6"
   }
 }

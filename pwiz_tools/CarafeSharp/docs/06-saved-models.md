@@ -1,8 +1,8 @@
 # 06. Saved models (.carafemodel)
 
 A fine-tuned model saved as one file, to predict libraries of any peptides from later without
-training again. Every training run writes one, `-model` predicts from it, and `-model_info`
-describes it. The file also records what the model was trained on (instruments, fragmentation,
+training again, or to fine-tune further on new runs. Every training run writes one, `-model`
+predicts from it (or, with training, starts from it), and `-model_info` describes it. The file also records what the model was trained on (instruments, fragmentation,
 NCE, gradient, windows, charges, peptides and how the fine-tune scored), so a user can choose among
 saved models: on CarafeSharp's command line, in its GUI to come, or in Skyline.
 
@@ -21,6 +21,9 @@ CarafeSharp -model_info train_out/carafe_fine_tuned_model.carafemodel
 
 CarafeSharp -db other_proteins.fasta -model train_out/carafe_fine_tuned_model.carafemodel -o new_library [library options]
     # predicts other_proteins.fasta with the fine-tuned model, no training
+
+CarafeSharp -i <new.training.parquet|folder> -ms <new runs> -model train_out/carafe_fine_tuned_model.carafemodel -o more_out [training options]
+    # fine-tunes the saved model further on the new runs; writes more_out/carafe_fine_tuned_model.carafemodel
 ```
 
 The file can be renamed, copied and shared; CarafeSharp reads it by its content, not its name.
@@ -32,14 +35,14 @@ what to predict. The training run supplies only what its fine-tuned models depen
 |---|---|
 | Precursor m/z window (`-min_pep_mz`, `-max_pep_mz`), charges, digestion, modifications | the command line |
 | Fragment m/z range, top fragments, minimum fragments, library format | the command line |
-| NCE, instrument | the training run, unless `-nce` or `-ms_instrument` is given |
+| NCE, instrument, activation, analyzer | the training run, unless `-nce`, `-ms_instrument`, `-activation` or `-analyzer` is given |
 | rt_max | the training run, unless `-rt_max` is given |
 
 rt_max comes from the training run because the fine-tuned RT model predicts retention time on the
 training run's gradient: its predictions are in minutes only when scaled by that run's rt_max. Give
 `-rt_max` only for a run on a different gradient, knowing that the model was trained on another.
-With several training runs, the library takes the last run's NCE and instrument and the largest
-rt_max, as the library predicted right after training does.
+With several training runs, the library takes the last run's NCE, instrument, activation and
+analyzer and the largest rt_max, as the library predicted right after training does.
 
 **Which models apply.** The file holds the fine-tuned models the training chose to predict with:
 - MS2: the fine-tuned model only when it beat the pretrained one on all four held-out metrics (as
@@ -49,6 +52,23 @@ rt_max, as the library predicted right after training does.
 `-tf ms2` or `-tf rt` on the prediction command takes only that model from the file, and the other
 pretrained. The log says which it used: `Use the saved model ...: MS2 fine-tuned, RT fine-tuned;
 trained on ...`.
+
+**Fine-tuning further.** A fine-tuned model differs from the pretrained one only in its weights, so it
+can be the start of another fine-tune, as the pretrained model is. With training, `-model` names the
+saved model to fine-tune further on the new runs:
+- Both models start from the saved model's: those it holds, and the pretrained one for a model it does
+  not hold. The held-out metrics called `pretrained` are then the saved model's.
+- The new fine-tuned MS2 model is kept when it beats the saved one on all four held-out metrics, as
+  against the pretrained model. Otherwise the new file holds the saved model's MS2 model
+  (`ms2_base.safetensors`), not the pretrained one, and a library from it predicts with that.
+- The RT model is fine-tuned on the new runs' gradient and their rt_max, as in any training.
+- Only `-tf all`: the new file holds both models. `-model` is refused with `-ms2_model`, which also
+  names an MS2 model to start from.
+- The new file records the runs this training used, and names the saved models it descends from in
+  `base_models`.
+
+Carafe's `-ms2_model` is unchanged: when the fine-tuned model does not beat it, predictions take the
+pretrained model.
 
 **Reproducibility.** Over the training library's own precursor window, the saved model predicts it
 again exactly (358 of 358 spectra byte for byte on the Stellar subset). Over another window,
@@ -64,7 +84,8 @@ files and shows what each was trained on. A `.carafemodel` file is a zip holding
 | Entry | Holds | Present |
 |---|---|---|
 | `manifest.json` | what the file is, and what the models were trained on (below) | always |
-| `ms2.safetensors` | the fine-tuned MS2 model (AlphaPeptDeep's BERT, safetensors) | when `models.ms2.used` |
+| `ms2.safetensors` | the fine-tuned MS2 model (AlphaPeptDeep's BERT, safetensors) | when `models.ms2.entry` names it |
+| `ms2_base.safetensors` | the MS2 model of the saved model this one was fine-tuned further from, which the fine-tuned one did not beat | when `models.ms2.entry` names it |
 | `rt.safetensors` | the fine-tuned RT model (AlphaPeptDeep's LSTM/CNN, safetensors) | when `models.rt.used` |
 | `model_evaluation_metrics.json` | the held-out metrics of the pretrained and fine-tuned models, as Carafe writes them | when the training wrote it |
 | `meta.json` | the training runs, as Carafe writes it (what `-model_dir` reads) | when the training wrote it |
@@ -72,14 +93,15 @@ files and shows what each was trained on. A `.carafemodel` file is a zip holding
 A reader that only lists models, as a model picker does, needs `manifest.json` alone.
 
 `manifest.json` from the chained regression leg's run on the Stellar subset (three runs; only the first
-is shown, and hashes and the path are shortened). The fine-tuned MS2 model lost to the pretrained one there
-(SPC 0.90760 against 0.90765), so the file holds only the fine-tuned RT model:
+is shown, and hashes and the path are shortened). The runs are Stellar HCD read out in the ion trap,
+so they trained as beam-CID and LIT. The fine-tuned MS2 model lost to the pretrained one there, so the
+file holds only the fine-tuned RT model:
 
 ```json
 {
   "format": "carafemodel-1",
-  "creator": "CarafeSharp 26.1.1.0+a943ca409b...",
-  "created": "2026-09-30T21:15:19.0027444Z",
+  "creator": "CarafeSharp 26.1.1.0+<commit>",
+  "created": "2026-10-01T00:31:50.7615831Z",
   "training_type": "all",
   "models": {
     "ms2": {
@@ -95,6 +117,18 @@ is shown, and hashes and the path are shortened). The fine-tuned MS2 model lost 
   },
   "pretrained_sha256": "75e6037db3280a513d0f6010a21dba4e8ea47a8d67127f38c77fb1f9a7d408eb",
   "ms2_start_model": null,
+  "base_models": [],
+  "acquisition": {
+    "activations": [
+      "beam-CID",
+      "reCID"
+    ],
+    "analyzers": [
+      "Orbitrap",
+      "LIT",
+      "ToF"
+    ]
+  },
   "training": {
     "settings": {
       "fdr": 0.01,
@@ -121,13 +155,20 @@ is shown, and hashes and the path are shortened). The fine-tuned MS2 model lost 
         "ms_file": "D:\\data\\Ste-2024-12-02_HeLa_4mz_sDIA_400-900_20.mzML",
         "instrument_vendor": "Thermo",
         "instrument_model": "Stellar",
-        "instrument": "",
+        "instrument": "Stellar",
+        "activation": "beam-CID",
+        "analyzer": "LIT",
         "nce": 30,
+        "nce_source": "file",
         "dissociation_methods": {
           "HCD": 200
         },
         "collision_energies": {
           "30": 200
+        },
+        "collision_energy_unit": "NCE",
+        "ms2_mass_analyzers": {
+          "radial ejection linear ion trap": 200
         },
         "rt_min": 6.5132626409,
         "rt_max": 13.47915817605,
@@ -150,9 +191,9 @@ is shown, and hashes and the path are shortened). The fine-tuned MS2 model lost 
       }
     ],
     "held_out_metrics": {
-      "ms2.finetuned.cos": 0.8564939498901367,
-      "ms2.finetuned.pcc": 0.8445116877555847,
-      "ms2.finetuned.sa": 0.65472412109375,
+      "ms2.finetuned.cos": 0.8562459945678711,
+      "ms2.finetuned.pcc": 0.8442764282226562,
+      "ms2.finetuned.sa": 0.6544184684753418,
       "ms2.finetuned.spc": 0.9076035618782043,
       "ms2.pretrained.cos": 0.8522642850875854,
       "ms2.pretrained.pcc": 0.8413179516792297,
@@ -166,13 +207,15 @@ is shown, and hashes and the path are shortened). The fine-tuned MS2 model lost 
   },
   "prediction_defaults": {
     "nce": 30,
-    "instrument": null,
+    "instrument": "Stellar",
+    "activation": "beam-CID",
+    "analyzer": "LIT",
     "rt_max": 13.58782254745
   },
   "entries": {
     "rt.safetensors": "56668607...",
-    "model_evaluation_metrics.json": "2834903c...",
-    "meta.json": "cdcc4271..."
+    "model_evaluation_metrics.json": "e812c50b...",
+    "meta.json": "98baeb77..."
   }
 }
 ```
@@ -184,11 +227,14 @@ is shown, and hashes and the path are shortened). The fine-tuned MS2 model lost 
 | `creator`, `created` | The CarafeSharp version that wrote the file, and when (UTC, ISO 8601). |
 | `training_type` | The training run's `-tf`: `all`, `ms2` or `rt`. |
 | `models.<ms2\|rt>.fine_tuned` | The training fine-tuned this model. |
-| `models.<ms2\|rt>.used` | The file holds the fine-tuned model, at `entry`, and prediction uses it. False with `fine_tuned` true: the fine-tuned MS2 model did not beat the pretrained one. |
+| `models.<ms2\|rt>.used` | The file holds the model, at `entry`, and prediction uses it. False with `fine_tuned` true: the fine-tuned MS2 model did not beat the pretrained one. |
+| `models.<ms2\|rt>.entry` | The entry that holds the model, or null. For MS2, `ms2_base.safetensors` when the fine-tuned model did not beat the saved model it was fine-tuned further from. |
 | `pretrained_sha256` | The SHA-256 of the pretrained archive the training started from (AlphaPeptDeep v1, `models/alphapeptdeep-v1`), or null. |
 | `ms2_start_model` | The file name of the `-ms2_model` the MS2 fine-tune started from instead of the pretrained model, or null. |
+| `base_models` | The saved models these were fine-tuned further from, newest first (the training run's `-model`, then the one that was fine-tuned from, ...); empty for none. Each has `file`, `sha256` (of the whole file, to find it again), `creator`, `created` and `runs` (the MS files it was trained on). |
 | `training` | What the models were trained on, or null (below). |
-| `prediction_defaults` | The NCE, instrument and rt_max a library takes unless its command line gives its own. `instrument` is null when the training runs' instrument is not one of Carafe's classes. |
+| `acquisition` | The activations and analyzers the MS2 model has columns for (`activations`, `analyzers`), or null. |
+| `prediction_defaults` | The NCE, instrument, activation, analyzer and rt_max a library takes unless its command line gives its own (`-nce`, `-ms_instrument`, `-activation`, `-analyzer`, `-rt_max`); each may be null. |
 | `entries` | Every other entry and its SHA-256 (lowercase hex). |
 
 `training`:
@@ -203,9 +249,12 @@ is shown, and hashes and the path are shortened). The fine-tuned MS2 model lost 
 | `runs[]` | Each training run, from Osprey's training export footer (Osprey's docs/22-training-export.md). |
 | `runs[].run`, `ms_file` | The run's name, and its file as `-ms` named it. |
 | `runs[].instrument_vendor`, `instrument_model` | As the run's data file reports them; null when Osprey searched it without the file. |
-| `runs[].instrument` | The instrument class the models were trained for (Carafe's: Lumos, Astral, ...), or empty when the model is none of them. |
-| `runs[].nce` | The NCE the models were trained with. |
-| `runs[].dissociation_methods`, `collision_energies` | MS2 spectra by dissociation method and by collision energy as the file reports it (normalized for Thermo, eV for Sciex), over the spectra Osprey sampled; empty without the data file. |
+| `runs[].instrument` | The instrument name the run trained as (Carafe's: Eclipse, Lumos, Astral, QE, Stellar, ...), or empty when Carafe names none. |
+| `runs[].activation`, `analyzer` | How the run's precursors were activated (`beam-CID`, `reCID`) and which analyzer read its MS2 spectra out (`Orbitrap`, `LIT`, `ToF`), as it trained; null when unknown (01-model-spec.md). |
+| `runs[].nce`, `nce_source` | The NCE the models were trained with, and where it came from: `file` (a Thermo run's own NCE), `calibrated` (on the run's spectra, its energy being in eV; 01-model-spec.md), `-nce`, or `default` (Carafe's 27). |
+| `runs[].dissociation_methods`, `collision_energies` | MS2 spectra by dissociation method (pwiz's short names: `HCD` for beam-type, `CID` for resonance CID) and by collision energy as the file reports it, over the spectra Osprey sampled; empty without the data file. |
+| `runs[].collision_energy_unit` | The unit of `collision_energies`: `NCE` for Thermo (the value pwiz reports is the scan filter's NCE), `eV` for any other vendor, or null when the run reports none. |
+| `runs[].ms2_mass_analyzers` | MS2 spectra by the mass analyzer that read them out (`orbitrap`, `radial ejection linear ion trap`, ...); empty without the data file or from an Osprey that did not record it. |
 | `runs[].rt_min`, `rt_max` | The run's first and last MS2 retention time, minutes. |
 | `runs[].isolation_mz_min`, `_max` | The range of the run's isolation windows. |
 | `runs[].ms2_mz_min`, `_max` | The MS2 m/z range the run measured. |
@@ -224,14 +273,21 @@ does not match its SHA-256.
 
 - `LibraryCommandLineTest.TestSavedModel`: a saved model predicts the same spectra as its models from
   their folder, with the command line's precursor window (a test that fails when the training run's
-  window is applied instead); the training run's NCE, instrument and rt_max unless given; an MS2
+  window is applied instead); the training run's NCE, instrument, activation, analyzer and rt_max
+  unless given; an MS2
   model that lost to the pretrained one left out; a damaged entry, a file that is not a zip, one
   without a manifest, a newer format and a missing file each refused.
 - `FineTuneLoopTest.TestModelTrainerRun`: a training run writes the file, with the model it chose, its
   start model, the run's defaults, and the training description (settings, data, the run's
   instrument, windows, gradient and charges, the held-out metrics), which `-model_info` prints.
-- `LibraryCommandLineTest.TestLibraryCommandLine`: `-model` and `-model_info` are parsed, and `-model`
-  is refused with `-model_dir`, with training, and without `-db`.
+- `FineTuneLoopTest.TestModelTrainerFromSavedModel`: a saved model fine-tuned further starts both
+  models from its own; a fine-tuned MS2 model that does not beat it leaves the saved one's in the new
+  file (byte for byte), which a library from it predicts with; a second round starts from that and
+  names both models back; a later run into the same folder without `-model` does not take it.
+- `LibraryCommandLineTest.TestLibraryCommandLine`: `-model` and `-model_info` are parsed; `-model`
+  with training names the model to fine-tune further, with `-tf all` only, and the library after
+  training predicts with the new models; `-model` is refused with `-model_dir`, with `-ms2_model`, and
+  without `-db` or training.
 - The chained regression leg (`regression.ps1 -Leg Chained`, [04](04-testing.md)): the model a real
   training run saved predicts a second library with `-model` over a wider precursor window; every
   precursor of the library training predicted is in it, with the same m/z, retention time and

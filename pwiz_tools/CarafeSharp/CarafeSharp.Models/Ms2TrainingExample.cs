@@ -36,7 +36,7 @@ namespace pwiz.CarafeSharp.Models
         public const int FRAGMENT_TYPES = PeptdeepConstants.NUM_NON_MODLOSS_FRAG_TYPES;
 
         public Ms2TrainingExample(PrecursorForm precursor, double nce, string instrument,
-            double[] intensities, double[] invalid)
+            double[] intensities, double[] invalid, string activation = null, string analyzer = null)
         {
             int expected = (precursor.Peptide.Length - 1) * FRAGMENT_TYPES;
             if (intensities.Length != expected || invalid.Length != expected)
@@ -47,6 +47,8 @@ namespace pwiz.CarafeSharp.Models
             Precursor = precursor;
             Nce = nce;
             Instrument = instrument;
+            Activation = activation;
+            Analyzer = analyzer;
             Intensities = intensities;
             Invalid = invalid;
         }
@@ -57,6 +59,12 @@ namespace pwiz.CarafeSharp.Models
 
         public string Instrument { get; }
 
+        /// <summary>How the precursor was activated (<see cref="AcquisitionVocabulary"/>), or null.</summary>
+        public string Activation { get; }
+
+        /// <summary>The analyzer that read the spectrum out (<see cref="AcquisitionVocabulary"/>), or null.</summary>
+        public string Analyzer { get; }
+
         /// <summary>Observed intensities, row-major <c>[nAA - 1, 4]</c>.</summary>
         public double[] Intensities { get; }
 
@@ -66,6 +74,12 @@ namespace pwiz.CarafeSharp.Models
         public string Sequence
         {
             get { return Precursor.Peptide.Sequence; }
+        }
+
+        /// <summary>This spectrum at another collision energy, as an NCE calibration scores it.</summary>
+        public Ms2TrainingExample WithNce(double nce)
+        {
+            return new Ms2TrainingExample(Precursor, nce, Instrument, Intensities, Invalid, Activation, Analyzer);
         }
     }
 }

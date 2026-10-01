@@ -97,10 +97,30 @@ namespace pwiz.CarafeSharp.Test
             }
             using (var charges = PeptdeepFeaturizer.Charges(new[] { 2, 3 }))
                 CollectionAssert.AreEqual(new[] { 2 * 0.1f, 3 * 0.1f }, charges.data<float>().ToArray());
-            using (var instruments = PeptdeepFeaturizer.InstrumentIndices(new[] { @"Eclipse", @"Exploris", @"Astral", @"Stellar" }))
+            using (var instruments = PeptdeepFeaturizer.InstrumentIndices(new[] { @"Eclipse", @"Exploris", @"Astral", @"Ascend", @"TribridOT", @"Stellar" }))
             {
-                // Eclipse and Astral are Lumos (1), Exploris is QE (0), anything unlisted is Lumos.
-                CollectionAssert.AreEqual(new long[] { 1, 0, 1, 1 }, instruments.data<long>().ToArray());
+                // Eclipse and Astral are Lumos (1), Exploris is QE (0), anything unlisted is Lumos;
+                // TribridOT and Stellar name the Lumos family.
+                CollectionAssert.AreEqual(new long[] { 1, 0, 1, 1, 1, 1 }, instruments.data<long>().ToArray());
+            }
+            // The meta features: the one-hot instrument, then the activation and analyzer in the
+            // model's columns (beam-CID, reCID; Orbitrap, LIT, ToF); null or unknown stays zero.
+            var precursor = new PrecursorForm(new PeptideForm(@"PEPTIDEK"), 2);
+            var requests = new[]
+            {
+                new Ms2Request(precursor, 30, @"QE", AcquisitionVocabulary.RE_CID, AcquisitionVocabulary.LIT),
+                new Ms2Request(precursor, 30, @"Lumos"),
+                new Ms2Request(precursor, 30, @"Lumos", @"ETD", AcquisitionVocabulary.TOF),
+            };
+            using (var meta = PeptdeepFeaturizer.MetaFeatures(requests, AcquisitionVocabulary.DEFAULT))
+            {
+                CollectionAssert.AreEqual(new long[] { 3, 13 }, meta.shape);
+                CollectionAssert.AreEqual(new float[]
+                {
+                    1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0,
+                    0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+                }, meta.data<float>().ToArray());
             }
             Assert.ThrowsException<ArgumentException>(() => PeptdeepFeaturizer.AaIndices(
                 new[] { new PeptideForm(@"PEPTIDE"), new PeptideForm(@"PEPTIDES") }));

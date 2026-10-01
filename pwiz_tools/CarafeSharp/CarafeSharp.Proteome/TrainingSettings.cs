@@ -76,6 +76,12 @@ namespace pwiz.CarafeSharp.Proteome
         /// <summary><c>-tf</c>: all, ms2 or rt.</summary>
         public string TrainingType { get; set; } = LibrarySettings.DEFAULT_TRAINING_TYPE;
 
+        /// <summary><c>-activation</c>: every run's activation, else each run's own (OspreyTrainingSet.GetActivation).</summary>
+        public string Activation { get; set; }
+
+        /// <summary><c>-analyzer</c>: every run's MS2 analyzer, else each run's own (OspreyTrainingSet.GetAnalyzer).</summary>
+        public string Analyzer { get; set; }
+
         /// <summary><c>-seed</c>.</summary>
         public uint Seed { get; set; } = DEFAULT_SEED;
 
@@ -84,7 +90,8 @@ namespace pwiz.CarafeSharp.Proteome
 
         /// <summary>
         /// <c>-nce</c>: the collision energy of a run whose export records none, as Carafe uses
-        /// it (a run's own collision energy comes first); null for Carafe's default of 27.
+        /// it (a Thermo run's own NCE comes first), and the NCE of a run whose energy is in eV
+        /// instead of calibrating one on its spectra; null for those defaults.
         /// </summary>
         public double? Nce { get; set; }
 
@@ -100,6 +107,13 @@ namespace pwiz.CarafeSharp.Proteome
         /// beat; null for the pretrained model.
         /// </summary>
         public string Ms2Model { get; set; }
+
+        /// <summary>
+        /// <c>-model</c> with training: a saved model (.carafemodel) whose MS2 and RT models the
+        /// run fine-tunes further instead of the pretrained ones, and whose MS2 model prediction
+        /// keeps when the fine-tuned one does not beat it; null for none.
+        /// </summary>
+        public string BaseModel { get; set; }
 
         /// <summary>CarafeSharp's <c>-pretrained</c> models zip, or null for the default.</summary>
         public string PretrainedModels { get; set; }

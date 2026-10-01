@@ -93,6 +93,20 @@
       "contents": [
         { "path": "stellar/Ste-2024-12-02_HeLa_4mz_sDIA_400-900_21.training.parquet" }
       ]
+    },
+    {
+      "id": "astral-export",
+      "zip": "carafesharp-export-astral-v1.zip",
+      "folder": "carafesharp-export-astral-v1",
+      "url": "PLACEHOLDER",
+      "sha256": "f718764460ac26c80799be02e8df23c11f41bbe9c929a238897d1c3446c51296",
+      "size": 161898686,
+      "testCategory": "Astral",
+      "description": "Osprey's CarafeSharp training export (format 2) of the Astral _55 search, written by #4708 from the .raw, for the Astral golden regression. It changes whenever Osprey does, so it is packaged apart.",
+      "exclude": [],
+      "contents": [
+        { "path": "astral/Ast-2024-12-05_HeLa_3mzDIA_6mIIT_400-900_55.training.parquet" }
+      ]
     }
   ]
 }

@@ -26,6 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.Models.Modules;
 using TorchSharp;
 using static TorchSharp.torch;
@@ -47,7 +48,7 @@ namespace pwiz.CarafeSharp.Models
         public static Ms2Model FromPretrained(PretrainedModels pretrained, Device device)
         {
             var weights = StateDict.ReadPthFromZip(pretrained.ZipPath, PretrainedModels.MS2_ENTRY);
-            return Create(weights, device);
+            return Create(weights, device, null);
         }
 
         /// <summary>
@@ -56,13 +57,13 @@ namespace pwiz.CarafeSharp.Models
         /// </summary>
         public static Ms2Model FromPthFile(string path, Device device)
         {
-            return Create(StateDict.ReadPthFile(path), device);
+            return Create(StateDict.ReadPthFile(path), device, null);
         }
 
         /// <summary>Loads a model saved with <see cref="Save"/>.</summary>
         public static Ms2Model FromSafetensors(string path, Device device)
         {
-            return Create(StateDict.ReadSafetensors(path), device);
+            return Create(StateDict.ReadSafetensors(path), device, AcquisitionVocabulary.FromMetadata(StateDict.ReadSafetensorsMetadata(path)));
         }
 
         /// <summary>Loads a <c>.safetensors</c> model, or else a PyTorch checkpoint.</summary>
@@ -73,22 +74,76 @@ namespace pwiz.CarafeSharp.Models
                 : FromPthFile(path, device);
         }
 
-        private static Ms2Model Create(IReadOnlyDictionary<string, Tensor> weights, Device device)
+        /// <param name="weights">The state dict.</param>
+        /// <param name="device">Where the model runs.</param>
+        /// <param name="stored">
+        /// The activations and analyzers the weights' acquisition layer has columns for, as a
+        /// CarafeSharp model's metadata records them, or null. Weights without the layer (peptdeep's
+        /// pretrained model, a Carafe checkpoint) get it at zero; a stored list gains a zero column
+        /// for each known value it lacks.
+        /// </param>
+        private static Ms2Model Create(IReadOnlyDictionary<string, Tensor> weights, Device device, AcquisitionVocabulary stored)
         {
-            var network = new ModelMs2Bert();
-            StateDict.Load(network, weights);
+            var source = new Dictionary<string, Tensor>(weights, StringComparer.Ordinal);
+            AcquisitionVocabulary vocabulary;
+            if (source.TryGetValue(MetaEmbedding.ACQUISITION_WEIGHT, out var acquisition))
+            {
+                // A layer without its list was written by a CarafeSharp network saved directly, in the default order.
+                var held = stored ?? AcquisitionVocabulary.DEFAULT;
+                if (acquisition.shape[1] != held.Width)
+                {
+                    throw new InvalidDataException(string.Format(@"The MS2 model's acquisition layer has {0} columns, but its list ({1}) has {2}.",
+                        acquisition.shape[1], held, held.Width));
+                }
+                vocabulary = held.WithKnownValues();
+                if (vocabulary.Width > held.Width)
+                    source[MetaEmbedding.ACQUISITION_WEIGHT] = PlaceColumns(acquisition, held, vocabulary);
+            }
+            else
+            {
+                vocabulary = AcquisitionVocabulary.DEFAULT;
+                source[MetaEmbedding.ACQUISITION_WEIGHT] = zeros(ModelMs2Bert.META_DIM - 1, vocabulary.Width);
+            }
+            var network = new ModelMs2Bert(acquisitionWidth: vocabulary.Width);
+            StateDict.Load(network, source);
+            foreach (var tensor in source.Values.Except(weights.Values))
+                tensor.Dispose();
             foreach (var tensor in weights.Values)
                 tensor.Dispose();
             network.to(device);
             network.eval();
-            return new Ms2Model(network, device);
+            return new Ms2Model(network, device, vocabulary);
         }
 
-        private Ms2Model(ModelMs2Bert network, Device device)
+        /// <summary>
+        /// <paramref name="weight"/>'s columns, laid out by <paramref name="held"/>, moved to their
+        /// names' columns in <paramref name="vocabulary"/>, every other column zero.
+        /// </summary>
+        private static Tensor PlaceColumns(Tensor weight, AcquisitionVocabulary held, AcquisitionVocabulary vocabulary)
+        {
+            var placed = zeros(weight.shape[0], vocabulary.Width, weight.dtype);
+            using (no_grad())
+            {
+                for (int i = 0; i < held.Activations.Count; i++)
+                    placed[TensorIndex.Colon, vocabulary.ActivationColumn(held.Activations[i])].copy_(weight[TensorIndex.Colon, i]);
+                for (int i = 0; i < held.Analyzers.Count; i++)
+                {
+                    placed[TensorIndex.Colon, vocabulary.AnalyzerColumn(held.Analyzers[i])]
+                        .copy_(weight[TensorIndex.Colon, held.Activations.Count + i]);
+                }
+            }
+            return placed;
+        }
+
+        private Ms2Model(ModelMs2Bert network, Device device, AcquisitionVocabulary vocabulary)
         {
             Network = network;
             Device = device;
+            Vocabulary = vocabulary;
         }
+
+        /// <summary>The activations and analyzers the model has acquisition columns for.</summary>
+        public AcquisitionVocabulary Vocabulary { get; }
 
         internal ModelMs2Bert Network { get; }
 
@@ -125,14 +180,14 @@ namespace pwiz.CarafeSharp.Models
             var mods = PeptdeepFeaturizer.ModFeatures(peptides).to(Device);
             var charges = PeptdeepFeaturizer.Charges(batch.Select(r => r.Precursor.Charge).ToArray()).to(Device);
             var nces = PeptdeepFeaturizer.Nces(batch.Select(r => r.Nce).ToArray()).to(Device);
-            var instruments = PeptdeepFeaturizer.InstrumentIndices(batch.Select(r => r.Instrument).ToArray()).to(Device);
-            return Network.call(aa, mods, charges, nces, instruments);
+            var meta = PeptdeepFeaturizer.MetaFeatures(batch, Vocabulary).to(Device);
+            return Network.call(aa, mods, charges, nces, meta);
         }
 
-        /// <summary>Saves the weights as safetensors, readable by <see cref="FromSafetensors"/>.</summary>
+        /// <summary>Saves the weights as safetensors, with the acquisition list in the metadata, readable by <see cref="FromSafetensors"/>.</summary>
         public void Save(string path)
         {
-            StateDict.WriteSafetensors(Network, path);
+            StateDict.WriteSafetensors(Network, path, Vocabulary.ToMetadata());
         }
 
         public void Dispose()

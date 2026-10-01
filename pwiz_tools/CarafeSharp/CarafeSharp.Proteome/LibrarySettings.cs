@@ -109,6 +109,21 @@ namespace pwiz.CarafeSharp.Proteome
         public bool UserInstrument { get; set; }
 
         /// <summary>
+        /// The activation predicted for (<c>-activation</c>: beam-CID, reCID), else the training
+        /// run's; null predicts with the acquisition layer's activation columns zero.
+        /// </summary>
+        public string Activation { get; set; }
+
+        /// <summary>True when <c>-activation</c> was given.</summary>
+        public bool UserActivation { get; set; }
+
+        /// <summary>The MS2 analyzer predicted for (<c>-analyzer</c>: Orbitrap, LIT, ToF), else the training run's; null as for <see cref="Activation"/>.</summary>
+        public string Analyzer { get; set; }
+
+        /// <summary>True when <c>-analyzer</c> was given.</summary>
+        public bool UserAnalyzer { get; set; }
+
+        /// <summary>
         /// <c>-rt_max</c>, the training gradient length: above 0 the library RT is
         /// <c>rt_max * rt_pred</c> in minutes, else iRT.
         /// </summary>
