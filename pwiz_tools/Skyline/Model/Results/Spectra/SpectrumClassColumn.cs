@@ -21,11 +21,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Util;
 
@@ -122,7 +124,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         public abstract void SetValue(SpectrumClass spectrumClass, object value);
 
-        public string GetLocalizedColumnName(CultureInfo cultureInfo)
+        public virtual string GetLocalizedColumnName(CultureInfo cultureInfo)
         {
             return ColumnCaptions.ResourceManager.GetString(ColumnName, cultureInfo) ?? ColumnName;
         }
@@ -145,7 +147,331 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         public static SpectrumClassColumn FindColumn(PropertyPath propertyPath)
         {
-            return ALL.FirstOrDefault(col => Equals(propertyPath, col.PropertyPath));
+            var column = ALL.FirstOrDefault(col => Equals(propertyPath, col.PropertyPath));
+            if (column != null)
+            {
+                return column;
+            }
+
+            // A dynamic mzML CV/user-parameter column is not in ALL; reconstruct it from its
+            // encoded path so saved filters resolve (and validate) before any file is imported.
+            if (propertyPath.IsProperty && propertyPath.Parent.IsRoot &&
+                TryDecodeCvParamColumnName(propertyPath.Name, out var accession))
+            {
+                // Recover the friendly name and value type from the compiled-in ontology catalog so a saved
+                // CV filter reads the same in the document tree/summaries as in the editor (e.g. "base peak
+                // intensity (MS:1000505)"). A term not in the catalog (a userParam, or a non-spectrum-level
+                // term) has no catalog entry, so it keeps the accession as its display name and is typed as
+                // a string, which accepts every operator.
+                CatalogHolder.TermsByAccession.TryGetValue(accession, out var catalogTerm);
+                return new CvParamColumn(accession, catalogTerm?.Name, catalogTerm?.IsNumeric ?? false);
+            }
+
+            return null;
+        }
+
+        // Encoded-column-name prefixes identifying a dynamic mzML CV/user-parameter column. Both keep
+        // the whole encoded name a single alphanumeric identifier, so a PropertyPath and the
+        // filter-string serializer round-trip it without quoting. A controlled-vocabulary term
+        // ("MS:1000505") encodes readably as "cvid" + accession without the colon ("cvidMS1000505"); a
+        // vendor userParam (an arbitrary name, no CVID) encodes as "cvup" + the name's UTF-8 hex.
+        private const string CV_ID_PREFIX = @"cvid";
+        private const string CV_USERPARAM_PREFIX = @"cvup";
+
+        /// <summary>
+        /// Builds a dynamic column for the uninterpreted mzML CV/user parameter identified by
+        /// <paramref name="accession"/> (a CV accession such as "MS:1000505", or a userParam name).
+        /// <paramref name="name"/> is the friendly display name (null when the column is reconstructed
+        /// from a saved filter). <paramref name="isNumeric"/> drives the column type offered in the
+        /// filter editor; the extraction predicate infers numeric vs. string from the operator and
+        /// operand independently (see <see cref="SpectrumClassFilter"/>).
+        /// </summary>
+        public static SpectrumClassColumn CvParam(string accession, string name, bool isNumeric)
+        {
+            return new CvParamColumn(accession, name, isNumeric);
+        }
+
+        /// <summary>
+        /// True if <paramref name="column"/> is a dynamic mzML CV/user-parameter column.
+        /// </summary>
+        public static bool IsCvParamColumn(SpectrumClassColumn column)
+        {
+            return column is CvParamColumn;
+        }
+
+        /// <summary>
+        /// True if <paramref name="column"/> is a CV term the ontology declares no value type for - a pure
+        /// flag, such as "zoom scan", which a spectrum either carries or does not. Nothing can be compared
+        /// against such a term, so only its presence is worth asking about. False for every other column,
+        /// including a vendor userParam, whose type the ontology cannot tell us.
+        /// </summary>
+        public static bool IsValuelessCvColumn(SpectrumClassColumn column)
+        {
+            return column is CvParamColumn cvParamColumn && !cvParamColumn.CanHaveValue;
+        }
+
+        /// <summary>
+        /// Whether the ontology declares that a term carries a value. A term with no declared value type
+        /// is a flag. A term the catalog does not know - a vendor userParam, or a term outside the
+        /// spectrum-level subset - is assumed to carry one, since assuming otherwise would withhold
+        /// operators that do work.
+        /// </summary>
+        private static bool CanTermHaveValue(string accession)
+        {
+            return !CatalogHolder.TermsByAccession.TryGetValue(accession, out var term) ||
+                   term.ValueType != null;
+        }
+
+        /// <summary>
+        /// The CV accession (or userParam name) a CV/user-parameter column filters on, or null for any
+        /// other kind of column. Lets a caller match an offered column against terms found in the data
+        /// without reaching into the column's encoded <see cref="ColumnName"/>.
+        /// </summary>
+        public static string GetCvAccession(SpectrumClassColumn column)
+        {
+            return (column as CvParamColumn)?.Accession;
+        }
+
+        /// <summary>
+        /// Builds the dynamic CV/user-parameter columns present across the given spectra: one per
+        /// distinct accession (the term's CV accession or userParam name). A CV term is typed from the
+        /// ontology; a userParam, which the ontology does not know, is typed from the values seen for it
+        /// (see <see cref="IsNumericCvColumn"/>). The friendly name comes from the term. The caller orders
+        /// the result for display (see <see cref="GetEditorCvColumns"/>).
+        /// </summary>
+        public static IList<SpectrumClassColumn> DiscoverCvColumns(IEnumerable<SpectrumMetadata> spectra)
+        {
+            var discovered = new Dictionary<string, CvColumnDiscovery>();
+            foreach (var spectrum in spectra)
+            {
+                foreach (var term in spectrum.OtherParams)
+                {
+                    if (!discovered.TryGetValue(term.Accession, out var info))
+                    {
+                        info = new CvColumnDiscovery(term.Accession);
+                        discovered.Add(term.Accession, info);
+                    }
+                    info.Add(term);
+                }
+            }
+
+            return discovered.Values
+                .Select(info => (SpectrumClassColumn)new CvParamColumn(info.Accession, info.Name, IsNumericCvColumn(info)))
+                .ToList();
+        }
+
+        /// <summary>
+        /// The dynamic CV/user-parameter columns discovered from a document's imported results (the
+        /// per-file metadata persisted in the chromatogram cache). Empty when nothing has been imported.
+        /// </summary>
+        public static IList<SpectrumClassColumn> DiscoverCvColumns(SrmDocument document)
+        {
+            var measuredResults = document.Settings.MeasuredResults;
+            if (measuredResults == null)
+            {
+                return Array.Empty<SpectrumClassColumn>();
+            }
+
+            var spectra = measuredResults.GetResultFileMetadatas().Values
+                .SelectMany(metadata => metadata.SpectrumMetadatas);
+            return DiscoverCvColumns(spectra);
+        }
+
+        /// <summary>
+        /// Whether a discovered column takes numeric comparisons. For a CV term the ontology is the
+        /// authority: it declares the type of value the term carries, and it declares it the same way
+        /// regardless of what any one file happened to contain, so a term is typed consistently whether it
+        /// reaches the editor from the catalog or from imported data. A vendor userParam has no ontology
+        /// entry, so its type can only be inferred from the values seen.
+        /// </summary>
+        private static bool IsNumericCvColumn(CvColumnDiscovery discovery)
+        {
+            if (CatalogHolder.TermsByAccession.TryGetValue(discovery.Accession, out var catalogTerm))
+            {
+                return catalogTerm.IsNumeric;
+            }
+            return discovery.IsNumeric;
+        }
+
+        /// <summary>
+        /// The catalog of uninterpreted mzML CV terms that can appear on a spectrum, as dynamic columns,
+        /// so the filter editor can offer them before any data is imported. Each column is typed from the
+        /// value type the ontology declares for the term (numeric or string); the predicate still infers
+        /// numeric vs. string from the operator and operand, so a string operator remains usable on a
+        /// numeric column.
+        /// </summary>
+        public static IList<SpectrumClassColumn> GetCvColumnCatalog()
+        {
+            return MsDataFileImpl.GetSpectrumCvTermCatalog()
+                .Select(term => (SpectrumClassColumn)new CvParamColumn(term.Accession, term.Name, term.IsNumeric))
+                .ToList();
+        }
+
+        /// <summary>
+        /// The CV/user-parameter columns to offer in the filter editor for <paramref name="document"/>:
+        /// the ontology catalog (always available) plus the vendor userParams discovered in imported data,
+        /// which the ontology has no way to know about. A discovered column replaces the catalog entry with
+        /// the same accession; both are typed from the ontology, so replacing one with the other changes
+        /// only which of two equivalent columns is offered.
+        /// </summary>
+        public static IList<SpectrumClassColumn> GetEditorCvColumns(SrmDocument document)
+        {
+            var byColumnName = new Dictionary<string, SpectrumClassColumn>();
+            foreach (var column in GetCvColumnCatalog())
+            {
+                byColumnName[column.ColumnName] = column;
+            }
+            foreach (var column in DiscoverCvColumns(document))
+            {
+                byColumnName[column.ColumnName] = column;
+            }
+            return byColumnName.Values
+                .OrderBy(column => column.GetLocalizedColumnName(CultureInfo.CurrentCulture), StringComparer.CurrentCulture)
+                .ToList();
+        }
+
+        /// <summary>
+        /// The catalog CV terms keyed by accession, built once from the compiled-in ontology. Used to give
+        /// a CV column its friendly name and value type wherever the column comes from something other than
+        /// the catalog itself: reconstructed from a saved filter path (see <see cref="FindColumn"/>), or
+        /// discovered in imported data (see <see cref="DiscoverCvColumns(IEnumerable{SpectrumMetadata})"/>).
+        /// </summary>
+        private static class CatalogHolder
+        {
+            public static readonly IDictionary<string, SpectrumCvTerm> TermsByAccession = BuildTermsByAccession();
+
+            private static IDictionary<string, SpectrumCvTerm> BuildTermsByAccession()
+            {
+                var termsByAccession = new Dictionary<string, SpectrumCvTerm>();
+                foreach (var term in MsDataFileImpl.GetSpectrumCvTermCatalog())
+                {
+                    termsByAccession[term.Accession] = term;
+                }
+                return termsByAccession;
+            }
+        }
+
+        /// <summary>
+        /// Accumulates, across the spectra that carry one term (keyed by accession), its friendly name
+        /// and whether every value seen parses as a number. The latter types a vendor userParam column,
+        /// which has no ontology entry to be typed from (see <see cref="IsNumericCvColumn"/>).
+        /// </summary>
+        private class CvColumnDiscovery
+        {
+            private bool _sawValue;
+            private bool _allNumeric = true;
+
+            public CvColumnDiscovery(string accession)
+            {
+                Accession = accession;
+            }
+
+            public string Accession { get; }
+            public string Name { get; private set; }
+            public bool IsNumeric => _sawValue && _allNumeric;
+
+            public void Add(SpectrumMetadataTerm term)
+            {
+                if (string.IsNullOrEmpty(Name) && !string.IsNullOrEmpty(term.Name))
+                {
+                    Name = term.Name;
+                }
+
+                if (!string.IsNullOrEmpty(term.Value))
+                {
+                    _sawValue = true;
+                    if (!double.TryParse(term.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
+                    {
+                        _allNumeric = false;
+                    }
+                }
+            }
+        }
+
+        private static string EncodeCvParamColumnName(string accession)
+        {
+            if (TrySplitCvid(accession, out var prefix, out var number))
+            {
+                return CV_ID_PREFIX + prefix + number;
+            }
+
+            var payload = Encoding.UTF8.GetBytes(accession);
+            var hex = new StringBuilder(CV_USERPARAM_PREFIX, CV_USERPARAM_PREFIX.Length + payload.Length * 2);
+            foreach (var b in payload)
+            {
+                hex.Append(b.ToString(@"x2", CultureInfo.InvariantCulture));
+            }
+            return hex.ToString();
+        }
+
+        private static bool TryDecodeCvParamColumnName(string columnName, out string accession)
+        {
+            accession = null;
+            if (columnName == null)
+            {
+                return false;
+            }
+
+            if (columnName.StartsWith(CV_ID_PREFIX, StringComparison.Ordinal))
+            {
+                var rest = columnName.Substring(CV_ID_PREFIX.Length);
+                int split = 0;
+                while (split < rest.Length && char.IsLetter(rest[split]))
+                {
+                    split++;
+                }
+                if (split == 0 || split == rest.Length || !rest.Skip(split).All(char.IsDigit))
+                {
+                    return false;
+                }
+                accession = rest.Substring(0, split) + @":" + rest.Substring(split);
+                return true;
+            }
+
+            if (columnName.StartsWith(CV_USERPARAM_PREFIX, StringComparison.Ordinal))
+            {
+                var hex = columnName.Substring(CV_USERPARAM_PREFIX.Length);
+                if (hex.Length == 0 || hex.Length % 2 != 0)
+                {
+                    return false;
+                }
+                var bytes = new byte[hex.Length / 2];
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    if (!byte.TryParse(hex.Substring(i * 2, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture,
+                            out bytes[i]))
+                    {
+                        return false;
+                    }
+                }
+                accession = Encoding.UTF8.GetString(bytes);
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Splits a controlled-vocabulary accession ("MS:1000505") into its letter prefix ("MS") and
+        /// digit number ("1000505"). Returns false for anything that is not a CV accession (e.g. a vendor
+        /// userParam name), which the caller then encodes verbatim instead.
+        /// </summary>
+        private static bool TrySplitCvid(string accession, out string prefix, out string number)
+        {
+            prefix = null;
+            number = null;
+            if (string.IsNullOrEmpty(accession))
+            {
+                return false;
+            }
+            int colon = accession.IndexOf(':');
+            if (colon <= 0 || colon == accession.Length - 1)
+            {
+                return false;
+            }
+            prefix = accession.Substring(0, colon);
+            number = accession.Substring(colon + 1);
+            return prefix.All(char.IsLetter) && number.All(char.IsDigit);
         }
 
         private static bool TypesMatch(Type propertyType, Type valueType)
@@ -246,6 +572,105 @@ namespace pwiz.Skyline.Model.Results.Spectra
             public override string GetAbbreviatedColumnName()
             {
                 return _getAbbreviatedColumName();
+            }
+        }
+
+        /// <summary>
+        /// A dynamic column for one uninterpreted mzML CV/user parameter, identified by its
+        /// <see cref="Accession"/> (a CV accession such as "MS:1000505", or a userParam name). Unlike the
+        /// static columns it is not bound to a <see cref="SpectrumClass"/> property: it reads its value
+        /// straight from <see cref="SpectrumMetadata.OtherParams"/>. The spectrum-filter predicate reads
+        /// it via <see cref="GetValue(SpectrumMetadata)"/>; the <see cref="SpectrumClass"/> POCO has no
+        /// such property, so the <see cref="SpectrumClass"/> accessors are not supported.
+        /// </summary>
+        private class CvParamColumn : SpectrumClassColumn
+        {
+            private readonly string _accession;
+            private readonly string _name;
+            private readonly bool _isNumeric;
+            private readonly bool _canHaveValue;
+
+            public CvParamColumn(string accession, string name, bool isNumeric)
+            {
+                _accession = accession;
+                _name = name;
+                _isNumeric = isNumeric;
+                // Read from the ontology rather than taken from the caller, so every way of making this
+                // column - catalog, discovery, or reconstruction from a saved filter - agrees about it.
+                _canHaveValue = CanTermHaveValue(accession);
+                ColumnName = EncodeCvParamColumnName(accession);
+            }
+
+            public string Accession
+            {
+                get { return _accession; }
+            }
+
+            /// <summary>
+            /// Whether the term can carry a value at all. False makes this a pure flag, present or absent
+            /// and nothing more (see <see cref="SpectrumClassColumn.IsValuelessCvColumn"/>).
+            /// </summary>
+            public bool CanHaveValue
+            {
+                get { return _canHaveValue; }
+            }
+
+            public override string ColumnName { get; }
+
+            public override Type ValueType
+            {
+                get { return _isNumeric ? typeof(double) : typeof(string); }
+            }
+
+            public override object GetValue(SpectrumMetadata spectrumMetadata)
+            {
+                foreach (var term in spectrumMetadata.OtherParams)
+                {
+                    if (Equals(term.Accession, _accession))
+                    {
+                        return term.Value;
+                    }
+                }
+                return null;
+            }
+
+            public override object GetValue(SpectrumClass spectrumClass)
+            {
+                throw new NotSupportedException();
+            }
+
+            public override void SetValue(SpectrumClass spectrumClass, object value)
+            {
+                throw new NotSupportedException();
+            }
+
+            public override string GetLocalizedColumnName(CultureInfo cultureInfo)
+            {
+                if (string.IsNullOrEmpty(_name))
+                {
+                    return _accession;
+                }
+                // A controlled-vocabulary term shows its friendly name with the accession as the precise
+                // cue, e.g. "base peak intensity (MS:1000505)"; a userParam (name == accession) shows just
+                // its name. The parenthesized format is localizable (a locale may use different
+                // parentheses) and resolved in the requested culture.
+                return Equals(_name, _accession)
+                    ? _name
+                    : string.Format(cultureInfo,
+                        SpectraResources.ResourceManager.GetString(
+                            nameof(SpectraResources.CvParamColumn_GetLocalizedColumnName_Name_Accession), cultureInfo)
+                        ?? @"{0} ({1})",
+                        _name, _accession);
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is CvParamColumn other && Equals(ColumnName, other.ColumnName);
+            }
+
+            public override int GetHashCode()
+            {
+                return ColumnName.GetHashCode();
             }
         }
 

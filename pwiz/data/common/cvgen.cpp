@@ -227,6 +227,10 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "    std::string def;\n"
           "    bool isObsolete;\n"
           "\n"
+          "    /// the type of the value the term carries, e.g. \"xsd:float\";\n"
+          "    /// empty for terms that carry no value (flags such as \"zoom scan\")\n"
+          "    std::string valueType;\n"
+          "\n"
           "    typedef std::vector<CVID> id_list;\n"
           "    id_list parentsIsA;\n"
           "    id_list parentsPartOf;\n"
@@ -395,6 +399,21 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     os << "const size_t relationsExactSynonymSize_ = sizeof(relationsExactSynonym_)/sizeof(CVIDStringPair);\n\n\n";
 
 
+    os << "CVIDStringPair valueTypes_[] =\n"
+          "{\n"
+          "    {CVID_Unknown, \"\"},\n";
+    for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
+    for(const Term& term : obo->terms)
+    {
+        if (term.valueType.empty())
+            continue;
+        os << "    {" << correctedEnumNameMaps[obo-obos.begin()][term.id] << ", \"" << term.valueType << "\"},\n";
+    }
+    os << "}; // valueTypes_\n\n\n";
+
+    os << "const size_t valueTypesSize_ = sizeof(valueTypes_)/sizeof(CVIDStringPair);\n\n\n";
+
+
     os << "struct PropertyValuePair\n"
           "{\n"
           "    CVID term;\n"
@@ -458,6 +477,9 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "\n"
           "        for (const CVIDStringPair* it=relationsExactSynonym_; it!=relationsExactSynonym_+relationsExactSynonymSize_; ++it)\n"
           "            infoMap_[it->first].exactSynonyms.push_back(it->second);\n"
+          "\n"
+          "        for (const CVIDStringPair* it=valueTypes_; it!=valueTypes_+valueTypesSize_; ++it)\n"
+          "            infoMap_[it->first].valueType = it->second;\n"
           "\n"
           "        for (const PropertyValuePair* it=propertyValue_; it!=propertyValue_+propertyValueSize_; ++it)\n"
           "            infoMap_[it->term].propertyValues.insert(make_pair(it->name, it->value));\n"

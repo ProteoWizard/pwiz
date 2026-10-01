@@ -67,9 +67,11 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(errDlg, errDlg.OkDialog);
             OkDialog(transitionDlg, transitionDlg.CancelDialog);
 
-            // Same check for the peptide (general) reader path, which had the identical exposure.
+            // Same check for the peptide (general) reader path, which had the identical exposure. The
+            // operator must be neither a symbol nor a friendly alias to be unparseable ("Equals" now
+            // aliases to "=").
             RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic));
-            const string badPeptideFilter = "CollisionEnergy Equals -17";
+            const string badPeptideFilter = "CollisionEnergy foobar -17";
             var peptideText =
                 "Protein Name\tPeptide Modified Sequence\tPrecursor m/z\tProduct m/z\tSpectrumFilter\n" +
                 "peptides1\tPEPTIDER\t478.737814\t478.737814\t" + badPeptideFilter + "\n";

@@ -83,6 +83,7 @@ EditRemoteAccountDlg,TestUnifi
 EditRTDlg,TestRetentionTimeFilter
 EditServerDlg,TestAccessServer
 EditSpectrumFilterDlg,TestEditSpectrumFilter
+SpectrumFilterStylingHelpDlg,TestCvSpectrumFilter
 EditStaticModDlg.IsotopeModView,TestEditStaticMod
 EditStaticModDlg.StructuralModView,TestEditStaticMod
 DiannSearchDlg.DataFilesPage,TestDiannSearch

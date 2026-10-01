@@ -651,6 +651,96 @@ namespace pwiz.Skyline.EditUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Spectrum Filters.
+        /// </summary>
+        public static string SpectrumFilterStylingHelpDlg_Title_Property_styling {
+            get {
+                return ResourceManager.GetString("SpectrumFilterStylingHelpDlg_Title_Property_styling", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A spectrum filter limits which spectra are used to extract chromatograms for a precursor.
+        /// </summary>
+        public static string SpectrumFilterStylingHelpDlg_What_is_a_spectrum_filter {
+            get {
+                return ResourceManager.GetString("SpectrumFilterStylingHelpDlg_What_is_a_spectrum_filter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Property column display uses different text styles.
+        /// </summary>
+        public static string SpectrumFilterStylingHelpDlg_Styling_intro {
+            get {
+                return ResourceManager.GetString("SpectrumFilterStylingHelpDlg_Styling_intro", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Accent color.
+        /// </summary>
+        public static string SpectrumFilterStylingHelpDlg_Style_name_accent_color {
+            get {
+                return ResourceManager.GetString("SpectrumFilterStylingHelpDlg_Style_name_accent_color", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Plain.
+        /// </summary>
+        public static string SpectrumFilterStylingHelpDlg_Style_name_plain {
+            get {
+                return ResourceManager.GetString("SpectrumFilterStylingHelpDlg_Style_name_plain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Italic.
+        /// </summary>
+        public static string SpectrumFilterStylingHelpDlg_Style_name_italic {
+            get {
+                return ResourceManager.GetString("SpectrumFilterStylingHelpDlg_Style_name_italic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to OK.
+        /// </summary>
+        public static string SpectrumFilterStylingHelpDlg_Ok {
+            get {
+                return ResourceManager.GetString("SpectrumFilterStylingHelpDlg_Ok", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This document&apos;s data has values for the property, so a filter on it can match spectra..
+        /// </summary>
+        public static string SpectrumFilterStylingHelpDlg_Explains_answerable {
+            get {
+                return ResourceManager.GetString("SpectrumFilterStylingHelpDlg_Explains_answerable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Nothing has been determined about the property, because no results have been imported or the data files could not be read..
+        /// </summary>
+        public static string SpectrumFilterStylingHelpDlg_Explains_undetermined {
+            get {
+                return ResourceManager.GetString("SpectrumFilterStylingHelpDlg_Explains_undetermined", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This document&apos;s data was examined and has no values for the property. A filter on it matches nothing here, but stays valid for data imported later..
+        /// </summary>
+        public static string SpectrumFilterStylingHelpDlg_Explains_unanswerable {
+            get {
+                return ResourceManager.GetString("SpectrumFilterStylingHelpDlg_Explains_unanswerable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Criteria {0}.
         /// </summary>
         public static string EditSpectrumFilterDlg_GetFilterTabNames_Criteria__0_ {

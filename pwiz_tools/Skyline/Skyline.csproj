@@ -993,6 +993,9 @@
     <Compile Include="Model\Results\Spectra\SpectrumClass.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassColumn.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassKey.cs" />
+    <Compile Include="Model\Results\Spectra\SpectrumColumnScanner.cs" />
+    <Compile Include="EditUI\SpectrumColumnStyle.cs" />
+    <Compile Include="EditUI\SpectrumFilterStylingHelpDlg.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumMetadataList.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumPrecursors.cs" />
     <Compile Include="Properties\Resources.Designer.cs">

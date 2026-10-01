@@ -19088,6 +19088,12 @@ public ref class CVTermInfo
     property bool isObsolete { bool get() {return base_->isObsolete;} }
 
     /// <summary>
+    /// returns the type of the value the term carries, e.g. "xsd:float", or an empty
+    /// string for terms that carry no value (flags such as "zoom scan")
+    /// </summary>
+    property System::String^ valueType { System::String^ get() {return ToSystemString(base_->valueType);} }
+
+    /// <summary>
     /// returns a list of terms which this term has an IS_A relationship with
     /// </summary>
     property CVIDList^ parentsIsA { CVIDList^ get() {return gcnew CVIDList(&base_->parentsIsA, gcnew Object());} }
