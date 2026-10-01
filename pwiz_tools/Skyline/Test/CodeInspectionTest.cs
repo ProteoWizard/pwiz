@@ -300,6 +300,31 @@ namespace pwiz.SkylineTest
                 true, // Pattern is a regular expression
                 @"Encoding.UTF8 includes a BOM by default. Use 'new UTF8Encoding(false)' for UTF-8 without BOM, or 'new UTF8Encoding(true)' if you explicitly need a BOM."); // Explanation for prohibition, appears in report
 
+            // Looking for invisible format characters (soft hyphen U+00AD, zero-width spaces and joiners, direction marks,
+            // a BOM inside a file), which are pasted in from documents or produced by editing tools, cannot be seen in
+            // review, and make strings that look identical compare unequal. A BOM at the start of a file is not seen here,
+            // because File.ReadAllText removes it. The soft hyphen is listed separately because the .NET Framework regex
+            // engine classifies it as a dash (Pd), so \p{Cf} alone does not match it there.
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                null, // There are no parts of the codebase that should skip this check
+                string.Empty, // No file content required for inspection
+                @"[\p{Cf}\xAD]", // Forbidden pattern - any character in the Unicode format category, and the soft hyphen
+                true, // Pattern is a regular expression
+                @"Invisible format character (e.g. soft hyphen U+00AD or zero-width space U+200B). Delete it, or if the character is intended, write it as a C# Unicode escape."); // Explanation for prohibition, appears in report
+
+            // Looking for space characters other than the ASCII space (non-breaking, ideographic and typographic spaces),
+            // which the compiler accepts as whitespace but which come from pasted text or Japanese and Chinese input methods.
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                null, // There are no parts of the codebase that should skip this check
+                string.Empty, // No file content required for inspection
+                @"[\p{Zs}-[ ]]", // Forbidden pattern - any Unicode space separator except the ASCII space
+                true, // Pattern is a regular expression
+                @"Non-ASCII space character (e.g. non-breaking space U+00A0 or ideographic space U+3000). Replace it with an ordinary space, or if the character is intended, write it as a C# Unicode escape."); // Explanation for prohibition, appears in report
+
             FilesTreeDataModelInspection();
 
             // A few lines of fake tests that can be useful in development of this mechanism
