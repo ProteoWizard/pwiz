@@ -67,8 +67,7 @@ The zips are in the PanoramaWeb perftests folder beside the Osprey test files,
 <https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/>, and anyone can download them.
 `testdata.json` has each one's URL, size and SHA-256. The export packages hold the format 2 exports that
 Osprey (#4708) wrote from the Stellar `_21` and Astral `_55` .raw files, each searched against the Carafe
-initial library of its test-files package; each README records the command. The Astral one is not
-uploaded yet: its URL in `testdata.json` is PLACEHOLDER until it is.
+initial library of its test-files package; each README records the command.
 
 Extract a zip into `<Downloads>/Perftests/`, where the Skyline and Osprey perf tests keep theirs:
 - `<Downloads>` is `SKYLINE_DOWNLOAD_PATH` when it is set, else the user's Downloads folder.
