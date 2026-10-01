@@ -212,6 +212,13 @@ namespace pwiz.Skyline
         [STAThread]
         public static int Main(string[] args = null)
         {
+            // System-DPI awareness has to be the first thing WinForms hears: on .NET the manifest
+            // is not embedded, and WinForms fixes its scaling at first use (SetDefaultFont below
+            // is one), after which SetHighDpiMode changes the process but not the auto-scaling.
+            // The test host stays DPI-unaware so screenshot and layout baselines remain 96-DPI
+            // on scaled developer displays (issue #4599).
+            if (!UnitTest && !FunctionalTest)
+                Application.SetHighDpiMode(HighDpiMode.SystemAware);
             SetDefaultFont();
 
             if (String.IsNullOrEmpty(Settings.Default.InstallationId)) // Each instance to have GUID
