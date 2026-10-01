@@ -41,7 +41,7 @@ namespace pwiz.Osprey.IO
     /// Ported from osprey/src/pipeline.rs (write_scores_parquet, load_fdr_stubs_from_parquet,
     /// load_pin_features_from_parquet).
     ///
-    /// Uses ParquetNet for columnar I/O. The Parquet schema matches the Rust implementation
+    /// Uses Parquet.Net for columnar I/O. The Parquet schema matches the Rust implementation
     /// to enable cross-platform cache compatibility.
     /// </summary>
     public static class ParquetScoreCache

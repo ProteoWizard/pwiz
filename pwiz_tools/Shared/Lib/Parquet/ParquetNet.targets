@@ -2,7 +2,7 @@
 
   <!--
     Override the NuGet-resolved Parquet.Net assembly (Parquet.dll) with the patched
-    build that lives next to this file as ParquetNet.dll.
+    build that lives next to this file, also as Parquet.dll.
 
     SOURCE OF TRUTH for this binary: the `maccoss-developers` repo, path
     skylinedev/Parquet.Net6 - a SIBLING checkout under the same project root as pwiz,
@@ -12,13 +12,13 @@
     it in memory and appending it to the file (added public API; written bytes unchanged),
     and a fix to the narrow integer encoders, which were not safe to run concurrently.
 
-    Why a copy rather than a Reference alone: on .NET the host resolves an assembly from
-    the file whose name matches the assembly name, and this assembly is "Parquet". The
-    file cannot be checked in under that name because a native parquet.dll owns it in
-    Skyline's output folder, so every consumer references the NuGet package for its
-    dependency graph (ExcludeAssets="compile"), compiles against ParquetNet.dll, and
-    this target copies the patched bits over the package's Parquet.dll after the build.
-    The patched dll has the same AssemblyVersion=6.0.0 as the stock 6.1.0 NuGet release.
+    Every consumer references the NuGet package for its dependency graph and runtime
+    assets (ExcludeAssets="compile"), compiles against the patched Parquet.dll here, and
+    this target copies the patched bits over the package's Parquet.dll in the output
+    after the build. The patched dll has the same AssemblyVersion=6.0.0 as the stock
+    6.1.0 NuGet release. (It was checked in as ParquetNet.dll while a native parquet.dll,
+    used by BiblioSpec, owned the plain name in Skyline's output folder. That native DLL
+    is gone.)
 
     Imported by pwiz_tools/Directory.Build.targets and pwiz-sharp/Directory.Build.targets.
     Conditioned on Exists() so the target is a no-op for projects that don't
@@ -34,14 +34,14 @@
     <!-- A full path, not "Parquet" with a HintPath: a simple name lets ResolveAssemblyReference
          bind to any Parquet.dll among a project's Content items first, and Skyline deploys
          BlibBuild's output folder as Content. -->
-    <Reference Include="$(MSBuildThisFileDirectory)ParquetNet.dll">
+    <Reference Include="$(MSBuildThisFileDirectory)Parquet.dll">
       <Private>false</Private>
     </Reference>
   </ItemGroup>
 
   <Target Name="OverridePatchedParquetNet" AfterTargets="Build">
     <PropertyGroup>
-      <_PatchedParquetSource>$(MSBuildThisFileDirectory)ParquetNet.dll</_PatchedParquetSource>
+      <_PatchedParquetSource>$(MSBuildThisFileDirectory)Parquet.dll</_PatchedParquetSource>
       <_ResolvedParquetTarget>$(OutDir)Parquet.dll</_ResolvedParquetTarget>
     </PropertyGroup>
     <Copy SourceFiles="$(_PatchedParquetSource)"

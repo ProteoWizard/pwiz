@@ -1,7 +1,7 @@
 <Project>
 
-  <!-- The patched Parquet.Net reference and the swap of ParquetNet.dll over the NuGet
-       Parquet.dll that used to live here. Imported here as well as from
+  <!-- The patched Parquet.Net reference and the swap of the patched Parquet.dll over the
+       NuGet package's Parquet.dll that used to live here. Imported here as well as from
        pwiz_tools/Directory.Build.targets because this file, being the nearest
        Directory.Build.targets, is the only one MSBuild imports for the Osprey tree. -->
   <Import Project="$(MSBuildThisFileDirectory)..\Shared\Lib\Parquet\ParquetNet.targets" />
