@@ -1951,9 +1951,8 @@ namespace pwiz.Skyline.Util
                     // non-volatile captured local written on a ThreadPool thread, so once this loop
                     // got hot the JIT hoisted the read into a register and never observed the write.
                     // The thread then spun on a core forever and RunProcess never returned, which
-                    // made everything downstream of the caller unreachable - including
-                    // PythonInstaller's bootstrap timeout, which cannot fire from a call that never
-                    // returns. A race, so it was intermittent: when Exited fired before the loop got
+                    // made everything downstream of the caller unreachable - including any caller's
+                    // timeout, which cannot fire from a call that never returns. A race, so it was intermittent: when Exited fired before the loop got
                     // hot the flag was already set and the call returned normally.
                     process.WaitForExit();
 

@@ -1220,6 +1220,15 @@ This will provide Skyline with a variety of candidate peaks to evaluate peak qua
   <data name="BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_AlphaPeptDeep_predictions_" xml:space="preserve">
     <value>Add peptide precursors to the document to build a library from AlphaPeptDeep predictions.</value>
   </data>
+  <data name="BuildLibraryDlg_ValidateCarafeModel_The_file__0__does_not_exist_" xml:space="preserve">
+    <value>The file {0} does not exist.</value>
+  </data>
+  <data name="BuildLibraryDlg_ValidateCarafeModel_The_file__0__is_not_a_valid_fine_tuned_Carafe_model_" xml:space="preserve">
+    <value>The file {0} is not a valid fine-tuned Carafe model.</value>
+  </data>
+  <data name="BuildLibraryDlg_ShowCarafeModelDlg_Fine_tuned_Carafe_Models" xml:space="preserve">
+    <value>Fine-tuned Carafe Models</value>
+  </data>
   <data name="PeptideSettingsUI_UpdateAlignmentDropdown_Tooltip" xml:space="preserve">
     <value>Choose the retention time alignment strategy for mapping the retention times of MS/MS IDs from libraries to result files in the document,
 and between result files in the document for peak boundary imputation.</value>

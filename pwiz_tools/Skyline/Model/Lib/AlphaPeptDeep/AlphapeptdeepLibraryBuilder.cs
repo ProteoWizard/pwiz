@@ -28,6 +28,7 @@ using System.Text;
 using pwiz.BiblioSpec;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.Models;
+using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
@@ -87,6 +88,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         // Processing folders
         private const string PREFIX_WORKDIR = "APD";
         private const string OUTPUT_SPECTRAL_LIBS = @"output_libs";
+        private const string CARAFE_MODEL_DIR = @"carafe_model";
 
         // Processing intermediate file names
         private const string INPUT_FILE_NAME = @"input.tsv";
@@ -139,6 +141,13 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 PretrainedModels.BUNDLED_RELATIVE_PATH);
 
         public LibrarySpec LibrarySpec { get; private set; }
+
+        /// <summary>
+        /// A model CarafeSharp fine-tuned on a set of runs and saved as a .carafemodel file, to predict
+        /// with in place of the pretrained models, or null for the pretrained models. It predicts for
+        /// the collision energy and instrument it was trained on.
+        /// </summary>
+        public string CarafeModelPath { get; set; }
 
         protected override IEnumerable<string> GetHeaderColumnNames(bool training)
         {
@@ -242,8 +251,16 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     : ModelResources.AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Predicting_on_the_CPU);
                 var pretrained = PretrainedModels.Open(PretrainedModelsPath);
                 Directory.CreateDirectory(OutputSpectralLibsDir);
-                using var ms2 = Ms2Model.FromPretrained(pretrained, device);
-                using var rt = RtModel.FromPretrained(pretrained, device);
+                var fineTuned = OpenCarafeModel();
+                using var ms2 = fineTuned?.Ms2Path != null
+                    ? Ms2Model.FromSafetensors(fineTuned.Ms2Path, device)
+                    : Ms2Model.FromPretrained(pretrained, device);
+                using var rt = fineTuned?.RtPath != null
+                    ? RtModel.FromSafetensors(fineTuned.RtPath, device)
+                    : RtModel.FromPretrained(pretrained, device);
+                double nce = fineTuned?.Nce ?? NCE;
+                string instrument = fineTuned?.Instrument ?? INSTRUMENT;
+                // Library RT is iRT, whichever RT model predicted it
                 var irt = rt.FitIrtCalibration();
                 using var writer = new StreamWriter(OutputSpectraLibFilepath, false, new UTF8Encoding(false));
                 writer.WriteLine(string.Join(TextUtil.SEPARATOR_TSV_STR, SpectralLibraryColumnNames));
@@ -253,7 +270,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                         throw new OperationCanceledException();
 
                     var chunk = precursors.Skip(start).Take(PRECURSORS_PER_CHUNK).ToList();
-                    var spectra = ms2.Predict(chunk.Select(p => new Ms2Request(p, NCE, INSTRUMENT)).ToList());
+                    var spectra = ms2.Predict(chunk.Select(p => new Ms2Request(p, nce, instrument)).ToList());
                     var normalizedRts = rt.Predict(chunk.Select(p => p.Peptide).ToList());
                     for (int i = 0; i < chunk.Count; i++)
                         WriteSpectrum(writer, spectra[i], irt.Slope * normalizedRts[i] + irt.Intercept);
@@ -273,6 +290,43 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             timer.Stop();
             Messages.WriteAsyncUserMessage(string.Format(ModelResources.AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_,
                 timer.Elapsed.Minutes, timer.Elapsed.Seconds));
+        }
+
+        /// <summary>
+        /// Opens <see cref="CarafeModelPath"/>, checking every entry, and unpacks its models into the
+        /// work folder; null when no model file is given.
+        /// </summary>
+        private FineTunedModels OpenCarafeModel()
+        {
+            if (string.IsNullOrEmpty(CarafeModelPath))
+                return null;
+            var modelFile = CarafeModelFile.Open(CarafeModelPath);
+            string folder = Path.Combine(WorkDir, CARAFE_MODEL_DIR);
+            modelFile.Extract(folder);
+            Messages.WriteAsyncUserMessage(string.Format(
+                ModelResources.AlphapeptdeepLibraryBuilder_OpenCarafeModel_Predicting_with_the_fine_tuned_model__0____1_,
+                CarafeModelPath, modelFile.Describe()));
+            return new FineTunedModels(modelFile, folder);
+        }
+
+        /// <summary>
+        /// The models a .carafemodel file holds, unpacked: each is null where the file keeps the
+        /// pretrained model, as it does for an MS2 model whose fine-tuning did not beat it.
+        /// </summary>
+        private class FineTunedModels
+        {
+            public FineTunedModels(CarafeModelFile modelFile, string folder)
+            {
+                Ms2Path = modelFile.Ms2Used ? Path.Combine(folder, ModelFiles.MS2_SAFETENSORS) : null;
+                RtPath = modelFile.RtUsed ? Path.Combine(folder, ModelFiles.RT_SAFETENSORS) : null;
+                Nce = modelFile.Nce;
+                Instrument = string.IsNullOrEmpty(modelFile.Instrument) ? null : modelFile.Instrument;
+            }
+
+            public string Ms2Path { get; }
+            public string RtPath { get; }
+            public double Nce { get; }
+            public string Instrument { get; }
         }
 
         private List<PrecursorForm> ReadPrecursorInputFile()

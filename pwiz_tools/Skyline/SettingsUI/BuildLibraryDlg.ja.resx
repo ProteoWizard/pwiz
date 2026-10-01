@@ -126,7 +126,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>492, 361</value>
+    <value>492, 338</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -154,7 +154,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnNext.Location" type="System.Drawing.Point, System.Drawing">
-    <value>411, 361</value>
+    <value>411, 338</value>
   </data>
   <data name="btnNext.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -184,7 +184,7 @@
     <value>False</value>
   </data>
   <data name="btnPrevious.Location" type="System.Drawing.Point, System.Drawing">
-    <value>330, 361</value>
+    <value>330, 338</value>
   </data>
   <data name="btnPrevious.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -209,66 +209,6 @@
   </data>
   <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>155, 17</value>
-  </metadata>
-  <data name="btnLearningDocBrowse.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="btnLearningDocBrowse.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnLearningDocBrowse.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;btnLearningDocBrowse.Name" xml:space="preserve">
-    <value>btnLearningDocBrowse</value>
-  </data>
-  <data name="&gt;&gt;btnLearningDocBrowse.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="textLearningDoc.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="textLearningDoc.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 20</value>
-  </data>
-  <data name="textLearningDoc.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;textLearningDoc.Name" xml:space="preserve">
-    <value>textLearningDoc</value>
-  </data>
-  <data name="&gt;&gt;textLearningDoc.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="label5.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 7</value>
-  </data>
-  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
-    <value>101, 13</value>
-  </data>
-  <data name="label5.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label5.Text" xml:space="preserve">
-    <value>学習ドキュメント(&amp;E):</value>
-  </data>
-  <data name="&gt;&gt;label5.Name" xml:space="preserve">
-    <value>label5</value>
-  </data>
-  <data name="&gt;&gt;label5.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <metadata name="toolTipProteinDatabase.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>248, 17</value>
-  </metadata>
-  <metadata name="toolTipTrainingData.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>425, 17</value>
-  </metadata>
-  <metadata name="toolTipMsMsData.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>582, 17</value>
   </metadata>
   <data name="gridInputFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -431,7 +371,7 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>571, 326</value>
+    <value>571, 303</value>
   </data>
   <data name="tabFiles.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -667,30 +607,6 @@
   <data name="&gt;&gt;tabAlphaSource.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="tabCarafeSource.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="tabCarafeSource.Size" type="System.Drawing.Size, System.Drawing">
-    <value>326, 130</value>
-  </data>
-  <data name="tabCarafeSource.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="tabCarafeSource.Text" xml:space="preserve">
-    <value>カラフ</value>
-  </data>
-  <data name="&gt;&gt;tabCarafeSource.Name" xml:space="preserve">
-    <value>tabCarafeSource</value>
-  </data>
-  <data name="&gt;&gt;tabCarafeSource.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabCarafeSource.Parent" xml:space="preserve">
-    <value>tabControlDataSource</value>
-  </data>
-  <data name="&gt;&gt;tabCarafeSource.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
   <data name="ceLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -843,7 +759,7 @@
     <value>2</value>
   </data>
   <data name="comboStandards.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 273</value>
+    <value>9, 250</value>
   </data>
   <data name="comboStandards.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 21</value>
@@ -862,36 +778,6 @@
   </data>
   <data name="&gt;&gt;comboStandards.ZOrder" xml:space="preserve">
     <value>3</value>
-  </data>
-  <data name="radioCarafeSource.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="radioCarafeSource.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="radioCarafeSource.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 65</value>
-  </data>
-  <data name="radioCarafeSource.Size" type="System.Drawing.Size, System.Drawing">
-    <value>56, 17</value>
-  </data>
-  <data name="radioCarafeSource.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="radioCarafeSource.Text" xml:space="preserve">
-    <value>カラフ(&amp;C)</value>
-  </data>
-  <data name="&gt;&gt;radioCarafeSource.Name" xml:space="preserve">
-    <value>radioCarafeSource</value>
-  </data>
-  <data name="&gt;&gt;radioCarafeSource.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioCarafeSource.Parent" xml:space="preserve">
-    <value>dataSourceGroupBox</value>
-  </data>
-  <data name="&gt;&gt;radioCarafeSource.ZOrder" xml:space="preserve">
-    <value>0</value>
   </data>
   <data name="radioAlphaSource.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -933,7 +819,7 @@
     <value>NoControl</value>
   </data>
   <data name="koinaInfoSettingsBtn.Location" type="System.Drawing.Point, System.Drawing">
-    <value>126, 90</value>
+    <value>126, 67</value>
   </data>
   <data name="koinaInfoSettingsBtn.Size" type="System.Drawing.Size, System.Drawing">
     <value>68, 13</value>
@@ -963,7 +849,7 @@
     <value>NoControl</value>
   </data>
   <data name="radioKoinaSource.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 88</value>
+    <value>6, 65</value>
   </data>
   <data name="radioKoinaSource.Size" type="System.Drawing.Size, System.Drawing">
     <value>52, 17</value>
@@ -1020,7 +906,7 @@
     <value>6, 124</value>
   </data>
   <data name="dataSourceGroupBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>200, 117</value>
+    <value>200, 94</value>
   </data>
   <data name="dataSourceGroupBox.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -1047,7 +933,7 @@
     <value>NoControl</value>
   </data>
   <data name="iRTPeptidesLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 257</value>
+    <value>9, 234</value>
   </data>
   <data name="iRTPeptidesLabel.Size" type="System.Drawing.Size, System.Drawing">
     <value>114, 13</value>
@@ -1167,7 +1053,7 @@
     <value>3, 3, 3, 3</value>
   </data>
   <data name="tabProperties.Size" type="System.Drawing.Size, System.Drawing">
-    <value>571, 326</value>
+    <value>571, 303</value>
   </data>
   <data name="tabProperties.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1194,7 +1080,7 @@
     <value>3, 3</value>
   </data>
   <data name="tabControlMain.Size" type="System.Drawing.Size, System.Drawing">
-    <value>579, 352</value>
+    <value>579, 329</value>
   </data>
   <data name="tabControlMain.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1218,7 +1104,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>579, 396</value>
+    <value>579, 373</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
@@ -1236,24 +1122,6 @@
     <value>helpTip</value>
   </data>
   <data name="&gt;&gt;helpTip.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolTipProteinDatabase.Name" xml:space="preserve">
-    <value>toolTipProteinDatabase</value>
-  </data>
-  <data name="&gt;&gt;toolTipProteinDatabase.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolTipTrainingData.Name" xml:space="preserve">
-    <value>toolTipTrainingData</value>
-  </data>
-  <data name="&gt;&gt;toolTipTrainingData.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolTipMsMsData.Name" xml:space="preserve">
-    <value>toolTipMsMsData</value>
-  </data>
-  <data name="&gt;&gt;toolTipMsMsData.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

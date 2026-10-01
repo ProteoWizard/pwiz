@@ -876,13 +876,6 @@
 
 この予測ライブラリの作成を続行しますか？</value>
   </data>
-  <data name="NvidiaInstaller_Requesting_Administrator_elevation" xml:space="preserve">
-    <value>Nvidia Cudaツールの初回インストールには、管理者権限が必要です。必要な権限がない場合はシステム管理者に相談して、以下のスクリプトの実行を依頼してください：
-
-{0} 
-
-このまま続行しますか？</value>
-  </data>
   <data name="LibraryHelper_PreparePrecursorInputFile_Preparing_prediction_input_file" xml:space="preserve">
     <value>予測入力ファイルを準備中</value>
   </data>

@@ -877,13 +877,6 @@
 
 是否要继续构建此预测库？</value>
   </data>
-  <data name="NvidiaInstaller_Requesting_Administrator_elevation" xml:space="preserve">
-    <value>首次安装 Nvidia Cuda 工具需要管理员权限。若您没有必要的权限，请咨询您的系统管理员并请求运行以下脚本：
-
-{0}
-
-是否要继续？</value>
-  </data>
   <data name="LibraryHelper_PreparePrecursorInputFile_Preparing_prediction_input_file" xml:space="preserve">
     <value>正在准备用于预测的输入文件</value>
   </data>
