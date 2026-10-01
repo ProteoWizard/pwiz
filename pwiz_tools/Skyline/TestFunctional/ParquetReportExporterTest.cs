@@ -27,7 +27,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Parquet;
 using Parquet.Schema;
 using pwiz.Common.DataBinding;
-using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
@@ -77,29 +76,26 @@ namespace pwiz.SkylineTestFunctional
             var ticks = new DateTime(2026, 3, 15, 9, 30, 0, 123).Ticks;
             var kinds = new[] { DateTimeKind.Unspecified, DateTimeKind.Local, DateTimeKind.Utc };
             var dateTimes = kinds.Select(kind => (DateTime?)new DateTime(ticks, kind)).Append(null).ToArray();
-            var items = dateTimes.Select(dateTime => new TimestampObject
-            {
-                WallClockTime = dateTime,
-                MomentTime = dateTime
-            }).ToList();
-            var stream = ExportReport(items, nameof(TimestampObject.WallClockTime), nameof(TimestampObject.MomentTime));
+            var items = dateTimes.Select(dateTime => new TimestampObject { Time = dateTime }).ToList();
+            var stream = ExportReport(items, nameof(TimestampObject.Time));
             ReadParquet(stream, reader =>
             {
+                var field = reader.Schema.GetDataFields().Single();
+                var dateTimeField = field as DateTimeDataField;
+                Assert.IsNotNull(dateTimeField);
+                AssertEx.AreEqual(DateTimeFormat.Timestamp, dateTimeField.DateTimeFormat);
+                AssertEx.IsTrue(dateTimeField.IsAdjustedToUTC);
                 using var groupReader = reader.OpenRowGroupReader(0);
-                // Wall-clock times have no zone, so the digits are written unchanged
-                // whatever their Kind, and the output is the same on every computer.
-                var wallClockTimes = ReadTimestampColumn(reader, groupReader,
-                    nameof(TimestampObject.WallClockTime), false);
-                // Moments in time are stored as UTC, so only a local time is converted.
-                var momentTimes = ReadTimestampColumn(reader, groupReader,
-                    nameof(TimestampObject.MomentTime), true);
+                var times = groupReader.ReadColumnAsync(field).GetAwaiter().GetResult().Data
+                    .Cast<DateTime?>().ToArray();
+                // Only a local time is converted. A time with no time zone is written as if
+                // it were UTC, so the output is the same on every computer.
                 for (int i = 0; i < dateTimes.Length; i++)
                 {
-                    var expectedMoment = dateTimes[i]?.Kind == DateTimeKind.Local
+                    var expected = dateTimes[i]?.Kind == DateTimeKind.Local
                         ? dateTimes[i].Value.ToUniversalTime()
                         : dateTimes[i];
-                    AssertEx.AreEqual(dateTimes[i]?.Ticks, wallClockTimes[i]?.Ticks);
-                    AssertEx.AreEqual(expectedMoment?.Ticks, momentTimes[i]?.Ticks);
+                    AssertEx.AreEqual(expected?.Ticks, times[i]?.Ticks);
                 }
             });
         }
@@ -133,18 +129,6 @@ namespace pwiz.SkylineTestFunctional
             });
         }
 
-        private static DateTime?[] ReadTimestampColumn(ParquetReader reader, ParquetRowGroupReader groupReader,
-            string name, bool isAdjustedToUtc)
-        {
-            var field = reader.Schema.GetDataFields().Single(f => f.Name == name);
-            var dateTimeField = field as DateTimeDataField;
-            Assert.IsNotNull(dateTimeField);
-            AssertEx.AreEqual(DateTimeFormat.Timestamp, dateTimeField.DateTimeFormat);
-            AssertEx.AreEqual(isAdjustedToUtc, dateTimeField.IsAdjustedToUTC);
-            var column = groupReader.ReadColumnAsync(field).GetAwaiter().GetResult();
-            return column.Data.Cast<DateTime?>().ToArray();
-        }
-
         class MyObject
         {
             public FormattableList<float> FloatArray
@@ -156,9 +140,7 @@ namespace pwiz.SkylineTestFunctional
 
         class TimestampObject
         {
-            public DateTime? WallClockTime { get; set; }
-            [UtcTimestamp]
-            public DateTime? MomentTime { get; set; }
+            public DateTime? Time { get; set; }
         }
     }
 }

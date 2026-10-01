@@ -20,7 +20,6 @@ using Parquet;
 using Parquet.Data;
 using Parquet.Schema;
 using pwiz.Common.DataBinding;
-using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using System;
@@ -213,7 +212,6 @@ namespace pwiz.Skyline.Model.Databinding
                 Name = name;
                 PropertyDescriptor = propertyDescriptor;
                 var valueType = PropertyDescriptor.DataSchema.GetWrappedValueType(PropertyDescriptor.PropertyType);
-                IsUtcTimestamp = PropertyDescriptor.Attributes[typeof(UtcTimestampAttribute)] != null;
 
                 // Check if this is a ListColumnValue<T>
                 ListElementType = GetListColumnValueStorageType(valueType);
@@ -244,7 +242,6 @@ namespace pwiz.Skyline.Model.Databinding
             public Type ElementStorageType { get; }
             public Field SchemaField { get; }
             public DataField DataField { get; }
-            public bool IsUtcTimestamp { get; }
 
             public object GetValue(RowItem rowItem)
             {
@@ -324,11 +321,10 @@ namespace pwiz.Skyline.Model.Databinding
                 {
                     return new DataField(name, storageType, isNullable, isArray);
                 }
-                // Without a format, Parquet.Net writes DateTime as the deprecated INT96. The
-                // TIMESTAMP logical type says whether the value is a moment in time (adjusted
-                // to UTC) or a wall-clock reading with no time zone. Parquet.Net 4.25 fails to
-                // write Micros or Nanos, so the values are stored to the millisecond.
-                return new DateTimeDataField(name, DateTimeFormat.Timestamp, IsUtcTimestamp,
+                // Without a format, Parquet.Net writes DateTime as the deprecated INT96.
+                // Parquet.Net 4.25 fails to write Micros or Nanos, so the values are stored
+                // to the millisecond.
+                return new DateTimeDataField(name, DateTimeFormat.Timestamp, true,
                     DateTimeTimeUnit.Millis, isNullable ?? true, isArray);
             }
 
@@ -336,9 +332,10 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 value = ConvertToStorageType(value, type);
                 // Parquet.Net writes the DateTime digits without looking at DateTime.Kind,
-                // so a local time has to be converted here. Other values are written as-is,
-                // which keeps the output the same on every computer.
-                if (IsUtcTimestamp && value is DateTime dateTime && dateTime.Kind == DateTimeKind.Local)
+                // so a local time has to be converted to UTC here. A time with no time zone
+                // (DateTimeKind.Unspecified) is written as if it were UTC, which keeps the
+                // output the same on every computer.
+                if (value is DateTime dateTime && dateTime.Kind == DateTimeKind.Local)
                 {
                     return dateTime.ToUniversalTime();
                 }
@@ -354,7 +351,7 @@ namespace pwiz.Skyline.Model.Databinding
                     return null;
                 }
 
-                if (array.GetType().GetElementType() == ListElementType && !IsUtcTimestamp)
+                if (array.GetType().GetElementType() == ListElementType && ListElementType != typeof(DateTime?))
                 {
                     return array;
                 }
