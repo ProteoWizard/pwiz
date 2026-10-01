@@ -144,6 +144,14 @@ namespace pwiz.Osprey.Test
             output = RunCommandAndValidateError(Variable(@"OSPREY_STAGE7_STREAM", @"1"),
                 InputLibraryOutput(input, library));
             StringAssert.Contains(output, @"OSPREY_STAGE7_STREAM");
+            // The training export under the one pass-2 mode that computes each run's q-values in
+            // SecondPassFDR, after the export is written: refused, never an export on the wrong q.
+            output = RunCommandAndValidateError(Variable(@"OSPREY_PASS2_QVALUE", OspreyEnvironment.PASS2_QVALUE_TRANSFER),
+                InputLibraryOutput(input, library).Concat(new[] { OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText }).ToArray());
+            AssertErrorMessage(output, string.Format(
+                OspreyResources.Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_the_run_q_values_in__2__after_the_per_run_export_,
+                OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText, @"OSPREY_PASS2_QVALUE=" + OspreyEnvironment.PASS2_QVALUE_TRANSFER,
+                SecondPassFdrTask.TASK_NAME));
             // A retired allowance token is a warning, not an error: the run goes on, here to
             // the ModelDiagnostics error above, which stays the only error line.
             output = RunCommandAndValidateError(Variable(@"OSPREY_ALLOW_UNFIXED_RESIDENT", @"hpc-merge"),
