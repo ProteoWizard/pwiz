@@ -70,6 +70,8 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     public static class TaskValiditySidecar
     {
+        public const string EXT = @".osprey.task";
+
         /// <summary>
         /// Sidecar path for an (output, task) pair:
         /// <c>output + "." + taskName + ".osprey.task"</c>. Lives next
@@ -83,7 +85,7 @@ namespace pwiz.Osprey.Tasks
                 throw new ArgumentException(@"outputPath required", nameof(outputPath));
             if (string.IsNullOrEmpty(taskName))
                 throw new ArgumentException(@"taskName required", nameof(taskName));
-            return outputPath + @"." + taskName + @".osprey.task";
+            return outputPath + @"." + taskName + EXT;
         }
 
         /// <summary>

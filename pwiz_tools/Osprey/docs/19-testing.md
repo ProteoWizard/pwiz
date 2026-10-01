@@ -150,7 +150,12 @@ Both rules parse only the code portion of each line (a shared `IndexOfLineCommen
 string-literal-aware scanner, `CodeInspectionTest.cs:260`) so a comment that
 mentions the forbidden pattern does not trip the rule.
 
-## 5. Standing gate 1 — `regression.ps1` (golden + resume + HPC chain at 1e-9)
+## 5. Standing gate 1 — `regression.ps1` (golden + FDR bounds + HPC chain at 1e-9)
+
+Pipeline behavior (resume, rehydrate, task boundaries, sidecar contracts, diagnostics
+regeneration) is checked in `Osprey.Test/SubsetPipelineTest.cs` on subset data on every
+commit, not here (#4728). `-Dataset Stellar` runs the golden only; resume and the chain
+run at full size on StellarLibDecoy and StellarGenDecoyEntrap.
 
 `Osprey/../regression.ps1` (`regression.ps1:1`) is the overnight end-to-end
 correctness gate, wired to the scheduled TeamCity "Osprey Windows .NET

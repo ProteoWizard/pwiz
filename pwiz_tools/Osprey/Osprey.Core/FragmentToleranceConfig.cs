@@ -86,4 +86,28 @@ namespace pwiz.Osprey.Core
         Ppm,
         Mz
     }
+
+    /// <summary>
+    /// The user-facing name of a <see cref="ToleranceUnit"/>: "ppm" or "m/z", as Skyline shows
+    /// them. Skyline's <c>GetLocalizedString</c> pattern.
+    /// </summary>
+    public static class ToleranceUnitExtension
+    {
+        private static string[] LOCALIZED_VALUES
+        {
+            get
+            {
+                return new[]
+                {
+                    OspreyCoreResources.ToleranceUnitExtension_LOCALIZED_VALUES_ppm,
+                    OspreyCoreResources.ToleranceUnitExtension_LOCALIZED_VALUES_mz
+                };
+            }
+        }
+
+        public static string GetLocalizedString(this ToleranceUnit val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
+    }
 }

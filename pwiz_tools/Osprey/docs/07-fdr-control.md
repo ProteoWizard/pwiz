@@ -325,7 +325,8 @@ entrapment-measured FDP.
 
 So the grid search keeps the SMALLEST C within `CSelectionTolerance` of the best count
 (default 0.01; `OSPREY_SVM_C_TOLERANCE` overrides it, and 0 restores the strict maximum,
-the first C in grid order winning a tie, which is what the Rust implementation does). A
+the first C in grid order winning a tie). Rust uses the same rule since maccoss/osprey#69, with
+no opt-out, so the two implementations agree at the default. A
 value that is not a number in [0, 1) stops the run at startup. The tolerance is part of the
 first-pass training validity key (`;csel=`), emitted for every setting, so a resume never
 adopts a directory trained under another rule. A relay node (`--task PerFileRescoring` or
@@ -890,13 +891,11 @@ calibration LDA, not Percolator.
   (`PercolatorEngine.cs:413`). This is agreement, recorded for
   completeness. Evidence: `Osprey.FDR/PercolatorEngine.cs:413`. Severity: info.
 
-- **[C#-ONLY DEFAULT] First-pass C selection keeps the most regularized C within 1% of
-  the best** - Rust's `grid_search_c` keeps the strict maximum of the inner-CV passing
-  counts (first C in grid order on a tie). C# keeps the smallest C whose count is within
-  `CSelectionTolerance` (0.01) of the best, because the strict maximum is decided by noise
-  (see "C selection" above). `OSPREY_SVM_C_TOLERANCE=0` restores the Rust rule, and the
-  cross-implementation scripts set it. Evidence: `Osprey.FDR/PercolatorTrainer.cs`
-  (`SelectC`). Severity: changes default output.
+- **[RESOLVED] First-pass C selection keeps the most regularized C within 1% of the best**
+  - C# adopted it first (pwiz #4703, `PercolatorTrainer.SelectC`) and Rust followed in
+  maccoss/osprey#69 (`svm::select_c`, no opt-out), so both now keep the smallest C whose count
+  is within 0.01 of the best (see "C selection" above). Only C# has
+  `OSPREY_SVM_C_TOLERANCE`, for A/B work. Severity: none.
 
 Everything else verified matches the Rust documentation step for step: the semi-supervised
 linear-SVM algorithm (standardize → best-per-precursor dedup → peptide-grouped subsample

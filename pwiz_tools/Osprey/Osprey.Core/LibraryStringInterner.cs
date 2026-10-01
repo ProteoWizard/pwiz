@@ -163,7 +163,7 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public void LogSummary(Action<string> logInfo)
         {
-            LogSummary(logInfo, "Unique library strings: {0:N0} / {1:N0} total ({2:F1}% reduced)");
+            LogSummary(logInfo, OspreyCoreResources.LibraryStringInterner_LogSummary_Unique_library_strings___0_____1__total___2___reduced_);
         }
 
         /// <summary>
@@ -175,7 +175,7 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public void LogDecoySummary(Action<string> logInfo)
         {
-            LogSummary(logInfo, "Unique decoy strings: {0:N0} / {1:N0} total ({2:F1}% reduced)");
+            LogSummary(logInfo, OspreyCoreResources.LibraryStringInterner_LogDecoySummary_Unique_decoy_strings___0_____1__total___2___reduced_);
         }
 
         /// <summary>
@@ -184,7 +184,7 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public void LogPairingManifestSummary(Action<string> logInfo)
         {
-            LogSummary(logInfo, "Unique pairing-manifest protein accessions: {0:N0} / {1:N0} total ({2:F1}% reduced)");
+            LogSummary(logInfo, OspreyCoreResources.LibraryStringInterner_LogPairingManifestSummary_Unique_pairing_manifest_protein_accessions___0_____1__total___2___reduced_);
         }
 
         private void LogSummary(Action<string> logInfo, string format)

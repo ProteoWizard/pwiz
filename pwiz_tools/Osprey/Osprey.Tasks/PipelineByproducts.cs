@@ -124,7 +124,7 @@ namespace pwiz.Osprey.Tasks
             if (interner == null || !OspreyOutput.Verbose)
                 return;
             logInfo(string.Format(
-                "Unique peptide sequences: {0:N0} from the library; {1:N0} read from intermediate files were not among them",
+                OspreyTasksResources.SequencePool_LogSummary_Unique_peptide_sequences___0__from_the_library___1__read_from_intermediate_files_were_not_,
                 SeedCount, interner.FrozenMisses));
         }
 
@@ -691,7 +691,7 @@ namespace pwiz.Osprey.Tasks
             // reporter rather than leaving the heading as the last line in the log.
             using (var progress = label == null
                        ? null
-                       : new ProgressReporter(CountText.Format(FileCount, "{1} (1 file)", "{1} ({0:N0} files)", label),
+                       : new ProgressReporter(CountText.Format(FileCount, OspreyTasksResources.RescoredEntries_StreamFiles__1___1_file_, OspreyTasksResources.RescoredEntries_StreamFiles__1____0__files_, label),
                            FileCount, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 int done = 0;

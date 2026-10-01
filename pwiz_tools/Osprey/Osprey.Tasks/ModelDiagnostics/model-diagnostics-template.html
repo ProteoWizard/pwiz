@@ -737,7 +737,8 @@ const HAS_CAL = !!(D.cal && D.cal.files && D.cal.files.length);
 // One shared UI state object so more cross-tab links / selectors are easy to add.
 const CAL = {
   files: HAS_CAL ? D.cal.files : [],
-  unit:  (D.cal && D.cal.massUnit) || "ppm",
+  // The data carries the calibration file's unit token; "Th" (absolute m/z) is shown as "m/z".
+  unit:  (D.cal && D.cal.massUnit) === "Th" ? "m/z" : ((D.cal && D.cal.massUnit) || "ppm"),
   hasEnt:!!(D.cal && D.cal.hasEntrapment),
   sel:   0,          // shared cal-file index (Model + FDR dropdowns stay in sync)
   on:    false       // CAL mode active (the third pass-switch button)

@@ -48,9 +48,11 @@ namespace pwiz.Osprey.Scoring
     {
         // TSV column order. Kept as a single source of truth so the header and the row
         // formatting below cannot drift apart.
-        private const string HeaderLine =
-            "base_id\tis_decoy\tcand_index\tcoelution\tln_intensity\trt_penalty\t" +
-            "median_polish\tapex_rt\tstart_rt\tend_rt\tis_picked";
+        private static readonly string[] HEADER_COLUMNS =
+        {
+            @"base_id", @"is_decoy", @"cand_index", @"coelution", @"ln_intensity", @"rt_penalty",
+            @"median_polish", @"apex_rt", @"start_rt", @"end_rt", @"is_picked"
+        };
 
         private readonly ConcurrentBag<Row> _rows = new ConcurrentBag<Row>();
 
@@ -115,21 +117,21 @@ namespace pwiz.Osprey.Scoring
             {
                 using (var writer = new StreamWriter(saver.SafeName, false))
                 {
-                    writer.NewLine = "\n";
-                    writer.WriteLine(HeaderLine);
+                    writer.NewLine = TextUtil.LF;
+                    writer.WriteLine(HEADER_COLUMNS.ToDsvLine(TextUtil.SEPARATOR_TSV));
                     foreach (var r in rows)
                     {
                         line.Clear();
-                        line.Append(r.BaseId.ToString(inv)).Append('\t')
-                            .Append(r.IsDecoy ? '1' : '0').Append('\t')
-                            .Append(r.CandIndex.ToString(inv)).Append('\t')
-                            .Append(r.Coelution.ToString("R", inv)).Append('\t')
-                            .Append(r.LnIntensity.ToString("R", inv)).Append('\t')
-                            .Append(r.RtPenalty.ToString("R", inv)).Append('\t')
-                            .Append(r.MedianPolish.ToString("R", inv)).Append('\t')
-                            .Append(r.ApexRt.ToString("R", inv)).Append('\t')
-                            .Append(r.StartRt.ToString("R", inv)).Append('\t')
-                            .Append(r.EndRt.ToString("R", inv)).Append('\t')
+                        line.Append(r.BaseId.ToString(inv)).Append(TextUtil.SEPARATOR_TSV)
+                            .Append(r.IsDecoy ? '1' : '0').Append(TextUtil.SEPARATOR_TSV)
+                            .Append(r.CandIndex.ToString(inv)).Append(TextUtil.SEPARATOR_TSV)
+                            .Append(r.Coelution.ToString(@"R", inv)).Append(TextUtil.SEPARATOR_TSV)
+                            .Append(r.LnIntensity.ToString(@"R", inv)).Append(TextUtil.SEPARATOR_TSV)
+                            .Append(r.RtPenalty.ToString(@"R", inv)).Append(TextUtil.SEPARATOR_TSV)
+                            .Append(r.MedianPolish.ToString(@"R", inv)).Append(TextUtil.SEPARATOR_TSV)
+                            .Append(r.ApexRt.ToString(@"R", inv)).Append(TextUtil.SEPARATOR_TSV)
+                            .Append(r.StartRt.ToString(@"R", inv)).Append(TextUtil.SEPARATOR_TSV)
+                            .Append(r.EndRt.ToString(@"R", inv)).Append(TextUtil.SEPARATOR_TSV)
                             .Append(r.IsPicked ? '1' : '0');
                         writer.WriteLine(line.ToString());
                     }

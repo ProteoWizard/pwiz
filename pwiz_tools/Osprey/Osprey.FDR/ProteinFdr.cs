@@ -280,7 +280,7 @@ namespace pwiz.Osprey.FDR
     /// </summary>
     public static class ProteinFdr
     {
-        private const string DECOY_PREFIX = "DECOY_";
+        private const string DECOY_PREFIX = @"DECOY_";
 
         /// <summary>
         /// Build protein parsimony from the spectral library.
@@ -333,7 +333,7 @@ namespace pwiz.Osprey.FDR
             {
                 var sortedPeptides = new List<string>(kvp.Value);
                 sortedPeptides.Sort(StringComparer.Ordinal); // Array.Sort OK: sorted only to build a canonical "|"-joined set key; equal peptide strings are byte-identical so tie order does not change the key
-                string key = string.Join("|", sortedPeptides);
+                string key = string.Join(@"|", sortedPeptides);
 
                 List<string> accessions;
                 if (!peptideSetToAccessions.TryGetValue(key, out accessions))
@@ -732,7 +732,7 @@ namespace pwiz.Osprey.FDR
                 // Stage 7 diagnostic dump).
                 var sortedAccs = new List<string>(group.Accessions);
                 sortedAccs.Sort(StringComparer.Ordinal); // Array.Sort OK: sorted only to build a canonical ";"-joined sortKey; equal accession strings are byte-identical so tie order does not change the key
-                string sortKey = string.Join(";", sortedAccs);
+                string sortKey = string.Join(@";", sortedAccs);
 
                 bool hasT = targetScore.TryGetValue(group.Id, out double t);
                 bool hasD = decoyScore.TryGetValue(group.Id, out double d);

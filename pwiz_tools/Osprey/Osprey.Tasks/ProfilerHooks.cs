@@ -198,14 +198,13 @@ namespace pwiz.Osprey.Tasks
 #if NETCOREAPP || NET5_0_OR_GREATER
             var gcInfo = GC.GetGCMemoryInfo();
             gcDetail = string.Format(CultureInfo.InvariantCulture,
-                ", gc_committed_last_gc={0:F2} GB, gc_heap_last_gc={1:F2} GB, gc_fragmented_last_gc={2:F2} GB",
+                @", gc_committed_last_gc={0:F2} GB, gc_heap_last_gc={1:F2} GB, gc_fragmented_last_gc={2:F2} GB",
                 gcInfo.TotalCommittedBytes / gb,
                 gcInfo.HeapSizeBytes / gb,
                 gcInfo.FragmentedBytes / gb);
 #endif
 
-            log.LogInfo(LogTag.Mem(label), string.Format(CultureInfo.InvariantCulture,
-                "working_set={0:F2} GB (peak={1:F2} GB), managed_heap={2:F2} GB, peak_paged={3:F2} GB, gen2_count={4}, loh_count={5}{6}",
+            log.LogInfo(LogTag.Mem(label), @"working_set={0:F2} GB (peak={1:F2} GB), managed_heap={2:F2} GB, peak_paged={3:F2} GB, gen2_count={4}, loh_count={5}{6}",
                 curWs / gb,
                 peakWs / gb,
                 managed / gb,
@@ -214,7 +213,7 @@ namespace pwiz.Osprey.Tasks
                 // Large Object Heap collection count is same as gen-2 in
                 // standard GC; report it explicitly to document intent.
                 GC.CollectionCount(2),
-                gcDetail));
+                gcDetail);
         }
 
         /// <summary>
@@ -258,9 +257,8 @@ namespace pwiz.Osprey.Tasks
             GC.Collect();
             GC.WaitForPendingFinalizers();
             GC.Collect();
-            log.LogInfo(LogTag.Mem(label), string.Format(CultureInfo.InvariantCulture,
-                "managed_heap={0:F2} GB {1}",
-                GC.GetTotalMemory(false) / (1024.0 * 1024.0 * 1024.0), detail));
+            log.LogInfo(LogTag.Mem(label), @"managed_heap={0:F2} GB {1}",
+                GC.GetTotalMemory(false) / (1024.0 * 1024.0 * 1024.0), detail);
             CaptureRetentionSnapshot(label);
         }
     }

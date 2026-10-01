@@ -23,7 +23,6 @@
 
 using System;
 using System.Diagnostics;
-using System.Globalization;
 
 namespace pwiz.Osprey.Core
 {
@@ -126,17 +125,18 @@ namespace pwiz.Osprey.Core
         /// Astral-class data can exceed <see cref="int.MaxValue"/> without overflow; an
         /// <see cref="int"/> argument widens implicitly.</param>
         /// <param name="indent">Leading whitespace for the heading so it lines up with the
-        /// matching completion line; the percent lines are indented one level (2 spaces) deeper.</param>
+        /// matching completion line (null for none); the percent lines are indented one level
+        /// (2 spaces) deeper.</param>
         /// <param name="intervalSeconds">Minimum seconds between percent lines (timer throttle).</param>
         /// <param name="heartbeatSeconds">Idle threshold for the frozen-percent heartbeat
         /// (see <see cref="HEARTBEAT_SECONDS"/>). Injectable so tests can trip it quickly.</param>
         /// <param name="minPercentSeconds">Minimum run time before the closing 100% is printed
         /// for a step that showed no percent (see <see cref="MIN_PERCENT_SECONDS"/>).</param>
-        public ProgressReporter(string activity, long total, string indent = "", double intervalSeconds = 1.0,
+        public ProgressReporter(string activity, long total, string indent = null, double intervalSeconds = 1.0,
             double heartbeatSeconds = HEARTBEAT_SECONDS, double minPercentSeconds = MIN_PERCENT_SECONDS)
         {
             _total = total;
-            _indent = indent;
+            _indent = indent ?? string.Empty;
             _intervalSeconds = intervalSeconds;
             _heartbeatSeconds = heartbeatSeconds;
             // Clamped to the report interval, which makes the closing rule hold by construction:
@@ -154,7 +154,7 @@ namespace pwiz.Osprey.Core
             //
             // Inside a MultiProgressReporter scope the heading buffers into the file's narrative
             // block rather than racing other files to the console.
-            OspreyOutput.Out.WriteLine("{0}{1}...", _indent, activity);
+            OspreyOutput.Out.WriteLine(@"{0}{1}...", _indent, activity);
         }
 
         /// <summary>
@@ -184,7 +184,7 @@ namespace pwiz.Osprey.Core
                 // The first percent waits one interval (_lastReportSeconds starts at 0).
                 if (percent > _lastPercent && now - _lastReportSeconds >= _intervalSeconds)
                 {
-                    OspreyOutput.Out.WriteLine("{0}  {1}%", _indent, percent);
+                    OspreyOutput.Out.WriteLine(@"{0}  {1}%", _indent, percent);
                     _lastPercent = percent;
                     _lastReportSeconds = now;
                 }
@@ -200,9 +200,9 @@ namespace pwiz.Osprey.Core
                     // when the phase calls Report; a phase that blocks inside one bulk
                     // operation (no Report calls) needs to be wrapped in a reporter first.
                     double pctExact = _total > 0 ? 100.0 * current / _total : 100.0;
-                    OspreyOutput.Out.WriteLine(string.Format(CultureInfo.InvariantCulture,
-                        "{0}  {1:0.00}% ({2:N0}/{3:N0}, {4} elapsed)",
-                        _indent, pctExact, current, _total, FormatElapsed(_stopwatch.Elapsed)));
+                    OspreyOutput.Out.WriteLine(
+                        OspreyCoreResources.ProgressReporter_Report__0____1_____2___3____4__elapsed_,
+                        _indent, pctExact, current, _total, FormatElapsed(_stopwatch.Elapsed));
                     _lastPercent = percent;
                     _lastReportSeconds = now;
                 }
@@ -232,7 +232,7 @@ namespace pwiz.Osprey.Core
                 // whether that step also gets a 100%.
                 if (_lastPercent < 100 && _stopwatch.Elapsed.TotalSeconds >= _minPercentSeconds)
                 {
-                    OspreyOutput.Out.WriteLine("{0}  100%", _indent);
+                    OspreyOutput.Out.WriteLine(@"{0}  100%", _indent);
                 }
             }
         }
@@ -243,10 +243,10 @@ namespace pwiz.Osprey.Core
         private static string FormatElapsed(TimeSpan elapsed)
         {
             if (elapsed.TotalHours >= 1)
-                return string.Format(CultureInfo.InvariantCulture, "{0}h{1:00}m", (int)elapsed.TotalHours, elapsed.Minutes);
+                return string.Format(OspreyCoreResources.ProgressReporter_FormatElapsed__0_h_1_00_m, (int)elapsed.TotalHours, elapsed.Minutes);
             if (elapsed.TotalMinutes >= 1)
-                return string.Format(CultureInfo.InvariantCulture, "{0}m{1:00}s", (int)elapsed.TotalMinutes, elapsed.Seconds);
-            return string.Format(CultureInfo.InvariantCulture, "{0}s", (int)elapsed.TotalSeconds);
+                return string.Format(OspreyCoreResources.ProgressReporter_FormatElapsed__0_m_1_00_s, (int)elapsed.TotalMinutes, elapsed.Seconds);
+            return string.Format(OspreyCoreResources.ProgressReporter_FormatElapsed__0_s, (int)elapsed.TotalSeconds);
         }
     }
 }

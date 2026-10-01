@@ -391,7 +391,7 @@ namespace pwiz.Osprey.Scoring
             // Append peak boundaries to search XIC diagnostic dump
             if (_diagnostics?.ShouldDumpSearchXicFor(candidate.Id) ?? false)
             {
-                string peakDumpPath = "cs_search_xic_entry_" + candidate.Id + ".txt";
+                string peakDumpPath = @"cs_search_xic_entry_" + candidate.Id + @".txt";
                 // A fresh FileSaver per call: "append" becomes read-existing,
                 // write-existing-plus-new-section, commit. DiagnosticFileLock.For is
                 // keyed by path and shared with OspreyFileDiagnostics.WriteSearchXicDump,
@@ -410,8 +410,8 @@ namespace pwiz.Osprey.Scoring
                             if (existing != null)
                                 dw.Write(existing);
                             dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                                "# CWT PEAKS: {0} candidates", peaks.Count));
-                            dw.WriteLine("peak\tidx\tstart\tapex\tend\tcorr_score");
+                                @"# CWT PEAKS: {0} candidates", peaks.Count));
+                            dw.WriteLine(new[] { @"peak", @"idx", @"start", @"apex", @"end", @"corr_score" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                             for (int pi = 0; pi < peaks.Count; pi++)
                             {
                                 var p = peaks[pi];
@@ -429,12 +429,15 @@ namespace pwiz.Osprey.Scoring
                                         }
                                     corrScore = pcnt > 0 ? psum / pcnt : 0.0;
                                 }
-                                dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                                    "peak\t{0}\t{1}\t{2}\t{3}\t{4:F10}",
-                                    pi, p.StartIndex, p.ApexIndex, p.EndIndex, corrScore));
+                                var inv = System.Globalization.CultureInfo.InvariantCulture;
+                                dw.WriteLine(new[]
+                                {
+                                    @"peak", pi.ToString(inv), p.StartIndex.ToString(inv), p.ApexIndex.ToString(inv),
+                                    p.EndIndex.ToString(inv), corrScore.ToString(@"F10", inv)
+                                }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                             }
                             dw.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                                "# BEST PEAK: idx={0} start={1} apex={2} end={3}",
+                                @"# BEST PEAK: idx={0} start={1} apex={2} end={3}",
                                 bestPeakIdx,
                                 bestPeak != null ? bestPeak.StartIndex : -1,
                                 bestPeak != null ? bestPeak.ApexIndex : -1,
@@ -655,7 +658,8 @@ namespace pwiz.Osprey.Scoring
                 peakXics.Add(new KeyValuePair<int, double[]>(xics[xi].FragmentIndex, slice));
             }
 
-            var polish = TukeyMedianPolish.Compute(peakXics, peakRts, 10, 0.01);
+            var polish = TukeyMedianPolish.Compute(peakXics, peakRts,
+                TukeyMedianPolish.SCORING_MAX_ITERATIONS, TukeyMedianPolish.SCORING_TOLERANCE);
             if (polish == null)
                 return 1.0;
             double lc = TukeyMedianPolish.LibCosine(polish, candidate.Fragments);
@@ -872,7 +876,7 @@ namespace pwiz.Osprey.Scoring
                 // calibrated_tolerance_ppm: max(3*SD, 1.0) ppm
                 ms1TolPpm = Math.Max(3.0 * ms1Calibration.SD, 1.0);
                 // reverse_calibrate_mz: observed ~ theoretical + offset
-                if (ms1Calibration.Unit == "Th")
+                if (ms1Calibration.Unit == MzCalibration.UNIT_TH)
                     searchMz = candidate.PrecursorMz + ms1Calibration.Mean;
                 else
                     searchMz = candidate.PrecursorMz * (1.0 + ms1Calibration.Mean / 1e6);

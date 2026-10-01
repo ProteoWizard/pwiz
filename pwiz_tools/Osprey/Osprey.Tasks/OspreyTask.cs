@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -58,6 +59,19 @@ namespace pwiz.Osprey.Tasks
     public abstract class OspreyTask : ISelectableTask
     {
         /// <summary>
+        /// The base-key term of every search of a blib library. Since the reader started typing
+        /// every peak from m/z and reading modification text residue- and precision-aware, a
+        /// blib's entries carry ion types and masses they did not before - which reach the
+        /// scores, the generated decoys and every stage after them - so a directory scored
+        /// before the change must not be adopted after. A TSV library keys exactly as before.
+        /// It carries <see cref="BlibLoader.READER_VERSION"/>, as the <c>.libcache</c> composition
+        /// term does, so a change to the reader moves both. The typing tolerance needs no term:
+        /// it is the search's fragment tolerance, already in
+        /// <see cref="SearchIdentity.SearchParameterHash"/>.
+        /// </summary>
+        public const string BLIB_READER_TERM = @";blibreader=" + BlibLoader.READER_VERSION;
+
+        /// <summary>
         /// Short identifier used in pipeline log lines, the <c>--task</c> selector and the
         /// validity sidecar. Each task returns its own <c>TASK_NAME</c> constant, the one
         /// spelling the CLI value list and the tests reference too.
@@ -87,10 +101,23 @@ namespace pwiz.Osprey.Tasks
         public virtual string ValidateSelection(OspreyConfig config)
         {
             if (!config.HasInputFiles)
-                return RequiresError(@"--input <file...>");
+                return RequiresError(OspreyArgNames.Text(OspreyArgNames.INPUT, @"<file...>"));
             if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
-                return RequiresError(@"--library and --output");
+                return RequiresError(LibraryAndOutputText);
             return null;
+        }
+
+        /// <summary>
+        /// The two arguments <see cref="ValidateSelection"/> requires together, as one phrase
+        /// ("--library and --output"): the argument text is passed in, never translated.
+        /// </summary>
+        public static string LibraryAndOutputText
+        {
+            get
+            {
+                return string.Format(OspreyTasksResources.OspreyTask_LibraryAndOutputText__0__and__1_,
+                    OspreyArgNames.Text(OspreyArgNames.LIBRARY), OspreyArgNames.Text(OspreyArgNames.OUTPUT));
+            }
         }
 
         public virtual string DescribeOutput(OspreyConfig config) => null;
@@ -194,12 +221,33 @@ namespace pwiz.Osprey.Tasks
         /// selects which peak a precursor's row describes, in Stage 4, and
         /// everything downstream inherits that choice. Putting it here also
         /// means a task added later carries it without having to know.
+        ///
+        /// <see cref="BLIB_READER_TERM"/> is here for the same reason: it changes what every
+        /// task reads from a blib library.
         /// </summary>
         public virtual string ValidityKey(PipelineContext ctx) => string.Format(
-            @"search={0};library={1}{2}",
+            @"search={0};library={1}{2}{3}",
             ctx.Config.Identity.SearchParameterHash(),
             ctx.Config.Identity.LibraryIdentityHash(),
-            OspreyEnvironment.PickValidityKeySuffix());
+            OspreyEnvironment.PickValidityKeySuffix(),
+            ctx.Config.LibrarySource?.Format == LibraryFormat.Blib ? BLIB_READER_TERM : string.Empty);
+
+        /// <summary>
+        /// The key one declared output is stamped and checked with: <paramref name="taskKey"/>
+        /// (this task's <see cref="ValidityKey"/>, computed once by the caller) for every task
+        /// whose outputs all depend on the same inputs. A fan-out task whose output for one run
+        /// also depends on that run's own artifacts appends their identities here, so a
+        /// rewritten input invalidates that run's output alone.
+        /// </summary>
+        public virtual string OutputValidityKey(PipelineContext ctx, string taskKey, string output) => taskKey;
+
+        /// <summary>
+        /// The inputs one declared output's stamp records: <paramref name="taskInputs"/> (this
+        /// task's <see cref="Inputs"/>, listed once by the caller) for every output built from
+        /// all of them. An output whose <see cref="OutputValidityKey"/> follows its own run's
+        /// artifacts names those instead, so its stamp says what it was built from.
+        /// </summary>
+        public virtual IEnumerable<string> OutputInputs(PipelineContext ctx, IReadOnlyList<string> taskInputs, string output) => taskInputs;
 
         /// <summary>
         /// A <see cref="ValidateSelection"/> error naming this task and what it is missing,
@@ -207,7 +255,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         protected string RequiresError(string requirement)
         {
-            return string.Format(@"--task {0} requires {1}.", Name, requirement);
+            return string.Format(OspreyTasksResources.OspreyTask_RequiresError___task__0__requires__1__, Name, requirement);
         }
 
         /// <summary>
@@ -221,8 +269,8 @@ namespace pwiz.Osprey.Tasks
             if (config.InputFiles != null && config.InputFiles.Count == 1)
                 return pathFor(config.InputFiles[0]);
             return string.IsNullOrEmpty(directory)
-                ? string.Format("a {0} file next to each input", extension)
-                : string.Format("a {0} file for each input, in {1}", extension, directory);
+                ? string.Format(OspreyTasksResources.OspreyTask_DescribePerInputOutput_a__0__file_next_to_each_input, extension)
+                : string.Format(OspreyTasksResources.OspreyTask_DescribePerInputOutput_a__0__file_for_each_input__in__1_, extension, directory);
         }
     }
 }

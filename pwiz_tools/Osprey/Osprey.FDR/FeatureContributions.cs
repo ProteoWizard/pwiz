@@ -411,7 +411,7 @@ namespace pwiz.Osprey.FDR
                 bool reversed = haveInfo && info.IsReversedScore;
                 bool wrongSign = linear && haveInfo && (info.IsReversedScore ^ (WeightAt(avgWeights, j) < 0.0));
                 string name = info.Name;
-                string label = info.Label ?? info.Name ?? string.Format("feature_{0}", j);
+                string label = info.Label ?? info.Name ?? string.Format(@"feature_{0}", j);
                 features[j] = new FeatureContribution(j, name, label,
                     WeightAt(avgWeights, j), deltaMu[j], weighted[j], pct, reversed, wrongSign);
             }
@@ -436,15 +436,16 @@ namespace pwiz.Osprey.FDR
             // investigate the library / calibration -- the analog of Skyline's mProphet
             // model view. The raw standardized coefficient is kept alongside for the
             // Compare-Peaks-style read of how the composite score was built.
-            yield return "  Model sanity check -- feature share of target-decoy separation (trained linear model, coefficients standardized):";
-            yield return string.Format("    {0,-36} {1,12} {2,9}", "feature", "coefficient", "share (%)");
+            yield return TextUtil.GetIndentation(1) + OspreyFDRResources.FeatureContributions_ToReportLines_Model_sanity_check___feature_share_of_target_decoy_separation__trained_linear_model__coefficients_standardized__;
+            yield return TextUtil.GetIndentation(2) + string.Format(@"{0,-36} {1,12} {2,9}", OspreyFDRResources.FeatureContributions_ToReportLines_feature,
+                OspreyFDRResources.FeatureContributions_ToReportLines_coefficient, OspreyFDRResources.FeatureContributions_ToReportLines_share____);
             foreach (var f in Features
                 .OrderByDescending(f => IsDegenerate ? 0.0 : Math.Abs(f.Percent))
                 .ThenBy(f => f.Index))
             {
-                yield return string.Format("    {0,-36} {1,12:F4} {2,8:F1}%{3}",
+                yield return TextUtil.GetIndentation(2) + string.Format(@"{0,-36} {1,12:F4} {2,8:F1}%{3}",
                     f.Label, f.Coefficient, f.Percent,
-                    f.IsUnexpectedDirection ? "  (unexpected direction)" : string.Empty);
+                    f.IsUnexpectedDirection ? @"  " + OspreyFDRResources.FeatureContributions_ToReportLines__unexpected_direction_ : string.Empty);
             }
         }
 

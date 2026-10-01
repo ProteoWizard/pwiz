@@ -124,7 +124,8 @@ namespace pwiz.Osprey.Test
                 act(reporter);
             }
             return writer.ToString()
-                .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)
+                .ReadLines()
+                .Where(line => line.Length > 0)
                 .ToList();
         }
     }

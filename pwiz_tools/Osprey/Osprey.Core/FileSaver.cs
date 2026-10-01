@@ -172,15 +172,12 @@ namespace pwiz.Osprey.Core
                 catch (UnauthorizedAccessException ex)
                 {
                     throw new IOException(string.Format(
-                        @"Access denied: unable to create a file in the folder '{0}'. " +
-                        @"Adjust the folder write permissions or retry the operation " +
-                        @"after moving or copying files to a different folder.",
+                        OspreyCoreResources.FileSaver_GetTempFileName_Access_denied__unable_to_create_a_file_in_the_folder___0____Adjust_the_folder_write_,
                         basePath), ex);
                 }
             }
             throw new IOException(string.Format(
-                @"Failed to allocate a temporary file in the folder '{0}' " +
-                @"after {1} attempts.", basePath, TEMP_NAME_ATTEMPTS));
+                OspreyCoreResources.FileSaver_GetTempFileName_Failed_to_allocate_a_temporary_file_in_the_folder___0___after__1__attempts_, basePath, TEMP_NAME_ATTEMPTS));
         }
     }
 }

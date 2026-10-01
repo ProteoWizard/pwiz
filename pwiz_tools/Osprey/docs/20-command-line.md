@@ -18,6 +18,12 @@ The three required inputs are `-i`/`--input` (one or more mzML), `-l`/`--library
 (a DIA-NN TSV or `.blib`), and `-o`/`--output` (the result `.blib`). Everything else
 has a sensible default; `--resolution` is the one flag you will almost always set.
 
+A DIA-NN TSV is validated in full before any search: a value Osprey cannot read in any
+column the library has (a fragment charge of `1.0` or `0`, an ion type other than
+a/b/c/x/y/z, an unknown loss or decoy flag, an empty cell) or a modification with no known
+mass refuses the library, listing each line and column to fix, as Skyline's transition
+list import does. Nothing is guessed for a bad value.
+
 ---
 
 ## Quick start
@@ -127,6 +133,15 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 | `--decoy-pairing-manifest` | `<manifest.tsv>` | FDRBench 5-column pairing manifest, used with `--decoys-in-library`. |
 | `--write-pin` | — | Write PIN files for external tools (diagnostic only; the engine does not consume them). |
 
+### Training Export
+
+| Option | Value | Default | Effect |
+|--------|-------|---------|--------|
+| `--training-export` | - | off | Write `<stem>.training.parquet` per run: every target at run q <= `--training-export-max-q` with its full b/y ladder's observed intensities and per-ion interference evidence. Written by `PerFileRescoring`; adding it to a finished run writes only the exports and re-scores nothing. See [22-training-export.md](22-training-export.md). |
+| `--training-export-max-q` | `<q>` | `--run-fdr` | With `--training-export`: the run precursor q-value a target must reach (second pass where `PerFileRescoring` wrote one, else first; [22](22-training-export.md)). |
+| `--training-export-claimant-q` | `<q>` | 0.01 | With `--training-export`: the run q-value at which another target counts as a claimant of a shared peak. |
+| `--training-export-xics` | - | off | With `--training-export`: also write each precursor's per-ion XIC matrix over its final peak. |
+
 ### Performance
 
 | Option | Value | Default | Effect |
@@ -138,7 +153,7 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 
 | Option | Value | Effect |
 |--------|-------|--------|
-| `--task` | `SpectraCache \| PerFileScoring \| FirstPassFDR \| PerFileRescoring \| SecondPassFDR \| ModelDiagnostics` | Run exactly one pipeline task (one node = one task). Omit for the whole pipeline. `SpectraCache` stages the `.spectra.bin` caches and needs no library; `ModelDiagnostics` regenerates only the `--model-diagnostics` report for a completed run. EVERY task takes `-i`/`--input-list` naming the data files; the parquets and sidecars are derived from their stems. See [15-hpc-scoring-split.md](15-hpc-scoring-split.md). |
+| `--task` | `SpectraCache \| PerFileScoring \| FirstPassFDR \| PerFileRescoring \| SecondPassFDR \| TrainingExport \| ModelDiagnostics` | Run exactly one pipeline task (one node = one task). Omit for the whole pipeline. `SpectraCache` stages the `.spectra.bin` caches and needs no library; `TrainingExport` is `--training-export` with no `--task`: a selector, not a stage, that runs the whole pipeline with the export on, so a completed run writes only its missing exports; `ModelDiagnostics` regenerates only the `--model-diagnostics` report for a completed run. EVERY task takes `-i`/`--input-list` naming the data files; the parquets and sidecars are derived from their stems. See [15-hpc-scoring-split.md](15-hpc-scoring-split.md). |
 
 ### Logging
 
@@ -178,10 +193,10 @@ translated, and it is the only part of the log a script or test may read.
 | `[TRAIN]` | `--perf-stats` | which population a model trained on |
 | `[MEM <label>]` | `OSPREY_LOG_MEMORY` | a memory probe |
 
-Prose that the user asked for with an option (`--model-diagnostics`, `-d`, an `OSPREY_*`
-setting) may carry a category tag (`[MODEL-DIAGNOSTICS]`, `[BISECT]`, ...). The tag labels
-the line and stays ASCII; the text after it is prose. In a plain default run `[TASK]` is the
-only tag.
+Prose that the user asked for with an option (`--model-diagnostics`, `--training-export`,
+`-d`, an `OSPREY_*` setting) may carry a category tag (`[MODEL-DIAGNOSTICS]`,
+`[TRAIN-EXPORT]`, `[BISECT]`, ...). The tag labels the line and stays ASCII; the text after
+it is prose. In a plain default run `[TASK]` is the only tag.
 
 **Warnings and errors are prose, not tags.** They start with `Warning:` and `Error:`, as in
 Skyline's command line, and are translated with the rest of the text. The exit code and the
@@ -208,11 +223,37 @@ Rules for code and for consumers:
   invariant culture with no group separators. Adding a key is free; renaming one means updating
   its consumers (`regression.ps1`, the `ai/scripts/Osprey` tools) in the same change.
 - **Every tag comes from `LogTag`** (`Osprey.Core/LogTag.cs`), and the route and count keys
-  come from `LogKey` in the same file. Code writes `log.LogInfo(LogTag.COUNT, text)` through an
-  `IOspreyLog`; `OspreyLog.Write` is the one place that decides whether the line is emitted.
+  come from `LogKey` in the same file. Code writes `log.LogInfo(LogTag.COUNT, format, args)`
+  through an `IOspreyLog`: that overload formats with the invariant culture, so a tagged line
+  reads `12.3s` under every UI language. `OspreyLog.Write` is the one place that decides whether
+  the line is emitted.
   `CodeInspectionTest.TestLogTagsComeFromLogTag` fails on a tag written as a string literal.
 
 ---
+
+### Localization
+
+Osprey's prose - the log, `--help`, warnings and errors - comes from resource files and follows
+the user's culture, as Skyline's does:
+
+- One `.resx` per assembly that writes user text: `OspreyCoreResources`, `OspreyIOResources`,
+  `OspreyScoringResources`, `OspreyFDRResources`, `OspreyTasksResources` and `OspreyResources`
+  (the exe). Each project opts in to ReSharper's `LocalizableElement` inspection with a
+  `<Project>.csproj.DotSettings`, so a plain string literal fails `Build-Osprey.ps1 -RunInspection`.
+- Translations are Japanese (`.ja.resx`) and Chinese (`.zh-Hans.resx`) only, produced by
+  Skyline's translation pipeline (`pwiz_tools/Skyline/Executables/DevTools/ResourcesOrganizer`),
+  which scans every `.resx` under `pwiz_tools`.
+- Text written for a PERSON uses the current culture: in fr-FR a count reads `1 234 567` and a
+  fraction `12,5 %`. Text written for a PROGRAM uses the invariant culture: every output file
+  (blib, TSV report, FDRBench input, parquet, JSON, `.osprey.task`) and every tagged log line.
+  A run under any culture writes byte-identical files.
+- `@"..."` marks text that is deliberately NOT translated: tagged lines, file headings and keys,
+  argument and environment variable names, internal-invariant exceptions, and diagnostics reached
+  only through `-d` or an `OSPREY_*` setting.
+- `--culture <name>` (internal, not in `--help`, as in Skyline) runs Osprey under a named culture
+  instead of the OS one, e.g. `--culture fr-FR` or `--culture ja`. The unit tests take the same
+  choice from `OSPREY_TEST_CULTURE` (`Build-Osprey.ps1 -RunTests -Culture ja-JP`); fr-FR and
+  tr-TR are test cultures for number formatting, not translation targets.
 
 ## Distributed execution (HPC)
 
@@ -271,7 +312,7 @@ CLI; they are read once at process start. The ones most likely to matter:
 | `OSPREY_PICK_DUMP_CANDIDATES` | Dump per-candidate pick terms for offline model training | [peak-model-training.md](peak-model-training.md) |
 | `OSPREY_TRAIN_PICK_RUN` | First-pass training selection, **on by default**: each precursor is represented by one uniformly drawn run's best candidate peak. `OSPREY_TRAIN_PICK_RUN=0` restores the pre-26.1 cross-run maximum. C#-only — Rust still takes the maximum | [07](07-fdr-control.md) |
 | `OSPREY_MAX_TRAIN_SIZE` | Cap on training rows (default 300000). Unchanged by the 26.1 selection flip: at matched FDP, 300K and 1M are indistinguishable | [07](07-fdr-control.md) |
-| `OSPREY_SVM_C_TOLERANCE` | First-pass SVM C selection: keep the most regularized C within this fraction of the best inner-CV count (default 0.01, in [0, 1); anything else is a startup ERROR). 0 is the strict maximum the Rust implementation uses; set it for cross-implementation comparisons, and on every node of a relay chain | [07](07-fdr-control.md) |
+| `OSPREY_SVM_C_TOLERANCE` | First-pass SVM C selection: keep the most regularized C within this fraction of the best inner-CV count (default 0.01, in [0, 1); anything else is a startup ERROR). 0 is the strict maximum, the pre-#4703 rule; Rust uses the 1% default with no opt-out, so leave it unset for cross-implementation comparisons. Set the same value on every node of a relay chain | [07](07-fdr-control.md) |
 | `OSPREY_PASS2_QVALUE` | Second-pass q-value mode: `protein-compact` (**default**) / `transfer`. An unrecognized value is a startup ERROR - `percolator` and `transfer-compete` were removed | [12](12-second-pass-fdr.md) |
 | `OSPREY_FDR_MODEL` | First-pass classifier: unset / `svm` = linear SVM (**default**), `gbdt` = **experimental** gradient-boosted trees (C#-only). An unrecognized value is a startup ERROR. Replaced the removed `--fdr-method` | [07](07-fdr-control.md) |
 | `OSPREY_GBT_*` | GBDT hyperparameters; apply only under `OSPREY_FDR_MODEL=gbdt` | [07](07-fdr-control.md) |

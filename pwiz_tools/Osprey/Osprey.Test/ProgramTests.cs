@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
@@ -85,6 +86,30 @@ namespace pwiz.Osprey.Test
                     prefix + " after the stamp columns");
                 Assert.IsTrue(CommandStatusWriter.DefaultIsErrorMessage(prefix + " message"), prefix);
             }
+            // The prefix Osprey WRITES in each shipped language must be one the detector reads,
+            // or a translated run would fail with an exit code its log does not explain.
+            foreach (var language in new[] { @"en", @"ja", @"zh-Hans" })
+            {
+                using (new CultureScope(CultureInfo.GetCultureInfo(language)))
+                {
+                    Assert.IsTrue(CommandStatusWriter.IsErrorLine(Program.ErrorPrefix + " message"), language);
+                    Assert.IsFalse(CommandStatusWriter.IsErrorLine(Program.WarningPrefix + " message"), language);
+                }
+            }
+            // Skyline's split at the top-level sinks: a user-actionable exception is its message;
+            // a programming defect is the whole exception (type and stack) so it can be fixed.
+            const string defectFormat = @"defect: {0}";
+            Assert.AreEqual(@"cannot open x", Program.DescribeFailure(new IOException(@"cannot open x"), defectFormat));
+            Assert.AreEqual(@"bad row", Program.DescribeFailure(new InvalidDataException(@"bad row"), defectFormat));
+            Assert.AreEqual(@"denied", Program.DescribeFailure(new UnauthorizedAccessException(@"denied"), defectFormat));
+            Assert.AreEqual(@"cannot open x", Program.DescribeFailure(
+                new AggregateException(new FileNotFoundException(@"cannot open x")), defectFormat));
+            var defect = new InvalidOperationException(@"invariant broken");
+            Assert.AreEqual(string.Format(defectFormat, defect), Program.DescribeFailure(defect, defectFormat));
+            var mixed = new AggregateException(new IOException(@"io"), new NullReferenceException());
+            Assert.AreEqual(string.Format(defectFormat, mixed), Program.DescribeFailure(mixed, defectFormat));
+            var empty = new IOException(string.Empty);
+            Assert.AreEqual(string.Format(defectFormat, empty), Program.DescribeFailure(empty, defectFormat));
             Assert.IsFalse(CommandStatusWriter.IsErrorLine("Warning: message"));
             Assert.IsFalse(CommandStatusWriter.IsErrorLine("Reported Error: in mid-line prose"));
             Assert.IsFalse(CommandStatusWriter.IsErrorLine(null));
@@ -139,6 +164,38 @@ namespace pwiz.Osprey.Test
             Assert.IsNull(Program.ValidateArgs(config));
         }
 
+        /// <summary>
+        /// A search whose output is its own library is refused - it would replace the library
+        /// with its results when it finishes - whether the paths are spelled alike or not, and
+        /// under a task as well as the full pipeline. So is an export given only blanks as its
+        /// path.
+        /// </summary>
+        [TestMethod]
+        public void TestValidateRejectsOutputOverLibrary()
+        {
+            var config = new OspreyConfig
+            {
+                InputFiles = new List<string> { @"a.mzML" },
+                LibrarySource = LibrarySource.FromPath(@"ref.blib"),
+                OutputBlib = Path.GetFullPath(@"ref.blib")
+            };
+            string expected = string.Format(OspreyResources.Program_ValidateArgs_The__0__path_is_the_library_the_search_reads___1_,
+                OspreyCommandArgs.ARG_OUTPUT.ArgumentText, @"ref.blib");
+            Assert.AreEqual(expected, Program.ValidateArgs(config));
+            config.OutputBlib = @"results.blib";
+            Assert.IsNull(Program.ValidateArgs(config));
+
+            var task = TaskConfigs.ForTask(PerFileScoringTask.TASK_NAME);
+            task.InputFiles = new List<string> { @"a.mzML" };
+            task.LibrarySource = LibrarySource.FromPath(@"ref.blib");
+            task.OutputBlib = @"ref.blib";
+            Assert.AreEqual(expected, Program.ValidateArgs(task));
+
+            var export = new OspreyConfig { LibrarySource = LibrarySource.FromPath(@"ref.blib"), ExportLibraryBlib = @"  " };
+            Assert.AreEqual(string.Format(OspreyResources.Program_ValidateArgs_No_path_given_for__0__,
+                OspreyCommandArgs.ARG_EXPORT_LIBRARY.ArgumentText), Program.ValidateArgs(export));
+        }
+
         // --- ValidateArgs: what each task requires -------------------------
         // Each config comes from TaskConfigs.ForTask, i.e. through the same SelectTask the
         // CLI goes through, so the flags are the task's own and not a copy of Main's wiring.
@@ -172,6 +229,108 @@ namespace pwiz.Osprey.Test
             Assert.IsNotNull(err);
             StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + SpectraCacheTask.TASK_NAME);
             StringAssert.Contains(err, expected);
+        }
+
+        // - TrainingExport (a selector for PerFileRescoring's export) --
+
+        /// <summary>
+        /// --task TrainingExport validates like the full pipeline it selects (inputs, library,
+        /// output), and the export settings are refused when they cannot apply: given without
+        /// the export they would be silently inert, and a q threshold outside (0, 1] selects
+        /// nothing or everything.
+        /// </summary>
+        [TestMethod]
+        public void TestValidateTrainingExport()
+        {
+            var config = TaskConfigs.ForTask(TrainingExportTask.TASK_NAME);
+            config.InputFiles = new List<string> { "a.mzML" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            Assert.IsNull(Program.ValidateArgs(config));
+            config.OutputBlib = null;
+            StringAssert.Contains(Program.ValidateArgs(config), OspreyCommandArgs.ARG_TASK + TrainingExportTask.TASK_NAME);
+
+            var full = FullPipelineConfig();
+            full.TrainingExport.Enabled = true;
+            full.TrainingExport.MaxQ = 0.05;
+            full.TrainingExport.ClaimantQ = 0.02;
+            full.TrainingExport.WriteXics = true;
+            Assert.IsNull(Program.ValidateArgs(full));
+
+            foreach (Action<TrainingExportConfig> orphan in new Action<TrainingExportConfig>[]
+                     {
+                         e => e.MaxQ = 0.05, e => e.ClaimantQ = 0.02, e => e.WriteXics = true,
+                     })
+            {
+                var withoutExport = FullPipelineConfig();
+                orphan(withoutExport.TrainingExport);
+                StringAssert.Contains(Program.ValidateArgs(withoutExport), OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText);
+            }
+            foreach (double bad in new[] { 0.0, -0.1, 1.5, double.NaN })
+            {
+                var maxQ = FullPipelineConfig();
+                maxQ.TrainingExport.Enabled = true;
+                maxQ.TrainingExport.MaxQ = bad;
+                StringAssert.Contains(Program.ValidateArgs(maxQ), OspreyCommandArgs.ARG_TRAINING_EXPORT_MAX_Q.ArgumentText);
+                var claimantQ = FullPipelineConfig();
+                claimantQ.TrainingExport.Enabled = true;
+                claimantQ.TrainingExport.ClaimantQ = bad;
+                StringAssert.Contains(Program.ValidateArgs(claimantQ), OspreyCommandArgs.ARG_TRAINING_EXPORT_CLAIMANT_Q.ArgumentText);
+            }
+
+            AssertTrainingExportUnderOtherSelections();
+        }
+
+        /// <summary>
+        /// HPC wrappers hand every node the same options, so <c>--training-export</c> under a
+        /// selection that leaves the export out is not an error - but the startup line must not
+        /// announce an export the run will not write. It names the export where it runs, and
+        /// elsewhere says where it does.
+        /// </summary>
+        private static void AssertTrainingExportUnderOtherSelections()
+        {
+            var straight = FullPipelineConfig();
+            straight.TrainingExport.Enabled = true;
+            string runs = Program.DescribeTrainingExport(straight);
+            Assert.IsNotNull(runs);
+            // The export is a product of PerFileRescoring, so a node running that task writes it.
+            Assert.AreEqual(runs, Program.DescribeTrainingExport(ExportNode(TrainingExportTask.TASK_NAME)));
+            Assert.AreEqual(runs, Program.DescribeTrainingExport(ExportNode(PerFileRescoreTask.TASK_NAME)));
+            Assert.IsNull(Program.DescribeTrainingExport(FullPipelineConfig()), @"no line at all with the option off");
+            string elsewhere = string.Format(OspreyResources.Program_DescribeTrainingExport_Training_export__not_written_by_this_run___0__writes_it_under__1___2___1___3__or_a_run_without__1__,
+                OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText, OspreyCommandArgs.ARG_TASK.ArgumentText,
+                TrainingExportTask.TASK_NAME, PerFileRescoreTask.TASK_NAME);
+            foreach (string taskName in new[]
+                     {
+                         SpectraCacheTask.TASK_NAME, PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME,
+                         SecondPassFdrTask.TASK_NAME, ModelDiagnosticsTask.TASK_NAME,
+                     })
+            {
+                var node = ExportNode(taskName);
+                Assert.AreEqual(elsewhere, Program.DescribeTrainingExport(node), taskName + @" does not run the export");
+                string err = Program.ValidateArgs(node);
+                Assert.IsTrue(err == null || !err.Contains(OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText),
+                    taskName + @" must accept --training-export: " + err);
+            }
+        }
+
+        private static OspreyConfig ExportNode(string taskName)
+        {
+            var config = TaskConfigs.ForTask(taskName);
+            config.InputFiles = new List<string> { "a.mzML", "b.mzML" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            config.TrainingExport.Enabled = true;
+            return config;
+        }
+
+        private static OspreyConfig FullPipelineConfig()
+        {
+            var config = TaskConfigs.StraightThrough();
+            config.InputFiles = new List<string> { "a.mzML" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            return config;
         }
 
         // - PerFileScoring (mzML in) --
@@ -239,7 +398,7 @@ namespace pwiz.Osprey.Test
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + PerFileRescoreTask.TASK_NAME);
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_LIBRARY.ArgumentText + @" and " + OspreyCommandArgs.ARG_OUTPUT.ArgumentText);
+            StringAssert.Contains(err, OspreyTask.LibraryAndOutputText);
         }
 
         // - FirstPassFDR (2+ runs in, reconciliation on) --
@@ -274,7 +433,7 @@ namespace pwiz.Osprey.Test
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME);
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_LIBRARY.ArgumentText + @" and " + OspreyCommandArgs.ARG_OUTPUT.ArgumentText);
+            StringAssert.Contains(err, OspreyTask.LibraryAndOutputText);
         }
 
         [TestMethod]
@@ -289,7 +448,9 @@ namespace pwiz.Osprey.Test
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME);
-            StringAssert.Contains(err, "2+ files");
+            StringAssert.Contains(err, string.Format(
+                OspreyTasksResources.FirstPassFdrTask_ValidateSelection___task__0__requires_at_least_2_input_files____input___but__1__were_given__The_,
+                FirstPassFdrTask.TASK_NAME, 1, PerFileRescoreTask.TASK_NAME));
         }
 
         [TestMethod]
@@ -302,7 +463,9 @@ namespace pwiz.Osprey.Test
             config.Reconciliation.Enabled = false;
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "Reconciliation.Enabled");
+            StringAssert.Contains(err, string.Format(
+                OspreyTasksResources.FirstPassFdrTask_ValidateSelection___task__0__requires_cross_run_reconciliation__which_the_configuration_turns_off__The_,
+                FirstPassFdrTask.TASK_NAME, PerFileRescoreTask.TASK_NAME));
         }
 
         // - SecondPassFDR (every run in, reading their reconciled parquets) --
@@ -340,7 +503,7 @@ namespace pwiz.Osprey.Test
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + SecondPassFdrTask.TASK_NAME);
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_LIBRARY.ArgumentText + @" and " + OspreyCommandArgs.ARG_OUTPUT.ArgumentText);
+            StringAssert.Contains(err, OspreyTask.LibraryAndOutputText);
         }
 
         // - ModelDiagnostics (the completed run's own command line, replayed) --
@@ -400,9 +563,8 @@ namespace pwiz.Osprey.Test
                 LibrarySource = LibrarySource.FromPath("ref.blib"),
                 OutputBlib = "out.blib"
             };
-            string err = Program.ValidateArgs(config);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, "No input files");
+            Assert.AreEqual(string.Format(OspreyResources.Program_ValidateArgs_No_input_files_specified__Use__0_, Program.USAGE_INPUT),
+                Program.ValidateArgs(config));
         }
 
         // --- ResolveTask (--task) -----------------------------------------
@@ -432,7 +594,8 @@ namespace pwiz.Osprey.Test
                 new[]
                 {
                     SpectraCacheTask.TASK_NAME, PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME,
-                    PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME, ModelDiagnosticsTask.TASK_NAME
+                    PerFileRescoreTask.TASK_NAME, SecondPassFdrTask.TASK_NAME, TrainingExportTask.TASK_NAME,
+                    ModelDiagnosticsTask.TASK_NAME
                 },
                 OspreyCommandArgs.ARG_TASK.Values);
 
@@ -440,14 +603,10 @@ namespace pwiz.Osprey.Test
             Assert.IsNull(Program.ResolveTask(PerFileRescoreTask.TASK_NAME.ToLowerInvariant(), tasks, out OspreyTask lower));
             Assert.AreEqual(PerFileRescoreTask.TASK_NAME, lower.Name);
 
-            string err = Program.ResolveTask("Bogus", tasks, out OspreyTask none);
+            string err = Program.ResolveTask(@"Bogus", tasks, out OspreyTask none);
             Assert.IsNull(none);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, "unknown task");
-            StringAssert.Contains(err, "Bogus");
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK.ArgumentText);
-            foreach (var task in tasks.All)
-                StringAssert.Contains(err, task.Name);
+            Assert.AreEqual(string.Format(OspreyResources.Program_ResolveTask__0___unknown_task___1____Valid_tasks___2__,
+                OspreyCommandArgs.ARG_TASK.ArgumentText, @"Bogus", string.Join(@", ", tasks.All.Select(t => t.Name))), err);
         }
 
         [TestMethod]
@@ -472,6 +631,7 @@ namespace pwiz.Osprey.Test
                 (FirstPassFdrTask.TASK_NAME,     true,  false, false),
                 (PerFileRescoreTask.TASK_NAME,   false, false, false),
                 (SecondPassFdrTask.TASK_NAME,    false, true,  false),
+                (TrainingExportTask.TASK_NAME,   false, false, false),
                 (ModelDiagnosticsTask.TASK_NAME, false, false, true),
             };
             Assert.AreEqual(OspreyTasks.Create().All.Count, cases.Length, @"every task has a flags row");
@@ -510,6 +670,11 @@ namespace pwiz.Osprey.Test
             // ... except --model-diagnostics, which is the operator's own flag, not a
             // selection's: ModelDiagnostics implies it but a later selection does not revoke it.
             Assert.IsTrue(reselected.ModelDiagnostics);
+            // --training-export is the same kind of flag: --task TrainingExport implies it, and
+            // nothing else does.
+            Assert.IsTrue(TaskConfigs.ForTask(TrainingExportTask.TASK_NAME).TrainingExport.Enabled);
+            Assert.IsFalse(TaskConfigs.ForTask(SecondPassFdrTask.TASK_NAME).TrainingExport.Enabled);
+            Assert.IsFalse(full.TrainingExport.Enabled);
             // A selection without the pipeline it runs is refused: the two travel together.
             Assert.ThrowsException<ArgumentNullException>(() => new OspreyConfig().SelectTask(secondPass, null));
         }
@@ -603,7 +768,7 @@ namespace pwiz.Osprey.Test
         {
             // --task and ordinary flags must NOT throw.
             Parse(OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME, OspreyCommandArgs.ARG_LIBRARY + @"ref.blib", OspreyCommandArgs.ARG_OUTPUT + @"out.blib");
-            // --task=Name is the one joined form Program.Main pre-scans, so it is spelled here.
+            // The joined --task=Name form too (see OspreyCommandArgsTests.TestNameEqualsValueForm).
             Parse(OspreyCommandArgs.ARG_TASK.ArgumentText + @"=" + SecondPassFdrTask.TASK_NAME, OspreyCommandArgs.ARG_LIBRARY + @"ref.blib", OspreyCommandArgs.ARG_OUTPUT + @"out.blib");
         }
 
@@ -685,12 +850,24 @@ namespace pwiz.Osprey.Test
                 year + yearDelta, ordinal + ordinalDelta, branch + branchDelta, doy + doyDelta);
         }
 
+        private const string MD_FILE = @"test.scores.parquet";
+
         private static string CheckMd(string cachedV, string cachedS, string cachedL)
         {
             return ParquetScoreCache.CheckParquetMetadata(
-                "test.scores.parquet",
+                MD_FILE,
                 cachedV, cachedS, cachedL,
                 VALID_SEARCH, VALID_LIB, CURRENT_VERSION);
+        }
+
+        /// <summary>
+        /// The whole message, from the same resource the code formats, so the assertion holds in
+        /// every UI language. {0} is always the file; <paramref name="args"/> are what the code
+        /// passes after it (the recorded and the current version, or the two hashes).
+        /// </summary>
+        private static void AssertMd(string format, string err, params object[] args)
+        {
+            Assert.AreEqual(string.Format(format, new object[] { MD_FILE }.Concat(args).ToArray()), err);
         }
 
         [TestMethod]
@@ -726,7 +903,7 @@ namespace pwiz.Osprey.Test
             // than silently reuse a stale cache behind an easily-missed warning.
             string err = CheckMd(DAILY_DRIFT_VERSION, VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "different daily build");
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_a_different_daily_build_of_Osprey___1___this_is__2____Score_the_file_, err, DAILY_DRIFT_VERSION, CURRENT_VERSION);
         }
 
         [TestMethod]
@@ -734,7 +911,7 @@ namespace pwiz.Osprey.Test
         {
             string err = CheckMd(BRANCH_DRIFT_VERSION, VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "incompatible release identity");
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_Osprey__1___which_is_not_compatible_with_this_build___2____Score_the_, err, BRANCH_DRIFT_VERSION, CURRENT_VERSION);
         }
 
         [TestMethod]
@@ -742,7 +919,7 @@ namespace pwiz.Osprey.Test
         {
             string err = CheckMd(ORDINAL_DRIFT_VERSION, VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "incompatible release identity");
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_Osprey__1___which_is_not_compatible_with_this_build___2____Score_the_, err, ORDINAL_DRIFT_VERSION, CURRENT_VERSION);
         }
 
         [TestMethod]
@@ -750,7 +927,7 @@ namespace pwiz.Osprey.Test
         {
             string err = CheckMd(YEAR_DRIFT_VERSION, VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "incompatible release identity");
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_Osprey__1___which_is_not_compatible_with_this_build___2____Score_the_, err, YEAR_DRIFT_VERSION, CURRENT_VERSION);
         }
 
         [TestMethod]
@@ -758,7 +935,7 @@ namespace pwiz.Osprey.Test
         {
             string err = CheckMd(null, VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "osprey.version");
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_Osprey_build_wrote_it__so_it_cannot_be_reused__Score_the_file_, err);
         }
 
         [TestMethod]
@@ -766,7 +943,7 @@ namespace pwiz.Osprey.Test
         {
             string err = CheckMd(CURRENT_VERSION, null, VALID_LIB);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "osprey.search_hash");
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_the_search_settings_it_was_scored_with__so_it_cannot_be_reused__Score_, err);
         }
 
         [TestMethod]
@@ -774,27 +951,23 @@ namespace pwiz.Osprey.Test
         {
             string err = CheckMd(CURRENT_VERSION, VALID_SEARCH, null);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "osprey.library_hash");
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_spectral_library_it_was_scored_against__so_it_cannot_be_reused__, err);
         }
 
         [TestMethod]
-        public void TestMetadataSearchHashMismatchNamesFieldAndFile()
+        public void TestMetadataSearchHashMismatchNamesFile()
         {
             string err = CheckMd(CURRENT_VERSION, "wrong-hash", VALID_LIB);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "search_hash mismatch");
-            StringAssert.Contains(err, "test.scores.parquet");
-            StringAssert.Contains(err, "wrong-hash");
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_with_different_search_settings_than_this_run_uses__Score_the_file_again_, err, "wrong-hash", VALID_SEARCH);
         }
 
         [TestMethod]
-        public void TestMetadataLibraryHashMismatchNamesFieldAndFile()
+        public void TestMetadataLibraryHashMismatchNamesFile()
         {
             string err = CheckMd(CURRENT_VERSION, VALID_SEARCH, "wrong-lib");
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "library_hash mismatch");
-            StringAssert.Contains(err, "test.scores.parquet");
-            StringAssert.Contains(err, "wrong-lib");
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_against_a_different_spectral_library_than___library_names__Score_the_file_, err, "wrong-lib", VALID_LIB);
         }
 
         [TestMethod]
@@ -804,7 +977,7 @@ namespace pwiz.Osprey.Test
             // compatibility, so refuse to reuse the cache (hard fail).
             string err = CheckMd("garbage", VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "unrecognized osprey version");
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_written_by_an_Osprey_build_this_one_does_not_recognize___1___this_is__2____so_it_, err, "garbage", CURRENT_VERSION);
         }
 
         // --- Library-decoy CLI flags ---------------------------------------

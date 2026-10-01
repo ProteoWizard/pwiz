@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
@@ -113,7 +114,7 @@ namespace pwiz.Osprey.IO
             // ("<library-leaf>.libcache"); only the directory is redirected.
             string cachePath = Path.Combine(
                 ArtifactPaths.ResolveCacheDir(path),
-                Path.GetFileName(path) + ".libcache");
+                Path.GetFileName(path) + LibraryCache.EXT);
 
             // Reuse the binary cache only when it was built from the SAME
             // version of the source library. The library's identity hash
@@ -152,7 +153,7 @@ namespace pwiz.Osprey.IO
                     if (cached != null && cached.Count > 0)
                     {
                         log.LogInfo(string.Format(
-                            "Loaded {0:N0} library precursors from cache '{1}'",
+                            OspreyIOResources.LibraryLoader_Load_Loaded__0__library_precursors_from_cache___1__,
                             cached.Count, cachePath));
                         // Caches written before the normalizer existed still hold Carafe's
                         // per-peptide accessions, and the cache is keyed on the SOURCE hash, so
@@ -174,10 +175,9 @@ namespace pwiz.Osprey.IO
                                 if (entry.IsSpectrumReleased)
                                     skipped++;
                             }
-                            log.LogInfo(LogTag.Mem(@"library-fragments"), string.Format(
-                                @"Skipped library fragments for {0} of {1} entries at load " +
+                            log.LogInfo(LogTag.Mem(@"library-fragments"), @"Skipped library fragments for {0} of {1} library precursors at load " +
                                 @"({2} base_ids retained for the 1st-pass retained set)",
-                                skipped, cached.Count, options.RetainFragmentsFor.Count));
+                                skipped, cached.Count, options.RetainFragmentsFor.Count);
                             log.LogInfo(LogTag.COUNT, LogKey.Format(LogKey.COUNT_LIBRARY_FRAGMENTS_SKIPPED,
                                 @"skipped={0} entries={1} retained={2}",
                                 skipped, cached.Count, options.RetainFragmentsFor.Count));
@@ -188,50 +188,54 @@ namespace pwiz.Osprey.IO
                         // already proven unchanged. The summary is still reported, recovered
                         // from the finished library, so a cached run is not silent about the
                         // pairing fraction (issue #4650).
-                        if (LibrarySuppliesDecoys(config))
+                        if (config.LibrarySuppliesDecoys)
                         {
                             LogCachedPairingSummary(RecoverPairingStats(cached), log);
                             error = DescribeSharedDecoyIds(cached);
-                            if (error != null)
-                                return null;
                         }
+                        else
+                        {
+                            error = DescribeUnflaggedDecoys(cached, config);
+                        }
+                        if (error != null)
+                            return null;
                         return cached;
                     }
                     if (status == LibraryCache.LibraryCacheStatus.IdentityMismatch)
                     {
                         log.LogInfo(string.Format(
-                            "Library cache '{0}' was built from a different version of the " +
-                            "source library; ignoring the stale cache and rebuilding from source.",
+                            OspreyIOResources.LibraryLoader_Load_Library_cache___0___was_built_from_a_different_version_of_the_source_library__ignoring_,
                             cachePath));
                     }
                 }
                 catch (Exception ex)
                 {
                     logWarning(string.Format(
-                        "Failed to load library cache: {0}. Falling back to source.", ex.Message));
+                        OspreyIOResources.LibraryLoader_Load_Failed_to_load_the_library_cache___0___Reading_the_library_file_instead_, ex.Message));
                 }
             }
 
             // Parse from source
-            log.LogInfo(string.Format("Loading spectral library from {0}...", path));
+            log.LogInfo(string.Format(OspreyIOResources.LibraryLoader_Load_Loading_spectral_library_from__0____, path));
 
             List<LibraryEntry> entries;
 
             switch (config.LibrarySource.Format)
             {
                 case LibraryFormat.DiannTsv:
-                    var tsvLoader = new DiannTsvLoader();
+                    var tsvLoader = new DiannTsvLoader(config.FragmentTolerance);
                     entries = tsvLoader.Load(path, log.LogInfo);
+                    tsvLoader.TypeCheck.Report(Path.GetFileName(path), config.Verbose, log.LogInfo, logWarning);
                     break;
 
                 case LibraryFormat.Blib:
-                    var blibLoader = new BlibLoader();
+                    var blibLoader = new BlibLoader(config.FragmentTolerance);
                     entries = blibLoader.Load(path, log.LogInfo);
                     break;
 
                 default:
                     throw new NotSupportedException(string.Format(
-                        "Unsupported library format: {0}", config.LibrarySource.Format));
+                        OspreyIOResources.LibraryLoader_Load_Unsupported_library_format___0_, config.LibrarySource.Format));
             }
 
             // Strip Carafe's per-peptide "_pepNNNNN" pseudo-protein accessions BEFORE dedup:
@@ -246,7 +250,7 @@ namespace pwiz.Osprey.IO
             // so entries carry shared instances by the time they get here.
             entries = LibraryDeduplicator.DeduplicateLibrary(entries);
 
-            log.LogInfo(string.Format("Loaded {0:N0} library precursors", entries.Count));
+            log.LogInfo(string.Format(OspreyIOResources.LibraryLoader_Load_Loaded__0__library_precursors, entries.Count));
 
             // Peak-less entries (0 fragments) are a BiblioSpec MS1-feature-finding artifact and are
             // not valid for DIA search; fail fast at load (issue #4355 / PR #4434 review), before the
@@ -254,11 +258,10 @@ namespace pwiz.Osprey.IO
             // silently exclude it), or a lean OmitFragments load (which would retain a phantom and
             // diverge the FirstPassFDR reconciliation bytes).
             foreach (var entry in entries)
+            {
                 if (entry.Fragments.Count == 0)
-                    throw new InvalidDataException(string.Format(
-                        "Library entry {0} ({1}) has no fragment peaks; peak-less entries support " +
-                        "BiblioSpec MS1 feature finding and are not valid for DIA search.",
-                        entry.Id, entry.ModifiedSequence));
+                    throw PeaklessPrecursorException(entry.Id, entry.ModifiedSequence);
+            }
 
             // FINISH the library before it is cached. Marking and pairing used to run at the
             // caller, after this method returned, so the cache stored a half-built library and
@@ -267,10 +270,16 @@ namespace pwiz.Osprey.IO
             // rewritten from the manifest. Ordering against Normalize and Deduplicate above is
             // unchanged - both still run first, which is what the cross-impl byte parity rests
             // on.
-            if (LibrarySuppliesDecoys(config) &&
+            if (config.LibrarySuppliesDecoys &&
                 !TryFinishSuppliedDecoys(entries, config, log, out error))
             {
                 return null;
+            }
+            if (!config.LibrarySuppliesDecoys)
+            {
+                error = DescribeUnflaggedDecoys(entries, config);
+                if (error != null)
+                    return null;
             }
 
             // Save binary cache for next run
@@ -279,12 +288,12 @@ namespace pwiz.Osprey.IO
                 // libraryHash is non-null here: the source existed to parse.
                 LibraryCache.SaveCache(cachePath, entries, libraryHash);
                 log.LogInfo(string.Format(
-                    "Saved library cache ({0:N0} precursors) to '{1}'",
+                    OspreyIOResources.LibraryLoader_Load_Saved_library_cache___0__precursors__to___1__,
                     entries.Count, cachePath));
             }
             catch (Exception ex)
             {
-                logWarning(string.Format("Failed to save library cache: {0}", ex.Message));
+                logWarning(string.Format(OspreyIOResources.LibraryLoader_Load_Failed_to_save_library_cache___0_, ex.Message));
             }
 
             // Drop the retained fragment arrays now that every fragment-count
@@ -313,6 +322,7 @@ namespace pwiz.Osprey.IO
 
             return entries;
         }
+
         /// <summary>
         /// Finish a supplied-decoy library: mark the decoys, then pair each to its target.
         /// Returns false with <paramref name="error"/> set on the faults that make the library
@@ -342,11 +352,10 @@ namespace pwiz.Osprey.IO
             LibraryDecoyMarker.ApplyLibraryDecoyMarking(
                 library, config.DecoyPrefixes, out var markingStats);
             log.LogInfo(string.Format(
-                "Library decoys are recognized by the protein accession prefixes {0}",
+                OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Library_decoys_are_recognized_by_the_protein_accession_prefixes__0_,
                 FormatPrefixList(config.DecoyPrefixes)));
-            log.LogInfo(LogTag.COUNT, string.Format(
-                @"Library-decoy mode: {0} flagged ({1} via Decoy column, {2} via protein-accession prefix)",
-                markingStats.NMarked, markingStats.NViaColumn, markingStats.NViaPrefix));
+            log.LogInfo(LogTag.COUNT, @"Library-decoy mode: {0} flagged ({1} via Decoy column, {2} via protein-accession prefix)",
+                markingStats.NMarked, markingStats.NViaColumn, markingStats.NViaPrefix);
 
             int nLibraryTargets = 0;
             foreach (var entry in library)
@@ -365,9 +374,7 @@ namespace pwiz.Osprey.IO
             if (nLibraryDecoys == 0)
             {
                 error = string.Format(
-                    @"decoys_in_library mode requested but no library entries match prefixes {0}. " +
-                    @"Check that the library actually contains decoys with one of these prefixes on " +
-                    @"a protein accession, or unset decoys_in_library so Osprey generates decoys.",
+                    OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys___decoys_in_library_was_given__but_no_library_precursor_has_a_protein_accession_starting_,
                     FormatPrefixList(config.DecoyPrefixes));
                 return false;
             }
@@ -385,7 +392,7 @@ namespace pwiz.Osprey.IO
             if (!string.IsNullOrEmpty(config.DecoyPairingManifestPath))
             {
                 log.LogInfo(string.Format(
-                    @"Loading decoy pairing manifest from {0}",
+                    OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Loading_decoy_pairing_manifest_from__0_,
                     config.DecoyPairingManifestPath));
                 DecoyPairingManifest manifest;
                 try
@@ -395,7 +402,7 @@ namespace pwiz.Osprey.IO
                 catch (Exception ex)
                 {
                     error = string.Format(
-                        @"Failed to read decoy pairing manifest {0}: {1}",
+                        OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Failed_to_read_decoy_pairing_manifest__0____1_,
                         config.DecoyPairingManifestPath, ex.Message);
                     return false;
                 }
@@ -410,8 +417,7 @@ namespace pwiz.Osprey.IO
                 if (manifestStats.NProteinsReplaced > 0)
                 {
                     log.LogInfo(string.Format(
-                        "Replaced the protein accessions of {0:N0} library precursors with the " +
-                        "source-protein accessions in the pairing manifest",
+                        OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Replaced_the_protein_accessions_of__0__library_precursors_with_the_source_protein_,
                         manifestStats.NProteinsReplaced));
                 }
                 if (manifestStats.NNewlyMarkedDecoy > 0)
@@ -420,8 +426,7 @@ namespace pwiz.Osprey.IO
                     // predictor stripped the decoy prefix). Update the decoy count so the
                     // pairing fraction is honest.
                     log.LogInfo(string.Format(
-                        "The pairing manifest marked {0:N0} more library precursors as decoys " +
-                        "(their protein accessions have no decoy prefix)",
+                        OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_The_pairing_manifest_marked__0__more_library_precursors_as_decoys__their_protein_,
                         manifestStats.NNewlyMarkedDecoy));
                     LibraryDecoyPairing.CountTargetsAndDecoys(library,
                         out nTargetsForStats, out nDecoysForStats);
@@ -432,8 +437,7 @@ namespace pwiz.Osprey.IO
             else
             {
                 log.LogInfo(
-                    @"Pairing library decoys to targets by amino-acid composition " +
-                    @"(no manifest provided).");
+                    OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Pairing_library_decoys_to_targets_by_amino_acid_composition__no_manifest_provided__);
             }
             pairingStats.NPairedViaComposition =
                 LibraryDecoyPairing.PairLibraryDecoysByComposition(
@@ -453,15 +457,12 @@ namespace pwiz.Osprey.IO
             if (pairingStats.PairedFraction < config.DecoyPairMinFraction)
             {
                 error = string.Format(
-                    "Only {0:F1}% of the library decoys could be paired with a target (at least " +
-                    "{1:F0}% is needed), so FDR estimates would be unreliable. Supply {2}, give " +
-                    "the library decoys the protein accessions of their targets with one of the " +
-                    "prefixes {3}, or leave out {4} so Osprey generates its own decoys.",
+                    OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys_Only__0___of_the_library_decoys_could_be_paired_with_a_target__at_least__1___is_needed___,
                     pairingStats.PairedFraction * 100.0,
                     config.DecoyPairMinFraction * 100.0,
-                    @"--decoy-pairing-manifest",
+                    OspreyArgNames.Text(OspreyArgNames.DECOY_PAIRING_MANIFEST),
                     FormatPrefixList(config.DecoyPrefixes),
-                    @"--decoys-in-library");
+                    OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY));
                 return false;
             }
             return true;
@@ -477,9 +478,7 @@ namespace pwiz.Osprey.IO
         private static void LogPairingSummary(PairingStats stats, IOspreyLog log)
         {
             log.LogInfo(string.Format(
-                "Paired {0:N0} of {1:N0} library decoys with their targets ({2:F1}%): {3:N0} from " +
-                "the pairing manifest, {4:N0} by amino acid composition. {5:N0} decoys and {6:N0} " +
-                "targets have no partner.",
+                OspreyIOResources.LibraryLoader_LogPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2______3__from_the_pairing_manifest_,
                 stats.NPaired, stats.NDecoys, stats.PairedFraction * 100.0,
                 stats.NPairedViaManifest, stats.NPairedViaComposition,
                 stats.NUnpairedDecoys, stats.NUnpairedTargets));
@@ -498,8 +497,7 @@ namespace pwiz.Osprey.IO
         private static void LogCachedPairingSummary(PairingStats stats, IOspreyLog log)
         {
             log.LogInfo(string.Format(
-                "Paired {0:N0} of {1:N0} library decoys with their targets ({2:F1}%, from the " +
-                "library cache). {3:N0} decoys and {4:N0} targets have no partner.",
+                OspreyIOResources.LibraryLoader_LogCachedPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2____from_the_library_cache____3__,
                 stats.NPaired, stats.NDecoys, stats.PairedFraction * 100.0,
                 stats.NUnpairedDecoys, stats.NUnpairedTargets));
         }
@@ -514,15 +512,31 @@ namespace pwiz.Osprey.IO
             List<int> indices, string manifestPath)
         {
             var sb = new StringBuilder();
-            sb.AppendFormat(
-                @"The library and its decoy pairing manifest disagree: {0} library entries are " +
-                @"decoys by their protein accessions, but the manifest {1} lists their sequence " +
-                @"as a target. This happens when a library merges a decoy with an identical real " +
-                @"target into one row. Regenerate the library so each row is one or the other.",
+            sb.AppendFormat(OspreyIOResources.LibraryLoader_DescribeDecoysListedAsTargets_The_library_and_its_decoy_pairing_manifest_disagree___0__library_precursors_are_,
                 indices.Count, manifestPath);
             foreach (int i in indices)
                 sb.AppendLine().Append(@"  ").Append(DescribeEntry(library[i]));
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// The load-time error for library precursors whose protein accessions mark them as
+        /// decoys (<see cref="OspreyConfig.DecoyPrefixes"/>) in a search that generates its own,
+        /// or null when there are none. Nothing else flags them - a .blib has no decoy column -
+        /// so they would be searched as targets, pass FDR as targets of a decoy protein, and
+        /// shape the generated decoys. A precursor a DIA-NN Decoy column flags is not counted:
+        /// decoy generation already drops it.
+        /// </summary>
+        private static string DescribeUnflaggedDecoys(List<LibraryEntry> library, OspreyConfig config)
+        {
+            var unflagged = library.Where(entry => !entry.IsDecoy && entry.LooksLikeLibraryDecoy(config.DecoyPrefixes))
+                .ToList();
+            if (unflagged.Count == 0)
+                return null;
+            return string.Format(
+                OspreyIOResources.LibraryLoader_DescribeUnflaggedDecoys__0__library_precursors_have_protein_accessions_marking_them_as_decoys,
+                unflagged.Count, FormatPrefixList(config.DecoyPrefixes), unflagged[0].ModifiedSequence,
+                OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY));
         }
 
         /// <summary>
@@ -538,12 +552,10 @@ namespace pwiz.Osprey.IO
             if (groups.Count == 0)
                 return null;
             var sb = new StringBuilder();
-            sb.AppendFormat(
-                @"Library-decoy pairing gave {0} entry_ids to more than one decoy. Each decoy must " +
-                @"pair with a distinct target.", groups.Count);
+            sb.AppendFormat(OspreyIOResources.LibraryLoader_DescribeSharedDecoyIds_Library_decoy_pairing_gave__0__library_precursor_IDs_to_more_than_one_decoy__Each_decoy_, groups.Count);
             foreach (var group in groups)
             {
-                sb.AppendLine().AppendFormat(@"  entry_id {0}:", library[group[0]].Id);
+                sb.AppendLine().Append(@"  ").AppendFormat(OspreyIOResources.LibraryLoader_DescribeSharedDecoyIds_Library_precursor_ID__0__, library[group[0]].Id);
                 foreach (int i in group)
                     sb.AppendLine().Append(@"    ").Append(DescribeEntry(library[i]));
             }
@@ -602,12 +614,12 @@ namespace pwiz.Osprey.IO
 
         private static string FormatPrefixList(IList<string> prefixes)
         {
-            var sb = new StringBuilder("[");
+            var sb = new StringBuilder(@"[");
             if (prefixes != null)
             {
                 for (int i = 0; i < prefixes.Count; i++)
                 {
-                    if (i > 0) sb.Append(", ");
+                    if (i > 0) sb.Append(@", ");
                     sb.Append('"').Append(prefixes[i] ?? string.Empty).Append('"');
                 }
             }
@@ -631,12 +643,14 @@ namespace pwiz.Osprey.IO
         private static string LibraryCompositionHash(OspreyConfig config)
         {
             var sb = new StringBuilder();
+            // ReSharper disable LocalizableElement
             sb.AppendFormat("library:{0}\n", config.Identity.LibraryIdentityHash());
             sb.AppendFormat(CultureInfo.InvariantCulture, "decoys_in_library:{0}\n",
                 config.DecoysInLibrary);
             sb.AppendFormat("decoy_method:{0}\n", config.DecoyMethod);
             sb.AppendFormat("decoy_prefixes:{0}\n", FormatPrefixList(config.DecoyPrefixes));
             AppendFileIdentity(sb, @"pairing_manifest", config.DecoyPairingManifestPath);
+            sb.Append(LibraryReaderTerms(config));
             using (var sha256 = SHA256.Create())
             {
                 byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
@@ -645,6 +659,29 @@ namespace pwiz.Osprey.IO
                     result.Append(hashBytes[i].ToString(@"x2", CultureInfo.InvariantCulture));
                 return result.ToString();
             }
+        }
+
+        /// <summary>
+        /// The composition terms that name a reader version, so a library whose parse changed is
+        /// re-read after an upgrade: the DIA-NN TSV reader's, and the blib reader's with the
+        /// fragment tolerance the cached types were computed within
+        /// (<see cref="BlibLoader.CacheTerm"/>).
+        /// </summary>
+        internal static string LibraryReaderTerms(OspreyConfig config)
+        {
+            var source = config.LibrarySource;
+            if (source == null)
+                return string.Empty;
+            // A cache is only as validated as the reader that wrote it: a DIA-NN TSV cached
+            // before the reader refused invalid lines is re-read once, so a bad library is
+            // reported instead of served from its cache. A valid library caches the same bytes.
+            if (source.Format == LibraryFormat.DiannTsv)
+                return string.Format(CultureInfo.InvariantCulture, "tsv_reader:{0}\n", DiannTsvLoader.READER_VERSION);
+            if (source.Format != LibraryFormat.Blib)
+                return string.Empty;
+            // Every blib's peaks are typed from m/z within the search's fragment tolerance, and
+            // the cache holds the types, so a different tolerance is a different cache.
+            return BlibLoader.CacheTerm(config.FragmentTolerance);
         }
 
         /// <summary>Name, size and mtime of one file, or just its name when it is absent.</summary>
@@ -663,17 +700,18 @@ namespace pwiz.Osprey.IO
             long mtimeSecs = (long)(info.LastWriteTimeUtc
                 - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
             sb.AppendFormat(CultureInfo.InvariantCulture, "{0}_mtime:{1}\n", label, mtimeSecs);
+            // ReSharper restore LocalizableElement
         }
 
         /// <summary>
-        /// Whether the library supplies its own decoys, so the load must mark and pair them.
-        /// The same predicate the caller used to apply - <c>DecoyMethod.FromLibrary</c> is a
-        /// synonym for <c>DecoysInLibrary</c>, and treating it as one is what fixed library-decoy
-        /// mode silently falling through to Reverse generation.
+        /// The load failure for a library precursor with no fragment peaks, shared by the source
+        /// loaders and <see cref="LibraryCache"/> so both report it in the same words.
         /// </summary>
-        private static bool LibrarySuppliesDecoys(OspreyConfig config)
+        internal static InvalidDataException PeaklessPrecursorException(uint id, string modifiedSequence)
         {
-            return config.DecoysInLibrary || config.DecoyMethod == DecoyMethod.FromLibrary;
+            return new InvalidDataException(string.Format(
+                OspreyIOResources.LibraryLoader_PeaklessPrecursorException_Library_precursor__0____1___has_no_fragment_peaks_,
+                id, modifiedSequence));
         }
     }
 }

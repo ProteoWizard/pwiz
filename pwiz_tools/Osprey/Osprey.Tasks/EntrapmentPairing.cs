@@ -84,8 +84,8 @@ namespace pwiz.Osprey.Tasks
             if (MetClipDroppedCount > 0)
             {
                 log.LogInfo(LogTag.ENTRAPMENT, CountText.Format(MetClipDroppedCount,
-                    "Excluded 1 entrapment peptide with no target pair (an N-terminal Met clip) from the FDRBench input and the diagnostics.",
-                    "Excluded {0:N0} entrapment peptides with no target pair (N-terminal Met clips) from the FDRBench input and the diagnostics."));
+                    OspreyTasksResources.EntrapmentPairing_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair__an_N_terminal_Met_clip__from_the_,
+                    OspreyTasksResources.EntrapmentPairing_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair__N_terminal_Met_clips__from_the_));
             }
             if (UnexplainedEntrapment.Count > 0)
             {
@@ -93,8 +93,8 @@ namespace pwiz.Osprey.Tasks
                 for (int i = 0; i < UnexplainedEntrapment.Count && i < 3; i++)
                     examples.Add(UnexplainedEntrapment[i]);
                 log.LogInfo(LogTag.ENTRAPMENT, CountText.Format(UnexplainedEntrapment.Count,
-                    "Excluded 1 entrapment peptide with no target pair and no known cause ({1}). Check the library and its pairing manifest.",
-                    "Excluded {0:N0} entrapment peptides with no target pair and no known cause (e.g. {1}). Check the library and its pairing manifest.",
+                    OspreyTasksResources.EntrapmentPairing_LogSummary_Excluded_1_entrapment_peptide_with_no_target_pair_and_no_known_cause___1____Check_the_,
+                    OspreyTasksResources.EntrapmentPairing_LogSummary_Excluded__0__entrapment_peptides_with_no_target_pair_and_no_known_cause__e_g___1____Check_,
                     string.Join(@", ", examples)));
             }
         }

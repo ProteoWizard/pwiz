@@ -55,9 +55,9 @@ namespace pwiz.Osprey.Scoring
     /// <summary>median_polish_cosine: library cosine of the median-polish fit (0 if no fit).</summary>
     internal sealed class MedianPolishCosineCalc : DetailedOspreyFeatureCalculator
     {
-        public override string Name { get { return "median_polish_cosine"; } }
+        public override string Name { get { return @"median_polish_cosine"; } }
 
-        public override string DisplayName { get { return "Median-polish cosine"; } }
+        public override string DisplayName { get { return OspreyScoringResources.MedianPolishCosineCalc_DisplayName_Median_polish_cosine; } }
 
         public override bool IsReversedScore { get { return false; } }   // higher is better
 
@@ -72,9 +72,9 @@ namespace pwiz.Osprey.Scoring
     /// <summary>median_polish_residual_ratio: residual ratio of the fit (1.0 if no fit).</summary>
     internal sealed class MedianPolishResidualRatioCalc : DetailedOspreyFeatureCalculator
     {
-        public override string Name { get { return "median_polish_residual_ratio"; } }
+        public override string Name { get { return @"median_polish_residual_ratio"; } }
 
-        public override string DisplayName { get { return "Median-polish residual ratio"; } }
+        public override string DisplayName { get { return OspreyScoringResources.MedianPolishResidualRatioCalc_DisplayName_Median_polish_residual_ratio; } }
 
         public override bool IsReversedScore { get { return true; } }   // lower is better
 
@@ -91,9 +91,9 @@ namespace pwiz.Osprey.Scoring
     /// <summary>median_polish_min_fragment_r2: minimum per-fragment R^2 of the fit (0 if no fit).</summary>
     internal sealed class MedianPolishMinFragmentR2Calc : DetailedOspreyFeatureCalculator
     {
-        public override string Name { get { return "median_polish_min_fragment_r2"; } }
+        public override string Name { get { return @"median_polish_min_fragment_r2"; } }
 
-        public override string DisplayName { get { return "Median-polish min fragment R2"; } }
+        public override string DisplayName { get { return OspreyScoringResources.MedianPolishMinFragmentR2Calc_DisplayName_Median_polish_min_fragment_R2; } }
 
         public override bool IsReversedScore { get { return false; } }   // higher is better
 
@@ -108,9 +108,9 @@ namespace pwiz.Osprey.Scoring
     /// <summary>median_polish_residual_correlation: residual correlation of the fit (0 if no fit).</summary>
     internal sealed class MedianPolishResidualCorrelationCalc : DetailedOspreyFeatureCalculator
     {
-        public override string Name { get { return "median_polish_residual_correlation"; } }
+        public override string Name { get { return @"median_polish_residual_correlation"; } }
 
-        public override string DisplayName { get { return "Median-polish residual correlation"; } }
+        public override string DisplayName { get { return OspreyScoringResources.MedianPolishResidualCorrelationCalc_DisplayName_Median_polish_residual_correlation; } }
 
         public override bool IsReversedScore { get { return true; } }   // lower is better
 

@@ -177,9 +177,11 @@ namespace pwiz.Osprey.Core
         /// OSPREY_CAL_SAMPLE_SIZE: override the calibration library sample size (targets
         /// sampled per attempt). Default 0 = use the configured CalibrationSampleSize
         /// (100K). Experimental lever for testing whether a larger sample surfaces
-        /// proportionally more near-zero-FDR calibration anchors on rich files.
+        /// proportionally more near-zero-FDR calibration anchors on rich files. Re-read on
+        /// each access (once per file), so an in-process test can drive the sampling path on
+        /// a library smaller than the default sample.
         /// </summary>
-        public static readonly int CalSampleSizeOverride = ParseIntOrZero(@"OSPREY_CAL_SAMPLE_SIZE");
+        public static int CalSampleSizeOverride => ParseIntOrZero(@"OSPREY_CAL_SAMPLE_SIZE");
 
         // Note: the OSPREY_EXIT_AFTER_SCORING env var that used to live here
         // was retired in favor of the --task PerFileScoring CLI flag. See the HPC
@@ -303,7 +305,7 @@ namespace pwiz.Osprey.Core
         /// after Stage 5, including entries already judged false. They read only the identity
         /// fields, never the spectra - so dropping entries would silently move protein FDR,
         /// while dropping fragments cannot. The blib write is safe for a separate reason:
-        /// <c>BlibOutputWriter.PrecompressSpectra</c> reads fragments only for
+        /// <c>BlibOutputWriter.PrepareSpectra</c> reads fragments only for
         /// <c>bestByPrecursor</c>, which is derived from the post-compaction survivors, so
         /// blib-written is a SUBSET of what is retained here.</para>
         ///
@@ -408,12 +410,13 @@ namespace pwiz.Osprey.Core
         /// <para>An environment variable rather than a command-line argument because it is a
         /// developer lever, not a product setting: it replaced <c>--fdr-method</c>, which was
         /// removed with no alias (#4543). Read once at process start and carried in-process as
-        /// <see cref="OspreyConfig.FdrMethod"/>, which the command-line parse sets from it. The
+        /// <see cref="OspreyConfig.FdrMethod"/>, which the command-line parse sets from it; a test
+        /// that runs the whole pipeline sets this instead, as it sets <see cref="MeanBestN"/>. The
         /// trees and every <c>OSPREY_GBT_*</c> setting key the FirstPassFDR, PerFileRescoring
         /// and SecondPassFDR validity keys (<c>PercolatorEngine.GbdtValidityKeySuffix</c>); the
         /// SVM adds nothing to them.</para>
         /// </summary>
-        public static readonly FdrMethod FdrModel =
+        public static FdrMethod FdrModel { get; internal set; } =
             ParseFdrModel(Environment.GetEnvironmentVariable(@"OSPREY_FDR_MODEL")) ?? FdrMethod.Percolator;
 
         /// <summary>The startup error for an unrecognized OSPREY_FDR_MODEL, or null when the
@@ -540,8 +543,8 @@ namespace pwiz.Osprey.Core
 
         /// <summary>OSPREY_SVM_C_TOLERANCE exactly as set, or null when unset: an override for
         /// <see cref="DEFAULT_SVM_C_SELECTION_TOLERANCE"/>, a number in [0, 1). 0 restores the
-        /// strict maximum that the Rust implementation uses, for cross-implementation
-        /// comparisons.</summary>
+        /// strict maximum (the pre-#4703 rule), for A/B work. Rust has used the same 1% default
+        /// since maccoss/osprey#69, with no opt-out.</summary>
         public static readonly string SvmCSelectionToleranceSetting =
             Environment.GetEnvironmentVariable(@"OSPREY_SVM_C_TOLERANCE");
 
@@ -751,8 +754,11 @@ namespace pwiz.Osprey.Core
         /// <para>Deliberately NOT in any validity key: it changes no output, so including it
         /// would invalidate every cached artifact the moment it was flipped, turning a
         /// diagnostic into a re-run.</para>
+        ///
+        /// <para>Re-read on each access rather than fixed at class load, so an in-process test
+        /// can switch it per command line with <see cref="OverrideVariables"/>.</para>
         /// </summary>
-        public static readonly bool Pass2VerifyWorker =
+        public static bool Pass2VerifyWorker =>
             IsSetAndNotZero(@"OSPREY_PASS2_VERIFY_WORKER");
 
         /// <summary>
@@ -922,7 +928,7 @@ namespace pwiz.Osprey.Core
         {
             if (!ExperimentAggMeanBest)
             {
-                return string.Format(@"Experiment aggregation: {0} (default - best observation per unit)",
+                return string.Format(OspreyCoreResources.OspreyEnvironment_DescribeExperimentAgg_Experiment_aggregation___0___default___best_observation_per_unit_,
                     EXPERIMENT_AGG_MAX);
             }
             return string.Format(

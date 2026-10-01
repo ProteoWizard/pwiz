@@ -179,9 +179,7 @@ namespace pwiz.Osprey.IO
             // picked-protein FDR break, and the protein-compact second pass gets an empty stratum
             // because no protein can reach 2 detected peptides.
             logWarning?.Invoke(string.Format(
-                "Library protein accessions carry the per-peptide '_pepNNNNN' suffix that Carafe " +
-                "adds (e.g. '{2}' -> '{3}'); removing it maps {0:N0} accessions to {1:N0} proteins. " +
-                "Without this, every peptide would count as its own protein.",
+                OspreyIOResources.CarafeProteinIdNormalizer_Normalize_Library_protein_accessions_carry_the_per_peptide___pepNNNNN__suffix_that_Carafe_adds__e_g_,
                 cleaned.Count, realAccessions.Count, example, exampleCleaned));
             return nEntries;
         }
