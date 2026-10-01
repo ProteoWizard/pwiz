@@ -526,6 +526,7 @@ namespace pwiz.SkylineTest
             TestPentaneAdduct("[M+CF3COO]", "C7H12F3O2", -1, coverage);
             TestPentaneAdduct("[M-2H+Na]", "C5H10Na", -1, coverage);
             TestPentaneAdduct("[M+CH3COO]", "C7H15O2", -1, coverage);
+            TestPentaneAdduct("[M+CH3CO2]", "C7H15O2", -1, coverage);
             TestPentaneAdduct("[M+Cl]", "C5H12Cl", -1, coverage);
             TestPentaneAdduct("[M+HCOO]", "C6H13O2", -1, coverage);
             TestTaxolAdduct("[M-H-CO2]", 808.33384, -1, coverage);
