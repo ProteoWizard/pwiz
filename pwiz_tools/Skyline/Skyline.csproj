@@ -162,14 +162,6 @@
     <EmbeddedResource Include="Model\Irt\StandardsDocuments\*.sky" />
   </ItemGroup>
 
-  <!-- NVIDIA install/uninstall .bat templates loaded via
-       GetManifestResourceStream(typeof(PythonInstaller), "...-bat.txt").
-       SDK default globs don't embed .txt. -->
-  <ItemGroup>
-    <EmbeddedResource Include="Model\Tools\InstallNvidiaLibraries-bat.txt" />
-    <EmbeddedResource Include="Model\Tools\UninstallNvidiaLibraries-bat.txt" />
-  </ItemGroup>
-
   <!-- log4net runtime config - [DeploymentItem("SkylineLog4Net.config")] in
        AbstractUnitTest.cs assumes this file lands next to the assembly. Legacy
        csproj emitted it via a None entry with CopyToOutputDirectory. SDK glob
@@ -320,6 +312,8 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\CarafeSharp\CarafeSharp.Models\CarafeSharp.Models.csproj" />
+    <!-- Reads the fine-tuned models CarafeSharp saves as .carafemodel files -->
+    <ProjectReference Include="..\CarafeSharp\CarafeSharp.Proteome\CarafeSharp.Proteome.csproj" />
     <PackageReference Include="libtorch-cpu-win-x64" Version="2.10.0" Condition="'$(SkylineTorch)' == 'cpu'" />
     <PackageReference Include="libtorch-cuda-12.8-win-x64" Version="2.10.0" Condition="'$(SkylineTorch)' == 'cuda'" />
     <!-- The pinned AlphaPeptDeep v1 pretrained models, beside the executable where

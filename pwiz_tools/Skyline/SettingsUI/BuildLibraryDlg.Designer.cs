@@ -34,12 +34,6 @@ namespace pwiz.Skyline.SettingsUI
             this.btnNext = new System.Windows.Forms.Button();
             this.btnPrevious = new System.Windows.Forms.Button();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
-            this.btnLearningDocBrowse = new System.Windows.Forms.Button();
-            this.textLearningDoc = new System.Windows.Forms.TextBox();
-            this.label5 = new System.Windows.Forms.Label();
-            this.toolTipProteinDatabase = new System.Windows.Forms.ToolTip(this.components);
-            this.toolTipTrainingData = new System.Windows.Forms.ToolTip(this.components);
-            this.toolTipMsMsData = new System.Windows.Forms.ToolTip(this.components);
             this.tabFiles = new System.Windows.Forms.TabPage();
             this.btnAddDirectory = new System.Windows.Forms.Button();
             this.label7 = new System.Windows.Forms.Label();
@@ -57,15 +51,16 @@ namespace pwiz.Skyline.SettingsUI
             this.radioKoinaSource = new System.Windows.Forms.RadioButton();
             this.koinaInfoSettingsBtn = new System.Windows.Forms.LinkLabel();
             this.radioAlphaSource = new System.Windows.Forms.RadioButton();
-            this.radioCarafeSource = new System.Windows.Forms.RadioButton();
             this.comboStandards = new System.Windows.Forms.ComboBox();
             this.textPath = new System.Windows.Forms.TextBox();
             this.tabControlDataSource = new pwiz.Skyline.Controls.WizardPages();
             this.tabKoinaSource = new System.Windows.Forms.TabPage();
             this.ceCombo = new System.Windows.Forms.ComboBox();
             this.ceLabel = new System.Windows.Forms.Label();
-            this.tabCarafeSource = new System.Windows.Forms.TabPage();
             this.tabAlphaSource = new System.Windows.Forms.TabPage();
+            this.btnCarafeModelBrowse = new System.Windows.Forms.Button();
+            this.textCarafeModel = new System.Windows.Forms.TextBox();
+            this.labelCarafeModel = new System.Windows.Forms.Label();
             this.tabFilesSource = new System.Windows.Forms.TabPage();
             this.cbFilter = new System.Windows.Forms.CheckBox();
             this.cbKeepRedundant = new System.Windows.Forms.CheckBox();
@@ -79,6 +74,7 @@ namespace pwiz.Skyline.SettingsUI
             this.dataSourceGroupBox.SuspendLayout();
             this.tabControlDataSource.SuspendLayout();
             this.tabKoinaSource.SuspendLayout();
+            this.tabAlphaSource.SuspendLayout();
             this.tabFilesSource.SuspendLayout();
             this.tabControlMain.SuspendLayout();
             this.SuspendLayout();
@@ -109,21 +105,6 @@ namespace pwiz.Skyline.SettingsUI
             this.helpTip.AutoPopDelay = 32767;
             this.helpTip.InitialDelay = 500;
             this.helpTip.ReshowDelay = 100;
-            // 
-            // btnLearningDocBrowse
-            // 
-            resources.ApplyResources(this.btnLearningDocBrowse, "btnLearningDocBrowse");
-            this.btnLearningDocBrowse.Name = "btnLearningDocBrowse";
-            // 
-            // textLearningDoc
-            // 
-            resources.ApplyResources(this.textLearningDoc, "textLearningDoc");
-            this.textLearningDoc.Name = "textLearningDoc";
-            // 
-            // label5
-            // 
-            resources.ApplyResources(this.label5, "label5");
-            this.label5.Name = "label5";
             // 
             // tabFiles
             // 
@@ -218,7 +199,6 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // dataSourceGroupBox
             // 
-            this.dataSourceGroupBox.Controls.Add(this.radioCarafeSource);
             this.dataSourceGroupBox.Controls.Add(this.radioAlphaSource);
             this.dataSourceGroupBox.Controls.Add(this.koinaInfoSettingsBtn);
             this.dataSourceGroupBox.Controls.Add(this.radioKoinaSource);
@@ -259,14 +239,6 @@ namespace pwiz.Skyline.SettingsUI
             this.radioAlphaSource.UseVisualStyleBackColor = true;
             this.radioAlphaSource.CheckedChanged += new System.EventHandler(this.dataSourceRadioButton_CheckedChanged);
             // 
-            // radioCarafeSource
-            // 
-            resources.ApplyResources(this.radioCarafeSource, "radioCarafeSource");
-            this.radioCarafeSource.Name = "radioCarafeSource";
-            this.radioCarafeSource.TabStop = true;
-            this.radioCarafeSource.UseVisualStyleBackColor = true;
-            this.radioCarafeSource.CheckedChanged += new System.EventHandler(this.dataSourceRadioButton_CheckedChanged);
-            // 
             // comboStandards
             // 
             this.comboStandards.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -288,7 +260,6 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.tabControlDataSource, "tabControlDataSource");
             this.tabControlDataSource.Controls.Add(this.tabFilesSource);
             this.tabControlDataSource.Controls.Add(this.tabAlphaSource);
-            this.tabControlDataSource.Controls.Add(this.tabCarafeSource);
             this.tabControlDataSource.Controls.Add(this.tabKoinaSource);
             this.tabControlDataSource.Name = "tabControlDataSource";
             this.tabControlDataSource.SelectedIndex = 0;
@@ -314,17 +285,31 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.ceLabel, "ceLabel");
             this.ceLabel.Name = "ceLabel";
             // 
-            // tabCarafeSource
-            // 
-            this.tabCarafeSource.BackColor = System.Drawing.SystemColors.Control;
-            resources.ApplyResources(this.tabCarafeSource, "tabCarafeSource");
-            this.tabCarafeSource.Name = "tabCarafeSource";
-            // 
             // tabAlphaSource
             // 
             this.tabAlphaSource.BackColor = System.Drawing.SystemColors.Control;
+            this.tabAlphaSource.Controls.Add(this.btnCarafeModelBrowse);
+            this.tabAlphaSource.Controls.Add(this.textCarafeModel);
+            this.tabAlphaSource.Controls.Add(this.labelCarafeModel);
             resources.ApplyResources(this.tabAlphaSource, "tabAlphaSource");
             this.tabAlphaSource.Name = "tabAlphaSource";
+            //
+            // btnCarafeModelBrowse
+            //
+            resources.ApplyResources(this.btnCarafeModelBrowse, "btnCarafeModelBrowse");
+            this.btnCarafeModelBrowse.Name = "btnCarafeModelBrowse";
+            this.btnCarafeModelBrowse.UseVisualStyleBackColor = true;
+            this.btnCarafeModelBrowse.Click += new System.EventHandler(this.btnCarafeModelBrowse_Click);
+            //
+            // textCarafeModel
+            //
+            resources.ApplyResources(this.textCarafeModel, "textCarafeModel");
+            this.textCarafeModel.Name = "textCarafeModel";
+            //
+            // labelCarafeModel
+            //
+            resources.ApplyResources(this.labelCarafeModel, "labelCarafeModel");
+            this.labelCarafeModel.Name = "labelCarafeModel";
             // 
             // tabFilesSource
             // 
@@ -408,6 +393,8 @@ namespace pwiz.Skyline.SettingsUI
             this.tabControlDataSource.ResumeLayout(false);
             this.tabKoinaSource.ResumeLayout(false);
             this.tabKoinaSource.PerformLayout();
+            this.tabAlphaSource.ResumeLayout(false);
+            this.tabAlphaSource.PerformLayout();
             this.tabFilesSource.ResumeLayout(false);
             this.tabFilesSource.PerformLayout();
             this.tabControlMain.ResumeLayout(false);
@@ -420,12 +407,6 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Button btnNext;
         private System.Windows.Forms.Button btnPrevious;
         private System.Windows.Forms.ToolTip helpTip;
-        private System.Windows.Forms.Button btnLearningDocBrowse;
-        private System.Windows.Forms.TextBox textLearningDoc;
-        private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.ToolTip toolTipProteinDatabase;
-        private System.Windows.Forms.ToolTip toolTipTrainingData;
-        private System.Windows.Forms.ToolTip toolTipMsMsData;
         private System.Windows.Forms.TabPage tabFiles;
         private FileUI.PeptideSearch.BuildLibraryGridView gridInputFiles;
         private System.Windows.Forms.Button btnAddPaths;
@@ -441,7 +422,9 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.CheckBox cbKeepRedundant;
         private System.Windows.Forms.CheckBox cbFilter;
         private System.Windows.Forms.TabPage tabAlphaSource;
-        private System.Windows.Forms.TabPage tabCarafeSource;
+        private System.Windows.Forms.Button btnCarafeModelBrowse;
+        private System.Windows.Forms.TextBox textCarafeModel;
+        private System.Windows.Forms.Label labelCarafeModel;
         private System.Windows.Forms.TabPage tabKoinaSource;
         private System.Windows.Forms.Label ceLabel;
         private System.Windows.Forms.ComboBox ceCombo;
@@ -449,7 +432,6 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.TextBox textName;
         private System.Windows.Forms.ComboBox comboStandards;
         private System.Windows.Forms.GroupBox dataSourceGroupBox;
-        private System.Windows.Forms.RadioButton radioCarafeSource;
         private System.Windows.Forms.RadioButton radioAlphaSource;
         private System.Windows.Forms.LinkLabel koinaInfoSettingsBtn;
         private System.Windows.Forms.RadioButton radioKoinaSource;

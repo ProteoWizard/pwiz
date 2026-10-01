@@ -343,38 +343,11 @@
   <data name="ToolUpdatesDlg_InstallUpdates_Installing_updates_to__0_" xml:space="preserve">
     <value>{0}にアップデートのインストール中</value>
   </data>
-  <data name="NvidiaInstaller_OkDialog_Successfully_set_up_Nvidia" xml:space="preserve">
-    <value>Nvidiaライブラリの設定に成功しました</value>
-  </data>
-  <data name="NvidiaInstaller_OkDialog_Failed_to_set_up_Nvidia" xml:space="preserve">
-    <value>Nvidiaライブラリの設定に失敗しました</value>
-  </data>
-  <data name="NvidiaInstaller_Setup_Nvidia_Libraries" xml:space="preserve">
-    <value>Nvidia GPU演算を設定中です</value>
-  </data>
-  <data name="PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment" xml:space="preserve">
-    <value>Python仮想環境の設定に成功しました</value>
-  </data>
-  <data name="PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment" xml:space="preserve">
-    <value>Python仮想環境の設定に失敗しました</value>
-  </data>
   <data name="PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required" xml:space="preserve">
     <value>{1}にはPython{0}の設定が必要です。設定するには「OK」をクリックしてください。</value>
   </data>
   <data name="PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required_please_wait" xml:space="preserve">
     <value>{1}にはPython {0}の設定が必要です。Pythonのインストールと設定が終わるまでお待ちください ...</value>
-  </data>
-  <data name="PythonInstaller_Requesting_Administrator_elevation" xml:space="preserve">
-    <value>インストールを完了するには管理者権限が必要です。必要な場合はシステム管理者に連絡してください。継続しますか？</value>
-  </data>
-  <data name="PythonInstaller_Install_Nvidia_Library" xml:space="preserve">
-    <value>SkylineはこのコンピュータにNvidia GPUを検出しました。Nvidia GPU計算を設定して、AI処理を高速化しますか？この機能をインストールするには、権限昇格が必要です。</value>
-  </data>
-  <data name="PythonInstaller_Downloading_Nvidia_Library" xml:space="preserve">
-    <value>Nvidia Cuda ToolkitとDeep Neural Networkソフトウェアをダウンロード中です。</value>
-  </data>
-  <data name="PythonInstaller_Installing_Nvidia_Library" xml:space="preserve">
-    <value>Nvidia Cuda ToolkitとDeep Neural Networkソフトウェアをインストール中です。</value>
   </data>
   <data name="SkylineProcessRunner_Timeout" xml:space="preserve">
     <value>SkylineProcessRunnerは{0}ミリ秒後にタイムアウトします</value>

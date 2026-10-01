@@ -298,6 +298,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Predicting with the fine-tuned model {0}: {1}.
+        /// </summary>
+        public static string AlphapeptdeepLibraryBuilder_OpenCarafeModel_Predicting_with_the_fine_tuned_model__0____1_ {
+            get {
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_OpenCarafeModel_Predicting_with_the_fine_tuned_model__0____1_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Failed to predict the library with AlphaPeptDeep..
         /// </summary>
         public static string AlphapeptdeepLibraryBuilder_PredictSpectralLibrary_Failed_to_predict_the_library_with_AlphaPeptDeep_ {
@@ -1381,20 +1390,6 @@ namespace pwiz.Skyline.Model {
         public static string MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries {
             get {
                 return ResourceManager.GetString("MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Administrative privileges are required to install Nvidia Cuda tools the first time. Consult with your system administrator if you don&apos;t have the necessary permissions and ask them to run the following script:
-        ///
-        ///{0}
-        ///
-        ///Would you like to continue?
-        ///    .
-        /// </summary>
-        public static string NvidiaInstaller_Requesting_Administrator_elevation {
-            get {
-                return ResourceManager.GetString("NvidiaInstaller_Requesting_Administrator_elevation", resourceCulture);
             }
         }
         

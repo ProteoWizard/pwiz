@@ -340,7 +340,16 @@ namespace pwiz.Skyline.SettingsUI {
                 return ResourceManager.GetString("BuildLibraryDlg_FindInputFiles_Finding_library_input_files_in", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Fine-tuned Carafe Models.
+        /// </summary>
+        public static string BuildLibraryDlg_ShowCarafeModelDlg_Fine_tuned_Carafe_Models {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_ShowCarafeModelDlg_Fine_tuned_Carafe_Models", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Access violation attempting to write to {0}..
         /// </summary>
@@ -406,7 +415,25 @@ namespace pwiz.Skyline.SettingsUI {
                 return ResourceManager.GetString("BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to The file {0} does not exist..
+        /// </summary>
+        public static string BuildLibraryDlg_ValidateCarafeModel_The_file__0__does_not_exist_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_ValidateCarafeModel_The_file__0__does_not_exist_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The file {0} is not a valid fine-tuned Carafe model..
+        /// </summary>
+        public static string BuildLibraryDlg_ValidateCarafeModel_The_file__0__is_not_a_valid_fine_tuned_Carafe_model_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_ValidateCarafeModel_The_file__0__is_not_a_valid_fine_tuned_Carafe_model_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Library {0}.
         /// </summary>

@@ -149,7 +149,8 @@ namespace SkylineNightly
                     // Register the task in the root folder
                     ts.RootFolder.RegisterTaskDefinition(Nightly.NightlyTaskNameWithUser, td);
 
-                    // Registry setting LongPathsEnabled here for python to install pip and configure packages required to run AlphaPeptDeep
+                    // Developer machines are expected to have long paths enabled, which the long-path-aware
+                    // Skyline and TestRunner need to use paths longer than MAX_PATH
                     Registry.SetValue(REG_FILESYSTEM_KEY, REG_LONGPATHS_ENABLED, 1);
                 }
             }

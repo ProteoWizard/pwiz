@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.BiblioSpec;
+using pwiz.CarafeSharp.Proteome;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -81,20 +82,17 @@ namespace pwiz.Skyline.SettingsUI
             BiblioSpecLiteBuilder.EXT_SSL,
         };
 
-        public enum Pages { properties, files, learning }
+        public enum Pages { properties, files }
 
         public class PropertiesPage : IFormView { }
         public class FilesPage : IFormView { }
-        public class LearningPage : IFormView { }
 
         private static readonly IFormView[] TAB_PAGES =
         {
-            new PropertiesPage(), new FilesPage(), new LearningPage(),
+            new PropertiesPage(), new FilesPage(),
         };
-        private bool IsAlphaEnabled => true;
-        private bool IsCarafeEnabled => false;  // TODO(dshteyn): Implement and enable
-        
-        public enum DataSourcePages { files, alpha, carafe, koina }
+
+        public enum DataSourcePages { files, alpha, koina }
 
         private readonly MessageBoxHelper _helper;
         private readonly IDocumentUIContainer _documentUiContainer;
@@ -147,37 +145,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // If we're not using dataSourceGroupBox (because we're in small molecule mode) shift other controls over where it was
             if (modeUIHandler.ComponentsDisabledForModeUI(dataSourceGroupBox))
-            {
                 tabControlDataSource.Left = dataSourceGroupBox.Left;
-                Height -= tabControlDataSource.Bottom - dataSourceGroupBox.Bottom;
-            }
-            else
-            {
-                int heightDiffGroupBox = 0;
-                if (!IsAlphaEnabled)
-                {
-                    int yShift = radioCarafeSource.Top - radioAlphaSource.Top;
-                    radioCarafeSource.Top -= yShift;
-                    radioKoinaSource.Top -= yShift;
-                    koinaInfoSettingsBtn.Top -= yShift;
-                    radioAlphaSource.Visible = false;
-                    heightDiffGroupBox += yShift;
-                }
-
-                if (!IsCarafeEnabled)
-                {
-                    int yShift = radioKoinaSource.Top - radioCarafeSource.Top;
-                    radioKoinaSource.Top -= yShift;
-                    koinaInfoSettingsBtn.Top -= yShift;
-                    radioCarafeSource.Visible = false;
-                    heightDiffGroupBox += yShift;
-                }
-
-                dataSourceGroupBox.Height -= heightDiffGroupBox;
-                iRTPeptidesLabel.Top -= heightDiffGroupBox;
-                comboStandards.Top -= heightDiffGroupBox;
-                Height -= heightDiffGroupBox;
-            }
         }
 
         private void BuildLibraryDlg_FormClosing(object sender, FormClosingEventArgs e)
@@ -318,9 +286,74 @@ namespace pwiz.Skyline.SettingsUI
                 return false;
             }
 
-            Builder = new AlphapeptdeepLibraryBuilder(name, outputPath, doc, IrtStandard);
+            string carafeModelPath = CarafeModelPath.Trim();
+            if (carafeModelPath.Length > 0 && !ValidateCarafeModel(carafeModelPath))
+                return false;
+
+            Builder = new AlphapeptdeepLibraryBuilder(name, outputPath, doc, IrtStandard)
+            {
+                CarafeModelPath = carafeModelPath.Length > 0 ? carafeModelPath : null
+            };
 
             return true;
+        }
+
+        /// <summary>
+        /// Opens the fine-tuned model file, which checks its contents, so that a missing or damaged
+        /// file is reported here rather than after the build starts.
+        /// </summary>
+        private bool ValidateCarafeModel(string path)
+        {
+            if (!File.Exists(path))
+            {
+                _helper.ShowTextBoxError(textCarafeModel,
+                    SettingsUIResources.BuildLibraryDlg_ValidateCarafeModel_The_file__0__does_not_exist_, path);
+                return false;
+            }
+            try
+            {
+                CarafeModelFile.Open(path);
+                return true;
+            }
+            catch (Exception x)
+            {
+                if (ExceptionUtil.IsProgrammingDefect(x))
+                    throw;
+                MessageDlg.ShowWithException(this,
+                    string.Format(SettingsUIResources.BuildLibraryDlg_ValidateCarafeModel_The_file__0__is_not_a_valid_fine_tuned_Carafe_model_, path), x);
+                textCarafeModel.Focus();
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// A .carafemodel file of models fine-tuned by CarafeSharp, to predict with in place of the
+        /// pretrained AlphaPeptDeep models, or empty for the pretrained models.
+        /// </summary>
+        public string CarafeModelPath
+        {
+            get { return textCarafeModel.Text; }
+            set { textCarafeModel.Text = value; }
+        }
+
+        private void btnCarafeModelBrowse_Click(object sender, EventArgs e)
+        {
+            ShowCarafeModelDlg();
+        }
+
+        public void ShowCarafeModelDlg()
+        {
+            using var dlg = new OpenFileDialog();
+            string currentPath = CarafeModelPath.Trim();
+            dlg.InitialDirectory = File.Exists(currentPath)
+                ? Path.GetDirectoryName(currentPath)
+                : Settings.Default.LibraryDirectory;
+            dlg.CheckFileExists = true;
+            dlg.DefaultExt = CarafeModelFile.EXTENSION;
+            dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(
+                SettingsUIResources.BuildLibraryDlg_ShowCarafeModelDlg_Fine_tuned_Carafe_Models, CarafeModelFile.EXTENSION));
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+                CarafeModelPath = dlg.FileName;
         }
 
         private bool CreateKoinaBuilder(string name, string outputPath, int nce = 27)
@@ -429,7 +462,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkWizardPage()
         {
-            if (tabControlMain.SelectedIndex != (int)Pages.properties || radioAlphaSource.Checked || radioKoinaSource.Checked)
+            if (tabControlMain.SelectedIndex != (int)Pages.properties || !radioFilesSource.Checked)
             {
                 if (ValidateBuilder(true))
                 {
@@ -442,16 +475,11 @@ namespace pwiz.Skyline.SettingsUI
             {
                 Settings.Default.LibraryDirectory = Path.GetDirectoryName(LibraryPath);
 
-                tabControlMain.SelectedIndex = (int)(radioFilesSource.Checked
-                    ? Pages.files
-                    : Pages.learning);  // Carafe
+                tabControlMain.SelectedIndex = (int)Pages.files;
                 btnPrevious.Enabled = true;
                 btnNext.Text = Resources.BuildLibraryDlg_OkWizardPage_Finish;
                 AcceptButton = btnNext;
-                if (radioFilesSource.Checked)
-                    btnNext.Enabled = Grid.IsReady;
-                else
-                    btnNext.Enabled = true;
+                btnNext.Enabled = Grid.IsReady;
             }
         }
 
@@ -809,12 +837,6 @@ namespace pwiz.Skyline.SettingsUI
             set { radioAlphaSource.Checked = value; }
         }
 
-        public bool Carafe
-        {
-            get { return radioCarafeSource.Checked; }
-            set { radioCarafeSource.Checked = value; }
-        }
-
         public int NCE
         {
             get { return (int)ceCombo.SelectedItem; }
@@ -905,11 +927,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 Settings.Default.IrtStandardList.Remove(IrtStandard.AUTO);
 
-                if (radioCarafeSource.Checked)
-                {
-                    tabControlDataSource.SelectedIndex = (int)DataSourcePages.carafe;
-                }
-                else if (radioAlphaSource.Checked)
+                if (radioAlphaSource.Checked)
                 {
                     tabControlDataSource.SelectedIndex = (int)DataSourcePages.alpha;
                     nextText = Resources.BuildLibraryDlg_OkWizardPage_Finish;
