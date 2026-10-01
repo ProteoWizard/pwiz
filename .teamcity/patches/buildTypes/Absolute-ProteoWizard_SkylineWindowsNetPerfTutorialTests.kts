@@ -2,7 +2,6 @@ package patches.buildTypes
 
 import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.BuildType
-import jetbrains.buildServer.configs.kotlin.buildSteps.dotnetCustom
 import jetbrains.buildServer.configs.kotlin.buildSteps.exec
 import jetbrains.buildServer.configs.kotlin.failureConditions.BuildFailureOnMetric
 import jetbrains.buildServer.configs.kotlin.failureConditions.failOnMetricChange
@@ -21,11 +20,14 @@ create(DslContext.projectId, BuildType({
     artifactRules = "# Configure artifacts in tcbuild.bat"
 
     steps {
-        dotnetCustom {
-            name = "Install dotCover"
-            id = "Install_dotCover"
-            enabled = false
-            args = "tool install -g JetBrains.dotCover.CommandLineTools"
+        exec {
+            name = "Clean"
+            id = "Skyline_Clean"
+            path = "clean.bat"
+            // Start from a clean slate: the agent reuses its checkout, and output left by an
+            // earlier build fails this one - a wildcard in Skyline.csproj listed BlibBuild DLLs a
+            // newer BlibBuild no longer produced, and its own build deleted them before Skyline
+            // could copy them (MSB3030). Without -cpp, clean.bat leaves the C++ build alone.
         }
         exec {
             id = "RUNNER_simpleRunner_139"
@@ -58,7 +60,7 @@ create(DslContext.projectId, BuildType({
             param("GitHubAuthToken", "credentialsJSON:ff89fd87-e72b-4868-b752-4f2beaabe7b2")
             param("buildStatusUpdateState", "success")
         }
-        stepsOrder = arrayListOf("Set_PYTHON_HOME_if_unset_by_agent", "Install_dotCover", "RUNNER_simpleRunner_139", "RUNNER_73", "RUNNER_85")
+        stepsOrder = arrayListOf("Set_PYTHON_HOME_if_unset_by_agent", "Skyline_Clean", "RUNNER_simpleRunner_139", "RUNNER_73", "RUNNER_85")
     }
 
     failureConditions {
