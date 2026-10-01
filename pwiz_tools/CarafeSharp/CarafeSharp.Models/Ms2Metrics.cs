@@ -68,7 +68,7 @@ namespace pwiz.CarafeSharp.Models
     {
         public static Ms2MetricSummary Evaluate(Ms2Model model, IReadOnlyList<Ms2TrainingExample> test)
         {
-            var predictions = model.Predict(test.Select(e => new Ms2Request(e.Precursor, e.Nce, e.Instrument)).ToArray());
+            var predictions = model.Predict(test.Select(e => new Ms2Request(e.Precursor, e.Nce, e.Instrument, e.Activation, e.Analyzer)).ToArray());
             var pcc = new List<double>();
             var cos = new List<double>();
             var sa = new List<double>();

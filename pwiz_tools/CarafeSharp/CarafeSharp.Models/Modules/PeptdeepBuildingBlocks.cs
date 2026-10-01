@@ -23,6 +23,7 @@
  */
 
 using System;
+using pwiz.CarafeSharp.Core;
 using TorchSharp.Modules;
 using TorchSharp.Utils;
 using static TorchSharp.torch;
@@ -88,32 +89,43 @@ namespace pwiz.CarafeSharp.Models.Modules
     }
 
     /// <summary>
-    /// Precursor meta features: a linear map of the one-hot instrument and the scaled NCE,
-    /// with the scaled charge appended.
+    /// Precursor meta features: peptdeep's linear map of the one-hot instrument and the scaled
+    /// NCE, plus CarafeSharp's acquisition layer (<see cref="AcquisitionVocabulary"/>, no bias,
+    /// zero until trained) over the one-hot activation and analyzer, with the scaled charge
+    /// appended. A zero acquisition layer adds exact zeros, so peptdeep's output is unchanged.
     /// </summary>
     internal sealed class MetaEmbedding : nn.Module<Tensor, Tensor, Tensor, Tensor>
     {
+        public const string ACQUISITION_WEIGHT = @"meta_nn.acquisition_nn.weight";
+
         [ComponentName(Name = @"nn")]
         private readonly Linear _nn;
 
-        public MetaEmbedding(int outFeatures)
+        [ComponentName(Name = @"acquisition_nn")]
+        private readonly Linear _acquisitionNn;
+
+        public MetaEmbedding(int outFeatures, int acquisitionWidth)
             : base(nameof(MetaEmbedding))
         {
             _nn = nn.Linear(PeptdeepConstants.MAX_INSTRUMENT_NUM + 1, outFeatures - 1);
+            _acquisitionNn = nn.Linear(acquisitionWidth, outFeatures - 1, hasBias: false);
+            using (no_grad())
+                _acquisitionNn.weight.zero_();
             RegisterComponents();
         }
 
-        /// <summary>Sets instrument slot <paramref name="to"/>'s weights to slot <paramref name="from"/>'s.</summary>
-        public void CopyInstrumentSlot(int from, int to)
+        /// <param name="charges">The scaled charges <c>[batch, 1]</c>.</param>
+        /// <param name="nces">The scaled NCEs <c>[batch, 1]</c>.</param>
+        /// <param name="metaFeatures">
+        /// The one-hot instrument (<see cref="PeptdeepConstants.MAX_INSTRUMENT_NUM"/> columns)
+        /// followed by the one-hot activation and analyzer, <c>[batch, 8 + width]</c>.
+        /// </param>
+        public override Tensor forward(Tensor charges, Tensor nces, Tensor metaFeatures)
         {
-            using (no_grad())
-                _nn.weight[TensorIndex.Colon, to].copy_(_nn.weight[TensorIndex.Colon, from]);
-        }
-
-        public override Tensor forward(Tensor charges, Tensor nces, Tensor instrumentIndices)
-        {
-            var instrument = nn.functional.one_hot(instrumentIndices, PeptdeepConstants.MAX_INSTRUMENT_NUM).to_type(ScalarType.Float32);
-            var meta = _nn.call(cat(new[] { instrument, nces }, 1));
+            long instruments = PeptdeepConstants.MAX_INSTRUMENT_NUM;
+            var instrument = metaFeatures.narrow(1, 0, instruments);
+            var acquisition = metaFeatures.narrow(1, instruments, metaFeatures.shape[1] - instruments);
+            var meta = _nn.call(cat(new[] { instrument, nces }, 1)) + _acquisitionNn.call(acquisition);
             return cat(new[] { meta, charges }, 1);
         }
     }

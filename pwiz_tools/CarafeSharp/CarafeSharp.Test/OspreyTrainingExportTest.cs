@@ -25,7 +25,6 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CarafeSharp.IO;
-using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Training;
 using static pwiz.CarafeSharp.Test.OspreyTestRecords;
 
@@ -278,8 +277,8 @@ namespace pwiz.CarafeSharp.Test
             // Carafe's names for instrument models, trimmed and case-insensitive.
             Assert.AreEqual(@"QEHF", OspreyTrainingSet.GetCarafeInstrument(@"  q exactive hf "));
             Assert.AreEqual(@"QE+", OspreyTrainingSet.GetCarafeInstrument(@"Exactive Plus"));
-            // CarafeSharp's: a Stellar reads MS2 out only in its linear ion trap.
-            Assert.AreEqual(PeptdeepConstants.LIT, OspreyTrainingSet.GetCarafeInstrument(@"Stellar"));
+            // CarafeSharp's name for a Stellar, which is peptdeep's Lumos family.
+            Assert.AreEqual(@"Stellar", OspreyTrainingSet.GetCarafeInstrument(@"Stellar"));
             Assert.IsNull(OspreyTrainingSet.GetCarafeInstrument(null));
 
             TestTrainingTables(trainingSet);

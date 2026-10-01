@@ -54,6 +54,8 @@ namespace pwiz.CarafeSharp.Proteome
             {
                 MsFile = GetString(element, ModelFiles.META_MS_FILE, DEFAULT_MS_FILE),
                 MsInstrument = GetString(element, ModelFiles.META_MS_INSTRUMENT, DEFAULT_MS_INSTRUMENT),
+                Activation = GetString(element, ModelFiles.META_ACTIVATION, null),
+                Analyzer = GetString(element, ModelFiles.META_ANALYZER, null),
                 Nce = GetDouble(element, ModelFiles.META_NCE, DEFAULT_NCE),
                 MinFragmentIonMz = GetDouble(element, ModelFiles.META_MIN_FRAGMENT_ION_MZ, DEFAULT_MIN_FRAGMENT_ION_MZ),
                 MaxFragmentIonMz = GetDouble(element, ModelFiles.META_MAX_FRAGMENT_ION_MZ, DEFAULT_MAX_FRAGMENT_ION_MZ),
@@ -72,6 +74,12 @@ namespace pwiz.CarafeSharp.Proteome
 
         /// <summary>The instrument Carafe detected in the run, empty when it recognized none.</summary>
         public string MsInstrument { get; set; } = DEFAULT_MS_INSTRUMENT;
+
+        /// <summary>CarafeSharp's: how the run's precursors were activated (beam-CID, reCID), or null when unknown.</summary>
+        public string Activation { get; set; }
+
+        /// <summary>CarafeSharp's: the analyzer that read the run's MS2 spectra out (Orbitrap, LIT, ToF), or null when unknown.</summary>
+        public string Analyzer { get; set; }
 
         public double Nce { get; set; } = DEFAULT_NCE;
 
@@ -97,10 +105,13 @@ namespace pwiz.CarafeSharp.Proteome
 
         public double PrecursorMzMax { get; set; } = DEFAULT_PRECURSOR_ION_MZ_MAX;
 
-        /// <summary>The entry as Carafe's fastjson writes it: every field, keys in alphabetical order.</summary>
+        /// <summary>
+        /// The entry as Carafe's fastjson writes it: every field, keys in alphabetical order, with
+        /// CarafeSharp's activation and analyzer when known.
+        /// </summary>
         public IReadOnlyDictionary<string, object> ToJson()
         {
-            return new SortedDictionary<string, object>(StringComparer.Ordinal)
+            var json = new SortedDictionary<string, object>(StringComparer.Ordinal)
             {
                 { ModelFiles.META_MS_FILE, MsFile },
                 { ModelFiles.META_MS_INSTRUMENT, MsInstrument },
@@ -115,6 +126,11 @@ namespace pwiz.CarafeSharp.Proteome
                 { ModelFiles.META_PRECURSOR_ION_MZ_MIN, PrecursorMzMin },
                 { ModelFiles.META_PRECURSOR_ION_MZ_MAX, PrecursorMzMax },
             };
+            if (Activation != null)
+                json[ModelFiles.META_ACTIVATION] = Activation;
+            if (Analyzer != null)
+                json[ModelFiles.META_ANALYZER] = Analyzer;
+            return json;
         }
 
         private static string GetString(JsonElement element, string name, string defaultValue)

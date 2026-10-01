@@ -22,14 +22,19 @@ using pwiz.CarafeSharp.Core;
 
 namespace pwiz.CarafeSharp.Models
 {
-    /// <summary>One precursor to predict, with the collision energy and instrument to predict for.</summary>
+    /// <summary>
+    /// One precursor to predict, with the collision energy, instrument, activation and analyzer to
+    /// predict for (<see cref="AcquisitionVocabulary"/>; null leaves the model's columns zero).
+    /// </summary>
     public sealed class Ms2Request
     {
-        public Ms2Request(PrecursorForm precursor, double nce, string instrument)
+        public Ms2Request(PrecursorForm precursor, double nce, string instrument, string activation = null, string analyzer = null)
         {
             Precursor = precursor;
             Nce = nce;
             Instrument = instrument;
+            Activation = activation;
+            Analyzer = analyzer;
         }
 
         public PrecursorForm Precursor { get; }
@@ -37,5 +42,9 @@ namespace pwiz.CarafeSharp.Models
         public double Nce { get; }
 
         public string Instrument { get; }
+
+        public string Activation { get; }
+
+        public string Analyzer { get; }
     }
 }

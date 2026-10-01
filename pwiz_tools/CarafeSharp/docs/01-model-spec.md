@@ -110,19 +110,33 @@ when the training `rt_max` is known, else `irt_pred`.
   Elite, OrbitrapTribrid, ThermoTribrid to Lumos; QE, QE+, QEHF, QEHFX, Exploris,
   Exploris480 to QE; timsTOF, SciexTOF, ThermoTOF to themselves; **anything else to Lumos**),
   then indexed QE=0, Lumos=1, timsTOF=2, SciexTOF=3, ThermoTOF=4.
-- **CarafeSharp's instrument classes (not peptdeep's).** Two slots peptdeep leaves untrained take
-  CarafeSharp's classes: LIT=5 (HCD read out in a linear ion trap: a Stellar, a Tribrid's ion trap;
-  names LIT and Stellar) and CID=6 (resonance CID, Thermo's CID, read out in either analyzer; names CID
-  and reCID). TribridOT names the Lumos family (a Tribrid's Orbitrap HCD). Slot 7 stays peptdeep's
-  unknown. In peptdeep's pretrained weights slots 5-7 were never trained: their columns of
-  `meta_nn.nn.weight` are at initialization scale and uncorrelated with Lumos's (cosine -0.14 for 5).
-  So a model that has never trained CarafeSharp's slots (the pretrained one, a Carafe checkpoint, a
-  CarafeSharp model saved before them) starts LIT and CID as a copy of Lumos's column when loaded,
-  and predicts them as Lumos until fine-tuning on ion trap or CID spectra separates them. A model
-  CarafeSharp saves records `carafesharp.instrument_slots` in its safetensors metadata, and is loaded
-  with its own slots. A run trains as a class by how its MS2 spectra were acquired (Osprey's export
-  footer: `osprey.dissociation_methods`, `osprey.ms2_mass_analyzers`); a run that mixes classes is
-  refused unless `-ms_instrument` names one for all of it.
+- **CarafeSharp's acquisition layer (not peptdeep's).** How a precursor was activated and which
+  analyzer read the spectrum out are not peptdeep instrument families, and the 8 instrument slots are
+  fixed by the pretrained weights (5 trained, slot 7 unknown). So the MS2 model gains a second layer
+  beside peptdeep's `meta_nn.nn`: `meta_nn.acquisition_nn`, a linear map with no bias from one input
+  column per activation (beam-CID, reCID) and per analyzer (Orbitrap, LIT, ToF) to the same 7 outputs,
+  added to peptdeep's. Its weights start at zero in any model that has not trained it (the pretrained
+  one, a Carafe checkpoint), which adds exact zeros, so predictions are peptdeep's bit for bit; fine-
+  tuning learns each value's effect from the spectra that carry it, as an adjustment to the instrument
+  family's prediction. Runs of one activation and one analyzer train the two columns alike (every
+  spectrum carries both, so they get the same updates and learn the same shift); only training data
+  that differs in one of them tells them apart. The number of values is not fixed by the model: a
+  model records its columns by name in its safetensors metadata (`carafesharp.activations`,
+  `carafesharp.analyzers`), a value is found by name, one the model lacks predicts with its columns
+  zero, and loading a model whose list lacks a known value gives it a zero column, each stored column
+  kept under its name. A Stellar and TribridOT name peptdeep's Lumos family.
+- **Activation and analyzer of a run**, from Osprey's export footer (`osprey.dissociation_methods`,
+  `osprey.ms2_mass_analyzers`), named to avoid vendors' terms:
+  - beam-CID: beam-type CID (PSI-MS's HCD) from any vendor, and plain CID from any vendor but Thermo,
+    since Sciex's and Bruker's CID is beam-type;
+  - reCID: trap-type CID, and plain CID from Thermo, whose CID is resonance CID in an ion trap;
+  - none for an electron-based method (ETD, EThcD, EAD), whose columns stay zero;
+  - ToF for a time-of-flight analyzer (an Astral's MS2, a timsTOF, a Sciex TOF), LIT for an ion trap
+    (a Stellar, a Tribrid's), Orbitrap for an Orbitrap; without the analyzers, a Stellar is LIT and an
+    Astral ToF.
+  A run whose MS2 spectra mix activations or analyzers is refused unless `-activation` or `-analyzer`
+  names one for all of it. A library predicts for `-activation` and `-analyzer`, else the training
+  run's.
 
 ## Prediction post-processing
 

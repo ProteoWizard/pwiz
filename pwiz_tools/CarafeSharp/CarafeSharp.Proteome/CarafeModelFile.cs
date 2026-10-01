@@ -65,8 +65,9 @@ namespace pwiz.CarafeSharp.Proteome
         /// <param name="pretrainedSha256">The SHA-256 of the pretrained archive the training started from, or null.</param>
         /// <param name="ms2StartModel">The <c>-ms2_model</c> the MS2 fine-tune started from instead, or null.</param>
         /// <param name="training">What the models were trained on, or null; its held-out metrics are read from the folder here.</param>
+        /// <param name="acquisition">The activations and analyzers the MS2 model has columns for, or null when unknown.</param>
         public static CarafeModelFile Write(string path, CarafeModelDirectory trained, string trainingType, string pretrainedSha256,
-            string ms2StartModel, CarafeModelTraining training)
+            string ms2StartModel, CarafeModelTraining training, AcquisitionVocabulary acquisition)
         {
             // Only the safetensors this run wrote: a Carafe checkpoint left in the folder is not its model.
             string ms2 = SafetensorsOrNull(trained.GetMs2ModelPath(trainingType));
@@ -103,6 +104,9 @@ namespace pwiz.CarafeSharp.Proteome
                 Ms2StartModel = ms2StartModel == null ? null : System.IO.Path.GetFileName(ms2StartModel),
                 Runs = runs,
                 Training = training,
+                Acquisition = acquisition,
+                Activation = runs.Select(r => r.Activation).LastOrDefault(a => a != null),
+                Analyzer = runs.Select(r => r.Analyzer).LastOrDefault(a => a != null),
                 // As the library right after training takes them (CarafeModelDirectory.ApplyTrainingRunOverrides):
                 // the last run's NCE and non-empty instrument, the largest rt_max.
                 Nce = runs.Count > 0 ? runs[runs.Count - 1].Nce : LibrarySettings.DEFAULT_NCE,
@@ -195,6 +199,12 @@ namespace pwiz.CarafeSharp.Proteome
         public IReadOnlyList<CarafeRunMeta> Runs { get; private set; } = new List<CarafeRunMeta>();
         /// <summary>What the models were trained on, or null for a file written without it.</summary>
         public CarafeModelTraining Training { get; private set; }
+        /// <summary>The activations and analyzers the MS2 model has columns for, or null when the file does not say.</summary>
+        public AcquisitionVocabulary Acquisition { get; private set; }
+        /// <summary>The activation a library takes unless <c>-activation</c> is given, or null.</summary>
+        public string Activation { get; private set; }
+        /// <summary>The MS2 analyzer a library takes unless <c>-analyzer</c> is given, or null.</summary>
+        public string Analyzer { get; private set; }
         /// <summary>The NCE a library takes unless <c>-nce</c> is given.</summary>
         public double Nce { get; private set; }
         /// <summary>The instrument a library takes unless <c>-ms_instrument</c> is given, or null for the command line's.</summary>
@@ -238,6 +248,10 @@ namespace pwiz.CarafeSharp.Proteome
                 settings.Instrument = Instrument;
             if (!settings.UserRtMax)
                 settings.RtMax = RtMax;
+            if (!settings.UserActivation && Activation != null)
+                settings.Activation = Activation;
+            if (!settings.UserAnalyzer && Analyzer != null)
+                settings.Analyzer = Analyzer;
         }
 
         /// <summary>A one-line description for the log: which models are fine-tuned, and what they were trained on.</summary>
@@ -264,8 +278,11 @@ namespace pwiz.CarafeSharp.Proteome
             Line(@"  RT model: {0}", RtUsed ? @"fine-tuned" : @"pretrained");
             if (Ms2StartModel != null)
                 Line(@"  MS2 fine-tune started from {0}", Ms2StartModel);
-            Line(@"  A library takes: NCE {0}, instrument {1}, rt_max {2} (unless -nce, -ms_instrument, -rt_max are given)",
-                Nce, Instrument ?? @"(the command line's)", RtMax);
+            Line(@"  A library takes: NCE {0}, instrument {1}, activation {2}, analyzer {3}, rt_max {4}" +
+                 @" (unless -nce, -ms_instrument, -activation, -analyzer, -rt_max are given)",
+                Nce, Instrument ?? @"(the command line's)", Activation ?? @"(none)", Analyzer ?? @"(none)", RtMax);
+            if (Acquisition != null)
+                Line(@"  MS2 acquisition columns: {0}", Acquisition);
             if (Training == null)
                 return text.ToString();
 
@@ -278,7 +295,7 @@ namespace pwiz.CarafeSharp.Proteome
                 Line(@"  Modifications: {0}", string.Join(@", ", training.Modifications.OrderBy(p => p.Key, StringComparer.Ordinal).Select(p => p.Key + @" " + p.Value)));
             foreach (var run in training.Runs)
             {
-                Line(@"  Run {0}", run.Run);
+                Line(@"  Run {0}: {1}, {2}", run.Run, run.Activation ?? @"activation unknown", run.Analyzer ?? @"analyzer unknown");
                 Line(@"    Instrument: {0} {1}{2}", run.InstrumentVendor ?? string.Empty, run.InstrumentModel ?? @"(unknown)",
                     string.IsNullOrEmpty(run.Instrument) ? string.Empty : @" (trained as " + run.Instrument + @")");
                 Line(@"    Fragmentation: {0}; collision energies {1}; NCE {2}; MS2 read out in {3}", FormatCounts(run.DissociationMethods),
@@ -335,6 +352,24 @@ namespace pwiz.CarafeSharp.Proteome
                 json.WriteEndObject();
                 WriteStringOrNull(json, @"pretrained_sha256", PretrainedSha256);
                 WriteStringOrNull(json, @"ms2_start_model", Ms2StartModel);
+                json.WritePropertyName(@"acquisition");
+                if (Acquisition == null)
+                {
+                    json.WriteNullValue();
+                }
+                else
+                {
+                    json.WriteStartObject();
+                    json.WriteStartArray(@"activations");
+                    foreach (string activation in Acquisition.Activations)
+                        json.WriteStringValue(activation);
+                    json.WriteEndArray();
+                    json.WriteStartArray(@"analyzers");
+                    foreach (string analyzer in Acquisition.Analyzers)
+                        json.WriteStringValue(analyzer);
+                    json.WriteEndArray();
+                    json.WriteEndObject();
+                }
                 json.WritePropertyName(@"training");
                 if (Training == null)
                     json.WriteNullValue();
@@ -343,6 +378,8 @@ namespace pwiz.CarafeSharp.Proteome
                 json.WriteStartObject(@"prediction_defaults");
                 json.WriteNumber(@"nce", Nce);
                 WriteStringOrNull(json, @"instrument", Instrument);
+                WriteStringOrNull(json, @"activation", Activation);
+                WriteStringOrNull(json, @"analyzer", Analyzer);
                 json.WriteNumber(@"rt_max", RtMax);
                 json.WriteEndObject();
                 json.WriteStartObject(@"entries");
@@ -369,6 +406,10 @@ namespace pwiz.CarafeSharp.Proteome
                 var training = root.TryGetProperty(@"training", out var trainingValue) && trainingValue.ValueKind == JsonValueKind.Object
                     ? CarafeModelTraining.ReadJson(trainingValue)
                     : null;
+                var acquisition = root.TryGetProperty(@"acquisition", out var acquisitionValue) && acquisitionValue.ValueKind == JsonValueKind.Object
+                    ? new AcquisitionVocabulary(acquisitionValue.GetProperty(@"activations").EnumerateArray().Select(v => v.GetString()),
+                        acquisitionValue.GetProperty(@"analyzers").EnumerateArray().Select(v => v.GetString()))
+                    : null;
                 return new CarafeModelFile
                 {
                     Path = path,
@@ -383,6 +424,9 @@ namespace pwiz.CarafeSharp.Proteome
                     PretrainedSha256 = GetStringOrNull(root, @"pretrained_sha256"),
                     Ms2StartModel = GetStringOrNull(root, @"ms2_start_model"),
                     Training = training,
+                    Acquisition = acquisition,
+                    Activation = GetStringOrNull(defaults, @"activation"),
+                    Analyzer = GetStringOrNull(defaults, @"analyzer"),
                     Nce = defaults.GetProperty(@"nce").GetDouble(),
                     Instrument = GetStringOrNull(defaults, @"instrument"),
                     RtMax = defaults.GetProperty(@"rt_max").GetDouble(),

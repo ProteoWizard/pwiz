@@ -140,7 +140,8 @@ namespace pwiz.CarafeSharp
                     Log(string.Format(CultureInfo.InvariantCulture, @"Library RT: rt_pred * rt_max ({0})", _settings.RtMax));
                 else
                     Log(string.Format(CultureInfo.InvariantCulture, @"Library RT: iRT = {0} * rt_pred + {1}", irt.Slope, irt.Intercept));
-                Log(string.Format(CultureInfo.InvariantCulture, @"NCE: {0}, instrument: {1}", _settings.Nce, _settings.Instrument));
+                Log(string.Format(CultureInfo.InvariantCulture, @"NCE: {0}, instrument: {1}, activation: {2}, analyzer: {3}", _settings.Nce,
+                    _settings.Instrument, _settings.Activation ?? @"(none)", _settings.Analyzer ?? @"(none)"));
                 var builder = new LibrarySpectrumBuilder(_settings, outputs, peptideToProteins);
                 WriteLibrary(forms, outputs, builder, ms2, rt, irt);
             }
@@ -238,7 +239,8 @@ namespace pwiz.CarafeSharp
                 var peptide = forms[i].ToAlphabase();
                 foreach (int charge in charges)
                 {
-                    requests.Add(new Ms2Request(new PrecursorForm(peptide, charge), _settings.Nce, _settings.Instrument));
+                    requests.Add(new Ms2Request(new PrecursorForm(peptide, charge), _settings.Nce, _settings.Instrument, _settings.Activation,
+                        _settings.Analyzer));
                     formIndex.Add(isoforms.Count);
                 }
                 isoforms.Add(forms[i]);
@@ -333,9 +335,9 @@ namespace pwiz.CarafeSharp
             Log(@"Use the saved model " + _settings.ModelFile + @" for spectral library generation: " + modelFile.Describe());
             modelFile.ApplyPredictionDefaults(_settings);
             Log(string.Format(CultureInfo.InvariantCulture,
-                @"Precursor m/z {0}-{1}, fragment m/z {2}-{3} from the command line; NCE {4}, instrument {5}, rt_max {6}",
+                @"Precursor m/z {0}-{1}, fragment m/z {2}-{3} from the command line; NCE {4}, instrument {5}, activation {6}, analyzer {7}, rt_max {8}",
                 _settings.MinPrecursorMz, _settings.MaxPrecursorMz, _settings.MinFragmentMz, _settings.MaxFragmentMz, _settings.Nce,
-                _settings.Instrument, _settings.RtMax));
+                _settings.Instrument, _settings.Activation ?? @"(none)", _settings.Analyzer ?? @"(none)", _settings.RtMax));
             return modelDirectory;
         }
 

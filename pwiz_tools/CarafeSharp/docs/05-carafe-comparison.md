@@ -127,12 +127,12 @@ its own pretrained baseline. They do not rank the two tools.
   slightly more often (9.0% against 6.7%). 1+ fragments stand well clear of their null (93% against
   67%, and 51% against 8%). So what matches at a 2+ fragment of a 2+ precursor on the Stellar is
   mostly interference or noise.
-- **Instrument classes (2026-09-30, after these runs):** CarafeSharp trains ion trap HCD as LIT and
-  resonance CID as CID, two instrument slots of its own (01-model-spec.md), where Carafe trains a
-  Stellar run as Eclipse (the Lumos slot) and a Tribrid's ion trap or CID spectra as the Tribrid. The
-  LIT and CID slots start as copies of Lumos, so a fine-tune of Stellar HCD spectra computes the same
-  as Carafe's in another slot: the Stellar golden's metrics and library are unchanged. They differ
-  from Carafe when a model is used for another class than it was trained on.
+- **Activation and analyzer (2026-09-30, after these runs):** CarafeSharp's MS2 model also learns
+  how a precursor was activated (beam-CID, reCID) and which analyzer read the spectrum out (Orbitrap,
+  LIT, ToF), in an acquisition layer of its own (01-model-spec.md); Carafe has neither and trains a
+  Stellar run as Eclipse. The layer starts at zero, so the pretrained predictions, and every parity
+  number here, are Carafe's; a fine-tune also trains the layer's columns for its runs' activation and
+  analyzer, so its models differ from Carafe's by what those columns learned.
 - **Nondeterminism:** GPU fine-tuning is nondeterministic in both tools. Two CarafeSharp GPU
   fine-tunes of the same data differ by a median cosine of 0.9997. A CPU fine-tune is
   bit-reproducible.

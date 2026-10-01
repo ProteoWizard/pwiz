@@ -87,32 +87,17 @@ namespace pwiz.CarafeSharp.Models
 
         public const int NUM_MODLOSS_FRAG_TYPES = 4;
 
-        /// <summary>HCD read out in a linear ion trap: a Stellar, or a Tribrid's ion trap. CarafeSharp's, not peptdeep's.</summary>
-        public const string LIT = @"LIT";
-
-        /// <summary>Resonance CID (Thermo's CID), read out in either analyzer. CarafeSharp's, not peptdeep's.</summary>
-        public const string CID = @"CID";
-
-        public const int LUMOS_INDEX = 1;
-        public const int LIT_INDEX = 5;
-        public const int CID_INDEX = 6;
-
         /// <summary>
-        /// Instrument families by one-hot index. The first five are peptdeep's, which its
-        /// pretrained model trained. LIT (5) and CID (6) are CarafeSharp's, in slots peptdeep leaves
-        /// untrained: a model that has never trained them starts them as a copy of Lumos
-        /// (Ms2Model), so it predicts them as it predicts a Tribrid's Orbitrap HCD until fine-tuning
-        /// on ion trap or CID spectra separates them. Index 7 stays peptdeep's unknown instrument.
+        /// Instrument families with a trained index, in index order. How a spectrum was activated
+        /// and read out is not an instrument family: CarafeSharp's acquisition layer models it
+        /// (<see cref="pwiz.CarafeSharp.Core.AcquisitionVocabulary"/>).
         /// </summary>
-        private static readonly string[] INSTRUMENTS = { @"QE", @"Lumos", @"timsTOF", @"SciexTOF", @"ThermoTOF", LIT, CID };
-
-        /// <summary>The instrument slots a CarafeSharp-saved model's weights hold, in index order, as its safetensors metadata records them.</summary>
-        public static readonly string INSTRUMENT_SLOTS = string.Join(@",", INSTRUMENTS);
+        private static readonly string[] INSTRUMENTS = { @"QE", @"Lumos", @"timsTOF", @"SciexTOF", @"ThermoTOF" };
 
         /// <summary>
         /// peptdeep's instrument grouping (<c>settings['model_mgr']['instrument_group']</c>),
-        /// keyed by upper-case instrument name, with CarafeSharp's LIT and CID classes (and TribridOT,
-        /// a name for the Lumos family). Anything not listed maps to Lumos.
+        /// keyed by upper-case instrument name, with CarafeSharp's names for a Stellar and for
+        /// TribridOT (a Tribrid's Orbitrap). Anything not listed maps to Lumos.
         /// </summary>
         private static readonly Dictionary<string, string> INSTRUMENT_GROUPS = new Dictionary<string, string>(StringComparer.Ordinal)
         {
@@ -134,10 +119,7 @@ namespace pwiz.CarafeSharp.Models
             { @"EXPLORIS", @"QE" },
             { @"EXPLORIS480", @"QE" },
             { @"TRIBRIDOT", @"Lumos" },
-            { @"LIT", LIT },
-            { @"STELLAR", LIT },
-            { @"CID", CID },
-            { @"RECID", CID },
+            { @"STELLAR", @"Lumos" },
         };
 
         private const string DEFAULT_INSTRUMENT_GROUP = @"Lumos";

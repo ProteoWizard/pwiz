@@ -192,6 +192,7 @@ namespace pwiz.CarafeSharp.Proteome
                 settings.MinPrecursorMz = run.PrecursorMzMin - 0.5;
                 settings.MaxPrecursorMz = run.PrecursorMzMax - 0.5;
             }
+            ApplyAcquisition(settings);
         }
 
         /// <summary>
@@ -217,8 +218,20 @@ namespace pwiz.CarafeSharp.Proteome
                 if (run.RtMax > settings.RtMax)
                     settings.RtMax = run.RtMax;
             }
+            ApplyAcquisition(settings);
             settings.MinPrecursorMz = minMz;
             settings.MaxPrecursorMz = maxMz;
+        }
+
+        /// <summary>The last run's known activation and analyzer, for those the command line did not give.</summary>
+        private void ApplyAcquisition(LibrarySettings settings)
+        {
+            string activation = Runs.Select(r => r.Activation).LastOrDefault(a => a != null);
+            string analyzer = Runs.Select(r => r.Analyzer).LastOrDefault(a => a != null);
+            if (!settings.UserActivation && activation != null)
+                settings.Activation = activation;
+            if (!settings.UserAnalyzer && analyzer != null)
+                settings.Analyzer = analyzer;
         }
 
         private static bool IsType(string trainingType, string value)

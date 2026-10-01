@@ -24,6 +24,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Proteome;
@@ -476,45 +477,64 @@ namespace pwiz.CarafeSharp.Test
         }
 
         /// <summary>
-        /// The instrument class a run trains as, from how Osprey's export says its MS2 spectra were
-        /// acquired: resonance CID (Thermo's CID) in either analyzer is CID; HCD read out in an ion
-        /// trap is LIT; Orbitrap HCD is the model's Carafe name; without the analyzers a Stellar is
-        /// LIT by its model. A run mixing classes is refused, and -ms_instrument names one for all of it.
+        /// A run's activation and MS2 analyzer, from Osprey's export. Beam-type CID (pwiz's HCD) is
+        /// beam-CID and trap-type CID reCID from any vendor; plain CID is reCID from Thermo, whose
+        /// CID is resonance CID, and beam-CID from Sciex or Bruker, whose CID is beam-type. A
+        /// time-of-flight analyzer (an Astral's) is ToF, an ion trap LIT, an Orbitrap Orbitrap;
+        /// without the analyzers a Stellar is LIT and an Astral ToF. A run mixing either is refused,
+        /// and -activation or -analyzer names one for all of it.
         /// </summary>
         [TestMethod]
-        public void TestInstrumentClasses()
+        public void TestAcquisitionClasses()
         {
-            string folder = Path.Combine(Path.GetTempPath(), @"CarafeSharpInstruments_" + Guid.NewGuid().ToString(@"N"));
+            string folder = Path.Combine(Path.GetTempPath(), @"CarafeSharpAcquisition_" + Guid.NewGuid().ToString(@"N"));
             Directory.CreateDirectory(folder);
             try
             {
-                const string trap = @"{""radial ejection linear ion trap"":200}";
-                const string orbitrap = @"{""orbitrap"":200}";
-                string Class(string model, string activations, string analyzers, string user = null) =>
-                    OspreyTrainingSet.GetTrainingInstrument(InstrumentExport(folder, model, activations, analyzers), user);
+                string Activation(string vendor, string model, string methods, string user = null) =>
+                    OspreyTrainingSet.GetActivation(AcquisitionExport(folder, vendor, model, methods, null), user);
+                string Analyzer(string model, string analyzers, string user = null) =>
+                    OspreyTrainingSet.GetAnalyzer(AcquisitionExport(folder, @"Thermo", model, null, analyzers), user);
 
-                Assert.AreEqual(PeptdeepConstants.LIT, Class(@"Stellar", @"{""HCD"":200}", trap));
-                Assert.AreEqual(PeptdeepConstants.LIT, Class(@"Orbitrap Eclipse", @"{""HCD"":200}", trap), @"a Tribrid's ion trap HCD");
-                Assert.AreEqual(PeptdeepConstants.CID, Class(@"Stellar", @"{""CID"":200}", trap));
-                Assert.AreEqual(PeptdeepConstants.CID, Class(@"Orbitrap Eclipse", @"{""CID"":200}", orbitrap), @"resonance CID read out in the Orbitrap");
-                Assert.AreEqual(@"Eclipse", Class(@"Orbitrap Eclipse", @"{""HCD"":200}", orbitrap), @"a Tribrid's Orbitrap HCD: the Lumos family");
-                Assert.AreEqual(@"Astral", Class(@"Orbitrap Astral", @"{""HCD"":200}", @"{""orbitrap astral"":200}"));
-                // Spectra without a value are left out; an electron-based method is the model's name, as before.
-                Assert.AreEqual(PeptdeepConstants.LIT, Class(@"Stellar", @"{""HCD"":199,""none"":1}", @"{""radial ejection linear ion trap"":199,""none"":1}"));
-                Assert.AreEqual(@"Eclipse", Class(@"Orbitrap Eclipse", @"{""ETD"":200}", orbitrap));
-                // Without the run info (no data file, or an Osprey that did not record the analyzers), the model decides.
-                Assert.AreEqual(PeptdeepConstants.LIT, Class(@"Stellar", null, null));
-                Assert.AreEqual(PeptdeepConstants.LIT, Class(@"Stellar", @"{""HCD"":200}", null));
-                Assert.AreEqual(@"Eclipse", Class(@"Orbitrap Eclipse", null, null));
-                Assert.IsNull(Class(@"Orbitrap Ascend", null, null));
+                Assert.AreEqual(AcquisitionVocabulary.BEAM_CID, Activation(@"Thermo", @"Stellar", @"{""HCD"":200}"));
+                Assert.AreEqual(AcquisitionVocabulary.RE_CID, Activation(@"Thermo", @"Orbitrap Eclipse", @"{""CID"":200}"), @"Thermo's CID is resonance CID");
+                Assert.AreEqual(AcquisitionVocabulary.BEAM_CID, Activation(@"Sciex", @"TripleTOF 6600", @"{""CID"":200}"), @"Sciex's CID is beam-type");
+                Assert.AreEqual(AcquisitionVocabulary.BEAM_CID, Activation(@"Bruker", @"timsTOF Pro", @"{""CID"":200}"), @"so is Bruker's");
+                Assert.AreEqual(AcquisitionVocabulary.RE_CID, Activation(null, @"Orbitrap Eclipse", @"{""CID"":200}"), @"no vendor: a Thermo model");
+                Assert.AreEqual(AcquisitionVocabulary.RE_CID, Activation(@"Sciex", @"QTRAP 6500", @"{""trap-type collision-induced dissociation"":200}"));
+                Assert.AreEqual(AcquisitionVocabulary.BEAM_CID,
+                    Activation(@"Thermo", @"Orbitrap Eclipse", @"{""higher energy beam-type collision-induced dissociation"":200}"));
+                Assert.AreEqual(AcquisitionVocabulary.BEAM_CID, Activation(@"Thermo", @"Stellar", @"{""HCD"":199,""none"":1}"), @"spectra without a value are left out");
+                Assert.IsNull(Activation(@"Thermo", @"Orbitrap Eclipse", @"{""ETD"":200}"), @"an electron-based method leaves the columns zero");
+                Assert.IsNull(Activation(@"Thermo", @"Stellar", null), @"no data file");
 
-                // A run that mixes classes is refused, naming what it mixes; -ms_instrument decides for all of it.
-                var mixedActivation = Assert.ThrowsException<InvalidDataException>(() => Class(@"Stellar", @"{""HCD"":150,""CID"":50}", trap));
-                StringAssert.Contains(mixedActivation.Message, @"CID (50) and HCD (150)");
-                var mixedReadout = Assert.ThrowsException<InvalidDataException>(() =>
-                    Class(@"Orbitrap Eclipse", @"{""HCD"":200}", @"{""orbitrap"":150,""radial ejection linear ion trap"":50}"));
-                StringAssert.Contains(mixedReadout.Message, @"ion trap (50) and not an ion trap (150)");
-                Assert.AreEqual(PeptdeepConstants.LIT, Class(@"Stellar", @"{""HCD"":150,""CID"":50}", trap, PeptdeepConstants.LIT));
+                Assert.AreEqual(AcquisitionVocabulary.LIT, Analyzer(@"Stellar", @"{""radial ejection linear ion trap"":200}"));
+                Assert.AreEqual(AcquisitionVocabulary.LIT, Analyzer(@"Orbitrap Eclipse", @"{""radial ejection linear ion trap"":200}"), @"a Tribrid's ion trap");
+                Assert.AreEqual(AcquisitionVocabulary.ORBITRAP, Analyzer(@"Orbitrap Eclipse", @"{""quadrupole orbitrap"":200}"));
+                Assert.AreEqual(AcquisitionVocabulary.TOF,
+                    Analyzer(@"Orbitrap Astral", @"{""quadrupole asymmetric track lossless time-of-flight analyzer"":200}"), @"an Astral's MS2");
+                Assert.AreEqual(AcquisitionVocabulary.TOF, Analyzer(@"timsTOF Pro", @"{""quadrupole time-of-flight"":200}"));
+                // Without the analyzers, the model decides where it has one MS2 analyzer.
+                Assert.AreEqual(AcquisitionVocabulary.LIT, Analyzer(@"Stellar", null));
+                Assert.AreEqual(AcquisitionVocabulary.TOF, Analyzer(@"Orbitrap Astral", null));
+                Assert.IsNull(Analyzer(@"Orbitrap Eclipse", null));
+
+                // A run that mixes either is refused, naming what it mixes; the option decides for all of it.
+                var mixedActivation = Assert.ThrowsException<InvalidDataException>(() => Activation(@"Thermo", @"Stellar", @"{""HCD"":150,""CID"":50}"));
+                StringAssert.Contains(mixedActivation.Message, @"beam-CID (150) and reCID (50)");
+                StringAssert.Contains(mixedActivation.Message, @"-activation");
+                var mixedAnalyzer = Assert.ThrowsException<InvalidDataException>(() =>
+                    Analyzer(@"Orbitrap Eclipse", @"{""quadrupole orbitrap"":150,""radial ejection linear ion trap"":50}"));
+                StringAssert.Contains(mixedAnalyzer.Message, @"LIT (50) and Orbitrap (150)");
+                Assert.AreEqual(AcquisitionVocabulary.RE_CID, Activation(@"Thermo", @"Stellar", @"{""HCD"":150,""CID"":50}", AcquisitionVocabulary.RE_CID));
+                Assert.AreEqual(AcquisitionVocabulary.LIT, Analyzer(@"Orbitrap Eclipse", @"{""orbitrap"":1,""linear ion trap"":1}", AcquisitionVocabulary.LIT));
+
+                // The training rows carry the run's activation and analyzer.
+                var export = AcquisitionExport(folder, @"Thermo", @"Stellar", @"{""HCD"":200}", @"{""radial ejection linear ion trap"":200}");
+                var row = OspreyTrainingSet.Build(new[] { export }, new OspreyTrainingSetOptions()).Ms2.Single();
+                Assert.AreEqual(AcquisitionVocabulary.BEAM_CID, row.Activation);
+                Assert.AreEqual(AcquisitionVocabulary.LIT, row.Analyzer);
+                Assert.AreEqual(@"Stellar", row.Instrument, @"a Stellar is peptdeep's Lumos family");
             }
             finally
             {
@@ -522,20 +542,26 @@ namespace pwiz.CarafeSharp.Test
             }
         }
 
-        /// <summary>A one-record export of <paramref name="model"/> with these footer histograms (JSON), each left out when null.</summary>
-        private static OspreyTrainingExport InstrumentExport(string folder, string model, string activations, string analyzers)
+        /// <summary>A one-record export from <paramref name="vendor"/>'s <paramref name="model"/>, with these footer histograms (JSON), each left out when null.</summary>
+        private static OspreyTrainingExport AcquisitionExport(string folder, string vendor, string model, string methods, string analyzers)
         {
             var footer = new Dictionary<string, string>
             {
                 { @"osprey.training_export.format_version", OspreyTrainingExport.FORMAT_VERSION },
                 { @"osprey.instrument_model", model },
+                { @"osprey.rt_max", @"20" },
             };
-            if (activations != null)
-                footer[@"osprey.dissociation_methods"] = activations;
+            if (vendor != null)
+                footer[@"osprey.instrument_vendor"] = vendor;
+            if (methods != null)
+                footer[@"osprey.dissociation_methods"] = methods;
             if (analyzers != null)
                 footer[@"osprey.ms2_mass_analyzers"] = analyzers;
             string path = Path.Combine(folder, Guid.NewGuid().ToString(@"N") + OspreyTrainingExport.FILE_SUFFIX);
-            OspreyTestRecords.WriteExport(path, new[] { OspreyTestRecords.CleanRecord(@"PEPTIDEK", 2) }, footer, 1);
+            var record = OspreyTestRecords.CleanRecord(@"PEPTIDEK", 2);
+            record.FileName = Path.GetFileNameWithoutExtension(path);
+            record.RunPrecursorQ = 0.001;
+            OspreyTestRecords.WriteExport(path, new[] { record }, footer, 1);
             return OspreyTrainingExport.Read(path);
         }
 

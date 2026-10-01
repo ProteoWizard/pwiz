@@ -39,6 +39,9 @@ namespace pwiz.CarafeSharp.Core
         // meta.json: an object per training run, keyed by the run's path, with Carafe's JMeta fields.
         public const string META_MS_FILE = @"ms_file";
         public const string META_MS_INSTRUMENT = @"ms_instrument";
+        /// <summary>CarafeSharp's: the run's activation and MS2 analyzer (AcquisitionVocabulary), absent when unknown.</summary>
+        public const string META_ACTIVATION = @"activation";
+        public const string META_ANALYZER = @"analyzer";
         public const string META_NCE = @"nce";
         public const string META_MIN_FRAGMENT_ION_MZ = @"min_fragment_ion_mz";
         public const string META_MAX_FRAGMENT_ION_MZ = @"max_fragment_ion_mz";

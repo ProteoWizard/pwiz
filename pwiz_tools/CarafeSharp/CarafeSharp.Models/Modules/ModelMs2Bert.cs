@@ -22,6 +22,7 @@
  * limitations under the License.
  */
 
+using pwiz.CarafeSharp.Core;
 using TorchSharp.Modules;
 using TorchSharp.Utils;
 using static TorchSharp.torch;
@@ -42,7 +43,7 @@ namespace pwiz.CarafeSharp.Models.Modules
     {
         public const int HIDDEN = 256;
         public const int NUM_LAYERS = 4;
-        private const int META_DIM = 8;
+        public const int META_DIM = 8;
         private const double RESIDUAL_SCALE = 0.2;
 
         /// <summary>Positions dropped from the front: N pad, first residue, and the offset to b1.</summary>
@@ -64,12 +65,14 @@ namespace pwiz.CarafeSharp.Models.Modules
         [ComponentName(Name = @"modloss_nn")]
         private readonly ModuleList<nn.Module<Tensor, Tensor>> _modlossNn;
 
-        public ModelMs2Bert(double dropout = 0.1)
+        /// <param name="dropout">The dropout rate.</param>
+        /// <param name="acquisitionWidth">The acquisition layer's input columns (<see cref="AcquisitionVocabulary.Width"/>).</param>
+        public ModelMs2Bert(double dropout = 0.1, int acquisitionWidth = -1)
             : base(nameof(ModelMs2Bert))
         {
             _dropout = nn.Dropout(dropout);
             _inputNn = new InputAaModPositionalEncoding(HIDDEN - META_DIM);
-            _metaNn = new MetaEmbedding(META_DIM);
+            _metaNn = new MetaEmbedding(META_DIM, acquisitionWidth < 0 ? AcquisitionVocabulary.DEFAULT.Width : acquisitionWidth);
             _hiddenNn = new HiddenHFaceTransformer(HIDDEN, NUM_LAYERS, dropout);
             _outputNn = new DecoderLinear(HIDDEN, PeptdeepConstants.NUM_NON_MODLOSS_FRAG_TYPES);
             _modlossNn = nn.ModuleList<nn.Module<Tensor, Tensor>>(
@@ -78,16 +81,15 @@ namespace pwiz.CarafeSharp.Models.Modules
             RegisterComponents();
         }
 
-        /// <summary>Sets instrument slot <paramref name="to"/>'s weights to slot <paramref name="from"/>'s (see <see cref="PeptdeepConstants"/>).</summary>
-        public void CopyInstrumentSlot(int from, int to)
-        {
-            _metaNn.CopyInstrumentSlot(from, to);
-        }
-
-        public override Tensor forward(Tensor aaIndices, Tensor modX, Tensor charges, Tensor nces, Tensor instrumentIndices)
+        /// <param name="aaIndices">The amino acid indices.</param>
+        /// <param name="modX">The modification features.</param>
+        /// <param name="charges">The scaled charges.</param>
+        /// <param name="nces">The scaled NCEs.</param>
+        /// <param name="metaFeatures">The one-hot instrument, activation and analyzer (<see cref="MetaEmbedding"/>).</param>
+        public override Tensor forward(Tensor aaIndices, Tensor modX, Tensor charges, Tensor nces, Tensor metaFeatures)
         {
             var inX = _dropout.call(_inputNn.call(aaIndices, modX));
-            var meta = _metaNn.call(charges, nces, instrumentIndices).unsqueeze(1).repeat(1, inX.shape[1], 1);
+            var meta = _metaNn.call(charges, nces, metaFeatures).unsqueeze(1).repeat(1, inX.shape[1], 1);
             inX = cat(new[] { inX, meta }, 2);
 
             var hiddenX = _dropout.call(_hiddenNn.call(inX) + inX * RESIDUAL_SCALE);

@@ -141,12 +141,12 @@ namespace pwiz.CarafeSharp.Proteome
         public string MsFile { get; set; }
         public string InstrumentVendor { get; set; }
         public string InstrumentModel { get; set; }
-        /// <summary>
-        /// The instrument class the run trained as: Carafe's names (Lumos, Astral, QE, ...), or
-        /// CarafeSharp's LIT (HCD read out in a linear ion trap) or CID (resonance CID); empty when
-        /// Carafe names none.
-        /// </summary>
+        /// <summary>The instrument name the run trained as (Carafe's: Eclipse, Lumos, Astral, QE, Stellar, ...), or empty when Carafe names none.</summary>
         public string Instrument { get; set; }
+        /// <summary>The activation the run trained as (beam-CID, reCID), or null when unknown.</summary>
+        public string Activation { get; set; }
+        /// <summary>The MS2 analyzer the run trained as (Orbitrap, LIT, ToF), or null when unknown.</summary>
+        public string Analyzer { get; set; }
         /// <summary>The NCE the models were trained with.</summary>
         public double Nce { get; set; }
         /// <summary>MS2 spectra by dissociation method, over the spectra Osprey sampled.</summary>
@@ -185,6 +185,8 @@ namespace pwiz.CarafeSharp.Proteome
             WriteString(json, @"instrument_vendor", InstrumentVendor);
             WriteString(json, @"instrument_model", InstrumentModel);
             WriteString(json, @"instrument", Instrument);
+            WriteString(json, @"activation", Activation);
+            WriteString(json, @"analyzer", Analyzer);
             json.WriteNumber(@"nce", Nce);
             CarafeModelTraining.WriteCounts(json, @"dissociation_methods", DissociationMethods.Select(p => (p.Key, p.Value)));
             CarafeModelTraining.WriteCounts(json, @"collision_energies", CollisionEnergies.Select(p => (p.Key, p.Value)));
@@ -217,6 +219,8 @@ namespace pwiz.CarafeSharp.Proteome
                 InstrumentVendor = ReadString(element, @"instrument_vendor"),
                 InstrumentModel = ReadString(element, @"instrument_model"),
                 Instrument = ReadString(element, @"instrument"),
+                Activation = ReadString(element, @"activation"),
+                Analyzer = ReadString(element, @"analyzer"),
                 Nce = element.GetProperty(@"nce").GetDouble(),
                 DissociationMethods = CarafeModelTraining.ReadCounts(element.GetProperty(@"dissociation_methods")),
                 CollisionEnergies = CarafeModelTraining.ReadCounts(element.GetProperty(@"collision_energies")),

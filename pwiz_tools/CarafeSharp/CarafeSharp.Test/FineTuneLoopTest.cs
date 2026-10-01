@@ -254,6 +254,10 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(28.0, saved.Nce);
             Assert.AreEqual(@"Astral", saved.Instrument);
             Assert.AreEqual(12.1, saved.RtMax, 1e-12);
+            // The export names no activation, and an Astral reads MS2 out in its time-of-flight analyzer.
+            Assert.IsNull(saved.Activation);
+            Assert.AreEqual(AcquisitionVocabulary.TOF, saved.Analyzer);
+            Assert.AreEqual(AcquisitionVocabulary.DEFAULT.ToString(), saved.Acquisition.ToString());
             Assert.IsFalse(File.Exists(Path.Combine(output, CarafeModelFile.DEFAULT_FILE_NAME + @".tmp")));
 
             // With what the models were trained on, for a user choosing a model: the settings, the
@@ -284,6 +288,7 @@ namespace pwiz.CarafeSharp.Test
             // -model_info prints it.
             string info = saved.FormatInfo();
             StringAssert.Contains(info, @"Orbitrap Astral (trained as Astral)");
+            StringAssert.Contains(info, @"Run run_a: activation unknown, ToF");
             StringAssert.Contains(info, @"6 precursors (3 at 2+, 3 at 3+)");
         }
 
@@ -326,27 +331,25 @@ namespace pwiz.CarafeSharp.Test
         }
 
         /// <summary>
-        /// CarafeSharp's LIT and CID instrument slots. A model that has never trained them (one
-        /// saved without CarafeSharp's slot record, as peptdeep's pretrained model and Carafe's
-        /// checkpoints are) predicts them exactly as Lumos. Fine-tuning on LIT spectra trains the
-        /// LIT slot alone: CID, untouched, still predicts as Lumos. A model CarafeSharp saves records
-        /// its slots, so loading it keeps the trained LIT slot; the same weights without the record
-        /// start LIT from Lumos again.
+        /// CarafeSharp's acquisition layer. A model that has never trained it predicts the same
+        /// with an activation and analyzer as without: its columns are zero. Fine-tuning on reCID
+        /// spectra read out in an ion trap trains the reCID and LIT columns alone, so beam-CID and
+        /// Orbitrap still predict as before. A model records its columns by name, and one whose list
+        /// lacks a known value gains a zero column for it, each stored column kept under its name.
         /// </summary>
         [TestMethod]
-        public void TestInstrumentSlots()
+        public void TestAcquisitionColumns()
         {
-            string start = RandomMs2Model(@"slots_start", 5);
-            var rows = Ms2Rows(PeptdeepConstants.LIT);
-            float[] As(Ms2Model model, string instrument) =>
-                Predict(model, rows.Select(r => new Ms2TrainingExample(r.Precursor, r.Nce, instrument, r.Intensities, r.Invalid)));
+            string start = RandomMs2Model(@"acquisition_start", 5);
+            var rows = Ms2Rows(@"Lumos", AcquisitionVocabulary.RE_CID, AcquisitionVocabulary.LIT);
+            float[] As(Ms2Model model, string activation, string analyzer) =>
+                Predict(model, rows.Select(r => new Ms2TrainingExample(r.Precursor, r.Nce, r.Instrument, r.Intensities, r.Invalid, activation, analyzer)));
             using (var untrained = Ms2Model.FromSafetensors(start, CPU))
             {
-                var lumos = As(untrained, @"Lumos");
-                CollectionAssert.AreEqual(lumos, As(untrained, PeptdeepConstants.LIT));
-                CollectionAssert.AreEqual(lumos, As(untrained, PeptdeepConstants.CID));
-                CollectionAssert.AreEqual(lumos, As(untrained, @"Stellar"));
-                CollectionAssert.AreNotEqual(lumos, As(untrained, @"QE"), @"a peptdeep slot of its own");
+                var none = As(untrained, null, null);
+                CollectionAssert.AreEqual(none, As(untrained, AcquisitionVocabulary.RE_CID, AcquisitionVocabulary.LIT));
+                CollectionAssert.AreEqual(none, As(untrained, AcquisitionVocabulary.BEAM_CID, AcquisitionVocabulary.TOF));
+                Assert.AreEqual(AcquisitionVocabulary.DEFAULT.ToString(), untrained.Vocabulary.ToString());
             }
 
             var options = new FineTuneOptions
@@ -355,20 +358,39 @@ namespace pwiz.CarafeSharp.Test
                 Ms2Model = start,
                 Ms2 = new FineTuneSettings { Epochs = 2, WarmupEpochs = 0, BatchSize = 4, LearningRate = 1e-3, AdjustBatchSize = false },
             };
-            string output = Path.Combine(_folder, @"slots_tuned");
+            string output = Path.Combine(_folder, @"acquisition_tuned");
             FineTuneRun.Run(null, rows, null, options, output, null);
             string tuned = Path.Combine(output, FineTuneRun.MS2_MODEL_FILE);
-            Assert.AreEqual(PeptdeepConstants.INSTRUMENT_SLOTS, StateDict.ReadSafetensorsMetadata(tuned)[Ms2Model.INSTRUMENT_SLOTS_KEY]);
-            string unrecorded = Path.Combine(_folder, @"slots_unrecorded.safetensors");
+            var metadata = StateDict.ReadSafetensorsMetadata(tuned);
+            Assert.AreEqual(@"beam-CID,reCID", metadata[AcquisitionVocabulary.ACTIVATIONS_KEY]);
+            Assert.AreEqual(@"Orbitrap,LIT,ToF", metadata[AcquisitionVocabulary.ANALYZERS_KEY]);
             using (var model = Ms2Model.FromSafetensors(tuned, CPU))
             {
-                var lumos = As(model, @"Lumos");
-                CollectionAssert.AreNotEqual(lumos, As(model, PeptdeepConstants.LIT), @"the LIT slot trained, and loading kept it");
-                CollectionAssert.AreEqual(lumos, As(model, PeptdeepConstants.CID), @"the CID slot did not train");
-                StateDict.WriteSafetensors(model.Network, unrecorded);
+                var none = As(model, null, null);
+                CollectionAssert.AreNotEqual(none, As(model, AcquisitionVocabulary.RE_CID, null), @"the reCID column trained");
+                CollectionAssert.AreNotEqual(none, As(model, null, AcquisitionVocabulary.LIT), @"the LIT column trained");
+                CollectionAssert.AreEqual(none, As(model, AcquisitionVocabulary.BEAM_CID, AcquisitionVocabulary.ORBITRAP), @"the others did not");
             }
-            using (var model = Ms2Model.FromSafetensors(unrecorded, CPU))
-                CollectionAssert.AreEqual(As(model, @"Lumos"), As(model, PeptdeepConstants.LIT), @"without the record, LIT starts from Lumos");
+
+            // A model whose list has only beam-CID and Orbitrap, its beam-CID column trained: loaded,
+            // it has every known column, beam-CID's weights under beam-CID and the new ones zero.
+            string partial = Path.Combine(_folder, @"acquisition_partial.safetensors");
+            manual_seed(6);
+            using (var network = new ModelMs2Bert(acquisitionWidth: 2))
+            {
+                using (no_grad())
+                    network.state_dict()[@"meta_nn.acquisition_nn.weight"][TensorIndex.Colon, 0].fill_(0.5);
+                var held = new AcquisitionVocabulary(new[] { AcquisitionVocabulary.BEAM_CID }, new[] { AcquisitionVocabulary.ORBITRAP });
+                StateDict.WriteSafetensors(network, partial, held.ToMetadata());
+            }
+            using (var model = Ms2Model.FromSafetensors(partial, CPU))
+            {
+                Assert.AreEqual(AcquisitionVocabulary.DEFAULT.ToString(), model.Vocabulary.ToString());
+                var none = As(model, null, null);
+                CollectionAssert.AreNotEqual(none, As(model, AcquisitionVocabulary.BEAM_CID, null), @"beam-CID kept its weights");
+                CollectionAssert.AreEqual(none, As(model, AcquisitionVocabulary.RE_CID, AcquisitionVocabulary.ORBITRAP), @"Orbitrap's and reCID's are zero");
+                CollectionAssert.AreEqual(none, As(model, null, AcquisitionVocabulary.LIT));
+            }
         }
 
         [TestMethod]
@@ -506,7 +528,7 @@ namespace pwiz.CarafeSharp.Test
 
         private static float[] Predict(Ms2Model model, IEnumerable<Ms2TrainingExample> rows)
         {
-            var requests = rows.Select(r => new Ms2Request(r.Precursor, r.Nce, r.Instrument)).ToArray();
+            var requests = rows.Select(r => new Ms2Request(r.Precursor, r.Nce, r.Instrument, r.Activation, r.Analyzer)).ToArray();
             return model.Predict(requests).SelectMany(p => p.Intensities).ToArray();
         }
 
@@ -514,7 +536,7 @@ namespace pwiz.CarafeSharp.Test
         /// Two lengths of peptide at charges 2 and 3: y ions rising along the ladder, weak b
         /// ions, charge 2 fragments only from the 3+ precursor, b1 masked.
         /// </summary>
-        private static Ms2TrainingExample[] Ms2Rows(string instrument = @"Lumos")
+        private static Ms2TrainingExample[] Ms2Rows(string instrument = @"Lumos", string activation = null, string analyzer = null)
         {
             var rows = new List<Ms2TrainingExample>();
             foreach (string sequence in MS2_PEPTIDES)
@@ -532,7 +554,8 @@ namespace pwiz.CarafeSharp.Test
                             intensities[row * Ms2TrainingExample.FRAGMENT_TYPES + AlphabaseFragmentMz.Y_Z2] = 0.3;
                     }
                     invalid[AlphabaseFragmentMz.B_Z1] = 1;
-                    rows.Add(new Ms2TrainingExample(new PrecursorForm(new PeptideForm(sequence), charge), 30, instrument, intensities, invalid));
+                    rows.Add(new Ms2TrainingExample(new PrecursorForm(new PeptideForm(sequence), charge), 30, instrument, intensities, invalid,
+                        activation, analyzer));
                 }
             }
             return rows.ToArray();

@@ -97,6 +97,8 @@ namespace pwiz.CarafeSharp
                 MaxRunQ = _settings.Fdr,
                 Nce = _settings.Nce,
                 Instrument = _settings.Instrument,
+                Activation = _settings.Activation,
+                Analyzer = _settings.Analyzer,
                 RtMax = _settings.RtMax,
                 UseMasking = !_settings.NoMasking,
                 Masking = new OspreyMaskingSettings
@@ -126,8 +128,12 @@ namespace pwiz.CarafeSharp
 
             // The fine-tuned model as one file, to predict later libraries from with -model.
             string modelFile = Path.Combine(_settings.OutputDirectory, CarafeModelFile.DEFAULT_FILE_NAME);
+            string ms2File = Path.Combine(_settings.OutputDirectory, FineTuneRun.MS2_MODEL_FILE);
+            var acquisition = File.Exists(ms2File)
+                ? AcquisitionVocabulary.FromMetadata(StateDict.ReadSafetensorsMetadata(ms2File)) ?? AcquisitionVocabulary.DEFAULT
+                : AcquisitionVocabulary.DEFAULT;
             var saved = CarafeModelFile.Write(modelFile, CarafeModelDirectory.Open(_settings.OutputDirectory, true), _settings.TrainingType,
-                pretrained?.Sha256, _settings.Ms2Model, BuildTrainingDescription(exports, selection.Runs, options, trainingSet, _settings));
+                pretrained?.Sha256, _settings.Ms2Model, BuildTrainingDescription(exports, selection.Runs, options, trainingSet, _settings), acquisition);
             Log(@"Saved the fine-tuned model " + modelFile + @": " + saved.Describe());
 
             if (_settings.Library != null)
@@ -163,7 +169,9 @@ namespace pwiz.CarafeSharp
                 runs.Add(new CarafeRunMeta
                 {
                     MsFile = runPaths.TryGetValue(stem, out string path) ? path : stem,
-                    MsInstrument = OspreyTrainingSet.GetTrainingInstrument(export, null) ?? string.Empty,
+                    MsInstrument = OspreyTrainingSet.GetCarafeInstrument(export.InstrumentModel) ?? string.Empty,
+                    Activation = OspreyTrainingSet.GetActivation(export, options.Activation),
+                    Analyzer = OspreyTrainingSet.GetAnalyzer(export, options.Analyzer),
                     Nce = OspreyTrainingSet.GetNce(export, options.Nce),
                     MinFragmentIonMz = scanWindow.Lower,
                     MaxFragmentIonMz = scanWindow.Upper,
@@ -198,7 +206,9 @@ namespace pwiz.CarafeSharp
                     MsFile = runPaths.TryGetValue(stem, out string path) ? path : stem,
                     InstrumentVendor = Footer(export, @"osprey.instrument_vendor"),
                     InstrumentModel = export.InstrumentModel,
-                    Instrument = OspreyTrainingSet.GetTrainingInstrument(export, settings.Instrument) ?? string.Empty,
+                    Instrument = settings.Instrument ?? OspreyTrainingSet.GetCarafeInstrument(export.InstrumentModel) ?? string.Empty,
+                    Activation = OspreyTrainingSet.GetActivation(export, options.Activation),
+                    Analyzer = OspreyTrainingSet.GetAnalyzer(export, options.Analyzer),
                     Nce = OspreyTrainingSet.GetNce(export, options.Nce),
                     DissociationMethods = export.DissociationMethods,
                     CollisionEnergies = export.CollisionEnergies,
