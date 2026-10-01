@@ -42,16 +42,26 @@ namespace pwiz.Osprey.Tasks
     /// <see cref="MzCalibration.ApplyCalibration"/> is the same pure per-m/z function
     /// that a whole-list calibrate-copy applies. Because each window is a fresh decode,
     /// calibration is done in place (no extra copy) rather than into a new array.
+    ///
+    /// <para>With <c>serialBlockReads</c>, each window is read as one block
+    /// (<see cref="SpectraWindowIndex.ReadWindowBlock"/>), one read at a time, and decoded and
+    /// calibrated outside the lock. For a caller that reads every window of a run from a cold
+    /// disk: parallel <see cref="SpectraWindowIndex.LoadWindow"/> calls make a spinning disk
+    /// seek between as many streams as there are threads.</para>
     /// </summary>
     public class StreamingWindowSpectraProvider : IWindowSpectraProvider
     {
         private readonly SpectraWindowIndex _index;
         private readonly MzCalibrationResult _ms2Calibration;
+        // Non-null in serial block-read mode: held only while a window's block is read.
+        private readonly object _readLock;
 
-        public StreamingWindowSpectraProvider(SpectraWindowIndex index, MzCalibrationResult ms2Calibration)
+        public StreamingWindowSpectraProvider(SpectraWindowIndex index, MzCalibrationResult ms2Calibration,
+            bool serialBlockReads = false)
         {
             _index = index;
             _ms2Calibration = ms2Calibration;
+            _readLock = serialBlockReads ? new object() : null;
         }
 
         public IReadOnlyList<double> Ms2RetentionTimes { get { return _index.AllMs2Rts; } }
@@ -59,7 +69,7 @@ namespace pwiz.Osprey.Tasks
         public List<Spectrum> GetCalibratedWindow(int windowKey)
         {
             // Fresh, uncalibrated decode of this window's spectra from disk.
-            var windowSpectra = _index.LoadWindow(windowKey);
+            var windowSpectra = _readLock == null ? _index.LoadWindow(windowKey) : LoadWindowBlock(windowKey);
             if (_ms2Calibration.Calibrated)
             {
                 // These arrays are freshly decoded and owned solely by this list,
@@ -73,6 +83,14 @@ namespace pwiz.Osprey.Tasks
                 }
             }
             return windowSpectra;
+        }
+
+        private List<Spectrum> LoadWindowBlock(int windowKey)
+        {
+            byte[] block;
+            lock (_readLock)
+                block = _index.ReadWindowBlock(windowKey);
+            return _index.DecodeWindowBlock(windowKey, block);
         }
     }
 }

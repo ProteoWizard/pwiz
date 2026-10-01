@@ -778,6 +778,9 @@ namespace pwiz.Osprey.Test
                     List<Spectrum> streamed = index.LoadWindow(kvp.Key);
                     AssertSpectraListEqual(kvp.Value, streamed);
                     streamedTotal += streamed.Count;
+                    // One block read decodes to the same spectra; the last window's block ends
+                    // at the MS1 section, the others at the next window's first record.
+                    AssertSpectraListEqual(kvp.Value, index.DecodeWindowBlock(kvp.Key, index.ReadWindowBlock(kvp.Key)));
                 }
                 // No record lost or double-counted across the window partition.
                 Assert.AreEqual(full.Ms2Spectra.Count, streamedTotal);
@@ -787,6 +790,8 @@ namespace pwiz.Osprey.Test
                 while (expected.ContainsKey(absentKey))
                     absentKey++;
                 Assert.AreEqual(0, index.LoadWindow(absentKey).Count);
+                Assert.IsNull(index.ReadWindowBlock(absentKey));
+                Assert.AreEqual(0, index.DecodeWindowBlock(absentKey, null).Count);
 
                 // AllMs2Rts mirrors the file-order RTs (dedup's sole dependency).
                 Assert.AreEqual(full.Ms2Spectra.Count, index.AllMs2Rts.Count);

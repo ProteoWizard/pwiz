@@ -996,6 +996,16 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An isolation window holds {0} bytes of spectra, more than one read can hold..
+        /// </summary>
+        public static string SpectraWindowIndex_ReadWindowBlock_An_isolation_window_holds__0__bytes_of_spectra__more_than_one_read_can_hold_ {
+            get {
+                return ResourceManager.GetString("SpectraWindowIndex_ReadWindowBlock_An_isolation_window_holds__0__bytes_of_spectr" +
+                        "a__more_than_one_read_can_hold_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Spectrum index {0} has no valid isolation window lower offset (cvParam MS:1000828 is missing or not positive). Osprey needs true isolation windows to process DIA data..
         /// </summary>
         public static string SpectrumBuilder_CreateMs2Spectrum_Spectrum_index__0__has_no_valid_isolation_window_lower_offset__cvParam_MS_1000828_is_ {
