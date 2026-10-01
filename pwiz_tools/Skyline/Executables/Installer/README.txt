@@ -19,6 +19,12 @@ WiX admin .msi (per-machine) of the .NET Framework build:
   * Two variants: <channel>-Setup-<version>.exe bundles the .NET 10 Desktop
     Runtime installer (run only when the runtime is missing);
     <channel>-NoNetRuntime-Setup-<version>.exe only checks for it
+  * A portable <channel>-<version>.zip beside them, the installed tree under a
+    <channel>\ folder: extract it and run <channel>.exe without installing (as
+    the ClickOnce "unplugged" zip allowed). No shortcuts, associations or
+    InstallDir record, and no update check; the .NET 10 Desktop Runtime must
+    already be installed. Downloaded zips should be unblocked (Properties >
+    Unblock) before extracting.
 
 Build:
   1. Build Skyline Release x64 (pwiz_tools\Skyline\build.bat --build-only, or

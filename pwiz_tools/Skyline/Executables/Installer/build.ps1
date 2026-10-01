@@ -17,11 +17,13 @@ Release x64 from Visual Studio):
      learn the published version, and <ProductName>-Setup-<version>.exe is that
      version's installer. Write the manifest and name the bundled installer
      accordingly.
-  4. Make sure the .NET 10 desktop runtime installer EXE is cached (shared with
+  4. Zip the stage as <ProductName>-<version>.zip, the installed tree under a
+     <ProductName> folder, for running Skyline without installing it.
+  5. Make sure the .NET 10 desktop runtime installer EXE is cached (shared with
      the pwiz-sharp installer under pwiz-sharp\installer\cache\).
-  5. Compile Setup.iss twice: the default variant bundling the runtime and the
+  6. Compile Setup.iss twice: the default variant bundling the runtime and the
      NoNetRuntime variant that only checks for it.
-  6. Report, including the two URLs to upload the manifest and the installer to.
+  7. Report, including the two URLs to upload the manifest and the installer to.
 
 The installer itself is described in Setup.iss. Test-Installer.ps1 exercises a built
 installer end to end (silent install, SkylineCmd smoke, uninstall).
@@ -140,6 +142,10 @@ Get-ChildItem $SkylineBinDir -Recurse -File | ForEach-Object {
     Copy-Item $_.FullName $dest
     $copied++; $bytesCopied += $_.Length
 }
+# The document icons the file associations point at, from the Skyline project directory.
+foreach ($ico in @('SkylineDoc.ico', 'SkylineData.ico', 'SkylineDocPointer.ico')) {
+    Copy-Item (Join-Path $skylineDir $ico) $stagingDir
+}
 Write-Host "    $copied files ($([math]::Round($bytesCopied/1MB, 1)) MB), $([math]::Round($bytesSkipped/1MB, 1)) MB skipped"
 foreach ($dataXml in @('unimod.xml', 'modifications.xml')) {
     if (-not (Test-Path (Join-Path $stagingDir $dataXml))) { throw "$dataXml did not make it into the stage; BlibBuild needs it." }
@@ -180,7 +186,25 @@ Write-Host "    product  $productName"
 Write-Host "    folder   $installUrl"
 Write-Host "    manifest $manifestPath"
 
-# 4. The .NET 10 desktop runtime EXE, cached beside the pwiz-sharp installer so the two
+# 4. Portable zip: the tree the installer puts in {app}, under a top-level <product>\
+#    folder, to extract and run <channel>.exe without installing (what the ClickOnce
+#    "unplugged" zip offered). No shortcuts, file associations or InstallDir record,
+#    and Skyline's update check stays off outside a registered install folder.
+Write-Host "`n==> portable zip" -ForegroundColor Cyan
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+$zipPath = Join-Path $OutputDir "$productName-$appVersion.zip"
+if (Test-Path $zipPath) { Remove-Item $zipPath }
+$zip = [System.IO.Compression.ZipFile]::Open($zipPath, 'Create')
+try {
+    Get-ChildItem $stagingDir -Recurse -File | ForEach-Object {
+        $entry = "$productName/" + $_.FullName.Substring($stagingDir.Length + 1).Replace('\', '/')
+        [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $_.FullName, $entry, 'Optimal') | Out-Null
+    }
+}
+finally { $zip.Dispose() }
+Write-Host "    $zipPath"
+
+# 5. The .NET 10 desktop runtime EXE, cached beside the pwiz-sharp installer so the two
 #    products share one download. The aka.ms URL redirects to the latest 10.0.x.
 $dotnetRuntimeUrl = 'https://aka.ms/dotnet/10.0/windowsdesktop-runtime-win-x64.exe'
 $dotnetExe = Join-Path $cacheDir 'windowsdesktop-runtime-10.0-win-x64.exe'
@@ -192,7 +216,7 @@ if (-not (Test-Path $dotnetExe)) {
 }
 Write-Host "    $([math]::Round((Get-Item $dotnetExe).Length / 1MB, 1)) MB at $dotnetExe"
 
-# 5. ISCC, bootstrapped by the shared Ensure-InnoSetup.ps1 when the machine lacks it.
+# 6. ISCC, bootstrapped by the shared Ensure-InnoSetup.ps1 when the machine lacks it.
 $ensure = Join-Path $pwizSharpInstaller 'Ensure-InnoSetup.ps1'
 $iscc = & pwsh -NoProfile -File $ensure -PassThru | Select-Object -Last 1
 if ($LASTEXITCODE -ne 0 -or -not $iscc -or -not (Test-Path $iscc)) {
@@ -231,7 +255,7 @@ $lightName   = "$productName-NoNetRuntime-Setup-$appVersion"
 Invoke-Iscc -OutputBaseFilename $bundledName
 Invoke-Iscc -OutputBaseFilename $lightName -ExtraDefines @('/DNoNetRuntime')
 
-# 6. Report.
+# 7. Report.
 Write-Host ""
 foreach ($base in @($bundledName, $lightName)) {
     $setupPath = Join-Path $OutputDir "$base.exe"
@@ -247,9 +271,14 @@ foreach ($base in @($bundledName, $lightName)) {
     Write-Host "SHA-256: $hash"
     Write-Host ""
 }
+Write-Host "Zip:     $zipPath" -ForegroundColor Green
+Write-Host "Size:    $([math]::Round((Get-Item $zipPath).Length / 1MB, 1)) MB"
+Write-Host "SHA-256: $((Get-FileHash -Path $zipPath -Algorithm SHA256).Hash)"
+Write-Host ""
 Write-Host "Update manifest: $manifestPath" -ForegroundColor Green
 Write-Host "To publish this version, upload:"
 Write-Host "    $manifestPath"
 Write-Host "        as $manifestUrl"
 Write-Host "    $(Join-Path $OutputDir "$bundledName.exe")"
 Write-Host "        as $installerUrl"
+Write-Host "and, if wanted, the NoNetRuntime installer and the zip beside it."
