@@ -131,12 +131,14 @@ namespace pwiz.Osprey.Tasks
             var perWindow = new List<TrainingRecord>[windows.Count];
             var observed = new double[windows.Count][];
             var provider = new StreamingWindowSpectraProvider(index, ms2Cal);
-            // Reported like the rescore's windows: from disk, without the rescore having just
-            // streamed them, a run's windows take about a minute on cohort-scale data, and a
-            // silent minute per run reads as a hang.
+            // Reported because, from disk, without the rescore having just streamed them, a
+            // run's windows take about a minute on cohort-scale data, and a silent minute per
+            // run reads as a hang. At the I/O cadence rather than the rescore's 2 s: this loop
+            // streams each window from .spectra.bin, and at 2 s it printed ~19 percent lines
+            // per run of a ~37 s export on SEA-AD (~1,500 for 82 runs).
             int nDone = 0;
             using (var progress = new ProgressReporter(OspreyTasksResources.TrainingExportWriter_ExportRun_Exporting_isolation_windows,
-                       windows.Count, @"  ", 2.0))
+                       windows.Count, @"  ", ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 Parallel.For(0, windows.Count, new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, maxThreads) }, w =>
                 {
