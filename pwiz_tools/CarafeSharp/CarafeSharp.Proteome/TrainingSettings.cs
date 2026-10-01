@@ -90,7 +90,8 @@ namespace pwiz.CarafeSharp.Proteome
 
         /// <summary>
         /// <c>-nce</c>: the collision energy of a run whose export records none, as Carafe uses
-        /// it (a run's own collision energy comes first); null for Carafe's default of 27.
+        /// it (a Thermo run's own NCE comes first), and the NCE of a run whose energy is in eV
+        /// instead of calibrating one on its spectra; null for those defaults.
         /// </summary>
         public double? Nce { get; set; }
 

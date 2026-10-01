@@ -293,6 +293,81 @@ namespace pwiz.CarafeSharp.Test
         }
 
         /// <summary>
+        /// The NCE of a run whose collision energy is in eV, calibrated on its spectra. Spectra the
+        /// start model itself predicts at NCE 33 calibrate to 33. A SCIEX run trains, and its saved
+        /// model predicts, at the NCE the start model calibrates on its spectra, not at its 35 eV,
+        /// and records both; with -nce, at that.
+        /// </summary>
+        [TestMethod]
+        public void TestNceCalibration()
+        {
+            // A start model whose predictions move clearly with the NCE: its NCE weights scaled up.
+            string start = Path.Combine(_folder, @"nce_start.safetensors");
+            manual_seed(17);
+            using (var network = new ModelMs2Bert())
+            {
+                using (no_grad())
+                    network.state_dict()[@"meta_nn.nn.weight"][TensorIndex.Colon, ModelMs2Bert.META_DIM].mul_(100);
+                StateDict.WriteSafetensors(network, start);
+            }
+            var rows = Ms2Rows();
+            using (var model = Ms2Model.FromSafetensors(start, CPU))
+            {
+                var predictions = model.Predict(rows.Select(r => new Ms2Request(r.Precursor, 33, r.Instrument)).ToArray());
+                var observed = rows.Select((r, i) => new Ms2TrainingExample(r.Precursor, 30, r.Instrument,
+                    Enumerable.Range(0, r.Intensities.Length).Select(k => (double)predictions[i].Get(k / Ms2TrainingExample.FRAGMENT_TYPES,
+                        k % Ms2TrainingExample.FRAGMENT_TYPES)).ToArray(), new double[r.Intensities.Length])).ToArray();
+                var calibration = NceCalibration.Calibrate(model, observed);
+                Assert.AreEqual(33, calibration.Nce, calibration.ToString());
+                Assert.AreEqual(NceCalibration.MAX_NCE - NceCalibration.MIN_NCE + 1, calibration.Scores.Count);
+                Assert.AreEqual(rows.Length, calibration.Spectra);
+                Assert.IsFalse(calibration.AtLimit);
+            }
+
+            var footer = new Dictionary<string, string>
+            {
+                { @"osprey.instrument_vendor", @"Sciex" },
+                { @"osprey.instrument_model", @"TripleTOF 6600" },
+                { @"osprey.collision_energies", @"{""35"":180,""38"":20}" },
+            };
+            string export = WriteCleanExport(@"run_sciex", null, null, footer);
+            string output = Path.Combine(_folder, @"sciex");
+            var log = new StringWriter();
+            new ModelTrainer(CarafeCommandLine.Parse(new[] { @"-i", export, @"-o", output, @"-tf", @"ms2", @"-seed", @"9",
+                @"-ms2_model", start, @"-device", @"cpu" }).TrainingSettings, log, zip => null).Run();
+            // What the start model calibrates on the rows the run trained on, as its training tables hold them.
+            double expected;
+            using (var model = Ms2Model.FromSafetensors(start, CPU))
+                expected = NceCalibration.Calibrate(model, CarafeTrainingDirectory.ReadMs2(output, 30, @"SciexTOF")).Nce;
+            var run = CarafeModelFile.Open(Path.Combine(output, CarafeModelFile.DEFAULT_FILE_NAME)).Training.Runs.Single();
+            Assert.AreEqual(expected, run.Nce, log.ToString());
+            Assert.AreEqual(RunCollisionEnergy.CALIBRATED, run.NceSource);
+            Assert.AreEqual(RunCollisionEnergy.EV_UNIT, run.CollisionEnergyUnit);
+            Assert.AreEqual(expected, CarafeModelDirectory.Open(output).Runs.Single().Nce, @"meta.json, which a library takes the NCE from");
+            Assert.AreEqual(expected, CarafeModelFile.Open(Path.Combine(output, CarafeModelFile.DEFAULT_FILE_NAME)).Nce);
+            // Every MS2 row of the run carries its calibrated NCE.
+            using (var model = Ms2Model.FromSafetensors(start, CPU))
+            {
+                var read = OspreyTrainingExport.Read(export);
+                var set = OspreyTrainingSet.Build(new[] { read }, new OspreyTrainingSetOptions { CalibrateNce = r => NceCalibration.Calibrate(model, r) });
+                var energy = set.GetCollisionEnergy(read);
+                Assert.AreEqual(RunCollisionEnergy.CALIBRATED, energy.Source);
+                Assert.IsTrue(set.Ms2.Count > 0 && set.Ms2.All(r => r.Nce == energy.Nce), energy.ToString());
+            }
+            StringAssert.Contains(log.ToString(), string.Format(CultureInfo.InvariantCulture, @"NCE {0} (calibrated); the file records 35 eV; calibration: NCE {0}", expected));
+            StringAssert.Contains(CarafeModelFile.Open(Path.Combine(output, CarafeModelFile.DEFAULT_FILE_NAME)).FormatInfo(),
+                string.Format(CultureInfo.InvariantCulture, @"collision energies 35 x180, 38 x20 (eV); NCE {0} (calibrated)", expected));
+
+            // -nce names it instead.
+            string named = Path.Combine(_folder, @"sciex_nce");
+            new ModelTrainer(CarafeCommandLine.Parse(new[] { @"-i", export, @"-o", named, @"-tf", @"ms2", @"-seed", @"9",
+                @"-ms2_model", start, @"-device", @"cpu", @"-nce", @"28" }).TrainingSettings, null, zip => null).Run();
+            var namedRun = CarafeModelFile.Open(Path.Combine(named, CarafeModelFile.DEFAULT_FILE_NAME)).Training.Runs.Single();
+            Assert.AreEqual(28.0, namedRun.Nce);
+            Assert.AreEqual(RunCollisionEnergy.COMMAND_LINE, namedRun.NceSource);
+        }
+
+        /// <summary>
         /// A saved model fine-tuned further (<c>-model</c> with training): both of its models are
         /// the start, and the baseline, of this run's. When the fine-tuned MS2 model does not beat
         /// the saved one (here it cannot: its learning rate is 0), the new file keeps the saved
@@ -524,9 +599,10 @@ namespace pwiz.CarafeSharp.Test
 
         /// <summary>
         /// A training export of six clean precursors for <paramref name="run"/>, from an Astral run
-        /// isolating 380-980 m/z, with the search hash and run q pass given (none when null).
+        /// isolating 380-980 m/z, with the search hash and run q pass given (none when null), and
+        /// <paramref name="footerValues"/> over the footer's.
         /// </summary>
-        private string WriteCleanExport(string run, string searchHash = null, string runQPass = null)
+        private string WriteCleanExport(string run, string searchHash = null, string runQPass = null, IReadOnlyDictionary<string, string> footerValues = null)
         {
             var records = new List<OspreyTrainingRecord>();
             foreach (string sequence in MS2_PEPTIDES)
@@ -554,6 +630,8 @@ namespace pwiz.CarafeSharp.Test
                 footer[OspreyTrainingExport.SEARCH_HASH_KEY] = searchHash;
             if (runQPass != null)
                 footer[@"osprey.training_export.run_q_pass"] = runQPass;
+            foreach (var pair in footerValues ?? new Dictionary<string, string>())
+                footer[pair.Key] = pair.Value;
             string export = Path.Combine(_folder, run + OspreyTrainingExport.FILE_SUFFIX);
             OspreyTestRecords.WriteExport(export, records, footer, 4);
             return export;

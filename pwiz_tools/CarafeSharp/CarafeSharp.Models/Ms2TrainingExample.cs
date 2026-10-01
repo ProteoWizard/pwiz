@@ -75,5 +75,11 @@ namespace pwiz.CarafeSharp.Models
         {
             get { return Precursor.Peptide.Sequence; }
         }
+
+        /// <summary>This spectrum at another collision energy, as an NCE calibration scores it.</summary>
+        public Ms2TrainingExample WithNce(double nce)
+        {
+            return new Ms2TrainingExample(Precursor, nce, Instrument, Intensities, Invalid, Activation, Analyzer);
+        }
     }
 }

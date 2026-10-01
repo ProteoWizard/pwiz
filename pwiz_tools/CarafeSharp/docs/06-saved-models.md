@@ -159,12 +159,14 @@ file holds only the fine-tuned RT model:
         "activation": "beam-CID",
         "analyzer": "LIT",
         "nce": 30,
+        "nce_source": "file",
         "dissociation_methods": {
           "HCD": 200
         },
         "collision_energies": {
           "30": 200
         },
+        "collision_energy_unit": "NCE",
         "ms2_mass_analyzers": {
           "radial ejection linear ion trap": 200
         },
@@ -249,8 +251,9 @@ file holds only the fine-tuned RT model:
 | `runs[].instrument_vendor`, `instrument_model` | As the run's data file reports them; null when Osprey searched it without the file. |
 | `runs[].instrument` | The instrument name the run trained as (Carafe's: Eclipse, Lumos, Astral, QE, Stellar, ...), or empty when Carafe names none. |
 | `runs[].activation`, `analyzer` | How the run's precursors were activated (`beam-CID`, `reCID`) and which analyzer read its MS2 spectra out (`Orbitrap`, `LIT`, `ToF`), as it trained; null when unknown (01-model-spec.md). |
-| `runs[].nce` | The NCE the models were trained with. |
-| `runs[].dissociation_methods`, `collision_energies` | MS2 spectra by dissociation method (pwiz's short names: `HCD` for beam-type, `CID` for resonance CID) and by collision energy as the file reports it (normalized for Thermo, eV for Sciex), over the spectra Osprey sampled; empty without the data file. |
+| `runs[].nce`, `nce_source` | The NCE the models were trained with, and where it came from: `file` (a Thermo run's own NCE), `calibrated` (on the run's spectra, its energy being in eV; 01-model-spec.md), `-nce`, or `default` (Carafe's 27). |
+| `runs[].dissociation_methods`, `collision_energies` | MS2 spectra by dissociation method (pwiz's short names: `HCD` for beam-type, `CID` for resonance CID) and by collision energy as the file reports it, over the spectra Osprey sampled; empty without the data file. |
+| `runs[].collision_energy_unit` | The unit of `collision_energies`: `NCE` for Thermo (the value pwiz reports is the scan filter's NCE), `eV` for any other vendor, or null when the run reports none. |
 | `runs[].ms2_mass_analyzers` | MS2 spectra by the mass analyzer that read them out (`orbitrap`, `radial ejection linear ion trap`, ...); empty without the data file or from an Osprey that did not record it. |
 | `runs[].rt_min`, `rt_max` | The run's first and last MS2 retention time, minutes. |
 | `runs[].isolation_mz_min`, `_max` | The range of the run's isolation windows. |

@@ -332,8 +332,9 @@ namespace pwiz.CarafeSharp.Proteome
                 Line(@"  Run {0}: {1}, {2}", run.Run, run.Activation ?? @"activation unknown", run.Analyzer ?? @"analyzer unknown");
                 Line(@"    Instrument: {0} {1}{2}", run.InstrumentVendor ?? string.Empty, run.InstrumentModel ?? @"(unknown)",
                     string.IsNullOrEmpty(run.Instrument) ? string.Empty : @" (trained as " + run.Instrument + @")");
-                Line(@"    Fragmentation: {0}; collision energies {1}; NCE {2}; MS2 read out in {3}", FormatCounts(run.DissociationMethods),
-                    FormatCounts(run.CollisionEnergies), run.Nce, FormatCounts(run.Ms2MassAnalyzers));
+                Line(@"    Fragmentation: {0}; collision energies {1}{2}; NCE {3}{4}; MS2 read out in {5}", FormatCounts(run.DissociationMethods),
+                    FormatCounts(run.CollisionEnergies), run.CollisionEnergyUnit == null ? string.Empty : @" (" + run.CollisionEnergyUnit + @")",
+                    run.Nce, run.NceSource == null ? string.Empty : @" (" + run.NceSource + @")", FormatCounts(run.Ms2MassAnalyzers));
                 Line(@"    RT {0}-{1} min; isolation m/z {2}-{3}; MS2 m/z {4}-{5}; fragment tolerance {6} {7}",
                     FormatNumber(run.RtMin), FormatNumber(run.RtMax), FormatNumber(run.IsolationMzMin), FormatNumber(run.IsolationMzMax),
                     FormatNumber(run.Ms2MzMin), FormatNumber(run.Ms2MzMax), FormatNumber(run.FragmentTolerance), run.FragmentToleranceUnit ?? string.Empty);

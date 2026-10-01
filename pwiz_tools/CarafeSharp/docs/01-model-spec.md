@@ -137,6 +137,19 @@ when the training `rt_max` is known, else `irt_pred`.
   A run whose MS2 spectra mix activations or analyzers is refused unless `-activation` or `-analyzer`
   names one for all of it. A library predicts for `-activation` and `-analyzer`, else the training
   run's.
+- **NCE of a run** (CarafeSharp's; Carafe trains every run at its file's energy). The NCE input is
+  Thermo's normalized collision energy. pwiz reports every vendor's energy as PSI-MS's collision
+  energy in eV, but a Thermo file's value is its scan filter's NCE, so:
+  - a Thermo run trains at its own NCE (the most common over its sampled MS2 spectra), else `-nce`,
+    else 27, as Carafe's does;
+  - a run from any other vendor, whose energy is in eV, trains at `-nce`, else at the NCE where the
+    start MS2 model predicts its training spectra best: the highest median PCC over NCE 20 to 40 in
+    steps of 1, on at most 1,000 of its spectra, as AlphaPeptDeep calibrated the NCE of its SCIEX
+    TripleTOF fine-tune. A rolling collision energy needs nothing more, since the run's spectra
+    decide. A calibration at 20 or 40 is warned about;
+  - a run that names neither vendor nor model counts as Thermo.
+  A library from the run's models predicts at the NCE it trained with (meta.json, and a saved
+  model's `prediction_defaults`), and the saved model records where it came from.
 
 ## Prediction post-processing
 

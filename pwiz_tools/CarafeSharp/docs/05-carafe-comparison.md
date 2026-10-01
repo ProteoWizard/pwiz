@@ -127,6 +127,10 @@ its own pretrained baseline. They do not rank the two tools.
   slightly more often (9.0% against 6.7%). 1+ fragments stand well clear of their null (93% against
   67%, and 51% against 8%). So what matches at a 2+ fragment of a 2+ precursor on the Stellar is
   mostly interference or noise.
+- **NCE of a run in eV (2026-09-30, after these runs):** Carafe trains a run at its file's collision
+  energy whatever its unit, so a SCIEX run at 35 eV trains as NCE 35. CarafeSharp calibrates the NCE
+  of a run whose energy is in eV on its own spectra (01-model-spec.md). Thermo runs, every run here,
+  train at their NCE as Carafe's do.
 - **Activation and analyzer (2026-09-30, after these runs):** CarafeSharp's MS2 model also learns
   how a precursor was activated (beam-CID, reCID) and which analyzer read the spectrum out (Orbitrap,
   LIT, ToF), in an acquisition layer of its own (01-model-spec.md); Carafe has neither and trains a

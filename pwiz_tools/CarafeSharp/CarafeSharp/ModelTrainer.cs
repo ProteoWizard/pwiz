@@ -116,17 +116,9 @@ namespace pwiz.CarafeSharp
                     RequireTopIonValid = _settings.RequireTopIonValid,
                 },
             };
-            var trainingSet = OspreyTrainingSet.Build(exports, options);
-            Stats = trainingSet.Stats;
-            Log(@"Training data: " + trainingSet.Stats);
-            Log(@"Ions masked by rule: " + string.Join(@", ", trainingSet.Stats.MaskedBy
-                .OrderBy(p => p.Key, StringComparer.Ordinal).Select(p => p.Key + @" " + p.Value)));
-            if (_settings.NoMasking)
-                Log(@"-no_masking: training on every ion of the kept spectra");
-            CarafeTrainingDirectory.Write(_settings.OutputDirectory, trainingSet.Rt, trainingSet.Ms2);
-
             var fineTune = new FineTuneOptions { Seed = _settings.Seed, Device = device, Ms2Model = _settings.Ms2Model };
             ConfigureFineTune?.Invoke(fineTune);
+            OspreyTrainingSet trainingSet;
             string baseFolder = null;
             try
             {
@@ -140,6 +132,8 @@ namespace pwiz.CarafeSharp
                     fineTune.KeepMs2Start = true;
                     Log(@"Fine-tune the saved model " + _settings.BaseModel + @" further: " + baseModel.Describe());
                 }
+                trainingSet = BuildTrainingSet(exports, options, fineTune, pretrained);
+                CarafeTrainingDirectory.Write(_settings.OutputDirectory, trainingSet.Rt, trainingSet.Ms2);
                 Result = FineTuneRun.Run(_settings.TrainRt ? trainingSet.Rt : null, _settings.TrainMs2 ? trainingSet.Ms2 : null,
                     pretrained, fineTune, _settings.OutputDirectory, Log);
             }
@@ -148,7 +142,7 @@ namespace pwiz.CarafeSharp
                 if (baseFolder != null && Directory.Exists(baseFolder))
                     Directory.Delete(baseFolder, true);
             }
-            CarafeModelDirectory.WriteMeta(_settings.OutputDirectory, BuildRunMeta(exports, selection.Runs, options));
+            CarafeModelDirectory.WriteMeta(_settings.OutputDirectory, BuildRunMeta(exports, selection.Runs, options, trainingSet));
 
             // The fine-tuned model as one file, to predict later libraries from with -model.
             // The acquisition columns of the MS2 model it holds; the pretrained model has the default ones.
@@ -184,7 +178,7 @@ namespace pwiz.CarafeSharp
         /// count, which Carafe never sets, keep JMeta's defaults.
         /// </summary>
         internal static IReadOnlyList<CarafeRunMeta> BuildRunMeta(IReadOnlyList<OspreyTrainingExport> exports,
-            IReadOnlyDictionary<string, string> runPaths, OspreyTrainingSetOptions options)
+            IReadOnlyDictionary<string, string> runPaths, OspreyTrainingSetOptions options, OspreyTrainingSet trainingSet)
         {
             var runs = new List<CarafeRunMeta>();
             foreach (var export in exports)
@@ -198,7 +192,7 @@ namespace pwiz.CarafeSharp
                     MsInstrument = OspreyTrainingSet.GetCarafeInstrument(export.InstrumentModel) ?? string.Empty,
                     Activation = OspreyTrainingSet.GetActivation(export, options.Activation),
                     Analyzer = OspreyTrainingSet.GetAnalyzer(export, options.Analyzer),
-                    Nce = OspreyTrainingSet.GetNce(export, options.Nce),
+                    Nce = trainingSet.GetCollisionEnergy(export).Nce,
                     MinFragmentIonMz = scanWindow.Lower,
                     MaxFragmentIonMz = scanWindow.Upper,
                     RtMax = OspreyTrainingSet.GetRtMax(export, options),
@@ -235,9 +229,11 @@ namespace pwiz.CarafeSharp
                     Instrument = settings.Instrument ?? OspreyTrainingSet.GetCarafeInstrument(export.InstrumentModel) ?? string.Empty,
                     Activation = OspreyTrainingSet.GetActivation(export, options.Activation),
                     Analyzer = OspreyTrainingSet.GetAnalyzer(export, options.Analyzer),
-                    Nce = OspreyTrainingSet.GetNce(export, options.Nce),
+                    Nce = trainingSet.GetCollisionEnergy(export).Nce,
+                    NceSource = trainingSet.GetCollisionEnergy(export).Source,
                     DissociationMethods = export.DissociationMethods,
                     CollisionEnergies = export.CollisionEnergies,
+                    CollisionEnergyUnit = trainingSet.GetCollisionEnergy(export).Unit,
                     Ms2MassAnalyzers = export.Ms2MassAnalyzers,
                     RtMin = FooterNumber(export, @"osprey.rt_min"),
                     RtMax = FooterNumber(export, @"osprey.rt_max"),
@@ -271,6 +267,50 @@ namespace pwiz.CarafeSharp
                     .GroupBy(name => name, StringComparer.Ordinal).ToDictionary(g => g.Key, g => g.Count(), StringComparer.Ordinal),
                 Runs = runs,
             };
+        }
+
+        /// <summary>
+        /// The training set, logged with what it kept and why. The NCE of a run whose collision
+        /// energy is in eV is calibrated on its spectra by the MS2 model the fine-tune starts
+        /// from, loaded only when such a run needs it.
+        /// </summary>
+        private OspreyTrainingSet BuildTrainingSet(IReadOnlyList<OspreyTrainingExport> exports, OspreyTrainingSetOptions options,
+            FineTuneOptions fineTune, PretrainedModels pretrained)
+        {
+            Ms2Model startModel = null;
+            try
+            {
+                options.CalibrateNce = rows =>
+                {
+                    startModel ??= fineTune.Ms2Model != null
+                        ? Ms2Model.FromFile(fineTune.Ms2Model, fineTune.Device)
+                        : Ms2Model.FromPretrained(pretrained, fineTune.Device);
+                    return NceCalibration.Calibrate(startModel, rows);
+                };
+                var trainingSet = OspreyTrainingSet.Build(exports, options);
+                Stats = trainingSet.Stats;
+                Log(@"Training data: " + trainingSet.Stats);
+                Log(@"Ions masked by rule: " + string.Join(@", ", trainingSet.Stats.MaskedBy
+                    .OrderBy(p => p.Key, StringComparer.Ordinal).Select(p => p.Key + @" " + p.Value)));
+                if (_settings.NoMasking)
+                    Log(@"-no_masking: training on every ion of the kept spectra");
+                foreach (var export in exports)
+                {
+                    var energy = trainingSet.GetCollisionEnergy(export);
+                    Log(@"Collision energy of " + export.Path + @": " + energy);
+                    if (energy.Calibration != null && energy.Calibration.AtLimit)
+                    {
+                        Log(string.Format(CultureInfo.InvariantCulture,
+                            @"WARNING: {0} calibrated at NCE {1}, an end of the range scored ({2}-{3}); give its NCE with -nce if another fits better.",
+                            export.Path, energy.Nce, NceCalibration.MIN_NCE, NceCalibration.MAX_NCE));
+                    }
+                }
+                return trainingSet;
+            }
+            finally
+            {
+                startModel?.Dispose();
+            }
         }
 
         private static string Footer(OspreyTrainingExport export, string key)

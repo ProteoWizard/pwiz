@@ -149,6 +149,13 @@ namespace pwiz.CarafeSharp.Proteome
         public string Analyzer { get; set; }
         /// <summary>The NCE the models were trained with.</summary>
         public double Nce { get; set; }
+        /// <summary>
+        /// Where <see cref="Nce"/> came from: <c>file</c> (a Thermo run's own NCE), <c>calibrated</c>
+        /// (on the run's spectra, its energy being in eV), <c>-nce</c> or <c>default</c>; null when unknown.
+        /// </summary>
+        public string NceSource { get; set; }
+        /// <summary>The unit of <see cref="CollisionEnergies"/>: <c>NCE</c> (Thermo) or <c>eV</c>, or null when the run reports none.</summary>
+        public string CollisionEnergyUnit { get; set; }
         /// <summary>MS2 spectra by dissociation method, over the spectra Osprey sampled.</summary>
         public IReadOnlyDictionary<string, long> DissociationMethods { get; set; } = new Dictionary<string, long>();
         /// <summary>MS2 spectra by collision energy as the file reports it, over the spectra Osprey sampled.</summary>
@@ -188,8 +195,10 @@ namespace pwiz.CarafeSharp.Proteome
             WriteString(json, @"activation", Activation);
             WriteString(json, @"analyzer", Analyzer);
             json.WriteNumber(@"nce", Nce);
+            WriteString(json, @"nce_source", NceSource);
             CarafeModelTraining.WriteCounts(json, @"dissociation_methods", DissociationMethods.Select(p => (p.Key, p.Value)));
             CarafeModelTraining.WriteCounts(json, @"collision_energies", CollisionEnergies.Select(p => (p.Key, p.Value)));
+            WriteString(json, @"collision_energy_unit", CollisionEnergyUnit);
             CarafeModelTraining.WriteCounts(json, @"ms2_mass_analyzers", Ms2MassAnalyzers.Select(p => (p.Key, p.Value)));
             WriteNumber(json, @"rt_min", RtMin);
             WriteNumber(json, @"rt_max", RtMax);
@@ -222,6 +231,8 @@ namespace pwiz.CarafeSharp.Proteome
                 Activation = ReadString(element, @"activation"),
                 Analyzer = ReadString(element, @"analyzer"),
                 Nce = element.GetProperty(@"nce").GetDouble(),
+                NceSource = ReadString(element, @"nce_source"),
+                CollisionEnergyUnit = ReadString(element, @"collision_energy_unit"),
                 DissociationMethods = CarafeModelTraining.ReadCounts(element.GetProperty(@"dissociation_methods")),
                 CollisionEnergies = CarafeModelTraining.ReadCounts(element.GetProperty(@"collision_energies")),
                 Ms2MassAnalyzers = element.TryGetProperty(@"ms2_mass_analyzers", out var analyzers)

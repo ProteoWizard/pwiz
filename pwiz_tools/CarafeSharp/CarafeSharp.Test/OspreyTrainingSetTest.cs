@@ -296,7 +296,7 @@ namespace pwiz.CarafeSharp.Test
                 // defaults where Carafe sets nothing; read back exactly as written.
                 var runPaths = new Dictionary<string, string> { { @"a", @"D:\data\a.mzML" } };
                 var options = new OspreyTrainingSetOptions { Nce = 25, RtMax = 15, Instrument = @"QE" };
-                CarafeModelDirectory.WriteMeta(folder, ModelTrainer.BuildRunMeta(exports, runPaths, options));
+                CarafeModelDirectory.WriteMeta(folder, ModelTrainer.BuildRunMeta(exports, runPaths, options, OspreyTrainingSet.Build(exports, options)));
                 var runs = CarafeModelDirectory.Open(folder).Runs.ToDictionary(r => r.MsFile);
                 Assert.AreEqual(2, runs.Count);
                 AssertRunMeta(runs[@"D:\data\a.mzML"], @"Exploris", 30, 15);
@@ -542,8 +542,52 @@ namespace pwiz.CarafeSharp.Test
             }
         }
 
+        /// <summary>
+        /// A run's collision energy and the NCE it trains with. A Thermo file's energy is its NCE
+        /// and wins over -nce, as Carafe takes it. Any other vendor's is in eV: -nce names the NCE,
+        /// else the run's spectra calibrate it, and with no calibrator the energy is taken as
+        /// Carafe takes it. A run with no energy takes -nce, else Carafe's default.
+        /// </summary>
+        [TestMethod]
+        public void TestCollisionEnergies()
+        {
+            string folder = Path.Combine(Path.GetTempPath(), @"CarafeSharpEnergy_" + Guid.NewGuid().ToString(@"N"));
+            Directory.CreateDirectory(folder);
+            try
+            {
+                RunCollisionEnergy Energy(string vendor, string model, string energies, double? nce = null, bool calibrate = true) =>
+                    OspreyTrainingSet.GetCollisionEnergy(AcquisitionExport(folder, vendor, model, null, null, energies),
+                        new OspreyTrainingSetOptions { Nce = nce, CalibrateNce = calibrate ? rows => null : null });
+                void AssertEnergy(RunCollisionEnergy energy, double nce, string source, double? recorded, string unit)
+                {
+                    Assert.AreEqual(nce, energy.Nce, energy.ToString());
+                    Assert.AreEqual(source, energy.Source, energy.ToString());
+                    Assert.AreEqual(recorded, energy.Energy, energy.ToString());
+                    Assert.AreEqual(unit, energy.Unit, energy.ToString());
+                }
+
+                AssertEnergy(Energy(@"Thermo", @"Stellar", @"{""30"":200}", 25), 30, RunCollisionEnergy.FROM_FILE, 30, RunCollisionEnergy.NCE_UNIT);
+                AssertEnergy(Energy(@"Sciex", @"TripleTOF 6600", @"{""35"":150,""40"":50}"), OspreyTrainingSetOptions.DEFAULT_NCE,
+                    RunCollisionEnergy.CALIBRATED, 35, RunCollisionEnergy.EV_UNIT);
+                AssertEnergy(Energy(@"Sciex", @"TripleTOF 6600", @"{""35"":200}", 28), 28, RunCollisionEnergy.COMMAND_LINE, 35, RunCollisionEnergy.EV_UNIT);
+                AssertEnergy(Energy(@"Sciex", @"TripleTOF 6600", @"{""35"":200}", null, false), 35, RunCollisionEnergy.FROM_FILE, 35,
+                    RunCollisionEnergy.EV_UNIT);
+                AssertEnergy(Energy(null, @"timsTOF Pro", @"{""42"":200}"), OspreyTrainingSetOptions.DEFAULT_NCE, RunCollisionEnergy.CALIBRATED, 42,
+                    RunCollisionEnergy.EV_UNIT);
+                AssertEnergy(Energy(null, string.Empty, @"{""30"":200}"), 30, RunCollisionEnergy.FROM_FILE, 30, RunCollisionEnergy.NCE_UNIT);
+                AssertEnergy(Energy(@"Sciex", @"TripleTOF 6600", null, 26), 26, RunCollisionEnergy.COMMAND_LINE, null, null);
+                AssertEnergy(Energy(@"Sciex", @"TripleTOF 6600", null), OspreyTrainingSetOptions.DEFAULT_NCE, RunCollisionEnergy.DEFAULT, null, null);
+                StringAssert.Contains(Energy(@"Sciex", @"TripleTOF 6600", @"{""35"":200}", 28).ToString(), @"NCE 28 (-nce); the file records 35 eV");
+            }
+            finally
+            {
+                Directory.Delete(folder, true);
+            }
+        }
+
         /// <summary>A one-record export from <paramref name="vendor"/>'s <paramref name="model"/>, with these footer histograms (JSON), each left out when null.</summary>
-        private static OspreyTrainingExport AcquisitionExport(string folder, string vendor, string model, string methods, string analyzers)
+        private static OspreyTrainingExport AcquisitionExport(string folder, string vendor, string model, string methods, string analyzers,
+            string energies = null)
         {
             var footer = new Dictionary<string, string>
             {
@@ -557,6 +601,8 @@ namespace pwiz.CarafeSharp.Test
                 footer[@"osprey.dissociation_methods"] = methods;
             if (analyzers != null)
                 footer[@"osprey.ms2_mass_analyzers"] = analyzers;
+            if (energies != null)
+                footer[@"osprey.collision_energies"] = energies;
             string path = Path.Combine(folder, Guid.NewGuid().ToString(@"N") + OspreyTrainingExport.FILE_SUFFIX);
             var record = OspreyTestRecords.CleanRecord(@"PEPTIDEK", 2);
             record.FileName = Path.GetFileNameWithoutExtension(path);
