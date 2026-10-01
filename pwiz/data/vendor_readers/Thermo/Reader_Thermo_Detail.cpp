@@ -129,6 +129,8 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_Orbitrap_Fusion_ETD:       return MS_Orbitrap_Fusion_ETD;
         case InstrumentModelType_Orbitrap_Ascend:           return MS_Orbitrap_Ascend;
         case InstrumentModelType_Orbitrap_Excedion_Pro:     return MS_Orbitrap_Excedion_Pro;
+        case InstrumentModelType_Orbitrap_Excedion:         return MS_Orbitrap_Excedion;
+        case InstrumentModelType_Orbitrap_Tribrid_Apex:     return MS_Orbitrap_Tribrid_Apex;
         case InstrumentModelType_Orbitrap_ID_X:             return MS_Orbitrap_ID_X;
         case InstrumentModelType_Orbitrap_IQ_X:             return MS_Orbitrap_IQ_X;
         case InstrumentModelType_TSQ_Quantiva:              return MS_TSQ_Quantiva;
@@ -268,6 +270,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_Orbitrap_Exploris_GC:
         case InstrumentModelType_Orbitrap_GC:
         case InstrumentModelType_Orbitrap_Excedion_Pro:
+        case InstrumentModelType_Orbitrap_Excedion:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
@@ -318,6 +321,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_Orbitrap_ID_X:
         case InstrumentModelType_Orbitrap_IQ_X:
         case InstrumentModelType_Orbitrap_Eclipse:
+        case InstrumentModelType_Orbitrap_Tribrid_Apex:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
