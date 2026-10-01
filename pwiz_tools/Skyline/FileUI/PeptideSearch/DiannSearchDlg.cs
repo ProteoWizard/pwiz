@@ -28,6 +28,7 @@ using Parquet;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DdaSearch;
@@ -77,14 +78,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             Icon = SkylineWindow.Icon;
 
             DataFileResults = new ImportResultsDIAControl(this);
-            AddPageControl(DataFileResults, dataFilesPage, 2, 60);
+            WizardPages.AddPageControl(DataFileResults, dataFilesPage, 2, 60);
 
             ImportFastaControl = new ImportFastaControl(this, skylineWindow.SequenceTree, false);
             ImportFastaControl.IsDDASearch = true;
-            AddPageControl(ImportFastaControl, fastaPage, 2, 60);
+            WizardPages.AddPageControl(ImportFastaControl, fastaPage, 2, 60);
 
             SearchControl = new DiannSearchControl(this);
-            AddPageControl(SearchControl, runSearchPage, 2, 0);
+            WizardPages.AddPageControl(SearchControl, runSearchPage, 2, 0);
             SearchControl.SearchFinished += SearchControlSearchFinished;
 
             // Set default config values
@@ -108,29 +109,33 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void InitSettingsPresetControls()
         {
             // Anchor the controls bottom-left of the dialog, in the same horizontal band
-            // as the Back/Next/Cancel buttons.
+            // as the Back/Next/Cancel buttons. The form has already auto-scaled, so the
+            // pixel literals are scaled here, and the label is added before it is measured
+            // so that it measures in the form's font rather than the default one.
+            int gap = DpiUtil.Scale(this, 6);
             var lbl = new Label
             {
                 AutoSize = true,
                 Anchor = AnchorStyles.Bottom | AnchorStyles.Left,
-                Location = new Point(12, btnBack.Top + 4),
                 Text = PeptideSearchResources.DiannSearchDlg_SettingsPreset_Label
             };
+            Controls.Add(lbl);
+            lbl.Location = new Point(DpiUtil.Scale(this, 12), btnBack.Top + DpiUtil.Scale(this, 4));
             _cbSettingsPreset = new ComboBox
             {
                 DropDownStyle = ComboBoxStyle.DropDownList,
                 Anchor = AnchorStyles.Bottom | AnchorStyles.Left,
-                Width = 220,
-                Location = new Point(lbl.Right + 6, btnBack.Top)
+                Width = DpiUtil.Scale(this, 220),
+                Location = new Point(lbl.Left + lbl.PreferredWidth + gap, btnBack.Top)
             };
             _btnSavePreset = new Button
             {
                 Text = PeptideSearchResources.DiannSearchDlg_SettingsPreset_Save,
                 Anchor = AnchorStyles.Bottom | AnchorStyles.Left,
                 AutoSize = true,
-                Location = new Point(_cbSettingsPreset.Right + 6, btnBack.Top - 1)
+                Height = btnBack.Height,
+                Location = new Point(_cbSettingsPreset.Right + gap, btnBack.Top)
             };
-            Controls.Add(lbl);
             Controls.Add(_cbSettingsPreset);
             Controls.Add(_btnSavePreset);
 
@@ -712,16 +717,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void btnBack_Click(object sender, EventArgs e)
         {
             PreviousPage();
-        }
-
-        private static void AddPageControl<TControl>(TControl pageControl, TabPage tabPage, int border, int header)
-            where TControl : UserControl
-        {
-            pageControl.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            pageControl.Location = new Point(border, header);
-            pageControl.Width = tabPage.Width - border * 2;
-            pageControl.Height = tabPage.Height - header - border;
-            tabPage.Controls.Add(pageControl);
         }
     }
 

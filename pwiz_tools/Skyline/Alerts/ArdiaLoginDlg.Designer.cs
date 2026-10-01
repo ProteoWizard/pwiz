@@ -324,6 +324,7 @@ namespace pwiz.Skyline.Alerts
             // ArdiaLoginDlg
             // 
             resources.ApplyResources(this, "$this");
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.wizardPagesMain);
             this.Name = "ArdiaLoginDlg";
             this.ShowIcon = false;

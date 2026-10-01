@@ -642,10 +642,13 @@ namespace pwiz.Skyline.Controls.Graphs
             string label = string.Format("{0}\n{1:F01}", title, retentionTime.DisplayTime);
             // ReSharper restore LocalizableElement
             FontSpec fontLabel = CreateFontSpec(color, _fontSpec.Size);
-            SizeF sizeLabel = fontLabel.MeasureString(g, label, graphPane.CalcScaleFactor());
+            float scaleFactor = graphPane.CalcScaleFactor();
+            SizeF sizeLabel = fontLabel.MeasureString(g, label, scaleFactor);
+            // Gaps are pixels at 96 DPI, scaled like the label they separate.
+            float labelGap = 15 * scaleFactor;
             PointF realTopPoint = ptTop;
-            ptTop = new PointF(0, ptTop.Y + sizeLabel.Height + 15);
-            float chartHeightWithLabel = graphPane.Chart.Rect.Height + sizeLabel.Height + 15;
+            ptTop = new PointF(0, ptTop.Y + sizeLabel.Height + labelGap);
+            float chartHeightWithLabel = graphPane.Chart.Rect.Height + sizeLabel.Height + labelGap;
             double intensityChartFraction = (ptTop.Y - realTopPoint.Y) / chartHeightWithLabel;
 
             LineObj stick = new LineObj(color, retentionTime.DisplayTime, intensityChartFraction, retentionTime.DisplayTime, 1)
@@ -658,7 +661,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 };
             annotations.Add(stick);
 
-            ptTop = new PointF(0, ptTop.Y - 5);
+            ptTop = new PointF(0, ptTop.Y - 5 * scaleFactor);
             intensityChartFraction = (ptTop.Y - realTopPoint.Y) / chartHeightWithLabel;
             TextObj text = new TextObj(label, retentionTime.DisplayTime, intensityChartFraction,
                                        CoordType.XScaleYChartFraction, AlignH.Center, AlignV.Bottom)

@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Drawing;
 using System.Windows.Forms;
 using pwiz.CLI.Bruker.PrmScheduling;
 using pwiz.Skyline.Model;
@@ -102,6 +103,11 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             masterPane.PaneList.Add(_pane);
+            // The pane is added after the control has been laid out, so nothing resizes it
+            // and it keeps ZedGraph's default 500x375 rect - which happens to fill the dialog
+            // at 96 DPI and covers two thirds of it at 150% (issue #4599)
+            using (var g = graphControl.CreateGraphics())
+                masterPane.ReSize(g, new RectangleF(0, 0, graphControl.Width, graphControl.Height));
             UpdateGraph();
         }
 

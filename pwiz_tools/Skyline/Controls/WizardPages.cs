@@ -17,12 +17,38 @@
  * limitations under the License.
  */
 using System;
+using System.Drawing;
 using System.Windows.Forms;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
 {
     public class WizardPages : TabControl
     {
+        /// <summary>
+        /// Adds a page body created at runtime to a wizard tab page, below the page's
+        /// title header and inset by a border, anchored to grow with the page.
+        /// </summary>
+        /// <param name="pageControl">The page body</param>
+        /// <param name="tabPage">The wizard page to add it to</param>
+        /// <param name="border">Left, right and bottom inset, in 96-DPI pixels</param>
+        /// <param name="header">Height reserved above the body for the page title, in 96-DPI pixels</param>
+        /// <remarks>
+        /// The page bodies are added after InitializeComponent, when the form has already
+        /// auto-scaled, so these offsets must be scaled here or the body rides up under the
+        /// title header on a high-DPI display.
+        /// </remarks>
+        public static void AddPageControl(UserControl pageControl, TabPage tabPage, int border, int header)
+        {
+            border = DpiUtil.Scale(tabPage, border);
+            header = DpiUtil.Scale(tabPage, header);
+            pageControl.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            pageControl.Location = new Point(border, header);
+            pageControl.Width = tabPage.Width - border * 2;
+            pageControl.Height = tabPage.Height - header - border;
+            tabPage.Controls.Add(pageControl);
+        }
+
         public WizardPages()
         {
             TabStop = false;    // Make sure the TabControl is not a tab stop
