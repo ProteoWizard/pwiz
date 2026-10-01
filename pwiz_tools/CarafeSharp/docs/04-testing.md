@@ -193,14 +193,15 @@ already there it compares the run with it, lists the `golden.json` values that c
 only with `-Force`. The golden records its commit, device, processor, OS, libtorch thread count and the
 inputs' SHA-256.
 
-**The Stellar golden** is a CPU run (Intel i9-9900K, Windows, 8 libtorch threads, 12 minutes): 19,344
-precursors, 334,744 peaks and 19,340 DecoyPairs rows (9,670 pairs, 4,833 of them entrapment pairs;
+**The Stellar golden** is a CPU run (Intel i9-9900K, Windows, 8 libtorch threads, 13 minutes): 19,344
+precursors, 335,840 peaks and 19,340 DecoyPairs rows (9,670 pairs, 4,833 of them entrapment pairs;
 all 9,666 targets paired, and 12 I/L twins left out of the check), with a 1,923-precursor sample of
-420 KB. It was made from `carafesharp-export-v1`, the format 2 export that Osprey (#4708) wrote from
-the .raw. The golden it replaced was made from the June export, which an earlier Osprey wrote from
-mzML. Against it, every fine-tuned metric and library check was within tolerance (sampled cosine
-median 0.99963, RT difference median 0.016 min); only the export's hash and the pretrained metrics
-differed, as they must with another export, because the held-out set comes from it.
+422 KB. It was made from `carafesharp-export-v1`, the format 2 export that Osprey (#4708) wrote from
+the .raw, and remade on 2026-09-30 (8dfe512b59) for the acquisition layer (01-model-spec.md), whose
+beam-CID and LIT columns now train. Against the golden before it, the pretrained metrics, training
+tables and RT model were identical, the fine-tuned MS2 metrics moved by at most 3.5e-4 (PCC), library
+peaks by +0.33%, and the sampled spectral cosine median was 0.9998. Two runs of that commit on this
+machine gave byte-identical models and libraries.
 
 **The chained leg.** `regression.ps1` builds Osprey from the same checkout (or takes `-OspreyExe`),
 extracts `pwiz_tools/Osprey/Osprey.Test/TestData/StellarSubset.zip` (one isolation window of the three
