@@ -118,7 +118,6 @@ namespace TestRunner
             // because the Windows shell cache grows
             {"TestNativeFileDialog", new ExpandedLeakCheck(LeakCheckIterations * 4)},
             {"TestNativeMessageBox", new ExpandedLeakCheck(LeakCheckIterations * 4)},
-            {"TestPrmMcpConnector", new ExpandedLeakCheck(LeakCheckIterations * 4)},
             {"TestLayoutExportImport", new ExpandedLeakCheck(LeakCheckIterations * 4)}
         };
 
