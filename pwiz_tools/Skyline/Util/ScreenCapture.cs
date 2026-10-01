@@ -305,9 +305,14 @@ namespace pwiz.Skyline.Util
             return bmp;
         }
 
+        // Other applications keep visible helper windows a few pixels across (a 1 x 1 pixel window, a strip
+        // along a screen edge), which can hide nothing of a form beneath them.
+        private const int MAX_NEGLIGIBLE_WINDOW_SIZE = 4;
+
         /// <summary>
         /// Returns the screen rectangles of visible non-Skyline top-level windows
-        /// that are above the target window in z-order and overlap the given screen rectangle.
+        /// that are above the target window in z-order and overlap the given screen rectangle,
+        /// leaving out windows no more than <see cref="MAX_NEGLIGIBLE_WINDOW_SIZE"/> pixels wide or high.
         /// EnumWindows enumerates in z-order (top to bottom), so we stop once we
         /// reach our own top-level window - anything below it cannot obscure the target.
         /// </summary>
@@ -331,8 +336,11 @@ namespace pwiz.Skyline.Util
 
                 var rect = new User32.RECT();
                 User32.GetWindowRect(hWnd, ref rect);
+                var logicalRect = rect.Rectangle;
+                if (logicalRect.Width <= MAX_NEGLIGIBLE_WINDOW_SIZE || logicalRect.Height <= MAX_NEGLIGIBLE_WINDOW_SIZE)
+                    continue;
                 // Scale from logical to physical coordinates to match screenRect
-                var windowRect = rect.Rectangle * scalingFactor;
+                var windowRect = logicalRect * scalingFactor;
                 var intersection = Rectangle.Intersect(screenRect, windowRect);
 
                 if (intersection.Width == 0 || intersection.Height == 0)
