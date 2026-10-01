@@ -84,7 +84,6 @@ namespace pwiz.Skyline.EditUI
         public UniquePeptidesDlg(IDocumentUIContainer documentUiContainer)
         {
             InitializeComponent();
-            DpiUtil.ScaleFixedPanel(splitContainer1);
 
             Icon = Resources.Skyline;
 

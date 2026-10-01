@@ -59,8 +59,8 @@ namespace pwiz.Skyline.Controls
         {
             InitializeComponent();
 
-            // The fixed popup size, the owner-drawn row height and the toolbar glyphs are
-            // 96-DPI designs that AutoScaleMode.Font does not touch (issue #4599).
+            // The fixed popup size and the owner-drawn row height are 96-DPI designs that
+            // AutoScaleMode.Font does not touch (issue #4599).
             Size = DpiUtil.ScaleSize(this, SizeAll);
             pickListMulti.ItemHeight = DpiUtil.Scale(this, pickListMulti.ItemHeight);
             // IntegralHeight snaps the list to whole rows once its handle exists, after the
@@ -72,7 +72,6 @@ namespace pwiz.Skyline.Controls
             int listHeight = rowsVisible * pickListMulti.ItemHeight +
                              pickListMulti.Height - pickListMulti.ClientSize.Height;
             Height += listHeight - pickListMulti.Height;
-            DpiUtil.ScaleToolStripImages(toolStrip1);
 
             cbItems.Text = childHeading;
 

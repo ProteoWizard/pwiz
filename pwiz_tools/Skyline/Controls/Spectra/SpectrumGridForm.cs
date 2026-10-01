@@ -40,7 +40,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Spectra
@@ -67,7 +66,6 @@ namespace pwiz.Skyline.Controls.Spectra
         public SpectrumGridForm(SkylineWindow skylineWindow)
         {
             InitializeComponent();
-            DpiUtil.ScaleFixedPanel(splitContainer1);
             SkylineWindow = skylineWindow;
             _allSpectrumClassColumns = SpectrumClassColumn.ALL;
             checkedListBoxSpectrumClassColumns.Items.AddRange(_allSpectrumClassColumns.ToArray());

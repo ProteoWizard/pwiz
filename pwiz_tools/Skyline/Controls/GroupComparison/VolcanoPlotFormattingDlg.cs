@@ -187,7 +187,6 @@ namespace pwiz.Skyline.Controls.GroupComparison
             layoutLabelsBox.Checked = Settings.Default.GroupComparisonAvoidLabelOverlap;
 
             // Tooltips/accessible names for the delete/reorder toolbar (image-only buttons).
-            DpiUtil.ScaleToolStripImages(toolStripFormatting);
             btnDeleteRule.Text = GroupComparisonStrings.VolcanoPlotFormattingDlg_Delete_rule;
             btnMoveRuleUp.Text = GroupComparisonStrings.VolcanoPlotFormattingDlg_Move_rule_up;
             btnMoveRuleDown.Text = GroupComparisonStrings.VolcanoPlotFormattingDlg_Move_rule_down;
