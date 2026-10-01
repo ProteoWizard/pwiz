@@ -339,6 +339,8 @@ namespace pwiz.CarafeSharp.Test
                 generator.Run();
                 Assert.IsTrue(generator.SpectrumCount > 0, log.ToString());
                 CollectionAssert.AreEqual(new[] { generator.BlibPath }, Directory.GetFiles(settings.OutputDirectory));
+                StringAssert.Contains(log.ToString(), @"The pairing manifest could not be read to keep the library's pairs whole");
+                Assert.AreEqual(0, generator.PairDropped.Count);
                 StringAssert.Contains(log.ToString(), string.Format(CarafeModelDirectory.BOTH_MODELS_WARNING_FORMAT,
                     Path.Combine(models, ModelFiles.MS2_SAFETENSORS), checkpoint));
 
@@ -650,6 +652,100 @@ namespace pwiz.CarafeSharp.Test
             CollectionAssert.AreEqual(new[] { false, true, false, true, false, true }, rows.Select(r => r.IsDecoy).ToArray());
             CollectionAssert.AreEqual(new[] { null, @"reverse", null, @"reverse", null, @"reverse" }, rows.Select(r => r.Method).ToArray());
             Assert.IsFalse(rows.Any(r => r.IsEntrapment));
+        }
+
+        /// <summary>
+        /// A library written with a pairing manifest writes each target and decoy, and each
+        /// entrapment target and entrapment decoy, only together: one whose partner has too few
+        /// fragments is dropped, whichever came first, so nothing is written unpaired. A pair
+        /// waits only until all of its precursors are offered. Each side keeps as many as the
+        /// other kept. A sequence whose partner has two places in the manifest, a partner that is
+        /// not in the library, and a precursor the manifest does not list all pass ungated.
+        /// </summary>
+        [TestMethod]
+        public void TestDecoyPairGate()
+        {
+            var manifest = new List<DecoyPairPlanner.ManifestEntry>
+            {
+                new DecoyPairPlanner.ManifestEntry(@"PEPTIDEK", false, @"target", 1),
+                new DecoyPairPlanner.ManifestEntry(@"EDITPEPK", true, @"decoy", 1),
+                new DecoyPairPlanner.ManifestEntry(@"TIDEPEPK", false, @"p_target", 1),
+                new DecoyPairPlanner.ManifestEntry(@"EPEDITPK", true, @"p_decoy", 1),
+                new DecoyPairPlanner.ManifestEntry(@"SAMPLERMK", false, @"target", 2),
+                new DecoyPairPlanner.ManifestEntry(@"MRELPMASK", true, @"decoy", 2),
+                // A decoy that is also the entrapment decoy: the planner pairs it once, so neither is gated.
+                new DecoyPairPlanner.ManifestEntry(@"LLRLLGR", false, @"target", 3),
+                new DecoyPairPlanner.ManifestEntry(@"GLLRLLR", true, @"decoy", 3),
+                new DecoyPairPlanner.ManifestEntry(@"LRGLLLR", false, @"p_target", 3),
+                new DecoyPairPlanner.ManifestEntry(@"GLLRLLR", true, @"p_decoy", 3),
+                new DecoyPairPlanner.ManifestEntry(@"MISSINGK", false, @"target", 4),
+                new DecoyPairPlanner.ManifestEntry(@"GNISSIMK", true, @"decoy", 4),
+            };
+            var gate = new DecoyPairGate(manifest);
+            Assert.IsTrue(gate.IsMember(@"PEPTLDEK"), @"I/L-normalized, as the planner matches");
+            Assert.IsFalse(gate.IsMember(@"LLRLLGR"));
+            Assert.IsFalse(gate.IsMember(@"GLLRLLR"));
+            Assert.IsFalse(gate.IsMember(@"OTHERK"));
+            foreach (string sequence in new[] { @"PEPTIDEK", @"EDITPEPK", @"TIDEPEPK", @"EPEDITPK", @"MISSINGK" })
+                gate.Expect(sequence, 2, string.Empty);
+            // Two forms of each side with one modification set (Oxidation on either M).
+            foreach (string sequence in new[] { @"SAMPLERMK", @"SAMPLERMK", @"MRELPMASK", @"MRELPMASK" })
+                gate.Expect(sequence, 2, @"Oxidation@M");
+            gate.Expect(@"SAMPLERMK", 3, string.Empty);
+            gate.Expect(@"MRELPMASK", 3, string.Empty);
+
+            var target = Spectrum(@"PEPTIDEK", 2);
+            var decoy = Spectrum(@"EDITPEPK", 2);
+            var released = new List<LibrarySpectrum>();
+            // A pair split across chunks waits for its decoy; precursors outside the manifest pass.
+            var other = Spectrum(@"OTHERK", 2);
+            gate.Offer(@"PEPTIDEK", 2, string.Empty, target, released);
+            gate.Offer(@"OTHERK", 2, string.Empty, other, released);
+            CollectionAssert.AreEqual(new[] { other }, released);
+            released.Clear();
+            gate.Offer(@"EDITPEPK", 2, string.Empty, decoy, released);
+            CollectionAssert.AreEqual(new[] { target, decoy }, released);
+
+            // An entrapment decoy below the minimum takes its entrapment target with it.
+            released.Clear();
+            var entrapment = Spectrum(@"TIDEPEPK", 2);
+            gate.Offer(@"TIDEPEPK", 2, string.Empty, entrapment, released);
+            gate.Offer(@"EPEDITPK", 2, string.Empty, null, released);
+            Assert.AreEqual(0, released.Count);
+            CollectionAssert.AreEqual(new[] { entrapment }, gate.Dropped.ToArray());
+
+            // Two target forms against one decoy form kept: one of each, the first offered.
+            var first = Spectrum(@"SAMPLERMK", 2);
+            var second = Spectrum(@"SAMPLERMK", 2);
+            var kept = Spectrum(@"MRELPMASK", 2);
+            gate.Offer(@"SAMPLERMK", 2, @"Oxidation@M", first, released);
+            gate.Offer(@"MRELPMASK", 2, @"Oxidation@M", null, released);
+            gate.Offer(@"SAMPLERMK", 2, @"Oxidation@M", second, released);
+            gate.Offer(@"MRELPMASK", 2, @"Oxidation@M", kept, released);
+            CollectionAssert.AreEqual(new[] { first, kept }, released);
+            CollectionAssert.AreEqual(new[] { entrapment, second }, gate.Dropped.ToArray());
+
+            // Ungated: the shared decoy and its precursors, and a target whose decoy is not in the library.
+            released.Clear();
+            var twin = Spectrum(@"LLRLLGR", 2);
+            var missing = Spectrum(@"MISSINGK", 2);
+            gate.Offer(@"LLRLLGR", 2, string.Empty, twin, released);
+            gate.Offer(@"MISSINGK", 2, string.Empty, missing, released);
+            CollectionAssert.AreEqual(new[] { twin, missing }, released);
+
+            // A pair whose decoy was expected but never offered is not written whole: Finish drops its target.
+            released.Clear();
+            var alone = Spectrum(@"SAMPLERMK", 3);
+            gate.Offer(@"SAMPLERMK", 3, string.Empty, alone, released);
+            Assert.AreEqual(0, released.Count);
+            gate.Finish(released);
+            Assert.AreEqual(0, released.Count);
+            CollectionAssert.AreEqual(new[] { entrapment, second, alone }, gate.Dropped.ToArray());
+        }
+
+        private static LibrarySpectrum Spectrum(string sequence, int charge)
+        {
+            return new LibrarySpectrum(new PrecursorForm(new PeptideForm(sequence), charge), 500, 10, @"P1", 0, Array.Empty<LibraryFragment>());
         }
 
         /// <summary>Randomly initialized MS2 and RT models, with metrics that say to use the MS2 one.</summary>

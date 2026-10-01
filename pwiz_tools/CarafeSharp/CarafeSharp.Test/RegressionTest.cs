@@ -213,6 +213,7 @@ namespace pwiz.CarafeSharp.Test
             Assert.IsTrue(pairs.Rows > 0, @"The library has no DecoyPairs rows.");
             Assert.AreEqual(0, pairs.MalformedPairs, @"DecoyPairs has pairs that are not one pair group's target and decoy of one charge.");
             Assert.AreEqual(0, pairs.UnpairedTargetsWithDecoy, @"DecoyPairs leaves out targets whose decoy the library has.");
+            Assert.AreEqual(0, pairs.UnpairedTargetsWithoutDecoy, @"The library has targets whose decoy it did not write.");
 
             Directory.CreateDirectory(folder);
             int modulus = SampleModulusFor(run.Library.Precursors);
@@ -445,7 +446,7 @@ namespace pwiz.CarafeSharp.Test
         /// <summary>
         /// The DecoyPairs rows, within the precursor-count tolerance of the golden's; and the table
         /// itself, as in a full library: each pair a target and the decoy of its pair group, of one
-        /// charge, and every target paired whose decoy the library has.
+        /// charge, and every target paired, its decoy written.
         /// </summary>
         private void CheckDecoyPairs(Golden golden, RunMeasurement run)
         {
@@ -454,7 +455,8 @@ namespace pwiz.CarafeSharp.Test
             Check(pairs.MalformedPairs == 0,
                 @"DecoyPairs pairs: {0} of {1} are not a target and the decoy of its pair group with one charge ({2} entrapment pairs)",
                 pairs.MalformedPairs, pairs.Pairs, pairs.EntrapmentPairs);
-            Check(pairs.UnpairedTargetsWithDecoy == 0,
+            // The library keeps its pairs whole (DecoyPairGate), so a target whose decoy was not written is a failure too.
+            Check(pairs.UnpairedTargetsWithDecoy == 0 && pairs.UnpairedTargetsWithoutDecoy == 0,
                 @"DecoyPairs targets: {0} of {1} paired; {2} unpaired although their decoy was written, {3} unpaired because it was not, " +
                 @"{4} unpaired because their partner precursor is paired in its other role",
                 pairs.PairedTargets, pairs.Targets, pairs.UnpairedTargetsWithDecoy, pairs.UnpairedTargetsWithoutDecoy, pairs.SharedPartnerTargets);

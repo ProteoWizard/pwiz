@@ -195,6 +195,16 @@ namespace pwiz.CarafeSharp.Test
                 @"-lf_min_n_frag", @"1", @"-device", @"cpu", @"-pairing_manifest", manifest);
             Assert.AreEqual(0, code, error);
             AssertDecoyPairs(Path.Combine(pairedFolder, BlibLibraryWriter.FILE_NAME));
+            // A minimum of fragments that only one member of some pairs reaches: each pair is still
+            // written whole, the member whose partner fell short left out with it.
+            string wholeFolder = Path.Combine(_folder, @"whole");
+            (code, output, error) = Run(@"-db", built, @"-o", wholeFolder, @"-model_dir", models, @"-lf_type", @"blib",
+                @"-lf_min_n_frag", @"16", @"-device", @"cpu", @"-pairing_manifest", manifest);
+            Assert.AreEqual(0, code, error);
+            string droppedLine = Lines(output).Single(l => l.StartsWith(@"Pairs: dropped ", StringComparison.Ordinal));
+            Assert.IsTrue(int.Parse(droppedLine.Split(' ')[2]) > 0, droppedLine);
+            AssertDecoyPairs(Path.Combine(wholeFolder, BlibLibraryWriter.FILE_NAME));
+            AssertPairsWhole(Path.Combine(wholeFolder, BlibLibraryWriter.FILE_NAME), manifest);
         }
 
         [TestMethod]
@@ -247,6 +257,42 @@ namespace pwiz.CarafeSharp.Test
             (code, _, error) = Run(@"-reconcile_manifest", reconciled, @"-manifest", goodManifest, @"-predicted_library", library);
             Assert.AreEqual(1, code, error);
             Assert.IsFalse(File.Exists(reconciled + PartialFile.SUFFIX));
+        }
+
+        /// <summary>
+        /// Every precursor of <paramref name="blib"/> that the manifest lists once, with a partner
+        /// listed once, has that partner written at its charge.
+        /// </summary>
+        private static void AssertPairsWhole(string blib, string manifest)
+        {
+            var places = DecoyPairPlanner.ReadManifest(manifest)
+                .GroupBy(e => PairingManifestReconciler.Normalize(e.Sequence)).ToDictionary(g => g.Key, g => g.ToList());
+            var groups = DecoyPairPlanner.ReadManifest(manifest).GroupBy(e => e.PairIndex)
+                .ToDictionary(g => g.Key, g => g.ToDictionary(e => e.PeptideType.Trim().ToLowerInvariant(), e => PairingManifestReconciler.Normalize(e.Sequence)));
+            var partners = new Dictionary<string, string> { { @"target", @"decoy" }, { @"decoy", @"target" }, { @"p_target", @"p_decoy" }, { @"p_decoy", @"p_target" } };
+            var written = new HashSet<(string, long)>();
+            using (var connection = new SQLiteConnection(new SQLiteConnectionStringBuilder { DataSource = blib, ReadOnly = true }.ToString()))
+            {
+                connection.Open();
+                using (var command = new SQLiteCommand(@"SELECT peptideSeq, precursorCharge FROM RefSpectra", connection))
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                        written.Add((PairingManifestReconciler.Normalize(reader.GetString(0)), reader.GetInt64(1)));
+                }
+            }
+            int checkedMembers = 0;
+            foreach (var (sequence, charge) in written)
+            {
+                if (!places.TryGetValue(sequence, out var entries) || entries.Count != 1)
+                    continue;
+                string type = entries[0].PeptideType.Trim().ToLowerInvariant();
+                if (!groups[entries[0].PairIndex].TryGetValue(partners[type], out string partner) || places[partner].Count != 1)
+                    continue;
+                checkedMembers++;
+                Assert.IsTrue(written.Contains((partner, charge)), @"{0} {1}+ ({2}) is written without its partner {3}", sequence, charge, type, partner);
+            }
+            Assert.IsTrue(checkedMembers > 0);
         }
 
         private static void AssertDecoyPairs(string blib)

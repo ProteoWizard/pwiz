@@ -59,6 +59,13 @@ through CarafeSharp, stage by stage, and why each difference is there.
   rounding. The blib stores doubles and floats.
 - **Decoy pairs:** CarafeSharp skips DecoyPairs rows whose decoy differs from its target only by I/L,
   where Carafe stops on a primary-key error.
+- **Whole pairs (2026-10-01):** with a pairing manifest, CarafeSharp writes a target and its decoy, and
+  an entrapment target and its entrapment decoy, only together (`DecoyPairGate`). When one member has
+  fewer than `-lf_min_n_frag` fragments, its partner is left out too. Carafe drops each on its own and
+  keeps the other unpaired, so a target can face no decoy in target-decoy competition: Osprey counts
+  such a target as a winner. It is rare: none in the Stellar runs here, 6 of 61,685 Astral targets
+  (7 on a GPU, whose predictions move a precursor across the threshold). The parity tests account for
+  the precursors left out and require nothing else to differ.
 
 ## Osprey search of the training run
 

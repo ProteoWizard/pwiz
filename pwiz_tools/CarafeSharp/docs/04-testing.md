@@ -171,7 +171,7 @@ least three times the largest spread seen across GPU repeats, CPU against GPU an
 | Library precursor count, DecoyPairs row count | within 1e-4 of the golden's (at least 2) |
 | Library peak count | within 1% |
 | DecoyPairs pairs | each is a target and the decoy of its pair group (or the entrapment target and entrapment decoy), of one charge |
-| DecoyPairs targets | every target whose decoy was written is paired |
+| DecoyPairs targets | every target paired, its decoy written (the library keeps its pairs whole) |
 | Sampled precursors | one-sided only with at most 3 fragments; the same precursor m/z |
 | Sampled spectral cosine | median 0.99925, p5 0.991, p1 0.975 or more |
 | Sampled RT difference (minutes) | median 0.03, p95 0.10, p99 0.16 or less |
@@ -198,7 +198,7 @@ least three times the largest spread seen across GPU repeats, CPU against GPU an
 
 **`-CreateGolden`** refuses a working tree with changes, a GPU request that fell back to the CPU, a
 fine-tuned MS2 model that does not beat the pretrained one on COS, PCC, SA and SPC or is not used for
-prediction, and a DecoyPairs table that leaves out a target whose decoy was written. With a golden
+prediction, and a DecoyPairs table that leaves out a target, or a library that lacks a target's decoy. With a golden
 already there it compares the run with it, lists the `golden.json` values that change, and replaces it
 only with `-Force`. The golden records its commit, device, processor, OS, libtorch thread count and the
 inputs' SHA-256.
