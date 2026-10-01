@@ -43,6 +43,13 @@ The 6 `major` items are: the sparse-library calibration retry omission (doc 04),
 > Rust too (the pick model in lock-step; the pass-2 modes ported C#→Rust in
 > maccoss/osprey#57) and are off the default parity-gated path. The one **PORT-ERROR**
 > below (P1, Razor rollup order) is tracked as ProteoWizard/pwiz#4441.
+>
+> **Library reading, C# ahead of Rust.** The UniMod id masses are Skyline's `UniModData.cs`
+> masses in one C# table (`Osprey.Core/UniMod.cs`); Rust's `unimod_id_to_mass` (osprey-io
+> `output/blib.rs`) still maps ids 28, 122, 214, 312, 385 and 747 to other modifications' masses
+> and lacks 27, 354, 2016 and the SILAC labels. A .blib library's peaks are typed from m/z and its
+> modifications matched at their printed precision in C# only ([13](13-blib-output-schema.md)).
+> Neither reaches the parity datasets, whose DIA-NN libraries use only UniMod:4.
 
 ---
 

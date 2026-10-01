@@ -86,15 +86,19 @@ namespace pwiz.Osprey.Test
             AssertNeutralLossEqual(NeutralLossCode.H3PO4, NeutralLoss.Parse("H3PO4"));
             AssertNeutralLossEqual(NeutralLossCode.H3PO4, NeutralLoss.Parse("PHOSPHO"));
 
-            // None returns
-            Assert.AreEqual(NeutralLossCode.None, NeutralLoss.Parse("").Code);
-            Assert.AreEqual(NeutralLossCode.None, NeutralLoss.Parse("NOLOSS").Code);
-            Assert.AreEqual(NeutralLossCode.None, NeutralLoss.Parse(null).Code);
+            // Explicitly no loss
+            AssertNeutralLossEqual(NeutralLossCode.None, NeutralLoss.Parse("NOLOSS"));
+
+            // Empty or unrecognized is not a loss the reader may assume
+            Assert.IsNull(NeutralLoss.Parse(""));
+            Assert.IsNull(NeutralLoss.Parse(null));
+            Assert.IsNull(NeutralLoss.Parse("garbage"));
 
             // Custom numeric
             var custom = NeutralLoss.Parse("18.5");
-            Assert.AreEqual(NeutralLossCode.Custom, custom.Code);
-            Assert.AreEqual(18.5, custom.CustomMass, TOLERANCE);
+            Assert.IsNotNull(custom);
+            Assert.AreEqual(NeutralLossCode.Custom, custom.Value.Code);
+            Assert.AreEqual(18.5, custom.Value.CustomMass, TOLERANCE);
         }
 
         #endregion
@@ -621,9 +625,10 @@ namespace pwiz.Osprey.Test
         }
 
         private static void AssertNeutralLossEqual(NeutralLossCode expected,
-            (NeutralLossCode Code, double CustomMass) actual)
+            (NeutralLossCode Code, double CustomMass)? actual)
         {
-            Assert.AreEqual(expected, actual.Code);
+            Assert.IsNotNull(actual);
+            Assert.AreEqual(expected, actual.Value.Code);
         }
 
         #endregion

@@ -27,6 +27,7 @@ using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
+using System.Text;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
@@ -37,16 +38,47 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public class BlibLoader
     {
-        private const double CARBAMIDOMETHYL_MASS = 57.021464;
-        private const double OXIDATION_MASS = 15.994915;
-        private const double ACETYL_MASS = 42.010565;
-        private const double PHOSPHO_MASS = 79.966331;
-        private const double DEAMIDATION_MASS = 0.984016;
-        private const double TMT6PLEX_MASS = 229.162932;
-        private const double MOD_TOLERANCE = 0.01;
+        private const double CYSTEINE_RESIDUE_MASS = 103.009185;
 
         /// <summary>
-        /// Load library entries from a blib file.
+        /// Version of what this reader makes of a blib. 2: every peak is typed from m/z
+        /// (<see cref="FragmentTyping"/>), where version 1 left every peak Unknown, and
+        /// modification text is read residue- and precision-aware
+        /// (<see cref="IdentifyModification"/>). Every blib reads differently under it, so the
+        /// <c>.libcache</c> composition term and the task-key term both carry it for every blib,
+        /// and a change to either moves both by editing this one value.
+        /// </summary>
+        public const string READER_VERSION = @"2";
+
+        private readonly FragmentToleranceConfig _fragmentTolerance;
+
+        /// <summary>
+        /// A reader that types each spectrum's peaks within <paramref name="fragmentTolerance"/>,
+        /// the search's fragment tolerance, so a peak it calls y6 is one chromatogram extraction
+        /// would count as y6.
+        /// </summary>
+        public BlibLoader(FragmentToleranceConfig fragmentTolerance)
+        {
+            _fragmentTolerance = fragmentTolerance;
+        }
+
+        /// <summary>
+        /// The <c>.libcache</c> composition term of a blib read by this reader: its version and
+        /// the tolerance it types within, which the cached fragment types carry.
+        /// </summary>
+        public static string CacheTerm(FragmentToleranceConfig fragmentTolerance)
+        {
+            // ReSharper disable LocalizableElement
+            return string.Format(CultureInfo.InvariantCulture, "blib_reader:{0},{1},{2}\n",
+                READER_VERSION, fragmentTolerance.Tolerance, fragmentTolerance.Unit);
+            // ReSharper restore LocalizableElement
+        }
+
+        /// <summary>
+        /// Load library entries from a blib file, every peak typed from m/z
+        /// (<see cref="FragmentTyping"/>). A <c>RefSpectraPeakAnnotations</c> table is not read:
+        /// Skyline designed it for small molecules, and no proteomics software is known to write
+        /// peptide fragment ions into it.
         /// </summary>
         public List<LibraryEntry> Load(string path, Action<string> logInfo = null)
         {
@@ -64,9 +96,14 @@ namespace pwiz.Osprey.IO
                 // spectra and the protein-mapping pass; only object identity
                 // changes, so output is unchanged.
                 var interner = new LibraryStringInterner();
-                var entries = LoadSpectra(conn, interner);
+                var typingStats = new FragmentTypingStats();
+                var entries = LoadSpectra(conn, interner, typingStats);
                 LoadProteinMappings(conn, entries, interner);
                 interner.LogSummary(logInfo);
+                logInfo?.Invoke(string.Format(
+                    OspreyIOResources.BlibLoader_Load_Typed__0_N0__of__1_N0__library_peaks_as_b_or_y_ions_within__2___3_,
+                    typingStats.Typed, typingStats.Total, _fragmentTolerance.Tolerance,
+                    _fragmentTolerance.Unit.GetLocalizedString()));
                 return entries;
             }
         }
@@ -84,9 +121,15 @@ namespace pwiz.Osprey.IO
             }
         }
 
-        private List<LibraryEntry> LoadSpectra(SQLiteConnection conn, LibraryStringInterner interner)
+        /// <summary>
+        /// Reads every spectrum with its peaks, typing them as they are read. A library with any
+        /// modification that cannot be identified is refused, listing every such modification.
+        /// </summary>
+        private List<LibraryEntry> LoadSpectra(SQLiteConnection conn, LibraryStringInterner interner,
+            FragmentTypingStats typingStats)
         {
             var entries = new List<LibraryEntry>();
+            var unidentifiedMods = new UnidentifiedModifications();
 
             using (var cmd = conn.CreateCommand())
             {
@@ -125,14 +168,21 @@ namespace pwiz.Osprey.IO
                         // was built from.
                         LibraryValidation.ValidatePeptideLength(peptideSeq);
 
-                        var modifications = BuildInternedModifications(
-                            ParseBlibModifications(peptideModSeq), interner);
+                        var parsed = ParseBlibModifications(peptideModSeq, out string unidentified);
+                        if (parsed == null)
+                        {
+                            unidentifiedMods.Add(unidentified, id, peptideModSeq);
+                            continue;
+                        }
+                        var modifications = BuildInternedModifications(parsed, interner);
 
                         LibraryFragment[] fragments;
                         if (peakMzBlob != null && peakIntBlob != null)
                             fragments = DecodeBlibPeaks(peakMzBlob, peakIntBlob, numPeaks).ToArray();
                         else
                             fragments = Array.Empty<LibraryFragment>();
+                        FragmentTyping.TypeFragments(peptideSeq, modifications, precursorCharge, fragments,
+                            _fragmentTolerance, typingStats);
 
                         var entry = new LibraryEntry((uint)id,
                             interner.Intern(peptideSeq), interner.Intern(peptideModSeq),
@@ -145,6 +195,8 @@ namespace pwiz.Osprey.IO
                 }
             }
 
+            if (unidentifiedMods.Any)
+                throw unidentifiedMods.ToException();
             return entries;
         }
 
@@ -216,116 +268,133 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Parse modifications from BiblioSpec modified sequence format.
-        /// Handles "PEPTC[+57.0]IDE" (mass shift) and "PEPTC[160.0]IDE" (absolute mass).
+        /// Parse modifications from BiblioSpec modified sequence format: a mass shift
+        /// (<c>PEPTC[+57.0]IDE</c>), an absolute cysteine mass (<c>PEPTC[160.0]IDE</c>) or a
+        /// UniMod id (<c>PEPTC[UniMod:4]IDE</c>, or in parentheses as DIA-NN writes it), each
+        /// resolved by <see cref="IdentifyModification"/>. Returns null when any cannot be, with
+        /// the first such bracket in <paramref name="unidentified"/>.
         /// </summary>
-        internal static List<Modification> ParseBlibModifications(string modSeq)
+        internal static List<Modification> ParseBlibModifications(string modSeq, out string unidentified)
         {
+            unidentified = null;
             var modifications = new List<Modification>();
+            int firstResidue = FirstResidueIndex(modSeq, 0);
+            int lastResidue = PrecedingResidueIndex(modSeq, modSeq.Length);
             int position = 0;
-            int i = 0;
-
-            while (i < modSeq.Length)
+            for (int i = 0; i < modSeq.Length; i++)
             {
                 char c = modSeq[i];
-
                 if (char.IsLetter(c))
-                {
                     position++;
-                    i++;
-                }
-                else if (c == '[')
+                if (c != '[' && c != '(')
+                    continue;
+                int close = CloseOf(modSeq, i);
+                // A bracket before the first residue modifies the first residue.
+                int residueIndex = position > 0 ? PrecedingResidueIndex(modSeq, i) : firstResidue;
+                char residue = residueIndex >= 0 ? modSeq[residueIndex] : '\0';
+                var modification = IdentifyModification(modSeq.Substring(i + 1, close - i - 1), residue,
+                    residueIndex == firstResidue, residueIndex == lastResidue);
+                if (modification == null)
                 {
-                    i++; // consume '['
-                    int start = i;
-                    while (i < modSeq.Length && modSeq[i] != ']')
-                        i++;
-                    string massStr = modSeq.Substring(start, i - start);
-                    if (i < modSeq.Length)
-                        i++; // consume ']'
-
-                    string toParse = massStr.TrimStart('+');
-                    double mass;
-                    if (double.TryParse(toParse, NumberStyles.Float, CultureInfo.InvariantCulture, out mass))
-                    {
-                        int modPosition = position > 0 ? position - 1 : 0;
-                        double massDelta;
-                        int? unimodId;
-                        string name;
-                        IdentifyModification(mass, modPosition == 0, out massDelta, out unimodId, out name);
-
-                        modifications.Add(new Modification
-                        {
-                            Position = modPosition,
-                            UnimodId = unimodId,
-                            MassDelta = massDelta,
-                            Name = name
-                        });
-                    }
+                    unidentified = modSeq.Substring(i, Math.Min(close + 1, modSeq.Length) - i);
+                    return null;
                 }
-                else
-                {
-                    i++;
-                }
+                modification.Position = Math.Max(position - 1, 0);
+                modifications.Add(modification);
+                i = close;
             }
-
             return modifications;
         }
 
         /// <summary>
-        /// Identify a modification by its mass. Recognizes common modifications and
-        /// handles both mass shift and absolute mass formats.
+        /// Identify the modification a bracket's <paramref name="text"/> names on
+        /// <paramref name="residue"/>, or null when it cannot be identified.
+        ///
+        /// <para>A UniMod id must be one Osprey knows (<see cref="UniMod"/>). A mass is matched
+        /// against the known modifications allowed on the residue as Skyline matches it, at the
+        /// precision it is printed with (<see cref="UniMod.Match"/>): BiblioSpec prints one
+        /// decimal (<c>C[+57.0]</c>, <c>K[+8.0]</c>), and the fragments need the modification's
+        /// exact mass, not one up to 0.05 Da off it. A mass printed with
+        /// <see cref="UniMod.MAX_PRECISION_TO_MATCH"/> or more decimals that matches nothing is
+        /// used as printed; one printed with fewer cannot be, and is not identified.</para>
+        ///
+        /// <para>An UNSIGNED value between 100 and 200 Da on cysteine is taken as the absolute
+        /// mass of the modified residue (<c>C[160.0]</c>). A signed value, or one on any other
+        /// residue, is a mass shift: GlyGly on lysine is <c>K[+114.042927]</c> and
+        /// N-ethylmaleimide on cysteine <c>C[+125.047679]</c>.</para>
         /// </summary>
-        internal static void IdentifyModification(double mass, bool isNterm,
-            out double massDelta, out int? unimodId, out string name)
+        internal static Modification IdentifyModification(string text, char residue, bool isNTerm, bool isCTerm)
         {
-            // Check if this is likely an absolute mass (for Cys: subtract residue mass)
-            double delta = mass;
-            if (mass > 100.0 && mass < 200.0)
-                delta = mass - 103.009185; // Cys residue mass
+            if (text.StartsWith(UniMod.PREFIX, StringComparison.OrdinalIgnoreCase))
+            {
+                if (!int.TryParse(text.Substring(UniMod.PREFIX.Length), NumberStyles.None, CultureInfo.InvariantCulture, out int id))
+                    return null;
+                var byId = UniMod.Find(id);
+                return byId == null ? null : new Modification { UnimodId = byId.Id, MassDelta = byId.Mass, Name = byId.Name };
+            }
 
-            if (Math.Abs(delta - CARBAMIDOMETHYL_MASS) < MOD_TOLERANCE)
+            string number = text.TrimStart('+');
+            if (!double.TryParse(number, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint,
+                    CultureInfo.InvariantCulture, out double mass))
             {
-                massDelta = CARBAMIDOMETHYL_MASS;
-                unimodId = 4;
-                name = @"Carbamidomethyl";
+                return null;
             }
-            else if (Math.Abs(delta - OXIDATION_MASS) < MOD_TOLERANCE)
+            bool isSigned = text.Length > 0 && (text[0] == '+' || text[0] == '-');
+            double delta = mass;
+            if (residue == 'C' && !isSigned && mass > 100.0 && mass < 200.0)
+                delta = mass - CYSTEINE_RESIDUE_MASS;
+            int precision = PrintedDecimals(number);
+            var known = UniMod.Match(delta, precision, residue, isNTerm, isCTerm);
+            if (known != null)
+                return new Modification { UnimodId = known.Id, MassDelta = known.Mass, Name = known.Name };
+            if (precision < UniMod.MAX_PRECISION_TO_MATCH)
+                return null;
+            return new Modification { MassDelta = delta };
+        }
+
+        /// <summary>Digits printed after the decimal point of a bracket value.</summary>
+        internal static int PrintedDecimals(string number)
+        {
+            int dot = number.IndexOf('.');
+            return dot < 0 ? 0 : number.Length - dot - 1;
+        }
+
+        /// <summary>The index of the bracket closing the one at <paramref name="open"/>, or the end of the text.</summary>
+        private static int CloseOf(string modSeq, int open)
+        {
+            char closing = modSeq[open] == '[' ? ']' : ')';
+            int close = modSeq.IndexOf(closing, open + 1);
+            return close < 0 ? modSeq.Length : close;
+        }
+
+        /// <summary>The index of the first residue after <paramref name="start"/>, skipping brackets, or -1.</summary>
+        private static int FirstResidueIndex(string modSeq, int start)
+        {
+            for (int j = start; j < modSeq.Length; j++)
             {
-                massDelta = OXIDATION_MASS;
-                unimodId = 35;
-                name = @"Oxidation";
+                if (char.IsLetter(modSeq[j]))
+                    return j;
+                if (modSeq[j] == '[' || modSeq[j] == '(')
+                    j = CloseOf(modSeq, j);
             }
-            else if (Math.Abs(delta - ACETYL_MASS) < MOD_TOLERANCE && isNterm)
+            return -1;
+        }
+
+        /// <summary>The index of the last residue before <paramref name="end"/>, skipping brackets, or -1.</summary>
+        private static int PrecedingResidueIndex(string modSeq, int end)
+        {
+            int depth = 0;
+            for (int j = end - 1; j >= 0; j--)
             {
-                massDelta = ACETYL_MASS;
-                unimodId = 1;
-                name = @"Acetyl";
+                char c = modSeq[j];
+                if (c == ']' || c == ')')
+                    depth++;
+                else if (c == '[' || c == '(')
+                    depth--;
+                else if (depth == 0 && char.IsLetter(c))
+                    return j;
             }
-            else if (Math.Abs(delta - PHOSPHO_MASS) < MOD_TOLERANCE)
-            {
-                massDelta = PHOSPHO_MASS;
-                unimodId = 21;
-                name = @"Phospho";
-            }
-            else if (Math.Abs(delta - DEAMIDATION_MASS) < MOD_TOLERANCE)
-            {
-                massDelta = DEAMIDATION_MASS;
-                unimodId = 7;
-                name = @"Deamidated";
-            }
-            else if (Math.Abs(delta - TMT6PLEX_MASS) < MOD_TOLERANCE)
-            {
-                massDelta = TMT6PLEX_MASS;
-                unimodId = 737;
-                name = @"TMT6plex";
-            }
-            else
-            {
-                massDelta = delta;
-                unimodId = null;
-                name = null;
-            }
+            return -1;
         }
 
         /// <summary>
@@ -503,6 +572,56 @@ namespace pwiz.Osprey.IO
             // Fall through - use raw blobs
             mzData = mzBlob;
             intData = intensityBlob;
+        }
+
+        /// <summary>
+        /// The modifications a library carries that cannot be identified, each listed once with
+        /// the number of spectra carrying it and the first of them.
+        /// </summary>
+        private sealed class UnidentifiedModifications
+        {
+            private const int MAX_LISTED = 100;
+
+            private readonly Dictionary<string, int> _counts = new Dictionary<string, int>();
+            private readonly List<string> _order = new List<string>();
+            private readonly Dictionary<string, string> _firstSpectrum = new Dictionary<string, string>();
+            private int _spectrumCount;
+
+            public bool Any => _spectrumCount > 0;
+
+            public void Add(string modification, long refSpectraId, string peptideModSeq)
+            {
+                _spectrumCount++;
+                if (_counts.TryGetValue(modification, out int count))
+                {
+                    _counts[modification] = count + 1;
+                    return;
+                }
+                _counts.Add(modification, 1);
+                _order.Add(modification);
+                _firstSpectrum.Add(modification, string.Format(CultureInfo.InvariantCulture, @"{0} (id {1})",
+                    peptideModSeq, refSpectraId));
+            }
+
+            public InvalidDataException ToException()
+            {
+                var sb = new StringBuilder(string.Format(
+                    OspreyIOResources.BlibLoader_ToException__0__library_spectra_have_modifications_Osprey_cannot_identify,
+                    _spectrumCount, UniMod.MAX_PRECISION_TO_MATCH));
+                for (int i = 0; i < _order.Count && i < MAX_LISTED; i++)
+                {
+                    string modification = _order[i];
+                    sb.AppendLine().Append(@"  ").Append(string.Format(
+                        OspreyIOResources.BlibLoader_ToException__0__in__1__spectra__first__2_,
+                        modification, _counts[modification], _firstSpectrum[modification]));
+                }
+                if (_order.Count > MAX_LISTED)
+                {
+                    sb.AppendLine().Append(@"  ").Append(string.Format(
+                        OspreyIOResources.BlibLoader_ToException____and__0__more_modifications, _order.Count - MAX_LISTED));
+                }
+                return new InvalidDataException(sb.ToString());
+            }
         }
 
         #endregion
