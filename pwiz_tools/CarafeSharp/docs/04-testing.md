@@ -186,8 +186,10 @@ least three times the largest spread seen across GPU repeats, CPU against GPU an
   sequence has another role in its group (Carafe's Astral digest gives some groups' decoy and
   entrapment decoy one sequence) is counted apart: the library holds that precursor once, and the
   planner pairs it once, in its other pair.
-- **The sample** is the precursors whose FNV-1a key hash falls in one tenth, stored with their spectra
-  as `library_sample.tsv.gz` beside `golden.json`.
+- **The sample** is the precursors whose FNV-1a key hash is 0 modulo the golden's modulus, stored with
+  their spectra as `library_sample.tsv.gz` beside `golden.json`. The modulus is 10 for each started
+  20,000 precursors of the golden's library (10 for Stellar's, 70 for Astral's), so a sample holds about
+  2,000; golden.json records it, and a run is sampled at its golden's.
 
 **`-CreateGolden`** refuses a working tree with changes, a GPU request that fell back to the CPU, a
 fine-tuned MS2 model that does not beat the pretrained one on COS, PCC, SA and SPC or is not used for

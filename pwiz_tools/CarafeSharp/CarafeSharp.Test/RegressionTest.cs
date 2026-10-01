@@ -89,6 +89,10 @@ namespace pwiz.CarafeSharp.Test
         /// <summary>The sample keeps the precursors whose key hash is 0 modulo this.</summary>
         private const int SAMPLE_MODULUS = 10;
 
+        // A golden of a larger library samples less of it: its modulus is SAMPLE_MODULUS for each
+        // started SAMPLE_PRECURSORS_PER_STEP precursors, so a sample holds at most about 2,000.
+        private const int SAMPLE_PRECURSORS_PER_STEP = 20000;
+
         /// <summary>A golden sample larger than this is not committed.</summary>
         private const long MAX_SAMPLE_BYTES = 2L * 1024 * 1024;
 
@@ -211,13 +215,15 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(0, pairs.UnpairedTargetsWithDecoy, @"DecoyPairs leaves out targets whose decoy the library has.");
 
             Directory.CreateDirectory(folder);
+            int modulus = SampleModulusFor(run.Library.Precursors);
+            var sample = run.Library.SampleAt(modulus);
             string samplePath = Path.Combine(folder, SAMPLE_FILE);
-            LibrarySample.Write(samplePath, run.Library.Sample);
+            LibrarySample.Write(samplePath, sample);
             long sampleBytes = new FileInfo(samplePath).Length;
             Assert.IsTrue(sampleBytes <= MAX_SAMPLE_BYTES, @"The library sample is {0} bytes, more than {1}.", sampleBytes, MAX_SAMPLE_BYTES);
-            Golden.Write(Path.Combine(folder, GOLDEN_FILE), run);
-            TestContext.WriteLine(@"Golden written to {0}: {1} precursors, {2} peaks, {3} DecoyPairs rows, {4} sampled ({5} bytes).",
-                folder, run.Library.Precursors, run.Library.Peaks, pairs.Rows, run.Library.Sample.Count, sampleBytes);
+            Golden.Write(Path.Combine(folder, GOLDEN_FILE), run, modulus, sample.Count);
+            TestContext.WriteLine(@"Golden written to {0}: {1} precursors, {2} peaks, {3} DecoyPairs rows, {4} sampled at modulus {5} ({6} bytes).",
+                folder, run.Library.Precursors, run.Library.Peaks, pairs.Rows, sample.Count, modulus, sampleBytes);
         }
 
         private void Compare(Golden golden, RunMeasurement run)
@@ -461,7 +467,7 @@ namespace pwiz.CarafeSharp.Test
 
         private void CheckSample(Golden golden, RunMeasurement run)
         {
-            var comparison = SampleComparison.Compare(golden.Sample, run.Library.Sample);
+            var comparison = SampleComparison.Compare(golden.Sample, run.Library.SampleAt(golden.SampleModulus));
             Check(comparison.MissingWithManyFragments == 0 && comparison.ExtraWithManyFragments == 0,
                 @"sampled precursors: {0} of the golden's {1} missing from the run ({2} with more than {3} fragments), {4} only in the run ({5} with more)",
                 comparison.Missing, golden.Sample.Count, comparison.MissingWithManyFragments, FEW_FRAGMENTS, comparison.Extra,
@@ -662,13 +668,19 @@ namespace pwiz.CarafeSharp.Test
             return modifiedSequence + @"/" + charge.ToString(CultureInfo.InvariantCulture);
         }
 
-        private static bool IsSampled(string key)
+        private static bool IsSampled(string key, int modulus)
         {
             ulong hash = FNV_OFFSET_BASIS;
             foreach (byte b in Encoding.UTF8.GetBytes(key))
                 hash = (hash ^ b) * FNV_PRIME;
             // FNV-1a mixes each byte into the high bits, so the sample reads those.
-            return (hash >> 32) % SAMPLE_MODULUS == 0;
+            return (hash >> 32) % (ulong)modulus == 0;
+        }
+
+        /// <summary>The sample modulus of a golden of <paramref name="precursors"/> precursors: a multiple of <see cref="SAMPLE_MODULUS"/>.</summary>
+        private static int SampleModulusFor(long precursors)
+        {
+            return SAMPLE_MODULUS * (int)Math.Max(1, (precursors + SAMPLE_PRECURSORS_PER_STEP - 1) / SAMPLE_PRECURSORS_PER_STEP);
         }
 
         /// <summary>Every spectrum of a .blib, its peaks decoded.</summary>
@@ -823,7 +835,7 @@ namespace pwiz.CarafeSharp.Test
                     peaks += spectrum.Mz.Length;
                     lines.Add(CanonicalLine(spectrum.Sequence, spectrum.Charge, spectrum.PrecursorMz, spectrum.RetentionTime, spectrum.Mz, spectrum.Intensity));
                     string key = PrecursorKey(spectrum.Sequence, spectrum.Charge);
-                    if (IsSampled(key))
+                    if (IsSampled(key, SAMPLE_MODULUS))
                         sample.Add(new SampledSpectrum(key, spectrum.PrecursorMz, spectrum.RetentionTime, spectrum.Mz, spectrum.Intensity));
                 }
                 lines.Sort(StringComparer.Ordinal);
@@ -843,7 +855,18 @@ namespace pwiz.CarafeSharp.Test
             public long Precursors { get; private set; }
             public long Peaks { get; private set; }
             public string ContentSha256 { get; private set; }
+            /// <summary>The precursors sampled at <see cref="SAMPLE_MODULUS"/>, by key.</summary>
             public IReadOnlyList<SampledSpectrum> Sample { get; private set; }
+
+            /// <summary>
+            /// The precursors sampled at <paramref name="modulus"/>, a multiple of <see cref="SAMPLE_MODULUS"/>:
+            /// a subset of <see cref="Sample"/>, since a hash that is 0 modulo it is 0 modulo that too.
+            /// </summary>
+            public IReadOnlyList<SampledSpectrum> SampleAt(int modulus)
+            {
+                Assert.AreEqual(0, modulus % SAMPLE_MODULUS, @"A sample modulus is a multiple of {0}, not {1}.", SAMPLE_MODULUS, modulus);
+                return Sample.Where(s => IsSampled(s.Key, modulus)).ToList();
+            }
 
             /// <summary>
             /// One precursor for the content hash: modified sequence, charge, exact precursor m/z,
@@ -1255,14 +1278,16 @@ namespace pwiz.CarafeSharp.Test
                     golden.Library = new LibrarySummary(library.GetProperty(@"precursors").GetInt64(), library.GetProperty(@"peaks").GetInt64(),
                         exact.GetProperty(@"library_content_sha256").GetString());
                     var sample = root.GetProperty(@"sample");
-                    Assert.AreEqual(SAMPLE_MODULUS, sample.GetProperty(@"modulus").GetInt32(), @"{0} was sampled with another modulus", path);
+                    golden.SampleModulus = sample.GetProperty(@"modulus").GetInt32();
+                    Assert.IsTrue(golden.SampleModulus > 0 && golden.SampleModulus % SAMPLE_MODULUS == 0,
+                        @"{0} was sampled at modulus {1}, which is not a multiple of {2}", path, golden.SampleModulus, SAMPLE_MODULUS);
                     golden.Sample = LibrarySample.Read(Path.Combine(folder, sample.GetProperty(@"file").GetString() ?? SAMPLE_FILE));
                 }
                 return golden;
             }
 
-            /// <summary>Writes golden.json for <paramref name="run"/>, whose sample is written beside it.</summary>
-            public static void Write(string path, RunMeasurement run)
+            /// <summary>Writes golden.json for <paramref name="run"/>, whose sample at <paramref name="modulus"/> is written beside it.</summary>
+            public static void Write(string path, RunMeasurement run, int modulus, int sampled)
             {
                 using (var stream = File.Create(path))
                 using (var json = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
@@ -1304,8 +1329,8 @@ namespace pwiz.CarafeSharp.Test
                     json.WriteEndObject();
                     json.WriteStartObject(@"sample");
                     json.WriteString(@"file", SAMPLE_FILE);
-                    json.WriteNumber(@"modulus", SAMPLE_MODULUS);
-                    json.WriteNumber(@"precursors", run.Library.Sample.Count);
+                    json.WriteNumber(@"modulus", modulus);
+                    json.WriteNumber(@"precursors", sampled);
                     json.WriteString(@"rule", @"the precursors whose 64-bit FNV-1a hash of modseq/charge, shifted right 32 bits, is 0 modulo the modulus");
                     json.WriteEndObject();
                     json.WriteStartObject(@"tolerances");
@@ -1351,6 +1376,8 @@ namespace pwiz.CarafeSharp.Test
             public int DecoyPairRows { get; private set; }
             public LibrarySummary Library { get; private set; }
             public IReadOnlyList<SampledSpectrum> Sample { get; private set; }
+            /// <summary>The modulus the golden's library was sampled at, a multiple of <see cref="SAMPLE_MODULUS"/>.</summary>
+            public int SampleModulus { get; private set; }
 
             private static void ReadMap(JsonElement element, IDictionary<string, string> map)
             {
