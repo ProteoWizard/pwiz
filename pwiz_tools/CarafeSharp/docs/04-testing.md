@@ -182,7 +182,10 @@ least three times the largest spread seen across GPU repeats, CPU against GPU an
 - **The DecoyPairs checks** place each precursor in its pair group by its I/L-normalized sequence, apart
   from `DecoyPairPlanner`. A peptide whose I/L twin is another member of its group (a shuffle that only
   swaps I and L) has more than one place in the manifest; the planner pairs such twins with themselves
-  and skips them, and the check leaves them out and counts them.
+  and skips them, and the check leaves them out and counts them. Likewise a target whose partner's
+  sequence has another role in its group (Carafe's Astral digest gives some groups' decoy and
+  entrapment decoy one sequence) is counted apart: the library holds that precursor once, and the
+  planner pairs it once, in its other pair.
 - **The sample** is the precursors whose FNV-1a key hash falls in one tenth, stored with their spectra
   as `library_sample.tsv.gz` beside `golden.json`.
 

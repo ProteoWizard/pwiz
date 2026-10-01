@@ -449,8 +449,9 @@ namespace pwiz.CarafeSharp.Test
                 @"DecoyPairs pairs: {0} of {1} are not a target and the decoy of its pair group with one charge ({2} entrapment pairs)",
                 pairs.MalformedPairs, pairs.Pairs, pairs.EntrapmentPairs);
             Check(pairs.UnpairedTargetsWithDecoy == 0,
-                @"DecoyPairs targets: {0} of {1} paired; {2} unpaired although their decoy was written, {3} unpaired because it was not",
-                pairs.PairedTargets, pairs.Targets, pairs.UnpairedTargetsWithDecoy, pairs.UnpairedTargetsWithoutDecoy);
+                @"DecoyPairs targets: {0} of {1} paired; {2} unpaired although their decoy was written, {3} unpaired because it was not, " +
+                @"{4} unpaired because their partner precursor is paired in its other role",
+                pairs.PairedTargets, pairs.Targets, pairs.UnpairedTargetsWithDecoy, pairs.UnpairedTargetsWithoutDecoy, pairs.SharedPartnerTargets);
             if (pairs.AmbiguousPrecursors > 0 || pairs.UnlistedPrecursors > 0)
             {
                 Report(@"INFO DecoyPairs: {0} precursors left out of the pairing check (an I/L twin: their I/L-normalized sequence has more than one place in the manifest), {1} not in the manifest",
@@ -948,6 +949,14 @@ namespace pwiz.CarafeSharp.Test
                         continue;
                     }
                     groups[group.PairIndex].TryGetValue(group.Type == TARGET ? DECOY : ENTRAPMENT_DECOY, out string partner);
+                    if (partner != null && ambiguous.Contains(partner))
+                    {
+                        // Its partner's sequence has another role in the manifest too (Carafe's digest gave a group's
+                        // decoy and entrapment decoy one sequence, or an entrapment decoy its target's): the library
+                        // holds that precursor once, and the planner pairs it once, in its other pair.
+                        summary.SharedPartnerTargets++;
+                        continue;
+                    }
                     if (partner != null && written.Contains(Precursor.MakeKey(partner, precursor.Charge, precursor.ModificationKey)))
                         summary.UnpairedTargetsWithDecoy++;
                     else
@@ -964,6 +973,8 @@ namespace pwiz.CarafeSharp.Test
             public int PairedTargets { get; private set; }
             public int UnpairedTargetsWithDecoy { get; private set; }
             public int UnpairedTargetsWithoutDecoy { get; private set; }
+            /// <summary>Unpaired targets whose partner precursor is also another role's, and paired in that role.</summary>
+            public int SharedPartnerTargets { get; private set; }
             public int AmbiguousPrecursors { get; private set; }
             public int UnlistedPrecursors { get; private set; }
 
