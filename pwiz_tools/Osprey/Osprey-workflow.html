@@ -63,7 +63,16 @@
     workers &mdash; PerFileScoring &#8594; FirstPassFDR &#8594; PerFileRescoring
     &#8594; SecondPassFDR &mdash; can each run as a separate HPC node; the
     banner heading each task names the files it reads and writes, including
-    the sidecars the next task rehydrates from. The C# implementation
+    the sidecars the next task rehydrates from. Optional products ride the
+    task that already holds their inputs, never a stage of their own:
+    <code>--model-diagnostics</code> adds
+    <code>&lt;blib-stem&gt;.1st-pass/.2nd-pass.model-diagnostics.json</code> and the
+    <code>&lt;blib-stem&gt;.model-diagnostics.html</code> report to FirstPassFDR and
+    SecondPassFDR, and <code>--training-export</code> adds each
+    run's <code>&lt;stem&gt;.training.parquet</code> to PerFileRescoring. Given to a
+    finished run, either flag writes only its product. <code>--task
+    ModelDiagnostics</code> and <code>--task TrainingExport</code> select the
+    pipeline with the flag set; they are not HPC nodes. The C# implementation
     (Osprey) is end-to-end cross-impl bit-identical to the Rust reference
     (osprey) from Stage 1 through Stage 7 + <code>.blib</code> on the Stellar
     (<code>--resolution unit</code>) and Astral (<code>--resolution hram</code>)
@@ -74,7 +83,7 @@
 </header>
 
 <main>
-<svg class="pipeline" viewBox="0 0 1200 2884" xmlns="http://www.w3.org/2000/svg">
+<svg class="pipeline" viewBox="0 0 1200 2900" xmlns="http://www.w3.org/2000/svg">
 <defs>
   <!-- Arrowhead for control flow between stages -->
   <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
@@ -267,7 +276,7 @@
 
   <rect class="st-done" x="80" y="70" width="460" height="42" rx="4"/>
   <text class="stage-title" x="310" y="90" text-anchor="middle">Load + dedup + binary cache</text>
-  <text class="stage-desc"  x="310" y="104" text-anchor="middle">best-per-precursor, sequential IDs, .libcache for fast reload</text>
+  <text class="stage-desc"  x="310" y="104" text-anchor="middle">best-per-precursor, .blib peaks typed b/y from m/z, .libcache for fast reload</text>
 
   <rect class="st-done" x="80" y="130" width="460" height="42" rx="4"/>
   <text class="stage-title" x="310" y="150" text-anchor="middle">Decoy generation (parallel)</text>
@@ -398,6 +407,7 @@
   <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan>, <tspan class="sc-run">&lt;stem&gt;.calibration.json</tspan>  (every run, derived from --input)</text>
   <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.1st-pass.fdr_scores.bin</tspan>, <tspan class="sc-run">.1st-pass.stratum.json</tspan>, <tspan class="sc-run">&lt;stem&gt;.reconciliation.json</tspan>   &#183;   validity  <tspan class="sc-run">&lt;out&gt;.FirstPassFDR.osprey.task</tspan></text>
   <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.fdr_experiment.bin</tspan>, <tspan class="sc-exp">.1st-pass.retained_base_ids.bin</tspan> (compaction key), <tspan class="sc-exp">&lt;stem&gt;.1st-pass.model.json</tspan></text>
+  <text x="140" y="88" class="task-hdr-io"><tspan class="task-hdr-key">opt&#160;</tspan><tspan class="sc-exp">.1st-pass.model-diagnostics.json</tspan>, <tspan class="sc-exp">.model-diagnostics.html</tspan>  (--model-diagnostics)</text>
   <text x="1060" y="88" text-anchor="end" class="task-hdr-relay">relay: every experiment-wide file to EVERY downstream node</text>
 </g>
 
@@ -465,6 +475,7 @@
   <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores.parquet</tspan> (derived from --input) + <tspan class="sc-run">.1st-pass.fdr_scores.bin</tspan>, <tspan class="sc-run">.reconciliation.json</tspan>, <tspan class="sc-run">.calibration.json</tspan>, <tspan class="sc-cache">.spectra.bin</tspan></text>
   <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.fdr_experiment.bin</tspan>, <tspan class="sc-exp">.1st-pass.retained_base_ids.bin</tspan>, <tspan class="sc-exp">&lt;stem&gt;.1st-pass.model.json</tspan>   &#183;   resident baseline</text>
   <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores-reconciled.parquet</tspan>, <tspan class="sc-run">.2nd-pass.fdr_decoys.bin</tspan>, <tspan class="sc-run">.2nd-pass.fdr_scores.bin</tspan> (pass-2 worker)   &#183;   validity  <tspan class="sc-run">&lt;out&gt;.PerFileRescoring.osprey.task</tspan></text>
+  <text x="140" y="88" class="task-hdr-io"><tspan class="task-hdr-key">opt&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.training.parquet</tspan>  (--training-export)</text>
   <text x="1060" y="88" text-anchor="end" class="task-hdr-relay">relay: the run's own set + every experiment-wide file</text>
 </g>
 
@@ -503,14 +514,15 @@
 <path class="flow" d="M 600 2492 L 600 2506" marker-end="url(#arrow)"/>
 
 <g transform="translate(0, 2508)">
-  <rect class="task-hdr-bg" x="120" y="0" width="960" height="96" rx="8"/>
+  <rect class="task-hdr-bg" x="120" y="0" width="960" height="112" rx="8"/>
   <text x="140" y="22" class="task-hdr-name">&#9656; --task SecondPassFDR</text>
   <text x="1060" y="22" text-anchor="end" class="task-hdr-role">join &#183; 1 node &#183; final aggregation</text>
   <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-run">&lt;stem&gt;.scores-reconciled.parquet</tspan> (every run - one parquet per run, no <tspan class="sc-run">.scores.parquet</tspan> fallback), <tspan class="sc-run">.2nd-pass.fdr_scores.bin</tspan> (worker)</text>
   <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan><tspan class="sc-exp">&lt;blib-stem&gt;.1st-pass.fdr_experiment.bin</tspan>, <tspan class="sc-exp">&lt;stem&gt;.1st-pass.model.json</tspan>, <tspan class="sc-exp">.1st-pass.stratum.json</tspan>, <tspan class="sc-run">&lt;stem&gt;.reconciliation.json</tspan>, <tspan class="sc-run">.calibration.json</tspan></text>
   <text x="140" y="72" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan><tspan class="sc-exp">&lt;output&gt;.blib</tspan>, <tspan class="sc-exp">&lt;blib-stem&gt;.2nd-pass.fdr_experiment.bin</tspan>, <tspan class="sc-run">&lt;stem&gt;.2nd-pass.fdr_scores.bin</tspan> (where no worker ran)   &#183;   validity  <tspan class="sc-exp">&lt;out&gt;.SecondPassFDR.osprey.task</tspan></text>
-  <text x="140" y="88" class="task-hdr-relay">holds O(distinct) &#183; folds the runs one at a time, rebuilding each from its own artifacts and dropping it</text>
-  <text x="1060" y="88" text-anchor="end" class="task-hdr-relay">relay: every run's reconciled set, with its .osprey.task stamps</text>
+  <text x="140" y="88" class="task-hdr-io"><tspan class="task-hdr-key">opt&#160;</tspan><tspan class="sc-exp">.2nd-pass.model-diagnostics.json</tspan>, <tspan class="sc-exp">.model-diagnostics.html</tspan>  (--model-diagnostics)</text>
+  <text x="140" y="104" class="task-hdr-relay">holds O(distinct) &#183; folds the runs one at a time, rebuilding each from its own artifacts and dropping it</text>
+  <text x="1060" y="104" text-anchor="end" class="task-hdr-relay">relay: every run's reconciled set, with its .osprey.task stamps</text>
 </g>
 
 <!-- ================================================================= -->
@@ -524,9 +536,9 @@
 <!-- experiment-level FDR, first-pass protein FDR, reconciliation       -->
 <!-- planning) under the FirstPassFDR phase.                            -->
 <!-- ================================================================= -->
-<path class="flow" d="M 600 2604 L 600 2622" marker-end="url(#arrow)"/>
+<path class="flow" d="M 600 2620 L 600 2638" marker-end="url(#arrow)"/>
 
-<g transform="translate(0, 2624)">
+<g transform="translate(0, 2640)">
   <rect class="phase-bg" x="40" y="0" width="1120" height="230" rx="6"/>
   <text class="phase-label" x="60" y="24">stage 7</text>
   <text class="phase-title" x="60" y="42">Post-join: second-pass Percolator + protein FDR + .blib output</text>

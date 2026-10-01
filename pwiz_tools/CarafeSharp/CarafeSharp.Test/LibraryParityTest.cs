@@ -26,6 +26,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
@@ -284,11 +285,22 @@ namespace pwiz.CarafeSharp.Test
             var generator = new LibraryGenerator(settings, new TestContextWriter(TestContext));
             generator.Run();
             Log(@"{0}: predicted {1} precursors in {2:F1} s", run.Folder, generator.SpectrumCount, clock.Elapsed.TotalSeconds);
+            // Carafe keeps a precursor whose target or decoy partner has too few fragments; CarafeSharp
+            // drops it with its partner (DecoyPairGate), so those are the only ones Carafe has and we lack.
+            var pairDropped = new HashSet<string>(generator.PairDropped.Select(p => p.Sequence + @"/" + p.Charge), StringComparer.Ordinal);
 
             var ours = CarafeLibraryTsv.Read(generator.TsvPath);
             var sequences = new HashSet<string>(ours.Precursors.Values.Select(p => p.Sequence), StringComparer.Ordinal);
             var fastaSequences = ReadFastaSequences(run.FastaPath);
             var reference = CarafeLibraryTsv.Read(run.LibraryTsv, subset ? sequences.Contains : null);
+            var unpaired = reference.Precursors.Where(p => pairDropped.Contains(p.Value.Sequence + @"/" + p.Value.Charge)).Select(p => p.Key).ToList();
+            foreach (string key in unpaired)
+                reference.Precursors.Remove(key);
+            Log(@"{0}: {1} precursors left out with a partner that had too few fragments, {2} of them in Carafe's library as compared",
+                run.Folder, pairDropped.Count, unpaired.Count);
+            // A whole library has every one of them; a subset only those whose sequence we wrote at another charge.
+            if (!subset)
+                Assert.AreEqual(pairDropped.Count, unpaired.Count, run.Folder);
             var comparison = reference.Compare(ours, (a, b) => IsClipExplained(a, b, fastaSequences, run.Settings) ||
                                                                 (subset && IsSubsetExplained(a, b)));
             Log(@"{0}: {1}", run.Folder, comparison);
@@ -302,7 +314,7 @@ namespace pwiz.CarafeSharp.Test
             Assert.IsTrue(comparison.MaxIntensityDiff < 0.002, run.Folder);
             Assert.IsTrue(comparison.MaxRetentionTimeDiff <= 0.011, run.Folder);
             if (run.LibraryBlib != null)
-                CompareBlibs(run, run.LibraryBlib, generator.BlibPath);
+                CompareBlibs(run, run.LibraryBlib, generator.BlibPath, pairDropped);
         }
 
         private void InScratchFolder(Action<string> action)
@@ -373,9 +385,16 @@ namespace pwiz.CarafeSharp.Test
             }
         }
 
-        private void CompareBlibs(CarafeReferenceRun run, string carafeBlib, string ourBlib)
+        /// <summary>
+        /// Carafe's .blib against ours: the same spectra, m/z, modifications and RT, but for
+        /// <paramref name="pairDropped"/>, the stripped sequence/charge of the precursors we left out
+        /// for a partner with too few fragments, which Carafe keeps.
+        /// </summary>
+        private void CompareBlibs(CarafeReferenceRun run, string carafeBlib, string ourBlib, ISet<string> pairDropped)
         {
             var carafe = ReadBlib(carafeBlib);
+            foreach (string key in carafe.Keys.Where(k => pairDropped.Contains(Regex.Replace(k, @"\[[^\]]*\]", string.Empty))).ToList())
+                carafe.Remove(key);
             var ours = ReadBlib(ourBlib);
             int mzDiffers = 0, modsDiffer = 0, missing = 0;
             double maxRtDiff = 0;

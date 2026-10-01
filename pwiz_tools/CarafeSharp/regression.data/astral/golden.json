@@ -1,19 +1,19 @@
 {
   "format": "carafesharp-regression-golden-3",
-  "created": "2026-09-30T19:57:05",
+  "created": "2026-10-01T12:02:07",
   "provenance": {
     "dataset": "Astral",
     "leg": "isolated",
     "torch": "cpu",
     "device_used": "cpu",
-    "commit": "249d01cc823a97368ce1119dae67e83293536291",
+    "commit": "8362e74827e86c26c9f885207b31b7abf076939f",
     "branch": "Skyline/work/20260923_carafesharp",
     "os": "Microsoft Windows 10.0.26200",
     "os_platform": "Windows",
     "processor": "Intel(R) Core(TM) i9-9900K CPU @ 3.60GHz",
     "logical_processors": 16,
     "omp_num_threads": null,
-    "minutes": 35.02,
+    "minutes": 36.34,
     "subset_rule": "the pair groups whose peptide_pair_index is a multiple of 50, with all their members",
     "subset_groups": 27820,
     "subset_records": 111322,
@@ -60,14 +60,14 @@
   },
   "use_finetuned_for_prediction": true,
   "library": {
-    "precursors": 123399,
-    "peaks": 1703849,
+    "precursors": 123389,
+    "peaks": 1703785,
     "decoy_pair_rows": 123380,
     "decoy_pairs": 61690,
     "entrapment_pairs": 30836,
-    "targets": 61685,
+    "targets": 61679,
     "paired_targets": 61675,
-    "unpaired_targets_decoy_not_written": 6
+    "unpaired_targets_decoy_not_written": 0
   },
   "sample": {
     "file": "library_sample.tsv.gz",
@@ -106,7 +106,7 @@
       "ms2.safetensors": "65ca082403049a38047f1d09624f18ecc767421e8a9713e289fd8e9f5f590d3f",
       "rt.safetensors": "f76c7dc58f6c2ddbca6cdda52a93a58d00ab3315e336ec8a348459ea9db14a79"
     },
-    "library_content_sha256": "cf7004d0400f9a24826e3751fd8acaaef03d73841ed284b5ea6c37f4ab2b70b0",
+    "library_content_sha256": "01cec75571ced21d26d973a57c7f1e204f761700d54e1f3958a91597e8ccc6f5",
     "library_content": "SHA-256 of one line per precursor, sorted: Skyline modified sequence, charge, precursor m/z, RT rounded to 1e-6, then the fragments in m/z order as m/z:intensity, each rounded to 1e-6"
   }
 }

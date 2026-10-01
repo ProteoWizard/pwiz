@@ -61,6 +61,7 @@ namespace pwiz.CarafeSharp
         private readonly Stopwatch _buildClock = new Stopwatch();
         private PretrainedModels _pretrained;
         private string _modelFileFolder;
+        private DecoyPairGate _pairGate;
 
         /// <param name="settings">The library to predict.</param>
         /// <param name="log">Receives progress, or null.</param>
@@ -80,6 +81,15 @@ namespace pwiz.CarafeSharp
 
         /// <summary>Precursors written.</summary>
         public int SpectrumCount { get; private set; }
+
+        /// <summary>
+        /// The precursors left out, with a pairing manifest, because their target or decoy
+        /// partner had too few fragments (<see cref="DecoyPairGate"/>); empty without one.
+        /// </summary>
+        public IReadOnlyList<LibrarySpectrum> PairDropped
+        {
+            get { return _pairGate?.Dropped ?? Array.Empty<LibrarySpectrum>(); }
+        }
 
         /// <summary>A test hook called with each chunk's index before it is predicted, on the predicting thread.</summary>
         internal Action<int> BeforePredictChunk { get; set; }
@@ -156,6 +166,7 @@ namespace pwiz.CarafeSharp
             var pairingPrecursors = BlibPath != null && !string.IsNullOrEmpty(_settings.PairingManifest)
                 ? new List<DecoyPairPlanner.Precursor>()
                 : null;
+            _pairGate = CreatePairGate(forms);
             using (var tsv = TsvPath != null ? new CarafeLibraryTsvWriter(TsvPath) : null)
             using (var blib = BlibPath != null ? new BlibLibraryWriter(BlibPath, Path.GetFileNameWithoutExtension(BlibPath)) : null)
             {
@@ -163,6 +174,16 @@ namespace pwiz.CarafeSharp
                 using (var writer = new LibraryChunkWriter(tsv, blib, pairingPrecursors, BeforeWriteChunk, BeforeQueueWait))
                 {
                     PredictChunks(forms, builder, ms2, rt, irt, writer);
+                    if (_pairGate != null)
+                    {
+                        var held = new List<LibrarySpectrum>();
+                        _pairGate.Finish(held);
+                        if (held.Count > 0)
+                            writer.Add(held);
+                        Log(string.Format(CultureInfo.InvariantCulture,
+                            @"Pairs: dropped {0} precursors whose target or decoy partner had fewer than {1} fragments, so every pair " +
+                            @"is written whole (Carafe keeps them unpaired)", _pairGate.Dropped.Count, _settings.MinFragments));
+                    }
                     var finishClock = Stopwatch.StartNew();
                     writer.Finish();
                     SpectrumCount = writer.Written;
@@ -183,6 +204,41 @@ namespace pwiz.CarafeSharp
                     Log(@"The spectral library is saved to " + TsvPath);
                 }
             }
+        }
+
+        /// <summary>
+        /// The pair gate for a library written with a pairing manifest, every pair member it will
+        /// be offered counted, or null without a manifest or when the manifest cannot be read;
+        /// the DecoyPairs step then reports the failure, as Carafe's does.
+        /// </summary>
+        private DecoyPairGate CreatePairGate(List<PeptideIsoform> forms)
+        {
+            if (string.IsNullOrEmpty(_settings.PairingManifest))
+                return null;
+            DecoyPairGate gate;
+            try
+            {
+                gate = new DecoyPairGate(DecoyPairPlanner.ReadManifest(_settings.PairingManifest));
+            }
+            catch (Exception e)
+            {
+                // As the DecoyPairs step does, any failure to read it leaves the library written as Carafe's is.
+                Log(@"The pairing manifest could not be read to keep the library's pairs whole: " + e.Message);
+                return null;
+            }
+            foreach (var form in forms)
+            {
+                if (!gate.IsMember(form.Sequence))
+                    continue;
+                var charges = LibraryPeptideForms.GetCharges(form, _settings.Charges, _settings.MinPrecursorMz, _settings.MaxPrecursorMz);
+                if (charges.Count == 0)
+                    continue;
+                var peptide = form.ToAlphabase();
+                string modKey = DecoyPairPlanner.ModKey(peptide.ModNames);
+                foreach (int charge in charges)
+                    gate.Expect(peptide.Sequence, charge, modKey);
+            }
+            return gate;
         }
 
         /// <summary>
@@ -262,7 +318,20 @@ namespace pwiz.CarafeSharp
                 double retentionTime = LibrarySpectrumBuilder.GetRetentionTime(rtPredictions[form], _settings.RtMax, irt.Slope, irt.Intercept);
                 spectra[i] = builder.Build(isoforms[form], requests[i].Precursor, predictions[i].Intensities, INTENSITY_STRIDE, retentionTime);
             });
-            var built = spectra.Where(s => s != null).ToList();
+            List<LibrarySpectrum> built;
+            if (_pairGate == null)
+            {
+                built = spectra.Where(s => s != null).ToList();
+            }
+            else
+            {
+                built = new List<LibrarySpectrum>(spectra.Length);
+                for (int i = 0; i < spectra.Length; i++)
+                {
+                    var peptide = requests[i].Precursor.Peptide;
+                    _pairGate.Offer(peptide.Sequence, requests[i].Precursor.Charge, DecoyPairPlanner.ModKey(peptide.ModNames), spectra[i], built);
+                }
+            }
             _buildClock.Stop();
             return built;
         }

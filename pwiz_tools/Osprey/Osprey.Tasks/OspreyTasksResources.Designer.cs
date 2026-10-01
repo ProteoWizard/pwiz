@@ -4739,6 +4739,15 @@ namespace pwiz.Osprey.Tasks {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exporting isolation windows.
+        /// </summary>
+        public static string TrainingExportWriter_ExportRun_Exporting_isolation_windows {
+            get {
+                return ResourceManager.GetString("TrainingExportWriter_ExportRun_Exporting_isolation_windows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}: {1:N0} of {2:N0} fitted precursors did not reproduce the scored median polish cosine..
         /// </summary>
         public static string TrainingExportWriter_ExportRun__0____1_N0__of__2_N0__fitted_precursors_did_not_reproduce_the_scored_median_polish_cosine_ {

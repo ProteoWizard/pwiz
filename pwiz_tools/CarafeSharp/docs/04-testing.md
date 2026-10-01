@@ -67,8 +67,7 @@ The zips are in the PanoramaWeb perftests folder beside the Osprey test files,
 <https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/>, and anyone can download them.
 `testdata.json` has each one's URL, size and SHA-256. The export packages hold the format 2 exports that
 Osprey (#4708) wrote from the Stellar `_21` and Astral `_55` .raw files, each searched against the Carafe
-initial library of its test-files package; each README records the command. The Astral one is not
-uploaded yet: its URL in `testdata.json` is PLACEHOLDER until it is.
+initial library of its test-files package; each README records the command.
 
 Extract a zip into `<Downloads>/Perftests/`, where the Skyline and Osprey perf tests keep theirs:
 - `<Downloads>` is `SKYLINE_DOWNLOAD_PATH` when it is set, else the user's Downloads folder.
@@ -172,7 +171,7 @@ least three times the largest spread seen across GPU repeats, CPU against GPU an
 | Library precursor count, DecoyPairs row count | within 1e-4 of the golden's (at least 2) |
 | Library peak count | within 1% |
 | DecoyPairs pairs | each is a target and the decoy of its pair group (or the entrapment target and entrapment decoy), of one charge |
-| DecoyPairs targets | every target whose decoy was written is paired |
+| DecoyPairs targets | every target paired, its decoy written (the library keeps its pairs whole) |
 | Sampled precursors | one-sided only with at most 3 fragments; the same precursor m/z |
 | Sampled spectral cosine | median 0.99925, p5 0.991, p1 0.975 or more |
 | Sampled RT difference (minutes) | median 0.03, p95 0.10, p99 0.16 or less |
@@ -199,7 +198,7 @@ least three times the largest spread seen across GPU repeats, CPU against GPU an
 
 **`-CreateGolden`** refuses a working tree with changes, a GPU request that fell back to the CPU, a
 fine-tuned MS2 model that does not beat the pretrained one on COS, PCC, SA and SPC or is not used for
-prediction, and a DecoyPairs table that leaves out a target whose decoy was written. With a golden
+prediction, and a DecoyPairs table that leaves out a target, or a library that lacks a target's decoy. With a golden
 already there it compares the run with it, lists the `golden.json` values that change, and replaces it
 only with `-Force`. The golden records its commit, device, processor, OS, libtorch thread count and the
 inputs' SHA-256.
@@ -216,10 +215,11 @@ machine gave byte-identical models and libraries.
 
 **The Astral golden** is a CPU run on the same machine (35 minutes, most of it the fine-tune on 39,702
 MS2 spectra and 77,073 RT peptide forms):
-- Library: 123,399 precursors, 1,703,849 peaks and 123,380 DecoyPairs rows (61,690 pairs, 30,836 of them
-  entrapment pairs).
-- Pairing: 61,675 of 61,685 targets paired. 6 are unpaired because their decoy was not written, 4 because
-  their partner precursor is paired in its other role, and 37 I/L twins are left out of the check.
+- Library: 123,389 precursors, 1,703,785 peaks and 123,380 DecoyPairs rows (61,690 pairs, 30,836 of them
+  entrapment pairs). It was remade on 2026-10-01 (8362e74827) when the library began writing its pairs
+  whole: 10 precursors whose partner had too few fragments were left out with it, 6 targets and 4 decoys.
+- Pairing: 61,675 of 61,679 targets paired. The other 4 are unpaired because their partner precursor is
+  paired in its other role, and 37 I/L twins are left out of the check.
 - Sample: 1,738 precursors at modulus 70, 313 KB.
 - Held-out metrics, pretrained to fine-tuned: MS2 COS 0.9771 to 0.9868, RT R2 0.8595 to 0.9972.
 - Export: `carafesharp-export-astral-v1`, which Osprey (#4708) wrote from the `_55` .raw against Carafe's

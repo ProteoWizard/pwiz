@@ -150,6 +150,7 @@ targets['Linux'] = merge(targets['CoreLinux'], targets['BumbershootLinux'])
 # "pwiz_tools/Bumbershoot/Jamfile.jam" matches both "pwiz_tools/Bumbershoot/.*" and "pwiz_tools/.*", but will only trigger "Bumbershoot" targets
 matchPaths = [
     (".*/smartBuildTrigger.py", {}),
+    (".*/nightly_trigger_and_paths_config.py", {}),
     (".*/vcs_trigger_and_paths_config.py", {}),
     (".*/ai/.*", {}),
     # TeamCity versioned settings: every UI edit to a config in the Versioned Configs
