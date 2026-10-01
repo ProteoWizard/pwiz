@@ -18,6 +18,7 @@
  */
 using System;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil.PInvoke;
 
 namespace pwiz.Skyline.Controls
 {
@@ -26,6 +27,35 @@ namespace pwiz.Skyline.Controls
         public WizardPages()
         {
             TabStop = false;    // Make sure the TabControl is not a tab stop
+        }
+
+        /// <summary>
+        /// Moves the focus to the first control on the new page only when the focus was already inside
+        /// this control. TabControl.SelectedIndex treats every change made in code as a user switching
+        /// tabs and always moves the focus onto the new page, so choosing a page from a control outside
+        /// it, such as a radio button or the Next button, would lose that control's focus.
+        /// </summary>
+        public new int SelectedIndex
+        {
+            get { return base.SelectedIndex; }
+            set
+            {
+                if (!IsHandleCreated || ContainsFocus || value == base.SelectedIndex)
+                {
+                    base.SelectedIndex = value;
+                    return;
+                }
+                // Changing the selection with the native message and raising the change ourselves
+                // leaves TabControl's private UI-selection flag clear, so it shows the page without
+                // moving the focus
+                User32.SendMessage(Handle, User32.WinMessageType.TCM_SETCURSEL, (IntPtr)value, IntPtr.Zero);
+                OnSelectedIndexChanged(EventArgs.Empty);
+            }
+        }
+
+        public new void SelectTab(int index)
+        {
+            SelectedIndex = index;
         }
 
         protected override void WndProc(ref Message m)
