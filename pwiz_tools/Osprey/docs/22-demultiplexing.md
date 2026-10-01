@@ -733,8 +733,8 @@ it.
   - Solving took 1,405 s. It now runs while the next batch is read.
   - Most of the rest was writing a 13.6 GB mzML.
 - **framed:3:1 with the floor, on the current build and 4 threads: 3,657 s.**
-- Inside Osprey, the demultiplexer would run from spectra Osprey has already parsed, as the overlap
-  demultiplexer does, and the separate read and write would go away.
+- Inside Osprey, the demultiplexer would run as Osprey reads the run, writing its spectra straight to
+  the spectra cache, and the separate mzML write and re-read would go away.
 
 ### Validation of the per-channel demultiplexer
 
@@ -876,11 +876,14 @@ The scripts behind these ZT Scan tables are in pwiz-ai, under `ai/scripts/Osprey
   variable widths, from centroided data (vendor centroiding, or a centroided mzML), by the
   per-channel demultiplexer (or the overlap demultiplexer, with `OSPREY_DEMUX_ENGINE=msconvert`).
 - **Supported in `Osprey.DemuxTool` only:** the per-channel demultiplexer for SCIEX ZT Scan, and
-  the joint solve for ZT Scan. Wiring them into `--demux` still needs:
+  the joint solve for ZT Scan. In `--demux` the joint solve will run as the run is read (`.wiff2`,
+  `.wiff` or mzML), and the spectra cache will hold only what it writes, demultiplexed and
+  centroided: the profile is read once and never cached. That still needs:
+  - the reading and solving wired into the cache build, with the joint solve's settings and the
+    kernel in the cache descriptor;
   - the .wiff2 reader staged for Osprey.exe;
-  - the transmission calibrated per file, in C#;
-  - for the joint solve, the profile, which the `.spectra.bin` does not hold;
-  - its descriptor in the demultiplexed cache.
+  - the transmission calibrated per file, in C#.
+- **Later:** a joint-solved file Skyline can read, so Skyline sees the spectra Osprey searched.
 - **Open questions for ZT Scan:**
   - quantitation over whole runs: the per-channel solve's quantities are noisier than the acquired
     data's (CV 0.119 against 0.112, with DIA-NN pinned), and DIA-NN's scanning mode on the `.wiff`
