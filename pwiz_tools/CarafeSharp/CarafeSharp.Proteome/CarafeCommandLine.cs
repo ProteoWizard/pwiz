@@ -181,7 +181,8 @@ namespace pwiz.CarafeSharp.Proteome
                     @"Training options (Carafe's): -se Osprey -fdr <q> -cor <r> -n_ion_min <n> -c_ion_min <n> -lf_frag_n_min <n>",
                     @"  -nf <n> -min_n <n> -valid -no_masking -tf all|ms2|rt -seed <n> -nce <nce> -ms_instrument <name>",
                     @"  -rt_max <min> -ms2_model <model> -device cpu|gpu; CarafeSharp only: -pretrained <pretrained_models.zip>,",
-                    @"  -activation beam-CID|reCID -analyzer Orbitrap|LIT|ToF (else each run's, from Osprey's export)");
+                    @"  -activation beam-CID|reCID -analyzer Orbitrap|LIT|ToF (else each run's, from Osprey's export),",
+                    @"  -model <file.carafemodel> (fine-tune a saved model further, instead of the pretrained models)");
             }
         }
 
@@ -251,12 +252,16 @@ namespace pwiz.CarafeSharp.Proteome
             {
                 if (Has(@"model_dir"))
                     throw new ArgumentException(@"-model and -model_dir both name the models to predict with; give one");
-                if (Has(@"ms") || NamesTrainingExports())
+                if (Has(@"ms2_model"))
+                    throw new ArgumentException(@"-model and -ms2_model both name the MS2 model to start from; give one");
+                bool training = Has(@"ms") || NamesTrainingExports();
+                // With training, -model is the model to fine-tune further, and the new file holds both of its models.
+                if (training && TryGet(@"tf", out string trainingType) && !string.Equals(trainingType, @"all", StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new ArgumentException(@"-model predicts a library from a saved model without training; a training run " +
-                                                @"(-ms, or -i naming training exports) saves its own model instead");
+                    throw new ArgumentException(@"-model with training fine-tunes both of the saved model's models further; -tf " +
+                                                trainingType + @" would leave the other one pretrained in the new model");
                 }
-                if (!Has(@"db"))
+                if (!training && !Has(@"db"))
                     throw new ArgumentException(@"-model predicts a library, which needs the FASTA to predict via -db");
             }
             // Carafe trains when -ms is given. CarafeSharp also trains on Osprey's training exports
@@ -364,14 +369,18 @@ namespace pwiz.CarafeSharp.Proteome
                 settings.RtMax = ParseDouble(@"rt_max", rtMax);
             if (TryGet(@"ms2_model", out string ms2Model))
                 settings.Ms2Model = ms2Model;
+            if (TryGet(@"model", out string baseModel))
+                settings.BaseModel = baseModel;
             if (TryGet(@"pretrained", out string pretrained))
                 settings.PretrainedModels = pretrained;
             if (Has(@"db"))
             {
-                // The library predicted right after training, with the fine-tuned models in -o.
+                // The library predicted right after training, with the fine-tuned models in -o,
+                // not the -model they were fine-tuned from.
                 var library = InterpretLibrary(digest, modifications, minMz, maxMz);
                 library.ApplyTrainingRunMeta = true;
                 library.TrainingType = settings.TrainingType;
+                library.ModelFile = null;
                 settings.Library = library;
             }
             return settings;

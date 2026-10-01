@@ -65,6 +65,13 @@ namespace pwiz.CarafeSharp.Core
         /// <summary>CarafeSharp's fine-tuned RT model.</summary>
         public const string RT_SAFETENSORS = @"rt.safetensors";
 
+        /// <summary>
+        /// CarafeSharp's: the MS2 model of the saved model a training run fine-tuned further
+        /// (<c>-model</c>), which prediction keeps when the run's fine-tuned MS2 model did not beat
+        /// it. No Carafe folder holds one.
+        /// </summary>
+        public const string MS2_BASE_SAFETENSORS = @"ms2_base.safetensors";
+
         /// <summary>Held-out scores before and after fine-tuning, and whether to predict with the fine-tuned MS2 model.</summary>
         public const string METRICS = @"model_evaluation_metrics.json";
 

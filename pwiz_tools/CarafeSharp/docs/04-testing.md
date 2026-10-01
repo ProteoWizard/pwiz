@@ -219,10 +219,14 @@ arguments, predicting a library from the FASTA. The comparator checks, with no g
   library predicted from it with `-model` over a wider precursor window holds every precursor of the
   first with the same m/z, retention time and fragments, and intensities within 1e-5 (float32
   rounding moves with a batch's other peptides; over the same window the spectra are identical).
+- the saved model fine-tuned further on the same exports (`-model` with training) starts from the
+  models the first training chose: on the same held-out rows they score exactly as they did there (RT's
+  fine-tuned metrics, and MS2's fine-tuned or pretrained ones as it chose). The new file names the
+  saved one as its base, by SHA-256, and holds the saved MS2 model when its own did not beat it.
 
 Training on one isolation window says little about the models, so the chained leg does not judge them;
 the isolated leg does. After the builds it takes under a minute on the CPU: Osprey 7 s, CarafeSharp
-19 s to train, and about 10 s for the library from the saved model.
+19 s to train, about 10 s for the library from the saved model, and 18 s to fine-tune it further.
 
 **Another export: `-Export`.** The run fine-tunes on the given file instead of the packaged export,
 for example one Osprey wrote from the .raw on another platform. The export's SHA-256 is then reported

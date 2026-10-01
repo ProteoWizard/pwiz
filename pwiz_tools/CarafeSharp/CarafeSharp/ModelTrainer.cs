@@ -61,16 +61,20 @@ namespace pwiz.CarafeSharp
 
         public FineTuneResult Result { get; private set; }
 
+        /// <summary>Changes the fine-tuning options before the run; for tests.</summary>
+        internal Action<FineTuneOptions> ConfigureFineTune { get; set; }
+
         public OspreyTrainingSetStats Stats { get; private set; }
 
         public void Run()
         {
-            // What the run needs before hours of work: the library FASTA, any -ms2_model, the
-            // device, and the pretrained models the fine-tuning starts from.
+            // What the run needs before hours of work: the library FASTA, any -ms2_model or
+            // saved model (-model, its entries checked), the device, and the pretrained models.
             if (_settings.Library != null && !File.Exists(_settings.Library.Database))
                 throw new FileNotFoundException(@"Library FASTA (-db) not found: " + _settings.Library.Database, _settings.Library.Database);
             if (_settings.Ms2Model != null && !File.Exists(_settings.Ms2Model))
                 throw new FileNotFoundException(@"MS2 model (-ms2_model) not found: " + _settings.Ms2Model, _settings.Ms2Model);
+            var baseModel = _settings.BaseModel != null ? CarafeModelFile.Open(_settings.BaseModel) : null;
             var device = TorchDevice.Resolve(_settings.Device, out string fallback);
             if (fallback != null)
                 Log(fallback);
@@ -122,18 +126,40 @@ namespace pwiz.CarafeSharp
             CarafeTrainingDirectory.Write(_settings.OutputDirectory, trainingSet.Rt, trainingSet.Ms2);
 
             var fineTune = new FineTuneOptions { Seed = _settings.Seed, Device = device, Ms2Model = _settings.Ms2Model };
-            Result = FineTuneRun.Run(_settings.TrainRt ? trainingSet.Rt : null, _settings.TrainMs2 ? trainingSet.Ms2 : null,
-                pretrained, fineTune, _settings.OutputDirectory, Log);
+            ConfigureFineTune?.Invoke(fineTune);
+            string baseFolder = null;
+            try
+            {
+                if (baseModel != null)
+                {
+                    // The models a library from the saved model predicts with: those it holds, else the pretrained ones.
+                    baseFolder = Path.Combine(Path.GetTempPath(), @"CarafeSharp_base_" + Guid.NewGuid().ToString(@"N"));
+                    var baseDirectory = baseModel.Extract(baseFolder);
+                    fineTune.Ms2Model = baseDirectory.GetMs2ModelPath(@"all");
+                    fineTune.RtModel = baseDirectory.GetRtModelPath(@"all");
+                    fineTune.KeepMs2Start = true;
+                    Log(@"Fine-tune the saved model " + _settings.BaseModel + @" further: " + baseModel.Describe());
+                }
+                Result = FineTuneRun.Run(_settings.TrainRt ? trainingSet.Rt : null, _settings.TrainMs2 ? trainingSet.Ms2 : null,
+                    pretrained, fineTune, _settings.OutputDirectory, Log);
+            }
+            finally
+            {
+                if (baseFolder != null && Directory.Exists(baseFolder))
+                    Directory.Delete(baseFolder, true);
+            }
             CarafeModelDirectory.WriteMeta(_settings.OutputDirectory, BuildRunMeta(exports, selection.Runs, options));
 
             // The fine-tuned model as one file, to predict later libraries from with -model.
+            // The acquisition columns of the MS2 model it holds; the pretrained model has the default ones.
             string modelFile = Path.Combine(_settings.OutputDirectory, CarafeModelFile.DEFAULT_FILE_NAME);
-            string ms2File = Path.Combine(_settings.OutputDirectory, FineTuneRun.MS2_MODEL_FILE);
-            var acquisition = File.Exists(ms2File)
+            var trained = CarafeModelDirectory.Open(_settings.OutputDirectory, true);
+            string ms2File = trained.GetMs2ModelPath(_settings.TrainingType);
+            var acquisition = ms2File != null && CarafeModelDirectory.IsSafetensors(ms2File)
                 ? AcquisitionVocabulary.FromMetadata(StateDict.ReadSafetensorsMetadata(ms2File)) ?? AcquisitionVocabulary.DEFAULT
                 : AcquisitionVocabulary.DEFAULT;
-            var saved = CarafeModelFile.Write(modelFile, CarafeModelDirectory.Open(_settings.OutputDirectory, true), _settings.TrainingType,
-                pretrained?.Sha256, _settings.Ms2Model, BuildTrainingDescription(exports, selection.Runs, options, trainingSet, _settings), acquisition);
+            var saved = CarafeModelFile.Write(modelFile, trained, _settings.TrainingType, pretrained?.Sha256, _settings.Ms2Model,
+                BuildTrainingDescription(exports, selection.Runs, options, trainingSet, _settings), acquisition, baseModel);
             Log(@"Saved the fine-tuned model " + modelFile + @": " + saved.Describe());
 
             if (_settings.Library != null)

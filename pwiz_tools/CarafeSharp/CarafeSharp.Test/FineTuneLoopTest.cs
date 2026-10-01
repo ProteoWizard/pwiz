@@ -293,6 +293,89 @@ namespace pwiz.CarafeSharp.Test
         }
 
         /// <summary>
+        /// A saved model fine-tuned further (<c>-model</c> with training): both of its models are
+        /// the start, and the baseline, of this run's. When the fine-tuned MS2 model does not beat
+        /// the saved one (here it cannot: its learning rate is 0), the new file keeps the saved
+        /// one's MS2 model, which a library from it predicts with. The new file names the models it
+        /// was fine-tuned from, newest first, and a later run without <c>-model</c> into the same
+        /// folder does not take the kept model for its own.
+        /// </summary>
+        [TestMethod]
+        public void TestModelTrainerFromSavedModel()
+        {
+            string export = WriteCleanExport(@"run_a");
+            // A saved model with both models, trained on other runs: its folder, then its file.
+            string baseFolder = Path.Combine(_folder, @"base");
+            Directory.CreateDirectory(baseFolder);
+            File.Copy(RandomMs2Model(@"base_ms2", 11), Path.Combine(baseFolder, ModelFiles.MS2_SAFETENSORS));
+            File.Copy(RandomRtModel(@"base_rt", 12), Path.Combine(baseFolder, ModelFiles.RT_SAFETENSORS));
+            File.WriteAllText(Path.Combine(baseFolder, ModelFiles.METRICS), @"{""ms2"":{""use_finetuned_for_prediction"":true}}");
+            File.WriteAllText(Path.Combine(baseFolder, ModelFiles.META), @"{""earlier.mzML"":{""ms_file"":""earlier.mzML"",""nce"":30.0,""rt_max"":40.0}}");
+            string baseFile = Path.Combine(_folder, @"earlier" + CarafeModelFile.EXTENSION);
+            var written = CarafeModelFile.Write(baseFile, CarafeModelDirectory.Open(baseFolder, true), @"all", null, null, null, null, null);
+            Assert.IsTrue(written.Ms2Used && written.RtUsed);
+            Assert.AreEqual(0, written.BaseModels.Count);
+
+            // Fine-tuned further at learning rate 0: the fine-tuned models are the saved ones, so the MS2 model does not beat it.
+            string first = Path.Combine(_folder, @"first");
+            var log = new StringWriter();
+            var trainer = new ModelTrainer(TrainFrom(export, first, baseFile), log, zip => null)
+            {
+                ConfigureFineTune = o =>
+                {
+                    o.Ms2 = new FineTuneSettings { Epochs = 1, WarmupEpochs = 0, BatchSize = 4, LearningRate = 0, AdjustBatchSize = false };
+                    o.Rt = new FineTuneSettings { Epochs = 1, WarmupEpochs = 0, BatchSize = 4, LearningRate = 0, AdjustBatchSize = false };
+                },
+            };
+            trainer.Run();
+            string text = log.ToString();
+            StringAssert.Contains(text, @"Fine-tune the saved model " + baseFile + @" further: MS2 fine-tuned, RT fine-tuned; trained on earlier.mzML");
+            StringAssert.Contains(text, @"predictions keep the start model");
+            Assert.IsFalse(trainer.Result.UseFineTunedMs2);
+            Assert.AreEqual(trainer.Result.RtPretrained.ToString(), trainer.Result.RtFineTuned.ToString(), @"the RT model started from the saved one and did not move");
+            Assert.IsTrue(File.Exists(Path.Combine(first, ModelFiles.MS2_BASE_SAFETENSORS)));
+            var saved = CarafeModelFile.Open(Path.Combine(first, CarafeModelFile.DEFAULT_FILE_NAME));
+            Assert.IsTrue(saved.Ms2Used && saved.Ms2FromBase);
+            Assert.AreEqual(ModelFiles.MS2_BASE_SAFETENSORS, saved.Ms2Entry);
+            Assert.AreEqual(written.Entries[ModelFiles.MS2_SAFETENSORS], saved.Entries[ModelFiles.MS2_BASE_SAFETENSORS], @"the saved model's MS2 model, as it was");
+            Assert.IsTrue(saved.RtUsed);
+            var chain = saved.BaseModels.Single();
+            Assert.AreEqual(@"earlier" + CarafeModelFile.EXTENSION, chain.File);
+            Assert.AreEqual(written.FileSha256, chain.Sha256);
+            Assert.AreEqual(written.Created, chain.Created);
+            CollectionAssert.AreEqual(new[] { @"earlier.mzML" }, chain.Runs.ToArray());
+            // This run's own training run and defaults, not the saved model's.
+            Assert.AreEqual(@"run_a", saved.Runs.Single().MsFile);
+            Assert.AreEqual(12.1, saved.RtMax, 1e-12);
+            string info = saved.FormatInfo();
+            StringAssert.Contains(info, @"MS2 model: the base model's (the fine-tuned model did not beat it)");
+            StringAssert.Contains(info, @"Fine-tuned further from earlier" + CarafeModelFile.EXTENSION + @" (SHA-256 " + written.FileSha256);
+            StringAssert.Contains(info, @"Held-out metrics (start model -> fine-tuned)");
+            // A library from the new file predicts with the kept model.
+            var extracted = saved.Extract(Path.Combine(_folder, @"first_extracted"));
+            Assert.AreEqual(ModelFiles.MS2_BASE_SAFETENSORS, Path.GetFileName(extracted.GetMs2ModelPath(@"all")));
+            Assert.IsNull(extracted.GetMs2ModelPath(@"rt"), @"-tf rt takes the pretrained MS2 model");
+
+            // Fine-tuned further again, from the new file: its kept MS2 model is the start, so it
+            // scores as the first run's start did on the same held-out spectra; two models back.
+            string second = Path.Combine(_folder, @"second");
+            var again = new ModelTrainer(TrainFrom(export, second, Path.Combine(first, CarafeModelFile.DEFAULT_FILE_NAME)), null, zip => null);
+            again.Run();
+            Assert.AreEqual(trainer.Result.Ms2Pretrained.ToString(), again.Result.Ms2Pretrained.ToString());
+            var twice = CarafeModelFile.Open(Path.Combine(second, CarafeModelFile.DEFAULT_FILE_NAME));
+            CollectionAssert.AreEqual(new[] { CarafeModelFile.DEFAULT_FILE_NAME, @"earlier" + CarafeModelFile.EXTENSION },
+                twice.BaseModels.Select(b => b.File).ToArray());
+            Assert.AreEqual(saved.FileSha256, twice.BaseModels[0].Sha256);
+
+            // A run without -model into the first folder does not predict with the model kept there.
+            var settings = CarafeCommandLine.Parse(new[] { @"-i", export, @"-o", first, @"-tf", @"ms2", @"-seed", @"9",
+                @"-ms2_model", RandomMs2Model(@"other_ms2", 13), @"-device", @"cpu" }).TrainingSettings;
+            new ModelTrainer(settings, null, zip => null).Run();
+            Assert.IsFalse(File.Exists(Path.Combine(first, ModelFiles.MS2_BASE_SAFETENSORS)));
+            Assert.IsFalse(CarafeModelFile.Open(Path.Combine(first, CarafeModelFile.DEFAULT_FILE_NAME)).Ms2FromBase);
+        }
+
+        /// <summary>
         /// A training run with <c>-db</c> predicts the final library right after training, as
         /// Carafe's does: from the model this run wrote, not a checkpoint an earlier Carafe run
         /// left in <c>-o</c>, and with the training run's precursor window, NCE and instrument.
@@ -474,6 +557,13 @@ namespace pwiz.CarafeSharp.Test
             string export = Path.Combine(_folder, run + OspreyTrainingExport.FILE_SUFFIX);
             OspreyTestRecords.WriteExport(export, records, footer, 4);
             return export;
+        }
+
+        /// <summary>A training run on <paramref name="export"/> into <paramref name="output"/> that fine-tunes the saved model <paramref name="baseModel"/> further.</summary>
+        private static TrainingSettings TrainFrom(string export, string output, string baseModel)
+        {
+            return CarafeCommandLine.Parse(new[] { @"-i", export, @"-o", output, @"-model", baseModel, @"-seed", @"9", @"-device", @"cpu", @"-nce", @"28" })
+                .TrainingSettings;
         }
 
         /// <summary>A randomly initialized MS2 model from <paramref name="seed"/>, saved under <paramref name="name"/>.</summary>

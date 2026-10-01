@@ -128,10 +128,17 @@ namespace pwiz.CarafeSharp.Test
             var training = CarafeCommandLine.Parse(new[] { @"-i", @"a.training.parquet", @"-activation", @"beam-cid", @"-analyzer", @"ToF" }).TrainingSettings;
             Assert.AreEqual(AcquisitionVocabulary.BEAM_CID, training.Activation);
             Assert.AreEqual(AcquisitionVocabulary.TOF, training.Analyzer);
-            // It is refused with -model_dir, with training, and without -db.
+            // It is refused with -model_dir, with -ms2_model, and without -db or training.
             Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model", @"m.carafemodel", @"-model_dir", @"d" }));
-            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model", @"m.carafemodel", @"-i", @"a.training.parquet" }));
+            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model", @"m.carafemodel", @"-ms2_model", @"s.safetensors" }));
             Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-model", @"m.carafemodel", @"-o", @"out" }));
+            // With training, -model is the saved model to fine-tune further, with -tf all only;
+            // the library after training predicts with the run's own models, not the saved one.
+            var further = CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model", @"m.carafemodel", @"-i", @"a.training.parquet" });
+            Assert.AreEqual(CarafeCommandMode.train, further.Mode);
+            Assert.AreEqual(@"m.carafemodel", further.TrainingSettings.BaseModel);
+            Assert.IsNull(further.TrainingSettings.Library.ModelFile);
+            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-model", @"m.carafemodel", @"-i", @"a.training.parquet", @"-tf", @"rt" }));
 
             // -ms is training, which reads Osprey's results (-i) rather than the raw data.
             Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-ms", @"a.mzML" }));
@@ -376,7 +383,7 @@ namespace pwiz.CarafeSharp.Test
                     @"{""run_a.mzML"":{""ms_file"":""run_a.mzML"",""nce"":31.0,""ms_instrument"":""Astral"",""activation"":""reCID"",""analyzer"":""LIT"",""rt_max"":45.0," +
                     @"""precursor_ion_mz_min"":1500.0,""precursor_ion_mz_max"":1504.0}}");
                 string modelFile = Path.Combine(folder, @"hela" + CarafeModelFile.EXTENSION);
-                var written = CarafeModelFile.Write(modelFile, CarafeModelDirectory.Open(models, true), @"all", PretrainedModels.PINNED_SHA256, null, null, AcquisitionVocabulary.DEFAULT);
+                var written = CarafeModelFile.Write(modelFile, CarafeModelDirectory.Open(models, true), @"all", PretrainedModels.PINNED_SHA256, null, null, AcquisitionVocabulary.DEFAULT, null);
                 Assert.IsTrue(written.Ms2Used && written.RtUsed);
                 CollectionAssert.AreEquivalent(new[] { ModelFiles.MS2_SAFETENSORS, ModelFiles.RT_SAFETENSORS, ModelFiles.METRICS, ModelFiles.META },
                     written.Entries.Keys.ToList());
@@ -437,7 +444,7 @@ namespace pwiz.CarafeSharp.Test
                 // library predicts MS2 with the pretrained model.
                 File.WriteAllText(Path.Combine(models, ModelFiles.METRICS), @"{""ms2"":{""use_finetuned_for_prediction"":false}}");
                 string rtOnly = Path.Combine(folder, @"rt_only" + CarafeModelFile.EXTENSION);
-                var lost = CarafeModelFile.Write(rtOnly, CarafeModelDirectory.Open(models, true), @"all", null, null, null, null);
+                var lost = CarafeModelFile.Write(rtOnly, CarafeModelDirectory.Open(models, true), @"all", null, null, null, null, null);
                 Assert.IsTrue(lost.Ms2FineTuned);
                 Assert.IsFalse(lost.Ms2Used);
                 Assert.IsFalse(lost.Entries.ContainsKey(ModelFiles.MS2_SAFETENSORS));

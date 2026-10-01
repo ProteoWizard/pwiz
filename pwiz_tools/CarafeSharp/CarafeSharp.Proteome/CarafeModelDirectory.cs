@@ -38,7 +38,9 @@ namespace pwiz.CarafeSharp.Proteome
     /// Carafe's library prediction picks its models from such a folder as its Python does:
     /// <list type="bullet">
     /// <item>MS2: the fine-tuned model only when the metrics say
-    /// <c>ms2.use_finetuned_for_prediction</c> and the file exists, else the pretrained one.</item>
+    /// <c>ms2.use_finetuned_for_prediction</c> and the file exists, else the base model a
+    /// CarafeSharp training run kept (<see cref="ModelFiles.MS2_BASE_SAFETENSORS"/>), else the
+    /// pretrained one.</item>
     /// <item>RT: the fine-tuned model whenever the file exists.</item>
     /// <item><c>-tf rt</c> takes the MS2 model pretrained and <c>-tf ms2</c> the RT model;
     /// a <c>-tf</c> other than all, rt, ms2 or test takes both pretrained.</item>
@@ -156,12 +158,19 @@ namespace pwiz.CarafeSharp.Proteome
         /// <summary>The meta.json entries, one per training MS file, in Java HashMap order.</summary>
         public IReadOnlyList<CarafeRunMeta> Runs { get; }
 
-        /// <summary>The fine-tuned MS2 model to predict with for <paramref name="trainingType"/>, or null for the pretrained one.</summary>
+        /// <summary>
+        /// The MS2 model to predict with for <paramref name="trainingType"/>: the fine-tuned one,
+        /// else the base model a training run kept because the fine-tuned one did not beat it, or
+        /// null for the pretrained one.
+        /// </summary>
         public string GetMs2ModelPath(string trainingType)
         {
-            return UseFineTunedMs2 && (IsType(trainingType, @"all") || IsType(trainingType, @"ms2") || IsType(trainingType, @"test"))
-                ? Ms2ModelPath
-                : null;
+            if (!IsType(trainingType, @"all") && !IsType(trainingType, @"ms2") && !IsType(trainingType, @"test"))
+                return null;
+            if (UseFineTunedMs2)
+                return Ms2ModelPath;
+            string basePath = Path.Combine(DirectoryPath, ModelFiles.MS2_BASE_SAFETENSORS);
+            return File.Exists(basePath) ? basePath : null;
         }
 
         /// <summary>The fine-tuned RT model to predict with for <paramref name="trainingType"/>, or null for the pretrained one.</summary>

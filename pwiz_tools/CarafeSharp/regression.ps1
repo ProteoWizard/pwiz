@@ -750,6 +750,24 @@ if (-not $CompareRun) {
         if ($savedExit -ne 0) {
             throw "CarafeSharp failed to predict from the saved model (exit $savedExit); log: $savedLog"
         }
+
+        # The saved model fine-tuned further, as a user would on new runs. Here the runs are the
+        # same, so it starts from the models the first training chose and scores them on the
+        # same held-out rows.
+        $furtherFolder = Join-Path $runFolder 'fine-tuned-further'
+        $furtherArgs = @('-i', $exportFolder, '-ms', ($runFiles -join ','), '-model', $savedModel, '-o', $furtherFolder) +
+            $arguments + @('-tf', 'all')
+        Write-Step "CarafeSharp: the saved model fine-tuned further ($furtherFolder)"
+        Write-Host "$exe $($furtherArgs -join ' ')" -ForegroundColor DarkGray
+        $furtherLog = Join-Path $runFolder 'carafesharp-fine-tuned-further.log'
+        & $exe @furtherArgs *>&1 | Tee-Object -FilePath $furtherLog | Out-Host
+        $furtherExit = $LASTEXITCODE
+        $info.fine_tuned_further = 'fine-tuned-further'
+        $info.fine_tuned_further_exit_code = $furtherExit
+        $info | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $infoPath -Encoding utf8
+        if ($furtherExit -ne 0) {
+            throw "CarafeSharp failed to fine-tune the saved model further (exit $furtherExit); log: $furtherLog"
+        }
     }
 } else {
     $runFolder = (Resolve-Path -LiteralPath $CompareRun).ProviderPath

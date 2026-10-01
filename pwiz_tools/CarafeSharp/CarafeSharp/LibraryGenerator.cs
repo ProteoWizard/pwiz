@@ -346,7 +346,9 @@ namespace pwiz.CarafeSharp
             string path = modelDirectory.GetMs2ModelPath(_settings.TrainingType);
             if (path != null)
             {
-                Log(@"Using fine-tuned MS2 model " + path);
+                Log((Path.GetFileName(path) == ModelFiles.MS2_BASE_SAFETENSORS
+                        ? @"Using the base model's MS2 model, which the fine-tuned one did not beat, "
+                        : @"Using fine-tuned MS2 model ") + path);
                 return CarafeModelDirectory.IsSafetensors(path) ? Ms2Model.FromSafetensors(path, device) : Ms2Model.FromPthFile(path, device);
             }
             Log(@"Using the pretrained MS2 model");

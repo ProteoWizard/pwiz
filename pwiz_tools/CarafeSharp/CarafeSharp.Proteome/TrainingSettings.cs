@@ -107,6 +107,13 @@ namespace pwiz.CarafeSharp.Proteome
         /// </summary>
         public string Ms2Model { get; set; }
 
+        /// <summary>
+        /// <c>-model</c> with training: a saved model (.carafemodel) whose MS2 and RT models the
+        /// run fine-tunes further instead of the pretrained ones, and whose MS2 model prediction
+        /// keeps when the fine-tuned one does not beat it; null for none.
+        /// </summary>
+        public string BaseModel { get; set; }
+
         /// <summary>CarafeSharp's <c>-pretrained</c> models zip, or null for the default.</summary>
         public string PretrainedModels { get; set; }
 

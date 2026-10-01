@@ -40,8 +40,9 @@ namespace pwiz.CarafeSharp.Proteome
     /// models were trained on (<see cref="CarafeModelTraining"/>, for a user choosing a model), the
     /// NCE, instrument and rt_max a library takes unless its command line gives its own, and every
     /// other entry's SHA-256.</item>
-    /// <item>The fine-tuned models the training chose to predict with: <c>ms2.safetensors</c>
-    /// when the fine-tuned MS2 model beat the pretrained one, <c>rt.safetensors</c> when the RT
+    /// <item>The models the training chose to predict with: <c>ms2.safetensors</c> when the
+    /// fine-tuned MS2 model beat its start model, <c>ms2_base.safetensors</c> when it did not
+    /// beat the saved model it was fine-tuned further from, <c>rt.safetensors</c> when the RT
     /// model was fine-tuned. A model not in the file is the pretrained one.</item>
     /// <item><c>model_evaluation_metrics.json</c> and <c>meta.json</c>, as the training run wrote them.</item>
     /// </list>
@@ -66,15 +67,18 @@ namespace pwiz.CarafeSharp.Proteome
         /// <param name="ms2StartModel">The <c>-ms2_model</c> the MS2 fine-tune started from instead, or null.</param>
         /// <param name="training">What the models were trained on, or null; its held-out metrics are read from the folder here.</param>
         /// <param name="acquisition">The activations and analyzers the MS2 model has columns for, or null when unknown.</param>
+        /// <param name="baseModel">The saved model the training fine-tuned further (<c>-model</c>), or null.</param>
         public static CarafeModelFile Write(string path, CarafeModelDirectory trained, string trainingType, string pretrainedSha256,
-            string ms2StartModel, CarafeModelTraining training, AcquisitionVocabulary acquisition)
+            string ms2StartModel, CarafeModelTraining training, AcquisitionVocabulary acquisition, CarafeModelFile baseModel)
         {
             // Only the safetensors this run wrote: a Carafe checkpoint left in the folder is not its model.
             string ms2 = SafetensorsOrNull(trained.GetMs2ModelPath(trainingType));
             string rt = SafetensorsOrNull(trained.GetRtModelPath(trainingType));
             var sources = new List<(string Entry, string Path)>();
+            // ms2.safetensors, or ms2_base.safetensors: an entry keeps its file's name, so the folder it unpacks to predicts the same.
+            string ms2Entry = ms2 == null ? null : System.IO.Path.GetFileName(ms2);
             if (ms2 != null)
-                sources.Add((ModelFiles.MS2_SAFETENSORS, ms2));
+                sources.Add((ms2Entry, ms2));
             if (rt != null)
                 sources.Add((ModelFiles.RT_SAFETENSORS, rt));
             foreach (string name in new[] { ModelFiles.METRICS, ModelFiles.META })
@@ -98,10 +102,15 @@ namespace pwiz.CarafeSharp.Proteome
                 TrainingType = trainingType,
                 Ms2FineTuned = IsTrained(trainingType, @"ms2"),
                 Ms2Used = ms2 != null,
+                Ms2Entry = ms2Entry,
                 RtFineTuned = IsTrained(trainingType, @"rt"),
                 RtUsed = rt != null,
                 PretrainedSha256 = pretrainedSha256,
                 Ms2StartModel = ms2StartModel == null ? null : System.IO.Path.GetFileName(ms2StartModel),
+                // Newest first: the model fine-tuned further, then the one it was fine-tuned from.
+                BaseModels = baseModel == null
+                    ? new List<CarafeModelBase>()
+                    : new[] { CarafeModelBase.Of(baseModel) }.Concat(baseModel.BaseModels).ToList(),
                 Runs = runs,
                 Training = training,
                 Acquisition = acquisition,
@@ -126,6 +135,7 @@ namespace pwiz.CarafeSharp.Proteome
                     zip.CreateEntryFromFile(source.Path, source.Entry, CompressionLevel.Optimal);
             }
             File.Move(temp, path, true);
+            model.FileSha256 = Sha256(File.ReadAllBytes(path));
             return model;
         }
 
@@ -153,6 +163,7 @@ namespace pwiz.CarafeSharp.Proteome
                         if (!string.Equals(Sha256(ReadAll(entry)), pair.Value, StringComparison.OrdinalIgnoreCase))
                             throw new InvalidDataException(string.Format(@"{0} is damaged: {1} does not match its SHA-256.", path, pair.Key));
                     }
+                    model.FileSha256 = Sha256(File.ReadAllBytes(path));
                     var metaEntry = model.Entries.ContainsKey(ModelFiles.META) ? zip.GetEntry(ModelFiles.META) : null;
                     if (metaEntry != null)
                     {
@@ -187,14 +198,31 @@ namespace pwiz.CarafeSharp.Proteome
         /// <summary>The training run's <c>-tf</c>.</summary>
         public string TrainingType { get; private set; }
         public bool Ms2FineTuned { get; private set; }
-        /// <summary>The fine-tuned MS2 model beat the pretrained one, and the file holds it.</summary>
+        /// <summary>
+        /// The file holds an MS2 model, and prediction uses it: the fine-tuned one, which beat its
+        /// start model, or the base model's, which the fine-tuned one did not beat (<see cref="Ms2FromBase"/>).
+        /// </summary>
         public bool Ms2Used { get; private set; }
+        /// <summary>The entry that holds the MS2 model, or null.</summary>
+        public string Ms2Entry { get; private set; }
+        /// <summary>The MS2 model is the base model's, kept because the fine-tuned one did not beat it.</summary>
+        public bool Ms2FromBase
+        {
+            get { return Ms2Entry == ModelFiles.MS2_BASE_SAFETENSORS; }
+        }
         public bool RtFineTuned { get; private set; }
         public bool RtUsed { get; private set; }
         /// <summary>The SHA-256 of the pretrained archive the training started from, when known.</summary>
         public string PretrainedSha256 { get; private set; }
         /// <summary>The file name of the <c>-ms2_model</c> the MS2 fine-tune started from, if any.</summary>
         public string Ms2StartModel { get; private set; }
+        /// <summary>
+        /// The saved models these were fine-tuned further from, newest first: the training run's
+        /// <c>-model</c>, then the one that was fine-tuned from, and so on; empty for none.
+        /// </summary>
+        public IReadOnlyList<CarafeModelBase> BaseModels { get; private set; } = new List<CarafeModelBase>();
+        /// <summary>The SHA-256 of the whole file (lowercase hex).</summary>
+        public string FileSha256 { get; private set; }
         /// <summary>The training runs, as the file's meta.json records them for prediction.</summary>
         public IReadOnlyList<CarafeRunMeta> Runs { get; private set; } = new List<CarafeRunMeta>();
         /// <summary>What the models were trained on, or null for a file written without it.</summary>
@@ -258,7 +286,7 @@ namespace pwiz.CarafeSharp.Proteome
         public string Describe()
         {
             return string.Format(CultureInfo.InvariantCulture, @"MS2 {0}, RT {1}; trained on {2}; written by {3} at {4}",
-                Ms2Used ? @"fine-tuned" : Ms2FineTuned ? @"pretrained (the fine-tuned model did not beat it)" : @"pretrained",
+                DescribeMs2(),
                 RtUsed ? @"fine-tuned" : @"pretrained",
                 Runs.Count == 0 ? @"unknown runs" : string.Join(@", ", Runs.Select(r => System.IO.Path.GetFileName(r.MsFile))),
                 Creator, Created);
@@ -274,10 +302,16 @@ namespace pwiz.CarafeSharp.Proteome
             void Line(string format, params object[] args) => text.AppendLine(string.Format(CultureInfo.InvariantCulture, format, args));
             Line(@"{0}", Path);
             Line(@"  Format {0}, written by {1} at {2}", Format, Creator, Created);
-            Line(@"  MS2 model: {0}", Ms2Used ? @"fine-tuned" : Ms2FineTuned ? @"pretrained (the fine-tuned model did not beat it)" : @"pretrained");
+            Line(@"  MS2 model: {0}", DescribeMs2());
             Line(@"  RT model: {0}", RtUsed ? @"fine-tuned" : @"pretrained");
             if (Ms2StartModel != null)
                 Line(@"  MS2 fine-tune started from {0}", Ms2StartModel);
+            for (int i = 0; i < BaseModels.Count; i++)
+            {
+                var baseModel = BaseModels[i];
+                Line(@"  {0} {1} (SHA-256 {2}), written by {3} at {4}, trained on {5}", i == 0 ? @"Fine-tuned further from" : @"  which was fine-tuned from",
+                    baseModel.File, baseModel.Sha256, baseModel.Creator, baseModel.Created, baseModel.Runs.Count == 0 ? @"unknown runs" : string.Join(@", ", baseModel.Runs));
+            }
             Line(@"  A library takes: NCE {0}, instrument {1}, activation {2}, analyzer {3}, rt_max {4}" +
                  @" (unless -nce, -ms_instrument, -activation, -analyzer, -rt_max are given)",
                 Nce, Instrument ?? @"(the command line's)", Activation ?? @"(none)", Analyzer ?? @"(none)", RtMax);
@@ -308,7 +342,7 @@ namespace pwiz.CarafeSharp.Proteome
             }
             if (training.HeldOutMetrics.Count > 0)
             {
-                Line(@"  Held-out metrics (pretrained -> fine-tuned):");
+                Line(@"  Held-out metrics ({0} -> fine-tuned):", BaseModels.Count > 0 || Ms2StartModel != null ? @"start model" : @"pretrained");
                 foreach (string model in new[] { @"ms2", @"rt" })
                 {
                     var names = training.HeldOutMetrics.Keys.Where(k => k.StartsWith(model + @".pretrained.", StringComparison.Ordinal))
@@ -320,6 +354,13 @@ namespace pwiz.CarafeSharp.Proteome
                 }
             }
             return text.ToString();
+        }
+
+        private string DescribeMs2()
+        {
+            if (Ms2FromBase)
+                return @"the base model's (the fine-tuned model did not beat it)";
+            return Ms2Used ? @"fine-tuned" : Ms2FineTuned ? @"pretrained (the fine-tuned model did not beat it)" : @"pretrained";
         }
 
         private static string FormatCharges(IReadOnlyDictionary<int, int> charges)
@@ -347,11 +388,15 @@ namespace pwiz.CarafeSharp.Proteome
                 json.WriteString(@"created", Created);
                 json.WriteString(@"training_type", TrainingType);
                 json.WriteStartObject(@"models");
-                WriteModel(json, @"ms2", Ms2FineTuned, Ms2Used, ModelFiles.MS2_SAFETENSORS);
+                WriteModel(json, @"ms2", Ms2FineTuned, Ms2Used, Ms2Entry);
                 WriteModel(json, @"rt", RtFineTuned, RtUsed, ModelFiles.RT_SAFETENSORS);
                 json.WriteEndObject();
                 WriteStringOrNull(json, @"pretrained_sha256", PretrainedSha256);
                 WriteStringOrNull(json, @"ms2_start_model", Ms2StartModel);
+                json.WriteStartArray(@"base_models");
+                foreach (var baseModel in BaseModels)
+                    baseModel.WriteJson(json);
+                json.WriteEndArray();
                 json.WritePropertyName(@"acquisition");
                 if (Acquisition == null)
                 {
@@ -406,6 +451,9 @@ namespace pwiz.CarafeSharp.Proteome
                 var training = root.TryGetProperty(@"training", out var trainingValue) && trainingValue.ValueKind == JsonValueKind.Object
                     ? CarafeModelTraining.ReadJson(trainingValue)
                     : null;
+                var baseModels = root.TryGetProperty(@"base_models", out var baseValue) && baseValue.ValueKind == JsonValueKind.Array
+                    ? baseValue.EnumerateArray().Select(CarafeModelBase.ReadJson).ToList()
+                    : new List<CarafeModelBase>();
                 var acquisition = root.TryGetProperty(@"acquisition", out var acquisitionValue) && acquisitionValue.ValueKind == JsonValueKind.Object
                     ? new AcquisitionVocabulary(acquisitionValue.GetProperty(@"activations").EnumerateArray().Select(v => v.GetString()),
                         acquisitionValue.GetProperty(@"analyzers").EnumerateArray().Select(v => v.GetString()))
@@ -419,10 +467,12 @@ namespace pwiz.CarafeSharp.Proteome
                     TrainingType = root.GetProperty(@"training_type").GetString(),
                     Ms2FineTuned = models.GetProperty(@"ms2").GetProperty(@"fine_tuned").GetBoolean(),
                     Ms2Used = models.GetProperty(@"ms2").GetProperty(@"used").GetBoolean(),
+                    Ms2Entry = GetStringOrNull(models.GetProperty(@"ms2"), @"entry"),
                     RtFineTuned = models.GetProperty(@"rt").GetProperty(@"fine_tuned").GetBoolean(),
                     RtUsed = models.GetProperty(@"rt").GetProperty(@"used").GetBoolean(),
                     PretrainedSha256 = GetStringOrNull(root, @"pretrained_sha256"),
                     Ms2StartModel = GetStringOrNull(root, @"ms2_start_model"),
+                    BaseModels = baseModels,
                     Training = training,
                     Acquisition = acquisition,
                     Activation = GetStringOrNull(defaults, @"activation"),

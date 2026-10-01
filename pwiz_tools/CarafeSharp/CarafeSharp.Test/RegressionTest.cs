@@ -257,7 +257,8 @@ namespace pwiz.CarafeSharp.Test
         /// 1% run FDR keeps and the per-run second pass's q-values; CarafeSharp read them, trained
         /// on a subset of their rows, wrote both models and finite metrics, recorded every run's
         /// isolation window, and predicted a library whose spectra keep -lf_min_n_frag peaks. Then
-        /// the model it saved predicted the same spectra again with -model, as a user reuses it.
+        /// the model it saved predicted the same spectra again with -model, as a user reuses it,
+        /// and was fine-tuned further on the same exports, starting from the models it holds.
         /// </summary>
         private void CheckChained(string folder)
         {
@@ -265,6 +266,8 @@ namespace pwiz.CarafeSharp.Test
             string exportFolder;
             int savedExitCode;
             string savedLibraryFolder;
+            int? furtherExitCode = null;
+            string furtherFolder = null;
             using (var info = JsonDocument.Parse(File.ReadAllText(TestData.RequireFile(Path.Combine(folder, RUN_INFO_FILE)))))
             {
                 var root = info.RootElement;
@@ -279,6 +282,12 @@ namespace pwiz.CarafeSharp.Test
                 exportFolder = Path.Combine(new[] { folder }.Concat(relative.Split('/')).ToArray());
                 savedExitCode = root.GetProperty(@"saved_model_exit_code").GetInt32();
                 savedLibraryFolder = Path.Combine(folder, root.GetProperty(@"saved_model_library").GetString() ?? string.Empty);
+                // A run made before the leg fine-tuned the saved model further has neither.
+                if (root.TryGetProperty(@"fine_tuned_further_exit_code", out var furtherExit))
+                {
+                    furtherExitCode = furtherExit.GetInt32();
+                    furtherFolder = Path.Combine(folder, root.GetProperty(@"fine_tuned_further").GetString() ?? string.Empty);
+                }
             }
 
             var exports = Directory.GetFiles(exportFolder, @"*" + OspreyTrainingExport.FILE_SUFFIX).OrderBy(p => p, StringComparer.Ordinal).ToList();
@@ -360,6 +369,46 @@ namespace pwiz.CarafeSharp.Test
                 @"library from the saved model: {0} precursors over the wider window; of the training run's {1}, {2} missing, {3} with " +
                 @"another m/z, RT or fragments, largest intensity difference {4} (at most {5})",
                 savedSpectra.Count, trainedSpectra.Count, missing, differ, Format(largest), Format(SAVED_MODEL_INTENSITY_TOLERANCE));
+
+            if (furtherExitCode == null)
+            {
+                Report(@"INFO the run did not fine-tune the saved model further (made before the leg did)");
+                return;
+            }
+            CheckFineTunedFurther(output, saved, furtherExitCode.Value, furtherFolder);
+        }
+
+        /// <summary>
+        /// The saved model fine-tuned further on the exports it was trained on (-model with
+        /// training). Its start models are the ones the first training chose, so their held-out
+        /// scores, on the same rows, are the first training's for those models: RT's fine-tuned
+        /// scores, and MS2's fine-tuned or pretrained ones as it chose. A new MS2 model that does
+        /// not beat a saved fine-tuned one leaves that one in the new file; the new file names the
+        /// saved one as its base.
+        /// </summary>
+        private void CheckFineTunedFurther(string output, CarafeModelFile saved, int exitCode, string furtherFolder)
+        {
+            Check(exitCode == 0, @"CarafeSharp -model with training exit code {0}", exitCode);
+            var first = ReadMetricValues(TestData.RequireFile(Path.Combine(output, ModelFiles.METRICS)))
+                .ToDictionary(p => p.Key, p => p.Value, StringComparer.Ordinal);
+            var further = ReadMetricValues(TestData.RequireFile(Path.Combine(furtherFolder, ModelFiles.METRICS)))
+                .ToDictionary(p => p.Key, p => p.Value, StringComparer.Ordinal);
+            string ms2Start = saved.Ms2Used ? @"finetuned" : @"pretrained";
+            foreach (var pair in further.Where(p => p.Key.Contains(@".pretrained.")))
+            {
+                string start = pair.Key.StartsWith(ModelFiles.METRICS_RT + @".", StringComparison.Ordinal)
+                    ? pair.Key.Replace(@".pretrained.", @".finetuned.")
+                    : pair.Key.Replace(@".pretrained.", @"." + ms2Start + @".");
+                Check(first.TryGetValue(start, out double expected) && expected == pair.Value,
+                    @"fine-tuned further: start {0} {1}, the first training's {2} {3}", pair.Key, Format(pair.Value), start,
+                    first.TryGetValue(start, out double value) ? Format(value) : @"(missing)");
+            }
+            var model = CarafeModelFile.Open(TestData.RequireFile(Path.Combine(furtherFolder, CarafeModelFile.DEFAULT_FILE_NAME)));
+            bool beat = CarafeModelDirectory.Open(furtherFolder, true).UseFineTunedMs2;
+            Check(model.Ms2FromBase == (!beat && saved.Ms2Used) && model.BaseModels.Count == 1 && model.BaseModels[0].Sha256 == saved.FileSha256,
+                @"fine-tuned further: {0}; base {1} (SHA-256 {2}, the saved model's {3})", model.Describe(),
+                model.BaseModels.Count == 0 ? @"none" : model.BaseModels[0].File, model.BaseModels.Count == 0 ? @"-" : model.BaseModels[0].Sha256,
+                saved.FileSha256);
         }
 
         private void CheckMetrics(Golden golden, RunMeasurement run)
