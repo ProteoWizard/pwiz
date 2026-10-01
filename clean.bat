@@ -4,18 +4,20 @@ setlocal
 
 set VERBOSE=1
 set CLEANCPP=0
+set CLEANSHARPCACHE=
 
 REM # By default this cleans only the .NET applications and leaves the C++ build alone.
 REM # Wiping the C++ tree means re-extracting and rebuilding boost and the vendor APIs,
 REM # which dominates the cost of a rebuild and is almost never what you want when the
 REM # thing you actually need cleaned is a managed bin/obj or a stale staging directory.
-REM # Pass -cpp (or -all) for the old full clean.
+REM # Pass -cpp (or -all) for the old full clean. -all also wipes pwiz-sharp's caches
+REM # (extracted vendor assemblies, runtime installer); see pwiz-sharp\clean.bat.
 :parseargs
 if "%~1"=="" goto endparse
 if /I "%~1"=="-quiet" set VERBOSE=0
 if /I "%~1"=="-q" set VERBOSE=0
 if /I "%~1"=="-cpp" set CLEANCPP=1
-if /I "%~1"=="-all" set CLEANCPP=1
+if /I "%~1"=="-all" (set CLEANCPP=1& set CLEANSHARPCACHE=--all)
 shift
 goto parseargs
 :endparse
@@ -110,5 +112,6 @@ git clean -f -d -X pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data > nul
 
 :SKIP_CPP
 IF EXIST pwiz_tools\clean-apps.bat call pwiz_tools\clean-apps.bat
+IF EXIST pwiz-sharp\clean.bat call pwiz-sharp\clean.bat %CLEANSHARPCACHE%
 
 popd
