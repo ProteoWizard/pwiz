@@ -46,7 +46,6 @@ namespace pwiz.Skyline.Model.Results
     {
         bool ProvidesCollisionalCrossSectionConverter { get; }
         eIonMobilityUnits IonMobilityUnits { get; } // Reports ion mobility units in use by the mass spec
-        bool HasCombinedIonMobility { get; } // When true, data source provides IMS data in 3-array format, which affects spectrum ID format
         IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge, object obj); // Convert from Collisional Cross Section to ion mobility
         double CCSFromIonMobility(IonMobilityValue im, double mz, int charge, object obj); // Convert from ion mobility to Collisional Cross Section
         bool IsWatersSonarData { get; } // Returns true if this ion mobility data is actually Waters SONAR data, which filters on precursor mz 
@@ -499,14 +498,6 @@ namespace pwiz.Skyline.Model.Results
                 return ProvidesCollisionalCrossSectionConverter
                     ? _ionMobilityFunctionsProvider.IonMobilityUnits
                     : eIonMobilityUnits.none;
-            }
-        }
-
-        public bool HasCombinedIonMobility
-        {
-            get
-            {
-                return ProvidesCollisionalCrossSectionConverter && _ionMobilityFunctionsProvider.HasCombinedIonMobility;
             }
         }
 

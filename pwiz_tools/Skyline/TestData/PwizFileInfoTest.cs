@@ -1,6 +1,7 @@
 /*
  * Original author: Vagisha Sharma <vsharma .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2012 University of Washington - Seattle, WA
  * 
@@ -26,7 +27,10 @@ using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestData
@@ -258,8 +262,27 @@ namespace pwiz.SkylineTestData
                 msLevels.Add(spectrum.Level);
             }
 
-            // With no function number to key on, the MSe level falls back to the declared ms level
+            // The wrapper reports the declared ms levels
             CollectionAssert.AreEqual(new[] { 1, 2 }, msLevels, path);
+
+            // ...and extraction has to use them. An All Ions filter on a Waters file assigns each
+            // spectrum an MSe level, from the function number where there is one. Here there is
+            // none, so it must fall back to the declared level - without that, every spectrum
+            // lands at level 0 and nothing at all is extracted from the file.
+            var doc = new SrmDocument(SrmSettingsList.GetDefault());
+            doc = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fullScan => fullScan
+                .ChangeAcquisitionMethod(FullScanAcquisitionMethod.DIA,
+                    new IsolationScheme(null, new IsolationWindow[0], IsolationScheme.SpecialHandlingType.ALL_IONS))
+                .ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 1, null)));
+            var spectrumFilter = new SpectrumFilter(doc, null, new DataFileInstrumentInfo(msDataFile),
+                null, null, null, false, null);
+            AssertEx.IsTrue(spectrumFilter.IsWatersMse, path);
+            var ms1 = msDataFile.GetSpectrum(0);
+            var ms2 = msDataFile.GetSpectrum(1);
+            AssertEx.IsTrue(spectrumFilter.IsMsSpectrum(ms1), path);
+            AssertEx.IsFalse(spectrumFilter.IsMsMsSpectrum(ms1), path);
+            AssertEx.IsTrue(spectrumFilter.IsMsMsSpectrum(ms2), path);
+            AssertEx.IsFalse(spectrumFilter.IsMsSpectrum(ms2), path);
         }
 
         /// <summary>
