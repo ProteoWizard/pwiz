@@ -49,11 +49,14 @@ REM #       This is what the top-level bs.bat gives a developer - the same proje
 REM #       and properties TeamCity builds, without the staging copy or the hour of
 REM #       tests that follows. Implies --no-tests.
 REM #   --with-tutorial-perf
-REM #       Also build TestTutorial and TestPerf, which the default set leaves out to
-REM #       mirror the TeamCity split between bt209 and the Perf/Tutorial configuration.
-REM #       SkylineNightly passes this: a nightly runs the tutorial tests as part of an
-REM #       ordinary run and gates only perf behind its own option, so both have to be
-REM #       staged for the run to select from.
+REM #       Include the tutorial and perf tests in the run. Tutorial tests already run
+REM #       by default, so this adds perftests=on to the full-suite pass (only that pass:
+REM #       the ja/zh import pass selects by regex and would pick up perf tests in two
+REM #       more languages). TestTutorial and TestPerf are built either way.
+REM #   --skip-tutorial-tests
+REM #       Build and stage TestTutorial as usual, so it still ships in SkylineTester.zip,
+REM #       but leave its tests out of every TestRunner pass (skip=TestTutorial.dll).
+REM #       tcbuild.bat passes this unless it is given --with-tutorial-perf.
 REM #
 REM # Distro zips:
 REM #   Pass the artifact name as a bare argument -- SkylineTester.zip,
@@ -76,12 +79,13 @@ REM #   SKYLINE_TEST_ARGS      extra args appended verbatim to the TestRunner
 REM #                          command (e.g. test=Foo,Bar for a smoke run).
 REM #
 REM # Scope:
-REM #   Builds + tests Skyline.csproj and the net8-ported test projects CommonTest,
-REM #   Test, TestData, TestFunctional, TestConnected (plus the TestRunner harness).
-REM #   TestConnected's network-service tests self-skip when their credentials
-REM #   aren't configured. TestPerf and TestTutorial are EXCLUDED from the default
-REM #   set, mirroring the TeamCity split between bt209 and the Perf/Tutorial
-REM #   configuration; pass --with-tutorial-perf to build them too.
+REM #   Builds + tests Skyline.csproj and every test project - CommonTest, Test,
+REM #   TestData, TestFunctional, TestConnected, TestTutorial and TestPerf - plus the
+REM #   TestRunner harness. All of them are built and staged so SkylineTester.zip
+REM #   carries every test DLL. TestConnected's network-service tests self-skip when
+REM #   their credentials aren't configured, and TestPerf's tests only run with
+REM #   perftests=on, which only --with-tutorial-perf sets. --skip-tutorial-tests
+REM #   keeps the tutorial tests out of the run without leaving them out of the build.
 REM #
 REM # NOTE: dotCover coverage (--coverage) is temporarily removed while the
 REM #   TestRunner path beds in; re-add it as a separate step once proven in CI.
@@ -100,6 +104,8 @@ set NOTESTS=0
 set SEQUENTIAL=1
 set BUILDONLY=0
 set WITHTUTORIALPERF=0
+set TEST_SKIP=
+set PERF_TESTS=
 set ERROR_TEXT=
 set ZIPS=
 
@@ -129,6 +135,7 @@ if /i "%~1"=="--no-tests" (set NOTESTS=1) else ^
 if /i "%~1"=="--parallel" (set SEQUENTIAL=0) else ^
 if /i "%~1"=="--build-only" (set BUILDONLY=1) else ^
 if /i "%~1"=="--with-tutorial-perf" (set WITHTUTORIALPERF=1) else ^
+if /i "%~1"=="--skip-tutorial-tests" (set "TEST_SKIP=skip=TestTutorial.dll") else ^
 if /i "%~1"=="--coverage" (echo ##teamcity[message text='--coverage is temporarily disabled in build.bat; ignoring' status='WARNING']) else ^
 if /i "%~x1"==".zip" (set ZIPS=!ZIPS!%%3B%~1) else ^
 if /i "%~1"=="Debug" (set CONFIG=Debug) else ^
@@ -146,6 +153,9 @@ REM # --build-only is the stronger of the two: it stops before staging, so it ca
 REM # never reach the test step. Stating the implication keeps that true even if the
 REM # exits below are ever reordered.
 if %BUILDONLY%==1 set NOTESTS=1
+
+REM # Perf tests only reach the full-suite pass; see --with-tutorial-perf above.
+if %WITHTUTORIALPERF%==1 set PERF_TESTS=perftests=on
 
 REM # A zip is produced after staging, which --build-only skips, so the two together are
 REM # contradictory. Say so rather than exiting 0 having quietly built no zip - that silent
@@ -177,17 +187,13 @@ REM # Build targets: Skyline.csproj pulls in every ProjectReference (BiblioSpec,
 REM # CommonMsData, ProteomeDb, ProteowizardWrapper, ZedGraph, the pwiz-sharp
 REM # vendor + BiblioSpec tool projects, ...). The test projects add the suites,
 REM # and TestRunner is the harness that stages + runs them.
-set BUILD_TARGET=Skyline.csproj CommonTest\CommonTest.csproj Test\Test.csproj TestData\TestData.csproj TestFunctional\TestFunctional.csproj TestConnected\TestConnected.csproj TestRunner\TestRunner.csproj
-
-REM # TestTutorial and TestPerf are left out of the default set to mirror the TeamCity
-REM # split - bt209 ("Skyline master and PRs") and ProteoWizard_SkylinePrPerfAndTutorial-
-REM # TestsWindowsX8664 ("Skyline PR Perf and Tutorial tests") are separate configurations.
-REM # A nightly is the case that split does not serve: SkylineNightly runs the tutorial
-REM # tests as part of an ordinary nightly and gates only perf behind its own option, so it
-REM # needs both staged and selects at run time. Without this flag TestRunner's stager just
-REM # logs "Skipping TestTutorial - no output ... (build it first)", the build still reports
-REM # 0 Error(s), and 26 tutorial tests plus the whole perf suite silently never run.
-if %WITHTUTORIALPERF%==1 set BUILD_TARGET=%BUILD_TARGET% TestTutorial\TestTutorial.csproj TestPerf\TestPerf.csproj
+REM # Every test project is built, so SkylineTester.zip carries every test DLL and a
+REM # nightly can select tutorial and perf tests at run time. Leaving one out does not
+REM # fail anything - TestRunner's stager only logs "Skipping TestTutorial - no output ...
+REM # (build it first)" - so a smaller set here silently drops those tests from every
+REM # consumer of the staged build. Keeping them out of a test RUN is --skip-tutorial-tests
+REM # (and perftests, for TestPerf), not a smaller build.
+set BUILD_TARGET=Skyline.csproj CommonTest\CommonTest.csproj Test\Test.csproj TestData\TestData.csproj TestFunctional\TestFunctional.csproj TestConnected\TestConnected.csproj TestTutorial\TestTutorial.csproj TestPerf\TestPerf.csproj TestRunner\TestRunner.csproj
 
 echo ##teamcity[progressMessage 'dotnet --version']
 dotnet --version
@@ -358,7 +364,7 @@ set TESTS_FAILED=0
 set FAILED_PASSES=
 
 echo ##teamcity[progressMessage 'TestRunner full suite ^(English^)']
-call :run_tests %RUNNER_MODE% loop=1 language=en offscreen=on results="%TC_TEST_RESULTS%" %TC_DECORATION%
+call :run_tests %RUNNER_MODE% loop=1 language=en offscreen=on results="%TC_TEST_RESULTS%" %TC_DECORATION% %PERF_TESTS%
 if %EXIT% NEQ 0 (set TESTS_FAILED=1 & set "FAILED_PASSES=%FAILED_PASSES% full-suite")
 
 echo ##teamcity[progressMessage 'TestRunner pass0 build check ^(CommonTest, Test, TestData^)']
@@ -378,7 +384,7 @@ if %TESTS_FAILED% NEQ 0 (set EXIT=1 & set "ERROR_TEXT=TestRunner reported failur
 goto tests_done
 
 :custom_run
-set RUNNER_ARGS=loop=1 language=en offscreen=on results="%TC_TEST_RESULTS%" %SKYLINE_TEST_ARGS%
+set RUNNER_ARGS=loop=1 language=en offscreen=on results="%TC_TEST_RESULTS%" %SKYLINE_TEST_ARGS% %PERF_TESTS%
 if defined TEAMCITY_VERSION set RUNNER_ARGS=%RUNNER_ARGS% teamcitytestdecoration=on
 if %SEQUENTIAL%==1 (
     set RUNNER_MODE=parallelmode=off
@@ -387,8 +393,8 @@ if %SEQUENTIAL%==1 (
     set RUNNER_MODE=parallelmode=server workercount=%SKYLINE_TEST_WORKERS%
     echo ##teamcity[progressMessage 'TestRunner ^(custom, parallel %SKYLINE_TEST_WORKERS% workers^)']
 )
-echo "%STAGE_DIR%\TestRunner.exe" %RUNNER_MODE% %RUNNER_ARGS%
-"%STAGE_DIR%\TestRunner.exe" %RUNNER_MODE% %RUNNER_ARGS%
+echo "%STAGE_DIR%\TestRunner.exe" %RUNNER_MODE% %RUNNER_ARGS% %TEST_SKIP%
+"%STAGE_DIR%\TestRunner.exe" %RUNNER_MODE% %RUNNER_ARGS% %TEST_SKIP%
 set EXIT=%ERRORLEVEL%
 popd
 if %EXIT% NEQ 0 (set "ERROR_TEXT=TestRunner reported test failures" & goto error)
@@ -416,8 +422,8 @@ goto :eof
 REM # Run one TestRunner pass from the staging dir (cwd is already %STAGE_DIR%).
 REM # All args are forwarded verbatim via %*; sets EXIT to the runner's result.
 :run_tests
-echo "%STAGE_DIR%\TestRunner.exe" %*
-"%STAGE_DIR%\TestRunner.exe" %*
+echo "%STAGE_DIR%\TestRunner.exe" %* %TEST_SKIP%
+"%STAGE_DIR%\TestRunner.exe" %* %TEST_SKIP%
 if errorlevel 1 (set EXIT=1) else (set EXIT=0)
 goto :eof
 

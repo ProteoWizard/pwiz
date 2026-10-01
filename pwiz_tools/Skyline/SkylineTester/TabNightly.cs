@@ -383,7 +383,8 @@ namespace SkylineTester
             // "git pull" instead of deleted and re-cloned. Defaults are unchanged - nukeBuild is the
             // designer default, and a .skytr that says nothing still nukes.
             // withTutorialPerf: a nightly selects its tests at run time, so TestTutorial and
-            // TestPerf have to be staged even though build.bat leaves them out by default.
+            // TestPerf have to be staged. build.bat now always builds them; the flag is kept so
+            // the intent stays stated here.
             if (!TabBuild.CreateBuildCommands(branchUrl, buildRoot, architectureList,
                     MainWindow.NukeBuild.Checked, MainWindow.UpdateBuild.Checked, false, true))
                 MainWindow.CommandShell.Add("# Nightly cancelled.");
