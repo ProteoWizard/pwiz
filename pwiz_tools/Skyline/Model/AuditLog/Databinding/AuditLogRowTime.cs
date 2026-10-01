@@ -35,6 +35,7 @@ namespace pwiz.Skyline.Model.AuditLog.Databinding
         }
 
         [Format(@"yyyy-MM-dd HH:mm:ss")]
+        [UtcTimestamp]
         public DateTime UTCTime
         {
             get { return _timeStampUTC; }
