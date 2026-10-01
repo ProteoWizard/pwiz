@@ -150,12 +150,10 @@ Name: "desktopicon"; Description: "Create a &Desktop shortcut"; \
 [Files]
 ; The whole staged build output (build.ps1 strips XML doc files and the
 ; non-Windows native runtimes; everything else Skyline builds next to itself
-; ships, vendor readers included, as the ClickOnce payload did).
+; ships, vendor readers included, as the ClickOnce payload did), plus the
+; document icons for the file associations, which build.ps1 adds to the stage
+; so that the portable .zip it makes from the same stage matches {app}.
 Source: "{#StagingDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-; Document icons for the file associations, from the Skyline project directory.
-Source: "..\..\SkylineDoc.ico";        DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\SkylineData.ico";       DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\SkylineDocPointer.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{#ProductName}";       Filename: "{app}\{#MyAppExe}"; WorkingDir: "{app}"; \
