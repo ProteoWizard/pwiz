@@ -606,7 +606,8 @@ namespace pwiz.Skyline.ToolsUI
         // Called from the pipe thread (no Invoke marshal) so a Pending or
         // Denied response does not pay the UI-thread round trip. A missing
         // desktop is not checked here: a managed form is rendered off-screen
-        // instead, and CaptureImage returns null when there is no image.
+        // instead (throwing if it cannot be), and a native dialog's
+        // CaptureImage returns null.
         private static string CheckScreenCaptureAvailability()
         {
             switch (ScreenCapture.EnsurePermission())

@@ -95,6 +95,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
             LB_SETANCHORINDEX = 0x019C,
             LB_SETCARETINDEX = 0x019E,
             LVM_SETSELECTIONMARK = 0x1043,
+            WM_PRINT = 0x0317,
             EM_SETSEL = 0x00B1,
             EM_REPLACESEL = 0x00C2,
             BM_CLICK = 0x00F5

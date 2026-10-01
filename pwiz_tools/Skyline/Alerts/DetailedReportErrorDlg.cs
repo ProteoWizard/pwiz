@@ -172,7 +172,8 @@ namespace pwiz.Skyline.Alerts
         }
         
         // Renders each top-level form off-screen. Skyline may already be in a bad state here, so a form that
-        // cannot be rendered safely (see ScreenCapture.RenderControl) is left out rather than risk making it worse.
+        // cannot be rendered safely (see ScreenCapture.RenderControl), or that throws, is left out rather than
+        // risk making it worse.
         private static List<Image> TakeScreenShots(IEnumerable<Form> forms)
         {
             var screenShots = new List<Image>();
@@ -180,7 +181,16 @@ namespace pwiz.Skyline.Alerts
             {
                 if (form.Parent == null || form is FloatingWindow)
                 {
-                    var screenShot = ScreenCapture.RenderControl(form);
+                    Bitmap screenShot;
+                    try
+                    {
+                        screenShot = ScreenCapture.RenderControl(form);
+                    }
+                    catch (Exception e)
+                    {
+                        Messages.WriteAsyncDebugMessage(@"Exception rendering {0}: {1}", form.GetType().Name, e);
+                        continue;
+                    }
                     if (screenShot == null)
                         continue;
                     screenShots.Add(screenShot);
