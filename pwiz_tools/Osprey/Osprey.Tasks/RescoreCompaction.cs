@@ -121,8 +121,12 @@ namespace pwiz.Osprey.Tasks
         /// the protein-FDR rescue -- is applied UPSTREAM by FirstPassFDR when it
         /// builds that set (<see cref="FirstPassFdrTask"/>'s compaction), matching
         /// Rust's <c>rescore::run_rescore</c>. This method only consumes the set.
+        ///
+        /// <paramref name="singleFileSearch"/> only words the progress heading: a one-file
+        /// search has no cross-run reconciliation to keep candidates for
+        /// (<see cref="ScoringTaskShared.IsSingleFileSearch"/>).
         /// </summary>
-        public static Stats Apply(RescoreInputs inputs)
+        public static Stats Apply(RescoreInputs inputs, bool singleFileSearch = false)
         {
             if (inputs == null) throw new ArgumentNullException(nameof(inputs));
 
@@ -135,9 +139,9 @@ namespace pwiz.Osprey.Tasks
             if (inputs.GlobalFirstPassBaseIds == null)
             {
                 throw new InvalidOperationException(
-                    "RescoreCompaction: RescoreInputs.GlobalFirstPassBaseIds is null. The " +
-                    "reconciliation.json envelope must carry the join-wide first-pass base_id " +
-                    "set (format v3); recomputing per file would diverge from the in-memory run.");
+                    @"RescoreCompaction: RescoreInputs.GlobalFirstPassBaseIds is null. The " +
+                    @"reconciliation.json envelope must carry the join-wide first-pass base_id " +
+                    @"set (format v3); recomputing per file would diverge from the in-memory run.");
             }
 
             int entriesBefore = 0;
@@ -224,8 +228,11 @@ namespace pwiz.Osprey.Tasks
             // with, and Report is cheap enough to sit in the outer loop only.
             int compactIdx = 0;
             using (var progress = new ProgressReporter(
-                       string.Format(@"Applying the retained set across {0} file(s)",
-                                     inputs.PerFileEntries.Count),
+                       singleFileSearch
+                           ? OspreyTasksResources.RescoreCompaction_Apply_Trimming_the_file_to_the_precursor_candidates_kept_for_re_scoring_and_second_pass_FDR
+                           : CountText.Format(inputs.PerFileEntries.Count,
+                               OspreyTasksResources.RescoreCompaction_Apply_Trimming_the_file_to_the_precursor_candidates_kept_for_cross_run_reconciliation,
+                               OspreyTasksResources.RescoreCompaction_Apply_Trimming_each_file_to_the_precursor_candidates_kept_for_cross_run_reconciliation___0__),
                        inputs.PerFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 foreach (var kvp in inputs.PerFileEntries)
@@ -249,9 +256,9 @@ namespace pwiz.Osprey.Tasks
             if (inputs.PreCompactionTallies != null && entriesAfter != entriesBefore)
             {
                 throw new InvalidOperationException(string.Format(
-                    "RescoreCompaction: the streamed bundle was pre-compacted to a different " +
-                    "set than Apply re-derives ({0} entries in, {1} retained). The streaming " +
-                    "hydrate and Apply must agree on the retained set.",
+                    @"RescoreCompaction: the streamed bundle was pre-compacted to a different " +
+                    @"set than Apply re-derives ({0} entries in, {1} retained). The streaming " +
+                    @"hydrate and Apply must agree on the retained set.",
                     entriesBefore, entriesAfter));
             }
 

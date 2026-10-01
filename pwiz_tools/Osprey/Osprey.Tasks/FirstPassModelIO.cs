@@ -65,8 +65,8 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     internal static class FirstPassModelIO
     {
-        private const string ModelSuffix = @".1st-pass.model.json";
-        private const string StratumSuffix = @".1st-pass.stratum.json";
+        public const string EXT_MODEL = @"." + FdrScoresSidecar.LABEL_FIRST_PASS + @".model.json";
+        public const string EXT_STRATUM = @"." + FdrScoresSidecar.LABEL_FIRST_PASS + @".stratum.json";
 
         /// <summary>Serializable slice of <see cref="PercolatorResults"/> the frozen scorer needs,
         /// plus the pass-1 provenance a SecondPassFDR node cannot otherwise know.</summary>
@@ -132,7 +132,7 @@ namespace pwiz.Osprey.Tasks
         public static string PathFor(string parquetPath, string fileStem)
         {
             string dir = Path.GetDirectoryName(Path.GetFullPath(parquetPath)) ?? string.Empty;
-            return Path.Combine(dir, fileStem + ModelSuffix);
+            return Path.Combine(dir, fileStem + EXT_MODEL);
         }
 
         /// <summary>
@@ -144,7 +144,7 @@ namespace pwiz.Osprey.Tasks
         public static string StratumPathFor(string parquetPath, string fileStem)
         {
             string dir = Path.GetDirectoryName(Path.GetFullPath(parquetPath)) ?? string.Empty;
-            return Path.Combine(dir, fileStem + StratumSuffix);
+            return Path.Combine(dir, fileStem + EXT_STRATUM);
         }
 
         /// <summary>
@@ -374,12 +374,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private static string SerializeJson(object dto)
         {
-            var settings = new JsonSerializerSettings { Converters = { new RoundtripDoubleConverter() } };
-            string json = JsonConvert.SerializeObject(dto, Formatting.Indented, settings);
-            json = json.Replace("\r\n", "\n");
-            if (!json.EndsWith("\n", StringComparison.Ordinal))
-                json += "\n";
-            return json;
+            return RoundtripDoubleConverter.SerializeIndented(dto);
         }
     }
 }

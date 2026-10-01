@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<!-- 
+		Microsoft ResX Schema
+
+		Version 1.3
+
+		The primary goals of this format is to allow a simple XML format 
+		that is mostly human readable. The generation and parsing of the 
+		various data types are done through the TypeConverter classes 
+		associated with the data types.
+
+		Example:
+
+		... ado.net/XML headers & schema ...
+		<resheader name="resmimetype">text/microsoft-resx</resheader>
+		<resheader name="version">1.3</resheader>
+		<resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+		<resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+		<data name="Name1">this is my long string</data>
+		<data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+		<data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+			[base64 mime encoded serialized .NET Framework object]
+		</data>
+		<data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+			[base64 mime encoded string representing a byte array form of the .NET Framework object]
+		</data>
+
+		There are any number of "resheader" rows that contain simple 
+		name/value pairs.
+
+		Each data row contains a name, and value. The row also contains a 
+		type or mimetype. Type corresponds to a .NET class that support 
+		text/value conversion through the TypeConverter architecture. 
+		Classes that don't support this are serialized and stored with the 
+		mimetype set.
+
+		The mimetype is used for serialized objects, and tells the 
+		ResXResourceReader how to depersist the object. This is currently not 
+		extensible. For a given mimetype the value must be set accordingly:
+
+		Note - application/x-microsoft.net.object.binary.base64 is the format 
+		that the ResXResourceWriter will generate, however the reader can 
+		read any of the formats listed below.
+
+		mimetype: application/x-microsoft.net.object.binary.base64
+		value   : The object must be serialized with 
+			: System.Serialization.Formatters.Binary.BinaryFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.soap.base64
+		value   : The object must be serialized with 
+			: System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+			: and then encoded with base64 encoding.
+
+		mimetype: application/x-microsoft.net.object.bytearray.base64
+		value   : The object must be serialized into a byte array 
+			: using a System.ComponentModel.TypeConverter
+			: and then encoded with base64 encoding.
+	-->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>1.3</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="BlibLoader_Load_Typed__0_N0__of__1_N0__library_peaks_as_b_or_y_ions_within__2___3_" xml:space="preserve">
+    <value>Typed {0:N0} of {1:N0} library peaks as b or y ions within {2} {3}</value>
+  </data>
+  <data name="FragmentTypeCheck_AddPeak__0___charge__1___peak_m_z__2_F4___the_library_says__3___Osprey_computes__4_" xml:space="preserve">
+    <value>{0}, charge {1}, peak m/z {2:F4}: the library says {3}, Osprey computes {4}</value>
+  </data>
+  <data name="FragmentTypeCheck_AddPeak_no_ion" xml:space="preserve">
+    <value>no ion</value>
+  </data>
+  <data name="FragmentTypeCheck_Summary_Fragment_types_in__0___Osprey_s_computed_types_agree_with__1_N0__of__2_N0__peaks" xml:space="preserve">
+    <value>Fragment types in {0}: of {2:N0} peaks the library types as a b or y ion, Osprey's own typing agrees on {1:N0}, the library chooses another ion within tolerance of the peak on {5:N0}, and names no ion within tolerance on {3:N0}; {4:N0} more peaks are typed outside what Osprey computes (neutral losses, other ion types, fragment charge above 2, or unreadable)</value>
+  </data>
+  <data name="BlibLoader_DecodeBlibPeaks_Invalid_peak_intensity_blob_size__expected__0__or__1__bytes__got__2_" xml:space="preserve">
+    <value>Invalid peak intensity blob size: expected {0} or {1} bytes, got {2}</value>
+  </data>
+  <data name="BlibLoader_DecodeBlibPeaks_Invalid_peak_m_z_blob_size___0__bytes__not_a_multiple_of_8_" xml:space="preserve">
+    <value>Invalid peak m/z blob size: {0} bytes (not a multiple of 8)</value>
+  </data>
+  <data name="BlibLoader_Load_Invalid_BiblioSpec_library__the_RefSpectra_table_was_not_found_" xml:space="preserve">
+    <value>Invalid BiblioSpec library: the RefSpectra table was not found.</value>
+  </data>
+  <data name="CarafeProteinIdNormalizer_Normalize_Library_protein_accessions_carry_the_per_peptide___pepNNNNN__suffix_that_Carafe_adds__e_g_" xml:space="preserve">
+    <value>Library protein accessions carry the per-peptide '_pepNNNNN' suffix that Carafe adds (e.g. '{2}' -&gt; '{3}'); removing it maps {0:N0} accessions to {1:N0} proteins. Without this, every peptide would count as its own protein.</value>
+  </data>
+  <data name="ColumnIndices_RequireColumn_Missing_required_column___0_" xml:space="preserve">
+    <value>Missing required column: {0}</value>
+  </data>
+  <data name="DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_empty_" xml:space="preserve">
+    <value>The decoy pairing manifest is empty.</value>
+  </data>
+  <data name="DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_missing_required_columns__it_needs_sequence__peptide_type_" xml:space="preserve">
+    <value>The decoy pairing manifest is missing required columns (it needs sequence, peptide_type and peptide_pair_index). Found: {0}</value>
+  </data>
+  <data name="DiannTsvLoader_LineReader___line__0___column__1___Missing__2_" xml:space="preserve">
+    <value>(line {0}, column {1}) Missing {2}</value>
+  </data>
+  <data name="DiannTsvLoader_Load_Parsing__0_" xml:space="preserve">
+    <value>Parsing {0}</value>
+  </data>
+  <data name="DiannTsvLoader_ParseReader_Building_library_precursors" xml:space="preserve">
+    <value>Building library precursors</value>
+  </data>
+  <data name="DiannTsvLoader_ParseReader_The_library_file_is_empty__it_has_no_header_row_" xml:space="preserve">
+    <value>The library file is empty: it has no header row.</value>
+  </data>
+  <data name="DiannTsvLoader_LineReader___line__0___column__1___Invalid__2____3__" xml:space="preserve">
+    <value>(line {0}, column {1}) Invalid {2} '{3}'</value>
+  </data>
+  <data name="DiannTsvLoader_ToException____and__0__more_errors" xml:space="preserve">
+    <value>... and {0:N0} more errors</value>
+  </data>
+  <data name="DiannTsvLoader_ToException__0__library_lines_have_errors__Fix_the_library_and_load_it_again_" xml:space="preserve">
+    <value>{0:N0} library lines have errors. Fix the library and load it again:</value>
+  </data>
+  <data name="LibraryBlibWriter_Write_Writing__0__library_precursors_to__1_" xml:space="preserve">
+    <value>Writing {0:N0} library precursors to {1}</value>
+  </data>
+  <data name="LibraryCacheStatus_LoadCache_Loading_library_cache___0__precursors_" xml:space="preserve">
+    <value>Loading library cache ({0:N0} precursors)</value>
+  </data>
+  <data name="LibraryCacheStatus_SaveCache_Writing_library_cache" xml:space="preserve">
+    <value>Writing library cache</value>
+  </data>
+  <data name="LibraryCacheStatus_static_The_library_cache_is_damaged__unknown_neutral_loss_tag__0____Delete_it_to_rebuild_it_from_" xml:space="preserve">
+    <value>The library cache is damaged (unknown neutral loss tag {0}).</value>
+  </data>
+  <data name="LibraryDeduplicator_DeduplicateLibrary_Merging_duplicate_library_precursors" xml:space="preserve">
+    <value>Merging duplicate library precursors</value>
+  </data>
+  <data name="LibraryLoader_DescribeDecoysListedAsTargets_The_library_and_its_decoy_pairing_manifest_disagree___0__library_precursors_are_" xml:space="preserve">
+    <value>The library and its decoy pairing manifest disagree: {0:N0} library precursors are decoys by their protein accessions, but the manifest {1} lists their sequences as targets. This happens when a library merges a decoy with an identical real target into one row. Regenerate the library so each row is one or the other.</value>
+  </data>
+  <data name="LibraryLoader_DescribeSharedDecoyIds_Library_decoy_pairing_gave__0__library_precursor_IDs_to_more_than_one_decoy__Each_decoy_" xml:space="preserve">
+    <value>Library-decoy pairing gave {0:N0} library precursor IDs to more than one decoy. Each decoy must pair with a distinct target.</value>
+  </data>
+  <data name="LibraryLoader_DescribeSharedDecoyIds_Library_precursor_ID__0__" xml:space="preserve">
+    <value>Library precursor ID {0}:</value>
+  </data>
+  <data name="LibraryLoader_Load_Failed_to_load_the_library_cache___0___Reading_the_library_file_instead_" xml:space="preserve">
+    <value>Failed to load the library cache: {0}. Reading the library file instead.</value>
+  </data>
+  <data name="LibraryLoader_Load_Failed_to_save_library_cache___0_" xml:space="preserve">
+    <value>Failed to save library cache: {0}</value>
+  </data>
+  <data name="LibraryLoader_Load_Library_cache___0___was_built_from_a_different_version_of_the_source_library__ignoring_" xml:space="preserve">
+    <value>Library cache '{0}' was built from a different version of the source library; ignoring the stale cache and rebuilding from source.</value>
+  </data>
+  <data name="LibraryLoader_Load_Loaded__0__library_precursors" xml:space="preserve">
+    <value>Loaded {0:N0} library precursors</value>
+  </data>
+  <data name="LibraryLoader_Load_Loaded__0__library_precursors_from_cache___1__" xml:space="preserve">
+    <value>Loaded {0:N0} library precursors from cache '{1}'</value>
+  </data>
+  <data name="LibraryLoader_Load_Loading_spectral_library_from__0____" xml:space="preserve">
+    <value>Loading spectral library from {0}...</value>
+  </data>
+  <data name="LibraryLoader_Load_Saved_library_cache___0__precursors__to___1__" xml:space="preserve">
+    <value>Saved library cache ({0:N0} precursors) to '{1}'</value>
+  </data>
+  <data name="LibraryLoader_Load_Unsupported_library_format___0_" xml:space="preserve">
+    <value>Unsupported library format: {0}</value>
+  </data>
+  <data name="LibraryLoader_LogCachedPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2____from_the_library_cache____3__" xml:space="preserve">
+    <value>Paired {0:N0} of {1:N0} library decoys with their targets ({2:F1}%, from the library cache). {3:N0} decoys and {4:N0} targets have no partner.</value>
+  </data>
+  <data name="LibraryLoader_LogPairingSummary_Paired__0__of__1__library_decoys_with_their_targets___2______3__from_the_pairing_manifest_" xml:space="preserve">
+    <value>Paired {0:N0} of {1:N0} library decoys with their targets ({2:F1}%): {3:N0} from the pairing manifest, {4:N0} by amino acid composition. {5:N0} decoys and {6:N0} targets have no partner.</value>
+  </data>
+  <data name="LibraryLoader_PeaklessPrecursorException_Library_precursor__0____1___has_no_fragment_peaks_" xml:space="preserve">
+    <value>Library precursor {0} ({1}) has no fragment peaks. Precursors without fragments are for BiblioSpec MS1 feature finding and cannot be used in a DIA search.</value>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys_Failed_to_read_decoy_pairing_manifest__0____1_" xml:space="preserve">
+    <value>Failed to read decoy pairing manifest {0}: {1}</value>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys_Library_decoys_are_recognized_by_the_protein_accession_prefixes__0_" xml:space="preserve">
+    <value>Library decoys are recognized by the protein accession prefixes {0}</value>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys_Loading_decoy_pairing_manifest_from__0_" xml:space="preserve">
+    <value>Loading decoy pairing manifest from {0}</value>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys_Only__0___of_the_library_decoys_could_be_paired_with_a_target__at_least__1___is_needed___" xml:space="preserve">
+    <value>Only {0:F1}% of the library decoys could be paired with a target (at least {1:F0}% is needed), so FDR estimates would be unreliable. Supply {2}, give the library decoys the protein accessions of their targets with one of the prefixes {3}, or leave out {4} so Osprey generates its own decoys.</value>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys_Pairing_library_decoys_to_targets_by_amino_acid_composition__no_manifest_provided__" xml:space="preserve">
+    <value>Pairing library decoys to targets by amino-acid composition (no manifest provided).</value>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys_Replaced_the_protein_accessions_of__0__library_precursors_with_the_source_protein_" xml:space="preserve">
+    <value>Replaced the protein accessions of {0:N0} library precursors with the source-protein accessions in the pairing manifest</value>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys_The_pairing_manifest_marked__0__more_library_precursors_as_decoys__their_protein_" xml:space="preserve">
+    <value>The pairing manifest marked {0:N0} more library precursors as decoys (their protein accessions have no decoy prefix)</value>
+  </data>
+  <data name="LibraryLoader_TryFinishSuppliedDecoys___decoys_in_library_was_given__but_no_library_precursor_has_a_protein_accession_starting_" xml:space="preserve">
+    <value>--decoys-in-library was given, but no library precursor has a protein accession starting with one of the decoy prefixes {0}. Check that the library contains decoys with one of these prefixes, or leave out --decoys-in-library so Osprey generates its own decoys.</value>
+  </data>
+  <data name="LibraryValidation_ValidatePeptideLength_Library_peptide___0___has__1__residues__the_minimum_supported_length_is__2___Peptides_" xml:space="preserve">
+    <value>Library peptide '{0}' has {1} residues; the minimum supported length is {2}. Peptides this short are not specific enough to identify and are excluded by convention from spectral libraries. Rebuild the library with a longer minimum.</value>
+  </data>
+  <data name="ParquetScoreCache_CheckParquetMetadata__0__does_not_record_the_search_settings_it_was_scored_with__so_it_cannot_be_reused__Score_" xml:space="preserve">
+    <value>{0} does not record the search settings it was scored with, so it cannot be reused. Score the file again (--task PerFileScoring).</value>
+  </data>
+  <data name="ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_Osprey_build_wrote_it__so_it_cannot_be_reused__Score_the_file_" xml:space="preserve">
+    <value>{0} does not record which Osprey build wrote it, so it cannot be reused. Score the file again with this build (--task PerFileScoring).</value>
+  </data>
+  <data name="ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_spectral_library_it_was_scored_against__so_it_cannot_be_reused__" xml:space="preserve">
+    <value>{0} does not record which spectral library it was scored against, so it cannot be reused. Score the file again (--task PerFileScoring).</value>
+  </data>
+  <data name="ParquetScoreCache_CheckParquetMetadata__0__was_scored_against_a_different_spectral_library_than___library_names__Score_the_file_" xml:space="preserve">
+    <value>{0} was scored against a different spectral library than --library names (library hash {1}; this run {2}). Score the file again with this library (--task PerFileScoring), or pass the library it was scored against.</value>
+  </data>
+  <data name="ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_Osprey__1___which_is_not_compatible_with_this_build___2____Score_the_" xml:space="preserve">
+    <value>{0} was scored by Osprey {1}, which is not compatible with this build ({2}). Score the file again with this build (--task PerFileScoring).</value>
+  </data>
+  <data name="ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_a_different_daily_build_of_Osprey___1___this_is__2____Score_the_file_" xml:space="preserve">
+    <value>{0} was scored by a different daily build of Osprey ({1}; this is {2}). Score the file again with this build (--task PerFileScoring), or run this task with the build that scored it.</value>
+  </data>
+  <data name="ParquetScoreCache_CheckParquetMetadata__0__was_scored_with_different_search_settings_than_this_run_uses__Score_the_file_again_" xml:space="preserve">
+    <value>{0} was scored with different search settings than this run uses (settings hash {1}; this run {2}). Score the file again with these settings (--task PerFileScoring), or use the settings it was scored with.</value>
+  </data>
+  <data name="ParquetScoreCache_CheckParquetMetadata__0__was_written_by_an_Osprey_build_this_one_does_not_recognize___1___this_is__2____so_it_" xml:space="preserve">
+    <value>{0} was written by an Osprey build this one does not recognize ({1}; this is {2}), so it cannot be reused. Score the file again with this build (--task PerFileScoring).</value>
+  </data>
+  <data name="ParquetScoreCache_DecodeBlob_The_scores_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__" xml:space="preserve">
+    <value>The scores file is damaged: a stored list of values is {0:N0} bytes long, which is not a multiple of {1}.</value>
+  </data>
+  <data name="ParquetScoreCache_LoadCwtCandidatesFromParquet__0___the_stored_peak_candidates_in_row_group__1__have_an_unexpected_type___2____The_file_is_damaged_or_was_written_by_a_different_version_of_Osprey_" xml:space="preserve">
+    <value>{0}: the stored peak candidates in row group {1} have an unexpected type ({2}). The file is damaged or was written by a different version of Osprey.</value>
+  </data>
+  <data name="ParquetScoreCache_RequireCharge__0__is_corrupt__row__1___entry_id__2___has_a_charge_of_0__which_is_not_a_possible_" xml:space="preserve">
+    <value>{0} is corrupt: row {1} (entry_id {2}) has a charge of 0, which is not a possible precursor charge. The charge column is either unreadable or was written corrupt, and because charge is part of the row's identity, using the file would silently drop precursors rather than report a wrong number. Delete this file and re-run the stage that produced it. Parquet written before 2026-09-17 may carry this from a write race in the parallel column writer, fixed in that release.</value>
+  </data>
+  <data name="ParquetScoreCache_StreamEntryIds_The_scores_file___0___is_damaged__row_group__1__has_no_readable_entry_id_column__so_its_" xml:space="preserve">
+    <value>The scores file '{0}' is damaged: row group {1} has no readable entry_id column, so its row order cannot be established. Delete it and score the file again.</value>
+  </data>
+  <data name="ParquetScoreCache_StreamReconciledScoresParquet__0___a_re_scored_precursor_candidate_peak_refers_to_row__1__past_the_end_of_the_scores_file___2__rows___and_was_not_written_" xml:space="preserve">
+    <value>{0}: a re-scored precursor candidate peak refers to row {1:N0}, past the end of the scores file ({2:N0} rows), and was not written.</value>
+  </data>
+  <data name="ParquetScoreCache_ValidateScoresParquetGroup_Could_not_read_the_scores_file__0____1_" xml:space="preserve">
+    <value>Could not read the scores file {0}: {1}</value>
+  </data>
+  <data name="ParquetScoreCache_ValidateScoresParquetGroup___task_SecondPassFDR_needs_the_reconciled_scores_files_that___task_PerFileRescoring_" xml:space="preserve">
+    <value>--task SecondPassFDR needs the reconciled scores files that --task PerFileRescoring writes, but {0} is not one (osprey.reconciled = '{1}'). Run --task PerFileRescoring first. If the file was written by a newer version of Osprey, use that version.</value>
+  </data>
+  <data name="ParquetScoreCache_WriteChunkedParquet_Writing__0__precursor_candidate_peaks" xml:space="preserve">
+    <value>Writing {0:N0} precursor candidate peaks</value>
+  </data>
+  <data name="ParquetScoreCache_static_Writing_precursor_candidate_peaks" xml:space="preserve">
+    <value>Writing precursor candidate peaks</value>
+  </data>
+  <data name="Pass_ReadScalars_The_file_is_not_an_Osprey_intermediate_file__" xml:space="preserve">
+    <value>The file is not an Osprey intermediate file: {0}</value>
+  </data>
+  <data name="Pass_ReadScalars_The_intermediate_file_belongs_to_the_other_FDR_pass__pass__0___expected__1_____2_" xml:space="preserve">
+    <value>The intermediate file belongs to the other FDR pass (pass {0}, expected {1}): {2}</value>
+  </data>
+  <data name="Pass_ReadScalars_The_intermediate_file_is_damaged___0__bytes_of_records_is_not_a_whole_number_of__1__byte_" xml:space="preserve">
+    <value>The intermediate file is damaged ({0:N0} bytes of records is not a whole number of {1}-byte records): {2}</value>
+  </data>
+  <data name="Pass_ReadScalars_The_intermediate_file_is_damaged__cut_short_at_record__0_____1_" xml:space="preserve">
+    <value>The intermediate file is damaged (cut short at record {0:N0}): {1}</value>
+  </data>
+  <data name="Pass_ReadScalars_The_intermediate_file_is_damaged__its_header_is_cut_short___" xml:space="preserve">
+    <value>The intermediate file is damaged (its header is cut short): {0}</value>
+  </data>
+  <data name="Pass_ReadScalars_The_intermediate_file_is_damaged__only__0__bytes____1_" xml:space="preserve">
+    <value>The intermediate file is damaged (only {0:N0} bytes): {1}</value>
+  </data>
+  <data name="Pass_ReadScalars_The_intermediate_file_was_written_by_a_different_Osprey_version__format__0___expected__1__" xml:space="preserve">
+    <value>The intermediate file was written by a different Osprey version (format {0}, expected {1}): {2}</value>
+  </data>
+  <data name="Pass_ThrowPartialWalk_Reading_the_intermediate_file___0___failed_partway__after__1__records_were_read__The_run_" xml:space="preserve">
+    <value>Reading the intermediate file '{0}' failed partway, after {1:N0} records were read. The run stops here rather than continue with part of the file's values.</value>
+  </data>
+  <data name="ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_carry_the_first_pass_" xml:space="preserve">
+    <value>Reconciliation file {0} has format_version {1} but does not carry the first-pass precursor set. Delete this analysis's *.FirstPassFDR.osprey.task files and run the first pass again.</value>
+  </data>
+  <data name="ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_list_the_input_files_it_" xml:space="preserve">
+    <value>Reconciliation file {0} has format_version {1} but does not list the input files it covers (file_stems). Delete this analysis's *.FirstPassFDR.osprey.task files and run the first pass again.</value>
+  </data>
+  <data name="ReconciliationFile_Load_Reconciliation_file__0__has_unsupported_format_version__1___expected__2____Delete_this_" xml:space="preserve">
+    <value>Reconciliation file {0} has unsupported format_version {1} (expected {2}). Delete this analysis's *.FirstPassFDR.osprey.task files and run the first pass again.</value>
+  </data>
+  <data name="ReconciliationFile_Load_Reconciliation_file_not_found__" xml:space="preserve">
+    <value>Reconciliation file not found: {0}</value>
+  </data>
+  <data name="ReconciliationFile_Load_Reconciliation_file_parsed_as_null__" xml:space="preserve">
+    <value>The reconciliation file is empty or not valid: {0}</value>
+  </data>
+  <data name="RoundtripDoubleConverter_ReadJson_A_number_in_the_JSON_file_has_no_value_" xml:space="preserve">
+    <value>A number in the JSON file has no value.</value>
+  </data>
+  <data name="RoundtripDoubleConverter_ReadJson_Expected_a_number_in_the_JSON_file__but_found__0__" xml:space="preserve">
+    <value>Expected a number in the JSON file, but found {0}.</value>
+  </data>
+  <data name="RoundtripDoubleConverter_WriteJson_Cannot_write__0__to_a_JSON_file__only_finite_numbers_can_be_stored_" xml:space="preserve">
+    <value>Cannot write {0} to a JSON file: only finite numbers can be stored.</value>
+  </data>
+  <data name="SpectraCacheException_Describe_no_file_exists_at_that_path" xml:space="preserve">
+    <value>no file exists at that path</value>
+  </data>
+  <data name="SpectraCacheException_Describe_the_cache_was_refused_for_an_unrecorded_reason" xml:space="preserve">
+    <value>the cache was refused for an unrecorded reason</value>
+  </data>
+  <data name="SpectraCacheException_Describe_the_cache_was_written_without_a_usable_source_fingerprint__so_it_can_never_be_validated_" xml:space="preserve">
+    <value>the cache was written without a usable source fingerprint, so it can never be validated against its source file</value>
+  </data>
+  <data name="SpectraCacheException_Describe_the_file_is_not_a_spectra_cache__wrong_magic_bytes_" xml:space="preserve">
+    <value>the file is not a spectra cache (wrong magic bytes)</value>
+  </data>
+  <data name="SpectraCacheException_Describe_the_file_is_truncated___it_is_too_short_to_hold_a_cache_header" xml:space="preserve">
+    <value>the file is truncated - it is too short to hold a cache header</value>
+  </data>
+  <data name="SpectraCacheException_Describe_the_file_was_written_in_an_older_spectra_cache_format_and_must_be_rebuilt" xml:space="preserve">
+    <value>the file was written in an older spectra cache format and must be rebuilt</value>
+  </data>
+  <data name="SpectraCacheException_Describe_the_source_file_cannot_be_measured__so_the_cache_cannot_be_checked_for_staleness" xml:space="preserve">
+    <value>the source file cannot be measured, so the cache cannot be checked for staleness</value>
+  </data>
+  <data name="SpectraCacheException_Describe_the_source_file_s_size_or_timestamp_has_changed_since_the_cache_was_written__so_the_cache_" xml:space="preserve">
+    <value>the source file's size or timestamp has changed since the cache was written, so the cache is stale</value>
+  </data>
+  <data name="SpectraCache_LoadSpectraCache_The_spectra_cache_is_damaged__a_record_is_not_where_its_index_says__expected_byte__0___" xml:space="preserve">
+    <value>The spectra cache is damaged: a record is not where its index says (expected byte {0}, found {1}).</value>
+  </data>
+  <data name="SpectraCache_ReadDoubleArray_The_spectra_cache_is_damaged__it_ends_in_the_middle_of_a_record__Delete_the__spectra_bin_" xml:space="preserve">
+    <value>The spectra cache is damaged: it ends in the middle of a record.</value>
+  </data>
+  <data name="SpectraCache_ReadFloatArray_The_spectra_cache_is_damaged__it_ends_in_the_middle_of_a_record__Delete_the__spectra_bin_" xml:space="preserve">
+    <value>The spectra cache is damaged: it ends in the middle of a record.</value>
+  </data>
+  <data name="SpectraCache_ReadIndex_The_spectra_cache_is_damaged__it_is_too_small_to_hold_its_footer__Delete_the__spectra_bin_" xml:space="preserve">
+    <value>The spectra cache is damaged: it is too small to hold its footer.</value>
+  </data>
+  <data name="SpectraCache_SaveSpectraCache_Writing_spectra_cache" xml:space="preserve">
+    <value>Writing spectra cache</value>
+  </data>
+  <data name="SpectraWindowIndex_LoadWindow_The_spectra_cache_is_damaged__a_record_is_not_where_its_index_says__expected_byte__0___" xml:space="preserve">
+    <value>The spectra cache is damaged: a record is not where its index says (expected byte {0}, found {1}).</value>
+  </data>
+  <data name="SpectrumBuilder_CreateMs2Spectrum_Spectrum_index__0__has_no_valid_isolation_window_lower_offset__cvParam_MS_1000828_is_" xml:space="preserve">
+    <value>Spectrum index {0} has no valid isolation window lower offset (cvParam MS:1000828 is missing or not positive). Osprey needs true isolation windows to process DIA data.</value>
+  </data>
+  <data name="SpectrumBuilder_CreateMs2Spectrum_Spectrum_index__0__has_no_valid_isolation_window_upper_offset__cvParam_MS_1000829_is_" xml:space="preserve">
+    <value>Spectrum index {0} has no valid isolation window upper offset (cvParam MS:1000829 is missing or not positive). Osprey needs true isolation windows to process DIA data.</value>
+  </data>
+  <data name="SpectrumBuilder_EnsureSorted_NaN_m_z_at_index__0__of_spectrum_index__1___n_peaks__2____cannot_sort_or_fragment_match_a_" xml:space="preserve">
+    <value>NaN m/z at index {0} of spectrum_index={1} (n_peaks={2}); cannot sort or fragment-match a malformed centroid array.</value>
+  </data>
+  <data name="SpectrumFileReader_LoadAllSpectra_Cannot_read___0____ProteoWizard_has_no_vendor_peak_picking_for_this_format__and_Osprey_" xml:space="preserve">
+    <value>Cannot read '{0}': ProteoWizard has no vendor peak picking for this format, and Osprey scores centroided peaks. Convert the file to mzML with msconvert --filter "peakPicking vendor msLevel=1-" and read that instead.</value>
+  </data>
+  <data name="SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_build_of_Osprey_has_no_vendor_instrument_support__Rebuild_with__p_" xml:space="preserve">
+    <value>Cannot read '{0}': this build of Osprey has no vendor instrument support. Rebuild with /p:IAgreeToVendorLicenses=true on Osprey.sln, or with 'bjam pwiz_tools/Osprey//Osprey --i-agree-to-the-vendor-licenses'. Otherwise convert the file to mzML with msconvert and read that instead.</value>
+  </data>
+  <data name="SpectrumFileReader_LoadAllSpectra_Reading__0_" xml:space="preserve">
+    <value>Reading {0}</value>
+  </data>
+  <data name="BlibLoader_ToException__0__library_spectra_have_modifications_Osprey_cannot_identify" xml:space="preserve">
+    <value>{0:N0} library spectra have modifications Osprey cannot identify. A modification mass printed with fewer than {1} decimals must match a known UniMod modification allowed on its residue, and a UniMod id must be one Osprey knows. Build the library with full-precision modification masses and load it again:</value>
+  </data>
+  <data name="BlibLoader_ToException__0__in__1__spectra__first__2_" xml:space="preserve">
+    <value>{0} in {1:N0} spectra, first {2}</value>
+  </data>
+  <data name="BlibLoader_ToException____and__0__more_modifications" xml:space="preserve">
+    <value>... and {0:N0} more modifications</value>
+  </data>
+  <data name="LibraryLoader_DescribeUnflaggedDecoys__0__library_precursors_have_protein_accessions_marking_them_as_decoys" xml:space="preserve">
+    <value>{0:N0} library precursors have protein accessions marking them as decoys ({1}), the first {2}, but {3} was not given, so they would be searched as targets. Search with {3} to use the library's decoys, or remove them from the library.</value>
+  </data>
+</root>

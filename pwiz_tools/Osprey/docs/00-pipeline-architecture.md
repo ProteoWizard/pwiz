@@ -419,8 +419,9 @@ per-file check read the parquet's stamp) four log lines later: 448 "skipping (ou
 valid)" lines, zero re-scores, and a .blib silently missing a run. Two notions of "done"
 is the defect, so the fix is one predicate, not a second check.
 
-The gate leg for this is mode 9 in `regression.ps1`, which cuts ONLY the later product and
-asserts the file is re-scored. Note why the pre-existing mode 8 could not catch it: it
+The test for this is `TestSubsetRescoreResume` in `SubsetPipelineTest` (formerly
+`regression.ps1` mode 9), which cuts ONLY the later product and asserts the file is
+re-scored. Note why the partial-rescore case before it (formerly mode 8) could not catch it: it
 amputates BOTH products, which puts the two checks back into agreement - an interruption
 test has to leave the state an interruption actually leaves, not a tidier one.
 
@@ -1116,9 +1117,9 @@ Experiment-wide:
 A `SecondPassFDR` node rebuilds each run from these artifacts one at a time and drops it, so
 it needs every run's files present but never holds more than one run's rows. The relay list
 is therefore the whole cohort's, as it always was; what changed is the node's peak, not its
-inputs. The run log says which shape it took - "folding over N run(s), each rebuilt from its
-own artifacts and dropped" - and that line is the evidence, because a resident pool and a
-fold produce identical output and differ only in a memory profile.
+inputs. The run log says which shape it took - under `--perf-stats`, the route line
+`[PATH] second-pass-join: per-run runs=N` - and that line is the evidence, because a resident
+pool and a fold produce identical output and differ only in a memory profile.
 
 **One parquet per run, and it is the reconciled one.** `<stem>.scores.parquet` is not an
 input to this boundary in any form - not as a fallback, not for a run Stage 6 did no work on.
@@ -1230,7 +1231,7 @@ the text says so rather than describing the current shape as though it were the 
    tokens.
 
    Because nothing in the output distinguishes the arms, the shape that ran is asserted from
-   the marker line `Second-pass join: folding over N run(s)` rather than inferred -
+   the route line `[PATH] second-pass-join: per-run` rather than inferred -
    `regression.ps1` demands it per leg (the cold run, both resumes, and mode 3's phase 4),
    scoped to the configurations that can actually stream.
 

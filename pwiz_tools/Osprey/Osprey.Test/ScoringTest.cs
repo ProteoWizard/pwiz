@@ -1416,8 +1416,9 @@ namespace pwiz.Osprey.Test
                 string beforePct = line.Substring(0, pctIdx);
                 int sp = beforePct.LastIndexOf(' ');
                 string token = beforePct.Substring(sp + 1);
+                // The table is prose, written in the current culture (12,3 under fr-FR).
                 if (double.TryParse(token, System.Globalization.NumberStyles.Float,
-                        System.Globalization.CultureInfo.InvariantCulture, out double share))
+                        System.Globalization.CultureInfo.CurrentCulture, out double share))
                 {
                     shareSum += share;
                     shareRows++;

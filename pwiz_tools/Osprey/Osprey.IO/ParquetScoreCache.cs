@@ -52,34 +52,34 @@ namespace pwiz.Osprey.IO
         public static readonly string[] PIN_FEATURE_NAMES =
         {
             // Pairwise coelution (3)
-            "fragment_coelution_sum",
-            "fragment_coelution_max",
-            "n_coeluting_fragments",
+            @"fragment_coelution_sum",
+            @"fragment_coelution_max",
+            @"n_coeluting_fragments",
             // Peak shape (3)
-            "peak_apex",
-            "peak_area",
-            "peak_sharpness",
+            @"peak_apex",
+            @"peak_area",
+            @"peak_sharpness",
             // Spectral at apex (3)
-            "xcorr",
-            "consecutive_ions",
-            "explained_intensity",
+            @"xcorr",
+            @"consecutive_ions",
+            @"explained_intensity",
             // Mass accuracy (2)
-            "mass_accuracy_deviation_mean",
-            "abs_mass_accuracy_deviation_mean",
+            @"mass_accuracy_deviation_mean",
+            @"abs_mass_accuracy_deviation_mean",
             // RT deviation (2)
-            "rt_deviation",
-            "abs_rt_deviation",
+            @"rt_deviation",
+            @"abs_rt_deviation",
             // MS1 (2)
-            "ms1_precursor_coelution",
-            "ms1_isotope_cosine",
+            @"ms1_precursor_coelution",
+            @"ms1_isotope_cosine",
             // Median polish (2)
-            "median_polish_cosine",
-            "median_polish_residual_ratio",
+            @"median_polish_cosine",
+            @"median_polish_residual_ratio",
             // SG-weighted multi-scan (4)
-            "sg_weighted_xcorr",
-            "sg_weighted_cosine",
-            "median_polish_min_fragment_r2",
-            "median_polish_residual_correlation",
+            @"sg_weighted_xcorr",
+            @"sg_weighted_cosine",
+            @"median_polish_min_fragment_r2",
+            @"median_polish_residual_correlation",
         };
 
         public const int NUM_PIN_FEATURES = 21;
@@ -98,20 +98,20 @@ namespace pwiz.Osprey.IO
         // Fields are declared in the same order Rust writes them. Order
         // doesn't affect Parquet correctness (columns are name-indexed),
         // but matching makes diffing easier.
-        private static readonly DataField FIELD_ENTRY_ID = new DataField<uint>("entry_id");
-        private static readonly DataField FIELD_IS_DECOY = new DataField<bool>("is_decoy");
-        private static readonly DataField FIELD_SEQUENCE = new DataField<string>("sequence");
-        private static readonly DataField FIELD_MODIFIED_SEQUENCE = new DataField<string>("modified_sequence");
-        private static readonly DataField FIELD_CHARGE = new DataField<byte>("charge");
-        private static readonly DataField FIELD_PRECURSOR_MZ = new DataField<double>("precursor_mz");
-        private static readonly DataField FIELD_PROTEIN_IDS = new DataField("protein_ids", typeof(string), isNullable: true, isArray: false);
-        private static readonly DataField FIELD_SCAN_NUMBER = new DataField<uint>("scan_number");
-        private static readonly DataField FIELD_APEX_RT = new DataField<double>("apex_rt");
-        private static readonly DataField FIELD_START_RT = new DataField<double>("start_rt");
-        private static readonly DataField FIELD_END_RT = new DataField<double>("end_rt");
-        private static readonly DataField FIELD_BOUNDS_AREA = new DataField<double>("bounds_area");
-        private static readonly DataField FIELD_BOUNDS_SNR = new DataField<double>("bounds_snr");
-        private static readonly DataField FIELD_FILE_NAME = new DataField<string>("file_name");
+        private static readonly DataField FIELD_ENTRY_ID = new DataField<uint>(@"entry_id");
+        private static readonly DataField FIELD_IS_DECOY = new DataField<bool>(@"is_decoy");
+        private static readonly DataField FIELD_SEQUENCE = new DataField<string>(@"sequence");
+        private static readonly DataField FIELD_MODIFIED_SEQUENCE = new DataField<string>(@"modified_sequence");
+        private static readonly DataField FIELD_CHARGE = new DataField<byte>(@"charge");
+        private static readonly DataField FIELD_PRECURSOR_MZ = new DataField<double>(@"precursor_mz");
+        private static readonly DataField FIELD_PROTEIN_IDS = new DataField(@"protein_ids", typeof(string), isNullable: true, isArray: false);
+        private static readonly DataField FIELD_SCAN_NUMBER = new DataField<uint>(@"scan_number");
+        private static readonly DataField FIELD_APEX_RT = new DataField<double>(@"apex_rt");
+        private static readonly DataField FIELD_START_RT = new DataField<double>(@"start_rt");
+        private static readonly DataField FIELD_END_RT = new DataField<double>(@"end_rt");
+        private static readonly DataField FIELD_BOUNDS_AREA = new DataField<double>(@"bounds_area");
+        private static readonly DataField FIELD_BOUNDS_SNR = new DataField<double>(@"bounds_snr");
+        private static readonly DataField FIELD_FILE_NAME = new DataField<string>(@"file_name");
         /// <summary>
         /// The row's ordinal in this file's <c>.scores.parquet</c> - the row identity the
         /// format never wrote down, and a foreign key into that file.
@@ -132,22 +132,22 @@ namespace pwiz.Osprey.IO
         /// past the source row count - which also makes this column the gap-fill
         /// discriminator.</para>
         /// </summary>
-        private static readonly DataField FIELD_SCORE_INDEX = new DataField<uint>("score_index");
+        private static readonly DataField FIELD_SCORE_INDEX = new DataField<uint>(@"score_index");
         // Binary blobs that Rust's reconciliation/gap-fill code paths read.
         // C# writes them as nullable placeholders so the schema bit-matches
         // Rust's; populating them with the actual fragment/XIC/CWT byte
         // serialization is a future sprint (Stage 5+8 cross-impl works
         // without them).
-        private static readonly DataField FIELD_CWT_CANDIDATES = new DataField("cwt_candidates", typeof(byte[]), isNullable: true, isArray: false);
-        private static readonly DataField FIELD_FRAGMENT_MZS = new DataField("fragment_mzs", typeof(byte[]), isNullable: true, isArray: false);
-        private static readonly DataField FIELD_FRAGMENT_INTENSITIES = new DataField("fragment_intensities", typeof(byte[]), isNullable: true, isArray: false);
-        private static readonly DataField FIELD_REFERENCE_XIC_RTS = new DataField("reference_xic_rts", typeof(byte[]), isNullable: true, isArray: false);
-        private static readonly DataField FIELD_REFERENCE_XIC_INTENSITIES = new DataField("reference_xic_intensities", typeof(byte[]), isNullable: true, isArray: false);
+        private static readonly DataField FIELD_CWT_CANDIDATES = new DataField(@"cwt_candidates", typeof(byte[]), isNullable: true, isArray: false);
+        private static readonly DataField FIELD_FRAGMENT_MZS = new DataField(@"fragment_mzs", typeof(byte[]), isNullable: true, isArray: false);
+        private static readonly DataField FIELD_FRAGMENT_INTENSITIES = new DataField(@"fragment_intensities", typeof(byte[]), isNullable: true, isArray: false);
+        private static readonly DataField FIELD_REFERENCE_XIC_RTS = new DataField(@"reference_xic_rts", typeof(byte[]), isNullable: true, isArray: false);
+        private static readonly DataField FIELD_REFERENCE_XIC_INTENSITIES = new DataField(@"reference_xic_intensities", typeof(byte[]), isNullable: true, isArray: false);
         // Reader-only alias for the fragment_coelution_sum PIN feature
         // column (the same column is read both as a stub for FDR loading
         // and as one of the 21 PIN features). Not added to the write
         // schema -- it's already there via BuildFeatureFields().
-        private static readonly DataField FIELD_COELUTION_SUM = new DataField<double>("fragment_coelution_sum");
+        private static readonly DataField FIELD_COELUTION_SUM = new DataField<double>(@"fragment_coelution_sum");
 
         private static DataField[] BuildFeatureFields()
         {
@@ -420,7 +420,7 @@ namespace pwiz.Osprey.IO
                     charges[j] = entry.Charge;
                     precursorMzs[j] = entry.PrecursorMz;
                     proteinIds[j] = entry.ProteinIds != null
-                        ? string.Join(";", entry.ProteinIds)
+                        ? string.Join(@";", entry.ProteinIds)
                         : null;
                     scanNumbers[j] = entry.ScanNumber;
                     apexRts[j] = entry.ApexRt;
@@ -578,8 +578,8 @@ namespace pwiz.Osprey.IO
                     if (!entry.ParquetIndex.HasValue)
                     {
                         throw new InvalidOperationException(string.Format(
-                            "Reconciled parquet write for {0}: row {1} (entry_id {2}) reached the " +
-                            "writer with no score_index assigned.", fileName, j, entry.EntryId));
+                            @"Reconciled parquet write for {0}: row {1} (entry_id {2}) reached the " +
+                            @"writer with no score_index assigned.", fileName, j, entry.EntryId));
                     }
                     scoreIndices[j] = entry.ParquetIndex.Value;
                 }
@@ -634,7 +634,7 @@ namespace pwiz.Osprey.IO
                     sequences[j] = libEntry.Sequence ?? string.Empty;
                     precursorMzs[j] = libEntry.PrecursorMz;
                     proteinIds[j] = libEntry.ProteinIds != null
-                        ? string.Join(";", libEntry.ProteinIds)
+                        ? string.Join(@";", libEntry.ProteinIds)
                         : null;
                 }
                 else
@@ -732,7 +732,7 @@ namespace pwiz.Osprey.IO
                 using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
                 using (var writer = RunSync(ParquetWriter.CreateAsync(schema, stream)))
                 using (var progress = new ProgressReporter(
-                    string.Format("Writing {0} entries", totalRows), totalRows, string.Empty,
+                    string.Format(OspreyIOResources.ParquetScoreCache_WriteChunkedParquet_Writing__0__precursor_candidate_peaks, totalRows), totalRows, string.Empty,
                     ProgressReporter.IO_INTERVAL_SECONDS))
                 {
                     writer.CompressionMethod = CompressionMethod.Zstd;
@@ -880,13 +880,7 @@ namespace pwiz.Osprey.IO
             if (charge != 0)
                 return charge;
             throw new InvalidDataException(string.Format(
-                @"{0} is corrupt: row {1} (entry_id {2}) has a charge of 0, which is not a " +
-                @"possible precursor charge. The charge column is either unreadable or was " +
-                @"written corrupt, and because charge is part of the row's identity, using the " +
-                @"file would silently drop precursors rather than report a wrong number. Delete " +
-                @"this file and re-run the stage that produced it. Parquet written before " +
-                @"2026-09-17 may carry this from a write race in the parallel column writer, " +
-                @"fixed in that release.",
+                OspreyIOResources.ParquetScoreCache_RequireCharge__0__is_corrupt__row__1___entry_id__2___has_a_charge_of_0__which_is_not_a_possible_,
                 path, row, entryId));
         }
 
@@ -954,7 +948,8 @@ namespace pwiz.Osprey.IO
                 return Array.Empty<double>();
             if (blob.Length % 8 != 0)
                 throw new InvalidDataException(string.Format(
-                    "f64 blob length {0} is not a multiple of 8", blob.Length));
+                    OspreyIOResources.ParquetScoreCache_DecodeBlob_The_scores_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__,
+                    blob.Length, 8));
             int n = blob.Length / 8;
             var values = new double[n];
             for (int i = 0; i < n; i++)
@@ -977,7 +972,8 @@ namespace pwiz.Osprey.IO
                 return Array.Empty<float>();
             if (blob.Length % 4 != 0)
                 throw new InvalidDataException(string.Format(
-                    "f32 blob length {0} is not a multiple of 4", blob.Length));
+                    OspreyIOResources.ParquetScoreCache_DecodeBlob_The_scores_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__,
+                    blob.Length, 4));
             int n = blob.Length / 4;
             var values = new float[n];
             Buffer.BlockCopy(blob, 0, values, 0, blob.Length);
@@ -1160,8 +1156,7 @@ namespace pwiz.Osprey.IO
                         if (col == null)
                         {
                             throw new InvalidDataException(string.Format(
-                                @"Scores parquet '{0}' row group {1} has no readable uint entry_id " +
-                                @"column, so its row order cannot be established.", path, g));
+                                OspreyIOResources.ParquetScoreCache_StreamEntryIds_The_scores_file___0___is_damaged__row_group__1__has_no_readable_entry_id_column__so_its_, path, g));
                         }
                         foreach (uint id in col)
                             yield return id;
@@ -1311,8 +1306,7 @@ namespace pwiz.Osprey.IO
                         {
                             // Parquet.Net 4.x types col.Data as non-null IArray.
                             throw new InvalidDataException(string.Format(
-                                "{0}: cwt_candidates column in row group {1} " +
-                                "decoded as {2}, expected byte[][] -- parquet schema mismatch",
+                                OspreyIOResources.ParquetScoreCache_LoadCwtCandidatesFromParquet__0___the_stored_peak_candidates_in_row_group__1__have_an_unexpected_type___2____The_file_is_damaged_or_was_written_by_a_different_version_of_Osprey_,
                                 Path.GetFileName(path), g, col.Data.GetType().Name));
                         }
                         for (int row = 0; row < blobs.Length; row++)
@@ -1515,6 +1509,9 @@ namespace pwiz.Osprey.IO
         /// Stage 4 parquet, which is how Stage 4 became a required Stage 7 input (#4486).
         /// Gap-fill rows are always emitted; they are survivors by construction.
         ///
+        /// <paramref name="taskName"/> is the <c>--task</c> name of the step doing the write,
+        /// for the message of the canonical-order guard.
+        ///
         /// <paramref name="progressIndent"/> is the leading whitespace for the write's own
         /// progress heading, or null to run the write SILENTLY. Silence is what a caller that
         /// already reports per file wants: two reporters at one indent emit bare "N%" lines
@@ -1534,7 +1531,7 @@ namespace pwiz.Osprey.IO
             IReadOnlyList<FdrEntry> gapFill,
             Dictionary<string, string> metadata,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById, string fileName,
-            ISet<(uint, byte, uint)> keepIdentities, string progressIndent,
+            ISet<(uint, byte, uint)> keepIdentities, string taskName, string progressIndent,
             Action<string> logWarning)
         {
             if (originalPath == null)
@@ -1585,8 +1582,11 @@ namespace pwiz.Osprey.IO
 
                 using (var writeStream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
                 using (var writer = RunSync(ParquetWriter.CreateAsync(schema, writeStream)))
+                // No count in the heading: totalRows is every source row plus the added missing
+                // peaks, and keepIdentities drops most of them, so a count here reads as the
+                // number written and contradicts the "Wrote N" line that follows.
                 using (var progress = progressIndent == null ? null : new ProgressReporter(
-                    string.Format("Writing {0} entries", totalRows), totalRows, progressIndent,
+                    OspreyIOResources.ParquetScoreCache_static_Writing_precursor_candidate_peaks, totalRows, progressIndent,
                     ProgressReporter.IO_INTERVAL_SECONDS))
                 {
                     writer.CompressionMethod = CompressionMethod.Zstd;
@@ -1631,11 +1631,11 @@ namespace pwiz.Osprey.IO
                     {
                         if (lastEmitted != null && KeyLess(e, lastEmitted))
                             throw new InvalidOperationException(string.Format(
-                                "Stage 6 reconciled transfer for {0}: rows out of canonical " +
-                                "(entry_id, charge, scan_number) order at output row {1} -- the " +
-                                "original parquet is not sorted, or a re-scored overlay changed its " +
-                                "scan across a same-(entry_id,charge) sibling. Refusing to write a " +
-                                "mis-ordered reconciled parquet.", fileName, written + buffer.Count));
+                                @"{0} reconciled transfer for {1}: rows out of canonical " +
+                                @"(entry_id, charge, scan_number) order at output row {2} - the " +
+                                @"original parquet is not sorted, or a re-scored overlay changed its " +
+                                @"scan across a same-(entry_id,charge) sibling. Refusing to write a " +
+                                @"mis-ordered reconciled parquet.", taskName, fileName, written + buffer.Count));
                         lastEmitted = e;
                         buffer.Add(e);
                         if (buffer.Count == rowsPerGroup)
@@ -1712,8 +1712,8 @@ namespace pwiz.Osprey.IO
                 {
                     if (kv.Key >= (uint)origRowCount)
                         logWarning(string.Format(
-                            "Stage 6 write-back: ParquetIndex {0} out of range for {1} ({2} rows)",
-                            kv.Key, fileName, origRowCount));
+                            OspreyIOResources.ParquetScoreCache_StreamReconciledScoresParquet__0___a_re_scored_precursor_candidate_peak_refers_to_row__1__past_the_end_of_the_scores_file___2__rows___and_was_not_written_,
+                            fileName, kv.Key, origRowCount));
                 }
             }
 
@@ -1896,7 +1896,7 @@ namespace pwiz.Osprey.IO
         {
             string dir = ArtifactPaths.ResolveOutputDir(mzmlPath);
             string stem = Path.GetFileNameWithoutExtension(mzmlPath);
-            return Path.Combine(dir, stem + ".scores.parquet");
+            return Path.Combine(dir, stem + EXT_SCORES);
         }
 
         // The reconciled-output marker is appended AFTER the ".scores" token
@@ -1906,8 +1906,8 @@ namespace pwiz.Osprey.IO
         // even when the input stem itself ends in ".reconciled". That makes the
         // suffix an UNAMBIGUOUS "this is a Stage 6 reconciled output" signal --
         // no parquet-metadata read needed to tell the two apart.
-        public const string ScoresParquetSuffix = ".scores.parquet";
-        public const string ReconciledScoresParquetSuffix = ".scores-reconciled.parquet";
+        public const string EXT_SCORES = @".scores.parquet";
+        public const string EXT_SCORES_RECONCILED = @".scores-reconciled.parquet";
 
         /// <summary>
         /// Returns the reconciled scores Parquet path for a given mzML path:
@@ -1922,18 +1922,18 @@ namespace pwiz.Osprey.IO
         {
             string dir = ArtifactPaths.ResolveOutputDir(mzmlPath);
             string stem = Path.GetFileNameWithoutExtension(mzmlPath);
-            return Path.Combine(dir, stem + ReconciledScoresParquetSuffix);
+            return Path.Combine(dir, stem + EXT_SCORES_RECONCILED);
         }
 
         /// <summary>
         /// True if <paramref name="path"/> is a Stage 6 reconciled-scores parquet
         /// (ends in <c>.scores-reconciled.parquet</c>). Unambiguous: see the note
-        /// on <see cref="ReconciledScoresParquetSuffix"/>.
+        /// on <see cref="EXT_SCORES_RECONCILED"/>.
         /// </summary>
         public static bool IsReconciledScoresPath(string path)
         {
             return !string.IsNullOrEmpty(path)
-                && path.EndsWith(ReconciledScoresParquetSuffix, StringComparison.Ordinal);
+                && path.EndsWith(EXT_SCORES_RECONCILED, StringComparison.Ordinal);
         }
 
         /// <summary>
@@ -1946,11 +1946,11 @@ namespace pwiz.Osprey.IO
         {
             if (string.IsNullOrEmpty(scoresPath))
                 return scoresPath;
-            if (scoresPath.EndsWith(ReconciledScoresParquetSuffix, StringComparison.Ordinal))
+            if (scoresPath.EndsWith(EXT_SCORES_RECONCILED, StringComparison.Ordinal))
                 return scoresPath;
-            if (scoresPath.EndsWith(ScoresParquetSuffix, StringComparison.Ordinal))
-                return scoresPath.Substring(0, scoresPath.Length - ScoresParquetSuffix.Length)
-                    + ReconciledScoresParquetSuffix;
+            if (scoresPath.EndsWith(EXT_SCORES, StringComparison.Ordinal))
+                return scoresPath.Substring(0, scoresPath.Length - EXT_SCORES.Length)
+                    + EXT_SCORES_RECONCILED;
             return scoresPath;
         }
 
@@ -2045,7 +2045,7 @@ namespace pwiz.Osprey.IO
             string currentVersion)
         {
             if (cachedVersion == null)
-                return string.Format("{0}: parquet has no `osprey.version` metadata", fileLabel);
+                return string.Format(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_Osprey_build_wrote_it__so_it_cannot_be_reused__Score_the_file_, fileLabel);
             int cY, cO, cB, cD, rY, rO, rB, rD;
             bool cachedOk = TryParseVersion(cachedVersion, out cY, out cO, out cB, out cD);
             bool currentOk = TryParseVersion(currentVersion, out rY, out rO, out rB, out rD);
@@ -2058,37 +2058,37 @@ namespace pwiz.Osprey.IO
             if (!cachedOk || !currentOk)
             {
                 return string.Format(
-                    "{0}: unrecognized osprey version (parquet=\"{1}\", current=\"{2}\"); refusing to reuse a cache whose compatibility cannot be verified",
+                    OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_written_by_an_Osprey_build_this_one_does_not_recognize___1___this_is__2____so_it_,
                     fileLabel, cachedVersion, currentVersion);
             }
             if (cY != rY || cO != rO || cB != rB)
             {
                 return string.Format(
-                    "{0}: osprey version mismatch: parquet was scored with {1} but current binary is {2} (incompatible release identity)",
+                    OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_Osprey__1___which_is_not_compatible_with_this_build___2____Score_the_,
                     fileLabel, cachedVersion, currentVersion);
             }
             if (cD != rD)
             {
                 return string.Format(
-                    "{0}: osprey version mismatch: parquet was scored with {1} but current binary is {2} (different daily build)",
+                    OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_a_different_daily_build_of_Osprey___1___this_is__2____Score_the_file_,
                     fileLabel, cachedVersion, currentVersion);
             }
 
             if (cachedSearch == null)
-                return string.Format("{0}: parquet has no `osprey.search_hash` metadata", fileLabel);
+                return string.Format(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_the_search_settings_it_was_scored_with__so_it_cannot_be_reused__Score_, fileLabel);
             if (cachedSearch != expectedSearch)
             {
                 return string.Format(
-                    "{0}: search_hash mismatch: parquet was scored with search_hash={1} but current config hashes to {2}",
+                    OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_with_different_search_settings_than_this_run_uses__Score_the_file_again_,
                     fileLabel, cachedSearch, expectedSearch);
             }
 
             if (cachedLibrary == null)
-                return string.Format("{0}: parquet has no `osprey.library_hash` metadata", fileLabel);
+                return string.Format(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_spectral_library_it_was_scored_against__so_it_cannot_be_reused__, fileLabel);
             if (cachedLibrary != expectedLibrary)
             {
                 return string.Format(
-                    "{0}: library_hash mismatch: parquet was scored with library_hash={1} but --library hashes to {2}",
+                    OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_against_a_different_spectral_library_than___library_names__Score_the_file_,
                     fileLabel, cachedLibrary, expectedLibrary);
             }
 
@@ -2118,11 +2118,11 @@ namespace pwiz.Osprey.IO
                 }
                 catch (Exception ex)
                 {
-                    return string.Format("{0}: cannot read parquet metadata: {1}", path, ex.Message);
+                    return string.Format(OspreyIOResources.ParquetScoreCache_ValidateScoresParquetGroup_Could_not_read_the_scores_file__0____1_, path, ex.Message);
                 }
-                string cachedV; kv.TryGetValue("osprey.version", out cachedV);
-                string cachedS; kv.TryGetValue("osprey.search_hash", out cachedS);
-                string cachedL; kv.TryGetValue("osprey.library_hash", out cachedL);
+                string cachedV; kv.TryGetValue(@"osprey.version", out cachedV);
+                string cachedS; kv.TryGetValue(@"osprey.search_hash", out cachedS);
+                string cachedL; kv.TryGetValue(@"osprey.library_hash", out cachedL);
 
                 string err = CheckParquetMetadata(
                     path, cachedV, cachedS, cachedL,
@@ -2140,21 +2140,17 @@ namespace pwiz.Osprey.IO
                 if (config.ExpectReconciledInput)
                 {
                     string cachedReconciled;
-                    kv.TryGetValue("osprey.reconciled", out cachedReconciled);
+                    kv.TryGetValue(@"osprey.reconciled", out cachedReconciled);
                     // Two accepted values, one meaning: this is a post-Stage-6 parquet.
                     // "survivors" additionally says it holds ONLY the Stage 5 survivor rows,
                     // which is what this build writes; "true" is the older row-for-row shape,
                     // still readable because the loader filters to survivors either way.
-                    if (!string.Equals(cachedReconciled, "true", StringComparison.Ordinal) &&
+                    if (!string.Equals(cachedReconciled, @"true", StringComparison.Ordinal) &&
                         !string.Equals(cachedReconciled, RECONCILED_SURVIVORS, StringComparison.Ordinal))
                     {
                         return string.Format(
-                            "--task SecondPassFDR requires a reconciled (post-Stage-6) parquet, " +
-                            "but {0} has osprey.reconciled = '{1}'. Either it is a Stage 4 " +
-                            "(raw) parquet - run --task PerFileRescoring to produce reconciled " +
-                            "parquets first - or it was written by a NEWER Osprey whose " +
-                            "reconciled parquet this build cannot read.",
-                            path, cachedReconciled ?? "<unset>");
+                            OspreyIOResources.ParquetScoreCache_ValidateScoresParquetGroup___task_SecondPassFDR_needs_the_reconciled_scores_files_that___task_PerFileRescoring_,
+                            path, cachedReconciled ?? @"<unset>");
                     }
                 }
             }

@@ -162,10 +162,43 @@ namespace pwiz.Common.SystemUtil
         public const string ERROR_MESSAGE_HINT = @"Error:";
 
         /// <summary>
+        /// The error prefix in each language Skyline and Osprey are translated into: English,
+        /// Japanese and Chinese (full-width colon). Literals rather than resources because
+        /// PortableUtil carries no .resx, and because a reader of a log - SkylineRunner, a
+        /// regression gate - must recognize an error from ANY language, not only the current
+        /// UI culture's. Mirrors SkylineRunner's ErrorChecker, which cannot reference this
+        /// assembly because it ships as a single exe.
+        /// </summary>
+        public static readonly string[] ERROR_PREFIXES =
+        {
+            ERROR_MESSAGE_HINT,
+            "\u30A8\u30E9\u30FC\uFF1A", // ja
+            "\u9519\u8BEF\uFF1A"        // zh-CHS
+        };
+
+        /// <summary>
+        /// True when a LOG line - as written, with any <c>--timestamp</c> / <c>--memstamp</c>
+        /// columns in front - reports an error in any of <see cref="ERROR_PREFIXES"/>: the
+        /// prefix starts the line or follows a tab.
+        /// </summary>
+        public static bool IsErrorLine(string line)
+        {
+            if (line == null)
+                return false;
+            foreach (var prefix in ERROR_PREFIXES)
+            {
+                int i = line.IndexOf(prefix, StringComparison.Ordinal);
+                if (i == 0 || (i > 0 && line[i - 1] == '\t'))
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Predicate deciding whether a written line marks an error (which flips
         /// <see cref="IsErrorReported"/>). Defaults to <see cref="DefaultIsErrorMessage"/>
-        /// (the invariant "Error:" prefix). A host that localizes its error prefix
-        /// (e.g. Skyline) assigns a lambda that also checks the localized variant.
+        /// (any of <see cref="ERROR_PREFIXES"/>). A host that localizes its error prefix
+        /// (e.g. Skyline) may assign a lambda that also checks the current culture's variant.
         /// CRITICAL: this is a Func invoked per line, so the host lambda re-resolves its
         /// localized string to the current UI culture on every call. NEVER capture a
         /// localized string in a static -- tests switch language in-process, so a frozen
@@ -175,8 +208,14 @@ namespace pwiz.Common.SystemUtil
 
         public static bool DefaultIsErrorMessage(string message)
         {
-            return message != null &&
-                   message.StartsWith(ERROR_MESSAGE_HINT, StringComparison.InvariantCulture);
+            if (message == null)
+                return false;
+            foreach (var prefix in ERROR_PREFIXES)
+            {
+                if (message.StartsWith(prefix, StringComparison.Ordinal))
+                    return true;
+            }
+            return false;
         }
 
         private string MemStamp(long memUsed)

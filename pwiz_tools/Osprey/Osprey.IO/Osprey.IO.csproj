@@ -41,30 +41,14 @@
        ONE reference in place of twelve, and more to the point one definition of the read
        semantics - MsDataFileImpl carries the ReaderConfig, the vendor centroiding and the
        vendor reader registration that SpectrumFileReader.Vendors.cs used to duplicate
-       here. It pulls the same eight vendor projects transitively; a file Skyline can open
+       here. It pulls the same nine vendor projects transitively; a file Skyline can open
        is a file Osprey can open, by construction rather than by matching lists.
 
        The vendor projects still carry no SDK unless the build opts in to the licenses
        (pwiz-sharp's IAgreeToVendorLicenses, plus NativeVendorsAvailable for the
        Windows-only native SDKs); without it they compile in NO_VENDOR_SUPPORT mode where
        Identify() works and Read() throws. So this reference costs a default developer
-       clone nothing.
-
-       FIXED (was: a Release Osprey deployed the DEBUG build of everything reached through
-       here). Building a .sln unsets Configuration and Platform across a ProjectReference
-       to a project that is not in that solution - MSBuild's
-       ShouldUnsetParentConfigurationAndPlatform, on by default - and neither
-       ProteowizardWrapper nor pwiz-sharp is in Osprey.sln, so both fell back to their own
-       Debug default. Osprey's Directory.Build.props now sets that property false.
-
-       Clearing the property was tried BEFORE and made it worse, producing pwiz-sharp under
-       bin/Release, bin/Debug AND bin/x64 with the deployed assembly matching none of them.
-       What changed is the tree, not the property: that attempt was made while these
-       projects still multi-targeted net472, so each transitive hop negotiated its own
-       TFM/platform set and MSBuild built several instances. Single-TFM net10.0 leaves one
-       instance per configuration, and a Release build now deploys x64/Release throughout -
-       verified by hashing all 109 in-tree assemblies in Osprey's output against their
-       build directories, with the Debug build still correctly deploying x64/Debug. -->
+       clone nothing. -->
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj" />
   </ItemGroup>
@@ -79,6 +63,19 @@
        cross-impl byte parity. -->
   <ItemGroup>
     <PackageReference Include="PROdotnetzip" Version="1.20.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- User-facing text. The Designer is checked in; VS regenerates it when the .resx is saved. -->
+    <Compile Update="OspreyIOResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>OspreyIOResources.resx</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="OspreyIOResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>OspreyIOResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

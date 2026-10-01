@@ -36,25 +36,20 @@ namespace pwiz.Osprey.Test
     public class DiannDecoyColumnTest
     {
         [TestMethod]
-        public void ParseDecoyFlagAcceptsTruthyValuesAndRejectsFalsy()
+        public void ParseDecoyFlagAcceptsTruthyAndFalsyAndRejectsTheRest()
         {
-            Assert.IsTrue(DiannTsvLoader.ParseDecoyFlag(@"1"));
-            Assert.IsTrue(DiannTsvLoader.ParseDecoyFlag(@"true"));
-            Assert.IsTrue(DiannTsvLoader.ParseDecoyFlag(@"TRUE"));
-            Assert.IsTrue(DiannTsvLoader.ParseDecoyFlag(@"Yes"));
-            Assert.IsTrue(DiannTsvLoader.ParseDecoyFlag(@"y"));
-            Assert.IsTrue(DiannTsvLoader.ParseDecoyFlag(@"t"));
-            Assert.IsTrue(DiannTsvLoader.ParseDecoyFlag(@" 1 "));
-            Assert.IsFalse(DiannTsvLoader.ParseDecoyFlag(@"0"));
-            Assert.IsFalse(DiannTsvLoader.ParseDecoyFlag(string.Empty));
-            Assert.IsFalse(DiannTsvLoader.ParseDecoyFlag(@"false"));
-            Assert.IsFalse(DiannTsvLoader.ParseDecoyFlag(@"garbage"));
-            Assert.IsFalse(DiannTsvLoader.ParseDecoyFlag(null));
+            foreach (string decoy in new[] { @"1", @"true", @"TRUE", @"Yes", @"y", @"t", @" 1 " })
+                Assert.AreEqual(true, DiannTsvLoader.ParseDecoyFlag(decoy), decoy);
+            foreach (string target in new[] { @"0", @"false", @"No", @"n", @"F", @" 0 " })
+                Assert.AreEqual(false, DiannTsvLoader.ParseDecoyFlag(target), target);
+            // Anything else is not a flag the loader may read as target: it refuses the row.
+            foreach (string invalid in new[] { null, string.Empty, @" ", @"garbage", @"2" })
+                Assert.IsNull(DiannTsvLoader.ParseDecoyFlag(invalid), invalid ?? @"null");
             // ASCII-only lowercasing: non-ASCII input is never a match.
             // Mirrors Rust's `to_ascii_lowercase`; `ToLowerInvariant`
             // would case-fold Unicode differently for some locales.
-            Assert.IsFalse(DiannTsvLoader.ParseDecoyFlag("１"));
-            Assert.IsFalse(DiannTsvLoader.ParseDecoyFlag("Yİ"));
+            Assert.IsNull(DiannTsvLoader.ParseDecoyFlag("１"));
+            Assert.IsNull(DiannTsvLoader.ParseDecoyFlag("Yİ"));
         }
 
         [TestMethod]

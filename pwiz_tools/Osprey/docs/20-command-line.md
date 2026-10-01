@@ -18,6 +18,12 @@ The three required inputs are `-i`/`--input` (one or more mzML), `-l`/`--library
 (a DIA-NN TSV or `.blib`), and `-o`/`--output` (the result `.blib`). Everything else
 has a sensible default; `--resolution` is the one flag you will almost always set.
 
+A DIA-NN TSV is validated in full before any search: a value Osprey cannot read in any
+column the library has (a fragment charge of `1.0` or `0`, an ion type other than
+a/b/c/x/y/z, an unknown loss or decoy flag, an empty cell) or a modification with no known
+mass refuses the library, listing each line and column to fix, as Skyline's transition
+list import does. Nothing is guessed for a bad value.
+
 ---
 
 ## Quick start
@@ -148,7 +154,7 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 | `--timestamp` | Prefix each output line with `[yyyy/MM/dd HH:mm:ss]`. |
 | `--memstamp` | Prefix each line with managed + private memory in MB (pair with `--timestamp` for perf visualization). |
 | `--log-file <path>` | Write all output to a file instead of stderr. |
-| `--perf-stats` | Emit machine-parseable `[COUNT]`/`[TIMING]`/`[STAGE-WALL]` lines. |
+| `--perf-stats` | Emit the machine-channel lines (`[COUNT]`, `[TIMING]`, `[BENCH]`, `[STAGE-WALL]`, `[PATH]`, `[TRAIN]`); see [Log format](#log-format). |
 | `--verbose` | Show implementer-grade detail (e.g. per-fold Percolator iterations). |
 
 ### Diagnostics & Info
@@ -160,7 +166,86 @@ Defaults and value lists are from `Osprey/OspreyCommandArgs.cs`; the parser acce
 | `-h`, `--help` | Show help. Accepts a format: `[ascii\|unicode\|sections\|html\|<Section>]`. |
 | `-v`, `--version` | Show version. |
 
+### Log format
+
+The log carries two kinds of line.
+
+**Prose** is written for the person watching the run. It may be reworded in any change and
+will be translated, so no script or test may key off it.
+
+**Tagged lines** start with `[TAG]` and are the machine channel. Their text is ASCII, never
+translated, and it is the only part of the log a script or test may read.
+
+| Tag | Written when | Carries |
+|-----|--------------|---------|
+| `[TASK]` | always | a task's start, skip and finish: `[TASK] <Name>:starting` / `:skipping (outputs valid)` / `:done (<s>s)`. The names are the `--task` values. |
+| `[COUNT]` | `--perf-stats` | a count, e.g. `[COUNT] library-fragments-released: released=N entries=M retained=K scope=rescore-gap-fill` |
+| `[PATH]` | `--perf-stats` | which code route the run took, e.g. `[PATH] second-pass-join: per-run runs=3` |
+| `[TIMING]`, `[STAGE-WALL]`, `[BENCH]` | `--perf-stats` | timings the perf tools read |
+| `[TRAIN]` | `--perf-stats` | which population a model trained on |
+| `[MEM <label>]` | `OSPREY_LOG_MEMORY` | a memory probe |
+
+Prose that the user asked for with an option (`--model-diagnostics`, `-d`, an `OSPREY_*`
+setting) may carry a category tag (`[MODEL-DIAGNOSTICS]`, `[BISECT]`, ...). The tag labels
+the line and stays ASCII; the text after it is prose. In a plain default run `[TASK]` is the
+only tag.
+
+**Warnings and errors are prose, not tags.** They start with `Warning:` and `Error:`, as in
+Skyline's command line, and are translated with the rest of the text. The exit code and the
+error lines always agree, as they do in Skyline:
+
+| Exit code | Meaning |
+|-----------|---------|
+| 0 | success; no `Error:` line was written |
+| 1 | failure; at least one `Error:` line says why |
+| 2 | an `Error:` line was written but the run otherwise completed |
+
+A script deciding whether a run failed reads the exit code. A script scanning a log for
+errors matches `Error:` in every shipped language (`Error:`, `エラー：`, `错误：`) at the
+start of the message, after any `--timestamp`/`--memstamp` columns - the shared
+`CommandStatusWriter.IsErrorLine` does exactly that. If Osprey ever finds the two
+disagreeing it repairs them and writes a `[PATH] exit-reconciled` line, which
+`regression.ps1` treats as a failure.
+
+Rules for code and for consumers:
+
+- **Read tagged lines only.** A script or test that matches prose is a defect in the consumer,
+  not a reason to freeze the prose.
+- **Keyed lines are `[TAG] key: value` or `[TAG] key: name=value ...`.** Numbers use the
+  invariant culture with no group separators. Adding a key is free; renaming one means updating
+  its consumers (`regression.ps1`, the `ai/scripts/Osprey` tools) in the same change.
+- **Every tag comes from `LogTag`** (`Osprey.Core/LogTag.cs`), and the route and count keys
+  come from `LogKey` in the same file. Code writes `log.LogInfo(LogTag.COUNT, format, args)`
+  through an `IOspreyLog`: that overload formats with the invariant culture, so a tagged line
+  reads `12.3s` under every UI language. `OspreyLog.Write` is the one place that decides whether
+  the line is emitted.
+  `CodeInspectionTest.TestLogTagsComeFromLogTag` fails on a tag written as a string literal.
+
 ---
+
+### Localization
+
+Osprey's prose - the log, `--help`, warnings and errors - comes from resource files and follows
+the user's culture, as Skyline's does:
+
+- One `.resx` per assembly that writes user text: `OspreyCoreResources`, `OspreyIOResources`,
+  `OspreyScoringResources`, `OspreyFDRResources`, `OspreyTasksResources` and `OspreyResources`
+  (the exe). Each project opts in to ReSharper's `LocalizableElement` inspection with a
+  `<Project>.csproj.DotSettings`, so a plain string literal fails `Build-Osprey.ps1 -RunInspection`.
+- Translations are Japanese (`.ja.resx`) and Chinese (`.zh-Hans.resx`) only, produced by
+  Skyline's translation pipeline (`pwiz_tools/Skyline/Executables/DevTools/ResourcesOrganizer`),
+  which scans every `.resx` under `pwiz_tools`.
+- Text written for a PERSON uses the current culture: in fr-FR a count reads `1 234 567` and a
+  fraction `12,5 %`. Text written for a PROGRAM uses the invariant culture: every output file
+  (blib, TSV report, FDRBench input, parquet, JSON, `.osprey.task`) and every tagged log line.
+  A run under any culture writes byte-identical files.
+- `@"..."` marks text that is deliberately NOT translated: tagged lines, file headings and keys,
+  argument and environment variable names, internal-invariant exceptions, and diagnostics reached
+  only through `-d` or an `OSPREY_*` setting.
+- `--culture <name>` (internal, not in `--help`, as in Skyline) runs Osprey under a named culture
+  instead of the OS one, e.g. `--culture fr-FR` or `--culture ja`. The unit tests take the same
+  choice from `OSPREY_TEST_CULTURE` (`Build-Osprey.ps1 -RunTests -Culture ja-JP`); fr-FR and
+  tr-TR are test cultures for number formatting, not translation targets.
 
 ## Distributed execution (HPC)
 
@@ -219,6 +304,7 @@ CLI; they are read once at process start. The ones most likely to matter:
 | `OSPREY_PICK_DUMP_CANDIDATES` | Dump per-candidate pick terms for offline model training | [peak-model-training.md](peak-model-training.md) |
 | `OSPREY_TRAIN_PICK_RUN` | First-pass training selection, **on by default**: each precursor is represented by one uniformly drawn run's best candidate peak. `OSPREY_TRAIN_PICK_RUN=0` restores the pre-26.1 cross-run maximum. C#-only — Rust still takes the maximum | [07](07-fdr-control.md) |
 | `OSPREY_MAX_TRAIN_SIZE` | Cap on training rows (default 300000). Unchanged by the 26.1 selection flip: at matched FDP, 300K and 1M are indistinguishable | [07](07-fdr-control.md) |
+| `OSPREY_SVM_C_TOLERANCE` | First-pass SVM C selection: keep the most regularized C within this fraction of the best inner-CV count (default 0.01, in [0, 1); anything else is a startup ERROR). 0 is the strict maximum, the pre-#4703 rule; Rust uses the 1% default with no opt-out, so leave it unset for cross-implementation comparisons. Set the same value on every node of a relay chain | [07](07-fdr-control.md) |
 | `OSPREY_PASS2_QVALUE` | Second-pass q-value mode: `protein-compact` (**default**) / `transfer`. An unrecognized value is a startup ERROR - `percolator` and `transfer-compete` were removed | [12](12-second-pass-fdr.md) |
 | `OSPREY_GBT_*` | GBDT hyperparameters (with `--fdr-method gbdt`) | [07](07-fdr-control.md) |
 | `OSPREY_EXPERIMENT_AGG` | Experimental first-pass experiment-wide aggregation (`max` / `mean-best-<N>`) | [07](07-fdr-control.md) |

@@ -87,7 +87,11 @@ namespace pwiz.Osprey.Chromatography
         /// <summary>Number of observations.</summary>
         public int Count { get; set; }
 
-        /// <summary>Unit string ("ppm" or "Th").</summary>
+        /// <summary>
+        /// Unit token as the calibration file stores it: <see cref="MzCalibration.UNIT_PPM"/> or
+        /// <see cref="MzCalibration.UNIT_TH"/>. Show it to a user through
+        /// <see cref="MzCalibration.GetUnitText"/>.
+        /// </summary>
         public string Unit { get; set; }
 
         /// <summary>Adjusted tolerance: |mean| + 3*SD.</summary>
@@ -105,7 +109,7 @@ namespace pwiz.Osprey.Chromatography
                 Median = 0.0,
                 SD = 0.0,
                 Count = 0,
-                Unit = "ppm",
+                Unit = @"ppm",
                 AdjustedTolerance = null,
                 Calibrated = false
             };
@@ -127,6 +131,34 @@ namespace pwiz.Osprey.Chromatography
     public static class MzCalibration
     {
         /// <summary>
+        /// Unit tokens written to and read from the calibration file, matching the Rust original
+        /// ("Th" is its name for absolute m/z). File text, never shown to a user: see
+        /// <see cref="GetUnitText"/>.
+        /// </summary>
+        public const string UNIT_PPM = @"ppm";
+        public const string UNIT_TH = @"Th";
+
+        /// <summary>The calibration-file token for <paramref name="unit"/>.</summary>
+        public static string GetUnitToken(ToleranceUnit unit)
+        {
+            return unit == ToleranceUnit.Ppm ? UNIT_PPM : UNIT_TH;
+        }
+
+        /// <summary>The unit a calibration-file token names; anything but "Th" is ppm.</summary>
+        public static ToleranceUnit ParseUnit(string unitToken)
+        {
+            return unitToken == UNIT_TH ? ToleranceUnit.Mz : ToleranceUnit.Ppm;
+        }
+
+        /// <summary>
+        /// A calibration-file unit token as a user sees it ("ppm" or "m/z").
+        /// </summary>
+        public static string GetUnitText(string unitToken)
+        {
+            return ParseUnit(unitToken).GetLocalizedString();
+        }
+
+        /// <summary>
         /// Calculate m/z calibration parameters from QC data.
         /// </summary>
         /// <param name="qcData">QC data with error measurements.</param>
@@ -142,14 +174,14 @@ namespace pwiz.Osprey.Chromatography
         /// <summary>
         /// Apply m/z calibration to correct an observed m/z value.
         /// For PPM: corrected = observed - observed * mean / 1e6.
-        /// For Th: corrected = observed - mean.
+        /// For absolute m/z: corrected = observed - mean.
         /// </summary>
         public static double ApplyCalibration(double observedMz, MzCalibrationResult calibration)
         {
             if (!calibration.Calibrated)
                 return observedMz;
 
-            if (calibration.Unit == "Th")
+            if (calibration.Unit == UNIT_TH)
                 return observedMz - calibration.Mean;
 
             // PPM correction
@@ -183,7 +215,7 @@ namespace pwiz.Osprey.Chromatography
 
         /// <summary>
         /// Get calibrated tolerance (unit-aware).
-        /// Returns 3*SD in the appropriate unit (ppm or Th).
+        /// Returns 3*SD in the appropriate unit (ppm or m/z).
         /// </summary>
         /// <param name="calibration">Calibration parameters.</param>
         /// <param name="baseTolerance">Default tolerance if not calibrated.</param>
@@ -197,7 +229,7 @@ namespace pwiz.Osprey.Chromatography
             if (calibration.Calibrated)
             {
                 double tolerance3SD = 3.0 * calibration.SD;
-                ToleranceUnit unit = calibration.Unit == "Th" ? ToleranceUnit.Mz : ToleranceUnit.Ppm;
+                ToleranceUnit unit = ParseUnit(calibration.Unit);
                 double minTolerance = unit == ToleranceUnit.Mz ? 0.05 : 1.0;
 
                 toleranceValue = Math.Max(tolerance3SD, minTolerance);
@@ -232,14 +264,13 @@ namespace pwiz.Osprey.Chromatography
         /// </summary>
         public static MzCalibrationResult CalculateSingleLevel(double[] errors, string unitStr)
         {
-            ToleranceUnit unit = unitStr == "Th" ? ToleranceUnit.Mz : ToleranceUnit.Ppm;
-            return CalculateSingleCalibration(errors, unit);
+            return CalculateSingleCalibration(errors, ParseUnit(unitStr));
         }
 
         private static MzCalibrationResult CalculateSingleCalibration(double[] errors,
             ToleranceUnit unit)
         {
-            string unitStr = unit == ToleranceUnit.Ppm ? "ppm" : "Th";
+            string unitStr = GetUnitToken(unit);
 
             if (errors == null || errors.Length == 0)
             {

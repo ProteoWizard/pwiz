@@ -50,6 +50,9 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     public static class OspreyReportWriter
     {
+        public const string EXT_PROTEIN_GROUPS = @".protein_groups.tsv";
+        public const string EXT_STATS = @".stats.tsv";
+
         /// <summary>
         /// Write both default reports next to <paramref name="config"/>'s output blib.
         /// A no-op (with a warning) when no output path is known. Called once, from the
@@ -63,28 +66,30 @@ namespace pwiz.Osprey.Tasks
             RescoredEntries rescored,
             IList<LibraryEntry> fullLibrary,
             OspreyConfig config,
-            Action<string> logInfo,
+            IOspreyLog log,
             Action<string> logWarning)
         {
             string stem = ReportStem(config);
             if (stem == null)
             {
-                logInfo?.Invoke(
-                    "Skipping reports: no output path (-o) to derive report file names from.");
+                log?.LogInfo(
+                    OspreyTasksResources.OspreyReportWriter_WriteReports_Skipping_reports__no_output_path___o__to_derive_report_file_names_from_);
                 return;
             }
 
             if (config.WriteProteinReport)
             {
-                string path = stem + @".protein_groups.tsv";
-                TryWriteReport("protein-group", path, logInfo, logWarning,
+                string path = stem + EXT_PROTEIN_GROUPS;
+                TryWriteReport(@"protein-group",
+                    OspreyTasksResources.OspreyReportWriter_WriteReports_protein_group_report, path, log, logWarning,
                     () => WriteProteinGroups(path, experimentResult, fullLibrary, config));
             }
 
             if (config.WriteSummaryReport)
             {
-                string path = stem + @".stats.tsv";
-                TryWriteReport("summary", path, logInfo, logWarning,
+                string path = stem + EXT_STATS;
+                TryWriteReport(@"summary",
+                    OspreyTasksResources.OspreyReportWriter_WriteReports_summary_report, path, log, logWarning,
                     () => WriteSummary(path, experimentResult, rescored, fullLibrary, config));
             }
         }
@@ -94,18 +99,20 @@ namespace pwiz.Osprey.Tasks
         // pipeline abort. The common case is the previous run's report still open in Excel,
         // which makes FileSaver.Commit throw IOException on the replace; Commit deliberately
         // lets that propagate so the caller can log it. FileSaver's disposal drops the temp.
-        private static void TryWriteReport(string label, string path,
-            Action<string> logInfo, Action<string> logWarning, Action write)
+        // label is the machine token on the [COUNT] line; displayName is the localized name
+        // the warning uses.
+        private static void TryWriteReport(string label, string displayName, string path,
+            IOspreyLog log, Action<string> logWarning, Action write)
         {
             try
             {
                 write();
-                logInfo?.Invoke(string.Format("[COUNT] Wrote {0} report: {1}", label, path));
+                log?.LogInfo(LogTag.COUNT, @"Wrote {0} report: {1}", label, path);
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
             {
                 logWarning?.Invoke(string.Format(
-                    "Failed to write the {0} report {1}: {2}", label, path, ex.Message));
+                    OspreyTasksResources.OspreyReportWriter_TryWriteReport_Failed_to_write_the__0___1____2_, displayName, path, ex.Message));
             }
         }
 
@@ -142,13 +149,14 @@ namespace pwiz.Osprey.Tasks
 
             // Reported for the same reason as the per-replicate FDR below (#4571). This half of
             // the report writer ran silent: it scans the whole library above and then walks every
-            // group here, and its only bracketing line is a [COUNT] that OspreyOutput.IsStatLine
-            // drops unless --perf-stats. A run with the protein report on but the summary
+            // group here, and its only bracketing line is a [COUNT] that LogTag.COUNT
+            // writes only under --perf-stats. A run with the protein report on but the summary
             // report off therefore produced no visible output for the entire report step.
             int groupIdx = 0;
             var rows = new List<string[]>(groups.Count);
             using (var progress = new ProgressReporter(
-                       string.Format(@"Building the protein-group report over {0} group(s)", groups.Count),
+                       CountText.Format(groups.Count, OspreyTasksResources.OspreyReportWriter_WriteProteinGroups_Building_the_protein_group_report_for_1_group,
+                           OspreyTasksResources.OspreyReportWriter_WriteProteinGroups_Building_the_protein_group_report_for__0__groups),
                        groups.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 foreach (var g in groups)
@@ -204,8 +212,8 @@ namespace pwiz.Osprey.Tasks
 
             WriteTsv(path, new[]
             {
-                "Protein.Group", "Protein.Names", "N.Peptides", "N.Proteotypic",
-                "PG.Q.Value", "Passes.PG.FDR", "Grouping.Peptides", "Library.Unique.Peptides"
+                @"Protein.Group", @"Protein.Names", @"N.Peptides", @"N.Proteotypic",
+                @"PG.Q.Value", @"Passes.PG.FDR", @"Grouping.Peptides", @"Library.Unique.Peptides"
             }, ordered);
         }
 
@@ -273,7 +281,9 @@ namespace pwiz.Osprey.Tasks
             // the caller's heading in front of it (#4571).
             int runIdx = 0;
             using (var progress = new ProgressReporter(
-                       string.Format(@"Per-replicate protein FDR over {0} run(s)", nFiles),
+                       nFiles == 1
+                           ? OspreyTasksResources.OspreyReportWriter_WriteSummary_Per_replicate_protein_FDR_for_1_file
+                           : string.Format(OspreyTasksResources.OspreyReportWriter_WriteSummary_Per_replicate_protein_FDR_for__0__files, nFiles),
                        nFiles, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 foreach (var kvp in rescored.StreamFiles())
@@ -305,13 +315,13 @@ namespace pwiz.Osprey.Tasks
                 if (q <= config.EffectiveProteinFdr) expProteins++;
             rows.Add(new[]
             {
-                "Experiment",
+                @"Experiment",
                 expPrec.ToString(CultureInfo.InvariantCulture),
                 expPep.ToString(CultureInfo.InvariantCulture),
                 expProteins.ToString(CultureInfo.InvariantCulture),
             });
 
-            WriteTsv(path, new[] { "Run", "Precursors", "Peptides", "Proteins" }, rows);
+            WriteTsv(path, new[] { @"Run", @"Precursors", @"Peptides", @"Proteins" }, rows);
         }
 
         // Distinct precursors (modseq + charge) and distinct peptides (modseq) among
@@ -344,7 +354,7 @@ namespace pwiz.Osprey.Tasks
                 double q = runLevel ? e.EffectiveRunQvalue(level) : e.EffectiveExperimentQvalue(level);
                 if (q > gate)
                     continue;
-                precSet.Add(e.ModifiedSequence + "|" + e.Charge.ToString(CultureInfo.InvariantCulture));
+                precSet.Add(e.ModifiedSequence + @"|" + e.Charge.ToString(CultureInfo.InvariantCulture));
                 pepSet.Add(e.ModifiedSequence);
             }
         }
@@ -371,10 +381,10 @@ namespace pwiz.Osprey.Tasks
             {
                 using (var w = new StreamWriter(saver.SafeName, false))
                 {
-                    w.NewLine = "\n";
-                    w.WriteLine(string.Join("\t", header));
+                    w.NewLine = TextUtil.LF;
+                    w.WriteLine(header.ToDsvLine(TextUtil.SEPARATOR_TSV));
                     foreach (var r in rows)
-                        w.WriteLine(string.Join("\t", r));
+                        w.WriteLine(r.ToDsvLine(TextUtil.SEPARATOR_TSV));
                 }
                 saver.Commit();
             }

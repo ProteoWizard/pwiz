@@ -95,8 +95,7 @@ namespace pwiz.Osprey.IO
                 if (double.IsNaN(mzArray[i]))
                 {
                     throw new InvalidDataException(string.Format(
-                        "NaN m/z at index {0} of spectrum_index={1} (n_peaks={2}); " +
-                        "cannot sort or fragment-match a malformed centroid array.",
+                        OspreyIOResources.SpectrumBuilder_EnsureSorted_NaN_m_z_at_index__0__of_spectrum_index__1___n_peaks__2____cannot_sort_or_fragment_match_a_,
                         i, spectrumIndex, mzArray.Length));
                 }
                 if (i > 0 && mzArray[i] < mzArray[i - 1])
@@ -178,15 +177,11 @@ namespace pwiz.Osprey.IO
 
             if (isoLower <= 0)
                 throw new InvalidDataException(string.Format(
-                    "spectrum index {0}: no valid isolation-window lower offset " +
-                    "(cvParam MS:1000828 missing or non-positive); cannot process DIA data " +
-                    "without true isolation windows.",
+                    OspreyIOResources.SpectrumBuilder_CreateMs2Spectrum_Spectrum_index__0__has_no_valid_isolation_window_lower_offset__cvParam_MS_1000828_is_,
                     spectrumIndex));
             if (isoUpper <= 0)
                 throw new InvalidDataException(string.Format(
-                    "spectrum index {0}: no valid isolation-window upper offset " +
-                    "(cvParam MS:1000829 missing or non-positive); cannot process DIA data " +
-                    "without true isolation windows.",
+                    OspreyIOResources.SpectrumBuilder_CreateMs2Spectrum_Spectrum_index__0__has_no_valid_isolation_window_upper_offset__cvParam_MS_1000829_is_,
                     spectrumIndex));
 
             return new Spectrum
