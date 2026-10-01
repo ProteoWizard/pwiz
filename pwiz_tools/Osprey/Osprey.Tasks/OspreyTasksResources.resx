@@ -931,26 +931,26 @@
   <data name="PerFileRescoreTask_ExecuteRescore_Re_scoring__0__files_in_parallel_" xml:space="preserve">
     <value>Re-scoring {0:N0} files in parallel:</value>
   </data>
-  <data name="PerFileRescoreTask_LoadMassCalibrations_Cannot_find_the_folder_of_the_calibration_file_for_input___0____Re_scoring_needs_the_" xml:space="preserve">
-    <value>Cannot find the folder of the calibration file for input '{0}'. Re-scoring needs the calibration that PerFileScoring saved for this input.</value>
+  <data name="ScoringTaskShared_LoadMassCalibrations_Cannot_find_the_folder_of_the_calibration_file_for_input___0_____1__needs_the_calibration" xml:space="preserve">
+    <value>Cannot find the folder of the calibration file for input '{0}'. {1} needs the calibration that PerFileScoring saved for this input.</value>
   </data>
-  <data name="PerFileRescoreTask_LoadMassCalibrations_Failed_to_read_the_calibration_file__0____1___The_file_exists_but_could_not_be_read__" xml:space="preserve">
+  <data name="ScoringTaskShared_LoadMassCalibrations_Failed_to_read_the_calibration_file__0____1___The_file_exists_but_could_not_be_read__" xml:space="preserve">
     <value>Failed to read the calibration file {0}: {1}. The file exists but could not be read. Check that it was written by the same version of Osprey.</value>
   </data>
-  <data name="PerFileRescoreTask_LoadMassCalibrations_The_calibration_file__0__for_input__1__was_not_found__Re_scoring_needs_the_calibration_" xml:space="preserve">
-    <value>The calibration file {0} for input {1} was not found. Re-scoring needs the calibration that PerFileScoring saved for this input. Run --task PerFileScoring for it first, or check the output folder.</value>
+  <data name="ScoringTaskShared_LoadMassCalibrations_The_calibration_file__0__for_input__1__was_not_found___2__needs_the_calibration" xml:space="preserve">
+    <value>The calibration file {0} for input {1} was not found. {2} needs the calibration that PerFileScoring saved for this input. Run --task PerFileScoring for it first, or check the output folder.</value>
   </data>
-  <data name="PerFileRescoreTask_LoadSpectraForRescore_Re_scoring_needs_the_spectra_cache___0___that_PerFileScoring_writes__but__1____2_" xml:space="preserve">
-    <value>Re-scoring needs the spectra cache '{0}' that PerFileScoring writes, but {1}. {2}</value>
+  <data name="ScoringTaskShared_LoadSpectraForRescore__0__needs_the_spectra_cache___1___that_PerFileScoring_writes__but__2____3_" xml:space="preserve">
+    <value>{0} needs the spectra cache '{1}' that PerFileScoring writes, but {2}. {3}</value>
   </data>
-  <data name="PerFileRescoreTask_LoadSpectraForRescore_Re_scoring_needs_the_spectra_cache___0___that_PerFileScoring_writes__but_it_could_not_be_" xml:space="preserve">
-    <value>Re-scoring needs the spectra cache '{0}' that PerFileScoring writes, but it could not be read: {1}</value>
+  <data name="ScoringTaskShared_LoadSpectraForRescore__0__needs_the_spectra_cache___1___that_PerFileScoring_writes__but_it_could_not_be_read" xml:space="preserve">
+    <value>{0} needs the spectra cache '{1}' that PerFileScoring writes, but it could not be read: {2}</value>
   </data>
-  <data name="PerFileRescoreTask_LoadSpectraForRescore_Run___task_PerFileScoring_for___0___again_to_rebuild_it_" xml:space="preserve">
-    <value>Run --task PerFileScoring for '{0}' again to rebuild it.</value>
+  <data name="ScoringTaskShared_LoadSpectraForRescore_Run__1__for___0___to_rebuild_it_from_its_source_data_" xml:space="preserve">
+    <value>Run {1} for '{0}' to rebuild it from its source data.</value>
   </data>
-  <data name="PerFileRescoreTask_LoadSpectraForRescore_The_cache_is_written_beside_its_source_data__so_a___task_worker_whose___output_dir_" xml:space="preserve">
-    <value>The cache is written beside its source data, so a --task worker whose --output-dir differs from the data folder must be pointed at it with --cache-dir. Pass --cache-dir &lt;folder holding {0}.spectra.bin&gt;, or run --task PerFileScoring for '{0}' again if no cache was ever written.</value>
+  <data name="ScoringTaskShared_LoadSpectraForRescore_The_cache_is_written_beside_its_source_data__so_a___task_worker_whose___output_dir_" xml:space="preserve">
+    <value>The cache is written beside its source data, so a --task worker whose --output-dir differs from the data folder must be pointed at it with --cache-dir. Pass --cache-dir &lt;folder holding {0}.spectra.bin&gt;, or run {1} for '{0}' if no cache was ever written.</value>
   </data>
   <data name="PerFileRescoreTask_LoadSpectraForRescore___Streaming__1__MS1_and__0__MS_MS_spectra_from_cache_for__2_" xml:space="preserve">
     <value>Streaming {1:N0} MS1 and {0:N0} MS/MS spectra from cache for {2}</value>
@@ -1026,6 +1026,12 @@
   </data>
   <data name="PerFileRescoreTask_WriteReconciledAndStamp___Failed_to_remove_the_incomplete_re_scored_results_file__0__after_a_failed_write___1_" xml:space="preserve">
     <value>Failed to remove the incomplete re-scored results file {0} after a failed write: {1}</value>
+  </data>
+  <data name="PerFileRescoreTask_WriteTrainingExports_The_training_export_failed_for__0____1_" xml:space="preserve">
+    <value>The training export failed for {0}: {1}</value>
+  </data>
+  <data name="PerFileRescoreTask_WriteTrainingExports_Training_export__0___1____2_" xml:space="preserve">
+    <value>Training export {0}/{1}: {2}</value>
   </data>
   <data name="PerFileRescoreTask_private___Missing_peaks_found_by_peak_detection___0____1_s_" xml:space="preserve">
     <value>Missing peaks found by peak detection: {0:N0} ({1:F1}s)</value>
@@ -1524,5 +1530,71 @@
   </data>
   <data name="PerFileScoringTask_CheckDecoysUsable_Too_few_peaks_of_the_library__3__are_b_or_y_ions_within_the_fragment_tolerance" xml:space="preserve">
     <value>Too few peaks of the library {3} are b or y ions within the fragment tolerance of {6} {7}: {0:N0} of {1:N0} generated decoys ({2:P1}, more than {4:P0}) have no fragment distinct from their target, so Osprey cannot generate usable decoys from it. Set a fragment tolerance that fits the library's m/z accuracy with {8} or {9}, or use a library that already contains decoys, with {5}.</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun_The_reconciled_scores_file___0___is_missing__The_training_export_" xml:space="preserve">
+    <value>The reconciled scores file '{0}' is missing. The training export reads the final peak boundaries from it.</value>
+  </data>
+  <data name="TrainingExportWriter_PairTargets_The_reconciled_scores_file___0___holds_two_peaks_for_precursor_candidate__1__at_" xml:space="preserve">
+    <value>The reconciled scores file '{0}' holds two peaks for precursor candidate {1} at apex RT {2}, so the training export cannot tell which one the record in '{3}' belongs to.</value>
+  </data>
+  <data name="TrainingExportWriter_PairTargets_The_reconciled_scores_file___0___names_precursor_candidate__1__as__2___3____" xml:space="preserve">
+    <value>The reconciled scores file '{0}' names precursor candidate {1} as {2} {3}+, but in the library precursor candidate {1} is {4} {5}+. The file was scored against another library, or by a build that numbered the library differently. Run the search again against this library before exporting.</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun__0____1_N0__of__2_N0__fitted_precursors_did_not_reproduce_the_scored_median_polish_cosine_" xml:space="preserve">
+    <value>{0}: {1:N0} of {2:N0} fitted precursors did not reproduce the scored median polish cosine.</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun__0____1_N0__target_precursors_at_run_q____2___3_N0__entrapment__of__4_N0__reconciled_targets" xml:space="preserve">
+    <value>{0}: {1:N0} target precursors at run q &lt;= {2} ({3:N0} entrapment) of {4:N0} reconciled targets, by the {5} run q, in {6:F1}s</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun__0___median_polish_cosine_reproduced_for__1_N0__of__2_N0__fitted_precursors" xml:space="preserve">
+    <value>{0}: median polish cosine reproduced for {1:N0} of {2:N0} fitted precursors ({3:N0} exported without a fit)</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun__0___the_source_file___1___is_not_here_or_cannot_be_read__so_the_instrument_" xml:space="preserve">
+    <value>{0}: the source file '{1}' is not here or cannot be read, so the instrument, dissociation and collision-energy footer keys are empty.</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun_first_pass" xml:space="preserve">
+    <value>first pass</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun_second_pass" xml:space="preserve">
+    <value>second pass</value>
+  </data>
+  <data name="TrainingExportWriter_PairTargets_The_intermediate_file___0___holds_two_records_for_precursor_candidate__1__at_apex_RT__2_" xml:space="preserve">
+    <value>The intermediate file '{0}' holds two records for precursor candidate {1} at apex RT {2}, so the training export cannot tell which one belongs to that peak.</value>
+  </data>
+  <data name="TrainingExportWriter_ReadRunQ_The_intermediate_file___0___is_missing_or_unreadable_" xml:space="preserve">
+    <value>The intermediate file '{0}' is missing or unreadable.</value>
+  </data>
+  <data name="TrainingExportWriter_ResolveTargets_The_library_is_empty_after_loading_" xml:space="preserve">
+    <value>The library is empty after loading.</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun__1___1_precursor_had_no_isolation_window_holding_its_apex_scan_and_was_not_exported_" xml:space="preserve">
+    <value>{1}: 1 precursor had no isolation window holding its apex scan and was not exported.</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun__1____0_N0__precursors_had_no_isolation_window_holding_their_apex_scan_and_were_not_exported_" xml:space="preserve">
+    <value>{1}: {0:N0} precursors had no isolation window holding their apex scan and were not exported.</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun__1___1_reconciled_target_has_no_library_spectrum_and_was_skipped_" xml:space="preserve">
+    <value>{1}: 1 reconciled target has no library spectrum and was skipped.</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun__1____0_N0__reconciled_targets_have_no_library_spectrum_and_were_skipped_" xml:space="preserve">
+    <value>{1}: {0:N0} reconciled targets have no library spectrum and were skipped.</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun__1___1_reconciled_target_has_no_run_q_value_at_its_final_apex_in___2___and_could_not_be_selected_" xml:space="preserve">
+    <value>{1}: 1 reconciled target has no run q-value at its final apex in '{2}' and could not be selected.</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun__1____0_N0__reconciled_targets_have_no_run_q_value_at_their_final_apex_in___2___and_could_not_be_selected_" xml:space="preserve">
+    <value>{1}: {0:N0} reconciled targets have no run q-value at their final apex in '{2}' and could not be selected.</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun__0___selected_by_the_first_pass_run_q_values__this_run_s_second_pass__if_the_analysis_computes_one__comes_from__1__" xml:space="preserve">
+    <value>{0}: selected by the first-pass run q-values; this run's second pass, if the analysis computes one, comes from {1} after the export, and its q-values can differ.</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun__0__was_written_by_Osprey__1___not_this_build___2____Add__3__with_the_build_that_ran_the_analysis_" xml:space="preserve">
+    <value>{0} was written by Osprey {1}, not this build ({2}). Add {3} with the build that ran the analysis, or run the analysis again with this build.</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun_The_training_export" xml:space="preserve">
+    <value>The training export</value>
+  </data>
+  <data name="TrainingExportWriter_ExportRun_Exporting_isolation_windows" xml:space="preserve">
+    <value>Exporting isolation windows</value>
   </data>
 </root>

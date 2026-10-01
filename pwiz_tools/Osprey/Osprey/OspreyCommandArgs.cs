@@ -234,6 +234,24 @@ namespace pwiz.Osprey
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Decoys, true,
                 ARG_DECOYS_IN_LIBRARY, ARG_DECOY_PAIRING_MANIFEST, ARG_WRITE_PIN);
 
+        // --- Training Export ---------------------------------------------------------------
+        // A PerFileRescoring product (docs/22-training-export.md; P17 in
+        // docs/00-pipeline-architecture.md). Off, nothing about the run changes; on, it adds
+        // one <stem>.training.parquet per run, and adding it to a finished directory writes
+        // only the exports and re-scores nothing.
+        public static readonly OspreyArgument ARG_TRAINING_EXPORT = new OspreyArgument(@"training-export",
+            (c, p) => c._config.TrainingExport.Enabled = true) { DescriptionArgs = () => new object[] { @"<stem>" + TrainingExportParquet.EXT, ARG_TRAINING_EXPORT_MAX_Q.ArgumentText } };
+        public static readonly OspreyArgument ARG_TRAINING_EXPORT_MAX_Q = new OspreyArgument(@"training-export-max-q",
+            () => @"<q>", (c, p) => c._config.TrainingExport.MaxQ = ParseDouble(p)) { DescriptionArgs = () => new object[] { ARG_TRAINING_EXPORT.ArgumentText, ARG_RUN_FDR.ArgumentText } };
+        public static readonly OspreyArgument ARG_TRAINING_EXPORT_CLAIMANT_Q = new OspreyArgument(@"training-export-claimant-q",
+            () => @"<q>", (c, p) => c._config.TrainingExport.ClaimantQ = ParseDouble(p)) { DescriptionArgs = () => new object[] { ARG_TRAINING_EXPORT.ArgumentText, TrainingExportConfig.DEFAULT_CLAIMANT_Q } };
+        public static readonly OspreyArgument ARG_TRAINING_EXPORT_XICS = new OspreyArgument(@"training-export-xics",
+            (c, p) => c._config.TrainingExport.WriteXics = true) { DescriptionArgs = () => new object[] { ARG_TRAINING_EXPORT.ArgumentText } };
+
+        private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_TRAINING_EXPORT =
+            new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_Training_Export, true,
+                ARG_TRAINING_EXPORT, ARG_TRAINING_EXPORT_MAX_Q, ARG_TRAINING_EXPORT_CLAIMANT_Q, ARG_TRAINING_EXPORT_XICS);
+
         // --- Distributed / HPC ------------------------------------------------------------
         // --task is resolved + validated by Program, which reads it with FindValue before the
         // full parse; the tokenizer here only consumes its value (and rejects a missing one).
@@ -241,7 +259,7 @@ namespace pwiz.Osprey
         // The value list IS the task list, in its --help order, so the help and the
         // resolution cannot disagree; six trivial constructions, once, at type init.
         public static readonly OspreyArgument ARG_TASK = new OspreyArgument(OspreyArgNames.TASK,
-            OspreyTasks.Create().All.Select(t => t.Name).ToArray(), (c, p) => true) { DescriptionArgs = () => new object[] { SpectraCacheTask.TASK_NAME, SpectraCache.EXT, ModelDiagnosticsTask.TASK_NAME, ARG_MODEL_DIAGNOSTICS.ArgumentText } };
+            OspreyTasks.Create().All.Select(t => t.Name).ToArray(), (c, p) => true) { DescriptionArgs = () => new object[] { SpectraCacheTask.TASK_NAME, SpectraCache.EXT, ModelDiagnosticsTask.TASK_NAME, ARG_MODEL_DIAGNOSTICS.ArgumentText, TrainingExportTask.TASK_NAME, ARG_TRAINING_EXPORT.ArgumentText } };
         // --input-scores is GONE. It named an input KIND - "you handed me parquets" - which is
         // how the Rust pipeline said "Stage 1-4 is already done"; the C# port says that with
         // --task plus the per-run validity sidecars, and two seams answering one question is
@@ -349,6 +367,7 @@ namespace pwiz.Osprey
                     GROUP_SCORING,
                     GROUP_FDR,
                     GROUP_DECOYS,
+                    GROUP_TRAINING_EXPORT,
                     GROUP_PERFORMANCE,
                     GROUP_HPC,
                     GROUP_LOGGING,
@@ -958,7 +977,7 @@ namespace pwiz.Osprey
             sb.AppendLine();
             sb.AppendLine(@"# split 2 - one process per file (the scores parquet and its intermediate files together)");
             sb.AppendLine(@"Osprey --task PerFileRescoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
-            sb.AppendLine(@"#   writes: &lt;stem&gt;.scores-reconciled.parquet");
+            sb.AppendLine(@"#   writes: &lt;stem&gt;.scores-reconciled.parquet, and &lt;stem&gt;.training.parquet with --training-export");
             sb.AppendLine();
             sb.AppendLine(@"# join 2 - one process over ALL runs, reading their reconciled parquets (writes out.blib)");
             sb.AppendLine(@"Osprey --task SecondPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
