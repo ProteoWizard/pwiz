@@ -1136,7 +1136,6 @@ namespace pwiz.Osprey.FDR
             var swFill = new Stopwatch();
             var swRunQ = new Stopwatch();
             var swAssign = new Stopwatch();
-            var swSink = new Stopwatch();
             int gEmit = 0;
             using (var emitProgress = new ProgressReporter(string.Format(OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Assigning_q_values_to__0__precursor_candidate_peaks, n), n))
             for (int f = 0; f < nFiles; f++)
@@ -1219,27 +1218,24 @@ namespace pwiz.Osprey.FDR
                     double ea = expAggByEntryId.TryGetValue(fEntryIds[r], out double eav)
                         ? eav : fScores[r];
 
-                    swSink.Start();
                     sink.Accept(f, r, fEntryIds[r], fLabels[r], fCharges[r], pept, fScores[r], ea,
                         buffer.ApexRts[r],
                         new FdrQValues(rp, rpe, ep, epe, pep));
-                    swSink.Stop();
                     emitProgress.Report(gEmit + r + 1);
                 }
                 swAssign.Stop();
                 gEmit += count;
             }
-            // The sink timer runs per ROW, so it costs two QueryPerformanceCounter reads per row
-            // (~1.5s over 33M rows, under 0.5% of the pass). That is worth paying: it is the one
-            // split that matters, since q-assign otherwise lumps the five q-value lookups in
-            // with the record write and those call for completely different fixes. The lookup
-            // cost is q-assign MINUS sink. The per-row progress Report stays inside q-assign;
-            // it is an uncontended lock plus a Stopwatch read, ~1.5s over the pass.
+            // Every timer here starts and stops once per FILE, so the instrumentation is free at
+            // any cohort size. A per-ROW timer is not: two QueryPerformanceCounter reads per row
+            // is ~1.5 s over 33M rows, and paying 2% of a hot loop permanently to watch it is
+            // self-defeating next to the perf gate. The finer splits inside q-assign (the record
+            // write against the peptide-keyed lookups) were measured with per-row timers once,
+            // deliberately not kept; re-measure with a throwaway build when they matter.
             log.LogInfo(LogTag.PATH,
-                @"{0} pass 2 cost over {1} rows: parquet walk {2:F1}s, sidecar load {3:F1}s, array fill {4:F1}s, run-q recompute {5:F1}s, q-assign {6:F1}s (of which sink {7:F1}s)",
+                @"{0} pass 2 cost over {1} rows: parquet walk {2:F1}s, sidecar load {3:F1}s, array fill {4:F1}s, run-q recompute {5:F1}s, q-assign {6:F1}s",
                 passLabel, n, swWalk.Elapsed.TotalSeconds, swSidecar.Elapsed.TotalSeconds,
-                swFill.Elapsed.TotalSeconds, swRunQ.Elapsed.TotalSeconds, swAssign.Elapsed.TotalSeconds,
-                swSink.Elapsed.TotalSeconds);
+                swFill.Elapsed.TotalSeconds, swRunQ.Elapsed.TotalSeconds, swAssign.Elapsed.TotalSeconds);
             sink.Finish(log);
             return false;
         }
