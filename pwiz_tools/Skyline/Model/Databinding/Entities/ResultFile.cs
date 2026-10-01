@@ -71,7 +71,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             return ChromFileInfo.FilePath.ToString();
         }
-        [UtcTimestamp]
         public DateTime? ModifiedTime { get { return ChromFileInfo.FileWriteTime; } }
         public DateTime? AcquiredTime { get { return ChromFileInfo.RunStartTime; } }
 
