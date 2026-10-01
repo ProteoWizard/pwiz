@@ -1594,4 +1594,7 @@
   <data name="TrainingExportWriter_ExportRun_The_training_export" xml:space="preserve">
     <value>The training export</value>
   </data>
+  <data name="TrainingExportWriter_ExportRun_Exporting_isolation_windows" xml:space="preserve">
+    <value>Exporting isolation windows</value>
+  </data>
 </root>
