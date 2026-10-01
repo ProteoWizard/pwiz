@@ -68,16 +68,10 @@ namespace pwiz.Skyline.Controls.Startup
         {
             InitializeComponent();
 
-            // The designer geometry and the caller-supplied image sizes are 96-DPI pixel
-            // values; scale everything to the display DPI so the tiles grow with the font
-            // instead of clipping the AutoSize caption (issue #4599). The icon PictureBox
-            // uses StretchImage, so the tutorial bitmaps scale with it.
-            Size = DpiUtil.ScaleSize(this, Size);
-            iconPictureBox.Location = labelDescription.Location =
-                new Point(DpiUtil.Scale(this, 10), DpiUtil.Scale(this, 10));
-            iconPictureBox.Size = labelDescription.Size = DpiUtil.ScaleSize(this, iconPictureBox.Size);
-            labelCaption.Location = new Point(DpiUtil.Scale(this, 5), DpiUtil.Scale(this, 155));
-
+            // AutoScaleMode.Font has already scaled the designer geometry to the display DPI
+            // (on .NET the control scales itself in InitializeComponent); only the caller-
+            // supplied image sizes are still 96-DPI pixel values (issue #4599). The icon
+            // PictureBox uses StretchImage, so the tutorial bitmaps scale with it.
             if (imageWidth.HasValue)
             {
                 int deltaWidth = DpiUtil.Scale(this, imageWidth.Value) - iconPictureBox.Width;
