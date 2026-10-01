@@ -22,11 +22,14 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
@@ -142,6 +145,11 @@ namespace pwiz.Osprey.Tasks
         // See RescoreOneFileStreamed for why that trade is free.
         private readonly object _survivorLoadLock = new object();
 
+        // Training exports that failed this run, by input: an export that failed while its run
+        // re-scored is reported with the rest by WriteTrainingExports rather than retried there.
+        private readonly ConcurrentDictionary<string, string> _trainingExportErrors =
+            new ConcurrentDictionary<string, string>(StringComparer.Ordinal);
+
         /// <summary>
         /// This task's name, as a constant so the CLI selector, the validity stamp another
         /// task looks for, and the tests all spell it from here rather than duplicating it (#4486).
@@ -222,6 +230,17 @@ namespace pwiz.Osprey.Tasks
             foreach (var input in ctx.Config.InputFiles)
                 yield return ParquetScoreCache.GetReconciledScoresPath(input);
 
+            // The training export (--training-export) is this task's product: it reads the
+            // spectra, reconciled boundaries and run q-values this task holds or has just
+            // written, so it is declared here rather than as a stage of its own (P17). Added to
+            // a finished analysis, it is then the only output outstanding, which is the
+            // export-only arm at the top of Run.
+            if (ExportsTraining(ctx.Config))
+            {
+                foreach (var input in ctx.Config.InputFiles)
+                    yield return TrainingExportParquet.PathFor(input);
+            }
+
             // The per-run 2nd-pass FDR sidecar is THIS task's output now (#4486): the per-file
             // half of the second pass runs in the rescore worker, so the file is produced here
             // and merely READ by SecondPassFDR. Declaring it matters beyond provenance -
@@ -279,7 +298,201 @@ namespace pwiz.Osprey.Tasks
                 + LibraryFragmentRelease.ValidityKeySuffix(ctx);
         }
 
+        /// <summary>
+        /// A training export's key: this task's key, the export settings, and the identities of
+        /// the run's own files the export reads (<see cref="TrainingExportWriter.RunInputIdentities"/>).
+        /// Changing an export setting or rewriting one run's inputs therefore redoes those
+        /// exports and never re-scores; every other output keys on the task key alone, so
+        /// adding the flag leaves them valid.
+        /// </summary>
+        public override string OutputValidityKey(PipelineContext ctx, string taskKey, string output)
+        {
+            string input = TrainingExportInputFor(ctx.Config, output);
+            return input == null
+                ? taskKey
+                : taskKey + TrainingExportKeyTerms(ctx.Config) + TrainingExportWriter.RunInputIdentities(input);
+        }
+
+        /// <summary>
+        /// A training export's stamp names the four artifacts of its run it read
+        /// (<see cref="TrainingExportWriter.RunInputs"/>), not every run's first-pass files.
+        /// </summary>
+        public override IEnumerable<string> OutputInputs(PipelineContext ctx, IReadOnlyList<string> taskInputs, string output)
+        {
+            string input = TrainingExportInputFor(ctx.Config, output);
+            return input == null ? taskInputs : TrainingExportWriter.RunInputs(input);
+        }
+
         public override bool Run(PipelineContext ctx)
+        {
+            // The export added to a finished analysis: nothing else of this task is outstanding,
+            // so write the exports from each run's own artifacts and re-score nothing - P16's
+            // pay-later path, the counterpart of FirstPassFdrTask.FoldDiagnosticsOnly. Taken
+            // before anything below demands FirstPassFDR's buffer, which would load it.
+            if (OnlyTrainingExportsOutstanding(ctx))
+            {
+                // A SecondPassFDR that still has to run loads the library anyway, so the
+                // exports take that one load rather than a private second one.
+                bool secondPassWillRun = SecondPassFdrWillRun(ctx);
+                if (!WriteTrainingExports(ctx, secondPassWillRun))
+                    return false;
+                // The driver marks this task done after Run, so a SecondPassFDR that still has
+                // to run would find RescoredEntries unpublished: publish it the way a skipped
+                // task does.
+                return !secondPassWillRun || Rehydrate(ctx);
+            }
+            return RunRescore(ctx) && WriteTrainingExports(ctx, false);
+        }
+
+        /// <summary>
+        /// Writes each run's training export that is not current, from the run's own artifacts,
+        /// stamping each as it lands. A run whose export was written while it re-scored is
+        /// current and skipped; every other route - a run resumed as already re-scored, a run
+        /// with no re-scoring work, the export-only arm - lands here, so no route leaves an
+        /// export missing or lets the driver stamp a stale one. A failed run is reported and
+        /// the rest still export; the task then fails, which stops the analysis before
+        /// SecondPassFDR writes the blib, and a re-run retries only the failed exports.
+        /// </summary>
+        private bool WriteTrainingExports(PipelineContext ctx, bool demandPipelineLibrary)
+        {
+            var config = ctx.Config;
+            if (!ExportsTraining(config) || config.InputFiles == null)
+                return true;
+            string key = ValidityKey(ctx);
+            IReadOnlyDictionary<uint, LibraryEntry> library = null;
+            int nFiles = config.InputFiles.Count;
+            for (int i = 0; i < nFiles; i++)
+            {
+                string input = config.InputFiles[i];
+                string output = TrainingExportParquet.PathFor(input);
+                string runKey = OutputValidityKey(ctx, key, output);
+                if (_trainingExportErrors.ContainsKey(input) || PerFileResumeDriver.IsCurrent(output, Name, runKey))
+                    continue;
+                library = library ?? TrainingExportWriter.ResolveTargets(ctx, demandPipelineLibrary);
+                if (library == null)
+                    return false;
+                ctx.LogInfo(string.Format(OspreyTasksResources.PerFileRescoreTask_WriteTrainingExports_Training_export__0___1____2_,
+                    i + 1, nFiles, Path.GetFileNameWithoutExtension(input)));
+                WriteTrainingExport(input, output, runKey, library, ctx, config.NThreads, null, null);
+            }
+            if (_trainingExportErrors.IsEmpty)
+                return true;
+            foreach (var failure in _trainingExportErrors.OrderBy(f => f.Key, StringComparer.Ordinal))
+            {
+                ctx.LogError(string.Format(OspreyTasksResources.PerFileRescoreTask_WriteTrainingExports_The_training_export_failed_for__0____1_,
+                    failure.Key, failure.Value));
+            }
+            ctx.ExitCode = 1;
+            return false;
+        }
+
+        /// <summary>
+        /// One run's training export, stale stamp cleared first and the new one written as it
+        /// lands, so a kill loses only the run in flight; a failure is recorded, not thrown,
+        /// since this can run inside the per-file loop.
+        ///
+        /// <para>A failure whose message is written for the user (a damaged or mismatched
+        /// file) is recorded as that message, and anything else as a defect, type and stack
+        /// included, so it can be fixed - the line Program.DescribeFailure draws. An
+        /// out-of-memory is never one run's failure, even wrapped by the export's window loop:
+        /// it propagates, as every other catch of a pipeline artifact lets it (#4615).</para>
+        /// </summary>
+        private void WriteTrainingExport(string input, string output, string runKey,
+            IReadOnlyDictionary<uint, LibraryEntry> library, PipelineContext ctx, int maxThreads,
+            SpectraWindowIndex spectra, MzCalibrationResult ms2Cal)
+        {
+            PerFileResumeDriver.ClearStale(output, Name);
+            try
+            {
+                TrainingExportWriter.ExportRun(input, output, library, ctx, maxThreads, spectra, ms2Cal);
+            }
+            catch (Exception ex) when (!IsOutOfMemory(ex))
+            {
+                var reported = CommonExceptionUtil.UnwrapUserException(ex);
+                _trainingExportErrors[input] = !CommonExceptionUtil.IsProgrammingDefect(reported) && !string.IsNullOrEmpty(reported.Message)
+                    ? reported.Message
+                    : ex.ToString();
+                return;
+            }
+            PerFileResumeDriver.Stamp(output, Name, OspreyVersion.Current, runKey, TrainingExportWriter.RunInputs(input), ctx.LogWarning);
+        }
+
+        /// <summary>
+        /// Whether the only outputs of this task not current are training exports: the flag
+        /// added to an analysis whose re-scoring is done. The counterpart of FirstPassFdrTask's
+        /// OnlyDiagnosticsProductOutstanding - every other declared output must be current
+        /// against its own key, so a partly re-scored analysis still takes the full path.
+        /// </summary>
+        private bool OnlyTrainingExportsOutstanding(PipelineContext ctx)
+        {
+            if (!ExportsTraining(ctx.Config))
+                return false;
+            string key = ValidityKey(ctx);
+            bool anyExportOutstanding = false;
+            foreach (string output in Outputs(ctx))
+            {
+                bool current = PerFileResumeDriver.IsCurrent(output, Name, OutputValidityKey(ctx, key, output));
+                if (TrainingExportInputFor(ctx.Config, output) != null)
+                    anyExportOutstanding |= !current;
+                else if (!current)
+                    return false;
+            }
+            return anyExportOutstanding;
+        }
+
+        /// <summary>Whether SecondPassFDR is in this run and will run rather than rehydrate.</summary>
+        private static bool SecondPassFdrWillRun(PipelineContext ctx)
+        {
+            var secondPass = ctx.TaskOf<SecondPassFdrTask>();
+            return secondPass != null && ScoringTaskShared.Includes<SecondPassFdrTask>(ctx.Config) &&
+                   !ctx.CanRehydrate(secondPass);
+        }
+
+        /// <summary>An out-of-memory, alone or among what a parallel loop threw.</summary>
+        private static bool IsOutOfMemory(Exception ex)
+        {
+            return ex is OutOfMemoryException ||
+                   ex is AggregateException aggregate && aggregate.Flatten().InnerExceptions.Any(e => e is OutOfMemoryException);
+        }
+
+        /// <summary>Asked for, and never under a diagnostics-only render, which writes nothing but its report.</summary>
+        private static bool ExportsTraining(OspreyConfig config)
+        {
+            return config.TrainingExport.Enabled && !config.DiagnosticsOnly;
+        }
+
+        /// <summary>The input whose training export <paramref name="output"/> is, or null.</summary>
+        private static string TrainingExportInputFor(OspreyConfig config, string output)
+        {
+            // The extension first, so the task's other outputs - three of every four under
+            // protein-compact - never pay the scan of every input.
+            if (!ExportsTraining(config) || config.InputFiles == null ||
+                !output.EndsWith(TrainingExportParquet.EXT, StringComparison.Ordinal))
+            {
+                return null;
+            }
+            foreach (string input in config.InputFiles)
+            {
+                if (string.Equals(TrainingExportParquet.PathFor(input), output, StringComparison.Ordinal))
+                    return input;
+            }
+            return null;
+        }
+
+        /// <summary>The export settings a training export keys on.</summary>
+        private static string TrainingExportKeyTerms(OspreyConfig config)
+        {
+            var settings = config.TrainingExport;
+            return string.Format(CultureInfo.InvariantCulture, @";trainexport={0};maxq={1:R};claimq={2:R};xics={3}",
+                TrainingExportParquet.FORMAT_VERSION, settings.EffectiveMaxQ(config.RunFdr),
+                settings.EffectiveClaimantQ, settings.WriteXics ? 1 : 0);
+        }
+
+        /// <summary>
+        /// Stage 6: re-score each run against the consensus and reconciliation boundaries and
+        /// write its reconciled parquet (and, under protein-compact, its per-run second pass).
+        /// </summary>
+        private bool RunRescore(PipelineContext ctx)
         {
             // Compute path (Stage 6 rescore): re-score each file's entries
             // against the consensus + reconciliation boundaries and write the
@@ -1397,7 +1610,11 @@ namespace pwiz.Osprey.Tasks
             // demand during the re-score. Stage 6 REQUIRES that cache; there is no mzML
             // fallback -- a rescore without the cache is a deployment error, not a reason
             // to re-read the 6 GB mzML (LoadSpectraForRescore throws).
-            SpectraWindowIndex spectraIndex = LoadSpectraForRescore(inputFile, fileName, ctx);
+            SpectraWindowIndex spectraIndex = ScoringTaskShared.LoadSpectraForRescore(inputFile, fileName,
+                OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores_Re_scoring, true);
+            ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(
+                OspreyTasksResources.PerFileRescoreTask_LoadSpectraForRescore___Streaming__1__MS1_and__0__MS_MS_spectra_from_cache_for__2_,
+                spectraIndex.Ms2Count, spectraIndex.Ms1Spectra.Count, fileName));
             var ms1Spectra = spectraIndex.Ms1Spectra.ToList();
 
             // Load-boundary memory probe. With streaming this measures the small index +
@@ -1416,7 +1633,7 @@ namespace pwiz.Osprey.Tasks
             // same MS2/MS1 mass calibrations the original Stage 1-4 run
             // used. The file is written by the original ProcessFile call
             // and read here -- same disk-roundtrip path the worker uses.
-            LoadMassCalibrations(inputFile,
+            ScoringTaskShared.LoadMassCalibrations(inputFile, OspreyTasksResources.PerFileScoringTask_LoadJoinOnlyScores_Re_scoring,
                 out MzCalibrationResult ms2Cal,
                 out MzCalibrationResult ms1Cal,
                 out double? rtMadFromCalJson);
@@ -1612,6 +1829,19 @@ namespace pwiz.Osprey.Tasks
             if (wroteReconciled)
                 ReleaseRescoredPayload(fdrEntries);
 
+            // The training export, while this run's spectra index and calibration are in hand,
+            // and after the payload above is released: the export reads its rows back from the
+            // reconciled parquet, so nothing it uses is released, and holding the rescore's
+            // arrays through it only raised the per-file peak. Every run this does not reach -
+            // resumed, with no re-scoring work, or failed here - WriteTrainingExports writes
+            // from disk; the file is the same either way.
+            if (wroteReconciled && ExportsTraining(inputs.Config))
+            {
+                string exportPath = TrainingExportParquet.PathFor(inputFile);
+                WriteTrainingExport(inputFile, exportPath, OutputValidityKey(ctx, inputs.TaskValidityKey, exportPath),
+                    inputs.LibraryById, ctx, fileConfig.NThreads, spectraIndex, ms2Cal);
+            }
+
             // Deterministically drop this file's transients before the next file loads its
             // own: the streaming index + MS1 and the write-back's full-parquet reload. At
             // 100s of files .NET's Server GC otherwise defers collection until it nears the
@@ -1786,11 +2016,10 @@ namespace pwiz.Osprey.Tasks
                 fdrEntries.TrimExcess();
                 return true;
             }
-            // About to (re-)rescore this file: clear any stale sidecar
-            // so a mid-Run crash leaves no false-positive pointing at
-            // the partially-written reconciled parquet.
-            if (hasParquetPath)
-                PerFileResumeDriver.ClearStale(reconciledPath, Name);
+            // The stale stamp is cleared where the reconciled parquet is rewritten
+            // (WriteReconciledAndStamp), not here: a file with no Stage 6 work keeps a current
+            // parquet as it is (WriteUnchangedReconciled), and clearing its stamp here would
+            // force a rewrite that changes nothing but its mtime.
             return false;
         }
 
@@ -1905,6 +2134,9 @@ namespace pwiz.Osprey.Tasks
             }
 
             string reconciledOutPath = ParquetScoreCache.ReconciledPathFromScoresPath(parquetPath);
+            // Clear any stale stamp before the write starts, so a mid-write crash leaves no
+            // false-positive pointing at a partially-written reconciled parquet.
+            PerFileResumeDriver.ClearStale(reconciledOutPath, Name);
             bool wrote = ReconciledParquetWriter.Write(parquetPath, reconciledOutPath, fdrEntries, fileName,
                 inputs.LibraryById, config, inputs.JoinFileStems, ctx.LogInfo, ctx.LogWarning);
 
@@ -1963,6 +2195,17 @@ namespace pwiz.Osprey.Tasks
         {
             if (inputs.FileNameToIdx == null ||
                 !inputs.FileNameToIdx.TryGetValue(fileName, out int inputIdx))
+            {
+                return;
+            }
+            // A current copy is left as it is. This file's resume arm can still decline it -
+            // its 2nd-pass sidecar is outstanding, which in a run with no Stage 6 work at all
+            // stays true on every invocation (#4729) - and rewriting an identical copy moves
+            // only its mtime, which is part of the identity a training export of this run is
+            // keyed on, so the export was rewritten whenever the re-run landed in a later second.
+            if (inputs.ParquetPaths.TryGetValue(fileName, out string parquetPath) &&
+                PerFileResumeDriver.IsCurrent(ParquetScoreCache.ReconciledPathFromScoresPath(parquetPath),
+                    Name, inputs.TaskValidityKey))
             {
                 return;
             }
@@ -3455,157 +3698,6 @@ namespace pwiz.Osprey.Tasks
             fdrEntries.AddRange(gapFillAppended);
 
             return (nGapCwt, nGapForced);
-        }
-
-        /// <summary>
-        /// Build a streaming <see cref="SpectraWindowIndex"/> over the <c>.spectra.bin</c>
-        /// cache the original Stage 1-4 run wrote, so Stage-6 rescore loads each isolation
-        /// window's MS2 on demand instead of materializing the whole ~6 GB resident
-        /// <c>List&lt;Spectrum&gt;</c>. MS1 + the first-cycle isolation windows come from the
-        /// same index. There is NO mzML fallback: Stage 6 always runs against a file the
-        /// upstream stages already cached, so an absent/invalid cache is a deployment error
-        /// (the mzML may not even be shipped to the rescore worker), and re-reading the 6 GB
-        /// mzML would defeat the streaming this method exists to enable. Throws
-        /// <see cref="InvalidDataException"/> when the cache cannot be indexed.
-        /// </summary>
-        private SpectraWindowIndex LoadSpectraForRescore(string inputFile, string fileName,
-            PipelineContext ctx)
-        {
-            string cachePath = SpectraCache.GetCachePath(inputFile);
-            SpectraWindowIndex index;
-            var reason = SpectraCacheRejection.None;
-            try
-            {
-                // Ask for the REASON, not just null. The six rejection rules have different
-                // remedies, and a message that lists them all sends the reader to the wrong one:
-                // "re-run PerFileScoring" is right for a stale cache and wrong for an absent
-                // one, where the cache usually exists and is valid but sits beside the raw data
-                // rather than in this worker's directory.
-                index = SpectraWindowIndex.BuildFromCache(cachePath, inputFile, out reason);
-            }
-            catch (Exception ex)
-            {
-                throw new SpectraCacheException(string.Format(
-                    OspreyTasksResources.PerFileRescoreTask_LoadSpectraForRescore_Re_scoring_needs_the_spectra_cache___0___that_PerFileScoring_writes__but_it_could_not_be_, cachePath, ex.Message,
-                    PerFileScoringTask.TASK_NAME),
-                    SpectraCacheRejection.None, cachePath, ex);
-            }
-            if (index == null)
-            {
-                // Absence is the one refusal that is usually a LOCATION problem rather than a
-                // damaged cache, so it names the flag that fixes it. The others are about the
-                // file that is there, and re-running the scoring stage is what rebuilds it.
-                string remedy = reason == SpectraCacheRejection.Absent
-                    ? string.Format(
-                        OspreyTasksResources.PerFileRescoreTask_LoadSpectraForRescore_The_cache_is_written_beside_its_source_data__so_a___task_worker_whose___output_dir_,
-                        fileName, OspreyArgNames.Text(OspreyArgNames.TASK), OspreyArgNames.Text(OspreyArgNames.OUTPUT_DIR),
-                        OspreyArgNames.Text(OspreyArgNames.CACHE_DIR), SpectraCache.EXT, OspreyArgNames.TaskText(PerFileScoringTask.TASK_NAME))
-                    : string.Format(
-                        OspreyTasksResources.PerFileRescoreTask_LoadSpectraForRescore_Run___task_PerFileScoring_for___0___again_to_rebuild_it_, fileName,
-                        OspreyArgNames.TaskText(PerFileScoringTask.TASK_NAME));
-                throw new SpectraCacheException(string.Format(
-                    OspreyTasksResources.PerFileRescoreTask_LoadSpectraForRescore_Re_scoring_needs_the_spectra_cache___0___that_PerFileScoring_writes__but__1____2_,
-                    cachePath, SpectraCacheException.Describe(reason), remedy, PerFileScoringTask.TASK_NAME),
-                    reason, cachePath);
-            }
-
-            ctx.LogInfo(TextUtil.GetIndentation(1) + string.Format(
-                OspreyTasksResources.PerFileRescoreTask_LoadSpectraForRescore___Streaming__1__MS1_and__0__MS_MS_spectra_from_cache_for__2_,
-                index.Ms2Count, index.Ms1Spectra.Count, fileName));
-            return index;
-        }
-
-        /// <summary>
-        /// Load MS2 + MS1 mass calibrations and the original Stage-4 RT
-        /// calibration MAD from the sibling .calibration.json that
-        /// Stage 2 wrote. Throws <see cref="InvalidDataException"/> if the
-        /// calibration sidecar is missing or unreadable -- Stage 6
-        /// requires the Stage 1-4 calibration to rescore, and silently
-        /// falling back to uncalibrated would mask a real configuration
-        /// error (the worker's output would diverge from the
-        /// straight-through pipeline's output). Mirrors the hard-error
-        /// behavior in Rust <c>run_rescore</c> at
-        /// <c>osprey/crates/osprey/src/rescore.rs</c>. Individual calibration
-        /// sections (Ms1Calibration / Ms2Calibration / RtMad) may still
-        /// be absent within the file; those leave the corresponding
-        /// out-param at its uncalibrated / null default.
-        /// </summary>
-        private void LoadMassCalibrations(string inputFile,
-            out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal,
-            out double? rtMadFromCalJson)
-        {
-            ms2Cal = MzCalibrationResult.Uncalibrated();
-            ms1Cal = MzCalibrationResult.Uncalibrated();
-            rtMadFromCalJson = null;
-
-            // Stage 1-4 wrote the calibration sidecar to the configured output
-            // directory (ArtifactPaths), which for a straight-through --output-dir
-            // run is NOT the (possibly read-only) input mzML's directory. Resolve
-            // it the same way the writer did; fall back to the input's own dir
-            // (via GetFullPath so a bare-filename input still yields an absolute
-            // dir) when no output dir is configured.
-            string parent = !string.IsNullOrEmpty(ArtifactPaths.OutputDir)
-                ? ArtifactPaths.OutputDir
-                : Path.GetDirectoryName(Path.GetFullPath(inputFile));
-            if (string.IsNullOrEmpty(parent))
-            {
-                throw new InvalidDataException(string.Format(
-                    OspreyTasksResources.PerFileRescoreTask_LoadMassCalibrations_Cannot_find_the_folder_of_the_calibration_file_for_input___0____Re_scoring_needs_the_, inputFile,
-                    PerFileScoringTask.TASK_NAME));
-            }
-            string calPath = CalibrationIO.CalibrationPathForInput(inputFile, parent);
-            if (!File.Exists(calPath))
-            {
-                throw new InvalidDataException(string.Format(
-                    OspreyTasksResources.PerFileRescoreTask_LoadMassCalibrations_The_calibration_file__0__for_input__1__was_not_found__Re_scoring_needs_the_calibration_, calPath, inputFile,
-                    PerFileScoringTask.TASK_NAME, OspreyArgNames.TaskText(PerFileScoringTask.TASK_NAME)));
-            }
-
-            CalibrationParams calParams;
-            try
-            {
-                calParams = CalibrationIO.LoadCalibration(calPath);
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidDataException(string.Format(
-                    OspreyTasksResources.PerFileRescoreTask_LoadMassCalibrations_Failed_to_read_the_calibration_file__0____1___The_file_exists_but_could_not_be_read__, calPath, ex.Message), ex);
-            }
-
-            if (calParams.Ms2Calibration != null && calParams.Ms2Calibration.Calibrated)
-            {
-                ms2Cal = new MzCalibrationResult
-                {
-                    Mean = calParams.Ms2Calibration.Mean,
-                    Median = calParams.Ms2Calibration.Median,
-                    SD = calParams.Ms2Calibration.SD,
-                    Count = calParams.Ms2Calibration.Count,
-                    Unit = calParams.Ms2Calibration.Unit,
-                    AdjustedTolerance = calParams.Ms2Calibration.AdjustedTolerance,
-                    Calibrated = true
-                };
-            }
-            if (calParams.Ms1Calibration != null && calParams.Ms1Calibration.Calibrated)
-            {
-                ms1Cal = new MzCalibrationResult
-                {
-                    Mean = calParams.Ms1Calibration.Mean,
-                    Median = calParams.Ms1Calibration.Median,
-                    SD = calParams.Ms1Calibration.SD,
-                    Count = calParams.Ms1Calibration.Count,
-                    Unit = calParams.Ms1Calibration.Unit,
-                    AdjustedTolerance = calParams.Ms1Calibration.AdjustedTolerance,
-                    Calibrated = true
-                };
-            }
-            // The MAD is what Rust's run_search uses for rt_tolerance
-            // derivation; emit it from here (not from the refined cal's
-            // abs_residuals) so the C# rescore matches Rust's window
-            // size byte-for-byte.
-            if (calParams.RtCalibration != null && calParams.RtCalibration.MAD.HasValue)
-            {
-                rtMadFromCalJson = calParams.RtCalibration.MAD.Value;
-            }
         }
     }
 }

@@ -220,6 +220,23 @@ namespace pwiz.Osprey.Tasks
             ctx.Config.LibrarySource?.Format == LibraryFormat.Blib ? BLIB_READER_TERM : string.Empty);
 
         /// <summary>
+        /// The key one declared output is stamped and checked with: <paramref name="taskKey"/>
+        /// (this task's <see cref="ValidityKey"/>, computed once by the caller) for every task
+        /// whose outputs all depend on the same inputs. A fan-out task whose output for one run
+        /// also depends on that run's own artifacts appends their identities here, so a
+        /// rewritten input invalidates that run's output alone.
+        /// </summary>
+        public virtual string OutputValidityKey(PipelineContext ctx, string taskKey, string output) => taskKey;
+
+        /// <summary>
+        /// The inputs one declared output's stamp records: <paramref name="taskInputs"/> (this
+        /// task's <see cref="Inputs"/>, listed once by the caller) for every output built from
+        /// all of them. An output whose <see cref="OutputValidityKey"/> follows its own run's
+        /// artifacts names those instead, so its stamp says what it was built from.
+        /// </summary>
+        public virtual IEnumerable<string> OutputInputs(PipelineContext ctx, IReadOnlyList<string> taskInputs, string output) => taskInputs;
+
+        /// <summary>
         /// A <see cref="ValidateSelection"/> error naming this task and what it is missing,
         /// in the one form every task's message takes.
         /// </summary>

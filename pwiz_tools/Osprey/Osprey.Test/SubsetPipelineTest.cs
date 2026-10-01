@@ -59,7 +59,7 @@ namespace pwiz.Osprey.Test
     /// the [TASK] / [PATH] / [COUNT] lines --perf-stats writes.</para>
     /// </summary>
     [TestClass]
-    public class SubsetPipelineTest
+    public partial class SubsetPipelineTest
     {
         private const string DATA_ZIP = @"StellarSubset.zip";
         private const string ASTRAL_ZIP = @"AstralSubset.zip";

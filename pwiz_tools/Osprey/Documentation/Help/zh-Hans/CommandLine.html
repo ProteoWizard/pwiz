@@ -59,6 +59,14 @@ a { color: #1565c0; }
 <tr><td><nobr>--decoy-pairing-manifest</nobr>&nbsp;&lt;manifest.tsv&gt;</td><td>FDRBench 5 列配对清单 (TSV)，与“<nobr>--decoys-in-library</nobr>”一起使用</td></tr>
 <tr><td><nobr>--write-pin</nobr></td><td>为外部工具写入 PIN 文件</td></tr>
 </table>
+<div class="RowType">Training Export</div>
+<table>
+<tr><th>参数</th><th>描述</th></tr>
+<tr><td><nobr>--training-export</nobr></td><td>Write &lt;stem&gt;.training.parquet per run: every target precursor at run q &lt;= <nobr>--training-export-max-q</nobr> with the observed intensities of its full b/y ladder and <nobr>per-ion</nobr> interference evidence (for training CarafeSharp). Adding it to a finished run writes only the exports and <nobr>re-scores</nobr> nothing.</td></tr>
+<tr><td><nobr>--training-export-max-q</nobr>&nbsp;&lt;q&gt;</td><td>With <nobr>--training-export</nobr>: the run precursor <nobr>q-value</nobr> a target must reach to be exported (default: <nobr>--run-fdr</nobr>)</td></tr>
+<tr><td><nobr>--training-export-claimant-q</nobr>&nbsp;&lt;q&gt;</td><td>With <nobr>--training-export</nobr>: the run <nobr>q-value</nobr> at which another target counts as a claimant of a shared fragment peak (default: 0.01)</td></tr>
+<tr><td><nobr>--training-export-xics</nobr></td><td>With <nobr>--training-export</nobr>: also write each precursor&#39;s <nobr>per-ion</nobr> XIC matrix over its final peak boundaries</td></tr>
+</table>
 <div class="RowType">性能</div>
 <table>
 <tr><th>参数</th><th>描述</th></tr>
@@ -68,7 +76,7 @@ a { color: #1565c0; }
 <div class="RowType">分布式 / HPC</div>
 <table>
 <tr><th>参数</th><th>描述</th></tr>
-<tr><td><nobr>--task</nobr> &lt;SpectraCache | PerFileScoring | FirstPassFDR | PerFileRescoring | SecondPassFDR | ModelDiagnostics&gt;</td><td>HPC：只运行一个流程任务（一个节点 = 一个任务）。省略则运行完整流程。SpectraCache 准备 .spectra.bin 缓存；ModelDiagnostics 仅为已完成的运行重新生成“<nobr>--model-diagnostics</nobr>”报告，不写入其他输出。</td></tr>
+<tr><td><nobr>--task</nobr> &lt;SpectraCache | PerFileScoring | FirstPassFDR | PerFileRescoring | SecondPassFDR | TrainingExport | ModelDiagnostics&gt;</td><td>HPC：只运行一个流程任务（一个节点 = 一个任务）。省略则运行完整流程。SpectraCache 准备 .spectra.bin 缓存；TrainingExport 写入“<nobr>--training-export</nobr>”parquet 文件（对已完成的运行仅写入缺失的文件）；ModelDiagnostics 仅为已完成的运行重新生成“<nobr>--model-diagnostics</nobr>”报告，不写入其他输出。</td></tr>
 </table>
 <div class="RowType">日志</div>
 <table>
@@ -99,7 +107,7 @@ Osprey --task FirstPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resol
 
 # 拆分 2 - 每个文件一个进程（得分 parquet 及其中间文件一起）
 Osprey --task PerFileRescoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
-#   写入：&lt;stem&gt;.scores-reconciled.parquet
+#   写入：&lt;stem&gt;.scores-reconciled.parquet，使用“--training-export”时还写入 &lt;stem&gt;.training.parquet
 
 # 合并 2 - 对所有运行使用一个进程，读取协调后的 parquet（写入 out.blib）
 Osprey --task SecondPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01

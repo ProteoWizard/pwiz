@@ -1217,32 +1217,32 @@
     <value>正在并行重新评分 {0:N0} 个文件：</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileRescoreTask_LoadMassCalibrations_Cannot_find_the_folder_of_the_calibration_file_for_input___0____Re_scoring_needs_the_" xml:space="preserve">
-    <value>找不到输入“{0}”的校准文件所在的文件夹。重新评分需要 {1} 为此输入保存的校准。</value>
+  <data name="ScoringTaskShared_LoadMassCalibrations_Cannot_find_the_folder_of_the_calibration_file_for_input___0_____1__needs_the_calibration" xml:space="preserve">
+    <value>找不到输入“{0}”的校准文件所在的文件夹。{1}需要 {2} 为此输入保存的校准。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileRescoreTask_LoadMassCalibrations_Failed_to_read_the_calibration_file__0____1___The_file_exists_but_could_not_be_read__" xml:space="preserve">
+  <data name="ScoringTaskShared_LoadMassCalibrations_Failed_to_read_the_calibration_file__0____1___The_file_exists_but_could_not_be_read__" xml:space="preserve">
     <value>读取校准文件 {0} 失败：{1}。该文件存在但无法读取。请检查它是否由同一版本的 Osprey 写入。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileRescoreTask_LoadMassCalibrations_The_calibration_file__0__for_input__1__was_not_found__Re_scoring_needs_the_calibration_" xml:space="preserve">
-    <value>未找到输入 {1} 的校准文件 {0}。重新评分需要 {2} 为此输入保存的校准。请先为其运行“{3}”，或检查输出文件夹。</value>
+  <data name="ScoringTaskShared_LoadMassCalibrations_The_calibration_file__0__for_input__1__was_not_found___2__needs_the_calibration" xml:space="preserve">
+    <value>未找到输入 {1} 的校准文件 {0}。{2}需要 {3} 为此输入保存的校准。请先为其运行“{4}”，或检查输出文件夹。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileRescoreTask_LoadSpectraForRescore_Re_scoring_needs_the_spectra_cache___0___that_PerFileScoring_writes__but__1____2_" xml:space="preserve">
-    <value>重新评分需要 {3} 写入的谱图缓存“{0}”，但{1}。{2}</value>
+  <data name="ScoringTaskShared_LoadSpectraForRescore__0__needs_the_spectra_cache___1___that_PerFileScoring_writes__but__2____3_" xml:space="preserve">
+    <value>{0}需要 {4} 写入的谱图缓存“{1}”，但{2}。{3}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileRescoreTask_LoadSpectraForRescore_Re_scoring_needs_the_spectra_cache___0___that_PerFileScoring_writes__but_it_could_not_be_" xml:space="preserve">
-    <value>重新评分需要 {2} 写入的谱图缓存“{0}”，但无法读取该缓存：{1}</value>
+  <data name="ScoringTaskShared_LoadSpectraForRescore__0__needs_the_spectra_cache___1___that_PerFileScoring_writes__but_it_could_not_be_read" xml:space="preserve">
+    <value>{0}需要 {3} 写入的谱图缓存“{1}”，但无法读取该缓存：{2}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileRescoreTask_LoadSpectraForRescore_Run___task_PerFileScoring_for___0___again_to_rebuild_it_" xml:space="preserve">
-    <value>请为“{0}”再次运行“{1}”以重新构建缓存。</value>
+  <data name="ScoringTaskShared_LoadSpectraForRescore_Run__1__for___0___to_rebuild_it_from_its_source_data_" xml:space="preserve">
+    <value>请为“{0}”运行“{1}”，从其源数据重新构建缓存。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileRescoreTask_LoadSpectraForRescore_The_cache_is_written_beside_its_source_data__so_a___task_worker_whose___output_dir_" xml:space="preserve">
-    <value>缓存写在其源数据旁，因此“{2}”与数据文件夹不同的“{1}”工作进程必须用“{3}”指向该缓存。请传入“{3}”&lt;包含 {0}{4} 的文件夹&gt;，如果从未写入过缓存，请为“{0}”再次运行“{5}”。</value>
+  <data name="ScoringTaskShared_LoadSpectraForRescore_The_cache_is_written_beside_its_source_data__so_a___task_worker_whose___output_dir_" xml:space="preserve">
+    <value>缓存写在其源数据旁，因此“{3}”与数据文件夹不同的“{2}”工作进程必须用“{4}”指向该缓存。请传入“{4}”&lt;包含 {0}{5} 的文件夹&gt;，如果从未写入过缓存，请为“{0}”运行“{1}”。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileRescoreTask_LoadSpectraForRescore___Streaming__1__MS1_and__0__MS_MS_spectra_from_cache_for__2_" xml:space="preserve">

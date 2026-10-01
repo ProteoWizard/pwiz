@@ -1217,32 +1217,32 @@
     <value>{0:N0}個のファイルを並列で再スコアリング中：</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileRescoreTask_LoadMassCalibrations_Cannot_find_the_folder_of_the_calibration_file_for_input___0____Re_scoring_needs_the_" xml:space="preserve">
-    <value>入力「{0}」の校正ファイルのフォルダが見つかりません。再スコアリングには、{1}がこの入力用に保存した校正が必要です。</value>
+  <data name="ScoringTaskShared_LoadMassCalibrations_Cannot_find_the_folder_of_the_calibration_file_for_input___0_____1__needs_the_calibration" xml:space="preserve">
+    <value>入力「{0}」の校正ファイルのフォルダが見つかりません。{1}には、{2}がこの入力用に保存した校正が必要です。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileRescoreTask_LoadMassCalibrations_Failed_to_read_the_calibration_file__0____1___The_file_exists_but_could_not_be_read__" xml:space="preserve">
+  <data name="ScoringTaskShared_LoadMassCalibrations_Failed_to_read_the_calibration_file__0____1___The_file_exists_but_could_not_be_read__" xml:space="preserve">
     <value>校正ファイル{0}の読み取りに失敗しました：{1}。ファイルは存在しますが、読み取れませんでした。同じバージョンのOspreyで書き込まれたことを確認してください。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileRescoreTask_LoadMassCalibrations_The_calibration_file__0__for_input__1__was_not_found__Re_scoring_needs_the_calibration_" xml:space="preserve">
-    <value>入力{1}の校正ファイル{0}が見つかりませんでした。再スコアリングには、{2}がこの入力用に保存した校正が必要です。先にこの入力に対して{3}を実行するか、出力フォルダを確認してください。</value>
+  <data name="ScoringTaskShared_LoadMassCalibrations_The_calibration_file__0__for_input__1__was_not_found___2__needs_the_calibration" xml:space="preserve">
+    <value>入力{1}の校正ファイル{0}が見つかりませんでした。{2}には、{3}がこの入力用に保存した校正が必要です。先にこの入力に対して{4}を実行するか、出力フォルダを確認してください。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileRescoreTask_LoadSpectraForRescore_Re_scoring_needs_the_spectra_cache___0___that_PerFileScoring_writes__but__1____2_" xml:space="preserve">
-    <value>再スコアリングには{3}が書き込むスペクトルキャッシュ「{0}」が必要ですが、{1}。{2}</value>
+  <data name="ScoringTaskShared_LoadSpectraForRescore__0__needs_the_spectra_cache___1___that_PerFileScoring_writes__but__2____3_" xml:space="preserve">
+    <value>{0}には{4}が書き込むスペクトルキャッシュ「{1}」が必要ですが、{2}。{3}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileRescoreTask_LoadSpectraForRescore_Re_scoring_needs_the_spectra_cache___0___that_PerFileScoring_writes__but_it_could_not_be_" xml:space="preserve">
-    <value>再スコアリングには{2}が書き込むスペクトルキャッシュ「{0}」が必要ですが、読み取れませんでした：{1}</value>
+  <data name="ScoringTaskShared_LoadSpectraForRescore__0__needs_the_spectra_cache___1___that_PerFileScoring_writes__but_it_could_not_be_read" xml:space="preserve">
+    <value>{0}には{3}が書き込むスペクトルキャッシュ「{1}」が必要ですが、読み取れませんでした：{2}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileRescoreTask_LoadSpectraForRescore_Run___task_PerFileScoring_for___0___again_to_rebuild_it_" xml:space="preserve">
-    <value>「{0}」に対して{1}を再実行し、キャッシュを再構築してください。</value>
+  <data name="ScoringTaskShared_LoadSpectraForRescore_Run__1__for___0___to_rebuild_it_from_its_source_data_" xml:space="preserve">
+    <value>「{0}」に対して{1}を実行し、ソースデータからキャッシュを再構築してください。</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="PerFileRescoreTask_LoadSpectraForRescore_The_cache_is_written_beside_its_source_data__so_a___task_worker_whose___output_dir_" xml:space="preserve">
-    <value>キャッシュはソースデータの横に書き込まれるため、{2}がデータフォルダと異なる{1}ワーカーでは、{3}でキャッシュの場所を指定する必要があります。{3} &lt;{0}{4}を含むフォルダ&gt;を指定するか、キャッシュが一度も書き込まれていない場合は「{0}」に対して{5}を再実行してください。</value>
+  <data name="ScoringTaskShared_LoadSpectraForRescore_The_cache_is_written_beside_its_source_data__so_a___task_worker_whose___output_dir_" xml:space="preserve">
+    <value>キャッシュはソースデータの横に書き込まれるため、{3}がデータフォルダと異なる{2}ワーカーでは、{4}でキャッシュの場所を指定する必要があります。{4} &lt;{0}{5}を含むフォルダ&gt;を指定するか、キャッシュが一度も書き込まれていない場合は「{0}」に対して{1}を実行してください。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileRescoreTask_LoadSpectraForRescore___Streaming__1__MS1_and__0__MS_MS_spectra_from_cache_for__2_" xml:space="preserve">

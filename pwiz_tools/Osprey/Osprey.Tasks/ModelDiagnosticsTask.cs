@@ -46,10 +46,10 @@ namespace pwiz.Osprey.Tasks
     /// base default), because the caller re-issues the completed run's command line
     /// verbatim plus the selector.</para>
     ///
-    /// <para>The non-degenerate version - a fifth canonical stage after SecondPassFDR that
-    /// OWNS the report render, replacing the <c>DiagnosticsOnly</c> write-suppression
-    /// threaded through the other tasks - is the natural follow-up, but it moves behavior
-    /// and is deliberately not part of making the task list authoritative.</para>
+    /// <para>The same shape serves every optional product (P17 in
+    /// docs/00-pipeline-architecture.md): the product is a declared output of the stage that
+    /// already holds its inputs, and a selector like this one asks for it. It is never a stage
+    /// of its own.</para>
     /// </summary>
     internal sealed class ModelDiagnosticsTask : OspreyTask
     {

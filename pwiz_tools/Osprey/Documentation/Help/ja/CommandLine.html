@@ -59,6 +59,14 @@ a { color: #1565c0; }
 <tr><td><nobr>--decoy-pairing-manifest</nobr>&nbsp;&lt;manifest.tsv&gt;</td><td>FDRBench 5列ペアリングマニフェスト（TSV）、<nobr>--decoys-in-libraryと併用</nobr></td></tr>
 <tr><td><nobr>--write-pin</nobr></td><td>外部ツール用のPINファイルを書き込みます</td></tr>
 </table>
+<div class="RowType">Training Export</div>
+<table>
+<tr><th>引数</th><th>説明</th></tr>
+<tr><td><nobr>--training-export</nobr></td><td>Write &lt;stem&gt;.training.parquet per run: every target precursor at run q &lt;= <nobr>--training-export-max-q</nobr> with the observed intensities of its full b/y ladder and <nobr>per-ion</nobr> interference evidence (for training CarafeSharp). Adding it to a finished run writes only the exports and <nobr>re-scores</nobr> nothing.</td></tr>
+<tr><td><nobr>--training-export-max-q</nobr>&nbsp;&lt;q&gt;</td><td>With <nobr>--training-export</nobr>: the run precursor <nobr>q-value</nobr> a target must reach to be exported (default: <nobr>--run-fdr</nobr>)</td></tr>
+<tr><td><nobr>--training-export-claimant-q</nobr>&nbsp;&lt;q&gt;</td><td>With <nobr>--training-export</nobr>: the run <nobr>q-value</nobr> at which another target counts as a claimant of a shared fragment peak (default: 0.01)</td></tr>
+<tr><td><nobr>--training-export-xics</nobr></td><td>With <nobr>--training-export</nobr>: also write each precursor&#39;s <nobr>per-ion</nobr> XIC matrix over its final peak boundaries</td></tr>
+</table>
 <div class="RowType">パフォーマンス</div>
 <table>
 <tr><th>引数</th><th>説明</th></tr>
@@ -68,7 +76,7 @@ a { color: #1565c0; }
 <div class="RowType">分散 / HPC</div>
 <table>
 <tr><th>引数</th><th>説明</th></tr>
-<tr><td><nobr>--task</nobr> &lt;SpectraCache | PerFileScoring | FirstPassFDR | PerFileRescoring | SecondPassFDR | ModelDiagnostics&gt;</td><td>HPC：パイプラインタスクを1つだけ実行します（1ノード = 1タスク）。完全なパイプラインを実行する場合は省略します。SpectraCacheは.spectra.binキャッシュを準備し、<nobr>ModelDiagnosticsは完了済みの実行の--model-diagnosticsレポートのみを再生成し</nobr>、その他の出力は書き込みません。</td></tr>
+<tr><td><nobr>--task</nobr> &lt;SpectraCache | PerFileScoring | FirstPassFDR | PerFileRescoring | SecondPassFDR | TrainingExport | ModelDiagnostics&gt;</td><td>HPC：パイプラインタスクを1つだけ実行します（1ノード = 1タスク）。完全なパイプラインを実行する場合は省略します。SpectraCacheは.spectra.binキャッシュを準備し、<nobr>TrainingExportは--training-exportのparquetを書き込み</nobr>（完了済みの実行では不足分のみ）、<nobr>ModelDiagnosticsは完了済みの実行の--model-diagnosticsレポートのみを再生成し</nobr>、その他の出力は書き込みません。</td></tr>
 </table>
 <div class="RowType">ログ記録</div>
 <table>
@@ -99,7 +107,7 @@ Osprey --task FirstPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resol
 
 # 分割2 - ファイルごとに1プロセス（スコアparquetとその中間ファイルをまとめて）
 Osprey --task PerFileRescoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
-#   書き込み：&lt;stem&gt;.scores-reconciled.parquet
+#   書き込み：&lt;stem&gt;.scores-reconciled.parquet、および--training-export指定時は&lt;stem&gt;.training.parquet
 
 # 結合2 - 全ランに対して1プロセス、整合済みparquetを読み込み（out.blibを書き込み）
 Osprey --task SecondPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01

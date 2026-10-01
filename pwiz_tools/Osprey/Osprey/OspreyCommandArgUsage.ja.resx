@@ -218,7 +218,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_task" xml:space="preserve">
-    <value>HPC：パイプラインタスクを1つだけ実行します（1ノード = 1タスク）。完全なパイプラインを実行する場合は省略します。{0}は{1}キャッシュを準備し、{2}は完了済みの実行の{3}レポートのみを再生成し、その他の出力は書き込みません。</value>
+    <value>HPC：パイプラインタスクを1つだけ実行します（1ノード = 1タスク）。完全なパイプラインを実行する場合は省略します。{0}は{1}キャッシュを準備し、{4}は{5}のparquetを書き込み（完了済みの実行では不足分のみ）、{2}は完了済みの実行の{3}レポートのみを再生成し、その他の出力は書き込みません。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_threads" xml:space="preserve">

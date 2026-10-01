@@ -186,6 +186,40 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// What the source file says about its acquisition (<see cref="SourceRunMetadata"/>),
+        /// from its declared instrument and its first <see cref="SourceRunMetadata.MAX_MS2_SPECTRA"/>
+        /// MS2 spectra. Read only for a training export, never by the search, so it adds no work
+        /// to a parse. Null when the source is not present - an HPC node handed only the spectra
+        /// cache - or cannot be opened; the export's footer then leaves the keys empty.
+        /// </summary>
+        public static SourceRunMetadata TryReadSourceMetadata(string path)
+        {
+            if (string.IsNullOrEmpty(path) || !(File.Exists(path) || Directory.Exists(path)))
+                return null;
+            try
+            {
+                var metadata = new SourceRunMetadata();
+                using (var msData = new MsDataFileImpl(path, simAsSpectra: true, combineIonMobilitySpectra: false))
+                {
+                    metadata.ObserveFile(msData);
+                    int count = msData.SpectrumCount;
+                    for (int i = 0; i < count && metadata.NMs2Sampled < SourceRunMetadata.MAX_MS2_SPECTRA; i++)
+                    {
+                        var spectrum = msData.GetSpectrum(i);
+                        if (spectrum == null || spectrum.Level != 2 || spectrum.Precursors.Count == 0)
+                            continue;
+                        metadata.ObserveMs2(spectrum, spectrum.Precursors[0]);
+                    }
+                }
+                return metadata;
+            }
+            catch (Exception ex) when (!(ex is OutOfMemoryException))
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Whether this path is a vendor instrument format, i.e. one with a vendor API
         /// behind it that can centroid. Deliberately a positive list rather than
         /// "anything that is not mzML": ProteoWizard also reads mzXML, MGF and MS2,

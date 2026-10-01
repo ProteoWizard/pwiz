@@ -218,7 +218,7 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_task" xml:space="preserve">
-    <value>HPC：只运行一个流程任务（一个节点 = 一个任务）。省略则运行完整流程。{0} 准备 {1} 缓存；{2} 仅为已完成的运行重新生成“{3}”报告，不写入其他输出。</value>
+    <value>HPC：只运行一个流程任务（一个节点 = 一个任务）。省略则运行完整流程。{0} 准备 {1} 缓存；{4} 写入“{5}”parquet 文件（对已完成的运行仅写入缺失的文件）；{2} 仅为已完成的运行重新生成“{3}”报告，不写入其他输出。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="_threads" xml:space="preserve">

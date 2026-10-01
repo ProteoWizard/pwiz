@@ -484,14 +484,23 @@ namespace pwiz.Osprey
                     config.LibrarySource?.Format.GetLocalizedString() ?? @"?"));
                 // A --task run executes one HPC stage rather than the full pipeline;
                 // name it so the log says which single task ran (no --task = full
-                // pipeline, no line). The Name is the canonical spelling, whatever
+                // pipeline, no line). A selector that is not a stage of the pipeline it
+                // runs (ModelDiagnostics, TrainingExport) runs every stage the analysis
+                // still needs, and says so. The Name is the canonical spelling, whatever
                 // case the operator typed.
                 if (config.SelectedTask != null)
-                    LogInfo(string.Format(OspreyResources.Program_Run_Task___0___single_task_run_, config.SelectedTask.Name));
+                {
+                    LogInfo(string.Format(config.Pipeline.Contains(config.SelectedTask)
+                        ? OspreyResources.Program_Run_Task___0___single_task_run_
+                        : OspreyResources.Program_Run_Task___0___runs_every_stage_the_analysis_still_needs_,
+                        config.SelectedTask.Name));
+                }
                 // A task that writes something other than the blib - per-file parquets,
                 // per-file spectra caches, the diagnostics report alone - names its real
                 // output, so the log does not read as if the --output blib were being
-                // rebuilt: every selectable task but SecondPassFDR describes its own output.
+                // rebuilt. SecondPassFDR writes the blib, and TrainingExport is the full run with
+                // the export on, whose parquets the training export line names; every other
+                // selectable task describes its own output.
                 LogInfo(string.Format(OspreyResources.Program_Run_Output___0_,
                     config.SelectedTask?.DescribeOutput(config) ?? config.OutputBlib));
                 LogInfo(string.Format(OspreyResources.Program_Run_Resolution___0_, config.ResolutionMode.GetLocalizedString()));
@@ -500,6 +509,11 @@ namespace pwiz.Osprey
                     config.FragmentTolerance.Unit.GetLocalizedString()));
                 LogInfo(string.Format(OspreyResources.Program_Run_Run_FDR___0_, config.RunFdr));
                 LogInfo(string.Format(OspreyResources.Program_Run_Experiment_FDR___0_, config.ExperimentFdr));
+                // Named only when on: with the option off the run, its log included, is the
+                // run it was before the option existed.
+                string trainingExport = DescribeTrainingExport(config);
+                if (trainingExport != null)
+                    LogInfo(trainingExport);
                 // Always print which experiment-wide aggregation is in force, active or not.
                 // Reported HERE and not from Stage 5 because FirstPassFdrTask.Run is skipped on
                 // --task SecondPassFDR, on a Rehydrate, and on any warm resume - exactly the runs
@@ -851,6 +865,10 @@ namespace pwiz.Osprey
                     return dupErr;
             }
 
+            string exportErr = TrainingExportError(config.TrainingExport);
+            if (exportErr != null)
+                return exportErr;
+
             // A --task run: the task states what it needs, naming itself in the message.
             if (config.SelectedTask != null)
                 return config.SelectedTask.ValidateSelection(config);
@@ -875,6 +893,58 @@ namespace pwiz.Osprey
         {
             return string.Equals(Path.GetFullPath(path1), Path.GetFullPath(path2),
                 OperatingSystem.IsLinux() ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// The startup line naming the training export, or null when <c>--training-export</c>
+        /// is off. The export is a product of PerFileRescoring, so it is described only where
+        /// that task runs - a straight-through run, <c>--task PerFileRescoring</c> or
+        /// <c>--task TrainingExport</c> - by the same membership rule the driver applies.
+        /// </summary>
+        internal static string DescribeTrainingExport(OspreyConfig config)
+        {
+            if (!config.TrainingExport.Enabled)
+                return null;
+            if (!ScoringTaskShared.Includes<PerFileRescoreTask>(config) || config.DiagnosticsOnly)
+            {
+                return string.Format(OspreyResources.Program_DescribeTrainingExport_Training_export__not_written_by_this_run___0__writes_it_under__1___2___1___3__or_a_run_without__1__, OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText,
+                    OspreyCommandArgs.ARG_TASK.ArgumentText, TrainingExportTask.TASK_NAME, PerFileRescoreTask.TASK_NAME);
+            }
+            return string.Format(OspreyResources.Program_DescribeTrainingExport_Training_export___0__per_run__run_q_____1___claimant_q_____2___XICs__3__,
+                @"<stem>" + TrainingExportParquet.EXT, config.TrainingExport.EffectiveMaxQ(config.RunFdr),
+                config.TrainingExport.EffectiveClaimantQ,
+                config.TrainingExport.WriteXics ? OspreyResources.Program_DescribeTrainingExport_on : OspreyResources.Program_DescribeTrainingExport_off);
+        }
+
+        /// <summary>
+        /// The training-export settings are refused rather than ignored when they cannot apply:
+        /// given without <c>--training-export</c> (or <c>--task TrainingExport</c>) they would
+        /// change nothing, and a q threshold outside (0, 1] selects nothing or everything.
+        /// </summary>
+        private static string TrainingExportError(TrainingExportConfig export)
+        {
+            if (export.HasSettingsWithoutExport)
+            {
+                return string.Format(OspreyResources.Program_TrainingExportError__0____1__and__2__apply_only_with__3__,
+                    OspreyCommandArgs.ARG_TRAINING_EXPORT_MAX_Q.ArgumentText,
+                    OspreyCommandArgs.ARG_TRAINING_EXPORT_CLAIMANT_Q.ArgumentText,
+                    OspreyCommandArgs.ARG_TRAINING_EXPORT_XICS.ArgumentText,
+                    OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText);
+            }
+            if (export.MaxQ.HasValue && !(export.MaxQ.Value > 0 && export.MaxQ.Value <= 1))
+                return string.Format(OspreyResources.Program_TrainingExportError__0__must_be_in__0__1__, OspreyCommandArgs.ARG_TRAINING_EXPORT_MAX_Q.ArgumentText);
+            if (export.ClaimantQ.HasValue && !(export.ClaimantQ.Value > 0 && export.ClaimantQ.Value <= 1))
+                return string.Format(OspreyResources.Program_TrainingExportError__0__must_be_in__0__1__, OspreyCommandArgs.ARG_TRAINING_EXPORT_CLAIMANT_Q.ArgumentText);
+            // The transfer arm computes every run's second-pass q in SecondPassFDR, after
+            // PerFileRescoring has written the export, so the export would have no second-pass
+            // values for any run to select on.
+            if (export.Enabled && OspreyEnvironment.Pass2TransferQ)
+            {
+                return string.Format(OspreyResources.Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_the_run_q_values_in__2__after_the_per_run_export_,
+                    OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText, @"OSPREY_PASS2_QVALUE=" + OspreyEnvironment.PASS2_QVALUE_TRANSFER,
+                    SecondPassFdrTask.TASK_NAME);
+            }
+            return null;
         }
 
         /// <summary>

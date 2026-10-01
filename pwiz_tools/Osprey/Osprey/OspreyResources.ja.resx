@@ -200,8 +200,8 @@
     <value>分割2 - ファイルごとに1プロセス（スコアparquetとその中間ファイルをまとめて）</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes___0_" xml:space="preserve">
-    <value>書き込み：{0}</value>
+  <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes___0___and__1__with__2_" xml:space="preserve">
+    <value>書き込み：{0}、および{2}指定時は{1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes_beside_each_parquet___0____1_" xml:space="preserve">

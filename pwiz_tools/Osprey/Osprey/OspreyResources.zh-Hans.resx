@@ -200,8 +200,8 @@
     <value>拆分 2 - 每个文件一个进程（得分 parquet 及其中间文件一起）</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes___0_" xml:space="preserve">
-    <value>写入：{0}</value>
+  <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes___0___and__1__with__2_" xml:space="preserve">
+    <value>写入：{0}，使用“{2}”时还写入 {1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes_beside_each_parquet___0____1_" xml:space="preserve">
