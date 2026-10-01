@@ -331,6 +331,22 @@ namespace TestPerf
 
         protected override void DoTest()
         {
+            try
+            {
+                DoTutorialSteps();
+            }
+            finally
+            {
+                // Cleanup output files in persistent dir, even when the test fails: the DIA-SWATH tutorial
+                // tests share this dir and select every .mzML in it, so leftover -diaumpire.mzML files fail them.
+                // (in IsRecordMode, keep these files around so that repeated tests on each language run faster)
+                if (!IsRecordMode)
+                    CleanUpPersistentDir(GetTestPath("DIA\\"));
+            }
+        }
+
+        private void DoTutorialSteps()
+        {
             Assert.IsNotNull(_expectedValues);
 
             // Clean-up before running the test
@@ -707,7 +723,6 @@ namespace TestPerf
                         { "collinsb_I180316_002", 41 }
                     }))
             {
-                CleanUpPersistentDir(diaDir);
                 return;
             }
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
@@ -890,13 +905,6 @@ namespace TestPerf
                     fcFloatingWindow.Top = SkylineWindow.Bottom - fcFloatingWindow.Height - 8;
                 });*/
                 TakeCoverShot();
-            }
-
-            // Cleanup output files in persistent dir
-            // (in IsRecordMode, keep these files around so that repeated tests on each language run faster)
-            if (!IsRecordMode)
-            {
-                CleanUpPersistentDir(diaDir);
             }
 
             if (IsRecordMode)
