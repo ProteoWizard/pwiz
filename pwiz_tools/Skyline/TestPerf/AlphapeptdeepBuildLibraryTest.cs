@@ -114,7 +114,13 @@ namespace TestPerf
             {
                 buildLibraryDlg.LibraryName = "No peptides prediction";
                 buildLibraryDlg.LibraryPath = LibraryPathWithoutIrt;
-                buildLibraryDlg.AlphaPeptDeep = true;
+
+                // Focusing the radio button checks it, as clicking it does, and showing the AlphaPeptDeep
+                // page must not take the focus from it
+                var radioAlpha = buildLibraryDlg.Controls.Find(@"radioAlphaSource", true).Single();
+                radioAlpha.Focus();
+                Assert.IsTrue(buildLibraryDlg.AlphaPeptDeep);
+                Assert.AreSame(radioAlpha, buildLibraryDlg.ActiveControl);
             });
 
             RunDlg<MessageDlg>(buildLibraryDlg.OkWizardPage, dlg =>
