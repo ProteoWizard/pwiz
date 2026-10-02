@@ -38,7 +38,7 @@ make ResourcesOrganizer.exe
 ##############
 # IncrementalUpdateResxFiles
 # Should be run when user interface changes during the development cycle
-# Updates the .ja and .zh-CHS resx files by reverting to English all strings not found in "LastReleaseResources.db"
+# Updates the .ja and .zh-Hans resx files by reverting to English all strings not found in "LastReleaseResources.db"
 ##############
 
 rule do_IncrementalUpdateResxFiles ( targets + : sources * : properties * )

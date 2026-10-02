@@ -41,7 +41,7 @@ Verify success by checking build output shows "changed X/Y matching records" and
 b.bat pwiz_tools/Skyline/Executables/DevTools/ResourcesOrganizer//FinalizeResxFiles
 ```
 
-Run before creating a release branch to update .ja and .zh-CHS .resx files with comments for strings added since the last release.
+Run before creating a release branch to update .ja and .zh-Hans .resx files with comments for strings added since the last release.
 
 ## Manual Scripts
 
