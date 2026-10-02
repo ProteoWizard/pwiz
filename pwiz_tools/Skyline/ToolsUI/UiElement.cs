@@ -2054,7 +2054,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             item.Focused = true;
             User32.SendMessage(item.ListView.Handle, User32.WinMessageType.LVM_SETSELECTIONMARK,
-                IntPtr.Zero, (IntPtr) item.Index);
+                IntPtr.Zero, item.Index);
         }
 
         private static void MakeCurrent(ListBox listBox, int index)
@@ -2062,8 +2062,8 @@ namespace pwiz.Skyline.ToolsUI
             // A single-selection list moves its caret with its selection; a multi-selection one does not.
             if (listBox.SelectionMode == SelectionMode.MultiSimple || listBox.SelectionMode == SelectionMode.MultiExtended)
             {
-                User32.SendMessage(listBox.Handle, User32.WinMessageType.LB_SETANCHORINDEX, (IntPtr) index, IntPtr.Zero);
-                User32.SendMessage(listBox.Handle, User32.WinMessageType.LB_SETCARETINDEX, (IntPtr) index, IntPtr.Zero);
+                User32.SendMessage(listBox.Handle, User32.WinMessageType.LB_SETANCHORINDEX, index, IntPtr.Zero);
+                User32.SendMessage(listBox.Handle, User32.WinMessageType.LB_SETCARETINDEX, index, IntPtr.Zero);
             }
         }
 
