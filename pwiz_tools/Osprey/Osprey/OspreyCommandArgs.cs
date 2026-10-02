@@ -26,8 +26,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using pwiz.Common.CommandLine;
+using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
@@ -105,19 +107,19 @@ namespace pwiz.Osprey
         public static readonly OspreyArgument ARG_INPUT_LIST = new OspreyArgument(@"input-list",
             () => @"<list.txt>", (c, p) => c._inputListPaths.Add(p.Value)) { DescriptionArgs = () => new object[] { ARG_INPUT.ShortArgumentText } };
         public static readonly OspreyArgument ARG_LIBRARY = new OspreyArgument(OspreyArgNames.LIBRARY,
-            () => @"<library.tsv|.blib>", (c, p) => c._libraryPath = p.Value) { ShortName = @"l" };
+            () => @"<library.tsv|.blib>", (c, p) => c._libraryPath = p.Value) { ShortName = @"l", DescriptionArgs = () => new object[] { TextUtil.EXT_TSV, LibrarySource.EXT_BLIB } };
         public static readonly OspreyArgument ARG_OUTPUT = new OspreyArgument(OspreyArgNames.OUTPUT,
             () => @"<output.blib>", (c, p) => c._outputPath = p.Value) { ShortName = @"o" };
         public static readonly OspreyArgument ARG_WORK_DIR = new OspreyArgument(@"work-dir",
             () => @"<dir>", (c, p) => c._workDir = p.Value);
-        public static readonly OspreyArgument ARG_OUTPUT_DIR = new OspreyArgument(@"output-dir",
+        public static readonly OspreyArgument ARG_OUTPUT_DIR = new OspreyArgument(OspreyArgNames.OUTPUT_DIR,
             () => @"<dir>", (c, p) => c._outputDir = p.Value) { DescriptionArgs = () => new object[] { ARG_WORK_DIR.ArgumentText } };
-        public static readonly OspreyArgument ARG_CACHE_DIR = new OspreyArgument(@"cache-dir",
+        public static readonly OspreyArgument ARG_CACHE_DIR = new OspreyArgument(OspreyArgNames.CACHE_DIR,
             () => @"<dir>", (c, p) => c._cacheDir = p.Value) { DescriptionArgs = () => new object[] { SpectraCache.EXT, ARG_WORK_DIR.ArgumentText } };
         public static readonly OspreyArgument ARG_REPORT = new OspreyArgument(@"report",
             () => @"<report.tsv>", (c, p) => c._config.OutputReport = p.Value);
         public static readonly OspreyArgument ARG_EXPORT_LIBRARY = new OspreyArgument(@"export-library",
-            () => @"<library.blib>", (c, p) => c._config.ExportLibraryBlib = p.Value) { DescriptionArgs = () => new object[] { ARG_LIBRARY.ArgumentText } };
+            () => @"<library.blib>", (c, p) => c._config.ExportLibraryBlib = p.Value) { DescriptionArgs = () => new object[] { ARG_LIBRARY.ArgumentText, LibrarySource.EXT_BLIB } };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_GENERAL_IO =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_General_IO, true,
@@ -211,11 +213,12 @@ namespace pwiz.Osprey
             }) { DescriptionArgs = () => new object[] { @"all" } };
 
         public static readonly OspreyArgument ARG_FDRBENCH = new OspreyArgument(@"fdrbench",
-            () => @"<input.tsv>", (c, p) => c._config.OutputFdrBench = p.Value) { DescriptionArgs = () => new object[] { ARG_FDR_LEVEL.ArgumentText } };
+            () => @"<input.tsv>", (c, p) => c._config.OutputFdrBench = p.Value) { DescriptionArgs = () => new object[] { ARG_FDR_LEVEL.ArgumentText, FdrBenchInputWriter.COLUMN_SCORE, @"peptide", @"precursor", @"both" } };
         public static readonly OspreyArgument ARG_FDRBENCH_PER_RUN = new OspreyArgument(@"fdrbench-per-run",
-            (c, p) => c._config.FdrBenchPerRun = true) { DescriptionArgs = () => new object[] { ARG_FDRBENCH.ArgumentText } };
+            (c, p) => c._config.FdrBenchPerRun = true) { DescriptionArgs = () => new object[] { ARG_FDRBENCH.ArgumentText, FdrBenchInputWriter.COLUMN_RUN } };
         public static readonly OspreyArgument ARG_FDRBENCH_PASS = new OspreyArgument(@"fdrbench-pass",
-            new[] { @"1", @"2", @"both" }, (c, p) => c._config.FdrBenchPass = ParseFdrBenchPass(p)) { DescriptionArgs = () => new object[] { ARG_FDRBENCH.ArgumentText } };
+            new[] { @"1", @"2", @"both" }, (c, p) => c._config.FdrBenchPass = ParseFdrBenchPass(p)) { DescriptionArgs = () => new object[] { ARG_FDRBENCH.ArgumentText,
+                FdrBenchInputWriter.PassSuffix(OspreyConfig.FDRBENCH_PASS_1), FdrBenchInputWriter.PassSuffix(OspreyConfig.FDRBENCH_PASS_2), @"both" } };
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_FDR =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_FDR_Protein_Inference, true,
@@ -239,7 +242,7 @@ namespace pwiz.Osprey
         // docs/00-pipeline-architecture.md). Off, nothing about the run changes; on, it adds
         // one <stem>.training.parquet per run, and adding it to a finished directory writes
         // only the exports and re-scores nothing.
-        public static readonly OspreyArgument ARG_TRAINING_EXPORT = new OspreyArgument(@"training-export",
+        public static readonly OspreyArgument ARG_TRAINING_EXPORT = new OspreyArgument(OspreyArgNames.TRAINING_EXPORT,
             (c, p) => c._config.TrainingExport.Enabled = true) { DescriptionArgs = () => new object[] { @"<stem>" + TrainingExportParquet.EXT, ARG_TRAINING_EXPORT_MAX_Q.ArgumentText } };
         public static readonly OspreyArgument ARG_TRAINING_EXPORT_MAX_Q = new OspreyArgument(@"training-export-max-q",
             () => @"<q>", (c, p) => c._config.TrainingExport.MaxQ = ParseDouble(p)) { DescriptionArgs = () => new object[] { ARG_TRAINING_EXPORT.ArgumentText, ARG_RUN_FDR.ArgumentText } };
@@ -279,7 +282,7 @@ namespace pwiz.Osprey
         // <N> = exactly N. Unlike the rest of Osprey's in-process work this is not HPC
         // (the Rust HPC split fans files across nodes, one file per process), so it gets its
         // own group rather than sitting under Distributed / HPC.
-        public static readonly OspreyArgument ARG_PARALLEL_FILES = new OspreyArgument(@"parallel-files",
+        public static readonly OspreyArgument ARG_PARALLEL_FILES = new OspreyArgument(OspreyArgNames.PARALLEL_FILES,
             () => @"[<N>]", (c, p) =>
             {
                 if (string.IsNullOrEmpty(p.Value))
@@ -317,7 +320,7 @@ namespace pwiz.Osprey
             () => @"<path>", (c, p) => c._config.LogFilePath = p.Value);
         public static readonly OspreyArgument ARG_PERF_STATS = new OspreyArgument(@"perf-stats",
             (c, p) => c._config.PerfStats = true) { DescriptionArgs = () => new object[] { @"[COUNT], [TIMING], [BENCH], [STAGE-WALL], [PATH], [TRAIN]" } }; // Log tag OK: help text naming the tags
-        public static readonly OspreyArgument ARG_VERBOSE = new OspreyArgument(@"verbose",
+        public static readonly OspreyArgument ARG_VERBOSE = new OspreyArgument(OspreyArgNames.VERBOSE,
             (c, p) => c._config.Verbose = true);
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_LOGGING =
@@ -374,7 +377,7 @@ namespace pwiz.Osprey
                     GROUP_INFO,
                     new ParaUsageBlock(OspreyResources.OspreyCommandArgs_UsageBlocks_EXAMPLES_),
                     new ParaUsageBlock(@"  osprey -i sample.mzML -l library.tsv -o results.blib"),
-                    new ParaUsageBlock(@"  osprey -i *.mzML -l library.tsv -o results.blib --resolution hram"),
+                    new ParaUsageBlock(@"  osprey -i *.mzML -l library.tsv -o results.blib " + (ARG_RESOLUTION + @"hram")),
                     new ParaUsageBlock(string.Format(OspreyResources.OspreyCommandArgs_UsageBlocks_HPC_SPLIT__one_node___one__0____see__0__above_,
                         ARG_TASK.ArgumentText)),
                 };
@@ -908,8 +911,12 @@ namespace pwiz.Osprey
             var sb = new StringBuilder();
             sb.AppendLine(@"<html><head>");
             sb.AppendLine(@"<meta charset=""utf-8"">");
-            sb.AppendLine(@"<title>Osprey command-line usage</title>");
-            sb.AppendLine(@"<meta name=""description"" content=""Command-line usage for Osprey, the C# (.NET 8) implementation of Mike MacCoss's peptide-centric DIA search tool: search and FDR arguments, protein inference, the SpectraCache staging task, the ModelDiagnostics report-only task, and the four distributed HPC --task workers (PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR)."">");
+            sb.AppendLine(@"<title>" + WebUtility.HtmlEncode(OspreyResources.OspreyCommandArgs_GenerateUsageHtml_Osprey_command_line_usage) + @"</title>");
+            sb.AppendLine(@"<meta name=""description"" content=""" + WebUtility.HtmlEncode(string.Format(
+                OspreyResources.OspreyCommandArgs_GenerateUsageHtml_Command_line_usage_for_Osprey__the_peptide_centric_DIA_search_tool_from_the_MacCoss_lab,
+                SpectraCacheTask.TASK_NAME, ModelDiagnosticsTask.TASK_NAME, ARG_TASK.ArgumentText,
+                string.Join(@", ", PerFileScoringTask.TASK_NAME, FirstPassFdrTask.TASK_NAME, PerFileRescoreTask.TASK_NAME,
+                    SecondPassFdrTask.TASK_NAME))) + @""">");
             // Self-contained stylesheet (Osprey does not reference Skyline, so it cannot call
             // DocumentationGenerator.GetStyleSheetHtml). The table rules are copied from that Skyline
             // stylesheet so Osprey's generated help matches Skyline's look (cell padding,
@@ -935,63 +942,95 @@ namespace pwiz.Osprey
             return sb.ToString();
         }
 
-        // Hand-written intro prose for the standalone web page (not part of the terminal --help text,
-        // which stays a terse flag reference). Locked against drift by TestCommandLineHelpDocumentation,
-        // which regenerates this whole document and diffs it against the committed Documentation copy.
+        // Intro prose for the standalone web page (not part of the terminal --help text, which stays a
+        // terse flag reference). As in Skyline's CommandLine.html, the prose comes from resources so the
+        // ja and zh-Hans pages are fully translated; markup, argument text and file names are passed in
+        // as arguments. Locked against drift by TestCommandLineHelpDocumentation, which regenerates each
+        // page and diffs it against the committed Documentation copy.
         private static void AppendUsageHtmlIntro(StringBuilder sb)
         {
-            sb.AppendLine(@"<h1>Osprey command-line usage</h1>");
-            sb.AppendLine(@"<p>Osprey is Mike MacCoss's peptide-centric DIA search tool, implemented in " +
-                @"C# (.NET 8). (The original Rust prototype is " +
-                @"<a href=""https://github.com/maccoss/osprey"">maccoss/osprey</a>.) It reads DIA mzML files " +
-                @"plus a spectral library and writes a " +
-                @"BiblioSpecLite (<code>.blib</code>) library of FDR-controlled results that imports " +
-                @"directly into Skyline. It runs as a standalone executable on Windows and Linux.</p>");
-            sb.AppendLine(@"<p>For the pipeline overview, per-stage detail, and how the four distributed " +
-                @"HPC tasks split and join, see the workflow diagram: " +
-                @"<a href=""https://raw.githack.com/ProteoWizard/pwiz/master/pwiz_tools/Osprey/Osprey-workflow.html"">Osprey-workflow.html</a>. " +
-                @"The argument tables below are generated from the command-line declarations, so they " +
-                @"always match the build; run <code>Osprey --help</code> for the same reference as text.</p>");
+            sb.AppendLine(@"<h1>" + WebUtility.HtmlEncode(OspreyResources.OspreyCommandArgs_GenerateUsageHtml_Osprey_command_line_usage) + @"</h1>");
+            sb.AppendLine(@"<p>" + Prose(
+                OspreyResources.OspreyCommandArgs_AppendUsageHtmlIntro_Osprey_is_a_peptide_centric_DIA_search_tool_from_the_MacCoss_lab,
+                Code(LibrarySource.EXT_BLIB)) + @"</p>");
+            sb.AppendLine(@"<p>" + Prose(
+                OspreyResources.OspreyCommandArgs_AppendUsageHtmlIntro_For_the_pipeline_overview__per_stage_detail__and_how_the_four_distributed_HPC_,
+                @"<a href=""https://raw.githack.com/ProteoWizard/pwiz/master/pwiz_tools/Osprey/Osprey-workflow.html"">Osprey-workflow.html</a>",
+                Code(@"Osprey " + ARG_HELP.ArgumentText)) + @"</p>");
         }
 
         // Worked distributed-execution example. Like the intro, this is web-page-only content held in
         // sync with the code by TestCommandLineHelpDocumentation.
         private static void AppendUsageHtmlHpcExamples(StringBuilder sb)
         {
-            sb.AppendLine(@"<div class=""RowType"">Distributed execution (HPC)</div>");
-            sb.AppendLine(@"<p>Run with no <code>--task</code> for the whole pipeline in one process. For " +
-                @"distributed (HPC / workflow-engine) execution the pipeline splits at its join / fan-out " +
-                @"boundaries into four single-task workers &mdash; one node = one <code>--task</code>: " +
-                @"<code>PerFileScoring</code> (split, per file) &rarr; <code>FirstPassFDR</code> (join, all " +
-                @"files) &rarr; <code>PerFileRescoring</code> (split, per file) &rarr; " +
-                @"<code>SecondPassFDR</code> (join, all files). Pass the same <code>--library</code> and search " +
-                @"options to every task; the parquet integrity check rejects inputs whose search/library " +
-                @"hash does not match.</p>");
+            sb.AppendLine(@"<div class=""RowType"">" + WebUtility.HtmlEncode(
+                OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_Distributed_execution__HPC_) + @"</div>");
+            sb.AppendLine(@"<p>" + Prose(
+                OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_Run_with_no__0__for_the_whole_pipeline_in_one_process,
+                Code(ARG_TASK.ArgumentText), Code(ARG_LIBRARY.ArgumentText), Code(PerFileScoringTask.TASK_NAME),
+                Code(FirstPassFdrTask.TASK_NAME), Code(PerFileRescoreTask.TASK_NAME), Code(SecondPassFdrTask.TASK_NAME),
+                @"&rarr;") + @"</p>");
             sb.AppendLine(@"<pre>");
-            sb.AppendLine(@"# split 1 - one process per mzML (writes &lt;stem&gt;.scores.parquet, &lt;stem&gt;.calibration.json beside each input)");
-            sb.AppendLine(@"Osprey --task PerFileScoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
+            AppendExampleComment(sb, Prose(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_split_1___one_process_per_mzML,
+                StemFile(ParquetScoreCache.EXT_SCORES), StemFile(CalibrationIO.EXT)));
+            sb.AppendLine(HpcExampleCommandLine(PerFileScoringTask.TASK_NAME, ARG_INPUT.ShortArgumentText, @"s1.mzML"));
             sb.AppendLine();
-            sb.AppendLine(@"# join 1 - one process over ALL runs (pass a sorted list so the order is deterministic)");
-            sb.AppendLine(@"Osprey --task FirstPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
-            sb.AppendLine(@"#   writes beside each parquet: &lt;stem&gt;.1st-pass.fdr_scores.bin, &lt;stem&gt;.reconciliation.json");
+            AppendExampleComment(sb, ArgUsage.HtmlEncode(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_join_1___one_process_over_ALL_runs));
+            sb.AppendLine(HpcExampleCommandLine(FirstPassFdrTask.TASK_NAME, ARG_INPUT_LIST.ArgumentText, @"runs.txt"));
+            AppendExampleComment(sb, @"  " + Prose(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes_beside_each_parquet___0____1_,
+                StemFile(FdrScoresSidecar.EXT_FIRST_PASS), StemFile(ReconciliationFile.EXT)));
             sb.AppendLine();
-            sb.AppendLine(@"# split 2 - one process per file (the scores parquet and its intermediate files together)");
-            sb.AppendLine(@"Osprey --task PerFileRescoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
-            sb.AppendLine(@"#   writes: &lt;stem&gt;.scores-reconciled.parquet, and &lt;stem&gt;.training.parquet with --training-export");
+            AppendExampleComment(sb, ArgUsage.HtmlEncode(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_split_2___one_process_per_file));
+            sb.AppendLine(HpcExampleCommandLine(PerFileRescoreTask.TASK_NAME, ARG_INPUT.ShortArgumentText, @"s1.mzML"));
+            AppendExampleComment(sb, @"  " + Prose(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes___0___and__1__with__2_,
+                StemFile(ParquetScoreCache.EXT_SCORES_RECONCILED), StemFile(TrainingExportParquet.EXT), ARG_TRAINING_EXPORT.ArgumentText));
             sb.AppendLine();
-            sb.AppendLine(@"# join 2 - one process over ALL runs, reading their reconciled parquets (writes out.blib)");
-            sb.AppendLine(@"Osprey --task SecondPassFDR --input-list runs.txt -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
+            AppendExampleComment(sb, Prose(OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_join_2___one_process_over_ALL_runs,
+                @"out" + LibrarySource.EXT_BLIB));
+            sb.AppendLine(HpcExampleCommandLine(SecondPassFdrTask.TASK_NAME, ARG_INPUT_LIST.ArgumentText, @"runs.txt"));
             sb.AppendLine(@"</pre>");
-            sb.AppendLine(@"<p>EVERY task takes <code>-i</code>, naming the DATA files - the same names " +
-                @"the first split was given. A join task derives each run's parquet and intermediate files from " +
-                @"the input stem, so the data file itself need not still exist: what has to be in the " +
-                @"worker's working directory (or under <code>--output-dir</code>) is that run's " +
-                @"artifacts. FirstPassFDR reconciliation is order-sensitive, so pass a " +
-                @"deterministically sorted list - <code>--input-list</code> takes one path per line and " +
-                @"is what a cohort past a few hundred runs needs, since <code>-i</code> spends the " +
-                @"command line at O(files). Let the scheduler do the fan-out (one file per split " +
-                @"process) rather than <code>--parallel-files</code>, which is the single-node " +
-                @"multi-file mode.</p>");
+            sb.AppendLine(@"<p>" + Prose(
+                OspreyResources.OspreyCommandArgs_AppendUsageHtmlHpcExamples_EVERY_task_takes__0___naming_the_DATA_files,
+                Code(ARG_INPUT.ShortArgumentText), Code(ARG_OUTPUT_DIR.ArgumentText), Code(ARG_INPUT_LIST.ArgumentText),
+                Code(ARG_PARALLEL_FILES.ArgumentText), FirstPassFdrTask.TASK_NAME) + @"</p>");
+        }
+
+        /// <summary>
+        /// A help-page sentence: the translated format string is HTML-encoded before the arguments,
+        /// which carry the intentional markup (<c>&lt;code&gt;</c>, links), are substituted.
+        /// </summary>
+        private static string Prose(string format, params object[] args)
+        {
+            return string.Format(ArgUsage.HtmlEncode(format), args);
+        }
+
+        private static string Code(string text)
+        {
+            return @"<code>" + WebUtility.HtmlEncode(text) + @"</code>";
+        }
+
+        /// <summary>
+        /// A per-input file name in the worked example: "&lt;stem&gt;" plus the extension, HTML-encoded.
+        /// </summary>
+        private static string StemFile(string extension)
+        {
+            return WebUtility.HtmlEncode(@"<stem>" + extension);
+        }
+
+        private static void AppendExampleComment(StringBuilder sb, string comment)
+        {
+            sb.AppendLine(@"# " + comment);
+        }
+
+        /// <summary>
+        /// One worker command line of the HPC example, built from the argument declarations so a
+        /// renamed argument cannot leave the example stale.
+        /// </summary>
+        private static string HpcExampleCommandLine(string taskName, string inputArgText, string input)
+        {
+            return string.Join(@" ", @"Osprey", ARG_TASK + taskName, inputArgText, input,
+                ARG_LIBRARY.ShortArgumentText, @"hela.tsv", ARG_OUTPUT.ShortArgumentText, @"out.blib",
+                ARG_RESOLUTION + @"unit", ARG_PROTEIN_FDR + @"0.01");
         }
 
         /// <summary>

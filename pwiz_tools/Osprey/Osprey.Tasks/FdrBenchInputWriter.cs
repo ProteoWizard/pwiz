@@ -50,6 +50,17 @@ namespace pwiz.Osprey.Tasks
     {
         public const string EXT_PAIRING = @".pairing.tsv";
 
+        /// <summary>Heading of the score column FDRBench reads (<c>-score 'score:1'</c>).</summary>
+        public const string COLUMN_SCORE = @"score";
+        /// <summary>Heading of the run column a per-run file adds.</summary>
+        public const string COLUMN_RUN = @"run";
+
+        /// <summary>
+        /// How a truncated protein-ID list ends, as a user sees it in the file: the kept IDs,
+        /// then this with N the number dropped (see FormatProteinField).
+        /// </summary>
+        public const string TRUNCATION_MARKER_PATTERN = @";...+N_more";
+
         /// <summary>
         /// Mask for extracting the target-side base id from <see cref="FdrEntry.EntryId"/>.
         /// The high bit is set for decoys; clearing it yields the library entry id shared
@@ -98,8 +109,17 @@ namespace pwiz.Osprey.Tasks
             string dir = Path.GetDirectoryName(config.OutputFdrBench);
             string stem = Path.GetFileNameWithoutExtension(config.OutputFdrBench);
             string ext = Path.GetExtension(config.OutputFdrBench);
-            string name = stem + @".pass" + pass.ToString(CultureInfo.InvariantCulture) + ext;
+            string name = stem + PassSuffix(pass) + ext;
             return string.IsNullOrEmpty(dir) ? name : Path.Combine(dir, name);
+        }
+
+        /// <summary>
+        /// The stem suffix <see cref="PathForPass"/> adds when both passes are written:
+        /// <c>.pass1</c> or <c>.pass2</c>.
+        /// </summary>
+        public static string PassSuffix(int pass)
+        {
+            return @".pass" + pass.ToString(CultureInfo.InvariantCulture);
         }
 
         /// <summary>
@@ -262,8 +282,8 @@ namespace pwiz.Osprey.Tasks
                     _writer = new StreamWriter(_saver.SafeName, false);
                     _writer.NewLine = TextUtil.LF; // emit '\n' line endings for the TSV body
                     _writer.WriteLine(perRun
-                        ? new[] { @"peptide", @"mod_peptide", @"charge", @"q_value", @"score", @"protein", @"run" }.ToDsvLine(TextUtil.SEPARATOR_TSV)
-                        : new[] { @"peptide", @"mod_peptide", @"charge", @"q_value", @"score", @"protein" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
+                        ? new[] { @"peptide", @"mod_peptide", @"charge", @"q_value", COLUMN_SCORE, @"protein", COLUMN_RUN }.ToDsvLine(TextUtil.SEPARATOR_TSV)
+                        : new[] { @"peptide", @"mod_peptide", @"charge", @"q_value", COLUMN_SCORE, @"protein" }.ToDsvLine(TextUtil.SEPARATOR_TSV));
                 }
                 catch
                 {
