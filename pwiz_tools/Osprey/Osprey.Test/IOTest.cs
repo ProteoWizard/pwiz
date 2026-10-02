@@ -777,6 +777,9 @@ namespace pwiz.Osprey.Test
                     List<Spectrum> streamed = index.LoadWindow(kvp.Key);
                     AssertSpectraListEqual(kvp.Value, streamed);
                     streamedTotal += streamed.Count;
+                    // One block read decodes to the same spectra; the last window's block ends
+                    // at the MS1 section, the others at the next window's first record.
+                    AssertSpectraListEqual(kvp.Value, index.LoadWindowSerialRead(kvp.Key));
                 }
                 // No record lost or double-counted across the window partition.
                 Assert.AreEqual(full.Ms2Spectra.Count, streamedTotal);
@@ -786,6 +789,7 @@ namespace pwiz.Osprey.Test
                 while (expected.ContainsKey(absentKey))
                     absentKey++;
                 Assert.AreEqual(0, index.LoadWindow(absentKey).Count);
+                Assert.AreEqual(0, index.LoadWindowSerialRead(absentKey).Count);
 
                 // AllMs2Rts mirrors the file-order RTs (dedup's sole dependency).
                 Assert.AreEqual(full.Ms2Spectra.Count, index.AllMs2Rts.Count);
@@ -820,6 +824,19 @@ namespace pwiz.Osprey.Test
             {
                 TryDeleteFile(path);
             }
+
+            // Windows acquired out of center order are stored out of center order, as on real Astral
+            // data: a window's block must end at the next block on disk, not at the next window by
+            // center.
+            AssertSerialReadsMatch(new List<Spectrum>
+            {
+                MakeIndexMs2(1, 10.0, 600.00, 3),
+                MakeIndexMs2(2, 10.0, 500.00, 2),
+                MakeIndexMs2(3, 10.0, 700.00, 4),
+                MakeIndexMs2(4, 10.1, 600.00, 1),
+                MakeIndexMs2(5, 10.1, 500.00, 5),
+                MakeIndexMs2(6, 10.1, 700.00, 2),
+            });
 
             // A cache with bad magic -> null (same rule as LoadSpectraCache), so a
             // caller can fall back to a resident load rather than stream garbage.
@@ -965,6 +982,26 @@ namespace pwiz.Osprey.Test
 
         // Group MS2 by the same key scoring uses: (int)Math.Round(center * 10.0),
         // preserving file order within each window.
+        private static void AssertSerialReadsMatch(List<Spectrum> ms2)
+        {
+            string path = Path.GetTempFileName();
+            try
+            {
+                SpectraCache.SaveSpectraCache(path, ms2, new List<MS1Spectrum>());
+                SpectraWindowIndex index = SpectraWindowIndex.BuildFromCache(path);
+                Assert.IsNotNull(index);
+                foreach (var kvp in GroupByWindowKey(ms2))
+                {
+                    AssertSpectraListEqual(kvp.Value, index.LoadWindow(kvp.Key));
+                    AssertSpectraListEqual(kvp.Value, index.LoadWindowSerialRead(kvp.Key));
+                }
+            }
+            finally
+            {
+                TryDeleteFile(path);
+            }
+        }
+
         private static Dictionary<int, List<Spectrum>> GroupByWindowKey(List<Spectrum> ms2)
         {
             var byKey = new Dictionary<int, List<Spectrum>>();
