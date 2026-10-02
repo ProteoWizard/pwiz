@@ -376,6 +376,9 @@
   <data name="SpectraWindowIndex_LoadWindow_The_spectra_cache_is_damaged__a_record_is_not_where_its_index_says__expected_byte__0___" xml:space="preserve">
     <value>The spectra cache is damaged: a record is not where its index says (expected byte {0}, found {1}).</value>
   </data>
+  <data name="SpectraWindowIndex_LoadWindowSerialRead_The_spectra_cache_is_damaged__an_isolation_window_would_end_at_byte__0___outside_the_file_" xml:space="preserve">
+    <value>The spectra cache is damaged: an isolation window would end at byte {0:N0}, outside the file.</value>
+  </data>
   <data name="SpectrumBuilder_CreateMs2Spectrum_Spectrum_index__0__has_no_valid_isolation_window_lower_offset__cvParam_MS_1000828_is_" xml:space="preserve">
     <value>Spectrum index {0} has no valid isolation window lower offset (cvParam {1} is missing or not positive). Osprey needs true isolation windows to process DIA data.</value>
   </data>
