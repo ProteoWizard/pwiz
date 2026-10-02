@@ -402,7 +402,7 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     // if there is a control given, use it to invoke the args collector form with that control as its parent. 
                     // Otherwise just invoke the form by itself
-                    answer = parent.Invoke(new Func<string[]>(() => (string[])methodInfo.Invoke(null, collectorArgs)));
+                    answer = parent.Invoke(() => (string[])methodInfo.Invoke(null, collectorArgs));
                 }
             }
             catch (Exception x)

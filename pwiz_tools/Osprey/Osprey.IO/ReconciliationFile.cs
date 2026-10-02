@@ -76,7 +76,11 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public const int CurrentFormatVersion = 3;
 
-        [JsonProperty(@"file_stems", Order = 0)]
+        // JSON keys a load error names, so a user can find them in the file.
+        private const string KEY_FILE_STEMS = @"file_stems";
+        private const string KEY_FORMAT_VERSION = @"format_version";
+
+        [JsonProperty(KEY_FILE_STEMS, Order = 0)]
         public List<string> FileStems { get; set; }
 
         /// <summary>
@@ -89,7 +93,7 @@ namespace pwiz.Osprey.IO
         [JsonProperty(@"forced_integration_actions", Order = 2)]
         public List<ForcedIntegrationEntry> ForcedIntegrationActions { get; set; }
 
-        [JsonProperty(@"format_version", Order = 3)]
+        [JsonProperty(KEY_FORMAT_VERSION, Order = 3)]
         public int FormatVersion { get; set; }
 
         [JsonProperty(@"gap_fill_targets", Order = 4)]
@@ -127,7 +131,8 @@ namespace pwiz.Osprey.IO
             {
                 throw new InvalidDataException(string.Format(
                     OspreyIOResources.ReconciliationFile_Load_Reconciliation_file__0__has_unsupported_format_version__1___expected__2____Delete_this_,
-                    path, parsed.FormatVersion, CurrentFormatVersion));
+                    path, parsed.FormatVersion, CurrentFormatVersion, KEY_FORMAT_VERSION,
+                    OspreyTaskNames.TaskFilePattern(OspreyTaskNames.FIRST_PASS_FDR)));
             }
             // v2 envelopes must carry the planner's full join file_stems set;
             // a deserialized v2 file with file_stems missing or empty would
@@ -141,7 +146,8 @@ namespace pwiz.Osprey.IO
             {
                 throw new InvalidDataException(string.Format(
                     OspreyIOResources.ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_list_the_input_files_it_,
-                    path, CurrentFormatVersion));
+                    path, CurrentFormatVersion, KEY_FORMAT_VERSION, KEY_FILE_STEMS,
+                    OspreyTaskNames.TaskFilePattern(OspreyTaskNames.FIRST_PASS_FDR)));
             }
             // v3 required: the join-wide first-pass base_id set. A per-file HPC
             // worker MUST have this to compact to the same set as the in-memory
@@ -151,7 +157,8 @@ namespace pwiz.Osprey.IO
             {
                 throw new InvalidDataException(string.Format(
                     OspreyIOResources.ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_carry_the_first_pass_,
-                    path, CurrentFormatVersion));
+                    path, CurrentFormatVersion, KEY_FORMAT_VERSION,
+                    OspreyTaskNames.TaskFilePattern(OspreyTaskNames.FIRST_PASS_FDR)));
             }
             return parsed;
         }

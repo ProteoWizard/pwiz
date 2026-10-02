@@ -794,7 +794,7 @@ namespace pwiz.CommonFileDialogs
                     // Wait for the handle to be created
                     System.Threading.Thread.Sleep(100);
                 }
-                BeginInvoke(new Action(() =>
+                BeginInvoke(() =>
                 {
                     try
                     {
@@ -806,7 +806,7 @@ namespace pwiz.CommonFileDialogs
                     catch
                     {
                     }
-                }));
+                });
             }
             catch
             {
@@ -1084,7 +1084,7 @@ namespace pwiz.CommonFileDialogs
             {
                 // Defer so the create work runs after the label-edit event completes, avoiding
                 // reentrancy on the list view.
-                BeginInvoke(new Action(() => CreateNewFolder(folderName)));
+                BeginInvoke(() => CreateNewFolder(folderName));
             }
         }
 

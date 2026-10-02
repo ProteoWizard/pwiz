@@ -544,7 +544,7 @@ namespace pwiz.Common.SystemUtil
                 if (cookies.Count > 0)
                 {
                     var cookieHeader = string.Join(@"; ", 
-                        cookies.Cast<Cookie>().Select(c => $@"{c.Name}={c.Value}"));
+                        cookies.Select(c => $@"{c.Name}={c.Value}"));
                     request.Headers.Add(cookieHeaderName, cookieHeader);
                 }
             }
@@ -606,7 +606,7 @@ namespace pwiz.Common.SystemUtil
                         if (t.IsFaulted)
                             _ = t.Exception;
                         else if (t.Status == TaskStatus.RanToCompletion)
-                            t.Result?.Dispose();
+                            t.Result.Dispose();
                     }, TaskScheduler.Default);
 
                     // The delay shares the caller's token, so cancelling completes it too and the

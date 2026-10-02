@@ -75,6 +75,11 @@ namespace TestPerf
             public string IsolationSchemeFile;
             public char IsolationSchemeFileSeparator;
             public MzTolerance PrecursorTolerance;
+            // Never applied: SetupPage assigns SearchSettingsControl.PrecursorTolerance but has no
+            // matching line for this, so the search runs at the dialog's default fragment tolerance.
+            // Kept because it records the value each instrument is meant to use; wiring it up would
+            // move the search results and needs a deliberate re-baseline.
+            // ReSharper disable once NotAccessedField.Local
             public MzTolerance FragmentTolerance;
             public DiaUmpire.Config.InstrumentPreset InstrumentPreset;
 
@@ -330,6 +335,22 @@ namespace TestPerf
         protected override bool IsRecordMode => false;
 
         protected override void DoTest()
+        {
+            try
+            {
+                DoTutorialSteps();
+            }
+            finally
+            {
+                // Cleanup output files in persistent dir, even when the test fails: the DIA-SWATH tutorial
+                // tests share this dir and select every .mzML in it, so leftover -diaumpire.mzML files fail them.
+                // (in IsRecordMode, keep these files around so that repeated tests on each language run faster)
+                if (!IsRecordMode)
+                    CleanUpPersistentDir(GetTestPath("DIA\\"));
+            }
+        }
+
+        private void DoTutorialSteps()
         {
             Assert.IsNotNull(_expectedValues);
 
@@ -595,7 +616,7 @@ namespace TestPerf
             // on-demand MSAmanda download prompt. On net8 MSAmanda is downloaded on demand (a modal
             // "Download MSAmanda" MultiButtonMsgDlg shown synchronously by ClickNextButton); on net472
             // MSAmanda is bundled and no dialog appears, so TryWaitForOpenForm just times out (no-op).
-            SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));
+            SkylineWindow.BeginInvoke(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
             if (downloaderDlg != null)
@@ -707,7 +728,6 @@ namespace TestPerf
                         { "collinsb_I180316_002", 41 }
                     }))
             {
-                CleanUpPersistentDir(diaDir);
                 return;
             }
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
@@ -890,13 +910,6 @@ namespace TestPerf
                     fcFloatingWindow.Top = SkylineWindow.Bottom - fcFloatingWindow.Height - 8;
                 });*/
                 TakeCoverShot();
-            }
-
-            // Cleanup output files in persistent dir
-            // (in IsRecordMode, keep these files around so that repeated tests on each language run faster)
-            if (!IsRecordMode)
-            {
-                CleanUpPersistentDir(diaDir);
             }
 
             if (IsRecordMode)

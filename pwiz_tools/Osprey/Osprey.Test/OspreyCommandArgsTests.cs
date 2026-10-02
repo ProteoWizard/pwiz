@@ -45,6 +45,9 @@ namespace pwiz.Osprey.Test
     [TestClass]
     public class OspreyCommandArgsTests
     {
+        // OspreyCommandArgs renders --help at 78 columns.
+        private const int HELP_WIDTH = 78;
+
         /// <summary>
         /// Parses tokens built from the Argument instances (<c>ARG_THREADS + 8</c>), split
         /// into argv the way a shell would by <see cref="ArgTokens.Split"/>.
@@ -179,6 +182,21 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(Parse(OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY).DecoysInLibrary);
             Assert.AreEqual(@"m.tsv", Parse(OspreyCommandArgs.ARG_DECOYS_IN_LIBRARY, OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST + @"m.tsv").DecoyPairingManifestPath);
             Assert.IsTrue(Parse(OspreyCommandArgs.ARG_WRITE_PIN).WritePin);
+
+            // Training export: off by default, and each setting lands where the task reads it.
+            var noExport = Parse(OspreyCommandArgs.ARG_INPUT + @"a.mzML").TrainingExport;
+            Assert.IsFalse(noExport.Enabled);
+            Assert.IsNull(noExport.MaxQ);
+            Assert.IsNull(noExport.ClaimantQ);
+            Assert.IsFalse(noExport.WriteXics);
+            Assert.AreEqual(0.01, noExport.EffectiveMaxQ(0.01));
+            Assert.AreEqual(TrainingExportConfig.DEFAULT_CLAIMANT_Q, noExport.EffectiveClaimantQ);
+            var export = Parse(OspreyCommandArgs.ARG_TRAINING_EXPORT, OspreyCommandArgs.ARG_TRAINING_EXPORT_MAX_Q + 0.05,
+                OspreyCommandArgs.ARG_TRAINING_EXPORT_CLAIMANT_Q + 0.02, OspreyCommandArgs.ARG_TRAINING_EXPORT_XICS).TrainingExport;
+            Assert.IsTrue(export.Enabled);
+            Assert.AreEqual(0.05, export.EffectiveMaxQ(0.01));
+            Assert.AreEqual(0.02, export.EffectiveClaimantQ);
+            Assert.IsTrue(export.WriteXics);
 
             // Performance: --parallel-files has an OPTIONAL value. Absent =
             // sequential default; no value = auto; <N> = explicit. The optional
@@ -505,6 +523,23 @@ namespace pwiz.Osprey.Test
                     @"NoSuchSection", OspreyCommandArgs.ARG_HELP.ArgumentText + @" sections") + Environment.NewLine,
                 OspreyCommandArgs.BuildUsage(@"NoSuchSection"));
 
+            // Japanese and Chinese: a CJK character fills two console columns, so every line must fit
+            // the table width in display columns, and a flag inside CJK text (which has no spaces to
+            // break at) must never be split across lines, where a user copying it gets a broken one.
+            foreach (var language in new[] { @"ja", @"zh-Hans" })
+            {
+                string localized;
+                using (new CultureScope(CultureInfo.GetCultureInfo(language)))
+                    localized = OspreyCommandArgs.BuildUsage(null);
+                foreach (var line in localized.Split('\n').Select(l => l.TrimEnd('\r')))
+                {
+                    Assert.IsTrue(ConsoleTable.DisplayWidth(line) <= HELP_WIDTH,
+                        string.Format(@"{0} help line is {1} columns wide: {2}", language, ConsoleTable.DisplayWidth(line), line));
+                }
+                foreach (var arg in OspreyCommandArgs.AllArguments.Where(a => !a.InternalUse))
+                    StringAssert.Contains(localized, arg.ArgumentText, language);
+            }
+
             // html: well-formed-ish document with a table.
             string html = OspreyCommandArgs.GenerateUsageHtml();
             StringAssert.Contains(html, @"<html>");
@@ -519,20 +554,40 @@ namespace pwiz.Osprey.Test
         /// <c>Documentation/Help/en/CommandLine.html</c>. The test is self-updating: when they
         /// differ it overwrites the committed file with the freshly generated content and then
         /// fails, so the fix is simply to review and commit the regenerated file. (CI fails the same
-        /// way, flagging an argument or generated-prose change that was not regenerated.) The
-        /// per-language folder leaves room for ja / zh-CHS once the descriptions move to a .resx.
+        /// way, flagging an argument or generated-prose change that was not regenerated.) As in
+        /// Skyline's Documentation/Help, there is one page per shipped language: en, ja, zh-Hans.
         /// </summary>
         [TestMethod]
         public void TestCommandLineHelpDocumentation()
         {
-            // The committed page is the English one (Help/en), whatever culture the suite runs in.
+            // Each page is generated in its own language, whatever culture the suite runs in.
+            var rewritten = new List<string>();
+            foreach (var language in new[] { @"en", @"ja", @"zh-Hans" })
+            {
+                string path = UpdateHelpPage(language);
+                if (path != null)
+                    rewritten.Add(path);
+            }
+            // Out of date (or missing): the pages were rewritten; fail so the developer reviews and
+            // commits them. Re-running after the commit passes.
+            Assert.AreEqual(0, rewritten.Count,
+                @"Command-line help pages were out of date or missing and were regenerated; review and commit: " +
+                string.Join(@", ", rewritten));
+        }
+
+        /// <summary>
+        /// Regenerates Documentation/Help/&lt;language&gt;/CommandLine.html when its content differs
+        /// from the committed page, returning its path, or null when it is up to date.
+        /// </summary>
+        private static string UpdateHelpPage(string language)
+        {
             string generated;
-            using (new CultureScope(CultureInfo.GetCultureInfo(@"en")))
+            using (new CultureScope(CultureInfo.GetCultureInfo(language)))
             {
                 generated = OspreyCommandArgs.GenerateUsageHtml();
             }
             string committedPath = Path.Combine(FindOspreySourceRoot(),
-                @"Documentation", @"Help", @"en", @"CommandLine.html");
+                @"Documentation", @"Help", language, @"CommandLine.html");
 
             // Compare EOL-agnostically: GenerateUsageHtml builds with Environment.NewLine, which
             // differs between the Windows (net472) and Linux (net8.0) test runs, and git may rewrite
@@ -540,18 +595,13 @@ namespace pwiz.Osprey.Test
             // and it keeps a pure EOL difference from triggering a spurious rewrite.
             string committed = File.Exists(committedPath) ? File.ReadAllText(committedPath) : null;
             if (committed != null && NormalizeEol(committed) == NormalizeEol(generated))
-                return;
+                return null;
 
-            // Out of date (or missing): self-heal by writing the regenerated page, then fail so the
-            // developer reviews and commits it. Re-running after the commit passes.
             string committedDir = Path.GetDirectoryName(committedPath);
             if (!string.IsNullOrEmpty(committedDir))
                 Directory.CreateDirectory(committedDir);
             File.WriteAllText(committedPath, generated);
-            Assert.Fail(committed == null
-                    ? @"Generated usage doc did not exist; wrote {0}. Review and commit it."
-                    : @"Documentation/Help/en/CommandLine.html was out of date; regenerated it at {0}. Review and commit the change.",
-                committedPath);
+            return committedPath;
         }
 
         private static string NormalizeEol(string s)
