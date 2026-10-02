@@ -26,8 +26,10 @@ namespace pwiz.CarafeSharp.Proteome
 {
     /// <summary>
     /// A saved model another one was fine-tuned further from (<c>-model</c> with training): the
-    /// file, its SHA-256 to find it again, what wrote it and when, and the runs it was trained
-    /// on. It is one entry of the manifest's <c>base_models</c> (docs/06-saved-models.md).
+    /// file, its SHA-256 to find it again, what wrote it and when, the runs it was trained on,
+    /// and its models' origins, so the chain of <c>base_models</c> holds each model's lineage
+    /// without the older files. It is one entry of the manifest's <c>base_models</c>
+    /// (docs/06-saved-models.md).
     /// </summary>
     public sealed class CarafeModelBase
     {
@@ -39,6 +41,10 @@ namespace pwiz.CarafeSharp.Proteome
         public string Created { get; set; }
         /// <summary>The MS files it was trained on.</summary>
         public IReadOnlyList<string> Runs { get; set; } = new List<string>();
+        /// <summary>Its MS2 model's origin, or null for a file that does not record one (<see cref="CarafeModelFile.FORMAT_1"/>).</summary>
+        public CarafeModelOrigin Ms2Origin { get; set; }
+        /// <summary>Its RT model's origin, or null for a file that does not record one.</summary>
+        public CarafeModelOrigin RtOrigin { get; set; }
 
         /// <summary>A saved model, as a base of the models fine-tuned from it.</summary>
         public static CarafeModelBase Of(CarafeModelFile model)
@@ -50,6 +56,8 @@ namespace pwiz.CarafeSharp.Proteome
                 Creator = model.Creator,
                 Created = model.Created,
                 Runs = model.Runs.Select(r => System.IO.Path.GetFileName(r.MsFile)).ToList(),
+                Ms2Origin = model.Ms2Origin,
+                RtOrigin = model.RtOrigin,
             };
         }
 
@@ -64,11 +72,28 @@ namespace pwiz.CarafeSharp.Proteome
             foreach (string run in Runs)
                 json.WriteStringValue(run);
             json.WriteEndArray();
+            json.WritePropertyName(@"models");
+            if (Ms2Origin == null || RtOrigin == null)
+            {
+                json.WriteNullValue();
+            }
+            else
+            {
+                json.WriteStartObject();
+                json.WriteStartObject(@"ms2");
+                Ms2Origin.WriteFields(json);
+                json.WriteEndObject();
+                json.WriteStartObject(@"rt");
+                RtOrigin.WriteFields(json);
+                json.WriteEndObject();
+                json.WriteEndObject();
+            }
             json.WriteEndObject();
         }
 
-        public static CarafeModelBase ReadJson(JsonElement element)
+        public static CarafeModelBase ReadJson(string path, JsonElement element)
         {
+            bool hasModels = element.TryGetProperty(@"models", out var models) && models.ValueKind == JsonValueKind.Object;
             return new CarafeModelBase
             {
                 File = element.GetProperty(@"file").GetString(),
@@ -76,6 +101,8 @@ namespace pwiz.CarafeSharp.Proteome
                 Creator = element.GetProperty(@"creator").GetString(),
                 Created = element.GetProperty(@"created").GetString(),
                 Runs = element.GetProperty(@"runs").EnumerateArray().Select(r => r.GetString()).ToList(),
+                Ms2Origin = hasModels ? CarafeModelOrigin.ReadFields(path, @"ms2", models.GetProperty(@"ms2")) : null,
+                RtOrigin = hasModels ? CarafeModelOrigin.ReadFields(path, @"rt", models.GetProperty(@"rt")) : null,
             };
         }
     }

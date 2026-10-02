@@ -164,9 +164,10 @@ namespace pwiz.CarafeSharp
             // The RT model this run fine-tuned, else (-tf ms2) the pretrained one its library predicts with.
             string rtFile = trained.GetRtModelPath(_settings.TrainingType);
             var rtModel = rtFile != null ? LibraryGenerator.GetRtModelType(rtFile) : fineTune.RtModelType;
+            bool ms2Held = ms2File != null && CarafeModelDirectory.IsSafetensors(ms2File);
             var saved = CarafeModelFile.Write(modelFile, trained, _settings.TrainingType, pretrained?.Sha256, _settings.Ms2Model,
                 BuildTrainingDescription(exports, selection.Runs, options, trainingSet, _settings), acquisition, baseModel,
-                rtModel, rtModel == RtModelType.chronologer ? ChronologerFiles.VERSION : null);
+                BuildMs2Origin(fineTune, baseModel, ms2Held), BuildRtOrigin(fineTune, baseModel, rtModel));
             Log(@"Saved the fine-tuned model " + modelFile + @": " + saved.Describe());
 
             if (_settings.Library != null)
@@ -342,6 +343,38 @@ namespace pwiz.CarafeSharp
             }
             Log(string.Format(@"WARNING: -rt_model {0}: the saved model's fine-tuned {1} RT model is not fine-tuned further; " +
                               @"the {0} RT model starts from its pretrained model.", fineTune.RtModelType, baseType));
+        }
+
+        /// <summary>
+        /// The saved MS2 model's origin: what its fine-tune started from (<c>-ms2_model</c>, the saved model's, else the
+        /// pretrained one), and the release a model the file holds descends from: the saved model's, unknown from
+        /// <c>-ms2_model</c>. A model the file does not hold is the pretrained one.
+        /// </summary>
+        private CarafeModelOrigin BuildMs2Origin(FineTuneOptions fineTune, CarafeModelFile baseModel, bool held)
+        {
+            string start = !_settings.TrainMs2 ? null
+                : _settings.Ms2Model != null ? CarafeModelOrigin.START_MS2_MODEL
+                : fineTune.Ms2Model != null ? CarafeModelOrigin.START_BASE
+                : CarafeModelOrigin.START_PRETRAINED;
+            string version = !held || start == CarafeModelOrigin.START_PRETRAINED ? PretrainedModels.VERSION
+                : start == CarafeModelOrigin.START_BASE ? baseModel?.Ms2Origin?.Version
+                : null;
+            return new CarafeModelOrigin { Model = CarafeModelOrigin.ALPHAPEPTDEEP, Version = version, Start = start };
+        }
+
+        /// <summary>
+        /// The saved RT model's origin: <paramref name="rtModel"/>, what its fine-tune started from (the saved model's of
+        /// the same kind, else the pretrained one), and the release, which for a model of CarafeSharp's own lineage is
+        /// that kind's pretrained one.
+        /// </summary>
+        private CarafeModelOrigin BuildRtOrigin(FineTuneOptions fineTune, CarafeModelFile baseModel, RtModelType rtModel)
+        {
+            string start = !_settings.TrainRt ? null
+                : fineTune.RtModel != null ? CarafeModelOrigin.START_BASE
+                : CarafeModelOrigin.START_PRETRAINED;
+            string pretrainedVersion = rtModel == RtModelType.chronologer ? ChronologerFiles.VERSION : PretrainedModels.VERSION;
+            string version = start == CarafeModelOrigin.START_BASE ? baseModel?.RtOrigin?.Version ?? pretrainedVersion : pretrainedVersion;
+            return new CarafeModelOrigin { Model = rtModel.ToString(), Version = version, Start = start };
         }
 
         private static string Footer(OspreyTrainingExport export, string key)

@@ -250,6 +250,13 @@ namespace pwiz.CarafeSharp.Test
             Assert.IsFalse(saved.RtFineTuned);
             Assert.IsFalse(saved.RtUsed);
             Assert.AreEqual(@"start_ms2.safetensors", saved.Ms2StartModel);
+            // Each model's origin: the MS2 model fine-tuned from -ms2_model, of a release it cannot know when it holds
+            // that model; the RT model AlphaPeptDeep's pretrained one, not fine-tuned.
+            Assert.AreEqual(CarafeModelOrigin.START_MS2_MODEL, saved.Ms2Origin.Start);
+            Assert.AreEqual(saved.Ms2Used ? null : PretrainedModels.VERSION, saved.Ms2Origin.Version);
+            Assert.AreEqual(CarafeModelOrigin.ALPHAPEPTDEEP, saved.RtOrigin.Model);
+            Assert.AreEqual(PretrainedModels.VERSION, saved.RtOrigin.Version);
+            Assert.IsNull(saved.RtOrigin.Start);
             Assert.AreEqual(@"run_a", saved.Runs.Single().MsFile);
             Assert.AreEqual(28.0, saved.Nce);
             Assert.AreEqual(@"Astral", saved.Instrument);
@@ -388,7 +395,7 @@ namespace pwiz.CarafeSharp.Test
             File.WriteAllText(Path.Combine(baseFolder, ModelFiles.META), @"{""earlier.mzML"":{""ms_file"":""earlier.mzML"",""nce"":30.0,""rt_max"":40.0}}");
             string baseFile = Path.Combine(_folder, @"earlier" + CarafeModelFile.EXTENSION);
             var written = CarafeModelFile.Write(baseFile, CarafeModelDirectory.Open(baseFolder, true), @"all", null, null, null, null, null,
-                RtModelType.alphapeptdeep, null);
+                PretrainedOrigin(), PretrainedOrigin());
             Assert.IsTrue(written.Ms2Used && written.RtUsed);
             Assert.AreEqual(0, written.BaseModels.Count);
 
@@ -420,6 +427,13 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(written.FileSha256, chain.Sha256);
             Assert.AreEqual(written.Created, chain.Created);
             CollectionAssert.AreEqual(new[] { @"earlier.mzML" }, chain.Runs.ToArray());
+            // Provenance: both models started from the saved model's, whose entry records that it started from the
+            // pretrained ones.
+            Assert.AreEqual(CarafeModelOrigin.START_BASE, saved.Ms2Origin.Start);
+            Assert.AreEqual(CarafeModelOrigin.START_BASE, saved.RtOrigin.Start);
+            Assert.AreEqual(PretrainedModels.VERSION, saved.Ms2Origin.Version, @"the base model's release");
+            Assert.AreEqual(CarafeModelOrigin.START_PRETRAINED, chain.Ms2Origin.Start);
+            Assert.AreEqual(CarafeModelOrigin.START_PRETRAINED, chain.RtOrigin.Start);
             // This run's own training run and defaults, not the saved model's.
             Assert.AreEqual(@"run_a", saved.Runs.Single().MsFile);
             Assert.AreEqual(12.1, saved.RtMax, 1e-12);
@@ -442,6 +456,10 @@ namespace pwiz.CarafeSharp.Test
             CollectionAssert.AreEqual(new[] { CarafeModelFile.DEFAULT_FILE_NAME, @"earlier" + CarafeModelFile.EXTENSION },
                 twice.BaseModels.Select(b => b.File).ToArray());
             Assert.AreEqual(saved.FileSha256, twice.BaseModels[0].Sha256);
+            // The RT model's lineage, back through the chain: base, base, pretrained.
+            CollectionAssert.AreEqual(new[] { CarafeModelOrigin.START_BASE, CarafeModelOrigin.START_BASE, CarafeModelOrigin.START_PRETRAINED },
+                new[] { twice.RtOrigin }.Concat(twice.BaseModels.Select(b => b.RtOrigin)).Select(o => o.Start).ToArray());
+            StringAssert.Contains(twice.FormatInfo(), @"its MS2: alphapeptdeep v1, fine-tuned from the base model; its RT: alphapeptdeep v1, fine-tuned from the base model");
 
             // A run without -model into the first folder does not predict with the model kept there.
             var settings = CarafeCommandLine.Parse(new[] { @"-i", export, @"-o", first, @"-tf", @"ms2", @"-seed", @"9",
@@ -528,9 +546,13 @@ namespace pwiz.CarafeSharp.Test
             var saved = CarafeModelFile.Open(savedPath);
             Assert.AreEqual(CarafeModelFile.FORMAT, saved.Format);
             Assert.AreEqual(RtModelType.chronologer, saved.RtModel);
-            Assert.AreEqual(ChronologerFiles.VERSION, saved.RtModelVersion);
+            Assert.AreEqual(ChronologerFiles.VERSION, saved.RtOrigin.Version);
+            Assert.AreEqual(CarafeModelOrigin.START_PRETRAINED, saved.RtOrigin.Start);
+            Assert.AreEqual(CarafeModelOrigin.START_MS2_MODEL, saved.Ms2Origin.Start);
             Assert.IsTrue(saved.RtUsed);
-            StringAssert.Contains(saved.FormatInfo(), @"RT model: fine-tuned Chronologer " + ChronologerFiles.VERSION);
+            string savedInfo = saved.FormatInfo();
+            StringAssert.Contains(savedInfo, @"RT model: fine-tuned Chronologer");
+            StringAssert.Contains(savedInfo, @"RT origin: chronologer " + ChronologerFiles.VERSION + @", fine-tuned from the pretrained model");
             string fromFileLog = PredictFromSavedModel(savedPath, fasta, @"from_file");
             StringAssert.Contains(fromFileLog, @"Using the fine-tuned Chronologer RT model");
             StringAssert.Contains(fromFileLog, @"Library RT: rt_pred * rt_max (12.1");
@@ -544,6 +566,8 @@ namespace pwiz.CarafeSharp.Test
             string ms2SavedPath = Path.Combine(ms2Only, CarafeModelFile.DEFAULT_FILE_NAME);
             var ms2Saved = CarafeModelFile.Open(ms2SavedPath);
             Assert.AreEqual(RtModelType.chronologer, ms2Saved.RtModel);
+            Assert.AreEqual(ChronologerFiles.VERSION, ms2Saved.RtOrigin.Version);
+            Assert.IsNull(ms2Saved.RtOrigin.Start, @"not fine-tuned");
             Assert.IsFalse(ms2Saved.RtUsed);
             StringAssert.Contains(ms2Saved.Describe(), @"RT pretrained Chronologer");
             string ms2Log = PredictFromSavedModel(ms2SavedPath, fasta, @"from_ms2_only");
@@ -569,7 +593,7 @@ namespace pwiz.CarafeSharp.Test
             File.WriteAllText(Path.Combine(baseFolder, ModelFiles.METRICS), @"{""ms2"":{""use_finetuned_for_prediction"":true}}");
             string baseFile = Path.Combine(_folder, @"earlier" + CarafeModelFile.EXTENSION);
             CarafeModelFile.Write(baseFile, CarafeModelDirectory.Open(baseFolder, true), @"all", null, null, null, null, null,
-                RtModelType.alphapeptdeep, null);
+                PretrainedOrigin(), PretrainedOrigin());
 
             // -rt_model chronologer on a saved AlphaPeptDeep model: Chronologer starts from its pretrained model.
             string toChronologer = Path.Combine(_folder, @"to_chronologer");
@@ -580,15 +604,28 @@ namespace pwiz.CarafeSharp.Test
                 @"WARNING: -rt_model chronologer: the saved model's fine-tuned alphapeptdeep RT model is not fine-tuned further");
             StringAssert.Contains(log.ToString(), @"RT: fine-tuning Chronologer ");
             string chronologerFile = Path.Combine(toChronologer, CarafeModelFile.DEFAULT_FILE_NAME);
-            Assert.AreEqual(RtModelType.chronologer, CarafeModelFile.Open(chronologerFile).RtModel);
+            var toChronologerSaved = CarafeModelFile.Open(chronologerFile);
+            Assert.AreEqual(RtModelType.chronologer, toChronologerSaved.RtModel);
+            // Its provenance says so: the MS2 model from the saved model's, the RT model from the pretrained Chronologer,
+            // although the file names the saved model as its base.
+            Assert.AreEqual(CarafeModelOrigin.START_BASE, toChronologerSaved.Ms2Origin.Start);
+            Assert.AreEqual(CarafeModelOrigin.START_PRETRAINED, toChronologerSaved.RtOrigin.Start);
+            Assert.AreEqual(ChronologerFiles.VERSION, toChronologerSaved.RtOrigin.Version);
+            Assert.AreEqual(@"earlier" + CarafeModelFile.EXTENSION, toChronologerSaved.BaseModels.Single().File);
 
-            // Without -rt_model, the saved Chronologer is fine-tuned further as a Chronologer.
+            // Without -rt_model, the saved Chronologer is fine-tuned further as a Chronologer: its lineage is the base's
+            // Chronologer, which started from the pretrained one, and the AlphaPeptDeep model before that is not in it.
             string further = Path.Combine(_folder, @"further");
             log = new StringWriter();
             new ModelTrainer(TrainFrom(export, further, chronologerFile), log, zip => null) { ConfigureFineTune = ShortFineTune }.Run();
             StringAssert.Contains(log.ToString(), @"RT: fine-tuning the Chronologer model ");
             Assert.IsFalse(log.ToString().Contains(@"WARNING: -rt_model"), log.ToString());
-            Assert.AreEqual(RtModelType.chronologer, CarafeModelFile.Open(Path.Combine(further, CarafeModelFile.DEFAULT_FILE_NAME)).RtModel);
+            var furtherSaved = CarafeModelFile.Open(Path.Combine(further, CarafeModelFile.DEFAULT_FILE_NAME));
+            Assert.AreEqual(RtModelType.chronologer, furtherSaved.RtModel);
+            Assert.AreEqual(CarafeModelOrigin.START_BASE, furtherSaved.RtOrigin.Start);
+            var baseRt = furtherSaved.BaseModels.Select(b => b.RtOrigin).ToArray();
+            CollectionAssert.AreEqual(new[] { @"chronologer", CarafeModelOrigin.ALPHAPEPTDEEP }, baseRt.Select(o => o.Model).ToArray());
+            CollectionAssert.AreEqual(new[] { CarafeModelOrigin.START_PRETRAINED, CarafeModelOrigin.START_PRETRAINED }, baseRt.Select(o => o.Start).ToArray());
 
             // An explicit -rt_model alphapeptdeep fine-tunes AlphaPeptDeep's pretrained RT model instead.
             string back = Path.Combine(_folder, @"back");
@@ -598,7 +635,10 @@ namespace pwiz.CarafeSharp.Test
             StringAssert.Contains(log.ToString(),
                 @"WARNING: -rt_model alphapeptdeep: the saved model's fine-tuned chronologer RT model is not fine-tuned further");
             Assert.IsFalse(ChronologerModel.IsChronologerFile(Path.Combine(back, ModelFiles.RT_SAFETENSORS)));
-            Assert.AreEqual(RtModelType.alphapeptdeep, CarafeModelFile.Open(Path.Combine(back, CarafeModelFile.DEFAULT_FILE_NAME)).RtModel);
+            var backSaved = CarafeModelFile.Open(Path.Combine(back, CarafeModelFile.DEFAULT_FILE_NAME));
+            Assert.AreEqual(RtModelType.alphapeptdeep, backSaved.RtModel);
+            Assert.AreEqual(CarafeModelOrigin.START_PRETRAINED, backSaved.RtOrigin.Start);
+            Assert.AreEqual(PretrainedModels.VERSION, backSaved.RtOrigin.Version);
         }
 
         /// <summary>
@@ -801,6 +841,15 @@ namespace pwiz.CarafeSharp.Test
             return CarafeCommandLine.Parse(new[] { @"-i", export, @"-o", output, @"-model", baseModel, @"-seed", @"9", @"-device", @"cpu", @"-nce", @"28" }
                     .Concat(options).ToArray())
                 .TrainingSettings;
+        }
+
+        /// <summary>The origin of a model fine-tuned from AlphaPeptDeep's pretrained model, for a saved model written in a test.</summary>
+        private static CarafeModelOrigin PretrainedOrigin()
+        {
+            return new CarafeModelOrigin
+            {
+                Model = CarafeModelOrigin.ALPHAPEPTDEEP, Version = PretrainedModels.VERSION, Start = CarafeModelOrigin.START_PRETRAINED,
+            };
         }
 
         /// <summary>A fine-tune of one MS2 epoch and two RT epochs, for runs that test what is trained rather than how well.</summary>

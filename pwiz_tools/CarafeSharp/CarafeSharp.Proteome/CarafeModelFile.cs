@@ -54,7 +54,10 @@ namespace pwiz.CarafeSharp.Proteome
         public const string EXTENSION = @".carafemodel";
         public const string DEFAULT_FILE_NAME = @"carafe_fine_tuned_model" + EXTENSION;
         public const string MANIFEST_ENTRY = @"manifest.json";
-        /// <summary>The format written: carafemodel-1 with the RT model named, which Chronologer needs.</summary>
+        /// <summary>
+        /// The format written: carafemodel-1 with each model's network, release and start named
+        /// (<see cref="CarafeModelOrigin"/>), as the RT model can be Chronologer.
+        /// </summary>
         public const string FORMAT = @"carafemodel-2";
         /// <summary>
         /// The format before Chronologer, still read. It does not name its RT model (<see cref="RtModel"/> is null),
@@ -75,14 +78,14 @@ namespace pwiz.CarafeSharp.Proteome
         /// <param name="training">What the models were trained on, or null; its held-out metrics are read from the folder here.</param>
         /// <param name="acquisition">The activations and analyzers the MS2 model has columns for, or null when unknown.</param>
         /// <param name="baseModel">The saved model the training fine-tuned further (<c>-model</c>), or null.</param>
-        /// <param name="rtModel">
-        /// The RT model a library from the file predicts with: the one the folder's fine-tuned RT model is, else the
-        /// pretrained one the training predicted its library with (<c>-tf ms2 -rt_model</c>).
+        /// <param name="ms2Origin">What the MS2 model is and what it was fine-tuned from.</param>
+        /// <param name="rtOrigin">
+        /// What the RT model is (the folder's fine-tuned one, else the pretrained one the training predicted its library
+        /// with: <c>-tf ms2 -rt_model</c>) and what it was fine-tuned from.
         /// </param>
-        /// <param name="rtModelVersion">The Chronologer version <paramref name="rtModel"/> is, or null for AlphaPeptDeep.</param>
         public static CarafeModelFile Write(string path, CarafeModelDirectory trained, string trainingType, string pretrainedSha256,
             string ms2StartModel, CarafeModelTraining training, AcquisitionVocabulary acquisition, CarafeModelFile baseModel,
-            RtModelType rtModel, string rtModelVersion)
+            CarafeModelOrigin ms2Origin, CarafeModelOrigin rtOrigin)
         {
             // Only the safetensors this run wrote: a Carafe checkpoint left in the folder is not its model.
             string ms2 = SafetensorsOrNull(trained.GetMs2ModelPath(trainingType));
@@ -118,8 +121,8 @@ namespace pwiz.CarafeSharp.Proteome
                 Ms2Entry = ms2Entry,
                 RtFineTuned = IsTrained(trainingType, @"rt"),
                 RtUsed = rt != null,
-                RtModel = rtModel,
-                RtModelVersion = rtModelVersion,
+                Ms2Origin = ms2Origin ?? throw new ArgumentNullException(nameof(ms2Origin)),
+                RtOrigin = rtOrigin ?? throw new ArgumentNullException(nameof(rtOrigin)),
                 PretrainedSha256 = pretrainedSha256,
                 Ms2StartModel = ms2StartModel == null ? null : System.IO.Path.GetFileName(ms2StartModel),
                 // Newest first: the model fine-tuned further, then the one it was fine-tuned from.
@@ -227,13 +230,18 @@ namespace pwiz.CarafeSharp.Proteome
         }
         public bool RtFineTuned { get; private set; }
         public bool RtUsed { get; private set; }
+        /// <summary>What the MS2 model is and what it was fine-tuned from; null for a <see cref="FORMAT_1"/> file, which does not say.</summary>
+        public CarafeModelOrigin Ms2Origin { get; private set; }
         /// <summary>
-        /// The RT model a library from the file predicts with: the fine-tuned one it holds (<see cref="RtUsed"/>), else
-        /// that model's pretrained one; null for a <see cref="FORMAT_1"/> file, which does not say.
+        /// What the RT model is (the fine-tuned one the file holds when <see cref="RtUsed"/>, else that network's
+        /// pretrained model) and what it was fine-tuned from; null for a <see cref="FORMAT_1"/> file, which does not say.
         /// </summary>
-        public RtModelType? RtModel { get; private set; }
-        /// <summary>The Chronologer version of a Chronologer <see cref="RtModel"/>, or null.</summary>
-        public string RtModelVersion { get; private set; }
+        public CarafeModelOrigin RtOrigin { get; private set; }
+        /// <summary>The RT model a library from the file predicts with, or null when the file does not say.</summary>
+        public RtModelType? RtModel
+        {
+            get { return RtOrigin?.RtModel; }
+        }
         /// <summary>The SHA-256 of the pretrained archive the training started from, when known.</summary>
         public string PretrainedSha256 { get; private set; }
         /// <summary>The file name of the <c>-ms2_model</c> the MS2 fine-tune started from, if any.</summary>
@@ -327,7 +335,11 @@ namespace pwiz.CarafeSharp.Proteome
             Line(@"{0}", Path);
             Line(@"  Format {0}, written by {1} at {2}", Format, Creator, Created);
             Line(@"  MS2 model: {0}", DescribeMs2());
-            Line(@"  RT model: {0}{1}", DescribeRt(), RtModelVersion == null ? string.Empty : @" " + RtModelVersion);
+            Line(@"  RT model: {0}", DescribeRt());
+            if (Ms2Origin != null)
+                Line(@"  MS2 origin: {0}", Ms2Origin);
+            if (RtOrigin != null)
+                Line(@"  RT origin: {0}", RtOrigin);
             if (Ms2StartModel != null)
                 Line(@"  MS2 fine-tune started from {0}", Ms2StartModel);
             for (int i = 0; i < BaseModels.Count; i++)
@@ -335,6 +347,8 @@ namespace pwiz.CarafeSharp.Proteome
                 var baseModel = BaseModels[i];
                 Line(@"  {0} {1} (SHA-256 {2}), written by {3} at {4}, trained on {5}", i == 0 ? @"Fine-tuned further from" : @"  which was fine-tuned from",
                     baseModel.File, baseModel.Sha256, baseModel.Creator, baseModel.Created, baseModel.Runs.Count == 0 ? @"unknown runs" : string.Join(@", ", baseModel.Runs));
+                if (baseModel.Ms2Origin != null && baseModel.RtOrigin != null)
+                    Line(@"    its MS2: {0}; its RT: {1}", baseModel.Ms2Origin, baseModel.RtOrigin);
             }
             Line(@"  A library takes: NCE {0}, instrument {1}, activation {2}, analyzer {3}, rt_max {4}" +
                  @" (unless -nce, -ms_instrument, -activation, -analyzer, -rt_max are given)",
@@ -420,12 +434,8 @@ namespace pwiz.CarafeSharp.Proteome
                 json.WriteString(@"created", Created);
                 json.WriteString(@"training_type", TrainingType);
                 json.WriteStartObject(@"models");
-                WriteModel(json, @"ms2", Ms2FineTuned, Ms2Used, Ms2Entry);
-                json.WriteEndObject();
-                WriteModel(json, @"rt", RtFineTuned, RtUsed, ModelFiles.RT_SAFETENSORS);
-                WriteStringOrNull(json, @"model", RtModel?.ToString());
-                WriteStringOrNull(json, @"model_version", RtModelVersion);
-                json.WriteEndObject();
+                WriteModel(json, @"ms2", Ms2FineTuned, Ms2Used, Ms2Entry, Ms2Origin);
+                WriteModel(json, @"rt", RtFineTuned, RtUsed, ModelFiles.RT_SAFETENSORS, RtOrigin);
                 json.WriteEndObject();
                 WriteStringOrNull(json, @"pretrained_sha256", PretrainedSha256);
                 WriteStringOrNull(json, @"ms2_start_model", Ms2StartModel);
@@ -489,7 +499,7 @@ namespace pwiz.CarafeSharp.Proteome
                     ? CarafeModelTraining.ReadJson(trainingValue)
                     : null;
                 var baseModels = root.TryGetProperty(@"base_models", out var baseValue) && baseValue.ValueKind == JsonValueKind.Array
-                    ? baseValue.EnumerateArray().Select(CarafeModelBase.ReadJson).ToList()
+                    ? baseValue.EnumerateArray().Select(b => CarafeModelBase.ReadJson(path, b)).ToList()
                     : new List<CarafeModelBase>();
                 var acquisition = root.TryGetProperty(@"acquisition", out var acquisitionValue) && acquisitionValue.ValueKind == JsonValueKind.Object
                     ? new AcquisitionVocabulary(acquisitionValue.GetProperty(@"activations").EnumerateArray().Select(v => v.GetString()),
@@ -507,8 +517,8 @@ namespace pwiz.CarafeSharp.Proteome
                     Ms2Entry = GetStringOrNull(models.GetProperty(@"ms2"), @"entry"),
                     RtFineTuned = rt.GetProperty(@"fine_tuned").GetBoolean(),
                     RtUsed = rt.GetProperty(@"used").GetBoolean(),
-                    RtModel = ReadRtModel(path, format, rt),
-                    RtModelVersion = GetStringOrNull(rt, @"model_version"),
+                    Ms2Origin = format == FORMAT_1 ? null : CarafeModelOrigin.ReadFields(path, @"ms2", models.GetProperty(@"ms2")),
+                    RtOrigin = format == FORMAT_1 ? null : CarafeModelOrigin.ReadFields(path, @"rt", rt),
                     PretrainedSha256 = GetStringOrNull(root, @"pretrained_sha256"),
                     Ms2StartModel = GetStringOrNull(root, @"ms2_start_model"),
                     BaseModels = baseModels,
@@ -525,24 +535,14 @@ namespace pwiz.CarafeSharp.Proteome
             }
         }
 
-        /// <summary>A model's object, left open for fields of its own.</summary>
-        private static void WriteModel(Utf8JsonWriter json, string name, bool fineTuned, bool used, string entry)
+        private static void WriteModel(Utf8JsonWriter json, string name, bool fineTuned, bool used, string entry, CarafeModelOrigin origin)
         {
             json.WriteStartObject(name);
             json.WriteBoolean(@"fine_tuned", fineTuned);
             json.WriteBoolean(@"used", used);
             WriteStringOrNull(json, @"entry", used ? entry : null);
-        }
-
-        /// <summary>A manifest's RT model: named in <see cref="FORMAT"/>, unknown (null) in <see cref="FORMAT_1"/>.</summary>
-        private static RtModelType? ReadRtModel(string path, string format, JsonElement rt)
-        {
-            if (format == FORMAT_1)
-                return null;
-            string name = rt.GetProperty(@"model").GetString();
-            if (name == null || !Enum.GetNames(typeof(RtModelType)).Contains(name, StringComparer.Ordinal))
-                throw new InvalidDataException(string.Format(@"{0} has RT model {1}, which this CarafeSharp does not know.", path, name ?? @"(none)"));
-            return (RtModelType)Enum.Parse(typeof(RtModelType), name);
+            origin.WriteFields(json);
+            json.WriteEndObject();
         }
 
         private static void WriteStringOrNull(Utf8JsonWriter json, string name, string value)

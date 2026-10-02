@@ -39,8 +39,14 @@ namespace pwiz.CarafeSharp.Models
         /// </summary>
         public const string DOWNLOAD_URL = @"https://github.com/MannLabs/alphapeptdeep/releases/download/pre-trained-models/pretrained_models.zip";
 
+        /// <summary>
+        /// The MannLabs release the archive is (<c>pretrained_models.zip</c>, before <c>_v2</c> and <c>_v3</c>), which a
+        /// saved model records as its AlphaPeptDeep models' version.
+        /// </summary>
+        public const string VERSION = @"v1";
+
         /// <summary>Where the build places the committed archive, relative to the executable.</summary>
-        public const string BUNDLED_RELATIVE_PATH = @"models/alphapeptdeep-v1/pretrained_models.zip";
+        public const string BUNDLED_RELATIVE_PATH = @"models/alphapeptdeep-" + VERSION + @"/pretrained_models.zip";
 
         /// <summary>The v1 archive Carafe uses (25,614,761 bytes, generic/ms2.pth dated 2022-10-28).</summary>
         public const string PINNED_SHA256 = @"75e6037db3280a513d0f6010a21dba4e8ea47a8d67127f38c77fb1f9a7d408eb";
