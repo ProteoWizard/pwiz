@@ -26,10 +26,6 @@ create(DslContext.projectId, BuildType({
             name = "Clean"
             id = "Skyline_Clean"
             path = "clean.bat"
-            // Start from a clean slate: the agent reuses its checkout, and output left by an
-            // earlier build fails this one - a wildcard in Skyline.csproj listed BlibBuild DLLs a
-            // newer BlibBuild no longer produced, and its own build deleted them before Skyline
-            // could copy them (MSB3030). Without -cpp, clean.bat leaves the C++ build alone.
         }
         exec {
             id = "RUNNER_simpleRunner_139"
@@ -95,5 +91,7 @@ create(DslContext.projectId, BuildType({
     requirements {
         contains("teamcity.agent.name", "MacCoss", "RQ_59")
     }
+    
+    disableSettings("RQ_59")
 }))
 
