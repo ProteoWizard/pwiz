@@ -23,14 +23,10 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
-using log4net;
-using log4net.Appender;
 using log4net.Config;
-using log4net.Repository.Hierarchy;
 using pwiz.Common;
 using SharedBatch;
 using Resources = AutoQC.Properties.Resources;
@@ -103,8 +99,6 @@ namespace AutoQC
                         MessageBoxIcon.Error);
                     return;
                 }
-
-                InitializeSecurityProtocol();
 
                 // Initialize log4net -- global application logging
                 XmlConfigurator.Configure();
@@ -387,19 +381,6 @@ namespace AutoQC
             }
         }
 
-        public static string GetProgramLogFilePath()
-        {
-            var repository = ((Hierarchy) LogManager.GetRepository());
-            FileAppender rootAppender = null;
-            if (repository != null)
-            {
-                rootAppender = repository.Root.Appenders.OfType<FileAppender>()
-                    .FirstOrDefault();
-            }
-
-            return rootAppender != null ? rootAppender.File : string.Empty;
-        }
-
         public static string Version()
         {
             return $"{AppName} {_install.BareVersion}";
@@ -412,12 +393,6 @@ namespace AutoQC
             var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
             var iconPath = Path.Combine(baseDirectory, "AutoQC_release.ico");
             return  System.Drawing.Icon.ExtractAssociatedIcon(iconPath);
-        }
-
-        private static void InitializeSecurityProtocol()
-        {
-            // Make sure we can negotiate with HTTPS servers that demand TLS 1.2 (default in dotNet 4.6, but has to be turned on in 4.5)
-            ServicePointManager.SecurityProtocol |= (SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12);  
         }
 
         public static void AddTestException(Exception exception)
