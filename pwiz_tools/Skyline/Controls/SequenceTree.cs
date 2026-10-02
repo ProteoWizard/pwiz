@@ -23,7 +23,6 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Alerts;
 using pwiz.Common.SystemUtil.PInvoke;
@@ -1140,9 +1139,14 @@ namespace pwiz.Skyline.Controls
                 if (_editTextBox == null)
                     BeginEdit(true);
                 // Handed straight to the edit box. SendKeys would type it into whichever window is in front,
-                // which is another application whenever Skyline is not the active one.
-                User32.SendMessage(_editTextBox.TextBox.Handle, User32.WinMessageType.WM_CHAR,
-                    (IntPtr) e.KeyChar, IntPtr.Zero);
+                // which is another application whenever Skyline is not the active one. The edit can already have
+                // ended, committed by the edit box losing the focus as it opened, leaving nothing to type into.
+                var editTextBox = _editTextBox?.TextBox;
+                if (editTextBox != null)
+                {
+                    User32.SendMessage(editTextBox.Handle, User32.WinMessageType.WM_CHAR,
+                        (IntPtr) e.KeyChar, IntPtr.Zero);
+                }
                 e.Handled = true;
             }
             else
