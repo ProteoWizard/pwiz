@@ -30,7 +30,7 @@ namespace pwiz.SkylineTest
     /// rest carry just Amanda:AmandaScore, which no library build can use. When Percolator fails to
     /// start - it needs a vcruntime140_1.dll its own package does not ship - MS Amanda still writes
     /// results, just unscored ones, and the only symptom used to be BlibBuild rejecting the file two
-    /// steps later. <see cref="MSAmandaSearchWrapper.HasPercolatorQValues"/> is what turns that into
+    /// steps later. <see cref="MSAmandaSearchWrapper.HasPercolatorQValues(string)"/> is what turns that into
     /// an error at the search, so it has to be right about an absence, not just a presence.
     /// </summary>
     [TestClass]

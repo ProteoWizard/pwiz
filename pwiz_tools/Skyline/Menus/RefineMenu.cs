@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Menus
                     while (!broker.IsCanceled)
                     {
                         SrmDocument documentUi = null;
-                        SkylineWindow.Invoke(new Action(() => { documentUi = SkylineWindow.DocumentUI; }));
+                        SkylineWindow.Invoke(() => { documentUi = SkylineWindow.DocumentUI; });
                         if (true == documentUi?.IsLoaded)
                         {
                             break;

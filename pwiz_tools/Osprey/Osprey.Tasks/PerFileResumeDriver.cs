@@ -86,7 +86,7 @@ namespace pwiz.Osprey.Tasks
             {
                 logWarning(TextUtil.GetIndentation(1) + string.Format(
                     OspreyTasksResources.PerFileResumeDriver_Stamp___Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_,
-                    taskName, outputPath, ex.Message));
+                    OspreyArgNames.TaskText(taskName), outputPath, ex.Message));
             }
         }
     }

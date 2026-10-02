@@ -39,6 +39,7 @@ namespace pwiz.Osprey.IO
     public class BlibLoader
     {
         private const double CYSTEINE_RESIDUE_MASS = 103.009185;
+        private const string TABLE_REF_SPECTRA = @"RefSpectra";
 
         /// <summary>
         /// Version of what this reader makes of a blib. 2: every peak is typed from m/z
@@ -87,8 +88,11 @@ namespace pwiz.Osprey.IO
             {
                 conn.Open();
 
-                if (!TableExists(conn, @"RefSpectra"))
-                    throw new InvalidOperationException(OspreyIOResources.BlibLoader_Load_Invalid_BiblioSpec_library__the_RefSpectra_table_was_not_found_);
+                if (!TableExists(conn, TABLE_REF_SPECTRA))
+                {
+                    throw new InvalidOperationException(string.Format(
+                        OspreyIOResources.BlibLoader_Load_Invalid_BiblioSpec_library__the_RefSpectra_table_was_not_found_, TABLE_REF_SPECTRA));
+                }
 
                 // Intern the repeated strings (sequences, modification names,
                 // protein accessions) as the interned arrays are filled, so no

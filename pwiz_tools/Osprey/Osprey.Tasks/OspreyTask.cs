@@ -103,21 +103,8 @@ namespace pwiz.Osprey.Tasks
             if (!config.HasInputFiles)
                 return RequiresError(OspreyArgNames.Text(OspreyArgNames.INPUT, @"<file...>"));
             if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
-                return RequiresError(LibraryAndOutputText);
+                return RequiresError(OspreyArgNames.Text(OspreyArgNames.LIBRARY), OspreyArgNames.Text(OspreyArgNames.OUTPUT));
             return null;
-        }
-
-        /// <summary>
-        /// The two arguments <see cref="ValidateSelection"/> requires together, as one phrase
-        /// ("--library and --output"): the argument text is passed in, never translated.
-        /// </summary>
-        public static string LibraryAndOutputText
-        {
-            get
-            {
-                return string.Format(OspreyTasksResources.OspreyTask_LibraryAndOutputText__0__and__1_,
-                    OspreyArgNames.Text(OspreyArgNames.LIBRARY), OspreyArgNames.Text(OspreyArgNames.OUTPUT));
-            }
         }
 
         public virtual string DescribeOutput(OspreyConfig config) => null;
@@ -233,12 +220,39 @@ namespace pwiz.Osprey.Tasks
             ctx.Config.LibrarySource?.Format == LibraryFormat.Blib ? BLIB_READER_TERM : string.Empty);
 
         /// <summary>
+        /// The key one declared output is stamped and checked with: <paramref name="taskKey"/>
+        /// (this task's <see cref="ValidityKey"/>, computed once by the caller) for every task
+        /// whose outputs all depend on the same inputs. A fan-out task whose output for one run
+        /// also depends on that run's own artifacts appends their identities here, so a
+        /// rewritten input invalidates that run's output alone.
+        /// </summary>
+        public virtual string OutputValidityKey(PipelineContext ctx, string taskKey, string output) => taskKey;
+
+        /// <summary>
+        /// The inputs one declared output's stamp records: <paramref name="taskInputs"/> (this
+        /// task's <see cref="Inputs"/>, listed once by the caller) for every output built from
+        /// all of them. An output whose <see cref="OutputValidityKey"/> follows its own run's
+        /// artifacts names those instead, so its stamp says what it was built from.
+        /// </summary>
+        public virtual IEnumerable<string> OutputInputs(PipelineContext ctx, IReadOnlyList<string> taskInputs, string output) => taskInputs;
+
+        /// <summary>
         /// A <see cref="ValidateSelection"/> error naming this task and what it is missing,
         /// in the one form every task's message takes.
         /// </summary>
         protected string RequiresError(string requirement)
         {
-            return string.Format(OspreyTasksResources.OspreyTask_RequiresError___task__0__requires__1__, Name, requirement);
+            return string.Format(OspreyTasksResources.OspreyTask_RequiresError___task__0__requires__1__, OspreyArgNames.TaskText(Name), requirement);
+        }
+
+        /// <summary>
+        /// The two-requirement form. A separate format string, not "{1}" filled with a translated
+        /// "a and b" phrase, so each language words the pair in its own sentence.
+        /// </summary>
+        protected string RequiresError(string requirement1, string requirement2)
+        {
+            return string.Format(OspreyTasksResources.OspreyTask_RequiresError__0__requires__1__and__2__, OspreyArgNames.TaskText(Name),
+                requirement1, requirement2);
         }
 
         /// <summary>

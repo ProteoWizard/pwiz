@@ -154,7 +154,8 @@ namespace pwiz.Osprey.Core
             //
             // Inside a MultiProgressReporter scope the heading buffers into the file's narrative
             // block rather than racing other files to the console.
-            OspreyOutput.Out.WriteLine(@"{0}{1}...", _indent, activity);
+            // The trailing ellipsis is a resource: Chinese writes it as one full-width character.
+            OspreyOutput.Out.WriteLine(_indent + string.Format(OspreyCoreResources.ProgressReporter_ProgressReporter__0____, activity));
         }
 
         /// <summary>

@@ -62,10 +62,37 @@ targets['SkylineRelease'] = \
 #targets['Skyline'] = merge(targets['SkylineRelease'], targets['SkylineDebug'])
 
 # On the .NET 8 port branch, Skyline builds and tests run via pwiz_tools/Skyline/build.bat
-# (dotnet restore + build + test; CodeInspection now runs inside Test.csproj), not the old
-# cpp/MSVC "bt209" config. Point plain Skyline triggers at the net8 build config instead.
+# (dotnet restore + build + test), not the old cpp/MSVC "bt209" config. Both inspections run
+# in-build too: the custom CodeInspectionTest as a test inside Test.csproj, and ReSharper as
+# the tcinspect.ps1 build step that replaces the standalone "Skyline Code Inspection" config.
+# Point plain Skyline triggers at the net8 build config instead.
 targets['SkylineWindowsNet'] = {'master': {"ProteoWizard_SkylineWindowsNet": "Skyline Windows .NET"}}
 targets['Skyline'] = targets['SkylineWindowsNet']
+
+# Configs that report more than one GitHub status, keyed by config id. Skyline Windows .NET
+# runs ReSharper as a build step and publishes that verdict under the context the standalone
+# inspection config publishes, so when this script skips the build it has to report the paired
+# context as well. Otherwise the check is simply absent on commits that do not rebuild Skyline,
+# and a PR sits with one green check and one that never arrives.
+#
+# This does nothing YET. ProteoWizard_SkylineWindowsNet is nested under 'master' above, and a
+# target reachable only through a merge()'d matchPaths entry never enters
+# notBuildingDueToChangedFiles at all - it is dropped silently, so today the build status and
+# the inspection status are consistently absent together. Un-nesting it (which the NET8-PORT
+# TEMP notes below say happens before this branch merges) starts reporting the build's skip
+# status, and this is what keeps the inspection one alongside it rather than leaving a check
+# that never arrives.
+#
+# These are WHOLE context strings, posted verbatim - unlike the targets above, which get a
+# "teamcity - " prefix. TeamCity's commit status publisher posts this particular check as a
+# bare "Skyline code inspection" with no prefix, so prefixing it here would create a second,
+# permanently stale check rather than keeping the existing one in sync. (That mismatch is why
+# the standalone config's skip status and its real status have always been two different
+# checks on GitHub; nothing here changes that for the standalone config.)
+extraStatuses = \
+{
+    "ProteoWizard_SkylineWindowsNet": ["Skyline code inspection"]
+}
 
 targets['SkylineWithTestConnected'] = \
 {

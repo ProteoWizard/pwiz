@@ -137,6 +137,9 @@ The C# adds a **fallback the Rust doc does not describe**: if *no* run passes ru
   worse than a possibly wrong choice between ions that each could have produced it. A peak no
   unclaimed candidate reaches stays Unknown, and decoy generation copies it unchanged.
 - **Logged:** one line with the peaks typed, of all peaks, and the tolerance.
+- **What typing changes:** the consecutive-ion feature, generated decoys (`DecoyGenerator`
+  recomputes typed fragments' m/z for the permuted sequence), and the training export's
+  library flags ([22](22-training-export.md)).
 - **Resume and cache safety:** every blib search adds `;blibreader=2` to every task validity key,
   and the `.libcache` composition carries `blib_reader:2` with the fragment tolerance the cached
   types were computed within ([14](14-intermediate-files.md)). Both carry

@@ -25,11 +25,6 @@
     <ProjectReference Include="..\..\..\..\SkylineTool\SkylineTool.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="System.Text.Json" Version="8.0.5" />
-    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
-  </ItemGroup>
-
   <!-- Central Skyline version (YEAR.ORDINAL.BRANCH.DOY), shared with Skyline.csproj,
        so the tool ZIP's info.properties tracks the Skyline version automatically. -->
   <Import Project="..\..\..\..\SkylineVersion.targets" />
