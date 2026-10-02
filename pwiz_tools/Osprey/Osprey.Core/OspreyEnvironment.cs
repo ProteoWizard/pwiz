@@ -248,6 +248,23 @@ namespace pwiz.Osprey.Core
         public static bool DropBetweenTasks { get; set; } = IsSetAndNotZero(@"OSPREY_DROP_BETWEEN_TASKS");
 
         /// <summary>
+        /// DIAGNOSTIC. The readers that read a run's spectra cache cold - calibration, the Stage 6
+        /// re-score and a training export made later - read one isolation window block at a time
+        /// (<c>SpectraWindowIndex.LoadWindowSerialRead</c>). Default ON;
+        /// <c>OSPREY_SERIAL_WINDOW_READS=0</c> makes them read in parallel the way scoring does, the
+        /// A/B arm for timing. Output is the same either way.
+        /// </summary>
+        public static bool SerialWindowReads { get; set; } = IsNotZero(@"OSPREY_SERIAL_WINDOW_READS");
+
+        /// <summary>
+        /// DIAGNOSTIC. <c>OSPREY_SERIAL_READ_SCOPE=process</c> makes the serial window reads take
+        /// turns across every file in the process instead of within each file. Under
+        /// --parallel-files the per-file default lets that many files' reads compete for one disk.
+        /// </summary>
+        public static bool SerialReadsProcessWide =>
+            string.Equals(GetVariable(@"OSPREY_SERIAL_READ_SCOPE"), @"process", StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>
         /// Stage 6 rebuilds each file's post-compaction survivors from that file's
         /// <c>.scores.parquet</c> + 1st-pass sidecar just before rescoring it, and drops
         /// them again once its reconciled parquet is on disk - so the all-files survivor

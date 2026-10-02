@@ -1683,8 +1683,17 @@ namespace pwiz.Osprey.Tasks
             // resident ~6 GB list, and none of the per-pass whole-list calibrated COPIES the
             // resident provider built. (That repeated-scoring is exactly why the resident path
             // had to pass consumeInputMzs:false; streaming has no such constraint.)
-            IWindowSpectraProvider spectraProvider =
-                new StreamingWindowSpectraProvider(spectraIndex, ms2Cal);
+            //
+            // The first pass to touch the file reads it cold: on a large cohort the cache left the
+            // file cache hours ago, while every run was scored. It reads one window block at a
+            // time (SpectraWindowIndex.LoadWindowSerialRead), which on a spinning disk took a cold
+            // SEA-AD run's windows from ~85 MB/s to the disk's sequential rate. The passes after it
+            // find the windows warm, where parallel LoadWindow is faster.
+            IWindowSpectraProvider coldProvider =
+                new StreamingWindowSpectraProvider(spectraIndex, ms2Cal, serialBlockReads: true);
+            IWindowSpectraProvider spectraProvider = subsetLibrary.Count > 0
+                ? new StreamingWindowSpectraProvider(spectraIndex, ms2Cal)
+                : coldProvider;
 
             // Segment 2/3 (score): the subset re-score; its "Re-scoring isolation
             // windows" reporter feeds this slice (the bulk of the file's motion).
@@ -1695,7 +1704,7 @@ namespace pwiz.Osprey.Tasks
             if (subsetLibrary.Count > 0)
             {
                 rescored = ScoringTaskShared.Pipeline(ctx).RunCoelutionScoring(
-                    subsetLibrary, spectraProvider, ms1Spectra,
+                    subsetLibrary, coldProvider, ms1Spectra,
                     isolationWindows, rtCal,
                     ms2Cal, ms1Cal,
                     context, passLabel: OspreyTasksResources.PerFileRescoreTask_Rescore_Re_scoring_isolation_windows);
@@ -1853,6 +1862,7 @@ namespace pwiz.Osprey.Tasks
             // file-parallelism > 1, where concurrent files legitimately share residency and
             // a blocking GC would stall the other in-flight rescores.
             spectraProvider = null;
+            coldProvider = null;
             spectraIndex = null;
             ms1Spectra = null;
             isolationWindows = null;

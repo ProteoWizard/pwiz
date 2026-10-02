@@ -53,6 +53,9 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public sealed class SpectraWindowIndex
     {
+        // Shared by every index under OSPREY_SERIAL_READ_SCOPE=process.
+        private static readonly object s_processBlockReadLock = new object();
+
         private readonly string _cachePath;
         private readonly Dictionary<int, List<long>> _windowKeyToOffsets;
         private readonly Dictionary<int, IsolationWindow> _windowKeyToFirstIso;
@@ -283,6 +286,8 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public List<Spectrum> LoadWindowSerialRead(int windowKey)
         {
+            if (!OspreyEnvironment.SerialWindowReads)
+                return LoadWindow(windowKey);
             if (!_windowKeyToOffsets.TryGetValue(windowKey, out var offsets))
                 return new List<Spectrum>();
 
@@ -303,7 +308,7 @@ namespace pwiz.Osprey.IO
                     return LoadWindow(windowKey);
                 // Allocated before taking the lock, so no other thread's read waits on it.
                 block = new byte[end - start];
-                lock (_blockReadLock)
+                lock (OspreyEnvironment.SerialReadsProcessWide ? s_processBlockReadLock : _blockReadLock)
                 {
                     fs.Seek(start, SeekOrigin.Begin);
                     fs.ReadExactly(block);
