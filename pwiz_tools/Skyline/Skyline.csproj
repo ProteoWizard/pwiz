@@ -254,7 +254,12 @@
     <ItemGroup>
       <_BundledToolDir Include="@(_BundledToolTargetPath->'%(RootDir)%(Directory)')" />
     </ItemGroup>
-    <CreateItem Include="%(_BundledToolDir.Identity)**\*">
+    <!-- Exclude any RID-named publish folder: a self-contained `dotnet publish -r win-x64` run
+         from one of these projects (msconvert, say) lands 200 MB of runtime under
+         bin\...\net10.0\win-x64, which is not part of the tool's framework-dependent output and
+         would otherwise ride into Skyline's bin and from there into the installer. -->
+    <CreateItem Include="%(_BundledToolDir.Identity)**\*"
+                Exclude="%(_BundledToolDir.Identity)win-*\**;%(_BundledToolDir.Identity)linux-*\**;%(_BundledToolDir.Identity)osx-*\**">
       <Output TaskParameter="Include" ItemName="_BundledToolFile" />
     </CreateItem>
     <ItemGroup>
