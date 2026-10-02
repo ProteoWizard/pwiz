@@ -1036,7 +1036,7 @@ namespace pwiz.Osprey.Tasks
                 {
                     throw new InvalidDataException(string.Format(
                         OspreyTasksResources.RescoreHydration_MapPlannedActions__0__refers_to_precursor_candidate__1___which_is_not_in_the_scores_file_for_that_run_,
-                        reconPath, action.EntryId));
+                        reconPath, action.EntryId, OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME)));
                 }
                 reconciliationActions[(fileName, vecIdx)] = action.Action;
             }
@@ -1165,7 +1165,8 @@ namespace pwiz.Osprey.Tasks
                 {
                     throw new InvalidDataException(string.Format(
                         OspreyTasksResources.RescoreHydration_Check__0__was_written_for_a_different_library_or_search_settings_than_the_other_reconciliation_files_of_this_analysis_,
-                        reconPath, LibraryHash, envelope.LibraryHash, SearchHash, envelope.SearchHash));
+                        reconPath, LibraryHash, envelope.LibraryHash, SearchHash, envelope.SearchHash,
+                        OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME)));
                 }
 
                 // ReconciliationFile.Load already rejects any envelope whose format_version
@@ -1184,7 +1185,8 @@ namespace pwiz.Osprey.Tasks
                         OspreyTasksResources.RescoreHydration_Check__0__was_written_for_a_different_set_of_input_files_than_the_other_reconciliation_files_of_this_analysis_,
                         reconPath,
                         string.Join(@", ", JoinFileStems),
-                        string.Join(@", ", envelopeStems)));
+                        string.Join(@", ", envelopeStems),
+                        OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME)));
                 }
             }
         }
