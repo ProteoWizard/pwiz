@@ -2,3 +2,5 @@
 *.zip binary
 *.pth binary
 *.safetensors binary
+*.pt binary
+*.json -text

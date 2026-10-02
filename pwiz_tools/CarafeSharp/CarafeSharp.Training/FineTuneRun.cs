@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -61,6 +62,12 @@ namespace pwiz.CarafeSharp.Training
 
         /// <summary>A safetensors RT model to fine-tune instead of the pretrained one: a saved model's, or a test's.</summary>
         public string RtModel { get; set; }
+
+        /// <summary>
+        /// The RT model to fine-tune. Chronologer starts from <see cref="RtModel"/> when that is a saved Chronologer,
+        /// else from the pretrained Chronologer.
+        /// </summary>
+        public RtModelType RtModelType { get; set; }
 
         public Device Device { get; set; } = CPU;
     }
@@ -154,23 +161,83 @@ namespace pwiz.CarafeSharp.Training
             int batchSize = options.Rt.EffectiveBatchSize(trainCount);
             log(string.Format(@"RT: {0} rows, {1} peptide forms, {2} training rows, {3} test rows, batch {4}",
                 rows.Count, forms.Count, train.Length, test.Length, batchSize));
-            if (options.RtModel != null)
-                log(@"RT: fine-tuning " + options.RtModel);
-
-            using (var model = options.RtModel != null
-                       ? RtModel.FromSafetensors(options.RtModel, options.Device)
-                       : RtModel.FromPretrained(pretrained, options.Device))
+            if (options.RtModelType == RtModelType.chronologer)
             {
-                result.RtPretrained = RtMetrics.Evaluate(model, test);
-                log(@"RT pretrained: " + result.RtPretrained);
-                result.RtHistory = ModelFineTuner.TrainRt(model, train, test, options.Rt, batchSize, shuffle, log);
-                result.RtFineTuned = RtMetrics.Evaluate(model, test);
-                log(@"RT fine-tuned: " + result.RtFineTuned);
-                model.Save(Path.Combine(outputDirectory, RT_MODEL_FILE));
+                TrainChronologer(train, test, options, outputDirectory, batchSize, shuffle, result, log);
+            }
+            else
+            {
+                if (options.RtModel != null)
+                    log(@"RT: fine-tuning " + options.RtModel);
+                using (var model = options.RtModel != null
+                           ? RtModel.FromSafetensors(options.RtModel, options.Device)
+                           : RtModel.FromPretrained(pretrained, options.Device))
+                {
+                    result.RtPretrained = RtMetrics.Evaluate(model, test);
+                    log(@"RT pretrained: " + result.RtPretrained);
+                    result.RtHistory = ModelFineTuner.TrainRt(model, train, test, options.Rt, batchSize, shuffle, log);
+                    result.RtFineTuned = RtMetrics.Evaluate(model, test);
+                    log(@"RT fine-tuned: " + result.RtFineTuned);
+                    model.Save(Path.Combine(outputDirectory, RT_MODEL_FILE));
+                }
             }
             result.RtTrainCount = train.Length;
             result.RtBatchSize = batchSize;
             result.RtElapsed = stopwatch.Elapsed;
+        }
+
+        /// <summary>
+        /// Fine-tunes Chronologer on the forms its encoding accepts. Starting from the pretrained model, the line
+        /// from its hydrophobic index to the training peptides' normalized RT is folded into its output layer
+        /// first, so that fine-tuning starts from the best linear calibration rather than from another scale.
+        /// </summary>
+        private static void TrainChronologer(RtTrainingExample[] train, RtTrainingExample[] test, FineTuneOptions options,
+            string outputDirectory, int batchSize, NumpyRandomState shuffle, FineTuneResult result, Action<string> log)
+        {
+            var files = ChronologerFiles.Open();
+            bool further = options.RtModel != null && ChronologerModel.IsChronologerFile(options.RtModel);
+            log(further ? @"RT: fine-tuning the Chronologer model " + options.RtModel : @"RT: fine-tuning Chronologer " + files.WeightsPath);
+            using (var model = further
+                       ? ChronologerModel.FromSafetensors(options.RtModel, files, options.Device)
+                       : ChronologerModel.FromFiles(files, options.Device))
+            {
+                var encodedTrain = ChronologerTrainingExample.Encode(model, train);
+                var encodedTest = ChronologerTrainingExample.Encode(model, test);
+                int rejected = train.Length + test.Length - encodedTrain.Count - encodedTest.Count;
+                if (rejected > 0)
+                    log(string.Format(@"RT: {0} peptide forms Chronologer cannot encode are left out", rejected));
+                if (encodedTrain.Count == 0)
+                    throw new InvalidOperationException(@"No RT training rows Chronologer can encode.");
+                if (!model.PredictsNormalizedRt)
+                {
+                    var (slope, intercept) = FitLine(model.Predict(encodedTrain.Select(e => e.Example.Peptide).ToArray()),
+                        encodedTrain.Select(e => e.RtNorm).ToArray());
+                    model.RescaleToNormalizedRt(slope, intercept);
+                    log(string.Format(CultureInfo.InvariantCulture,
+                        @"RT: Chronologer's hydrophobic index to normalized RT: {0} * hi + {1}", slope, intercept));
+                }
+                var testExamples = encodedTest.Select(e => e.Example).ToArray();
+                result.RtPretrained = RtMetrics.Evaluate(peptides => model.Predict(peptides), testExamples);
+                log(@"RT pretrained (Chronologer, linear calibration): " + result.RtPretrained);
+                result.RtHistory = ModelFineTuner.TrainChronologer(model, encodedTrain, encodedTest, options.Rt, batchSize, shuffle, log);
+                result.RtFineTuned = RtMetrics.Evaluate(peptides => model.Predict(peptides), testExamples);
+                log(@"RT fine-tuned: " + result.RtFineTuned);
+                model.Save(Path.Combine(outputDirectory, RT_MODEL_FILE));
+            }
+        }
+
+        /// <summary>The least-squares line y = slope * x + intercept.</summary>
+        private static (double Slope, double Intercept) FitLine(IReadOnlyList<double> x, IReadOnlyList<double> y)
+        {
+            double meanX = x.Average(), meanY = y.Average();
+            double sxy = 0, sxx = 0;
+            for (int i = 0; i < x.Count; i++)
+            {
+                sxy += (x[i] - meanX) * (y[i] - meanY);
+                sxx += (x[i] - meanX) * (x[i] - meanX);
+            }
+            double slope = sxx > 0 ? sxy / sxx : 0;
+            return (slope, meanY - slope * meanX);
         }
 
         private static void TrainMs2(IReadOnlyList<Ms2TrainingExample> rows, PretrainedModels pretrained, FineTuneOptions options,
@@ -259,6 +326,7 @@ namespace pwiz.CarafeSharp.Training
             {
                 info[@"rt"] = new Dictionary<string, object>
                 {
+                    { @"model", options.RtModelType.ToString() },
                     { @"pretrained", new { r2 = result.RtPretrained.R2, mae_normalized = result.RtPretrained.MedianAbsoluteError } },
                     { @"finetuned", new { r2 = result.RtFineTuned.R2, mae_normalized = result.RtFineTuned.MedianAbsoluteError } },
                     { @"train_rows", result.RtTrainCount },

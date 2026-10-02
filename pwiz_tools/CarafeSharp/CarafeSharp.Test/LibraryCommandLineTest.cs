@@ -132,6 +132,18 @@ namespace pwiz.CarafeSharp.Test
             var training = CarafeCommandLine.Parse(new[] { @"-i", @"a.training.parquet", @"-activation", @"beam-cid", @"-analyzer", @"ToF" }).TrainingSettings;
             Assert.AreEqual(AcquisitionVocabulary.BEAM_CID, training.Activation);
             Assert.AreEqual(AcquisitionVocabulary.TOF, training.Analyzer);
+            // -rt_model names an RT model, whatever its case: in training the one to fine-tune, and for the library
+            // after training the one to predict with.
+            Assert.AreEqual(RtModelType.alphapeptdeep, CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta" }).LibrarySettings.RtModelType);
+            Assert.AreEqual(RtModelType.chronologer,
+                CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-rt_model", @"Chronologer" }).LibrarySettings.RtModelType);
+            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-rt_model", @"prosit" }));
+            Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-rt_model", @"1" }));
+            var fineTuned = CarafeCommandLine.Parse(new[] { @"-i", @"a.training.parquet", @"-db", @"x.fasta", @"-rt_model", @"chronologer" });
+            Assert.AreEqual(RtModelType.chronologer, fineTuned.TrainingSettings.RtModelType);
+            Assert.AreEqual(RtModelType.chronologer, fineTuned.TrainingSettings.Library.RtModelType);
+            var ms2Only = CarafeCommandLine.Parse(new[] { @"-i", @"a.training.parquet", @"-db", @"x.fasta", @"-tf", @"ms2", @"-rt_model", @"chronologer" });
+            Assert.AreEqual(RtModelType.chronologer, ms2Only.TrainingSettings.Library.RtModelType);
             // It is refused with -model_dir, with -ms2_model, and without -db or training.
             Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model", @"m.carafemodel", @"-model_dir", @"d" }));
             Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model", @"m.carafemodel", @"-ms2_model", @"s.safetensors" }));

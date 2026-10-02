@@ -84,6 +84,33 @@ namespace pwiz.CarafeSharp.Models
                 batch => RtLoss(model, batch));
         }
 
+        /// <summary>
+        /// Fine-tunes Chronologer with the RT fine-tune's L1 loss on the normalized RT, its BatchNorm statistics
+        /// frozen (<see cref="Modules.ModelChronologer.FreezeBatchNorm"/>). The model must already predict normalized RT
+        /// (<see cref="ChronologerModel.RescaleToNormalizedRt"/>).
+        /// </summary>
+        public static IReadOnlyList<EpochRecord> TrainChronologer(ChronologerModel model, IReadOnlyList<ChronologerTrainingExample> train,
+            IReadOnlyList<ChronologerTrainingExample> test, FineTuneSettings settings, int batchSize, NumpyRandomState shuffle,
+            Action<string> log)
+        {
+            if (!model.PredictsNormalizedRt)
+                throw new InvalidOperationException(@"Chronologer is fine-tuned on normalized RT; rescale it first.");
+            model.Network.FreezeBatchNorm = true;
+            try
+            {
+                // One group for every length: Chronologer pads each peptide to the same positions, so a batch need
+                // not hold one length, and should not, as the output layer weighs each position separately and
+                // single-length batches pull it a different way for each length.
+                return Train(model.Network, train, test, settings, batchSize, shuffle, log, e => 0,
+                    batch => ChronologerLoss(model, batch));
+            }
+            finally
+            {
+                model.Network.FreezeBatchNorm = false;
+                model.Network.eval();
+            }
+        }
+
         private static IReadOnlyList<EpochRecord> Train<T>(nn.Module network, IReadOnlyList<T> train, IReadOnlyList<T> test,
             FineTuneSettings settings, int batchSize, NumpyRandomState shuffle, Action<string> log,
             Func<T, int> getLength, Func<IReadOnlyList<T>, Tensor> loss)
@@ -196,6 +223,13 @@ namespace pwiz.CarafeSharp.Models
         private static Tensor RtLoss(RtModel model, IReadOnlyList<RtTrainingExample> batch)
         {
             var predicted = model.Forward(batch.Select(e => e.Peptide).ToArray());
+            var target = tensor(batch.Select(e => (float)e.RtNorm).ToArray()).to(model.Device);
+            return (predicted - target).abs().mean();
+        }
+
+        private static Tensor ChronologerLoss(ChronologerModel model, IReadOnlyList<ChronologerTrainingExample> batch)
+        {
+            var predicted = model.Forward(batch.Select(e => e.Tokens).ToArray());
             var target = tensor(batch.Select(e => (float)e.RtNorm).ToArray()).to(model.Device);
             return (predicted - target).abs().mean();
         }

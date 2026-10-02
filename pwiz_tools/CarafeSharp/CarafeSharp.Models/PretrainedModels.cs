@@ -113,7 +113,7 @@ namespace pwiz.CarafeSharp.Models
 
         public string Sha256 { get; }
 
-        private static string ComputeSha256(string path)
+        internal static string ComputeSha256(string path)
         {
             using (var stream = File.OpenRead(path))
             using (var sha = SHA256.Create())

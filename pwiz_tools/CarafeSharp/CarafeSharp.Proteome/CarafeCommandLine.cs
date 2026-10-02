@@ -177,13 +177,17 @@ namespace pwiz.CarafeSharp.Proteome
                     @"  -device cpu|gpu -pairing_manifest <tsv> -ccs (timsTOF ion mobility, 1/K0); CarafeSharp only:",
                     @"  -pretrained <pretrained_models.zip>,",
                     @"  -model <file.carafemodel> (a saved fine-tuned model, which every training run writes into -o),",
-                    @"  -activation beam-CID|reCID -analyzer Orbitrap|LIT|ToF (else the training run's)",
+                    @"  -activation beam-CID|reCID -analyzer Orbitrap|LIT|ToF (else the training run's),",
+                    @"  -rt_model alphapeptdeep|chronologer (chronologer: the pretrained Chronologer RT model, in iRT; a",
+                    @"  fine-tuned Chronologer in -model or -model_dir is used without it)",
                     @"Saved models: CarafeSharp -model_info <file.carafemodel> (what the model was trained on)",
                     @"Training options (Carafe's): -se Osprey -fdr <q> -cor <r> -n_ion_min <n> -c_ion_min <n> -lf_frag_n_min <n>",
                     @"  -nf <n> -min_n <n> -valid -no_masking -tf all|ms2|rt -seed <n> -nce <nce> -ms_instrument <name>",
                     @"  -rt_max <min> -ms2_model <model> -device cpu|gpu; CarafeSharp only: -pretrained <pretrained_models.zip>,",
                     @"  -activation beam-CID|reCID -analyzer Orbitrap|LIT|ToF (else each run's, from Osprey's export),",
-                    @"  -model <file.carafemodel> (fine-tune a saved model further, instead of the pretrained models)");
+                    @"  -model <file.carafemodel> (fine-tune a saved model further, instead of the pretrained models),",
+                    @"  -rt_model alphapeptdeep|chronologer (the RT model to fine-tune; with -tf ms2 chronologer is the",
+                    @"  pretrained Chronologer, in iRT)");
             }
         }
 
@@ -382,6 +386,8 @@ namespace pwiz.CarafeSharp.Proteome
                 settings.BaseModel = baseModel;
             if (TryGet(@"pretrained", out string pretrained))
                 settings.PretrainedModels = pretrained;
+            if (TryGet(@"rt_model", out string rtModel))
+                settings.RtModelType = ParseRtModel(rtModel);
             if (Has(@"db"))
             {
                 // The library predicted right after training, with the fine-tuned models in -o,
@@ -497,6 +503,8 @@ namespace pwiz.CarafeSharp.Proteome
                 settings.PairingManifest = manifest;
             if (TryGet(@"pretrained", out string pretrained))
                 settings.PretrainedModels = pretrained;
+            if (TryGet(@"rt_model", out string rtModel))
+                settings.RtModelType = ParseRtModel(rtModel);
             // Fails here for -lf_type mzSpecLib, before any prediction.
             var outputs = LibraryOutputs.FromFormat(settings.LibraryFormat, settings.Fast);
             // Carafe fails on the first such peptide, part way through writing the library.
@@ -672,6 +680,18 @@ namespace pwiz.CarafeSharp.Proteome
             return value;
         }
 
+        /// <summary><c>-rt_model</c>'s value: alphapeptdeep or chronologer (case-insensitive).</summary>
+        private static RtModelType ParseRtModel(string value)
+        {
+            string name = Enum.GetNames(typeof(RtModelType)).FirstOrDefault(n => string.Equals(n, value, StringComparison.OrdinalIgnoreCase));
+            if (name == null)
+            {
+                throw new ArgumentException(string.Format(@"Unknown -rt_model {0} (expected {1})", value,
+                    string.Join(@", ", Enum.GetNames(typeof(RtModelType)))));
+            }
+            return (RtModelType)Enum.Parse(typeof(RtModelType), name);
+        }
+
         /// <summary>Java's <c>Integer.parseInt</c>: an optional sign and digits, nothing else.</summary>
         /// <summary><c>-activation</c>'s value, a known activation (case-insensitive).</summary>
         private static string ParseActivation(string value)
@@ -742,7 +762,7 @@ namespace pwiz.CarafeSharp.Proteome
                                      @"entrapment_ratio entrapment_seed decoy_seed reconcile_manifest predicted_library " +
                                      @"build_koina_library koina_url koina_ms2_model koina_rt_model nce_ms n_ion_min " +
                                      @"c_ion_min nce ms_instrument device se mode tf seed python mod2mass user_var_mods " +
-                                     @"model_dir ms2_model verbose ai_version pretrained model model_info activation analyzer";
+                                     @"model_dir ms2_model verbose ai_version pretrained model model_info activation analyzer rt_model";
             const string flagsOnly = @"printPTM nm cs ez skyline valid use_all_peaks I2L clip_n_m rf xic export_mgf " +
                                      @"no_masking no_similarity_gate ignore_pairing_errors entrapment no_decoys mz_filter " +
                                      @"y1 fast ccs torch_compile h";

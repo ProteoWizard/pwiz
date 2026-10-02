@@ -20,6 +20,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.CarafeSharp.Core;
 
 namespace pwiz.CarafeSharp.Proteome
 {
@@ -117,6 +118,9 @@ namespace pwiz.CarafeSharp.Proteome
 
         /// <summary>CarafeSharp's <c>-pretrained</c> models zip, or null for the default.</summary>
         public string PretrainedModels { get; set; }
+
+        /// <summary>CarafeSharp's <c>-rt_model</c>: the RT model to fine-tune.</summary>
+        public RtModelType RtModelType { get; set; }
 
         /// <summary>The library to predict with the fine-tuned models (<c>-db</c>), or null.</summary>
         public LibrarySettings Library { get; set; }

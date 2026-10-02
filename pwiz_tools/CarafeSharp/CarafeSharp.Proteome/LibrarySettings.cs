@@ -21,6 +21,8 @@
  * limitations under the License.
  */
 
+using pwiz.CarafeSharp.Core;
+
 namespace pwiz.CarafeSharp.Proteome
 {
     /// <summary>
@@ -184,6 +186,12 @@ namespace pwiz.CarafeSharp.Proteome
 
         /// <summary><c>-pretrained</c> (CarafeSharp only): the AlphaPeptDeep pretrained_models.zip.</summary>
         public string PretrainedModels { get; set; }
+
+        /// <summary>
+        /// <c>-rt_model</c> (CarafeSharp only). An explicit chronologer replaces a fine-tuned AlphaPeptDeep RT
+        /// model; a fine-tuned Chronologer is used whatever this says.
+        /// </summary>
+        public RtModelType RtModelType { get; set; }
 
         /// <summary>Peptidoforms per prediction batch.</summary>
         public int PeptidesPerBatch { get; set; } = DEFAULT_PEPTIDES_PER_BATCH;

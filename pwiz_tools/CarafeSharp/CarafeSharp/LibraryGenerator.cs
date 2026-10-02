@@ -64,6 +64,9 @@ namespace pwiz.CarafeSharp
         private PretrainedModels _pretrained;
         private string _modelFileFolder;
         private DecoyPairGate _pairGate;
+        // The rt_max this run's library RT is scaled by; 0 (iRT) for the pretrained Chronologer, whose
+        // hydrophobic index is not a fraction of the gradient.
+        private double _libraryRtMax;
 
         /// <param name="settings">The library to predict.</param>
         /// <param name="log">Receives progress, or null.</param>
@@ -148,21 +151,29 @@ namespace pwiz.CarafeSharp
                 var peptideToProteins = LibraryDatabase.MapPeptidesToProteins(_settings.Database, _settings.Digest);
                 Log(string.Format(CultureInfo.InvariantCulture, @"Mapped {0} peptides to proteins", peptideToProteins.Count));
 
-                var irt = _settings.RtMax > 0 ? (Slope: 0.0, Intercept: 0.0) : rt.FitIrtCalibration();
-                if (_settings.RtMax > 0)
-                    Log(string.Format(CultureInfo.InvariantCulture, @"Library RT: rt_pred * rt_max ({0})", _settings.RtMax));
+                _libraryRtMax = rt is ChronologerRtPredictor { PredictsNormalizedRt: false } ? 0 : _settings.RtMax;
+                if (_libraryRtMax <= 0 && _settings.RtMax > 0)
+                    Log(string.Format(CultureInfo.InvariantCulture, @"Ignored rt_max {0}: the pretrained Chronologer's library RT is iRT", _settings.RtMax));
+                var irt = _libraryRtMax > 0 ? (Slope: 0.0, Intercept: 0.0) : rt.FitIrtCalibration();
+                if (_libraryRtMax > 0)
+                    Log(string.Format(CultureInfo.InvariantCulture, @"Library RT: rt_pred * rt_max ({0})", _libraryRtMax));
                 else
                     Log(string.Format(CultureInfo.InvariantCulture, @"Library RT: iRT = {0} * rt_pred + {1}", irt.Slope, irt.Intercept));
                 Log(string.Format(CultureInfo.InvariantCulture, @"NCE: {0}, instrument: {1}, activation: {2}, analyzer: {3}", _settings.Nce,
                     _settings.Instrument, _settings.Activation ?? @"(none)", _settings.Analyzer ?? @"(none)"));
                 var builder = new LibrarySpectrumBuilder(_settings, outputs, peptideToProteins);
                 WriteLibrary(forms, outputs, builder, ms2, rt, ccs, irt);
+                if (rt is ChronologerRtPredictor chronologer && chronologer.FallbackCount > 0)
+                {
+                    Log(string.Format(CultureInfo.InvariantCulture,
+                        @"Chronologer could not encode {0} peptide forms; AlphaPeptDeep's pretrained model predicted their RT", chronologer.FallbackCount));
+                }
             }
             Log(string.Format(CultureInfo.InvariantCulture, @"Wrote {0} precursors in {1:F1} s", SpectrumCount, _clock.Elapsed.TotalSeconds));
         }
 
         private void WriteLibrary(List<PeptideIsoform> forms, LibraryOutputs outputs, LibrarySpectrumBuilder builder,
-            Ms2Model ms2, RtModel rt, CcsModel ccs, (double Slope, double Intercept) irt)
+            Ms2Model ms2, IRtPredictor rt, CcsModel ccs, (double Slope, double Intercept) irt)
         {
             TsvPath = outputs.WritesTsv ? Path.Combine(_settings.OutputDirectory, CarafeLibraryTsvWriter.FILE_NAME) : null;
             BlibPath = outputs.WritesBlib ? Path.Combine(_settings.OutputDirectory, BlibLibraryWriter.FILE_NAME) : null;
@@ -249,7 +260,7 @@ namespace pwiz.CarafeSharp
         /// writer thread, which writes it while the next is predicted. Stops with the writer's
         /// exception as soon as writing fails.
         /// </summary>
-        private void PredictChunks(List<PeptideIsoform> forms, LibrarySpectrumBuilder builder, Ms2Model ms2, RtModel rt,
+        private void PredictChunks(List<PeptideIsoform> forms, LibrarySpectrumBuilder builder, Ms2Model ms2, IRtPredictor rt,
             CcsModel ccs, (double Slope, double Intercept) irt, LibraryChunkWriter writer)
         {
             int batchCount = (forms.Count + _settings.PeptidesPerBatch - 1) / Math.Max(1, _settings.PeptidesPerBatch);
@@ -287,7 +298,7 @@ namespace pwiz.CarafeSharp
         /// the ion mobility) for every precursor in the m/z window, RT once per peptidoform.
         /// </summary>
         private List<LibrarySpectrum> PredictChunk(List<PeptideIsoform> forms, int start, int end, LibrarySpectrumBuilder builder,
-            Ms2Model ms2, RtModel rt, CcsModel ccs, (double Slope, double Intercept) irt)
+            Ms2Model ms2, IRtPredictor rt, CcsModel ccs, (double Slope, double Intercept) irt)
         {
             var isoforms = new List<PeptideIsoform>();
             var peptides = new List<PeptideForm>();
@@ -328,7 +339,7 @@ namespace pwiz.CarafeSharp
             Parallel.For(0, requests.Count, i =>
             {
                 int form = formIndex[i];
-                double retentionTime = LibrarySpectrumBuilder.GetRetentionTime(rtPredictions[form], _settings.RtMax, irt.Slope, irt.Intercept);
+                double retentionTime = LibrarySpectrumBuilder.GetRetentionTime(rtPredictions[form], _libraryRtMax, irt.Slope, irt.Intercept);
                 spectra[i] = builder.Build(isoforms[form], requests[i].Precursor, predictions[i].Intensities, INTENSITY_STRIDE, retentionTime,
                     ccsPredictions?[i]);
             });
@@ -438,9 +449,31 @@ namespace pwiz.CarafeSharp
             return Ms2Model.FromPretrained(OpenPretrained(), device);
         }
 
-        private RtModel LoadRtModel(CarafeModelDirectory modelDirectory, Device device)
+        private IRtPredictor LoadRtModel(CarafeModelDirectory modelDirectory, Device device)
         {
             string path = modelDirectory.GetRtModelPath(_settings.TrainingType);
+            // A fine-tuned Chronologer is used whatever -rt_model says; -rt_model chronologer replaces a fine-tuned
+            // AlphaPeptDeep model with the pretrained Chronologer.
+            bool fineTunedChronologer = path != null && CarafeModelDirectory.IsSafetensors(path) && ChronologerModel.IsChronologerFile(path);
+            if (fineTunedChronologer || _settings.RtModelType == RtModelType.chronologer)
+            {
+                var files = ChronologerFiles.Open();
+                ChronologerModel chronologer;
+                if (fineTunedChronologer)
+                {
+                    Log(@"Using the fine-tuned Chronologer RT model " + path);
+                    chronologer = ChronologerModel.FromSafetensors(path, files, device);
+                }
+                else
+                {
+                    Log(path != null
+                        ? @"Using the pretrained Chronologer RT model instead of the fine-tuned RT model " + path
+                        : @"Using the pretrained Chronologer RT model " + files.WeightsPath);
+                    chronologer = ChronologerModel.FromFiles(files, device);
+                }
+                Log(@"AlphaPeptDeep's pretrained RT model predicts the peptides Chronologer cannot encode");
+                return new ChronologerRtPredictor(chronologer, RtModel.FromPretrained(OpenPretrained(), device));
+            }
             if (path != null)
             {
                 Log(@"Using fine-tuned RT model " + path);

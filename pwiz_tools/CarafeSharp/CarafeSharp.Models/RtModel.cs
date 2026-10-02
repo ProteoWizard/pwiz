@@ -37,28 +37,9 @@ namespace pwiz.CarafeSharp.Models
     /// (the fraction of the training gradient, <c>rt / rt_max</c>), clipped at 0. Charge does
     /// not enter the model, so callers predict each peptide form once.
     /// </summary>
-    public sealed class RtModel : IDisposable
+    public sealed class RtModel : IRtPredictor
     {
         public const int DEFAULT_BATCH_SIZE = 1024;
-
-        /// <summary>
-        /// The Biognosys iRT kit peptides and their iRT values, which peptdeep predicts to map
-        /// normalized RT onto the iRT scale.
-        /// </summary>
-        private static readonly (string Sequence, double Irt)[] IRT_PEPTIDES =
-        {
-            (@"LGGNEQVTR", -24.92),
-            (@"GAGSSEPVTGLDAK", 0.00),
-            (@"VEATFGVDESNAK", 12.39),
-            (@"YILAGVENSK", 19.79),
-            (@"TPVISGGPYEYR", 28.71),
-            (@"TPVITGAPYEYR", 33.38),
-            (@"DGLDAASYYAPVR", 42.26),
-            (@"ADVTPADFSEWSK", 54.62),
-            (@"GTFIIDPGGVIR", 70.52),
-            (@"GTFIIDPAAVIR", 87.23),
-            (@"LFLQFGAQGSPFLK", 100.00),
-        };
 
         public static RtModel FromPretrained(PretrainedModels pretrained, Device device)
         {
@@ -118,26 +99,18 @@ namespace pwiz.CarafeSharp.Models
             return results;
         }
 
+        double[] IRtPredictor.Predict(IReadOnlyList<PeptideForm> peptides)
+        {
+            return Predict(peptides);
+        }
+
         /// <summary>
         /// The linear map from this model's normalized RT to the iRT scale, fitted by predicting
         /// the eleven iRT kit peptides (peptdeep's <c>add_irt_column_to_precursor_df</c>).
         /// </summary>
         public (double Slope, double Intercept) FitIrtCalibration()
         {
-            var peptides = IRT_PEPTIDES.Select(p => new PeptideForm(p.Sequence)).ToArray();
-            double[] predicted = Predict(peptides);
-            double predictedMean = predicted.Average();
-            double irtMean = IRT_PEPTIDES.Average(p => p.Irt);
-            double sxy = 0, sxx = 0;
-            for (int i = 0; i < predicted.Length; i++)
-            {
-                double x = predicted[i] - predictedMean;
-                double y = IRT_PEPTIDES[i].Irt - irtMean;
-                sxy += x * y;
-                sxx += x * x;
-            }
-            double slope = sxy / sxx;
-            return (slope, irtMean - slope * predictedMean);
+            return IrtKit.FitCalibration(peptides => Predict(peptides));
         }
 
         /// <summary>Raw network output <c>[batch]</c> for one same-length batch, on <see cref="Device"/>.</summary>
