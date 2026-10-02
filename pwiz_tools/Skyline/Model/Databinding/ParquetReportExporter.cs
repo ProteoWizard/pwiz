@@ -379,7 +379,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         private static Task WriteNullableColumnAsync<T>(ParquetRowGroupWriter groupWriter, DataField field, Array values) where T : struct
         {
-            return groupWriter.WriteAsync<T>(field, new ReadOnlyMemory<T?>((T?[]) values));
+            return groupWriter.WriteAsync(field, new ReadOnlyMemory<T?>((T?[]) values));
         }
 
         private static readonly MethodInfo WRITE_LIST_COLUMN_METHOD =
