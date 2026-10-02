@@ -83,6 +83,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public double? Height { get { return ChromInfo.IsEmpty ? (double?) null : ChromInfo.Height; } }
         [Format(Formats.MASS_ERROR, NullValue = TextUtil.EXCEL_NA)]
         public double? MassErrorPPM { get { return ChromInfo.MassError; } }
+        // Observed ion mobility / CCS is a property of the ion, not of an individual
+        // isotope or fragment transition, so it is surfaced once per precursor
+        // (see PrecursorResult.ObservedIonMobility) rather than as per-transition columns.
+        // The per-transition observed IM stored on ChromInfo is the internal substrate
+        // for that precursor-level aggregate.
         public bool? Truncated { get { return ChromInfo.IsTruncated; } }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int? PeakRank { get { return ChromInfo.IsEmpty ? (int?)null : ChromInfo.Rank; } }

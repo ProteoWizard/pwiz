@@ -41,6 +41,9 @@ namespace pwiz.Skyline.Model.Hibernate
         public const string SamplingTime = "0.00";
         public const string OneOverK0 = "0.####";
         public const string Percent = "0%";
+        // Percent error shown to 2 decimals, e.g. observed-vs-target ion mobility / CCS. One
+        // decimal (MASS_ERROR) collapses sub-0.05% differences to "0", hiding a real gap.
+        public const string PercentError = "0.##";
         public const string PEAK_SCORE = "0.####";
 
         public const string IonMobility = "0.###";

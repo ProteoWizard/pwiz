@@ -966,6 +966,7 @@
     <Compile Include="Model\Results\PeakShapeValues.cs" />
     <Compile Include="Model\Results\Scoring\Calculators.cs" />
     <Compile Include="Model\Results\IntensityAccumulator.cs" />
+    <Compile Include="Model\Results\ObservedIonMobilityCalculator.cs" />
     <Compile Include="Model\Results\MedianPeakShape.cs" />
     <Compile Include="Model\Results\OptStepChromatograms.cs" />
     <Compile Include="Model\Results\Scoring\FeatureNames.cs" />
