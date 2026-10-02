@@ -229,6 +229,9 @@ namespace pwiz.Skyline.Controls
 
         private void ResizeListViewColumns()
         {
+            // Posted by listView_Resize, so the list may have been emptied (the view closed) since then
+            if (listView.IsDisposed || listView.Items.Count == 0)
+                return;
             int height = listView.Items[listView.Items.Count - 1].Bounds.Bottom;
             int dxAvailable = listView.ClientRectangle.Width;
             if (height > listView.ClientRectangle.Height)
