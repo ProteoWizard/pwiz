@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Model.Lib
             bool limitRanks =
                 groupDocNode.IsCustomIon && // For small molecules, cap the number of ranked ions displayed if we don't have any peak metadata
                 groupDocNode.Transitions.Any(t => string.IsNullOrEmpty(t.FragmentIonName));
-            RankLimit = limitRanks ? settings.TransitionSettings.Libraries.IonCount : (int?) null;
+            RankLimit = limitRanks ? settings.TransitionSettings.Libraries.IonCount : null;
 
             // Get necessary mass calculators and masses
             var labelType = targetInfo.SpectrumLabelType;

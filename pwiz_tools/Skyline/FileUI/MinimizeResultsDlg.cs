@@ -321,7 +321,7 @@ namespace pwiz.Skyline.FileUI
                         var _this = this;
                         try
                         {
-                            BeginInvoke(new Action(() => UpdateStatistics(worker)));
+                            BeginInvoke(() => UpdateStatistics(worker));
                         }
                         catch (Exception x)
                         {

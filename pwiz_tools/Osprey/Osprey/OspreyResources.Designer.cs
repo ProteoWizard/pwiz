@@ -235,6 +235,110 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Distributed execution (HPC).
+        /// </summary>
+        public static string OspreyCommandArgs_AppendUsageHtmlHpcExamples_Distributed_execution__HPC_ {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_AppendUsageHtmlHpcExamples_Distributed_execution__HPC_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to EVERY task takes {0}, naming the DATA files - the same names the first split was given. A join task derives the parquet and intermediate files of each run from the input stem, so the data file itself need not still exist: what has to be in the working directory of the worker (or under {1}) is the artifacts of that run. {4} reconciliation is order-sensitive, so pass a deterministically sorted list - {2} takes one path per line and is what a cohort past a few hundred runs needs, since {0} spends the command l [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string OspreyCommandArgs_AppendUsageHtmlHpcExamples_EVERY_task_takes__0___naming_the_DATA_files {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_AppendUsageHtmlHpcExamples_EVERY_task_takes__0___naming_the_DAT" +
+                        "A_files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to join 1 - one process over ALL runs (pass a sorted list so the order is deterministic).
+        /// </summary>
+        public static string OspreyCommandArgs_AppendUsageHtmlHpcExamples_join_1___one_process_over_ALL_runs {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_AppendUsageHtmlHpcExamples_join_1___one_process_over_ALL_runs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to join 2 - one process over ALL runs, reading their reconciled parquets (writes {0}).
+        /// </summary>
+        public static string OspreyCommandArgs_AppendUsageHtmlHpcExamples_join_2___one_process_over_ALL_runs {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_AppendUsageHtmlHpcExamples_join_2___one_process_over_ALL_runs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Run with no {0} for the whole pipeline in one process. For distributed (HPC / workflow-engine) execution the pipeline splits at its join / fan-out boundaries into four single-task workers - one node = one {0}: {2} (split, per file) {6} {3} (join, all files) {6} {4} (split, per file) {6} {5} (join, all files). Pass the same {1} and search options to every task; the parquet integrity check rejects inputs whose search/library hash does not match..
+        /// </summary>
+        public static string OspreyCommandArgs_AppendUsageHtmlHpcExamples_Run_with_no__0__for_the_whole_pipeline_in_one_process {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_AppendUsageHtmlHpcExamples_Run_with_no__0__for_the_whole_pipeli" +
+                        "ne_in_one_process", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to split 1 - one process per mzML (writes {0}, {1} beside each input).
+        /// </summary>
+        public static string OspreyCommandArgs_AppendUsageHtmlHpcExamples_split_1___one_process_per_mzML {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_AppendUsageHtmlHpcExamples_split_1___one_process_per_mzML", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to split 2 - one process per file (the scores parquet and its intermediate files together).
+        /// </summary>
+        public static string OspreyCommandArgs_AppendUsageHtmlHpcExamples_split_2___one_process_per_file {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_AppendUsageHtmlHpcExamples_split_2___one_process_per_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to writes: {0}, and {1} with {2}.
+        /// </summary>
+        public static string OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes___0___and__1__with__2_ {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes___0___and__1__with__2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to writes beside each parquet: {0}, {1}.
+        /// </summary>
+        public static string OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes_beside_each_parquet___0____1_ {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_AppendUsageHtmlHpcExamples_writes_beside_each_parquet___0____1_" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to For the pipeline overview, per-stage detail, and how the four distributed HPC tasks split and join, see the workflow diagram: {0}. The argument tables below are generated from the command-line declarations, so they always match the build; run {1} for the same reference as text..
+        /// </summary>
+        public static string OspreyCommandArgs_AppendUsageHtmlIntro_For_the_pipeline_overview__per_stage_detail__and_how_the_four_distributed_HPC_ {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_AppendUsageHtmlIntro_For_the_pipeline_overview__per_stage_detai" +
+                        "l__and_how_the_four_distributed_HPC_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey is a peptide-centric DIA search tool from the MacCoss lab. It reads DIA mzML files plus a spectral library and writes a BiblioSpecLite ({0}) library of FDR-controlled results that imports directly into Skyline. It runs as a standalone executable on Windows and Linux..
+        /// </summary>
+        public static string OspreyCommandArgs_AppendUsageHtmlIntro_Osprey_is_a_peptide_centric_DIA_search_tool_from_the_MacCoss_lab {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_AppendUsageHtmlIntro_Osprey_is_a_peptide_centric_DIA_search_too" +
+                        "l_from_the_MacCoss_lab", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No help section matching &apos;{0}&apos; found. Use {1} to list available sections..
         /// </summary>
         public static string OspreyCommandArgs_BuildUsage_No_help_section_matching___0___found__Use__1__to_list_available_sections_ {
@@ -251,6 +355,25 @@ namespace pwiz.Osprey {
             get {
                 return ResourceManager.GetString("OspreyCommandArgs_FdrBenchMissingMessage__0__is_set_without__1___no_FDRBench_inpu" +
                         "t_will_be_written__Pass__1___2__to_enable_FDRBench_output_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Command-line usage for Osprey, the peptide-centric DIA search tool from the MacCoss lab: search and FDR arguments, protein inference, the {0} staging task, the {1} report-only task, and the four distributed HPC {2} workers ({3})..
+        /// </summary>
+        public static string OspreyCommandArgs_GenerateUsageHtml_Command_line_usage_for_Osprey__the_peptide_centric_DIA_search_tool_from_the_MacCoss_lab {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_GenerateUsageHtml_Command_line_usage_for_Osprey__the_peptide_ce" +
+                        "ntric_DIA_search_tool_from_the_MacCoss_lab", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Osprey command-line usage.
+        /// </summary>
+        public static string OspreyCommandArgs_GenerateUsageHtml_Osprey_command_line_usage {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_GenerateUsageHtml_Osprey_command_line_usage", resourceCulture);
             }
         }
         
@@ -323,6 +446,15 @@ namespace pwiz.Osprey {
         public static string OspreyCommandArgs_Group_Scoring_Tolerance {
             get {
                 return ResourceManager.GetString("OspreyCommandArgs_Group_Scoring_Tolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Training Export.
+        /// </summary>
+        public static string OspreyCommandArgs_Group_Training_Export {
+            get {
+                return ResourceManager.GetString("OspreyCommandArgs_Group_Training_Export", resourceCulture);
             }
         }
         
@@ -428,7 +560,7 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Osprey - Peptide-centric DIA analysis (.NET port of Osprey).
+        ///   Looks up a localized string similar to Osprey - Peptide-centric DIA analysis.
         /// </summary>
         public static string OspreyCommandArgs_UsageBlocks_Osprey___Peptide_centric_DIA_analysis__NET_port_of_Osprey_ {
             get {
@@ -443,6 +575,44 @@ namespace pwiz.Osprey {
         public static string OspreyCommandArgs_UsageBlocks_USAGE___0_ {
             get {
                 return ResourceManager.GetString("OspreyCommandArgs_UsageBlocks_USAGE___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to off.
+        /// </summary>
+        public static string Program_DescribeTrainingExport_off {
+            get {
+                return ResourceManager.GetString("Program_DescribeTrainingExport_off", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to on.
+        /// </summary>
+        public static string Program_DescribeTrainingExport_on {
+            get {
+                return ResourceManager.GetString("Program_DescribeTrainingExport_on", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Training export: {0} per run (run q &lt;= {1}, claimant q &lt;= {2}, XICs {3}).
+        /// </summary>
+        public static string Program_DescribeTrainingExport_Training_export___0__per_run__run_q_____1___claimant_q_____2___XICs__3__ {
+            get {
+                return ResourceManager.GetString("Program_DescribeTrainingExport_Training_export___0__per_run__run_q_____1___claima" +
+                        "nt_q_____2___XICs__3__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Training export: not written by this run; {0} writes it under {1} {2}, {1} {3} or a run without {1}..
+        /// </summary>
+        public static string Program_DescribeTrainingExport_Training_export__not_written_by_this_run___0__writes_it_under__1___2___1___3__or_a_run_without__1__ {
+            get {
+                return ResourceManager.GetString("Program_DescribeTrainingExport_Training_export__not_written_by_this_run___0__writ" +
+                        "es_it_under__1___2___1___3__or_a_run_without__1__", resourceCulture);
             }
         }
         
@@ -705,6 +875,15 @@ namespace pwiz.Osprey {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Task: {0} (runs every stage the analysis still needs).
+        /// </summary>
+        public static string Program_Run_Task___0___runs_every_stage_the_analysis_still_needs_ {
+            get {
+                return ResourceManager.GetString("Program_Run_Task___0___runs_every_stage_the_analysis_still_needs_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Task: {0} (single-task run).
         /// </summary>
         public static string Program_Run_Task___0___single_task_run_ {
@@ -750,7 +929,7 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("Program_RunExportLibrary_Saved__0_N0__library_precursors_to__1_", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Saved 1 library precursor to {1}.
         /// </summary>
@@ -759,7 +938,7 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("Program_RunExportLibrary_Saved_1_library_precursor_to__1_", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to {0}: building the report from the completed analysis. Nothing is re-run and no other output changes..
         /// </summary>
@@ -787,6 +966,34 @@ namespace pwiz.Osprey {
             get {
                 return ResourceManager.GetString("Program_RunModelDiagnosticsTask__0___there_is_no_completed_first_pass_to_describe" +
                         "__no_first_pass_intermediate_file_for_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}, {1} and {2} apply only with {3}..
+        /// </summary>
+        public static string Program_TrainingExportError__0____1__and__2__apply_only_with__3__ {
+            get {
+                return ResourceManager.GetString("Program_TrainingExportError__0____1__and__2__apply_only_with__3__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} cannot run with {1}: that mode computes the run q-values in {2}, after the per-run export is written. Leave out {0}, or run without {1}..
+        /// </summary>
+        public static string Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_the_run_q_values_in__2__after_the_per_run_export_ {
+            get {
+                return ResourceManager.GetString("Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_the_run_q" +
+                        "_values_in__2__after_the_per_run_export_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} must be in (0, 1]..
+        /// </summary>
+        public static string Program_TrainingExportError__0__must_be_in__0__1__ {
+            get {
+                return ResourceManager.GetString("Program_TrainingExportError__0__must_be_in__0__1__", resourceCulture);
             }
         }
         
@@ -825,7 +1032,7 @@ namespace pwiz.Osprey {
                 return ResourceManager.GetString("Program_ValidateArgs_No_spectral_library_specified__Use__0_", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to The {0} path is the library it reads: {1}. Choose another path for the exported library..
         /// </summary>

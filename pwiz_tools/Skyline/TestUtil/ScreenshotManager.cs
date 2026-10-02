@@ -280,7 +280,7 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public Rectangle GetScreenshotBounds()
         {
-            return (Rectangle)_skylineWindow.Invoke((Func<Rectangle>)(() => _skylineWindow.Bounds));
+            return _skylineWindow.Invoke((Func<Rectangle>)(() => _skylineWindow.Bounds));
         }
 
         public Rectangle GetScreenshotScreenBounds()

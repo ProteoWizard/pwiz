@@ -354,13 +354,22 @@ namespace pwiz.Osprey.Tasks
             int maxAttempts = ComputeMaxAttempts(sampleSize, retryFactor, nTotalTargets);
             int currentSampleSize = sampleSize;
 
-            _ctx.LogVerbose(CountText.Format(maxAttempts,
-                OspreyTasksResources.Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting__2___1_attempt_at_most_,
-                OspreyTasksResources.Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting__2__per_attempt__up_to__0__attempts_,
-                nTotalTargets,
-                currentSampleSize == 0 || nTotalTargets <= currentSampleSize
-                    ? OspreyTasksResources.Calibrator_RunCalibration_all
-                    : string.Format(@"{0:N0}", currentSampleSize)));
+            // "All" gets its own sentences rather than filling the number's slot: ja / zh follow
+            // the number with a counter word that does not fit a word.
+            if (currentSampleSize == 0 || nTotalTargets <= currentSampleSize)
+            {
+                _ctx.LogVerbose(CountText.Format(maxAttempts,
+                    OspreyTasksResources.Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting_all__1_attempt_at_most_,
+                    OspreyTasksResources.Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting_all_per_attempt__up_to__0__attempts_,
+                    nTotalTargets));
+            }
+            else
+            {
+                _ctx.LogVerbose(CountText.Format(maxAttempts,
+                    OspreyTasksResources.Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting__2___1_attempt_at_most_,
+                    OspreyTasksResources.Calibrator_RunCalibration_Calibration__library_has__1__targets__requesting__2__per_attempt__up_to__0__attempts_,
+                    nTotalTargets, currentSampleSize));
+            }
 
             // Best match per library entry, accumulated across attempts. Mirrors
             // Rust's accumulated_matches (pipeline.rs:730).

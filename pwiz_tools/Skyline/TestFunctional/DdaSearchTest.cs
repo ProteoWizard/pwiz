@@ -1199,7 +1199,7 @@ namespace pwiz.SkylineTestFunctional
                 //Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
-            SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.ClickNextButton()));
+            SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
 
             if (RedownloadTools || TestSettings.HasMissingDependencies)
             {
@@ -1292,11 +1292,11 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Start a second search, test cannot-close-during-search, then cancel
-            SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.ClickNextButton()));
+            SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
             TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.DDASearchPage));
             RunUI(() => importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success);
 
-            SkylineWindow.BeginInvoke(new Action(importPeptideSearchDlg.Close)); // try to close (don't wait for return)
+            SkylineWindow.BeginInvoke(importPeptideSearchDlg.Close); // try to close (don't wait for return)
             var cannotCloseDuringSearchDlg = WaitForOpenForm<MessageDlg>();
             Assert.AreEqual(PeptideSearchResources.SearchControl_CanWizardClose_Cannot_close_wizard_while_the_search_is_running_,
                 cannotCloseDuringSearchDlg.Message);
@@ -1556,7 +1556,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Rerun search
             searchSucceeded = null;
-            SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.ClickNextButton()));
+            SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
 
             var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
             if (downloaderDlg != null)

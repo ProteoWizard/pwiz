@@ -24,7 +24,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Net;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
@@ -347,7 +346,6 @@ namespace pwiz.Skyline.Util
         /// </summary>
         /// <typeparam name="TItem">Type of items in the array</typeparam>
         /// <param name="values">Array instance</param>
-        /// <param name="forward">True if the enumerator should be forward, False if reversed</param>
         /// <returns>The enumeration of the Array</returns>
         public static IEnumerable<TItem> GetEnumerator<TItem>(this IList<TItem> values)
         {
@@ -1836,7 +1834,7 @@ namespace pwiz.Skyline.Util
         public static double? ParseNullableDouble(string s)
         {
             double d;
-            return double.TryParse(s, out d) ? d : (double?)null;
+            return double.TryParse(s, out d) ? d : null;
         }
 
         public static string NullableDoubleToString(double? d)
@@ -2001,7 +1999,7 @@ namespace pwiz.Skyline.Util
         {
             try
             {
-                control.Invoke(new Action(() =>
+                control.Invoke(() =>
                 {
                     lock (_timers)
                     {
@@ -2017,7 +2015,7 @@ namespace pwiz.Skyline.Util
                         _timers[id] = new AlarmInfo {Timer = timer, Ticks = alarmTicks};
                         timer.Start();
                     }
-                }));
+                });
             }
             catch (InvalidOperationException)
             {
@@ -2033,25 +2031,6 @@ namespace pwiz.Skyline.Util
                 alarmInfo.Timer.Dispose();
             }
             action();
-        }
-    }
-
-    public static class SecurityProtocolInitializer
-    {
-        // Make sure we can negotiate with HTTPS servers that demand modern TLS levels
-        // The current recommendation from MSFT for future-proofing this https://docs.microsoft.com/en-us/dotnet/framework/network-programming/tls
-        // is don't specify TLS levels at all, let the OS decide. But we worry that this will mess up Win7 and Win8 installs, so we continue to specify explicitly.
-        public static void Initialize()
-        {
-            try
-            {
-                var Tls13 = (SecurityProtocolType)12288; // From decompiled SecurityProtocolType - compiler has no definition for some reason
-                ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | Tls13;
-            }
-            catch (NotSupportedException)
-            {
-                ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12; // Probably an older Windows Server
-            }
         }
     }
 

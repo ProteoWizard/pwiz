@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -125,7 +124,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => uniquePeptidesDlg.GetDataGridView().RowCount == rowcount);
             if (bogus)
             {
-                uniquePeptidesDlg.BeginInvoke(new Action(() => uniquePeptidesDlg.SelectUnique(testType)));
+                uniquePeptidesDlg.BeginInvoke(() => uniquePeptidesDlg.SelectUnique(testType));
                 // Expect a warning about missing metadata
                 var errorDlg = WaitForOpenForm<MessageDlg>();
                 var expectedErr = testType == UniquePeptidesDlg.UniquenessType.gene ?

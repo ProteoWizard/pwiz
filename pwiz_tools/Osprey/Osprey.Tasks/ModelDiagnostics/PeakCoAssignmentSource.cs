@@ -382,7 +382,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             string sidecarPath = FdrScoresSidecar.Pass1Path(sidecarBase);
             if (!File.Exists(sidecarPath))
             {
-                reason = string.Format(OspreyTasksResources.PeakCoAssignmentSource_AddFile_no__1st_pass_fdr_scores_bin_file_for__0_, fileName);
+                reason = string.Format(OspreyTasksResources.PeakCoAssignmentSource_AddFile_no__1st_pass_fdr_scores_bin_file_for__0_, fileName,
+                    FdrScoresSidecar.EXT_FIRST_PASS);
                 return 0;
             }
 

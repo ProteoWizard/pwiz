@@ -64,6 +64,9 @@ namespace pwiz.Osprey.FDR
             /// </summary>
             public string Label { get; }
 
+            /// <summary>Invariant-culture label, for the model-diagnostics report.</summary>
+            public string ReportLabel { get; }
+
             /// <summary>Standardized averaged weight w_j (the trained coefficient).</summary>
             public double Coefficient { get; }
 
@@ -101,13 +104,15 @@ namespace pwiz.Osprey.FDR
             /// <param name="percent">Percent of composite, or NaN when degenerate.</param>
             /// <param name="isReversedScore">Whether the feature is a declared reversed score.</param>
             /// <param name="isUnexpectedDirection">IsReversedScore XOR (coefficient &lt; 0).</param>
+            /// <param name="reportLabel">Invariant-culture label for the model-diagnostics report, or null for <paramref name="label"/>.</param>
             public FeatureContribution(int index, string name, string label,
                 double coefficient, double targetDecoyMeanGap, double weighted,
-                double percent, bool isReversedScore, bool isUnexpectedDirection)
+                double percent, bool isReversedScore, bool isUnexpectedDirection, string reportLabel = null)
             {
                 Index = index;
                 Name = name;
                 Label = label;
+                ReportLabel = reportLabel ?? label;
                 Coefficient = coefficient;
                 TargetDecoyMeanGap = targetDecoyMeanGap;
                 Weighted = weighted;
@@ -374,8 +379,9 @@ namespace pwiz.Osprey.FDR
                 bool wrongSign = haveInfo && (info.IsReversedScore ^ (avgWeights[j] < 0.0));
                 string name = info.Name;
                 string label = info.Label ?? info.Name ?? string.Format(@"feature_{0}", j);
+                string reportLabel = info.ReportLabel ?? info.Name ?? string.Format(@"feature_{0}", j);
                 features[j] = new FeatureContribution(j, name, label,
-                    avgWeights[j], deltaMu[j], weighted[j], pct, reversed, wrongSign);
+                    avgWeights[j], deltaMu[j], weighted[j], pct, reversed, wrongSign, reportLabel);
             }
             Features = features;
         }
