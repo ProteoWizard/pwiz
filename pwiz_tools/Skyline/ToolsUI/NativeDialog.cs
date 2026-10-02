@@ -19,6 +19,7 @@
  */
 
 using pwiz.Common.SystemUtil.PInvoke;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
 using System;
@@ -320,7 +321,10 @@ namespace pwiz.Skyline.ToolsUI
                 @"Setting values is not supported for native dialog {0}.", FormId));
         }
 
-        public override System.Drawing.Bitmap CaptureImage() => JsonUiService.CaptureNativeWindow(Hwnd);
+        // A native dialog cannot be rendered off-screen the way a managed form can, so without a desktop to copy
+        // from there is no image.
+        public override System.Drawing.Bitmap CaptureImage() =>
+            ScreenCapture.IsDesktopAvailable() ? JsonUiService.CaptureNativeWindow(Hwnd) : null;
 
         private void VerifyNotBlocked()
         {

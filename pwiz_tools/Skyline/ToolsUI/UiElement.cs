@@ -19,10 +19,14 @@
  */
 using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
+using pwiz.Common.Controls;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Databinding.AuditLog;
+using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
@@ -93,21 +97,27 @@ namespace pwiz.Skyline.ToolsUI
         void SelectAllNow();
     }
 
-    /// <summary>A tree whose selected node can be renamed in place (the Targets tree -- e.g. renaming a
-    /// peptide group), as a user does by editing the node label and pressing Enter.</summary>
-    public interface IRenameNodeElement { void RenameNodeNow(string value); }
+    /// <summary>An element that can show the tooltip of its selected item, as resting the mouse on the item does:
+    /// a tree's selected node, a list's selected item, a grid's current cell.</summary>
+    public interface ITooltipElement { void ShowTooltipNow(); }
 
-    /// <summary>An element the keyboard can be driven on, without it having the focus. Every control is one.
-    /// <see cref="SendTextNow"/> takes LITERAL text, so nothing in it needs escaping;
+    /// <summary>An element a key can be pressed on, without it having the focus: every control, and a form,
+    /// which takes a key the way it does while it is the active window (its shortcuts, then its dialog keys).
     /// <see cref="SendKeyStrokeNow"/> takes one key named with its modifiers ("Ctrl+V", "Down").</summary>
-    public interface IKeyboardElement
+    public interface IKeyStrokeElement
     {
-        void SendTextNow(string text);
         void SendKeyStrokeNow(string keyStroke);
     }
 
+    /// <summary>An element that can also be typed into. Every control is one; a form is not.
+    /// <see cref="SendTextNow"/> takes LITERAL text, so nothing in it needs escaping.</summary>
+    public interface IKeyboardElement : IKeyStrokeElement
+    {
+        void SendTextNow(string text);
+    }
+
     /// <summary>An element that offers a fixed list of choices whose visible text can be read (get_options) --
-    /// a combo box, a list box, or a checked list box. Unlike get_value (which reports the current
+    /// a combo box, a list box, a checked list box, or a list view. Unlike get_value (which reports the current
     /// selection / checked items), this returns EVERY choice regardless of state, so a caller can see the
     /// options that are available to select or check.</summary>
     public interface IOptionsElement { IEnumerable<string> GetOptions(); }
@@ -622,7 +632,8 @@ namespace pwiz.Skyline.ToolsUI
         {
             if (string.IsNullOrEmpty(text))
                 return text;
-            var normalized = text.Replace(@"&", string.Empty).Trim().TrimEnd('.', '…', '：', ':', ' ').Trim();
+            // A single '&' marks the mnemonic; '&&' is a literal ampersand ("Use start && end RTs")
+            var normalized = Regex.Replace(text, @"&(&?)", @"$1").Trim().TrimEnd('.', '…', '：', ':', ' ').Trim();
             return normalized.Length == 0 ? text : normalized;
         }
 
@@ -704,17 +715,51 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>PRESSES ONE KEY on the control, named with its modifiers - "Ctrl+V", "Down", "Enter",
-        /// "Ctrl+Shift+Home". It raises KeyDown with the composed <see cref="Keys"/> value, which is where a
-        /// WinForms handler reads a keystroke from. Composing the value is what lets a modifier be expressed:
-        /// a delivered key message carries only the virtual key, and WinForms fills the modifiers in from the
-        /// GLOBAL keyboard state, which this does not touch.
-        ///
-        /// <para>KNOWN LIMIT: raising KeyDown does not run the control's default window procedure, so a key
-        /// whose effect comes from that rather than from a handler - Backspace editing a text box, an arrow
-        /// moving a plain list's selection - has no effect.</para></summary>
+        /// "Ctrl+Shift+Home" - the way the keyboard does (see <see cref="KeyStroke"/>): shortcuts and dialog
+        /// keys first, then forms that preview keys, KeyDown handlers and the control's own behavior, then the
+        /// character the key types.</summary>
         public virtual void SendKeyStrokeNow(string keyStroke)
         {
-            RaiseProtectedHandler(Control, @"OnKeyDown", new KeyEventArgs(ParseKeyStroke(keyStroke)));
+            KeyStroke.Press(Control, ParseKeyStroke(keyStroke));
+        }
+
+        /// <summary>Brings up the tooltip of the item at <paramref name="itemBounds"/> (client coordinates) the way a
+        /// user does: the mouse comes to rest on the item, and the tip follows after the usual delay. Several of
+        /// Skyline's tips show only for the control that has the focus, so its window is brought to the front and
+        /// the control focused first -- giving it the focus alone does nothing while Skyline is not the active
+        /// application. The tip then comes down as it does for a user (the mouse moves, the focus goes
+        /// elsewhere), and an element also takes it down when its selection changes: see
+        /// <see cref="HideTooltip"/>.</summary>
+        protected void ShowTooltipAt(System.Drawing.Rectangle itemBounds)
+        {
+            HideTooltip();
+            ScreenCapture.ActivateForm(Control);
+            Control.Focus();
+            if (!Control.Focused)
+            {
+                throw new InvalidOperationException(LlmInstruction.Format(
+                    @"The control '{0}' could not be given the focus, which its tooltip needs: Windows did not let Skyline come to the front. Ask the user to click on the Skyline window, then try again.",
+                    Label ?? NullIfEmpty(Name) ?? ElementType.Name));
+            }
+            MoveMouseTo((itemBounds.Left + itemBounds.Right) / 2, (itemBounds.Top + itemBounds.Bottom) / 2);
+        }
+
+        /// <summary>Takes the tooltip down by moving the mouse off the control, which also lets the next move
+        /// count as one however this one ended.</summary>
+        protected void HideTooltip()
+        {
+            MoveMouseTo(-1, -1);
+        }
+
+        private void MoveMouseTo(int x, int y)
+        {
+            RaiseProtectedHandler(Control, @"OnMouseMove", new MouseEventArgs(MouseButtons.None, 0, x, y, 0));
+        }
+
+        protected static Exception NothingSelected()
+        {
+            return new ArgumentException(new LlmInstruction(
+                @"Nothing is selected -- select the item whose tooltip to show first."));
         }
 
         // Spellings for keys whose Keys name differs. Everything else is matched against the Keys enum, so
@@ -869,10 +914,11 @@ namespace pwiz.Skyline.ToolsUI
             {
                 if (Control is IButtonControl && !string.IsNullOrEmpty(Control.Text))
                     return Control.Text;
-                var previous = Control.FindForm()?.GetNextControl(Control, false);
-                return (previous as Label)?.Text;
+                return PrecedingLabel;
             }
         }
+
+        protected string PrecedingLabel => (Control.FindForm()?.GetNextControl(Control, false) as Label)?.Text;
 
         public override UiElement GetChild(UiElementPath path)
         {
@@ -922,6 +968,7 @@ namespace pwiz.Skyline.ToolsUI
         internal static ContextMenuStrip TryBuildGraphContextMenu(Control control)
         {
             var zedGraph = control as ZedGraph.ZedGraphControl
+                ?? (control as MsGraphExtension)?.Graph
                 ?? (control as DockableFormEx != null ? JsonUiService.TryGetZedGraphControl((DockableFormEx) control) : null);
             if (zedGraph == null)
                 return null;
@@ -981,9 +1028,9 @@ namespace pwiz.Skyline.ToolsUI
                 var element = FormElement.ElementFor(control);
                 if (element != null)
                     yield return element;
-                // Recurse through a transparent container (no element of its own), and through a TabControl
-                // (kept above) to flatten its tab contents up alongside it.
-                if (element == null || control is TabControl)
+                // Recurse through a transparent container (no element of its own), and through a TabControl or
+                // a SplitContainer (kept above) to flatten its pages' or panels' contents up alongside it.
+                if (element == null || control is TabControl || control is SplitContainer)
                     foreach (var inner in GetDescendants(control))
                         yield return inner;
             }
@@ -1022,7 +1069,7 @@ namespace pwiz.Skyline.ToolsUI
     /// a managed formId to this and call its methods, which marshal to the UI thread (and watch for a dialog
     /// a mutation pops) so the connector drives a form the same way whether or not it is native. It is the
     /// factory (<see cref="ElementFor"/>) for the elements in its tree, tagging each with itself.</summary>
-    public class StandaloneForm : StandaloneWindow
+    public class StandaloneForm : StandaloneWindow, IKeyStrokeElement
     {
         // Wraps a managed form, reading its window handle now. Must be built on the form's own UI thread -- reading
         // Form.Handle off it trips the cross-thread check -- which the assertion enforces. Off that thread, build it
@@ -1084,6 +1131,26 @@ namespace pwiz.Skyline.ToolsUI
         public override bool IsProgressing => Form is ILongWaitForm { IsBusy: true };
         public override string DetailedMessage => (Form as CommonFormEx)?.DetailedMessage ?? Form.Text;
 
+        /// <summary>Presses a key on the form as the keyboard does while it is the active window: on the
+        /// control that has the focus in it, or on the form itself when none does (see <see cref="KeyStroke"/>).
+        /// So its shortcuts (the main window's F11 for Auto-Zoom Best Peak), its dialog keys (Enter and Escape
+        /// for a dialog's OK and Cancel) and the focused control's own keys (Escape closing a pick-list, Home in
+        /// the Targets tree) all work.</summary>
+        public void SendKeyStrokeNow(string keyStroke)
+        {
+            KeyStroke.Press(FocusedControl(Form), ControlElement.ParseKeyStroke(keyStroke));
+        }
+
+        // The control a key goes to: each container's active control in turn, down through nested containers
+        // (a docked pane is a form within the main window), or the form itself when nothing in it is active.
+        private static Control FocusedControl(Form form)
+        {
+            Control control = form;
+            while (control is ContainerControl { ActiveControl: { } active })
+                control = active;
+            return control;
+        }
+
         // Only the main Skyline window pastes / selects all at the window level (into/over the document); any
         // other form has no window-level clipboard gesture, so refuse it with a clear message.
 
@@ -1112,10 +1179,13 @@ namespace pwiz.Skyline.ToolsUI
                 // a checkbox and a radio button are handled above, each with the click it actually has). Anything
                 // else deriving from ButtonBase is a control we would not know how to click, so it falls through
                 // to the default: not an element at all, rather than one whose click cannot work.
+                // A LiteDropDownList is a Button that acts as a drop-down list, so its case must win.
+                case LiteDropDownList dropDownList: return new DropDownListElement(dropDownList, token);
                 case ButtonBase button when button is IButtonControl: return new ButtonElement(button, token);
                 case ComboBox comboBox: return new ComboBoxElement(comboBox, token);
                 case TextBoxBase textBox: return new TextBoxElement(textBox, token);
                 case TabControl tabControl: return new TabElement(tabControl, token);
+                case SplitContainer splitContainer: return new SplitterElement(splitContainer, token);
                 // CheckedListBox before ListBox -- it derives from ListBox, so its case must win.
                 case CheckedListBox checkedListBox: return new CheckedListBoxElement(checkedListBox, token);
                 // The Pick Children pop-up's owner-drawn ListBox presents as a CheckedListBox.
@@ -1124,7 +1194,9 @@ namespace pwiz.Skyline.ToolsUI
                 // SequenceTree before TreeView -- it derives from TreeView, so its case must win.
                 case SequenceTree sequenceTree: return new SequenceTreeElement(sequenceTree, token);
                 case TreeView treeView: return new TreeViewElement(treeView, token);
-                case ListView listView: return new ItemContainerElement<ListView>(listView, token);
+                case ListView listView when listView.FindForm() is StatementCompletionForm:
+                    return new StatementCompletionListElement(listView, token);
+                case ListView listView: return new ListViewElement(listView, token);
                 // The grid itself -- the inner grid of a DataboundGridControl (a BoundDataGridView, driven
                 // through its rich copy/paste path) or a standalone DataGridView (direct cell access). The
                 // DataboundGridControl is a UserControl you walk into to reach this grid and its nav bar.
@@ -1193,11 +1265,35 @@ namespace pwiz.Skyline.ToolsUI
         // controls report not-visible - is still found. Must be called on the form's UI thread.
         internal GraphElement FindGraph()
         {
-            var zedGraph = Form is DockableFormEx dockable ? JsonUiService.TryGetZedGraphControl(dockable) : null;
-            if (zedGraph == null)
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Not a graph form: {0}. Use skyline_get_open_forms to find forms with HasGraph=True.", FormId));
-            return (GraphElement) ElementFor(zedGraph);
+            var zedGraph = TryGetGraphControl();
+            if (zedGraph != null)
+                return (GraphElement) ElementFor(zedGraph);
+            throw new ArgumentException(LlmInstruction.Format(
+                @"Not a graph form: {0}. Use skyline_get_open_forms to find forms with HasGraph=True.", FormId));
+        }
+
+        // The graph of a graph pane, or of a dialog showing one graph among its other controls (e.g. Edit Peak
+        // Scoring Model, the Spectral Library Explorer) -- the one currently visible; null for any other form.
+        private ZedGraph.ZedGraphControl TryGetGraphControl()
+        {
+            if (Form is DockableFormEx dockable)
+                return JsonUiService.TryGetZedGraphControl(dockable);
+            var graphs = VisibleControls(Form).OfType<ZedGraph.ZedGraphControl>().Take(2).ToList();
+            return graphs.Count == 1 ? graphs[0] : null;
+        }
+
+        // The visible controls of a form, not counting those of the forms it hosts (the main window's docked
+        // panes), which are forms of their own.
+        private static IEnumerable<Control> VisibleControls(Control parent)
+        {
+            foreach (Control control in parent.Controls)
+            {
+                if (!control.Visible || control is Form)
+                    continue;
+                yield return control;
+                foreach (var inner in VisibleControls(control))
+                    yield return inner;
+            }
         }
 
         // Parses a grid-cell locator "name[column,row]" (the name is optional -> the form's single grid).
@@ -1251,28 +1347,57 @@ namespace pwiz.Skyline.ToolsUI
             });
         }
 
+        // A user resizes a form by dragging its border, which a docked or floating pane does not have as its
+        // own (its size belongs to the dock layout) and a fixed-border dialog does not have at all. Dragging a
+        // maximized or minimized window restores it first, so this does too.
+        public override WindowSize ResizeWindow(int width, int height)
+        {
+            PerformAction(() =>
+            {
+                VerifyEnabled();
+                if (Form is DockableFormEx)
+                {
+                    throw new InvalidOperationException(LlmInstruction.Format(
+                        @"The window '{0}' is a pane whose size belongs to the window layout. Arrange panes with 'File > Import > Window Layout'.",
+                        FormId));
+                }
+                if (Form.FormBorderStyle != FormBorderStyle.Sizable && Form.FormBorderStyle != FormBorderStyle.SizableToolWindow)
+                {
+                    throw new InvalidOperationException(LlmInstruction.Format(
+                        @"The window '{0}' has a fixed size.", FormId));
+                }
+                if (Form.WindowState != FormWindowState.Normal)
+                    Form.WindowState = FormWindowState.Normal;
+                Form.Size = new System.Drawing.Size(width, height);
+            });
+            return CallFunction(() => new WindowSize { Width = Form.Width, Height = Form.Height });
+        }
+
         // How long to wait (ms), and how often to re-check, for the form to reach the foreground before
         // grabbing the screen. The wait stops as soon as the form is in front; the cap just bounds a refused
         // activation.
         private const int ACTIVATE_POLL_MILLIS = 25;
         private const int ACTIVATE_SETTLE_MAX_MILLIS = 500;
 
-        // Activates the form and captures it (redacting any sensitive regions), as a right-click "capture
-        // screenshot" would. Called off the UI thread (the connector pipe thread, or a test thread). Bringing
-        // the window to the front is processed by the UI thread's message loop, so the activation and the
-        // capture are two separate UI-thread trips: in between, this off-UI caller releases the UI thread and
-        // polls until the form's top-level window is actually the foreground window -- stopping the moment it
-        // is, or after the cap if activation was refused. Capturing before the form is on top would leave any
-        // window still over it to be redacted (a cyan block) by CaptureAndRedact.
+        // Activates the form and captures it, as a right-click "capture screenshot" would. Called off the UI
+        // thread (the connector pipe thread, or a test thread). Bringing the window to the front is processed by
+        // the UI thread's message loop, so the activation and the capture are two separate UI-thread trips: in
+        // between, this off-UI caller releases the UI thread and polls until the form's top-level window is
+        // actually the foreground window -- stopping the moment it is, or after the cap if activation was refused.
+        // A form still covered by another application's window, or with no desktop to copy from, is rendered
+        // off-screen instead of copied from the screen (see ScreenCapture.GetFormImage). With no desktop the
+        // activation still selects a docked form's tab, but there is no foreground window to wait for.
         public override System.Drawing.Bitmap CaptureImage()
         {
+            bool desktopAvailable = ScreenCapture.IsDesktopAvailable();
             var topLevelHandle = DialogWatcher.CallFunction(Hwnd, () =>
             {
                 ScreenCapture.ActivateForm(Form);
                 return (FormUtil.FindTopLevelOwner(Form) ?? Form).Handle;
             }, CancellationToken);
             for (int waited = 0;
-                 waited < ACTIVATE_SETTLE_MAX_MILLIS && User32.GetForegroundWindow() != topLevelHandle;
+                 desktopAvailable && waited < ACTIVATE_SETTLE_MAX_MILLIS &&
+                 User32.GetForegroundWindow() != topLevelHandle;
                  waited += ACTIVATE_POLL_MILLIS)
                 Thread.Sleep(ACTIVATE_POLL_MILLIS);
             return DialogWatcher.CallFunction(Hwnd, () =>
@@ -1280,7 +1405,7 @@ namespace pwiz.Skyline.ToolsUI
                 // Flush any pending repaint so the screen grab reflects the form's current state rather than a
                 // stale frame (e.g. a wizard page captured mid-transition still showing the previous page).
                 Form.Update();
-                return ScreenCapture.CaptureAndRedact(ScreenCapture.GetWindowRectangle(Form), Form);
+                return ScreenCapture.GetFormImage(Form);
             }, CancellationToken);
         }
 
@@ -1324,8 +1449,7 @@ namespace pwiz.Skyline.ToolsUI
                 return formInfo;    // another thread owns this form: report only what is safe to read from here
 
             formInfo.DockState = GetDockState();
-            formInfo.HasGraph = Form is DockableFormEx dockableForm &&
-                                null != JsonUiService.TryGetZedGraphControl(dockableForm);
+            formInfo.HasGraph = TryGetGraphControl() != null;
             // What the form SAYS -- an alert's text -- so a caller listing the forms can see that one is in the way,
             // and why, without capturing an image of it. Only for a form that says something beyond its own title (a
             // CommonFormEx: an alert, an error); a plain form's DetailedMessage IS its title.
@@ -1362,6 +1486,11 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         public SkylineWindow SkylineWindow => (SkylineWindow) Form;
+
+        // A segment with no selector (a perform_action naming neither label nor type) is this window itself, whose
+        // paste and select_all the container that holds its controls does not have
+        public override UiElement GetChild(UiElementPath path) =>
+            string.IsNullOrEmpty(path.Type) && path.Text == null && !path.Index.HasValue ? this : base.GetChild(path);
 
         public void PasteNow(string text) => SkylineWindow.Paste(text);
 
@@ -1417,6 +1546,25 @@ namespace pwiz.Skyline.ToolsUI
     {
         public ButtonElement(Control control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
         public override string Label => Control.Text;
+
+        // A button's menu is the one its click drops down beside it (e.g. Copy on Manage Reports, Add on
+        // Configure Tools), once that click has opened it. It is found among the open menus rather than opened
+        // here, since clicking a button only to look for a menu could do anything that button does.
+        public override ContextMenuStrip BuildContextMenu()
+        {
+            if (Control.ContextMenuStrip != null)
+                return base.BuildContextMenu();
+            var droppedDown = User32.EnumThreadWindows((uint) Kernel32.GetCurrentThreadId())
+                .Select(Control.FromHandle).OfType<ContextMenuStrip>()
+                .FirstOrDefault(menu => menu.Visible &&
+                                        (ReferenceEquals(menu.SourceControl, Control) ||
+                                         ReferenceEquals(menu.SourceControl, Control.Parent)));
+            if (droppedDown == null)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"{0} has no menu open. Click it first (skyline_click_form_button) to drop its menu down.",
+                    NullIfEmpty(Label) ?? NullIfEmpty(Name) ?? ElementType.Name));
+            return droppedDown;
+        }
     }
 
     /// <summary>A checkbox or radio button. Neither is an IButtonControl, so neither can be clicked the way a
@@ -1476,12 +1624,25 @@ namespace pwiz.Skyline.ToolsUI
     {
         private readonly ComboBox _comboBox;
         public ComboBoxElement(ComboBox comboBox, CancellationToken cancellationToken) : base(comboBox, cancellationToken) { _comboBox = comboBox; }
-        public override object GetValueNow() => _comboBox.GetItemText(_comboBox.SelectedItem);
+        // A combo box a user can type into (e.g. Amino acid "S, T") holds text no item matches
+        private bool IsEditable => _comboBox.DropDownStyle != ComboBoxStyle.DropDownList;
+
+        public override object GetValueNow() => IsEditable
+            ? _comboBox.Text
+            : _comboBox.GetItemText(_comboBox.SelectedItem);
         public IEnumerable<string> GetOptions() => ListItems.GetOptions(_comboBox);
         public void SetValueNow(object value)
         {
             var text = value?.ToString();
             int index = _comboBox.FindStringExact(text);
+            // An item's text can carry whitespace the user never sees (e.g. Import Results "Many ")
+            if (index < 0 && text != null)
+                index = GetOptions().ToList().FindIndex(option => option.Trim() == text.Trim());
+            if (index < 0 && IsEditable)
+            {
+                _comboBox.Text = text;
+                return;
+            }
             if (index < 0)
                 throw new ArgumentException(LlmInstruction.Format(
                     @"No item '{0}' in combo box {1}.", text, _comboBox.Name));
@@ -1489,14 +1650,54 @@ namespace pwiz.Skyline.ToolsUI
         }
     }
 
+    /// <summary>A button that drops down a list to choose from (<see cref="LiteDropDownList"/>, e.g. each column's
+    /// type in Import Transition List: Identify Columns) -- set and read like a combo box.</summary>
+    internal sealed class DropDownListElement : ControlElement<LiteDropDownList>, IValueElement, IOptionsElement
+    {
+        public DropDownListElement(LiteDropDownList dropDownList, CancellationToken cancellationToken) : base(dropDownList, cancellationToken) { }
+        // Its Text is the chosen value, not a caption: like a combo box, it is named by the label before it
+        public override string Label => PrecedingLabel;
+        public override object GetValueNow() => Control.Text;
+        public IEnumerable<string> GetOptions() => Control.Items.Select(item => item.ToString()).ToList();
+        public void SetValueNow(object value)
+        {
+            var text = value?.ToString();
+            int index = Control.FindStringExact(text);
+            if (index < 0)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"No item '{0}' in drop-down list {1}.", text, Control.Name));
+            Control.SelectedIndex = index;
+        }
+    }
+
     /// <summary>A ListControl -- a ListBox or CheckedListBox. Select an item by index
     /// (set_selected_index) or by its text (select_item / unselect_item).</summary>
-    internal class ListControlElement<T> : ControlElement<T>, ISelectItemsElement, IOptionsElement
+    internal class ListControlElement<T> : ControlElement<T>, ISelectItemsElement, IOptionsElement, ITooltipElement
         where T : ListControl
     {
         public ListControlElement(T control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
+
+        public void ShowTooltipNow()
+        {
+            var listBox = Control as ListBox;
+            if (listBox == null || listBox.SelectedIndex < 0)
+                throw NothingSelected();
+            ShowTooltipAt(listBox.GetItemRectangle(listBox.SelectedIndex));
+            listBox.SelectedIndexChanged += SelectionChanged;
+        }
+
+        private void SelectionChanged(object sender, EventArgs e)
+        {
+            ((ListBox) (ListControl) Control).SelectedIndexChanged -= SelectionChanged;
+            HideTooltip();
+        }
+
         public void SetSelectedIndexNow(int index) => ListItems.SetSelectedIndex(Control, index);
         public void SetItemSelectedNow(string item, bool isSelected) => ListItems.SetSelected(Control, item, isSelected);
+        // The selected items' text, one per line
+        public override object GetValueNow() => Control is ListBox listBox
+            ? string.Join(Environment.NewLine, listBox.SelectedItems.Cast<object>().Select(listBox.GetItemText))
+            : Control.Text;
         // Every choice the list offers (get_options), regardless of selection/checked state.
         public virtual IEnumerable<string> GetOptions() => ListItems.GetOptions(Control);
     }
@@ -1536,12 +1737,39 @@ namespace pwiz.Skyline.ToolsUI
         public void SetSelectedIndexNow(int index) => ListItems.SetSelectedIndex(Control, index);
     }
 
+    /// <summary>A ListView -- its items' text is read with get_options (e.g. the files in Import Results Files).</summary>
+    internal sealed class ListViewElement : ItemContainerElement<ListView>, IOptionsElement
+    {
+        public ListViewElement(ListView control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
+        // The selected items' text, one per line
+        public override object GetValueNow() =>
+            string.Join(Environment.NewLine, Control.SelectedItems.Cast<ListViewItem>().Select(item => item.Text));
+        public IEnumerable<string> GetOptions() => ListItems.GetOptions(Control);
+    }
+
     /// <summary>A TreeView. Besides checking/selecting a node by text, a node is expanded or collapsed
     /// (expand/collapse) by a path: an array whose segments select a child at each level -- a string is the
     /// first child whose text matches it, an integer is the child at that index.</summary>
-    internal class TreeViewElement : ItemContainerElement<TreeView>, IExpandCollapseElement
+    internal class TreeViewElement : ItemContainerElement<TreeView>, IExpandCollapseElement, ITooltipElement
     {
         public TreeViewElement(TreeView control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
+
+        public void ShowTooltipNow()
+        {
+            var node = Control.SelectedNode;
+            if (node == null)
+                throw NothingSelected();
+            node.EnsureVisible();
+            ShowTooltipAt((node as TreeNodeMS)?.BoundsMS ?? node.Bounds);
+            Control.AfterSelect += SelectionChanged;
+        }
+
+        private void SelectionChanged(object sender, TreeViewEventArgs e)
+        {
+            Control.AfterSelect -= SelectionChanged;
+            HideTooltip();
+        }
+
         public void ExpandNow(object path) => ResolveTreePath(path).Expand();
         public void CollapseNow(object path) => ResolveTreePath(path).Collapse();
 
@@ -1620,8 +1848,8 @@ namespace pwiz.Skyline.ToolsUI
     }
 
     /// <summary>The Targets tree (a <see cref="SequenceTree"/>): a TreeView with the document-owned node
-    /// context menu and an in-place node rename a plain TreeView does not have.</summary>
-    internal sealed class SequenceTreeElement : TreeViewElement, IRenameNodeElement, IClipboardElement
+    /// context menu and the in-place label edit a plain TreeView does not have.</summary>
+    internal sealed class SequenceTreeElement : TreeViewElement, IClipboardElement
     {
         public SequenceTreeElement(SequenceTree control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
 
@@ -1639,13 +1867,49 @@ namespace pwiz.Skyline.ToolsUI
         public override ContextMenuStrip BuildContextMenu() =>
             OpenContextMenu(Program.MainWindow.ContextMenuTreeNode);
 
-        // Renames the selected node in place the way a user typing into its label and pressing Enter would:
-        // begin the in-place edit, set the text, commit it. Select the node first.
-        public void RenameNodeNow(string value)
+        // While a label is being edited, a key goes to its edit box, as a user's would.
+        public override void SendKeyStrokeNow(string keyStroke) =>
+            KeyStroke.Press(SequenceTree.KeyTarget, ParseKeyStroke(keyStroke));
+    }
+
+    /// <summary>The list on the completion pop-up that typing into the Targets tree brings up (a
+    /// <see cref="StatementCompletionForm"/>). It never takes the focus and has no selection: a click on an
+    /// item accepts it, so that is what selecting one does here.</summary>
+    internal sealed class StatementCompletionListElement : ControlElement<ListView>, ISelectItemsElement, IOptionsElement
+    {
+        public StatementCompletionListElement(ListView control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
+
+        // Each choice as the pop-up shows it: the name, then its description.
+        public IEnumerable<string> GetOptions() =>
+            Control.Items.Cast<ListViewItem>().Select(item =>
+                TextUtil.SpaceSeparate(item.Text, StatementCompletionForm.GetDescription(item) ?? string.Empty).Trim()).ToList();
+
+        public void SetItemSelectedNow(string item, bool isSelected)
         {
-            SequenceTree.BeginEdit(false);
-            SequenceTree.StatementCompletionEditBox.TextBox.Text = value;
-            SequenceTree.CommitEditBox(false);
+            if (!isSelected)
+                throw new ArgumentException(new LlmInstruction(
+                    @"The completion list has no selection to clear. Press 'Esc' on the Targets tree to close it."));
+            var items = Control.Items;
+            int best = ListItems.BestMatch(items.Count, i => items[i].Text, item);
+            if (best < 0)
+                throw new ArgumentException(LlmInstruction.Format(@"Item not found in the completion list: {0}.", item));
+            ClickItem(items[best]);
+        }
+
+        public void SetSelectedIndexNow(int index)
+        {
+            if (index < 0 || index >= Control.Items.Count)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Index {0} is out of range; the completion list has {1} items.", index, Control.Items.Count));
+            ClickItem(Control.Items[index]);
+        }
+
+        private void ClickItem(ListViewItem item)
+        {
+            item.EnsureVisible();
+            var bounds = item.Bounds;
+            RaiseProtectedHandler(Control, @"OnMouseDown", new MouseEventArgs(MouseButtons.Left, 1,
+                bounds.Left + bounds.Height, bounds.Top + bounds.Height / 2, 0));
         }
     }
 
@@ -1725,7 +1989,10 @@ namespace pwiz.Skyline.ToolsUI
             switch (control)
             {
                 case ListBox listBox: // CheckedListBox derives from ListBox
-                    listBox.SetSelected(FindListItemIndex(listBox, item), selected);
+                    int index = FindListItemIndex(listBox, item);
+                    listBox.SetSelected(index, selected);
+                    if (selected)
+                        MakeCurrent(listBox, index);
                     break;
                 case TreeView treeView:
                     var node = FindTreeNode(treeView, item);
@@ -1738,7 +2005,10 @@ namespace pwiz.Skyline.ToolsUI
                     var listViewItem = FindListViewItem(listView, item);
                     listViewItem.Selected = selected;
                     if (selected)
+                    {
+                        MakeCurrent(listViewItem);
                         listViewItem.EnsureVisible();
+                    }
                     break;
                 default:
                     throw new ArgumentException(LlmInstruction.Format(
@@ -1757,6 +2027,7 @@ namespace pwiz.Skyline.ToolsUI
                     RequireIndexInRange(index, listBox.Items.Count, listBox.Name);
                     listBox.ClearSelected();
                     listBox.SetSelected(index, true);
+                    MakeCurrent(listBox, index);
                     break;
                 case TreeView treeView:
                     RequireIndexInRange(index, treeView.Nodes.Count, treeView.Name);
@@ -1767,11 +2038,32 @@ namespace pwiz.Skyline.ToolsUI
                     listView.SelectedItems.Clear();
                     var listViewItem = listView.Items[index];
                     listViewItem.Selected = true;
+                    MakeCurrent(listViewItem);
                     listViewItem.EnsureVisible();
                     break;
                 default:
                     throw new ArgumentException(LlmInstruction.Format(
                         @"Setting the selected index is supported for a ListBox, TreeView, or ListView, not {0}.", control.Name));
+            }
+        }
+
+        // Clicking an item makes it the list's current item as well as selecting it: the one the keyboard moves
+        // on from (the focused item) and the one Shift extends a range from (the anchor). A tree's selected node
+        // is already both.
+        private static void MakeCurrent(ListViewItem item)
+        {
+            item.Focused = true;
+            User32.SendMessage(item.ListView.Handle, User32.WinMessageType.LVM_SETSELECTIONMARK,
+                IntPtr.Zero, (IntPtr) item.Index);
+        }
+
+        private static void MakeCurrent(ListBox listBox, int index)
+        {
+            // A single-selection list moves its caret with its selection; a multi-selection one does not.
+            if (listBox.SelectionMode == SelectionMode.MultiSimple || listBox.SelectionMode == SelectionMode.MultiExtended)
+            {
+                User32.SendMessage(listBox.Handle, User32.WinMessageType.LB_SETANCHORINDEX, (IntPtr) index, IntPtr.Zero);
+                User32.SendMessage(listBox.Handle, User32.WinMessageType.LB_SETCARETINDEX, (IntPtr) index, IntPtr.Zero);
             }
         }
 
@@ -1784,7 +2076,7 @@ namespace pwiz.Skyline.ToolsUI
 
         // The display text of EVERY item a list control offers, regardless of which are selected or checked --
         // what get_options reads. A ComboBox and a ListBox (a CheckedListBox derives from ListBox) both expose
-        // their choices through Items + GetItemText.
+        // their choices through Items + GetItemText; a ListView through its items' Text.
         public static IEnumerable<string> GetOptions(Control control)
         {
             switch (control)
@@ -1793,9 +2085,11 @@ namespace pwiz.Skyline.ToolsUI
                     return comboBox.Items.Cast<object>().Select(comboBox.GetItemText).ToList();
                 case ListBox listBox: // CheckedListBox derives from ListBox
                     return listBox.Items.Cast<object>().Select(listBox.GetItemText).ToList();
+                case ListView listView:
+                    return listView.Items.Cast<ListViewItem>().Select(item => item.Text).ToList();
                 default:
                     throw new ArgumentException(LlmInstruction.Format(
-                        @"Listing options is supported for a ComboBox or ListBox, not {0}.", control.Name));
+                        @"Listing options is supported for a ComboBox, ListBox or ListView, not {0}.", control.Name));
             }
         }
 
@@ -1829,11 +2123,18 @@ namespace pwiz.Skyline.ToolsUI
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Empty tree path: {0}. Expected '>'-separated node texts, e.g. 'Protein > Peptide > Precursor'.",
                     path ?? string.Empty));
-            var nodes = treeView.Nodes;
+            IList<TreeNode> nodes = treeView.Nodes.Cast<TreeNode>().ToList();
             TreeNode current = null;
             for (int i = 0; i < segments.Length; i++)
             {
-                int best = BestMatch(nodes.Count, j => nodes[j].Text, segments[i]);
+                int best = BestTreeNodeMatch(nodes, segments[i]);
+                if (best < 0 && i == 0)
+                {
+                    // A user clicks the node they see, however deep, so the path may start at any node that is
+                    // showing in the tree (every ancestor expanded), e.g. a peptide under its expanded protein
+                    nodes = ShownNodes(treeView.Nodes).ToList();
+                    best = BestTreeNodeMatch(nodes, segments[i]);
+                }
                 if (best < 0)
                     throw new ArgumentException(LlmInstruction.Format(
                         @"Tree node not found: {0} (no match for '{1}').", path, segments[i]));
@@ -1841,10 +2142,44 @@ namespace pwiz.Skyline.ToolsUI
                 if (i < segments.Length - 1)
                 {
                     current.Expand(); // populate lazily-built children before descending
-                    nodes = current.Nodes;
+                    nodes = current.Nodes.Cast<TreeNode>().ToList();
                 }
             }
             return current;
+        }
+
+        // The node whose text matches the key, or failing that whose text does without a trailing parenthetical --
+        // the results a Targets node shows after its name, e.g. "513.7951++ (rdotp 0.91, total ratio 0.02)",
+        // which change with the data -- or, for a Targets peptide shown with its flanking residues and position
+        // ("K.IHGFDLAAINLQR.C [545, 557]"), whose sequence does. -1 if none.
+        private static int BestTreeNodeMatch(IList<TreeNode> nodes, string key)
+        {
+            int best = BestMatch(nodes.Count, j => nodes[j].Text, key);
+            if (best < 0)
+                best = BestMatch(nodes.Count, j => WithoutTrailingParenthetical(nodes[j].Text), key);
+            if (best < 0)
+                best = BestMatch(nodes.Count, j => (nodes[j] as PeptideTreeNode)?.DocNode.Peptide.Sequence, key);
+            return best;
+        }
+
+        private static string WithoutTrailingParenthetical(string text)
+        {
+            int start = text.LastIndexOf(@" (", StringComparison.Ordinal);
+            return start > 0 && text.EndsWith(@")") ? text.Substring(0, start) : text;
+        }
+
+        // The nodes showing in a tree, in display order: each node, then its children if it is expanded.
+        private static IEnumerable<TreeNode> ShownNodes(TreeNodeCollection nodes)
+        {
+            foreach (TreeNode node in nodes)
+            {
+                yield return node;
+                if (node.IsExpanded)
+                {
+                    foreach (var child in ShownNodes(node.Nodes))
+                        yield return child;
+                }
+            }
         }
 
         // The index of the best text match among count items (by the connector's label matching), or -1: the
@@ -1969,8 +2304,9 @@ namespace pwiz.Skyline.ToolsUI
         // Splits a menu/toolbar path into its segments (separators '>', '|', '/'). Throws if empty.
         private static string[] ParseMenuSegments(string menuPath)
         {
+            // Only '>' separates levels: an item's own text can hold a '/' or '|' (e.g. "Observed m/z Values")
             var segments = (menuPath ?? string.Empty)
-                .Split(new[] { '>', '|', '/' }, StringSplitOptions.RemoveEmptyEntries)
+                .Split(new[] { '>' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();
             if (segments.Length == 0)
                 throw new ArgumentException(LlmInstruction.Format(
@@ -1999,6 +2335,21 @@ namespace pwiz.Skyline.ToolsUI
         public override string Label => _item is ToolStripControlHost ? null
             : string.IsNullOrEmpty(_item.Text) ? _item.ToolTipText : _item.Text;
         public override bool IsEnabled => _item.Enabled;
+        // A menu command's check mark (e.g. a graph's Legend, or which of Transitions > All / Total is on), or a
+        // toolbar button's pushed state (e.g. the B-ions button of a spectrum), so a caller can see a toggle's
+        // state before clicking it
+        public override object GetValueNow()
+        {
+            switch (_item)
+            {
+                case ToolStripMenuItem { HasDropDownItems: false } menuItem:
+                    return menuItem.Checked;
+                case ToolStripButton button:
+                    return button.Checked;
+                default:
+                    return null;
+            }
+        }
         private List<UiElement> _children;
 
         // A ToolStripControlHost hosts a real control: a single control the form recognizes (e.g. the Audit
@@ -2058,10 +2409,26 @@ namespace pwiz.Skyline.ToolsUI
     /// <summary>A grid -- the DataGridView a caller reads as TSV or sets a cell on, by direct cell access.
     /// A bound grid (the inner grid of a DataboundGridControl, e.g. the Document Grid) is a
     /// <see cref="BoundGridElement"/> that overrides the read/write with the rich copy/paste path.</summary>
-    internal class GridElement : ControlElement, IValueElement, IClipboardElement
+    internal class GridElement : ControlElement, IValueElement, IClipboardElement, ITooltipElement
     {
         private readonly DataGridView _dataGridView;
         public GridElement(DataGridView dataGridView, CancellationToken cancellationToken) : base(dataGridView, cancellationToken) { _dataGridView = dataGridView; }
+
+        public void ShowTooltipNow()
+        {
+            var cell = _dataGridView.CurrentCellAddress;
+            if (cell.X < 0 || cell.Y < 0)
+                throw NothingSelected();
+            ShowTooltipAt(_dataGridView.GetCellDisplayRectangle(cell.X, cell.Y, true));
+            _dataGridView.CurrentCellChanged += CurrentCellChanged;
+        }
+
+        private void CurrentCellChanged(object sender, EventArgs e)
+        {
+            _dataGridView.CurrentCellChanged -= CurrentCellChanged;
+            HideTooltip();
+        }
+
 
         // Pasting into a grid is normally the same as set_grid_text: tab-separated text filled from the current
         // cell. SetGridText owns the gating/marshaling, so that case just delegates to it.
@@ -2085,7 +2452,12 @@ namespace pwiz.Skyline.ToolsUI
         // the connector at the point it is exposed (get_value, ControlInfo), not here.
         public override object GetValueNow() => _dataGridView.CurrentCell?.Value;
 
-        public void SetValueNow(object value)
+        public virtual void SetValueNow(object value)
+        {
+            WritableCurrentCell().Value = value;
+        }
+
+        protected DataGridViewCell WritableCurrentCell()
         {
             var cell = _dataGridView.CurrentCell;
             if (cell == null)
@@ -2096,14 +2468,15 @@ namespace pwiz.Skyline.ToolsUI
             if (cell.ReadOnly || _dataGridView.ReadOnly)
                 throw new ArgumentException(new LlmInstruction(
                     @"The current cell is read-only, so its value cannot be set."));
-            cell.Value = value;
+            return cell;
         }
 
-        // A grid carries no caption, so it is addressed by its control Name -- the one place the connector
-        // matches on a name rather than on visible text (an empty name picks the form's single grid, handled
-        // by FindElement). The name match is the same whether strict or loose.
+        // A grid carries no caption of its own, so it is addressed by the label before it -- the one
+        // skyline_get_controls reports, e.g. "Input Files" -- or by its control Name, the one place the connector
+        // matches on a name rather than on visible text (an empty name picks the form's single grid, handled by
+        // FindElement). The name match is the same whether strict or loose.
         public override bool MatchesText(string text, bool strict) =>
-            string.Equals(Control.Name, text, StringComparison.OrdinalIgnoreCase);
+            string.Equals(Control.Name, text, StringComparison.OrdinalIgnoreCase) || base.MatchesText(text, strict);
 
         // A grid is a leaf in the walk (not a ContainerElement): its content is read/written through the
         // grid actions, not by walking into child controls. The plain path reads/writes cells directly.
@@ -2153,7 +2526,33 @@ namespace pwiz.Skyline.ToolsUI
             if (row < 0 || row >= _dataGridView.Rows.Count)
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Row {0} is out of range; the grid has {1} rows.", row, _dataGridView.Rows.Count));
-            _dataGridView.CurrentCell = _dataGridView.Rows[row].Cells[visibleColumns[column].Index];
+            var cell = _dataGridView.Rows[row].Cells[visibleColumns[column].Index];
+            // Clicking a cell gives the grid the focus, and a focused grid puts a cell with no editing control (a
+            // checkbox) straight into edit mode, which is what lets Space then toggle it. A text cell is not
+            // focused: in edit mode its editing control would overwrite text then entered through the grid.
+            if (cell.EditType == null)
+                _dataGridView.Focus();
+            _dataGridView.CurrentCell = cell;
+        }
+
+        // Clicks one of the images drawn in the current cell (e.g. the Audit Log's undo arrow or magnifying
+        // glass), counting the images the cell shows from the left. A real click needs the mouse over the
+        // image, so this goes through the cell's own ClickImage rather than a synthesized mouse gesture.
+        public void ClickCellImageNow(int index)
+        {
+            var cell = _dataGridView.CurrentCell;
+            if (cell == null)
+                throw new ArgumentException(new LlmInstruction(
+                    @"The grid has no current cell -- move to one first with set_current_cell_address."));
+            if (!(cell is TextImageCell imageCell) || !(cell.OwningColumn is TextImageColumn column))
+                throw new ArgumentException(new LlmInstruction(@"The current cell shows no images."));
+            // The cell draws its visible images right to left from the last, so left to right is ascending order
+            var shown = Enumerable.Range(0, imageCell.Items.Length)
+                .Where(i => column.ShouldDisplay(cell.Value, i)).ToArray();
+            if (index < 0 || index >= shown.Length)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Image {0} is out of range; the current cell shows {1} images.", index, shown.Length));
+            imageCell.ClickImage(shown[index]);
         }
 
         // A grid's menu is the one for its current cell (move there first with SetCurrentCellAddress), built
@@ -2212,6 +2611,20 @@ namespace pwiz.Skyline.ToolsUI
                 // (one undoable batch-modify -- see BoundDataGridViewPasteHandler).
                 BoundDataGridViewPasteHandler.PasteText(DataGridView, bindingListSource, text);
         }
+
+        // A bound cell holds a typed value (e.g. a Sample Type), which a raw string cannot be assigned to, so
+        // the value is entered the way a user types it: as text pasted into the current cell, converted to the
+        // column's type and committed to the document.
+        public override void SetValueNow(object value)
+        {
+            if (BindingListSource == null)
+            {
+                base.SetValueNow(value);
+                return;
+            }
+            WritableCurrentCell();
+            SetGridTextCore(value?.ToString() ?? string.Empty);
+        }
     }
 
     /// <summary>The right-click context menu of a control -- addressed by a path whose Type is
@@ -2256,6 +2669,33 @@ namespace pwiz.Skyline.ToolsUI
                     throw new ArgumentException(LlmInstruction.Format(@"No tab matches '{0}'.", tabText));
                 Control.SelectedTab = tab;
             }
+    }
+
+    /// <summary>A SplitContainer's splitter, which a user drags to share the space between its two panels. Its
+    /// value is where the splitter sits: its distance in pixels from the top of the container for panels one
+    /// above the other, from the left for panels side by side. Like a TabControl's pages, the panels are not
+    /// elements; their controls are flattened up to the form.</summary>
+    internal sealed class SplitterElement : ControlElement<SplitContainer>, IValueElement
+    {
+        public SplitterElement(SplitContainer control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
+        public override IEnumerable<UiElement> EnumerateChildren() => Enumerable.Empty<UiElement>();
+        public override object GetValueNow() => Control.SplitterDistance;
+
+        // A drag stops where the panels' minimum sizes leave no more room, so a distance outside that range is
+        // refused with the range rather than letting SplitterDistance throw.
+        public void SetValueNow(object value)
+        {
+            int distance = UiValue.ToInt(value);
+            int length = Control.Orientation == Orientation.Horizontal ? Control.Height : Control.Width;
+            int min = Control.Panel1MinSize;
+            int max = length - Control.SplitterWidth - Control.Panel2MinSize;
+            if (distance < min || distance > max)
+            {
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"The splitter can be moved to between {0} and {1} pixels; {2} is outside that range.", min, max, distance));
+            }
+            Control.SplitterDistance = distance;
+        }
     }
 
     // Small value helpers shared by the value elements.

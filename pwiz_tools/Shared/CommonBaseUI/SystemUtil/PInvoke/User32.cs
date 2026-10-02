@@ -84,11 +84,18 @@ namespace pwiz.Common.SystemUtil.PInvoke
             WM_VSCROLL = 0x0115,
             WM_KEYDOWN = 0x0100,
             WM_KEYUP = 0x0101,
+            WM_SYSKEYDOWN = 0x0104,
+            WM_SYSKEYUP = 0x0105,
+            WM_SYSCHAR = 0x0106,
             WM_CHANGEUISTATE = 0x0127,
             WM_MOUSEMOVE = 0x0200,
             WM_LBUTTONDOWN = 0x0201,
             WM_LBUTTONUP = 0x0202,
             WM_MOUSELEAVE = 0x02A3,
+            LB_SETANCHORINDEX = 0x019C,
+            LB_SETCARETINDEX = 0x019E,
+            LVM_SETSELECTIONMARK = 0x1043,
+            WM_PRINT = 0x0317,
             EM_SETSEL = 0x00B1,
             EM_REPLACESEL = 0x00C2,
             BM_CLICK = 0x00F5
@@ -149,6 +156,25 @@ namespace pwiz.Common.SystemUtil.PInvoke
 
             public Point Point => new Point(x, y);
         }
+
+        [StructLayout(LayoutKind.Sequential)]
+        // ReSharper disable once InconsistentNaming
+        public struct MSG
+        {
+            public IntPtr hwnd;
+            public uint message;
+            public IntPtr wParam;
+            public IntPtr lParam;
+            public uint time;
+            public POINT pt;
+        }
+
+        // PeekMessage wRemoveMsg: remove the message from the queue.
+        public const uint PM_REMOVE = 0x0001;
+        // MapVirtualKey uMapType: virtual-key code to scan code.
+        public const uint MAPVK_VK_TO_VSC = 0;
+        // ToUnicode wFlags: leave the keyboard's dead-key state alone (Windows 10 1607 and later).
+        public const uint TOUNICODE_NO_STATE_CHANGE = 0x0004;
 
         [StructLayout(LayoutKind.Sequential)]
         public struct RECT
@@ -392,6 +418,23 @@ namespace pwiz.Common.SystemUtil.PInvoke
 
         [DllImport("user32.dll", EntryPoint = "OpenClipboard", SetLastError = true)]
         public static extern bool OpenClipboard(IntPtr hWndNewOwner);
+
+        [DllImport("user32.dll")]
+        public static extern bool GetKeyboardState(byte[] lpKeyState);
+
+        [DllImport("user32.dll")]
+        public static extern bool SetKeyboardState(byte[] lpKeyState);
+
+        [DllImport("user32.dll")]
+        public static extern uint MapVirtualKey(uint uCode, uint uMapType);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        public static extern int ToUnicode(uint wVirtKey, uint wScanCode, byte[] lpKeyState,
+            [Out] StringBuilder pwszBuff, int cchBuff, uint wFlags);
+
+        [DllImport("user32.dll")]
+        public static extern bool PeekMessage(out MSG lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax,
+            uint wRemoveMsg);
 
         [DllImport("user32.dll")]
         public static extern bool PostMessageA(IntPtr hWnd, WinMessageType msgType, int wParam, int lParam);
