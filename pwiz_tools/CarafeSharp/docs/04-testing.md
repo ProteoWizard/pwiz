@@ -130,7 +130,7 @@ new version.
 | CPU, with data | `build.ps1 -RequireData` | all 92 | about 10 min |
 | Astral | `build.ps1 -TestCategory Astral -RequireData` | 4, on the Astral package | about 12 min |
 | CUDA | `build.ps1 -Torch cuda` | the `Cuda` category: pretrained predictions on the GPU against the CPU | not yet timed |
-| Regression | `regression.ps1 [-Dataset Astral]` | the `Regression` category: a fine-tune and library against the golden (see "Regression") | Stellar 13 min, Astral 35 min on the CPU |
+| Regression | `regression.ps1 [-Dataset Astral]` | the `Regression` category: a fine-tune and library against the golden (see "Regression") | Stellar 12 min, Astral 38 min on the CPU (i9-13900H) |
 
 - **CUDA:** the pass sets `CARAFESHARP_REQUIRE_CUDA=1`, so a GPU test that finds no usable GPU fails
   instead of passing untested. The GPU and CPU predictions agree within 3e-5 in intensity and 5e-5 in
@@ -220,25 +220,33 @@ already there it compares the run with it, lists the `golden.json` values that c
 only with `-Force`. The golden records its commit, device, processor, OS, libtorch thread count and the
 inputs' SHA-256.
 
-**The Stellar golden** is a CPU run (Intel i9-9900K, Windows, 8 libtorch threads, 13 minutes): 19,344
-precursors, 335,840 peaks and 19,340 DecoyPairs rows (9,670 pairs, 4,833 of them entrapment pairs;
+**The Stellar golden** is a CPU run (Intel i9-13900H, Windows, 14 libtorch threads, 12 minutes): 19,344
+precursors, 335,219 peaks and 19,340 DecoyPairs rows (9,670 pairs, 4,833 of them entrapment pairs;
 all 9,666 targets paired, and 12 I/L twins left out of the check), with a 1,923-precursor sample of
-422 KB. It was made from `carafesharp-export-v1`, the format 2 export that Osprey (#4708) wrote from
-the .raw, and remade on 2026-09-30 (8dfe512b59) for the acquisition layer (01-model-spec.md), whose
-beam-CID and LIT columns now train. Against the golden before it, the pretrained metrics, training
-tables and RT model were identical, the fine-tuned MS2 metrics moved by at most 3.5e-4 (PCC), library
-peaks by +0.33%, and the sampled spectral cosine median was 0.9998. Two runs of that commit on this
-machine gave byte-identical models and libraries.
+421 KB. It was made from `carafesharp-export-v1`, the format 2 export that Osprey (#4708) wrote from
+the .raw, remade on 2026-09-30 (8dfe512b59) for the acquisition layer (01-model-spec.md), whose
+beam-CID and LIT columns now train, and remade on 2026-10-02 (6a1f1e41bc) when Chronologer became the
+default RT model. Against the AlphaPeptDeep golden before it (an i9-9900K, 8 threads):
+- RT held-out metrics: pretrained R2 0.8707 to 0.9933, fine-tuned R2 0.9976 to 0.9980 and median
+  error 0.0050 to 0.0037 of the gradient; the library's sampled RT moved by a median 0.19 min, as it should.
+- The training tables were identical and the library held the same 19,344 precursors; its sampled spectral
+  cosine median was 0.99974.
+- The other machine moved the fine-tuned MS2 metrics by at most 3.3e-4 (SA) and library peaks by -0.18%,
+  within the tolerances above.
 
-**The Astral golden** is a CPU run on the same machine (35 minutes, most of it the fine-tune on 39,702
+**The Astral golden** is a CPU run on the same machine (38 minutes, most of it the fine-tune on 39,702
 MS2 spectra and 77,073 RT peptide forms):
-- Library: 123,389 precursors, 1,703,785 peaks and 123,380 DecoyPairs rows (61,690 pairs, 30,836 of them
+- Library: 123,383 precursors, 1,701,983 peaks and 123,374 DecoyPairs rows (61,687 pairs, 30,834 of them
   entrapment pairs). It was remade on 2026-10-01 (8362e74827) when the library began writing its pairs
-  whole: 10 precursors whose partner had too few fragments were left out with it, 6 targets and 4 decoys.
-- Pairing: 61,675 of 61,679 targets paired. The other 4 are unpaired because their partner precursor is
+  whole (10 precursors whose partner had too few fragments were left out with it, 6 targets and 4
+  decoys), and on 2026-10-02 (3c3d40a502) when Chronologer became the default RT model; the 3 pairs fewer
+  come from the MS2 fine-tune on this machine, not the i9-9900K of the golden before.
+- Pairing: 61,672 of 61,676 targets paired. The other 4 are unpaired because their partner precursor is
   paired in its other role, and 37 I/L twins are left out of the check.
-- Sample: 1,738 precursors at modulus 70, 313 KB.
-- Held-out metrics, pretrained to fine-tuned: MS2 COS 0.9771 to 0.9868, RT R2 0.8595 to 0.9972.
+- Sample: 1,738 precursors at modulus 70, 313 KB; sampled spectral cosine median 0.99982 against the
+  AlphaPeptDeep golden.
+- Held-out metrics, pretrained to fine-tuned: MS2 COS 0.9771 to 0.9868; RT (Chronologer) R2 0.9943 to
+  0.9971, median error 0.0067 to 0.0039 (AlphaPeptDeep's: R2 0.8595 to 0.9972, 0.0554 to 0.0048).
 - Export: `carafesharp-export-astral-v1`, which Osprey (#4708) wrote from the `_55` .raw against Carafe's
   initial library. Seven precursors are left out of that library: Carafe had merged each with a decoy
   of the same sequence, and this Osprey refuses such rows against the pairing manifest. The package
