@@ -69,9 +69,24 @@ The zips are in the PanoramaWeb perftests folder beside the Osprey test files,
 Osprey (#4708) wrote from the Stellar `_21` and Astral `_55` .raw files, each searched against the Carafe
 initial library of its test-files package; each README records the command.
 
-Extract a zip into `<Downloads>/Perftests/`, where the Skyline and Osprey perf tests keep theirs:
+The packages go in `<Downloads>/Perftests/`, where the Skyline and Osprey perf tests keep theirs:
 - `<Downloads>` is `SKYLINE_DOWNLOAD_PATH` when it is set, else the user's Downloads folder.
 - Or set `CARAFESHARP_TESTDATA` to the folder that holds the package folders.
+
+**Fetching and verifying:** `build.ps1 -TestData Fetch` (or `ai/scripts/CarafeSharp/Build-CarafeSharp.ps1
+-TestData Fetch`) downloads the packages the run reads that are not there yet, before it builds:
+- By default those of the default test pass (`testfiles`, `export`), plus `-TestCategory`'s (`Astral` adds
+  `astral` and `astral-export`); `-TestDataPackage all`, or a comma-separated list of ids, picks others.
+- Each zip is checked against its size and SHA-256 in `testdata.json` and kept beside the packages. A zip
+  already there is checked rather than downloaded again, and downloaded again only if it is wrong.
+- It is extracted to a temporary folder that is renamed into place when complete, and its files are then
+  checked against its `MANIFEST.sha256`. A package folder already there is left alone.
+
+`-TestData Verify` checks every file of the packages against their `MANIFEST.sha256`, a zip kept beside
+them against `testdata.json`, and the committed `pretrained_models.zip` against its pin; it reads every
+file, so the Astral package takes a few minutes. Either fails on any problem and names it.
+`./build.ps1 -NoBuild -NoTests -TestData Fetch` only fetches. You can also download a zip from the page
+above and extract it there yourself.
 
 This works from Visual Studio or ReSharper too, where no script sets variables.
 
