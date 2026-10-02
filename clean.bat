@@ -112,6 +112,11 @@ git clean -f -d -X pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data > nul
 
 :SKIP_CPP
 IF EXIST pwiz_tools\clean-apps.bat call pwiz_tools\clean-apps.bat
+REM # pwiz-sharp's own clean: every bin/obj/TestResults under it, plus the native CMake trees and
+REM # generated vendor pins a bin/obj sweep would miss. It keeps its vendor-assembly and runtime
+REM # caches unless -all is given. Skyline links pwiz-sharp output and bundles BlibBuild's by wildcard,
+REM # so stale files left here by an older build fail Skyline's build once the current one stops
+REM # producing them.
 IF EXIST pwiz-sharp\clean.bat call pwiz-sharp\clean.bat %CLEANSHARPCACHE%
 
 popd

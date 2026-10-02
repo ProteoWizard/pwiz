@@ -58,7 +58,7 @@ namespace pwiz.SkylineTestUtil
 
         protected int? ExpectedRevision
         {
-            get { return _revisionIncrement.HasValue ? WaitRevision : (int?) null; }
+            get { return _revisionIncrement.HasValue ? WaitRevision : null; }
         }
 
         protected SrmDocument Wait()

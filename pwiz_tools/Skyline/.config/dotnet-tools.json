@@ -7,6 +7,12 @@
       "commands": [
         "dotnet-dotCover"
       ]
+    },
+    "jetbrains.resharper.globaltools": {
+      "version": "2025.3.3",
+      "commands": [
+        "jb"
+      ]
     }
   }
 }

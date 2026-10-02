@@ -345,8 +345,8 @@ namespace pwiz.Skyline.Model.Results
         public bool HasRawChromatograms { get { return (Flags & FlagValues.raw_chromatograms) != 0; } }
         public bool IsDda { get { return (Flags & FlagValues.dda_acquisition_method) != 0; } }
 
-        public float? StartTime { get { return _startTime >= 0 ? _startTime : (float?) null; }  } // For SRM data with same precursor but different RT interval
-        public float? EndTime { get { return _endTime >= 0 ? _endTime : (float?)null; } } // For SRM data with same precursor but different RT interval
+        public float? StartTime { get { return _startTime >= 0 ? _startTime : null; }  } // For SRM data with same precursor but different RT interval
+        public float? EndTime { get { return _endTime >= 0 ? _endTime : null; } } // For SRM data with same precursor but different RT interval
 
         public bool HasRawTimes()
         {
@@ -1206,7 +1206,7 @@ namespace pwiz.Skyline.Model.Results
         public float BackgroundArea { get { return _backgroundArea; } }
         public float Height { get { return _height; } }
         public float Fwhm { get { return _fwhm; } }
-        public short? PointsAcross { get { return _pointsAcross == 0 ? (short?)null : _pointsAcross; } }
+        public short? PointsAcross { get { return _pointsAcross == 0 ? null : _pointsAcross; } }
 
         public override string ToString()
         {
@@ -1953,12 +1953,12 @@ namespace pwiz.Skyline.Model.Results
 
         public double? OptionalMinTime
         {
-            get { return _hasOptionalTimes ? (double?) _optionalMinTime : null; }
+            get { return _hasOptionalTimes ? _optionalMinTime : null; }
         }
 
         public double? OptionalMaxTime
         {
-            get { return _hasOptionalTimes ? (double?) _optionalMaxTime : null; }
+            get { return _hasOptionalTimes ? _optionalMaxTime : null; }
         }
 
         public ChromKey ChangeOptimizationStep(int step, SignedMz? newProductMz)
