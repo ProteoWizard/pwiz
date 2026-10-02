@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -117,6 +118,10 @@ namespace pwiz.CarafeSharp.Test
                     @"Q[-17.026549]NQEYQVLLDVR", 9),
                 (new PeptideForm(@"ACDEFGHIK", new[] { @"Acetyl@Protein_N-term" }, new[] { 0 }), @"[+42.010565]ACDEFGHIK", 12),
                 (new PeptideForm(@"SPEPTIDEK", new[] { @"Phospho@S" }, new[] { 1 }), @"S[+79.966331]PEPTIDEK", 14),
+                // Two modifications at one position are one mass, as jchronologer sums them: N-terminal ammonia loss on
+                // a carbamidomethyl-Cys, as a DIA-NN-style library lists them, is the cyclized Cys.
+                (new PeptideForm(@"CPEPTIDEK", new[] { @"Ammonia-loss@C^Any_N-term", @"Carbamidomethyl@C" }, new[] { 0, 1 }),
+                    @"C[+39.994915]PEPTIDEK", 11),
             };
             using (var model = ChronologerModel.FromFiles(ChronologerFiles.Open(), CPU))
             {
@@ -210,10 +215,34 @@ namespace pwiz.CarafeSharp.Test
                     model.Save(tuned);
                 }
                 Assert.IsTrue(ChronologerModel.IsChronologerFile(tuned));
+                Assert.AreEqual(ChronologerFiles.VERSION, StateDict.ReadSafetensorsMetadata(tuned)[ChronologerModel.VERSION_KEY]);
                 using (var reloaded = ChronologerModel.FromSafetensors(tuned, files, CPU))
                 {
                     Assert.IsTrue(reloaded.PredictsNormalizedRt);
                     CollectionAssert.AreEqual(tunedPrediction, reloaded.Predict(peptides));
+
+                    // A Chronologer fine-tuned from another version is refused: its encoding may differ.
+                    string otherVersion = Path.Combine(folder, @"other_version.safetensors");
+                    StateDict.WriteSafetensors(reloaded.Network, otherVersion, new Dictionary<string, string>
+                    {
+                        { ChronologerModel.RT_MODEL_KEY, @"chronologer" },
+                        { ChronologerModel.RT_SCALE_KEY, @"normalized_rt" },
+                        { ChronologerModel.VERSION_KEY, @"20990101000000" },
+                    });
+                    StringAssert.Contains(Assert.ThrowsException<InvalidDataException>(() => ChronologerModel.FromSafetensors(otherVersion, files, CPU)).Message,
+                        @"Chronologer 20990101000000");
+                }
+
+                // Normalized RT is clipped at 0, as AlphaPeptDeep's is, and the hydrophobic index is not.
+                using (var model = ChronologerModel.FromFiles(files, CPU))
+                {
+                    double[] hi = model.Predict(peptides);
+                    double median = hi.OrderBy(v => v).ElementAt(hi.Length / 2);
+                    model.RescaleToNormalizedRt(1, -median);
+                    double[] clipped = model.Predict(peptides);
+                    for (int i = 0; i < peptides.Length; i++)
+                        Assert.AreEqual(Math.Max(hi[i] - median, 0), clipped[i], 1e-4, peptides[i].Sequence);
+                    Assert.IsTrue(clipped.Contains(0.0));
                 }
 
                 string alphaPeptDeep = Path.Combine(folder, @"alphapeptdeep_rt.safetensors");

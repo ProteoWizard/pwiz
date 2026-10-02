@@ -49,10 +49,5 @@ namespace pwiz.CarafeSharp.Models
         {
             get { return Example.RtNorm; }
         }
-
-        public int Length
-        {
-            get { return Example.Peptide.Length; }
-        }
     }
 }

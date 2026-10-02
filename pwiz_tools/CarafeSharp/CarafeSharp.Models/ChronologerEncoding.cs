@@ -78,39 +78,41 @@ namespace pwiz.CarafeSharp.Models
 
         /// <summary>
         /// The EncyclopeDIA-style mass-annotated sequence of <paramref name="form"/>, the form
-        /// Chronologer's rules match: each modification's mass after its residue, a terminal modification
-        /// before the sequence, and a residue-specific N-terminal one (<c>Gln->pyro-Glu@Q^Any_N-term</c>) on
-        /// the first residue. Null when the form has a modification the alphabase table does not know, or a
-        /// C-terminal one, which Chronologer has no token for.
+        /// Chronologer's rules match: the mass of each residue's modifications after it, a terminal
+        /// modification's before the sequence, and a residue-specific N-terminal one
+        /// (<c>Gln->pyro-Glu@Q^Any_N-term</c>) on the first residue. Modifications at one position are one
+        /// mass, their sum, as EncyclopeDIA and jchronologer write them: N-terminal ammonia loss on a
+        /// carbamidomethyl-Cys is the cyclized <c>C[+39.994915]</c>. Null when the form has a modification the
+        /// alphabase table does not know, or a C-terminal one, which Chronologer has no token for.
         /// </summary>
         public static string ToModifiedSequence(PeptideForm form)
         {
-            string prefix = string.Empty;
-            var residueMods = new List<double>[form.Length + 1];
+            double? prefix = null;
+            var residueMasses = new double?[form.Length + 1];
             for (int i = 0; i < form.ModNames.Count; i++)
             {
                 string name = form.ModNames[i];
                 int site = form.ModSites[i];
-                if (site < 0 || !ModificationTable.TryGet(name, out var definition))
+                if (site < 0 || site > form.Length || !ModificationTable.TryGet(name, out var definition))
                     return null;
                 if (site == 0)
                 {
                     int at = name.IndexOf('@');
                     if (at < 0 || name.IndexOf('^', at) < 0)
                     {
-                        prefix += Bracket(definition.Mass);
+                        prefix = (prefix ?? 0) + definition.Mass;
                         continue;
                     }
                     site = 1;
                 }
-                (residueMods[site] ?? (residueMods[site] = new List<double>())).Add(definition.Mass);
+                residueMasses[site] = (residueMasses[site] ?? 0) + definition.Mass;
             }
-            var sb = new StringBuilder(prefix);
+            var sb = new StringBuilder(prefix.HasValue ? Bracket(prefix.Value) : string.Empty);
             for (int i = 0; i < form.Length; i++)
             {
                 sb.Append(form.Sequence[i]);
-                foreach (double mass in residueMods[i + 1] ?? Enumerable.Empty<double>())
-                    sb.Append(Bracket(mass));
+                if (residueMasses[i + 1].HasValue)
+                    sb.Append(Bracket(residueMasses[i + 1].Value));
             }
             return sb.ToString();
         }

@@ -69,7 +69,8 @@ namespace pwiz.CarafeSharp
         public void Run()
         {
             // What the run needs before hours of work: the library FASTA, any -ms2_model or
-            // saved model (-model, its entries checked), the device, and the pretrained models.
+            // saved model (-model, its entries checked), the device, the pretrained models, and
+            // Chronologer's pinned files when it is the RT model.
             if (_settings.Library != null && !File.Exists(_settings.Library.Database))
                 throw new FileNotFoundException(@"Library FASTA (-db) not found: " + _settings.Library.Database, _settings.Library.Database);
             if (_settings.Ms2Model != null && !File.Exists(_settings.Ms2Model))
@@ -79,6 +80,8 @@ namespace pwiz.CarafeSharp
             if (fallback != null)
                 Log(fallback);
             var pretrained = _openPretrained(_settings.PretrainedModels);
+            if ((_settings.RtModelType ?? baseModel?.RtModel) == RtModelType.chronologer)
+                ChronologerFiles.Open();
             Directory.CreateDirectory(_settings.OutputDirectory);
 
             var selection = TrainingExportLocator.Find(_settings.Identifications, _settings.MsFiles);
@@ -118,7 +121,8 @@ namespace pwiz.CarafeSharp
             };
             var fineTune = new FineTuneOptions
             {
-                Seed = _settings.Seed, Device = device, Ms2Model = _settings.Ms2Model, RtModelType = _settings.RtModelType,
+                Seed = _settings.Seed, Device = device, Ms2Model = _settings.Ms2Model,
+                RtModelType = _settings.RtModelType ?? RtModelType.alphapeptdeep,
             };
             ConfigureFineTune?.Invoke(fineTune);
             OspreyTrainingSet trainingSet;
@@ -131,16 +135,12 @@ namespace pwiz.CarafeSharp
                     baseFolder = Path.Combine(Path.GetTempPath(), @"CarafeSharp_base_" + Guid.NewGuid().ToString(@"N"));
                     var baseDirectory = baseModel.Extract(baseFolder);
                     fineTune.Ms2Model = baseDirectory.GetMs2ModelPath(@"all");
-                    fineTune.RtModel = baseDirectory.GetRtModelPath(@"all");
-                    // A saved Chronologer is fine-tuned further as a Chronologer.
-                    if (fineTune.RtModel != null && CarafeModelDirectory.IsSafetensors(fineTune.RtModel) &&
-                        ChronologerModel.IsChronologerFile(fineTune.RtModel))
-                    {
-                        fineTune.RtModelType = RtModelType.chronologer;
-                    }
+                    SetBaseRtModel(fineTune, baseModel, baseDirectory.GetRtModelPath(@"all"));
                     fineTune.KeepMs2Start = true;
                     Log(@"Fine-tune the saved model " + _settings.BaseModel + @" further: " + baseModel.Describe());
                 }
+                if (_settings.Library != null)
+                    _settings.Library.RtModelType = fineTune.RtModelType;
                 trainingSet = BuildTrainingSet(exports, options, fineTune, pretrained);
                 CarafeTrainingDirectory.Write(_settings.OutputDirectory, trainingSet.Rt, trainingSet.Ms2);
                 Result = FineTuneRun.Run(_settings.TrainRt ? trainingSet.Rt : null, _settings.TrainMs2 ? trainingSet.Ms2 : null,
@@ -161,8 +161,12 @@ namespace pwiz.CarafeSharp
             var acquisition = ms2File != null && CarafeModelDirectory.IsSafetensors(ms2File)
                 ? AcquisitionVocabulary.FromMetadata(StateDict.ReadSafetensorsMetadata(ms2File)) ?? AcquisitionVocabulary.DEFAULT
                 : AcquisitionVocabulary.DEFAULT;
+            // The RT model this run fine-tuned, else (-tf ms2) the pretrained one its library predicts with.
+            string rtFile = trained.GetRtModelPath(_settings.TrainingType);
+            var rtModel = rtFile != null ? LibraryGenerator.GetRtModelType(rtFile) : fineTune.RtModelType;
             var saved = CarafeModelFile.Write(modelFile, trained, _settings.TrainingType, pretrained?.Sha256, _settings.Ms2Model,
-                BuildTrainingDescription(exports, selection.Runs, options, trainingSet, _settings), acquisition, baseModel);
+                BuildTrainingDescription(exports, selection.Runs, options, trainingSet, _settings), acquisition, baseModel,
+                rtModel, rtModel == RtModelType.chronologer ? ChronologerFiles.VERSION : null);
             Log(@"Saved the fine-tuned model " + modelFile + @": " + saved.Describe());
 
             if (_settings.Library != null)
@@ -320,6 +324,24 @@ namespace pwiz.CarafeSharp
             {
                 startModel?.Dispose();
             }
+        }
+
+        /// <summary>
+        /// The RT model a saved model is fine-tuned further as: <c>-rt_model</c>'s, else the saved model's. Its fine-tuned
+        /// RT model (<paramref name="baseRt"/>) is the start when it is of that kind; one of the other kind is not, and
+        /// the fine-tune starts from the pretrained model, as the log warns.
+        /// </summary>
+        private void SetBaseRtModel(FineTuneOptions fineTune, CarafeModelFile baseModel, string baseRt)
+        {
+            var baseType = baseRt != null ? LibraryGenerator.GetRtModelType(baseRt) : baseModel.RtModel;
+            fineTune.RtModelType = _settings.RtModelType ?? baseType ?? RtModelType.alphapeptdeep;
+            if (baseRt == null || baseType == fineTune.RtModelType)
+            {
+                fineTune.RtModel = baseRt;
+                return;
+            }
+            Log(string.Format(@"WARNING: -rt_model {0}: the saved model's fine-tuned {1} RT model is not fine-tuned further; " +
+                              @"the {0} RT model starts from its pretrained model.", fineTune.RtModelType, baseType));
         }
 
         private static string Footer(OspreyTrainingExport export, string key)

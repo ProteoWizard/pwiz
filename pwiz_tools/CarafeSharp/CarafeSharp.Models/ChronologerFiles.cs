@@ -30,11 +30,17 @@ namespace pwiz.CarafeSharp.Models
     /// </summary>
     public sealed class ChronologerFiles
     {
-        /// <summary>Where the build places the committed files, relative to the executable.</summary>
-        public const string BUNDLED_RELATIVE_DIRECTORY = @"models/chronologer-20220601193755";
+        /// <summary>
+        /// The Chronologer these files are, as its weights are named. A saved Chronologer records the version it was
+        /// fine-tuned from, and a newer Chronologer gets its own folder and pins.
+        /// </summary>
+        public const string VERSION = @"20220601193755";
 
-        public const string WEIGHTS_FILE = @"Chronologer_20220601193755.pt";
-        public const string ENCODING_FILE = @"Chronologer_20220601193755.preprocessing.json";
+        /// <summary>Where the build places the committed files, relative to the executable.</summary>
+        public const string BUNDLED_RELATIVE_DIRECTORY = @"models/chronologer-" + VERSION;
+
+        public const string WEIGHTS_FILE = @"Chronologer_" + VERSION + @".pt";
+        public const string ENCODING_FILE = @"Chronologer_" + VERSION + @".preprocessing.json";
 
         public const string PINNED_WEIGHTS_SHA256 = @"1a500c246b49a1a23643bce7f2df86d5a107359bf0ec34365531c73431b6c0b3";
         public const string PINNED_ENCODING_SHA256 = @"ae67c1343b3b1603eedc3b1df8193dfb3c286655d9d16cbc64e790c48112f967";

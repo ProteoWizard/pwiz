@@ -33,6 +33,12 @@ namespace pwiz.CarafeSharp.Models
         /// <summary>Predictions in input order.</summary>
         double[] Predict(IReadOnlyList<PeptideForm> peptides);
 
+        /// <summary>
+        /// True when the predictions are a fraction of a gradient (<c>rt / rt_max</c>), which rt_max scales to minutes;
+        /// false for a scale of the model's own, such as the pretrained Chronologer's hydrophobic index.
+        /// </summary>
+        bool PredictsNormalizedRt { get; }
+
         /// <summary>The line from this model's scale to iRT, fitted on the iRT kit peptides.</summary>
         (double Slope, double Intercept) FitIrtCalibration();
     }

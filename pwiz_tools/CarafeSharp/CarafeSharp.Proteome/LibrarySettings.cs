@@ -188,10 +188,11 @@ namespace pwiz.CarafeSharp.Proteome
         public string PretrainedModels { get; set; }
 
         /// <summary>
-        /// <c>-rt_model</c> (CarafeSharp only). An explicit chronologer replaces a fine-tuned AlphaPeptDeep RT
-        /// model; a fine-tuned Chronologer is used whatever this says.
+        /// <c>-rt_model</c> (CarafeSharp only), or null when it is not given: then the model folder's or saved
+        /// model's RT model, else AlphaPeptDeep. A model that differs from a fine-tuned RT model replaces it with
+        /// its own pretrained model.
         /// </summary>
-        public RtModelType RtModelType { get; set; }
+        public RtModelType? RtModelType { get; set; }
 
         /// <summary>Peptidoforms per prediction batch.</summary>
         public int PeptidesPerBatch { get; set; } = DEFAULT_PEPTIDES_PER_BATCH;

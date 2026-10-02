@@ -243,3 +243,34 @@ function Test-PretrainedModels([string]$CarafeRoot) {
     Write-Host "  pretrained_models.zip: matches its pin"
     return $null
 }
+
+# The committed Chronologer weights and encoding against the version and pins in ChronologerFiles.cs;
+# returns the problems found, none when both match.
+function Test-ChronologerModel([string]$CarafeRoot) {
+    $source = Join-Path $CarafeRoot 'CarafeSharp.Models/ChronologerFiles.cs'
+    $text = Get-Content -LiteralPath $source -Raw
+    $version = [regex]::Match($text, 'const string VERSION = @"(\d+)"')
+    if (-not $version.Success) {
+        return @("found no VERSION in $source")
+    }
+    $folder = Join-Path $CarafeRoot "models/chronologer-$($version.Groups[1].Value)"
+    $problems = @()
+    $files = @(
+        @{ Name = "Chronologer_$($version.Groups[1].Value).pt"; Pin = 'PINNED_WEIGHTS_SHA256' },
+        @{ Name = "Chronologer_$($version.Groups[1].Value).preprocessing.json"; Pin = 'PINNED_ENCODING_SHA256' }
+    )
+    foreach ($file in $files) {
+        $pin = [regex]::Match($text, "$($file.Pin) = @""([0-9a-f]{64})""")
+        $path = Join-Path $folder $file.Name
+        if (-not $pin.Success) {
+            $problems += "found no $($file.Pin) in $source"
+        } elseif (-not (Test-Path -LiteralPath $path)) {
+            $problems += "$path is missing"
+        } elseif (($sha = Get-TestDataSha256 $path) -ne $pin.Groups[1].Value) {
+            $problems += "$path has SHA-256 $sha, not the pinned $($pin.Groups[1].Value)"
+        } else {
+            Write-Host "  $($file.Name): matches its pin"
+        }
+    }
+    return $problems
+}

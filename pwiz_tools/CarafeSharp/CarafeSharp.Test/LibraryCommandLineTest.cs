@@ -132,8 +132,12 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(AcquisitionVocabulary.BEAM_CID, training.Activation);
             Assert.AreEqual(AcquisitionVocabulary.TOF, training.Analyzer);
             // -rt_model names an RT model, whatever its case: in training the one to fine-tune, and for the library
-            // after training the one to predict with.
-            Assert.AreEqual(RtModelType.alphapeptdeep, CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta" }).LibrarySettings.RtModelType);
+            // after training the one to predict with. Without it, none is named, so a saved model's own can apply,
+            // and an explicit alphapeptdeep is not taken for the default.
+            Assert.IsNull(CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta" }).LibrarySettings.RtModelType);
+            Assert.IsNull(CarafeCommandLine.Parse(new[] { @"-i", @"a.training.parquet" }).TrainingSettings.RtModelType);
+            Assert.AreEqual(RtModelType.alphapeptdeep,
+                CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-rt_model", @"alphapeptdeep" }).LibrarySettings.RtModelType);
             Assert.AreEqual(RtModelType.chronologer,
                 CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-rt_model", @"Chronologer" }).LibrarySettings.RtModelType);
             Assert.ThrowsException<ArgumentException>(() => CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-rt_model", @"prosit" }));
@@ -481,7 +485,8 @@ namespace pwiz.CarafeSharp.Test
                     @"{""run_a.mzML"":{""ms_file"":""run_a.mzML"",""nce"":31.0,""ms_instrument"":""Astral"",""activation"":""reCID"",""analyzer"":""LIT"",""rt_max"":45.0," +
                     @"""precursor_ion_mz_min"":1500.0,""precursor_ion_mz_max"":1504.0}}");
                 string modelFile = Path.Combine(folder, @"hela" + CarafeModelFile.EXTENSION);
-                var written = CarafeModelFile.Write(modelFile, CarafeModelDirectory.Open(models, true), @"all", PretrainedModels.PINNED_SHA256, null, null, AcquisitionVocabulary.DEFAULT, null);
+                var written = CarafeModelFile.Write(modelFile, CarafeModelDirectory.Open(models, true), @"all", PretrainedModels.PINNED_SHA256, null, null, AcquisitionVocabulary.DEFAULT, null,
+                    RtModelType.alphapeptdeep, null);
                 Assert.IsTrue(written.Ms2Used && written.RtUsed);
                 CollectionAssert.AreEquivalent(new[] { ModelFiles.MS2_SAFETENSORS, ModelFiles.RT_SAFETENSORS, ModelFiles.METRICS, ModelFiles.META },
                     written.Entries.Keys.ToList());
@@ -542,7 +547,8 @@ namespace pwiz.CarafeSharp.Test
                 // library predicts MS2 with the pretrained model.
                 File.WriteAllText(Path.Combine(models, ModelFiles.METRICS), @"{""ms2"":{""use_finetuned_for_prediction"":false}}");
                 string rtOnly = Path.Combine(folder, @"rt_only" + CarafeModelFile.EXTENSION);
-                var lost = CarafeModelFile.Write(rtOnly, CarafeModelDirectory.Open(models, true), @"all", null, null, null, null, null);
+                var lost = CarafeModelFile.Write(rtOnly, CarafeModelDirectory.Open(models, true), @"all", null, null, null, null, null,
+                    RtModelType.alphapeptdeep, null);
                 Assert.IsTrue(lost.Ms2FineTuned);
                 Assert.IsFalse(lost.Ms2Used);
                 Assert.IsFalse(lost.Entries.ContainsKey(ModelFiles.MS2_SAFETENSORS));
@@ -569,21 +575,21 @@ namespace pwiz.CarafeSharp.Test
                 using (var zip = ZipFile.Open(noManifest, ZipArchiveMode.Create))
                     zip.CreateEntryFromFile(Path.Combine(models, ModelFiles.RT_SAFETENSORS), ModelFiles.RT_SAFETENSORS);
                 StringAssert.Contains(Assert.ThrowsException<InvalidDataException>(() => CarafeModelFile.Open(noManifest)).Message, CarafeModelFile.MANIFEST_ENTRY);
-                string newer = Path.Combine(folder, @"newer" + CarafeModelFile.EXTENSION);
-                File.Copy(modelFile, newer);
-                using (var zip = ZipFile.Open(newer, ZipArchiveMode.Update))
-                {
-                    var entry = zip.GetEntry(CarafeModelFile.MANIFEST_ENTRY);
-                    Assert.IsNotNull(entry);
-                    string manifest;
-                    using (var reader = new StreamReader(entry.Open()))
-                        manifest = reader.ReadToEnd();
-                    entry.Delete();
-                    using (var writer = new StreamWriter(zip.CreateEntry(CarafeModelFile.MANIFEST_ENTRY).Open()))
-                        writer.Write(manifest.Replace(CarafeModelFile.FORMAT, @"carafemodel-2"));
-                }
-                StringAssert.Contains(Assert.ThrowsException<InvalidDataException>(() => CarafeModelFile.Open(newer)).Message, @"carafemodel-2");
+                string newer = CopyWithManifest(modelFile, @"newer", m => m.Replace(CarafeModelFile.FORMAT, @"carafemodel-3"));
+                StringAssert.Contains(Assert.ThrowsException<InvalidDataException>(() => CarafeModelFile.Open(newer)).Message, @"carafemodel-3");
+                // An RT model this CarafeSharp does not know is refused too.
+                string unknownRt = CopyWithManifest(modelFile, @"unknown_rt", m => m.Replace(@"""model"": ""alphapeptdeep""", @"""model"": ""prosit"""));
+                StringAssert.Contains(Assert.ThrowsException<InvalidDataException>(() => CarafeModelFile.Open(unknownRt)).Message, @"RT model prosit");
                 Assert.ThrowsException<FileNotFoundException>(() => CarafeModelFile.Open(Path.Combine(folder, @"missing" + CarafeModelFile.EXTENSION)));
+
+                // The format before Chronologer is still read; it does not name its RT model.
+                Assert.AreEqual(RtModelType.alphapeptdeep, opened.RtModel);
+                Assert.IsNull(opened.RtModelVersion);
+                var older = CarafeModelFile.Open(CopyWithManifest(modelFile, @"older", m => m.Replace(CarafeModelFile.FORMAT, CarafeModelFile.FORMAT_1)));
+                Assert.AreEqual(CarafeModelFile.FORMAT_1, older.Format);
+                Assert.IsNull(older.RtModel);
+                Assert.IsTrue(older.RtUsed);
+                Assert.AreEqual(opened.RtMax, older.RtMax);
             }
             finally
             {
@@ -931,6 +937,27 @@ namespace pwiz.CarafeSharp.Test
             }
             spectra.Sort(StringComparer.Ordinal);
             return spectra;
+        }
+
+        /// <summary>A copy of the saved model <paramref name="modelFile"/> named <paramref name="name"/>, its manifest changed.</summary>
+        private static string CopyWithManifest(string modelFile, string name, Func<string, string> change)
+        {
+            string copy = Path.Combine(Path.GetDirectoryName(modelFile) ?? string.Empty, name + CarafeModelFile.EXTENSION);
+            File.Copy(modelFile, copy);
+            using (var zip = ZipFile.Open(copy, ZipArchiveMode.Update))
+            {
+                var entry = zip.GetEntry(CarafeModelFile.MANIFEST_ENTRY);
+                Assert.IsNotNull(entry);
+                string manifest;
+                using (var reader = new StreamReader(entry.Open()))
+                    manifest = reader.ReadToEnd();
+                entry.Delete();
+                string changed = change(manifest);
+                Assert.AreNotEqual(manifest, changed, @"the manifest change applies");
+                using (var writer = new StreamWriter(zip.CreateEntry(CarafeModelFile.MANIFEST_ENTRY).Open()))
+                    writer.Write(changed);
+            }
+            return copy;
         }
 
         /// <summary>

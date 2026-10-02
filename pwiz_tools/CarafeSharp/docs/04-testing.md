@@ -83,8 +83,9 @@ The packages go in `<Downloads>/Perftests/`, where the Skyline and Osprey perf t
   checked against its `MANIFEST.sha256`. A package folder already there is left alone.
 
 `-TestData Verify` checks every file of the packages against their `MANIFEST.sha256`, a zip kept beside
-them against `testdata.json`, and the committed `pretrained_models.zip` against its pin; it reads every
-file, so the Astral package takes a few minutes. Either fails on any problem and names it.
+them against `testdata.json`, and the committed `pretrained_models.zip` and Chronologer files
+(`models/chronologer-20220601193755`) against their pins; it reads every file, so the Astral package
+takes a few minutes. Either fails on any problem and names it.
 `./build.ps1 -NoBuild -NoTests -TestData Fetch` only fetches. You can also download a zip from the page
 above and extract it there yourself.
 
@@ -115,6 +116,7 @@ separated by `;` (`:` on Linux):
 | `CARAFESHARP_STAGE1_REFERENCE`, `CARAFESHARP_STAGE1_BUILDS` | stage-1 references and builds |
 | `CARAFESHARP_OSPREY_TRAINING_EXPORT` | training exports |
 | `CARAFESHARP_PRETRAINED_MODELS` | the pretrained archive |
+| `CARAFESHARP_CHRONOLOGER_MODEL` | the Chronologer folder: a folder holding both pinned files (a set variable naming a missing folder fails rather than falling back) |
 
 `ai/scripts/CarafeSharp/New-CarafeSharpTestData.ps1` builds the zips from `testdata.json`. A published
 package is never republished under the same name, because extraction never overwrites; a change gets a
@@ -124,8 +126,8 @@ new version.
 
 | Pass | Command | Tests | Time |
 |---|---|---|---|
-| CPU, no data | `build.ps1` | 74, of which the 8 parity tests are Inconclusive | about 1 min |
-| CPU, with data | `build.ps1 -RequireData` | all 74 | about 10 min |
+| CPU, no data | `build.ps1` | 92, of which the 8 parity tests are Inconclusive | about 1.5 min |
+| CPU, with data | `build.ps1 -RequireData` | all 92 | about 10 min |
 | Astral | `build.ps1 -TestCategory Astral -RequireData` | 4, on the Astral package | about 12 min |
 | CUDA | `build.ps1 -Torch cuda` | the `Cuda` category: pretrained predictions on the GPU against the CPU | not yet timed |
 | Regression | `regression.ps1 [-Dataset Astral]` | the `Regression` category: a fine-tune and library against the golden (see "Regression") | Stellar 13 min, Astral 35 min on the CPU |

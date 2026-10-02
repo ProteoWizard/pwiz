@@ -36,8 +36,8 @@ namespace pwiz.CarafeSharp.Models
     /// (HI), a scale of its own that tracks elution to the end of the gradient, where AlphaPeptDeep's generic
     /// model plateaus; <see cref="FitIrtCalibration"/> maps it onto iRT. A fine-tuned model predicts the
     /// training run's normalized RT (<see cref="PredictsNormalizedRt"/>), as a fine-tuned AlphaPeptDeep model
-    /// does. Charge does not enter the model. A peptide the encoding rejects (<see cref="ChronologerEncoding"/>)
-    /// predicts NaN.
+    /// does, clipped at 0 as AlphaPeptDeep's are. Charge does not enter the model. A peptide the encoding rejects
+    /// (<see cref="ChronologerEncoding"/>) predicts NaN.
     /// </summary>
     public sealed class ChronologerModel : IDisposable
     {
@@ -47,6 +47,11 @@ namespace pwiz.CarafeSharp.Models
         public const string RT_MODEL_KEY = @"carafesharp.rt_model";
         /// <summary>The safetensors metadata key naming the scale a saved Chronologer predicts.</summary>
         public const string RT_SCALE_KEY = @"carafesharp.rt_scale";
+        /// <summary>
+        /// The safetensors metadata key naming the Chronologer (<see cref="ChronologerFiles.VERSION"/>) a saved model
+        /// was fine-tuned from, whose encoding it needs. A file without it was saved before the key, from 20220601193755.
+        /// </summary>
+        public const string VERSION_KEY = @"carafesharp.chronologer_version";
 
         private const string MODEL_NAME = @"chronologer";
         private const string SCALE_HYDROPHOBIC_INDEX = @"hydrophobic_index";
@@ -58,12 +63,20 @@ namespace pwiz.CarafeSharp.Models
             return Create(StateDict.ReadPthFile(files.WeightsPath), files, false, device);
         }
 
-        /// <summary>A Chronologer saved by <see cref="Save"/>, with the pinned encoding of <paramref name="files"/>.</summary>
+        /// <summary>
+        /// A Chronologer saved by <see cref="Save"/>, with the pinned encoding of <paramref name="files"/>, which must be
+        /// the Chronologer it was fine-tuned from.
+        /// </summary>
         public static ChronologerModel FromSafetensors(string path, ChronologerFiles files, Device device)
         {
             var metadata = StateDict.ReadSafetensorsMetadata(path);
             if (!IsChronologer(metadata))
                 throw new InvalidDataException(path + @" is not a saved Chronologer model.");
+            if (metadata.TryGetValue(VERSION_KEY, out string version) && version != ChronologerFiles.VERSION)
+            {
+                throw new InvalidDataException(string.Format(@"{0} was fine-tuned from Chronologer {1}; this CarafeSharp has Chronologer {2}.",
+                    path, version, ChronologerFiles.VERSION));
+            }
             bool normalized = metadata.TryGetValue(RT_SCALE_KEY, out string scale) && scale == SCALE_NORMALIZED_RT;
             return Create(StateDict.ReadSafetensors(path), files, normalized, device);
         }
@@ -82,13 +95,26 @@ namespace pwiz.CarafeSharp.Models
         private static ChronologerModel Create(IReadOnlyDictionary<string, Tensor> weights, ChronologerFiles files, bool normalized,
             Device device)
         {
-            var network = new ModelChronologer();
-            StateDict.Load(network, weights);
-            foreach (var tensor in weights.Values)
-                tensor.Dispose();
-            network.to(device);
-            network.eval();
-            return new ChronologerModel(network, ChronologerEncoding.Load(files.EncodingPath), normalized, device);
+            ModelChronologer network = null;
+            try
+            {
+                var encoding = ChronologerEncoding.Load(files.EncodingPath);
+                network = new ModelChronologer();
+                StateDict.Load(network, weights);
+                network.to(device);
+                network.eval();
+                return new ChronologerModel(network, encoding, normalized, device);
+            }
+            catch
+            {
+                network?.Dispose();
+                throw;
+            }
+            finally
+            {
+                foreach (var tensor in weights.Values)
+                    tensor.Dispose();
+            }
         }
 
         private ChronologerModel(ModelChronologer network, ChronologerEncoding encoding, bool normalized, Device device)
@@ -135,19 +161,29 @@ namespace pwiz.CarafeSharp.Models
             PredictsNormalizedRt = true;
         }
 
-        /// <summary>Saves the weights as safetensors, marked as a Chronologer and with the scale it predicts.</summary>
+        /// <summary>
+        /// Saves the weights as safetensors, marked as a Chronologer, with the scale it predicts and the Chronologer it
+        /// was fine-tuned from.
+        /// </summary>
         public void Save(string path)
         {
             StateDict.WriteSafetensors(Network, path, new Dictionary<string, string>
             {
                 { RT_MODEL_KEY, MODEL_NAME },
                 { RT_SCALE_KEY, PredictsNormalizedRt ? SCALE_NORMALIZED_RT : SCALE_HYDROPHOBIC_INDEX },
+                { VERSION_KEY, ChronologerFiles.VERSION },
             });
         }
 
-        /// <summary>Predictions for encoded peptides (null entries predict NaN), in input order.</summary>
+        /// <summary>
+        /// Predictions for encoded peptides (null entries predict NaN), in input order; normalized RT is clipped at 0,
+        /// as <see cref="RtModel.Predict"/> clips it.
+        /// </summary>
         internal double[] PredictTokens(IReadOnlyList<long[]> tokens, int batchSize = DEFAULT_BATCH_SIZE)
         {
+            if (batchSize <= 0)
+                throw new ArgumentOutOfRangeException(nameof(batchSize), batchSize, @"The batch size must be positive.");
+            float floor = PredictsNormalizedRt ? 0f : float.NegativeInfinity;
             var results = Enumerable.Repeat(double.NaN, tokens.Count).ToArray();
             int[] accepted = Enumerable.Range(0, tokens.Count).Where(i => tokens[i] != null).ToArray();
             Network.eval();
@@ -161,7 +197,7 @@ namespace pwiz.CarafeSharp.Models
                         var batch = Enumerable.Range(start, count).Select(i => tokens[accepted[i]]).ToArray();
                         float[] values = Forward(batch).cpu().data<float>().ToArray();
                         for (int i = 0; i < count; i++)
-                            results[accepted[start + i]] = values[i];
+                            results[accepted[start + i]] = Math.Max(values[i], floor);
                     }
                 }
             }

@@ -119,8 +119,11 @@ namespace pwiz.CarafeSharp.Proteome
         /// <summary>CarafeSharp's <c>-pretrained</c> models zip, or null for the default.</summary>
         public string PretrainedModels { get; set; }
 
-        /// <summary>CarafeSharp's <c>-rt_model</c>: the RT model to fine-tune.</summary>
-        public RtModelType RtModelType { get; set; }
+        /// <summary>
+        /// CarafeSharp's <c>-rt_model</c>: the RT model to fine-tune, and with <c>-tf ms2</c> the pretrained one the
+        /// saved model predicts with; null when it is not given: then the <c>-model</c>'s RT model, else AlphaPeptDeep.
+        /// </summary>
+        public RtModelType? RtModelType { get; set; }
 
         /// <summary>The library to predict with the fine-tuned models (<c>-db</c>), or null.</summary>
         public LibrarySettings Library { get; set; }

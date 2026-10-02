@@ -387,7 +387,8 @@ namespace pwiz.CarafeSharp.Test
             File.WriteAllText(Path.Combine(baseFolder, ModelFiles.METRICS), @"{""ms2"":{""use_finetuned_for_prediction"":true}}");
             File.WriteAllText(Path.Combine(baseFolder, ModelFiles.META), @"{""earlier.mzML"":{""ms_file"":""earlier.mzML"",""nce"":30.0,""rt_max"":40.0}}");
             string baseFile = Path.Combine(_folder, @"earlier" + CarafeModelFile.EXTENSION);
-            var written = CarafeModelFile.Write(baseFile, CarafeModelDirectory.Open(baseFolder, true), @"all", null, null, null, null, null);
+            var written = CarafeModelFile.Write(baseFile, CarafeModelDirectory.Open(baseFolder, true), @"all", null, null, null, null, null,
+                RtModelType.alphapeptdeep, null);
             Assert.IsTrue(written.Ms2Used && written.RtUsed);
             Assert.AreEqual(0, written.BaseModels.Count);
 
@@ -486,6 +487,160 @@ namespace pwiz.CarafeSharp.Test
             // Each run's isolation window widened by 0.5, the -nce the exports lack, the detected instrument.
             StringAssert.Contains(text, @"From the training run: precursor m/z 379.5-980.5, NCE 28, instrument Astral,");
             Assert.AreEqual(1, Directory.GetFiles(output, @"*.blib").Length, text);
+        }
+
+        /// <summary>
+        /// A training run with <c>-rt_model chronologer</c>, end to end: it fine-tunes the pretrained Chronologer,
+        /// saves a model that names its RT model, and the library right after training and one from the saved model
+        /// predict with that Chronologer, in minutes on the training gradient. A <c>-tf ms2</c> run's saved model names
+        /// the pretrained Chronologer its library predicted with, in iRT, and a library from it predicts the same way.
+        /// </summary>
+        [TestMethod]
+        public void TestChronologerTrainingRun()
+        {
+            string export = WriteCleanExport(@"run_a");
+            string fasta = Path.Combine(_folder, @"proteins.fasta");
+            File.WriteAllText(fasta, ">sp|P1|A\nMPEPTIDEKSAMPLERLVNELTEFAK\n");
+            string output = Path.Combine(_folder, @"chronologer");
+            var settings = CarafeCommandLine.Parse(new[] { @"-i", export, @"-o", output, @"-seed", @"9", @"-ms2_model", RandomMs2Model(@"start_ms2", 9),
+                @"-device", @"cpu", @"-nce", @"28", @"-rt_model", @"chronologer", @"-db", fasta, @"-lf_type", LibraryOutputs.BLIB_FORMAT,
+                @"-lf_min_n_frag", @"1" }).TrainingSettings;
+            var log = new StringWriter();
+            var trainer = new ModelTrainer(settings, log, zip => null) { ConfigureFineTune = ShortFineTune };
+            trainer.Run();
+            string text = log.ToString();
+            string rtFile = Path.Combine(output, ModelFiles.RT_SAFETENSORS);
+            StringAssert.Contains(text, @"RT: fine-tuning Chronologer ");
+            Assert.IsTrue(ChronologerModel.IsChronologerFile(rtFile));
+            StringAssert.Contains(text, @"Using the fine-tuned Chronologer RT model " + rtFile);
+            StringAssert.Contains(text, @"Library RT: rt_pred * rt_max (12.1");
+            // model.json names the RT model and counts the rows it trained on.
+            using (var info = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, FineTuneRun.MODEL_INFO_FILE))))
+            {
+                var rt = info.RootElement.GetProperty(@"rt");
+                Assert.AreEqual(@"chronologer", rt.GetProperty(@"model").GetString());
+                Assert.AreEqual(trainer.Result.RtTrainCount, rt.GetProperty(@"train_rows").GetInt32());
+                Assert.AreEqual(trainer.Result.RtFineTuned.Count, rt.GetProperty(@"test_rows").GetInt32());
+            }
+
+            // The saved model names its RT model, and a library from it predicts with it.
+            string savedPath = Path.Combine(output, CarafeModelFile.DEFAULT_FILE_NAME);
+            var saved = CarafeModelFile.Open(savedPath);
+            Assert.AreEqual(CarafeModelFile.FORMAT, saved.Format);
+            Assert.AreEqual(RtModelType.chronologer, saved.RtModel);
+            Assert.AreEqual(ChronologerFiles.VERSION, saved.RtModelVersion);
+            Assert.IsTrue(saved.RtUsed);
+            StringAssert.Contains(saved.FormatInfo(), @"RT model: fine-tuned Chronologer " + ChronologerFiles.VERSION);
+            string fromFileLog = PredictFromSavedModel(savedPath, fasta, @"from_file");
+            StringAssert.Contains(fromFileLog, @"Using the fine-tuned Chronologer RT model");
+            StringAssert.Contains(fromFileLog, @"Library RT: rt_pred * rt_max (12.1");
+
+            // -tf ms2: the saved model holds no RT model and names the pretrained Chronologer, which a library from it
+            // predicts with, in iRT, without -rt_model.
+            string ms2Only = Path.Combine(_folder, @"ms2_only");
+            new ModelTrainer(CarafeCommandLine.Parse(new[] { @"-i", export, @"-o", ms2Only, @"-tf", @"ms2", @"-seed", @"9",
+                @"-ms2_model", RandomMs2Model(@"start_ms2_only", 9), @"-device", @"cpu", @"-nce", @"28", @"-rt_model", @"chronologer" }).TrainingSettings,
+                null, zip => null) { ConfigureFineTune = ShortFineTune }.Run();
+            string ms2SavedPath = Path.Combine(ms2Only, CarafeModelFile.DEFAULT_FILE_NAME);
+            var ms2Saved = CarafeModelFile.Open(ms2SavedPath);
+            Assert.AreEqual(RtModelType.chronologer, ms2Saved.RtModel);
+            Assert.IsFalse(ms2Saved.RtUsed);
+            StringAssert.Contains(ms2Saved.Describe(), @"RT pretrained Chronologer");
+            string ms2Log = PredictFromSavedModel(ms2SavedPath, fasta, @"from_ms2_only");
+            StringAssert.Contains(ms2Log, @"Using the pretrained Chronologer RT model");
+            StringAssert.Contains(ms2Log, @"Ignored rt_max 12.1");
+            StringAssert.Contains(ms2Log, @"Library RT: iRT = ");
+        }
+
+        /// <summary>
+        /// A saved model fine-tuned further takes its RT model from <c>-rt_model</c>, else from the saved model. Its
+        /// fine-tuned RT model is the start only when it is of that kind: an AlphaPeptDeep one does not become the start
+        /// of a Chronologer fine-tune, and an explicit <c>-rt_model alphapeptdeep</c> is not overridden by a saved
+        /// Chronologer; the log warns of either.
+        /// </summary>
+        [TestMethod]
+        public void TestChronologerSavedModelChoice()
+        {
+            string export = WriteCleanExport(@"run_a");
+            string baseFolder = Path.Combine(_folder, @"base");
+            Directory.CreateDirectory(baseFolder);
+            File.Copy(RandomMs2Model(@"base_ms2", 11), Path.Combine(baseFolder, ModelFiles.MS2_SAFETENSORS));
+            File.Copy(RandomRtModel(@"base_rt", 12), Path.Combine(baseFolder, ModelFiles.RT_SAFETENSORS));
+            File.WriteAllText(Path.Combine(baseFolder, ModelFiles.METRICS), @"{""ms2"":{""use_finetuned_for_prediction"":true}}");
+            string baseFile = Path.Combine(_folder, @"earlier" + CarafeModelFile.EXTENSION);
+            CarafeModelFile.Write(baseFile, CarafeModelDirectory.Open(baseFolder, true), @"all", null, null, null, null, null,
+                RtModelType.alphapeptdeep, null);
+
+            // -rt_model chronologer on a saved AlphaPeptDeep model: Chronologer starts from its pretrained model.
+            string toChronologer = Path.Combine(_folder, @"to_chronologer");
+            var log = new StringWriter();
+            new ModelTrainer(TrainFrom(export, toChronologer, baseFile, @"-rt_model", @"chronologer"), log, zip => null)
+                { ConfigureFineTune = ShortFineTune }.Run();
+            StringAssert.Contains(log.ToString(),
+                @"WARNING: -rt_model chronologer: the saved model's fine-tuned alphapeptdeep RT model is not fine-tuned further");
+            StringAssert.Contains(log.ToString(), @"RT: fine-tuning Chronologer ");
+            string chronologerFile = Path.Combine(toChronologer, CarafeModelFile.DEFAULT_FILE_NAME);
+            Assert.AreEqual(RtModelType.chronologer, CarafeModelFile.Open(chronologerFile).RtModel);
+
+            // Without -rt_model, the saved Chronologer is fine-tuned further as a Chronologer.
+            string further = Path.Combine(_folder, @"further");
+            log = new StringWriter();
+            new ModelTrainer(TrainFrom(export, further, chronologerFile), log, zip => null) { ConfigureFineTune = ShortFineTune }.Run();
+            StringAssert.Contains(log.ToString(), @"RT: fine-tuning the Chronologer model ");
+            Assert.IsFalse(log.ToString().Contains(@"WARNING: -rt_model"), log.ToString());
+            Assert.AreEqual(RtModelType.chronologer, CarafeModelFile.Open(Path.Combine(further, CarafeModelFile.DEFAULT_FILE_NAME)).RtModel);
+
+            // An explicit -rt_model alphapeptdeep fine-tunes AlphaPeptDeep's pretrained RT model instead.
+            string back = Path.Combine(_folder, @"back");
+            log = new StringWriter();
+            new ModelTrainer(TrainFrom(export, back, chronologerFile, @"-rt_model", @"alphapeptdeep"), log)
+                { ConfigureFineTune = ShortFineTune }.Run();
+            StringAssert.Contains(log.ToString(),
+                @"WARNING: -rt_model alphapeptdeep: the saved model's fine-tuned chronologer RT model is not fine-tuned further");
+            Assert.IsFalse(ChronologerModel.IsChronologerFile(Path.Combine(back, ModelFiles.RT_SAFETENSORS)));
+            Assert.AreEqual(RtModelType.alphapeptdeep, CarafeModelFile.Open(Path.Combine(back, CarafeModelFile.DEFAULT_FILE_NAME)).RtModel);
+        }
+
+        /// <summary>
+        /// Chronologer is fine-tuned on the forms it can encode. When it can encode none of the test forms (here the
+        /// one the split holds out has 54 residues), it is tested on its training forms rather than failing, and
+        /// model.json counts the rows it trained on. A start model of the other kind is refused.
+        /// </summary>
+        [TestMethod]
+        public void TestChronologerUnencodableTestSet()
+        {
+            // Twelve forms, one row each, in the collapsed forms' order: the split trains on eleven and tests on one.
+            string[] sequences = @"ALVNELTEFAK DPEPTIDEK ESAMPLER FLVNELTEFR GPEPTIDER HSAMPLEK IPEPTIDEK KSAMPLER LPEPTIDER MSAMPLEK NPEPTIDER PSAMPLEK"
+                .Split(' ');
+            var (trainIndexes, testIndexes) = TrainingSplit.Split(sequences, sequences.Select(_ => string.Empty).ToArray(), sequences.Length - 1, 1);
+            Assert.AreEqual(sequences.Length - 1, trainIndexes.Length);
+            int held = testIndexes.Single();
+            // Too long for Chronologer, and still in the same place in the order.
+            sequences[held] += new string('A', 45);
+            var rows = sequences.Select((s, i) => new RtTrainingExample(new PeptideForm(s), 0.05 + 0.07 * i)).ToArray();
+            string output = Path.Combine(_folder, @"unencodable");
+            var log = new List<string>();
+            var options = new FineTuneOptions { Seed = 9, RtModelType = RtModelType.chronologer };
+            ShortFineTune(options);
+            var result = FineTuneRun.Run(rows, null, null, options, output, log.Add);
+            string text = string.Join(Environment.NewLine, log);
+            StringAssert.Contains(text, @"RT: Chronologer cannot encode 0 of 11 training and 1 of 1 test peptide forms");
+            StringAssert.Contains(text, @"testing on the training forms");
+            Assert.AreEqual(11, result.RtTrainCount);
+            Assert.AreEqual(11, result.RtFineTuned.Count);
+            using (var info = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, FineTuneRun.MODEL_INFO_FILE))))
+            {
+                var rt = info.RootElement.GetProperty(@"rt");
+                Assert.AreEqual(@"chronologer", rt.GetProperty(@"model").GetString());
+                Assert.AreEqual(11, rt.GetProperty(@"train_rows").GetInt32());
+            }
+
+            // A saved Chronologer is no AlphaPeptDeep start model, and an AlphaPeptDeep one no Chronologer start model.
+            string chronologer = Path.Combine(output, FineTuneRun.RT_MODEL_FILE);
+            Assert.ThrowsException<InvalidOperationException>(() => FineTuneRun.Run(rows, null, null,
+                new FineTuneOptions { RtModel = chronologer, RtModelType = RtModelType.alphapeptdeep }, Path.Combine(_folder, @"wrong_a"), null));
+            Assert.ThrowsException<InvalidOperationException>(() => FineTuneRun.Run(rows, null, null,
+                new FineTuneOptions { RtModel = RandomRtModel(@"apd_rt", 3), RtModelType = RtModelType.chronologer }, Path.Combine(_folder, @"wrong_b"), null));
         }
 
         /// <summary>
@@ -637,11 +792,34 @@ namespace pwiz.CarafeSharp.Test
             return export;
         }
 
-        /// <summary>A training run on <paramref name="export"/> into <paramref name="output"/> that fine-tunes the saved model <paramref name="baseModel"/> further.</summary>
-        private static TrainingSettings TrainFrom(string export, string output, string baseModel)
+        /// <summary>
+        /// A training run on <paramref name="export"/> into <paramref name="output"/> that fine-tunes the saved model
+        /// <paramref name="baseModel"/> further, with <paramref name="options"/> added to its command line.
+        /// </summary>
+        private static TrainingSettings TrainFrom(string export, string output, string baseModel, params string[] options)
         {
-            return CarafeCommandLine.Parse(new[] { @"-i", export, @"-o", output, @"-model", baseModel, @"-seed", @"9", @"-device", @"cpu", @"-nce", @"28" })
+            return CarafeCommandLine.Parse(new[] { @"-i", export, @"-o", output, @"-model", baseModel, @"-seed", @"9", @"-device", @"cpu", @"-nce", @"28" }
+                    .Concat(options).ToArray())
                 .TrainingSettings;
+        }
+
+        /// <summary>A fine-tune of one MS2 epoch and two RT epochs, for runs that test what is trained rather than how well.</summary>
+        private static void ShortFineTune(FineTuneOptions options)
+        {
+            options.Ms2 = new FineTuneSettings { Epochs = 1, WarmupEpochs = 0, BatchSize = 4, LearningRate = 1e-3, AdjustBatchSize = false };
+            options.Rt = new FineTuneSettings { Epochs = 2, WarmupEpochs = 0, BatchSize = 4, LearningRate = 1e-3, AdjustBatchSize = false };
+        }
+
+        /// <summary>A library of <paramref name="fasta"/> predicted from the saved model <paramref name="modelFile"/> into a folder of its own; returns its log.</summary>
+        private string PredictFromSavedModel(string modelFile, string fasta, string name)
+        {
+            var settings = CarafeCommandLine.Parse(new[] { @"-db", fasta, @"-model", modelFile, @"-o", Path.Combine(_folder, name), @"-device", @"cpu",
+                @"-lf_type", LibraryOutputs.BLIB_FORMAT, @"-lf_min_n_frag", @"1" }).LibrarySettings;
+            var log = new StringWriter();
+            var generator = new LibraryGenerator(settings, log);
+            generator.Run();
+            Assert.IsTrue(generator.SpectrumCount > 0, log.ToString());
+            return log.ToString();
         }
 
         /// <summary>A randomly initialized MS2 model from <paramref name="seed"/>, saved under <paramref name="name"/>.</summary>

@@ -68,9 +68,9 @@ namespace pwiz.CarafeSharp.Models.Modules
         }
 
         /// <summary>
-        /// Keep the BatchNorm layers on their running statistics while the rest trains. Fine-tuning batches hold
-        /// one peptide length each and can be small, so their own statistics would be noisy, and a few thousand
-        /// peptides of one run should not move statistics learned from a large multi-source database.
+        /// Keep the BatchNorm layers on their running statistics while the rest trains. Fine-tuning batches can be
+        /// small, so their own statistics would be noisy, and a few thousand peptides of one run should not move
+        /// statistics learned from a large multi-source database.
         /// </summary>
         public bool FreezeBatchNorm { get; set; }
 

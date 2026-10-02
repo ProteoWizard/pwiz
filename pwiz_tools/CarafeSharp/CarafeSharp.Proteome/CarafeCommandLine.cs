@@ -178,16 +178,16 @@ namespace pwiz.CarafeSharp.Proteome
                     @"  -pretrained <pretrained_models.zip>,",
                     @"  -model <file.carafemodel> (a saved fine-tuned model, which every training run writes into -o),",
                     @"  -activation beam-CID|reCID -analyzer Orbitrap|LIT|ToF (else the training run's),",
-                    @"  -rt_model alphapeptdeep|chronologer (chronologer: the pretrained Chronologer RT model, in iRT; a",
-                    @"  fine-tuned Chronologer in -model or -model_dir is used without it)",
+                    @"  -rt_model alphapeptdeep|chronologer (default: the RT model of -model or -model_dir, else alphapeptdeep;",
+                    @"  one that differs from their fine-tuned RT model replaces it with its pretrained model, Chronologer's in iRT)",
                     @"Saved models: CarafeSharp -model_info <file.carafemodel> (what the model was trained on)",
                     @"Training options (Carafe's): -se Osprey -fdr <q> -cor <r> -n_ion_min <n> -c_ion_min <n> -lf_frag_n_min <n>",
                     @"  -nf <n> -min_n <n> -valid -no_masking -tf all|ms2|rt -seed <n> -nce <nce> -ms_instrument <name>",
                     @"  -rt_max <min> -ms2_model <model> -device cpu|gpu; CarafeSharp only: -pretrained <pretrained_models.zip>,",
                     @"  -activation beam-CID|reCID -analyzer Orbitrap|LIT|ToF (else each run's, from Osprey's export),",
                     @"  -model <file.carafemodel> (fine-tune a saved model further, instead of the pretrained models),",
-                    @"  -rt_model alphapeptdeep|chronologer (the RT model to fine-tune; with -tf ms2 chronologer is the",
-                    @"  pretrained Chronologer, in iRT)");
+                    @"  -rt_model alphapeptdeep|chronologer (the RT model to fine-tune, default: -model's, else alphapeptdeep;",
+                    @"  with -tf ms2 the pretrained one the saved model predicts with, Chronologer's in iRT)");
             }
         }
 

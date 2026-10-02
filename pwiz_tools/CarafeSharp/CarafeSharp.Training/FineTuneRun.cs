@@ -167,6 +167,8 @@ namespace pwiz.CarafeSharp.Training
             }
             else
             {
+                if (options.RtModel != null && ChronologerModel.IsChronologerFile(options.RtModel))
+                    throw new InvalidOperationException(options.RtModel + @" is a saved Chronologer model, not an AlphaPeptDeep RT model.");
                 if (options.RtModel != null)
                     log(@"RT: fine-tuning " + options.RtModel);
                 using (var model = options.RtModel != null
@@ -180,8 +182,8 @@ namespace pwiz.CarafeSharp.Training
                     log(@"RT fine-tuned: " + result.RtFineTuned);
                     model.Save(Path.Combine(outputDirectory, RT_MODEL_FILE));
                 }
+                result.RtTrainCount = train.Length;
             }
-            result.RtTrainCount = train.Length;
             result.RtBatchSize = batchSize;
             result.RtElapsed = stopwatch.Elapsed;
         }
@@ -190,24 +192,35 @@ namespace pwiz.CarafeSharp.Training
         /// Fine-tunes Chronologer on the forms its encoding accepts. Starting from the pretrained model, the line
         /// from its hydrophobic index to the training peptides' normalized RT is folded into its output layer
         /// first, so that fine-tuning starts from the best linear calibration rather than from another scale.
+        /// When it can encode none of the test forms, it is tested on its training forms, as the split tests on
+        /// every row when none are left for testing.
         /// </summary>
         private static void TrainChronologer(RtTrainingExample[] train, RtTrainingExample[] test, FineTuneOptions options,
             string outputDirectory, int batchSize, NumpyRandomState shuffle, FineTuneResult result, Action<string> log)
         {
+            if (options.RtModel != null && !ChronologerModel.IsChronologerFile(options.RtModel))
+                throw new InvalidOperationException(options.RtModel + @" is not a saved Chronologer model, so Chronologer cannot be fine-tuned from it.");
             var files = ChronologerFiles.Open();
-            bool further = options.RtModel != null && ChronologerModel.IsChronologerFile(options.RtModel);
-            log(further ? @"RT: fine-tuning the Chronologer model " + options.RtModel : @"RT: fine-tuning Chronologer " + files.WeightsPath);
-            using (var model = further
+            log(options.RtModel != null ? @"RT: fine-tuning the Chronologer model " + options.RtModel : @"RT: fine-tuning Chronologer " + files.WeightsPath);
+            using (var model = options.RtModel != null
                        ? ChronologerModel.FromSafetensors(options.RtModel, files, options.Device)
                        : ChronologerModel.FromFiles(files, options.Device))
             {
                 var encodedTrain = ChronologerTrainingExample.Encode(model, train);
                 var encodedTest = ChronologerTrainingExample.Encode(model, test);
-                int rejected = train.Length + test.Length - encodedTrain.Count - encodedTest.Count;
-                if (rejected > 0)
-                    log(string.Format(@"RT: {0} peptide forms Chronologer cannot encode are left out", rejected));
+                if (encodedTrain.Count < train.Length || encodedTest.Count < test.Length)
+                {
+                    log(string.Format(@"RT: Chronologer cannot encode {0} of {1} training and {2} of {3} test peptide forms, which are left out",
+                        train.Length - encodedTrain.Count, train.Length, test.Length - encodedTest.Count, test.Length));
+                }
                 if (encodedTrain.Count == 0)
                     throw new InvalidOperationException(@"No RT training rows Chronologer can encode.");
+                if (encodedTest.Count == 0)
+                {
+                    log(@"RT: Chronologer can encode none of the test peptide forms; testing on the training forms");
+                    encodedTest = encodedTrain;
+                }
+                result.RtTrainCount = encodedTrain.Count;
                 if (!model.PredictsNormalizedRt)
                 {
                     var (slope, intercept) = FitLine(model.Predict(encodedTrain.Select(e => e.Example.Peptide).ToArray()),

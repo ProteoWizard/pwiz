@@ -111,17 +111,26 @@ output widths are equal; `output` Linear(52 x 64, 1).
 Input: one token per residue between an N-terminal token (`-` free, `^` acetyl, `(` pyro-Glu, `)` cyclized
 carbamidomethyl-Cys) and `_`, padded with 0 to 52. A peptide is written as an EncyclopeDIA mass-annotated
 sequence from its alphabase modifications, and the JSON's rules map each modified residue to a token of its
-own. Rejected: 5 or fewer, or more than 50, residues; a modification without a token; a C-terminal
-modification. Library prediction predicts those with the pretrained AlphaPeptDeep model, carried onto
-Chronologer's scale through both models' iRT fits.
+own. Modifications at one position are one mass, their sum, as EncyclopeDIA and jchronologer write them
+(N-terminal ammonia loss on a carbamidomethyl-Cys is the cyclized `C[+39.994915]`). Rejected: 5 or fewer,
+or more than 50, residues; a modification without a token; a C-terminal modification. Library prediction
+predicts those with the pretrained AlphaPeptDeep model, carried onto Chronologer's scale through both
+models' iRT fits, so a library with Chronologer needs the pretrained archive too.
 
 Output `[B]`: the pretrained model predicts a hydrophobic index, which the library maps to iRT through the
 same 11 iRT kit peptides (`rt_max` does not apply). Fine-tuning first folds the least-squares line from the
 hydrophobic index to the training peptides' normalized RT into `output`, then trains every weight with the
-RT fine-tune's L1 loss, the BatchNorm running statistics frozen (their layers stay in eval mode). The
-fine-tuned model predicts normalized RT, and its library RT is `rt_pred * rt_max` as for AlphaPeptDeep. Its
-`rt.safetensors` carries the metadata `carafesharp.rt_model = chronologer` and
-`carafesharp.rt_scale = normalized_rt`.
+RT fine-tune's L1 loss, the BatchNorm running statistics frozen (their layers stay in eval mode). It trains
+on the forms Chronologer encodes; when it encodes none of the test forms, it is tested on its training forms.
+The fine-tuned model predicts normalized RT, clipped at 0 as AlphaPeptDeep's is, and its library RT is
+`rt_pred * rt_max` as for AlphaPeptDeep. Its `rt.safetensors` carries the metadata
+`carafesharp.rt_model = chronologer`, `carafesharp.rt_scale = normalized_rt` and
+`carafesharp.chronologer_version = 20220601193755`, the Chronologer it was fine-tuned from, whose encoding it
+needs; one from another version is refused.
+
+Which RT model a run uses: `-rt_model`, else the one a saved model (`-model`) or model folder (`-model_dir`)
+holds or names, else AlphaPeptDeep. A fine-tuned RT model of the other kind is replaced by the named kind's
+pretrained model, with a log line (a warning when fine-tuning further).
 
 ## CCS model: `Model_CCS_LSTM` (ion mobility, `-ccs`)
 

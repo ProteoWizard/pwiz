@@ -104,6 +104,12 @@ namespace pwiz.CarafeSharp.Models
             return Predict(peptides);
         }
 
+        /// <summary>Always true: pretrained or fine-tuned, the model predicts a fraction of the gradient.</summary>
+        public bool PredictsNormalizedRt
+        {
+            get { return true; }
+        }
+
         /// <summary>
         /// The linear map from this model's normalized RT to the iRT scale, fitted by predicting
         /// the eleven iRT kit peptides (peptdeep's <c>add_irt_column_to_precursor_df</c>).

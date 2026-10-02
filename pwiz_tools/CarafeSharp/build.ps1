@@ -212,6 +212,7 @@ if ($TestData) {
         if ($problem) {
             $problems += $problem
         }
+        $problems += @(Test-ChronologerModel $scriptRoot)
     }
     if ($problems.Count -gt 0) {
         $problems | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
