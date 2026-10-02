@@ -41,8 +41,6 @@ namespace pwiz.Skyline.Alerts
 
             Icon = Resources.Skyline;
 
-            // A fixed-height header keeps the 96-DPI default while its text scales.
-            libraryGridView.ColumnHeadersHeight = DpiUtil.Scale(this, libraryGridView.ColumnHeadersHeight);
             libraryGridView.AutoGenerateColumns = false;
             libraryGridView.DataSource = new SortableBindingList<Row>();
 
