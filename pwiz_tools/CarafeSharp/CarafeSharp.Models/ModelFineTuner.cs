@@ -98,7 +98,10 @@ namespace pwiz.CarafeSharp.Models
             model.Network.FreezeBatchNorm = true;
             try
             {
-                return Train(model.Network, train, test, settings, batchSize, shuffle, log, e => e.Length,
+                // One group for every length: Chronologer pads each peptide to the same positions, so a batch need
+                // not hold one length, and should not, as the output layer weighs each position separately and
+                // single-length batches pull it a different way for each length.
+                return Train(model.Network, train, test, settings, batchSize, shuffle, log, e => 0,
                     batch => ChronologerLoss(model, batch));
             }
             finally
