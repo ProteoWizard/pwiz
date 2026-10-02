@@ -1326,7 +1326,7 @@ namespace pwiz.Osprey.FDR
             return string.Format(
                 @"The persisted first-pass model offered for reuse is {0}, but this run uses {1}, " +
                 @"and a model of one classifier cannot score a run of the other. The task validity " +
-                @"key records the FDR method, so a current model should always match; this points " +
+                @"key records the classifier, so a current model should always match; this points " +
                 @"to an inconsistency in the intermediate files. Re-run with a clean output directory.",
                 PercolatorResults.ClassifierName(modelIsTrees), PercolatorResults.ClassifierName(runUsesTrees));
         }

@@ -402,7 +402,7 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(DecoyMethod.Reverse, config.DecoyMethod);
             Assert.IsTrue(config.PrefilterEnabled);
             Assert.AreEqual(0.01, config.ExperimentFdr, TOLERANCE);
-            Assert.AreEqual(FdrMethod.Percolator, config.FdrMethod);
+            Assert.AreEqual(FdrClassifier.LinearSvm, config.FdrClassifier);
             Assert.AreEqual(FdrLevel.Precursor, config.FdrLevel);
             Assert.AreEqual(SharedPeptideMode.All, config.SharedPeptides);
         }
@@ -696,7 +696,7 @@ namespace pwiz.Osprey.Test
             // Unset, empty and whitespace-only are the default, as for every OSPREY_* selector.
             foreach (string unset in new[] { null, string.Empty, @"   " })
             {
-                Assert.AreEqual(FdrMethod.Percolator, OspreyEnvironment.ParseFdrModel(unset));
+                Assert.AreEqual(FdrClassifier.LinearSvm, OspreyEnvironment.ParseFdrModel(unset));
                 Assert.IsNull(OspreyEnvironment.DescribeUnrecognizedFdrModel(unset));
             }
 
@@ -704,12 +704,12 @@ namespace pwiz.Osprey.Test
             // default has an explicit spelling so a sweep can name both arms.
             foreach (string svm in new[] { OspreyEnvironment.FDR_MODEL_SVM, @"SVM", @" svm " })
             {
-                Assert.AreEqual(FdrMethod.Percolator, OspreyEnvironment.ParseFdrModel(svm), svm);
+                Assert.AreEqual(FdrClassifier.LinearSvm, OspreyEnvironment.ParseFdrModel(svm), svm);
                 Assert.IsNull(OspreyEnvironment.DescribeUnrecognizedFdrModel(svm), svm);
             }
             foreach (string gbdt in new[] { OspreyEnvironment.FDR_MODEL_GBDT, @"GBDT", "\tGbdt " })
             {
-                Assert.AreEqual(FdrMethod.Gbdt, OspreyEnvironment.ParseFdrModel(gbdt), gbdt);
+                Assert.AreEqual(FdrClassifier.Gbdt, OspreyEnvironment.ParseFdrModel(gbdt), gbdt);
                 Assert.IsNull(OspreyEnvironment.DescribeUnrecognizedFdrModel(gbdt), gbdt);
             }
 
@@ -730,13 +730,13 @@ namespace pwiz.Osprey.Test
 
             // The run log names the classifier only when it is not the default, so the linear
             // SVM's log is unchanged.
-            Assert.IsNull(OspreyEnvironment.DescribeFdrModel(FdrMethod.Percolator));
-            StringAssert.Contains(OspreyEnvironment.DescribeFdrModel(FdrMethod.Gbdt), OspreyEnvironment.FDR_MODEL_GBDT);
+            Assert.IsNull(OspreyEnvironment.DescribeFdrModel(FdrClassifier.LinearSvm));
+            StringAssert.Contains(OspreyEnvironment.DescribeFdrModel(FdrClassifier.Gbdt), OspreyEnvironment.FDR_MODEL_GBDT);
 
             // Not a search parameter: SearchParameterHash must match Rust, which has no trees, so
             // the classifier keys only the tasks the model determines (TaskValidityKeyTest).
             Assert.AreEqual(new OspreyConfig().Identity.SearchParameterHash(),
-                new OspreyConfig { FdrMethod = FdrMethod.Gbdt }.Identity.SearchParameterHash());
+                new OspreyConfig { FdrClassifier = FdrClassifier.Gbdt }.Identity.SearchParameterHash());
         }
 
         /// <summary>

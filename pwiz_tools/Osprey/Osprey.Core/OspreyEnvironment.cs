@@ -410,14 +410,14 @@ namespace pwiz.Osprey.Core
         /// <para>An environment variable rather than a command-line argument because it is a
         /// developer lever, not a product setting: it replaced <c>--fdr-method</c>, which was
         /// removed with no alias (#4543). Read once at process start and carried in-process as
-        /// <see cref="OspreyConfig.FdrMethod"/>, which the command-line parse sets from it; a test
+        /// <see cref="OspreyConfig.FdrClassifier"/>, which the command-line parse sets from it; a test
         /// that runs the whole pipeline sets this instead, as it sets <see cref="MeanBestN"/>. The
         /// trees and every <c>OSPREY_GBT_*</c> setting key the FirstPassFDR, PerFileRescoring
         /// and SecondPassFDR validity keys (<c>PercolatorEngine.GbdtValidityKeySuffix</c>); the
         /// SVM adds nothing to them.</para>
         /// </summary>
-        public static FdrMethod FdrModel { get; internal set; } =
-            ParseFdrModel(Environment.GetEnvironmentVariable(@"OSPREY_FDR_MODEL")) ?? FdrMethod.Percolator;
+        public static FdrClassifier FdrModel { get; internal set; } =
+            ParseFdrModel(Environment.GetEnvironmentVariable(@"OSPREY_FDR_MODEL")) ?? FdrClassifier.LinearSvm;
 
         /// <summary>The startup error for an unrecognized OSPREY_FDR_MODEL, or null when the
         /// value is usable. Program startup ABORTS on it, like
@@ -432,15 +432,15 @@ namespace pwiz.Osprey.Core
         /// default for every other OSPREY_* selector. Public so the parse can be tested; the
         /// environment itself is read once, into <see cref="FdrModel"/>.
         /// </summary>
-        public static FdrMethod? ParseFdrModel(string raw)
+        public static FdrClassifier? ParseFdrModel(string raw)
         {
             if (string.IsNullOrWhiteSpace(raw))
-                return FdrMethod.Percolator;
+                return FdrClassifier.LinearSvm;
             string v = raw.Trim().ToLowerInvariant();
             if (v == FDR_MODEL_SVM)
-                return FdrMethod.Percolator;
+                return FdrClassifier.LinearSvm;
             if (v == FDR_MODEL_GBDT)
-                return FdrMethod.Gbdt;
+                return FdrClassifier.Gbdt;
             return null;
         }
 
@@ -466,9 +466,9 @@ namespace pwiz.Osprey.Core
         /// FirstPassFDR does not run on a resume or on <c>--task SecondPassFDR</c>, and those
         /// runs score with the model too.
         /// </summary>
-        public static string DescribeFdrModel(FdrMethod fdrMethod)
+        public static string DescribeFdrModel(FdrClassifier fdrClassifier)
         {
-            if (fdrMethod != FdrMethod.Gbdt)
+            if (fdrClassifier != FdrClassifier.Gbdt)
                 return null;
             return string.Format(
                 @"FDR model: {0} (EXPERIMENTAL, OSPREY_FDR_MODEL) - gradient-boosted trees " +

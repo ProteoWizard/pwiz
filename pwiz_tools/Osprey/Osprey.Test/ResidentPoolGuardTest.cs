@@ -64,7 +64,7 @@ namespace pwiz.Osprey.Test
             // OSPREY_FDR_PROJECTION=0 trips the fat pool: guarded (armed), and the message is
             // actionable - it names the token the operator would set, not just a symptom.
             // This exemplar was the HPC reconciled-input merge until #4486 streamed it,
-            // --fdrbench-pass 1 until #4507 did, and a non-Percolator FdrMethod until #4543
+            // --fdrbench-pass 1 until #4507 did, and a non-Percolator FDR method until #4543
             // deleted the last one, leaving the projection switch the only first-pass trigger.
             // The properties being pinned are the guard's, so any still-listed trigger
             // exercises them. It is NOT an automatic exemption for being the A/B byte-identity
@@ -211,7 +211,7 @@ namespace pwiz.Osprey.Test
             // resident one, so no FDRBench selection reaches the resident path and the token
             // had nothing left to admit.
             // 'non-percolator-fdr' is GONE (#4543) - the SIXTH shrink. It admitted a
-            // non-Percolator FdrMethod, which never used the projection framework. Mokapot was
+            // non-Percolator FDR method, which never used the projection framework. Mokapot was
             // never reachable and simple was deleted, so every method left is a classifier inside
             // the Percolator framework and streams; the gbdt assertion below pins that.
             CollectionAssert.AreEqual(
@@ -252,10 +252,10 @@ namespace pwiz.Osprey.Test
             // resident pool and so arms the guard above.
             Assert.IsTrue(PerFileScoringTask.NeedsResidentPool(lean, useFdrProjection: false));
             // The tree classifier is NOT in it. It runs the Percolator framework the SVM does,
-            // and the FdrMethod test this predicate used to make is exactly the kind of gate
+            // and the FDR-method test this predicate used to make is exactly the kind of gate
             // that, comparing against Percolator alone, would send gbdt down the resident path -
             // same q-values, whole-run pool resident, which is what OOM'd the 82-file join.
-            AssertNeedsResidentPool(false, new OspreyConfig { FdrMethod = FdrMethod.Gbdt });
+            AssertNeedsResidentPool(false, new OspreyConfig { FdrClassifier = FdrClassifier.Gbdt });
             // FDRBench pass 1 left the set with #4507, and so did `both` - which had never been
             // IN it (the old `== 1` test could not match a mask of 3), the defect that made
             // `both` emit pass 2 only.

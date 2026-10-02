@@ -165,8 +165,8 @@ namespace pwiz.Osprey.Test
             // environment cannot be varied here, so the value is passed in, and followed into the
             // training config: #4491 was gbdt silently training the SVM, and a check that the
             // config merely echoes the environment passes with the assignment deleted.
-            AssertClassifierReachesTraining(FdrMethod.Gbdt, true, OspreyEnvironment.GbtMaxIterations);
-            AssertClassifierReachesTraining(FdrMethod.Percolator, false, 10);
+            AssertClassifierReachesTraining(FdrClassifier.Gbdt, true, OspreyEnvironment.GbtMaxIterations);
+            AssertClassifierReachesTraining(FdrClassifier.LinearSvm, false, 10);
             Assert.AreEqual(FdrLevel.Peptide, Parse(OspreyCommandArgs.ARG_FDR_LEVEL + @"peptide").FdrLevel);
             Assert.AreEqual(FdrLevel.Precursor, Parse(OspreyCommandArgs.ARG_FDR_LEVEL, @"bogus").FdrLevel);     // warn -> default unchanged
             Assert.AreEqual(SharedPeptideMode.Razor, Parse(OspreyCommandArgs.ARG_SHARED_PEPTIDES + @"razor").SharedPeptides);
@@ -234,12 +234,12 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(@"run.log", Parse(OspreyCommandArgs.ARG_LOG_FILE + @"run.log").LogFilePath);
         }
 
-        private static void AssertClassifierReachesTraining(FdrMethod fdrModel, bool expectTrees,
+        private static void AssertClassifierReachesTraining(FdrClassifier fdrModel, bool expectTrees,
             int expectMaxIterations)
         {
             var config = OspreyCommandArgs.ParseArgs(ArgTokens.Split(new[] { OspreyCommandArgs.ARG_INPUT + @"a.mzML" }),
                 fdrModel);
-            Assert.AreEqual(fdrModel, config.FdrMethod);
+            Assert.AreEqual(fdrModel, config.FdrClassifier);
             var percConfig = PercolatorEngine.BuildProjectionPercolatorConfig(config, null, null);
             Assert.AreEqual(expectTrees, percConfig.UseGradientBoostedTrees);
             Assert.AreEqual(expectMaxIterations, percConfig.MaxIterations);

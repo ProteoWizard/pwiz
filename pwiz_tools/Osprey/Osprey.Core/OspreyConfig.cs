@@ -207,7 +207,7 @@ namespace pwiz.Osprey.Core
         /// <summary>The classifier first-pass Percolator trains: the linear SVM (default) or
         /// gradient-boosted trees. Set from <see cref="OspreyEnvironment.FdrModel"/> when the
         /// command line is parsed; nothing else reads OSPREY_FDR_MODEL.</summary>
-        public FdrMethod FdrMethod { get; set; } = FdrMethod.Percolator;
+        public FdrClassifier FdrClassifier { get; set; } = FdrClassifier.LinearSvm;
 
         /// <summary>
         /// Write the protein-group report (<c>&lt;output&gt;.protein_groups.tsv</c>) at the
@@ -559,14 +559,20 @@ namespace pwiz.Osprey.Core
     /// trained per fold. Selected by the OSPREY_FDR_MODEL environment variable
     /// (<see cref="OspreyEnvironment.FdrModel"/>), not by a command-line argument.
     ///
+    /// <para>"Percolator" names that framework, not a classifier, so no value here is called
+    /// Percolator. The framework is also not the original Percolator tool: it cross-validates
+    /// during the SVM training iterations and assigns q-values by target-decoy competition
+    /// rather than Storey-Tibshirani. The linear SVM is the classifier the original tool used,
+    /// and it is the default and the production path.</para>
+    ///
     /// <para>Rust's FdrMethod (osprey-core/src/config.rs) is Percolator, Mokapot and Simple,
     /// and has no trees. Osprey dropped the other two: Mokapot was never reachable here, and
     /// the simple target-decoy competition was removed (#4543).</para>
     /// </summary>
-    public enum FdrMethod
+    public enum FdrClassifier
     {
-        /// <summary>The linear SVM, the default.</summary>
-        Percolator,
+        /// <summary>The linear SVM, the default and the production classifier.</summary>
+        LinearSvm,
         /// <summary>Gradient-boosted decision trees in place of the linear SVM; implemented by
         /// Osprey.ML GradientBoostedTrees. EXPERIMENTAL, selected by
         /// <c>OSPREY_FDR_MODEL=gbdt</c>.</summary>

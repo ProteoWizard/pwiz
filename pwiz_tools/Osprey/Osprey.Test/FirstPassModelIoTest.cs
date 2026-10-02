@@ -480,7 +480,7 @@ namespace pwiz.Osprey.Test
             Assert.IsNotNull(sidecar.Model, @"the gate should hand back the model it checked");
 
             refusals = task.CompactionGateRefusals(experimentPath, key, parquetPaths,
-                new OspreyConfig { FdrMethod = FdrMethod.Gbdt }, out _);
+                new OspreyConfig { FdrClassifier = FdrClassifier.Gbdt }, out _);
             Assert.AreEqual(1, refusals.Count,
                 @"a gbdt run must not enter at the gate with a linear model: it would publish that model");
         }

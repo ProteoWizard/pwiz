@@ -328,7 +328,7 @@ namespace pwiz.Osprey.Test
         {
             var tasks = OspreyTasks.Create().Pipeline;
             var linearCtx = new PipelineContext(new OspreyConfig(), tasks, null, null, null);
-            var treeCtx = new PipelineContext(new OspreyConfig { FdrMethod = FdrMethod.Gbdt }, tasks, null, null, null);
+            var treeCtx = new PipelineContext(new OspreyConfig { FdrClassifier = FdrClassifier.Gbdt }, tasks, null, null, null);
             string treeTerm = PercolatorEngine.GbdtValidityKeySuffix(treeCtx.Config);
             Assert.AreNotEqual(string.Empty, treeTerm, @"gbdt must emit a term");
             // The linear SVM emits NOTHING, through both overloads and whatever the tree settings
@@ -336,7 +336,7 @@ namespace pwiz.Osprey.Test
             // existing SVM output directory.
             Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(new OspreyConfig()),
                 @"the linear SVM must emit nothing, or every existing output directory is invalidated");
-            Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(FdrMethod.Percolator,
+            Assert.AreEqual(string.Empty, PercolatorEngine.GbdtValidityKeySuffix(FdrClassifier.LinearSvm,
                     new GbtParams { NTrees = 7 }, OspreyEnvironment.GBT_MAX_ITERATIONS_DEFAULT + 1, 1),
                 @"tree settings must not reach a linear-SVM key");
 
@@ -347,7 +347,7 @@ namespace pwiz.Osprey.Test
                 @";fdrmodel=gbdt;gbtobjective=LogisticBinary;gbttrees=200;gbtdepth=6;gbtlr=0.1" +
                 @";gbtminchild=1;gbtsubsample=0.8;gbtcolsample=0.8;gbtgamma=0;gbtlambda=1;gbtalpha=0" +
                 @";gbtbins=64;gbtseed=42;gbtiterations=30;gbtinnerfolds=5",
-                PercolatorEngine.GbdtValidityKeySuffix(FdrMethod.Gbdt, new GbtParams(),
+                PercolatorEngine.GbdtValidityKeySuffix(FdrClassifier.Gbdt, new GbtParams(),
                     OspreyEnvironment.GBT_MAX_ITERATIONS_DEFAULT, 5));
 
             // The term is the ONLY difference: a percolator key is the gbdt key without it.
@@ -373,15 +373,15 @@ namespace pwiz.Osprey.Test
         {
             const int iterations = OspreyEnvironment.GBT_MAX_ITERATIONS_DEFAULT;
             const int innerFolds = 5;
-            string defaultKey = PercolatorEngine.GbdtValidityKeySuffix(FdrMethod.Gbdt, new GbtParams(), iterations, innerFolds);
-            Assert.AreEqual(defaultKey, PercolatorEngine.GbdtValidityKeySuffix(FdrMethod.Gbdt, new GbtParams(), iterations, innerFolds),
+            string defaultKey = PercolatorEngine.GbdtValidityKeySuffix(FdrClassifier.Gbdt, new GbtParams(), iterations, innerFolds);
+            Assert.AreEqual(defaultKey, PercolatorEngine.GbdtValidityKeySuffix(FdrClassifier.Gbdt, new GbtParams(), iterations, innerFolds),
                 @"the term must be a pure function of its settings");
             var keys = new HashSet<string> { defaultKey };
             foreach (var field in typeof(GbtParams).GetFields(BindingFlags.Public | BindingFlags.Instance))
             {
                 var changed = new GbtParams();
                 field.SetValue(changed, OtherValue(field.GetValue(changed)));
-                string key = PercolatorEngine.GbdtValidityKeySuffix(FdrMethod.Gbdt, changed, iterations, innerFolds);
+                string key = PercolatorEngine.GbdtValidityKeySuffix(FdrClassifier.Gbdt, changed, iterations, innerFolds);
                 if (field.Name == nameof(GbtParams.MaxDegreeOfParallelism))
                 {
                     Assert.AreEqual(defaultKey, key, @"training is bit-identical at any thread count, so it must not key");
@@ -389,9 +389,9 @@ namespace pwiz.Osprey.Test
                 }
                 Assert.IsTrue(keys.Add(key), field.Name + @" must key, and distinctly from every other setting");
             }
-            Assert.IsTrue(keys.Add(PercolatorEngine.GbdtValidityKeySuffix(FdrMethod.Gbdt, new GbtParams(), iterations + 1, innerFolds)),
+            Assert.IsTrue(keys.Add(PercolatorEngine.GbdtValidityKeySuffix(FdrClassifier.Gbdt, new GbtParams(), iterations + 1, innerFolds)),
                 @"the tree iteration cap (OSPREY_GBT_MAX_ITERATIONS) must key");
-            Assert.IsTrue(keys.Add(PercolatorEngine.GbdtValidityKeySuffix(FdrMethod.Gbdt, new GbtParams(), iterations, 1)),
+            Assert.IsTrue(keys.Add(PercolatorEngine.GbdtValidityKeySuffix(FdrClassifier.Gbdt, new GbtParams(), iterations, 1)),
                 @"the inner-fold count (OSPREY_GBT_INNER_FOLDS) must key");
         }
 

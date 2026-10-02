@@ -369,7 +369,7 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         public static string GbdtValidityKeySuffix(OspreyConfig config)
         {
-            return GbdtValidityKeySuffix(config?.FdrMethod ?? FdrMethod.Percolator, BuildGbtParams(),
+            return GbdtValidityKeySuffix(config?.FdrClassifier ?? FdrClassifier.LinearSvm, BuildGbtParams(),
                 OspreyEnvironment.GbtMaxIterations, OspreyEnvironment.GbtInnerFolds);
         }
 
@@ -380,10 +380,10 @@ namespace pwiz.Osprey.FDR
         /// model is bit-identical at any value, so keying it would invalidate a directory for a
         /// difference that cannot exist.
         /// </summary>
-        public static string GbdtValidityKeySuffix(FdrMethod fdrMethod, GbtParams gbtParams,
+        public static string GbdtValidityKeySuffix(FdrClassifier fdrClassifier, GbtParams gbtParams,
             int maxIterations, int innerFolds)
         {
-            if (fdrMethod != FdrMethod.Gbdt)
+            if (fdrClassifier != FdrClassifier.Gbdt)
                 return string.Empty;
             return string.Format(CultureInfo.InvariantCulture,
                 @";fdrmodel=gbdt;gbtobjective={0};gbttrees={1};gbtdepth={2};gbtlr={3:R}" +
@@ -423,7 +423,7 @@ namespace pwiz.Osprey.FDR
                 // still improving when they hit 10, so they get their own (higher) cap --
                 // both loops still early-stop on convergence, so this only binds when the
                 // model genuinely has further to go. See OspreyEnvironment.GbtMaxIterations.
-                MaxIterations = config.FdrMethod == FdrMethod.Gbdt
+                MaxIterations = config.FdrClassifier == FdrClassifier.Gbdt
                     ? OspreyEnvironment.GbtMaxIterations
                     : 10,
                 NFolds = 3,
@@ -433,7 +433,7 @@ namespace pwiz.Osprey.FDR
                 // dedup, fold assignment, semi-supervised iteration, competition, and
                 // q-value/PEP math are the same shared code either way, which is what
                 // makes them comparable at matched entrapment FDP.
-                UseGradientBoostedTrees = config.FdrMethod == FdrMethod.Gbdt,
+                UseGradientBoostedTrees = config.FdrClassifier == FdrClassifier.Gbdt,
                 GbtParams = gbtParams,
                 // Percolator-3.0 training-subsample cap (mirrors the PercolatorConfig ctor
                 // default); OSPREY_MAX_TRAIN_SIZE raises it to feed the model more rows.

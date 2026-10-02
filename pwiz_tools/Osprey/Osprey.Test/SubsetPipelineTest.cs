@@ -476,7 +476,7 @@ namespace pwiz.Osprey.Test
             var savedFdrModel = OspreyEnvironment.FdrModel;
             try
             {
-                OspreyEnvironment.FdrModel = FdrMethod.Gbdt;
+                OspreyEnvironment.FdrModel = FdrClassifier.Gbdt;
                 RunAnalysis(gbdtDir, DataInputs(), Verifier(false));
             }
             finally

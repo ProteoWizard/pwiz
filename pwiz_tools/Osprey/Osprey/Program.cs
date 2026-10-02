@@ -538,7 +538,7 @@ namespace pwiz.Osprey
                     LogError(OspreyEnvironment.FdrModelError);
                     return 1;
                 }
-                string fdrModelLine = OspreyEnvironment.DescribeFdrModel(config.FdrMethod);
+                string fdrModelLine = OspreyEnvironment.DescribeFdrModel(config.FdrClassifier);
                 if (fdrModelLine != null)
                     LogInfo(fdrModelLine);
                 // Abort, do not fall back. A run that asked for a mode it did not get would

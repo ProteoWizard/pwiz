@@ -411,7 +411,7 @@ namespace pwiz.Osprey.Tasks
             // projection. It must mirror that task's dispatch exactly (FirstPassFdrTask.cs:
             // !PerFileScoringTask.NeedsResidentPool): the one other configuration -
             // OSPREY_FDR_PROJECTION=0 - still needs the fat stubs here. A non-Percolator
-            // FdrMethod was one until #4543 deleted the last. FDRBench pass 1 is NOT one of them any more (#4507):
+            // The FDR method was one until #4543 deleted the last. FDRBench pass 1 is NOT one of them any more (#4507):
             // it streams off the per-file sidecars. --model-diagnostics is NOT
             // one of them any more (#4505): it streams its report on every path.
             // The fat/lean decision, and the guard that checks it, key off CanUseLeanProjection -
@@ -1737,7 +1737,7 @@ namespace pwiz.Osprey.Tasks
         /// OSPREY_DUMP_PERCOLATOR bisection dump (emitted by FirstPassFDR's rehydrate before it
         /// compacts, so it genuinely needs the all-files pre-compaction pool rather than a
         /// silently post-compaction one) and OSPREY_FDR_PROJECTION=0. A non-Percolator
-        /// FdrMethod left the list with #4543, which deleted the simple FDR method, the last
+        /// The FDR method left the list with #4543, which deleted the simple FDR method, the last
         /// one. --fdrbench-pass 1 left it with #4507: the pass-1 emitter streams
         /// off the per-file sidecars now. OSPREY_PASS2_QVALUE=transfer is NOT among them:
         /// the per-run-only redesign (#4438) resolves each adjusted peak against that file's
@@ -2285,7 +2285,7 @@ namespace pwiz.Osprey.Tasks
             // never matched: memory-safe by a type confusion, and silently pass-2-only. The
             // pass-1 emitter now streams off the per-file sidecars, so the term is gone and
             // the ratchet token with it.
-            // A non-Percolator FdrMethod was the last config term, and went with its token
+            // A non-Percolator FDR method was the last config term, and went with its token
             // (non-percolator-fdr) when #4543 deleted the simple FDR method: every method left
             // runs the Percolator framework and streams. No config field arms the pool now; the
             // config stays in the signature so ResidentPoolGuardTest can keep asserting that
@@ -2329,7 +2329,7 @@ namespace pwiz.Osprey.Tasks
         /// <c>OSPREY_FDR_PROJECTION=0</c>, which requests the legacy resident implementation
         /// outright and so must be named like any other. The
         /// HPC reconciled-input merge (#4486) and <c>--fdrbench-pass 1</c> (#4507) were
-        /// triggers and are streamed now, and a non-Percolator FdrMethod was one until #4543
+        /// triggers and are streamed now, and a non-Percolator FDR method was one until #4543
         /// deleted the last.
         /// </summary>
         private static void GuardResidentPool(OspreyConfig config, bool needsResidentPool)

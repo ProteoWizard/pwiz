@@ -74,7 +74,7 @@ namespace pwiz.Osprey.Core
         // rows, so the flag arms no resident path at any file count and no token can name one.
 
         // non-percolator-fdr is GONE (#4543), the ratchet shrinking a sixth time. It named a
-        // non-Percolator FdrMethod, which never used the projection framework and so always took
+        // non-Percolator FDR method, which never used the projection framework and so always took
         // the resident path. Mokapot was never reachable, and the simple target-decoy
         // competition was deleted: every method left is a classifier inside the Percolator
         // framework, so none takes this path and no token can name one. Not to be re-added - an

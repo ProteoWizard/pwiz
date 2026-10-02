@@ -2801,7 +2801,7 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Run Percolator-based FDR control (Stage 5). Every <see cref="FdrMethod"/> runs this
+        /// Run Percolator-based FDR control (Stage 5). Every <see cref="FdrClassifier"/> runs this
         /// one semi-supervised target-decoy framework; the method rides along in the config and
         /// selects the classifier (linear SVM vs gradient-boosted trees) at the seams inside the
         /// engine that touch it, so there is no dispatch on it here. Thin facade over
@@ -3717,7 +3717,7 @@ namespace pwiz.Osprey.Tasks
             }
             else
             {
-                bool runUsesTrees = config.FdrMethod == FdrMethod.Gbdt;
+                bool runUsesTrees = config.FdrClassifier == FdrClassifier.Gbdt;
                 if (modelSidecar.Model.IsGradientBoostedTrees != runUsesTrees)
                 {
                     refusals.Add(string.Format(@".1st-pass.model.json holds {0} and this run uses {1}",

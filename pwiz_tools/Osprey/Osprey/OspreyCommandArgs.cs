@@ -390,7 +390,7 @@ namespace pwiz.Osprey
         /// test. Exists so a test can prove that gbdt reaches the config: #4491 was the
         /// classifier silently not reaching training.
         /// </summary>
-        internal static OspreyConfig ParseArgs(string[] args, FdrMethod fdrModel)
+        internal static OspreyConfig ParseArgs(string[] args, FdrClassifier fdrModel)
         {
             var parser = new OspreyCommandArgs();
             parser.TokenizeAndDispatch(args);
@@ -564,7 +564,7 @@ namespace pwiz.Osprey
             }
         }
 
-        private OspreyConfig ToConfig(FdrMethod fdrModel)
+        private OspreyConfig ToConfig(FdrClassifier fdrModel)
         {
             // Expand --input-list BEFORE normalization, so a listed path is indistinguishable
             // from one given with -i from here on. Appended in the order the lists were given,
@@ -593,7 +593,7 @@ namespace pwiz.Osprey
             // config and never the environment. An unrecognized value parses to the default only
             // so the config is well-formed; Program aborts on OspreyEnvironment.FdrModelError
             // before the pipeline runs.
-            _config.FdrMethod = fdrModel;
+            _config.FdrClassifier = fdrModel;
 
             switch (_resolution)
             {

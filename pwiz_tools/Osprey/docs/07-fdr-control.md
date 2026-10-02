@@ -89,16 +89,22 @@ ParquetIndex)` so the SVM working-set order is canonical across Rust and C#
 
 There is no dispatch on an FDR method: every run goes through the one Percolator framework
 (`FirstPassFdrTask.RunPercolatorFdr` -> `PercolatorEngine.RunPercolatorFdr`), and
-`config.FdrMethod` only selects the classifier trained inside it:
+`config.FdrClassifier` only selects the classifier trained inside it:
 
-- `FdrMethod.Percolator` (default) - the linear SVM
-- `FdrMethod.Gbdt` - a gradient-boosted-tree classifier swapped in per fold.
+- `FdrClassifier.LinearSvm` (default) - the linear SVM
+- `FdrClassifier.Gbdt` - a gradient-boosted-tree classifier swapped in per fold.
   **Experimental**; see below.
 
 The classifier is chosen by the `OSPREY_FDR_MODEL` environment variable, not a command-line
 argument, because it is a developer lever rather than a product setting. It is read once at
-process start (`OspreyEnvironment.FdrModel`) and copied onto `OspreyConfig.FdrMethod` when the
+process start (`OspreyEnvironment.FdrModel`) and copied onto `OspreyConfig.FdrClassifier` when the
 command line is parsed; nothing else reads it.
+
+"Percolator" names the framework, not a classifier, so no enum value is called Percolator.
+The framework is also not the original Percolator tool: it cross-validates during the SVM
+training iterations and assigns q-values by target-decoy competition rather than
+Storey-Tibshirani. The enum was `FdrMethod {Percolator, Gbdt}` until #4715 renamed it;
+the deleted values below are named as they were.
 
 | `OSPREY_FDR_MODEL` | Classifier |
 |---|---|
@@ -838,7 +844,7 @@ calibration LDA, not Percolator.
   and `--subset_max_train` memory logic. C# ships only the native Percolator: the
   never-reachable `FdrMethod.Mokapot` value and the Simple method were both deleted (#4543),
   and there is no MokapotRunner, no PIN round-trip on the default path, and no Python
-  dependency. Evidence: `Osprey.Core/OspreyConfig.cs` (`FdrMethod` is `{Percolator, Gbdt}`).
+  dependency. Evidence: `Osprey.Core/OspreyConfig.cs` (`FdrClassifier` is `{LinearSvm, Gbdt}`).
   Behavior/outputs of the retained engine match Rust. Severity: info.
 
 - **[INTENTIONAL-CSHARP-DESIGN] No `--fdr-method`; the classifier is `OSPREY_FDR_MODEL`,
@@ -874,14 +880,14 @@ calibration LDA, not Percolator.
   cross-impl-corrupting bug. The Rust doc's "Peptide default" prose is stale relative to
   the Rust config. Evidence: `Osprey.Core/OspreyConfig.cs:284`. Severity: minor.
 
-- **[C#-ONLY ADDITION] The `gbdt` classifier exists only in C#** - The C# `FdrMethod`
-  enum is `{Percolator, Gbdt}` and `OSPREY_FDR_MODEL=gbdt` selects an **experimental**
+- **[C#-ONLY ADDITION] The `gbdt` classifier exists only in C#** - The C# `FdrClassifier`
+  enum is `{LinearSvm, Gbdt}` and `OSPREY_FDR_MODEL=gbdt` selects an **experimental**
   gradient-boosted-tree classifier inside the Percolator framework
   (`Osprey.ML/GradientBoostedTrees.cs`; see "GBDT" above). **The Rust
   reference has no GBDT scorer** — grepping the Rust crates for `gbdt`/`GradientBoost`
   returns nothing — so this is a C# addition *beyond* the reference engine, not a port,
   and carries no cross-impl parity claim. The linear SVM remains the default
-  and the parity-gated path. Evidence: `Osprey.Core/OspreyConfig.cs` (`FdrMethod`),
+  and the parity-gated path. Evidence: `Osprey.Core/OspreyConfig.cs` (`FdrClassifier`),
   `Osprey.Core/OspreyEnvironment.cs` (`FdrModel`). Severity: info.
 
 - **[INTENTIONAL-CSHARP-DESIGN] Streaming-only, matching Rust's v26.7.0 change** - The

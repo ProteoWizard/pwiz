@@ -2529,7 +2529,7 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(LogTag.TIMING, @"Reloaded PIN features for {0} peaks: {1:F1}s",
                 nReloaded, swReloadFeats.Elapsed.TotalSeconds);
 
-            // Every FdrMethod shares this path: the 2nd pass is the same sequence regardless
+            // Both classifiers share this path: the 2nd pass is the same sequence regardless
             // of which classifier the 1st pass trained. The frozen model carried in ctx is
             // whichever one that was, and the score passes select on it, so the frozen
             // competition works unchanged for trees.

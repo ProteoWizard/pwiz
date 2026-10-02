@@ -86,7 +86,7 @@ once per input, name the first and count the rest.
 Use Skyline's pattern: a `GetLocalizedString(this Enum)` extension over a
 `LOCALIZED_VALUES` property that returns resource strings (see `Skyline/Model/Export.cs`). A
 property, never a static field: tests switch the UI culture in process, and a static would
-keep the first language it saw. `DecoyMethod`, `ResolutionMode`, `FdrMethod` and
+keep the first language it saw. `DecoyMethod`, `ResolutionMode` and
 `LibraryFormat` have one; never print an enum's `ToString()` in user text.
 
 ## Tiers
