@@ -47,6 +47,7 @@ namespace pwiz.CarafeSharp.Models
 
         public const string MS2_ENTRY = @"generic/ms2.pth";
         public const string RT_ENTRY = @"generic/rt.pth";
+        public const string CCS_ENTRY = @"generic/ccs.pth";
 
         /// <summary>Environment variable naming the archive, overriding the default location.</summary>
         public const string PATH_VARIABLE = @"CARAFESHARP_PRETRAINED_MODELS";

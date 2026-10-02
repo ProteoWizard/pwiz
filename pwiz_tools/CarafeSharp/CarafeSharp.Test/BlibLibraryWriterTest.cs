@@ -88,12 +88,23 @@ namespace pwiz.CarafeSharp.Test
         {
             var spectrum = CreateSpectra()[0];
             string expectedPrefix = "_PEPTC[UniMod:4]K_\tPEPTCK\t360.6578\t2\t-35.21\tsp|P1_pep00001|A;sp|P2_pep00002|B\t0\t";
-            string[] rows = CarafeLibraryTsvWriter.FormatRows(spectrum).Split('\n');
+            string[] rows = CarafeLibraryTsvWriter.FormatRows(spectrum, false).Split('\n');
             Assert.AreEqual(spectrum.Fragments.Count + 1, rows.Length);
             Assert.AreEqual(string.Empty, rows[rows.Length - 1]);
             Assert.AreEqual(expectedPrefix + "400.25\t1.0000\ty\t3\t1\tnoloss", rows[0]);
             Assert.AreEqual(expectedPrefix + "250.125\t0.5000\tb\t2\t1\tnoloss", rows[1]);
             Assert.AreEqual(13, CarafeLibraryTsvWriter.HEADER.Split('\t').Length);
+
+            // With -ccs, Carafe's IonMobility column after Tr_recalibrated, to four decimals; a
+            // spectrum without one cannot be written there. The 1/K0 is alphabase's for the CCS.
+            Assert.AreEqual(0.8117930609358772, spectrum.IonMobility.Value, 1e-12);
+            string[] mobilityRows = CarafeLibraryTsvWriter.FormatRows(spectrum, true).Split('\n');
+            Assert.AreEqual("_PEPTC[UniMod:4]K_\tPEPTCK\t360.6578\t2\t-35.21\t0.8118\tsp|P1_pep00001|A;sp|P2_pep00002|B\t0\t" +
+                            "400.25\t1.0000\ty\t3\t1\tnoloss", mobilityRows[0]);
+            var mobilityHeader = CarafeLibraryTsvWriter.HEADER_WITH_ION_MOBILITY.Split('\t');
+            Assert.AreEqual(14, mobilityHeader.Length);
+            Assert.AreEqual(5, Array.IndexOf(mobilityHeader, @"IonMobility"));
+            Assert.ThrowsException<InvalidOperationException>(() => CarafeLibraryTsvWriter.FormatRows(CreateSpectra()[1], true));
 
             string folder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"Tsv_" + Guid.NewGuid().ToString(@"N"));
             Directory.CreateDirectory(folder);
@@ -105,9 +116,23 @@ namespace pwiz.CarafeSharp.Test
                     writer.Write(spectrum);
                     writer.Complete();
                 }
-                string expected = CarafeLibraryTsvWriter.HEADER + "\n" + CarafeLibraryTsvWriter.FormatRows(spectrum);
+                string expected = CarafeLibraryTsvWriter.HEADER + "\n" + CarafeLibraryTsvWriter.FormatRows(spectrum, false);
                 Assert.AreEqual(expected, File.ReadAllText(path));
                 CollectionAssert.AreEqual(new[] { path }, Directory.GetFiles(folder));
+
+                using (var writer = new CarafeLibraryTsvWriter(path, true))
+                {
+                    Assert.IsTrue(writer.WritesIonMobility);
+                    writer.Write(spectrum);
+                    writer.Complete();
+                }
+                Assert.AreEqual(CarafeLibraryTsvWriter.HEADER_WITH_ION_MOBILITY + "\n" + CarafeLibraryTsvWriter.FormatRows(spectrum, true),
+                    File.ReadAllText(path));
+                using (var writer = new CarafeLibraryTsvWriter(path))
+                {
+                    writer.Write(spectrum);
+                    writer.Complete();
+                }
 
                 // A run that stops before Complete leaves the previous TSV as it was.
                 using (var writer = new CarafeLibraryTsvWriter(path))
@@ -270,7 +295,7 @@ namespace pwiz.CarafeSharp.Test
                     Fragment('y', 3, 1, 400.25, 1.0f),
                     Fragment('b', 2, 1, 250.125, 0.5f),
                     Fragment('y', 2, 1, 300.0, 0.25f),
-                })
+                }, 331.27978515625)
             {
                 ModifiedPeptide = @"_PEPTC[UniMod:4]K_",
                 SkylineModifiedSequence = @"PEPTC[+57.02146372057]K",
@@ -324,6 +349,9 @@ namespace pwiz.CarafeSharp.Test
                 // TINYINT columns read back as bytes; CAST gives Int64 like the others.
                 CollectionAssert.AreEqual(new object[] { 1L, @"carafe_spectral_library", 1L },
                     Row(connection, @"SELECT id, fileName, CAST(workflowType AS INTEGER) FROM SpectrumSourceFiles"));
+                // The id Skyline reads as 1/K0, which -ccs writes.
+                Assert.AreEqual(@"inverseK0(Vsec/cm^2)", Scalar(connection,
+                    @"SELECT ionMobilityType FROM IonMobilityTypes WHERE id = " + BlibLibraryWriter.ION_MOBILITY_TYPE_INVERSE_K0));
 
                 for (int i = 0; i < spectra.Count; i++)
                     VerifySpectrum(connection, i + 1, spectra[i]);
@@ -361,6 +389,16 @@ namespace pwiz.CarafeSharp.Test
                                                 @"WHERE RefSpectraID = " + id);
             CollectionAssert.AreEqual(new object[] { spectrum.RetentionTime, 1L, 1L }, retentionTime.Take(3).ToArray());
             Assert.IsTrue(retentionTime[3] is DBNull && retentionTime[4] is DBNull);
+
+            // The ion mobility, in both tables: 1/K0 with -ccs, else NULL of type none; the CCS NULL either way, as Carafe writes it.
+            var expectedMobility = spectrum.IonMobility.HasValue
+                ? new object[] { spectrum.IonMobility.Value, DBNull.Value, (long)BlibLibraryWriter.ION_MOBILITY_TYPE_INVERSE_K0 }
+                : new object[] { DBNull.Value, DBNull.Value, (long)BlibLibraryWriter.ION_MOBILITY_TYPE_NONE };
+            foreach (string table in new[] { @"RefSpectra WHERE id", @"RetentionTimes WHERE RefSpectraID" })
+            {
+                CollectionAssert.AreEqual(expectedMobility, Row(connection, @"SELECT ionMobility, collisionalCrossSectionSqA, " +
+                                                                            @"CAST(ionMobilityType AS INTEGER) FROM " + table + @" = " + id), table);
+            }
 
             var blobs = Row(connection, @"SELECT peakMZ, peakIntensity FROM RefSpectraPeaks WHERE RefSpectraID = " + id);
             int count = spectrum.Fragments.Count;

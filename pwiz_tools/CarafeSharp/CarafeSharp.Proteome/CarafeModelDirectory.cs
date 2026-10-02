@@ -44,6 +44,9 @@ namespace pwiz.CarafeSharp.Proteome
     /// <item>RT: the fine-tuned model whenever the file exists.</item>
     /// <item><c>-tf rt</c> takes the MS2 model pretrained and <c>-tf ms2</c> the RT model;
     /// a <c>-tf</c> other than all, rt, ms2 or test takes both pretrained.</item>
+    /// <item>CCS (<c>-ccs</c>): Carafe's fine-tuned <c>ccs_model.pt</c> for <c>-tf all</c>
+    /// when the file exists, else the pretrained model; CarafeSharp does not fine-tune CCS, and
+    /// refuses <c>-ccs</c> with <c>-tf rt</c> or <c>ms2</c>, for which Carafe predicts none.</item>
     /// <item>A fine-tuned model is Carafe's checkpoint, else CarafeSharp's safetensors; the
     /// library a training run predicts takes the safetensors that run wrote first.</item>
     /// </list>
@@ -52,6 +55,7 @@ namespace pwiz.CarafeSharp.Proteome
     {
         public const string MS2_MODEL_FILE = ModelFiles.MS2_CHECKPOINT;
         public const string RT_MODEL_FILE = ModelFiles.RT_CHECKPOINT;
+        public const string CCS_MODEL_FILE = ModelFiles.CCS_CHECKPOINT;
         public const string METRICS_FILE = ModelFiles.METRICS;
         public const string META_FILE = ModelFiles.META;
 
@@ -179,6 +183,18 @@ namespace pwiz.CarafeSharp.Proteome
             return HasRtModel && (IsType(trainingType, @"all") || IsType(trainingType, @"rt") || IsType(trainingType, @"test"))
                 ? RtModelPath
                 : null;
+        }
+
+        /// <summary>
+        /// Carafe's fine-tuned CCS model (from a timsTOF training run) to predict with for
+        /// <paramref name="trainingType"/>, or null for the pretrained one. Carafe's Python
+        /// (<c>ai_pred.py</c>) takes the folder's <c>ccs_model.pt</c> for <c>--tf_type all</c>
+        /// and the generic model for any other type it predicts CCS for.
+        /// </summary>
+        public string GetCcsModelPath(string trainingType)
+        {
+            string path = Path.Combine(DirectoryPath, CCS_MODEL_FILE);
+            return IsType(trainingType, @"all") && File.Exists(path) ? path : null;
         }
 
         /// <summary>

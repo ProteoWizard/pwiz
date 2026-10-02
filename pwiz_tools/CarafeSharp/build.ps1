@@ -19,6 +19,8 @@
 
     Tests read their reference data from <Downloads>/Perftests (or %CARAFESHARP_TESTDATA%);
     see docs/04-testing.md. Without the data, data-dependent tests report Inconclusive.
+    -TestData Fetch downloads and extracts the packages a run needs; -TestData Verify checks
+    them file by file.
 
 .PARAMETER Configuration
     Debug or Release. Default Release.
@@ -44,6 +46,19 @@
     Fail when any test did not run to a pass or fail (NotExecuted or Inconclusive), which is
     how a missing or incomplete test-data package shows up.
 
+.PARAMETER TestData
+    Fetch: download and extract the test data packages the run reads (testdata.json) that are
+    not there yet, each zip checked against its size and SHA-256, then check what was extracted.
+    Verify: check every file of those packages against its MANIFEST.sha256, a zip kept beside
+    them against testdata.json, and the committed pretrained_models.zip against its pin.
+    Either fails the run on any problem. Runs before the build; with -NoBuild -NoTests it is all
+    that runs.
+
+.PARAMETER TestDataPackage
+    With -TestData, the package ids to fetch or verify (testdata.json: testfiles, export, astral,
+    astral-export), or all. By default, the packages of the default test pass, plus those of
+    -TestCategory (Astral adds the Astral packages).
+
 .PARAMETER Coverage
     Run the tests under JetBrains dotCover (2023.3.3, from .config/dotnet-tools.json, the version
     Osprey pins) and print the statement coverage of each CarafeSharp assembly. The .dcvr snapshot
@@ -61,6 +76,10 @@
     ./build.ps1 -Torch cuda                    # CUDA build and the Cuda test category
 .EXAMPLE
     ./build.ps1 -NoBuild -TestCategory Astral  # the Astral parity tests on the existing build
+.EXAMPLE
+    ./build.ps1 -TestData Fetch -RequireData   # fetch the test data, then build and run every test
+.EXAMPLE
+    ./build.ps1 -NoBuild -NoTests -TestData Verify -TestDataPackage all  # check every package
 #>
 param(
     [ValidateSet('Debug', 'Release')] [string]$Configuration = 'Release',
@@ -70,6 +89,8 @@ param(
     [string]$TestName,
     [string]$TestCategory,
     [switch]$RequireData,
+    [ValidateSet('Fetch', 'Verify')] [string]$TestData,
+    [string[]]$TestDataPackage,
     [switch]$Coverage,
     [switch]$TeamCity,
     [ValidateSet('quiet', 'minimal', 'normal', 'detailed', 'diagnostic')]
@@ -160,6 +181,43 @@ if (-not (Test-Path -LiteralPath $sln)) {
 }
 if ($Torch -eq 'cuda') {
     Test-CudaHardware
+}
+
+if ($TestData) {
+    . (Join-Path $scriptRoot 'scripts/TestData.ps1')
+    try {
+        $dataRoot = Get-TestDataRoot -Create:($TestData -eq 'Fetch')
+        $selected = Select-TestDataPackages (Get-TestDataPackages (Join-Path $scriptRoot 'testdata.json')) $TestCategory $TestDataPackage
+    } catch {
+        Stop-WithProblem $_.Exception.Message
+    }
+    Write-Step ("{0} test data in {1}: {2}" -f $TestData, $dataRoot, (($selected | ForEach-Object { $_.folder }) -join ', '))
+    $problems = @()
+    foreach ($package in $selected) {
+        # Fetch checks what it extracts; Verify checks everything, however long that takes.
+        $check = $TestData -eq 'Verify' -or -not (Test-Path -LiteralPath (Join-Path $dataRoot $package.folder))
+        if ($TestData -eq 'Fetch') {
+            $problem = Invoke-TestDataFetch $package $dataRoot
+            if ($problem) {
+                $problems += $problem
+                continue
+            }
+        }
+        if ($check) {
+            $problems += @(Invoke-TestDataVerify $package $dataRoot)
+        }
+    }
+    if ($TestData -eq 'Verify') {
+        $problem = Test-PretrainedModels $scriptRoot
+        if ($problem) {
+            $problems += $problem
+        }
+    }
+    if ($problems.Count -gt 0) {
+        $problems | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
+        Stop-WithProblem ("{0} test data: {1} problem(s)" -f $TestData, $problems.Count)
+    }
+    Write-Host "Test data ready in $dataRoot" -ForegroundColor Green
 }
 
 if (-not $NoBuild) {

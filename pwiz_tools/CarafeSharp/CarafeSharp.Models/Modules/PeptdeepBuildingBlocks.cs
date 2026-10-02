@@ -330,4 +330,45 @@ namespace pwiz.CarafeSharp.Models.Modules
             return _attnSum.call(x);
         }
     }
+
+    /// <summary>
+    /// <c>Encoder_26AA_Mod_Charge_CNN_LSTM_AttnSum</c> (legacy name
+    /// <c>Input_AA_CNN_LSTM_cat_Charge_Encoder</c>): <see cref="EncoderAaModCnnLstmAttnSum"/> with
+    /// the scaled precursor charge as one more input feature at every position.
+    /// </summary>
+    internal sealed class EncoderAaModChargeCnnLstmAttnSum : nn.Module<Tensor, Tensor, Tensor, Tensor>
+    {
+        [ComponentName(Name = @"mod_nn")]
+        private readonly ModEmbeddingFixFirstK _modNn;
+        [ComponentName(Name = @"input_cnn")]
+        private readonly SeqCnn _inputCnn;
+        [ComponentName(Name = @"hidden_nn")]
+        private readonly SeqLstm _hiddenNn;
+        [ComponentName(Name = @"attn_sum")]
+        private readonly SeqAttentionSum _attnSum;
+
+        public EncoderAaModChargeCnnLstmAttnSum(int outFeatures, int numLstmLayers)
+            : base(nameof(EncoderAaModChargeCnnLstmAttnSum))
+        {
+            const int inputDim = PeptdeepConstants.AA_EMBEDDING_SIZE + PeptdeepConstants.MOD_HIDDEN + 1;
+            _modNn = new ModEmbeddingFixFirstK(PeptdeepConstants.MOD_HIDDEN);
+            _inputCnn = new SeqCnn(inputDim);
+            _hiddenNn = new SeqLstm(inputDim * 4, outFeatures, numLstmLayers);
+            _attnSum = new SeqAttentionSum(outFeatures);
+            RegisterComponents();
+        }
+
+        /// <param name="aaIndices">Residue indices <c>[batch, n + 2]</c>.</param>
+        /// <param name="modX">Modification features <c>[batch, n + 2, 109]</c>.</param>
+        /// <param name="charges">Scaled charges <c>[batch, 1]</c> (<see cref="PeptdeepFeaturizer.Charges"/>).</param>
+        public override Tensor forward(Tensor aaIndices, Tensor modX, Tensor charges)
+        {
+            var mod = _modNn.call(modX);
+            var aa = nn.functional.one_hot(aaIndices, PeptdeepConstants.AA_EMBEDDING_SIZE).to_type(ScalarType.Float32);
+            var charge = charges.unsqueeze(1).repeat(1, mod.size(1), 1);
+            var x = _inputCnn.call(cat(new[] { aa, mod, charge }, 2));
+            x = _hiddenNn.call(x);
+            return _attnSum.call(x);
+        }
+    }
 }

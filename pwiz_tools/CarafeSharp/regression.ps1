@@ -223,31 +223,9 @@ function Write-Step([string]$Message) {
 }
 
 # ---------------------------------------------------------------------------
-# Test data packages (the rules of CarafeSharp.Test/TestData.cs)
+# Test data packages (the rules of CarafeSharp.Test/TestData.cs, in scripts/TestData.ps1)
 # ---------------------------------------------------------------------------
-function Get-DownloadsPath {
-    if ($env:SKYLINE_DOWNLOAD_PATH) {
-        return $env:SKYLINE_DOWNLOAD_PATH
-    }
-    if ($IsWindows) {
-        $key = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders'
-        $value = (Get-ItemProperty -Path $key -ErrorAction SilentlyContinue).'{374DE290-123F-4565-9164-39C4925E467B}'
-        if ($value) {
-            return [Environment]::ExpandEnvironmentVariables($value)
-        }
-    }
-    return Join-Path ([Environment]::GetFolderPath('UserProfile')) 'Downloads'
-}
-
-function Get-TestDataRoot {
-    if ($env:CARAFESHARP_TESTDATA) {
-        if (-not (Test-Path -LiteralPath $env:CARAFESHARP_TESTDATA -PathType Container)) {
-            throw "CARAFESHARP_TESTDATA names a folder that does not exist: $env:CARAFESHARP_TESTDATA"
-        }
-        return (Resolve-Path -LiteralPath $env:CARAFESHARP_TESTDATA).ProviderPath
-    }
-    return Join-Path (Get-DownloadsPath) 'Perftests'
-}
+. (Join-Path $scriptRoot 'scripts/TestData.ps1')
 
 function Resolve-PackageFile([hashtable]$Entry) {
     $package = $packages | Where-Object { $_.id -eq $Entry.Package }
@@ -256,7 +234,7 @@ function Resolve-PackageFile([hashtable]$Entry) {
     }
     $folder = Join-Path $testDataRoot $package.folder
     if (-not (Test-Path -LiteralPath $folder -PathType Container)) {
-        throw "Missing test data: extract $($package.zip) into $testDataRoot (or set CARAFESHARP_TESTDATA)."
+        throw "Missing test data: run build.ps1 -TestData Fetch, or extract $($package.zip) into $testDataRoot (or set CARAFESHARP_TESTDATA)."
     }
     if (-not (Test-Path -LiteralPath (Join-Path $folder 'MANIFEST.sha256'))) {
         throw "$folder has no MANIFEST.sha256, so it is not a complete copy of $($package.zip). Delete the folder and extract the zip again."

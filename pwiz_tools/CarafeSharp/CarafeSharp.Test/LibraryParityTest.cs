@@ -374,14 +374,14 @@ namespace pwiz.CarafeSharp.Test
                     for (int k = 0; k < 4; k++)
                         intensities[row * 4 + k] = predicted[k][starts[i] + row];
                 }
-                var spectrum = builder.Build(isoform, precursor, intensities, 4, retentionTimes[ids[i]]);
+                var spectrum = builder.Build(isoform, precursor, intensities, 4, retentionTimes[ids[i]], null);
                 if (spectrum == null)
                 {
                     dropped++;
                     continue;
                 }
                 expected[CarafeLibraryTsv.Key(spectrum.ModifiedPeptide, spectrum.Charge.ToString(CultureInfo.InvariantCulture), spectrum.PrecursorMz)] =
-                    CarafeLibraryTsvWriter.FormatRows(spectrum);
+                    CarafeLibraryTsvWriter.FormatRows(spectrum, false);
             }
         }
 

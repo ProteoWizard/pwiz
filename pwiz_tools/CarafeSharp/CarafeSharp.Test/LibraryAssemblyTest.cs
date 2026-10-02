@@ -276,11 +276,11 @@ namespace pwiz.CarafeSharp.Test
             var proteins = new Dictionary<string, string> { { @"PEPTIDEK", @"sp|P1|A" } };
             var fast = new LibrarySettings { Fast = true };
             var spectrum = new LibrarySpectrumBuilder(fast, LibraryOutputs.FromFormat(fast.LibraryFormat, true), proteins)
-                .Build(isoform, precursor, predicted, 4, 10);
+                .Build(isoform, precursor, predicted, 4, 10, null);
             Assert.AreEqual(LibrarySpectrum.NO_PROTEIN, spectrum.ProteinId);
             var notFast = new LibrarySettings();
             var builder = new LibrarySpectrumBuilder(notFast, LibraryOutputs.FromFormat(notFast.LibraryFormat, false), proteins);
-            var missing = Assert.ThrowsException<InvalidDataException>(() => builder.Build(isoform, precursor, predicted, 4, 10));
+            var missing = Assert.ThrowsException<InvalidDataException>(() => builder.Build(isoform, precursor, predicted, 4, 10, null));
             Assert.AreEqual(string.Format(LibrarySpectrumBuilder.PEPTIDE_NOT_FOUND_FORMAT, isoform.Sequence), missing.Message);
         }
 

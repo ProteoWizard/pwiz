@@ -123,6 +123,47 @@ fine-tuned model predicts normalized RT, and its library RT is `rt_pred * rt_max
 `rt.safetensors` carries the metadata `carafesharp.rt_model = chronologer` and
 `carafesharp.rt_scale = normalized_rt`.
 
+## CCS model: `Model_CCS_LSTM` (ion mobility, `-ccs`)
+
+State dict (713,452 parameters): the RT model's layout under `ccs_encoder.*` with one more input
+channel, Conv1d(36, 36, k=3/5/7) and LSTM(144, 128, 2 layers, bidirectional); then
+`ccs_decoder.nn.{0,1,2}.*`, Linear(257, 64), PReLU, Linear(64, 1).
+
+The encoder (`Encoder_26AA_Mod_Charge_CNN_LSTM_AttnSum`) concatenates `one_hot(aa, 27)`, the
+8-wide mod embedding and the scaled charge (`charge * 0.1`, float32, repeated at every position).
+The decoder reads the attention sum with the scaled charge appended. Output `[B]` is the
+collisional cross section in square angstroms, clipped at 0 (Carafe's `ModelInterface` clips every
+prediction at `min_pred_value` 0, as for RT).
+
+1/K0 (timsTOF reduced ion mobility, V s/cm^2), from alphabase's `ccs_to_mobility_bruker`:
+`M = precursor_mz * z`, `mu = M * 28 / (M + 28)`, `1/K0 = ccs * sqrt(mu) / z / 1059.62245`. The
+precursor m/z is alphabase's (residues, plus water, plus the mods, over z, plus a proton), not
+the compomics m/z the library writes.
+
+In the library (`-ccs`):
+- The model, as Carafe's `ai_pred.py` picks it: with `-tf all` (the default) the model folder's
+  Carafe `ccs_model.pt` (from a timsTOF training run) when there is one, else `generic/ccs.pth`;
+  any other `-tf` takes `generic/ccs.pth`. Carafe predicts no CCS for `-tf rt` or `ms2` and then
+  fails, so CarafeSharp refuses `-ccs` with them. Carafe takes `generic/ccs.pth` in the phospho and
+  ubiquitin modes too.
+- With training, as Carafe does on Osprey's results, which carry no ion mobility: the CCS model
+  is not fine-tuned, and the library after training predicts 1/K0 as above (with a warning).
+- TSV: Carafe's `IonMobility` column after `Tr_recalibrated`, `%.4f`.
+- .blib: `ionMobility` with `ionMobilityType` 2 (`inverseK0(Vsec/cm^2)`) in both `RefSpectra` and
+  `RetentionTimes`, and `collisionalCrossSectionSqA` NULL, as Carafe writes them. Given a CCS,
+  Skyline would convert it with the data file's own calibration and use that instead of the
+  library's 1/K0 (`Library.GetLibraryMeasuredIonMobilityAndCCS`); without one it uses the 1/K0
+  and derives the CCS itself where the data file allows.
+
+Parity:
+- On 23 precursors (charges 1 to 4, lengths 7 to 30, N-term, C-term and residue mods), CCS and
+  1/K0 are identical to Carafe 2.2.0's Python on this machine's CPU (`TestCcsPrediction`).
+- End to end against the Carafe 2.2.0 jar on 30 HeLa proteins (1,268 precursors, CPU), the TSV
+  `IonMobility` column is identical on every row.
+- In the .blib, 1/K0 agrees to 2e-16 wherever the float32 CCS is the same (753 of 777
+  unmodified precursors). The rest differ by 1 or 2 float32 ulps, which batch composition moves,
+  at most 1.5e-7 in 1/K0.
+
 ## Featurization
 
 - Residue indices: `ord(aa) - 64`, so A=1 .. Z=26, padded with 0 at both ends: `[B, nAA+2]`.
@@ -180,7 +221,7 @@ fine-tuned model predicts normalized RT, and its library RT is `rt_pred * rt_max
 
 ## Prediction post-processing
 
-- Group by nAA ascending, batch 512 (MS2) or 1024 (RT), eval mode, no gradient.
+- Group by nAA ascending, batch 512 (MS2) or 1024 (RT and CCS), eval mode, no gradient.
 - MS2: per precursor, divide by the maximum over all 8 columns (1 if that maximum is not
   positive), then set values below 1e-4 (negatives included) to 0.
 - Fragment m/z (alphabase): residue masses from formulas with most-abundant-isotope element
@@ -190,7 +231,8 @@ fine-tuned model predicts normalized RT, and its library RT is `rt_pred * rt_max
 
 ## Fine-tuning (`ai.py` v2)
 
-- Order for `--tf_type all`: RT, CCS (if at least 100 rows), MS2. Java passes `--seed 2024`
+- Order for `--tf_type all`: RT, CCS (if at least 100 rows; not in CarafeSharp, which does not
+  fine-tune CCS), MS2. Java passes `--seed 2024`
   and never passes `--use_best_model`/`--early_stop`, so the **last epoch** is kept.
 - Split: `n_test = max(1, min(1000, ceil(0.1 N) - 10))`; training rows are
   `psm_sampling_with_important_mods(N - n_test, top 10 mods, +50 per mod, seed 1337)`; test
