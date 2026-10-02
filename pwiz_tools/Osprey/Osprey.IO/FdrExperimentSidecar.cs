@@ -55,21 +55,26 @@ namespace pwiz.Osprey.IO
     /// is named after one of the input files - which is a real configuration, and a guard that
     /// cannot fire is better than one that has to be checked.</para>
     ///
-    /// Format (32-byte header + N x 36-byte records, all little-endian):
+    /// Format (32-byte header + N x 52-byte records, all little-endian):
     /// <code>
     ///   magic         [0..8]   = b"OSPRYEXP"
-    ///   version       [8]      = u8 (= 1)
+    ///   version       [8]      = u8 (= 3)
     ///   pass          [9]      = u8 (1 = first-pass, 2 = second-pass)
     ///   reserved      [10..16] = 6 bytes (zero)
     ///   entry_count   [16..24] = u64
     ///   reserved      [24..32] = 8 bytes (zero)
-    ///   body          [32..]   = entry_count * 36 bytes:
+    ///   body          [32..]   = entry_count * 52 bytes:
     ///                            [0..4]   u32 entry_id
     ///                            [4..12]  f64 experiment_precursor_qvalue
     ///                            [12..20] f64 experiment_peptide_qvalue
     ///                            [20..28] f64 experiment_protein_qvalue
     ///                            [28..36] f64 experiment_aggregate_score
+    ///                            [36..44] f64 pep
+    ///                            [44..52] f64 peptide_pep
     /// </code>
+    ///
+    /// <para>v2 added <c>pep</c>; v3 added <c>peptide_pep</c>, the posterior error probability
+    /// of the experiment-wide peptide-level competition.</para>
     ///
     /// <para>The magic differs from the per-file sidecar's <c>OSPRYFDR</c> deliberately: the two
     /// files share a header shape and a pass byte, so identical magic would let one be read as
@@ -89,9 +94,9 @@ namespace pwiz.Osprey.IO
         private static readonly byte[] Magic =
             { (byte)'O', (byte)'S', (byte)'P', (byte)'R', (byte)'Y', (byte)'E', (byte)'X', (byte)'P' };
 
-        public const byte FormatVersion = 2;
+        public const byte FormatVersion = 3;
         public const int HeaderLength = 32;
-        public const int RecordLength = 44;
+        public const int RecordLength = 52;
 
         /// <summary>
         /// Path for the experiment-wide sidecar of one pass: named after the output blib's stem,
@@ -223,6 +228,7 @@ namespace pwiz.Osprey.IO
                         bw.Write(r.ExperimentProteinQvalue);        // [20..28]
                         bw.Write(r.ExperimentAggregateScore);       // [28..36]
                         bw.Write(r.Pep);                            // [36..44]
+                        bw.Write(r.PeptidePep);                     // [44..52]
                     }
                 }
                 saver.Commit();
@@ -231,7 +237,7 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Stream every record to <paramref name="onRecord"/> in stored (ascending entry_id)
-        /// order, one 36-byte record resident at a time. Returns false - with whatever partial
+        /// order, one record resident at a time. Returns false - with whatever partial
         /// callback effects the caller must then discard - on a missing file or any header /
         /// size mismatch.
         /// </summary>
@@ -269,7 +275,8 @@ namespace pwiz.Osprey.IO
                             BitConverter.ToDouble(record, 12),
                             BitConverter.ToDouble(record, 20),
                             BitConverter.ToDouble(record, 28),
-                            BitConverter.ToDouble(record, 36)));
+                            BitConverter.ToDouble(record, 36),
+                            BitConverter.ToDouble(record, 44)));
                     }
                 }
             }

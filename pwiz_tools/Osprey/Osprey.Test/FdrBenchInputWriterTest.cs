@@ -421,10 +421,10 @@ namespace pwiz.Osprey.Test
                             if (entry.IsDecoy)
                                 continue;
                             var record = new FdrScoreRecord(entry.EntryId, entry.Score,
-                                entry.RunPrecursorQvalue, entry.RunPeptideQvalue, entry.ApexRt);
+                                entry.RunPrecursorQvalue, entry.RunPeptideQvalue, entry.ApexRt, 1.0);
                             var experiment = new FdrExperimentRecord(entry.EntryId,
                                 entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue,
-                                1.0, 0.0, 1.0);
+                                1.0, 0.0, 1.0, 1.0);
                             sink.Add(run.Key, FdrBenchInputWriter.Row.FromSidecar(
                                 entry.ModifiedSequence, entry.Charge, in record, in experiment,
                                 sink.EffectiveLevel));

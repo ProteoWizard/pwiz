@@ -560,6 +560,8 @@ namespace pwiz.Osprey.FDR
                     fdrEntry.ExperimentPrecursorQvalue = result.ExperimentPrecursorQvalue;
                     fdrEntry.ExperimentPeptideQvalue = result.ExperimentPeptideQvalue;
                     fdrEntry.Pep = result.Pep;
+                    fdrEntry.ExperimentPeptidePep = result.ExperimentPeptidePep;
+                    fdrEntry.RunPep = result.RunPep;
                     fdrEntry.ExperimentAggregateScore = result.ExperimentAggregateScore;
                 }
             }

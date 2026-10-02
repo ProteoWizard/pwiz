@@ -819,7 +819,7 @@ namespace pwiz.Osprey.Test
                 {
                     acc.Add(fi, e.ModifiedSequence, e.Charge, e.EntryId, e.IsDecoy, e.Score,
                         new FdrQValues(e.RunPrecursorQvalue, e.RunPeptideQvalue,
-                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0));
+                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0, 1.0, 1.0));
                 }
             }
             var streamed = acc.Build(contrib);
@@ -855,7 +855,7 @@ namespace pwiz.Osprey.Test
                 foreach (var e in perFileEntries[fi].Value)
                     accNM.Add(fi, e.ModifiedSequence, e.Charge, e.EntryId, e.IsDecoy, e.Score,
                         new FdrQValues(e.RunPrecursorQvalue, e.RunPeptideQvalue,
-                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0));
+                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0, 1.0, 1.0));
             Assert.AreEqual(
                 JsonConvert.SerializeObject(batchNM, settings),
                 JsonConvert.SerializeObject(accNM.Build(contrib), settings),
@@ -942,7 +942,7 @@ namespace pwiz.Osprey.Test
                 {
                     acc.Add(fi, e.ModifiedSequence, e.Charge, e.EntryId, e.IsDecoy, e.Score,
                         new FdrQValues(e.RunPrecursorQvalue, e.RunPeptideQvalue,
-                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0));
+                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0, 1.0, 1.0));
                 }
                 ModelDiagnosticsData.ObserveCoAssignmentRun(coAssign, fi,
                     perFileEntries[fi].Value, cls, runFdr, level);
@@ -989,7 +989,7 @@ namespace pwiz.Osprey.Test
                 {
                     accT.Add(fi, e.ModifiedSequence, e.Charge, e.EntryId, e.IsDecoy, e.Score,
                         new FdrQValues(e.RunPrecursorQvalue, e.RunPeptideQvalue,
-                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0));
+                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0, 1.0, 1.0));
                 }
                 ModelDiagnosticsData.ObserveCoAssignmentRun(coAssignT, fi,
                     perFileEntries[fi].Value, cls, runFdr, level);
@@ -1025,7 +1025,7 @@ namespace pwiz.Osprey.Test
                 {
                     accS.Add(fi, e.ModifiedSequence, e.Charge, e.EntryId, e.IsDecoy, e.Score,
                         new FdrQValues(e.RunPrecursorQvalue, e.RunPeptideQvalue,
-                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0));
+                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0, 1.0, 1.0));
                 }
                 ModelDiagnosticsData.ObserveCoAssignmentRun(coAssignS, fi,
                     perFileEntries[fi].Value, cls, runFdr, level);

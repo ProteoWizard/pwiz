@@ -4001,7 +4001,7 @@ namespace pwiz.Osprey.Test
                 AssertExperimentCollapseRejectsDisagreement();
                 AssertUnreadableExperimentSidecarStopsTheRun(dir);
                 AssertSidecarsRejectEachOther(dir);
-                AssertPerFileSidecarCarriesNoPep(dir);
+                AssertPerFileSidecarCarriesRunScopeOnly(dir);
             }
             finally
             {
@@ -4031,7 +4031,7 @@ namespace pwiz.Osprey.Test
         private static void AssertPartialUpdatePreservesEveryField()
         {
             var accumulator = new FdrExperimentAccumulator();
-            accumulator.Add(7, 0.011, 0.012, 1.0, -1.5, 0.25);
+            accumulator.Add(7, 0.011, 0.012, 1.0, -1.5, 0.25, 0.375);
             accumulator.SetProteinQvalue(7, 0.0042);
 
             var updated = accumulator.Records[7];
@@ -4041,6 +4041,7 @@ namespace pwiz.Osprey.Test
             AssertBitEqual(0.0042, updated.ExperimentProteinQvalue);
             AssertBitEqual(-1.5, updated.ExperimentAggregateScore);
             AssertBitEqual(0.25, updated.Pep);
+            AssertBitEqual(0.375, updated.PeptidePep);
         }
 
         /// <summary>
@@ -4061,10 +4062,10 @@ namespace pwiz.Osprey.Test
         private static void AssertRunQFloorsAreAppliedNotStored()
         {
             var accumulator = new FdrExperimentAccumulator();
-            accumulator.Add(1, 0.001, 0.002, 0.5, -1.0, 0.1);   // both floors bite
-            accumulator.Add(2, 0.030, 0.040, 0.6, -2.0, 0.2);   // neither floor bites
-            accumulator.Add(3, 0.004, 0.050, 0.7, -3.0, 0.3);   // only the precursor floor bites
-            accumulator.Add(4, 0.005, 0.006, 0.8, -4.0, 0.4);   // floors unknown
+            accumulator.Add(1, 0.001, 0.002, 0.5, -1.0, 0.1, 0.15);   // both floors bite
+            accumulator.Add(2, 0.030, 0.040, 0.6, -2.0, 0.2, 0.25);   // neither floor bites
+            accumulator.Add(3, 0.004, 0.050, 0.7, -3.0, 0.3, 0.35);   // only the precursor floor bites
+            accumulator.Add(4, 0.005, 0.006, 0.8, -4.0, 0.4, 0.45);   // floors unknown
 
             var floors = new Dictionary<uint, (double Entry, double Peptide)>
             {
@@ -4094,6 +4095,7 @@ namespace pwiz.Osprey.Test
             AssertBitEqual(0.5, accumulator.Records[1].ExperimentProteinQvalue);
             AssertBitEqual(-1.0, accumulator.Records[1].ExperimentAggregateScore);
             AssertBitEqual(0.1, accumulator.Records[1].Pep);
+            AssertBitEqual(0.15, accumulator.Records[1].PeptidePep);
             Assert.AreEqual(4, accumulator.Count);
         }
 
@@ -4103,12 +4105,12 @@ namespace pwiz.Osprey.Test
             AssertRunQFloorsAreAppliedNotStored();
             string path = Path.Combine(dir, "analysis.1st-pass.fdr_experiment.bin");
             var accumulator = new FdrExperimentAccumulator();
-            accumulator.Add(7, 0.011, 0.012, 0.013, -1.5, 1.0);
-            accumulator.Add(2, 0.021, 0.022, 0.023, -2.5, 1.0);
-            accumulator.Add(9, 0.031, 0.032, 0.033, -3.5, 1.0);
+            accumulator.Add(7, 0.011, 0.012, 0.013, -1.5, 1.0, 1.0);
+            accumulator.Add(2, 0.021, 0.022, 0.023, -2.5, 1.0, 1.0);
+            accumulator.Add(9, 0.031, 0.032, 0.033, -3.5, 0.034, 0.035);
             // A repeat sighting of an entry_id already held, with identical values: the ordinary
             // case, since every observation of a precursor carries the same experiment values.
-            accumulator.Add(2, 0.021, 0.022, 0.023, -2.5, 1.0);
+            accumulator.Add(2, 0.021, 0.022, 0.023, -2.5, 1.0, 1.0);
             Assert.AreEqual(3, accumulator.Count);
 
             FdrExperimentSidecar.Write(path, accumulator.Records, FdrScoresSidecar.Pass.FirstPass);
@@ -4128,6 +4130,8 @@ namespace pwiz.Osprey.Test
             AssertBitEqual(0.032, map[9].ExperimentPeptideQvalue);
             AssertBitEqual(0.033, map[9].ExperimentProteinQvalue);
             AssertBitEqual(-3.5, map[9].ExperimentAggregateScore);
+            AssertBitEqual(0.034, map[9].Pep);
+            AssertBitEqual(0.035, map[9].PeptidePep);
 
             // SetProteinQvalue replaces only the column protein FDR owns, and ignores an
             // entry_id the accumulator never saw rather than inventing a record for it.
@@ -4163,8 +4167,8 @@ namespace pwiz.Osprey.Test
             // Control: a valid file of the expected pass reads back with its records.
             string path = Path.Combine(dir, "unreadable-probe.2nd-pass.fdr_experiment.bin");
             var accumulator = new FdrExperimentAccumulator();
-            accumulator.Add(4, 0.041, 0.042, 0.043, -4.5, 1.0);
-            accumulator.Add(5, 0.051, 0.052, 0.053, -5.5, 1.0);
+            accumulator.Add(4, 0.041, 0.042, 0.043, -4.5, 1.0, 1.0);
+            accumulator.Add(5, 0.051, 0.052, 0.053, -5.5, 1.0, 1.0);
             FdrExperimentSidecar.Write(path, accumulator.Records, pass);
             Assert.AreEqual(2, Pass2FdrSidecar.LoadExperimentRecordsFrom(path, pass).Count);
 
@@ -4192,10 +4196,10 @@ namespace pwiz.Osprey.Test
         private static void AssertExperimentCollapseRejectsDisagreement()
         {
             var accumulator = new FdrExperimentAccumulator();
-            accumulator.Add(4, 0.01, 0.02, 0.03, -1.0, 1.0);
+            accumulator.Add(4, 0.01, 0.02, 0.03, -1.0, 1.0, 1.0);
             try
             {
-                accumulator.Add(4, 0.01, 0.02, 0.03, -1.25, 1.0);
+                accumulator.Add(4, 0.01, 0.02, 0.03, -1.25, 1.0, 1.0);
                 Assert.Fail("Disagreeing experiment values for one entry_id must throw.");
             }
             catch (InvalidOperationException)
@@ -4216,7 +4220,7 @@ namespace pwiz.Osprey.Test
                 new List<FdrEntry> { MakeFdrEntry(1, -1.0, 0.01, 0.02) },
                 FdrScoresSidecar.Pass.FirstPass);
             var accumulator = new FdrExperimentAccumulator();
-            accumulator.Add(1, 0.01, 0.02, 0.03, -1.0, 1.0);
+            accumulator.Add(1, 0.01, 0.02, 0.03, -1.0, 1.0, 1.0);
             FdrExperimentSidecar.Write(experiment, accumulator.Records, FdrScoresSidecar.Pass.FirstPass);
 
             Assert.IsFalse(FdrExperimentSidecar.IsCurrentFormat(perFile, FdrScoresSidecar.Pass.FirstPass));
@@ -4227,34 +4231,33 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// A per-file sidecar carries NO PEP column, on either pass, and a second write of the
-        /// same records reproduces the file byte for byte (issue #4486).
+        /// A per-file sidecar carries only RUN-scope columns, on either pass, and a second write
+        /// of the same records reproduces the file byte for byte (issue #4486).
         ///
-        /// <para>This replaces a test that asserted a placeholder write plus <c>PatchPep</c>
-        /// equalled a single-phase write. That test passed for as long as the patch existed, and
-        /// the patch is exactly what it should have been questioning: PEP is one value per
-        /// base_id, so writing it per observation forced the second pass to reopen and rewrite
-        /// every per-run sidecar after the experiment fold. Those files are now written once and
-        /// never revisited, and PEP lives on <see cref="FdrExperimentRecord.Pep"/>.</para>
+        /// <para>The experiment-wide PEP is not one of them. It is one value per base_id, so
+        /// writing it per observation forced the second pass to reopen and rewrite every per-run
+        /// sidecar after the experiment fold; it lives on <see cref="FdrExperimentRecord.Pep"/>.
+        /// The RUN PEP is: it comes from this run's own competition and is final when the file
+        /// is written.</para>
         /// </summary>
-        private static void AssertPerFileSidecarCarriesNoPep(string dir)
+        private static void AssertPerFileSidecarCarriesRunScopeOnly(string dir)
         {
             string first = Path.Combine(dir, "a.2nd-pass.fdr_scores.bin");
             string second = Path.Combine(dir, "b.2nd-pass.fdr_scores.bin");
             // Non-sequential entry_ids, so a positional read cannot pass for a keyed one.
             var records = new List<FdrScoreRecord>
             {
-                new FdrScoreRecord(3, -2.0, 0.01, 0.02, 31.5),
-                new FdrScoreRecord(77, -1.0, 0.03, 0.04, 42.25),
+                new FdrScoreRecord(3, -2.0, 0.01, 0.02, 31.5, 0.125),
+                new FdrScoreRecord(77, -1.0, 0.03, 0.04, 42.25, 1.0),
             };
             FdrScoresSidecar.Write(first, records, FdrScoresSidecar.Pass.SecondPass);
             FdrScoresSidecar.Write(second, records, FdrScoresSidecar.Pass.SecondPass);
             CollectionAssert.AreEqual(File.ReadAllBytes(first), File.ReadAllBytes(second));
 
-            // The record is exactly entry_id + score + the two RUN q-values + the apex RT.
-            // Every one of those is RUN-scope and per-observation; an experiment-scope column
-            // reappearing here would widen it, and that is what this pins.
-            Assert.AreEqual(sizeof(uint) + 4 * sizeof(double), FdrScoresSidecar.RecordLength);
+            // The record is exactly entry_id + score + the two RUN q-values + the apex RT + the
+            // run PEP. Every one of those is RUN-scope and per-observation; an experiment-scope
+            // column reappearing here would widen it, and that is what this pins.
+            Assert.AreEqual(sizeof(uint) + 5 * sizeof(double), FdrScoresSidecar.RecordLength);
             Assert.AreEqual(FdrScoresSidecar.HeaderLength + records.Count * FdrScoresSidecar.RecordLength,
                 new FileInfo(first).Length);
 
@@ -4269,6 +4272,9 @@ namespace pwiz.Osprey.Test
             // file would notice if the two disagreed on its offset.
             AssertBitEqual(31.5, read[0].ApexRt);
             AssertBitEqual(42.25, read[1].ApexRt);
+            // The run PEP is the v8 column, added the same way.
+            AssertBitEqual(0.125, read[0].RunPep);
+            AssertBitEqual(1.0, read[1].RunPep);
 
             // WRITE-ONCE. Rewriting a sidecar inside one run is the defect class this whole
             // change exists to remove: the file no longer matches the validity sidecar that

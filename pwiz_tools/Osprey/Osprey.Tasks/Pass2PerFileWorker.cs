@@ -191,6 +191,7 @@ namespace pwiz.Osprey.Tasks
                 // Precursor-level path: keep peptide q in step with precursor q for the reported
                 // set (peptide-level FDR is not the target here).
                 e.RunPeptideQvalue = rq;
+                e.RunPep = competition.RunPep.TryGetValue(e.EntryId, out double pv) ? pv : 1.0;
             }
             return new Pass2FileResult(
                 competition,
@@ -309,7 +310,7 @@ namespace pwiz.Osprey.Tasks
                          .ThenBy(e => e.Charge).ThenBy(e => e.ScanNumber))
             {
                 records.Add(new FdrScoreRecord(
-                    e.EntryId, e.Score, e.RunPrecursorQvalue, e.RunPeptideQvalue, e.ApexRt));
+                    e.EntryId, e.Score, e.RunPrecursorQvalue, e.RunPeptideQvalue, e.ApexRt, e.RunPep));
             }
             // Checked HERE rather than at the write, so a pool that arrived short fails on the
             // node that built the records instead of somewhere downstream that can only see a

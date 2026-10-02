@@ -336,10 +336,14 @@ namespace pwiz.Osprey.FDR
             bool isSingleFile = uniqueFiles.Count <= 1;
 
             var runPrecursorQvalues = PercolatorQValues.ComputePerRunPrecursorQvalues(
-                finalScores, labels, entryIds, fileNames);
+                finalScores, labels, entryIds, fileNames, out double[] runPeps);
             var runPeptideQvalues = PercolatorQValues.ComputePerRunPeptideQvalues(
                 finalScores, labels, entryIds, fileNames, peptides);
 
+            // The peptide PEP comes from the experiment peptide competition either way; with
+            // one file that competition is the run's own.
+            var expPeptideCompetitionQvalues = PercolatorQValues.ComputeExperimentPeptideQvalues(
+                finalScores, labels, entryIds, peptides, out double[] peptidePeps);
             double[] expPrecursorQvalues;
             double[] expPeptideQvalues;
             if (isSingleFile)
@@ -351,8 +355,7 @@ namespace pwiz.Osprey.FDR
             {
                 expPrecursorQvalues = PercolatorQValues.ComputeExperimentPrecursorQvalues(
                     finalScores, labels, entryIds);
-                expPeptideQvalues = PercolatorQValues.ComputeExperimentPeptideQvalues(
-                    finalScores, labels, entryIds, peptides);
+                expPeptideQvalues = expPeptideCompetitionQvalues;
             }
 
             // Best-of-runs monotonicity (issue #4390 clamp, memory-bounded flat form): floor
@@ -401,7 +404,9 @@ namespace pwiz.Osprey.FDR
                     RunPeptideQvalue = runPeptideQvalues[i],
                     ExperimentPrecursorQvalue = expPrecursorQvalues[i],
                     ExperimentPeptideQvalue = expPeptideQvalues[i],
-                    Pep = peps[i]
+                    Pep = peps[i],
+                    ExperimentPeptidePep = peptidePeps[i],
+                    RunPep = runPeps[i]
                 });
             }
 

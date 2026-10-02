@@ -24,17 +24,19 @@ a value both routes copy identically from pass 1. See issue #4559.
 
 Two artifacts since the v5 scope split (issue #4486), and this decodes both.
 
-Per-file run-scope (Osprey.IO\FdrScoresSidecar.cs), v7: 32-byte header, 36-byte records,
-  entry_id u32 @0, score f64 @4, run_precursor_q @12, run_peptide_q @20, apex_rt @28.
-  NO pep: it is experiment-scope and moved to the experiment sidecar (issue #4486).
+Per-file run-scope (Osprey.IO\FdrScoresSidecar.cs), v8: 32-byte header, 44-byte records,
+  entry_id u32 @0, score f64 @4, run_precursor_q @12, run_peptide_q @20, apex_rt @28,
+  run_pep @36.
+  The experiment-wide pep is experiment-scope and moved to the experiment sidecar (issue
+  #4486); run_pep (v8) is this run's own competition's PEP.
   apex_rt arrived at v7 (issue #4522) so the model-diagnostics co-assignment panel stops
   re-reading a whole column out of every .scores.parquet to recover it.
   Magic OSPRYFDR. One record per OBSERVATION, one file per input.
 
-Analysis-wide experiment-scope (Osprey.IO\FdrExperimentSidecar.cs), v1: 32-byte header,
-  v2: 44-byte records, entry_id u32 @0, experiment_precursor_q f64 @4,
+Analysis-wide experiment-scope (Osprey.IO\FdrExperimentSidecar.cs), v3: 32-byte header,
+  52-byte records, entry_id u32 @0, experiment_precursor_q f64 @4,
   experiment_peptide_q @12, experiment_protein_q @20, experiment_aggregate_score @28,
-  pep @36.
+  pep @36, peptide_pep @44.
   Magic OSPRYEXP. One record per DISTINCT entry_id, ONE file per pass per analysis, named
   after the output blib.
 
@@ -180,15 +182,15 @@ public class Pass2ProteinQLiveness
 public static class OspreyFdrSidecarComparer
 {
     private const int HeaderLen = 32;
-    private const int RecordLen = 36;
-    private const byte ExpectedVersion = 7;
+    private const int RecordLen = 44;
+    private const byte ExpectedVersion = 8;
     private static readonly byte[] Magic = { 0x4F, 0x53, 0x50, 0x52, 0x59, 0x46, 0x44, 0x52 }; // OSPRYFDR
 
     // The analysis-wide experiment-scope sidecar (format v5, issue #4486): its own magic, its
     // own version, one record per DISTINCT entry_id.
     public const int ExperimentHeaderLen = 32;
-    public const int ExperimentRecordLen = 44;
-    private const byte ExpectedExperimentVersion = 2;
+    public const int ExperimentRecordLen = 52;
+    private const byte ExpectedExperimentVersion = 3;
     private static readonly byte[] ExperimentMagic =
         { 0x4F, 0x53, 0x50, 0x52, 0x59, 0x45, 0x58, 0x50 }; // OSPRYEXP
 
@@ -208,6 +210,7 @@ public static class OspreyFdrSidecarComparer
         // pool on the other - so a divergence here would not be a shared defect the way an
         // arithmetic slip in a q-value can be.
         new FdrSidecarField { Name = "apex_rt",              Offset = 28 },
+        new FdrSidecarField { Name = "run_pep",              Offset = 36 },
     };
 
     /// The experiment-scope record's fields, in its own file. Kept as a separate table for the
@@ -220,6 +223,7 @@ public static class OspreyFdrSidecarComparer
         new FdrSidecarField { Name = "experiment_protein_qvalue",   Offset = 20 },
         new FdrSidecarField { Name = "experiment_aggregate_score",  Offset = 28 },
         new FdrSidecarField { Name = "pep",                          Offset = 36 },
+        new FdrSidecarField { Name = "peptide_pep",                  Offset = 44 },
     };
 
     // Rust's FUSED per-file sidecar (write_fdr_scores_sidecar, pipeline.rs): the same nine
@@ -642,7 +646,7 @@ public static class OspreyFdrSidecarComparer
     /// The size arithmetic is checked: 68 divides many lengths, so a corrupt count can
     /// satisfy the size test by wrapping mod 2^64 and then walk off the end of the buffer.
     /// The canonical reader wraps the identical expression for the identical reason.
-    /// Read + validate an EXPERIMENT-scope sidecar (own magic, own version, 36-byte records).
+    /// Read + validate an EXPERIMENT-scope sidecar (own magic, own version, own record length).
     /// Same contract as ReadIfValid: null with a NAMED problem rather than a silent skip, because
     /// a gate that reports a false PASS is worse than no gate.
     public static byte[] ReadExperimentIfValid(string path, int expectedPass, out long count, out string problem)
@@ -692,7 +696,7 @@ public static class OspreyFdrSidecarComparer
     }
 
     /// Read + validate Rust's FUSED per-file sidecar. Same magic as the C# run-scope file, so
-    /// the VERSION byte is the only thing that separates the two layouts - and a 36-byte file
+    /// the VERSION byte is the only thing that separates the two layouts - and a C# run-scope file
     /// read at a 68-byte stride produces plausible garbage rather than an error, which is why
     /// the version is refused by name before the size arithmetic is trusted.
     private static byte[] ReadFusedIfValid(

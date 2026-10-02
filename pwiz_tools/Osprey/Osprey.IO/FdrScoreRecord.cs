@@ -25,13 +25,14 @@ namespace pwiz.Osprey.IO
 {
     /// <summary>
     /// One per-file <c>.fdr_scores.bin</c> record's payload: the RUN-scope statistics for one
-    /// OBSERVATION - entry_id + SVM score + the two run q-values + the detection apex RT.
+    /// OBSERVATION - entry_id + SVM score + the two run q-values + the detection apex RT + the
+    /// run PEP.
     /// Decoupled from any resident buffer (issue #4355 struct-shrink S0), because the lean
     /// <c>FdrProjection</c> does not carry the q-value outputs, so the sidecar writers assemble
     /// records
     /// of this shape and hand them to
     /// <see cref="FdrScoresSidecar.Write(string, System.Collections.Generic.IReadOnlyList{FdrScoreRecord}, FdrScoresSidecar.Pass)"/>.
-    /// The 36-byte layout stays single-sourced through <c>FdrScoresSidecar.WriteRecord</c>.
+    /// The byte layout stays single-sourced through <c>FdrScoresSidecar.WriteRecord</c>.
     ///
     /// <para>The four EXPERIMENT-scope columns this struct used to carry -
     /// <c>experiment_precursor_qvalue</c>, <c>experiment_peptide_qvalue</c>,
@@ -72,30 +73,32 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public readonly double ApexRt;
 
-        // NO Pep COLUMN, on either pass (issue #4486). PEP is one value per base_id -
-        // PepEstimator.PosteriorError over the single winning observation - and storing it here
-        // meant writing that one fact into every observation of the precursor, real on the winner
-        // and 1.0 everywhere else. The 1.0 was never a posterior error probability; it was a
-        // sentinel meaning "not the row the estimate was computed on", i.e. a materialized
-        // left-outer-join. It also could not be known until the whole experiment had been folded,
-        // so the 2nd pass re-opened and rewrote every per-run sidecar afterwards, which is what
-        // broke these files' immutability and forced the experiment-wide stage to hold write
-        // access to output it does not own.
-        //
-        // The winner fact now lives once on FdrExperimentRecord (Pep + PepWinnerFileIndex) and
-        // consumers that want the per-observation view join to it at read time via
-        // FdrExperimentRecord.PepForFile. Both passes store it the same way, which they did not
-        // before: pass 1 wrote a final value once, pass 2 wrote a placeholder and patched it.
+        /// <summary>
+        /// This observation's RUN-level posterior error probability (format v8): the PEP of
+        /// this file's own precursor-level target/decoy competition, the one that gives
+        /// <see cref="RunPrecursorQvalue"/>, fitted over that file's winners. Real on the
+        /// observation that won its base_id's competition in this file, and 1.0 on the side
+        /// that lost, exactly as the run q-value beside it is 1.0 on a loser.
+        ///
+        /// <para>Not the experiment-wide PEP this file once carried (dropped at v6, issue #4486).
+        /// That one was fitted over the whole analysis, so it was real on a single observation
+        /// per precursor and a sentinel everywhere else, and it could not be known until every
+        /// run had been folded. This one is a property of this run alone and is final when the
+        /// file is written, which is what lets it live in a write-once per-run file. The
+        /// experiment-wide value is <see cref="FdrExperimentRecord.Pep"/>.</para>
+        /// </summary>
+        public readonly double RunPep;
 
         public FdrScoreRecord(
             uint entryId, double score,
-            double runPrecursorQvalue, double runPeptideQvalue, double apexRt)
+            double runPrecursorQvalue, double runPeptideQvalue, double apexRt, double runPep)
         {
             EntryId = entryId;
             Score = score;
             RunPrecursorQvalue = runPrecursorQvalue;
             RunPeptideQvalue = runPeptideQvalue;
             ApexRt = apexRt;
+            RunPep = runPep;
         }
     }
 }

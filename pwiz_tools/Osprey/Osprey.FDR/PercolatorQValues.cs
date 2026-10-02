@@ -110,6 +110,48 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
+        /// PEP of each winner of one target/decoy competition, by rank: a
+        /// <see cref="PepEstimator"/> fitted over the winners in <paramref name="winnerBaseIds"/>
+        /// order, then evaluated at each winner's score. The fit order is fixed because the KDE
+        /// sum is not associative; base_id order is the order <see cref="ComputePepWinnerMap"/>
+        /// fits the experiment precursor PEP in. Shared by the run-level, peptide-level and
+        /// second-pass PEPs so they cannot drift from each other.
+        /// </summary>
+        internal static double[] ComputeWinnerPeps(
+            double[] winnerScores, bool[] winnerIsDecoy, uint[] winnerBaseIds)
+        {
+            int nWinners = winnerScores.Length;
+            var pepOrder = new int[nWinners];
+            for (int k = 0; k < nWinners; k++)
+                pepOrder[k] = k;
+            Array.Sort(pepOrder, (a, b) => winnerBaseIds[a].CompareTo(winnerBaseIds[b])); // Array.Sort OK: one winner per base_id in a competition, so no ties
+            var pepScores = new double[nWinners];
+            var pepIsDecoy = new bool[nWinners];
+            for (int k = 0; k < nWinners; k++)
+            {
+                pepScores[k] = winnerScores[pepOrder[k]];
+                pepIsDecoy[k] = winnerIsDecoy[pepOrder[k]];
+            }
+            var pepEstimator = PepEstimator.FitDefault(pepScores, pepIsDecoy);
+            var peps = new double[nWinners];
+            for (int rank = 0; rank < nWinners; rank++)
+                peps[rank] = pepEstimator.PosteriorError(winnerScores[rank]);
+            return peps;
+        }
+
+        /// <summary>
+        /// The base_id of each winner a <see cref="TargetDecoyCompetition.CompeteFromIndices"/>
+        /// call returned, for <see cref="ComputeWinnerPeps"/>.
+        /// </summary>
+        internal static uint[] WinnerBaseIds(int[] winnerIndices, uint[] entryIds)
+        {
+            var baseIds = new uint[winnerIndices.Length];
+            for (int rank = 0; rank < winnerIndices.Length; rank++)
+                baseIds[rank] = entryIds[winnerIndices[rank]] & PercolatorEntry.BASE_ID_MASK;
+            return baseIds;
+        }
+
+        /// <summary>
         /// Memory-bounded flat form of <see cref="PercolatorEngine.ClampExperimentQToBestRun"/>
         /// (issue #4378): floor each experiment q up to the entry's best (min-over-runs)
         /// combined run q (<c>runBoth = max(runPrecursorQ, runPeptideQ)</c>), keyed by EntryId
@@ -435,15 +477,21 @@ namespace pwiz.Osprey.FDR
         /// over the global score-pass arrays (no per-file slice copy; issue #4355 Part B), then
         /// maps each winning global index back to its local offset. Byte-identical to the per-file
         /// group body of <see cref="ComputePerRunPrecursorQvalues"/>: winners get their q, every
-        /// other row stays 1.0. Returns a local array indexed 0..count-1 (the caller scatters it back).
+        /// other row stays 1.0. Returns local arrays indexed 0..count-1 (the caller scatters them
+        /// back): the q-values, and the run PEPs fitted over the same winners (1.0 on losers).
         /// </summary>
         private static double[] ComputePerRunPrecursorQvaluesForFile(
-            double[] scores, bool[] labels, uint[] entryIds, int[] indices, int off)
+            double[] scores, bool[] labels, uint[] entryIds, int[] indices, int off,
+            out double[] runPeps)
         {
             int count = indices.Length;
             var qvalues = new double[count];
+            runPeps = new double[count];
             for (int i = 0; i < count; i++)
+            {
                 qvalues[i] = 1.0;
+                runPeps[i] = 1.0;
+            }
 
             int[] wi;
             double[] ws;
@@ -452,8 +500,12 @@ namespace pwiz.Osprey.FDR
 
             var q = new double[wi.Length];
             ComputeConservativeQvalues(ws, wd, q);
+            var peps = ComputeWinnerPeps(ws, wd, WinnerBaseIds(wi, entryIds));
             for (int rank = 0; rank < wi.Length; rank++)
+            {
                 qvalues[wi[rank] - off] = q[rank];   // wi[rank] is a global index in [off, off+count)
+                runPeps[wi[rank] - off] = peps[rank];
+            }
             return qvalues;
         }
 
@@ -499,15 +551,15 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Computes one file's per-run precursor + peptide q-values from its contiguous slice
-        /// <c>[off, off+count)</c> of the flat score-pass arrays (nested (file, row) order, so a
-        /// file's rows are contiguous). Used by the projection score pass in place of the full
-        /// double[n] per-run arrays (issue #4355 Part B); bounded to one file.
+        /// Computes one file's per-run precursor + peptide q-values and run PEPs from its
+        /// contiguous slice <c>[off, off+count)</c> of the flat score-pass arrays (nested (file,
+        /// row) order, so a file's rows are contiguous). Used by the projection score pass in
+        /// place of the full double[n] per-run arrays (issue #4355 Part B); bounded to one file.
         /// </summary>
         internal static void ComputePerFileRunQvalues(
             double[] scores, bool[] labels, uint[] entryIds, string[] peptides,
             int off, int count,
-            out double[] runPrecursorQvalues, out double[] runPeptideQvalues)
+            out double[] runPrecursorQvalues, out double[] runPeptideQvalues, out double[] runPeps)
         {
             // A file's rows are the contiguous global range [off, off+count); compete directly over
             // the global arrays through this index buffer instead of copying four per-file slices
@@ -515,17 +567,32 @@ namespace pwiz.Osprey.FDR
             var indices = new int[count];
             for (int r = 0; r < count; r++)
                 indices[r] = off + r;
-            runPrecursorQvalues = ComputePerRunPrecursorQvaluesForFile(scores, labels, entryIds, indices, off);
+            runPrecursorQvalues = ComputePerRunPrecursorQvaluesForFile(scores, labels, entryIds, indices, off, out runPeps);
             runPeptideQvalues = ComputePerRunPeptideQvaluesForFile(scores, labels, entryIds, peptides, indices, off);
         }
 
         internal static double[] ComputePerRunPrecursorQvalues(
             double[] scores, bool[] labels, uint[] entryIds, string[] fileNames)
         {
+            return ComputePerRunPrecursorQvalues(scores, labels, entryIds, fileNames, out _);
+        }
+
+        /// <summary>
+        /// Full-length per-run precursor q-values, and the run PEPs fitted over each file's
+        /// winners (1.0 on losers), both index-aligned to the inputs.
+        /// </summary>
+        internal static double[] ComputePerRunPrecursorQvalues(
+            double[] scores, bool[] labels, uint[] entryIds, string[] fileNames,
+            out double[] runPeps)
+        {
             int n = scores.Length;
             var qvalues = new double[n];
+            runPeps = new double[n];
             for (int i = 0; i < n; i++)
+            {
                 qvalues[i] = 1.0;
+                runPeps[i] = 1.0;
+            }
 
             var fileGroups = new Dictionary<string, List<int>>();
             for (int i = 0; i < n; i++)
@@ -564,11 +631,13 @@ namespace pwiz.Osprey.FDR
 
                 var q = new double[wi.Length];
                 ComputeConservativeQvalues(ws, wd, q);
+                var peps = ComputeWinnerPeps(ws, wd, WinnerBaseIds(wi, fileEntryIds));
 
                 for (int rank = 0; rank < wi.Length; rank++)
                 {
                     int globalIdx = group[wi[rank]];
                     qvalues[globalIdx] = q[rank];
+                    runPeps[globalIdx] = peps[rank];
                 }
             }
             progress?.Dispose();
@@ -867,6 +936,19 @@ namespace pwiz.Osprey.FDR
             double[] scores, bool[] labels, uint[] entryIds, string[] peptides,
             bool applyExperimentAgg = true)
         {
+            return ComputeExperimentPeptideQMap(scores, labels, entryIds, peptides, out _, applyExperimentAgg);
+        }
+
+        /// <summary>
+        /// <see cref="ComputeExperimentPeptideQMap(double[], bool[], uint[], string[], bool)"/>
+        /// plus the peptide-level PEP: <paramref name="pepByPeptide"/> maps each winning peptide
+        /// to the posterior error probability fitted over the same peptide-level winners
+        /// (<see cref="ComputeWinnerPeps"/>). A peptide absent from it lost and has PEP 1.0.
+        /// </summary>
+        internal static Dictionary<string, double> ComputeExperimentPeptideQMap(
+            double[] scores, bool[] labels, uint[] entryIds, string[] peptides,
+            out Dictionary<string, double> pepByPeptide, bool applyExperimentAgg = true)
+        {
             int n = scores.Length;
 
             // Reproducibility roll-up (OSPREY_EXPERIMENT_AGG=mean-best-2): the peptide score is
@@ -905,12 +987,15 @@ namespace pwiz.Osprey.FDR
 
             var q = new double[wi.Length];
             ComputeConservativeQvalues(ws, wd, q);
+            var peps = ComputeWinnerPeps(ws, wd, WinnerBaseIds(wi, peptEntryIds));
 
             var peptideQvalue = new Dictionary<string, double>();
+            pepByPeptide = new Dictionary<string, double>(wi.Length);
             for (int rank = 0; rank < wi.Length; rank++)
             {
                 int globalIdx = bestPerPeptide[wi[rank]];
                 peptideQvalue[peptides[globalIdx]] = q[rank];
+                pepByPeptide[peptides[globalIdx]] = peps[rank];
             }
             return peptideQvalue;
         }
@@ -925,14 +1010,25 @@ namespace pwiz.Osprey.FDR
             double[] scores, bool[] labels, uint[] entryIds, string[] peptides,
             bool applyExperimentAgg = true)
         {
+            return ComputeExperimentPeptideQvalues(scores, labels, entryIds, peptides, out _, applyExperimentAgg);
+        }
+
+        /// <summary>
+        /// As above, plus each row's peptide-level PEP (1.0 where the row's peptide lost).
+        /// </summary>
+        internal static double[] ComputeExperimentPeptideQvalues(
+            double[] scores, bool[] labels, uint[] entryIds, string[] peptides,
+            out double[] peptidePeps, bool applyExperimentAgg = true)
+        {
             int n = scores.Length;
             var qvalues = new double[n];
+            peptidePeps = new double[n];
             var peptideQvalue = ComputeExperimentPeptideQMap(
-                scores, labels, entryIds, peptides, applyExperimentAgg);
+                scores, labels, entryIds, peptides, out var pepByPeptide, applyExperimentAgg);
             for (int i = 0; i < n; i++)
             {
-                double qv;
-                qvalues[i] = peptideQvalue.TryGetValue(peptides[i], out qv) ? qv : 1.0;
+                qvalues[i] = peptideQvalue.TryGetValue(peptides[i], out double qv) ? qv : 1.0;
+                peptidePeps[i] = pepByPeptide.TryGetValue(peptides[i], out double pv) ? pv : 1.0;
             }
             return qvalues;
         }

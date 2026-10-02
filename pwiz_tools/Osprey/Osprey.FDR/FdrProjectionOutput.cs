@@ -27,9 +27,8 @@ using pwiz.Osprey.Core;
 namespace pwiz.Osprey.FDR
 {
     /// <summary>
-    /// The five per-row Percolator q-value outputs the score pass computes, in the
-    /// exact field order the SVM write-back produces them (issue #4355 step (b),
-    /// FdrProjection struct-shrink S0). These are the outputs the lean
+    /// The per-row Percolator q-value and PEP outputs the score pass computes (issue #4355
+    /// step (b), FdrProjection struct-shrink S0). These are the outputs the lean
     /// <see cref="FdrProjection"/> no longer stores: the score pass hands each row's
     /// values to a per-pass <see cref="IFdrOutputSink"/> instead of overlaying them
     /// onto the struct. <c>ExperimentProteinQvalue</c> is NOT here -- it is produced by
@@ -42,16 +41,23 @@ namespace pwiz.Osprey.FDR
         public readonly double ExperimentPrecursorQvalue;
         public readonly double ExperimentPeptideQvalue;
         public readonly double Pep;
+        /// <summary>The experiment-wide peptide-level PEP; see <c>FdrEntry.ExperimentPeptidePep</c>.</summary>
+        public readonly double ExperimentPeptidePep;
+        /// <summary>The run-level precursor PEP; see <c>FdrEntry.RunPep</c>.</summary>
+        public readonly double RunPep;
 
         public FdrQValues(
             double runPrecursorQvalue, double runPeptideQvalue,
-            double experimentPrecursorQvalue, double experimentPeptideQvalue, double pep)
+            double experimentPrecursorQvalue, double experimentPeptideQvalue, double pep,
+            double experimentPeptidePep, double runPep)
         {
             RunPrecursorQvalue = runPrecursorQvalue;
             RunPeptideQvalue = runPeptideQvalue;
             ExperimentPrecursorQvalue = experimentPrecursorQvalue;
             ExperimentPeptideQvalue = experimentPeptideQvalue;
             Pep = pep;
+            ExperimentPeptidePep = experimentPeptidePep;
+            RunPep = runPep;
         }
 
         /// <summary>
@@ -157,9 +163,9 @@ namespace pwiz.Osprey.FDR
 
     /// <summary>
     /// Hand one file's COMPLETE run-scope first-pass output to the caller, at the moment
-    /// pass 1 finishes that file. The five values are exactly what the per-file
-    /// <c>.1st-pass.fdr_scores.bin</c> stores, and pass 1 has all five - the score from the
-    /// averaged fold model, the two run q-values from
+    /// pass 1 finishes that file. The six values are exactly what the per-file
+    /// <c>.1st-pass.fdr_scores.bin</c> stores, and pass 1 has all six - the score from the
+    /// averaged fold model, the two run q-values and the run PEP from
     /// <see cref="PercolatorQValues.ComputePerFileRunQvalues"/> over this file's own rows, and
     /// <paramref name="apexRts"/> straight off the parquet row the score was computed from
     /// (format v7, issue #4522 - it is not computed here, it is carried).
@@ -184,5 +190,5 @@ namespace pwiz.Osprey.FDR
     /// </summary>
     public delegate void FileRunScopeSink(string fileName, int fileIndex, int rowCount,
         uint[] entryIds, double[] scores, double[] runPrecursorQvalues, double[] runPeptideQvalues,
-        double[] apexRts);
+        double[] apexRts, double[] runPeps);
 }

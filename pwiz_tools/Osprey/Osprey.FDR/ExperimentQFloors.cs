@@ -106,6 +106,18 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
+        /// The modified sequence of the TARGET entry with this base_id, or null when no target
+        /// with it was observed. A target's entry_id is its base_id. Used to group a base_id's
+        /// target and decoy precursors under one peptide for the second-pass peptide competition.
+        /// </summary>
+        public string TargetPeptideFor(uint baseId)
+        {
+            return _peptideByEntryId.TryGetValue(baseId, out var pkey) && !pkey.IsDecoy
+                ? pkey.ModifiedSequence
+                : null;
+        }
+
+        /// <summary>
         /// Fold ONE per-run observation into the ENTRY floor, from the two run q-values a
         /// per-file FDR record carries. The streaming half of this type: a caller already
         /// reading those records for another purpose gets the floor for nothing, instead of

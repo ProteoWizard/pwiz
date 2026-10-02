@@ -35,6 +35,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.ML;
 
 namespace pwiz.Osprey.FDR
 {
@@ -104,11 +105,10 @@ namespace pwiz.Osprey.FDR
 
     /// <summary>
     /// Result of picked-protein FDR computation. Only target winners appear in
-    /// <see cref="GroupQvalues"/> and <see cref="GroupScores"/>; decoy winners are
-    /// statistical machinery for the cumulative FDR computation and are not
-    /// exposed. Protein-level posterior error probability (PEP) is intentionally
-    /// not computed -- use peptide-level PEP for downstream confidence (matches
-    /// Rust <c>ProteinFdrResult</c>).
+    /// <see cref="GroupQvalues"/>, <see cref="GroupScores"/> and <see cref="GroupPeps"/>;
+    /// decoy winners are statistical machinery for the cumulative FDR computation and are not
+    /// exposed. Rust <c>ProteinFdrResult</c> computes no protein-level posterior error
+    /// probability; <see cref="GroupPeps"/> is a C# addition.
     /// </summary>
     public class ProteinFdrResult
     {
@@ -118,6 +118,12 @@ namespace pwiz.Osprey.FDR
         /// <summary>Protein group ID to best peptide SVM score (target winners only).</summary>
         public Dictionary<uint, double> GroupScores { get; set; }
 
+        /// <summary>
+        /// Protein group ID to posterior error probability (target winners only); a group absent
+        /// from it has PEP 1.0. See <see cref="ProteinFdr.ComputeProteinFdr"/> for how it is fitted.
+        /// </summary>
+        public Dictionary<uint, double> GroupPeps { get; set; }
+
         /// <summary>Peptide (modified_sequence) to best protein q-value among its groups.</summary>
         public Dictionary<string, double> PeptideQvalues { get; set; }
 
@@ -125,6 +131,7 @@ namespace pwiz.Osprey.FDR
         {
             GroupQvalues = new Dictionary<uint, double>();
             GroupScores = new Dictionary<uint, double>();
+            GroupPeps = new Dictionary<uint, double>();
             PeptideQvalues = new Dictionary<string, double>();
         }
     }
@@ -673,6 +680,8 @@ namespace pwiz.Osprey.FDR
             // modified_sequence; the decoy side is looked up via DECOY_<seq>.
             var targetScore = new Dictionary<uint, double>();
             var decoyScore = new Dictionary<uint, double>();
+            // The target side WITHOUT the gate, for the PEP fit only (see Step 5b).
+            var ungatedTargetScore = new Dictionary<uint, double>();
 
             foreach (var kvp in parsimony.PeptideToGroupMap)
             {
@@ -680,21 +689,14 @@ namespace pwiz.Osprey.FDR
                 var groupIds = kvp.Value;
 
                 PeptideScore tps;
-                if (bestScores.TryGetValue(peptide, out tps) &&
-                    !tps.IsDecoy && tps.BestQvalue <= qvalueGate)
+                if (bestScores.TryGetValue(peptide, out tps) && !tps.IsDecoy)
                 {
                     foreach (uint gid in groupIds)
+                        KeepMax(ungatedTargetScore, gid, tps.Score);
+                    if (tps.BestQvalue <= qvalueGate)
                     {
-                        double existing;
-                        if (targetScore.TryGetValue(gid, out existing))
-                        {
-                            if (tps.Score > existing)
-                                targetScore[gid] = tps.Score;
-                        }
-                        else
-                        {
-                            targetScore[gid] = tps.Score;
-                        }
+                        foreach (uint gid in groupIds)
+                            KeepMax(targetScore, gid, tps.Score);
                     }
                 }
 
@@ -809,6 +811,8 @@ namespace pwiz.Osprey.FDR
                     rawQvalues, monotonicQvalues);
             }
 
+            var groupPeps = ComputeGroupPeps(parsimony, ungatedTargetScore, decoyScore, groupScores);
+
             // Step 5: Propagate to peptides. Each peptide's q-value is the min
             // (best) q-value across its groups. Peptides whose only groups lost
             // the pair stay at q = 1.0.
@@ -831,8 +835,71 @@ namespace pwiz.Osprey.FDR
             {
                 GroupQvalues = groupQvalues,
                 GroupScores = groupScores,
+                GroupPeps = groupPeps,
                 PeptideQvalues = peptideQvalues
             };
+        }
+
+        /// <summary>
+        /// Step 5b: the protein-group posterior error probability of each target winner.
+        ///
+        /// <para>Fitted on a SYMMETRIC version of the picked competition above, not on its
+        /// winners. The q-value competition gates the target side (a group's target score counts
+        /// only peptides at run peptide q &lt;= the gate, Savitski's "proteins we would report")
+        /// and leaves the decoy side ungated, so its winners hold every decoy group but only the
+        /// target groups that pass the gate. A PEP estimator fitted there takes its decoy
+        /// fraction and decoy density from an unmatched pair of populations. Here each group's
+        /// target competes on its best peptide with no gate, the same treatment its decoy gets;
+        /// the estimator fitted on those winners is then evaluated at the score each target
+        /// winner actually reported. This is a best guess at the right null for a group PEP, not
+        /// a port of anything Rust does.</para>
+        ///
+        /// <para>Winners are fed to the fit in sorted-accessions order, the deterministic key the
+        /// q-value sort tiebreaks on, because the KDE sum is order-sensitive.</para>
+        /// </summary>
+        private static Dictionary<uint, double> ComputeGroupPeps(
+            ProteinParsimonyResult parsimony,
+            Dictionary<uint, double> ungatedTargetScore,
+            Dictionary<uint, double> decoyScore,
+            Dictionary<uint, double> reportedTargetScore)
+        {
+            var fit = new List<ProteinWinner>();
+            foreach (var group in parsimony.Groups)
+            {
+                bool hasT = ungatedTargetScore.TryGetValue(group.Id, out double t);
+                bool hasD = decoyScore.TryGetValue(group.Id, out double d);
+                if (!hasT && !hasD)
+                    continue;
+                // Ties to the target, as in the q-value competition.
+                bool decoyWins = hasT && hasD ? t < d : !hasT;
+                var sortedAccs = new List<string>(group.Accessions);
+                sortedAccs.Sort(StringComparer.Ordinal); // Array.Sort OK: distinct accessions, so the joined key is the same in any tie order
+                fit.Add(new ProteinWinner
+                {
+                    GroupId = group.Id, SortKey = string.Join(@";", sortedAccs),
+                    Score = decoyWins ? d : t, IsDecoy = decoyWins
+                });
+            }
+            fit.Sort((a, b) => string.CompareOrdinal(a.SortKey, b.SortKey)); // Array.Sort OK: each group's sorted-accessions key is unique (identical sets were merged by parsimony)
+            var scores = new double[fit.Count];
+            var isDecoy = new bool[fit.Count];
+            for (int i = 0; i < fit.Count; i++)
+            {
+                scores[i] = fit[i].Score;
+                isDecoy[i] = fit[i].IsDecoy;
+            }
+            var estimator = PepEstimator.FitDefault(scores, isDecoy);
+
+            var groupPeps = new Dictionary<uint, double>(reportedTargetScore.Count);
+            foreach (var kvp in reportedTargetScore)
+                groupPeps[kvp.Key] = estimator.PosteriorError(kvp.Value);
+            return groupPeps;
+        }
+
+        private static void KeepMax(Dictionary<uint, double> byGroup, uint groupId, double score)
+        {
+            if (!byGroup.TryGetValue(groupId, out double existing) || score > existing)
+                byGroup[groupId] = score;
         }
 
         private struct ProteinWinner

@@ -51,17 +51,18 @@ namespace pwiz.Osprey.IO
     /// records, all little-endian):
     /// <code>
     ///   magic         [0..8]   = b"OSPRYFDR"
-    ///   version       [8]      = u8 (= 7)
+    ///   version       [8]      = u8 (= 8)
     ///   pass          [9]      = u8 (1 = first-pass, 2 = second-pass)
     ///   reserved      [10..16] = 6 bytes (zero)
     ///   entry_count   [16..24] = u64
     ///   reserved      [24..32] = 8 bytes (zero)
-    ///   body          [32..]   = entry_count * 36 bytes:
+    ///   body          [32..]   = entry_count * 44 bytes:
     ///                            [0..4]   u32 entry_id
     ///                            [4..12]  f64 svm_score
     ///                            [12..20] f64 run_precursor_qvalue
     ///                            [20..28] f64 run_peptide_qvalue
     ///                            [28..36] f64 apex_rt
+    ///                            [36..44] f64 run_pep
     /// </code>
     /// Records are written pre-compaction at the Stage 5 → Stage 6
     /// boundary: every input entry contributes one record so q-values are
@@ -147,6 +148,11 @@ namespace pwiz.Osprey.IO
     /// file, read sequentially - and deletes the column read, the inferred join
     /// and the assertion that policed it.
     ///
+    /// v7 → v8 (2026-10-02): appended <c>run_pep</c>, the posterior error probability of
+    /// this file's own precursor-level competition (<see cref="FdrScoreRecord.RunPep"/>). Unlike
+    /// the experiment-wide <c>pep</c> dropped at v6, it is a run-scope fact that is final when
+    /// the file is written, so it does not reopen the write-once contract. 8 bytes per record.
+    ///
     /// No conversion path is written: pre-first-public-release, an older sidecar
     /// simply fails <see cref="IsCurrentFormat"/> and is recomputed, which
     /// costs a re-run rather than risking a misread record. A version bump is
@@ -170,19 +176,18 @@ namespace pwiz.Osprey.IO
         private static readonly byte[] Magic =
             { (byte)'O', (byte)'S', (byte)'P', (byte)'R', (byte)'Y', (byte)'F', (byte)'D', (byte)'R' };
 
-        public const byte FormatVersion = 7;
+        public const byte FormatVersion = 8;
         public const int HeaderLength = 32;
-        public const int RecordLength = 36;
+        public const int RecordLength = 44;
 
         /// <summary>
-        /// Records per buffered body read in <see cref="TryWalkRecords"/>. 2,048 x 36 B =
-        /// 73,728 B, still under the 85,000-byte large-object threshold at format v7's wider
-        /// record, so a reader walks a 137 MB sidecar through one Gen0 buffer instead of
-        /// allocating the whole file on the LOH. Any further column added here has to be
-        /// checked against that threshold: 2,048 x 42 B would cross it and put every sidecar
-        /// read back on the large object heap.
+        /// Records per buffered body read in <see cref="TryWalkRecords"/>. 1,536 x 44 B =
+        /// 67,584 B, under the 85,000-byte large-object threshold, so a reader walks a large
+        /// sidecar through one Gen0 buffer instead of allocating the whole file on the LOH.
+        /// Any further column added here has to be checked against that threshold, and this
+        /// count lowered with it.
         /// </summary>
-        private const int RECORDS_PER_CHUNK = 2048;
+        private const int RECORDS_PER_CHUNK = 1536;
 
         /// <summary>
         /// Pass identifier embedded in the header. Mirrors the Rust pass
@@ -432,7 +437,7 @@ namespace pwiz.Osprey.IO
                 foreach (var e in entries)
                 {
                     WriteRecord(bw, e.EntryId, e.Score,
-                        e.RunPrecursorQvalue, e.RunPeptideQvalue, e.ApexRt);
+                        e.RunPrecursorQvalue, e.RunPeptideQvalue, e.ApexRt, e.RunPep);
                 }
             });
         }
@@ -461,7 +466,7 @@ namespace pwiz.Osprey.IO
                 foreach (var r in records)
                 {
                     WriteRecord(bw, r.EntryId, r.Score,
-                        r.RunPrecursorQvalue, r.RunPeptideQvalue, r.ApexRt);
+                        r.RunPrecursorQvalue, r.RunPeptideQvalue, r.ApexRt, r.RunPep);
                 }
             });
         }
@@ -535,8 +540,8 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Write one <see cref="RecordLength"/>-byte record (entry_id + 4 f64s, little-endian)
-        /// in the exact v7 field order. Single-sourced so the FdrEntry and FdrProjection write
+        /// Write one <see cref="RecordLength"/>-byte record (entry_id + 5 f64s, little-endian)
+        /// in the exact v8 field order. Single-sourced so the FdrEntry and FdrProjection write
         /// paths cannot drift on byte layout.
         /// </summary>
         /// <summary>
@@ -598,13 +603,14 @@ namespace pwiz.Osprey.IO
 
         private static void WriteRecord(
             BinaryWriter bw, uint entryId, double score,
-            double runPrecursorQvalue, double runPeptideQvalue, double apexRt)
+            double runPrecursorQvalue, double runPeptideQvalue, double apexRt, double runPep)
         {
             bw.Write(entryId);                          // [0..4]
             bw.Write(score);                            // [4..12]
             bw.Write(runPrecursorQvalue);               // [12..20]
             bw.Write(runPeptideQvalue);                 // [20..28]
             bw.Write(apexRt);                           // [28..36]
+            bw.Write(runPep);                           // [36..44]
         }
 
         /// <summary>
@@ -700,6 +706,7 @@ namespace pwiz.Osprey.IO
                 e.Score                       = BitConverter.ToDouble(chunk, off + 4);
                 e.RunPrecursorQvalue          = BitConverter.ToDouble(chunk, off + 12);
                 e.RunPeptideQvalue            = BitConverter.ToDouble(chunk, off + 20);
+                e.RunPep                      = BitConverter.ToDouble(chunk, off + 36);
                 // apex_rt (format v7) is deliberately NOT overlaid. Every caller of this
                 // overload builds its entries from a parquet that already carries the column,
                 // so the sidecar's copy is the same number arriving by a second route; writing
@@ -728,6 +735,7 @@ namespace pwiz.Osprey.IO
                     e.ExperimentPeptideQvalue   = exp.ExperimentPeptideQvalue;
                     e.ExperimentProteinQvalue   = exp.ExperimentProteinQvalue;
                     e.ExperimentAggregateScore  = exp.ExperimentAggregateScore;
+                    e.ExperimentPeptidePep      = exp.PeptidePep;
                 }
                 return true;
             });
@@ -763,6 +771,7 @@ namespace pwiz.Osprey.IO
                 e.Score                       = BitConverter.ToDouble(chunk, off + 4);
                 e.RunPrecursorQvalue          = BitConverter.ToDouble(chunk, off + 12);
                 e.RunPeptideQvalue            = BitConverter.ToDouble(chunk, off + 20);
+                e.RunPep                      = BitConverter.ToDouble(chunk, off + 36);
                 // The EXPERIMENT-scope half, for the records THIS file's sidecar carries and no
                 // others (format v5, issue #4486). Scoping it to the matched records is the
                 // whole point: those columns are keyed by entry_id for the analysis, so applying
@@ -780,6 +789,7 @@ namespace pwiz.Osprey.IO
                     e.ExperimentPrecursorQvalue = exp.ExperimentPrecursorQvalue;
                     e.ExperimentPeptideQvalue   = exp.ExperimentPeptideQvalue;
                     e.ExperimentAggregateScore  = exp.ExperimentAggregateScore;
+                    e.ExperimentPeptidePep      = exp.PeptidePep;
                 }
                 return true;
             });
@@ -985,7 +995,7 @@ namespace pwiz.Osprey.IO
 
         /// <summary>
         /// Decode one <see cref="RecordLength"/>-byte record into a
-        /// <see cref="FdrScoreRecord"/>, reading the exact v7 field order
+        /// <see cref="FdrScoreRecord"/>, reading the exact v8 field order
         /// <see cref="WriteRecord"/> wrote (little-endian). Single-sourced with the writer so
         /// the read/write byte layout cannot drift.
         /// </summary>
@@ -996,7 +1006,8 @@ namespace pwiz.Osprey.IO
                 BitConverter.ToDouble(rec, 4),    // [4..12]  svm_score
                 BitConverter.ToDouble(rec, 12),   // [12..20] run_precursor_qvalue
                 BitConverter.ToDouble(rec, 20),   // [20..28] run_peptide_qvalue
-                BitConverter.ToDouble(rec, 28));  // [28..36] apex_rt
+                BitConverter.ToDouble(rec, 28),   // [28..36] apex_rt
+                BitConverter.ToDouble(rec, 36));  // [36..44] run_pep
         }
     }
 }

@@ -66,8 +66,8 @@ namespace pwiz.Osprey.Test
             };
             var records = new List<FdrScoreRecord>
             {
-                new FdrScoreRecord(5, 4.0, 0.001, 0.001, 10.0),
-                new FdrScoreRecord(5, 0.5, 0.2, 0.2, 12.0),
+                new FdrScoreRecord(5, 4.0, 0.001, 0.001, 10.0, 1.0),
+                new FdrScoreRecord(5, 0.5, 0.2, 0.2, 12.0, 1.0),
             };
             var targets = TrainingExportWriter.PairTargets(RECONCILED, rows, library, PASS2, records, out int nNoLibrary);
             Assert.AreEqual(3, targets.Count);
@@ -103,8 +103,8 @@ namespace pwiz.Osprey.Test
             var library = Library(Entry(5, @"PEPTIDEK", 2));
             var records = new List<FdrScoreRecord>
             {
-                new FdrScoreRecord(5, 4.0, 0.001, 0.001, 10.0),
-                new FdrScoreRecord(5, 0.5, 0.2, 0.2, 10.0),
+                new FdrScoreRecord(5, 4.0, 0.001, 0.001, 10.0, 1.0),
+                new FdrScoreRecord(5, 0.5, 0.2, 0.2, 10.0, 1.0),
             };
             var ex = Assert.ThrowsException<InvalidDataException>(() => TrainingExportWriter.PairTargets(RECONCILED,
                 new List<FdrEntry> { Row(5, @"PEPTIDEK", 2, 10.0) }, library, PASS2, records, out _));

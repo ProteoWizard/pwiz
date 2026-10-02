@@ -2418,7 +2418,7 @@ namespace pwiz.Osprey.Tasks
                 {
                     experiment.Add(e.EntryId, e.ExperimentPrecursorQvalue,
                         e.ExperimentPeptideQvalue, e.ExperimentProteinQvalue,
-                        e.ExperimentAggregateScore, e.Pep);
+                        e.ExperimentAggregateScore, e.Pep, e.ExperimentPeptidePep);
                 }
                 string fdrPath = FdrScoresSidecar.Pass1Path(sidecarBase);
                 // Clear first so a marker from an earlier invocation cannot outlive the file it
@@ -3522,16 +3522,16 @@ namespace pwiz.Osprey.Tasks
             }
 
             // Pass 1 hands each file's finished run-scope output straight to the sidecar writer.
-            // Nothing about it is provisional: the score and both run q-values are final the
-            // moment that file's rows have been walked, and no later phase revises them.
+            // Nothing about it is provisional: the score, both run q-values and the run PEP are
+            // final the moment that file's rows have been walked, and no later phase revises them.
             int pass1WriteFailures = 0;
             FileRunScopeSink flushFileRunScope =
-                (fileName, fileIndex, rowCount, entryIds, scores, runPrecQ, runPeptQ, apexRts) =>
+                (fileName, fileIndex, rowCount, entryIds, scores, runPrecQ, runPeptQ, apexRts, runPeps) =>
                 {
                     var records = new List<FdrScoreRecord>(rowCount);
                     for (int r = 0; r < rowCount; r++)
                         records.Add(new FdrScoreRecord(
-                            entryIds[r], scores[r], runPrecQ[r], runPeptQ[r], apexRts[r]));
+                            entryIds[r], scores[r], runPrecQ[r], runPeptQ[r], apexRts[r], runPeps[r]));
                     // Marked before the result is known: a failed write must not be retried by
                     // the sink either, because FdrScoresSidecar registers the path on the way in
                     // and would refuse the second attempt as a double write.

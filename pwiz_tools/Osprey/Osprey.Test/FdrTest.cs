@@ -2342,10 +2342,14 @@ namespace pwiz.Osprey.Test
                 PercolatorQValues.ComputeExperimentPrecursorQMap(
                     scoreArr, labelArr, entryIdArr, applyExperimentAgg: false),
                 streaming.BuildExperimentPrecursorQMap(), "exp-precursor");
-            AssertMapsEqual(
-                PercolatorQValues.ComputeExperimentPeptideQMap(
-                    scoreArr, labelArr, entryIdArr, peptideArr, applyExperimentAgg: false),
-                streaming.BuildExperimentPeptideQMap(), "exp-peptide");
+            var flatPeptideQ = PercolatorQValues.ComputeExperimentPeptideQMap(
+                scoreArr, labelArr, entryIdArr, peptideArr, out var flatPeptidePep, applyExperimentAgg: false);
+            var streamedPeptideQ = streaming.BuildExperimentPeptideQMap(out var streamedPeptidePep);
+            AssertMapsEqual(flatPeptideQ, streamedPeptideQ, "exp-peptide");
+            // The peptide PEP is fitted over the same winners on both paths.
+            AssertMapsEqual(flatPeptidePep, streamedPeptidePep, "exp-peptide-pep");
+            CollectionAssert.AreEquivalent(flatPeptideQ.Keys.ToList(), flatPeptidePep.Keys.ToList(),
+                "every peptide that won has a PEP, and only those");
             AssertMapsEqual(
                 PercolatorQValues.ComputePepWinnerMap(scoreArr, labelArr, entryIdArr),
                 streaming.BuildPepWinnerMap(), "pep-winner");
@@ -3795,6 +3799,182 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The peptide-level and run-level statistics a .blib reader filters on: the second
+        /// pass's experiment peptide q-value and PEP, the run PEP, and the protein-group PEP.
+        /// </summary>
+        [TestMethod]
+        public void TestPeptideRunAndProteinPeps()
+        {
+            AssertSecondPassPeptideCompetitionMatchesFirstPass();
+            AssertRunPepPerFileMatchesFullLength();
+            AssertProteinGroupPeps();
+        }
+
+        /// <summary>
+        /// The second pass's peptide competition is the first pass's computation over the second
+        /// pass's per-entry bests: one q-value and PEP per peptide and side, the same on every
+        /// charge state, and bit-identical to <see cref="PercolatorQValues.ComputeExperimentPeptideQMap(double[], bool[], uint[], string[], out Dictionary{string, double}, bool)"/>
+        /// over those bests. Before this, the second pass copied each precursor's q into the
+        /// peptide field, so charge states of one peptide disagreed.
+        /// </summary>
+        private static void AssertSecondPassPeptideCompetitionMatchesFirstPass()
+        {
+            // 30 peptides with two charge states each (base_ids 2k+1, 2k+2), in two files. The
+            // first 8 peptides' decoys outscore their targets, so the PEP fit has both classes.
+            const int nPeptides = 30;
+            var ids = new List<uint>();
+            var scoresA = new List<double>();
+            var scoresB = new List<double>();
+            for (int k = 0; k < nPeptides; k++)
+            {
+                for (uint c = 1; c <= 2; c++)
+                {
+                    uint b = (uint)(2 * k) + c;
+                    bool decoyWins = k < 8;
+                    ids.Add(b);
+                    scoresA.Add((decoyWins ? 0.5 : 3.0) + k * 0.1 + c * 0.013);
+                    scoresB.Add((decoyWins ? 0.4 : 2.5) + k * 0.1 + c * 0.017);
+                    ids.Add(b | 0x80000000u);
+                    scoresA.Add((decoyWins ? 2.0 : 0.3) + k * 0.07 + c * 0.011);
+                    scoresB.Add((decoyWins ? 2.2 : 0.2) + k * 0.07 + c * 0.019);
+                }
+            }
+            var idArr = ids.ToArray();
+            var survivorIds = new HashSet<uint>(idArr.Where(id => (id & 0x80000000u) == 0));
+            (uint[] e, double[] s, IReadOnlyDictionary<uint, double> ov, HashSet<uint> own) Read(string key)
+                => ((uint[])idArr.Clone(), (key == "a" ? scoresA : scoresB).ToArray(),
+                    new Dictionary<uint, double>(), survivorIds);
+            var competition = StreamingFdr.ComputeFullPopulationPrecursorFdrStreaming(
+                new[] { "a", "b" }, Read, survivorIds, (_, c) => { });
+            string PeptideOf(uint baseId) => "P" + ((baseId - 1) / 2);
+            var peptides = competition.CompetePeptides(PeptideOf);
+
+            // The oracle: one row per entry at its best score across the files, decoys under a
+            // distinct sequence as the first pass sees them.
+            var bestByEntry = new Dictionary<uint, double>();
+            for (int i = 0; i < idArr.Length; i++)
+                bestByEntry[idArr[i]] = Math.Max(scoresA[i], scoresB[i]);
+            var oIds = bestByEntry.Keys.ToArray();
+            var oScores = oIds.Select(id => bestByEntry[id]).ToArray();
+            var oLabels = oIds.Select(id => (id & 0x80000000u) != 0).ToArray();
+            var oPeptides = oIds.Select(id => ((id & 0x80000000u) != 0 ? "DECOY_" : string.Empty) +
+                PeptideOf(id & 0x7FFFFFFFu)).ToArray();
+            var expectedQ = PercolatorQValues.ComputeExperimentPeptideQMap(
+                oScores, oLabels, oIds, oPeptides, out var expectedPep, applyExperimentAgg: false);
+
+            int realPeps = 0;
+            foreach (uint id in idArr)
+            {
+                uint baseId = id & 0x7FFFFFFFu;
+                string key = ((id & 0x80000000u) != 0 ? "DECOY_" : string.Empty) + PeptideOf(baseId);
+                double q = expectedQ.TryGetValue(key, out double eq) ? eq : 1.0;
+                double pep = expectedPep.TryGetValue(key, out double ep) ? ep : 1.0;
+                Assert.AreEqual(q, peptides.QValue(id), 0.0, "peptide q of entry " + id);
+                Assert.AreEqual(pep, peptides.Pep(id), 0.0, "peptide PEP of entry " + id);
+                if (pep < 1.0)
+                    realPeps++;
+                // Both charge states of a peptide carry the same values.
+                uint sibling = (baseId % 2 == 1 ? baseId + 1 : baseId - 1) | (id & 0x80000000u);
+                Assert.AreEqual(peptides.QValue(id), peptides.QValue(sibling), 0.0);
+                Assert.AreEqual(peptides.Pep(id), peptides.Pep(sibling), 0.0);
+            }
+            Assert.IsTrue(realPeps > 0, "a degenerate fit reports 1.0 everywhere and proves nothing");
+        }
+
+        /// <summary>
+        /// The run PEP from the projection path's per-file slices equals the full-length one, is
+        /// real on each file's competition winners and 1.0 on the losers.
+        /// </summary>
+        private static void AssertRunPepPerFileMatchesFullLength()
+        {
+            var scores = new List<double>();
+            var labels = new List<bool>();
+            var ids = new List<uint>();
+            var files = new List<string>();
+            var peptides = new List<string>();
+            foreach (string file in new[] { "a", "b" })
+            {
+                for (uint b = 1; b <= 25; b++)
+                {
+                    bool decoyWins = b <= 6;
+                    double shift = file == "a" ? 0.0 : 0.05;
+                    scores.Add((decoyWins ? 0.4 : 2.0) + b * 0.1 + shift);
+                    labels.Add(false);
+                    ids.Add(b);
+                    files.Add(file);
+                    peptides.Add("P" + b);
+                    scores.Add((decoyWins ? 1.5 : 0.2) + b * 0.03 + shift);
+                    labels.Add(true);
+                    ids.Add(b | 0x80000000u);
+                    files.Add(file);
+                    peptides.Add("DECOY_P" + b);
+                }
+            }
+            var sc = scores.ToArray();
+            var lb = labels.ToArray();
+            var id = ids.ToArray();
+            var pe = peptides.ToArray();
+            PercolatorQValues.ComputePerRunPrecursorQvalues(sc, lb, id, files.ToArray(), out double[] fullPeps);
+            int half = sc.Length / 2;
+            int realPeps = 0;
+            for (int off = 0; off < sc.Length; off += half)
+            {
+                PercolatorQValues.ComputePerFileRunQvalues(sc, lb, id, pe, off, half,
+                    out _, out _, out double[] slicePeps);
+                for (int r = 0; r < half; r++)
+                {
+                    Assert.AreEqual(fullPeps[off + r], slicePeps[r], 0.0, "run PEP of row " + (off + r));
+                    if (slicePeps[r] < 1.0)
+                        realPeps++;
+                }
+                // Rows alternate target, decoy for each base_id: only the side that won its
+                // competition in this file can carry a real run PEP.
+                for (int r = 0; r < half; r += 2)
+                {
+                    Assert.IsTrue(slicePeps[r].Equals(1.0) || slicePeps[r + 1].Equals(1.0),
+                        "both sides of base_id " + id[off + r] + " carry a real run PEP");
+                }
+            }
+            Assert.IsTrue(realPeps > 0, "a degenerate fit reports 1.0 everywhere and proves nothing");
+        }
+
+        /// <summary>
+        /// Every target-winning protein group gets a PEP in [0, 1], a better-scoring group never
+        /// gets a worse PEP, and only target winners appear - the same population as the
+        /// group q-values.
+        /// </summary>
+        private static void AssertProteinGroupPeps()
+        {
+            var parsimony = new ProteinParsimonyResult();
+            var bestScores = new Dictionary<string, PeptideScore>();
+            for (uint g = 0; g < 40; g++)
+            {
+                string peptide = "Q" + g;
+                parsimony.Groups.Add(new ProteinGroup { Id = g, Accessions = new List<string> { "PROT" + g } });
+                parsimony.PeptideToGroupMap[peptide] = new List<uint> { g };
+                // Groups below 10 fail the gate, so the q-value competition sees only their decoy.
+                bestScores[peptide] = new PeptideScore
+                {
+                    Score = 2.0 + g * 0.1, IsDecoy = false, BestQvalue = g < 10 ? 0.5 : 0.001
+                };
+                bestScores["DECOY_" + peptide] = new PeptideScore
+                {
+                    Score = 1.5 + (g % 7) * 0.3, IsDecoy = true, BestQvalue = 1.0
+                };
+            }
+            var result = ProteinFdr.ComputeProteinFdr(parsimony, bestScores, 0.01);
+            CollectionAssert.AreEquivalent(result.GroupQvalues.Keys.ToList(), result.GroupPeps.Keys.ToList());
+            var byScore = result.GroupScores.OrderBy(kvp => kvp.Value).Select(kvp => result.GroupPeps[kvp.Key]).ToList();
+            for (int i = 0; i < byScore.Count; i++)
+            {
+                Assert.IsTrue(byScore[i] >= 0.0 && byScore[i] <= 1.0, "PEP out of range: " + byScore[i]);
+                if (i > 0)
+                    Assert.IsTrue(byScore[i] <= byScore[i - 1], "a better-scoring group got a worse PEP");
+            }
+            Assert.IsTrue(byScore.Any(p => p < 1.0), "a degenerate fit reports 1.0 everywhere and proves nothing");
+        }
+
+        /// <summary>
         /// The summary report's per-replicate protein count is a REAL run-level protein
         /// FDR (its own parsimony + picked-protein FDR on that replicate), not a slice of
         /// the experiment set -- the property a reviewer asks for. Verify the run-scoped
@@ -4243,9 +4423,9 @@ namespace pwiz.Osprey.Test
             // non-survivor decoy is absent - that is the property this test exists for.
             var records = new List<FdrScoreRecord>
             {
-                new FdrScoreRecord(t1a, 0.90, competed.RunQ.TryGetValue(t1a, out var q1) ? q1 : 1.0, 1.0, 0.0),
-                new FdrScoreRecord(t1b, 0.90, competed.RunQ.TryGetValue(t1b, out var q2) ? q2 : 1.0, 1.0, 0.0),
-                new FdrScoreRecord(t2, 0.50, competed.RunQ.TryGetValue(t2, out var q3) ? q3 : 1.0, 1.0, 0.0),
+                new FdrScoreRecord(t1a, 0.90, competed.RunQ.TryGetValue(t1a, out var q1) ? q1 : 1.0, 1.0, 0.0, 1.0),
+                new FdrScoreRecord(t1b, 0.90, competed.RunQ.TryGetValue(t1b, out var q2) ? q2 : 1.0, 1.0, 0.0, 1.0),
+                new FdrScoreRecord(t2, 0.50, competed.RunQ.TryGetValue(t2, out var q3) ? q3 : 1.0, 1.0, 0.0, 1.0),
             };
 
             // ... and the decoy side, through the real file rather than the in-memory map, so a
@@ -4288,7 +4468,7 @@ namespace pwiz.Osprey.Test
                 // divergence rather than the representational one above.
                 var bogus = new List<FdrScoreRecord>(records)
                 {
-                    new FdrScoreRecord(DecoyOf(1u), 0.10, 0.5, 1.0, 0.0)
+                    new FdrScoreRecord(DecoyOf(1u), 0.10, 0.5, 1.0, 0.0, 1.0)
                 };
                 Assert.ThrowsException<InvalidOperationException>(
                     () => StreamingFdr.AssertContributionsMatch(
@@ -4320,14 +4500,14 @@ namespace pwiz.Osprey.Test
             // Canonical pool order: ascending, with 7 and 9 the "gap-fills" interleaved.
             var poolOrder = new uint[] { 3, 5, 7, 8, 9, 11 };
             var inOrder = poolOrder
-                .Select(id => new FdrScoreRecord(id, 0.5, 1.0, 1.0, 0.0)).ToList();
+                .Select(id => new FdrScoreRecord(id, 0.5, 1.0, 1.0, 0.0, 1.0)).ToList();
             Pass2FdrSidecar.AssertRecordsMatchPoolSequence(@"f", @"p.parquet", inOrder, poolOrder);
 
             // The real defect: same rows, same count, gap-fills moved to a trailing block.
             var gapFills = new uint[] { 7, 9 };
             var trailing = poolOrder.Where(id => !gapFills.Contains(id))
                 .Concat(gapFills)
-                .Select(id => new FdrScoreRecord(id, 0.5, 1.0, 1.0, 0.0)).ToList();
+                .Select(id => new FdrScoreRecord(id, 0.5, 1.0, 1.0, 0.0, 1.0)).ToList();
             Assert.AreEqual(inOrder.Count, trailing.Count, "the permutation must not change length");
             var ex = Assert.ThrowsException<InvalidOperationException>(
                 () => Pass2FdrSidecar.AssertRecordsMatchPoolSequence(
@@ -4368,8 +4548,8 @@ namespace pwiz.Osprey.Test
             // not a competition observation, so it must not displace the worker's answer.
             var records = new List<FdrScoreRecord>
             {
-                new FdrScoreRecord(t2, 0.50, 1.0, 1.0, 0.0),
-                new FdrScoreRecord(d2, 0.95, 1.0, 1.0, 0.0),
+                new FdrScoreRecord(t2, 0.50, 1.0, 1.0, 0.0, 1.0),
+                new FdrScoreRecord(d2, 0.95, 1.0, 1.0, 0.0, 1.0),
             };
             var rebuilt = Pass2FdrSidecar.FileCompetitionFromRecords(records, stratum, fromWorker);
             Assert.AreEqual(0.20, rebuilt.BestDecoy[2u].score);

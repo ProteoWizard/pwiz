@@ -240,7 +240,7 @@ namespace pwiz.Osprey.Tasks
             {
                 _buffer.Add(new FdrScoreRecord(
                     entryId, score,
-                    q.RunPrecursorQvalue, q.RunPeptideQvalue, apexRt));
+                    q.RunPrecursorQvalue, q.RunPeptideQvalue, apexRt, q.RunPep));
             }
 
             // The EXPERIMENT-scope values collapse to one record per distinct entry_id. The
@@ -251,7 +251,7 @@ namespace pwiz.Osprey.Tasks
             // rewritten on disk, which is what the placeholder-plus-patch used to cost.
             _experiment.Add(entryId,
                 q.ExperimentPrecursorQvalue, q.ExperimentPeptideQvalue,
-                1.0, experimentAggregateScore, q.Pep);
+                1.0, experimentAggregateScore, q.Pep, q.ExperimentPeptidePep);
 
             // RowCount, not PerFile[fileIdx].Value.Count: on the 1st-pass streaming path the
             // projection carries per-file counts but NO resident rows (issue #4355 struct-shrink
@@ -358,10 +358,10 @@ namespace pwiz.Osprey.Tasks
 
             _buffer.Add(new FdrScoreRecord(
                 entryId, score,
-                q.RunPrecursorQvalue, q.RunPeptideQvalue, apexRt));
+                q.RunPrecursorQvalue, q.RunPeptideQvalue, apexRt, q.RunPep));
             _experiment.Add(entryId,
                 q.ExperimentPrecursorQvalue, q.ExperimentPeptideQvalue,
-                experimentProteinQvalue, experimentAggregateScore, q.Pep);
+                experimentProteinQvalue, experimentAggregateScore, q.Pep, q.ExperimentPeptidePep);
 
             // Last row of this file: flush its sidecar and release the buffer. RowCount
             // (not the row list) so the 2nd-pass resident projection and the 1st-pass

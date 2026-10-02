@@ -694,8 +694,9 @@ the best-of-runs clamp is re-applied afterward.
 Protein parsimony always runs. Two-pass picked-protein FDR (Savitski 2015) writes
 `FdrEntry.RunProteinQvalue` (first pass, `ProteinFdr.cs:826`) and
 `FdrEntry.ExperimentProteinQvalue` (second pass, authoritative, `ProteinFdr.cs:781`).
-The ranking score is the maximum peptide SVM discriminant per group; protein-level PEP is
-intentionally not computed. **However**, unlike Rust, the C# `FdrLevel` enum has no
+The ranking score is the maximum peptide SVM discriminant per group. A protein-group PEP
+(`ProteinFdrResult.GroupPeps`) is a C# addition Rust does not compute; see
+`08-protein-parsimony.md`. **However**, unlike Rust, the C# `FdrLevel` enum has no
 `Protein` variant, so protein q-values are computed and reported in the protein report but
 **cannot gate the blib output** from the CLI — see Divergences.
 

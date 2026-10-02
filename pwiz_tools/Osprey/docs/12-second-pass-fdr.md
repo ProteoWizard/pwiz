@@ -41,7 +41,7 @@ fails in seconds rather than after Stage 1-5.
 
 | Mode | Retrain? | Null population | Level |
 |------|----------|-----------------|-------|
-| `protein-compact` (default) | no (frozen model) | competition constrained to the protein stratum | precursor |
+| `protein-compact` (default) | no (frozen model) | competition constrained to the protein stratum | precursor; experiment peptide from a peptide-level competition over the same bests |
 | `transfer` | no | pass-1 q carried through; only moved peaks re-mapped | precursor + peptide |
 
 These two are the whole list. `percolator` was removed for retraining against a
@@ -97,6 +97,24 @@ Off-stratum survivors keep their first-pass q-values, so the report is
 `pass-1 ∪ stratum-passers`. Constraining the competition to a biologically
 pre-filtered set reduces the multiple-testing burden (independent filtering,
 Bourgon 2010).
+
+The **experiment peptide q-value and peptide PEP** of an on-stratum survivor come from a
+peptide-level competition over the same per-entry bests
+(`StreamedCompetitionState.CompetePeptides`): each peptide's best target and best decoy
+precursor, competed by base_id and conservative q, as the first pass does it in
+`PercolatorQValues.ComputeExperimentPeptideQMap`, with the PEP fitted on those winners. A
+base_id is grouped under its target's modified sequence, taken from the survivor entries
+(`ExperimentQFloors.TargetPeptideFor`) rather than the library, which a `--task
+SecondPassFDR` node holds without its generated decoys. Before this, the second pass copied
+each precursor's q into the peptide field, so the charge states of one peptide disagreed.
+The RUN peptide q is still set to the run precursor q on this path
+(`Pass2PerFileWorker`): replacing it would move the protein FDR gate, which reads run
+peptide q.
+
+Each file's competition also fits a **run PEP** on its own winners
+(`StreamingFdr.FileCompetition.RunPep`), written to the per-run sidecar beside run q. Under
+`transfer`, a moved or gap-filled peak has no score-to-PEP table to re-map through and
+reports run PEP 1.0; an unchanged one keeps its first-pass value.
 
 ## Frozen vs. retrain
 
