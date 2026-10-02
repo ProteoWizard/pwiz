@@ -29,17 +29,13 @@ using System.Threading;
 
 
 using Pwiz.Analysis;
-using Pwiz.Analysis.DiaUmpire;
 using Pwiz.Analysis.PeakPicking;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData;
 using Pwiz.Data.MsData.Instruments;
-using Pwiz.Data.MsData.Processing;
 using Pwiz.Data.MsData.Readers;
-using Pwiz.Data.MsData.Sources;
 using Pwiz.Data.MsData.Spectra;
-using Pwiz.Util;
 
 namespace pwiz.ProteowizardWrapper
 {
@@ -52,7 +48,7 @@ namespace pwiz.ProteowizardWrapper
     /// after read operations have been completed. This returns a handy CSV-formatted
     /// report on file read performance.
     /// </summary>
-    public partial class MsDataFileImpl : IDisposable
+    public class MsDataFileImpl : IDisposable
     {
         private static readonly ReaderList FULL_READER_LIST = ReaderList.Default;
 
@@ -918,7 +914,7 @@ namespace pwiz.ProteowizardWrapper
         public double? GetChromatogramCollisionEnergy(int chromIndex)
         {
             var chrom = ChromatogramList.GetChromatogram(chromIndex, DetailLevel.FullMetadata);
-            return chrom.Precursor?.Activation?.CvParam(CVID.MS_collision_energy);
+            return chrom.Precursor.Activation.CvParam(CVID.MS_collision_energy);
         }
         
         public void GetChromatogramMetadata(int chromIndex, out string id, out bool? isNegativePolarity, out double precursorMz, out double productMz)
@@ -1019,10 +1015,6 @@ namespace pwiz.ProteowizardWrapper
                     return null;
                 }
                 var chromatogram = ChromatogramList.GetChromatogram(0, true);                {
-                    if (chromatogram == null)
-                    {
-                        return null;
-                    }
                     TimeIntensityPairList timeIntensityPairList = new TimeIntensityPairList();
                     chromatogram.GetTimeIntensityPairs(ref timeIntensityPairList);
                     double[] times = new double[timeIntensityPairList.Count];
@@ -1044,7 +1036,7 @@ namespace pwiz.ProteowizardWrapper
                 return null;
             }
             var chromatogram = ChromatogramList.GetChromatogram(0, true);            {
-                return chromatogram?.GetIntensityArray()?.Data.ToArray();
+                return chromatogram.GetIntensityArray()?.Data.ToArray();
             }
         }
 
@@ -1225,9 +1217,6 @@ namespace pwiz.ProteowizardWrapper
                 }
 
                 var chromatogram = ChromatogramList.GetChromatogram(i, true);                {
-                    if (chromatogram == null)
-                        return null;
-
                     result.Add(new QcTrace(chromatogram));
                 }
             }
@@ -1317,7 +1306,7 @@ namespace pwiz.ProteowizardWrapper
             if (_cvidIonMobility.HasValue)
             {
                 if (_cvidIonMobility.Value != CVID.CVID_Unknown)
-                    data = s.GetArrayByCvid(_cvidIonMobility.Value)?.Data?.ToArray();
+                    data = s.GetArrayByCvid(_cvidIonMobility.Value)?.Data.ToArray();
             }
             else
             {
@@ -1551,7 +1540,9 @@ namespace pwiz.ProteowizardWrapper
                         continue;
                     }
                     var cvParamLowerLimit = window.CvParam(CVID.MS_scan_window_lower_limit);
-                    if (cvParamLowerLimit != null)
+                    // IsEmpty, not null: CvParam returns an empty CVParam when the term is absent, and
+                    // an empty one converts to 0.0, which would record a scan window starting at zero
+                    if (!cvParamLowerLimit.IsEmpty)
                     {
                         double windowStart = cvParamLowerLimit;
                         if (scanWindowLowerLimit == null || windowStart < scanWindowLowerLimit)
@@ -1561,7 +1552,8 @@ namespace pwiz.ProteowizardWrapper
                     }
 
                     var cvParamUpperLimit = window.CvParam(CVID.MS_scan_window_upper_limit);
-                    if (cvParamUpperLimit != null)
+                    // IsEmpty, not null, as above
+                    if (!cvParamUpperLimit.IsEmpty)
                     {
                         double windowEnd = cvParamUpperLimit;
                         if (scanWindowUpperLimit == null || windowEnd > scanWindowUpperLimit)
@@ -1659,7 +1651,7 @@ namespace pwiz.ProteowizardWrapper
                 {
                     continue;
                 }
-                string value = param.Value ?? string.Empty;
+                string value = param.Value;
                 bool hasUnit = param.Units != CVID.CVID_Unknown;
                 string unit = hasUnit ? param.UnitsName : null;
                 string unitAccession = hasUnit ? CvLookup.CvTermInfo(param.Units).Id : null;
@@ -1680,7 +1672,7 @@ namespace pwiz.ProteowizardWrapper
                 {
                     continue;
                 }
-                string value = param.Value ?? string.Empty;
+                string value = param.Value;
                 var unitInfo = param.Units == CVID.CVID_Unknown ? null : CvLookup.CvTermInfo(param.Units);
                 terms.Add(new SpectrumMetadataTerm(param.Name, param.Name, value, unitInfo?.Name, unitInfo?.Id));
             }
@@ -1749,7 +1741,7 @@ namespace pwiz.ProteowizardWrapper
                 return true;
 
             // If the first spectrum is not SRM, the others will not be either
-            var spectrum = _spectrumList.GetSpectrum(0, false);            {
+            var spectrum = _spectrumList.GetSpectrum(0);            {
                 return IsSrmSpectrum(spectrum);
             }
         }
@@ -1760,7 +1752,7 @@ namespace pwiz.ProteowizardWrapper
                 return false;
 
             // Assume that if any spectra have ion mobility info, all do
-            var spectrum = IonMobilitySpectrumList.GetSpectrum(0, false);            {
+            var spectrum = IonMobilitySpectrumList.GetSpectrum(0);            {
                 return GetIonMobility(spectrum).HasValue;
             }
         }
@@ -1965,7 +1957,7 @@ namespace pwiz.ProteowizardWrapper
                     total += param;
                 }
             }
-            return count == 0 ? (double?) null : total;
+            return count == 0 ? null : total;
         }
 
         private double GetSourceOffsetVoltage(Spectrum spectrum)
@@ -2209,23 +2201,15 @@ namespace pwiz.ProteowizardWrapper
 
         private static int GetMsLevel(Precursor precursor)
         {
-            UserParam msLevelParam = null;
-            try
-            {
-                msLevelParam = precursor.IsolationWindow.UserParam("ms level");
-                if (msLevelParam.IsEmpty)
-                    msLevelParam = precursor.UserParam("ms level");
-                return msLevelParam.IsEmpty ? 1 : (int)msLevelParam;
-            }
-            finally
-            {
-            }
-
+            var msLevelParam = precursor.IsolationWindow.UserParam("ms level");
+            if (msLevelParam.IsEmpty)
+                msLevelParam = precursor.UserParam("ms level");
+            return msLevelParam.IsEmpty ? 1 : (int)msLevelParam;
         }
 
         private static int? GetChargeStateValue(Precursor precursor)
         {
-            if (precursor.SelectedIons == null || precursor.SelectedIons.Count == 0)
+            if (precursor.SelectedIons.Count == 0)
                 return null;
             var param = precursor.SelectedIons[0].CvParam(CVID.MS_charge_state);
             if (param.IsEmpty)

@@ -287,6 +287,9 @@ namespace SkylineNightly
 
                                 foreach (var frame in thread.EnumerateStackTrace())
                                 {
+                                    // ClrMD annotates Type non-null, but this walks a process that is
+                                    // already wedged; an NRE here costs the stack the nightly needs
+                                    // ReSharper disable once ConstantConditionalAccessQualifier
                                     message.AppendFormat("  {0}.{1}", frame.Method?.Type?.Name ?? "[Unknown]",
                                         frame.Method?.Name ?? "[Unknown]");
                                     message.AppendLine();

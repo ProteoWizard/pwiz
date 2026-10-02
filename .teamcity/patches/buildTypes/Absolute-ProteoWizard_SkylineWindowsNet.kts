@@ -4,12 +4,6 @@ import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.BuildType
 import jetbrains.buildServer.configs.kotlin.buildFeatures.PullRequests
 import jetbrains.buildServer.configs.kotlin.buildFeatures.pullRequests
-import jetbrains.buildServer.configs.kotlin.buildSteps.DotnetMsBuildStep
-import jetbrains.buildServer.configs.kotlin.buildSteps.DotnetVsTestStep
-import jetbrains.buildServer.configs.kotlin.buildSteps.dotnetCustom
-import jetbrains.buildServer.configs.kotlin.buildSteps.dotnetMsBuild
-import jetbrains.buildServer.configs.kotlin.buildSteps.dotnetRestore
-import jetbrains.buildServer.configs.kotlin.buildSteps.dotnetVsTest
 import jetbrains.buildServer.configs.kotlin.buildSteps.exec
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
 import jetbrains.buildServer.configs.kotlin.failureConditions.BuildFailureOnMetric
@@ -33,45 +27,59 @@ create(DslContext.projectId, BuildType({
         pwiz_tools/Skyline/bin/staging/Release/BiblioSpec.zip
     """.trimIndent()
 
+    params {
+        // Environment for the inspection step below. These are declared at configuration
+        // level because env.* IS a build-configuration parameter: the generic runners have
+        // no per-step environment variables. param("env.X", ...) inside an exec {} block
+        // compiles and is stored as a runner property, and nothing ever reads it - build
+        // #285 ran the step with all three declared there and tcinspect.ps1 saw none of
+        // them. The steps in this file that look like counterexamples are meta-runners
+        // (RUNNER_73, RUNNER_85), where those names are the runner's declared inputs.
+        //
+        // BUILD_VCS_NUMBER needs no entry: TeamCity predefines it. That is how #285 posted
+        // nothing for the token while still resolving the commit SHA.
+        param("env.GITHUB_STATUS_TOKEN", "%GitHubAuthToken%")
+        // guest=1 so the link from GitHub opens without a TeamCity login, matching what the
+        // standalone inspection config has always linked to.
+        param("env.INSPECTION_TARGET_URL", "https://teamcity.labkey.org/buildConfiguration/%system.teamcity.buildType.id%/%teamcity.build.id%?guest=1")
+    }
+
     steps {
-        dotnetCustom {
-            name = "Install dotCover"
-            id = "Install_dotCover"
-            enabled = false
-            args = "tool install -g JetBrains.dotCover.CommandLineTools"
+        exec {
+            name = "Clean"
+            id = "Skyline_Clean"
+            path = "clean.bat"
+            // The one clean for the whole build, and it runs first so the code inspection starts
+            // from a clean slate too: on an agent that reuses its checkout, stale bin\x64 and
+            // obj\x64 left by an earlier commit fail inspectcode's own solution build.
+            // tcbuild.bat does not clean again: build.bat builds the same x64 tree the
+            // inspection just built, and picks up from it. Without -cpp, clean.bat leaves the C++
+            // build alone and just runs pwiz_tools\clean-apps.bat.
+        }
+        exec {
+            name = "Skyline code inspection"
+            id = "Skyline_Code_Inspection"
+            path = "pwsh"
+            // -AutomatedBuild because tcbuild.bat passes build.bat --automated: the inspection
+            // builds the x64 tree build.bat then builds on top of, and the two only reuse each
+            // other's output when every MSBuild property matches.
+            arguments = "-NoProfile -File pwiz_tools/Skyline/tcinspect.ps1 -AutomatedBuild"
+            // tcinspect.ps1 posts its own GitHub commit status rather than handing a verdict
+            // to a following step, so the check updates when the inspection finishes instead
+            // of when the enclosing step ends - and it stays correct if the inspection ever
+            // moves inside tcbuild.bat. It always exits 0, so it cannot fail this build.
+            //
+            // It publishes the context the standalone "Skyline Code Inspection" config
+            // publishes, character for character, replacing that check on a PR rather than
+            // adding a second one. Note there is no "teamcity - " prefix on that one, unlike
+            // every other config here - verified against the GitHub status API, not inferred.
+            //
+            // GITHUB_STATUS_TOKEN and INSPECTION_TARGET_URL reach it from params above.
         }
         exec {
             id = "RUNNER_simpleRunner_139"
             path = "pwiz_tools/Skyline/tcbuild.bat"
             arguments = "--i-agree-to-the-vendor-licenses --automated --require-vendor-support"
-        }
-        dotnetRestore {
-            name = "Restore"
-            id = "dotnet_1"
-            enabled = false
-            projects = "pwiz-sharp/Pwiz.sln"
-            args = "/p:IAgreeToVendorLicenses=true"
-            sdk = "8.0"
-        }
-        dotnetMsBuild {
-            id = "dotnet"
-            enabled = false
-            projects = "pwiz-sharp/Pwiz.sln"
-            version = DotnetMsBuildStep.MSBuildVersion.CrossPlatform
-            configuration = "Release"
-            args = "/p:IAgreeToVendorLicenses=true -p:TestTfmsInParallel=false"
-            sdk = "8.0"
-        }
-        dotnetVsTest {
-            name = "Test"
-            id = "Test"
-            enabled = false
-            assemblies = "**/bin/**Tests.dll"
-            version = DotnetVsTestStep.VSTestVersion.CrossPlatform
-            platform = DotnetVsTestStep.Platform.Auto
-            sdk = "8.0"
-            coverage = dotcover {
-            }
         }
         script {
             name = "Set PWIZ_VERSION variable"
@@ -116,11 +124,11 @@ create(DslContext.projectId, BuildType({
             param("GitHubAuthToken", "credentialsJSON:ff89fd87-e72b-4868-b752-4f2beaabe7b2")
             param("buildStatusUpdateState", "success")
         }
-        stepsOrder = arrayListOf("Set_PYTHON_HOME_if_unset_by_agent", "Install_dotCover", "RUNNER_simpleRunner_139", "dotnet_1", "dotnet", "Test", "Set_PWIZ_VERSION_variable", "RUNNER_73", "RUNNER_85")
+        stepsOrder = arrayListOf("Set_PYTHON_HOME_if_unset_by_agent", "Skyline_Clean", "Skyline_Code_Inspection", "RUNNER_simpleRunner_139", "Set_PWIZ_VERSION_variable", "RUNNER_73", "RUNNER_85")
     }
 
     failureConditions {
-        executionTimeoutMin = 90
+        executionTimeoutMin = 120
         failOnMetricChange {
             id = "BUILD_EXT_539"
             metric = BuildFailureOnMetric.MetricType.TEST_COUNT

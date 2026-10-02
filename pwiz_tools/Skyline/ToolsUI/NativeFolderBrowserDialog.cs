@@ -78,7 +78,7 @@ namespace pwiz.Skyline.ToolsUI
             var pathPtr = Marshal.StringToHGlobalUni(value);
             try
             {
-                User32.SendMessage(Hwnd, (User32.WinMessageType)BFFM_SETSELECTIONW, (IntPtr)1, pathPtr);
+                User32.SendMessage(Hwnd, (User32.WinMessageType)BFFM_SETSELECTIONW, 1, pathPtr);
             }
             finally
             {

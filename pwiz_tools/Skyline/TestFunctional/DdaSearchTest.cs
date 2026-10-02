@@ -38,6 +38,7 @@ using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -125,6 +126,37 @@ namespace pwiz.SkylineTestFunctional
 
             RunFunctionalTest();
             Assert.IsFalse(IsRecordMode);
+        }
+
+        /// <summary>
+        /// The search settings page collects a maximum number of variable modifications per peptide and
+        /// hands it to every search engine through SetModifications. MS Amanda takes it as MaxNoDynModifs
+        /// in the settings XML the wrapper generates, and nothing else in the pipeline reads that value
+        /// back, so a settings XML built without it would look correct everywhere but the search.
+        /// </summary>
+        [TestMethod]
+        public void TestMaxVariableModsReachesSettingsXml()
+        {
+            var mods = new[]
+            {
+                new StaticMod(@"Carbamidomethyl (C)", @"C", null, @"C2H3ON"),
+                new StaticMod(@"Oxidation (M)", @"M", null, @"O").ChangeVariable(true)
+            };
+
+            using (var searchEngine = new MSAmandaSearchWrapper())
+            {
+                // One parameter, one control: MaxNoDynModifs is driven by the max variable mods
+                // setting, so it must not also appear in the additional settings grid.
+                Assert.IsFalse(searchEngine.AdditionalSettings.ContainsKey(@"MaxNoDynModifs"),
+                    "MaxNoDynModifs should not be an additional setting");
+
+                foreach (int maxVariableMods in new[] { 0, 2, 9 })
+                {
+                    searchEngine.SetModifications(mods, maxVariableMods);
+                    AssertEx.Contains(searchEngine.BuildSettingsXml(), string.Format(CultureInfo.InvariantCulture,
+                        @"<MaxNoDynModifs>{0}</MaxNoDynModifs>", maxVariableMods));
+                }
+            }
         }
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
@@ -1199,7 +1231,7 @@ namespace pwiz.SkylineTestFunctional
                 //Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
-            SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.ClickNextButton()));
+            SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
 
             if (RedownloadTools || TestSettings.HasMissingDependencies)
             {
@@ -1292,11 +1324,11 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Start a second search, test cannot-close-during-search, then cancel
-            SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.ClickNextButton()));
+            SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
             TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.DDASearchPage));
             RunUI(() => importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success);
 
-            SkylineWindow.BeginInvoke(new Action(importPeptideSearchDlg.Close)); // try to close (don't wait for return)
+            SkylineWindow.BeginInvoke(importPeptideSearchDlg.Close); // try to close (don't wait for return)
             var cannotCloseDuringSearchDlg = WaitForOpenForm<MessageDlg>();
             Assert.AreEqual(PeptideSearchResources.SearchControl_CanWizardClose_Cannot_close_wizard_while_the_search_is_running_,
                 cannotCloseDuringSearchDlg.Message);
@@ -1556,7 +1588,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Rerun search
             searchSucceeded = null;
-            SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.ClickNextButton()));
+            SkylineWindow.BeginInvoke(() => importPeptideSearchDlg.ClickNextButton());
 
             var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
             if (downloaderDlg != null)

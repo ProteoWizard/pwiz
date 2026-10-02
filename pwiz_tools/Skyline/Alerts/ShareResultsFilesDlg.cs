@@ -348,7 +348,7 @@ namespace pwiz.Skyline.Alerts
                     if (longWaitBroker != null && longWaitBroker.IsCanceled)
                         return;
 
-                    if (entry != null && DataSourceUtil.IsDataSource(entry))
+                    if (DataSourceUtil.IsDataSource(entry))
                     {
                         if (namesToMatch.Contains(Path.GetFileName(entry)))
                         {
