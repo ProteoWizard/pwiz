@@ -1257,22 +1257,25 @@ namespace pwiz.Skyline.ToolsUI
         private const int ACTIVATE_POLL_MILLIS = 25;
         private const int ACTIVATE_SETTLE_MAX_MILLIS = 500;
 
-        // Activates the form and captures it (redacting any sensitive regions), as a right-click "capture
-        // screenshot" would. Called off the UI thread (the connector pipe thread, or a test thread). Bringing
-        // the window to the front is processed by the UI thread's message loop, so the activation and the
-        // capture are two separate UI-thread trips: in between, this off-UI caller releases the UI thread and
-        // polls until the form's top-level window is actually the foreground window -- stopping the moment it
-        // is, or after the cap if activation was refused. Capturing before the form is on top would leave any
-        // window still over it to be redacted (a cyan block) by CaptureAndRedact.
+        // Activates the form and captures it, as a right-click "capture screenshot" would. Called off the UI
+        // thread (the connector pipe thread, or a test thread). Bringing the window to the front is processed by
+        // the UI thread's message loop, so the activation and the capture are two separate UI-thread trips: in
+        // between, this off-UI caller releases the UI thread and polls until the form's top-level window is
+        // actually the foreground window -- stopping the moment it is, or after the cap if activation was refused.
+        // A form still covered by another application's window, or with no desktop to copy from, is rendered
+        // off-screen instead of copied from the screen (see ScreenCapture.GetFormImage). With no desktop the
+        // activation still selects a docked form's tab, but there is no foreground window to wait for.
         public override System.Drawing.Bitmap CaptureImage()
         {
+            bool desktopAvailable = ScreenCapture.IsDesktopAvailable();
             var topLevelHandle = DialogWatcher.CallFunction(Hwnd, () =>
             {
                 ScreenCapture.ActivateForm(Form);
                 return (FormUtil.FindTopLevelOwner(Form) ?? Form).Handle;
             }, CancellationToken);
             for (int waited = 0;
-                 waited < ACTIVATE_SETTLE_MAX_MILLIS && User32.GetForegroundWindow() != topLevelHandle;
+                 desktopAvailable && waited < ACTIVATE_SETTLE_MAX_MILLIS &&
+                 User32.GetForegroundWindow() != topLevelHandle;
                  waited += ACTIVATE_POLL_MILLIS)
                 Thread.Sleep(ACTIVATE_POLL_MILLIS);
             return DialogWatcher.CallFunction(Hwnd, () =>
@@ -1280,7 +1283,7 @@ namespace pwiz.Skyline.ToolsUI
                 // Flush any pending repaint so the screen grab reflects the form's current state rather than a
                 // stale frame (e.g. a wizard page captured mid-transition still showing the previous page).
                 Form.Update();
-                return ScreenCapture.CaptureAndRedact(ScreenCapture.GetWindowRectangle(Form), Form);
+                return ScreenCapture.GetFormImage(Form);
             }, CancellationToken);
         }
 
