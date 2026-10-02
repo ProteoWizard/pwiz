@@ -35,11 +35,18 @@ namespace pwiz.Osprey.Core
         public const string INPUT = @"input";
         public const string LIBRARY = @"library";
         public const string OUTPUT = @"output";
+        public const string OUTPUT_DIR = @"output-dir";
+        public const string CACHE_DIR = @"cache-dir";
         public const string FDR_METHOD = @"fdr-method";
         public const string DECOYS_IN_LIBRARY = @"decoys-in-library";
+        public const string RESOLUTION = @"resolution";
+        public const string FRAGMENT_TOLERANCE = @"fragment-tolerance";
         public const string DECOY_PAIRING_MANIFEST = @"decoy-pairing-manifest";
         public const string TASK = @"task";
         public const string MODEL_DIAGNOSTICS = @"model-diagnostics";
+        public const string PARALLEL_FILES = @"parallel-files";
+        public const string VERBOSE = @"verbose";
+        public const string TRAINING_EXPORT = @"training-export";
 
         /// <summary>The argument as it is typed: <c>--name</c>.</summary>
         public static string Text(string name)

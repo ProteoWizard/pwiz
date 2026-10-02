@@ -49,6 +49,12 @@ namespace pwiz.Osprey.Core
         public string OutputReport { get; set; }
 
         /// <summary>
+        /// Optional: write the loaded spectral library to this path as a .blib, with fragment ion
+        /// annotations, and exit without searching. No input files are needed.
+        /// </summary>
+        public string ExportLibraryBlib { get; set; }
+
+        /// <summary>
         /// Optional: write an FDRBench-compatible input TSV to this path. Includes every reported
         /// (compaction-surviving) target, i.e. the peptides actually written to the output, regardless
         /// of q-value, with the raw SVM discriminant as <c>score</c>. The level
@@ -151,6 +157,16 @@ namespace pwiz.Osprey.Core
         /// their <see cref="LibraryEntry.Id"/> set.
         /// </summary>
         public bool DecoysInLibrary { get; set; }
+
+        /// <summary>
+        /// Whether the library supplies its own decoys, so the load must mark and pair them and
+        /// Osprey generates none: <see cref="DecoysInLibrary"/>, or its synonym
+        /// <see cref="DecoyMethod.FromLibrary"/>. Treating the two as one is what fixed
+        /// library-decoy mode silently falling through to Reverse generation. The one
+        /// definition: the load, scoring and the argument checks all ask it here, so they
+        /// cannot disagree about which searches generate.
+        /// </summary>
+        public bool LibrarySuppliesDecoys => DecoysInLibrary || DecoyMethod == DecoyMethod.FromLibrary;
 
         /// <summary>
         /// Protein-accession prefixes that identify decoys when the
@@ -273,6 +289,12 @@ namespace pwiz.Osprey.Core
 
         /// <summary>Inter-replicate peak reconciliation settings.</summary>
         public ReconciliationConfig Reconciliation { get; set; } = new ReconciliationConfig();
+
+        /// <summary>
+        /// The optional training export (<c>--training-export</c>), a PerFileRescoring output.
+        /// Off by default, and in no identity hash: off, it is not declared at all.
+        /// </summary>
+        public TrainingExportConfig TrainingExport { get; set; } = new TrainingExportConfig();
 
         /// <summary>Enable the coelution signal pre-filter.</summary>
         public bool PrefilterEnabled { get; set; } = true;

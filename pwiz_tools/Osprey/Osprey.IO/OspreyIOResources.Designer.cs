@@ -81,7 +81,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid BiblioSpec library: the RefSpectra table was not found..
+        ///   Looks up a localized string similar to Invalid BiblioSpec library: the {0} table was not found..
         /// </summary>
         public static string BlibLoader_Load_Invalid_BiblioSpec_library__the_RefSpectra_table_was_not_found_ {
             get {
@@ -90,7 +90,45 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Library protein accessions carry the per-peptide &apos;_pepNNNNN&apos; suffix that Carafe adds (e.g. &apos;{2}&apos; -&gt; &apos;{3}&apos;); removing it maps {0:N0} accessions to {1:N0} proteins. Without this, every peptide would count as its own protein..
+        ///   Looks up a localized string similar to Typed {0:N0} of {1:N0} library peaks as b or y ions within {2} {3}.
+        /// </summary>
+        public static string BlibLoader_Load_Typed__0_N0__of__1_N0__library_peaks_as_b_or_y_ions_within__2___3_ {
+            get {
+                return ResourceManager.GetString("BlibLoader_Load_Typed__0_N0__of__1_N0__library_peaks_as_b_or_y_ions_within__2___3" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ... and {0:N0} more modifications.
+        /// </summary>
+        public static string BlibLoader_ToException____and__0__more_modifications {
+            get {
+                return ResourceManager.GetString("BlibLoader_ToException____and__0__more_modifications", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} in {1:N0} spectra, first {2}.
+        /// </summary>
+        public static string BlibLoader_ToException__0__in__1__spectra__first__2_ {
+            get {
+                return ResourceManager.GetString("BlibLoader_ToException__0__in__1__spectra__first__2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0:N0} library spectra have modifications Osprey cannot identify. A modification mass printed with fewer than {1} decimals must match a known UniMod modification allowed on its residue, and a UniMod id must be one Osprey knows. Build the library with full-precision modification masses and load it again:.
+        /// </summary>
+        public static string BlibLoader_ToException__0__library_spectra_have_modifications_Osprey_cannot_identify {
+            get {
+                return ResourceManager.GetString("BlibLoader_ToException__0__library_spectra_have_modifications_Osprey_cannot_ident" +
+                        "ify", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library protein accessions carry the per-peptide &apos;{4}&apos; suffix that Carafe adds (e.g. &apos;{2}&apos; -&gt; &apos;{3}&apos;); removing it maps {0:N0} accessions to {1:N0} proteins. Without this, every peptide would count as its own protein..
         /// </summary>
         public static string CarafeProteinIdNormalizer_Normalize_Library_protein_accessions_carry_the_per_peptide___pepNNNNN__suffix_that_Carafe_adds__e_g_ {
             get {
@@ -118,7 +156,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The decoy pairing manifest is missing required columns (it needs sequence, peptide_type and peptide_pair_index). Found: {0}.
+        ///   Looks up a localized string similar to The decoy pairing manifest is missing required columns (it needs {1}, {2} and {3}). Found: {0}.
         /// </summary>
         public static string DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_missing_required_columns__it_needs_sequence__peptide_type_ {
             get {
@@ -128,11 +166,20 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Missing {0} at row {1}.
+        ///   Looks up a localized string similar to (line {0}, column {1}) Invalid {2} &apos;{3}&apos;.
         /// </summary>
-        public static string DiannTsvLoader_GetField_Missing__0__at_row__1_ {
+        public static string DiannTsvLoader_LineReader___line__0___column__1___Invalid__2____3__ {
             get {
-                return ResourceManager.GetString("DiannTsvLoader_GetField_Missing__0__at_row__1_", resourceCulture);
+                return ResourceManager.GetString("DiannTsvLoader_LineReader___line__0___column__1___Invalid__2____3__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (line {0}, column {1}) Missing {2}.
+        /// </summary>
+        public static string DiannTsvLoader_LineReader___line__0___column__1___Missing__2_ {
+            get {
+                return ResourceManager.GetString("DiannTsvLoader_LineReader___line__0___column__1___Missing__2_", resourceCulture);
             }
         }
         
@@ -164,11 +211,59 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid {0} &apos;{1}&apos; at row {2}.
+        ///   Looks up a localized string similar to ... and {0:N0} more errors.
         /// </summary>
-        public static string DiannTsvLoader_ParseValue_Invalid__0____1___at_row__2_ {
+        public static string DiannTsvLoader_ToException____and__0__more_errors {
             get {
-                return ResourceManager.GetString("DiannTsvLoader_ParseValue_Invalid__0____1___at_row__2_", resourceCulture);
+                return ResourceManager.GetString("DiannTsvLoader_ToException____and__0__more_errors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0:N0} library lines have errors. Fix the library and load it again:.
+        /// </summary>
+        public static string DiannTsvLoader_ToException__0__library_lines_have_errors__Fix_the_library_and_load_it_again_ {
+            get {
+                return ResourceManager.GetString("DiannTsvLoader_ToException__0__library_lines_have_errors__Fix_the_library_and_loa" +
+                        "d_it_again_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}, charge {1}, peak m/z {2:F4}: the library says {3}, Osprey computes {4}.
+        /// </summary>
+        public static string FragmentTypeCheck_AddPeak__0___charge__1___peak_m_z__2_F4___the_library_says__3___Osprey_computes__4_ {
+            get {
+                return ResourceManager.GetString("FragmentTypeCheck_AddPeak__0___charge__1___peak_m_z__2_F4___the_library_says__3__" +
+                        "_Osprey_computes__4_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to no ion.
+        /// </summary>
+        public static string FragmentTypeCheck_AddPeak_no_ion {
+            get {
+                return ResourceManager.GetString("FragmentTypeCheck_AddPeak_no_ion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fragment types in {0}: of {2:N0} peaks the library types as a b or y ion, Osprey&apos;s own typing agrees on {1:N0}, the library chooses another ion within tolerance of the peak on {5:N0}, and names no ion within tolerance on {3:N0}; {4:N0} more peaks are typed outside what Osprey computes (neutral losses, other ion types, fragment charge above 2, or unreadable).
+        /// </summary>
+        public static string FragmentTypeCheck_Summary_Fragment_types_in__0___Osprey_s_computed_types_agree_with__1_N0__of__2_N0__peaks {
+            get {
+                return ResourceManager.GetString("FragmentTypeCheck_Summary_Fragment_types_in__0___Osprey_s_computed_types_agree_wi" +
+                        "th__1_N0__of__2_N0__peaks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Writing {0:N0} library precursors to {1}.
+        /// </summary>
+        public static string LibraryBlibWriter_Write_Writing__0__library_precursors_to__1_ {
+            get {
+                return ResourceManager.GetString("LibraryBlibWriter_Write_Writing__0__library_precursors_to__1_", resourceCulture);
             }
         }
         
@@ -235,6 +330,16 @@ namespace pwiz.Osprey.IO {
         public static string LibraryLoader_DescribeSharedDecoyIds_Library_precursor_ID__0__ {
             get {
                 return ResourceManager.GetString("LibraryLoader_DescribeSharedDecoyIds_Library_precursor_ID__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0:N0} library precursors have protein accessions marking them as decoys ({1}), the first {2}, but {3} was not given, so they would be searched as targets. Search with {3} to use the library&apos;s decoys, or remove them from the library..
+        /// </summary>
+        public static string LibraryLoader_DescribeUnflaggedDecoys__0__library_precursors_have_protein_accessions_marking_them_as_decoys {
+            get {
+                return ResourceManager.GetString("LibraryLoader_DescribeUnflaggedDecoys__0__library_precursors_have_protein_accessi" +
+                        "ons_marking_them_as_decoys", resourceCulture);
             }
         }
         
@@ -343,7 +448,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to --decoys-in-library was given, but no library precursor has a protein accession starting with one of the decoy prefixes {0}. Check that the library contains decoys with one of these prefixes, or leave out --decoys-in-library so Osprey generates its own decoys..
+        ///   Looks up a localized string similar to {1} was given, but no library precursor has a protein accession starting with one of the decoy prefixes {0}. Check that the library contains decoys with one of these prefixes, or leave out {1} so Osprey generates its own decoys..
         /// </summary>
         public static string LibraryLoader_TryFinishSuppliedDecoys___decoys_in_library_was_given__but_no_library_precursor_has_a_protein_accession_starting_ {
             get {
@@ -432,7 +537,17 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} does not record the search settings it was scored with, so it cannot be reused. Score the file again (--task PerFileScoring)..
+        ///   Looks up a localized string similar to The file is damaged: a stored list of values is {0:N0} bytes long, which is not a multiple of {1}..
+        /// </summary>
+        public static string ParquetBlobCodec_Decode_The_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__ {
+            get {
+                return ResourceManager.GetString("ParquetBlobCodec_Decode_The_file_is_damaged__a_stored_list_of_values_is__0__bytes" +
+                        "_long__which_is_not_a_multiple_of__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} does not record the search settings it was scored with, so it cannot be reused. Score the file again ({1})..
         /// </summary>
         public static string ParquetScoreCache_CheckParquetMetadata__0__does_not_record_the_search_settings_it_was_scored_with__so_it_cannot_be_reused__Score_ {
             get {
@@ -442,7 +557,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} does not record which Osprey build wrote it, so it cannot be reused. Score the file again with this build (--task PerFileScoring)..
+        ///   Looks up a localized string similar to {0} does not record which Osprey build wrote it, so it cannot be reused. Score the file again with this build ({1})..
         /// </summary>
         public static string ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_Osprey_build_wrote_it__so_it_cannot_be_reused__Score_the_file_ {
             get {
@@ -452,7 +567,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} does not record which spectral library it was scored against, so it cannot be reused. Score the file again (--task PerFileScoring)..
+        ///   Looks up a localized string similar to {0} does not record which spectral library it was scored against, so it cannot be reused. Score the file again ({1})..
         /// </summary>
         public static string ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_spectral_library_it_was_scored_against__so_it_cannot_be_reused__ {
             get {
@@ -462,7 +577,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} was scored against a different spectral library than --library names (library hash {1}; this run {2}). Score the file again with this library (--task PerFileScoring), or pass the library it was scored against..
+        ///   Looks up a localized string similar to {0} was scored against a different spectral library than {3} names (library hash {1}; this run {2}). Score the file again with this library ({4}), or pass the library it was scored against..
         /// </summary>
         public static string ParquetScoreCache_CheckParquetMetadata__0__was_scored_against_a_different_spectral_library_than___library_names__Score_the_file_ {
             get {
@@ -472,7 +587,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} was scored by a different daily build of Osprey ({1}; this is {2}). Score the file again with this build (--task PerFileScoring), or run this task with the build that scored it..
+        ///   Looks up a localized string similar to {0} was scored by a different daily build of Osprey ({1}; this is {2}). Score the file again with this build ({3}), or run this task with the build that scored it..
         /// </summary>
         public static string ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_a_different_daily_build_of_Osprey___1___this_is__2____Score_the_file_ {
             get {
@@ -482,7 +597,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} was scored by Osprey {1}, which is not compatible with this build ({2}). Score the file again with this build (--task PerFileScoring)..
+        ///   Looks up a localized string similar to {0} was scored by Osprey {1}, which is not compatible with this build ({2}). Score the file again with this build ({3})..
         /// </summary>
         public static string ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_Osprey__1___which_is_not_compatible_with_this_build___2____Score_the_ {
             get {
@@ -492,7 +607,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} was scored with different search settings than this run uses (settings hash {1}; this run {2}). Score the file again with these settings (--task PerFileScoring), or use the settings it was scored with..
+        ///   Looks up a localized string similar to {0} was scored with different search settings than this run uses (settings hash {1}; this run {2}). Score the file again with these settings ({3}), or use the settings it was scored with..
         /// </summary>
         public static string ParquetScoreCache_CheckParquetMetadata__0__was_scored_with_different_search_settings_than_this_run_uses__Score_the_file_again_ {
             get {
@@ -502,22 +617,12 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} was written by an Osprey build this one does not recognize ({1}; this is {2}), so it cannot be reused. Score the file again with this build (--task PerFileScoring)..
+        ///   Looks up a localized string similar to {0} was written by an Osprey build this one does not recognize ({1}; this is {2}), so it cannot be reused. Score the file again with this build ({3})..
         /// </summary>
         public static string ParquetScoreCache_CheckParquetMetadata__0__was_written_by_an_Osprey_build_this_one_does_not_recognize___1___this_is__2____so_it_ {
             get {
                 return ResourceManager.GetString("ParquetScoreCache_CheckParquetMetadata__0__was_written_by_an_Osprey_build_this_on" +
                         "e_does_not_recognize___1___this_is__2____so_it_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The scores file is damaged: a stored list of values is {0:N0} bytes long, which is not a multiple of {1}..
-        /// </summary>
-        public static string ParquetScoreCache_DecodeBlob_The_scores_file_is_damaged__a_stored_list_of_values_is__0__bytes_long__which_is_not_a_multiple_of__1__ {
-            get {
-                return ResourceManager.GetString("ParquetScoreCache_DecodeBlob_The_scores_file_is_damaged__a_stored_list_of_values_" +
-                        "is__0__bytes_long__which_is_not_a_multiple_of__1__", resourceCulture);
             }
         }
         
@@ -533,7 +638,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} is corrupt: row {1} (entry_id {2}) has a charge of 0, which is not a possible precursor charge. The charge column is either unreadable or was written corrupt, and because charge is part of the row&apos;s identity, using the file would silently drop precursors rather than report a wrong number. Delete this file and re-run the stage that produced it. Parquet written before 2026-09-17 may carry this from a write race in the parallel column writer, fixed in that release..
+        ///   Looks up a localized string similar to {0} is damaged: row {1} in row group {5} ({3} {2}) has a charge of 0, which is not a possible precursor charge. Delete the file and run {4} again to rewrite it..
         /// </summary>
         public static string ParquetScoreCache_RequireCharge__0__is_corrupt__row__1___entry_id__2___has_a_charge_of_0__which_is_not_a_possible_ {
             get {
@@ -552,7 +657,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The scores file &apos;{0}&apos; is damaged: row group {1} has no readable entry_id column, so its row order cannot be established. Delete it and score the file again..
+        ///   Looks up a localized string similar to The scores file &apos;{0}&apos; is damaged: row group {1} has no readable {2} column, so its row order cannot be established. Delete it and score the file again..
         /// </summary>
         public static string ParquetScoreCache_StreamEntryIds_The_scores_file___0___is_damaged__row_group__1__has_no_readable_entry_id_column__so_its_ {
             get {
@@ -573,12 +678,12 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to --task SecondPassFDR needs the reconciled scores files that --task PerFileRescoring writes, but {0} is not one (osprey.reconciled = &apos;{1}&apos;). Run --task PerFileRescoring first. If the file was written by a newer version of Osprey, use that version..
+        ///   Looks up a localized string similar to {2} needs the reconciled scores files that {3} writes, but {0} is not one ({4} = &apos;{1}&apos;). Run {3} first. If the file was written by a newer version of Osprey, use that version..
         /// </summary>
-        public static string ParquetScoreCache_ValidateScoresParquetGroup___task_SecondPassFDR_needs_the_reconciled_scores_files_that___task_PerFileRescoring_ {
+        public static string ParquetScoreCache_ValidateScoresParquetGroup__2__needs_the_reconciled_scores_files_that___task_PerFileRescoring_writes {
             get {
-                return ResourceManager.GetString("ParquetScoreCache_ValidateScoresParquetGroup___task_SecondPassFDR_needs_the_recon" +
-                        "ciled_scores_files_that___task_PerFileRescoring_", resourceCulture);
+                return ResourceManager.GetString("ParquetScoreCache_ValidateScoresParquetGroup__2__needs_the_reconciled_scores_file" +
+                        "s_that___task_PerFileRescoring_writes", resourceCulture);
             }
         }
         
@@ -678,7 +783,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Reconciliation file {0} has format_version {1} but does not carry the first-pass precursor set. Delete this analysis&apos;s *.FirstPassFDR.osprey.task files and run the first pass again..
+        ///   Looks up a localized string similar to Reconciliation file {0} has {2} {1} but does not carry the first-pass precursor set. Delete this analysis&apos;s {3} files and run the first pass again..
         /// </summary>
         public static string ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_carry_the_first_pass_ {
             get {
@@ -688,7 +793,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Reconciliation file {0} has format_version {1} but does not list the input files it covers (file_stems). Delete this analysis&apos;s *.FirstPassFDR.osprey.task files and run the first pass again..
+        ///   Looks up a localized string similar to Reconciliation file {0} has {2} {1} but does not list the input files it covers ({3}). Delete this analysis&apos;s {4} files and run the first pass again..
         /// </summary>
         public static string ReconciliationFile_Load_Reconciliation_file__0__has_format_version__1__but_does_not_list_the_input_files_it_ {
             get {
@@ -698,7 +803,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Reconciliation file {0} has unsupported format_version {1} (expected {2}). Delete this analysis&apos;s *.FirstPassFDR.osprey.task files and run the first pass again..
+        ///   Looks up a localized string similar to Reconciliation file {0} has unsupported {3} {1} (expected {2}). Delete this analysis&apos;s {4} files and run the first pass again..
         /// </summary>
         public static string ReconciliationFile_Load_Reconciliation_file__0__has_unsupported_format_version__1___expected__2____Delete_this_ {
             get {
@@ -892,7 +997,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Spectrum index {0} has no valid isolation window lower offset (cvParam MS:1000828 is missing or not positive). Osprey needs true isolation windows to process DIA data..
+        ///   Looks up a localized string similar to Spectrum index {0} has no valid isolation window lower offset (cvParam {1} is missing or not positive). Osprey needs true isolation windows to process DIA data..
         /// </summary>
         public static string SpectrumBuilder_CreateMs2Spectrum_Spectrum_index__0__has_no_valid_isolation_window_lower_offset__cvParam_MS_1000828_is_ {
             get {
@@ -902,7 +1007,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Spectrum index {0} has no valid isolation window upper offset (cvParam MS:1000829 is missing or not positive). Osprey needs true isolation windows to process DIA data..
+        ///   Looks up a localized string similar to Spectrum index {0} has no valid isolation window upper offset (cvParam {1} is missing or not positive). Osprey needs true isolation windows to process DIA data..
         /// </summary>
         public static string SpectrumBuilder_CreateMs2Spectrum_Spectrum_index__0__has_no_valid_isolation_window_upper_offset__cvParam_MS_1000829_is_ {
             get {
@@ -912,7 +1017,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to NaN m/z at index {0} of spectrum_index={1} (n_peaks={2}); cannot sort or fragment-match a malformed centroid array..
+        ///   Looks up a localized string similar to NaN m/z at index {0} of spectrum index {1} ({2:N0} peaks); cannot sort or fragment-match a malformed centroid array..
         /// </summary>
         public static string SpectrumBuilder_EnsureSorted_NaN_m_z_at_index__0__of_spectrum_index__1___n_peaks__2____cannot_sort_or_fragment_match_a_ {
             get {
@@ -922,7 +1027,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot read &apos;{0}&apos;: ProteoWizard has no vendor peak picking for this format, and Osprey scores centroided peaks. Convert the file to mzML with msconvert --filter &quot;peakPicking vendor msLevel=1-&quot; and read that instead..
+        ///   Looks up a localized string similar to Cannot read &apos;{0}&apos;: ProteoWizard has no vendor peak picking for this format, and Osprey scores centroided peaks. Convert the file to mzML with {1} and read that instead..
         /// </summary>
         public static string SpectrumFileReader_LoadAllSpectra_Cannot_read___0____ProteoWizard_has_no_vendor_peak_picking_for_this_format__and_Osprey_ {
             get {
@@ -932,7 +1037,7 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot read &apos;{0}&apos;: this build of Osprey has no vendor instrument support. Rebuild with /p:IAgreeToVendorLicenses=true on Osprey.sln, or with &apos;bjam pwiz_tools/Osprey//Osprey --i-agree-to-the-vendor-licenses&apos;. Otherwise convert the file to mzML with msconvert and read that instead..
+        ///   Looks up a localized string similar to Cannot read &apos;{0}&apos;: this build of Osprey has no vendor instrument support. Rebuild with {1} on {2}, or with &apos;{3}&apos;. Otherwise convert the file to mzML with {4} and read that instead..
         /// </summary>
         public static string SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_build_of_Osprey_has_no_vendor_instrument_support__Rebuild_with__p_ {
             get {

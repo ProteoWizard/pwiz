@@ -306,7 +306,7 @@ namespace pwiz.Osprey.Core
         /// after Stage 5, including entries already judged false. They read only the identity
         /// fields, never the spectra - so dropping entries would silently move protein FDR,
         /// while dropping fragments cannot. The blib write is safe for a separate reason:
-        /// <c>BlibOutputWriter.PrecompressSpectra</c> reads fragments only for
+        /// <c>BlibOutputWriter.PrepareSpectra</c> reads fragments only for
         /// <c>bestByPrecursor</c>, which is derived from the post-compaction survivors, so
         /// blib-written is a SUBSET of what is retained here.</para>
         ///

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
 	<!-- 
 		Microsoft ResX Schema
@@ -112,6 +112,9 @@
   <data name="_experiment_fdr" xml:space="preserve">
     <value>Experiment-level FDR threshold (default: 0.01)</value>
   </data>
+  <data name="_export_library" xml:space="preserve">
+    <value>Write the spectral library given by {0} to this path as a {1} file that Skyline and Osprey can read, and exit without searching</value>
+  </data>
   <data name="_fdr_level" xml:space="preserve">
     <value>FDR level (default: {0})</value>
   </data>
@@ -119,13 +122,13 @@
     <value>FDR method (default: {0})</value>
   </data>
   <data name="_fdrbench" xml:space="preserve">
-    <value>Write an FDRBench-compatible input TSV to this path. The level is taken from {0} (peptide; precursor and both emit precursor-level). Includes every reported target, i.e. the peptides actually written to the output, regardless of q-value, with the raw SVM discriminant as 'score', so FDRBench can compute true FDR via entrapment counting without truncation at Osprey's threshold.</value>
+    <value>Write an FDRBench-compatible input TSV to this path. The level is taken from {0} ({2}; {3} and {4} emit precursor-level). Includes every reported target, i.e. the peptides actually written to the output, regardless of q-value, with the raw SVM discriminant as '{1}', so FDRBench can compute true FDR via entrapment counting without truncation at Osprey's threshold.</value>
   </data>
   <data name="_fdrbench_pass" xml:space="preserve">
-    <value>With {0}: which FDR pass to emit. 2 (default) = the second-pass results written to the blib (the FDR of what Osprey reports). 1 = the full first-pass pool, before it is filtered for the second pass (every scored target, regardless of q), with first-pass q-values, matching the FDRBench input of the original Rust Osprey (the assumption the second-pass output rests on). both = emit both in one run, writing the {0} path with .pass1 / .pass2 stem suffixes.</value>
+    <value>With {0}: which FDR pass to emit. 2 (default) = the second-pass results written to the blib (the FDR of what Osprey reports). 1 = the full first-pass pool, before it is filtered for the second pass (every scored target, regardless of q), with first-pass q-values, matching the FDRBench input of the original Rust Osprey (the assumption the second-pass output rests on). {3} = emit both in one run, writing the {0} path with {1} / {2} stem suffixes.</value>
   </data>
   <data name="_fdrbench_per_run" xml:space="preserve">
-    <value>With {0}: emit one row per (precursor, run) using run-level q-values (adds a 'run' column). Default is one row per precursor using experiment-level q-values.</value>
+    <value>With {0}: emit one row per (precursor, run) using run-level q-values (adds a '{1}' column). Default is one row per precursor using experiment-level q-values.</value>
   </data>
   <data name="_fragment_tolerance" xml:space="preserve">
     <value>Fragment m/z tolerance (default: 10)</value>
@@ -143,7 +146,7 @@
     <value>File of input paths, one per line (# comments ignored). Bounded alternative to a long {0} list.</value>
   </data>
   <data name="_library" xml:space="preserve">
-    <value>Spectral library (.tsv, .blib)</value>
+    <value>Spectral library ({0}, {1})</value>
   </data>
   <data name="_log_file" xml:space="preserve">
     <value>Write all output to this file instead of stderr</value>
@@ -188,13 +191,25 @@
     <value>Shared peptide handling (default: {0})</value>
   </data>
   <data name="_task" xml:space="preserve">
-    <value>HPC: run exactly one pipeline task (one node = one task). Omit for the full pipeline. {0} stages the {1} caches; {2} regenerates only the {3} report for a COMPLETED run, writing no other output.</value>
+    <value>HPC: run exactly one pipeline task (one node = one task). Omit for the full pipeline. {0} stages the {1} caches; {4} writes the {5} parquets, and on a COMPLETED run only the missing ones; {2} regenerates only the {3} report for a COMPLETED run, writing no other output.</value>
   </data>
   <data name="_threads" xml:space="preserve">
     <value>Per-file main-search threads (INNER; default: all cores), divided across files run concurrently by {0}</value>
   </data>
   <data name="_timestamp" xml:space="preserve">
     <value>Prefix each output line with {0}</value>
+  </data>
+  <data name="_training_export" xml:space="preserve">
+    <value>Write {0} per run: every target precursor at run q &lt;= {1} with the observed intensities of its full b/y ladder and per-ion interference evidence (for training CarafeSharp). Adding it to a finished run writes only the exports and re-scores nothing.</value>
+  </data>
+  <data name="_training_export_claimant_q" xml:space="preserve">
+    <value>With {0}: the run q-value at which another target counts as a claimant of a shared fragment peak (default: {1})</value>
+  </data>
+  <data name="_training_export_max_q" xml:space="preserve">
+    <value>With {0}: the run precursor q-value a target must reach to be exported (default: {1})</value>
+  </data>
+  <data name="_training_export_xics" xml:space="preserve">
+    <value>With {0}: also write each precursor's per-ion XIC matrix over its final peak boundaries</value>
   </data>
   <data name="_verbose" xml:space="preserve">
     <value>Show more detail (e.g. per-fold Percolator iterations) that is hidden by default</value>

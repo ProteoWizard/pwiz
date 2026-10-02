@@ -66,6 +66,8 @@ namespace pwiz.Osprey.Core
         public static readonly LogTag MODEL_DIAGNOSTICS = new LogTag(@"MODEL-DIAGNOSTICS", Always);
         /// <summary>Entrapment pairing under <c>--fdrbench</c>.</summary>
         public static readonly LogTag ENTRAPMENT = new LogTag(@"ENTRAPMENT", Always);
+        /// <summary>The per-run summary of <c>--training-export</c>.</summary>
+        public static readonly LogTag TRAIN_EXPORT = new LogTag(@"TRAIN-EXPORT", Always);
         /// <summary>A bisection dump or stop, reached only through <c>-d</c> or an <c>OSPREY_DUMP_*</c> / <c>OSPREY_DIAG_*</c> setting.</summary>
         public static readonly LogTag BISECT = new LogTag(@"BISECT", Always);
         /// <summary>A diagnostic dump reached only through <c>-d</c>.</summary>

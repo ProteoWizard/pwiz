@@ -140,7 +140,7 @@ namespace pwiz.Osprey.Core
                     int explicitN = Math.Max(1, Math.Min(request.Count, nFiles));
                     log?.Invoke(string.Format(
                         OspreyCoreResources.FileParallelismResolver_Resolve_File_parallelism___0___explicit___parallel_files___1__files_,
-                        explicitN, nFiles));
+                        explicitN, nFiles, OspreyArgNames.Text(OspreyArgNames.PARALLEL_FILES)));
                     return explicitN;
 
                 case FileParallelismMode.Auto:
@@ -165,7 +165,7 @@ namespace pwiz.Osprey.Core
                     }
                     log?.Invoke(string.Format(
                         OspreyCoreResources.FileParallelismResolver_Resolve_File_parallelism__1__sequential_default__pass___parallel_files_to_score__0__files_,
-                        nFiles));
+                        nFiles, OspreyArgNames.Text(OspreyArgNames.PARALLEL_FILES)));
                     return 1;
             }
         }

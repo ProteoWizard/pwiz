@@ -66,6 +66,14 @@ namespace pwiz.Osprey.IO
     {
         public const string EXT_MZML = @".mzML";
 
+        // Commands and file names the vendor-file errors tell the user to run or open. They go
+        // into the messages as arguments, never inside translated text.
+        private const string CMD_MSCONVERT = @"msconvert";
+        private const string CMD_MSCONVERT_PEAK_PICKING = CMD_MSCONVERT + @" --filter ""peakPicking vendor msLevel=1-""";
+        private const string MSBUILD_VENDOR_LICENSES = @"/p:IAgreeToVendorLicenses=true";
+        private const string OSPREY_SOLUTION = @"Osprey.sln";
+        private const string BJAM_VENDOR_LICENSES = @"bjam pwiz_tools/Osprey//Osprey --i-agree-to-the-vendor-licenses";
+
         private static int _vendorFailuresReported;
 
         /// <summary>
@@ -159,7 +167,8 @@ namespace pwiz.Osprey.IO
                 // SupportsVendorPeakPicking cannot be used to pre-empt this: it answers
                 // "is this a vendor reader" (true for Agilent), not "does it centroid".
                 throw new NotSupportedException(string.Format(
-                    OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Cannot_read___0____ProteoWizard_has_no_vendor_peak_picking_for_this_format__and_Osprey_, path), ex);
+                    OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Cannot_read___0____ProteoWizard_has_no_vendor_peak_picking_for_this_format__and_Osprey_,
+                    path, CMD_MSCONVERT_PEAK_PICKING), ex);
             }
             catch (VendorSupportNotEnabledException ex)
             {
@@ -169,10 +178,45 @@ namespace pwiz.Osprey.IO
                 // project's build flag rather than how Osprey is built. Restate it in
                 // terms the reader can act on, and keep the original as InnerException.
                 throw new NotSupportedException(string.Format(
-                    OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_build_of_Osprey_has_no_vendor_instrument_support__Rebuild_with__p_, path), ex);
+                    OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_build_of_Osprey_has_no_vendor_instrument_support__Rebuild_with__p_,
+                    path, MSBUILD_VENDOR_LICENSES, OSPREY_SOLUTION, BJAM_VENDOR_LICENSES, CMD_MSCONVERT), ex);
             }
 
             return new SpectrumFileResult(ms2Spectra, ms1Spectra, unsortedCount);
+        }
+
+        /// <summary>
+        /// What the source file says about its acquisition (<see cref="SourceRunMetadata"/>),
+        /// from its declared instrument and its first <see cref="SourceRunMetadata.MAX_MS2_SPECTRA"/>
+        /// MS2 spectra. Read only for a training export, never by the search, so it adds no work
+        /// to a parse. Null when the source is not present - an HPC node handed only the spectra
+        /// cache - or cannot be opened; the export's footer then leaves the keys empty.
+        /// </summary>
+        public static SourceRunMetadata TryReadSourceMetadata(string path)
+        {
+            if (string.IsNullOrEmpty(path) || !(File.Exists(path) || Directory.Exists(path)))
+                return null;
+            try
+            {
+                var metadata = new SourceRunMetadata();
+                using (var msData = new MsDataFileImpl(path, simAsSpectra: true, combineIonMobilitySpectra: false))
+                {
+                    metadata.ObserveFile(msData);
+                    int count = msData.SpectrumCount;
+                    for (int i = 0; i < count && metadata.NMs2Sampled < SourceRunMetadata.MAX_MS2_SPECTRA; i++)
+                    {
+                        var spectrum = msData.GetSpectrum(i);
+                        if (spectrum == null || spectrum.Level != 2 || spectrum.Precursors.Count == 0)
+                            continue;
+                        metadata.ObserveMs2(spectrum, spectrum.Precursors[0]);
+                    }
+                }
+                return metadata;
+            }
+            catch (Exception ex) when (!(ex is OutOfMemoryException))
+            {
+                return null;
+            }
         }
 
         /// <summary>
