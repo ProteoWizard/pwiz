@@ -342,11 +342,13 @@ namespace TestPerf
                 // register each one we delete in its persistent dir's PotentialMissingPersistentFileSet so
                 // the persistent-dir modification check tolerates the deletion and stays in sync with the
                 // glob (same pattern as DeleteFilesForScreenshots in DiaSwathTutorialTest).
+                // No dot after -diaumpire: the search also writes <file>-diaumpire_pin.tsv here, and one
+                // orphan left in the persistent dir fails CheckForModifiedPersistentFilesDir at cleanup.
                 var testFilesDir = TestFilesDirs[0];
                 foreach (var searchFile in searchFiles)
                 {
                     var searchFileDir = Path.GetDirectoryName(searchFile) ?? string.Empty;
-                    foreach (var diaumpireFile in Directory.GetFiles(searchFileDir, "*-diaumpire.*"))
+                    foreach (var diaumpireFile in Directory.GetFiles(searchFileDir, "*-diaumpire*"))
                     {
                         testFilesDir.PotentialMissingPersistentFileSet ??= new HashSet<string>();
                         testFilesDir.PotentialMissingPersistentFileSet.Add(
