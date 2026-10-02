@@ -310,8 +310,9 @@ namespace pwiz.CarafeSharp.Proteome
         /// </summary>
         public void ApplyPredictionDefaults(LibrarySettings settings)
         {
+            // A carafemodel-1 file holding no RT model predicted with AlphaPeptDeep's pretrained one, whatever the default is now.
             if (settings.RtModelType == null)
-                settings.RtModelType = RtModel;
+                settings.RtModelType = RtModel ?? (RtUsed ? null : RtModelType.alphapeptdeep);
             if (!settings.UserNce)
                 settings.Nce = Nce;
             if (!settings.UserInstrument && !string.IsNullOrEmpty(Instrument))

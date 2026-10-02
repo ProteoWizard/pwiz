@@ -452,13 +452,14 @@ namespace pwiz.CarafeSharp
         /// <summary>
         /// The RT model the library predicts with: <c>-rt_model</c>'s, else the one the folder's fine-tuned RT model is
         /// (a saved model's <see cref="CarafeModelFile.RtModel"/> came in as <c>-rt_model</c>'s default), else
-        /// AlphaPeptDeep. A fine-tuned RT model of another kind is replaced by that kind's pretrained model.
+        /// <see cref="LibrarySettings.DEFAULT_RT_MODEL"/>. A fine-tuned RT model of another kind is replaced by that
+        /// kind's pretrained model.
         /// </summary>
         private IRtPredictor LoadRtModel(CarafeModelDirectory modelDirectory, Device device)
         {
             string path = modelDirectory.GetRtModelPath(_settings.TrainingType);
             var fineTunedType = path != null ? GetRtModelType(path) : (RtModelType?)null;
-            var type = _settings.RtModelType ?? fineTunedType ?? RtModelType.alphapeptdeep;
+            var type = _settings.RtModelType ?? fineTunedType ?? LibrarySettings.DEFAULT_RT_MODEL;
             if (fineTunedType != null && fineTunedType != type)
             {
                 Log(string.Format(@"-rt_model {0}: using the pretrained {0} RT model instead of the fine-tuned {1} RT model {2}",

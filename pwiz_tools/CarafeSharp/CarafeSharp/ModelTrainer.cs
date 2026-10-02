@@ -80,7 +80,7 @@ namespace pwiz.CarafeSharp
             if (fallback != null)
                 Log(fallback);
             var pretrained = _openPretrained(_settings.PretrainedModels);
-            if ((_settings.RtModelType ?? baseModel?.RtModel) == RtModelType.chronologer)
+            if ((_settings.RtModelType ?? baseModel?.RtModel ?? LibrarySettings.DEFAULT_RT_MODEL) == RtModelType.chronologer)
                 ChronologerFiles.Open();
             Directory.CreateDirectory(_settings.OutputDirectory);
 
@@ -122,7 +122,7 @@ namespace pwiz.CarafeSharp
             var fineTune = new FineTuneOptions
             {
                 Seed = _settings.Seed, Device = device, Ms2Model = _settings.Ms2Model,
-                RtModelType = _settings.RtModelType ?? RtModelType.alphapeptdeep,
+                RtModelType = _settings.RtModelType ?? LibrarySettings.DEFAULT_RT_MODEL,
             };
             ConfigureFineTune?.Invoke(fineTune);
             OspreyTrainingSet trainingSet;
@@ -335,7 +335,7 @@ namespace pwiz.CarafeSharp
         private void SetBaseRtModel(FineTuneOptions fineTune, CarafeModelFile baseModel, string baseRt)
         {
             var baseType = baseRt != null ? LibraryGenerator.GetRtModelType(baseRt) : baseModel.RtModel;
-            fineTune.RtModelType = _settings.RtModelType ?? baseType ?? RtModelType.alphapeptdeep;
+            fineTune.RtModelType = _settings.RtModelType ?? baseType ?? LibrarySettings.DEFAULT_RT_MODEL;
             if (baseRt == null || baseType == fineTune.RtModelType)
             {
                 fineTune.RtModel = baseRt;

@@ -633,6 +633,17 @@ namespace pwiz.CarafeSharp.Test
                 Assert.IsNull(older.Ms2Origin);
                 Assert.IsTrue(older.RtUsed);
                 Assert.AreEqual(opened.RtMax, older.RtMax);
+                var olderSettings = new LibrarySettings();
+                older.ApplyPredictionDefaults(olderSettings);
+                Assert.IsNull(olderSettings.RtModelType, @"its rt.safetensors says which");
+                // One that holds no RT model predicted with AlphaPeptDeep's pretrained one, whatever the default is now.
+                string ms2Only = Path.Combine(folder, @"ms2_only" + CarafeModelFile.EXTENSION);
+                CarafeModelFile.Write(ms2Only, CarafeModelDirectory.Open(models, true), @"ms2", null, null, null, null, null,
+                    PretrainedOrigin(), PretrainedOrigin());
+                var olderMs2Only = CarafeModelFile.Open(CopyWithManifest(ms2Only, @"older_ms2_only", m => m.Replace(CarafeModelFile.FORMAT, CarafeModelFile.FORMAT_1)));
+                Assert.IsFalse(olderMs2Only.RtUsed);
+                olderMs2Only.ApplyPredictionDefaults(olderSettings);
+                Assert.AreEqual(RtModelType.alphapeptdeep, olderSettings.RtModelType);
             }
             finally
             {

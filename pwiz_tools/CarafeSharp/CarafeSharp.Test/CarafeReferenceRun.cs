@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Proteome;
 
@@ -80,6 +81,8 @@ namespace pwiz.CarafeSharp.Test
             RemoveOption(args, @"-i");
             RemoveOption(args, @"-tf");
             Settings = CarafeCommandLine.Parse(args).LibrarySettings;
+            // Carafe predicts RT with AlphaPeptDeep's model, CarafeSharp by default with Chronologer.
+            Settings.RtModelType = RtModelType.alphapeptdeep;
             // The paths are the ones Carafe ran with; find the files where this copy of the run keeps them.
             string parent = Path.GetDirectoryName(folder);
             Settings.Database = TestData.Relocate(Settings.Database, parent);

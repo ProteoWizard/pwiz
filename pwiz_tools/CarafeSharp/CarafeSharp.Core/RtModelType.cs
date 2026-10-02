@@ -22,9 +22,10 @@ namespace pwiz.CarafeSharp.Core
 {
     /// <summary>
     /// <c>-rt_model</c> (CarafeSharp only): the retention-time model library prediction and fine-tuning use.
-    /// <see cref="alphapeptdeep"/> is Carafe's; <see cref="chronologer"/> is Chronologer, which tracks the end
-    /// of the gradient where AlphaPeptDeep's generic model plateaus. Pretrained, Chronologer's library RT is
-    /// iRT; fine-tuned, it predicts the run's normalized RT, as a fine-tuned AlphaPeptDeep model does.
+    /// <see cref="alphapeptdeep"/> is Carafe's; <see cref="chronologer"/> is Chronologer, CarafeSharp's default,
+    /// which tracks the end of the gradient where AlphaPeptDeep's generic model plateaus. Pretrained,
+    /// Chronologer's library RT is iRT; fine-tuned, it predicts the run's normalized RT, as a fine-tuned
+    /// AlphaPeptDeep model does.
     /// </summary>
     public enum RtModelType
     {

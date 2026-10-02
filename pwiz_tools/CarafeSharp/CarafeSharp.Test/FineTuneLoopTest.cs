@@ -251,11 +251,11 @@ namespace pwiz.CarafeSharp.Test
             Assert.IsFalse(saved.RtUsed);
             Assert.AreEqual(@"start_ms2.safetensors", saved.Ms2StartModel);
             // Each model's origin: the MS2 model fine-tuned from -ms2_model, of a release it cannot know when it holds
-            // that model; the RT model AlphaPeptDeep's pretrained one, not fine-tuned.
+            // that model; the RT model the default's (Chronologer's) pretrained one, not fine-tuned.
             Assert.AreEqual(CarafeModelOrigin.START_MS2_MODEL, saved.Ms2Origin.Start);
             Assert.AreEqual(saved.Ms2Used ? null : PretrainedModels.VERSION, saved.Ms2Origin.Version);
-            Assert.AreEqual(CarafeModelOrigin.ALPHAPEPTDEEP, saved.RtOrigin.Model);
-            Assert.AreEqual(PretrainedModels.VERSION, saved.RtOrigin.Version);
+            Assert.AreEqual(LibrarySettings.DEFAULT_RT_MODEL, saved.RtModel);
+            Assert.AreEqual(ChronologerFiles.VERSION, saved.RtOrigin.Version);
             Assert.IsNull(saved.RtOrigin.Start);
             Assert.AreEqual(@"run_a", saved.Runs.Single().MsFile);
             Assert.AreEqual(28.0, saved.Nce);

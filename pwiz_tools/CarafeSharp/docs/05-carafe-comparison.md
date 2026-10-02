@@ -16,6 +16,10 @@ through CarafeSharp, stage by stage, and why each difference is there.
 - Both used the options of `Run-CarafeOspreyWorkflow.ps1` and `Run-CarafeSharpWorkflow.ps1`: NoCut
   digest, shuffle entrapment, `-cor 0.8`, top 20 fragments of at least 1e-4.
 - One machine (Intel i9-9900K, NVIDIA GTX 1650), one arm at a time.
+- Both predicted RT with AlphaPeptDeep's model, Carafe's and then CarafeSharp's default. CarafeSharp's default is
+  now Chronologer (`LibrarySettings.DEFAULT_RT_MODEL`; 01-model-spec.md), which tracks the end of the gradient
+  where AlphaPeptDeep's generic model plateaus (#4759). `-rt_model alphapeptdeep` gives the RT model compared
+  here, and the parity tests against Carafe (`CarafeParityTest`, `LibraryParityTest`) set it.
 
 ---
 

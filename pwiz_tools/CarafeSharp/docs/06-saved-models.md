@@ -50,10 +50,11 @@ rt_max does not apply (the log says `Ignored rt_max`).
 **Which models apply.** The file holds the fine-tuned models the training chose to predict with:
 - MS2: the fine-tuned model only when it beat the pretrained one on all four held-out metrics (as
   Carafe decides it); otherwise the file has none and the bundled pretrained model predicts MS2.
-- RT: the fine-tuned model (AlphaPeptDeep's, or Chronologer with `-rt_model chronologer`) whenever the
-  RT model was trained (`-tf all` or `-tf rt`). With `-tf ms2` the file holds none and names the
+- RT: the fine-tuned model (Chronologer by default, AlphaPeptDeep's with `-rt_model alphapeptdeep`) whenever
+  the RT model was trained (`-tf all` or `-tf rt`). With `-tf ms2` the file holds none and names the
   pretrained RT model the training's library predicted with, which a library from the file predicts
-  with too: `-tf ms2 -rt_model chronologer` saves a model whose libraries have Chronologer's iRT.
+  with too: a `-tf ms2` model's libraries have Chronologer's iRT, unless it was trained with
+  `-rt_model alphapeptdeep`.
 - `-rt_model` naming the other kind of RT model than the file's replaces the fine-tuned RT model with
   that kind's pretrained model, and the log says so.
 - Chronologer, fine-tuned or pretrained, needs the pretrained archive too: AlphaPeptDeep's pretrained
@@ -253,13 +254,13 @@ file holds only the fine-tuned RT model:
 
 | Field | Meaning |
 |---|---|
-| `format` | `carafemodel-2`. A reader refuses any value it does not know: a new value means a change old readers cannot read. Fields may be added within a format; readers ignore fields they do not know. `carafemodel-2` added each model's `model`, `model_version` and `start`, and `base_models[].models`, as its `rt.safetensors` can be a Chronologer, which a `carafemodel-1` reader would take for AlphaPeptDeep's; CarafeSharp still reads `carafemodel-1`, whose RT model is the one its `rt.safetensors` holds, else AlphaPeptDeep's. A new network or release is a new `model` or `model_version` value, not a new format. |
+| `format` | `carafemodel-2`. A reader refuses any value it does not know: a new value means a change old readers cannot read. Fields may be added within a format; readers ignore fields they do not know. `carafemodel-2` added each model's `model`, `model_version` and `start`, and `base_models[].models`, as its `rt.safetensors` can be a Chronologer, which a `carafemodel-1` reader would take for AlphaPeptDeep's; CarafeSharp still reads `carafemodel-1`, whose RT model is the one its `rt.safetensors` holds, else AlphaPeptDeep's pretrained one, whatever the default now is. A new network or release is a new `model` or `model_version` value, not a new format. |
 | `creator`, `created` | The CarafeSharp version that wrote the file, and when (UTC, ISO 8601). |
 | `training_type` | The training run's `-tf`: `all`, `ms2` or `rt`. |
 | `models.<ms2\|rt>.fine_tuned` | The training fine-tuned this model. |
 | `models.<ms2\|rt>.used` | The file holds the model, at `entry`, and prediction uses it. False with `fine_tuned` true: the fine-tuned MS2 model did not beat the pretrained one. |
 | `models.<ms2\|rt>.entry` | The entry that holds the model, or null. For MS2, `ms2_base.safetensors` when the fine-tuned model did not beat the saved model it was fine-tuned further from. |
-| `models.<ms2\|rt>.model` | The network: `alphapeptdeep` for MS2; `alphapeptdeep` or `chronologer` for RT. With `used`, the model at `entry`; without, that network's pretrained model, which a library from the file predicts with (for RT, `-tf ms2 -rt_model chronologer` gives a file whose libraries have Chronologer's iRT). A reader refuses a network it does not know. |
+| `models.<ms2\|rt>.model` | The network: `alphapeptdeep` for MS2; `alphapeptdeep` or `chronologer` for RT. With `used`, the model at `entry`; without, that network's pretrained model, which a library from the file predicts with (for RT, a `-tf ms2` file names the pretrained `-rt_model`, by default Chronologer, whose libraries have iRT). A reader refuses a network it does not know. |
 | `models.<ms2\|rt>.model_version` | The pretrained release the model is or descends from: AlphaPeptDeep's `v1` (`models/alphapeptdeep-v1`; MannLabs has since published v2 and v3), Chronologer's `20220601193755` (`models/chronologer-20220601193755`, whose encoding a fine-tuned Chronologer needs). Null when unknown: an MS2 model whose lineage starts from `-ms2_model`. |
 | `models.<ms2\|rt>.start` | What the training that wrote the file fine-tuned the model from: `pretrained`, `base` (the same model of `base_models[0]`, the `-model` it was fine-tuned further from), or `ms2_model` (`ms2_start_model`); null when it did not fine-tune the model. A reader refuses a value it does not know. |
 | `pretrained_sha256` | The SHA-256 of the pretrained archive the training started from (AlphaPeptDeep v1, `models/alphapeptdeep-v1`), or null. |

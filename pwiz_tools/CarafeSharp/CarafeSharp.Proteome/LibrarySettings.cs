@@ -49,6 +49,14 @@ namespace pwiz.CarafeSharp.Proteome
         public const string DEFAULT_DEVICE = @"gpu";
         public const string DEFAULT_OUTPUT_DIRECTORY = @"./";
 
+        /// <summary>
+        /// CarafeSharp's RT model when neither <c>-rt_model</c> nor a model folder or saved model names one: Chronologer,
+        /// which tracks the end of the gradient where AlphaPeptDeep's generic model plateaus (#4759: 12-17% more
+        /// precursors at matched entrapment FDP on Stellar, Astral and ZT Scan). Carafe's is AlphaPeptDeep
+        /// (<c>-rt_model alphapeptdeep</c>).
+        /// </summary>
+        public const RtModelType DEFAULT_RT_MODEL = Core.RtModelType.chronologer;
+
         /// <summary>Carafe's <c>n_peptides_per_batch</c>: peptidoforms per prediction batch.</summary>
         public const int DEFAULT_PEPTIDES_PER_BATCH = 200000;
 
@@ -189,8 +197,8 @@ namespace pwiz.CarafeSharp.Proteome
 
         /// <summary>
         /// <c>-rt_model</c> (CarafeSharp only), or null when it is not given: then the model folder's or saved
-        /// model's RT model, else AlphaPeptDeep. A model that differs from a fine-tuned RT model replaces it with
-        /// its own pretrained model.
+        /// model's RT model, else <see cref="DEFAULT_RT_MODEL"/>. A model that differs from a fine-tuned RT model
+        /// replaces it with its own pretrained model.
         /// </summary>
         public RtModelType? RtModelType { get; set; }
 

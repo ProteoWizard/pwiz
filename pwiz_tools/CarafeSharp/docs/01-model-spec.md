@@ -96,12 +96,15 @@ iRT: predict the 11 Biognosys peptides (LGGNEQVTR -24.92 ... LFLQFGAQGSPFLK 100.
 `irt = slope * rt_pred + intercept` by least squares. Carafe's library RT is `rt_pred * rt_max`
 when the training `rt_max` is known, else `irt_pred`.
 
-## RT model: Chronologer (`-rt_model chronologer`)
+## RT model: Chronologer (the default; `-rt_model chronologer`)
 
 Chronologer (Searle lab; searlelab/chronologer, Apache-2.0), committed in
-`models/chronologer-20220601193755` with jchronologer's encoding JSON, as an alternative to
-`Model_RT_LSTM_CNN`: AlphaPeptDeep's generic RT model plateaus at the end of the gradient (issue #4759),
-Chronologer does not.
+`models/chronologer-20220601193755` with jchronologer's encoding JSON, CarafeSharp's default RT model in place
+of Carafe's `Model_RT_LSTM_CNN` (`-rt_model alphapeptdeep`): AlphaPeptDeep's generic RT model plateaus at the end
+of the gradient (issue #4759), Chronologer does not. In the #4759 matrix (predict, search one run, fine-tune,
+search three runs) it gave 12-17% more precursors at matched entrapment FDP on Stellar, Astral and ZT Scan, and
+recovered most of DIA-NN's last-gradient-bin precursors, which AlphaPeptDeep's libraries lost (11.6% -> 67.5% on
+ZT Scan).
 
 State dict (120,321 values): `seq_embed.weight` [55,64]; three `resnet_blocks.{0,1,2}` (dilation 1, 2, 3),
 each `process_blocks.{0,1}.0.{0,1}` (a 1x1, then a kernel-7 Conv1d(64, 64, same padding), each with
@@ -129,7 +132,7 @@ The fine-tuned model predicts normalized RT, clipped at 0 as AlphaPeptDeep's is,
 needs; one from another version is refused.
 
 Which RT model a run uses: `-rt_model`, else the one a saved model (`-model`) or model folder (`-model_dir`)
-holds or names, else AlphaPeptDeep. A fine-tuned RT model of the other kind is replaced by the named kind's
+holds or names, else Chronologer (`LibrarySettings.DEFAULT_RT_MODEL`). A fine-tuned RT model of the other kind is replaced by the named kind's
 pretrained model, with a log line (a warning when fine-tuning further).
 
 ## CCS model: `Model_CCS_LSTM` (ion mobility, `-ccs`)
