@@ -293,9 +293,11 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 else
                 {
+                    var elementRef = ElementRefs.FromObjectReference(ElementLocator.Parse(elementLocatorString));
+                    if (!IsInDocument(elementRef, skylineWindow.DocumentUI))
+                        throw NoSuchElement(elementLocatorString);
                     // Full navigation (bookmark, replicate, scroll)
-                    skylineWindow.SelectElement(
-                        ElementRefs.FromObjectReference(ElementLocator.Parse(elementLocatorString)));
+                    skylineWindow.SelectElement(elementRef);
                 }
 
                 // Secondary selections
@@ -317,13 +319,45 @@ namespace pwiz.Skyline.ToolsUI
                         if (elementRef is NodeRef nodeRef)
                         {
                             var path = nodeRef.ToIdentityPath(document);
-                            if (path != null)
-                                allPaths.Add(path);
+                            if (path == null)
+                                throw NoSuchElement(trimmed);
+                            allPaths.Add(path);
                         }
                     }
                     skylineWindow.SequenceTree.SelectedPaths = allPaths;
                 }
             });
+        }
+
+        // Whether the element an ElementRef names is in the document. Navigation to a missing node falls back to
+        // the nearest ancestor that exists, and navigation to a missing replicate or result file does nothing,
+        // either of which would report success with something else selected.
+        private static bool IsInDocument(ElementRef elementRef, SrmDocument document)
+        {
+            switch (elementRef)
+            {
+                case NodeRef nodeRef:
+                    return nodeRef.ToIdentityPath(document) != null;
+                case ReplicateRef replicateRef:
+                    return replicateRef.FindChromatogramSet(document) != null;
+                case ResultFileRef resultFileRef:
+                    var chromatogramSet = ((ReplicateRef) resultFileRef.Parent).FindChromatogramSet(document);
+                    return chromatogramSet != null && chromatogramSet.MSDataFilePaths.Any(resultFileRef.Matches);
+                case ResultRef resultRef:
+                    int replicateIndex = resultRef.FindReplicateIndex(document);
+                    return replicateIndex >= 0 &&
+                           resultRef.FindChromFileInfo(document.Settings.MeasuredResults.Chromatograms[replicateIndex]) != null &&
+                           IsInDocument(resultRef.Parent, document);
+                default:
+                    return true;
+            }
+        }
+
+        private static Exception NoSuchElement(string elementLocator)
+        {
+            return new ArgumentException(LlmInstruction.Format(
+                @"No element in the document matches '{0}'. A modified peptide's locator includes its modifications (e.g. C[+57.021464]): take locators from skyline_get_selection or a report's Locator columns.",
+                elementLocator));
         }
 
         public static void SetReplicate(string replicateName)
@@ -380,7 +414,20 @@ namespace pwiz.Skyline.ToolsUI
             // populate or a prior real right-click; empty it first (as ZedGraph's own contextMenuStrip1_Opening
             // does) before the builder repopulates it.
             menuStrip.Items.Clear();
+            // A right-click shows the menu on the graph, which makes the graph its SourceControl, and some
+            // builders find their graph through it (the spectrum menu adds its ion-type, charge and rank items
+            // only when it finds the annotated spectrum that way). SourceControl can only be set internally.
+            SetSourceControl(menuStrip, zedGraph);
             builder(zedGraph, menuStrip, centerPoint, default(ZedGraphControl.ContextMenuObjectState));
+        }
+
+        private static void SetSourceControl(ContextMenuStrip menuStrip, Control sourceControl)
+        {
+            var property = typeof(ContextMenuStrip).GetProperty(@"SourceControlInternal",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            if (property == null)
+                throw new InvalidOperationException(@"ContextMenuStrip.SourceControlInternal not found");
+            property.SetValue(menuStrip, sourceControl);
         }
 
         // Verifies the resolved element supports the action (it is the kind the action targets); the
@@ -562,6 +609,13 @@ namespace pwiz.Skyline.ToolsUI
         internal static System.Drawing.Bitmap CaptureNativeWindow(IntPtr windowHandle)
         {
             User32.SetForegroundWindow(windowHandle);
+            return CaptureWindowRect(windowHandle);
+        }
+
+        // The screen copy alone, for a window that must not be activated to be captured: a tip is topmost already,
+        // and activating it deactivates the window it belongs to, which takes the tip down (and closes a pick list).
+        internal static System.Drawing.Bitmap CaptureWindowRect(IntPtr windowHandle)
+        {
             var rect = new User32.RECT();
             User32.GetWindowRect(windowHandle, ref rect);
             var screenRect = rect.Rectangle * ScreenCapture.GetScalingFactor();

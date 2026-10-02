@@ -1098,6 +1098,7 @@
       <DependentUpon>ToolsUIResources.resx</DependentUpon>
     </Compile>
     <Compile Include="ToolsUI\StandaloneWindow.cs" />
+    <Compile Include="ToolsUI\TipWindow.cs" />
     <Compile Include="Util\AnnotatedDouble.cs" />
     <Compile Include="Util\DataGridViewPasteHandler.cs" />
     <Compile Include="Util\ScoredPeakValue.cs" />
@@ -1420,6 +1421,7 @@
     <Compile Include="ToolsUI\GraphElement.cs" />
     <Compile Include="ToolsUI\DialogWatcher.cs" />
     <Compile Include="ToolsUI\UiElement.cs" />
+    <Compile Include="ToolsUI\KeyStroke.cs" />
     <Compile Include="ToolsUI\NativeFileDialog.cs" />
     <Compile Include="ToolsUI\NativeControl.cs" />
     <Compile Include="ToolsUI\UiActions.cs" />

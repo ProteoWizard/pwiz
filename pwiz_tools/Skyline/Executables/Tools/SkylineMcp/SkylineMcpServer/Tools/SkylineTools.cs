@@ -576,14 +576,19 @@ public static class SkylineTools
         "(lists child elements as JSON UiElementPaths -- each already parented onto the element you listed, " +
         "so pass one straight back as 'path'); 'click'; 'set_value' (uses 'value'); 'get_value' " +
         "(returns the current value); 'check_item'/'uncheck_item'/'select_item'/'unselect_item' (a " +
-        "list/tree/list-view item by its text, value the item -- a TreeView node by a '>'-separated path); " +
+        "list/tree/list-view item by its text, value the item -- a TreeView node by a '>'-separated path, " +
+        "which may start at any node showing in the tree, e.g. a peptide under its expanded protein); " +
         "'set_selected_index' (a list, value the index); 'get_grid_text'/'set_grid_text' (a grid's text); " +
-        "'set_current_cell_address' (value a [column, row] array, e.g. [0, 1]); 'select_tab' (a TabControl, value the tab text); " +
+        "'set_current_cell_address' (value a [column, row] array, e.g. [0, 1]); 'click_cell_image' (a grid: clicks an image " +
+        "drawn in the current cell, e.g. the Audit Log's undo arrow or magnifying glass; value the zero-based index among the " +
+        "images the cell shows, from the left); 'select_tab' (a TabControl, value the tab text); " +
         "'expand'/'collapse' (a TreeView node, value a JSON array path whose segments are a child's text or " +
         "its index, e.g. [\"Peptides\", 0]); 'paste' (value the text to paste into a text box, a grid, the " +
         "Targets tree, or the main Skyline window -- without using the clipboard); 'select_all' (selects all " +
-        "of a paste-capable element's content, e.g. before paste to replace it); 'rename_node' (the Targets " +
-        "tree, value the new name for the selected node). " +
+        "of a paste-capable element's content, e.g. before paste to replace it); 'show_tooltip' (a tree, list or grid: shows " +
+        "the tooltip of the selected node / selected item / current cell, as resting the mouse on it does -- " +
+        "select it first; Skyline comes to the front, and the tip comes up about half a second later as a window of its own in " +
+        "skyline_get_open_forms, where skyline_get_form_image captures it whole). " +
         "For a control's right-click menu, pass path as the JSON {\"parent\": <the control's " +
         "UiElementPath>, \"type\": \"ContextMenu\"}, then get_children to list its items or " +
         "click to invoke one (for a grid, move to the cell first with skyline_set_current_cell_address). When " +
@@ -591,10 +596,10 @@ public static class SkylineTools
         "skyline_get_controls; the typed tools (skyline_click_form_button, ...) remain for common cases.")]
     public static string PerformAction(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string form,
-        [Description("Action: get_actions, get_children, click, get_value, set_value, send_text, send_key_stroke, get_options, check_item, uncheck_item, select_item, unselect_item, set_selected_index, get_grid_text, set_grid_text, set_current_cell_address, get_graph_zoom, zoom_graph_to, click_graph, expand, collapse, select_tab, dismiss, paste, select_all, rename_node")] string action,
+        [Description("Action: get_actions, get_children, click, get_value, set_value, send_text, send_key_stroke, get_options, check_item, uncheck_item, select_item, unselect_item, set_selected_index, get_grid_text, set_grid_text, set_current_cell_address, click_cell_image, get_graph_zoom, zoom_graph_to, click_graph, expand, collapse, select_tab, dismiss, paste, select_all, show_tooltip")] string action,
         [Description("Visible label that names the control (optional)")] string label = null,
         [Description("Control type for a caption-less control, e.g. TreeView/ListView (optional)")] string type = null,
-        [Description("Value for set_value/set_grid_text, the text for send_text/paste/rename_node, the key for send_key_stroke (e.g. 'Ctrl+V'), a [column, row] array for set_current_cell_address, a [left, top, right, bottom] array of graph data coordinates for zoom_graph_to/click_graph, the tab text for select_tab, or a JSON array path for expand/collapse (optional)")] string value = null,
+        [Description("Value for set_value/set_grid_text, the text for send_text/paste, the key for send_key_stroke (e.g. 'Ctrl+V'), a [column, row] array for set_current_cell_address, a [left, top, right, bottom] array of graph data coordinates for zoom_graph_to/click_graph, the tab text for select_tab, or a JSON array path for expand/collapse (optional)")] string value = null,
         [Description("A full UiElementPath as JSON (e.g. one straight from get_children, or wrapped as a ContextMenu); overrides label/type when given (optional)")] string path = null)
     {
         return Invoke(connection =>
@@ -649,7 +654,8 @@ public static class SkylineTools
     }
 
     [McpServerTool(Name = "skyline_click_form_button"),
-     Description("Click a control on an open form, matching it by control name or visible text: a " +
+     Description("Click a control on an open form, matching it by its visible text (or, for a caption-less " +
+        "control, its type as skyline_get_controls reports it -- not its internal Name): a " +
         "button, a checkbox or radio button, a toolbar/menu item, an item in a checked-list box (its " +
         "check is toggled), or any other control. To dismiss a dialog instead, use " +
         "skyline_dismiss_with_accept_button / skyline_dismiss_with_cancel_button / skyline_dismiss_with_button, " +
@@ -657,7 +663,7 @@ public static class SkylineTools
         "dialog returns immediately; call skyline_get_open_forms to find the resulting form.")]
     public static string ClickFormButton(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
-        [Description("Control name or visible label, e.g. 'Add Files', 'OK', or a checkbox label")] string button)
+        [Description("Visible label, e.g. 'Add Files', 'OK', or a checkbox label")] string button)
     {
         return Invoke(connection =>
         {
@@ -696,6 +702,25 @@ public static class SkylineTools
         });
     }
 
+    [McpServerTool(Name = "skyline_resize_window"),
+     Description("Resize a window, as a user does by dragging its edge: the main Skyline window " +
+        "('SkylineWindow:Skyline') or a dialog whose border can be dragged. The window keeps its position; a " +
+        "maximized or minimized window is restored first. Use it where a tutorial sizes a window. A docked or " +
+        "floating pane is sized by the window layout instead: arrange those with 'File > Import > Window " +
+        "Layout' (skyline_click_main_menu_item, then the file dialog). Returns the size the window ended up at, " +
+        "which differs from the one asked for when the window has a minimum or maximum size.")]
+    public static string ResizeWindow(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Outer width in pixels, border included")] int width,
+        [Description("Outer height in pixels, border and title bar included")] int height)
+    {
+        return Invoke(connection =>
+        {
+            var size = connection.ResizeWindow(formId, width, height);
+            return $"Resized {formId} to {size.Width} x {size.Height}.";
+        });
+    }
+
     [McpServerTool(Name = "skyline_dismiss_with_button"),
      Description("Dismiss an open dialog by clicking the button with the given caption, then wait until it has " +
         "closed -- e.g. 'No' on a 'replace it?' message box, when neither the default (accept) nor the cancel " +
@@ -721,7 +746,7 @@ public static class SkylineTools
         "may also be a grid cell locator 'grid[column,row]' (grid name optional) to set that cell.")]
     public static string SetFormValue(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
-        [Description("Control name, a grid cell locator 'grid[column,row]', or ignored for a native file dialog")] string controlId,
+        [Description("The control's visible label (not its internal Name), a grid cell locator 'grid[column,row]', or ignored for a native file dialog")] string controlId,
         [Description("Value to set: text, 'true'/'false' for a checkbox, item text for a combo box, " +
             "or space-separated quoted file paths for a native file dialog")] string value)
     {
@@ -917,10 +942,13 @@ public static class SkylineTools
         "focus and you never have to arrange focus first; the control is verified enabled first. The text is " +
         "LITERAL - no key names, nothing to escape. To press a key (Enter, Down, Ctrl+V) use " +
         "skyline_send_key_stroke; to PASTE use skyline_perform_action with action='paste', which takes the " +
-        "text and so needs neither the clipboard nor Ctrl+V. DO NOT type into the Targets tree: it forwards " +
-        "each character through the FOCUSED window, so the characters land in whatever application is in " +
-        "front and arrive out of order - use skyline_perform_action with action='rename_node' to set a " +
-        "node's text. Discover control names with skyline_get_controls.")]
+        "text and so needs neither the clipboard nor Ctrl+V. Typing into the Targets tree edits the selected " +
+        "node's label, as it does for a user: select the node first (the blank one at the end to add a " +
+        "target). With a background proteome the matches appear in a completion pop-up, a form of its own " +
+        "in skyline_get_open_forms - select_item in its list accepts one, or press 'Down'/'Up' then 'Enter' " +
+        "on the tree; 'Enter' alone accepts the text as typed and 'Esc' cancels. The matches are looked up in the " +
+        "background, so the pop-up opens a moment after this returns: read its list before choosing. " +
+        "Discover control names with skyline_get_controls.")]
     public static string SendText(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
         [Description("Control to type into, as skyline_get_controls reports it: its visible Label, or its Type for a caption-less control (e.g. 'TreeView')")] string controlId,
@@ -934,20 +962,27 @@ public static class SkylineTools
     }
 
     [McpServerTool(Name = "skyline_send_key_stroke"),
-     Description("Press one key on a control, whether or not it has the focus - e.g. to accept or step " +
-        "through a popup, or to paste with 'Ctrl+V' where a form's own handler does the pasting. " +
-        "NOTE: this raises the control's KeyDown, so a key handled by the control's DEFAULT behavior rather " +
-        "than by a handler - Backspace editing a text box, an arrow moving a plain list's selection - will " +
-        "NOT take effect. Discover control names with skyline_get_controls.")]
+     Description("Press one key on a control, whether or not it has the focus, as the keyboard does - e.g. to " +
+        "accept or step through a popup, to paste with 'Ctrl+V', or to move through a list or tree with the " +
+        "arrows, Home and End. The key goes through everything a real press does: keyboard shortcuts and dialog " +
+        "keys first, then a form that previews keys (e.g. Escape on a graph returns to the Targets view), the " +
+        "control's own handlers and behavior (an arrow moving a list's selection, Backspace editing text), then " +
+        "the character the key types. In the Targets tree while a label is being edited, keys go to the edit " +
+        "box. Discover control names with skyline_get_controls.")]
     public static string SendKeyStroke(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
-        [Description("Control to press the key on, as skyline_get_controls reports it")] string controlId,
+        [Description("Control to press the key on, as skyline_get_controls reports it; empty to press it as the " +
+            "keyboard does while the window is active - on the control that has the focus in the form, or the " +
+            "form itself - so its keyboard shortcuts (e.g. F11 on the main window), dialog keys (Enter, Esc) and " +
+            "the focused control's keys all work")] string controlId,
         [Description("The key with any modifiers, '+'-separated and in any order: e.g. 'Down', 'Enter', 'Ctrl+V', 'Ctrl+Shift+Home', 'Alt+F4'. Key names are A-Z, 0-9, Enter, Down, Up, Left, Right, Tab, Esc, Backspace, Delete, Home, End, PgUp, PgDn, F1-F12, Space.")] string keyStroke)
     {
         return Invoke(connection =>
         {
             var result = connection.SendKeyStroke(formId, controlId, keyStroke);
-            return DescribeAction(result, $"Pressed '{keyStroke}' on '{controlId}' in {formId}.");
+            return DescribeAction(result, string.IsNullOrEmpty(controlId)
+                ? $"Pressed '{keyStroke}' on {formId}."
+                : $"Pressed '{keyStroke}' on '{controlId}' in {formId}.");
         });
     }
 
