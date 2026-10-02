@@ -37,7 +37,7 @@ namespace pwiz.CarafeSharp.Models
     /// (the fraction of the training gradient, <c>rt / rt_max</c>), clipped at 0. Charge does
     /// not enter the model, so callers predict each peptide form once.
     /// </summary>
-    public sealed class RtModel : IDisposable
+    public sealed class RtModel : IRtPredictor
     {
         public const int DEFAULT_BATCH_SIZE = 1024;
 
@@ -97,6 +97,11 @@ namespace pwiz.CarafeSharp.Models
                 }
             }
             return results;
+        }
+
+        double[] IRtPredictor.Predict(IReadOnlyList<PeptideForm> peptides)
+        {
+            return Predict(peptides);
         }
 
         /// <summary>

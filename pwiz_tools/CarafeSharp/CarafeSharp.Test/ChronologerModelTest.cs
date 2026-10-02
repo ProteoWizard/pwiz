@@ -131,6 +131,32 @@ namespace pwiz.CarafeSharp.Test
             }
         }
 
+        /// <summary>
+        /// Library prediction's Chronologer: Chronologer's own value for a peptide it encodes, and for one it rejects
+        /// the pretrained AlphaPeptDeep prediction, carried onto the hydrophobic-index scale so that on iRT it is
+        /// AlphaPeptDeep's own iRT.
+        /// </summary>
+        [TestMethod]
+        public void TestChronologerRtPredictorFallback()
+        {
+            var plain = new PeptideForm(@"VATVSLPR");
+            var amidated = new PeptideForm(@"VATVSLPR", new[] { @"Amidated@Any_C-term" }, new[] { -1 });
+            var pretrained = PretrainedModels.Open();
+            using (var predictor = new ChronologerRtPredictor(ChronologerModel.FromFiles(ChronologerFiles.Open(), CPU),
+                       RtModel.FromPretrained(pretrained, CPU)))
+            using (var alphaPeptDeep = RtModel.FromPretrained(pretrained, CPU))
+            {
+                double[] predicted = predictor.Predict(new[] { plain, amidated });
+                Assert.AreEqual(GOLDEN_ACCEPTED[0].Hi, predicted[0], HI_TOLERANCE);
+                Assert.AreEqual(1, predictor.FallbackCount);
+                var chronologerIrt = predictor.FitIrtCalibration();
+                var alphaPeptDeepIrt = alphaPeptDeep.FitIrtCalibration();
+                double fallback = alphaPeptDeep.Predict(new[] { amidated }).Single();
+                Assert.AreEqual(alphaPeptDeepIrt.Slope * fallback + alphaPeptDeepIrt.Intercept,
+                    chronologerIrt.Slope * predicted[1] + chronologerIrt.Intercept, 1e-6);
+            }
+        }
+
         /// <summary>The iRT kit peptides map the hydrophobic index onto iRT with a positive slope.</summary>
         [TestMethod]
         public void TestChronologerIrtCalibration()
