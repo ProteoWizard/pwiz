@@ -178,8 +178,9 @@ if ($installUrl -notmatch '^https?://.+/$') {
     throw "InstallUrl '$installUrl' must be an http(s) folder URL ending in /."
 }
 if (-not $productName) { $productName = $appName }
-$manifestUrl = "$installUrl$productName.json"
-$installerUrl = "$installUrl$productName-Setup-$appVersion.exe"
+# Escaped as one path segment, the same as UpdateChecker and the download page do.
+$manifestUrl = $installUrl + [uri]::EscapeDataString("$productName.json")
+$installerUrl = $installUrl + [uri]::EscapeDataString("$productName-Setup-$appVersion.exe")
 $manifestPath = Join-Path $OutputDir "$productName.json"
 if (-not (Test-Path $OutputDir)) { New-Item -ItemType Directory $OutputDir -Force | Out-Null }
 Set-Content -Path $manifestPath -Value (@{ version = $appVersion } | ConvertTo-Json)

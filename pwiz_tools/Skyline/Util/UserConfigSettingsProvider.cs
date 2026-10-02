@@ -25,6 +25,7 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security.Principal;
 using System.Xml.Linq;
 
 namespace pwiz.Common.SystemUtil
@@ -65,20 +66,101 @@ namespace pwiz.Common.SystemUtil
         private const string KEY_GROUP_NAME = @"GroupName";
 
         /// <summary>
+        /// Folder under %LOCALAPPDATA% that holds the settings of the installations a user does
+        /// not own, one subfolder for each, named for the installation folder.
+        /// </summary>
+        public const string PERSONAL_SETTINGS_FOLDER = @"ProteoWizard";
+
+        private static string _defaultConfigFolder;
+
+        /// <summary>
         /// The folder holding the assembly this code lives in. Skyline.exe, Skyline-daily.exe and
         /// SkylineCmd.exe are all installed beside that assembly, so they all resolve to one
         /// user.config and share their settings.
         ///
         /// When the process is something else entirely, such as a test host, this is that host's
-        /// folder, and which settings file gets read does not matter.
+        /// folder.
         ///
         /// Note that this deliberately asks where the assembly is rather than where the entry
         /// executable is. Use <see cref="AppContext.BaseDirectory"/> instead if this assembly ever
         /// stops being deployed next to the executable.
         /// </summary>
-        public static string GetDefaultConfigFolder()
+        public static string GetInstallationFolder()
         {
             return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        }
+
+        /// <summary>
+        /// Where the running installation keeps the current user's settings, by the rule in
+        /// <see cref="GetConfigFolder"/>.
+        /// </summary>
+        public static string GetDefaultConfigFolder()
+        {
+            return _defaultConfigFolder ?? (_defaultConfigFolder = GetConfigFolder(GetInstallationFolder()));
+        }
+
+        /// <summary>
+        /// Where an installation in the folder keeps the current user's settings. A user who owns
+        /// the folder, as with a per user install or a build, keeps them beside the executable.
+        /// Anyone else, as with a per machine install under Program Files, keeps them under
+        /// %LOCALAPPDATA%, whether or not the folder happens to be writable to them; the
+        /// user.config beside the executable is then the administrator's, shared by every user
+        /// of the installation. An elevated administrator owns a folder the installer made, so
+        /// that is how the shared file gets written.
+        /// </summary>
+        public static string GetConfigFolder(string installationFolder)
+        {
+            return IsOwnedByCurrentUser(installationFolder)
+                ? installationFolder
+                : GetPersonalConfigFolder(installationFolder);
+        }
+
+        /// <summary>
+        /// The administrator's user.config beside the running executable, for a user whose own
+        /// settings are elsewhere and start from it, or null when the user's settings are that
+        /// file or there is none.
+        /// </summary>
+        public static string GetSharedConfigFile()
+        {
+            var installationFolder = GetInstallationFolder();
+            if (string.Equals(GetDefaultConfigFolder(), installationFolder, StringComparison.OrdinalIgnoreCase))
+                return null;
+            var sharedConfigFile = Path.Combine(installationFolder, CONFIG_FILE_NAME);
+            return File.Exists(sharedConfigFile) ? sharedConfigFile : null;
+        }
+
+        public static string GetPersonalConfigFolder(string installationFolder)
+        {
+            string folderName = Path.GetFileName(
+                installationFolder.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                PERSONAL_SETTINGS_FOLDER, folderName);
+        }
+
+        /// <summary>
+        /// Whether the folder's owner is the current user, or a group the current user is an
+        /// enabled member of. The latter is how an elevated administrator owns a folder owned by
+        /// Administrators; the same administrator without elevation does not. A folder whose
+        /// owner cannot be read, such as one on a file system without security, counts as owned,
+        /// which keeps the settings beside the executable.
+        /// </summary>
+        public static bool IsOwnedByCurrentUser(string folder)
+        {
+            try
+            {
+                var owner = new DirectoryInfo(folder).GetAccessControl().GetOwner(typeof(SecurityIdentifier))
+                    as SecurityIdentifier;
+                if (owner == null)
+                    return true;
+                using (var identity = WindowsIdentity.GetCurrent())
+                {
+                    return owner.Equals(identity.User) || new WindowsPrincipal(identity).IsInRole(owner);
+                }
+            }
+            catch (Exception)
+            {
+                return true;
+            }
         }
 
         private readonly LocalFileSettingsProvider _applicationScopedProvider = new LocalFileSettingsProvider();
@@ -95,9 +177,15 @@ namespace pwiz.Common.SystemUtil
             set { _configFolder = value; }
         }
 
+        /// <summary>
+        /// Name of the settings file in <see cref="ConfigFolder"/>. Something other than
+        /// user.config only for reading a copy of one, as the settings merge does.
+        /// </summary>
+        public string ConfigFileName { get; set; } = CONFIG_FILE_NAME;
+
         public string ConfigFilePath
         {
-            get { return Path.Combine(ConfigFolder, CONFIG_FILE_NAME); }
+            get { return Path.Combine(ConfigFolder, ConfigFileName); }
         }
 
         public override string ApplicationName { get; set; }

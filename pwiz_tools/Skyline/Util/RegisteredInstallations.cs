@@ -30,7 +30,8 @@ namespace pwiz.Skyline.Util
 {
     /// <summary>
     /// Finds the Skyline installations that an installer, rather than ClickOnce, put on the
-    /// machine. Those keep their settings in a user.config beside the executable, and Programs
+    /// machine. Those keep their settings in a user.config whose folder follows from where the
+    /// executable is (see <see cref="UserConfigSettingsProvider.GetConfigFolder"/>), and Programs
     /// and Features records where the executable is, so the registry's Uninstall entries are the
     /// whole search. See <see cref="ClickOnceInstallations"/> for the older kind.
     /// </summary>
@@ -82,7 +83,8 @@ namespace pwiz.Skyline.Util
                 if (folder == null || !foldersSeen.Add(folder))
                     continue;
                 var executable = Path.Combine(folder, ProductName + @".exe");
-                var userConfigFile = Path.Combine(folder, UserConfigSettingsProvider.CONFIG_FILE_NAME);
+                var userConfigFile = Path.Combine(UserConfigSettingsProvider.GetConfigFolder(folder),
+                    UserConfigSettingsProvider.CONFIG_FILE_NAME);
                 if (!File.Exists(executable) || !File.Exists(userConfigFile))
                     continue;
                 yield return new SkylineInstallation

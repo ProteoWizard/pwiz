@@ -97,21 +97,19 @@ namespace pwiz.Skyline.Util
         public Action<string> RunUninstall { get; set; }
 
         /// <summary>
-        /// The whole import, for a caller with no UI to show progress in. A caller with one runs
-        /// the three steps itself, with <see cref="CopyTools"/> in the background and the other
-        /// two on the UI thread: reloading the settings raises PropertyChanged for every setting,
-        /// and the graphs that listen for those expect to hear about them on the UI thread.
+        /// The settings file as it was before <see cref="ImportSettingsFile"/> replaced it, or
+        /// null when there was none, so that <see cref="RevertImport"/> can put it back.
         /// </summary>
-        public void Import(ILongWaitBroker broker)
-        {
-            ImportSettingsFile();
-            CopyTools(broker);
-            FinishImport();
-        }
+        private byte[] _originalConfigBytes;
+
+        private bool _settingsFileReplaced;
 
         /// <summary>
         /// Replaces the settings file with the source and reads it in, keeping this program's
-        /// own installation id unless the source's is to be taken over.
+        /// own installation id unless the source's is to be taken over. The import then runs
+        /// <see cref="CopyTools"/> in the background and <see cref="FinishImport"/> back on the
+        /// UI thread, since reloading the settings raises PropertyChanged for every setting and
+        /// the graphs that listen for those expect to hear about them on the UI thread.
         /// </summary>
         public void ImportSettingsFile()
         {
@@ -121,7 +119,11 @@ namespace pwiz.Skyline.Util
             var configFolder = Path.GetDirectoryName(configFile);
             if (!string.IsNullOrEmpty(configFolder))
                 Directory.CreateDirectory(configFolder);
+            // Saved first, so that what a revert puts back includes this session's changes.
+            settings.Save();
+            _originalConfigBytes = File.Exists(configFile) ? File.ReadAllBytes(configFile) : null;
             File.Copy(SourceConfigFile, configFile, true);
+            _settingsFileReplaced = true;
             settings.Reload();
 
             // An imported file with no id of its own has nothing to take over.
@@ -158,19 +160,39 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// Puts back the settings file that <see cref="ImportSettingsFile"/> replaced, for an
+        /// import that was canceled or failed before <see cref="FinishImport"/>. Tool folders
+        /// already copied stay in the Tools folder, where nothing names them.
+        /// </summary>
+        public void RevertImport()
+        {
+            if (!_settingsFileReplaced)
+                return;
+            var settings = Settings.Default;
+            string configFile = settings.SettingsFilePath;
+            if (_originalConfigBytes == null)
+                FileEx.SafeDelete(configFile, true);
+            else
+                File.WriteAllBytes(configFile, _originalConfigBytes);
+            _settingsFileReplaced = false;
+            settings.Reload();
+        }
+
+        /// <summary>
         /// Brings the external tools the current settings name into this installation's Tools
         /// folder, and points the settings at the copies. Tools already there are left alone.
         /// Public because the ClickOnce migration at startup copies the settings file itself,
         /// before anything has read the settings, and then needs just this part.
+        /// Returns false when the user canceled before every tool was copied.
         /// </summary>
-        public void CopyTools(ILongWaitBroker broker)
+        public bool CopyTools(ILongWaitBroker broker)
         {
             var toolsDirectory = ToolDescriptionHelpers.GetToolsDirectory();
             var toolList = Settings.Default.ToolList;
             var searchToolList = Settings.Default.SearchToolList;
             int numTools = toolList.Count + searchToolList.Count;
             if (numTools == 0)
-                return;
+                return true;
             if (broker != null)
                 broker.Message = SkylineResources.Program_Main_Copying_external_tools_from_a_previous_installation;
             int increment = 100 / (numTools + 1);
@@ -194,7 +216,7 @@ namespace pwiz.Skyline.Util
             // Assigning the lists is what marks them changed, so that the new paths get saved.
             Settings.Default.ToolList = ToolList.CopyTools(toolList);
             if (canceled)
-                return;
+                return false;
 
             foreach (var tool in searchToolList)
             {
@@ -208,9 +230,13 @@ namespace pwiz.Skyline.Util
                     tool.Path = tool.Path?.Replace(oldDir, newDir);
                 }
                 if (!AdvanceProgress(broker, increment))
+                {
+                    canceled = true;
                     break;
+                }
             }
             Settings.Default.SearchToolList = SearchToolList.CopyTools(searchToolList);
+            return !canceled;
         }
 
         /// <summary>

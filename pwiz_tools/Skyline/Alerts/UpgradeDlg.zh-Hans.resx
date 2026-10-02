@@ -192,9 +192,6 @@
   <data name="labelDirections.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <data name="labelDirections.Text" xml:space="preserve">
-    <value>点击“现在安装”按钮开始升级。</value>
-  </data>
   <data name="&gt;&gt;labelDirections.Name" xml:space="preserve">
     <value>labelDirections</value>
   </data>
@@ -320,9 +317,6 @@
   </data>
   <data name="btnInstall.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
-  </data>
-  <data name="btnInstall.Text" xml:space="preserve">
-    <value>现在安装(&amp;N)</value>
   </data>
   <data name="&gt;&gt;btnInstall.Name" xml:space="preserve">
     <value>btnInstall</value>

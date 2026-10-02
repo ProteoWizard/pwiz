@@ -46,6 +46,12 @@ namespace pwiz.SkylineTestFunctional
         private const string TOOL_FOLDER = @"ImportedTool";
         private const string TOOL_FILE = @"tool.bat";
         private const int OTHER_ANNOTATION_COLOR = 7;
+        private const int OWN_ANNOTATION_COLOR = 2;
+        private const int SOURCE_ANNOTATION_COLOR = 3;
+        private const string OWN_TOOL_TITLE = @"Own Tool";
+        private const string SOURCE_TOOL_TITLE = @"Tool Added To Source";
+        private const string OWN_LIBRARY_DIRECTORY = @"C:\OwnLibraries";
+        private const string SOURCE_LIBRARY_DIRECTORY = @"C:\SourceLibraries";
 
         private string _toolsDirectory;
 
@@ -77,7 +83,8 @@ namespace pwiz.SkylineTestFunctional
                 WriteOwnSettings(provider, TestFilesDir.GetTestPath(@"Own"));
 
                 TestImportKeepingOwnIdentity(other, stale);
-                TestSourceChangeDetection(other);
+                TestRevertImport(other);
+                TestTrackedChangesMerge(other);
                 TestImportWithUninstall(other);
             }
             finally
@@ -135,21 +142,67 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// The startup check notices when the tracked file changes, and does not when it has not.
+        /// An import canceled or failed partway is undone, down to a change made in this session
+        /// and not yet saved.
         /// </summary>
-        private void TestSourceChangeDetection(SkylineInstallation other)
+        private void TestRevertImport(SkylineInstallation other)
+        {
+            RunUI(() =>
+            {
+                Settings.Default.AnnotationColor = OWN_ANNOTATION_COLOR;
+                var importer = new SettingsImporter(other.UserConfigFile);
+                importer.ImportSettingsFile();
+                Assert.AreEqual(OTHER_ANNOTATION_COLOR, Settings.Default.AnnotationColor);
+                importer.RevertImport();
+                Assert.AreEqual(OWN_ANNOTATION_COLOR, Settings.Default.AnnotationColor);
+                Assert.AreEqual(other.UserConfigFile, Settings.Default.ImportedSettingsPath);
+
+                // Back to what was imported, for the merge that follows
+                Settings.Default.AnnotationColor = OTHER_ANNOTATION_COLOR;
+            });
+        }
+
+        /// <summary>
+        /// The startup check brings across what changed in the tracked file since the import,
+        /// without undoing what changed here: a setting changed only there takes its new value,
+        /// one changed in both places keeps this one's, and the tool list gains the tools added
+        /// in each place.
+        /// </summary>
+        private void TestTrackedChangesMerge(SkylineInstallation other)
         {
             var updater = new ImportedSettingsUpdater();
             Assert.IsTrue(updater.IsTracking);
             Assert.AreEqual(other.UserConfigFile, updater.SourcePath);
             Assert.IsFalse(updater.HasSourceChanged());
-            updater.UpdateIfChanged();
 
-            File.AppendAllText(other.UserConfigFile, @"<!-- changed since the import -->");
+            RunUI(() =>
+            {
+                Settings.Default.LibraryDirectory = OWN_LIBRARY_DIRECTORY;
+                Settings.Default.ToolList = ToolList.CopyTools(Settings.Default.ToolList.Append(
+                    new ToolDescription(OWN_TOOL_TITLE, @"own.exe", string.Empty)));
+
+                var source = new Settings();
+                source.UserConfigProvider.ConfigFolder = other.ExecutableFolder;
+                source.AnnotationColor = SOURCE_ANNOTATION_COLOR;
+                source.LibraryDirectory = SOURCE_LIBRARY_DIRECTORY;
+                source.ToolList = ToolList.CopyTools(source.ToolList.Append(
+                    new ToolDescription(SOURCE_TOOL_TITLE, @"source.exe", string.Empty)));
+                source.Save();
+            });
             Assert.IsTrue(updater.HasSourceChanged());
-            // The merge is not written yet, so this only has to leave things as they are
-            updater.UpdateIfChanged();
-            Assert.IsTrue(updater.HasSourceChanged());
+
+            RunUI(updater.UpdateIfChanged);
+
+            Assert.AreEqual(SOURCE_ANNOTATION_COLOR, Settings.Default.AnnotationColor);
+            Assert.AreEqual(OWN_LIBRARY_DIRECTORY, Settings.Default.LibraryDirectory);
+            Assert.AreEqual(OWN_INSTALLATION_ID, Settings.Default.InstallationId);
+            CollectionAssert.AreEquivalent(new[] { TOOL_TITLE, OWN_TOOL_TITLE, SOURCE_TOOL_TITLE },
+                Settings.Default.ToolList.Select(tool => tool.Title).ToArray());
+            // The copy brought into this installation's Tools folder is still the one used
+            Assert.AreEqual(Path.Combine(_toolsDirectory, TOOL_FOLDER),
+                Settings.Default.ToolList.Single(tool => tool.Title == TOOL_TITLE).ToolDirPath);
+            // The base copy was refreshed, so the next start has nothing to bring across
+            Assert.IsFalse(updater.HasSourceChanged());
         }
 
         /// <summary>

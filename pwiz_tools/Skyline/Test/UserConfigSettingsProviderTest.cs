@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Specialized;
 using System.Configuration;
 using System.IO;
@@ -46,6 +47,7 @@ namespace pwiz.SkylineTest
         {
             TestFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
             VerifyDefaultLocation();
+            VerifyFolderOwnership();
             VerifySkylineSettingsUseProvider();
             VerifyDefaultsWhenNoFile();
             VerifyRoundTrip();
@@ -65,6 +67,26 @@ namespace pwiz.SkylineTest
             var expectedFolder = Path.GetDirectoryName(typeof(UserConfigSettingsProvider).Assembly.Location);
             Assert.AreEqual(expectedFolder, provider.ConfigFolder);
             Assert.AreEqual(Path.Combine(expectedFolder, @"user.config"), provider.ConfigFilePath);
+        }
+
+        /// <summary>
+        /// An installation folder the user owns keeps its settings beside the executable. One
+        /// the user does not, like System32, which belongs to TrustedInstaller much as a per
+        /// machine install belongs to Administrators, sends them to a folder of the user's own.
+        /// </summary>
+        private void VerifyFolderOwnership()
+        {
+            var ownedFolder = TestFilesDir.GetTestPath(@"Owned");
+            Directory.CreateDirectory(ownedFolder);
+            Assert.IsTrue(UserConfigSettingsProvider.IsOwnedByCurrentUser(ownedFolder));
+            Assert.AreEqual(ownedFolder, UserConfigSettingsProvider.GetConfigFolder(ownedFolder));
+
+            var systemFolder = Environment.SystemDirectory;
+            Assert.IsFalse(UserConfigSettingsProvider.IsOwnedByCurrentUser(systemFolder));
+            var expectedFolder = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                UserConfigSettingsProvider.PERSONAL_SETTINGS_FOLDER, Path.GetFileName(systemFolder));
+            Assert.AreEqual(expectedFolder, UserConfigSettingsProvider.GetConfigFolder(systemFolder));
         }
 
         /// <summary>

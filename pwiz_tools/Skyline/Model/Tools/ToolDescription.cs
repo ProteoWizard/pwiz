@@ -465,11 +465,13 @@ namespace pwiz.Skyline.Model.Tools
         }
 
         /// <summary>
-        /// Get a name for the Skyline Tools directory - if we are running a test, make that name unique to the test in case tests are executing in parallel
+        /// Get a name for the Skyline Tools directory - if we are running a test, make that name unique to the test in case tests are executing in parallel.
+        /// It sits beside the user's settings, since those name the tools in it: beside the executable for a user who
+        /// owns the installation folder, and under %LOCALAPPDATA% for one who cannot install anything there.
         /// </summary>
         public static string GetToolsDirectory()
         {
-            var skylineDirPath = GetSkylineInstallationPath();
+            var skylineDirPath = UserConfigSettingsProvider.GetDefaultConfigFolder();
             // Use a unique tools path when running tests to allow tests to run in parallel
             // ReSharper disable once AssignNullToNotNullAttribute
             var tools = GetToolsDirectoryBasis(); // Helps catch Unicode path issues on Windows

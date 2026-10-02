@@ -20,38 +20,62 @@
 
 using System.IO;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
 {
     /// <summary>
-    /// Keeps settings that were imported with "keep up to date" in step with the file they
-    /// came from. <see cref="SettingsImporter"/> leaves a copy of the imported file beside
-    /// user.config; a source file that no longer matches that copy has changed since the import.
+    /// Keeps this program's settings in step with another settings file they were copied from:
+    /// one imported with "keep up to date", or the administrator's user.config beside the
+    /// executable of an installation the user does not own. A copy of the other file, the base,
+    /// is kept beside this program's user.config, and a source that no longer matches it has
+    /// changed since the copy was taken.
     /// </summary>
     public class ImportedSettingsUpdater
     {
+        /// <summary>
+        /// Name of the base copy of the administrator's user.config, kept apart from the one
+        /// for an imported file since a user can have both.
+        /// </summary>
+        public const string SHARED_BASE_CONFIG_FILE_NAME = @"shared.base.user.config";
+
+        /// <summary>
+        /// Tracks the file the settings were imported from, if they were imported with "keep up
+        /// to date".
+        /// </summary>
         public ImportedSettingsUpdater()
         {
-            ConfigFilePath = Settings.Default.SettingsFilePath;
             SourcePath = Settings.Default.ImportedSettingsPath;
+            BaseConfigFilePath = SettingsImporter.GetBaseConfigPath(Settings.Default.SettingsFilePath);
         }
 
         /// <summary>
-        /// This program's own user.config, beside which the base copy sits.
+        /// Tracks the administrator's user.config, or returns null when the user's settings are
+        /// that file.
         /// </summary>
-        public string ConfigFilePath { get; set; }
+        public static ImportedSettingsUpdater ForSharedSettings()
+        {
+            var sharedConfigFile = UserConfigSettingsProvider.GetSharedConfigFile();
+            if (sharedConfigFile == null)
+                return null;
+            return new ImportedSettingsUpdater
+            {
+                SourcePath = sharedConfigFile,
+                BaseConfigFilePath = Path.Combine(UserConfigSettingsProvider.GetDefaultConfigFolder(),
+                    SHARED_BASE_CONFIG_FILE_NAME)
+            };
+        }
 
         /// <summary>
-        /// The file the settings were imported from, or empty when they were not imported with
-        /// "keep up to date".
+        /// The file the settings follow, or empty when they follow none.
         /// </summary>
         public string SourcePath { get; set; }
 
-        public string BaseConfigFilePath
-        {
-            get { return SettingsImporter.GetBaseConfigPath(ConfigFilePath); }
-        }
+        /// <summary>
+        /// The copy of <see cref="SourcePath"/> as it was when last brought across.
+        /// </summary>
+        public string BaseConfigFilePath { get; set; }
 
         public bool IsTracking
         {
@@ -59,13 +83,17 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Whether the source file differs from the copy taken when it was imported. A source or
-        /// copy that has gone missing counts as unchanged, since there is nothing to compare.
+        /// Whether the source file differs from the copy taken when it was last brought across.
+        /// A missing source counts as unchanged, since there is nothing to bring. A missing copy
+        /// counts as one holding only defaults, so that everything the source changed from those
+        /// gets brought across.
         /// </summary>
         public bool HasSourceChanged()
         {
-            if (!IsTracking || !File.Exists(SourcePath) || !File.Exists(BaseConfigFilePath))
+            if (!IsTracking || !File.Exists(SourcePath))
                 return false;
+            if (!File.Exists(BaseConfigFilePath))
+                return true;
             return !File.ReadAllBytes(SourcePath).SequenceEqual(File.ReadAllBytes(BaseConfigFilePath));
         }
 
@@ -76,12 +104,29 @@ namespace pwiz.Skyline.Util
             MergeChanges();
         }
 
+        /// <summary>
+        /// Brings across the settings that differ between the base copy and the source, leaving
+        /// alone whatever the user changed here since, and then refreshes the base copy.
+        /// </summary>
         private void MergeChanges()
         {
-            // The settings that differ between the base copy and the source are the ones to bring
-            // across, leaving alone whatever the user changed here since importing, and the base
-            // copy is then refreshed. That three way merge is not written yet: a changed source
-            // is noticed and left as it is, so the base copy still records what was imported.
+            var settings = Settings.Default;
+            settings.MergeChanges(ReadSettings(BaseConfigFilePath), ReadSettings(SourcePath));
+            settings.Save();
+            File.Copy(SourcePath, BaseConfigFilePath, true);
+        }
+
+        /// <summary>
+        /// Settings read from a file other than this program's own, which a file that does not
+        /// exist leaves at their defaults.
+        /// </summary>
+        private static Settings ReadSettings(string configFilePath)
+        {
+            var settings = new Settings();
+            var provider = settings.UserConfigProvider;
+            provider.ConfigFolder = Path.GetDirectoryName(configFilePath);
+            provider.ConfigFileName = Path.GetFileName(configFilePath);
+            return settings;
         }
     }
 }

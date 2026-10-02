@@ -348,10 +348,8 @@ namespace pwiz.Skyline
                             longWaitDlg.PerformWork(null, 1000*3, broker => new SettingsImporter(null).CopyTools(broker));
                         }
                     }
-                    else
-                    {
-                        new ImportedSettingsUpdater().UpdateIfChanged();
-                    }
+                    ImportedSettingsUpdater.ForSharedSettings()?.UpdateIfChanged();
+                    new ImportedSettingsUpdater().UpdateIfChanged();
                 }
                 // ReSharper disable once EmptyGeneralCatchClause
                 catch
@@ -621,8 +619,9 @@ namespace pwiz.Skyline
         /// Gives a new installation the user settings of the ClickOnce installed Skyline it is
         /// replacing. Only for the upgrade from 26.1 and earlier, which kept settings in a per
         /// version folder under %LOCALAPPDATA%; from here on an installation reads the
-        /// user.config beside its own executable, and successive installations into the same
-        /// folder find the settings already there with nothing to look for.
+        /// user.config that <see cref="UserConfigSettingsProvider.GetDefaultConfigFolder"/> names,
+        /// and successive installations into the same folder find the settings already there
+        /// with nothing to look for.
         ///
         /// A missing user.config is what identifies a first run. Everything else the migration
         /// needs follows from the settings it brings over, including the tool lists that say
@@ -644,6 +643,7 @@ namespace pwiz.Skyline
                     new ClickOnceInstallations(typeof(Program).Assembly).ListCandidates());
                 if (candidate == null)
                     return;
+                Directory.CreateDirectory(UserConfigSettingsProvider.GetDefaultConfigFolder());
                 File.Copy(candidate.UserConfigFile, configFile);
                 _settingsMigratedFromClickOnce = true;
             }
