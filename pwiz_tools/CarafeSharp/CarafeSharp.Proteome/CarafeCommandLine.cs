@@ -174,7 +174,8 @@ namespace pwiz.CarafeSharp.Proteome
                     @"  -min_pep_mz <mz> -max_pep_mz <mz> -min_pep_charge <z> -max_pep_charge <z> -I2L",
                     @"  -lf_frag_mz_min <mz> -lf_frag_mz_max <mz> -lf_top_n_frag <n> -lf_min_n_frag <n> -lf_frag_n_min <n>",
                     @"  -nce <nce> -ms_instrument <name> -rt_max <min> -model_dir <folder> -tf all|ms2|rt",
-                    @"  -device cpu|gpu -pairing_manifest <tsv>; CarafeSharp only: -pretrained <pretrained_models.zip>,",
+                    @"  -device cpu|gpu -pairing_manifest <tsv> -ccs (timsTOF ion mobility, 1/K0); CarafeSharp only:",
+                    @"  -pretrained <pretrained_models.zip>,",
                     @"  -model <file.carafemodel> (a saved fine-tuned model, which every training run writes into -o),",
                     @"  -activation beam-CID|reCID -analyzer Orbitrap|LIT|ToF (else the training run's)",
                     @"Saved models: CarafeSharp -model_info <file.carafemodel> (what the model was trained on)",
@@ -299,10 +300,18 @@ namespace pwiz.CarafeSharp.Proteome
             CheckAiVersion();
             if (Has(@"user_var_mods") || Has(@"mod2mass"))
                 throw new NotSupportedException(@"-user_var_mods and -mod2mass are not supported by CarafeSharp");
-            foreach (string option in new[] { @"cs", @"y1", @"use_all_peaks", @"ccs" })
+            foreach (string option in new[] { @"cs", @"y1", @"use_all_peaks" })
             {
                 if (Has(option))
                     throw new NotSupportedException(@"-" + option + @" is not supported by CarafeSharp training");
+            }
+            if (Has(@"ccs"))
+            {
+                // Carafe does the same with Osprey's results, which carry no ion mobility to train on.
+                Warnings.Add(Has(@"db")
+                    ? @"-ccs: the CCS model is not fine-tuned (Osprey's results carry no ion mobility); the library's 1/K0 is predicted " +
+                      @"with the pretrained CCS model, or a Carafe ccs_model.pt already in -o."
+                    : @"Ignored -ccs: the CCS model is not fine-tuned, and without -db no library is predicted.");
             }
             if (TryGet(@"na", out string flanking) && ParseInt(@"na", flanking) != 0)
                 throw new NotSupportedException(@"-na (flanking spectra) is not supported by CarafeSharp training");
@@ -381,6 +390,7 @@ namespace pwiz.CarafeSharp.Proteome
                 library.ApplyTrainingRunMeta = true;
                 library.TrainingType = settings.TrainingType;
                 library.ModelFile = null;
+                CheckIonMobilityTrainingType(library);
                 settings.Library = library;
             }
             return settings;
@@ -394,8 +404,6 @@ namespace pwiz.CarafeSharp.Proteome
             string extension = Path.GetExtension(database).ToLowerInvariant();
             if (extension != @".fa" && extension != @".fasta")
                 throw new NotSupportedException(@"CarafeSharp predicts libraries from a FASTA (.fa or .fasta) only: " + database);
-            if (Has(@"ccs"))
-                throw new NotSupportedException(@"-ccs is not supported by CarafeSharp");
             if (Has(@"user_var_mods") || Has(@"mod2mass"))
                 throw new NotSupportedException(@"-user_var_mods and -mod2mass are not supported by CarafeSharp");
             if (TryGet(@"mode", out string mode) && mode != @"-" && !string.Equals(mode, @"general", StringComparison.OrdinalIgnoreCase))
@@ -417,6 +425,7 @@ namespace pwiz.CarafeSharp.Proteome
                 MinPrecursorMz = minMz,
                 MaxPrecursorMz = maxMz,
                 Fast = Has(@"fast"),
+                PredictIonMobility = Has(@"ccs"),
             };
             if (TryGet(@"o", out string output))
                 settings.OutputDirectory = output;
@@ -480,6 +489,7 @@ namespace pwiz.CarafeSharp.Proteome
                     settings.TrainingType = trainingType;
                 if (string.Equals(settings.TrainingType, @"test", StringComparison.OrdinalIgnoreCase))
                     throw new NotSupportedException(@"-tf test is not supported by CarafeSharp");
+                CheckIonMobilityTrainingType(settings);
             }
             if (TryGet(@"device", out string device))
                 settings.Device = ParseDevice(device);
@@ -703,6 +713,21 @@ namespace pwiz.CarafeSharp.Proteome
             if (!double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out double result))
                 throw new ArgumentException(string.Format(@"Invalid number for -{0}: {1}", option, value));
             return result;
+        }
+
+        /// <summary>
+        /// Carafe's Python predicts no CCS for <c>-tf rt</c> or <c>ms2</c>, and its Java then fails
+        /// reading the missing predictions: refused here, before any work.
+        /// </summary>
+        private static void CheckIonMobilityTrainingType(LibrarySettings settings)
+        {
+            if (settings.PredictIonMobility &&
+                (string.Equals(settings.TrainingType, @"rt", StringComparison.Ordinal) ||
+                 string.Equals(settings.TrainingType, @"ms2", StringComparison.Ordinal)))
+            {
+                throw new NotSupportedException(@"-ccs with -tf " + settings.TrainingType +
+                                                @": Carafe predicts no ion mobility for that training type; use -tf all");
+            }
         }
 
         private static Dictionary<string, bool> BuildOptionTable()

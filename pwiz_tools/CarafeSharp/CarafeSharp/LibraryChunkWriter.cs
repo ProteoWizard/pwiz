@@ -208,7 +208,7 @@ namespace pwiz.CarafeSharp
             {
                 var rows = new string[spectra.Count];
                 Parallel.For(0, spectra.Count, new ParallelOptions { MaxDegreeOfParallelism = threads },
-                    i => rows[i] = CarafeLibraryTsvWriter.FormatRows(spectra[i]));
+                    i => rows[i] = CarafeLibraryTsvWriter.FormatRows(spectra[i], _tsv.WritesIonMobility));
                 foreach (string text in rows)
                     _tsv.WriteRows(text);
             }

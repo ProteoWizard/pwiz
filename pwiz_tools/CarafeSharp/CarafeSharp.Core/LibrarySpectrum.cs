@@ -34,8 +34,15 @@ namespace pwiz.CarafeSharp.Core
         /// <summary>Carafe's value for a peptide that no database entry maps to.</summary>
         public const string NO_PROTEIN = @"-";
 
+        /// <param name="precursor">The sequence, alphabase modifications and charge the models predicted.</param>
+        /// <param name="precursorMz">The precursor m/z Carafe's Java computes.</param>
+        /// <param name="retentionTime">The library retention time.</param>
+        /// <param name="proteinId">The <c>;</c>-joined protein accessions, or <see cref="NO_PROTEIN"/>.</param>
+        /// <param name="decoy">The TSV Decoy column value.</param>
+        /// <param name="fragments">The selected fragments, most intense first.</param>
+        /// <param name="collisionalCrossSection">The predicted CCS (<c>-ccs</c>), from which the 1/K0 follows, or null.</param>
         public LibrarySpectrum(PrecursorForm precursor, double precursorMz, double retentionTime, string proteinId,
-            int decoy, IReadOnlyList<LibraryFragment> fragments)
+            int decoy, IReadOnlyList<LibraryFragment> fragments, double? collisionalCrossSection = null)
         {
             Precursor = precursor;
             PrecursorMz = precursorMz;
@@ -43,6 +50,9 @@ namespace pwiz.CarafeSharp.Core
             ProteinId = proteinId;
             Decoy = decoy;
             Fragments = fragments;
+            CollisionalCrossSection = collisionalCrossSection;
+            if (collisionalCrossSection.HasValue)
+                IonMobility = TimsMobility.CcsToInverseK0(collisionalCrossSection.Value, precursor);
         }
 
         /// <summary>The sequence, alphabase modifications and charge the models predicted.</summary>
@@ -72,6 +82,16 @@ namespace pwiz.CarafeSharp.Core
 
         /// <summary>The TSV Decoy column value.</summary>
         public int Decoy { get; }
+
+        /// <summary>
+        /// The predicted timsTOF ion mobility, 1/K0 in V s/cm^2, converted from
+        /// <see cref="CollisionalCrossSection"/> (<see cref="TimsMobility"/>), or null when the
+        /// library predicts none (without <c>-ccs</c>).
+        /// </summary>
+        public double? IonMobility { get; }
+
+        /// <summary>The predicted collisional cross section in square angstroms, or null.</summary>
+        public double? CollisionalCrossSection { get; }
 
         /// <summary>The selected fragments, most intense first.</summary>
         public IReadOnlyList<LibraryFragment> Fragments { get; }

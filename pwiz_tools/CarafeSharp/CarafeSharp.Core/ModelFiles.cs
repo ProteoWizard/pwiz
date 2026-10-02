@@ -58,6 +58,8 @@ namespace pwiz.CarafeSharp.Core
 
         /// <summary>Carafe's fine-tuned RT model (PyTorch state_dict).</summary>
         public const string RT_CHECKPOINT = @"rt_model.pt";
+        /// <summary>Carafe's fine-tuned CCS model (PyTorch state_dict), from a timsTOF training run.</summary>
+        public const string CCS_CHECKPOINT = @"ccs_model.pt";
 
         /// <summary>CarafeSharp's fine-tuned MS2 model.</summary>
         public const string MS2_SAFETENSORS = @"ms2.safetensors";

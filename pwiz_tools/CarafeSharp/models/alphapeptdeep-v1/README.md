@@ -1,7 +1,8 @@
 # AlphaPeptDeep pretrained models, v1
 
 `pretrained_models.zip` holds the pretrained MS2 and RT models (`generic/ms2.pth`, `generic/rt.pth`) that
-CarafeSharp predicts from and fine-tunes. They are the exact weights Carafe 2.2 uses.
+CarafeSharp predicts from and fine-tunes, and the CCS model (`generic/ccs.pth`) that predicts a library's
+timsTOF ion mobility with `-ccs`. They are the exact weights Carafe 2.2 uses.
 
 | | |
 |---|---|

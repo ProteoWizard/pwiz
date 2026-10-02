@@ -78,7 +78,9 @@ namespace pwiz.CarafeSharp.Proteome
         /// <param name="intensities">Predicted intensities, <paramref name="stride"/> per fragment row, b_z1 b_z2 y_z1 y_z2 first.</param>
         /// <param name="stride">Values per fragment row of <paramref name="intensities"/>.</param>
         /// <param name="retentionTime">From <see cref="GetRetentionTime"/>.</param>
-        public LibrarySpectrum Build(PeptideIsoform isoform, PrecursorForm precursor, float[] intensities, int stride, double retentionTime)
+        /// <param name="collisionalCrossSection">The CCS model's prediction (<c>-ccs</c>), which gives the spectrum its 1/K0, or null.</param>
+        public LibrarySpectrum Build(PeptideIsoform isoform, PrecursorForm precursor, float[] intensities, int stride, double retentionTime,
+            double? collisionalCrossSection)
         {
             var fragments = _selector.Select(intensities, stride, AlphabaseFragmentMz.Calculate(precursor));
             if (fragments.Count < _minFragments)
@@ -91,7 +93,7 @@ namespace pwiz.CarafeSharp.Proteome
                 proteins = LibrarySpectrum.NO_PROTEIN;
             }
             var spectrum = new LibrarySpectrum(precursor, isoform.GetMz(precursor.Charge), retentionTime, proteins,
-                _fast ? 0 : IsDecoy(proteins) ? 1 : 0, fragments);
+                _fast ? 0 : IsDecoy(proteins) ? 1 : 0, fragments, collisionalCrossSection);
             if (_outputs.WritesTsv)
                 spectrum.ModifiedPeptide = ModifiedPeptideNotation.Format(isoform, _outputs.TsvStyle);
             if (_outputs.WritesBlib)
