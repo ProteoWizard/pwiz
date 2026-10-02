@@ -129,11 +129,11 @@ namespace pwiz.SkylineTestFunctional
             {
                 setupAction?.Invoke();
                 bool success = false;
-                SkylineWindow.BeginInvoke(new Action(() =>
+                SkylineWindow.BeginInvoke(() =>
                 {
                     action();
                     success = true;
-                }));
+                });
                 WaitForCondition(() => success || null != FindOpenForm<AlertDlg>());
                 if (success)
                 {
@@ -229,7 +229,7 @@ namespace pwiz.SkylineTestFunctional
             thread.Start();
             WaitForCondition(() => null != FindOpenForm<ClipboardLockingForm>());
             action();
-            clipboardLockingForm.BeginInvoke(new Action(()=>clipboardLockingForm.Close()));
+            clipboardLockingForm.BeginInvoke(()=>clipboardLockingForm.Close());
             WaitForCondition(() => null == FindOpenForm<ClipboardLockingForm>());
         }
 

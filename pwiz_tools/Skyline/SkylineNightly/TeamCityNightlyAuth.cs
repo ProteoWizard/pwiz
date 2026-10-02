@@ -26,7 +26,6 @@
 
 using System;
 using System.IO;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -102,7 +101,6 @@ namespace SkylineNightly
         /// </summary>
         public static void DownloadArtifact(string url, string filePath, string token)
         {
-            ConfigureSecurityProtocol();
             try
             {
                 using (var client = new HttpClient())
@@ -139,21 +137,6 @@ namespace SkylineNightly
                 if (e is HttpRequestException || e is IOException)
                     throw new IOException(GetFullMessage(e), e);
                 throw;
-            }
-        }
-
-        private static void ConfigureSecurityProtocol()
-        {
-            // The current recommendation from MSFT for future-proofing HTTPS https://docs.microsoft.com/en-us/dotnet/framework/network-programming/tls
-            // is don't specify TLS levels at all, let the OS decide. But we worry that this will mess up Win7 and Win8 installs, so we continue to specify explicitly.
-            try
-            {
-                var Tls13 = (SecurityProtocolType)12288; // From decompiled SecurityProtocolType - compiler has no definition for some reason
-                ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | Tls13;
-            }
-            catch (NotSupportedException)
-            {
-                ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12; // Probably an older Windows Server
             }
         }
 

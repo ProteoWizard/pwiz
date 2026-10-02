@@ -51,7 +51,7 @@ namespace pwiz.Osprey.Tasks
         /// This task's name, as a constant so the CLI selector, the validity stamp another
         /// task looks for, and the tests all spell it from here rather than duplicating it.
         /// </summary>
-        public const string TASK_NAME = @"SpectraCache";
+        public const string TASK_NAME = OspreyTaskNames.SPECTRA_CACHE;
 
         public override string Name => TASK_NAME;
 
@@ -79,9 +79,10 @@ namespace pwiz.Osprey.Tasks
             string perInput = config.InputFiles != null && config.InputFiles.Count > 1 &&
                               string.IsNullOrEmpty(config.CacheDir) && !string.IsNullOrEmpty(config.OutputDir)
                 ? string.Format(OspreyTasksResources.SpectraCacheTask_DescribeOutput_a__spectra_bin_file_next_to_each_input__or_in__0__where_the_input_folder_is_read_only,
-                    config.OutputDir)
+                    config.OutputDir, SpectraCache.EXT)
                 : DescribePerInputOutput(config, SpectraCache.GetCachePath, SpectraCache.EXT, config.CacheDir);
-            return string.Format(OspreyTasksResources.SpectraCacheTask_DescribeOutput__0_____output_and___library_are_not_used_, perInput);
+            return string.Format(OspreyTasksResources.SpectraCacheTask_DescribeOutput__0_____output_and___library_are_not_used_, perInput,
+                OspreyArgNames.Text(OspreyArgNames.OUTPUT), OspreyArgNames.Text(OspreyArgNames.LIBRARY));
         }
 
         public override IEnumerable<string> Inputs(PipelineContext ctx)

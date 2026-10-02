@@ -10,9 +10,11 @@
       SYSLIB0003 Code Access Security attributes (ZedGraph fork); CAS no-ops on net8.
       CA1416 (platform-compat) is handled in Directory.Build.targets - suppressed only on
       Windows-targeted projects, so multi-platform net10.0 model/command-line code keeps it. -->
- <!-- NU1510: new in .NET 10 (package pruning); flags PackageReferences the shared
-      framework now provides. -->
- <NoWarn>$(NoWarn);CS8981;SYSLIB0003;NU1510</NoWarn>
+ <!-- NU1510 (.NET 10 package pruning) is deliberately NOT suppressed: it flags a PackageReference
+      to something a referenced framework already ships. System.Resources.Extensions is the
+      usual one - Windows Desktop projects (UseWindowsForms/UseWPF) get it from the framework,
+      so only plain net10.0 projects with preserialized resources need the package. -->
+ <NoWarn>$(NoWarn);CS8981;SYSLIB0003</NoWarn>
  <!-- .NET 9+ defaults this to "all" (transitive), which fails restore. Restore the
       net8 default; transitive advisories are tracked separately. -->
  <NuGetAuditMode>direct</NuGetAuditMode>

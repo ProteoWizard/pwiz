@@ -47,7 +47,7 @@ namespace pwiz.SkylineTestFunctional
 
         /// <summary>
         /// Set to true to regenerate EXPECTED_POINT_COUNT and EXPECTED_RANDOM_POINTS above:
-        /// the run prints them as pasteable C#, and <see cref="CheckRecordMode"/> then fails the
+        /// the run prints them as pasteable C#, and <see cref="AbstractUnitTestEx.CheckRecordMode"/> then fails the
         /// test so record mode cannot be committed switched on. Recording requires an on-screen
         /// run (offscreen=off) - offscreen coordinates are not reproducible.
         /// </summary>

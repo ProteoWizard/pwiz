@@ -45,6 +45,10 @@ namespace pwiz.Osprey.IO
     /// </summary>
     internal static class SpectrumBuilder
     {
+        // PSI-MS accessions of the isolation window offsets, named in the error when one is missing.
+        private const string CV_ISOLATION_WINDOW_LOWER_OFFSET = @"MS:1000828";
+        private const string CV_ISOLATION_WINDOW_UPPER_OFFSET = @"MS:1000829";
+
         // Unsorted-centroid notices are per-process, not per-file: the cap keeps
         // a pathological file from flooding the log across parallel ProcessFile
         // calls. After the cap, we suppress further lines (the first ones
@@ -176,13 +180,17 @@ namespace pwiz.Osprey.IO
                 return null;
 
             if (isoLower <= 0)
+            {
                 throw new InvalidDataException(string.Format(
                     OspreyIOResources.SpectrumBuilder_CreateMs2Spectrum_Spectrum_index__0__has_no_valid_isolation_window_lower_offset__cvParam_MS_1000828_is_,
-                    spectrumIndex));
+                    spectrumIndex, CV_ISOLATION_WINDOW_LOWER_OFFSET));
+            }
             if (isoUpper <= 0)
+            {
                 throw new InvalidDataException(string.Format(
                     OspreyIOResources.SpectrumBuilder_CreateMs2Spectrum_Spectrum_index__0__has_no_valid_isolation_window_upper_offset__cvParam_MS_1000829_is_,
-                    spectrumIndex));
+                    spectrumIndex, CV_ISOLATION_WINDOW_UPPER_OFFSET));
+            }
 
             return new Spectrum
             {

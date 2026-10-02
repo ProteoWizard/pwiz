@@ -52,7 +52,7 @@ namespace pwiz.Osprey.Tasks
         /// This task's name, as a constant so the CLI selector, the validity stamp another
         /// task looks for, and the tests all spell it from here rather than duplicating it.
         /// </summary>
-        public const string TASK_NAME = @"SecondPassFDR";
+        public const string TASK_NAME = OspreyTaskNames.SECOND_PASS_FDR;
 
         public override string Name => TASK_NAME;
 
@@ -433,14 +433,17 @@ namespace pwiz.Osprey.Tasks
                 throw new InvalidOperationException(string.Format(
                     OspreyTasksResources.SecondPassFdrTask_Run__0__of__1__runs_have_no_re_scored_results_file___scores_reconciled_parquet___which_,
                     unusable.Missing.Count, rescored.FileCount,
-                    string.Join(@", ", unusable.Missing)));
+                    string.Join(@", ", unusable.Missing), ParquetScoreCache.EXT_SCORES_RECONCILED,
+                    PerFileRescoreTask.TASK_NAME, ParquetScoreCache.EXT_SCORES,
+                    OspreyArgNames.TaskText(PerFileRescoreTask.TASK_NAME)));
             }
             if (unusable.Stale.Count > 0)
             {
                 throw new InvalidOperationException(CountText.Format(unusable.Stale.Count,
                     OspreyTasksResources.SecondPassFdrTask_Run_1_of__1__re_scored_intermediate_files_was_written_by_an_older_Osprey_build_and_cannot_be_,
                     OspreyTasksResources.SecondPassFdrTask_Run__0__of__1__re_scored_intermediate_files_were_written_by_an_older_Osprey_build_and_cannot_,
-                    rescored.FileCount, string.Join(@", ", unusable.Stale)));
+                    rescored.FileCount, string.Join(@", ", unusable.Stale),
+                    OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME)));
             }
 
             // NO .Value here any more (#4486). Every consumer below folds through
@@ -541,7 +544,8 @@ namespace pwiz.Osprey.Tasks
             var swBlib = Stopwatch.StartNew();
             if (config.DiagnosticsOnly)
             {
-                ctx.LogInfo(OspreyTasksResources.SecondPassFdrTask_Run___task_ModelDiagnostics__skipping_the__blib_write__report_only__);
+                ctx.LogInfo(string.Format(OspreyTasksResources.SecondPassFdrTask_Run___task_ModelDiagnostics__skipping_the__blib_write__report_only__,
+                    OspreyArgNames.TaskText(ModelDiagnosticsTask.TASK_NAME), LibrarySource.EXT_BLIB));
             }
             else
             {
@@ -607,9 +611,11 @@ namespace pwiz.Osprey.Tasks
                         OspreyTasksResources.SecondPassFdrTask_Run__0__FDRBench_rows_had_no_matching_library_peptide__their_peptide_and_protein_columns_were_,
                         benchResult.MissingLibrary));
                 if (benchResult.TruncatedProtein > 0)
+                {
                     ctx.LogInfo(string.Format(
                         OspreyTasksResources.SecondPassFdrTask_Run__0__FDRBench_rows_had_very_long_protein_ID_lists__which_were_truncated_with_______N_more__,
-                        benchResult.TruncatedProtein));
+                        benchResult.TruncatedProtein, FdrBenchInputWriter.TRUNCATION_MARKER_PATTERN));
+                }
                 ctx.LogInfo(LogTag.STAGE_WALL, @"fdrbench: {0:F1}s",
                     swFdrBench.Elapsed.TotalSeconds);
             }
@@ -1291,7 +1297,8 @@ namespace pwiz.Osprey.Tasks
 
             if (passingEntries.Count == 0)
             {
-                ctx.LogWarning(OspreyTasksResources.SecondPassFdrTask_WriteBlibOutput_No_precursors_pass_the_FDR_threshold__Writing_an_empty__blib_);
+                ctx.LogWarning(string.Format(OspreyTasksResources.SecondPassFdrTask_WriteBlibOutput_No_precursors_pass_the_FDR_threshold__Writing_an_empty__blib_,
+                    LibrarySource.EXT_BLIB));
             }
 
             // Ensure output directory exists

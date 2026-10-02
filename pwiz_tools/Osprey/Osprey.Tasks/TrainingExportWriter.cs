@@ -55,7 +55,7 @@ namespace pwiz.Osprey.Tasks
     internal static class TrainingExportWriter
     {
         /// <summary>The name the reconciled-parquet footer check gives the export.</summary>
-        private const string RECONCILED_CONSUMER = @"--training-export";
+        private static readonly string RECONCILED_CONSUMER = OspreyArgNames.Text(OspreyArgNames.TRAINING_EXPORT);
 
         /// <summary>Footer key naming the pass whose run q-values the export selected on.</summary>
         public const string KEY_RUN_Q_PASS = @"osprey.training_export.run_q_pass";

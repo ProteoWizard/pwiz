@@ -5,10 +5,10 @@ REM # ------------------------------------------------------------------------
 REM # tc-perftests.bat -- TeamCity entry point for the Skyline net8 perf +
 REM # tutorial test suites.
 REM #
-REM # TestPerf and TestTutorial are intentionally EXCLUDED from the per-commit
-REM # build (build.bat / tcbuild.bat) because they download large vendor datasets
-REM # and run for a long time. This is the "separate build configuration invoking
-REM # those csprojs directly" that tcbuild.bat's scope note calls for: it builds
+REM # The per-commit build (tcbuild.bat) builds and stages TestPerf and
+REM # TestTutorial but leaves their tests out of its run, because they download
+REM # large vendor datasets and run for a long time. This is the separate
+REM # configuration that runs them, as tcbuild.bat's scope note says: it builds
 REM # the net8 SDK Skyline tree + TestPerf + TestTutorial, stages them, and runs
 REM # both suites through the Skyline TestRunner harness (the functional/perf UI
 REM # tests are written for it; `dotnet test` can't run them) with perftests=on.

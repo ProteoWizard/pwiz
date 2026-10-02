@@ -19,7 +19,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -491,7 +490,7 @@ namespace pwiz.Skyline.SettingsUI
             base.OnHandleDestroyed(e);
         }
 
-        protected override void OnClosing(CancelEventArgs e)
+        protected override void OnFormClosing(FormClosingEventArgs e)
         {
             Settings.Default.ViewLibraryLocation = Location;
             Settings.Default.ViewLibrarySize = Size;
@@ -505,7 +504,7 @@ namespace pwiz.Skyline.SettingsUI
                 ionTypeSelector.HostedControl.LossChanged -= IonTypeSelector_LossChanged;
             }
 
-            base.OnClosing(e);
+            base.OnFormClosing(e);
         }
 
         #endregion

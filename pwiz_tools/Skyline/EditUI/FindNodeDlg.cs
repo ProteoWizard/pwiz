@@ -177,7 +177,7 @@ namespace pwiz.Skyline.EditUI
             {
                 // Checked state doesn't update until after event has returned.
                 // Therefore update enabled state of buttons via BeginInvoke.
-                BeginInvoke(new Action(EnableDisableButtons));
+                BeginInvoke(EnableDisableButtons);
             }
         }
     }

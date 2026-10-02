@@ -271,7 +271,7 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(declared, @"the export is a declared output of PerFileRescoring under the flag");
             Assert.AreEqual(offTask.ValidityKey(offCtx), taskKeyOn, @"the flag must not move PerFileRescoring's key");
             Assert.AreEqual(straight, ExportKey(TaskConfigs.ForTask(TrainingExportTask.TASK_NAME), c => { }, out _, out _),
-                @"the --task TrainingExport selector must compute the straight-through key");
+                OspreyArgNames.TaskText(TrainingExportTask.TASK_NAME) + @" must compute the straight-through key");
             Assert.AreEqual(straight, ExportKey(TaskConfigs.StraightThrough(), c => c.TrainingExport.MaxQ = c.RunFdr, out _, out _),
                 @"an explicit max-q equal to the default is the same export");
             foreach (var change in new Action<OspreyConfig>[]
@@ -351,8 +351,8 @@ namespace pwiz.Osprey.Test
                         declared = true;
                 }
                 Assert.AreEqual(wanted, declared, wanted
-                    ? @"the report must be a declared output when --model-diagnostics is on, or a deleted report cannot be regenerated"
-                    : @"the report must NOT be declared when --model-diagnostics is off, or every plain run is permanently invalid");
+                    ? string.Format(@"the report must be a declared output when {0} is on, or a deleted report cannot be regenerated", OspreyCommandArgs.ARG_MODEL_DIAGNOSTICS.ArgumentText)
+                    : string.Format(@"the report must NOT be declared when {0} is off, or every plain run is permanently invalid", OspreyCommandArgs.ARG_MODEL_DIAGNOSTICS.ArgumentText));
             }
         }
 

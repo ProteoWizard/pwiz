@@ -4699,7 +4699,10 @@ namespace pwiz.Osprey.Test
                 }
                 catch (InvalidDataException ex)
                 {
-                    StringAssert.Contains(ex.Message, "unsupported format_version");
+                    Assert.AreEqual(string.Format(
+                        OspreyIOResources.ReconciliationFile_Load_Reconciliation_file__0__has_unsupported_format_version__1___expected__2____Delete_this_,
+                        path, 99, ReconciliationFile.CurrentFormatVersion, "format_version",
+                        OspreyTaskNames.TaskFilePattern(OspreyTaskNames.FIRST_PASS_FDR)), ex.Message);
                 }
             }
             finally
@@ -5054,7 +5057,7 @@ namespace pwiz.Osprey.Test
                 {
                     Assert.AreEqual(string.Format(
                         OspreyTasksResources.RescoreHydration_MapPlannedActions__0__refers_to_precursor_candidate__1___which_is_not_in_the_scores_file_for_that_run_,
-                        reconPath, 999), ex.Message);
+                        reconPath, 999, OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME)), ex.Message);
                 }
             }
             finally

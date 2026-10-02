@@ -98,7 +98,8 @@ namespace pwiz.Osprey.IO
         // Fields are declared in the same order Rust writes them. Order
         // doesn't affect Parquet correctness (columns are name-indexed),
         // but matching makes diffing easier.
-        private static readonly DataField FIELD_ENTRY_ID = new DataField<uint>(@"entry_id");
+        private const string COLUMN_ENTRY_ID = @"entry_id";
+        private static readonly DataField FIELD_ENTRY_ID = new DataField<uint>(COLUMN_ENTRY_ID);
         private static readonly DataField FIELD_IS_DECOY = new DataField<bool>(@"is_decoy");
         private static readonly DataField FIELD_SEQUENCE = new DataField<string>(@"sequence");
         private static readonly DataField FIELD_MODIFIED_SEQUENCE = new DataField<string>(@"modified_sequence");
@@ -225,6 +226,12 @@ namespace pwiz.Osprey.IO
         public const string RECONCILED_SURVIVORS = @"survivors";
 
         /// <summary>
+        /// The footer metadata key that marks a parquet as reconciled (written by
+        /// PerFileRescoring), holding <c>"false"</c>, <c>"true"</c> or <see cref="RECONCILED_SURVIVORS"/>.
+        /// </summary>
+        public const string META_RECONCILED = @"osprey.reconciled";
+
+        /// <summary>
         /// True when <paramref name="path"/> is a reconciled parquet holding the survivor
         /// SUBSET but carrying no <c>score_index</c> column - the one shape whose rows cannot
         /// be traced back to <c>.scores.parquet</c> at all.
@@ -303,7 +310,7 @@ namespace pwiz.Osprey.IO
                 using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
                 using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
                 {
-                    reader.CustomMetadata.TryGetValue(@"osprey.reconciled", out string marker);
+                    reader.CustomMetadata.TryGetValue(META_RECONCILED, out string marker);
                     if (!string.Equals(marker, RECONCILED_SURVIVORS, StringComparison.Ordinal))
                         return false;
                     foreach (var f in reader.Schema.GetDataFields())
@@ -874,14 +881,18 @@ namespace pwiz.Osprey.IO
         /// failure before that. A guard here would have named it the first time a file was read.
         /// Files written in that window can still be on disk; failing them loudly is the point.</para>
         /// </summary>
-        private static byte RequireCharge(byte[] chargeCol, int row, uint entryId, string path)
+        private static byte RequireCharge(byte[] chargeCol, int rowGroup, int row, uint entryId, string path)
         {
             byte charge = chargeCol == null ? (byte)0 : chargeCol[row];
             if (charge != 0)
                 return charge;
+            // Charge is part of the row's identity, so reading on would silently drop precursors
+            // rather than report a wrong number. Parquet written before 2026-09-17 can carry a zero
+            // charge from a write race in the parallel column writer, fixed in that release.
+            string rewriteTask = RewriteTaskText(path);
             throw new InvalidDataException(string.Format(
                 OspreyIOResources.ParquetScoreCache_RequireCharge__0__is_corrupt__row__1___entry_id__2___has_a_charge_of_0__which_is_not_a_possible_,
-                path, row, entryId));
+                path, row, entryId, COLUMN_ENTRY_ID, rewriteTask, rowGroup));
         }
 
         #endregion
@@ -994,7 +1005,7 @@ namespace pwiz.Osprey.IO
                                 EntryId = entryIdCol[row],
                                 ParquetIndex = parquetIndex,
                                 IsDecoy = isDecoyCol[row],
-                                Charge = RequireCharge(chargeCol, row, entryIdCol[row], path),
+                                Charge = RequireCharge(chargeCol, g, row, entryIdCol[row], path),
                                 ScanNumber = scanCol != null ? scanCol[row] : 0u,
                                 ApexRt = apexCol != null ? apexCol[row] : 0.0,
                                 StartRt = startCol != null ? startCol[row] : 0.0,
@@ -1060,7 +1071,7 @@ namespace pwiz.Osprey.IO
                         if (col == null)
                         {
                             throw new InvalidDataException(string.Format(
-                                OspreyIOResources.ParquetScoreCache_StreamEntryIds_The_scores_file___0___is_damaged__row_group__1__has_no_readable_entry_id_column__so_its_, path, g));
+                                OspreyIOResources.ParquetScoreCache_StreamEntryIds_The_scores_file___0___is_damaged__row_group__1__has_no_readable_entry_id_column__so_its_, path, g, COLUMN_ENTRY_ID));
                         }
                         foreach (uint id in col)
                             yield return id;
@@ -1158,7 +1169,7 @@ namespace pwiz.Osprey.IO
                         {
                             onRow(
                                 entryIdCol[row],
-                                RequireCharge(chargeCol, row, entryIdCol[row], path),
+                                RequireCharge(chargeCol, g, row, entryIdCol[row], path),
                                 isDecoyCol[row],
                                 coelutionCol != null ? coelutionCol[row] : 0.0,
                                 modseqCol != null ? modseqCol[row] : string.Empty,
@@ -1249,7 +1260,7 @@ namespace pwiz.Osprey.IO
             if (!File.Exists(path))
                 return (false, 0L);
             var footer = LoadFooterMetadata(path);
-            footer.TryGetValue(@"osprey.reconciled", out string marker);
+            footer.TryGetValue(META_RECONCILED, out string marker);
             if (!string.Equals(marker, RECONCILED_SURVIVORS, StringComparison.Ordinal))
                 return (false, 0L);
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -1777,7 +1788,7 @@ namespace pwiz.Osprey.IO
                             ? scoreIndexCol[row]
                             : (uint)(startParquetIndex + row),
                         IsDecoy = isDecoyCol[row],
-                        Charge = RequireCharge(chargeCol, row, entryIdCol[row], path),
+                        Charge = RequireCharge(chargeCol, g, row, entryIdCol[row], path),
                         ScanNumber = scanCol != null ? scanCol[row] : 0u,
                         ApexRt = apexCol != null ? apexCol[row] : 0.0,
                         StartRt = startCol != null ? startCol[row] : 0.0,
@@ -1895,6 +1906,17 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// The command line that rewrites a scores file: <c>--task PerFileRescoring</c> for a
+        /// reconciled one, which only that task writes, otherwise <c>--task PerFileScoring</c>.
+        /// </summary>
+        public static string RewriteTaskText(string path)
+        {
+            return OspreyArgNames.TaskText(IsReconciledScoresPath(path)
+                ? OspreyTaskNames.PER_FILE_RESCORING
+                : OspreyTaskNames.PER_FILE_SCORING);
+        }
+
+        /// <summary>
         /// Map an original <c>.scores.parquet</c> path to its reconciled sibling
         /// <c>.scores-reconciled.parquet</c> by swapping the trailing suffix. A
         /// path that is already a reconciled output is returned unchanged (safe
@@ -2002,8 +2024,10 @@ namespace pwiz.Osprey.IO
             string expectedLibrary,
             string currentVersion)
         {
+            // Every remedy below is the same command line: run again the task that wrote the file.
+            string scoreAgain = RewriteTaskText(fileLabel);
             if (cachedVersion == null)
-                return string.Format(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_Osprey_build_wrote_it__so_it_cannot_be_reused__Score_the_file_, fileLabel);
+                return string.Format(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_Osprey_build_wrote_it__so_it_cannot_be_reused__Score_the_file_, fileLabel, scoreAgain);
             int cY, cO, cB, cD, rY, rO, rB, rD;
             bool cachedOk = TryParseVersion(cachedVersion, out cY, out cO, out cB, out cD);
             bool currentOk = TryParseVersion(currentVersion, out rY, out rO, out rB, out rD);
@@ -2017,37 +2041,37 @@ namespace pwiz.Osprey.IO
             {
                 return string.Format(
                     OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_written_by_an_Osprey_build_this_one_does_not_recognize___1___this_is__2____so_it_,
-                    fileLabel, cachedVersion, currentVersion);
+                    fileLabel, cachedVersion, currentVersion, scoreAgain);
             }
             if (cY != rY || cO != rO || cB != rB)
             {
                 return string.Format(
                     OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_Osprey__1___which_is_not_compatible_with_this_build___2____Score_the_,
-                    fileLabel, cachedVersion, currentVersion);
+                    fileLabel, cachedVersion, currentVersion, scoreAgain);
             }
             if (cD != rD)
             {
                 return string.Format(
                     OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_a_different_daily_build_of_Osprey___1___this_is__2____Score_the_file_,
-                    fileLabel, cachedVersion, currentVersion);
+                    fileLabel, cachedVersion, currentVersion, scoreAgain);
             }
 
             if (cachedSearch == null)
-                return string.Format(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_the_search_settings_it_was_scored_with__so_it_cannot_be_reused__Score_, fileLabel);
+                return string.Format(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_the_search_settings_it_was_scored_with__so_it_cannot_be_reused__Score_, fileLabel, scoreAgain);
             if (cachedSearch != expectedSearch)
             {
                 return string.Format(
                     OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_with_different_search_settings_than_this_run_uses__Score_the_file_again_,
-                    fileLabel, cachedSearch, expectedSearch);
+                    fileLabel, cachedSearch, expectedSearch, scoreAgain);
             }
 
             if (cachedLibrary == null)
-                return string.Format(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_spectral_library_it_was_scored_against__so_it_cannot_be_reused__, fileLabel);
+                return string.Format(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_spectral_library_it_was_scored_against__so_it_cannot_be_reused__, fileLabel, scoreAgain);
             if (cachedLibrary != expectedLibrary)
             {
                 return string.Format(
                     OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_against_a_different_spectral_library_than___library_names__Score_the_file_,
-                    fileLabel, cachedLibrary, expectedLibrary);
+                    fileLabel, cachedLibrary, expectedLibrary, OspreyArgNames.Text(OspreyArgNames.LIBRARY), scoreAgain);
             }
 
             return null;
@@ -2065,7 +2089,7 @@ namespace pwiz.Osprey.IO
             string currentVersion)
         {
             return ValidateScoresParquetGroup(paths, config, currentVersion,
-                config.ExpectReconciledInput ? @"--task SecondPassFDR" : null);
+                config.ExpectReconciledInput ? OspreyArgNames.TaskText(OspreyTaskNames.SECOND_PASS_FDR) : null);
         }
 
         /// <summary>
@@ -2116,7 +2140,7 @@ namespace pwiz.Osprey.IO
                 if (reconciledConsumer != null)
                 {
                     string cachedReconciled;
-                    kv.TryGetValue(@"osprey.reconciled", out cachedReconciled);
+                    kv.TryGetValue(META_RECONCILED, out cachedReconciled);
                     // Two accepted values, one meaning: this is a post-Stage-6 parquet.
                     // "survivors" additionally says it holds ONLY the Stage 5 survivor rows,
                     // which is what this build writes; "true" is the older row-for-row shape,
@@ -2124,8 +2148,10 @@ namespace pwiz.Osprey.IO
                     if (!string.Equals(cachedReconciled, @"true", StringComparison.Ordinal) &&
                         !string.Equals(cachedReconciled, RECONCILED_SURVIVORS, StringComparison.Ordinal))
                     {
-                        return string.Format(OspreyIOResources.ParquetScoreCache_ValidateScoresParquetGroup__2__needs_the_reconciled_scores_files_that___task_PerFileRescoring_writes,
-                            path, cachedReconciled ?? @"<unset>", reconciledConsumer);
+                        return string.Format(
+                            OspreyIOResources.ParquetScoreCache_ValidateScoresParquetGroup__2__needs_the_reconciled_scores_files_that___task_PerFileRescoring_writes,
+                            path, cachedReconciled ?? @"<unset>", reconciledConsumer,
+                            OspreyArgNames.TaskText(OspreyTaskNames.PER_FILE_RESCORING), META_RECONCILED);
                     }
                 }
             }

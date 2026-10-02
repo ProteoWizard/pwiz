@@ -74,7 +74,61 @@ namespace pwiz.Osprey
 
         static int Main(string[] args)
         {
-            return RunCommand(args, new CommandStatusWriter(Console.Error));
+            // Japanese and Chinese text written to a console in a code page that cannot hold it
+            // (the OEM code page of an English-locale Windows, or Shift-JIS / GBK where the reader
+            // expects UTF-8, as in "--help html > help.html") arrives as '?' or mojibake. As in
+            // SkylineCmd's EncodingManager, switch the console to UTF-8 for the run and put it back.
+            Encoding startEncoding = UsesTranslatedText(args) ? SwitchConsoleEncoding(new UTF8Encoding(false)) : null;
+            try
+            {
+                return RunCommand(args, new CommandStatusWriter(Console.Error));
+            }
+            finally
+            {
+                if (startEncoding != null)
+                    SwitchConsoleEncoding(startEncoding);
+            }
+        }
+
+        /// <summary>
+        /// True when this run may write Japanese or Chinese: an explicit <c>--culture</c> (SkylineCmd's
+        /// rule), or a UI language Osprey ships translations for.
+        /// </summary>
+        private static bool UsesTranslatedText(string[] args)
+        {
+            try
+            {
+                if (OspreyCommandArgs.FindValue(args, OspreyCommandArgs.ARG_INTERNAL_CULTURE) != null)
+                    return true;
+            }
+            catch (Exception)
+            {
+                // A malformed --culture is reported by RunCommand; decide from the UI language.
+            }
+            string language = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+            return language == @"ja" || language == @"zh";
+        }
+
+        /// <summary>
+        /// Sets the console output encoding, returning the one it replaced, or null when there is
+        /// no console to change (output redirected by a host that refuses it).
+        /// </summary>
+        private static Encoding SwitchConsoleEncoding(Encoding encoding)
+        {
+            try
+            {
+                Encoding previous = Console.OutputEncoding;
+                Console.OutputEncoding = encoding;
+                return previous;
+            }
+            catch (IOException)
+            {
+                return null;
+            }
+            catch (PlatformNotSupportedException)
+            {
+                return null;
+            }
         }
 
         /// <summary>
