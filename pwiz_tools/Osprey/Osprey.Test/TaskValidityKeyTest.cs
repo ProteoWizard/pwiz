@@ -22,9 +22,14 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 using pwiz.Osprey.Tasks.ModelDiagnostics;
 
@@ -54,6 +59,254 @@ namespace pwiz.Osprey.Test
             AssertEveryTaskCarriesTheSuffixesItNeeds();
             AssertLibraryFragmentArmIsPinnedToThePipeline();
             AssertDiagnosticsReportIsADeclaredOutputOnlyWhenAsked();
+            AssertTrainingExportKey();
+            AssertTrainingExportKeyFollowsEachRunsInputs();
+            AssertLibraryTermsKeyOnlyWhatChanged();
+        }
+
+        /// <summary>
+        /// Each library term keys what its change reaches, and no more:
+        /// <list type="bullet">
+        /// <item>every blib is read differently since the reader started typing its peaks from
+        /// m/z (and reading modification text residue- and precision-aware), so every task of a
+        /// blib search keys on <see cref="OspreyTask.BLIB_READER_TERM"/>, and the
+        /// <c>.libcache</c> composition carries the reader version with the fragment tolerance
+        /// the cached types were computed within;</item>
+        /// <item>a DIA-NN TSV search keys exactly as before - its columns are still the typing -
+        /// while its <c>.libcache</c> is re-read once through the validating reader;</item>
+        /// <item>the output blib's rows changed for every library, so SecondPassFDR keys on
+        /// <c>;blibout</c> for both.</item>
+        /// </list>
+        /// </summary>
+        private static void AssertLibraryTermsKeyOnlyWhatChanged()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), @"osprey_libterms_" + Path.GetRandomFileName());
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string tsv = Path.Combine(dir, @"library.tsv");
+                File.WriteAllText(tsv, @"not read");
+                string blib = Path.Combine(dir, @"library.blib");
+                File.WriteAllText(blib, @"not read");
+
+                var tsvConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(tsv) };
+                var tsvKeys = TaskKeys(tsvConfig);
+                Assert.AreEqual(PreUpgradeBaseKey(tsvConfig), tsvKeys[PerFileScoringTask.TASK_NAME],
+                    @"a TSV search keys as before the reader change");
+                foreach (var key in tsvKeys)
+                    Assert.IsFalse(key.Value.Contains(OspreyTask.BLIB_READER_TERM), key.Key);
+                Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, "tsv_reader:{0}\n", DiannTsvLoader.READER_VERSION),
+                    LibraryLoader.LibraryReaderTerms(tsvConfig));
+
+                var blibConfig = new OspreyConfig { LibrarySource = LibrarySource.FromPath(blib) };
+                var blibKeys = TaskKeys(blibConfig);
+                Assert.AreEqual(PreUpgradeBaseKey(blibConfig) + OspreyTask.BLIB_READER_TERM,
+                    blibKeys[PerFileScoringTask.TASK_NAME]);
+                foreach (var key in blibKeys)
+                    StringAssert.Contains(key.Value, OspreyTask.BLIB_READER_TERM, key.Key + @" must key on the blib reader");
+                Assert.AreEqual(BlibLoader.CacheTerm(blibConfig.FragmentTolerance), LibraryLoader.LibraryReaderTerms(blibConfig));
+                // The cached types were computed within the fragment tolerance, so another
+                // tolerance is another cache (the task keys follow it through the search hash).
+                var unitConfig = new OspreyConfig
+                {
+                    LibrarySource = LibrarySource.FromPath(blib),
+                    FragmentTolerance = FragmentToleranceConfig.UnitResolution(0.5)
+                };
+                Assert.AreNotEqual(LibraryLoader.LibraryReaderTerms(blibConfig), LibraryLoader.LibraryReaderTerms(unitConfig));
+                Assert.AreNotEqual(blibConfig.Identity.SearchParameterHash(), unitConfig.Identity.SearchParameterHash());
+
+                foreach (var config in new[] { tsvConfig, blibConfig })
+                {
+                    StringAssert.Contains(TaskKeys(config)[SecondPassFdrTask.TASK_NAME],
+                        @";blibout=" + BlibSpectrum.FORMAT_VERSION);
+                }
+            }
+            finally
+            {
+                DeleteTempDirectory(dir);
+            }
+        }
+
+        /// <summary>Every pipeline task's validity key for <paramref name="config"/>, by task name.</summary>
+        private static Dictionary<string, string> TaskKeys(OspreyConfig config)
+        {
+            var tasks = OspreyTasks.Create().Pipeline;
+            var ctx = new PipelineContext(config, tasks, null, null, null);
+            return tasks.ToDictionary(t => t.Name, t => t.ValidityKey(ctx));
+        }
+
+        /// <summary>
+        /// Removes a test's temp folder best effort, so a lingering SQLite handle cannot replace
+        /// the assertion that failed with an IOException from a finally block.
+        /// </summary>
+        private static void DeleteTempDirectory(string dir)
+        {
+            foreach (string file in Directory.GetFiles(dir))
+                BlibLibraryInputTest.TryDeleteFile(file);
+            try
+            {
+                Directory.Delete(dir, true);
+            }
+            catch (IOException)
+            {
+                // A test's temp folder; a lingering handle must not fail the test.
+            }
+        }
+
+        /// <summary>
+        /// A run's export is PerFileRescoring's product, and it reads that run's reconciled
+        /// parquet, one q-value sidecar, calibration and spectra cache, so each one's identity
+        /// keys that run's export - absent and present differ, and so do two versions of one file
+        /// - while another run's export, the task key and the task's other outputs do not move.
+        /// The q-value sidecar is the second-pass one only when PerFileRescoring wrote it - its
+        /// stamp and its decoys file. One SecondPassFDR writes after the export (a run with no
+        /// Stage 6 work, or no readable first-pass model) is not read and must not key it, even
+        /// once the driver has stamped it under PerFileRescoring's name, or the export flips to
+        /// it on a later invocation of the same command.
+        /// </summary>
+        private static void AssertTrainingExportKeyFollowsEachRunsInputs()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), @"osprey_trainrun_" + Path.GetRandomFileName());
+            Directory.CreateDirectory(dir);
+            string savedOutput = ArtifactPaths.OutputDir;
+            string savedCache = ArtifactPaths.CacheDir;
+            try
+            {
+                ArtifactPaths.OutputDir = dir;
+                ArtifactPaths.CacheDir = dir;
+                string runA = Path.Combine(dir, @"a.mzML");
+                string runB = Path.Combine(dir, @"b.mzML");
+                var config = TaskConfigs.StraightThrough();
+                config.InputFiles = new List<string> { runA, runB };
+                config.LibrarySource = LibrarySource.FromPath(@"ref.tsv");
+                config.OutputBlib = Path.Combine(dir, @"out.blib");
+                config.TrainingExport.Enabled = true;
+                var ctx = TaskConfigs.ContextFor(config);
+                var task = config.Pipeline.OfType<PerFileRescoreTask>().Single();
+                string key = task.ValidityKey(ctx);
+                string RunKey(string input) => task.OutputValidityKey(ctx, key, TrainingExportParquet.PathFor(input));
+
+                string otherRun = RunKey(runB);
+                string current = RunKey(runA);
+                foreach (string artifact in new[]
+                         {
+                             ParquetScoreCache.GetReconciledScoresPath(runA),
+                             FdrScoresSidecar.Pass1Path(runA),
+                             CalibrationIO.CalibrationPathForInput(runA, ArtifactPaths.ResolveOutputDir(runA)),
+                             SpectraCache.GetCachePath(runA),
+                         })
+                {
+                    current = AssertRewritesInvalidate(artifact, current, () => RunKey(runA));
+                    Assert.AreEqual(otherRun, RunKey(runB), @"another run's export does not depend on this run's files");
+                }
+
+                string pass2 = FdrScoresSidecar.Pass2Path(runA);
+                File.WriteAllText(pass2, @"SecondPassFDR's");
+                Assert.AreEqual(current, RunKey(runA), @"a second-pass sidecar PerFileRescoring did not write is not read, so it must not key the export");
+                Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out var pass));
+                Assert.AreEqual(FdrScoresSidecar.Pass.FirstPass, pass);
+                // The driver stamps every declared output that exists after a PerFileRescoring
+                // run, so SecondPassFDR's sidecar can carry a PerFileRescoring stamp it did not
+                // earn. The worker's decoys file is what the driver cannot supply.
+                File.WriteAllText(TaskValiditySidecar.PathFor(pass2, PerFileRescoreTask.TASK_NAME), @"stamp");
+                Assert.AreEqual(current, RunKey(runA), @"a PerFileRescoring stamp without the worker's decoys must not flip the export to the second pass");
+                Assert.AreEqual(FdrScoresSidecar.Pass1Path(runA), TrainingExportWriter.RunQPath(runA, out pass));
+                File.WriteAllText(Pass2CompetitionDecoys.PathFor(runA), @"decoys");
+                Assert.AreEqual(pass2, TrainingExportWriter.RunQPath(runA, out pass), @"the worker's stamp and decoys make the second pass the one read");
+                Assert.AreEqual(FdrScoresSidecar.Pass.SecondPass, pass);
+                Assert.AreNotEqual(current, RunKey(runA), @"switching the sidecar read must invalidate the run's export");
+                current = AssertRewritesInvalidate(pass2, RunKey(runA), () => RunKey(runA));
+                File.WriteAllText(FdrScoresSidecar.Pass1Path(runA), @"no longer read");
+                Assert.AreEqual(current, RunKey(runA), @"the first-pass sidecar is not read once the second pass is");
+                Assert.AreEqual(otherRun, RunKey(runB), @"another run's export does not depend on this run's files");
+
+                Assert.AreEqual(key, task.ValidityKey(ctx), @"the per-run identities belong to the run's export, not the task key (P4)");
+                string reconciled = ParquetScoreCache.GetReconciledScoresPath(runA);
+                Assert.AreEqual(key, task.OutputValidityKey(ctx, key, reconciled),
+                    @"the task's other outputs key on the task key alone");
+            }
+            finally
+            {
+                ArtifactPaths.OutputDir = savedOutput;
+                ArtifactPaths.CacheDir = savedCache;
+                Directory.Delete(dir, true);
+            }
+        }
+
+        /// <summary>
+        /// Writes <paramref name="artifact"/> and then rewrites it longer, asserting that each
+        /// moves the key <paramref name="runKey"/> computes; returns the key after the rewrite.
+        /// </summary>
+        private static string AssertRewritesInvalidate(string artifact, string current, Func<string> runKey)
+        {
+            File.WriteAllText(artifact, @"first");
+            string written = runKey();
+            Assert.AreNotEqual(current, written, Path.GetFileName(artifact) + @" appearing must invalidate the run's export");
+            File.WriteAllText(artifact, @"rewritten, and longer");
+            string rewritten = runKey();
+            Assert.AreNotEqual(written, rewritten, Path.GetFileName(artifact) + @" rewritten must invalidate the run's export");
+            return rewritten;
+        }
+
+        /// <summary>
+        /// The training export is a declared output of PerFileRescoring only when asked for, and
+        /// asking for it moves no other key: PerFileRescoring's own key is the same with the flag
+        /// or without, so adding the flag to a finished analysis leaves every other output
+        /// valid and only the exports outstanding (P17). The export's key follows each export
+        /// setting, and the straight-through run and a <c>--task TrainingExport</c> selector
+        /// compute the same key, so a pay-later export is never redone.
+        /// </summary>
+        private static void AssertTrainingExportKey()
+        {
+            var off = TaskConfigs.StraightThrough();
+            off.InputFiles = new List<string> { @"a.mzML" };
+            off.LibrarySource = LibrarySource.FromPath(@"ref.tsv");
+            off.OutputBlib = @"out.blib";
+            var offCtx = TaskConfigs.ContextFor(off);
+            var offTask = off.Pipeline.OfType<PerFileRescoreTask>().Single();
+            string export = TrainingExportParquet.PathFor(@"a.mzML");
+            Assert.IsFalse(offTask.Outputs(offCtx).Contains(export), @"no export is declared with the flag off");
+
+            string straight = ExportKey(TaskConfigs.StraightThrough(), c => { }, out string taskKeyOn, out bool declared);
+            Assert.IsTrue(declared, @"the export is a declared output of PerFileRescoring under the flag");
+            Assert.AreEqual(offTask.ValidityKey(offCtx), taskKeyOn, @"the flag must not move PerFileRescoring's key");
+            Assert.AreEqual(straight, ExportKey(TaskConfigs.ForTask(TrainingExportTask.TASK_NAME), c => { }, out _, out _),
+                OspreyArgNames.TaskText(TrainingExportTask.TASK_NAME) + @" must compute the straight-through key");
+            Assert.AreEqual(straight, ExportKey(TaskConfigs.StraightThrough(), c => c.TrainingExport.MaxQ = c.RunFdr, out _, out _),
+                @"an explicit max-q equal to the default is the same export");
+            foreach (var change in new Action<OspreyConfig>[]
+                     {
+                         c => c.TrainingExport.MaxQ = 0.05,
+                         c => c.TrainingExport.ClaimantQ = 0.05,
+                         c => c.TrainingExport.WriteXics = true,
+                         c => c.RunFdr = 0.05,
+                     })
+            {
+                Assert.AreNotEqual(straight, ExportKey(TaskConfigs.StraightThrough(), change, out _, out _),
+                    @"an export setting must change the key");
+            }
+        }
+
+        private static string ExportKey(OspreyConfig config, Action<OspreyConfig> mutate, out string taskKey, out bool declared)
+        {
+            config.InputFiles = new List<string> { @"a.mzML" };
+            config.LibrarySource = LibrarySource.FromPath(@"ref.tsv");
+            config.OutputBlib = @"out.blib";
+            config.TrainingExport.Enabled = true;
+            mutate(config);
+            var ctx = TaskConfigs.ContextFor(config);
+            var task = config.Pipeline.OfType<PerFileRescoreTask>().Single();
+            string export = TrainingExportParquet.PathFor(@"a.mzML");
+            taskKey = task.ValidityKey(ctx);
+            declared = task.Outputs(ctx).Contains(export);
+            return task.OutputValidityKey(ctx, taskKey, export);
+        }
+
+        /// <summary>The base task key as every build before the blib reader change wrote it.</summary>
+        private static string PreUpgradeBaseKey(OspreyConfig config)
+        {
+            return string.Format(@"search={0};library={1}{2}", config.Identity.SearchParameterHash(),
+                config.Identity.LibraryIdentityHash(), OspreyEnvironment.PickValidityKeySuffix());
         }
 
         /// <summary>
@@ -94,12 +347,12 @@ namespace pwiz.Osprey.Test
                 bool declared = false;
                 foreach (string o in second.Outputs(ctx))
                 {
-                    if (o != null && o.EndsWith(ModelDiagnosticsReport.HtmlSuffix, StringComparison.Ordinal))
+                    if (o != null && o.EndsWith(ModelDiagnosticsReport.EXT_HTML, StringComparison.Ordinal))
                         declared = true;
                 }
                 Assert.AreEqual(wanted, declared, wanted
-                    ? @"the report must be a declared output when --model-diagnostics is on, or a deleted report cannot be regenerated"
-                    : @"the report must NOT be declared when --model-diagnostics is off, or every plain run is permanently invalid");
+                    ? string.Format(@"the report must be a declared output when {0} is on, or a deleted report cannot be regenerated", OspreyCommandArgs.ARG_MODEL_DIAGNOSTICS.ArgumentText)
+                    : string.Format(@"the report must NOT be declared when {0} is off, or every plain run is permanently invalid", OspreyCommandArgs.ARG_MODEL_DIAGNOSTICS.ArgumentText));
             }
         }
 

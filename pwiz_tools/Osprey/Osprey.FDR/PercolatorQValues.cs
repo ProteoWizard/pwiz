@@ -76,7 +76,7 @@ namespace pwiz.Osprey.FDR
             bool[] winnerIsDecoy;
             // Throttled progress over the ~344M-row population competition (the big walk that
             // ran silent at 82 files); null (silent) on small runs. Console-only, byte-neutral.
-            using (var pepProgress = QProgress(@"Population target/decoy competition", n, n))
+            using (var pepProgress = QProgress(OspreyFDRResources.PercolatorQValues_ComputePepWinnerMap_Population_target_decoy_competition, n, n))
                 TargetDecoyCompetition.CompeteAll(finalScores, labels, entryIds,
                     out winnerIndices, out winnerScores, out winnerIsDecoy, pepProgress);
 
@@ -539,7 +539,7 @@ namespace pwiz.Osprey.FDR
                 list.Add(i);
             }
 
-            var progress = QProgress(@"Per-run precursor q-values", fileGroups.Count, n);
+            var progress = QProgress(OspreyFDRResources.PercolatorQValues_ComputePerRunPrecursorQvalues_Per_run_precursor_q_values, fileGroups.Count, n);
             int fileDone = 0;
             foreach (var group in fileGroups.Values)
             {
@@ -662,7 +662,7 @@ namespace pwiz.Osprey.FDR
                 list.Add(i);
             }
 
-            var progress = QProgress(@"Per-run peptide q-values", fileGroups.Count, n);
+            var progress = QProgress(OspreyFDRResources.PercolatorQValues_ComputePerRunPeptideQvalues_Per_run_peptide_q_values, fileGroups.Count, n);
             int fileDone = 0;
             foreach (var group in fileGroups.Values)
             {
@@ -736,7 +736,7 @@ namespace pwiz.Osprey.FDR
             int[] wi;
             double[] ws;
             bool[] wd;
-            using (var progress = QProgress(@"Experiment precursor q-values", n, n))
+            using (var progress = QProgress(OspreyFDRResources.PercolatorQValues_ComputeExperimentPrecursorQMap_Experiment_precursor_q_values, n, n))
             {
                 if (applyExperimentAgg && OspreyEnvironment.ExperimentAggMeanBest)
                 {
@@ -899,7 +899,7 @@ namespace pwiz.Osprey.FDR
             int[] wi;
             double[] ws;
             bool[] wd;
-            using (var progress = QProgress(@"Experiment peptide q-values", bestPerPeptide.Length, bestPerPeptide.Length))
+            using (var progress = QProgress(OspreyFDRResources.PercolatorQValues_ComputeExperimentPeptideQMap_Experiment_peptide_q_values, bestPerPeptide.Length, bestPerPeptide.Length))
                 TargetDecoyCompetition.CompeteFromIndices(peptScores, peptLabels, peptEntryIds, allPeptIndices,
                     out wi, out ws, out wd, progress);
 

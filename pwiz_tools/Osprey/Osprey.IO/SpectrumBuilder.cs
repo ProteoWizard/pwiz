@@ -45,6 +45,10 @@ namespace pwiz.Osprey.IO
     /// </summary>
     internal static class SpectrumBuilder
     {
+        // PSI-MS accessions of the isolation window offsets, named in the error when one is missing.
+        private const string CV_ISOLATION_WINDOW_LOWER_OFFSET = @"MS:1000828";
+        private const string CV_ISOLATION_WINDOW_UPPER_OFFSET = @"MS:1000829";
+
         // Unsorted-centroid notices are per-process, not per-file: the cap keeps
         // a pathological file from flooding the log across parallel ProcessFile
         // calls. After the cap, we suppress further lines (the first ones
@@ -95,8 +99,7 @@ namespace pwiz.Osprey.IO
                 if (double.IsNaN(mzArray[i]))
                 {
                     throw new InvalidDataException(string.Format(
-                        "NaN m/z at index {0} of spectrum_index={1} (n_peaks={2}); " +
-                        "cannot sort or fragment-match a malformed centroid array.",
+                        OspreyIOResources.SpectrumBuilder_EnsureSorted_NaN_m_z_at_index__0__of_spectrum_index__1___n_peaks__2____cannot_sort_or_fragment_match_a_,
                         i, spectrumIndex, mzArray.Length));
                 }
                 if (i > 0 && mzArray[i] < mzArray[i - 1])
@@ -177,17 +180,17 @@ namespace pwiz.Osprey.IO
                 return null;
 
             if (isoLower <= 0)
+            {
                 throw new InvalidDataException(string.Format(
-                    "spectrum index {0}: no valid isolation-window lower offset " +
-                    "(cvParam MS:1000828 missing or non-positive); cannot process DIA data " +
-                    "without true isolation windows.",
-                    spectrumIndex));
+                    OspreyIOResources.SpectrumBuilder_CreateMs2Spectrum_Spectrum_index__0__has_no_valid_isolation_window_lower_offset__cvParam_MS_1000828_is_,
+                    spectrumIndex, CV_ISOLATION_WINDOW_LOWER_OFFSET));
+            }
             if (isoUpper <= 0)
+            {
                 throw new InvalidDataException(string.Format(
-                    "spectrum index {0}: no valid isolation-window upper offset " +
-                    "(cvParam MS:1000829 missing or non-positive); cannot process DIA data " +
-                    "without true isolation windows.",
-                    spectrumIndex));
+                    OspreyIOResources.SpectrumBuilder_CreateMs2Spectrum_Spectrum_index__0__has_no_valid_isolation_window_upper_offset__cvParam_MS_1000829_is_,
+                    spectrumIndex, CV_ISOLATION_WINDOW_UPPER_OFFSET));
+            }
 
             return new Spectrum
             {

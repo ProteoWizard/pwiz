@@ -20,13 +20,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
-using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 
 namespace pwiz.Osprey.Test
@@ -35,11 +35,12 @@ namespace pwiz.Osprey.Test
     /// The command-line errors a user can reach without data, run through
     /// <see cref="Program.RunCommand"/> exactly as Osprey.exe runs them, in the manner of
     /// Skyline's CommandLineTest. Each case asserts what the user sees: one "Error:" line, a
-    /// failure exit code that agrees with it, the flag, value or path the user typed, and no
-    /// exception type or stack trace in place of a message.
+    /// failure exit code that agrees with it, and the exact message, formatted from the same
+    /// resource the code uses, with the flag, value or path the user typed - never an exception
+    /// type or stack trace in place of a message.
     ///
-    /// <para>Assertions use only text that is not translated - flag names, paths, the values
-    /// typed - so they hold once the messages move to resources.</para>
+    /// <para>Messages Osprey.Tasks owns and the developer-only OSPREY_* variable messages are
+    /// asserted by the flag, value or variable they must name.</para>
     /// </summary>
     [TestClass]
     public class CommandLineErrorTest
@@ -72,24 +73,35 @@ namespace pwiz.Osprey.Test
             // No arguments: the usage, then the error.
             string output = RunCommandAndValidateError();
             StringAssert.Contains(output, OspreyCommandArgs.ARG_INPUT.ArgumentText);
+            AssertErrorMessage(output, OspreyResources.Program_Run_No_arguments_were_given__see_the_usage_above_);
 
             // --task with no name, and with a name that is not a task: both list every task.
+            string taskList = string.Join(@", ", OspreyCommandArgs.ARG_TASK.Values);
             output = RunCommandAndValidateError(OspreyCommandArgs.ARG_TASK.ArgumentText);
-            AssertNamesEveryTask(output);
+            AssertErrorMessage(output, string.Format(OspreyResources.Program_Run__0__requires_a_task_name___1___,
+                OspreyCommandArgs.ARG_TASK.ArgumentText, taskList));
             output = RunCommandAndValidateError(OspreyCommandArgs.ARG_TASK.ArgumentText, @"Bogus");
-            StringAssert.Contains(output, @"Bogus");
-            AssertNamesEveryTask(output);
+            AssertErrorMessage(output, string.Format(OspreyResources.Program_ResolveTask__0___unknown_task___1____Valid_tasks___2__,
+                OspreyCommandArgs.ARG_TASK.ArgumentText, @"Bogus", taskList));
 
             // Parse errors: the flag or value the user typed, not the exception that carried it.
             output = RunCommandAndValidateError(@"--bogus-flag");
-            StringAssert.Contains(output, @"--bogus-flag");
+            AssertErrorMessage(output, string.Format(
+                OspreyResources.OspreyCommandArgs_TokenizeAndDispatch_Unknown_argument___0___Run_with__1__to_see_valid_options_,
+                @"--bogus-flag", OspreyCommandArgs.ARG_HELP.ArgumentText));
             output = RunCommandAndValidateError(OspreyCommandArgs.ARG_THREADS.ArgumentText, @"bad");
-            StringAssert.Contains(output, OspreyCommandArgs.ARG_THREADS.ArgumentText);
+            AssertErrorMessage(output, string.Format(OspreyResources.OspreyArgUsageProvider_ValueInvalidMessage_Invalid_value___0___for__1__,
+                @"bad", OspreyCommandArgs.ARG_THREADS.ArgumentText));
+            output = RunCommandAndValidateError(OspreyCommandArgs.ARG_OUTPUT.ArgumentText);
+            AssertErrorMessage(output, string.Format(OspreyResources.OspreyArgUsageProvider_ValueMissingMessage__0__requires_a_value_,
+                OspreyCommandArgs.ARG_OUTPUT.ArgumentText));
             string missingList = TestPath(@"missing-list.txt");
             output = RunCommandAndValidateError(OspreyCommandArgs.ARG_INPUT_LIST.ArgumentText, missingList);
-            StringAssert.Contains(output, missingList);
+            AssertErrorMessage(output, string.Format(OspreyResources.OspreyCommandArgs_ReadInputList__0__file_not_found___1_,
+                OspreyCommandArgs.ARG_INPUT_LIST.ArgumentText, missingList));
 
-            // A task missing an argument it requires names the task and the argument.
+            // A task missing an argument it requires names the task and the argument. The
+            // message is Osprey.Tasks' own (ValidateSelection).
             output = RunCommandAndValidateError(OspreyCommandArgs.ARG_TASK.ArgumentText, PerFileScoringTask.TASK_NAME,
                 OspreyCommandArgs.ARG_INPUT.ArgumentText, TestPath(@"a.mzML"));
             StringAssert.Contains(output, PerFileScoringTask.TASK_NAME);
@@ -99,25 +111,32 @@ namespace pwiz.Osprey.Test
             string library = CreateEmptyFile(@"library.blib");
             string missingInput = TestPath(@"missing.mzML");
             output = RunCommandAndValidateError(InputLibraryOutput(missingInput, library));
-            StringAssert.Contains(output, missingInput);
+            AssertErrorMessage(output, string.Format(
+                OspreyResources.Program_Run_Input_file_not_found__and_no_spectra_cache_or_intermediate_file_exists_to_stand_in_for_it_,
+                missingInput));
 
             string input = CreateEmptyFile(@"run1.mzML");
             string missingLibrary = TestPath(@"missing.blib");
             output = RunCommandAndValidateError(InputLibraryOutput(input, missingLibrary));
-            StringAssert.Contains(output, missingLibrary);
+            AssertErrorMessage(output, string.Format(OspreyResources.Program_Run_Library_file_not_found___0_, missingLibrary));
 
             string unwritableLog = Path.Combine(TestPath(@"no-such-dir"), @"run.log");
             output = RunCommandAndValidateError(InputLibraryOutput(input, library)
                 .Concat(new[] { OspreyCommandArgs.ARG_LOG_FILE.ArgumentText, unwritableLog }).ToArray());
-            StringAssert.Contains(output, unwritableLog);
+            AssertErrorMessage(output, string.Format(OspreyResources.Program_Run_Failed_to_open_log_file__0____1_,
+                unwritableLog, GetOpenErrorMessage(unwritableLog)));
 
             // --task ModelDiagnostics before any analysis exists: an error, not an empty report.
             var modelDiagnostics = InputLibraryOutput(input, library)
                 .Concat(new[] { OspreyCommandArgs.ARG_TASK.ArgumentText, ModelDiagnosticsTask.TASK_NAME }).ToArray();
+            string noFirstPass = string.Format(
+                OspreyResources.Program_RunModelDiagnosticsTask__0___there_is_no_completed_first_pass_to_describe__no_first_pass_intermediate_file_for_,
+                Program.ModelDiagnosticsTaskText, FirstPassFdrTask.TASK_NAME);
             output = RunCommandAndValidateError(modelDiagnostics);
-            StringAssert.Contains(output, ModelDiagnosticsTask.TASK_NAME);
+            AssertErrorMessage(output, noFirstPass);
 
-            // Environment variables checked at startup: the variable and the value set.
+            // Environment variables checked at startup: the variable and the value set. These
+            // messages are for a developer who set the variable, so they stay English.
             output = RunCommandAndValidateError(Variable(@"OSPREY_PASS2_QVALUE", @"bogus"),
                 InputLibraryOutput(input, library));
             StringAssert.Contains(output, @"OSPREY_PASS2_QVALUE");
@@ -125,12 +144,72 @@ namespace pwiz.Osprey.Test
             output = RunCommandAndValidateError(Variable(@"OSPREY_STAGE7_STREAM", @"1"),
                 InputLibraryOutput(input, library));
             StringAssert.Contains(output, @"OSPREY_STAGE7_STREAM");
+            // The training export under the one pass-2 mode that computes each run's q-values in
+            // SecondPassFDR, after the export is written: refused, never an export on the wrong q.
+            output = RunCommandAndValidateError(Variable(@"OSPREY_PASS2_QVALUE", OspreyEnvironment.PASS2_QVALUE_TRANSFER),
+                InputLibraryOutput(input, library).Concat(new[] { OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText }).ToArray());
+            AssertErrorMessage(output, string.Format(
+                OspreyResources.Program_TrainingExportError__0__cannot_run_with__1___that_mode_computes_the_run_q_values_in__2__after_the_per_run_export_,
+                OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText, @"OSPREY_PASS2_QVALUE=" + OspreyEnvironment.PASS2_QVALUE_TRANSFER,
+                SecondPassFdrTask.TASK_NAME));
             // A retired allowance token is a warning, not an error: the run goes on, here to
             // the ModelDiagnostics error above, which stays the only error line.
             output = RunCommandAndValidateError(Variable(@"OSPREY_ALLOW_UNFIXED_RESIDENT", @"hpc-merge"),
                 modelDiagnostics);
             StringAssert.Contains(output, @"hpc-merge");
-            StringAssert.Contains(output, ModelDiagnosticsTask.TASK_NAME);
+            AssertErrorMessage(output, noFirstPass);
+
+            // --culture: a name .NET does not know stops the run with .NET's own message (which
+            // spans lines), and a command line run under another culture puts the caller's
+            // culture back.
+            const string badCulture = @"not a culture!";
+            string cultureError = Assert.ThrowsException<CultureNotFoundException>(
+                () => CultureInfo.GetCultureInfo(badCulture)).Message;
+            output = RunCommandAndValidateError(OspreyCommandArgs.ARG_INTERNAL_CULTURE.ArgumentText, badCulture);
+            StringAssert.Contains(output, Program.ErrorPrefix + @" " + cultureError);
+
+            var callerCulture = CultureInfo.CurrentCulture;
+            var callerUiCulture = CultureInfo.CurrentUICulture;
+            string otherCulture = callerCulture.TwoLetterISOLanguageName == @"ja" ? @"fr-FR" : @"ja-JP";
+            output = RunCommandAndValidateError(OspreyCommandArgs.ARG_INTERNAL_CULTURE.ArgumentText, otherCulture);
+            Assert.AreSame(callerCulture, CultureInfo.CurrentCulture);
+            Assert.AreSame(callerUiCulture, CultureInfo.CurrentUICulture);
+            // The run wrote in the other culture, so its expected text is formatted there too.
+            using (new CultureScope(CultureInfo.GetCultureInfo(otherCulture)))
+            {
+                AssertErrorMessage(output, string.Format(OspreyResources.Program_ValidateArgs_No_input_files_specified__Use__0_,
+                    Program.USAGE_INPUT));
+            }
+            // --culture is applied to formatting and resource lookup for the whole run (the scope
+            // RunCommand holds), and not only parsed.
+            using (Program.CreateCultureScope(new[] { OspreyCommandArgs.ARG_INTERNAL_CULTURE.ArgumentText, otherCulture },
+                       out string scopeError))
+            {
+                Assert.IsNull(scopeError);
+                Assert.AreEqual(otherCulture, CultureInfo.CurrentCulture.Name);
+                Assert.AreEqual(otherCulture, CultureInfo.CurrentUICulture.Name);
+                Assert.AreEqual(otherCulture, CultureInfo.DefaultThreadCurrentCulture?.Name);
+            }
+            Assert.AreSame(callerCulture, CultureInfo.CurrentCulture);
+        }
+
+        /// <summary>
+        /// The one error line in <paramref name="output"/> is exactly <paramref name="expected"/>
+        /// after the error prefix, both in the current culture.
+        /// </summary>
+        private static void AssertErrorMessage(string output, string expected)
+        {
+            string errorLine = output.ReadLines().Single(CommandStatusWriter.IsErrorLine);
+            Assert.AreEqual(Program.ErrorPrefix + @" " + expected, errorLine);
+        }
+
+        /// <summary>
+        /// The message the runtime gives for opening <paramref name="path"/> to write, which the
+        /// log-file error passes through.
+        /// </summary>
+        private static string GetOpenErrorMessage(string path)
+        {
+            return Assert.ThrowsException<DirectoryNotFoundException>(() => new StreamWriter(path).Dispose()).Message;
         }
 
         /// <summary>
@@ -159,7 +238,7 @@ namespace pwiz.Osprey.Test
                 isolated[pair.Key] = pair.Value;
             using (OspreyEnvironment.OverrideVariables(isolated))
             {
-                exitCode = RunCommandInProcess(args, writer);
+                exitCode = InProcessOsprey.Run(args, writer);
             }
             string output = buffer.ToString();
             string message = string.Format(@"Command line: {0}{1}Output:{1}{2}",
@@ -167,39 +246,12 @@ namespace pwiz.Osprey.Test
 
             Assert.AreEqual(Program.EXIT_CODE_FAILURE_TO_START, exitCode, message);
             Assert.IsTrue(writer.IsErrorReported, message);
-            var lines = output.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+            var lines = output.ReadLines();
             Assert.AreEqual(1, lines.Count(CommandStatusWriter.IsErrorLine),
                 @"exactly one error line. " + message);
             // A usage error is a message, never an exception type and stack.
             Assert.IsFalse(output.Contains(typeof(Exception).Namespace + @"."), message);
             return output;
-        }
-
-        /// <summary>
-        /// <see cref="Program.RunCommand"/> with the process-wide state it sets restored after,
-        /// so one command line cannot leak its writer or directories into the next test.
-        /// </summary>
-        private static int RunCommandInProcess(string[] args, CommandStatusWriter writer)
-        {
-            var savedOut = OspreyOutput.Out;
-            bool savedPerfStats = OspreyOutput.PerfStats;
-            bool savedVerbose = OspreyOutput.Verbose;
-            var savedDiagnosticsLog = OspreyDiagnosticsLog.Log;
-            string savedOutputDir = ArtifactPaths.OutputDir;
-            string savedCacheDir = ArtifactPaths.CacheDir;
-            try
-            {
-                return Program.RunCommand(args, writer);
-            }
-            finally
-            {
-                OspreyOutput.Out = savedOut;
-                OspreyOutput.PerfStats = savedPerfStats;
-                OspreyOutput.Verbose = savedVerbose;
-                OspreyDiagnosticsLog.Log = savedDiagnosticsLog;
-                ArtifactPaths.OutputDir = savedOutputDir;
-                ArtifactPaths.CacheDir = savedCacheDir;
-            }
         }
 
         private static IReadOnlyDictionary<string, string> Variable(string name, string value)

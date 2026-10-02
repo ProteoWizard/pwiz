@@ -1901,17 +1901,8 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public static bool IsProgrammingDefect(Exception exception)
         {
-            // User-actionable exceptions with friendly messages
-            if (exception is InvalidDataException
-                || exception is IOException
-                || exception is OperationCanceledException
-                || exception is UnauthorizedAccessException
-                || exception is UserMessageException)  // Covers all custom user-facing exceptions
-            {
-                return false;
-            }
-
-            return true;  // Programming defects that should be reported
+            // Shared with Osprey, which draws the same line between user messages and defects
+            return CommonExceptionUtil.IsProgrammingDefect(exception);
         }
 
 

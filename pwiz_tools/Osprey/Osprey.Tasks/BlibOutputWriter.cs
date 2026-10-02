@@ -21,7 +21,9 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -74,15 +76,14 @@ namespace pwiz.Osprey.Tasks
             // leave sidecar files that the rename would not carry.
             using (var saver = new FileSaver(config.OutputBlib))
             {
-                using (var writer = new BlibWriter(saver.SafeName))
+                using (var writer = OpenBlibWriter(saver.SafeName, config.OutputBlib))
                 {
                     writer.BeginBatch();
 
                     var sourceFileIds = CreateSourceFiles(writer, config, fileNames, fdrThreshold);
 
                     var blibEntries = bestByPrecursor.Values.ToList();
-                    PrecompressSpectra(blibEntries, libraryById, config.NThreads,
-                        out byte[][] blibMzBlobs, out byte[][] blibIntBlobs, out int[] blibNumPeaks);
+                    var spectra = PrepareSpectra(blibEntries, libraryById, config.NThreads);
 
                     // TWO passes, and the split is the point. The first writes one row per
                     // precursor and hands back the RefSpectra ids; the second walks the
@@ -96,8 +97,8 @@ namespace pwiz.Osprey.Tasks
                     // RetentionTimes on (peptideModSeq, precursorCharge, fileName), and the
                     // self-consistency legs go through Compare-BlibFull, table-based too.
                     var refIdByPrecursor = EmitSpectrumRows(
-                        writer, blibEntries, blibMzBlobs, blibIntBlobs, blibNumPeaks,
-                        sourceFileIds, libraryById, bestExpPrecursorQ, sharedBounds,
+                        writer, blibEntries, spectra,
+                        sourceFileIds, bestExpPrecursorQ, sharedBounds,
                         precursorFacts, fileNames.Count);
 
                     WriteRetentionTimesFileMajor(writer, passingEntries, refIdByPrecursor,
@@ -110,7 +111,62 @@ namespace pwiz.Osprey.Tasks
 
                     writer.FinalizeDatabase();
                 }
-                saver.Commit();
+                try
+                {
+                    saver.Commit();
+                }
+                catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+                {
+                    throw new BlibOutputException(config.OutputBlib, ex);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Open the SQLite writer on the temp file beside the output. A failure here is a
+        /// user-correctable condition (the folder is not writable, or the file is locked), so
+        /// it becomes a <see cref="BlibOutputException"/> naming the output rather than a raw
+        /// <see cref="SQLiteException"/> whose type and stack would bury the cause.
+        ///
+        /// <para>Only SQLite failures that describe file access are translated. The constructor
+        /// also creates the schema and prepares the insert statements, and a defect there is a
+        /// bug in this build, not a locked file - reporting it as one would send the user
+        /// looking for a program that does not exist.</para>
+        /// </summary>
+        private static BlibWriter OpenBlibWriter(string tempPath, string outputPath)
+        {
+            try
+            {
+                return new BlibWriter(tempPath);
+            }
+            catch (Exception ex) when (IsFileAccessFailure(ex))
+            {
+                throw new BlibOutputException(outputPath, ex);
+            }
+        }
+
+        private static bool IsFileAccessFailure(Exception ex)
+        {
+            if (ex is IOException || ex is UnauthorizedAccessException)
+                return true;
+            if (!(ex is SQLiteException sqliteEx))
+                return false;
+            // Strip any extended code (IoErr_Write, CantOpen_IsDir, ...) to its primary code: SQLite
+            // keeps the primary result code in the low byte.
+            var primary = (SQLiteErrorCode)((int)sqliteEx.ResultCode & 0xFF);
+            switch (primary)
+            {
+                case SQLiteErrorCode.CantOpen:
+                case SQLiteErrorCode.ReadOnly:
+                case SQLiteErrorCode.Busy:
+                case SQLiteErrorCode.Locked:
+                case SQLiteErrorCode.IoErr:
+                case SQLiteErrorCode.Full:
+                case SQLiteErrorCode.Perm:
+                case SQLiteErrorCode.Auth:
+                    return true;
+                default:
+                    return false;
             }
         }
 
@@ -149,26 +205,23 @@ namespace pwiz.Osprey.Tasks
                 // the bare name the writer always used to record rather than
                 // fail the whole blib over it.
                 if (!sourcePathByName.TryGetValue(fileName, out string sourcePath))
-                    sourcePath = fileName + ".mzML";
+                    sourcePath = fileName + SpectrumFileReader.EXT_MZML;
                 sourceFileIds[fileName] = writer.AddSourceFile(
                     sourcePath, libraryIdName, fdrThreshold);
             }
             return sourceFileIds;
         }
 
-        // Parallel pre-compress pass. Per-spectrum zlib dominates the blib
-        // write wall; pre-compute (mzBlob, intBlob, numPeaks) for every
-        // entry in parallel, then drive AddSpectrumPrecompressed in
-        // iteration order so RefSpectra row IDs stay deterministic.
-        private static void PrecompressSpectra(
+        // Parallel preparation pass. Per-spectrum zlib dominates the blib write wall;
+        // BlibSpectrum does it with the rest of the per-precursor rows, for every entry in
+        // parallel, and EmitSpectrumRows writes them in iteration order so RefSpectra row IDs
+        // stay deterministic. A precursor missing from the library gets null and no row.
+        private static BlibSpectrum[] PrepareSpectra(
             List<KeyValuePair<string, FdrEntry>> blibEntries,
-            IReadOnlyDictionary<uint, LibraryEntry> libraryById, int nThreads,
-            out byte[][] blibMzBlobs, out byte[][] blibIntBlobs, out int[] blibNumPeaks)
+            IReadOnlyDictionary<uint, LibraryEntry> libraryById, int nThreads)
         {
             int blibN = blibEntries.Count;
-            var mzBlobs = new byte[blibN][];
-            var intBlobs = new byte[blibN][];
-            var numPeaks = new int[blibN];
+            var spectra = new BlibSpectrum[blibN];
             // Reported because per-spectrum zlib dominates the blib write and ran silent: on the
             // 82-file SEA-AD run this pass and the emission below were the bulk of a 47 s gap
             // ending at "Wrote 51597 library spectra". They are not all of it - Commit,
@@ -178,7 +231,7 @@ namespace pwiz.Osprey.Tasks
             // under that flag (the same trap the calibration scoring loop records).
             int precompressed = 0;
             using (var progress = new ProgressReporter(
-                       string.Format(@"Compressing {0:N0} library spectra for the blib", blibN),
+                       string.Format(OspreyTasksResources.BlibOutputWriter_PrecompressSpectra_Compressing__0__library_spectra_for_the_blib, blibN),
                        blibN, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 Parallel.For(0, blibN,
@@ -188,38 +241,22 @@ namespace pwiz.Osprey.Tasks
                         // Reported before the early-out below, so a run whose library lookups all
                         // miss still advances to 100% rather than stalling at 0%.
                         progress.Report(Interlocked.Increment(ref precompressed));
-                        var entry = blibEntries[i].Value;
-                        LibraryEntry libEntryP;
-                        if (!libraryById.TryGetValue(entry.EntryId, out libEntryP))
-                            return;
-                        int nFrags = libEntryP.Fragments.Count;
-                        var mzsP = new double[nFrags];
-                        var intsP = new float[nFrags];
-                        for (int j = 0; j < nFrags; j++)
-                        {
-                            mzsP[j] = libEntryP.Fragments[j].Mz;
-                            intsP[j] = libEntryP.Fragments[j].RelativeIntensity;
-                        }
-                        mzBlobs[i] = BlibWriter.CompressMzs(mzsP);
-                        intBlobs[i] = BlibWriter.CompressIntensities(intsP);
-                        numPeaks[i] = nFrags;
+                        if (libraryById.TryGetValue(blibEntries[i].Value.EntryId, out var libEntry))
+                            spectra[i] = BlibSpectrum.FromLibraryEntry(libEntry);
                     });
             }
-            blibMzBlobs = mzBlobs;
-            blibIntBlobs = intBlobs;
-            blibNumPeaks = numPeaks;
+            return spectra;
         }
 
         // Sequential per-best-precursor emission: one RefSpectra row (plus its
-        // modifications / protein mappings / RetentionTimes / Osprey extension
-        // rows) for each pre-compressed entry, in iteration order so row IDs stay
+        // modifications / protein mappings / Osprey extension
+        // rows) for each prepared spectrum, in iteration order so row IDs stay
         // deterministic.
         private static Dictionary<(string, byte), long> EmitSpectrumRows(
             BlibWriter writer,
             List<KeyValuePair<string, FdrEntry>> blibEntries,
-            byte[][] blibMzBlobs, byte[][] blibIntBlobs, int[] blibNumPeaks,
+            BlibSpectrum[] spectra,
             Dictionary<string, long> sourceFileIds,
-            IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             Dictionary<(string, byte), double> bestExpPrecursorQ,
             Dictionary<(string, string), double[]> sharedBounds,
             Dictionary<(string, byte), (bool AnyPassesRunFdr, string BestRunFile, int NRuns)> precursorFacts,
@@ -229,7 +266,7 @@ namespace pwiz.Osprey.Tasks
             // Reported for the same reason as the pre-compress pass above: this emits five row
             // families per spectrum into SQLite and ran silent inside the same 47 s gap.
             using (var progress = new ProgressReporter(
-                       string.Format(@"Writing {0:N0} spectra to the blib", blibEntries.Count),
+                       string.Format(OspreyTasksResources.BlibOutputWriter_PrecompressSpectra_Writing__0__spectra_to_the_blib, blibEntries.Count),
                        blibEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 for (int blibIdx = 0; blibIdx < blibEntries.Count; blibIdx++)
@@ -239,15 +276,11 @@ namespace pwiz.Osprey.Tasks
                     string fileName = kvp.Key;
                     var entry = kvp.Value;
 
-                    LibraryEntry libEntry;
-                    if (!libraryById.TryGetValue(entry.EntryId, out libEntry))
+                    var spectrum = spectra[blibIdx];
+                    if (spectrum == null)
                         continue;
 
                     long fileId = sourceFileIds[fileName];
-
-                    byte[] mzBlobPre = blibMzBlobs[blibIdx];
-                    byte[] intBlobPre = blibIntBlobs[blibIdx];
-                    int numPeaksPre = blibNumPeaks[blibIdx];
 
                     // RefSpectra.score is the EXPERIMENT-PRECURSOR q-value (min
                     // across all observations of this (modseq, charge)). Mirrors
@@ -279,24 +312,12 @@ namespace pwiz.Osprey.Tasks
                         sharedEnd = sharedVals[2];
                     }
 
-                    long refId = writer.AddSpectrumPrecompressed(
-                        libEntry.Sequence,
-                        libEntry.ModifiedSequence,
-                        libEntry.PrecursorMz,
-                        libEntry.Charge,
-                        sharedApex,
-                        sharedStart,
-                        sharedEnd,
-                        mzBlobPre, intBlobPre, numPeaksPre,
-                        scoreQvalue, fileId, nRunsDetected, 0.0);
-
-                    // Add modifications
-                    if (libEntry.Modifications != null && libEntry.Modifications.Count > 0)
-                        writer.AddModifications(refId, libEntry.Modifications);
-
-                    // Add protein mappings
-                    if (libEntry.ProteinIds != null && libEntry.ProteinIds.Count > 0)
-                        writer.AddProteinMapping(refId, libEntry.ProteinIds);
+                    // The library precursor's own rows - peaks, modifications and proteins -
+                    // exactly as --export-library writes them; this
+                    // row adds the search result's apex, boundaries, q-value and run count.
+                    long refId = writer.AddSpectrum(spectrum,
+                        sharedApex, sharedStart, sharedEnd,
+                        scoreQvalue, fileId, nRunsDetected);
 
                     refIdByPrecursor[lookupKey] = refId;
 
@@ -369,7 +390,7 @@ namespace pwiz.Osprey.Tasks
             double fdrThreshold)
         {
             using (var progress = new ProgressReporter(
-                       string.Format("Writing {0:N0} peak retention times to the blib",
+                       string.Format(OspreyTasksResources.BlibOutputWriter_WriteRetentionTimesFileMajor_Writing__0__peak_retention_times_to_the_blib,
                                      passingEntries.Count),
                        passingEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
@@ -422,6 +443,20 @@ namespace pwiz.Osprey.Tasks
                         isBest);
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// The output .blib could not be opened or put in place. Reported as an Error: line
+    /// naming the file and the likely cause, not as a stack trace.
+    /// </summary>
+    public class BlibOutputException : IOException
+    {
+        public BlibOutputException(string outputPath, Exception inner)
+            : base(string.Format(
+                OspreyTasksResources.BlibOutputException_Could_not_write_the_spectral_library__0____1____Check_that_the_file_is_not_open_in_,
+                outputPath, inner.Message), inner)
+        {
         }
     }
 }

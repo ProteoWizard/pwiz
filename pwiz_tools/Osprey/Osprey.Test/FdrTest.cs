@@ -30,6 +30,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
@@ -573,6 +574,29 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// One scorer serves every per-file second-pass worker of a --parallel-files run, so
+        /// concurrent <see cref="FrozenModelScorer.Score"/> calls must each score their own
+        /// features. A shared standardization buffer once let one file's entries be scored with
+        /// another's features, silently changing the second-pass answer.
+        /// </summary>
+        [TestMethod]
+        public void TestFrozenModelScorerIsThreadSafe()
+        {
+            var entries = MakeNonMonotoneEntries();
+            var model = PercolatorTrainer.RunPercolator(entries,
+                new PercolatorConfig { MaxIterations = 3, TrainOnly = true });
+            var scorer = FrozenModelScorer.TryCreate(model);
+            var expected = entries.Select(e => scorer.Score(e.Features)).ToArray();
+            var actual = new double[expected.Length];
+            for (int round = 0; round < 50; round++)
+            {
+                Parallel.For(0, expected.Length, new ParallelOptions { MaxDegreeOfParallelism = 8 },
+                    i => actual[i] = scorer.Score(entries[i].Features));
+                CollectionAssert.AreEqual(expected, actual, "concurrent scores differ from serial, round " + round);
+            }
+        }
+
+        /// <summary>
         /// The gradient-boosted-trees path must be deterministic to the same standard as
         /// the linear SVM: identical input -> BIT-identical scores, every run. The model
         /// subsamples rows and columns, so this is a real property, not a formality --
@@ -633,7 +657,7 @@ namespace pwiz.Osprey.Test
             var serial = rows.Select(r => model.ScoreSingle(r)).ToArray();
 
             var parallel = new double[rows.Count];
-            System.Threading.Tasks.Parallel.For(0, rows.Count, i =>
+            Parallel.For(0, rows.Count, i =>
             {
                 parallel[i] = model.ScoreSingle(rows[i]);
             });
@@ -1658,21 +1682,23 @@ namespace pwiz.Osprey.Test
 
             // The model sanity-check block appears only under --verbose, reframed away
             // from importance/weight wording (issue #4364).
-            StringAssert.Contains(report,
-                "Model sanity check -- feature share of target-decoy separation");
-            Assert.IsFalse(defaultReport.Contains("Model sanity check"),
-                "the feature share table must be gated behind --verbose");
+            StringAssert.Contains(report, OspreyFDRResources.FeatureContributions_ToReportLines_Model_sanity_check___feature_share_of_target_decoy_separation__trained_linear_model__coefficients_standardized__);
+            Assert.IsFalse(defaultReport.Contains(OspreyFDRResources.FeatureContributions_ToReportLines_Model_sanity_check___feature_share_of_target_decoy_separation__trained_linear_model__coefficients_standardized__),
+                "the feature share table must be gated behind " + OspreyCommandArgs.ARG_VERBOSE.ArgumentText);
 
             // Parse the percent column from the three feature rows. The table rows
             // are "<4 spaces><label><coefficient F4><percent F1>%"; match on the
             // coefficient-then-percent shape so the unrelated "{F1}% at {P0} FDR"
             // training-progress lines (which have "(" / " at " around the percent)
             // are not picked up.
+            // The table is prose in the current culture, so its decimal separator is that
+            // culture's (12,3 under fr-FR).
+            string dec = Regex.Escape(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
             var percents = new List<double>();
             foreach (Match m in Regex.Matches(report,
-                         @"^    \S.*\s-?\d+\.\d{4}\s+(-?\d+\.\d)%",
+                         @"^    \S.*\s-?\d+" + dec + @"\d{4}\s+(-?\d+" + dec + @"\d)%",
                          RegexOptions.Multiline))
-                percents.Add(double.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture));
+                percents.Add(double.Parse(m.Groups[1].Value, CultureInfo.CurrentCulture));
             Assert.AreEqual(3, percents.Count,
                 "expected exactly three percent rows in the contribution table");
             double total = percents.Sum();
@@ -1689,7 +1715,7 @@ namespace pwiz.Osprey.Test
                     string.Format("Feature {0} object flag mismatch (weight={1})",
                         (char)('A' + j), features[j].Coefficient));
                 bool rowFlagged = Regex.IsMatch(report,
-                    @"Feature " + (char)('A' + j) + @"\b.*\(unexpected direction\)");
+                    @"Feature " + (char)('A' + j) + @"\b.*" + Regex.Escape(OspreyFDRResources.FeatureContributions_ToReportLines__unexpected_direction_));
                 Assert.AreEqual(expectedFlag, rowFlagged,
                     string.Format("Feature {0} printed-flag mismatch (weight={1})",
                         (char)('A' + j), features[j].Coefficient));
@@ -1699,7 +1725,7 @@ namespace pwiz.Osprey.Test
             // flagged one: its trained weight is positive.
             Assert.IsTrue(features[1].Coefficient > 0.0,
                 "fixture should drive a positive weight on the declared-reversed feature B");
-            StringAssert.Contains(report, "(unexpected direction)");
+            StringAssert.Contains(report, OspreyFDRResources.FeatureContributions_ToReportLines__unexpected_direction_);
 
             // Reporting did not disturb scoring: targets still outscore decoys.
             double avgTarget = 0.0, avgDecoy = 0.0;

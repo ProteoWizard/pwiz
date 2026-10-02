@@ -66,6 +66,8 @@ namespace pwiz.Osprey.Core
         public static readonly LogTag MODEL_DIAGNOSTICS = new LogTag(@"MODEL-DIAGNOSTICS", Always);
         /// <summary>Entrapment pairing under <c>--fdrbench</c>.</summary>
         public static readonly LogTag ENTRAPMENT = new LogTag(@"ENTRAPMENT", Always);
+        /// <summary>The per-run summary of <c>--training-export</c>.</summary>
+        public static readonly LogTag TRAIN_EXPORT = new LogTag(@"TRAIN-EXPORT", Always);
         /// <summary>A bisection dump or stop, reached only through <c>-d</c> or an <c>OSPREY_DUMP_*</c> / <c>OSPREY_DIAG_*</c> setting.</summary>
         public static readonly LogTag BISECT = new LogTag(@"BISECT", Always);
         /// <summary>A diagnostic dump reached only through <c>-d</c>.</summary>
@@ -165,6 +167,18 @@ namespace pwiz.Osprey.Core
         {
             if (sink != null && tag.IsEnabled)
                 sink(tag.Format(text));
+        }
+
+        /// <summary>
+        /// Write a tagged line whose text is <paramref name="format"/> formatted with the
+        /// INVARIANT culture. Machine-channel text is read by scripts, so a number in it must
+        /// look the same under every UI culture: <c>12.3s</c>, never the <c>12,3s</c> that
+        /// fr-FR gives. Prose is the opposite case and is formatted with the current culture by
+        /// the caller.
+        /// </summary>
+        public static void LogInfo(this IOspreyLog log, LogTag tag, string format, params object[] args)
+        {
+            log.LogInfo(tag, string.Format(CultureInfo.InvariantCulture, format, args));
         }
 
         /// <summary>
@@ -293,6 +307,16 @@ namespace pwiz.Osprey.Core
         public const string SCOPE_RESCORE_GAP_FILL = @"rescore-gap-fill";
         /// <summary>The release after second-pass FDR, keeping the first-pass retained set.</summary>
         public const string SCOPE_RETAINED_SUMMARY = @"retained-summary";
+
+        /// <summary>
+        /// The text after the tag for a keyed line whose value is already text:
+        /// <c>key: value</c>. A number is passed as <c>ToString(CultureInfo.InvariantCulture)</c>,
+        /// or through the format overload below.
+        /// </summary>
+        public static string Format(string key, string value)
+        {
+            return key + @": " + value;
+        }
 
         /// <summary>
         /// The text after the tag for a keyed line: <c>key: value</c>, with

@@ -139,9 +139,9 @@ namespace pwiz.Osprey.Tasks
             if (inputs.GlobalFirstPassBaseIds == null)
             {
                 throw new InvalidOperationException(
-                    "RescoreCompaction: RescoreInputs.GlobalFirstPassBaseIds is null. The " +
-                    "reconciliation.json envelope must carry the join-wide first-pass base_id " +
-                    "set (format v3); recomputing per file would diverge from the in-memory run.");
+                    @"RescoreCompaction: RescoreInputs.GlobalFirstPassBaseIds is null. The " +
+                    @"reconciliation.json envelope must carry the join-wide first-pass base_id " +
+                    @"set (format v3); recomputing per file would diverge from the in-memory run.");
             }
 
             int entriesBefore = 0;
@@ -229,10 +229,10 @@ namespace pwiz.Osprey.Tasks
             int compactIdx = 0;
             using (var progress = new ProgressReporter(
                        singleFileSearch
-                           ? "Trimming the file to the precursor candidates kept for re-scoring and second-pass FDR"
+                           ? OspreyTasksResources.RescoreCompaction_Apply_Trimming_the_file_to_the_precursor_candidates_kept_for_re_scoring_and_second_pass_FDR
                            : CountText.Format(inputs.PerFileEntries.Count,
-                               "Trimming the file to the precursor candidates kept for cross-run reconciliation",
-                               "Trimming each file to the precursor candidates kept for cross-run reconciliation ({0:N0} files)"),
+                               OspreyTasksResources.RescoreCompaction_Apply_Trimming_the_file_to_the_precursor_candidates_kept_for_cross_run_reconciliation,
+                               OspreyTasksResources.RescoreCompaction_Apply_Trimming_each_file_to_the_precursor_candidates_kept_for_cross_run_reconciliation___0__),
                        inputs.PerFileEntries.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 foreach (var kvp in inputs.PerFileEntries)
@@ -256,9 +256,9 @@ namespace pwiz.Osprey.Tasks
             if (inputs.PreCompactionTallies != null && entriesAfter != entriesBefore)
             {
                 throw new InvalidOperationException(string.Format(
-                    "RescoreCompaction: the streamed bundle was pre-compacted to a different " +
-                    "set than Apply re-derives ({0} entries in, {1} retained). The streaming " +
-                    "hydrate and Apply must agree on the retained set.",
+                    @"RescoreCompaction: the streamed bundle was pre-compacted to a different " +
+                    @"set than Apply re-derives ({0} entries in, {1} retained). The streaming " +
+                    @"hydrate and Apply must agree on the retained set.",
                     entriesBefore, entriesAfter));
             }
 

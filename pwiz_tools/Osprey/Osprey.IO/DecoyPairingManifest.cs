@@ -102,6 +102,11 @@ namespace pwiz.Osprey.IO
     /// </summary>
     public class DecoyPairingManifest
     {
+        // Required column headings, named in the error a manifest without them gets.
+        private const string COLUMN_SEQUENCE = @"sequence";
+        private const string COLUMN_PEPTIDE_TYPE = @"peptide_type";
+        private const string COLUMN_PEPTIDE_PAIR_INDEX = @"peptide_pair_index";
+
         private readonly Dictionary<string, ManifestEntryInfo> _seqToInfo;
 
         private DecoyPairingManifest(Dictionary<string, ManifestEntryInfo> seqToInfo)
@@ -160,16 +165,16 @@ namespace pwiz.Osprey.IO
             {
                 string header = reader.ReadLine();
                 if (header == null)
-                    throw new InvalidDataException(@"FDRBench manifest is empty");
-                var cols = header.Split('\t');
+                    throw new InvalidDataException(OspreyIOResources.DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_empty_);
+                var cols = header.Split(TextUtil.SEPARATOR_TSV);
                 int iSeq = -1, iType = -1, iPair = -1, iProteins = -1;
                 for (int i = 0; i < cols.Length; i++)
                 {
-                    if (cols[i] == @"sequence")
+                    if (cols[i] == COLUMN_SEQUENCE)
                         iSeq = i;
-                    else if (cols[i] == @"peptide_type")
+                    else if (cols[i] == COLUMN_PEPTIDE_TYPE)
                         iType = i;
-                    else if (cols[i] == @"peptide_pair_index")
+                    else if (cols[i] == COLUMN_PEPTIDE_PAIR_INDEX)
                         iPair = i;
                     else if (cols[i] == @"proteins")
                         iProteins = i;
@@ -177,9 +182,8 @@ namespace pwiz.Osprey.IO
                 if (iSeq < 0 || iType < 0 || iPair < 0)
                 {
                     throw new InvalidDataException(string.Format(
-                        @"FDRBench manifest header missing required columns " +
-                        @"(need sequence, peptide_type, peptide_pair_index). Got: {0}",
-                        header));
+                        OspreyIOResources.DecoyPairingManifest_FromTsv_The_decoy_pairing_manifest_is_missing_required_columns__it_needs_sequence__peptide_type_,
+                        header, COLUMN_SEQUENCE, COLUMN_PEPTIDE_TYPE, COLUMN_PEPTIDE_PAIR_INDEX));
                 }
                 // `proteins` is optional -- older manifests without it still
                 // parse fine; ApplyToLibrary simply won't replace
@@ -203,7 +207,7 @@ namespace pwiz.Osprey.IO
                 {
                     if (line.Length == 0)
                         continue;
-                    var fields = line.Split('\t');
+                    var fields = line.Split(TextUtil.SEPARATOR_TSV);
                     if (fields.Length < minRequiredCols)
                     {
                         nSkipped++;

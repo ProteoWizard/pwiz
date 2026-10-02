@@ -2,6 +2,8 @@ package patches.buildTypes
 
 import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.BuildType
+import jetbrains.buildServer.configs.kotlin.buildFeatures.PullRequests
+import jetbrains.buildServer.configs.kotlin.buildFeatures.pullRequests
 import jetbrains.buildServer.configs.kotlin.buildSteps.exec
 import jetbrains.buildServer.configs.kotlin.failureConditions.BuildFailureOnMetric
 import jetbrains.buildServer.configs.kotlin.failureConditions.failOnMetricChange
@@ -73,6 +75,19 @@ create(DslContext.projectId, BuildType({
             comparison = BuildFailureOnMetric.MetricComparison.LESS
             compareTo = build {
                 buildRule = lastSuccessful()
+            }
+        }
+    }
+
+    features {
+        pullRequests {
+            id = "BUILD_EXT_554"
+            vcsRootExtId = "ProteoWizard_PwizGithubMasterWithPRs"
+            provider = github {
+                authType = storedToken {
+                    tokenId = "tc_token_id:CID_2c0e75d7e804d2e5c4aea406dff78212:-1:3e6cdadb-90ad-473a-a1c6-7e86c4ad3ea8"
+                }
+                filterAuthorRole = PullRequests.GitHubRoleFilter.MEMBER_OR_COLLABORATOR
             }
         }
     }

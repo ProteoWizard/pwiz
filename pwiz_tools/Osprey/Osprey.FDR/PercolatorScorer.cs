@@ -347,7 +347,7 @@ namespace pwiz.Osprey.FDR
             // covers a slow single file. Console-only -- never touches finalScores /
             // the sink, so byte-identity is unaffected.
             int gi = 0;
-            using (var scoreProgress = new ProgressReporter(string.Format("Scoring {0:N0} precursor candidate peaks", n), n))
+            using (var scoreProgress = new ProgressReporter(string.Format(OspreyFDRResources.PercolatorScorer_ScoreProjectionAndComputeFdrInPlace_Scoring__0__precursor_candidate_peaks, n), n))
             {
                 foreach (var kvp in perFile)
                 {
@@ -463,7 +463,7 @@ namespace pwiz.Osprey.FDR
             // to assign. min/max are order-independent -> byte-identical to the flat clamp.
             var minRunBothByEntryId = new Dictionary<uint, double>();
             var minRunBothByPeptide = new Dictionary<(string, bool), double>();
-            using (var floorProgress = PercolatorQValues.QProgress(@"Per-run q-value floors", perFile.Count, n))
+            using (var floorProgress = PercolatorQValues.QProgress(OspreyFDRResources.PercolatorScorer_ScoreProjectionAndComputeFdrInPlace_Per_run_q_value_floors, perFile.Count, n))
             {
                 int off = 0;
                 int floorFile = 0;
@@ -707,8 +707,8 @@ namespace pwiz.Osprey.FDR
             bool pickRun = OspreyEnvironment.TrainPickRun;
             if (!pickRun)
             {
-                log.LogInfo("OSPREY_TRAIN_PICK_RUN=0 is set: each precursor is trained on its best " +
-                            "observation across runs, not a uniform sample of them (the behavior before 26.1).");
+                log.LogInfo(@"OSPREY_TRAIN_PICK_RUN=0 is set: each precursor is trained on its best " +
+                            @"observation across runs, not a uniform sample of them (the behavior before 26.1).");
             }
             int g = 0;
             int nInputTargets = 0, nInputDecoys = 0;
@@ -716,8 +716,8 @@ namespace pwiz.Osprey.FDR
             // determinate O(files) I/O step (43s at 82 files, minutes at 500). Report per-file
             // progress through the standard throttled reporter so a large join never goes silent.
             var ingestProgress = new ProgressReporter(
-                CountText.Format(nFiles, "Reading precursor candidate peaks for Percolator from 1 file",
-                    "Reading precursor candidate peaks for Percolator from {0:N0} files"), nFiles,
+                CountText.Format(nFiles, OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Reading_precursor_candidate_peaks_for_Percolator_from_1_file,
+                    OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Reading_precursor_candidate_peaks_for_Percolator_from__0__files), nFiles,
                 intervalSeconds: ProgressReporter.IO_INTERVAL_SECONDS);
             for (int f = 0; f < nFiles; f++)
             {
@@ -797,11 +797,9 @@ namespace pwiz.Osprey.FDR
             }
             ingestProgress.Dispose();
             int n = g;
-            log.LogInfo(LogTag.PATH, string.Format(
-                @"{0} streaming ingest (RunStreamingFirstPass): {1} rows", passLabel, n));
-            log.LogInfo(LogTag.COUNT, string.Format(
-                "{0} Percolator input: {1} entries ({2} targets, {3} decoys, {4} features)",
-                passLabel, n, nInputTargets, nInputDecoys, nFeatures));
+            log.LogInfo(LogTag.PATH, @"{0} streaming ingest (RunStreamingFirstPass): {1} rows", passLabel, n);
+            log.LogInfo(LogTag.COUNT, @"{0} Percolator input: {1} peaks ({2} targets, {3} decoys, {4} features)",
+                passLabel, n, nInputTargets, nInputDecoys, nFeatures);
 
             // Dedup rows in ascending global ordinal == SelectBestPerPrecursor's Array.Sort of the
             // winning global indices (each base_id's best is one unique row, so g never ties).
@@ -813,9 +811,8 @@ namespace pwiz.Osprey.FDR
             int dedupTargets = 0;
             foreach (var d in dedup)
                 if (!d.IsDecoy) dedupTargets++;
-            log.LogInfo(LogTag.COUNT, string.Format(
-                "{0} Percolator streaming best-per-precursor: {1} entries ({2} targets, {3} decoys) from {4} total",
-                passLabel, m, dedupTargets, m - dedupTargets, n));
+            log.LogInfo(LogTag.COUNT, @"{0} Percolator streaming best-per-precursor: {1} precursors ({2} targets, {3} decoys) from {4} peaks",
+                passLabel, m, dedupTargets, m - dedupTargets, n);
 
             // Peptide-grouped subsample when the dedup count exceeds MaxTrainSize (mirrors
             // BuildTrainingSubset: SelectBestPerPrecursor already ran above via the streaming dedup,
@@ -860,9 +857,8 @@ namespace pwiz.Osprey.FDR
                     Features = null
                 });
             }
-            log.LogInfo(LogTag.COUNT, string.Format(
-                "{0} Percolator streaming subsample: {1} entries ({2} targets, {3} decoys)",
-                passLabel, subsetEntries.Count, subTargets, subsetEntries.Count - subTargets));
+            log.LogInfo(LogTag.COUNT, @"{0} Percolator streaming subsample: {1} precursors ({2} targets, {3} decoys)",
+                passLabel, subsetEntries.Count, subTargets, subsetEntries.Count - subTargets);
 
             // A persisted model is only usable if it was trained on THIS run's feature set, and
             // nothing upstream can establish that: the validity key the caller checks carries no
@@ -883,8 +879,7 @@ namespace pwiz.Osprey.FDR
                     pretrainedModel.Standardizer.NumFeatures != nFeatures)
                 {
                     log.LogInfo(string.Format(
-                        @"Ignoring the persisted 1st-pass model: it carries {0} features " +
-                        @"and this run scores {1}. Training a fresh model.", modelFeatures, nFeatures));
+                        OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Ignoring_the_saved_first_pass_model__it_has__0__features_and_this_run_scores__1___, modelFeatures, nFeatures));
                     pretrainedModel = null;
                 }
             }
@@ -901,8 +896,8 @@ namespace pwiz.Osprey.FDR
             {
                 int subsetFilesLoaded = 0;
                 using (var loadProgress = new ProgressReporter(CountText.Format(subsetByFile.Count,
-                           "Loading Percolator training features from 1 file",
-                           "Loading Percolator training features from {0:N0} files"), subsetByFile.Count))
+                           OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Loading_Percolator_training_features_from_1_file,
+                           OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Loading_Percolator_training_features_from__0__files), subsetByFile.Count))
                 foreach (var kvp in subsetByFile)
                 {
                     IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
@@ -918,7 +913,7 @@ namespace pwiz.Osprey.FDR
             else
             {
                 // No training subset is loaded and no SVM is trained.
-                log.LogInfo("Reusing the saved first-pass model.");
+                log.LogInfo(OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Reusing_the_saved_first_pass_model_);
             }
 
             var trainConfig = BuildStreamingTrainConfig(percConfig);
@@ -984,7 +979,7 @@ namespace pwiz.Osprey.FDR
             // Fill the previously-silent multi-minute streaming score pass with throttled percent,
             // mirroring the resident ScoreProjectionAndComputeFdrInPlace "Scoring N entries" line.
             // Progress is log-only (OspreyOutput.Out), so the FDR output stays byte-identical.
-            using (var scoreProgress = new ProgressReporter(string.Format("Scoring {0:N0} precursor candidate peaks", n), n))
+            using (var scoreProgress = new ProgressReporter(string.Format(OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Scoring__0__precursor_candidate_peaks, n), n))
             for (int f = 0; f < nFiles; f++)
             {
                 // Identity first (entry_id / charge / decoy / modseq): scalar parquet columns,
@@ -1075,7 +1070,7 @@ namespace pwiz.Osprey.FDR
             // Progress-reported (log-only) like Pass 1 so the second streaming pass over all rows
             // is not silent; byte-identical q-values and sink output.
             int gEmit = 0;
-            using (var emitProgress = new ProgressReporter(string.Format("Assigning q-values to {0:N0} precursor candidate peaks", n), n))
+            using (var emitProgress = new ProgressReporter(string.Format(OspreyFDRResources.PercolatorScorer_RunStreamingFirstPass_Assigning_q_values_to__0__precursor_candidate_peaks, n), n))
             for (int f = 0; f < nFiles; f++)
             {
                 buffer.Clear();

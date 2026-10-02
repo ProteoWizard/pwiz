@@ -41,7 +41,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
     /// </summary>
     public static class ModelDiagnosticsReport
     {
-        public const string HtmlSuffix = ".model-diagnostics.html";
+        public const string EXT_HTML = @".model-diagnostics.html";
 
         /// <summary>
         /// The pass-1 <see cref="ModelDiagnosticsData"/>, written by FirstPassFdrTask when its
@@ -58,17 +58,17 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// <para>A JSON round-trip (Newtonsoft, camelCase, NaN/Infinity as literals) so it
         /// reloads into the same object graph the HTML embeds.</para>
         /// </summary>
-        private const string Pass1SidecarSuffix = ".1st-pass.model-diagnostics.json";
+        public const string EXT_PASS1 = @"." + FdrScoresSidecar.LABEL_FIRST_PASS + @".model-diagnostics.json";
 
         /// <summary>
         /// The pass-2 (final reported pool) bundle alone - <see cref="ModelDiagnosticsData.Pass2"/>
         /// and nothing else - written by SecondPassFdrTask when pass 2 ends. A separate file
-        /// rather than a revisit of <see cref="Pass1SidecarSuffix"/>, which is P12 for this
+        /// rather than a revisit of <see cref="EXT_PASS1"/>, which is P12 for this
         /// feature: a column lives in the file written by the phase that computes it, and the
         /// pass-2 views are computed by pass 2. Absence therefore means "pass 2 has not run",
         /// never "pass 2 had nothing to say" (P13).
         /// </summary>
-        private const string Pass2SidecarSuffix = ".2nd-pass.model-diagnostics.json";
+        public const string EXT_PASS2 = @"." + FdrScoresSidecar.LABEL_SECOND_PASS + @".model-diagnostics.json";
 
         private static readonly JsonSerializerSettings SidecarSettings = new JsonSerializerSettings
         {
@@ -133,12 +133,12 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 WritePass1Sidecar(data, config, validityKey, log.LogInfo);
                 string outPath = RenderAndWrite(data, config);
 
-                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format("Wrote the model diagnostics report: {0}", outPath));
+                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(OspreyTasksResources.ModelDiagnosticsReport_Write_Wrote_the_model_diagnostics_report___0_, outPath));
             }
             catch (Exception ex)
             {
                 // Never let a diagnostics-only artifact take down a real run.
-                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format("The model diagnostics report could not be written: {0}", ex.Message));
+                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(OspreyTasksResources.ModelDiagnosticsReport_Write_The_model_diagnostics_report_could_not_be_written___0_, ex.Message));
             }
         }
 
@@ -190,12 +190,12 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 WritePass1Sidecar(data, config, validityKey, log.LogInfo);
                 string outPath = RenderAndWrite(data, config);
 
-                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format("Wrote the model diagnostics report: {0}", outPath));
+                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(OspreyTasksResources.ModelDiagnosticsReport_WriteFromAccumulator_Wrote_the_model_diagnostics_report___0_, outPath));
             }
             catch (Exception ex)
             {
                 // Never let a diagnostics-only artifact take down a real run.
-                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format("The model diagnostics report could not be written: {0}", ex.Message));
+                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(OspreyTasksResources.ModelDiagnosticsReport_WriteFromAccumulator_The_model_diagnostics_report_could_not_be_written___0_, ex.Message));
             }
         }
 
@@ -256,7 +256,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             }
             catch (Exception ex)
             {
-                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format("The second-pass results could not be added to the model diagnostics report: {0}", ex.Message));
+                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(OspreyTasksResources.ModelDiagnosticsReport_WritePass2AndFinalize_The_second_pass_results_could_not_be_added_to_the_model_diagnostics_report___0_, ex.Message));
             }
         }
 
@@ -305,7 +305,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             }
             catch (Exception ex)
             {
-                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format("The second-pass results could not be added to the model diagnostics report: {0}", ex.Message));
+                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(OspreyTasksResources.ModelDiagnosticsReport_WritePass2AndFinalizeFromAccumulator_The_second_pass_results_could_not_be_added_to_the_model_diagnostics_report___0_, ex.Message));
             }
         }
 
@@ -320,8 +320,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             var data = ReadJson<ModelDiagnosticsData>(ResolvePass1SidecarPath(config));
             if (data == null)
             {
-                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, "The saved first-pass diagnostics results were not " +
-                        "found, so the report keeps its first-pass content and the second-pass results are not added.");
+                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, OspreyTasksResources.ModelDiagnosticsReport_ReadPass1ForEnrichment_The_saved_first_pass_diagnostics_results_were_not_found__so_the_report_keeps_its_first_);
                 return null;
             }
             return data;
@@ -348,7 +347,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             log.LogInfo(LogTag.COUNT, LogKey.Format(LogKey.COUNT_MDIAG_PASS2, @"fdr-views={0} model={1}",
                 pass2ViewCount, data.Pass2?.Model != null ? @"included" : @"none"));
             log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
-                "Added the second-pass results to the model diagnostics report: {0}", outPath));
+                OspreyTasksResources.ModelDiagnosticsReport_FinalizePass2_Added_the_second_pass_results_to_the_model_diagnostics_report___0_, outPath));
         }
 
         /// <summary>
@@ -357,10 +356,9 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// </summary>
         private static void LogModelNotRetrained(IOspreyLog log)
         {
-            log.LogInfo(LogTag.MODEL_DIAGNOSTICS,
-                "The first-pass model was not retrained on this run (it resumed from saved first-pass " +
-                "results), so the Model tab has no feature table or per-feature distributions. Delete " +
-                "the .1st-pass.* intermediate files to retrain it.");
+            log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
+                OspreyTasksResources.ModelDiagnosticsReport_LogModelNotRetrained_The_first_pass_model_was_not_retrained_on_this_run__it_resumed_from_saved_first_pass_,
+                FdrScoresSidecar.FIRST_PASS_FILE_PATTERN));
         }
 
         /// <summary>
@@ -392,8 +390,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // library, a different parameter set or a different pass-2 arm while looking
                 // exactly like an answer about this one, so refuse rather than mislead - and
                 // fall through to the fold, which rebuilds it correctly.
-                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, "The saved first-pass diagnostics results belong to " +
-                        "a different analysis; rebuilding them.");
+                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, OspreyTasksResources.ModelDiagnosticsReport_TryRenderFromProducts_The_saved_first_pass_diagnostics_results_belong_to_a_different_analysis__rebuilding_them_);
                 return false;
             }
             var data = ReadJson<ModelDiagnosticsData>(pass1Path);
@@ -403,11 +400,10 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             string outPath = RenderAndWrite(data, config);
             if (data.Pass2 == null)
             {
-                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, "Second-pass results are not on disk, so this report " +
-                        "covers the first pass only. Run this task again once the analysis completes to add them.");
+                log.LogInfo(LogTag.MODEL_DIAGNOSTICS, OspreyTasksResources.ModelDiagnosticsReport_TryRenderFromProducts_Second_pass_results_are_not_on_disk__so_this_report_covers_the_first_pass_only__Run_this_);
             }
             log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
-                "Rebuilt the model diagnostics report from the completed analysis: {0}", outPath));
+                OspreyTasksResources.ModelDiagnosticsReport_TryRenderFromProducts_Rebuilt_the_model_diagnostics_report_from_the_completed_analysis___0_, outPath));
             return true;
         }
 
@@ -576,9 +572,10 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // run completed before the diagnostics products were retained looks like. Saying
                 // "the second pass has not completed" here would be a confident wrong answer
                 // about a finished analysis.
-                reasons.Add(@"The second pass completed but left no diagnostics product, so this " +
-                            @"page shows first-pass views only; re-run SecondPassFDR with " +
-                            @"--model-diagnostics to add the pass-2 views");
+                reasons.Add(string.Format(
+                    @"The second pass completed but left no diagnostics product, so this " +
+                    @"page shows first-pass views only; re-run {0} with {1} to add the pass-2 views",
+                    SecondPassFdrTask.TASK_NAME, OspreyArgNames.Text(OspreyArgNames.MODEL_DIAGNOSTICS)));
             }
             if (contributed < data.FileCount)
             {
@@ -606,8 +603,9 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             // guard earned its place here rather than in the relay.
             if (config.SelectedTask?.IsPerFileWorker == true)
             {
-                OspreyLog.Write(logWarning, LogTag.MODEL_DIAGNOSTICS,
-                    "Skipped the first-pass model diagnostics data: this task holds one file, and --task FirstPassFDR writes it for the whole experiment.");
+                OspreyLog.Write(logWarning, LogTag.MODEL_DIAGNOSTICS, string.Format(
+                    OspreyTasksResources.ModelDiagnosticsReport_WritePass1Sidecar_Skipped_the_first_pass_model_diagnostics_data__this_task_holds_one_file__and___task_,
+                    OspreyArgNames.TaskText(FirstPassFdrTask.TASK_NAME)));
                 return;
             }
             // Serialized without the pass-2 bundle even if one is attached to the in-memory
@@ -702,8 +700,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             // minutes at the top of first-pass FDR. Console-only, never affects the
             // classification.
             log.LogInfo(string.Format(pass == 1
-                    ? "Classifying {0:N0} precursor candidates for first-pass model diagnostics..."
-                    : "Classifying {0:N0} precursor candidates for second-pass model diagnostics...",
+                    ? OspreyTasksResources.ModelDiagnosticsReport_BuildClassificationFromLibrary_Classifying__0__precursor_candidates_for_first_pass_model_diagnostics___
+                    : OspreyTasksResources.ModelDiagnosticsReport_BuildClassificationFromLibrary_Classifying__0__precursor_candidates_for_second_pass_model_diagnostics___,
                 libraryById.Count));
             var pairing = EntrapmentPairing.Build(libraryById, config.DecoyPairingManifestPath);
 
@@ -800,7 +798,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
 
         private static string ResolveReportPath(OspreyConfig config)
         {
-            return Path.Combine(ResolveOutputDir(config), OutputStem(config) + HtmlSuffix);
+            return Path.Combine(ResolveOutputDir(config), OutputStem(config) + EXT_HTML);
         }
 
         /// <summary>
@@ -821,12 +819,12 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
 
         private static string ResolvePass1SidecarPath(OspreyConfig config)
         {
-            return Path.Combine(ResolveOutputDir(config), OutputStem(config) + Pass1SidecarSuffix);
+            return Path.Combine(ResolveOutputDir(config), OutputStem(config) + EXT_PASS1);
         }
 
         private static string ResolvePass2SidecarPath(OspreyConfig config)
         {
-            return Path.Combine(ResolveOutputDir(config), OutputStem(config) + Pass2SidecarSuffix);
+            return Path.Combine(ResolveOutputDir(config), OutputStem(config) + EXT_PASS2);
         }
 
         private static string ResolveOutputDir(OspreyConfig config)

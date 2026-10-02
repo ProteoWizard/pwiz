@@ -84,8 +84,9 @@ once per input, name the first and count the rest.
 ## Enums
 
 Use Skyline's pattern: a `GetLocalizedString(this Enum)` extension over a
-`LOCALIZED_VALUES` array (see `Skyline/Model/Export.cs`), so the text can move to RESX
-without touching the call sites. `DecoyMethod`, `ResolutionMode`, `FdrMethod` and
+`LOCALIZED_VALUES` property that returns resource strings (see `Skyline/Model/Export.cs`). A
+property, never a static field: tests switch the UI culture in process, and a static would
+keep the first language it saw. `DecoyMethod`, `ResolutionMode`, `FdrMethod` and
 `LibraryFormat` have one; never print an enum's `ToString()` in user text.
 
 ## Tiers
@@ -94,3 +95,25 @@ without touching the call sites. `DecoyMethod`, `ResolutionMode`, `FdrMethod` an
 - **`--verbose`**: code-path narration, per-file detail, the feature table.
 - **`-d` diagnostics**: developer output; may use any vocabulary, and lives off the
   mainline path (see `00-pipeline-architecture.md`).
+
+## Resources
+
+Every string on this page lives in the owning assembly's `.resx` (see "Localization" in
+`20-command-line.md`). When you add or reword one:
+
+- Put the English in the `.resx` and let Visual Studio regenerate the Designer; the key is
+  Skyline's `Class_Member_Text_with_underscores`, as ReSharper's "Move to resource" writes it.
+- The resource holds the whole format string (`{0:N0}` included); `string.Format` stays at
+  the call site. A count that can be 1 is two resources, singular and plural (`CountText`).
+- Names a user types or a program reads - `--task` values, argument names, file extensions,
+  column headings - go in as `{0}` arguments, never inside the translated text. Take each from
+  its declaration: `OspreyArgNames.Text` / `TaskText` (or the `OspreyCommandArgs.ARG_*`
+  instance in the executable and the tests), `OspreyTaskNames`, and the `EXT` constants on
+  the class that owns the file. `CodeInspectionTest.TestArgumentTextComesFromArguments` fails
+  on a flag or file extension in an English `.resx` value, and on a string literal anywhere in
+  Osprey that spells out a declared argument.
+- A test asserts the resource, formatted with the same arguments, never the English:
+  `Assert.AreEqual(string.Format(OspreyIOResources.X, path), message)`. The suite runs under
+  `ja-JP` and `fr-FR` as well as `en-US`.
+- `CodeInspectionTest` scans the English `.resx` values for the words in the first table on
+  this page, so a banned word cannot come back through a resource.

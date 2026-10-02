@@ -101,7 +101,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             catch (Exception ex)
             {
                 log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
-                    "Peak co-assignment failed, so the panel is left out of the report: {0}",
+                    OspreyTasksResources.PeakCoAssignmentSource_Build_Peak_co_assignment_failed__so_the_panel_is_left_out_of_the_report___0_,
                     ex.Message));
                 return null;
             }
@@ -119,7 +119,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             if (fileNames == null || perFileParquetPaths == null || libraryById == null)
             {
                 log.LogInfo(LogTag.MODEL_DIAGNOSTICS,
-                    "Peak co-assignment: no scores files or library are available, so the panel is left out of the report.");
+                    OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment__no_scores_files_or_library_are_available__so_the_panel_is_left_out_of_);
                 return null;
             }
 
@@ -140,7 +140,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             if (experimentRecords == null || experimentRecords.Count == 0)
             {
                 log.LogInfo(LogTag.MODEL_DIAGNOSTICS,
-                    "Peak co-assignment: no experiment-level first-pass results are available, so the panel is left out of the report.");
+                    OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment__no_experiment_level_first_pass_results_are_available__so_the_panel_is_);
                 return null;
             }
 
@@ -157,7 +157,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             // NaN-fills ~100 MB. The two loops under it carry reporters for exactly this reason -
             // a silent stretch here reads as a hung run.
             log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
-                "Peak co-assignment: indexing {0:N0} experiment-level precursor results...",
+                OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment__indexing__0__experiment_level_precursor_results___,
                 experimentRecords.Count));
             uint maxBaseId = 0;
             foreach (uint entryId in experimentRecords.Keys)
@@ -179,8 +179,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             log.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_COASSIGN_PHASE, @"scan files={0}", fileNames.Count));
             using (var scanProgress = new ProgressReporter(
                 fileNames.Count == 1
-                    ? "Peak co-assignment: reading first-pass results for 1 file"
-                    : string.Format("Peak co-assignment: reading first-pass results for {0:N0} files", fileNames.Count),
+                    ? OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment__reading_first_pass_results_for_1_file
+                    : string.Format(OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment__reading_first_pass_results_for__0__files, fileNames.Count),
                 fileNames.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 for (int f = 0; f < fileNames.Count; f++)
@@ -220,7 +220,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     if (!readOk)
                     {
                         log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
-                            "Peak co-assignment: the first-pass results for {0} could not be read in full, so the panel is left out of the report.",
+                            OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment__the_first_pass_results_for__0__could_not_be_read_in_full__so_the_,
                             fileNames[f]));
                         return null;
                     }
@@ -236,7 +236,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             // the silence the 138 s gap covered.
             log.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_COASSIGN_PHASE, @"reduce files={0}", fileNames.Count));
             log.LogInfo(LogTag.MODEL_DIAGNOSTICS,
-                "Peak co-assignment: finding the experiment-level decoy score boundary...");
+                OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment__finding_the_experiment_level_decoy_score_boundary___);
             builder.SealCutoffs();
 
             // Name the acceptance boundary in the --perf-stats log. The decoy row is the only class
@@ -270,8 +270,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             log.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_COASSIGN_PHASE, @"join files={0}", fileNames.Count));
             using (var progress = new ProgressReporter(
                 fileNames.Count == 1
-                    ? "Peak co-assignment: reading apex retention times for 1 file"
-                    : string.Format("Peak co-assignment: reading apex retention times for {0:N0} files", fileNames.Count),
+                    ? OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment__reading_apex_retention_times_for_1_file
+                    : string.Format(OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment__reading_apex_retention_times_for__0__files, fileNames.Count),
                 fileNames.Count, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 for (int f = 0; f < fileNames.Count; f++)
@@ -286,7 +286,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     if (reason != null)
                     {
                         log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
-                            "Peak co-assignment is unavailable ({0}), so the panel is left out of the report.", reason));
+                            OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment_is_unavailable___0____so_the_panel_is_left_out_of_the_report_, reason));
                         return null;
                     }
                     totalDetected += detected;
@@ -321,13 +321,13 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             if (admitted != tallied)
             {
                 log.LogInfo(LogTag.MODEL_DIAGNOSTICS, string.Format(
-                    "Peak co-assignment: {0:N0} decoy precursors cleared the experiment-level boundary but {1:N0} reached the panel, so the panel under-reports decoys.",
+                    OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment___0__decoy_precursors_cleared_the_experiment_level_boundary_but__1__,
                     admitted, tallied));
             }
             if (data == null)
             {
                 log.LogInfo(LogTag.MODEL_DIAGNOSTICS,
-                    "Peak co-assignment: no detected peak matched a library precursor m/z, so the panel is left out of the report.");
+                    OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment__no_detected_peak_matched_a_library_precursor_m_z__so_the_panel_is_);
                 return null;
             }
             sw.Stop();
@@ -342,8 +342,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // 30x under-reported (19 counted against 598 in the sidecars) with nothing in the
                 // log to say a whole class had been thinned.
                 log.LogInfo(LogTag.MODEL_DIAGNOSTICS, totalUnresolved == 1
-                    ? "Peak co-assignment: 1 detected peak had no library precursor and was left out."
-                    : string.Format("Peak co-assignment: {0:N0} detected peaks had no library precursor and were left out.",
+                    ? OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment__1_detected_peak_had_no_library_precursor_and_was_left_out_
+                    : string.Format(OspreyTasksResources.PeakCoAssignmentSource_BuildCore_Peak_co_assignment___0__detected_peaks_had_no_library_precursor_and_were_left_out_,
                         totalUnresolved));
             }
             return data;
@@ -373,7 +373,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             string sidecarBase = ScoringTaskShared.ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
             if (string.IsNullOrEmpty(sidecarBase))
             {
-                reason = string.Format("no first-pass intermediate files for {0}", fileName);
+                reason = string.Format(OspreyTasksResources.PeakCoAssignmentSource_AddFile_no_first_pass_intermediate_files_for__0_, fileName);
                 return 0;
             }
             // The same path the score-pass sink wrote, so the panel reads exactly what this run
@@ -382,7 +382,8 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             string sidecarPath = FdrScoresSidecar.Pass1Path(sidecarBase);
             if (!File.Exists(sidecarPath))
             {
-                reason = string.Format("no .1st-pass.fdr_scores.bin file for {0}", fileName);
+                reason = string.Format(OspreyTasksResources.PeakCoAssignmentSource_AddFile_no__1st_pass_fdr_scores_bin_file_for__0_, fileName,
+                    FdrScoresSidecar.EXT_FIRST_PASS);
                 return 0;
             }
 
@@ -431,7 +432,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
 
             if (!ok)
             {
-                reason = string.Format("could not read {0}", Path.GetFileName(sidecarPath));
+                reason = string.Format(OspreyTasksResources.PeakCoAssignmentSource_AddFile_could_not_read__0_, Path.GetFileName(sidecarPath));
                 return 0;
             }
             if (tally != null)

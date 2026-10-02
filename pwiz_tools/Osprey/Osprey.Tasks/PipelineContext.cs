@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using pwiz.Common.SystemUtil;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Tasks
@@ -301,6 +302,15 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// This run's instance of task <typeparamref name="T"/>, or null when the run has none,
+        /// without materializing it - for a task that asks whether another will run.
+        /// </summary>
+        internal T TaskOf<T>() where T : OspreyTask
+        {
+            return _tasksByType.TryGetValue(typeof(T), out var task) ? (T)task : null;
+        }
+
+        /// <summary>
         /// Publish a byproduct value for downstream tasks, keyed by its purpose
         /// type <typeparamref name="TInfo"/>. Once-only: publishing the same type
         /// twice in a run is a programming defect (two producers, or a producer
@@ -497,7 +507,7 @@ namespace pwiz.Osprey.Tasks
             foreach (var output in outputs)
             {
                 if (!File.Exists(output)) return false;
-                if (!TaskValiditySidecar.IsValid(output, task.Name, key)) return false;
+                if (!TaskValiditySidecar.IsValid(output, task.Name, task.OutputValidityKey(this, key, output))) return false;
             }
             return true;
         }
@@ -557,7 +567,7 @@ namespace pwiz.Osprey.Tasks
     /// pipeline definition is missing the producer); fail fast and hard so it
     /// surfaces in testing rather than at runtime.
     /// </summary>
-    public sealed class UnknownTaskException : Exception
+    public sealed class UnknownTaskException : InvalidOperationException
     {
         public Type RequestedType { get; }
 
@@ -577,7 +587,7 @@ namespace pwiz.Osprey.Tasks
     /// that neglected to <see cref="PipelineContext.Publish{TInfo}"/> -- and are
     /// surfaced loudly rather than degrading to a silent default value.
     /// </summary>
-    public sealed class UnknownByproductException : Exception
+    public sealed class UnknownByproductException : InvalidOperationException
     {
         public Type RequestedType { get; }
 
@@ -599,13 +609,13 @@ namespace pwiz.Osprey.Tasks
     /// rather than letting the consumer proceed with default state. Carries the
     /// task type and the exit code the failing task requested.
     /// </summary>
-    public sealed class RehydrateFailedException : Exception
+    public sealed class RehydrateFailedException : UserMessageException
     {
         public Type TaskType { get; }
         public int ExitCode { get; }
 
         public RehydrateFailedException(Type taskType, string taskName, int exitCode)
-            : base(string.Format("The {0} step could not reload its results from the intermediate files (exit code {1}).",
+            : base(string.Format(OspreyTasksResources.RehydrateFailedException_The__0__step_could_not_reload_its_results_from_the_intermediate_files__exit_code__1___,
                 taskName, exitCode))
         {
             TaskType = taskType;

@@ -118,7 +118,7 @@ namespace pwiz.Osprey.IO
 
         private static bool IsDirectoryWritable(string dir)
         {
-            string key = string.IsNullOrEmpty(dir) ? "." : dir;
+            string key = string.IsNullOrEmpty(dir) ? @"." : dir;
             return _writable.GetOrAdd(key, ProbeWritable);
         }
 
@@ -128,7 +128,7 @@ namespace pwiz.Osprey.IO
             {
                 if (!Directory.Exists(dir))
                     return false;
-                string probe = Path.Combine(dir, "." + Guid.NewGuid().ToString("N") + ".osprey-wtest");
+                string probe = Path.Combine(dir, @"." + Guid.NewGuid().ToString(@"N") + @".osprey-wtest");
                 // DeleteOnClose keeps the probe self-cleaning even if disposal
                 // races with AV / permission edge cases -- no littered temp file.
                 using (new FileStream(probe, FileMode.CreateNew, FileAccess.Write,
