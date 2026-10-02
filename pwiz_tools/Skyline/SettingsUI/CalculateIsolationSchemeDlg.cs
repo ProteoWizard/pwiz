@@ -200,8 +200,8 @@ namespace pwiz.Skyline.SettingsUI
                     Start = methodStart + (isIsolation ? 0 : margin),
                     End = methodEnd - (isIsolation ?  0 : margin),
                     Target = null,
-                    StartMargin = generateMargin ? (double?)margin : null,
-                    EndMargin = generateMargin ? (double?)margin : null,
+                    StartMargin = generateMargin ? margin : null,
+                    EndMargin = generateMargin ? margin : null,
                     CERange = ceRange
                 };
                 if (overlap > 0)

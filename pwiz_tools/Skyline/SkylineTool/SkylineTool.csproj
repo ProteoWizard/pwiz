@@ -20,10 +20,6 @@
     <NoWarn>$(NoWarn);NU1605;NU1701</NoWarn>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="System.Text.Json" Version="8.0.5" />
-  </ItemGroup>
-
 
   <!-- RemoteBase's legacy tool IPC serializes through BinaryFormatter. .NET 9 REMOVED the
        implementation from the shared framework: the type still compiles but every

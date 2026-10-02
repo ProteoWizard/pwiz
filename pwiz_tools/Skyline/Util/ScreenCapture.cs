@@ -116,7 +116,7 @@ namespace pwiz.Skyline.Util
             }
             else if (fullScreen)
             {
-                snapshotBounds = (Rectangle)ctrl.Invoke((Func<Rectangle>)(() => Screen.FromControl(ctrl).Bounds));
+                snapshotBounds = ctrl.Invoke((Func<Rectangle>)(() => Screen.FromControl(ctrl).Bounds));
             }
             else
             {
@@ -128,7 +128,7 @@ namespace pwiz.Skyline.Util
         public static Rectangle GetDockedFormBounds(DockableForm ctrl)
         {
             return ctrl.InvokeRequired
-                ? (Rectangle)ctrl.Invoke((Func<Rectangle>)(() => GetDockedFormBoundsInternal(ctrl)))
+                ? ctrl.Invoke((Func<Rectangle>)(() => GetDockedFormBoundsInternal(ctrl)))
                 : GetDockedFormBoundsInternal(ctrl);
         }
 
@@ -136,7 +136,7 @@ namespace pwiz.Skyline.Util
         {
             ctrl = FindParent<FloatingWindow>(ctrl) ?? ctrl;
             return ctrl.InvokeRequired
-                ? (Rectangle)ctrl.Invoke((Func<Rectangle>)(() => GetFramedWindowBoundsInternal(ctrl)))
+                ? ctrl.Invoke((Func<Rectangle>)(() => GetFramedWindowBoundsInternal(ctrl)))
                 : GetFramedWindowBoundsInternal(ctrl);
         }
 

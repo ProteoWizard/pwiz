@@ -886,7 +886,7 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public ActionResult ImportFasta(string textFasta, string keepEmptyProteins = null)
         {
-            bool? keepEmpty = keepEmptyProteins == null ? (bool?)null : bool.Parse(keepEmptyProteins);
+            bool? keepEmpty = keepEmptyProteins == null ? null : bool.Parse(keepEmptyProteins);
             return InvokeOnMainWindow(mainWindow =>
                 mainWindow.SkylineWindow.ImportFasta(new StringReader(textFasta),
                     Helpers.CountLinesInString(textFasta), false,
