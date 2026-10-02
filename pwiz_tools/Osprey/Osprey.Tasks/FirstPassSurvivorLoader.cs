@@ -152,7 +152,8 @@ namespace pwiz.Osprey.Tasks
                 !_perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
             {
                 error = string.Format(
-                    OspreyTasksResources.FirstPassSurvivorLoader_Load_No__scores_parquet_file_is_known_for__0___so_its_kept_precursor_candidates_cannot_be_, fileName);
+                    OspreyTasksResources.FirstPassSurvivorLoader_Load_No__scores_parquet_file_is_known_for__0___so_its_kept_precursor_candidates_cannot_be_, fileName,
+                    ParquetScoreCache.EXT_SCORES);
                 return null;
             }
             if (parquetPathOverride != null)
@@ -165,7 +166,8 @@ namespace pwiz.Osprey.Tasks
                 {
                     error = string.Format(
                         OspreyTasksResources.FirstPassSurvivorLoader_Load__0__was_written_by_an_older_Osprey_build_and_cannot_be_matched_to_its__scores_parquet__,
-                        parquetPathOverride);
+                        parquetPathOverride, ParquetScoreCache.EXT_SCORES,
+                        OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME));
                     return null;
                 }
                 parquetPath = parquetPathOverride;
