@@ -375,7 +375,7 @@ namespace pwiz.Osprey.IO
             {
                 error = string.Format(
                     OspreyIOResources.LibraryLoader_TryFinishSuppliedDecoys___decoys_in_library_was_given__but_no_library_precursor_has_a_protein_accession_starting_,
-                    FormatPrefixList(config.DecoyPrefixes));
+                    FormatPrefixList(config.DecoyPrefixes), OspreyArgNames.Text(OspreyArgNames.DECOYS_IN_LIBRARY));
                 return false;
             }
 

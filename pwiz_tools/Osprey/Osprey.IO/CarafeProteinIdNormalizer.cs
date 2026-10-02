@@ -180,7 +180,7 @@ namespace pwiz.Osprey.IO
             // because no protein can reach 2 detected peptides.
             logWarning?.Invoke(string.Format(
                 OspreyIOResources.CarafeProteinIdNormalizer_Normalize_Library_protein_accessions_carry_the_per_peptide___pepNNNNN__suffix_that_Carafe_adds__e_g_,
-                cleaned.Count, realAccessions.Count, example, exampleCleaned));
+                cleaned.Count, realAccessions.Count, example, exampleCleaned, PEP_TOKEN + @"NNNNN"));
             return nEntries;
         }
     }

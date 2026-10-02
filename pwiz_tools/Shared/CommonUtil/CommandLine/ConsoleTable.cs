@@ -130,7 +130,6 @@ namespace pwiz.Common.CommandLine
         public override string ToString()
         {
             int[] widths = GetWidths();
-            string rowFormat = BuildRowFormat(widths);
             int fullWidth = widths.Sum() + widths.Length + 1;
 
             var sb = new StringBuilder();
@@ -142,7 +141,7 @@ namespace pwiz.Common.CommandLine
                 sb.Append(ParaToString(fullWidth, Preamble));
             AppendBorders(sb, widths, DIVIDER_POS.ABOVE); // Top of table border
             if (_header != null)
-                sb.AppendFormat(rowFormat, _header.Cast<object>().ToArray());
+                AppendRow(sb, widths, _header);
 
             for (int i = 0; i < _rows.Count; i++)
             {
@@ -173,7 +172,7 @@ namespace pwiz.Common.CommandLine
                             cells[cellIndex] = cells[cellIndex].Substring(0, wrapIndex - wrapChars);
                         }
                     }
-                    sb.AppendFormat(rowFormat, cells.Cast<object>().ToArray());
+                    AppendRow(sb, widths, cells);
                     cells = remaining;
                 }
             }
@@ -191,8 +190,11 @@ namespace pwiz.Common.CommandLine
             if (text == null)
                 return -1;
 
+            // The number of characters that fit in the display width. Equal to the width for
+            // text without East Asian wide characters, each of which fills two columns.
+            int fitLength = FitLength(text, width);
             int breakIndex = text.IndexOfAny(new []{'\r', '\n'});
-            if (breakIndex != -1 && breakIndex < width)
+            if (breakIndex != -1 && breakIndex < fitLength)
             {
                 wrapWidth = text[breakIndex] == '\n' ? 1 : 2;
                 return breakIndex + wrapWidth;
@@ -200,12 +202,12 @@ namespace pwiz.Common.CommandLine
 
             if (width <= 0)
                 return -1;
-            if (text.Length <= width)
+            if (fitLength >= text.Length)
                 return -1;
 
             foreach (var lb in new[] { @" ", @"|"})
             {
-                int indexBreak = text.LastIndexOf(lb, width, StringComparison.Ordinal);
+                int indexBreak = text.LastIndexOf(lb, fitLength, StringComparison.Ordinal);
                 if (indexBreak != -1)
                 {
                     if (lb == @" ")
@@ -213,7 +215,89 @@ namespace pwiz.Common.CommandLine
                     return indexBreak + lb.Length;
                 }
             }
-            return width;   // No line break sequences found, just return the width itself
+            // No line break sequences found: break at the width, but not inside an ASCII token
+            // (a flag or file name) embedded in CJK text, which has no spaces to break at.
+            return AvoidSplittingToken(text, fitLength);
+        }
+
+        /// <summary>
+        /// The display width of <paramref name="text"/>: East Asian wide and fullwidth characters
+        /// fill two console columns, everything else one.
+        /// </summary>
+        public static int DisplayWidth(string text)
+        {
+            int width = 0;
+            foreach (char c in text)
+                width += IsWide(c) ? 2 : 1;
+            return width;
+        }
+
+        private static bool IsWide(char c)
+        {
+            return (c >= '\u1100' && c <= '\u115F') ||   // Hangul Jamo
+                   (c >= '\u2E80' && c <= '\uA4CF' && c != '\u303F') ||   // CJK radicals .. Yi, incl. kana and ideographs
+                   (c >= '\uAC00' && c <= '\uD7A3') ||   // Hangul syllables
+                   (c >= '\uF900' && c <= '\uFAFF') ||   // CJK compatibility ideographs
+                   (c >= '\uFE30' && c <= '\uFE4F') ||   // CJK compatibility forms
+                   (c >= '\uFF00' && c <= '\uFF60') ||   // Fullwidth forms
+                   (c >= '\uFFE0' && c <= '\uFFE6');
+        }
+
+        /// <summary>
+        /// How many leading characters of <paramref name="text"/> fit in <paramref name="width"/>
+        /// display columns.
+        /// </summary>
+        private static int FitLength(string text, int width)
+        {
+            int used = 0;
+            for (int i = 0; i < text.Length; i++)
+            {
+                used += IsWide(text[i]) ? 2 : 1;
+                if (used > width)
+                    return i;
+            }
+            return text.Length;
+        }
+
+        private static bool IsTokenChar(char c)
+        {
+            return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+                   c == '-' || c == '_' || c == '.';
+        }
+
+        /// <summary>
+        /// Moves a hard break at <paramref name="index"/> back to the start of the ASCII token it would
+        /// split, when that token follows a wide character. Text without wide characters keeps its
+        /// break, so English output is unchanged.
+        /// </summary>
+        private static int AvoidSplittingToken(string text, int index)
+        {
+            if (index <= 0 || index >= text.Length || !IsTokenChar(text[index - 1]) || !IsTokenChar(text[index]))
+                return index;
+            int start = index - 1;
+            while (start > 0 && IsTokenChar(text[start - 1]))
+                start--;
+            return start > 0 && IsWide(text[start - 1]) ? start : index;
+        }
+
+        private void AppendRow(StringBuilder sb, int[] widths, IList<string> cells)
+        {
+            if (Borders)
+                sb.Append(VERTICAL); // Left edge
+            for (int i = 0; i < widths.Length; i++)
+            {
+                if (i > 0)
+                    sb.Append(Borders ? VERTICAL : ' '); // Divider
+                string cell = i < cells.Count ? cells[i] ?? string.Empty : string.Empty;
+                var padding = new string(' ', Math.Max(0, widths[i] - DisplayWidth(cell)));
+                if (TextAlignment == AlignText.ALIGN_LEFT)
+                    sb.Append(cell).Append(padding);
+                else
+                    sb.Append(padding).Append(cell);
+            }
+            if (Borders)
+                sb.Append(VERTICAL); // Right edge
+            sb.AppendLine();
         }
 
         private void AppendBorders(StringBuilder hsb, int[] widths, DIVIDER_POS pos)
@@ -237,33 +321,6 @@ namespace pwiz.Common.CommandLine
         }
 
         /// <summary>
-        /// Returns a valid format that is to be passed to AppendFormat
-        /// member function of StringBuilder.
-        /// General form: "|{i, +/-widths[i]}|", where 0 &lt;= i &lt;= widths.Length - 1
-        /// and widths[i] represents the maximum width from column 'i'.
-        /// </summary>
-        /// <param name="widths">The array of widths presented above.</param>
-        private string BuildRowFormat(int[] widths)
-        {
-            var rowFormat = new StringBuilder();
-            if (Borders)
-                rowFormat.Append(VERTICAL); // Left edge
-            for (int i = 0; i < widths.Length; i++)
-            {
-                if (i > 0)
-                    rowFormat.Append(Borders ? VERTICAL : ' '); // Divider
-                if (TextAlignment == AlignText.ALIGN_LEFT)
-                    rowFormat.Append('{').Append(i).Append(@",-").Append(widths[i]).Append('}');
-                else
-                    rowFormat.Append('{').Append(i).Append(',').Append(widths[i]).Append('}');
-            }
-            if (Borders)
-                rowFormat.Append(VERTICAL); // Right edge
-            rowFormat.AppendLine();
-            return rowFormat.ToString();
-        }
-
-        /// <summary>
         /// This function will return an array of integers, an element at
         /// position 'i' will return the maximum length from column 'i'
         /// of the table (if we look at the table as a matrix).
@@ -277,7 +334,7 @@ namespace pwiz.Common.CommandLine
                 // is exactly the length of the header from column 'i'.
                 widths = new int[_header.Length];
                 for (int i = 0; i < _header.Length; i++)
-                    widths[i] = _header[i].Split('\n').Max(s => s.Length);
+                    widths[i] = _header[i].Split('\n').Max(DisplayWidth);
             }
             else
             {
@@ -294,7 +351,7 @@ namespace pwiz.Common.CommandLine
                     if (row[i] == null)
                         continue;
                     row[i] = row[i].Trim();
-                    int rowWidth = row[i].Split('\n').Max(s => s.Length);
+                    int rowWidth = row[i].Split('\n').Max(DisplayWidth);
                     if (rowWidth > widths[i])
                         widths[i] = rowWidth ;
                 }
