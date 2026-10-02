@@ -997,6 +997,16 @@ namespace pwiz.Osprey.IO {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The spectra cache is damaged: an isolation window would end at byte {0:N0}, outside the file..
+        /// </summary>
+        public static string SpectraWindowIndex_LoadWindowSerialRead_The_spectra_cache_is_damaged__an_isolation_window_would_end_at_byte__0___outside_the_file_ {
+            get {
+                return ResourceManager.GetString("SpectraWindowIndex_LoadWindowSerialRead_The_spectra_cache_is_damaged__an_isolati" +
+                        "on_window_would_end_at_byte__0___outside_the_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Spectrum index {0} has no valid isolation window lower offset (cvParam {1} is missing or not positive). Osprey needs true isolation windows to process DIA data..
         /// </summary>
         public static string SpectrumBuilder_CreateMs2Spectrum_Spectrum_index__0__has_no_valid_isolation_window_lower_offset__cvParam_MS_1000828_is_ {
