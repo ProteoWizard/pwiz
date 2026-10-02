@@ -96,6 +96,33 @@ iRT: predict the 11 Biognosys peptides (LGGNEQVTR -24.92 ... LFLQFGAQGSPFLK 100.
 `irt = slope * rt_pred + intercept` by least squares. Carafe's library RT is `rt_pred * rt_max`
 when the training `rt_max` is known, else `irt_pred`.
 
+## RT model: Chronologer (`-rt_model chronologer`)
+
+Chronologer (Searle lab; searlelab/chronologer, Apache-2.0), committed in
+`models/chronologer-20220601193755` with jchronologer's encoding JSON, as an alternative to
+`Model_RT_LSTM_CNN`: AlphaPeptDeep's generic RT model plateaus at the end of the gradient (issue #4759),
+Chronologer does not.
+
+State dict (120,321 values): `seq_embed.weight` [55,64]; three `resnet_blocks.{0,1,2}` (dilation 1, 2, 3),
+each `process_blocks.{0,1}.0.{0,1}` (a 1x1, then a kernel-7 Conv1d(64, 64, same padding), each with
+BatchNorm1d and ReLU) and a `shortcut.{0,1}` (Conv1d + BatchNorm1d) that forward never uses, as input and
+output widths are equal; `output` Linear(52 x 64, 1).
+
+Input: one token per residue between an N-terminal token (`-` free, `^` acetyl, `(` pyro-Glu, `)` cyclized
+carbamidomethyl-Cys) and `_`, padded with 0 to 52. A peptide is written as an EncyclopeDIA mass-annotated
+sequence from its alphabase modifications, and the JSON's rules map each modified residue to a token of its
+own. Rejected: 5 or fewer, or more than 50, residues; a modification without a token; a C-terminal
+modification. Library prediction predicts those with the pretrained AlphaPeptDeep model, carried onto
+Chronologer's scale through both models' iRT fits.
+
+Output `[B]`: the pretrained model predicts a hydrophobic index, which the library maps to iRT through the
+same 11 iRT kit peptides (`rt_max` does not apply). Fine-tuning first folds the least-squares line from the
+hydrophobic index to the training peptides' normalized RT into `output`, then trains every weight with the
+RT fine-tune's L1 loss, the BatchNorm running statistics frozen (their layers stay in eval mode). The
+fine-tuned model predicts normalized RT, and its library RT is `rt_pred * rt_max` as for AlphaPeptDeep. Its
+`rt.safetensors` carries the metadata `carafesharp.rt_model = chronologer` and
+`carafesharp.rt_scale = normalized_rt`.
+
 ## Featurization
 
 - Residue indices: `ord(aa) - 64`, so A=1 .. Z=26, padded with 0 at both ends: `[B, nAA+2]`.

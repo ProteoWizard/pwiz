@@ -47,6 +47,12 @@ namespace pwiz.CarafeSharp.Models
             _fallbackToHi = (fallbackIrt.Slope / _irt.Slope, (fallbackIrt.Intercept - _irt.Intercept) / _irt.Slope);
         }
 
+        /// <summary>True for a fine-tuned Chronologer, which predicts the training run's normalized RT.</summary>
+        public bool PredictsNormalizedRt
+        {
+            get { return _chronologer.PredictsNormalizedRt; }
+        }
+
         /// <summary>Peptide forms predicted so far by the fallback model.</summary>
         public int FallbackCount { get; private set; }
 

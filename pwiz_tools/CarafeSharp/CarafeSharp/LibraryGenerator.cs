@@ -62,8 +62,8 @@ namespace pwiz.CarafeSharp
         private PretrainedModels _pretrained;
         private string _modelFileFolder;
         private DecoyPairGate _pairGate;
-        // The rt_max this run's library RT is scaled by; 0 (iRT) for Chronologer, whose hydrophobic index is
-        // not a fraction of the gradient.
+        // The rt_max this run's library RT is scaled by; 0 (iRT) for the pretrained Chronologer, whose
+        // hydrophobic index is not a fraction of the gradient.
         private double _libraryRtMax;
 
         /// <param name="settings">The library to predict.</param>
@@ -148,9 +148,9 @@ namespace pwiz.CarafeSharp
                 var peptideToProteins = LibraryDatabase.MapPeptidesToProteins(_settings.Database, _settings.Digest);
                 Log(string.Format(CultureInfo.InvariantCulture, @"Mapped {0} peptides to proteins", peptideToProteins.Count));
 
-                _libraryRtMax = rt is ChronologerRtPredictor ? 0 : _settings.RtMax;
+                _libraryRtMax = rt is ChronologerRtPredictor { PredictsNormalizedRt: false } ? 0 : _settings.RtMax;
                 if (_libraryRtMax <= 0 && _settings.RtMax > 0)
-                    Log(string.Format(CultureInfo.InvariantCulture, @"Ignored rt_max {0}: Chronologer's library RT is iRT", _settings.RtMax));
+                    Log(string.Format(CultureInfo.InvariantCulture, @"Ignored rt_max {0}: the pretrained Chronologer's library RT is iRT", _settings.RtMax));
                 var irt = _libraryRtMax > 0 ? (Slope: 0.0, Intercept: 0.0) : rt.FitIrtCalibration();
                 if (_libraryRtMax > 0)
                     Log(string.Format(CultureInfo.InvariantCulture, @"Library RT: rt_pred * rt_max ({0})", _libraryRtMax));
@@ -438,12 +438,27 @@ namespace pwiz.CarafeSharp
         private IRtPredictor LoadRtModel(CarafeModelDirectory modelDirectory, Device device)
         {
             string path = modelDirectory.GetRtModelPath(_settings.TrainingType);
-            if (_settings.RtModelType == RtModelType.chronologer)
+            // A fine-tuned Chronologer is used whatever -rt_model says; -rt_model chronologer replaces a fine-tuned
+            // AlphaPeptDeep model with the pretrained Chronologer.
+            bool fineTunedChronologer = path != null && CarafeModelDirectory.IsSafetensors(path) && ChronologerModel.IsChronologerFile(path);
+            if (fineTunedChronologer || _settings.RtModelType == RtModelType.chronologer)
             {
                 var files = ChronologerFiles.Open();
-                Log((path != null ? @"Using the Chronologer RT model instead of the fine-tuned RT model " + path : @"Using the Chronologer RT model") +
-                    @" (" + files.WeightsPath + @"; AlphaPeptDeep's pretrained model for peptides Chronologer cannot encode)");
-                return new ChronologerRtPredictor(ChronologerModel.FromFiles(files, device), RtModel.FromPretrained(OpenPretrained(), device));
+                ChronologerModel chronologer;
+                if (fineTunedChronologer)
+                {
+                    Log(@"Using the fine-tuned Chronologer RT model " + path);
+                    chronologer = ChronologerModel.FromSafetensors(path, files, device);
+                }
+                else
+                {
+                    Log(path != null
+                        ? @"Using the pretrained Chronologer RT model instead of the fine-tuned RT model " + path
+                        : @"Using the pretrained Chronologer RT model " + files.WeightsPath);
+                    chronologer = ChronologerModel.FromFiles(files, device);
+                }
+                Log(@"AlphaPeptDeep's pretrained RT model predicts the peptides Chronologer cannot encode");
+                return new ChronologerRtPredictor(chronologer, RtModel.FromPretrained(OpenPretrained(), device));
             }
             if (path != null)
             {

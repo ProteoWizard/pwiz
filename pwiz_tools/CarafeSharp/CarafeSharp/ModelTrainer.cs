@@ -116,7 +116,10 @@ namespace pwiz.CarafeSharp
                     RequireTopIonValid = _settings.RequireTopIonValid,
                 },
             };
-            var fineTune = new FineTuneOptions { Seed = _settings.Seed, Device = device, Ms2Model = _settings.Ms2Model };
+            var fineTune = new FineTuneOptions
+            {
+                Seed = _settings.Seed, Device = device, Ms2Model = _settings.Ms2Model, RtModelType = _settings.RtModelType,
+            };
             ConfigureFineTune?.Invoke(fineTune);
             OspreyTrainingSet trainingSet;
             string baseFolder = null;
@@ -129,6 +132,12 @@ namespace pwiz.CarafeSharp
                     var baseDirectory = baseModel.Extract(baseFolder);
                     fineTune.Ms2Model = baseDirectory.GetMs2ModelPath(@"all");
                     fineTune.RtModel = baseDirectory.GetRtModelPath(@"all");
+                    // A saved Chronologer is fine-tuned further as a Chronologer.
+                    if (fineTune.RtModel != null && CarafeModelDirectory.IsSafetensors(fineTune.RtModel) &&
+                        ChronologerModel.IsChronologerFile(fineTune.RtModel))
+                    {
+                        fineTune.RtModelType = RtModelType.chronologer;
+                    }
                     fineTune.KeepMs2Start = true;
                     Log(@"Fine-tune the saved model " + _settings.BaseModel + @" further: " + baseModel.Describe());
                 }

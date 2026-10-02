@@ -21,6 +21,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Globalization;
 using System.Linq;
 using TorchSharp.Modules;
@@ -66,6 +67,23 @@ namespace pwiz.CarafeSharp.Models.Modules
             RegisterComponents();
         }
 
+        /// <summary>
+        /// Keep the BatchNorm layers on their running statistics while the rest trains. Fine-tuning batches hold
+        /// one peptide length each and can be small, so their own statistics would be noisy, and a few thousand
+        /// peptides of one run should not move statistics learned from a large multi-source database.
+        /// </summary>
+        public bool FreezeBatchNorm { get; set; }
+
+        public override void train(bool train = true)
+        {
+            base.train(train);
+            if (train && FreezeBatchNorm)
+            {
+                foreach (var batchNorm in modules().OfType<BatchNorm1d>())
+                    batchNorm.eval();
+            }
+        }
+
         public override Tensor forward(Tensor tokens)
         {
             // [batch, positions, channels] -> [batch, channels, positions] for the convolutions; the
@@ -73,6 +91,17 @@ namespace pwiz.CarafeSharp.Models.Modules
             var x = _seqEmbed.call(tokens).transpose(1, -1);
             x = _dropout.call(_resnetBlocks.call(x));
             return _output.call(x.flatten(1)).squeeze(1);
+        }
+
+        /// <summary>Folds <c>y = slope * x + intercept</c> into the output layer, so the network predicts y.</summary>
+        public void ScaleOutput(double slope, double intercept)
+        {
+            var bias = _output.bias ?? throw new InvalidOperationException(@"Chronologer's output layer has no bias.");
+            using (no_grad())
+            {
+                _output.weight.mul_(slope);
+                bias.mul_(slope).add_(intercept);
+            }
         }
     }
 

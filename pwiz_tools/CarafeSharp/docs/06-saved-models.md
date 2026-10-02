@@ -86,7 +86,7 @@ files and shows what each was trained on. A `.carafemodel` file is a zip holding
 | `manifest.json` | what the file is, and what the models were trained on (below) | always |
 | `ms2.safetensors` | the fine-tuned MS2 model (AlphaPeptDeep's BERT, safetensors) | when `models.ms2.entry` names it |
 | `ms2_base.safetensors` | the MS2 model of the saved model this one was fine-tuned further from, which the fine-tuned one did not beat | when `models.ms2.entry` names it |
-| `rt.safetensors` | the fine-tuned RT model (AlphaPeptDeep's LSTM/CNN, safetensors) | when `models.rt.used` |
+| `rt.safetensors` | the fine-tuned RT model: AlphaPeptDeep's LSTM/CNN, or Chronologer when its safetensors metadata has `carafesharp.rt_model = chronologer` | when `models.rt.used` |
 | `model_evaluation_metrics.json` | the held-out metrics of the pretrained and fine-tuned models, as Carafe writes them | when the training wrote it |
 | `meta.json` | the training runs, as Carafe writes it (what `-model_dir` reads) | when the training wrote it |
 

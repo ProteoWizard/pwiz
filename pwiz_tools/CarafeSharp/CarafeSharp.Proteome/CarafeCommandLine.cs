@@ -177,14 +177,16 @@ namespace pwiz.CarafeSharp.Proteome
                     @"  -device cpu|gpu -pairing_manifest <tsv>; CarafeSharp only: -pretrained <pretrained_models.zip>,",
                     @"  -model <file.carafemodel> (a saved fine-tuned model, which every training run writes into -o),",
                     @"  -activation beam-CID|reCID -analyzer Orbitrap|LIT|ToF (else the training run's),",
-                    @"  -rt_model alphapeptdeep|chronologer (chronologer: the pretrained Chronologer RT model, in iRT)",
+                    @"  -rt_model alphapeptdeep|chronologer (chronologer: the pretrained Chronologer RT model, in iRT; a",
+                    @"  fine-tuned Chronologer in -model or -model_dir is used without it)",
                     @"Saved models: CarafeSharp -model_info <file.carafemodel> (what the model was trained on)",
                     @"Training options (Carafe's): -se Osprey -fdr <q> -cor <r> -n_ion_min <n> -c_ion_min <n> -lf_frag_n_min <n>",
                     @"  -nf <n> -min_n <n> -valid -no_masking -tf all|ms2|rt -seed <n> -nce <nce> -ms_instrument <name>",
                     @"  -rt_max <min> -ms2_model <model> -device cpu|gpu; CarafeSharp only: -pretrained <pretrained_models.zip>,",
                     @"  -activation beam-CID|reCID -analyzer Orbitrap|LIT|ToF (else each run's, from Osprey's export),",
                     @"  -model <file.carafemodel> (fine-tune a saved model further, instead of the pretrained models),",
-                    @"  -rt_model chronologer (with -tf ms2: the library's RT from the pretrained Chronologer)");
+                    @"  -rt_model alphapeptdeep|chronologer (the RT model to fine-tune; with -tf ms2 chronologer is the",
+                    @"  pretrained Chronologer, in iRT)");
             }
         }
 
@@ -375,11 +377,8 @@ namespace pwiz.CarafeSharp.Proteome
                 settings.BaseModel = baseModel;
             if (TryGet(@"pretrained", out string pretrained))
                 settings.PretrainedModels = pretrained;
-            if (TryGet(@"rt_model", out string rtModel) && ParseRtModel(rtModel) == RtModelType.chronologer && settings.TrainRt)
-            {
-                throw new NotSupportedException(
-                    @"-rt_model chronologer cannot be fine-tuned yet; add -tf ms2 to fine-tune MS2 only and predict RT with Chronologer");
-            }
+            if (TryGet(@"rt_model", out string rtModel))
+                settings.RtModelType = ParseRtModel(rtModel);
             if (Has(@"db"))
             {
                 // The library predicted right after training, with the fine-tuned models in -o,

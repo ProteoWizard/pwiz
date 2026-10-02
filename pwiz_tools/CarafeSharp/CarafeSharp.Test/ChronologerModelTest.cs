@@ -19,11 +19,13 @@
  */
 
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.Models;
+using TorchSharp.Modules;
 using static TorchSharp.torch;
 
 namespace pwiz.CarafeSharp.Test
@@ -154,6 +156,75 @@ namespace pwiz.CarafeSharp.Test
                 double fallback = alphaPeptDeep.Predict(new[] { amidated }).Single();
                 Assert.AreEqual(alphaPeptDeepIrt.Slope * fallback + alphaPeptDeepIrt.Intercept,
                     chronologerIrt.Slope * predicted[1] + chronologerIrt.Intercept, 1e-6);
+            }
+        }
+
+        /// <summary>
+        /// Fine-tuning Chronologer: rescaled to normalized RT, it fits a target that is not a line of its hydrophobic
+        /// index better after training, its BatchNorm statistics do not move, and it saves and reloads as a
+        /// Chronologer that predicts normalized RT, which an AlphaPeptDeep model file is not taken for.
+        /// </summary>
+        [TestMethod]
+        public void TestChronologerFineTune()
+        {
+            string folder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"ChronologerTune_" + Guid.NewGuid().ToString(@"N"));
+            Directory.CreateDirectory(folder);
+            try
+            {
+                manual_seed(5);
+                var files = ChronologerFiles.Open();
+                var random = new Random(5);
+                const string residues = @"ACDEFGHIKLMNPQRSTVWY";
+                var peptides = Enumerable.Range(0, 120).Select(_ =>
+                        new PeptideForm(new string(Enumerable.Range(0, random.Next(7, 16)).Select(i => residues[random.Next(residues.Length)]).ToArray()) +
+                                        (random.Next(2) == 0 ? @"K" : @"R")))
+                    .ToArray();
+                string tuned = Path.Combine(folder, ModelFiles.RT_SAFETENSORS);
+                double[] tunedPrediction;
+                using (var model = ChronologerModel.FromFiles(files, CPU))
+                {
+                    // A target that is not a line of the hydrophobic index: the linear rescaling leaves its curvature.
+                    double[] hi = model.Predict(peptides);
+                    var rows = peptides.Select((p, i) => new RtTrainingExample(p, 0.5 + 0.4 * Math.Tanh((hi[i] - 12) / 6))).ToArray();
+                    double meanHi = hi.Average();
+                    model.RescaleToNormalizedRt(0.4 / 6, 0.5 - 0.4 / 6 * meanHi);
+                    Assert.IsTrue(model.PredictsNormalizedRt);
+                    var encoded = ChronologerTrainingExample.Encode(model, rows);
+                    Assert.AreEqual(rows.Length, encoded.Count);
+
+                    var batchNorm = model.Network.modules().OfType<BatchNorm1d>().First();
+                    float[] RunningMean() => (batchNorm.running_mean ?? throw new AssertFailedException(@"no running mean")).data<float>().ToArray();
+                    float[] runningMean = RunningMean();
+                    var before = RtMetrics.Evaluate(p => model.Predict(p), rows);
+                    var settings = new FineTuneSettings { Epochs = 8, WarmupEpochs = 0, BatchSize = 16, LearningRate = 1e-3, AdjustBatchSize = false };
+                    var history = ModelFineTuner.TrainChronologer(model, encoded, encoded, settings, 16, new NumpyRandomState(5), null);
+                    Assert.IsTrue(history.Last().TrainLoss < history.First().TrainLoss,
+                        string.Format(CultureInfo.InvariantCulture, @"loss {0} -> {1}", history.First().TrainLoss, history.Last().TrainLoss));
+                    var after = RtMetrics.Evaluate(p => model.Predict(p), rows);
+                    Assert.IsTrue(after.MedianAbsoluteError < before.MedianAbsoluteError,
+                        string.Format(CultureInfo.InvariantCulture, @"RT MAE {0} -> {1}", before.MedianAbsoluteError, after.MedianAbsoluteError));
+                    CollectionAssert.AreEqual(runningMean, RunningMean());
+                    Assert.ThrowsException<InvalidOperationException>(() => model.RescaleToNormalizedRt(1, 0));
+
+                    tunedPrediction = model.Predict(peptides);
+                    model.Save(tuned);
+                }
+                Assert.IsTrue(ChronologerModel.IsChronologerFile(tuned));
+                using (var reloaded = ChronologerModel.FromSafetensors(tuned, files, CPU))
+                {
+                    Assert.IsTrue(reloaded.PredictsNormalizedRt);
+                    CollectionAssert.AreEqual(tunedPrediction, reloaded.Predict(peptides));
+                }
+
+                string alphaPeptDeep = Path.Combine(folder, @"alphapeptdeep_rt.safetensors");
+                using (var rt = RtModel.FromPretrained(PretrainedModels.Open(), CPU))
+                    rt.Save(alphaPeptDeep);
+                Assert.IsFalse(ChronologerModel.IsChronologerFile(alphaPeptDeep));
+                Assert.ThrowsException<InvalidDataException>(() => ChronologerModel.FromSafetensors(alphaPeptDeep, files, CPU));
+            }
+            finally
+            {
+                Directory.Delete(folder, true);
             }
         }
 

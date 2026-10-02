@@ -21,20 +21,10 @@
  * limitations under the License.
  */
 
+using pwiz.CarafeSharp.Core;
+
 namespace pwiz.CarafeSharp.Proteome
 {
-    /// <summary>
-    /// <c>-rt_model</c> (CarafeSharp only): the retention-time model library prediction uses.
-    /// <see cref="alphapeptdeep"/> is Carafe's (pretrained or fine-tuned); <see cref="chronologer"/> is the
-    /// pretrained Chronologer, which tracks the end of the gradient where AlphaPeptDeep's generic model
-    /// plateaus, and writes iRT.
-    /// </summary>
-    public enum RtModelType
-    {
-        alphapeptdeep,
-        chronologer,
-    }
-
     /// <summary>
     /// What a Carafe library-generation run (<c>-db</c> without <c>-ms</c>) predicts and writes.
     /// Defaults are Carafe's code defaults, which are not all its help text's: precursor
@@ -192,8 +182,8 @@ namespace pwiz.CarafeSharp.Proteome
         public string PretrainedModels { get; set; }
 
         /// <summary>
-        /// <c>-rt_model</c> (CarafeSharp only). Chronologer replaces any fine-tuned RT model, as it is not
-        /// fine-tuned itself.
+        /// <c>-rt_model</c> (CarafeSharp only). An explicit chronologer replaces a fine-tuned AlphaPeptDeep RT
+        /// model; a fine-tuned Chronologer is used whatever this says.
         /// </summary>
         public RtModelType RtModelType { get; set; }
 

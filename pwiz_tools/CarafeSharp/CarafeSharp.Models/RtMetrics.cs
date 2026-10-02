@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.CarafeSharp.Core;
 
 namespace pwiz.CarafeSharp.Models
 {
@@ -52,7 +53,13 @@ namespace pwiz.CarafeSharp.Models
     {
         public static RtMetricSummary Evaluate(RtModel model, IReadOnlyList<RtTrainingExample> test)
         {
-            double[] predicted = model.Predict(test.Select(e => e.Peptide).ToArray());
+            return Evaluate(peptides => model.Predict(peptides), test);
+        }
+
+        /// <summary>The metrics of any RT model that predicts normalized RT.</summary>
+        public static RtMetricSummary Evaluate(Func<IReadOnlyList<PeptideForm>, double[]> predict, IReadOnlyList<RtTrainingExample> test)
+        {
+            double[] predicted = predict(test.Select(e => e.Peptide).ToArray());
             double[] observed = test.Select(e => e.RtNorm).ToArray();
             double mean = observed.Average();
             double residual = 0, total = 0;
