@@ -39,7 +39,8 @@ namespace pwiz.CarafeSharp
 {
     /// <summary>
     /// Carafe's library prediction (<c>-db</c> without <c>-ms</c>): digests the FASTA, lists
-    /// every peptidoform and precursor, predicts MS2 and RT, and writes the library as Carafe's
+    /// every peptidoform and precursor, predicts MS2 and RT (and with <c>-ccs</c> each
+    /// precursor's ion mobility), and writes the library as Carafe's
     /// TSV and/or a BiblioSpec .blib. Work proceeds in Carafe's batches of 200,000 peptidoforms,
     /// each predicted in chunks that a <see cref="LibraryChunkWriter"/> thread writes while the
     /// next chunk is predicted, so memory is bounded by a few chunks plus the peptide list;
@@ -58,6 +59,7 @@ namespace pwiz.CarafeSharp
         private readonly Stopwatch _clock = new Stopwatch();
         private readonly Stopwatch _ms2Clock = new Stopwatch();
         private readonly Stopwatch _rtClock = new Stopwatch();
+        private readonly Stopwatch _ccsClock = new Stopwatch();
         private readonly Stopwatch _buildClock = new Stopwatch();
         private PretrainedModels _pretrained;
         private string _modelFileFolder;
@@ -136,6 +138,7 @@ namespace pwiz.CarafeSharp
                 Log(fallback);
             using (var ms2 = LoadMs2Model(modelDirectory, device))
             using (var rt = LoadRtModel(modelDirectory, device))
+            using (var ccs = _settings.PredictIonMobility ? LoadCcsModel(modelDirectory, device) : null)
             {
                 var digester = new Digester(_settings.Digest);
                 var peptides = LibraryDatabase.DigestPeptides(_settings.Database, digester, Log);
@@ -153,13 +156,13 @@ namespace pwiz.CarafeSharp
                 Log(string.Format(CultureInfo.InvariantCulture, @"NCE: {0}, instrument: {1}, activation: {2}, analyzer: {3}", _settings.Nce,
                     _settings.Instrument, _settings.Activation ?? @"(none)", _settings.Analyzer ?? @"(none)"));
                 var builder = new LibrarySpectrumBuilder(_settings, outputs, peptideToProteins);
-                WriteLibrary(forms, outputs, builder, ms2, rt, irt);
+                WriteLibrary(forms, outputs, builder, ms2, rt, ccs, irt);
             }
             Log(string.Format(CultureInfo.InvariantCulture, @"Wrote {0} precursors in {1:F1} s", SpectrumCount, _clock.Elapsed.TotalSeconds));
         }
 
         private void WriteLibrary(List<PeptideIsoform> forms, LibraryOutputs outputs, LibrarySpectrumBuilder builder,
-            Ms2Model ms2, RtModel rt, (double Slope, double Intercept) irt)
+            Ms2Model ms2, RtModel rt, CcsModel ccs, (double Slope, double Intercept) irt)
         {
             TsvPath = outputs.WritesTsv ? Path.Combine(_settings.OutputDirectory, CarafeLibraryTsvWriter.FILE_NAME) : null;
             BlibPath = outputs.WritesBlib ? Path.Combine(_settings.OutputDirectory, BlibLibraryWriter.FILE_NAME) : null;
@@ -167,13 +170,13 @@ namespace pwiz.CarafeSharp
                 ? new List<DecoyPairPlanner.Precursor>()
                 : null;
             _pairGate = CreatePairGate(forms);
-            using (var tsv = TsvPath != null ? new CarafeLibraryTsvWriter(TsvPath) : null)
+            using (var tsv = TsvPath != null ? new CarafeLibraryTsvWriter(TsvPath, ccs != null) : null)
             using (var blib = BlibPath != null ? new BlibLibraryWriter(BlibPath, Path.GetFileNameWithoutExtension(BlibPath)) : null)
             {
                 // Disposed before tsv and blib, so a failure stops the writer thread before their partial files are discarded.
                 using (var writer = new LibraryChunkWriter(tsv, blib, pairingPrecursors, BeforeWriteChunk, BeforeQueueWait))
                 {
-                    PredictChunks(forms, builder, ms2, rt, irt, writer);
+                    PredictChunks(forms, builder, ms2, rt, ccs, irt, writer);
                     if (_pairGate != null)
                     {
                         var held = new List<LibrarySpectrum>();
@@ -247,7 +250,7 @@ namespace pwiz.CarafeSharp
         /// exception as soon as writing fails.
         /// </summary>
         private void PredictChunks(List<PeptideIsoform> forms, LibrarySpectrumBuilder builder, Ms2Model ms2, RtModel rt,
-            (double Slope, double Intercept) irt, LibraryChunkWriter writer)
+            CcsModel ccs, (double Slope, double Intercept) irt, LibraryChunkWriter writer)
         {
             int batchCount = (forms.Count + _settings.PeptidesPerBatch - 1) / Math.Max(1, _settings.PeptidesPerBatch);
             int chunkIndex = 0;
@@ -262,26 +265,29 @@ namespace pwiz.CarafeSharp
                 {
                     writer.ThrowIfFailed();
                     BeforePredictChunk?.Invoke(chunkIndex++);
-                    var spectra = PredictChunk(forms, start, Math.Min(batchEnd, start + FORMS_PER_CHUNK), builder, ms2, rt, irt);
+                    var spectra = PredictChunk(forms, start, Math.Min(batchEnd, start + FORMS_PER_CHUNK), builder, ms2, rt, ccs, irt);
                     writer.Add(spectra);
                     batchPredicted += spectra.Count;
                 }
                 predicted += batchPredicted;
+                string ccsTime = ccs != null
+                    ? string.Format(CultureInfo.InvariantCulture, @", CCS {0:F1} s", _ccsClock.Elapsed.TotalSeconds)
+                    : string.Empty;
                 Log(string.Format(CultureInfo.InvariantCulture,
                     @"Batch {0}/{1}: peptide forms {2}-{3}, {4} precursors predicted in {5:F1} s ({6} total, {7} written, {8:F1} s elapsed; " +
-                    @"MS2 {9:F1} s, RT {10:F1} s, assembly {11:F1} s, writing {12:F1} s, waiting on writer {13:F1} s)",
+                    @"MS2 {9:F1} s, RT {10:F1} s{14}, assembly {11:F1} s, writing {12:F1} s, waiting on writer {13:F1} s)",
                     batch + 1, batchCount, batchStart + 1, batchEnd, batchPredicted, batchClock.Elapsed.TotalSeconds, predicted,
                     writer.Written, _clock.Elapsed.TotalSeconds, _ms2Clock.Elapsed.TotalSeconds, _rtClock.Elapsed.TotalSeconds,
-                    _buildClock.Elapsed.TotalSeconds, writer.WriteTime.TotalSeconds, writer.QueueWaitTime.TotalSeconds));
+                    _buildClock.Elapsed.TotalSeconds, writer.WriteTime.TotalSeconds, writer.QueueWaitTime.TotalSeconds, ccsTime));
             }
         }
 
         /// <summary>
-        /// Predicts and builds the spectra of peptidoforms [start, end): MS2 for every precursor
-        /// in the m/z window, RT once per peptidoform.
+        /// Predicts and builds the spectra of peptidoforms [start, end): MS2 (and with a CCS model
+        /// the ion mobility) for every precursor in the m/z window, RT once per peptidoform.
         /// </summary>
         private List<LibrarySpectrum> PredictChunk(List<PeptideIsoform> forms, int start, int end, LibrarySpectrumBuilder builder,
-            Ms2Model ms2, RtModel rt, (double Slope, double Intercept) irt)
+            Ms2Model ms2, RtModel rt, CcsModel ccs, (double Slope, double Intercept) irt)
         {
             var isoforms = new List<PeptideIsoform>();
             var peptides = new List<PeptideForm>();
@@ -310,13 +316,21 @@ namespace pwiz.CarafeSharp
             _rtClock.Start();
             double[] rtPredictions = rt.Predict(peptides);
             _rtClock.Stop();
+            double[] ccsPredictions = null;
+            if (ccs != null)
+            {
+                _ccsClock.Start();
+                ccsPredictions = ccs.Predict(requests.Select(r => r.Precursor).ToArray());
+                _ccsClock.Stop();
+            }
             _buildClock.Start();
             var spectra = new LibrarySpectrum[requests.Count];
             Parallel.For(0, requests.Count, i =>
             {
                 int form = formIndex[i];
                 double retentionTime = LibrarySpectrumBuilder.GetRetentionTime(rtPredictions[form], _settings.RtMax, irt.Slope, irt.Intercept);
-                spectra[i] = builder.Build(isoforms[form], requests[i].Precursor, predictions[i].Intensities, INTENSITY_STRIDE, retentionTime);
+                spectra[i] = builder.Build(isoforms[form], requests[i].Precursor, predictions[i].Intensities, INTENSITY_STRIDE, retentionTime,
+                    ccsPredictions?[i]);
             });
             List<LibrarySpectrum> built;
             if (_pairGate == null)
@@ -434,6 +448,22 @@ namespace pwiz.CarafeSharp
             }
             Log(@"Using the pretrained RT model");
             return RtModel.FromPretrained(OpenPretrained(), device);
+        }
+
+        /// <summary>
+        /// The CCS model for <c>-ccs</c>: the model folder's Carafe <c>ccs_model.pt</c> for
+        /// <c>-tf all</c>, else the pretrained one (a saved CarafeSharp model holds none).
+        /// </summary>
+        private CcsModel LoadCcsModel(CarafeModelDirectory modelDirectory, Device device)
+        {
+            string path = modelDirectory.GetCcsModelPath(_settings.TrainingType);
+            if (path != null)
+            {
+                Log(@"Using fine-tuned CCS model " + path + @" for the ion mobility (1/K0)");
+                return CcsModel.FromPthFile(path, device);
+            }
+            Log(@"Using the pretrained CCS model for the ion mobility (1/K0)");
+            return CcsModel.FromPretrained(OpenPretrained(), device);
         }
 
         /// <summary>The pretrained models, opened (and their SHA-256 checked) once.</summary>

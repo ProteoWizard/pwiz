@@ -167,6 +167,12 @@ namespace pwiz.CarafeSharp.Proteome
         /// </summary>
         public bool PreferSafetensors { get; set; }
 
+        /// <summary>
+        /// <c>-ccs</c>: predict each precursor's timsTOF ion mobility (1/K0) with the CCS model, the
+        /// model folder's Carafe <c>ccs_model.pt</c> when it has one, else the pretrained one.
+        /// </summary>
+        public bool PredictIonMobility { get; set; }
+
         /// <summary><c>-tf</c>, read only with <c>-model_dir</c>: which of its models to use.</summary>
         public string TrainingType { get; set; } = DEFAULT_TRAINING_TYPE;
 

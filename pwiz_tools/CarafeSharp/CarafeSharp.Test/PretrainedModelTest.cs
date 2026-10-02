@@ -21,11 +21,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CarafeSharp.Core;
 using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Models.Modules;
+using pwiz.CarafeSharp.Proteome;
 using pwiz.CarafeSharp.Training;
 using static TorchSharp.torch;
 
@@ -46,6 +48,19 @@ namespace pwiz.CarafeSharp.Test
         /// digits); CarafeSharp matches Carafe 2.2.0's predictions to about 1e-5.
         /// </summary>
         private const double PYRO_GLU_TOLERANCE = 2e-5;
+
+        /// <summary>
+        /// Against Carafe's Python CCS predictions (square angstroms, float32 printed in full). They
+        /// agree to the bit on the CPU that wrote them; the tolerance leaves room for another CPU's
+        /// float32 kernels, about 33 ulps of a 500 A^2 CCS.
+        /// </summary>
+        private const double CCS_TOLERANCE = 1e-3;
+
+        /// <summary>
+        /// The 1/K0 that <see cref="CCS_TOLERANCE"/> allows: 1/K0 per A^2 of CCS is at most about
+        /// 0.005, for a singly charged precursor.
+        /// </summary>
+        private const double INVERSE_K0_TOLERANCE = 6e-6;
 
         public TestContext TestContext { get; set; }
 
@@ -236,6 +251,105 @@ namespace pwiz.CarafeSharp.Test
                 }
                 Assert.AreEqual(0.051533796f, prediction.Get(0, 3), PYRO_GLU_TOLERANCE);
                 Assert.AreEqual(0.6012333f, prediction.Get(2, 3), PYRO_GLU_TOLERANCE);
+            }
+        }
+
+        /// <summary>
+        /// The pretrained CCS model and the timsTOF 1/K0 it converts to, against Carafe 2.2.0's own
+        /// Python (py/v2/models.py <c>predict_mobility</c>, generic/ccs.pth, CPU): charges 1 to 4,
+        /// lengths 7 to 30, and modifications on the N-term, the C-term and residues. The same
+        /// weights in a model folder as Carafe's fine-tuned <c>ccs_model.pt</c> predict the same.
+        /// </summary>
+        [TestMethod]
+        public void TestCcsPrediction()
+        {
+            // Sequence, mods, sites, charge, then Python's precursor_mz, ccs_pred and mobility_pred.
+            var references = new (string Sequence, string Mods, string Sites, int Charge, double PrecursorMz, double Ccs, double InverseK0)[]
+            {
+                (@"LGGNEQVTR", @"", @"", 2, 487.256705240605, 331.27978515625, 0.8155331505902977),
+                (@"LGGNEQVTR", @"", @"", 3, 325.17356231607, 382.4161376953125, 0.6276216232412947),
+                (@"GAGSSEPVTGLDAK", @"", @"", 2, 644.82260624973, 382.269775390625, 0.9442863487584952),
+                (@"VEATFGVDESNAK", @"", @"", 2, 683.827888591745, 394.2088623046875, 0.9743690844310147),
+                (@"YILAGVENSK", @"", @"", 1, 1093.58880101168, 262.2637939453125, 1.293231871170388),
+                (@"YILAGVENSK", @"", @"", 2, 547.29803873934, 364.82806396484375, 0.8995002555346188),
+                (@"TPVISGGPYEYR", @"", @"", 2, 669.838059352605, 394.31756591796875, 0.9744336416284588),
+                (@"TPVISGGPYEYR", @"", @"", 3, 446.89446505740335, 451.3885803222656, 0.7436503619094422),
+                (@"DGLDAASYYAPVR", @"", @"", 2, 699.3384234905051, 399.73651123046875, 0.9882517066554944),
+                (@"ADVTPADFSEWSK", @"", @"", 3, 484.8929012383167, 465.7850341796875, 0.7679839713431659),
+                (@"GTFIIDPGGVIR", @"", @"", 2, 622.85351245548, 379.4434509277344, 0.9369536667861403),
+                (@"LFLQFGAQGSPFLK", @"", @"", 2, 776.92975140178, 435.544921875, 1.0778361455168644),
+                (@"LFLQFGAQGSPFLK", @"", @"", 3, 518.28892642352, 500.3923034667969, 0.8255466915651517),
+                (@"LFLQFGAQGSPFLK", @"", @"", 4, 388.96851393439, 580.3511352539062, 0.7181011275060851),
+                (@"PEPTIDE", @"", @"", 1, 800.36724049975, 256.2716979980469, 1.2579451514438),
+                (@"ACDEFGHIK", @"Carbamidomethyl@C", @"2", 2, 538.7451163417049, 356.1441345214844, 0.8779158325174755),
+                (@"PEPTMIDEK", @"Oxidation@M", @"5", 2, 538.2524398449899, 356.4376220703125, 0.878629111463515),
+                (@"MCQEHMK", @"Oxidation@M;Carbamidomethyl@C", @"1;2", 2, 490.1933482815149, 333.2208557128906, 0.8203802476192024),
+                (@"SAMPLER", @"Acetyl@Protein_N-term", @"0", 2, 423.21292076066993, 308.4308776855469, 0.7576849900902468),
+                (@"SAMPLESR", @"Phospho@S", @"1", 2, 485.706818065695, 326.15277099609375, 0.8028758670614909),
+                (@"PEPTIDEK", @"Amidated@Any_C-term", @"-1", 2, 464.24273219951493, 326.0474548339844, 0.8020972931476827),
+                (@"VLSIGDGIARVHGLRNVQAEEMVEFSSGLK", @"", @"", 3, 1071.2345868210803, 687.3775634765625, 1.1392478570427942),
+                (@"VLSIGDGIARVHGLRNVQAEEMVEFSSGLK", @"", @"", 4, 803.6777592325601, 807.8851318359375, 1.004232643978344),
+            };
+            var precursors = references.Select(r => new PrecursorForm(PeptideForm.FromAlphabase(r.Sequence, r.Mods, r.Sites), r.Charge))
+                .ToArray();
+            var pretrained = PretrainedModels.Open();
+            double[] ccs;
+            using (var model = CcsModel.FromPretrained(pretrained, CPU))
+                ccs = model.Predict(precursors);
+            for (int i = 0; i < references.Length; i++)
+            {
+                var reference = references[i];
+                string label = precursors[i].ToString();
+                Assert.AreEqual(reference.PrecursorMz, AlphabaseFragmentMz.CalculatePrecursorMz(precursors[i]), 1e-9, label);
+                Assert.AreEqual(reference.Ccs, ccs[i], CCS_TOLERANCE, label);
+                Assert.AreEqual(reference.InverseK0, TimsMobility.CcsToInverseK0(ccs[i], precursors[i]), INVERSE_K0_TOLERANCE, label);
+                // The conversion alone, from Python's own CCS and m/z, is alphabase's to the last bits.
+                Assert.AreEqual(reference.InverseK0, TimsMobility.CcsToInverseK0(reference.Ccs, reference.PrecursorMz, reference.Charge),
+                    1e-15, label);
+            }
+
+            string folder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"Ccs_" + Guid.NewGuid().ToString(@"N"));
+            Directory.CreateDirectory(folder);
+            try
+            {
+                Assert.IsNull(CarafeModelDirectory.Open(folder).GetCcsModelPath(@"all"));
+                string checkpoint = Path.Combine(folder, CarafeModelDirectory.CCS_MODEL_FILE);
+                ExtractPretrainedEntry(pretrained, PretrainedModels.CCS_ENTRY, checkpoint);
+                var directory = CarafeModelDirectory.Open(folder);
+                Assert.AreEqual(checkpoint, directory.GetCcsModelPath(@"all"));
+                // Carafe's Python takes the folder's CCS model for --tf_type all only, the generic one otherwise.
+                Assert.IsNull(directory.GetCcsModelPath(@"nce"));
+                using (var model = CcsModel.FromPthFile(checkpoint, CPU))
+                {
+                    CollectionAssert.AreEqual(ccs, model.Predict(precursors));
+                    // One precursor at a time: batches hold one length, so each prediction is its own.
+                    for (int i = 0; i < precursors.Length; i++)
+                        Assert.AreEqual(ccs[i], model.Predict(new[] { precursors[i] })[0], CCS_TOLERANCE, precursors[i].ToString());
+                }
+
+                // A model whose output is negative predicts 0, as Carafe clips every prediction.
+                using (var network = new ModelCcsLstm())
+                {
+                    var weights = network.state_dict().ToDictionary(p => p.Key, p => p.Value.detach().clone());
+                    weights[@"ccs_decoder.nn.2.bias"].fill_(-1e6);
+                    using (var negative = CcsModel.Create(weights, CPU))
+                        Assert.AreEqual(0.0, negative.Predict(new[] { precursors[0] })[0]);
+                }
+            }
+            finally
+            {
+                Directory.Delete(folder, true);
+            }
+        }
+
+        /// <summary>Writes the pretrained archive's <paramref name="entry"/> to <paramref name="path"/>, as a model folder holds it.</summary>
+        internal static void ExtractPretrainedEntry(PretrainedModels pretrained, string entry, string path)
+        {
+            using (var zip = ZipFile.OpenRead(pretrained.ZipPath))
+            {
+                var member = zip.GetEntry(entry);
+                Assert.IsNotNull(member, entry);
+                member.ExtractToFile(path);
             }
         }
 

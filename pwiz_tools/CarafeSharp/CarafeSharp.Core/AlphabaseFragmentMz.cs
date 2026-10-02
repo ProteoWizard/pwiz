@@ -83,6 +83,23 @@ namespace pwiz.CarafeSharp.Core
             return mz;
         }
 
+        /// <summary>
+        /// The precursor m/z alphabase computes (<c>update_precursor_mz</c>): the residue masses
+        /// summed, plus water, plus the modification masses summed in order, over the charge, plus
+        /// a proton. numpy sums the residues pairwise, so the last bit can differ from it.
+        /// </summary>
+        public static double CalculatePrecursorMz(PrecursorForm precursor)
+        {
+            var peptide = precursor.Peptide;
+            double residues = 0;
+            foreach (char aa in peptide.Sequence)
+                residues += AlphabaseMasses.GetResidueMass(aa);
+            double modifications = 0;
+            foreach (string name in peptide.ModNames)
+                modifications += ModificationTable.Get(name).Mass;
+            return (residues + AlphabaseMasses.H2O + modifications) / precursor.Charge + AlphabaseMasses.PROTON;
+        }
+
         /// <summary>The float32 values alphabase stores (<c>PEAK_MZ_DTYPE</c>).</summary>
         public static float[] ToFloat32(double[] mz)
         {

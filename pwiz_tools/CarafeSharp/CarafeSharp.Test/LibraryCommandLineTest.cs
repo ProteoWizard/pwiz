@@ -28,6 +28,7 @@ using System.Linq;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CarafeSharp.Core;
+using pwiz.CarafeSharp.IO;
 using pwiz.CarafeSharp.Models;
 using pwiz.CarafeSharp.Models.Modules;
 using pwiz.CarafeSharp.Proteome;
@@ -94,6 +95,8 @@ namespace pwiz.CarafeSharp.Test
             Assert.AreEqual(@"rev_", settings.DecoyPrefix);
             Assert.AreEqual(@"./", settings.OutputDirectory);
             Assert.AreEqual(@"gpu", settings.Device);
+            Assert.IsFalse(settings.PredictIonMobility);
+            Assert.IsTrue(CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-ccs" }).LibrarySettings.PredictIonMobility);
 
             // -model_dir reads the folder's meta.json and -tf; -tf is ignored without it.
             settings = CarafeCommandLine.Parse(new[] { @"-db", @"x.fasta", @"-model_dir", @"m", @"-tf", @"rt", @"-I2L", @"-pretrained", @"p.zip" })
@@ -354,6 +357,87 @@ namespace pwiz.CarafeSharp.Test
                     Device = TorchDevice.CPU,
                 };
                 Assert.AreEqual(zip, Assert.ThrowsException<FileNotFoundException>(() => new LibraryGenerator(early, null).Run()).FileName);
+            }
+            finally
+            {
+                SQLiteConnection.ClearAllPools();
+                Directory.Delete(folder, true);
+            }
+        }
+
+        /// <summary>
+        /// <c>-ccs</c>: every precursor gets the CCS model's timsTOF 1/K0, in the TSV's IonMobility
+        /// column and the .blib's ionMobility (type inverseK0, with the CCS NULL as Carafe writes it)
+        /// in both RefSpectra and RetentionTimes; the pretrained model's, or with <c>-tf all</c> the
+        /// model folder's Carafe ccs_model.pt when it has one.
+        /// </summary>
+        [TestMethod]
+        public void TestLibraryIonMobility()
+        {
+            string folder = Path.Combine(TestContext.TestRunDirectory ?? Path.GetTempPath(), @"Mobility_" + Guid.NewGuid().ToString(@"N"));
+            Directory.CreateDirectory(folder);
+            try
+            {
+                var pretrained = PretrainedModels.Open();
+                var settings = CreateGeneratorSettings(folder, LibraryOutputs.BLIB_FORMAT + @",DIA-NN");
+                settings.PredictIonMobility = true;
+                var log = new StringWriter();
+                var generator = new LibraryGenerator(settings, log, pretrained);
+                generator.Run();
+                StringAssert.Contains(log.ToString(), @"Using the pretrained CCS model");
+                StringAssert.Contains(log.ToString(), @", CCS ");
+                var mobilities = ReadMobilities(generator.BlibPath);
+                Assert.AreEqual(generator.SpectrumCount, mobilities.Count);
+                foreach (var row in mobilities)
+                {
+                    Assert.AreEqual(BlibLibraryWriter.ION_MOBILITY_TYPE_INVERSE_K0, row.Type, row.Label);
+                    Assert.IsTrue(double.IsNaN(row.Ccs), row.Label);
+                    Assert.IsTrue(row.InverseK0 > 0.4 && row.InverseK0 < 2.0, row.Label);
+                }
+                // The unmodified precursors' 1/K0 is the pretrained model's CCS, converted.
+                var unmodified = mobilities.Where(m => m.ModifiedSequence == m.Sequence).ToList();
+                Assert.IsTrue(unmodified.Count > 0);
+                var precursors = unmodified.Select(m => new PrecursorForm(new PeptideForm(m.Sequence), m.Charge)).ToArray();
+                using (var ccs = CcsModel.FromPretrained(pretrained, CPU))
+                {
+                    double[] predicted = ccs.Predict(precursors);
+                    for (int i = 0; i < precursors.Length; i++)
+                        Assert.AreEqual(TimsMobility.CcsToInverseK0(predicted[i], precursors[i]), unmodified[i].InverseK0, 1e-5, unmodified[i].Label);
+                }
+
+                // The TSV's IonMobility column holds the same values, to Carafe's four decimals.
+                var tsvLines = File.ReadAllLines(generator.TsvPath);
+                Assert.AreEqual(CarafeLibraryTsvWriter.HEADER_WITH_ION_MOBILITY, tsvLines[0]);
+                var tsvMobilities = tsvLines.Skip(1).Select(l => l.Split('\t')).Select(c => c[1] + @"/" + c[3] + @" " + c[5]).Distinct().ToList();
+                var blibMobilities = mobilities.Select(m => m.Sequence + @"/" + m.Charge + @" " + JavaNumberFormat.FormatFixed(m.InverseK0, 4)).ToList();
+                tsvMobilities.Sort(StringComparer.Ordinal);
+                blibMobilities.Sort(StringComparer.Ordinal);
+                CollectionAssert.AreEqual(blibMobilities.Distinct().ToList(), tsvMobilities);
+
+                // Carafe's fine-tuned ccs_model.pt in the model folder is used instead; these are the
+                // pretrained weights, so the values are the same.
+                string checkpoint = Path.Combine(settings.ModelDirectory, ModelFiles.CCS_CHECKPOINT);
+                PretrainedModelTest.ExtractPretrainedEntry(pretrained, PretrainedModels.CCS_ENTRY, checkpoint);
+                log = new StringWriter();
+                generator = new LibraryGenerator(settings, log, pretrained);
+                generator.Run();
+                StringAssert.Contains(log.ToString(), @"Using fine-tuned CCS model " + checkpoint);
+                CollectionAssert.AreEqual(mobilities.Select(m => m.Label + @" " + m.InverseK0.ToString(@"R", CultureInfo.InvariantCulture)).ToList(),
+                    ReadMobilities(generator.BlibPath).Select(m => m.Label + @" " + m.InverseK0.ToString(@"R", CultureInfo.InvariantCulture)).ToList());
+
+                // A -tf other than all takes the pretrained CCS model, as Carafe's Python does.
+                settings.TrainingType = @"nce";
+                log = new StringWriter();
+                new LibraryGenerator(settings, log, pretrained).Run();
+                StringAssert.Contains(log.ToString(), @"Using the pretrained CCS model");
+                settings.TrainingType = LibrarySettings.DEFAULT_TRAINING_TYPE;
+
+                // Without -ccs the library has no ion mobility, and the TSV no column for it.
+                settings.PredictIonMobility = false;
+                generator = new LibraryGenerator(settings, new StringWriter(), pretrained);
+                generator.Run();
+                Assert.IsTrue(ReadMobilities(generator.BlibPath).All(m => m.Type == BlibLibraryWriter.ION_MOBILITY_TYPE_NONE && double.IsNaN(m.InverseK0)));
+                Assert.AreEqual(CarafeLibraryTsvWriter.HEADER, File.ReadLines(generator.TsvPath).First());
             }
             finally
             {
@@ -781,6 +865,37 @@ namespace pwiz.CarafeSharp.Test
                 RtMax = 30,
                 MinFragments = 1,
             };
+        }
+
+        /// <summary>
+        /// A .blib's ion mobility per spectrum, in id order, checking that RetentionTimes repeats
+        /// RefSpectra's; NaN where a value is NULL.
+        /// </summary>
+        private static List<(string Label, string Sequence, string ModifiedSequence, int Charge, double PrecursorMz, double InverseK0, double Ccs,
+            int Type)> ReadMobilities(string blib)
+        {
+            var rows = new List<(string, string, string, int, double, double, double, int)>();
+            using (var connection = new SQLiteConnection(new SQLiteConnectionStringBuilder { DataSource = blib, ReadOnly = true }.ToString()))
+            {
+                connection.Open();
+                using (var command = new SQLiteCommand(@"SELECT r.peptideSeq, r.peptideModSeq, r.precursorCharge, r.precursorMZ, r.ionMobility, " +
+                                                       @"r.collisionalCrossSectionSqA, CAST(r.ionMobilityType AS INTEGER), t.ionMobility, " +
+                                                       @"t.collisionalCrossSectionSqA, CAST(t.ionMobilityType AS INTEGER) " +
+                                                       @"FROM RefSpectra r JOIN RetentionTimes t ON t.RefSpectraID = r.id ORDER BY r.id", connection))
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        string label = reader.GetString(1) + @"/" + reader.GetInt64(2);
+                        for (int i = 4; i < 7; i++)
+                            Assert.AreEqual(reader.GetValue(i), reader.GetValue(i + 3), label + @": RetentionTimes differs from RefSpectra");
+                        rows.Add((label, reader.GetString(0), reader.GetString(1), (int)reader.GetInt64(2), reader.GetDouble(3),
+                            reader.IsDBNull(4) ? double.NaN : reader.GetDouble(4), reader.IsDBNull(5) ? double.NaN : reader.GetDouble(5),
+                            (int)reader.GetInt64(6)));
+                    }
+                }
+            }
+            return rows;
         }
 
         /// <summary>A .blib's spectra, one line each: modified sequence, charge, precursor m/z, RT and the peak blobs.</summary>

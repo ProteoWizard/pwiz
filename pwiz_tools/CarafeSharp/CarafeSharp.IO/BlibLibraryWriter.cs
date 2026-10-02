@@ -98,6 +98,12 @@ namespace pwiz.CarafeSharp.IO
 
         private static readonly string[] ION_MOBILITY_TYPES = { @"none", @"driftTime(msec)", @"inverseK0(Vsec/cm^2)", @"compensation(V)" };
 
+        /// <summary>The IonMobilityTypes id of a spectrum with no ion mobility.</summary>
+        public const int ION_MOBILITY_TYPE_NONE = 0;
+
+        /// <summary>The IonMobilityTypes id of timsTOF 1/K0, which <c>-ccs</c> writes.</summary>
+        public const int ION_MOBILITY_TYPE_INVERSE_K0 = 2;
+
         private readonly PartialFile _file;
         private readonly Dictionary<string, long> _proteinIds = new Dictionary<string, long>(StringComparer.Ordinal);
         // The INSERT of n annotation rows at index n, prepared when first needed.
@@ -289,8 +295,13 @@ namespace pwiz.CarafeSharp.IO
 
         private void InsertSpectrum(int id, LibrarySpectrum spectrum, byte[] mzBlob, byte[] intensityBlob)
         {
+            // The 1/K0 without its CCS, as Carafe writes it: given a CCS, Skyline would convert it with the
+            // data file's own calibration instead of using this value, and it derives the CCS itself.
+            object ionMobility = spectrum.IonMobility.HasValue ? spectrum.IonMobility.Value : DBNull.Value;
+            int ionMobilityType = spectrum.IonMobility.HasValue ? ION_MOBILITY_TYPE_INVERSE_K0 : ION_MOBILITY_TYPE_NONE;
             _insertSpectrum.Execute(id, spectrum.Sequence, spectrum.PrecursorMz, spectrum.Charge,
-                spectrum.SkylineModifiedSequence ?? spectrum.Sequence, spectrum.Fragments.Count, spectrum.RetentionTime);
+                spectrum.SkylineModifiedSequence ?? spectrum.Sequence, spectrum.Fragments.Count, ionMobility, ionMobilityType,
+                spectrum.RetentionTime);
             _insertPeaks.Execute(id, mzBlob, intensityBlob);
             InsertAnnotations(id, spectrum.Fragments);
 
@@ -307,7 +318,7 @@ namespace pwiz.CarafeSharp.IO
                 }
             }
 
-            _insertRetentionTime.Execute(id, spectrum.RetentionTime);
+            _insertRetentionTime.Execute(id, ionMobility, ionMobilityType, spectrum.RetentionTime);
         }
 
         /// <summary>
@@ -410,10 +421,14 @@ namespace pwiz.CarafeSharp.IO
                                       @"copies, numPeaks, ionMobility, collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType, " +
                                       @"retentionTime, startTime, endTime, totalIonCurrent, moleculeName, chemicalFormula, precursorAdduct, " +
                                       @"inchiKey, otherKeys, fileID, SpecIDinFile, score, scoreType) VALUES (@id, @seq, @mz, @charge, @modseq, " +
-                                      @"'-', '-', 1, @numPeaks, NULL, NULL, NULL, 0, @rt, NULL, NULL, NULL, '', '', '', '', '', " +
+                                      @"'-', '-', 1, @numPeaks, @im, NULL, NULL, @imType, @rt, NULL, NULL, NULL, '', '', '', '', '', " +
                                       @"@file, NULL, 0, @scoreType)",
-                new[] { @"@id", @"@seq", @"@mz", @"@charge", @"@modseq", @"@numPeaks", @"@rt" },
-                new[] { DbType.Int64, DbType.String, DbType.Double, DbType.Int32, DbType.String, DbType.Int32, DbType.Double });
+                new[] { @"@id", @"@seq", @"@mz", @"@charge", @"@modseq", @"@numPeaks", @"@im", @"@imType", @"@rt" },
+                new[]
+                {
+                    DbType.Int64, DbType.String, DbType.Double, DbType.Int32, DbType.String, DbType.Int32, DbType.Double, DbType.Int32,
+                    DbType.Double,
+                });
             _insertSpectrum.AddConstant(@"@file", DbType.Int32, SOURCE_FILE_ID);
             _insertSpectrum.AddConstant(@"@scoreType", DbType.Int32, SCORE_TYPE_UNKNOWN);
             _insertPeaks = Prepare(@"INSERT INTO RefSpectraPeaks (RefSpectraID, peakMZ, peakIntensity) VALUES (@id, @mz, @intensity)",
@@ -427,8 +442,9 @@ namespace pwiz.CarafeSharp.IO
             // No start or end time: Skyline would read them as explicit peak boundaries.
             _insertRetentionTime = Prepare(@"INSERT INTO RetentionTimes (RefSpectraID, RedundantRefSpectraID, SpectrumSourceID, ionMobility, " +
                                            @"collisionalCrossSectionSqA, ionMobilityHighEnergyOffset, ionMobilityType, retentionTime, startTime, " +
-                                           @"endTime, score, bestSpectrum) VALUES (@id, 0, @file, NULL, NULL, NULL, 0, @rt, NULL, NULL, 0, 1)",
-                new[] { @"@id", @"@rt" }, new[] { DbType.Int64, DbType.Double });
+                                           @"endTime, score, bestSpectrum) VALUES (@id, 0, @file, @im, NULL, NULL, @imType, @rt, NULL, NULL, 0, 1)",
+                new[] { @"@id", @"@im", @"@imType", @"@rt" },
+                new[] { DbType.Int64, DbType.Double, DbType.Int32, DbType.Double });
             _insertRetentionTime.AddConstant(@"@file", DbType.Int32, SOURCE_FILE_ID);
         }
 

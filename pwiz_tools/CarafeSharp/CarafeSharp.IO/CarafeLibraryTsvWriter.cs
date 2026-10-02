@@ -32,7 +32,8 @@ namespace pwiz.CarafeSharp.IO
     /// <summary>
     /// Writes Carafe's library TSV (<c>carafe_spectral_library.tsv</c>), one row per fragment:
     /// ModifiedPeptide, StrippedPeptide, PrecursorMz (Java <c>Double.toString</c>),
-    /// PrecursorCharge, Tr_recalibrated (<c>%.2f</c>), ProteinID, Decoy, FragmentMz (Java
+    /// PrecursorCharge, Tr_recalibrated (<c>%.2f</c>), with <c>-ccs</c> IonMobility (1/K0,
+    /// <c>%.4f</c>), ProteinID, Decoy, FragmentMz (Java
     /// <c>Float.toString</c> of the float32 m/z), RelativeIntensity (<c>%.4f</c>),
     /// FragmentType, FragmentNumber, FragmentCharge and FragmentLossType. Lines end in LF and
     /// the file is UTF-8 without a byte-order mark, as Carafe writes it. The rows go to a
@@ -42,9 +43,14 @@ namespace pwiz.CarafeSharp.IO
     {
         public const string FILE_NAME = @"carafe_spectral_library.tsv";
 
-        public const string HEADER = "ModifiedPeptide\tStrippedPeptide\tPrecursorMz\tPrecursorCharge\tTr_recalibrated\t" +
-                                     "ProteinID\tDecoy\tFragmentMz\tRelativeIntensity\tFragmentType\tFragmentNumber\t" +
-                                     "FragmentCharge\tFragmentLossType";
+        private const string PRECURSOR_COLUMNS = "ModifiedPeptide\tStrippedPeptide\tPrecursorMz\tPrecursorCharge\tTr_recalibrated\t";
+        private const string FRAGMENT_COLUMNS = "ProteinID\tDecoy\tFragmentMz\tRelativeIntensity\tFragmentType\tFragmentNumber\t" +
+                                                "FragmentCharge\tFragmentLossType";
+
+        public const string HEADER = PRECURSOR_COLUMNS + FRAGMENT_COLUMNS;
+
+        /// <summary>Carafe's header with <c>-ccs</c>: IonMobility after Tr_recalibrated.</summary>
+        public const string HEADER_WITH_ION_MOBILITY = PRECURSOR_COLUMNS + "IonMobility\t" + FRAGMENT_COLUMNS;
 
         private readonly PartialFile _file;
         private readonly StreamWriter _writer;
@@ -53,23 +59,42 @@ namespace pwiz.CarafeSharp.IO
         /// Starts the TSV that <see cref="Complete"/> writes to <paramref name="path"/>; until
         /// then any file already there is left as it is.
         /// </summary>
-        public CarafeLibraryTsvWriter(string path)
+        /// <param name="path">The final TSV.</param>
+        /// <param name="ionMobility">Write Carafe's IonMobility column (<c>-ccs</c>).</param>
+        public CarafeLibraryTsvWriter(string path, bool ionMobility = false)
         {
+            WritesIonMobility = ionMobility;
             _file = new PartialFile(path);
             _writer = new StreamWriter(_file.PartialPath, false, new UTF8Encoding(false), 1 << 20) { NewLine = "\n" };
-            _writer.Write(HEADER + "\n");
+            _writer.Write((ionMobility ? HEADER_WITH_ION_MOBILITY : HEADER) + "\n");
         }
+
+        /// <summary>The TSV has the IonMobility column, which <see cref="FormatRows"/> must then be asked for.</summary>
+        public bool WritesIonMobility { get; }
 
         /// <summary>
         /// The TSV rows of one precursor. Pure, so batches can be formatted in parallel and
         /// written in order with <see cref="WriteRows"/>.
         /// </summary>
-        public static string FormatRows(LibrarySpectrum spectrum)
+        /// <param name="spectrum">The precursor.</param>
+        /// <param name="ionMobility">
+        /// Include the IonMobility column, which the spectrum must then have: the
+        /// <see cref="WritesIonMobility"/> of the writer the rows are for.
+        /// </param>
+        public static string FormatRows(LibrarySpectrum spectrum, bool ionMobility)
         {
+            string mobility = string.Empty;
+            if (ionMobility)
+            {
+                if (!spectrum.IonMobility.HasValue)
+                    throw new InvalidOperationException(@"No ion mobility was predicted for " + spectrum);
+                mobility = JavaNumberFormat.FormatFixed(spectrum.IonMobility.Value, 4) + "\t";
+            }
             string precursor = spectrum.ModifiedPeptide + "\t" + spectrum.Sequence + "\t" +
                                JavaNumberFormat.ToString(spectrum.PrecursorMz) + "\t" +
                                spectrum.Charge.ToString(CultureInfo.InvariantCulture) + "\t" +
                                JavaNumberFormat.FormatFixed(spectrum.RetentionTime, 2) + "\t" +
+                               mobility +
                                spectrum.ProteinId + "\t" +
                                spectrum.Decoy.ToString(CultureInfo.InvariantCulture) + "\t";
             var rows = new StringBuilder((precursor.Length + 40) * spectrum.Fragments.Count);
@@ -88,7 +113,7 @@ namespace pwiz.CarafeSharp.IO
 
         public void Write(LibrarySpectrum spectrum)
         {
-            WriteRows(FormatRows(spectrum));
+            WriteRows(FormatRows(spectrum, WritesIonMobility));
         }
 
         /// <summary>Writes text from <see cref="FormatRows"/>.</summary>
