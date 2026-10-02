@@ -293,9 +293,11 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 else
                 {
+                    var elementRef = ElementRefs.FromObjectReference(ElementLocator.Parse(elementLocatorString));
+                    if (!IsInDocument(elementRef, skylineWindow.DocumentUI))
+                        throw NoSuchElement(elementLocatorString);
                     // Full navigation (bookmark, replicate, scroll)
-                    skylineWindow.SelectElement(
-                        ElementRefs.FromObjectReference(ElementLocator.Parse(elementLocatorString)));
+                    skylineWindow.SelectElement(elementRef);
                 }
 
                 // Secondary selections
@@ -317,13 +319,45 @@ namespace pwiz.Skyline.ToolsUI
                         if (elementRef is NodeRef nodeRef)
                         {
                             var path = nodeRef.ToIdentityPath(document);
-                            if (path != null)
-                                allPaths.Add(path);
+                            if (path == null)
+                                throw NoSuchElement(trimmed);
+                            allPaths.Add(path);
                         }
                     }
                     skylineWindow.SequenceTree.SelectedPaths = allPaths;
                 }
             });
+        }
+
+        // Whether the element an ElementRef names is in the document. Navigation to a missing node falls back to
+        // the nearest ancestor that exists, and navigation to a missing replicate or result file does nothing,
+        // either of which would report success with something else selected.
+        private static bool IsInDocument(ElementRef elementRef, SrmDocument document)
+        {
+            switch (elementRef)
+            {
+                case NodeRef nodeRef:
+                    return nodeRef.ToIdentityPath(document) != null;
+                case ReplicateRef replicateRef:
+                    return replicateRef.FindChromatogramSet(document) != null;
+                case ResultFileRef resultFileRef:
+                    var chromatogramSet = ((ReplicateRef) resultFileRef.Parent).FindChromatogramSet(document);
+                    return chromatogramSet != null && chromatogramSet.MSDataFilePaths.Any(resultFileRef.Matches);
+                case ResultRef resultRef:
+                    int replicateIndex = resultRef.FindReplicateIndex(document);
+                    return replicateIndex >= 0 &&
+                           resultRef.FindChromFileInfo(document.Settings.MeasuredResults.Chromatograms[replicateIndex]) != null &&
+                           IsInDocument(resultRef.Parent, document);
+                default:
+                    return true;
+            }
+        }
+
+        private static Exception NoSuchElement(string elementLocator)
+        {
+            return new ArgumentException(LlmInstruction.Format(
+                @"No element in the document matches '{0}'. A modified peptide's locator includes its modifications (e.g. C[+57.021464]): take locators from skyline_get_selection or a report's Locator columns.",
+                elementLocator));
         }
 
         public static void SetReplicate(string replicateName)
@@ -380,7 +414,20 @@ namespace pwiz.Skyline.ToolsUI
             // populate or a prior real right-click; empty it first (as ZedGraph's own contextMenuStrip1_Opening
             // does) before the builder repopulates it.
             menuStrip.Items.Clear();
+            // A right-click shows the menu on the graph, which makes the graph its SourceControl, and some
+            // builders find their graph through it (the spectrum menu adds its ion-type, charge and rank items
+            // only when it finds the annotated spectrum that way). SourceControl can only be set internally.
+            SetSourceControl(menuStrip, zedGraph);
             builder(zedGraph, menuStrip, centerPoint, default(ZedGraphControl.ContextMenuObjectState));
+        }
+
+        private static void SetSourceControl(ContextMenuStrip menuStrip, Control sourceControl)
+        {
+            var property = typeof(ContextMenuStrip).GetProperty(@"SourceControlInternal",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            if (property == null)
+                throw new InvalidOperationException(@"ContextMenuStrip.SourceControlInternal not found");
+            property.SetValue(menuStrip, sourceControl);
         }
 
         // Verifies the resolved element supports the action (it is the kind the action targets); the
@@ -517,10 +564,12 @@ namespace pwiz.Skyline.ToolsUI
             string denial = CheckScreenCaptureAvailability();
             if (denial != null)
                 return denial;
-            // The form captures itself in its own thread context (a managed form on the UI thread with
-            // redaction; a native dialog by window handle on this thread).
+            // The form captures itself in its own thread context (a managed form on the UI thread, from the
+            // screen or rendered off-screen; a native dialog by window handle on this thread).
             using (var bitmap = form.CaptureImage())
             {
+                if (bitmap == null)
+                    return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
                 filePath = filePath ?? GetMcpTmpFilePath(FORM_FILE_PREFIX, form.Title, EXT_PNG);
                 DirectoryEx.CreateForFilePath(filePath);
                 bitmap.Save(filePath, ImageFormat.Png);
@@ -535,13 +584,15 @@ namespace pwiz.Skyline.ToolsUI
             string denial = CheckScreenCaptureAvailability();
             if (denial != null)
             {
-                // Permission denial / desktop unavailable: return a structured Message instead of bytes. The
-                // wrapper emits Message as plain text content (no error flag) so the response shape matches
-                // what the legacy file-based path returned for the same condition.
+                // Permission denied, pending, or with no window to ask from: return a structured Message instead
+                // of bytes. The wrapper emits Message as plain text content (no error flag) so the response shape
+                // matches what the legacy file-based path returned for the same condition.
                 return new ImageBytesMetadata { Message = denial };
             }
             using (var bitmap = form.CaptureImage())
             {
+                if (bitmap == null)
+                    return new ImageBytesMetadata { Message = LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE };
                 return new ImageBytesMetadata
                 {
                     Data = BitmapToPngBytes(bitmap),
@@ -558,6 +609,13 @@ namespace pwiz.Skyline.ToolsUI
         internal static System.Drawing.Bitmap CaptureNativeWindow(IntPtr windowHandle)
         {
             User32.SetForegroundWindow(windowHandle);
+            return CaptureWindowRect(windowHandle);
+        }
+
+        // The screen copy alone, for a window that must not be activated to be captured: a tip is topmost already,
+        // and activating it deactivates the window it belongs to, which takes the tip down (and closes a pick list).
+        internal static System.Drawing.Bitmap CaptureWindowRect(IntPtr windowHandle)
+        {
             var rect = new User32.RECT();
             User32.GetWindowRect(windowHandle, ref rect);
             var screenRect = rect.Rectangle * ScreenCapture.GetScalingFactor();
@@ -565,10 +623,13 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // Returns null when screen capture can proceed, or the LLM-facing
-        // denial / pending / desktop-unavailable message that the form-image
+        // denial / pending / unavailable message that the form-image
         // tools should return to the caller without attempting capture.
         // Called from the pipe thread (no Invoke marshal) so a Pending or
-        // Denied response does not pay the UI-thread round trip.
+        // Denied response does not pay the UI-thread round trip. A missing
+        // desktop is not checked here: a managed form is rendered off-screen
+        // instead (throwing if it cannot be), and a native dialog's
+        // CaptureImage returns null.
         private static string CheckScreenCaptureAvailability()
         {
             switch (ScreenCapture.EnsurePermission())
@@ -579,10 +640,6 @@ namespace pwiz.Skyline.ToolsUI
                     return LLM_MSG_SCREEN_CAPTURE_PERMISSION_REQUIRED;
                 case PermissionResult.unavailable:
                     return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
-            }
-            if (!ScreenCapture.IsDesktopAvailable())
-            {
-                return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
             }
             return null;
         }

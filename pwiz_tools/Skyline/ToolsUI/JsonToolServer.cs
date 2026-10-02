@@ -1080,23 +1080,49 @@ namespace pwiz.Skyline.ToolsUI
             return ResolveForm(formId).DismissWithCancelButton();
         }
 
+        public WindowSize ResizeWindow(string formId, int width, int height)
+        {
+            return ResolveForm(formId).ResizeWindow(width, height);
+        }
+
         // The graph verbs all resolve the formId to its form and act on that form's single graph (its
         // GraphElement), on the form's UI thread. There is no separate graph id - a graph form is assumed to
         // have exactly one graph - so the parameter is the same formId GetOpenForms reports.
 
         public string GetGraphData(string formId, string filePath = null)
         {
+            WaitForGraphs();
             return CallOnForm<StandaloneForm, string>(formId, form => form.FindGraph().GetData(filePath));
         }
 
         public string GetGraphImage(string formId, string filePath = null)
         {
+            WaitForGraphs();
             return CallOnForm<StandaloneForm, string>(formId, form => form.FindGraph().GetImage(filePath));
         }
 
         public ImageBytesMetadata GetGraphImageBytes(string formId)
         {
+            WaitForGraphs();
             return CallOnForm<StandaloneForm, ImageBytesMetadata>(formId, form => form.FindGraph().GetImageBytes());
+        }
+
+        private const int GRAPH_POLL_MILLIS = 50;
+        private const int GRAPH_WAIT_MAX_MILLIS = 10000;
+
+        // The graphs redraw a moment after the selection or the view changes -- on a timer, and then with their
+        // data calculated in the background -- so a graph read at once can still show what was there before
+        // (e.g. the previous peptide's peak areas across 40 replicates). Wait for them first, as a test's
+        // WaitForGraphs does. Called off the UI thread, which is released between polls.
+        private static void WaitForGraphs()
+        {
+            var mainWindow = Program.MainWindow;
+            if (mainWindow == null)
+                return;
+            for (int waited = 0;
+                 waited < GRAPH_WAIT_MAX_MILLIS && mainWindow.Invoke((Func<bool>) (() => mainWindow.IsGraphUpdatePending));
+                 waited += GRAPH_POLL_MILLIS)
+                Thread.Sleep(GRAPH_POLL_MILLIS);
         }
 
         // The geometry verbs go through the graph's UiActions, so what each one MEANS lives in one place and is
@@ -1131,19 +1157,25 @@ namespace pwiz.Skyline.ToolsUI
                 UiActions.SendText.InvokeNow(form.FindElement(controlId, UiActions.SendText), text));
         }
 
+        // A blank control presses the key where the keyboard would with the window active -- on its focused
+        // control, or the form -- since every control takes a key, so "the one control that supports the
+        // action" would never be a single answer.
         public ActionResult SendKeyStroke(string formId, string controlId, string keyStroke)
         {
             return InvokeOnForm<StandaloneForm>(formId, form =>
-                UiActions.SendKeyStroke.InvokeNow(form.FindElement(controlId, UiActions.SendKeyStroke), keyStroke));
+                UiActions.SendKeyStroke.InvokeNow(string.IsNullOrEmpty(controlId)
+                    ? form : form.FindElement(controlId, UiActions.SendKeyStroke), keyStroke));
         }
 
         public string GetFormImage(string formId, string filePath = null)
         {
+            WaitForGraphs();
             return JsonUiService.GetFormImage(formId, filePath, RequestCancellation);
         }
 
         public ImageBytesMetadata GetFormImageBytes(string formId)
         {
+            WaitForGraphs();
             return JsonUiService.GetFormImageBytes(formId, RequestCancellation);
         }
 
