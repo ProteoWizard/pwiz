@@ -82,11 +82,11 @@ namespace pwiz.Skyline.Controls
             {
                 button.ShowDropDown();
                 if (list != null)
-                    list.Closing += DenyListClosing;
+                    list.FormClosing += DenyListClosing;
             }
             else if (list != null)
             {
-                list.Closing -= DenyListClosing;
+                list.FormClosing -= DenyListClosing;
                 list.Close();
             }
         }

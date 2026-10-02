@@ -197,9 +197,9 @@ namespace pwiz.Skyline.Properties
             get
             {
                 return LockMassParameters.Create(
-                    LockMassPositive == 0 ? (double?) null : LockMassPositive,
-                    LockMassNegative == 0 ? (double?) null : LockMassNegative,
-                    LockMassTolerance == 0 ? (double?) null : LockMassTolerance);
+                    LockMassPositive == 0 ? null : LockMassPositive,
+                    LockMassNegative == 0 ? null : LockMassNegative,
+                    LockMassTolerance == 0 ? null : LockMassTolerance);
             }
             set
             {
