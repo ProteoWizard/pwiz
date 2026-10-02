@@ -674,7 +674,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         bool isEntrap = haveManifest
                             && classByBaseId.TryGetValue(e.EntryId & BASE_ID_MASK, out var fcls)
                             && fcls == EntrapmentClass.PTarget;
-                        FrontierRow(frontier, fileMinQ, e.ModifiedSequence + "|" + e.Charge, isEntrap,
+                        FrontierRow(frontier, fileMinQ, e.ModifiedSequence + @"|" + e.Charge, isEntrap,
                             e.EffectiveRunQvalue(fdrLevel), e.EffectiveExperimentQvalue(fdrLevel));
                     }
                     FrontierFlushFile(frontier, fileMinQ);   // one increment per detected precursor = one file
@@ -762,7 +762,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // file count would invite a completion estimate from unequal-cost units.
             int cardIdx = 0;
             var progress = new ProgressReporter(
-                string.Format(@"Building {0} pass-2 diagnostics card(s)", cards),
+                CountText.Format(cards, OspreyFDRResources.ModelDiagnosticsData_BuildPass2_Building_1_second_pass_diagnostics_panel,
+                    OspreyFDRResources.ModelDiagnosticsData_BuildPass2_Building__0__second_pass_diagnostics_panels),
                 cards, string.Empty, ProgressReporter.IO_INTERVAL_SECONDS);
 
             // Indented one level: this reporter nests inside the card reporter, and without it
@@ -871,7 +872,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 rows.Add(new FeatureRow
                 {
                     Index = f.Index,
-                    Label = f.Label,
+                    // Invariant: the report and its intermediate file read the same in every UI language.
+                    Label = f.ReportLabel,
                     Coefficient = f.Coefficient,
                     Percent = f.Percent,
                     DeltaMu = f.TargetDecoyMeanGap,
@@ -1018,7 +1020,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             IReadOnlyDictionary<uint, uint> pairByBaseId,
             bool haveManifest,
             out int nWithClass, out int nWithoutClass,
-            string indent = "")
+            string indent = null)
         {
             var best = new Dictionary<string, Prec>(StringComparer.Ordinal);
             int wc = 0, woc = 0;
@@ -1030,7 +1032,9 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // larger dataset. The reporter's throttle means a small run still costs one line.
             int reduceIdx = 0;
             using (var progress = new ProgressReporter(
-                       string.Format(@"Reducing {0} file(s) to best-per-precursor", perFileEntries.Count),
+                       CountText.Format(perFileEntries.Count,
+                           OspreyFDRResources.ModelDiagnosticsData_ReduceToPrecs_Finding_the_best_peak_of_each_precursor_in_1_file,
+                           OspreyFDRResources.ModelDiagnosticsData_ReduceToPrecs_Finding_the_best_peak_of_each_precursor_across__0__files),
                        perFileEntries.Count, indent, ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 foreach (var kvp in perFileEntries)
@@ -1044,7 +1048,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         uint pairIdx = 0;
                         bool hasPair = pairByBaseId != null &&
                             pairByBaseId.TryGetValue(baseId, out pairIdx);
-                        string key = e.ModifiedSequence + "|" + e.Charge;
+                        string key = e.ModifiedSequence + @"|" + e.Charge;
                         if (!best.TryGetValue(key, out var cur))
                         {
                             cur = new Prec
@@ -1496,7 +1500,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     // matching the Summary per-file loop -- not a hardcoded peptide q.
                     if (e.EffectiveRunQvalue(fdrLevel) > runFdr)
                         continue;
-                    string key = e.ModifiedSequence + "|" + e.Charge;   // same key as ReduceToPrecs
+                    string key = e.ModifiedSequence + @"|" + e.Charge;   // same key as ReduceToPrecs
                     bool expOk = e.EffectiveExperimentQvalue(fdrLevel) <= runFdr; // max(run q, exp q) <= FDR
                     // Entrapment (p_target) is a known false set that by design does not
                     // reproduce: route it to its own sets so it can't inflate the real-target

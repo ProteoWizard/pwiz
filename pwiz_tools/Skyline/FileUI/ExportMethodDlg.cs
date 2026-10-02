@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -315,11 +314,11 @@ namespace pwiz.Skyline.FileUI
             base.OnHandleCreated(e);
         }
 
-        protected override void OnClosing(CancelEventArgs e)
+        protected override void OnFormClosing(FormClosingEventArgs e)
         {
             _cancellationTokenSource.Cancel();
 
-            base.OnClosing(e);
+            base.OnFormClosing(e);
         }
 
         public string InstrumentType

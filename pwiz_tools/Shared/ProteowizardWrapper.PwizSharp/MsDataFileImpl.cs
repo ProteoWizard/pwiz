@@ -1015,10 +1015,6 @@ namespace pwiz.ProteowizardWrapper
                     return null;
                 }
                 var chromatogram = ChromatogramList.GetChromatogram(0, true);                {
-                    if (chromatogram == null)
-                    {
-                        return null;
-                    }
                     TimeIntensityPairList timeIntensityPairList = new TimeIntensityPairList();
                     chromatogram.GetTimeIntensityPairs(ref timeIntensityPairList);
                     double[] times = new double[timeIntensityPairList.Count];
@@ -1221,9 +1217,6 @@ namespace pwiz.ProteowizardWrapper
                 }
 
                 var chromatogram = ChromatogramList.GetChromatogram(i, true);                {
-                    if (chromatogram == null)
-                        return null;
-
                     result.Add(new QcTrace(chromatogram));
                 }
             }
@@ -1547,7 +1540,9 @@ namespace pwiz.ProteowizardWrapper
                         continue;
                     }
                     var cvParamLowerLimit = window.CvParam(CVID.MS_scan_window_lower_limit);
-                    if (cvParamLowerLimit != null)
+                    // IsEmpty, not null: CvParam returns an empty CVParam when the term is absent, and
+                    // an empty one converts to 0.0, which would record a scan window starting at zero
+                    if (!cvParamLowerLimit.IsEmpty)
                     {
                         double windowStart = cvParamLowerLimit;
                         if (scanWindowLowerLimit == null || windowStart < scanWindowLowerLimit)
@@ -1557,7 +1552,8 @@ namespace pwiz.ProteowizardWrapper
                     }
 
                     var cvParamUpperLimit = window.CvParam(CVID.MS_scan_window_upper_limit);
-                    if (cvParamUpperLimit != null)
+                    // IsEmpty, not null, as above
+                    if (!cvParamUpperLimit.IsEmpty)
                     {
                         double windowEnd = cvParamUpperLimit;
                         if (scanWindowUpperLimit == null || windowEnd > scanWindowUpperLimit)
@@ -2213,7 +2209,7 @@ namespace pwiz.ProteowizardWrapper
 
         private static int? GetChargeStateValue(Precursor precursor)
         {
-            if (precursor.SelectedIons == null || precursor.SelectedIons.Count == 0)
+            if (precursor.SelectedIons.Count == 0)
                 return null;
             var param = precursor.SelectedIons[0].CvParam(CVID.MS_charge_state);
             if (param.IsEmpty)

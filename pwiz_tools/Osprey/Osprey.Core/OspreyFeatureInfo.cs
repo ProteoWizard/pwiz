@@ -48,6 +48,13 @@ namespace pwiz.Osprey.Core
         public string Label { get; }
 
         /// <summary>
+        /// The label in the invariant (English) UI culture, for output that must not depend on the
+        /// language of the run: the model-diagnostics report and its intermediate file. Defaults to
+        /// <see cref="Label"/>.
+        /// </summary>
+        public string ReportLabel { get; }
+
+        /// <summary>
         /// True when a LOWER raw value is target-like (Skyline's
         /// <c>IsReversedScore</c>). Defines the EXPECTED sign of the trained
         /// coefficient; the contribution table flags a feature as an unexpected
@@ -58,11 +65,13 @@ namespace pwiz.Osprey.Core
         /// <param name="name">Machine PIN feature name.</param>
         /// <param name="label">Display label, or null to fall back to <paramref name="name"/>.</param>
         /// <param name="isReversedScore">Whether a lower raw value is target-like.</param>
-        public OspreyFeatureInfo(string name, string label, bool isReversedScore)
+        /// <param name="reportLabel">Invariant-culture label, or null to use <paramref name="label"/>.</param>
+        public OspreyFeatureInfo(string name, string label, bool isReversedScore, string reportLabel = null)
         {
             Name = name;
             Label = label;
             IsReversedScore = isReversedScore;
+            ReportLabel = reportLabel ?? label;
         }
     }
 }

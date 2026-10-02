@@ -2639,13 +2639,10 @@ namespace pwiz.SkylineTestFunctional
             if (bindingSource != null)
             {
                 PropertyDescriptorCollection propertyDescriptorCollection = bindingSource.GetItemProperties(null);
-                if (propertyDescriptorCollection != null)
+                message.AppendLine("Properties:");
+                foreach (PropertyDescriptor prop in propertyDescriptorCollection)
                 {
-                    message.AppendLine("Properties:");
-                    foreach (PropertyDescriptor prop in propertyDescriptorCollection)
-                    {
-                        message.AppendLine(prop.DisplayName + ":" + (prop.IsReadOnly ? "RO" : "Writeable"));
-                    }
+                    message.AppendLine(prop.DisplayName + ":" + (prop.IsReadOnly ? "RO" : "Writeable"));
                 }
             }
             throw new ApplicationException(message.ToString(), exception);

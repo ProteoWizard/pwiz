@@ -30,6 +30,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
@@ -398,6 +399,57 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The C grid search keeps the most regularized C whose inner-CV passing count is
+        /// within the tolerance of the best, not the strict best. On Stellar the counts for
+        /// C = 0.1, 1 and 10 are within 35 of about 5,000 (0.7%), so the strict maximum is
+        /// decided by noise, and the C = 1 model it then often keeps generalizes to the
+        /// second pass's reconciled peaks much worse. The first case is a real Stellar
+        /// inner-CV sweep.
+        /// </summary>
+        [TestMethod]
+        public void TestSvmCSelectionTolerance()
+        {
+            var grid = new[] { 0.001, 0.01, 0.1, 1.0, 10.0, 100.0 };
+            var stellar = new[] { 4670, 4925, 5025, 5037, 5002, 4971 };
+            // Strict maximum (tolerance 0, the pre-#4703 rule): C = 1 wins by 12 of 5,037.
+            Assert.AreEqual(1.0, PercolatorTrainer.SelectC(grid, stellar, 0));
+            // Within 1% (>= 4,986.6): 0.1, 1 and 10 qualify and the most regularized is 0.1; 0.01's 4,925 does not.
+            Assert.AreEqual(0.1, PercolatorTrainer.SelectC(grid, stellar, 0.01));
+            // Wide enough to take in 0.01 as well.
+            Assert.AreEqual(0.01, PercolatorTrainer.SelectC(grid, stellar, 0.03));
+
+            // A clear winner beyond the tolerance keeps its C.
+            Assert.AreEqual(100.0, PercolatorTrainer.SelectC(grid, new[] { 100, 200, 300, 400, 500, 600 }, 0.01));
+            // A tie under the strict rule goes to the first C in grid order.
+            Assert.AreEqual(0.1, PercolatorTrainer.SelectC(grid, new[] { 10, 20, 30, 30, 20, 10 }, 0));
+            // The smallest C VALUE wins, whatever the grid order.
+            var unordered = new[] { 1.0, 0.1, 10.0 };
+            Assert.AreEqual(0.1, PercolatorTrainer.SelectC(unordered, new[] { 1000, 995, 900 }, 0.01));
+            Assert.AreEqual(1.0, PercolatorTrainer.SelectC(unordered, new[] { 1000, 995, 900 }, 0));
+            // The default configuration carries the default tolerance, and both train-only copies
+            // carry a non-default one through (a dropped field would fall back to the default).
+            Assert.AreEqual(OspreyEnvironment.DEFAULT_SVM_C_SELECTION_TOLERANCE, new PercolatorConfig().CSelectionTolerance);
+            var strict = new PercolatorConfig { CSelectionTolerance = 0 };
+            Assert.AreEqual(0.0, strict.CloneForTrainOnly().CSelectionTolerance);
+            Assert.AreEqual(0.0, PercolatorScorer.BuildStreamingTrainConfig(strict).CSelectionTolerance);
+            var wide = new PercolatorConfig { CSelectionTolerance = 0.05 };
+            Assert.AreEqual(0.05, wide.CloneForTrainOnly().CSelectionTolerance);
+            Assert.AreEqual(0.05, PercolatorScorer.BuildStreamingTrainConfig(wide).CSelectionTolerance);
+
+            // OSPREY_SVM_C_TOLERANCE: a number in [0, 1), invariant culture. Anything else is
+            // rejected (null), which aborts the run at startup instead of silently training and
+            // keying the default arm.
+            Assert.AreEqual(0.01, OspreyEnvironment.ParseSvmCSelectionTolerance(@"0.01"));
+            Assert.AreEqual(0.0, OspreyEnvironment.ParseSvmCSelectionTolerance(@"0"));
+            Assert.AreEqual(0.005, OspreyEnvironment.ParseSvmCSelectionTolerance(@"5e-3"));
+            // -0 is accepted as 0 and must key as 0, not "-0".
+            Assert.AreEqual(@"0", OspreyEnvironment.ParseSvmCSelectionTolerance(@"-0").Value.ToString(@"R", CultureInfo.InvariantCulture));
+            foreach (var bad in new[] { @"", @"0,01", @"1%", @"""0""", @"1", @"1.5", @"-0.01", @"NaN", @"Infinity", @"strict" })
+                Assert.IsNull(OspreyEnvironment.ParseSvmCSelectionTolerance(bad), bad);
+            Assert.IsNull(OspreyEnvironment.ParseSvmCSelectionTolerance(null));
+        }
+
+        /// <summary>
         /// --fdr-method gbdt trains tree ensembles instead of the linear SVM and
         /// scores through the same population/competition path: targets separate from
         /// decoys, one model per fold, and no linear weights (the tree path leaves
@@ -522,6 +574,29 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// One scorer serves every per-file second-pass worker of a --parallel-files run, so
+        /// concurrent <see cref="FrozenModelScorer.Score"/> calls must each score their own
+        /// features. A shared standardization buffer once let one file's entries be scored with
+        /// another's features, silently changing the second-pass answer.
+        /// </summary>
+        [TestMethod]
+        public void TestFrozenModelScorerIsThreadSafe()
+        {
+            var entries = MakeNonMonotoneEntries();
+            var model = PercolatorTrainer.RunPercolator(entries,
+                new PercolatorConfig { MaxIterations = 3, TrainOnly = true });
+            var scorer = FrozenModelScorer.TryCreate(model);
+            var expected = entries.Select(e => scorer.Score(e.Features)).ToArray();
+            var actual = new double[expected.Length];
+            for (int round = 0; round < 50; round++)
+            {
+                Parallel.For(0, expected.Length, new ParallelOptions { MaxDegreeOfParallelism = 8 },
+                    i => actual[i] = scorer.Score(entries[i].Features));
+                CollectionAssert.AreEqual(expected, actual, "concurrent scores differ from serial, round " + round);
+            }
+        }
+
+        /// <summary>
         /// The gradient-boosted-trees path must be deterministic to the same standard as
         /// the linear SVM: identical input -> BIT-identical scores, every run. The model
         /// subsamples rows and columns, so this is a real property, not a formality --
@@ -582,7 +657,7 @@ namespace pwiz.Osprey.Test
             var serial = rows.Select(r => model.ScoreSingle(r)).ToArray();
 
             var parallel = new double[rows.Count];
-            System.Threading.Tasks.Parallel.For(0, rows.Count, i =>
+            Parallel.For(0, rows.Count, i =>
             {
                 parallel[i] = model.ScoreSingle(rows[i]);
             });
@@ -988,7 +1063,7 @@ namespace pwiz.Osprey.Test
                 _apexRts[(fileIdx, rowIdx)] = apexRt;
             }
 
-            public void Finish(Action<string> logInfo)
+            public void Finish(IOspreyLog log)
             {
             }
 
@@ -1004,7 +1079,7 @@ namespace pwiz.Osprey.Test
         /// <summary>
         /// End-to-end projection RunPercolatorFdr equivalence (the survivor-reload
         /// equivalence at the unit level): the projection
-        /// <see cref="PercolatorEngine.RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Func{string,double[]},System.Action{FeatureContributions},System.Action{PercolatorResults})"/>
+        /// <see cref="PercolatorEngine.RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],IOspreyLog,IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}},System.Func{string,double[]},System.Action{FeatureContributions},System.Action{PercolatorResults})"/>
         /// overload must produce byte-identical Score + q-values to the FdrEntry-buffer
         /// <see cref="PercolatorEngine"/> RunPercolatorFdr overload (the one that takes the
         /// per-file <see cref="FdrEntry"/> lists) -- the flag-off byte-identity ORACLE -- on the same input, at the
@@ -1047,14 +1122,14 @@ namespace pwiz.Osprey.Test
             // FdrEntry oracle overload: streams via DispatchSvm -> RunPercolatorStreaming
             // (standardizer fit on the best-per-precursor subsample).
             PercolatorEngine.RunPercolatorFdr(
-                fdrStubs, config, featureInfos, s => { }, out _, null, "First-pass",
+                fdrStubs, config, featureInfos, OspreyLog.None, out _, null, "First-pass",
                 f => featuresA[f]);
             // Projection overload under test: streams the same way (RunStreamingIntoProjection)
             // and must match the oracle byte-for-byte. The lean struct takes Score; the
             // q-values are captured off the sink (issue #4355 struct-shrink S0).
             var sink = new CapturingSink();
             PercolatorEngine.RunPercolatorFdr(
-                projSet, config, featureInfos, s => { }, sink, null, "First-pass",
+                projSet, config, featureInfos, OspreyLog.None, sink, null, "First-pass",
                 f => featuresB[f], f => ApexRtsByParquetIndex(fdrStubs2, f));
 
             // Both overloads sort their buffers, so compare keyed -- EntryId repeats
@@ -1128,7 +1203,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 aborted = PercolatorEngine.RunPercolatorFdr(
-                    fdrStubs, config, featureInfos, s => { }, out _, diagnostics, "First-pass",
+                    fdrStubs, config, featureInfos, OspreyLog.None, out _, diagnostics, "First-pass",
                     f => features[f], r => captured = r);
             }
             finally
@@ -1199,7 +1274,7 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(80, nTargets);
             Assert.AreEqual(80, nDecoys);
             PercolatorResults streamingResults = PercolatorEngine.RunPercolatorStreaming(
-                percEntries, percConfig, s => { }, "First-pass", f => featuresA[f]);
+                percEntries, percConfig, OspreyLog.None, "First-pass", f => featuresA[f]);
             PercolatorEngine.ApplyPercolatorResults(fdrStubs, streamingResults);
 
             // Projection-native streaming path (the change under test). Score lands on
@@ -1207,7 +1282,7 @@ namespace pwiz.Osprey.Test
             // struct-shrink S0).
             var sink = new CapturingSink();
             bool abort = PercolatorEngine.RunStreamingIntoProjection(
-                projSet.PerFile, projSet.PeptideById, percConfig, s => { }, "First-pass",
+                projSet.PerFile, projSet.PeptideById, percConfig, OspreyLog.None, "First-pass",
                 f => featuresB[f], f => ApexRtsByParquetIndex(fdrStubs2, f), sink);
             Assert.IsFalse(abort);
 
@@ -1291,7 +1366,7 @@ namespace pwiz.Osprey.Test
             // Resident projection streaming path (the byte-identity oracle).
             var sinkRes = new CapturingSink();
             bool abortRes = PercolatorEngine.RunStreamingIntoProjection(
-                projSet.PerFile, projSet.PeptideById, percConfig, s => { }, "First-pass",
+                projSet.PerFile, projSet.PeptideById, percConfig, OspreyLog.None, "First-pass",
                 f => featuresRes[f], f => ApexRtsByParquetIndex(fixtureRes, f), sinkRes);
             Assert.IsFalse(abortRes);
 
@@ -1311,7 +1386,7 @@ namespace pwiz.Osprey.Test
                 };
             var sinkStr = new CapturingSink();
             bool abortStr = PercolatorScorer.RunStreamingFirstPass(
-                fileNames, streamFileRows, f => featuresStr[f], percConfig, s => { }, "First-pass",
+                fileNames, streamFileRows, f => featuresStr[f], percConfig, OspreyLog.None, "First-pass",
                 sinkStr);
             Assert.IsFalse(abortStr);
 
@@ -1607,21 +1682,23 @@ namespace pwiz.Osprey.Test
 
             // The model sanity-check block appears only under --verbose, reframed away
             // from importance/weight wording (issue #4364).
-            StringAssert.Contains(report,
-                "Model sanity check -- feature share of target-decoy separation");
-            Assert.IsFalse(defaultReport.Contains("Model sanity check"),
-                "the feature share table must be gated behind --verbose");
+            StringAssert.Contains(report, OspreyFDRResources.FeatureContributions_ToReportLines_Model_sanity_check___feature_share_of_target_decoy_separation__trained_linear_model__coefficients_standardized__);
+            Assert.IsFalse(defaultReport.Contains(OspreyFDRResources.FeatureContributions_ToReportLines_Model_sanity_check___feature_share_of_target_decoy_separation__trained_linear_model__coefficients_standardized__),
+                "the feature share table must be gated behind " + OspreyCommandArgs.ARG_VERBOSE.ArgumentText);
 
             // Parse the percent column from the three feature rows. The table rows
             // are "<4 spaces><label><coefficient F4><percent F1>%"; match on the
             // coefficient-then-percent shape so the unrelated "{F1}% at {P0} FDR"
             // training-progress lines (which have "(" / " at " around the percent)
             // are not picked up.
+            // The table is prose in the current culture, so its decimal separator is that
+            // culture's (12,3 under fr-FR).
+            string dec = Regex.Escape(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
             var percents = new List<double>();
             foreach (Match m in Regex.Matches(report,
-                         @"^    \S.*\s-?\d+\.\d{4}\s+(-?\d+\.\d)%",
+                         @"^    \S.*\s-?\d+" + dec + @"\d{4}\s+(-?\d+" + dec + @"\d)%",
                          RegexOptions.Multiline))
-                percents.Add(double.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture));
+                percents.Add(double.Parse(m.Groups[1].Value, CultureInfo.CurrentCulture));
             Assert.AreEqual(3, percents.Count,
                 "expected exactly three percent rows in the contribution table");
             double total = percents.Sum();
@@ -1638,7 +1715,7 @@ namespace pwiz.Osprey.Test
                     string.Format("Feature {0} object flag mismatch (weight={1})",
                         (char)('A' + j), features[j].Coefficient));
                 bool rowFlagged = Regex.IsMatch(report,
-                    @"Feature " + (char)('A' + j) + @"\b.*\(unexpected direction\)");
+                    @"Feature " + (char)('A' + j) + @"\b.*" + Regex.Escape(OspreyFDRResources.FeatureContributions_ToReportLines__unexpected_direction_));
                 Assert.AreEqual(expectedFlag, rowFlagged,
                     string.Format("Feature {0} printed-flag mismatch (weight={1})",
                         (char)('A' + j), features[j].Coefficient));
@@ -1648,7 +1725,7 @@ namespace pwiz.Osprey.Test
             // flagged one: its trained weight is positive.
             Assert.IsTrue(features[1].Coefficient > 0.0,
                 "fixture should drive a positive weight on the declared-reversed feature B");
-            StringAssert.Contains(report, "(unexpected direction)");
+            StringAssert.Contains(report, OspreyFDRResources.FeatureContributions_ToReportLines__unexpected_direction_);
 
             // Reporting did not disturb scoring: targets still outscore decoys.
             double avgTarget = 0.0, avgDecoy = 0.0;
@@ -2691,7 +2768,7 @@ namespace pwiz.Osprey.Test
             OspreyEnvironment.MeanBestN = meanBestN;
             var stubs = BuildPassGateFixture(nFeat);
             PercolatorEngine.RunPercolatorFdr(
-                stubs, new OspreyConfig(), featureInfos, s => { }, out _, null, passLabel);
+                stubs, new OspreyConfig(), featureInfos, OspreyLog.None, out _, null, passLabel);
             var q = new List<double>();
             foreach (var kvp in stubs)
             {

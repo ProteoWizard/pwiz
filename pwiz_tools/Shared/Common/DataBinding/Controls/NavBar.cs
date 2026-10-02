@@ -264,7 +264,7 @@ namespace pwiz.Common.DataBinding.Controls
             // button when the form closes; only the replaced ones would otherwise leak.)
             var previousDropDown = navBarButtonViews.DropDown;
             navBarButtonViews.DropDown = contextMenu;
-            if (previousDropDown != null && previousDropDown != contextMenu)
+            if (previousDropDown != contextMenu)
                 previousDropDown.Dispose();
         }
 

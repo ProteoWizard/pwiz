@@ -215,5 +215,17 @@ namespace pwiz.Osprey.Tasks
             FragmentMath.ClearTop6MzCache();
             return released;
         }
+
+        /// <summary>
+        /// Write the machine-channel record of one release, which the regression gate parses to
+        /// assert the release ran and what it kept. <paramref name="scope"/> is
+        /// <see cref="LogKey.SCOPE_RESCORE_GAP_FILL"/> or
+        /// <see cref="LogKey.SCOPE_RETAINED_SUMMARY"/>.
+        /// </summary>
+        public static void LogRelease(IOspreyLog log, int released, int entries, int retained, string scope)
+        {
+            log.LogInfo(LogTag.COUNT, LogKey.Format(LogKey.COUNT_LIBRARY_FRAGMENTS_RELEASED,
+                @"released={0} entries={1} retained={2} scope={3}", released, entries, retained, scope));
+        }
     }
 }

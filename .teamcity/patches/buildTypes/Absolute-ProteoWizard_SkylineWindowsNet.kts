@@ -2,12 +2,8 @@ package patches.buildTypes
 
 import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.BuildType
-import jetbrains.buildServer.configs.kotlin.buildSteps.DotnetMsBuildStep
-import jetbrains.buildServer.configs.kotlin.buildSteps.DotnetVsTestStep
-import jetbrains.buildServer.configs.kotlin.buildSteps.dotnetCustom
-import jetbrains.buildServer.configs.kotlin.buildSteps.dotnetMsBuild
-import jetbrains.buildServer.configs.kotlin.buildSteps.dotnetRestore
-import jetbrains.buildServer.configs.kotlin.buildSteps.dotnetVsTest
+import jetbrains.buildServer.configs.kotlin.buildFeatures.PullRequests
+import jetbrains.buildServer.configs.kotlin.buildFeatures.pullRequests
 import jetbrains.buildServer.configs.kotlin.buildSteps.exec
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
 import jetbrains.buildServer.configs.kotlin.failureConditions.BuildFailureOnMetric
@@ -50,10 +46,24 @@ create(DslContext.projectId, BuildType({
 
     steps {
         exec {
+            name = "Clean"
+            id = "Skyline_Clean"
+            path = "clean.bat"
+            // The one clean for the whole build, and it runs first so the code inspection starts
+            // from a clean slate too: on an agent that reuses its checkout, stale bin\x64 and
+            // obj\x64 left by an earlier commit fail inspectcode's own solution build.
+            // tcbuild.bat does not clean again: build.bat builds the same x64 tree the
+            // inspection just built, and picks up from it. Without -cpp, clean.bat leaves the C++
+            // build alone and just runs pwiz_tools\clean-apps.bat.
+        }
+        exec {
             name = "Skyline code inspection"
             id = "Skyline_Code_Inspection"
             path = "pwsh"
-            arguments = "-NoProfile -File pwiz_tools/Skyline/tcinspect.ps1"
+            // -AutomatedBuild because tcbuild.bat passes build.bat --automated: the inspection
+            // builds the x64 tree build.bat then builds on top of, and the two only reuse each
+            // other's output when every MSBuild property matches.
+            arguments = "-NoProfile -File pwiz_tools/Skyline/tcinspect.ps1 -AutomatedBuild"
             // tcinspect.ps1 posts its own GitHub commit status rather than handing a verdict
             // to a following step, so the check updates when the inspection finishes instead
             // of when the enclosing step ends - and it stays correct if the inspection ever
@@ -66,44 +76,10 @@ create(DslContext.projectId, BuildType({
             //
             // GITHUB_STATUS_TOKEN and INSPECTION_TARGET_URL reach it from params above.
         }
-        dotnetCustom {
-            name = "Install dotCover"
-            id = "Install_dotCover"
-            enabled = false
-            args = "tool install -g JetBrains.dotCover.CommandLineTools"
-        }
         exec {
             id = "RUNNER_simpleRunner_139"
             path = "pwiz_tools/Skyline/tcbuild.bat"
             arguments = "--i-agree-to-the-vendor-licenses --automated --require-vendor-support"
-        }
-        dotnetRestore {
-            name = "Restore"
-            id = "dotnet_1"
-            enabled = false
-            projects = "pwiz-sharp/Pwiz.sln"
-            args = "/p:IAgreeToVendorLicenses=true"
-            sdk = "8.0"
-        }
-        dotnetMsBuild {
-            id = "dotnet"
-            enabled = false
-            projects = "pwiz-sharp/Pwiz.sln"
-            version = DotnetMsBuildStep.MSBuildVersion.CrossPlatform
-            configuration = "Release"
-            args = "/p:IAgreeToVendorLicenses=true -p:TestTfmsInParallel=false"
-            sdk = "8.0"
-        }
-        dotnetVsTest {
-            name = "Test"
-            id = "Test"
-            enabled = false
-            assemblies = "**/bin/**Tests.dll"
-            version = DotnetVsTestStep.VSTestVersion.CrossPlatform
-            platform = DotnetVsTestStep.Platform.Auto
-            sdk = "8.0"
-            coverage = dotcover {
-            }
         }
         script {
             name = "Set PWIZ_VERSION variable"
@@ -148,7 +124,7 @@ create(DslContext.projectId, BuildType({
             param("GitHubAuthToken", "credentialsJSON:ff89fd87-e72b-4868-b752-4f2beaabe7b2")
             param("buildStatusUpdateState", "success")
         }
-        stepsOrder = arrayListOf("Set_PYTHON_HOME_if_unset_by_agent", "Skyline_Code_Inspection", "Install_dotCover", "RUNNER_simpleRunner_139", "dotnet_1", "dotnet", "Test", "Set_PWIZ_VERSION_variable", "RUNNER_73", "RUNNER_85")
+        stepsOrder = arrayListOf("Set_PYTHON_HOME_if_unset_by_agent", "Skyline_Clean", "Skyline_Code_Inspection", "RUNNER_simpleRunner_139", "Set_PWIZ_VERSION_variable", "RUNNER_73", "RUNNER_85")
     }
 
     failureConditions {
@@ -161,6 +137,19 @@ create(DslContext.projectId, BuildType({
             comparison = BuildFailureOnMetric.MetricComparison.LESS
             compareTo = build {
                 buildRule = lastSuccessful()
+            }
+        }
+    }
+
+    features {
+        pullRequests {
+            id = "BUILD_EXT_555"
+            vcsRootExtId = "ProteoWizard_PwizGithubMasterWithPRs"
+            provider = github {
+                authType = storedToken {
+                    tokenId = "tc_token_id:CID_2c0e75d7e804d2e5c4aea406dff78212:-1:3e6cdadb-90ad-473a-a1c6-7e86c4ad3ea8"
+                }
+                filterAuthorRole = PullRequests.GitHubRoleFilter.MEMBER
             }
         }
     }

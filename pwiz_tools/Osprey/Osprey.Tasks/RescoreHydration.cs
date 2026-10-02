@@ -297,15 +297,6 @@ namespace pwiz.Osprey.Tasks
     public static class RescoreHydration
     {
         /// <summary>
-        /// The one substring every disclosure of the ALL-RUNS reconciliation bundle carries:
-        /// both hydrate twins log it when they start building the bundle, and the guard that
-        /// refuses the bundle names it in the refusal. The regression gate's negative route
-        /// assertion reads this constant's value, so a run that built the bundle, or was refused
-        /// for trying, is visible in its log by construction rather than by wording coincidence.
-        /// </summary>
-        public const string ALL_RUNS_BUNDLE_MARKER = @"ALL-RUNS reconciliation bundle";
-
-        /// <summary>
         /// Overlay the per-file 1st-pass FDR sidecars and parse the per-file
         /// <c>reconciliation.json</c> envelopes onto an already-loaded
         /// <paramref name="perFileEntries"/> list. The per-file element at
@@ -331,14 +322,14 @@ namespace pwiz.Osprey.Tasks
             IList<string> parquetPaths,
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             LibraryStringInterner sequencePool = null,
-            Action<string> logInfo = null)
+            IOspreyLog log = null)
         {
             if (perFileEntries == null) throw new ArgumentNullException(nameof(perFileEntries));
             if (parquetPaths == null) throw new ArgumentNullException(nameof(parquetPaths));
             if (perFileEntries.Count != parquetPaths.Count)
             {
-                throw new InvalidDataException(string.Format(
-                    "HydrateReconciliationOverlay: perFileEntries.Count ({0}) != parquetPaths.Count ({1})",
+                throw new InvalidOperationException(string.Format(
+                    @"HydrateReconciliationOverlay: perFileEntries.Count ({0}) != parquetPaths.Count ({1})",
                     perFileEntries.Count, parquetPaths.Count));
             }
 
@@ -346,19 +337,24 @@ namespace pwiz.Osprey.Tasks
             // shape has at gate scale: every value and every artifact is identical to the
             // bounded twin's, and 3 files make the memory difference free. The regression gate's
             // negative route assertion reads this line, so it must not be a ProgressReporter
-            // heading - that is deferred by LOG_WAIT_SECONDS and never appears on a 3-file
-            // hydrate, and the bounded HydrateCompactedStreaming prints the identical heading
-            // when it IS slow enough. A marker that both routes emit, and neither emits quickly,
-            // cannot tell them apart; this one is emitted here and nowhere else.
+            // heading - the bounded HydrateCompactedStreaming prints the identical heading, so a
+            // marker that both routes emit cannot tell them apart; this one is emitted here and
+            // nowhere else.
             //
             // On the builder rather than at a caller so it covers every door into the all-runs
             // bundle at once - the resume rehydrate, the --input-scores load, and any added
             // later, which is the case a per-caller marker would silently miss. BOTH twins emit
             // it: this overlay, and HydrateCompactedStreaming below, which streams the reading
             // but accumulates the result and is the twin the 446-run incident actually took.
-            logInfo?.Invoke(string.Format(
-                @"Hydrating the {0}: {1} run(s) held at once, O(files x entries).",
-                ALL_RUNS_BUNDLE_MARKER, perFileEntries.Count));
+            if (OspreyOutput.Verbose)
+            {
+                log?.LogInfo(string.Format(
+                    // The regression gate reads [PATH] all-runs-bundle below, not this prose.
+                    OspreyTasksResources.RescoreHydration_HydrateReconciliationOverlay_Loading_the_cross_run_reconciliation_files_for_all__0__runs_into_memory_at_once__memory_,
+                    perFileEntries.Count));
+            }
+            log?.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_ALL_RUNS_BUNDLE, @"built runs={0}",
+                perFileEntries.Count));
 
             var refinedCalibrations = new Dictionary<string, RTCalibration>();
             var perFileGapFill = new Dictionary<string, List<GapFillTarget>>();
@@ -373,7 +369,7 @@ namespace pwiz.Osprey.Tasks
             // HEARTBEAT_SECONDS tick. That bounds the gap only while Report keeps being
             // called - it fires from inside Report - so a single slow file still reopens it.
             using (var hydrateProgress = new ProgressReporter(
-                       @"Hydrating reconciliation bundle", perFileEntries.Count))
+                       OspreyTasksResources.RescoreHydration_HydrateReconciliationOverlay_Loading_cross_run_reconciliation_files, perFileEntries.Count))
             {
                 for (int i = 0; i < perFileEntries.Count; i++)
                 {
@@ -383,12 +379,11 @@ namespace pwiz.Osprey.Tasks
                     string fileName = perFileEntries[i].Key;
                     var stubs = perFileEntries[i].Value;
 
-                    OverlayFirstPassSidecar(syntheticInput, fileName, stubs,
-                        nameof(HydrateReconciliationOverlay), experimentRecords);
+                    OverlayFirstPassSidecar(syntheticInput, fileName, stubs, experimentRecords);
 
                     string reconPath = ReconciliationFile.PathForInput(syntheticInput);
-                    var envelope = LoadEnvelope(reconPath, nameof(HydrateReconciliationOverlay));
-                    consistency.Check(envelope, reconPath, nameof(HydrateReconciliationOverlay));
+                    var envelope = LoadEnvelope(reconPath);
+                    consistency.Check(envelope, reconPath);
 
                     // Build entry_id -> vec_idx map from the loaded stubs so the
                     // planner's entry_id-keyed actions can be rehomed onto
@@ -398,7 +393,7 @@ namespace pwiz.Osprey.Tasks
                         idToIdx[stubs[idx].EntryId] = idx;
 
                     MapPlannedActions(PlanActions(envelope), fileName, reconPath, idToIdx,
-                        reconciliationActions, nameof(HydrateReconciliationOverlay));
+                        reconciliationActions);
                     CaptureCalibrationAndGapFill(envelope, fileName, refinedCalibrations, perFileGapFill,
                         sequencePool);
                 }
@@ -441,7 +436,7 @@ namespace pwiz.Osprey.Tasks
             Action<int, string, List<FdrEntry>> onStubsHydrated,
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             HashSet<uint> retainedBaseIds,
-            Action<string> logInfo = null)
+            IOspreyLog log = null)
         {
             if (parquetPaths == null)
                 throw new ArgumentNullException(nameof(parquetPaths));
@@ -453,7 +448,7 @@ namespace pwiz.Osprey.Tasks
                 throw new ArgumentNullException(nameof(retainedBaseIds));
 
             using (var progress = new ProgressReporter(
-                       @"Folding first-pass diagnostics", parquetPaths.Count))
+                       OspreyTasksResources.RescoreHydration_FoldPreCompactionPerRun_Reading_first_pass_results_for_the_model_diagnostics_report, parquetPaths.Count))
             {
                 for (int i = 0; i < parquetPaths.Count; i++)
                 {
@@ -463,23 +458,22 @@ namespace pwiz.Osprey.Tasks
                     if (string.IsNullOrEmpty(fileName))
                     {
                         throw new InvalidDataException(string.Format(
-                            "FoldPreCompactionPerRun: could not derive file_name from parquet path {0}",
+                            OspreyTasksResources.RescoreHydration_Cannot_tell_which_input_file_the_scores_file__0__belongs_to_from_its_name_,
                             parquetPaths[i]));
                     }
 
                     var stubs = loadStubs(i, fileName, parquetPaths[i]);
                     if (stubs == null)
                     {
-                        throw new InvalidDataException(string.Format(
-                            "FoldPreCompactionPerRun: no stubs loaded for {0}", fileName));
+                        throw new InvalidOperationException(string.Format(
+                            @"FoldPreCompactionPerRun: no stubs loaded for {0}", fileName));
                     }
 
                     // Same overlay, same drift predicate as the bundle-building twin: the
                     // sidecar was written over the whole pre-compaction row set, so a record
                     // whose base_id did not survive legitimately has no entry to land on while
                     // any OTHER miss is real parquet drift.
-                    OverlayFirstPassSidecar(syntheticInput, fileName, stubs,
-                        nameof(FoldPreCompactionPerRun), experimentRecords,
+                    OverlayFirstPassSidecar(syntheticInput, fileName, stubs, experimentRecords,
                         id => !retainedBaseIds.Contains(id & ScoringTaskShared.BASE_ID_MASK));
 
                     onStubsHydrated(i, fileName, stubs);
@@ -495,7 +489,7 @@ namespace pwiz.Osprey.Tasks
                     // set with --memstamp carries uncollected garbage, so it can only show shape.
                     // Reading shape as magnitude is what sent the previous fix after the wrong
                     // structure; this probe is what settles it.
-                    ProfilerHooks.LogManagedHeapAfterGcIfEnabled(logInfo, @"mdiag-fold-live",
+                    ProfilerHooks.LogManagedHeapAfterGcIfEnabled(log, @"mdiag-fold-live",
                         string.Format(@"(post-GC, diagnostics fold, run {0} of {1})",
                             i + 1, parquetPaths.Count));
                 }
@@ -559,7 +553,7 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             HashSet<uint> retainedBaseIds,
             LibraryStringInterner sequencePool = null,
-            Action<string> logInfo = null)
+            IOspreyLog log = null)
         {
             if (perFileEntries == null)
                 throw new ArgumentNullException(nameof(perFileEntries));
@@ -571,12 +565,12 @@ namespace pwiz.Osprey.Tasks
                 throw new ArgumentNullException(nameof(retainedBaseIds));
             if (perFileEntries.Count != 0)
             {
-                throw new InvalidDataException(string.Format(
-                    "HydrateCompactedStreaming: perFileEntries must be empty on entry (got {0})",
+                throw new InvalidOperationException(string.Format(
+                    @"HydrateCompactedStreaming: perFileEntries must be empty on entry (got {0})",
                     perFileEntries.Count));
             }
             if (parquetPaths.Count == 0)
-                throw new InvalidDataException("HydrateCompactedStreaming: parquetPaths is empty");
+                throw new InvalidOperationException(@"HydrateCompactedStreaming: parquetPaths is empty");
 
             int nFiles = parquetPaths.Count;
             var refinedCalibrations = new Dictionary<string, RTCalibration>();
@@ -608,13 +602,18 @@ namespace pwiz.Osprey.Tasks
             // perFileEntries and held together, so this is the all-runs builder as much as the
             // overlay twin is - it is the route the 446-run --task ModelDiagnostics incident
             // took. Same marker as the overlay, for the same negative route assertion, and
-            // emitted here rather than through the ProgressReporter heading above, which is
-            // deferred and never appears on a small cohort.
-            logInfo?.Invoke(string.Format(
-                @"Hydrating the {0}: {1} run(s) held at once, O(files x entries).",
-                ALL_RUNS_BUNDLE_MARKER, nFiles));
+            // emitted here rather than through the ProgressReporter heading above, which the
+            // bounded route prints too.
+            if (OspreyOutput.Verbose)
+            {
+                log?.LogInfo(string.Format(
+                    // The regression gate reads [PATH] all-runs-bundle below, not this prose.
+                    OspreyTasksResources.RescoreHydration_HydrateCompactedStreaming_Loading_the_cross_run_reconciliation_files_for_all__0__runs_into_memory_at_once__memory_,
+                    nFiles));
+            }
+            log?.LogInfo(LogTag.PATH, LogKey.Format(LogKey.ROUTE_ALL_RUNS_BUNDLE, @"built runs={0}", nFiles));
             using (var hydrateProgress = new ProgressReporter(
-                       @"Hydrating reconciliation bundle", nFiles))
+                       OspreyTasksResources.RescoreHydration_HydrateCompactedStreaming_Loading_cross_run_reconciliation_files, nFiles))
             {
                 for (int i = 0; i < nFiles; i++)
                 {
@@ -624,12 +623,12 @@ namespace pwiz.Osprey.Tasks
                     if (string.IsNullOrEmpty(fileName))
                     {
                         throw new InvalidDataException(string.Format(
-                            "HydrateCompactedStreaming: could not derive file_name from parquet path {0}",
+                            OspreyTasksResources.RescoreHydration_Cannot_tell_which_input_file_the_scores_file__0__belongs_to_from_its_name_,
                             parquetPaths[i]));
                     }
                     string reconPath = ReconciliationFile.PathForInput(syntheticInput);
-                    var envelope = LoadEnvelope(reconPath, nameof(HydrateCompactedStreaming));
-                    consistency.Check(envelope, reconPath, nameof(HydrateCompactedStreaming));
+                    var envelope = LoadEnvelope(reconPath);
+                    consistency.Check(envelope, reconPath);
 
                     var planned = PlanActions(envelope);
                     CaptureCalibrationAndGapFill(envelope, fileName, refinedCalibrations, perFileGapFill,
@@ -644,8 +643,8 @@ namespace pwiz.Osprey.Tasks
                     // enforced by the type rather than by discipline.
                     if (stubs == null)
                     {
-                        throw new InvalidDataException(string.Format(
-                            "HydrateCompactedStreaming: no stubs loaded for {0}", fileName));
+                        throw new InvalidOperationException(string.Format(
+                            @"HydrateCompactedStreaming: no stubs loaded for {0}", fileName));
                     }
                     // The 1st-pass sidecar is written over the WHOLE pre-compaction row set,
                     // but these stubs come from the reconciled parquet, which now holds only
@@ -663,8 +662,7 @@ namespace pwiz.Osprey.Tasks
                     // record, every survivor would keep Score = 0.0, and the un-q-gated decoy
                     // zeros would compete in the picked-protein null. Same shape as
                     // FirstPassSurvivorLoader's predicate, which asks the survivor test.
-                    OverlayFirstPassSidecar(syntheticInput, fileName, stubs,
-                        nameof(HydrateCompactedStreaming), experimentRecords,
+                    OverlayFirstPassSidecar(syntheticInput, fileName, stubs, experimentRecords,
                         id => !retainedBaseIds.Contains(id & ScoringTaskShared.BASE_ID_MASK));
 
                     // The caller's one look at this file's full pre-compaction pool: it fills
@@ -684,7 +682,7 @@ namespace pwiz.Osprey.Tasks
                     for (int idx = 0; idx < stubs.Count; idx++)
                         idToIdx[stubs[idx].EntryId] = idx;
                     MapPlannedActions(planned, fileName, reconPath, idToIdx,
-                        reconciliationActions, nameof(HydrateCompactedStreaming));
+                        reconciliationActions);
 
                     perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
                 }
@@ -740,7 +738,7 @@ namespace pwiz.Osprey.Tasks
                 string reconPath = ReconciliationFile.PathForInput(syntheticInput);
                 if (!File.Exists(reconPath))
                     continue;
-                var envelope = LoadEnvelope(reconPath, nameof(ReadGapFillAndCalibrations));
+                var envelope = LoadEnvelope(reconPath);
                 CaptureCalibrationAndGapFill(envelope, fileName, refinedCalibrations, perFileGapFill,
                     sequencePool);
             }
@@ -795,11 +793,12 @@ namespace pwiz.Osprey.Tasks
             if (string.IsNullOrEmpty(fileName))
             {
                 throw new InvalidDataException(string.Format(
-                    "HydrateOneRun: could not derive file_name from parquet path {0}", parquetPath));
+                    OspreyTasksResources.RescoreHydration_Cannot_tell_which_input_file_the_scores_file__0__belongs_to_from_its_name_,
+                    parquetPath));
             }
 
             string reconPath = ReconciliationFile.PathForInput(syntheticInput);
-            var envelope = LoadEnvelope(reconPath, nameof(HydrateOneRun));
+            var envelope = LoadEnvelope(reconPath);
             var planned = PlanActions(envelope);
 
             var refinedCalibrations = new Dictionary<string, RTCalibration>();
@@ -810,8 +809,8 @@ namespace pwiz.Osprey.Tasks
             var stubs = loadStubs(fileName, parquetPath);
             if (stubs == null)
             {
-                throw new InvalidDataException(string.Format(
-                    "HydrateOneRun: no stubs loaded for {0}", fileName));
+                throw new InvalidOperationException(string.Format(
+                    @"HydrateOneRun: no stubs loaded for {0}", fileName));
             }
 
             // Same order as the all-runs sibling: overlay, look, then compact. The
@@ -819,8 +818,7 @@ namespace pwiz.Osprey.Tasks
             // the sidecar was written over the whole pre-compaction row set, and a reconciled
             // parquet holds only survivors, so most records legitimately have no entry to land
             // on while any OTHER miss is real parquet drift.
-            OverlayFirstPassSidecar(syntheticInput, fileName, stubs, nameof(HydrateOneRun),
-                experimentRecords,
+            OverlayFirstPassSidecar(syntheticInput, fileName, stubs, experimentRecords,
                 id => !retainedBaseIds.Contains(id & ScoringTaskShared.BASE_ID_MASK));
 
             var tally = new PreCompactionTally { Stubs = stubs.Count };
@@ -833,7 +831,7 @@ namespace pwiz.Osprey.Tasks
             for (int idx = 0; idx < stubs.Count; idx++)
                 idToIdx[stubs[idx].EntryId] = idx;
             var actions = new Dictionary<(string, int), ReconcileAction>();
-            MapPlannedActions(planned, fileName, reconPath, idToIdx, actions, nameof(HydrateOneRun));
+            MapPlannedActions(planned, fileName, reconPath, idToIdx, actions);
 
             perFileGapFill.TryGetValue(fileName, out var gapFill);
             refinedCalibrations.TryGetValue(fileName, out var refinedCalibration);
@@ -899,8 +897,8 @@ namespace pwiz.Osprey.Tasks
             var stubs = loadStubs(fileName, parquetPath);
             if (stubs == null)
             {
-                throw new InvalidDataException(string.Format(
-                    "RefillOneRunSurvivors: no stubs loaded for {0}", fileName));
+                throw new InvalidOperationException(string.Format(
+                    @"RefillOneRunSurvivors: no stubs loaded for {0}", fileName));
             }
             if (overlayFirstPass)
             {
@@ -909,8 +907,7 @@ namespace pwiz.Osprey.Tasks
                 // the sidecar covers the whole PRE-compaction row set, so the filter has to
                 // name the records that legitimately have no entry to land on and leave every
                 // other miss reportable as the parquet drift it is.
-                OverlayFirstPassSidecar(syntheticInput, fileName, stubs,
-                    nameof(RefillOneRunSurvivors), experimentRecords,
+                OverlayFirstPassSidecar(syntheticInput, fileName, stubs, experimentRecords,
                     id => !retainedBaseIds.Contains(id & ScoringTaskShared.BASE_ID_MASK));
             }
             // Kept even where the reconciled parquet is already the survivor subset and this
@@ -952,7 +949,7 @@ namespace pwiz.Osprey.Tasks
         /// tolerance was first applied to both paths at once.</para>
         /// </summary>
         private static void OverlayFirstPassSidecar(
-            string syntheticInput, string fileName, List<FdrEntry> stubs, string context,
+            string syntheticInput, string fileName, List<FdrEntry> stubs,
             IReadOnlyDictionary<uint, FdrExperimentRecord> experimentRecords,
             Func<uint, bool> expectedAbsent = null)
         {
@@ -964,8 +961,8 @@ namespace pwiz.Osprey.Tasks
                     expectedAbsent, experimentRecords))
             {
                 throw new InvalidDataException(string.Format(
-                    "{0}: failed to overlay .1st-pass.fdr_scores.bin for {1} (expected at {2})",
-                    context, fileName, sidecarPath));
+                    OspreyTasksResources.RescoreHydration_OverlayFirstPassSidecar_Failed_to_read_the_first_pass_intermediate_file_for__0___expected_at__1___,
+                    fileName, sidecarPath));
             }
         }
 
@@ -973,7 +970,7 @@ namespace pwiz.Osprey.Tasks
         /// Read one <c>reconciliation.json</c> envelope, wrapping any reader failure in
         /// <see cref="InvalidDataException"/> with the offending path named.
         /// </summary>
-        private static ReconciliationFile LoadEnvelope(string reconPath, string context)
+        private static ReconciliationFile LoadEnvelope(string reconPath)
         {
             try
             {
@@ -982,7 +979,7 @@ namespace pwiz.Osprey.Tasks
             catch (Exception ex)
             {
                 throw new InvalidDataException(string.Format(
-                    "{0}: failed to read {1}: {2}", context, reconPath, ex.Message), ex);
+                    OspreyTasksResources.RescoreHydration_LoadEnvelope_Failed_to_read__0____1_, reconPath, ex.Message), ex);
             }
         }
         /// <summary>
@@ -1031,16 +1028,15 @@ namespace pwiz.Osprey.Tasks
             string fileName,
             string reconPath,
             Dictionary<uint, int> idToIdx,
-            Dictionary<(string, int), ReconcileAction> reconciliationActions,
-            string context)
+            Dictionary<(string, int), ReconcileAction> reconciliationActions)
         {
             foreach (var action in planned)
             {
                 if (!idToIdx.TryGetValue(action.EntryId, out int vecIdx))
                 {
                     throw new InvalidDataException(string.Format(
-                        "{0}: {1} entry_id {2} in {3} not found in stubs (parquet drift?)",
-                        context, action.Kind, action.EntryId, reconPath));
+                        OspreyTasksResources.RescoreHydration_MapPlannedActions__0__refers_to_precursor_candidate__1___which_is_not_in_the_scores_file_for_that_run_,
+                        reconPath, action.EntryId, OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME)));
                 }
                 reconciliationActions[(fileName, vecIdx)] = action.Action;
             }
@@ -1142,7 +1138,7 @@ namespace pwiz.Osprey.Tasks
             private string LibraryHash { get; set; }
             private string SearchHash { get; set; }
 
-            public void Check(ReconciliationFile envelope, string reconPath, string context)
+            public void Check(ReconciliationFile envelope, string reconPath)
             {
                 // Materialize the join-wide set from the FIRST envelope only, and do not compare
                 // the siblings' copies against it. The comparison used to be this class's main
@@ -1168,11 +1164,9 @@ namespace pwiz.Osprey.Tasks
                          !string.Equals(SearchHash, envelope.SearchHash, StringComparison.Ordinal))
                 {
                     throw new InvalidDataException(string.Format(
-                        "{0}: reconciliation.json {1} was written against a different library or " +
-                        "search configuration than its siblings (planner inconsistency): " +
-                        "library {2} vs {3}, search {4} vs {5}.",
-                        context, reconPath, LibraryHash, envelope.LibraryHash,
-                        SearchHash, envelope.SearchHash));
+                        OspreyTasksResources.RescoreHydration_Check__0__was_written_for_a_different_library_or_search_settings_than_the_other_reconciliation_files_of_this_analysis_,
+                        reconPath, LibraryHash, envelope.LibraryHash, SearchHash, envelope.SearchHash,
+                        OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME)));
                 }
 
                 // ReconciliationFile.Load already rejects any envelope whose format_version
@@ -1188,11 +1182,11 @@ namespace pwiz.Osprey.Tasks
                 else if (!StemsEqual(JoinFileStems, envelopeStems))
                 {
                     throw new InvalidDataException(string.Format(
-                        "{0}: reconciliation.json {1} carries a different file_stems set than " +
-                        "its siblings (planner inconsistency). Expected: [{2}]; got: [{3}]",
-                        context, reconPath,
-                        string.Join(", ", JoinFileStems),
-                        string.Join(", ", envelopeStems)));
+                        OspreyTasksResources.RescoreHydration_Check__0__was_written_for_a_different_set_of_input_files_than_the_other_reconciliation_files_of_this_analysis_,
+                        reconPath,
+                        string.Join(@", ", JoinFileStems),
+                        string.Join(@", ", envelopeStems),
+                        OspreyTaskNames.TaskFilePattern(FirstPassFdrTask.TASK_NAME)));
                 }
             }
         }
@@ -1274,14 +1268,14 @@ namespace pwiz.Osprey.Tasks
             // (so the only way a name ends in ".scores-reconciled" is Stage 6).
             // GetFileNameWithoutExtension of "x.scores-reconciled.parquet" is
             // "x.scores-reconciled"; check the longer token first.
-            const string ReconciledScoresSuffix = ".scores-reconciled";
-            const string ScoresSuffix = ".scores";
-            if (stem.EndsWith(ReconciledScoresSuffix, StringComparison.Ordinal))
-                stem = stem.Substring(0, stem.Length - ReconciledScoresSuffix.Length);
-            else if (stem.EndsWith(ScoresSuffix, StringComparison.Ordinal))
-                stem = stem.Substring(0, stem.Length - ScoresSuffix.Length);
+            string reconciledScoresSuffix = Path.GetFileNameWithoutExtension(ParquetScoreCache.EXT_SCORES_RECONCILED);
+            string scoresSuffix = Path.GetFileNameWithoutExtension(ParquetScoreCache.EXT_SCORES);
+            if (stem.EndsWith(reconciledScoresSuffix, StringComparison.Ordinal))
+                stem = stem.Substring(0, stem.Length - reconciledScoresSuffix.Length);
+            else if (stem.EndsWith(scoresSuffix, StringComparison.Ordinal))
+                stem = stem.Substring(0, stem.Length - scoresSuffix.Length);
             string parent = Path.GetDirectoryName(parquetPath);
-            string filename = stem + ".mzML";
+            string filename = stem + SpectrumFileReader.EXT_MZML;
             return string.IsNullOrEmpty(parent) ? filename : Path.Combine(parent, filename);
         }
     }

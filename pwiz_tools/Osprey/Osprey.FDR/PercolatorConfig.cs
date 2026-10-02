@@ -50,6 +50,18 @@ namespace pwiz.Osprey.FDR
         /// <summary>Grid search C values for SVM cost parameter.</summary>
         public double[] CValues { get; set; }
 
+        /// <summary>
+        /// How close to the best inner-CV passing count a smaller C must come to be chosen
+        /// over it, as a fraction of that count (default: 0.01). The grid search takes the
+        /// most regularized C within this fraction of the best rather than the strict best:
+        /// on Stellar, C = 0.1, 1 and 10 are within 0.7% of each other's inner-CV targets, so
+        /// a strict maximum is decided by noise, and the weakly regularized C = 1 fit it then
+        /// often picks can split weight between correlated spectral features in a way that
+        /// the second pass, which reuses the frozen first-pass model on reconciled peaks,
+        /// handles much worse. 0 restores the strict maximum.
+        /// </summary>
+        public double CSelectionTolerance { get; set; }
+
         /// <summary>Maximum paired entries for SVM cross-validation (default: 300000).</summary>
         public int MaxTrainSize { get; set; }
 
@@ -131,6 +143,7 @@ namespace pwiz.Osprey.FDR
             NFolds = 3;
             Seed = 42;
             CValues = new[] { 0.001, 0.01, 0.1, 1.0, 10.0, 100.0 };
+            CSelectionTolerance = OspreyEnvironment.DEFAULT_SVM_C_SELECTION_TOLERANCE;
             MaxTrainSize = 300000;
             TrainOnly = false;
             UseGradientBoostedTrees = false;
@@ -162,6 +175,7 @@ namespace pwiz.Osprey.FDR
                 NFolds = NFolds,
                 Seed = Seed,
                 CValues = CValues,
+                CSelectionTolerance = CSelectionTolerance,
                 MaxTrainSize = MaxTrainSize,
                 FeatureInfos = FeatureInfos,
                 UseGradientBoostedTrees = UseGradientBoostedTrees,
