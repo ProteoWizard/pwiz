@@ -62,7 +62,7 @@ create(DslContext.projectId, BuildType({
     }
 
     failureConditions {
-        executionTimeoutMin = 180
+        executionTimeoutMin = 320
         failOnMetricChange {
             id = "BUILD_EXT_539"
             metric = BuildFailureOnMetric.MetricType.TEST_COUNT
