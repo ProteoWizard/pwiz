@@ -234,7 +234,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         }
 
         /// <summary>
-        /// Predicts fragment intensities and iRT for every precursor in the input file and writes them
+        /// Predicts fragment intensities and retention times (iRT, or minutes with a fine-tuned RT model)
+        /// for every precursor in the input file and writes them
         /// to <see cref="OutputSpectraLibFilepath"/>.
         /// </summary>
         private void PredictSpectralLibrary(IProgressMonitor progress, ref IProgressStatus progressStatus)
@@ -260,8 +261,10 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     : RtModel.FromPretrained(pretrained, device);
                 double nce = fineTuned?.Nce ?? NCE;
                 string instrument = fineTuned?.Instrument ?? INSTRUMENT;
-                // Library RT is iRT, whichever RT model predicted it
-                var irt = rt.FitIrtCalibration();
+                // A fine-tuned RT model predicts on its training run's gradient, so its library RT is
+                // minutes on that gradient, as CarafeSharp writes it; the pretrained model's is iRT
+                double rtMax = fineTuned?.RtPath != null ? fineTuned.RtMax : 0;
+                var rtScale = rtMax > 0 ? (Slope: rtMax, Intercept: 0.0) : rt.FitIrtCalibration();
                 using var writer = new StreamWriter(OutputSpectraLibFilepath, false, new UTF8Encoding(false));
                 writer.WriteLine(string.Join(TextUtil.SEPARATOR_TSV_STR, SpectralLibraryColumnNames));
                 for (int start = 0; start < precursors.Count; start += PRECURSORS_PER_CHUNK)
@@ -273,7 +276,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     var spectra = ms2.Predict(chunk.Select(p => new Ms2Request(p, nce, instrument)).ToList());
                     var normalizedRts = rt.Predict(chunk.Select(p => p.Peptide).ToList());
                     for (int i = 0; i < chunk.Count; i++)
-                        WriteSpectrum(writer, spectra[i], irt.Slope * normalizedRts[i] + irt.Intercept);
+                        WriteSpectrum(writer, spectra[i], rtScale.Slope * normalizedRts[i] + rtScale.Intercept);
 
                     progress.UpdateProgress(progressStatus = progressStatus
                         .ChangePercentComplete((start + chunk.Count) * 100 / precursors.Count));
@@ -317,15 +320,19 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         {
             public FineTunedModels(CarafeModelFile modelFile, string folder)
             {
-                Ms2Path = modelFile.Ms2Used ? Path.Combine(folder, ModelFiles.MS2_SAFETENSORS) : null;
+                // The MS2 entry is ms2_base.safetensors when the file keeps the model it was fine-tuned further from
+                Ms2Path = modelFile.Ms2Used ? Path.Combine(folder, modelFile.Ms2Entry) : null;
                 RtPath = modelFile.RtUsed ? Path.Combine(folder, ModelFiles.RT_SAFETENSORS) : null;
                 Nce = modelFile.Nce;
+                RtMax = modelFile.RtMax;
                 Instrument = string.IsNullOrEmpty(modelFile.Instrument) ? null : modelFile.Instrument;
             }
 
             public string Ms2Path { get; }
             public string RtPath { get; }
             public double Nce { get; }
+            /// <summary>The training run's gradient length in minutes, which scales the fine-tuned RT model's predictions.</summary>
+            public double RtMax { get; }
             public string Instrument { get; }
         }
 
