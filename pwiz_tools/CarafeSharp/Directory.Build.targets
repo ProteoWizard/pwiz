@@ -39,6 +39,20 @@
           CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
   </ItemGroup>
 
+  <!-- The Chronologer retention-time model, committed in models/chronologer-20220601193755 (its
+       README.md has the provenance), placed where ChronologerFiles.DefaultDirectory looks for it. -->
+  <ItemGroup Condition="'$(UseLibTorch)' == 'true'">
+    <None Include="$(MSBuildThisFileDirectory)models\chronologer-20220601193755\Chronologer_20220601193755.pt"
+          Link="models\chronologer-20220601193755\Chronologer_20220601193755.pt"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory)models\chronologer-20220601193755\Chronologer_20220601193755.preprocessing.json"
+          Link="models\chronologer-20220601193755\Chronologer_20220601193755.preprocessing.json"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory)models\chronologer-20220601193755\LICENSE.txt"
+          Link="models\chronologer-20220601193755\LICENSE.txt"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
+  </ItemGroup>
+
   <!-- Deploy pwiz's patched Parquet.Net (pwiz_tools/Shared/Lib/Parquet/ParquetNet.dll) over the
        NuGet Parquet.dll, exactly as pwiz_tools/Osprey/Directory.Build.targets does; that file
        documents the fork's deltas. A no-op for projects without Parquet.dll in their output. -->

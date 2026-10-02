@@ -41,25 +41,6 @@ namespace pwiz.CarafeSharp.Models
     {
         public const int DEFAULT_BATCH_SIZE = 1024;
 
-        /// <summary>
-        /// The Biognosys iRT kit peptides and their iRT values, which peptdeep predicts to map
-        /// normalized RT onto the iRT scale.
-        /// </summary>
-        private static readonly (string Sequence, double Irt)[] IRT_PEPTIDES =
-        {
-            (@"LGGNEQVTR", -24.92),
-            (@"GAGSSEPVTGLDAK", 0.00),
-            (@"VEATFGVDESNAK", 12.39),
-            (@"YILAGVENSK", 19.79),
-            (@"TPVISGGPYEYR", 28.71),
-            (@"TPVITGAPYEYR", 33.38),
-            (@"DGLDAASYYAPVR", 42.26),
-            (@"ADVTPADFSEWSK", 54.62),
-            (@"GTFIIDPGGVIR", 70.52),
-            (@"GTFIIDPAAVIR", 87.23),
-            (@"LFLQFGAQGSPFLK", 100.00),
-        };
-
         public static RtModel FromPretrained(PretrainedModels pretrained, Device device)
         {
             return Create(StateDict.ReadPthFromZip(pretrained.ZipPath, PretrainedModels.RT_ENTRY), device);
@@ -124,20 +105,7 @@ namespace pwiz.CarafeSharp.Models
         /// </summary>
         public (double Slope, double Intercept) FitIrtCalibration()
         {
-            var peptides = IRT_PEPTIDES.Select(p => new PeptideForm(p.Sequence)).ToArray();
-            double[] predicted = Predict(peptides);
-            double predictedMean = predicted.Average();
-            double irtMean = IRT_PEPTIDES.Average(p => p.Irt);
-            double sxy = 0, sxx = 0;
-            for (int i = 0; i < predicted.Length; i++)
-            {
-                double x = predicted[i] - predictedMean;
-                double y = IRT_PEPTIDES[i].Irt - irtMean;
-                sxy += x * y;
-                sxx += x * x;
-            }
-            double slope = sxy / sxx;
-            return (slope, irtMean - slope * predictedMean);
+            return IrtKit.FitCalibration(peptides => Predict(peptides));
         }
 
         /// <summary>Raw network output <c>[batch]</c> for one same-length batch, on <see cref="Device"/>.</summary>
