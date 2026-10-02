@@ -310,7 +310,7 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(elsewhere, Program.DescribeTrainingExport(node), taskName + @" does not run the export");
                 string err = Program.ValidateArgs(node);
                 Assert.IsTrue(err == null || !err.Contains(OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText),
-                    taskName + @" must accept --training-export: " + err);
+                    taskName + @" must accept " + OspreyCommandArgs.ARG_TRAINING_EXPORT.ArgumentText + @": " + err);
             }
         }
 
@@ -397,8 +397,7 @@ namespace pwiz.Osprey.Test
             config.InputFiles = new List<string> { "a.mzML" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + PerFileRescoreTask.TASK_NAME);
-            StringAssert.Contains(err, OspreyTask.LibraryAndOutputText);
+            Assert.AreEqual(RequiresLibraryAndOutputError(PerFileRescoreTask.TASK_NAME), err);
         }
 
         // - FirstPassFDR (2+ runs in, reconciliation on) --
@@ -432,8 +431,7 @@ namespace pwiz.Osprey.Test
             config.InputFiles = new List<string> { "a.mzML", "b.mzML" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME);
-            StringAssert.Contains(err, OspreyTask.LibraryAndOutputText);
+            Assert.AreEqual(RequiresLibraryAndOutputError(FirstPassFdrTask.TASK_NAME), err);
         }
 
         [TestMethod]
@@ -450,7 +448,8 @@ namespace pwiz.Osprey.Test
             StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME);
             StringAssert.Contains(err, string.Format(
                 OspreyTasksResources.FirstPassFdrTask_ValidateSelection___task__0__requires_at_least_2_input_files____input___but__1__were_given__The_,
-                FirstPassFdrTask.TASK_NAME, 1, PerFileRescoreTask.TASK_NAME));
+                OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME, 1, PerFileRescoreTask.TASK_NAME,
+                OspreyCommandArgs.ARG_INPUT.ArgumentText));
         }
 
         [TestMethod]
@@ -465,7 +464,7 @@ namespace pwiz.Osprey.Test
             Assert.IsNotNull(err);
             StringAssert.Contains(err, string.Format(
                 OspreyTasksResources.FirstPassFdrTask_ValidateSelection___task__0__requires_cross_run_reconciliation__which_the_configuration_turns_off__The_,
-                FirstPassFdrTask.TASK_NAME, PerFileRescoreTask.TASK_NAME));
+                OspreyCommandArgs.ARG_TASK + FirstPassFdrTask.TASK_NAME, PerFileRescoreTask.TASK_NAME));
         }
 
         // - SecondPassFDR (every run in, reading their reconciled parquets) --
@@ -502,8 +501,7 @@ namespace pwiz.Osprey.Test
             config.InputFiles = new List<string> { "a.mzML" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, OspreyCommandArgs.ARG_TASK + SecondPassFdrTask.TASK_NAME);
-            StringAssert.Contains(err, OspreyTask.LibraryAndOutputText);
+            Assert.AreEqual(RequiresLibraryAndOutputError(SecondPassFdrTask.TASK_NAME), err);
         }
 
         // - ModelDiagnostics (the completed run's own command line, replayed) --
@@ -586,7 +584,7 @@ namespace pwiz.Osprey.Test
                 Assert.IsNull(Program.ResolveTask(expected.Name, tasks, out OspreyTask task));
                 Assert.AreSame(expected, task, expected.Name);
                 Assert.AreEqual(1, Array.FindAll(OspreyCommandArgs.ARG_TASK.Values, v => v == expected.Name).Length,
-                    string.Format(@"{0} must appear in the --task values exactly once", expected.Name));
+                    string.Format(@"{0} must appear in the {1} values exactly once", expected.Name, OspreyCommandArgs.ARG_TASK.ArgumentText));
             }
             // The four canonical stages and the two selector-only tasks, by the constants the
             // classes declare, so a task dropped from the list fails here by name.
@@ -704,9 +702,9 @@ namespace pwiz.Osprey.Test
             // same output paths DOES declare outputs when the flag is off, so an empty
             // list here cannot be an artifact of the bare config.
             Assert.AreEqual(0, SecondPassFdrOutputs(ModelDiagnosticsTask.TASK_NAME).Count,
-                "--task ModelDiagnostics must declare no outputs");
+                OspreyCommandArgs.ARG_TASK + ModelDiagnosticsTask.TASK_NAME + " must declare no outputs");
             Assert.AreNotEqual(0, SecondPassFdrOutputs(SecondPassFdrTask.TASK_NAME).Count,
-                "--task SecondPassFDR must still declare its outputs");
+                OspreyCommandArgs.ARG_TASK + SecondPassFdrTask.TASK_NAME + " must still declare its outputs");
         }
 
         private static List<string> SecondPassFdrOutputs(string taskName)
@@ -870,6 +868,9 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(string.Format(format, new object[] { MD_FILE }.Concat(args).ToArray()), err);
         }
 
+        /// <summary>The remedy every metadata refusal names: the command line that scores the file again.</summary>
+        private static string ScoreAgain => OspreyCommandArgs.ARG_TASK + PerFileScoringTask.TASK_NAME;
+
         [TestMethod]
         public void TestParseVersionRoundTrip()
         {
@@ -903,7 +904,7 @@ namespace pwiz.Osprey.Test
             // than silently reuse a stale cache behind an easily-missed warning.
             string err = CheckMd(DAILY_DRIFT_VERSION, VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
-            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_a_different_daily_build_of_Osprey___1___this_is__2____Score_the_file_, err, DAILY_DRIFT_VERSION, CURRENT_VERSION);
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_a_different_daily_build_of_Osprey___1___this_is__2____Score_the_file_, err, DAILY_DRIFT_VERSION, CURRENT_VERSION, ScoreAgain);
         }
 
         [TestMethod]
@@ -911,7 +912,7 @@ namespace pwiz.Osprey.Test
         {
             string err = CheckMd(BRANCH_DRIFT_VERSION, VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
-            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_Osprey__1___which_is_not_compatible_with_this_build___2____Score_the_, err, BRANCH_DRIFT_VERSION, CURRENT_VERSION);
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_Osprey__1___which_is_not_compatible_with_this_build___2____Score_the_, err, BRANCH_DRIFT_VERSION, CURRENT_VERSION, ScoreAgain);
         }
 
         [TestMethod]
@@ -919,7 +920,7 @@ namespace pwiz.Osprey.Test
         {
             string err = CheckMd(ORDINAL_DRIFT_VERSION, VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
-            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_Osprey__1___which_is_not_compatible_with_this_build___2____Score_the_, err, ORDINAL_DRIFT_VERSION, CURRENT_VERSION);
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_Osprey__1___which_is_not_compatible_with_this_build___2____Score_the_, err, ORDINAL_DRIFT_VERSION, CURRENT_VERSION, ScoreAgain);
         }
 
         [TestMethod]
@@ -927,7 +928,7 @@ namespace pwiz.Osprey.Test
         {
             string err = CheckMd(YEAR_DRIFT_VERSION, VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
-            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_Osprey__1___which_is_not_compatible_with_this_build___2____Score_the_, err, YEAR_DRIFT_VERSION, CURRENT_VERSION);
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_by_Osprey__1___which_is_not_compatible_with_this_build___2____Score_the_, err, YEAR_DRIFT_VERSION, CURRENT_VERSION, ScoreAgain);
         }
 
         [TestMethod]
@@ -935,7 +936,14 @@ namespace pwiz.Osprey.Test
         {
             string err = CheckMd(null, VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
-            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_Osprey_build_wrote_it__so_it_cannot_be_reused__Score_the_file_, err);
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_Osprey_build_wrote_it__so_it_cannot_be_reused__Score_the_file_, err, ScoreAgain);
+
+            // A reconciled scores file is rewritten by PerFileRescoring, not PerFileScoring.
+            string reconciled = @"test" + ParquetScoreCache.EXT_SCORES_RECONCILED;
+            Assert.AreEqual(string.Format(
+                    OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_Osprey_build_wrote_it__so_it_cannot_be_reused__Score_the_file_,
+                    reconciled, OspreyArgNames.TaskText(OspreyTaskNames.PER_FILE_RESCORING)),
+                ParquetScoreCache.CheckParquetMetadata(reconciled, null, VALID_SEARCH, VALID_LIB, VALID_SEARCH, VALID_LIB, CURRENT_VERSION));
         }
 
         [TestMethod]
@@ -943,7 +951,7 @@ namespace pwiz.Osprey.Test
         {
             string err = CheckMd(CURRENT_VERSION, null, VALID_LIB);
             Assert.IsNotNull(err);
-            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_the_search_settings_it_was_scored_with__so_it_cannot_be_reused__Score_, err);
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_the_search_settings_it_was_scored_with__so_it_cannot_be_reused__Score_, err, ScoreAgain);
         }
 
         [TestMethod]
@@ -951,7 +959,7 @@ namespace pwiz.Osprey.Test
         {
             string err = CheckMd(CURRENT_VERSION, VALID_SEARCH, null);
             Assert.IsNotNull(err);
-            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_spectral_library_it_was_scored_against__so_it_cannot_be_reused__, err);
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__does_not_record_which_spectral_library_it_was_scored_against__so_it_cannot_be_reused__, err, ScoreAgain);
         }
 
         [TestMethod]
@@ -959,7 +967,7 @@ namespace pwiz.Osprey.Test
         {
             string err = CheckMd(CURRENT_VERSION, "wrong-hash", VALID_LIB);
             Assert.IsNotNull(err);
-            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_with_different_search_settings_than_this_run_uses__Score_the_file_again_, err, "wrong-hash", VALID_SEARCH);
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_with_different_search_settings_than_this_run_uses__Score_the_file_again_, err, "wrong-hash", VALID_SEARCH, ScoreAgain);
         }
 
         [TestMethod]
@@ -967,7 +975,7 @@ namespace pwiz.Osprey.Test
         {
             string err = CheckMd(CURRENT_VERSION, VALID_SEARCH, "wrong-lib");
             Assert.IsNotNull(err);
-            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_against_a_different_spectral_library_than___library_names__Score_the_file_, err, "wrong-lib", VALID_LIB);
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_scored_against_a_different_spectral_library_than___library_names__Score_the_file_, err, "wrong-lib", VALID_LIB, OspreyCommandArgs.ARG_LIBRARY.ArgumentText, ScoreAgain);
         }
 
         [TestMethod]
@@ -977,7 +985,7 @@ namespace pwiz.Osprey.Test
             // compatibility, so refuse to reuse the cache (hard fail).
             string err = CheckMd("garbage", VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
-            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_written_by_an_Osprey_build_this_one_does_not_recognize___1___this_is__2____so_it_, err, "garbage", CURRENT_VERSION);
+            AssertMd(OspreyIOResources.ParquetScoreCache_CheckParquetMetadata__0__was_written_by_an_Osprey_build_this_one_does_not_recognize___1___this_is__2____so_it_, err, "garbage", CURRENT_VERSION, ScoreAgain);
         }
 
         // --- Library-decoy CLI flags ---------------------------------------
@@ -1017,7 +1025,7 @@ namespace pwiz.Osprey.Test
             try
             {
                 Parse(argsNoValue);
-                Assert.Fail(@"Expected ArgumentException for bare --decoy-pairing-manifest.");
+                Assert.Fail(@"Expected ArgumentException for bare " + OspreyCommandArgs.ARG_DECOY_PAIRING_MANIFEST.ArgumentText);
             }
             catch (ArgumentException)
             {
@@ -1073,6 +1081,16 @@ namespace pwiz.Osprey.Test
             };
             args.AddRange(tokens);
             return args.ToArray();
+        }
+
+        /// <summary>
+        /// The error a task gives when <c>--library</c> and <c>--output</c> are both missing, in the
+        /// current UI language.
+        /// </summary>
+        private static string RequiresLibraryAndOutputError(string taskName)
+        {
+            return string.Format(OspreyTasksResources.OspreyTask_RequiresError__0__requires__1__and__2__, OspreyArgNames.TaskText(taskName),
+                OspreyArgNames.Text(OspreyArgNames.LIBRARY), OspreyArgNames.Text(OspreyArgNames.OUTPUT));
         }
     }
 }

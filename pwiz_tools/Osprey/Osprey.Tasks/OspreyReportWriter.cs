@@ -72,8 +72,9 @@ namespace pwiz.Osprey.Tasks
             string stem = ReportStem(config);
             if (stem == null)
             {
-                log?.LogInfo(
-                    OspreyTasksResources.OspreyReportWriter_WriteReports_Skipping_reports__no_output_path___o__to_derive_report_file_names_from_);
+                log?.LogInfo(string.Format(
+                    OspreyTasksResources.OspreyReportWriter_WriteReports_Skipping_reports__no_output_path___o__to_derive_report_file_names_from_,
+                    OspreyArgNames.Text(OspreyArgNames.OUTPUT)));
                 return;
             }
 

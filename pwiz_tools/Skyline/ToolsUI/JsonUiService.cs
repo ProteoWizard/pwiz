@@ -81,7 +81,7 @@ namespace pwiz.Skyline.ToolsUI
         public static void InvokeOnUiThread(Action action)
         {
             Exception caught = null;
-            RequireMainOrStart().Invoke(new Action(() =>
+            RequireMainOrStart().Invoke(() =>
             {
                 try
                 {
@@ -91,7 +91,7 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     caught = ex;
                 }
-            }));
+            });
             if (caught != null)
                 ExceptionUtil.WrapAndThrowException(caught);
         }
@@ -230,13 +230,13 @@ namespace pwiz.Skyline.ToolsUI
         {
             RequireMainWindow();
             TextWriter immediateWriter = null;
-            Program.MainWindow.Invoke(new Action(() =>
+            Program.MainWindow.Invoke(() =>
             {
                 Program.MainWindow.ShowImmediateWindow();
                 Program.MainWindow.ImmediateWindow.WriteFresh(header);
                 Program.MainWindow.ImmediateWindow.WriteLine(string.Empty);
                 immediateWriter = Program.MainWindow.ImmediateWindow.Writer;
-            }));
+            });
             return new TeeTextWriter(capture, immediateWriter);
         }
 
@@ -447,11 +447,11 @@ namespace pwiz.Skyline.ToolsUI
             // Walked once, and kept in the order it came back (Z-order, topmost first -- load-bearing; see ResolveForm).
             var topLevelWindows = StandaloneWindow.GetTopLevelWindows(cancellationToken).ToList();
             FormInfo[] openForms = null;
-            var asyncResult = Program.MainWindow?.BeginInvoke(new Action(() =>
+            var asyncResult = Program.MainWindow?.BeginInvoke(() =>
             {
                 openForms = topLevelWindows.Concat(GetDockedForms(cancellationToken))
                     .Select(form => form.GetFormInfo()).ToArray();
-            }));
+            });
             if (true == asyncResult?.AsyncWaitHandle.WaitOne(MAIN_THREAD_TIMEOUT_MILLIS))
             {
                 Assume.IsNotNull(openForms);

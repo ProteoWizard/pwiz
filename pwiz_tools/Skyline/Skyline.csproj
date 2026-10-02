@@ -194,7 +194,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2592.51" />
   </ItemGroup>
 
@@ -407,8 +406,8 @@
                       ReferenceOutputAssembly="false"
                       Private="false" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('Executables\SkylineProcessRunner\SkylineProcessRunner\bin\$(Configuration)\net10.0-windows')">
-    <Content Include="Executables\SkylineProcessRunner\SkylineProcessRunner\bin\$(Configuration)\net10.0-windows\**\*">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows' And Exists('Executables\SkylineProcessRunner\SkylineProcessRunner\bin\$(BundledProjectPlatformDir)$(Configuration)\net10.0-windows')">
+    <Content Include="Executables\SkylineProcessRunner\SkylineProcessRunner\bin\$(BundledProjectPlatformDir)$(Configuration)\net10.0-windows\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
       <Visible>false</Visible>
@@ -528,10 +527,28 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <Compile Remove="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <!-- Net8Version.g.cs is rewritten only when the values stamped into it change, the way the SDK's
+       own GenerateAssemblyInfo works. WriteCodeFragment writes its file unconditionally, so running
+       it on every build left Net8Version.g.cs newer than Skyline-daily.dll every time, and Skyline -
+       with everything that references it - recompiled on every build, however small the change.
+       The inputs cache below is rewritten only when its content differs, and gates the target. -->
+  <Target Name="_WriteNet8VersionInputsCache"
+          Condition="'$(TargetFramework)' == 'net10.0-windows'"
+          DependsOnTargets="ComputeSkylineVersion">
+    <WriteLinesToFile File="$(IntermediateOutputPath)Net8Version.inputs.cache"
+                      Lines="$(SkylineNumericVersion);$(SkylineInformationalVersion)"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <FileWrites Include="$(IntermediateOutputPath)Net8Version.inputs.cache" />
+    </ItemGroup>
+  </Target>
   <Target Name="StampNet8InformationalVersion"
           Condition="'$(TargetFramework)' == 'net10.0-windows'"
-          DependsOnTargets="ComputeSkylineVersion"
-          BeforeTargets="CoreCompile">
+          DependsOnTargets="ComputeSkylineVersion;_WriteNet8VersionInputsCache"
+          BeforeTargets="CoreCompile"
+          Inputs="$(IntermediateOutputPath)Net8Version.inputs.cache"
+          Outputs="$(IntermediateOutputPath)Net8Version.g.cs">
     <ItemGroup>
       <AssemblyAttribute Include="System.Reflection.AssemblyVersionAttribute">
         <_Parameter1>$(SkylineNumericVersion)</_Parameter1>
@@ -545,10 +562,14 @@
     </ItemGroup>
     <WriteCodeFragment AssemblyAttributes="@(AssemblyAttribute)"
                        Language="C#"
-                       OutputDirectory="$(IntermediateOutputPath)"
-                       OutputFile="Net8Version.g.cs">
-      <Output TaskParameter="OutputFile" ItemName="Compile" />
-    </WriteCodeFragment>
+                       OutputFile="$(IntermediateOutputPath)Net8Version.g.cs" />
+    <!-- Added here rather than from the task's Output: when the target is skipped as up to date,
+         MSBuild still evaluates its item groups but does not run the task, so this is what keeps
+         the existing file in the compile. -->
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)Net8Version.g.cs" />
+      <FileWrites Include="$(IntermediateOutputPath)Net8Version.g.cs" />
+    </ItemGroup>
   </Target>
 
 
