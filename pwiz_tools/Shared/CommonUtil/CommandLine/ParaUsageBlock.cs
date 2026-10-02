@@ -39,7 +39,10 @@ namespace pwiz.Common.CommandLine
 
         public string ToHtmlString()
         {
-            return @"<p>" + Text + @"</p>";
+            // Usage text names placeholders such as <file.mzML>, which a browser would otherwise
+            // parse as tags and drop. Only the characters that matter in element text are encoded,
+            // so quotes and apostrophes stay as written in the committed help pages.
+            return @"<p>" + Text.Replace(@"&", @"&amp;").Replace(@"<", @"&lt;").Replace(@">", @"&gt;") + @"</p>";
         }
     }
 }

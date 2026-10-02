@@ -836,7 +836,8 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(
                 JsonConvert.SerializeObject(batch, settings),
                 JsonConvert.SerializeObject(streamed, settings),
-                @"streaming --model-diagnostics accumulator must byte-match the resident batch build");
+                string.Format(@"streaming {0} accumulator must byte-match the resident batch build",
+                    OspreyCommandArgs.ARG_MODEL_DIAGNOSTICS.ArgumentText));
 
             // Guard against a vacuous all-null match: the fixture must actually populate the cards.
             Assert.IsTrue(batch.HasEntrapment);

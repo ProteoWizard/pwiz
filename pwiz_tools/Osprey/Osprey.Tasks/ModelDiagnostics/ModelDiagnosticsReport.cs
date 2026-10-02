@@ -624,8 +624,9 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             // guard earned its place here rather than in the relay.
             if (config.SelectedTask?.IsPerFileWorker == true)
             {
-                OspreyLog.Write(logWarning, LogTag.MODEL_DIAGNOSTICS,
-                    OspreyTasksResources.ModelDiagnosticsReport_WritePass1Sidecar_Skipped_the_first_pass_model_diagnostics_data__this_task_holds_one_file__and___task_);
+                OspreyLog.Write(logWarning, LogTag.MODEL_DIAGNOSTICS, string.Format(
+                    OspreyTasksResources.ModelDiagnosticsReport_WritePass1Sidecar_Skipped_the_first_pass_model_diagnostics_data__this_task_holds_one_file__and___task_,
+                    OspreyArgNames.TaskText(FirstPassFdrTask.TASK_NAME)));
                 return;
             }
             // Serialized without the pass-2 bundle even if one is attached to the in-memory

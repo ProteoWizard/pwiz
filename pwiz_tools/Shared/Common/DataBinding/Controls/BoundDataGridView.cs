@@ -452,11 +452,7 @@ namespace pwiz.Common.DataBinding.Controls
             }
 
             var column = Columns[e.ColumnIndex];
-            if (column == null)
-            {
-                return;
-            }
-            var propertyDescriptor = reportResults.ItemProperties.FindByName(Columns[e.ColumnIndex].DataPropertyName);
+            var propertyDescriptor = reportResults.ItemProperties.FindByName(column.DataPropertyName);
             if (propertyDescriptor == null)
             {
                 return;

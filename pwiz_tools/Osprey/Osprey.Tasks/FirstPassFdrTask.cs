@@ -74,7 +74,7 @@ namespace pwiz.Osprey.Tasks
         /// This task's name, as a constant so the CLI selector, the validity stamp another
         /// task looks for, and the tests all spell it from here rather than duplicating it.
         /// </summary>
-        public const string TASK_NAME = @"FirstPassFDR";
+        public const string TASK_NAME = OspreyTaskNames.FIRST_PASS_FDR;
 
         public override string Name => TASK_NAME;
 
@@ -101,13 +101,14 @@ namespace pwiz.Osprey.Tasks
             {
                 return string.Format(
                     OspreyTasksResources.FirstPassFdrTask_ValidateSelection___task__0__requires_at_least_2_input_files____input___but__1__were_given__The_,
-                    Name, config.InputFiles.Count, PerFileRescoreTask.TASK_NAME);
+                    OspreyArgNames.TaskText(Name), config.InputFiles.Count, PerFileRescoreTask.TASK_NAME,
+                    OspreyArgNames.Text(OspreyArgNames.INPUT));
             }
             if (!config.Reconciliation.Enabled)
             {
                 return string.Format(
                     OspreyTasksResources.FirstPassFdrTask_ValidateSelection___task__0__requires_cross_run_reconciliation__which_the_configuration_turns_off__The_,
-                    Name, PerFileRescoreTask.TASK_NAME);
+                    OspreyArgNames.TaskText(Name), PerFileRescoreTask.TASK_NAME);
             }
             return null;
         }
@@ -121,7 +122,7 @@ namespace pwiz.Osprey.Tasks
         {
             return string.Format(
                 OspreyTasksResources.FirstPassFdrTask_DescribeOutput_first_pass_intermediate_files_next_to_each_input_s__scores_parquet_file__and_the_analysis_,
-                config.OutputBlib);
+                config.OutputBlib, ParquetScoreCache.EXT_SCORES);
         }
 
         /// <summary>
@@ -332,7 +333,8 @@ namespace pwiz.Osprey.Tasks
                 if (!perFileParquetPaths.TryGetValue(fileName, out string path))
                 {
                     ctx.LogError(string.Format(
-                        OspreyTasksResources.FirstPassFdrTask_FoldDiagnosticsOnly___task_ModelDiagnostics__no__scores_parquet_file_is_known_for__0__, fileName));
+                        OspreyTasksResources.FirstPassFdrTask_FoldDiagnosticsOnly___task_ModelDiagnostics__no__scores_parquet_file_is_known_for__0__, fileName,
+                        OspreyArgNames.TaskText(ModelDiagnosticsTask.TASK_NAME), ParquetScoreCache.EXT_SCORES));
                     ctx.ExitCode = 1;
                     return false;
                 }
@@ -350,7 +352,8 @@ namespace pwiz.Osprey.Tasks
                 // Same policy as every other diagnostics builder: an opt-in report never takes
                 // down a run. Here the run IS the report, so there is nothing left to do.
                 ctx.LogError(string.Format(
-                    OspreyTasksResources.FirstPassFdrTask_FoldDiagnosticsOnly___task_ModelDiagnostics__could_not_prepare_the_report___0_, ex.Message));
+                    OspreyTasksResources.FirstPassFdrTask_FoldDiagnosticsOnly___task_ModelDiagnostics__could_not_prepare_the_report___0_, ex.Message,
+                    OspreyArgNames.TaskText(ModelDiagnosticsTask.TASK_NAME)));
                 ctx.ExitCode = 1;
                 return false;
             }
@@ -1152,7 +1155,7 @@ namespace pwiz.Osprey.Tasks
                 // with files means it did not, and the Stage 6 survivor handoff cannot stream.
                 ctx.LogError(string.Format(
                     OspreyTasksResources.FirstPassFdrTask_TryBuildResumeSurvivorLoader_Cannot_resume__the_first_pass_intermediate_files_for__0__files_are_missing_the_list_of_,
-                    perFileEntries.Count));
+                    perFileEntries.Count, FdrScoresSidecar.FIRST_PASS_FILE_PATTERN));
                 ctx.ExitCode = 1;
                 return false;
             }
@@ -1162,7 +1165,8 @@ namespace pwiz.Osprey.Tasks
                 if (perFileParquetPaths != null && perFileParquetPaths.ContainsKey(kvp.Key))
                     continue;
                 ctx.LogError(string.Format(
-                    OspreyTasksResources.FirstPassFdrTask_TryBuildResumeSurvivorLoader_Cannot_resume__no__scores_parquet_file_is_known_for__0___so_its_first_pass_precursor_, kvp.Key));
+                    OspreyTasksResources.FirstPassFdrTask_TryBuildResumeSurvivorLoader_Cannot_resume__no__scores_parquet_file_is_known_for__0___so_its_first_pass_precursor_, kvp.Key,
+                    ParquetScoreCache.EXT_SCORES));
                 ctx.ExitCode = 1;
                 return false;
             }
@@ -1369,7 +1373,8 @@ namespace pwiz.Osprey.Tasks
                 if (!perFileParquetPaths.TryGetValue(kvp.Key, out var path))
                 {
                     ctx.LogError(string.Format(
-                        OspreyTasksResources.FirstPassFdrTask_LoadOwnReconciliationBundle_Cannot_resume__no__scores_parquet_file_is_known_for__0__, kvp.Key));
+                        OspreyTasksResources.FirstPassFdrTask_LoadOwnReconciliationBundle_Cannot_resume__no__scores_parquet_file_is_known_for__0__, kvp.Key,
+                        ParquetScoreCache.EXT_SCORES));
                     ctx.ExitCode = 1;
                     return null;
                 }
@@ -1520,7 +1525,7 @@ namespace pwiz.Osprey.Tasks
                 {
                     ctx.LogWarning(string.Format(
                         OspreyTasksResources.FirstPassFdrTask_StreamOwnReconciliationBundle___model_diagnostics__could_not_prepare_the_report_on_this_resume__so_no_report_will_be_,
-                        ex.Message));
+                        ex.Message, OspreyArgNames.Text(OspreyArgNames.MODEL_DIAGNOSTICS)));
                 }
             }
             // Hydrate into a LOCAL buffer, then swap the contents in only on success.
@@ -2051,7 +2056,7 @@ namespace pwiz.Osprey.Tasks
             {
                 ctx.LogInfo(string.Format(
                     OspreyTasksResources.FirstPassFdrTask_EmitFdrBenchPass1__0__FDRBench_rows_had_very_long_protein_ID_lists__which_were_truncated_with_______N_more__,
-                    benchResult.TruncatedProtein));
+                    benchResult.TruncatedProtein, FdrBenchInputWriter.TRUNCATION_MARKER_PATTERN));
             }
             ctx.LogInfo(LogTag.STAGE_WALL, @"fdrbench-pass1: {0:F1}s",
                 swFdrBench.Elapsed.TotalSeconds);
@@ -2303,7 +2308,8 @@ namespace pwiz.Osprey.Tasks
                 }
                 ctx.LogInfo(CountText.Format(perFileEntries.Count,
                     OspreyTasksResources.FirstPassFdrTask_PlanStage6___task_FirstPassFDR_complete__first_pass_FDR_and_reconciliation_planning_done_for_1_file__,
-                    OspreyTasksResources.FirstPassFdrTask_PlanStage6___task_FirstPassFDR_complete__first_pass_FDR_and_reconciliation_planning_done_for__0__));
+                    OspreyTasksResources.FirstPassFdrTask_PlanStage6___task_FirstPassFDR_complete__first_pass_FDR_and_reconciliation_planning_done_for__0__,
+                    OspreyArgNames.TaskText(TASK_NAME), PerFileRescoreTask.TASK_NAME));
                 // Success: return true (not false). The stop after Stage 5 is now
                 // a membership fact -- PerFileRescore and SecondPassFDR are excluded
                 // by the membership rule under --task FirstPassFDR (OspreyConfig.Includes), so the driver loop iterates no
@@ -2442,7 +2448,8 @@ namespace pwiz.Osprey.Tasks
             if (string.IsNullOrEmpty(path))
             {
                 ctx.LogWarning(
-                    OspreyTasksResources.FirstPassFdrTask_WriteExperimentSidecar_There_is_no_output__blib_to_name_the_whole_experiment_first_pass_intermediate_file_after__);
+                    string.Format(OspreyTasksResources.FirstPassFdrTask_WriteExperimentSidecar_There_is_no_output__blib_to_name_the_whole_experiment_first_pass_intermediate_file_after__,
+                        LibrarySource.EXT_BLIB));
                 return 1;
             }
             PerFileResumeDriver.ClearStale(path, Name);
@@ -2622,7 +2629,7 @@ namespace pwiz.Osprey.Tasks
         {
             ctx.LogError(string.Format(
                 OspreyTasksResources.FirstPassFdrTask_LogIntermediateWriteFailures___task_FirstPassFDR___0__of__1__first_pass_intermediate_files_could_not_be_written__so_,
-                failures, fileCount));
+                failures, fileCount, OspreyArgNames.TaskText(TASK_NAME)));
         }
 
         /// <summary>
@@ -2659,7 +2666,8 @@ namespace pwiz.Osprey.Tasks
             catch (Exception ex)
             {
                 ctx.LogError(string.Format(
-                    OspreyTasksResources.FirstPassFdrTask_WriteRetainedBaseIdSummary_Failed_to_write_the_analysis_wide_list_of_kept_precursor_candidates__0____1___The_next_, path, ex.Message));
+                    OspreyTasksResources.FirstPassFdrTask_WriteRetainedBaseIdSummary_Failed_to_write_the_analysis_wide_list_of_kept_precursor_candidates__0____1___The_next_, path, ex.Message,
+                    PerFileRescoreTask.TASK_NAME));
                 ctx.ExitCode = 1;
                 return false;
             }
@@ -3690,17 +3698,22 @@ namespace pwiz.Osprey.Tasks
         {
             var refusals = new List<string>();
             if (string.IsNullOrEmpty(experimentPath))
-                refusals.Add(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_there_is_no_output__blib_to_name_the_whole_experiment_first_pass_intermediate_file_after);
+            {
+                refusals.Add(string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_there_is_no_output__blib_to_name_the_whole_experiment_first_pass_intermediate_file_after,
+                    LibrarySource.EXT_BLIB));
+            }
             else if (!PerFileResumeDriver.IsCurrent(experimentPath, Name, validityKey))
                 refusals.Add(string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_the_whole_experiment_first_pass_intermediate_file_is_not_up_to_date___0_, experimentPath));
             modelSidecar = FirstPassModelIO.LoadFromAny(perFileParquetPaths);
             if (modelSidecar == null)
             {
-                refusals.Add(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_no_readable_first_pass_model_file___1st_pass_model_json__was_found_beside_the_inputs___);
+                refusals.Add(string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_no_readable_first_pass_model_file___1st_pass_model_json__was_found_beside_the_inputs___,
+                    FirstPassModelIO.EXT_MODEL, ParquetScoreCache.EXT_SCORES));
             }
             else if (modelSidecar.Model == null)
             {
-                refusals.Add(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_the_first_pass_model_file___1st_pass_model_json__holds_no_model);
+                refusals.Add(string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_the_first_pass_model_file___1st_pass_model_json__holds_no_model,
+                    FirstPassModelIO.EXT_MODEL));
             }
             else
             {
@@ -3714,7 +3727,7 @@ namespace pwiz.Osprey.Tasks
                 if (OspreyEnvironment.Pass2ProteinCompact && modelSidecar.StratumBaseIds == null)
                 {
                     refusals.Add(string.Format(OspreyTasksResources.FirstPassFdrTask_RunFirstPassProjection_no_list_of_precursors_from_proteins_with_2_or_more_first_pass_peptides___0___was_found,
-                        FirstPassModelIO.EXT_STRATUM));
+                        FirstPassModelIO.EXT_STRATUM, ParquetScoreCache.EXT_SCORES));
                 }
             }
             return refusals;
@@ -4329,7 +4342,8 @@ namespace pwiz.Osprey.Tasks
                 FdrScoresSidecar.Pass.FirstPass);
             if (string.IsNullOrEmpty(path))
             {
-                ctx.LogError(OspreyTasksResources.FirstPassFdrTask_LoadFirstPassExperimentRecords_There_is_no_output__blib__so_there_is_no_whole_experiment_first_pass_intermediate_file_to_);
+                ctx.LogError(string.Format(OspreyTasksResources.FirstPassFdrTask_LoadFirstPassExperimentRecords_There_is_no_output__blib__so_there_is_no_whole_experiment_first_pass_intermediate_file_to_,
+                    LibrarySource.EXT_BLIB));
                 ctx.ExitCode = 1;
                 return null;
             }

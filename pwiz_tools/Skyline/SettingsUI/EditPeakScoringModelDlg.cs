@@ -708,7 +708,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 // During teardown the grid's cell value can already be null, so guard the deref.
                 var nameCell = gridPeakCalculators.Rows[_selectedCalculator].Cells[(int)ColumnNames.calculator_name];
-                if (nameCell?.Value != null)
+                if (nameCell.Value != null)
                     graphPane.Title.Text = nameCell.Value.ToString();
             }
 
@@ -1004,7 +1004,10 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         var cell = gridPeakCalculators.Rows[row].Cells[i];
                         cell.Style = warningStyle;
-                        cell.ToolTipText = cell.ToolTipText ?? SettingsUIResources.EditPeakScoringModelDlg_OnDataBindingComplete_Unexpected_Coefficient_Sign;
+                        // ToolTipText reads back as empty, never null, so a ?? here would keep the
+                        // empty string and the warning would never appear
+                        if (string.IsNullOrEmpty(cell.ToolTipText))
+                            cell.ToolTipText = SettingsUIResources.EditPeakScoringModelDlg_OnDataBindingComplete_Unexpected_Coefficient_Sign;
                     }
                 }
                 // Show row in disabled style if the score is not eligible

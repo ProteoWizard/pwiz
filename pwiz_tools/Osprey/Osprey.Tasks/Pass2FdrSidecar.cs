@@ -167,7 +167,8 @@ namespace pwiz.Osprey.Tasks
                 {
                     ctx.LogWarning(string.Format(
                         OspreyTasksResources.Pass2FdrSidecar_ComputeAndPersist___task_SecondPassFDR___0__files_from_the_first_pass_are_not_among_the_inputs_of_this_run_,
-                        unmatchedKeys.Count, string.Join(@", ", unmatchedKeys)));
+                        unmatchedKeys.Count, string.Join(@", ", unmatchedKeys),
+                        OspreyArgNames.TaskText(SecondPassFdrTask.TASK_NAME)));
                 }
 
                 int missingPass2 = 0;
@@ -405,7 +406,8 @@ namespace pwiz.Osprey.Tasks
                 {
                     ctx.LogVerbose(CountText.Format(pass2Tally.Skipped,
                         OspreyTasksResources.Pass2FdrSidecar_ComputeAndPersist_Left_the_second_pass_FDR_scores_file_of_1_file_untouched____task_ModelDiagnostics_writes_,
-                        OspreyTasksResources.Pass2FdrSidecar_ComputeAndPersist_Left_the_second_pass_FDR_scores_files_of__0__files_untouched____task_ModelDiagnostics_));
+                        OspreyTasksResources.Pass2FdrSidecar_ComputeAndPersist_Left_the_second_pass_FDR_scores_files_of__0__files_untouched____task_ModelDiagnostics_,
+                        OspreyArgNames.TaskText(ModelDiagnosticsTask.TASK_NAME)));
                 }
             }
 
@@ -1205,7 +1207,7 @@ namespace pwiz.Osprey.Tasks
                     ctx.LogWarning(CountText.Format(unreadable.Count,
                         OspreyTasksResources.Pass1ScalarSeeder_The_first_pass_intermediate_file___1st_pass_fdr_scores_bin__is_missing_or_unreadable_for_,
                         OspreyTasksResources.Pass1ScalarSeeder_The_first_pass_intermediate_files___1st_pass_fdr_scores_bin__are_missing_or_unreadable_,
-                        string.Join(@", ", unreadable)));
+                        string.Join(@", ", unreadable), FdrScoresSidecar.EXT_FIRST_PASS));
                 }
                 ctx.LogVerbose(CountText.Format(filesRead,
                     OspreyTasksResources.Pass1ScalarSeeder_Restored_the_first_pass_scores_of__1__kept_precursor_candidate_peaks_in_1_file_,
@@ -1603,7 +1605,8 @@ namespace pwiz.Osprey.Tasks
             if (string.IsNullOrEmpty(experimentPath))
             {
                 ctx.LogWarning(
-                    OspreyTasksResources.Pass2FdrSidecar_WritePass2ExperimentSidecar_No_output__blib_was_given__so_the_second_pass_experiment_level_q_values_are_not_saved_to_);
+                    string.Format(OspreyTasksResources.Pass2FdrSidecar_WritePass2ExperimentSidecar_No_output__blib_was_given__so_the_second_pass_experiment_level_q_values_are_not_saved_to_,
+                        LibrarySource.EXT_BLIB));
                 return;
             }
             try
@@ -1683,8 +1686,9 @@ namespace pwiz.Osprey.Tasks
             // Absent inputs: the frozen 1st-pass model, 1st-pass scalar sidecars or protein
             // stratum, or a file whose input path could not be resolved - e.g. a warm rerun or a
             // distributed SecondPassFDR node that did not train pass 1 in-process.
-            throw new InvalidOperationException(
-                OspreyTasksResources.Pass2FdrSidecar_ComputePass2FrozenCompetition_Second_pass_FDR_cannot_run__the_saved_first_pass_model__a_first_pass_intermediate_file__);
+            throw new InvalidOperationException(string.Format(
+                OspreyTasksResources.Pass2FdrSidecar_ComputePass2FrozenCompetition_Second_pass_FDR_cannot_run__the_saved_first_pass_model__a_first_pass_intermediate_file__,
+                OspreyArgNames.Text(OspreyArgNames.TASK)));
         }
 
         /// <summary>
@@ -1870,7 +1874,8 @@ namespace pwiz.Osprey.Tasks
                 if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
                 {
                     ctx.LogWarning(string.Format(
-                        OspreyTasksResources.Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR__no__scores_parquet_file_is_known_for___0____so_its_first_pass_, fileName));
+                        OspreyTasksResources.Pass2FdrSidecar_ComputePass2TransferCompeteFull_Second_pass_FDR__no__scores_parquet_file_is_known_for___0____so_its_first_pass_, fileName,
+                        ParquetScoreCache.EXT_SCORES));
                     return false;
                 }
                 // ONLY WHEN THIS PASS WILL READ THEM. The default path applies the worker's own
@@ -2482,7 +2487,7 @@ namespace pwiz.Osprey.Tasks
                     // an incomplete hand-off.
                     ctx.LogWarning(string.Format(
                         OspreyTasksResources.Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR__no__scores_parquet_file_is_known_for___0____so__1__precursor_candidates_,
-                        kvp.Key, kvp.Value.Count));
+                        kvp.Key, kvp.Value.Count, ParquetScoreCache.EXT_SCORES));
                     continue;
                 }
                 // Read the RECONCILED parquet - Stage 6's rescored features - which it
@@ -3624,7 +3629,7 @@ namespace pwiz.Osprey.Tasks
                 {
                     _ctx.LogWarning(string.Format(
                         OspreyTasksResources.Pass2SidecarWriter_Failed_to_record_that___task__0__completed__1____2___A_resume_will_redo_this_step_,
-                        _taskName, pass2Path, ex.Message));
+                        OspreyArgNames.TaskText(_taskName), pass2Path, ex.Message));
                 }
                 return true;
             }

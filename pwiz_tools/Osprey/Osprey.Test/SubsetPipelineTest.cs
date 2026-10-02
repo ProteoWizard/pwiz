@@ -381,7 +381,7 @@ namespace pwiz.Osprey.Test
             DeleteDiagnosticsProducts(workDir, pass1, pass2);
             log = RunDiagnostics(FirstPassFdrTask.TASK_NAME);
             AssertLogShape(log, new[] { foldPass1 }, noAnalysis);
-            Assert.IsTrue(File.Exists(pass1), @"--task FirstPassFDR folded nothing");
+            Assert.IsTrue(File.Exists(pass1), OspreyArgNames.TaskText(FirstPassFdrTask.TASK_NAME) + @" folded nothing");
             // --task SecondPassFDR with no pass-1 product refuses rather than half-producing.
             DeleteDiagnosticsProducts(workDir, pass1, pass2);
             log = RunDiagnostics(SecondPassFdrTask.TASK_NAME, Program.EXIT_CODE_FAILURE_TO_START);
@@ -391,7 +391,7 @@ namespace pwiz.Osprey.Test
             File.Copy(ReferenceOf(pass1), pass1);
             log = RunDiagnostics(SecondPassFdrTask.TASK_NAME);
             AssertLogShape(log, new[] { foldPass2 }, noAnalysis);
-            Assert.IsTrue(File.Exists(pass2), @"--task SecondPassFDR folded nothing");
+            Assert.IsTrue(File.Exists(pass2), OspreyArgNames.TaskText(SecondPassFdrTask.TASK_NAME) + @" folded nothing");
         }
 
         /// <summary>

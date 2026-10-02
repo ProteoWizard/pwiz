@@ -21,12 +21,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
     <ProjectReference Include="..\ImageComparer.Core\ImageComparer.Core.csproj" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
-    <PackageReference Include="System.Drawing.Common" Version="8.0.10" />
   </ItemGroup>
 
 

@@ -70,7 +70,7 @@ namespace pwiz.Osprey.Tasks
     /// </summary>
     public static class TaskValiditySidecar
     {
-        public const string EXT = @".osprey.task";
+        public const string EXT = OspreyTaskNames.EXT_TASK_FILE;
 
         /// <summary>
         /// Sidecar path for an (output, task) pair:

@@ -172,8 +172,11 @@ namespace pwiz.Common.SystemUtil
         public static readonly string[] ERROR_PREFIXES =
         {
             ERROR_MESSAGE_HINT,
+            // Escapes, so @"..." is not available; the comment above says why these are not resources
+            // ReSharper disable LocalizableElement
             "\u30A8\u30E9\u30FC\uFF1A", // ja
             "\u9519\u8BEF\uFF1A"        // zh-CHS
+            // ReSharper restore LocalizableElement
         };
 
         /// <summary>

@@ -170,11 +170,12 @@ namespace pwiz.Osprey.Test
             foreach (string token in ResidentPaths.KNOWN_UNFIXED)
             {
                 Assert.IsFalse(mdiagErr.Contains(token),
-                    string.Format("--model-diagnostics refusal names token '{0}', so that " +
-                                  "token now admits it", token));
+                    string.Format("{0} refusal names token '{1}', so that " +
+                                  "token now admits it", OspreyCommandArgs.ARG_MODEL_DIAGNOSTICS.ArgumentText, token));
                 Assert.AreEqual(mdiagErr,
                     PerFileScoringTask.ResidentPoolGuardError(mdiag, true, token, true),
-                    string.Format("--model-diagnostics changed disposition under token '{0}'", token));
+                    string.Format("{0} changed disposition under token '{1}'",
+                        OspreyCommandArgs.ARG_MODEL_DIAGNOSTICS.ArgumentText, token));
             }
 
             // A resident path with NO token is refused unconditionally - no value admits it.
@@ -477,7 +478,7 @@ namespace pwiz.Osprey.Test
             // join runs alone. This single row is the whole change.
             var secondPass = TaskConfigs.ForTask(SecondPassFdrTask.TASK_NAME);
             Assert.IsFalse(ScoringTaskShared.Includes<FirstPassFdrTask>(secondPass),
-                "--task SecondPassFDR must not be treated as running first-pass Percolator");
+                OspreyCommandArgs.ARG_TASK + SecondPassFdrTask.TASK_NAME + " must not be treated as running first-pass Percolator");
 
             // And the consequence the loader draws from it: the merge no longer demands the
             // RESIDENT pool, so it can take the file-count-bounded STREAMING hydrate.

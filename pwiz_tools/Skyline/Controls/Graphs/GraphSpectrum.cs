@@ -28,7 +28,6 @@ using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls;
-using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.MSGraph;
 using pwiz.Skyline.Controls.SeqNode;
@@ -1770,10 +1769,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 Settings.Default.ViewLibraryPropertiesSorted = true;
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnFormClosed(FormClosedEventArgs e)
         {
             _updateManager.Dispose();
             _documentContainer.UnlistenUI(OnDocumentUIChanged);
+            base.OnFormClosed(e);
         }
 
         protected override void OnHandleDestroyed(EventArgs e)
