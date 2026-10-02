@@ -68,7 +68,14 @@ namespace pwiz.CarafeSharp.Models
                 using (var unpickler = new CheckpointUnpickler(archive, prefix))
                 using (var pickleStream = pickleEntry.Open())
                 {
-                    root = unpickler.load(pickleStream);
+                    try
+                    {
+                        root = unpickler.load(pickleStream);
+                    }
+                    finally
+                    {
+                        unpickler.DisposeStorages();
+                    }
                 }
                 if (!(root is IDictionary dictionary))
                     throw new InvalidDataException(@"Checkpoint does not hold a state_dict.");
@@ -179,6 +186,14 @@ namespace pwiz.CarafeSharp.Models
                 _storages.Add(key, storage);
                 return storage;
             }
+
+            /// <summary>Disposes the storage tensors, once the state_dict's tensors, which are copies of them, are built.</summary>
+            public void DisposeStorages()
+            {
+                foreach (var storage in _storages.Values)
+                    storage.Dispose();
+                _storages.Clear();
+            }
         }
 
         /// <summary>
@@ -193,7 +208,10 @@ namespace pwiz.CarafeSharp.Models
                 long offset = Convert.ToInt64(args[1]);
                 long[] size = ((object[])args[2]).Select(Convert.ToInt64).ToArray();
                 long[] stride = ((object[])args[3]).Select(Convert.ToInt64).ToArray();
-                return storage.as_strided(size, stride, offset).clone();
+                // The view is disposed here, not left to its finalizer: once clone has its handle nothing references
+                // it, and a collection during the copy would free it under libtorch.
+                using (var view = storage.as_strided(size, stride, offset))
+                    return view.clone();
             }
         }
 

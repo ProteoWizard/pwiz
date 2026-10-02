@@ -122,7 +122,9 @@ namespace pwiz.CarafeSharp.Models
         private static Tensor PlaceColumns(Tensor weight, AcquisitionVocabulary held, AcquisitionVocabulary vocabulary)
         {
             var placed = zeros(weight.shape[0], vocabulary.Width, weight.dtype);
+            // The scope holds the column views, so none is finalized during its copy, and disposes them.
             using (no_grad())
+            using (NewDisposeScope())
             {
                 for (int i = 0; i < held.Activations.Count; i++)
                     placed[TensorIndex.Colon, vocabulary.ActivationColumn(held.Activations[i])].copy_(weight[TensorIndex.Colon, i]);

@@ -124,7 +124,12 @@ namespace pwiz.CarafeSharp.Models
                         throw new InvalidDataException(string.Format(@"Checkpoint tensor {0} has shape [{1}], expected [{2}].",
                             pair.Key, string.Join(@",", value.shape), string.Join(@",", pair.Value.shape)));
                     }
-                    pair.Value.copy_(value.to(pair.Value.dtype, pair.Value.device));
+                    // Disposed after the copy, which keeps it from its finalizer until then; a conversion that changes
+                    // nothing may return the source itself.
+                    var converted = value.to(pair.Value.dtype, pair.Value.device);
+                    pair.Value.copy_(converted);
+                    if (!ReferenceEquals(converted, value))
+                        converted.Dispose();
                 }
             }
         }

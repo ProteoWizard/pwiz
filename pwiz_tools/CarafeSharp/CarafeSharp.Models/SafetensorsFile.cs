@@ -65,18 +65,22 @@ namespace pwiz.CarafeSharp.Models
             // Ordinal key order, so the same weights always produce the same bytes.
             foreach (string name in tensors.Keys.OrderBy(k => k, StringComparer.Ordinal))
             {
-                var tensor = tensors[name].detach().cpu().contiguous();
-                if (!DTYPES.TryGetValue(tensor.dtype, out var dtype))
-                    throw new NotSupportedException(string.Format(@"Tensor {0} has unsupported type {1}.", name, tensor.dtype));
-                byte[] data = tensor.bytes.ToArray();
-                header[name] = new Dictionary<string, object>
+                // The scope holds the intermediate tensors, so none is finalized while libtorch reads it, and disposes them.
+                using (NewDisposeScope())
                 {
-                    { @"dtype", dtype.Name },
-                    { @"shape", tensor.shape },
-                    { @"data_offsets", new[] { offset, offset + data.Length } },
-                };
-                payloads.Add(data);
-                offset += data.Length;
+                    var tensor = tensors[name].detach().cpu().contiguous();
+                    if (!DTYPES.TryGetValue(tensor.dtype, out var dtype))
+                        throw new NotSupportedException(string.Format(@"Tensor {0} has unsupported type {1}.", name, tensor.dtype));
+                    byte[] data = tensor.bytes.ToArray();
+                    header[name] = new Dictionary<string, object>
+                    {
+                        { @"dtype", dtype.Name },
+                        { @"shape", tensor.shape },
+                        { @"data_offsets", new[] { offset, offset + data.Length } },
+                    };
+                    payloads.Add(data);
+                    offset += data.Length;
+                }
             }
             byte[] json = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(header));
             // Pad the header with spaces to an 8-byte boundary, as the reference writer does.
