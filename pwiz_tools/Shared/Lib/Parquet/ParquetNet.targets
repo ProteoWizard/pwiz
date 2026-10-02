@@ -12,22 +12,23 @@
     it in memory and appending it to the file (added public API; written bytes unchanged),
     and a fix to the narrow integer encoders, which were not safe to run concurrently.
 
-    Every consumer references the NuGet package for its dependency graph and runtime
-    assets (ExcludeAssets="compile"), compiles against the patched Parquet.dll here, and
-    this target copies the patched bits over the package's Parquet.dll in the output
-    after the build. The patched dll has the same AssemblyVersion=6.0.0 as the stock
-    6.1.0 NuGet release. (It was checked in as ParquetNet.dll while a native parquet.dll,
-    used by BiblioSpec, owned the plain name in Skyline's output folder. That native DLL
-    is gone.)
+    Every consumer references the NuGet package for its dependencies (ExcludeAssets="compile"),
+    and compiles against and deploys the patched Parquet.dll here. The target below drops
+    the package's own Parquet.dll from the copy-local items, which feed the build output,
+    the publish folder and deps.json. Copying the patched dll over it after the build is
+    not enough, because publishing copies the package's dll straight from the NuGet cache.
+    Excluding the package's runtime assets is not an option either: NuGet applies that to
+    its dependencies too. The patched dll has the same AssemblyVersion=6.0.0 as the stock
+    6.1.0 NuGet release, so nothing warns until a call to the patched API fails.
+    (It was checked in as ParquetNet.dll while a native parquet.dll, used by BiblioSpec,
+    owned the plain name in Skyline's output folder. That native DLL is gone.)
 
     Imported by pwiz_tools/Directory.Build.targets and pwiz-sharp/Directory.Build.targets.
-    Conditioned on Exists() so the target is a no-op for projects that don't
-    transitively reference Parquet.Net.
 
     A project that compiles against Parquet.Net sets ReferenceParquetNet=true and gets the
-    pair below: the package for its dependency graph and runtime assets, and the patched
-    build to compile against. The compile assets do not flow to a referencing project, so
-    every project with Parquet code in it opts in for itself.
+    pair below: the package for its dependency graph, and the patched build to compile
+    against and deploy. The compile assets do not flow to a referencing project, so every
+    project with Parquet code in it opts in for itself.
   -->
   <ItemGroup Condition="'$(ReferenceParquetNet)' == 'true'">
     <PackageReference Include="Parquet.Net" Version="6.1.0" ExcludeAssets="compile" />
@@ -35,19 +36,17 @@
          bind to any Parquet.dll among a project's Content items first, and Skyline deploys
          BlibBuild's output folder as Content. -->
     <Reference Include="$(MSBuildThisFileDirectory)Parquet.dll">
-      <Private>false</Private>
+      <Private>true</Private>
     </Reference>
   </ItemGroup>
 
-  <Target Name="OverridePatchedParquetNet" AfterTargets="Build">
-    <PropertyGroup>
-      <_PatchedParquetSource>$(MSBuildThisFileDirectory)Parquet.dll</_PatchedParquetSource>
-      <_ResolvedParquetTarget>$(OutDir)Parquet.dll</_ResolvedParquetTarget>
-    </PropertyGroup>
-    <Copy SourceFiles="$(_PatchedParquetSource)"
-          DestinationFiles="$(_ResolvedParquetTarget)"
-          SkipUnchangedFiles="true"
-          Condition="Exists('$(_ResolvedParquetTarget)') and Exists('$(_PatchedParquetSource)')" />
+  <!-- Unconditional, because a project that only references a ReferenceParquetNet project
+       still gets the package's Parquet.dll transitively. -->
+  <Target Name="RemoveNuGetParquetNet" AfterTargets="ResolvePackageAssets">
+    <ItemGroup>
+      <RuntimeCopyLocalItems Remove="@(RuntimeCopyLocalItems)"
+                             Condition="'%(RuntimeCopyLocalItems.NuGetPackageId)' == 'Parquet.Net'" />
+    </ItemGroup>
   </Target>
 
 </Project>
