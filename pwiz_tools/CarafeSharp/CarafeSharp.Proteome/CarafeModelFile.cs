@@ -176,6 +176,9 @@ namespace pwiz.CarafeSharp.Proteome
                         model = ReadManifest(path, stream);
                     foreach (var pair in model.Entries)
                     {
+                        // Extract unpacks each entry beside the others: a folder or path in its name would write outside.
+                        if (!IsEntryName(pair.Key))
+                            throw new InvalidDataException(string.Format(@"{0} lists {1}, which is not a file name.", path, pair.Key));
                         var entry = zip.GetEntry(pair.Key) ??
                                     throw new InvalidDataException(string.Format(@"{0} lists {1}, which it does not hold.", path, pair.Key));
                         if (!string.Equals(Sha256(ReadAll(entry)), pair.Value, StringComparison.OrdinalIgnoreCase))
@@ -205,6 +208,13 @@ namespace pwiz.CarafeSharp.Proteome
 
         private CarafeModelFile()
         {
+        }
+
+        /// <summary>A plain file name, which unpacks into the model folder itself: no folder, drive or parent in it.</summary>
+        private static bool IsEntryName(string name)
+        {
+            return name.Length > 0 && name != @"." && name != @".." && name.IndexOfAny(new[] { '/', '\\', ':' }) < 0 &&
+                   name.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()) < 0;
         }
 
         public string Path { get; private set; }

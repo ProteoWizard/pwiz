@@ -25,6 +25,7 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CarafeSharp.Core;
@@ -582,6 +583,40 @@ namespace pwiz.CarafeSharp.Test
                 StringAssert.Contains(Assert.ThrowsException<InvalidDataException>(() => CarafeModelFile.Open(unknownModel)).Message, @"model prosit");
                 string unknownStart = CopyWithManifest(modelFile, @"unknown_start", m => m.Replace(@"""start"": ""pretrained""", @"""start"": ""koina"""));
                 StringAssert.Contains(Assert.ThrowsException<InvalidDataException>(() => CarafeModelFile.Open(unknownStart)).Message, @"start koina");
+                // An entry named outside the folder it would unpack to fails on opening, though its SHA-256 matches,
+                // so -model and -model_info refuse it before anything is written.
+                foreach (string escape in new[] { @"../", @"sub/", Path.GetFullPath(folder).TrimEnd('\\', '/') + Path.DirectorySeparatorChar })
+                {
+                    string escaping = Path.Combine(folder, @"escaping" + CarafeModelFile.EXTENSION);
+                    File.Copy(modelFile, escaping, true);
+                    using (var zip = ZipFile.Open(escaping, ZipArchiveMode.Update))
+                    {
+                        var manifestEntry = zip.GetEntry(CarafeModelFile.MANIFEST_ENTRY);
+                        var rtEntry = zip.GetEntry(ModelFiles.RT_SAFETENSORS);
+                        Assert.IsNotNull(manifestEntry);
+                        Assert.IsNotNull(rtEntry);
+                        string manifest;
+                        using (var reader = new StreamReader(manifestEntry.Open()))
+                            manifest = reader.ReadToEnd();
+                        byte[] rt;
+                        using (var stream = new MemoryStream())
+                        {
+                            using (var source = rtEntry.Open())
+                                source.CopyTo(stream);
+                            rt = stream.ToArray();
+                        }
+                        manifestEntry.Delete();
+                        string key = "\"" + ModelFiles.RT_SAFETENSORS + "\":";
+                        Assert.IsTrue(manifest.Contains(key), manifest);
+                        string escapedName = escape + ModelFiles.RT_SAFETENSORS;
+                        using (var writer = new StreamWriter(zip.CreateEntry(CarafeModelFile.MANIFEST_ENTRY).Open()))
+                            writer.Write(manifest.Replace(key, JsonSerializer.Serialize(escapedName) + ":"));
+                        using (var stream = zip.CreateEntry(escapedName).Open())
+                            stream.Write(rt, 0, rt.Length);
+                    }
+                    StringAssert.Contains(Assert.ThrowsException<InvalidDataException>(() => CarafeModelFile.Open(escaping)).Message,
+                        @"is not a file name", escape);
+                }
                 Assert.ThrowsException<FileNotFoundException>(() => CarafeModelFile.Open(Path.Combine(folder, @"missing" + CarafeModelFile.EXTENSION)));
 
                 // Each model's network, release and start, as written. The format before them is still read; it says none.
