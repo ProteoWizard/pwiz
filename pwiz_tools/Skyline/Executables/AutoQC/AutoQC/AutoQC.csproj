@@ -27,7 +27,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
     <ProjectReference Include="..\..\..\..\Shared\CommonUtil\CommonUtil.csproj" />
     <ProjectReference Include="..\..\..\..\Shared\CommonBaseUI\CommonBaseUI.csproj" />
     <ProjectReference Include="..\..\..\..\Shared\PanoramaClient\PanoramaClient.csproj" />
@@ -44,9 +43,7 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <PackageReference Include="log4net" Version="3.4.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
     <PackageReference Include="System.Management" Version="8.0.0" />
-    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
   </ItemGroup>
 
   <!-- net472: the exact on-disk DLLs + the framework assemblies the SDK doesn't auto-add. -->

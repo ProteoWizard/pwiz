@@ -214,7 +214,7 @@ with MSBuild directly against `Osprey/Osprey.csproj`. The
 assembly name is `Osprey`, so the produced binary is `Osprey`
 (Linux) / `Osprey.exe` (Windows).
 
-## Redistribution (ZIP / .msi)
+## Redistribution (ZIP / Setup.exe)
 
 `package.ps1` produces the canonical redistributable artifacts on top of the
 build above. Each is a self-contained `net8.0` publish (no system .NET needed),
@@ -225,8 +225,8 @@ unzipped side by side -- important for pinning an exact Osprey per HPC analysis.
 # Per-RID ZIPs into dist/ (win-x64 + linux-x64 by default)
 pwsh -File ./package.ps1
 
-# Windows ZIP + the per-machine .msi installer
-pwsh -File ./package.ps1 -Rid win-x64 -Msi
+# Windows ZIP + the Setup.exe installer
+pwsh -File ./package.ps1 -Rid win-x64 -Setup
 ```
 
 Artifacts (gitignored `dist/`):
@@ -234,12 +234,16 @@ Artifacts (gitignored `dist/`):
 ```
 Osprey-<version>-win-x64.zip      Osprey.exe + runtime DLLs + Documentation/ + README + LICENSE
 Osprey-<version>-linux-x64.zip    same layout, Linux self-contained
-Osprey-<version>-win-x64.msi      installs to C:\Program Files\Osprey (per-machine), adds PATH
+Osprey-Setup-<version>.exe        Inno Setup installer: per-user or per-machine, optional PATH entry
 ```
 
 The version is the Skyline scheme `YEAR.ORDINAL.BRANCH.DOY` shared with the
-build via `version.ps1`. The `.msi` is built with the WiX v5 dotnet tool (see
-`Installer/Osprey.wxs`); Authenticode signing is available behind `-Sign`
+build via `version.ps1`. The Setup.exe is built with Inno Setup 6 (see
+`Installer/Setup.iss`; `pwiz-sharp/installer/Ensure-InnoSetup.ps1` fetches the
+compiler when a machine lacks it). Like the ProteoWizard-Sharp installer it asks
+for a per-user or per-machine install and offers a "version-specific" install
+that keeps its own folder and Start Menu shortcuts beside other versions instead
+of being replaced by the next one. Authenticode signing is available behind `-Sign`
 (off by default -- see the script header for the `OSPREY_SIGN*` env vars). CI
 runs this via `tcpackage.bat`. This is the official artifact downstream tools
 (e.g. Carafe) should consume rather than building their own Osprey publish.

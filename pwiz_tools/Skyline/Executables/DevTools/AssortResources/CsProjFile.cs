@@ -4,8 +4,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-#nullable enable
 
+// Also linked into Test.csproj, whose layout implies pwiz.SkylineTest; this is the tool's namespace
+// ReSharper disable once CheckNamespace
 namespace AssortResources
 {
     public class CsProjFile
