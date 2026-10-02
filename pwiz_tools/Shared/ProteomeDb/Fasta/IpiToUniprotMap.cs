@@ -116,7 +116,7 @@ namespace pwiz.ProteomeDatabase.Fasta
             // outer Stream caller continue managing the underlying stream.
             using (var archive = new ZipArchive(streamInfo, ZipArchiveMode.Read))
             {
-                var entry = archive.GetEntry("MapUniprotIPI.txt");
+                var entry = archive.GetEntry(@"MapUniprotIPI.txt");
                 using (var zstream = entry.Open())
                 using (var stream = new StreamReader(zstream))
                 {

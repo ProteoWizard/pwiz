@@ -66,6 +66,14 @@ namespace pwiz.Osprey.IO
     {
         public const string EXT_MZML = @".mzML";
 
+        // Commands and file names the vendor-file errors tell the user to run or open. They go
+        // into the messages as arguments, never inside translated text.
+        private const string CMD_MSCONVERT = @"msconvert";
+        private const string CMD_MSCONVERT_PEAK_PICKING = CMD_MSCONVERT + @" --filter ""peakPicking vendor msLevel=1-""";
+        private const string MSBUILD_VENDOR_LICENSES = @"/p:IAgreeToVendorLicenses=true";
+        private const string OSPREY_SOLUTION = @"Osprey.sln";
+        private const string BJAM_VENDOR_LICENSES = @"bjam pwiz_tools/Osprey//Osprey --i-agree-to-the-vendor-licenses";
+
         private static int _vendorFailuresReported;
 
         /// <summary>
@@ -159,7 +167,8 @@ namespace pwiz.Osprey.IO
                 // SupportsVendorPeakPicking cannot be used to pre-empt this: it answers
                 // "is this a vendor reader" (true for Agilent), not "does it centroid".
                 throw new NotSupportedException(string.Format(
-                    OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Cannot_read___0____ProteoWizard_has_no_vendor_peak_picking_for_this_format__and_Osprey_, path), ex);
+                    OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Cannot_read___0____ProteoWizard_has_no_vendor_peak_picking_for_this_format__and_Osprey_,
+                    path, CMD_MSCONVERT_PEAK_PICKING), ex);
             }
             catch (VendorSupportNotEnabledException ex)
             {
@@ -169,7 +178,8 @@ namespace pwiz.Osprey.IO
                 // project's build flag rather than how Osprey is built. Restate it in
                 // terms the reader can act on, and keep the original as InnerException.
                 throw new NotSupportedException(string.Format(
-                    OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_build_of_Osprey_has_no_vendor_instrument_support__Rebuild_with__p_, path), ex);
+                    OspreyIOResources.SpectrumFileReader_LoadAllSpectra_Cannot_read___0____this_build_of_Osprey_has_no_vendor_instrument_support__Rebuild_with__p_,
+                    path, MSBUILD_VENDOR_LICENSES, OSPREY_SOLUTION, BJAM_VENDOR_LICENSES, CMD_MSCONVERT), ex);
             }
 
             return new SpectrumFileResult(ms2Spectra, ms1Spectra, unsortedCount);

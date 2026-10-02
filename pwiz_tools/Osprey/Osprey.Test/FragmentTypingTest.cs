@@ -210,7 +210,7 @@ namespace pwiz.Osprey.Test
             var warnings = new List<string>();
             check.Report(@"library.tsv", false, info.Add, warnings.Add);
             CollectionAssert.AreEqual(new[] { check.Summary(@"library.tsv") }, warnings);
-            Assert.AreEqual(0, info.Count, @"no examples without --verbose");
+            Assert.AreEqual(0, info.Count, @"no examples without " + OspreyArgNames.Text(OspreyArgNames.VERBOSE));
             warnings.Clear();
             check.Report(@"library.tsv", true, info.Add, warnings.Add);
             CollectionAssert.AreEqual(new[] { example }, info);

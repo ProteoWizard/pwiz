@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public double? GetY(double? x)
         {
-            return x == null ? (double?) null : GetY(x.Value);
+            return x == null ? null : GetY(x.Value);
         }
         public abstract double GetY(double x);
 

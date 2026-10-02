@@ -106,7 +106,12 @@ Every string on this page lives in the owning assembly's `.resx` (see "Localizat
 - The resource holds the whole format string (`{0:N0}` included); `string.Format` stays at
   the call site. A count that can be 1 is two resources, singular and plural (`CountText`).
 - Names a user types or a program reads - `--task` values, argument names, file extensions,
-  column headings - go in as `{0}` arguments, never inside the translated text.
+  column headings - go in as `{0}` arguments, never inside the translated text. Take each from
+  its declaration: `OspreyArgNames.Text` / `TaskText` (or the `OspreyCommandArgs.ARG_*`
+  instance in the executable and the tests), `OspreyTaskNames`, and the `EXT` constants on
+  the class that owns the file. `CodeInspectionTest.TestArgumentTextComesFromArguments` fails
+  on a flag or file extension in an English `.resx` value, and on a string literal anywhere in
+  Osprey that spells out a declared argument.
 - A test asserts the resource, formatted with the same arguments, never the English:
   `Assert.AreEqual(string.Format(OspreyIOResources.X, path), message)`. The suite runs under
   `ja-JP` and `fr-FR` as well as `en-US`.

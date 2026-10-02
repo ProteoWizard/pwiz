@@ -68,7 +68,8 @@ namespace pwiz.Osprey.Tasks
             if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath) ||
                 !File.Exists(parquetPath))
             {
-                invalid.Add(string.Format(OspreyTasksResources.CwtCandidateLoader_ValidateFileInRange__0____scores_parquet_file_missing_, fileName));
+                invalid.Add(string.Format(OspreyTasksResources.CwtCandidateLoader_ValidateFileInRange__0____scores_parquet_file_missing_, fileName,
+                    ParquetScoreCache.EXT_SCORES));
                 return;
             }
 
@@ -83,7 +84,7 @@ namespace pwiz.Osprey.Tasks
             }
             catch (Exception ex)
             {
-                invalid.Add(string.Format(@"{0} (unreadable: {1})", fileName, ex.Message));
+                invalid.Add(string.Format(OspreyTasksResources.CwtCandidateLoader_ValidateFileInRange__0___unreadable___1__, fileName, ex.Message));
                 return;
             }
 
@@ -93,9 +94,11 @@ namespace pwiz.Osprey.Tasks
             // What must hold is that every stub's ParquetIndex is in range.
             uint maxIdx = MaxParquetIndex(entries);
             if (entries.Count > 0 && maxIdx >= effectiveRowCount)
+            {
                 invalid.Add(string.Format(
                     OspreyTasksResources.CwtCandidateLoader_ValidateFileInRange__0___a_CWT_candidate_refers_to_row__1___but_the__scores_parquet_file_has_only__2__rows_,
-                    fileName, maxIdx, effectiveRowCount));
+                    fileName, maxIdx, effectiveRowCount, ParquetScoreCache.EXT_SCORES));
+            }
         }
 
         /// <summary>
@@ -109,7 +112,7 @@ namespace pwiz.Osprey.Tasks
                 return;
             throw new InvalidDataException(string.Format(
                 OspreyTasksResources.CwtCandidateLoader_ThrowIfAnyInvalid_Reconciliation_planning_stopped__CWT_candidates_are_missing_or_damaged_in__0__of__1__,
-                invalid.Count, fileCount, string.Join(@"; ", invalid)));
+                invalid.Count, fileCount, string.Join(@"; ", invalid), ParquetScoreCache.EXT_SCORES));
         }
 
         /// <summary>
@@ -128,8 +131,11 @@ namespace pwiz.Osprey.Tasks
         {
             if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath) ||
                 !File.Exists(parquetPath))
+            {
                 throw new InvalidDataException(string.Format(
-                    OspreyTasksResources.CwtCandidateLoader_LoadOneFile_Reconciliation_planning_stopped__the__scores_parquet_file_for__0__is_missing__Delete_any_, fileName));
+                    OspreyTasksResources.CwtCandidateLoader_LoadOneFile_Reconciliation_planning_stopped__the__scores_parquet_file_for__0__is_missing__Delete_any_, fileName,
+                    ParquetScoreCache.EXT_SCORES));
+            }
 
             try
             {
@@ -143,7 +149,7 @@ namespace pwiz.Osprey.Tasks
             {
                 throw new InvalidDataException(string.Format(
                     OspreyTasksResources.CwtCandidateLoader_LoadOneFile_Reconciliation_planning_stopped__the_CWT_candidates_in__0__could_not_be_read___1___The__,
-                    parquetPath, ex.Message));
+                    parquetPath, ex.Message, ParquetScoreCache.EXT_SCORES));
             }
         }
 

@@ -95,8 +95,9 @@ namespace pwiz.Osprey.Core
                 case EXT_BLIB:
                     return new LibrarySource(LibraryFormat.Blib, path);
                 case EXT_ELIB:
-                    throw new System.NotSupportedException(
-                        OspreyCoreResources.LibrarySource_FromPath_EncyclopeDIA__elib_spectral_libraries_are_no_longer_supported__convert_the_library_to_DIA_);
+                    throw new System.NotSupportedException(string.Format(
+                        OspreyCoreResources.LibrarySource_FromPath_EncyclopeDIA__elib_spectral_libraries_are_no_longer_supported__convert_the_library_to_DIA_,
+                        EXT_ELIB, TextUtil.EXT_TSV, EXT_BLIB));
                 case EXT_SKY:
                     return new LibrarySource(LibraryFormat.SkylineDocument, path);
                 default:

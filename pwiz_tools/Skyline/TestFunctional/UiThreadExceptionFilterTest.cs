@@ -121,7 +121,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var disposedMutex = new Mutex();
             disposedMutex.Dispose();
-            SkylineWindow.BeginInvoke(new Action(disposedMutex.ReleaseMutex));
+            SkylineWindow.BeginInvoke(disposedMutex.ReleaseMutex);
 
             var reported = AssertReportedObjectDisposedException(
                 @"The filter swallowed an ObjectDisposedException thrown by a marshaled callback.");
@@ -148,18 +148,18 @@ namespace pwiz.SkylineTestFunctional
 
             // Park the UI thread inside Control.InvokeMarshaledCallbacks so the next call can be
             // queued behind it and have its wait handle disposed before it is dispatched.
-            target.BeginInvoke(new Action(() =>
+            target.BeginInvoke(() =>
             {
                 callbackEntered.Set();
                 releaseCallback.Wait(PARKED_CALLBACK_RELEASE_MILLIS);
-            }));
+            });
             try
             {
                 AssertEx.IsTrue(callbackEntered.Wait(WAIT_TIME),
                     string.Format(@"The UI thread never entered the blocking marshaled callback on {0}.",
                         target.GetType().Name));
 
-                var stranded = target.BeginInvoke(new Action(() => strandedCallbackRan = true));
+                var stranded = target.BeginInvoke(() => strandedCallbackRan = true);
                 stranded.AsyncWaitHandle.Dispose();
             }
             finally
