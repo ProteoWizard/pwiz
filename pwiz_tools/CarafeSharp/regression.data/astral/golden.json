@@ -1,25 +1,25 @@
 {
   "format": "carafesharp-regression-golden-3",
-  "created": "2026-10-01T12:02:07",
+  "created": "2026-10-02T14:49:51",
   "provenance": {
     "dataset": "Astral",
     "leg": "isolated",
     "torch": "cpu",
     "device_used": "cpu",
-    "commit": "8362e74827e86c26c9f885207b31b7abf076939f",
-    "branch": "Skyline/work/20260923_carafesharp",
+    "commit": "3c3d40a5022e828f816ca7721045c83f7b5834c3",
+    "branch": "Skyline/work/20261001_osprey_missed_vs_diann",
     "os": "Microsoft Windows 10.0.26200",
     "os_platform": "Windows",
-    "processor": "Intel(R) Core(TM) i9-9900K CPU @ 3.60GHz",
-    "logical_processors": 16,
+    "processor": "13th Gen Intel(R) Core(TM) i9-13900H",
+    "logical_processors": 20,
     "omp_num_threads": null,
-    "minutes": 36.34,
+    "minutes": 38.14,
     "subset_rule": "the pair groups whose peptide_pair_index is a multiple of 50, with all their members",
     "subset_groups": 27820,
     "subset_records": 111322,
     "subset_pairing_rows": 111280,
     "export_note": "carafesharp-export-astral-v1: the format 2 export Osprey #4708 (a5d15e6a4f, vendor reader) wrote from the Astral _55 .raw.",
-    "torch_cpu_threads": 8,
+    "torch_cpu_threads": 14,
     "arguments": "-fdr 0.01 -itol 20 -itolu ppm -rf -rf_rt_win auto -cor 0.8 -min_mz 200 -n_ion_min 2 -c_ion_min 2 -mode general -device cpu -enzyme NoCut -miss_c 1 -fixMod 1 -varMod 0 -maxVar 1 -clip_n_m -minLength 7 -maxLength 35 -min_pep_mz 400 -max_pep_mz 900 -min_pep_charge 2 -max_pep_charge 3 -lf_frag_mz_min 200 -lf_frag_mz_max 1960 -lf_top_n_frag 20 -lf_min_n_frag 2 -lf_frag_n_min 2 -lf_type blib -se Osprey -decoy_prefix decoy_ -nm -nf 4 -min_n 4 -valid -na 0 -fast"
   },
   "inputs": {
@@ -45,28 +45,28 @@
     }
   },
   "metrics": {
-    "ms2.finetuned.cos": 0.9868488907814026,
-    "ms2.finetuned.pcc": 0.9860745668411255,
-    "ms2.finetuned.sa": 0.8966398239135742,
-    "ms2.finetuned.spc": 0.8929774463176727,
+    "ms2.finetuned.cos": 0.9867832362651825,
+    "ms2.finetuned.pcc": 0.986162394285202,
+    "ms2.finetuned.sa": 0.8963815569877625,
+    "ms2.finetuned.spc": 0.8919209241867065,
     "ms2.pretrained.cos": 0.9771113991737366,
     "ms2.pretrained.pcc": 0.9753012359142303,
     "ms2.pretrained.sa": 0.8635301887989044,
     "ms2.pretrained.spc": 0.8603035509586334,
-    "rt.finetuned.mae_normalized": 0.004789706964598739,
-    "rt.finetuned.r2": 0.9972410718303474,
-    "rt.pretrained.mae_normalized": 0.05540747333297674,
-    "rt.pretrained.r2": 0.8594663777776945
+    "rt.finetuned.mae_normalized": 0.0038870245114502877,
+    "rt.finetuned.r2": 0.9970986728217768,
+    "rt.pretrained.mae_normalized": 0.00674399404158639,
+    "rt.pretrained.r2": 0.9943084620549594
   },
   "use_finetuned_for_prediction": true,
   "library": {
-    "precursors": 123389,
-    "peaks": 1703785,
-    "decoy_pair_rows": 123380,
-    "decoy_pairs": 61690,
-    "entrapment_pairs": 30836,
-    "targets": 61679,
-    "paired_targets": 61675,
+    "precursors": 123383,
+    "peaks": 1701983,
+    "decoy_pair_rows": 123374,
+    "decoy_pairs": 61687,
+    "entrapment_pairs": 30834,
+    "targets": 61676,
+    "paired_targets": 61672,
     "unpaired_targets_decoy_not_written": 0
   },
   "sample": {
@@ -103,10 +103,10 @@
       "rt_train_data.tsv": "46a1fc617cf4c7c7ad16c44f31a6f39f0bed0987be35384c87582e9f44a0c2ca"
     },
     "models": {
-      "ms2.safetensors": "65ca082403049a38047f1d09624f18ecc767421e8a9713e289fd8e9f5f590d3f",
-      "rt.safetensors": "f76c7dc58f6c2ddbca6cdda52a93a58d00ab3315e336ec8a348459ea9db14a79"
+      "ms2.safetensors": "6ae5bfde78de04c6f19f380ae7c5d4bb6d4c2a86e418d571872a817cfec313a0",
+      "rt.safetensors": "872061bf00ac847096ebbb91c530a46817a073388e426830f729d29557333f7b"
     },
-    "library_content_sha256": "01cec75571ced21d26d973a57c7f1e204f761700d54e1f3958a91597e8ccc6f5",
+    "library_content_sha256": "3da0b8b33e0d0f360c9f92d975ea40bc74126eef59575273902e9a9a53fb2009",
     "library_content": "SHA-256 of one line per precursor, sorted: Skyline modified sequence, charge, precursor m/z, RT rounded to 1e-6, then the fragments in m/z order as m/z:intensity, each rounded to 1e-6"
   }
 }
