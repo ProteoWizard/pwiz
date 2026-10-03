@@ -311,12 +311,20 @@ namespace pwiz.Skyline.Model.Tools
                 // Handle info.properties
                 var toolInfo = GetToolInfo(toolInfDir, retval);
 
+                // Reinstalling or updating a tool deletes the installed copy, which for a tool
+                // installed for all users belongs to the owner of the installation folder.
+                var toolsToBeOverwritten = GetToolsToBeOverwritten(toolInfo.PackageIdentifier);
+                if (toolsToBeOverwritten.Any(tool => tool.IsReadOnly))
+                {
+                    throw new ToolExecutionException(string.Format(
+                        ToolsResources.ToolInstaller_UnpackZipTool_The_tool__0__was_installed_for_all_users_of_this_Skyline_installation__Only_the_owner_of_the_installation_folder_can_reinstall_or_update_it_,
+                        toolInfo.PackageName));
+                }
+
                 if (!HandleAnnotations(unpackSupport.ShouldOverwriteAnnotations, toolInfDir))
                     return null;
 
                 HandleLegacyQuaSAR(toolInfo);
-
-                var toolsToBeOverwritten = GetToolsToBeOverwritten(toolInfo.PackageIdentifier);
 
                 List<ReportOrViewSpec> newReports;
                 var existingReports = FindReportConflicts(toolInfDir, tempToolPath, out newReports);
