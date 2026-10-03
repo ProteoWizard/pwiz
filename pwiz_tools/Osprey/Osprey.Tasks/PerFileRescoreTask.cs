@@ -1676,10 +1676,9 @@ namespace pwiz.Osprey.Tasks
             // applied to the resident list, so the window fan-out is unchanged.
             var isolationWindows = spectraIndex.IsolationWindows.ToList();
 
-            // Stream each isolation window's calibrated MS2 from the index on demand. ONE
-            // provider is shared across the subset re-score + both gap-fill passes: it holds
-            // no per-window state (each GetCalibratedWindow is a fresh decode + in-place
-            // calibration), so re-scoring the file three times just re-reads windows -- no
+            // Stream each isolation window's calibrated MS2 from the index on demand. The
+            // providers hold no per-window state (each GetCalibratedWindow is a fresh decode +
+            // in-place calibration), so re-scoring the file three times just re-reads windows -- no
             // resident ~6 GB list, and none of the per-pass whole-list calibrated COPIES the
             // resident provider built. (That repeated-scoring is exactly why the resident path
             // had to pass consumeInputMzs:false; streaming has no such constraint.)
@@ -1690,7 +1689,7 @@ namespace pwiz.Osprey.Tasks
             // SEA-AD run's windows from ~85 MB/s to the disk's sequential rate. The passes after it
             // find the windows warm, where parallel LoadWindow is faster.
             IWindowSpectraProvider coldProvider =
-                new StreamingWindowSpectraProvider(spectraIndex, ms2Cal, serialBlockReads: true);
+                new StreamingWindowSpectraProvider(spectraIndex, ms2Cal, serialBlockReads: OspreyEnvironment.SerialWindowReads);
             IWindowSpectraProvider spectraProvider = subsetLibrary.Count > 0
                 ? new StreamingWindowSpectraProvider(spectraIndex, ms2Cal)
                 : coldProvider;

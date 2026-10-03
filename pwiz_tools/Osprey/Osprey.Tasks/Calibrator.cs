@@ -1569,6 +1569,7 @@ namespace pwiz.Osprey.Tasks
             // "Running RT calibration..." and the pass summary -- ~40 s per file, ~50 min
             // across an 82-file run.
             int windowsDone = 0;
+            bool serialReads = OspreyEnvironment.SerialWindowReads;
             using (var progress = new ProgressReporter(
                        OspreyTasksResources.Calibrator_private_Scoring_calibration_windows, entriesByWindow.Count, @"  "))
             {
@@ -1581,10 +1582,12 @@ namespace pwiz.Osprey.Tasks
                     {
                         // Load, RT-sort, and preprocess this window's spectra so the XCorr cache
                         // aligns with the RT-sorted spectra order used for scoring. One block read
-                        // at a time: the first calibration pass is the first read of a cache that
-                        // already existed, which on a spinning disk parallel LoadWindow calls
+                        // at a time: the first calibration pass is often the first read of a cache
+                        // that already existed, which on a spinning disk parallel LoadWindow calls
                         // make seek between threads. Later passes find it warm and pay ~0.5 s.
-                        var windowSpectra = windowIndex.LoadWindowSerialRead(kvp.Key);
+                        var windowSpectra = serialReads
+                            ? windowIndex.LoadWindowSerialRead(kvp.Key)
+                            : windowIndex.LoadWindow(kvp.Key);
                         windowSpectra.Sort((a, b) => a.RetentionTime.CompareTo(b.RetentionTime)); // Array.Sort OK: calibration RT-only sort tie behaviour
                         // s_calXcorrScorer is shared across the window-parallel bodies here, so
                         // PreprocessSpectrumForXcorrF32 MUST remain stateless (a pure function of its
