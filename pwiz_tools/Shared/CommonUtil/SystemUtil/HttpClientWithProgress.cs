@@ -1,6 +1,7 @@
 /*
  * Original author: brendanx .at. uw.edu
  * AI assistance: Cursor (Claude Sonnet 4) <cursor .at. anysphere.co>
+ *                Claude Code (Claude Opus 5.5) <noreply .at. anthropic.com>
  *
  * Copyright 2025 University of Washington - Seattle, WA
  * 
@@ -25,6 +26,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -1193,18 +1195,45 @@ namespace pwiz.Common.SystemUtil
                 return new NetworkRequestException(message, statusCodeValue, uri, httpEx);
             }
                 
-            // DNS resolution failure (e.g., 'The remote name could not be resolved')
-            // This is real and has been seen in a debugger. The InnerException is a WebException
-            // HttpClient appears to use HttpWebRequest, but wrap its exceptions in HttpRequestException
-            if (httpEx.InnerException is WebException { Status: WebExceptionStatus.NameResolutionFailure })
+            // DNS resolution failure (e.g., 'No such host is known')
+            if (IsDnsResolutionFailure(httpEx))
+            {
                 return new NetworkRequestException(
                     string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_resolve_host__0___Please_check_your_DNS_settings_or_VPN_proxy_, server), 
                     NetworkFailureType.DnsResolution, uri, httpEx);
+            }
 
             // Generic connection failure (no HTTP response received)
             return new NetworkRequestException(
                 string.Format(MessageResources.HttpClientWithProgress_MapHttpException_Failed_to_connect_to__0___Please_check_your_network_connection__VPN_proxy__or_firewall_, server), 
                 NetworkFailureType.ConnectionFailed, uri, httpEx);
+        }
+
+        /// <summary>
+        /// Whether the request failed because a host name could not be resolved, as opposed to
+        /// resolving and then failing to connect. The two are reported differently to the user.
+        /// Not every resolver failure is reported as <see cref="HttpRequestError.NameResolutionError"/>:
+        /// a name that exists but has no address record arrives as
+        /// <see cref="HttpRequestError.ConnectionError"/> with an inner <see cref="SocketException"/>
+        /// of <see cref="SocketError.NoData"/>, so the inner socket error is checked as well.
+        /// </summary>
+        private static bool IsDnsResolutionFailure(HttpRequestException httpEx)
+        {
+            if (httpEx.HttpRequestError == HttpRequestError.NameResolutionError)
+                return true;
+            var socketEx = httpEx.InnerException as SocketException;
+            if (socketEx == null)
+                return false;
+            switch (socketEx.SocketErrorCode)
+            {
+                case SocketError.HostNotFound:
+                case SocketError.NoData:
+                case SocketError.NoRecovery:
+                case SocketError.TryAgain:
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         public static bool IsNetworkReallyAvailable()
@@ -1264,8 +1293,9 @@ namespace pwiz.Common.SystemUtil
             // This prevents background threads from blocking process shutdown
             AppDomain.CurrentDomain.ProcessExit += (sender, e) => DisposeInstance();
 
-            // Use HttpClientHandler (SocketsHttpHandler is not available in .NET Framework 4.7.2)
-            // Note: Connection pooling and DNS refresh are handled automatically by HttpClient
+            // On .NET, HttpClientHandler delegates to SocketsHttpHandler, which pools connections.
+            // PooledConnectionLifetime is not set, so a connection kept busy keeps the address it
+            // first resolved; only idle connections are dropped and re-resolved.
             _handler = new HttpClientHandler
             {
                 UseProxy = true,

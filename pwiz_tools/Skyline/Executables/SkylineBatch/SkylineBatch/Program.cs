@@ -25,7 +25,6 @@ using System.Configuration;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Net;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
@@ -99,8 +98,6 @@ namespace SkylineBatch
                     return;
                 }
 
-                InitializeSecurityProtocol();
-                
                 // Initialize log4net -- global application logging
                 XmlConfigurator.Configure();
 
@@ -279,12 +276,6 @@ namespace SkylineBatch
         public static Icon Icon()
         {
             return System.Drawing.Icon.ExtractAssociatedIcon(Application.ExecutablePath);
-        }
-
-        private static void InitializeSecurityProtocol()
-        {
-            // Make sure we can negotiate with HTTPS servers that demand TLS 1.2 (default in dotNet 4.6, but has to be turned on in 4.5)
-            ServicePointManager.SecurityProtocol |= (SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12);  
         }
 
         public static void AddTestException(Exception exception)
