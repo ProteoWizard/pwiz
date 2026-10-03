@@ -45,7 +45,6 @@ a { color: #1565c0; }
 <tr><td><nobr>--experiment-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td>実験レベルFDR閾値（デフォルト：0.01）</td></tr>
 <tr><td><nobr>--reconciliation-compaction-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td>ラン間整合と第2パスのために第1パスのペプチドを保持する、ペプチドQ値閾値（デフォルト：0.01 = <nobr>--run-fdr</nobr>。整合のプールを広げるには、例えば0.05に緩めます）</td></tr>
 <tr><td><nobr>--protein-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td>タンパク質レベルFDR閾値（オプション）</td></tr>
-<tr><td><nobr>--fdr-method</nobr> &lt;percolator | gbdt | simple&gt;</td><td>FDR手法（デフォルト：percolator）</td></tr>
 <tr><td><nobr>--fdr-level</nobr> &lt;precursor | peptide | both&gt;</td><td>FDRレベル（デフォルト：precursor）</td></tr>
 <tr><td><nobr>--shared-peptides</nobr> &lt;all | razor | unique&gt;</td><td>共有ペプチドの処理（デフォルト：all）</td></tr>
 <tr><td><nobr>--fdrbench</nobr>&nbsp;&lt;input.tsv&gt;</td><td>FDRBench互換の入力TSVをこのパスに書き込みます。<nobr>レベルは--fdr-levelから取得します</nobr>（peptide。precursorとbothはプリカーサーレベルを出力）。報告されたすべてのターゲット（つまり実際に出力に書き込まれたペプチド）をQ値に関係なく含み、生のSVM判別値を「score」として出力するため、FDRBenchはOspreyの閾値で切り捨てられることなく、エントラップメントのカウントによって真のFDRを計算できます。</td></tr>

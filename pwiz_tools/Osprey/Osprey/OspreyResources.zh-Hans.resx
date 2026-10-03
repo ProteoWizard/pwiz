@@ -288,10 +288,6 @@
     <value>未知的 FDR 水平“{0}”，默认使用 {1}</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="OspreyCommandArgs_Unknown_FDR_method___0____defaulting_to__1_" xml:space="preserve">
-    <value>未知的 FDR 方法“{0}”，默认使用 {1}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="OspreyCommandArgs_Unknown_fragment_unit___0____defaulting_to__1_" xml:space="preserve">
     <value>未知的碎片单位“{0}”，默认使用 {1}</value>
     <comment>Needs Review:New resource</comment>

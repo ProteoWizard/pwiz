@@ -388,9 +388,6 @@
   <data name="FirstPassFdrTask_RehydrateForPerRunRescore_Read_missing_peak_targets_and_refined_calibrations_from__0__cross_run_reconciliation_" xml:space="preserve">
     <value>Read missing-peak targets and refined calibrations from {0:N0} cross-run reconciliation files in {1:F1}s</value>
   </data>
-  <data name="FirstPassFdrTask_RehydrateForPerRunRescore_This_analysis_cannot_resume_from_its_completed_first_pass_with__0_" xml:space="preserve">
-    <value>This analysis cannot resume from its completed first pass with {0}. Delete this analysis's {1} files and run again to repeat the first pass.</value>
-  </data>
   <data name="FirstPassFdrTask_Rehydrate_Using_the_first_pass_q_values_saved_in_the_intermediate_files__first_pass_Percolator_is_" xml:space="preserve">
     <value>Using the first-pass q-values saved in the intermediate files; first-pass Percolator is not run again.</value>
   </data>
@@ -399,9 +396,6 @@
   </data>
   <data name="FirstPassFdrTask_ReloadFirstPassSurvivors_Reloading_the_kept_precursor_candidates_from__0__files" xml:space="preserve">
     <value>Reloading the kept precursor candidates from {0:N0} files</value>
-  </data>
-  <data name="FirstPassFdrTask_RunFdr_FDR_method__0__not_yet_supported__falling_back_to_simple" xml:space="preserve">
-    <value>FDR method {0} not yet supported, falling back to simple</value>
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_Cannot_write_the_first_pass_intermediate_file_for___0____no_location_could_be_derived_" xml:space="preserve">
     <value>Cannot write the first-pass intermediate file for '{0}': no location could be derived from its input path.</value>
@@ -477,9 +471,6 @@
   </data>
   <data name="FirstPassFdrTask_Run_Model_diagnostics__the_first_pass_is_already_complete__so_its_report_is_built_from_the_" xml:space="preserve">
     <value>Model diagnostics: the first pass is already complete, so its report is built from the first-pass intermediate files. Nothing is re-run.</value>
-  </data>
-  <data name="FirstPassFdrTask_Run_Running__0__FDR_control_on_the_scored_precursor_candidates___" xml:space="preserve">
-    <value>Running {0} FDR control on the scored precursor candidates...</value>
   </data>
   <data name="FirstPassFdrTask_StreamFirstPassFileScores_Cannot_locate_the_first_pass_intermediate_files_for___0___" xml:space="preserve">
     <value>Cannot locate the first-pass intermediate files for '{0}'.</value>
@@ -570,9 +561,6 @@
   </data>
   <data name="ModelDiagnosticsReport_FinalizePass2_Added_the_second_pass_results_to_the_model_diagnostics_report___0_" xml:space="preserve">
     <value>Added the second-pass results to the model diagnostics report: {0}</value>
-  </data>
-  <data name="ModelDiagnosticsReport_LogModelNotRetrained_The_first_pass_model_was_not_retrained_on_this_run__it_resumed_from_saved_first_pass_" xml:space="preserve">
-    <value>The first-pass model was not retrained on this run (it resumed from saved first-pass results), so the Model tab has no feature table or per-feature distributions. Delete the {0} intermediate files to retrain it.</value>
   </data>
   <data name="ModelDiagnosticsReport_ReadPass1ForEnrichment_The_saved_first_pass_diagnostics_results_were_not_found__so_the_report_keeps_its_first_" xml:space="preserve">
     <value>The saved first-pass diagnostics results were not found, so the report keeps its first-pass content and the second-pass results are not added.</value>
@@ -711,9 +699,6 @@
   </data>
   <data name="Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR__the_re_scored_intermediate_file___3___does_not_match_the_first_pass_" xml:space="preserve">
     <value>Second-pass FDR: the re-scored intermediate file '{3}' does not match the first-pass intermediate file for '{0}' ({1:N0} rows, {2:N0} expected); {4:N0} precursor candidates will be scored without features.</value>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR_is_not_available_for_the__0__FDR_method__protein_FDR_will_use_first_pass_" xml:space="preserve">
-    <value>Second-pass FDR is not available for the {0} FDR method; protein FDR will use first-pass scores.</value>
   </data>
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Applied_the_recomputed_q_values_to__0__precursor_candidate_peaks___1__scored_with_the_first_pass_model_" xml:space="preserve">
     <value>Applied the recomputed q-values to {0:N0} precursor candidate peaks ({1:N0} scored with the first-pass model) in {2:F1}s.</value>
@@ -1179,9 +1164,6 @@
   </data>
   <data name="PerFileScoringTask_LogScoringSummary_Loaded__0__first_pass_precursor_candidate_peaks_from__1__files_" xml:space="preserve">
     <value>Loaded {0:N0} first-pass precursor candidate peaks from {1:N0} files.</value>
-  </data>
-  <data name="PerFileScoringTask_PreCompactionPoolReason_An_FDR_method_other_than_Percolator" xml:space="preserve">
-    <value>An FDR method other than Percolator</value>
   </data>
   <data name="PerFileScoringTask_PreCompactionPoolReason_Resuming_without_cross_run_reconciliation_files" xml:space="preserve">
     <value>Resuming without cross-run reconciliation files</value>

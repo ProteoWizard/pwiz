@@ -485,10 +485,6 @@
     <value>已在 {1:F1}s 内从 {0:N0} 个跨运行协调文件读取缺失峰目标和优化后的校准</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FirstPassFdrTask_RehydrateForPerRunRescore_This_analysis_cannot_resume_from_its_completed_first_pass_with__0_" xml:space="preserve">
-    <value>此分析无法使用“{0}”从已完成的第一轮恢复运行。请删除此分析的 {1} 文件并重新运行以重复第一轮。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FirstPassFdrTask_Rehydrate_Using_the_first_pass_q_values_saved_in_the_intermediate_files__first_pass_Percolator_is_" xml:space="preserve">
     <value>使用中间文件中保存的第一轮 q 值；不再重新运行第一轮 Percolator。</value>
     <comment>Needs Review:New resource</comment>
@@ -499,10 +495,6 @@
   </data>
   <data name="FirstPassFdrTask_ReloadFirstPassSurvivors_Reloading_the_kept_precursor_candidates_from__0__files" xml:space="preserve">
     <value>正在从 {0:N0} 个文件重新加载保留的母离子候选</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_RunFdr_FDR_method__0__not_yet_supported__falling_back_to_simple" xml:space="preserve">
-    <value>尚不支持 FDR 方法 {0}，改用简单方法</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_RunFirstPassProjection_Cannot_write_the_first_pass_intermediate_file_for___0____no_location_could_be_derived_" xml:space="preserve">
@@ -603,10 +595,6 @@
   </data>
   <data name="FirstPassFdrTask_Run_Model_diagnostics__the_first_pass_is_already_complete__so_its_report_is_built_from_the_" xml:space="preserve">
     <value>模型诊断：第一轮已完成，因此根据第一轮中间文件构建其报告。不会重新运行任何内容。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FirstPassFdrTask_Run_Running__0__FDR_control_on_the_scored_precursor_candidates___" xml:space="preserve">
-    <value>正在对已评分的母离子候选运行 {0} FDR 控制…</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="FirstPassFdrTask_StreamFirstPassFileScores_Cannot_locate_the_first_pass_intermediate_files_for___0___" xml:space="preserve">
@@ -727,10 +715,6 @@
   </data>
   <data name="ModelDiagnosticsReport_FinalizePass2_Added_the_second_pass_results_to_the_model_diagnostics_report___0_" xml:space="preserve">
     <value>已将第二轮结果添加到模型诊断报告：{0}</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="ModelDiagnosticsReport_LogModelNotRetrained_The_first_pass_model_was_not_retrained_on_this_run__it_resumed_from_saved_first_pass_" xml:space="preserve">
-    <value>本次运行未重新训练第一轮模型（从已保存的第一轮结果恢复运行），因此“模型”选项卡中没有特征表或各特征分布。请删除 {0} 中间文件以重新训练模型。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ModelDiagnosticsReport_ReadPass1ForEnrichment_The_saved_first_pass_diagnostics_results_were_not_found__so_the_report_keeps_its_first_" xml:space="preserve">
@@ -915,10 +899,6 @@
   </data>
   <data name="Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR__the_re_scored_intermediate_file___3___does_not_match_the_first_pass_" xml:space="preserve">
     <value>第二轮 FDR：重新评分的中间文件“{3}”与“{0}”的第一轮中间文件不匹配（{1:N0} 行，应为 {2:N0} 行）；{4:N0} 个母离子候选将在没有特征的情况下评分。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="Pass2FdrSidecar_ComputePass2Resident_Second_pass_FDR_is_not_available_for_the__0__FDR_method__protein_FDR_will_use_first_pass_" xml:space="preserve">
-    <value>{0} FDR 方法不支持第二轮 FDR；蛋白质 FDR 将使用第一轮得分。</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="Pass2FdrSidecar_ComputePass2TransferCompeteFull_Applied_the_recomputed_q_values_to__0__precursor_candidate_peaks___1__scored_with_the_first_pass_model_" xml:space="preserve">
@@ -1523,10 +1503,6 @@
   </data>
   <data name="PerFileScoringTask_LogScoringSummary_Loaded__0__first_pass_precursor_candidate_peaks_from__1__files_" xml:space="preserve">
     <value>已从 {1:N0} 个文件加载 {0:N0} 个第一轮母离子候选峰。</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="PerFileScoringTask_PreCompactionPoolReason_An_FDR_method_other_than_Percolator" xml:space="preserve">
-    <value>Percolator 以外的 FDR 方法</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PerFileScoringTask_PreCompactionPoolReason_Resuming_without_cross_run_reconciliation_files" xml:space="preserve">

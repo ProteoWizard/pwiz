@@ -149,28 +149,10 @@ namespace pwiz.Osprey
             () => @"<threshold>", (c, p) => c._config.ReconciliationCompactionFdr = ParseDouble(p)) { DescriptionArgs = () => new object[] { ARG_RUN_FDR.ArgumentText } };
         public static readonly OspreyArgument ARG_PROTEIN_FDR = new OspreyArgument(@"protein-fdr",
             () => @"<threshold>", (c, p) => c._config.ProteinFdr = ParseDouble(p));
-        public static readonly OspreyArgument ARG_FDR_METHOD = new OspreyArgument(OspreyArgNames.FDR_METHOD,
-            new[] { @"percolator", @"gbdt", @"simple" }, (c, p) =>
-            {
-                switch (p.Value.ToLowerInvariant())
-                {
-                    case @"percolator":
-                        c._config.FdrMethod = FdrMethod.Percolator;
-                        break;
-                    case @"gbdt":
-                    case @"fasttree": // deprecated alias for gbdt (gradient-boosted decision trees)
-                        c._config.FdrMethod = FdrMethod.Gbdt;
-                        break;
-                    case @"simple":
-                        c._config.FdrMethod = FdrMethod.Simple;
-                        break;
-                    default:
-                        Program.LogWarning(string.Format(
-                            OspreyResources.OspreyCommandArgs_Unknown_FDR_method___0____defaulting_to__1_, p.Value, @"percolator"));
-                        c._config.FdrMethod = FdrMethod.Percolator;
-                        break;
-                }
-            }) { DescriptionArgs = () => new object[] { @"percolator" } };
+        // --fdr-method is GONE (#4543), with no alias: it is rejected as an unknown argument.
+        // Its percolator and gbdt values chose the classifier inside the one Percolator
+        // framework, a developer lever that belongs in an environment variable, so the choice
+        // moved to OSPREY_FDR_MODEL (see ToConfig). Its third value, simple, was deleted.
         public static readonly OspreyArgument ARG_FDR_LEVEL = new OspreyArgument(@"fdr-level",
             new[] { @"precursor", @"peptide", @"both" }, (c, p) =>
             {
@@ -222,7 +204,7 @@ namespace pwiz.Osprey
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_FDR =
             new ArgumentGroup<OspreyCommandArgs>(() => OspreyResources.OspreyCommandArgs_Group_FDR_Protein_Inference, true,
-                ARG_RUN_FDR, ARG_EXPERIMENT_FDR, ARG_RECONCILIATION_COMPACTION_FDR, ARG_PROTEIN_FDR, ARG_FDR_METHOD, ARG_FDR_LEVEL, ARG_SHARED_PEPTIDES,
+                ARG_RUN_FDR, ARG_EXPERIMENT_FDR, ARG_RECONCILIATION_COMPACTION_FDR, ARG_PROTEIN_FDR, ARG_FDR_LEVEL, ARG_SHARED_PEPTIDES,
                 ARG_FDRBENCH, ARG_FDRBENCH_PER_RUN, ARG_FDRBENCH_PASS);
 
         // --- Decoys -----------------------------------------------------------------------
@@ -399,9 +381,20 @@ namespace pwiz.Osprey
         /// </summary>
         internal static OspreyConfig ParseArgs(string[] args)
         {
+            return ParseArgs(args, OspreyEnvironment.FdrModel);
+        }
+
+        /// <summary>
+        /// <see cref="ParseArgs(string[])"/> with the classifier supplied rather than read from
+        /// OSPREY_FDR_MODEL, which is read once at process start and so cannot be varied by a
+        /// test. Exists so a test can prove that gbdt reaches the config: #4491 was the
+        /// classifier silently not reaching training.
+        /// </summary>
+        internal static OspreyConfig ParseArgs(string[] args, FdrClassifier fdrModel)
+        {
             var parser = new OspreyCommandArgs();
             parser.TokenizeAndDispatch(args);
-            return parser.ToConfig();
+            return parser.ToConfig(fdrModel);
         }
 
         /// <summary>
@@ -571,7 +564,7 @@ namespace pwiz.Osprey
             }
         }
 
-        private OspreyConfig ToConfig()
+        private OspreyConfig ToConfig(FdrClassifier fdrModel)
         {
             // Expand --input-list BEFORE normalization, so a listed path is indistinguishable
             // from one given with -i from here on. Appended in the order the lists were given,
@@ -594,6 +587,13 @@ namespace pwiz.Osprey
 
             if (!string.IsNullOrEmpty(_outputPath))
                 _config.OutputBlib = _outputPath;
+
+            // The classifier comes from OSPREY_FDR_MODEL, read once at process start, and is set
+            // here, where --fdr-method used to set it, so the rest of the pipeline reads the
+            // config and never the environment. An unrecognized value parses to the default only
+            // so the config is well-formed; Program aborts on OspreyEnvironment.FdrModelError
+            // before the pipeline runs.
+            _config.FdrClassifier = fdrModel;
 
             switch (_resolution)
             {
