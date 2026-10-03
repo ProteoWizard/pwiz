@@ -121,20 +121,6 @@
     <value>母离子和肽段</value>
     <comment>Needs Review:New resource</comment>
   </data>
-  <data name="FdrMethodExtensions_LOCALIZED_VALUES_Mokapot" xml:space="preserve">
-    <value>Mokapot</value>
-  </data>
-  <data name="FdrMethodExtensions_LOCALIZED_VALUES_Percolator" xml:space="preserve">
-    <value>Percolator</value>
-  </data>
-  <data name="FdrMethodExtensions_LOCALIZED_VALUES_gradient_boosted_tree" xml:space="preserve">
-    <value>梯度提升树</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
-  <data name="FdrMethodExtensions_LOCALIZED_VALUES_simple_target_decoy" xml:space="preserve">
-    <value>简单目标-诱饵</value>
-    <comment>Needs Review:New resource</comment>
-  </data>
   <data name="FileParallelismResolver_ResolveAuto_File_parallelism___0___auto__CPU_bound___1__cores___2__files__memory_estimate_unavailable_" xml:space="preserve">
     <value>文件并行数：{0}（自动，受 CPU 限制：{1} 个核心，{2} 个文件；无法估计内存）</value>
     <comment>Needs Review:New resource</comment>
